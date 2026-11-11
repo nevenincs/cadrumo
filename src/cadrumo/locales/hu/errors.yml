@@ -1341,11 +1341,18 @@ errors:
       el a(z) %{field_id} mezőben, amelynek az AEAT rekordterve %{field_length} pozíciót
       ad. A levágás más adatot vallana be. Ellenőrizd az adatot vagy az összeget,
       és exportálj újra.'
+    refused_modelo_household_row_fact_unstated: 'A bevallás továbbra is elutasított:
+      a profilod nem tartalmaz egy olyan háztartási adatot, amelyet a hivatalos kialakítás
+      megkövetel. Add meg a profilodban, majd számíts újra.'
     refused_modelo_instalment_election: 'Ezt a bevallást nem fizetheted két részletben:
       ehhez olyan fizetendő eredmény kell, amelyből a második részlet legalább egy
       cent marad, a bevallás nem lehet helyesbítő, határidőn belül kell benyújtanod,
       és ha a második részletet csoportos beszedéssel fizeted, saját spanyol számla
       is kell.'
+    refused_modelo_inventory_purchase_ledger_row: 'A bevallás továbbra is elutasított:
+      a készleted egy vásárlása nem mondja meg, melyik tétel rögzíti, vagy olyat jelöl
+      meg, amely nem egyezik vele. Add meg minden vásárlásnál, melyik tétel rögzíti,
+      vagy hogy egyik sem, majd számíts újra.'
     refused_modelo_iva_wallet_reconciliation_blocked: 'A Modelo 303 nem számítható
       ki, amíg a korábbi időszakokból áthozott kompenzációnak nincs forrása: rögzítsd
       az IVA-egyenlegben.'
@@ -1362,6 +1369,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: A 303-as rectificativa egyetlen kanonikus
       indokot követel meg egy alkalmazható és felülvizsgált rekordtervnél; az indok
       minden más esetben tiltott.
+    refused_modelo_operation_subject_not_work_unit: Ez a kérés nem azt a bevallást
+      jelöli meg, amelyhez a mentett számítása tartozik; nyisd meg azt a bevallást,
+      és onnan küldd el újra.
     refused_modelo_payment_election_capability: A választott fizetési mód nem támogatott.
     refused_modelo_payment_election_incompatible: A választott fizetési módhoz pozitív
       eredmény szükséges.

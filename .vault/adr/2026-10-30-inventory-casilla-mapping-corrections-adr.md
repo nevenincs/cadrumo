@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#inventory-casilla-mapping'
 date: '2026-10-30'
-modified: '2026-10-30'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d882e97a2d0928615de44c8048f8e54e40a5f979765a5ae9a51a811e7f2d15f'
+body_hash: 'sha256:2fa5815ea269bfa35e1c2ac7dea3fe8a718a00768fbd1cfc0e5852de6b693587'
 related:
   - "[[2026-08-23-inventory-casilla-mapping-adr]]"
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
@@ -59,3 +59,9 @@ The effective set plus history satisfies the rectification and retention rules w
 - A ledger with no closing authority never reached a calculation, so the drift finding fires only for cohort changes: another activity's authority, or a retirement. It stays as the guard against a stored document changing beneath a draft.
 - Reversing a movement can make a valuation refuse; the operator then corrects in date order. The history keeps every step.
 - Events and ledger writes share no transaction, as with the other inventory verbs. A crash between them followed by a replay leaves the change recorded in history with no event.
+
+## Amendment 2026-11-11: book-claimed purchases
+
+Accepted 2026-11-11 by PRIME under the operator's delegation, as recorded in `2026-11-11-inventory-casilla-mapping-book-claimed-purchases-adr`.
+
+A purchase movement's ledger link is a claim fact. It enters no valuation or fingerprint, and linking or unlinking remains permitted after a closing authority, as a correction with a `correction_id` retained in history. A change to the claimed set makes a Modelo 100 draft stale through the drift gate. A purchase's recargo de equivalencia is a stock fact. The statement that a purchase has no ledger row is a claim fact, under the same rules as the link.

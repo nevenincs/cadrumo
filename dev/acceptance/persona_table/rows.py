@@ -44,6 +44,8 @@ class Stage(StrEnum):
     """Calculate only: the application refused with the code the persona states."""
     REFUSAL_NOT_RAISED = "refusal-not-raised"
     """Calculate only: the persona states a refusal, and the return calculated."""
+    UNRESOLVED = "unresolved"
+    """Calculate only: the calculation gives no value for a stated casilla, so nothing disagrees and nothing passes."""
     INCOMPLETE = "incomplete"
     """Verify only: verificado completo was not granted."""
     REFUSED = "refused"
@@ -64,6 +66,7 @@ class Verdict(StrEnum):
     NO_ORACLE = "no-oracle"
     UNSUPPORTED = "unsupported"
     NOT_RUN = "not-run"
+    FLOOR_SOURCE = "floor-source"
 
 
 VERDICT_MEANING: dict[Verdict, str] = {
@@ -77,6 +80,8 @@ VERDICT_MEANING: dict[Verdict, str] = {
     Verdict.NO_ORACLE: "the persona owes the return but states no values for it; stages are shown, nothing compared",
     Verdict.UNSUPPORTED: "the application refuses the return as unsupported",
     Verdict.NOT_RUN: "the persona could not be replayed for that year, or the runner itself failed",
+    Verdict.FLOOR_SOURCE: "at this lowered horizon the floor dropped a record of the year before this return, "
+    "and a stage refused; the row proves nothing either way",
 }
 
 GREEN = frozenset({Verdict.PASSED})
@@ -102,6 +107,8 @@ class PlannedRow:
     grounding: str
     """The stated values' grounding, ``none`` when the persona states none."""
     sources: tuple[str, ...]
+    floor_source_dropped: bool = False
+    """Whether the return is of the floor year and the replay's floor dropped a history record of the year before."""
 
     @property
     def key(self) -> tuple[str, str, int, str]:
@@ -126,6 +133,7 @@ class TableRow:
     export: Stage = Stage.NOT_REACHED
     reason: str = ""
     export_detail: str = ""
+    floor_source_dropped: bool = False
     verdict: Verdict = field(init=False)
 
     def __post_init__(self) -> None:
@@ -163,6 +171,7 @@ class TableRow:
             export=export,
             reason=reason,
             export_detail=export_detail,
+            floor_source_dropped=plan.floor_source_dropped,
         )
 
     def to_json(self) -> str:
@@ -187,6 +196,8 @@ class TableRow:
             "export": self.export.value,
             "verdict": self.verdict.value,
         }
+        if self.floor_source_dropped:
+            data["floor_source_dropped"] = True
         return json.dumps(data, ensure_ascii=False, sort_keys=True)
 
     @classmethod
@@ -236,7 +247,21 @@ def classify(row: TableRow) -> Verdict:
     if row.calculate is Stage.EXPECTED_REFUSAL:
         return Verdict.EXPECTED_REFUSAL
     passed = (row.calculate, row.verify, row.export) == (Stage.PASSED, Stage.PASSED, Stage.PASSED)
-    return Verdict.PASSED if passed else Verdict.FAIL
+    if passed:
+        return Verdict.PASSED
+    return Verdict.FLOOR_SOURCE if _refused_for_dropped_source(row) else Verdict.FAIL
+
+
+_REFUSING_STAGES = frozenset({Stage.REFUSED, Stage.INCOMPLETE, Stage.UNRESOLVED})
+
+
+def _refused_for_dropped_source(row: TableRow) -> bool:
+    """Whether a red row is the application's correct refusal of a return whose prior-year source the floor dropped.
+
+    A value mismatch is a finding whatever was dropped, so it keeps the row red.
+    """
+    stages = (row.calculate, row.verify, row.export)
+    return row.floor_source_dropped and Stage.MISMATCH not in stages and any(s in _REFUSING_STAGES for s in stages)
 
 
 def stage_refusal_codes(*reasons: str) -> set[str]:
@@ -270,7 +295,13 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     stated_only = set(stated) - _obligation_keys(persona, shifted, applicable=False)
     keys = _obligation_keys(persona, shifted, applicable=True) | _history_keys(persona, shifted) | stated_only
     return [
-        _planned(persona.id, horizon, (modelo, year, period), stated.get((modelo, year, period), []))
+        _planned(
+            persona.id,
+            horizon,
+            (modelo, year, period),
+            stated.get((modelo, year, period), []),
+            floor_source_dropped=year == shifted.floor and _history_dropped_before(persona, shifted, year - 1),
+        )
         for modelo, year, period in sorted(keys, key=chain_order)
         if year is not None
     ]
@@ -314,7 +345,21 @@ def _history_keys(persona: Persona, envelope: YearEnvelope) -> set[tuple[str, in
     }
 
 
-def _planned(persona_id: str, horizon: int, key: tuple[str, int, str], values: list[ExpectedValue]) -> PlannedRow:
+def _history_dropped_before(persona: Persona, envelope: YearEnvelope, year: int) -> bool:
+    """Whether the read left out a return-history record of ``year``, which lies below the floor."""
+    return any(
+        record.history and record.year.resolve(envelope, biographical=True) == year for record in persona.below_floor
+    )
+
+
+def _planned(
+    persona_id: str,
+    horizon: int,
+    key: tuple[str, int, str],
+    values: list[ExpectedValue],
+    *,
+    floor_source_dropped: bool = False,
+) -> PlannedRow:
     modelo, year, period = key
     return PlannedRow(
         persona=persona_id,
@@ -325,6 +370,7 @@ def _planned(persona_id: str, horizon: int, key: tuple[str, int, str], values: l
         has_values=bool(values),
         grounding=_grounding(values),
         sources=tuple(dict.fromkeys(source for value in values for source in value.legal_ref)),
+        floor_source_dropped=floor_source_dropped,
     )
 
 

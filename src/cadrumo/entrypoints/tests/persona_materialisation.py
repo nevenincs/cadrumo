@@ -3,7 +3,7 @@
 A persona (``dev/fixtures/personas``, read by :mod:`cadrumo.tests.personas`)
 reaches its profile the way an operator's input does: the registered wizard
 patch, field and repeatable-row mutations, the household replacements, the
-suffered-withholding record, the statement import, single classification,
+own bank accounts and their designations, the suffered-withholding record, the statement import, single classification,
 invoice recording and linking, evidence intake and attachment, and, in the
 history scope, the local observations of returns the taxpayer holds, the
 withholding capture of every rent payment on leased premises, the filed
@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from enum import StrEnum
-from functools import cache
+from functools import cache, partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Final, cast
@@ -124,6 +124,7 @@ from ...application.live.filed_single_capture_operation import (
     FiledSingleCapturePublicResultV1,
     FiledSingleCaptureRequest,
 )
+from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from ...application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     ModeloInvoiceWithholdingCaptureProjection,
@@ -170,6 +171,7 @@ from ...application.modelo.work_filing_contracts import (
 )
 from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.composition import OperationComposedServices, compose_operation_services
+from ...application.operations.error_detail import OperationErrorDetailV1, operation_error_detail_schema
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...application.operations.frontend_requests import (
     OperationObservationRequestV1,
@@ -212,7 +214,11 @@ from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.aggregation import RetencionClave, RetencionScheme
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
-from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.period import Period
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.time.clock import frozen_clock, now
@@ -256,6 +262,8 @@ from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
+from .persona_inventory_purchases import replay_inventory_purchases
+from .persona_own_accounts import replay_own_accounts
 
 PERSONA_ACTOR = "operator:persona"
 """The actor every replayed operation is submitted under."""
@@ -279,7 +287,7 @@ class ReplayScope(StrEnum):
     HOUSEHOLD = "household"
     """The profile scope and the descendant and ascendant replacements."""
     FULL = "full"
-    """The household scope, the declared withholding, the statement import, invoices, evidence and inventory books."""
+    """The household scope, the own bank accounts, the declared withholding, the statement import, invoices, evidence and inventory books."""
     RECORDS = "records"
     """The full scope, then the records the persona's returns read, without the returns.
 
@@ -490,18 +498,38 @@ def settle_operation(
     """Submit one registered operation, settle it, refuse anything but success, and return its public result.
 
     The operation addresses the profile unless ``subject`` names another subject, such as a work unit.
+    A declaration edit travels as the window's volatile operator input: the
+    operation is admitted on its amount-free request, then receives the staged
+    intents as its financial operand.
     """
+    subject_ref = subject or profile_operation_subject(str(world.profile_id))
 
     async def settle() -> OperationPublicProjectionV1:
         services = world.services
-        submitted = await services.submission.submit(
-            OperationRequest(
+        if not isinstance(payload, ModeloEditOperatorInputV2):
+            submitted = await services.submission.submit(
+                OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=payload),
+                actor_ref=PERSONA_ACTOR,
+            )
+        else:
+            prepared = prepare_modelo_edit_operand(
                 definition_id=definition_id,
-                subject_ref=subject or profile_operation_subject(str(world.profile_id)),
-                payload=payload,
-            ),
-            actor_ref=PERSONA_ACTOR,
-        )
+                profile_id=world.profile_id,
+                subject_ref=subject_ref,
+                input_json=payload.model_dump_json(),
+            )
+            try:
+                submitted = await services.submission.submit(
+                    OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=prepared.request),
+                    actor_ref=PERSONA_ACTOR,
+                )
+                if prepared.operand is None:
+                    raise PersonaMaterialisationError(f"{definition_id} prepared no edit operand")
+                await services.submission.supervisor.bind_typed_financial_operand(
+                    submitted.receipt.operation_id, prepared.operand
+                )
+            finally:
+                prepared.release()
         operation_id = submitted.receipt.operation_id
         await services.submission.start(operation_id)
         await services.submission.settled(operation_id)
@@ -521,9 +549,60 @@ def settle_operation(
             if terminal.terminal_condition is OperationTerminalCondition.REFUSED
             else terminal.failure_error_code
         )
-        detail = "no detail" if result is None else result.model_dump_json(exclude={"profile_id"})
+        detail = _served_words(world, terminal)
+        if detail is None and result is not None:
+            # A refusal a definition records as its own typed result carries its sentence in that result.
+            detail = _result_words(result.model_dump(mode="json", exclude={"profile_id"}))
+            detail = result.model_dump_json(exclude={"profile_id"}) if detail is None else detail
+        if detail is None:
+            detail = "no detail"
         raise PersonaMaterialisationError(f"{definition_id} settled {terminal.terminal_condition} ({code}): {detail}")
     return result
+
+
+def _result_words(value: object) -> str | None:
+    """The ``refusal_words`` sentence a typed refusal result carries, on one line, wherever it nests."""
+    if isinstance(value, Mapping):
+        words = str(value.get("refusal_words") or "")
+        if words.strip():
+            return " ".join(words.split())
+        children: Sequence[object] = tuple(value.values())
+    elif isinstance(value, list | tuple):
+        children = value
+    else:
+        return None
+    found: str | None = None
+    for child in children:
+        found = _result_words(child)
+        if found is not None:
+            break
+    return found
+
+
+def _served_words(world: PersonaWorld, terminal: OperationPublicProjectionV1) -> str | None:
+    """The sentence the application serves an operator for a refused or failed operation, on one line.
+
+    This reads the recorded error detail through the settled-result read, as the command line and the
+    workbench do, so the words are those a frontend shows. ``None`` when the operation recorded none.
+    """
+    if terminal.terminal_condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL:
+        return None
+    contract = terminal.definition_contract
+    resolved = asyncio.run(
+        world.services.result.resolve(
+            OperationResultProjectionRequestV1(
+                operation_id=terminal.operation_id,
+                terminal_revision=terminal.revision,
+                definition_contract_digest=contract.definition_contract_digest,
+                result_schema=operation_error_detail_schema(),
+            ),
+            OperationErrorDetailV1,
+        )
+    )
+    if not isinstance(resolved, OperationResultProjectionSuccessV1):
+        return None
+    words = resolved.projection.refusal_words if isinstance(resolved.projection, OperationErrorDetailV1) else None
+    return None if words is None else " ".join(words.split())
 
 
 def run_operation[Projection: BaseModel](
@@ -1023,12 +1102,12 @@ def inventory_statement(persona: Persona, book: InventoryBook, *, envelope: Year
     return target
 
 
-def _replay_inventory(persona: Persona, world: PersonaWorld) -> None:
-    """Open each inventory book and record its closing on its movements, evidenced by the taxpayer's statement.
+def _replay_inventory(persona: Persona, world: PersonaWorld, transactions: Mapping[str, str]) -> None:
+    """Open each inventory book, add its purchases, and record its closing on its movements, evidenced by the statement.
 
-    The book records no movement, so its closing value is the opening stock.
-    The statement also evidences the prior year's closing the opening continues
-    from, since no earlier book holds one.
+    Each purchase claims the ledger row that books it, and rests on the invoice
+    attached to that row. The statement also evidences the prior year's closing
+    the opening continues from, since no earlier book holds one.
     """
     for book in persona.inventory:
         year = book.year.resolve(world.envelope)
@@ -1047,6 +1126,21 @@ def _replay_inventory(persona: Persona, world: PersonaWorld) -> None:
         )
         if created.outcome != "created":
             raise PersonaMaterialisationError(f"{where}: create refused: {created.model_dump_json()}")
+        replay_inventory_purchases(
+            persona,
+            book,
+            year=year,
+            profile_id=world.profile_id,
+            workdir=world.workdir,
+            transactions=transactions,
+            invoice_source=lambda ref: document_path(
+                persona,
+                next(document for document in persona.documents if ref in document.attach_to),
+                envelope=world.envelope,
+                workdir=world.workdir,
+            ),
+            settle=partial(settle_operation, world),
+        )
         source = inventory_statement(persona, book, envelope=world.envelope, workdir=world.workdir)
         stored = run_operation(
             world,
@@ -1668,12 +1762,13 @@ def materialise_persona(
         if scope.includes(ReplayScope.HOUSEHOLD):
             _replay_household(persona, world)
         if scope.includes(ReplayScope.FULL):
+            replay_own_accounts(persona, world.profile_id, partial(settle_operation, world))
             _replay_withholding(persona, world)
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)
             _state_filing_names(persona, world)
             evidence = _replay_documents(persona, world, transactions)
-            _replay_inventory(persona, world)
+            _replay_inventory(persona, world, transactions)
         setup_complete = _complete_setup(world) if complete_setup else None
         if scope.includes(ReplayScope.RECORDS) and (
             persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings

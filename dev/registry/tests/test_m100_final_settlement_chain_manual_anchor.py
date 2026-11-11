@@ -113,7 +113,6 @@ def _bindings(revision_id: str) -> dict[str, Decimal]:
         # resolved no-descendant scalar just as the profile resolver would.
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         "renta-profile-incremento-guarderia": Decimal("0"),
-        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),

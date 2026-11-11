@@ -24,6 +24,7 @@ from ...application.inventory.registered_requests import (
     InventoryInspectRequest,
     InventoryLedgerChangeRequest,
     InventoryMovementAddRequest,
+    InventoryMovementClaimRequest,
     InventoryMovementCorrectRequest,
     InventoryMovementReverseRequest,
     InventoryRestoreRequest,
@@ -40,6 +41,7 @@ from ...domain.contribuyente.inventory.records import (
     InventoryCorrectionReason,
     InventoryRetirementReason,
     MovementKind,
+    PurchaseLedgerRow,
     ValuationMethod,
     load_inventory_acquisition_cost,
 )
@@ -331,6 +333,39 @@ def inventory_movement_correct(
     )
 
 
+def inventory_movement_claim(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    movement_id: str,
+    ledger_row: PurchaseLedgerRow,
+    transaction_id: str | None = None,
+) -> None:
+    """State which ledger transaction books a purchase, that none does, or clear the statement."""
+    if (ledger_row is PurchaseLedgerRow.CLAIMED) != (transaction_id is not None):
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.claim_transaction_mismatch"),
+            param_hint="--transaction-id",
+        )
+    try:
+        request = InventoryMovementClaimRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            movement_id=movement_id,
+            ledger_row=ledger_row,
+            claimed_transaction_id=transaction_id,
+        )
+    except ValidationError as exc:
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.claim_transaction_mismatch"),
+            param_hint="--transaction-id",
+        ) from exc
+    emit_ledger_change(ctx, command="ledger.inventory.movement.claim", request=request)
+
+
 def inventory_movement_reverse(
     ctx: typer.Context,
     actividad_id: str,
@@ -531,6 +566,7 @@ __all__ = [
     "inventory_inspect",
     "inventory_list",
     "inventory_movement_add",
+    "inventory_movement_claim",
     "inventory_movement_correct",
     "inventory_movement_reverse",
     "inventory_options",

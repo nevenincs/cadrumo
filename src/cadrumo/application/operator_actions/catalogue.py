@@ -219,6 +219,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.ascendiente",
+            target_command_key="config.profile.ascendiente.list",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.descendiente",
             target_command_key="config.profile.descendiente.list",
         ),
@@ -310,6 +314,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.profile.status",
             target_command_key="config.profile.status",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.account.add",
+            target_command_key="ledger.account.add",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="holding",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="holding",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="label",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="label",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.link",
@@ -406,6 +426,37 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     argument_name="revision_json",
                     source=ActionArgumentSource.REQUEST_CONTEXT,
                     source_key="revision_json",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.inventory.movement.claim",
+            target_command_key="ledger.inventory.movement.claim",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="actividad_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="actividad_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="correction_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="correction_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="ledger_row",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="ledger_row",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="movement_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="movement_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
                 ),
             ),
         ),
@@ -732,6 +783,48 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     argument_name="work_unit_id",
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.override",
+            target_command_key="modelo.work.override",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="binding_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="binding_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="value",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.attest_m303_exonerado_390",
+            target_command_key="modelo.work.attest_m303_exonerado_390",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="observed_at",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="observed_at",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
                 ),
             ),
         ),

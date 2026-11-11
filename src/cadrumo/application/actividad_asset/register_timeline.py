@@ -110,7 +110,7 @@ def _class_names_reader(context: RegisterReadContext) -> ClassNames:
         if not isinstance(record, ActivityAssetRevision):
             return dict[str, str]()
         regime = record.amortization.regime
-        tax_year = max(context.today.year, record.in_service_date.year)
+        tax_year = context.election_year(record)
         if (regime, tax_year) not in cache:
             try:
                 cache[regime, tax_year] = context.class_labels(regime, tax_year)

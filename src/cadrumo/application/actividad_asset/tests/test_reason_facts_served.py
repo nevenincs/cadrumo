@@ -6,8 +6,10 @@ would render with its placeholder showing.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
+from typing import NoReturn
 
 import pytest
 
@@ -19,6 +21,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.application.actividad_asset.ports import ActivityAssetForecastOperation
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetUnsupportedError, PercentFact
@@ -49,9 +52,19 @@ def _stated(facts: tuple[ActivityAssetReasonFact, ...]) -> dict[str, str]:
 
 
 def test_the_election_limits_of_a_year_no_edition_covers_state_the_year_that_words_the_reason() -> None:
-    uncovered_year = filing_year_envelope().floor - 1
-    operations, _ = register_operations(today=date(uncovered_year, 6, 30))
-    operations.create(register_revision(in_service=date(uncovered_year - 1, 1, 1)), NAME)
+    uncovered_year = filing_year_envelope().floor
+
+    def edition(tax_year: int) -> NoReturn:
+        raise RegistryError(f"no edition covers {tax_year}")
+
+    operations = ActivityAssetOperations(
+        repository=MemoryRepository(),
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=register_forecast,
+        taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
+        register_authority=replace(memory_register_authority(), edition=edition),
+    )
+    operations.create(register_revision(in_service=date(uncovered_year, 1, 1)), NAME)
 
     limits = operations.plan_limits(_ASSET)
 

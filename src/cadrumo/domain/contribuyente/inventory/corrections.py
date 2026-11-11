@@ -21,6 +21,7 @@ from typing import Literal, TypeIs, get_args
 
 from ....core.hashing import content_hash_hex
 from ....core.identity.digest import ContentDigest
+from ....core.identity.transaction_ids import TransactionId
 from .closing_foundations import InventoryLedgerError
 from .records import (
     InventoryCorrectionReason,
@@ -29,9 +30,13 @@ from .records import (
     InventoryLedgerDescriptor,
     InventoryLedgerDocument,
     InventoryLedgerHistoryEntry,
+    InventoryLedgerRowChange,
     InventoryRetirementReason,
+    MovementKind,
     MovementRecord,
+    PurchaseLedgerRow,
     ValuationMethod,
+    movement_identity_payload,
 )
 from .valuation import compute_inventory_valuation
 
@@ -48,6 +53,13 @@ InventoryCorrectionRefusalReason = Literal[
     "count_would_raise_stock",
     "correction_id_conflict",
     "correction_changes_nothing",
+    "recargo_with_deductible_iva",
+    "ledger_row_not_purchase",
+    "claimed_transaction_missing",
+    "claimed_transaction_double_claim",
+    "claimed_transaction_amount_mismatch",
+    "claimed_transaction_substrate_missing",
+    "claimed_transaction_not_eur",
 ]
 """Every typed reason this module and the valuation engine refuse a change for."""
 
@@ -219,7 +231,7 @@ def correct_movement(
             "kind": InventoryHistoryKind.MOVEMENT_CORRECTED.value,
             "reason": reason.value,
             "target_movement_id": target_movement_id,
-            "replacement": replacement.model_dump(mode="json"),
+            "replacement": movement_identity_payload(replacement),
         }
     )
     if _is_replay(ledger, stamp.correction_id, fingerprint):
@@ -308,6 +320,83 @@ def restore_ledger(ledger: InventoryLedger, *, stamp: InventoryChangeStamp) -> I
     return ledger.model_copy(update={"history": (*ledger.history, entry)})
 
 
+def _transaction_claimed_elsewhere(
+    document: InventoryLedgerDocument, ledger: InventoryLedger, transaction_id: TransactionId
+) -> InventoryLedger | None:
+    """The other book whose purchase already claims this transaction, if any."""
+    for other in document.ledgers:
+        if (other.actividad_id, other.year) == (ledger.actividad_id, ledger.year):
+            continue
+        if any(movement.claimed_transaction_id == transaction_id for movement in other.period_movements):
+            return other
+    return None
+
+
+def state_movement_ledger_row(
+    document: InventoryLedgerDocument,
+    ledger: InventoryLedger,
+    *,
+    stamp: InventoryChangeStamp,
+    movement_id: str,
+    ledger_row: PurchaseLedgerRow,
+    claimed_transaction_id: TransactionId | None,
+) -> InventoryLedger:
+    """State which ledger transaction books one purchase, or that none does, keeping the prior statement.
+
+    The statement is a claim fact: it enters no valuation and no fingerprint, so it
+    stays changeable after a closing authority and on a retired book. Several
+    purchases of one book may claim one transaction (one invoice of several
+    lines); a transaction another book already claims refuses. The checks against
+    the ledger itself belong to the caller, which holds the transactions.
+    """
+    fingerprint = content_hash_hex(
+        {
+            "kind": InventoryHistoryKind.LEDGER_ROW_STATED.value,
+            "movement_id": movement_id,
+            "ledger_row": ledger_row.value,
+            "claimed_transaction_id": claimed_transaction_id,
+        }
+    )
+    if _is_replay(ledger, stamp.correction_id, fingerprint):
+        return ledger
+    target = _require_effective_movement(ledger, movement_id)
+    if target.kind is not MovementKind.PURCHASE:
+        raise _refused("ledger_row_not_purchase", ledger, movement_id=movement_id)
+    if target.ledger_row is ledger_row and target.claimed_transaction_id == claimed_transaction_id:
+        raise _refused("correction_changes_nothing", ledger, movement_id=movement_id)
+    if claimed_transaction_id is not None:
+        other = _transaction_claimed_elsewhere(document, ledger, claimed_transaction_id)
+        if other is not None:
+            raise _refused(
+                "claimed_transaction_double_claim",
+                ledger,
+                movement_id=movement_id,
+                other_actividad_id=other.actividad_id,
+                other_year=str(other.year),
+            )
+    restated = MovementRecord.model_validate(
+        {
+            **target.model_dump(),
+            "ledger_row": ledger_row,
+            "claimed_transaction_id": claimed_transaction_id,
+        }
+    )
+    entry = _entry(
+        stamp,
+        InventoryHistoryKind.LEDGER_ROW_STATED,
+        fingerprint,
+        ledger_row_change=InventoryLedgerRowChange(
+            movement_id=movement_id,
+            prior_ledger_row=target.ledger_row,
+            prior_claimed_transaction_id=target.claimed_transaction_id,
+        ),
+    )
+    effective = tuple(restated if item.movement_id == movement_id else item for item in ledger.period_movements)
+    return InventoryLedger.model_validate(
+        ledger.model_copy(update={"period_movements": effective, "history": (*ledger.history, entry)}).model_dump()
+    )
+
+
 def _entry(
     stamp: InventoryChangeStamp,
     kind: InventoryHistoryKind,
@@ -320,6 +409,7 @@ def _entry(
     prior_opening_stock: Decimal | None = None,
     prior_valuation_method: ValuationMethod | None = None,
     prior_descriptor: InventoryLedgerDescriptor | None = None,
+    ledger_row_change: InventoryLedgerRowChange | None = None,
 ) -> InventoryLedgerHistoryEntry:
     return InventoryLedgerHistoryEntry(
         correction_id=stamp.correction_id,
@@ -334,6 +424,7 @@ def _entry(
         prior_opening_stock=prior_opening_stock,
         prior_valuation_method=prior_valuation_method,
         prior_descriptor=prior_descriptor,
+        ledger_row_change=ledger_row_change,
     )
 
 
@@ -351,4 +442,5 @@ __all__ = [
     "restore_ledger",
     "retire_ledger",
     "reverse_movement",
+    "state_movement_ledger_row",
 ]

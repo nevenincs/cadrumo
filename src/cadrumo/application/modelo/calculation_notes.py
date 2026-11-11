@@ -69,6 +69,7 @@ from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticRe
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from .disagreement_words import CROSS_CHECK_LABEL_LOCALE_KEYS, sources_facts_words, value_facts_words
+from .inventory_purchase_claim_gate import inventory_purchase_claim_verdict
 from .value_presentation import format_casilla_value
 from .work_form_findings import ModeloFormAttention
 
@@ -89,6 +90,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "advisory_binding_value",
         "credit_source_disagreement",
         "precedence_tier_divergence",
+        "household_row_fact_unstated",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.
@@ -207,6 +209,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "deferred_binding_source": _I,
         "oss_no_live_source": _I,
         "register_owned_capital_acquisition": _I,
+        "inventory_book_claimed_purchase": _I,
         "activity_asset_agrarian_excluded": _I,
         "dt12_regime_window_closed": _I,
         "dt12_regime_window_unverified": _I,
@@ -259,7 +262,7 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
 )
 """Reasons whose cause is an entry in the filer's records, where the note sits and is put right."""
 
-PROFILE_REASONS: Final[frozenset[str]] = frozenset({"household_rows_incomplete"})
+PROFILE_REASONS: Final[frozenset[str]] = frozenset({"household_rows_incomplete", "household_row_fact_unstated"})
 """Reasons whose cause is a fact the filer keeps in their profile, where the note is put right."""
 
 _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
@@ -301,6 +304,15 @@ _INCOME_CLASS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 _OTHER_INCOME_CLASS_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.income_class.other"
 _ELEMENT_PLACEHOLDERS: Final[frozenset[str]] = frozenset({"element", "elements"})
 _PROFILE_GROUP_VALUE: Final[str] = "group"
+_HOUSEHOLD_LEAF_VALUE: Final[str] = "leaf"
+_HOUSEHOLD_LEAF_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "nif": "application.modelo.calc_diagnostic_words.household_leaf.nif",
+        "apellidos_nombre": "application.modelo.calc_diagnostic_words.household_leaf.apellidos_nombre",
+        "birth_date": "application.modelo.calc_diagnostic_words.household_leaf.birth_date",
+    }
+)
+"""The words of each household row fact the design requires, by the leaf token the profile stores."""
 _PROFILE_FIELD_VALUE: Final[str] = "field"
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
@@ -346,6 +358,9 @@ operation, so the note names the invoice and never the clave.
 
 def note_record_verdict(diagnostic: CalculationSourceDiagnostic) -> PreconditionVerdict | None:
     """The door to the record a note names, where its reason has one and its fact names exactly one row."""
+    inventory_door = inventory_purchase_claim_verdict(diagnostic.fact)
+    if inventory_door is not None:
+        return inventory_door
     declared = _RECORD_NOTE_ACTIONS.get(diagnostic.reason)
     fact = diagnostic.fact
     if declared is None or fact is None or len(fact.row_refs) != 1:
@@ -468,6 +483,8 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
         return format_casilla_value(date.fromisoformat(value), data_type="date", language=language)
     if name in _AMOUNT_VALUES:
         return format_casilla_value(Decimal(value), data_type="money", language=language)
+    if name == _HOUSEHOLD_LEAF_VALUE:
+        return tr(_HOUSEHOLD_LEAF_LOCALE_KEYS[value], locale=language.value)
     if name == _INCOME_CLASS_VALUE:
         return tr(_INCOME_CLASS_LOCALE_KEYS.get(value, _OTHER_INCOME_CLASS_LOCALE_KEY), locale=language.value)
     if name in (_PROFILE_GROUP_VALUE, _PROFILE_FIELD_VALUE):

@@ -274,6 +274,7 @@ class BucketEventType(StrEnum):
     LEDGER_INVENTORY_CORRECTED = "ledger.inventory.corrected"
     LEDGER_INVENTORY_MOVEMENT_CORRECTED = "ledger.inventory.movement_corrected"
     LEDGER_INVENTORY_MOVEMENT_REVERSED = "ledger.inventory.movement_reversed"
+    LEDGER_INVENTORY_MOVEMENT_LEDGER_ROW_STATED = "ledger.inventory.movement_ledger_row_stated"
     LEDGER_INVENTORY_RETIRED = "ledger.inventory.retired"
     LEDGER_INVENTORY_RESTORED = "ledger.inventory.restored"
     # audit verb-group (evidence bundle)

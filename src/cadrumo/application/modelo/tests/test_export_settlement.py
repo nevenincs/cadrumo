@@ -21,6 +21,11 @@ from ....domain.calculations.registry.tests.authored_editions import newest_auth
 from ....domain.calculations.registry.tests.published_authority import published_revision, published_source_reference
 from ....domain.deadlines.models import ChargeAccount, RefundAccount
 from ....domain.modelos.errors import ModeloExportError
+from ..action_errors import (
+    ModeloChargeAccountMissingError,
+    ModeloInstalmentElectionRefusedError,
+    ModeloRefundAccountMissingError,
+)
 from ..export_settlement import DeclaredSettlement, SettlementRefusal, settlement_dictionary_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -150,7 +155,7 @@ def test_two_instalments_split_sixty_forty_in_the_fractioned_block(
 
 
 def test_a_debited_instalment_without_a_charge_account_is_refused() -> None:
-    with pytest.raises(ModeloExportError) as refused:
+    with pytest.raises(ModeloChargeAccountMissingError) as refused:
         settlement_dictionary_values(
             disposition=ResultDisposition.INGRESO,
             settlement=_settled("100.00"),
@@ -160,7 +165,7 @@ def test_a_debited_instalment_without_a_charge_account_is_refused() -> None:
             refund_account=None,
         )
 
-    assert refused.value.context == {"cause": "charge_account_missing", "result_disposition": "I"}
+    assert refused.value.context == {"account_role": "charge", "result_disposition": "I"}
 
 
 def test_a_refund_states_its_positive_amount_into_a_spanish_account() -> None:
@@ -219,7 +224,7 @@ def test_a_nil_result_states_its_disposition_alone_and_an_absent_one_writes_noth
 
 
 def test_a_refund_without_an_account_or_an_amount_is_refused() -> None:
-    with pytest.raises(ModeloExportError) as no_account:
+    with pytest.raises(ModeloRefundAccountMissingError) as no_account:
         settlement_dictionary_values(
             disposition=ResultDisposition.DEVOLUCION,
             settlement=_settled("-1.00"),
@@ -247,7 +252,7 @@ def test_a_refund_without_an_account_or_an_amount_is_refused() -> None:
             refund_account=None,
         )
 
-    assert no_account.value.context == {"cause": "refund_account_missing", "result_disposition": "D"}
+    assert no_account.value.context == {"account_role": "refund", "result_disposition": "D"}
     assert no_amount.value.context == {"cause": "result_unknown", "result_disposition": "I"}
     assert unsupported.value.context == {"cause": "settlement_unsupported", "result_disposition": "I"}
     assert no_amount.value.translated_message == "application.modelo.errors.export_settlement_unknown"
@@ -279,7 +284,7 @@ def test_a_settlement_refusal_reads_in_every_language_and_is_no_write_failure(
 
 
 def test_a_split_the_modelo_does_not_declare_is_refused() -> None:
-    with pytest.raises(ModeloExportError) as refused:
+    with pytest.raises(ModeloInstalmentElectionRefusedError) as refused:
         settlement_dictionary_values(
             disposition=ResultDisposition.INGRESO,
             settlement=_settled("100.00"),
@@ -289,12 +294,12 @@ def test_a_split_the_modelo_does_not_declare_is_refused() -> None:
             refund_account=None,
         )
 
-    assert refused.value.context == {"cause": "instalment_split_undeclared", "result_disposition": "I"}
+    assert refused.value.context == {"reason": "not_declared", "result_disposition": "I"}
 
 
 def test_an_amount_whose_second_instalment_would_be_nothing_is_paid_at_once_never_split() -> None:
     """60 per cent of 0,01 is 0,006: the first instalment takes the cent and the second would be 0,00."""
-    with pytest.raises(ModeloExportError) as refused:
+    with pytest.raises(ModeloInstalmentElectionRefusedError) as refused:
         settlement_dictionary_values(
             disposition=ResultDisposition.INGRESO,
             settlement=_settled("0.01"),
@@ -320,6 +325,6 @@ def test_an_amount_whose_second_instalment_would_be_nothing_is_paid_at_once_neve
         refund_account=None,
     )
 
-    assert refused.value.context == {"cause": "second_instalment_zero", "result_disposition": "I"}
+    assert refused.value.context == {"reason": "second_instalment_nothing", "result_disposition": "I"}
     assert at_once == {"TIPODECLARACION": "I", "ING_IMPORTE": Decimal("0.01"), "ING_CUENTACORRIENTE": None}
     assert least["ING_IMPORTE_PF1"] == Decimal("0.01") and least["ING_IMPORTE_PF2"] == Decimal("0.01")

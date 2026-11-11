@@ -471,12 +471,17 @@ class ModeloReconciliationImportExecutor:
             return command, prepared
 
         try:
-            command, prepared = await await_cancellation_complete(
+            outcome = await await_cancellation_complete(
                 asyncio.to_thread(prepare),
                 task_name="modelo-reconciliation-import-prepare",
             )
-        except CalculationRevisionNotFoundError as exc:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
+        except CalculationRevisionNotFoundError:
+            outcome = None
+        if outcome is None:
+            # Raised outside the handler: the denial must not chain to the lookup's
+            # served door, which would tell the caller the revision is not stored.
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        command, prepared = outcome
         report = ModeloReconciliationImportProjection.from_report(prepared.report)
         _require_import_projection(payload, report, profile_id, command, prepared, verified_parser)
         if len(canonical_json_bytes(report.model_dump(mode="json"))) > _MAX_RESULT_DOCUMENT_BYTES:

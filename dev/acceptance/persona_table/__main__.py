@@ -100,7 +100,7 @@ def _baseline(args: argparse.Namespace) -> int:
         by_persona.setdefault(key[0], []).append(rows[key])
     for persona, persona_rows in by_persona.items():
         text = "".join(row.to_baseline_json(_horizon()) + "\n" for row in persona_rows)
-        (args.dir / f"{persona}.jsonl").write_text(text, encoding="utf-8")
+        (args.dir / f"{persona}.jsonl").write_text(text, encoding="utf-8", newline="\n")
     return 0
 
 

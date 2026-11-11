@@ -14,20 +14,24 @@ from typing import ClassVar, Protocol, get_args
 from pydantic import ValidationError
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.binding_temporal import SameTargetContext
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.inventory_anexo_d_applicability import inventory_anexo_d_applies
 from ...domain.calculations.registry.inventory_bindings import InventoryProvider
-from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
 from ...domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.user_profile.values import UserProfileRecord
+from ..inventory.movement_claim_checks import InventoryClaimLedgerReads
+from .inventory_claim_findings import inventory_claim_findings
+from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import (
     CalculationSourceContext,
@@ -61,6 +65,23 @@ class InventoryLedgerRepositoryProtocol(Protocol):
 
 def _inventory_bindings(context: CalculationSourceContext) -> tuple[BindingDefinition, ...]:
     return tuple(binding for binding in context.revision.bindings if binding.source is _SOURCE)
+
+
+def revision_carries_inventory_purchases(revision: ModeloRevision) -> bool:
+    """Whether the revision gives an inventory book's purchases a casilla of their own.
+
+    Only then may a ledger row a purchase claims leave the ledger expenses: the
+    book's acquisition-cost row reaches the casilla bound to it. An edition that
+    binds no such casilla declares the purchase through the ledger row.
+    """
+    acquisition = {
+        binding.id
+        for binding in revision.bindings
+        if isinstance(binding.provider, InventoryProvider) and binding.provider.row_field == "complete_acquisition_cost"
+    }
+    return any(
+        casilla.input_kind == InputKind.BOUND and casilla.binding in acquisition for casilla in revision.casillas
+    )
 
 
 def _profile_declares_no_activity_income(context: CalculationSourceContext) -> bool:
@@ -214,7 +235,12 @@ def _activity_books_refusal(
 
 
 def _diagnostic(
-    *, reason: CalculationSourceDiagnosticReason, state: str, message: str, remedy: str | None = None
+    *,
+    reason: CalculationSourceDiagnosticReason,
+    state: str,
+    message: str,
+    remedy: str | None = None,
+    fact: CalculationNoteFact | None = None,
 ) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason=reason,
@@ -222,6 +248,7 @@ def _diagnostic(
         resolver_id=InventorySourceResolver.resolver_id,
         message=f"inventory source {state}: {message}",
         remedy=remedy,
+        fact=fact,
     )
 
 
@@ -252,7 +279,6 @@ def _resolve_inventory_binding_template(
     coordinate_refusal = _inventory_coordinate_refusal(
         typed_bindings,
         binding_ids=binding_ids,
-        filing_year=filing_year,
         resolver_id=resolver_id,
         owned_sources=owned_sources,
     )
@@ -299,14 +325,14 @@ def _inventory_coordinate_refusal(
     typed_bindings: list[tuple[BindingDefinition, InventoryProvider]],
     *,
     binding_ids: tuple[str, ...],
-    filing_year: int,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution | None:
     # The declaration carries no authored year: it states timeless intent and the
-    # filing context supplies the coordinate. The year guard is therefore a guard
-    # on the temporal selector -- an inventory row template must rest on the
-    # target's own filing coordinate rather than shifting off it.
+    # filing context supplies the coordinate. An inventory row template must rest
+    # on the target's own filing coordinate rather than shifting off it. Whether
+    # the rows apply at all is the selected edition's: it declares these bindings
+    # only where its design carries the Anexo D casillas.
     if any(not isinstance(selector.temporal, SameTargetContext) for _binding, selector in typed_bindings):
         return _template_refusal_resolution(
             binding_ids,
@@ -314,21 +340,7 @@ def _inventory_coordinate_refusal(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )
-
-    # Refuse an inapplicable filing year here, before the encrypted ledger is
-    # read: the projection would refuse it anyway, but only after a load.
-    try:
-        applies = inventory_anexo_d_applies(filing_year=filing_year)
-    except RegistryValidationError:
-        applies = False
-    if applies:
-        return None
-    return _template_refusal_resolution(
-        binding_ids,
-        "inventory row template is not applicable for the filing year",
-        resolver_id=resolver_id,
-        owned_sources=owned_sources,
-    )
+    return None
 
 
 def _inventory_bindings_by_operation(
@@ -482,15 +494,61 @@ def _row_provenance(content_fingerprint: str) -> CalculationSourceProvenance:
     )
 
 
+def _activity_casillas(
+    revision: ModeloRevision,
+    row_values: Mapping[tuple[str, int], Decimal | str],
+    *,
+    activity_count: int,
+    resolver_id: str,
+) -> tuple[dict[CasillaId, Decimal], tuple[CalculationSourceDiagnostic, ...]]:
+    """Give the return's activity casillas the one activity's Anexo D values, or name them unresolved.
+
+    Casillas 0177, 0181 and 0182 of the estimación directa block are the
+    activity's own, as 0171 and 0183 are, and the gastos total sums them. With
+    one activity its book's row is that activity's figure; with several, no row
+    is the return's one activity, so each casilla stays unresolved rather than
+    reading as a sum or a zero.
+    """
+    row_bindings = {binding_id for binding_id, _row in row_values}
+    bound = tuple(
+        (casilla, casilla.binding)
+        for casilla in revision.casillas
+        if casilla.input_kind == InputKind.BOUND and casilla.binding in row_bindings
+    )
+    if activity_count == 1:
+        return {
+            casilla.id: value for casilla, binding in bound if isinstance(value := row_values[(binding, 1)], Decimal)
+        }, ()
+    return {}, tuple(
+        CalculationSourceDiagnostic(
+            reason="unresolved_binding",
+            source_kind=_SOURCE.value,
+            resolver_id=resolver_id,
+            binding_id=binding,
+            casilla_id=casilla.id,
+            message=(
+                f"casilla {casilla.id!r} is the one estimación directa activity's figure, and the profile "
+                f"declares {activity_count} activities with a book each, so no book's row is that figure"
+            ),
+            remedy=(
+                "Each activity's inventory row is kept in the Anexo D rows; the activity casilla needs the "
+                "declaration's per-activity blocks, which this calculation does not yet fill."
+            ),
+        )
+        for casilla, binding in bound
+    )
+
+
 def _resolve_inventory_rows(
     ledgers: tuple[InventoryLedger, ...],
     *,
+    revision: ModeloRevision,
     binding_ids: tuple[str, ...],
     bindings_by_operation: Mapping[str, BindingDefinition],
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution:
-    """Project each activity into row values, identities, and physical evidence diagnostics."""
+    """Project each activity into row values, identities, its activity casillas, and physical evidence diagnostics."""
     row_values: dict[tuple[str, int], Decimal | str] = {}
     row_identities: dict[tuple[str, int], RowSourceIdentity] = {}
     provenance: list[CalculationSourceProvenance] = []
@@ -527,13 +585,17 @@ def _resolve_inventory_rows(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )
+    casillas, unresolved = _activity_casillas(
+        revision, row_values, activity_count=len(ledgers), resolver_id=resolver_id
+    )
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
         row_binding_values=row_values,
         row_source_identities=row_identities,
+        bound_inputs_by_casilla_id=casillas,
         provenance=tuple(provenance),
-        diagnostics=tuple(diagnostics),
+        diagnostics=(*diagnostics, *unresolved),
     )
 
 
@@ -613,9 +675,20 @@ class InventorySourceResolver:
     resolver_id: ClassVar[str] = "inventory"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
-    def __init__(self, *, inventory_repository: InventoryLedgerRepositoryProtocol | None = None) -> None:
-        """Bind the optional repository used to read inventory facts."""
+    def __init__(
+        self,
+        *,
+        inventory_repository: InventoryLedgerRepositoryProtocol | None = None,
+        claim_reads: InventoryClaimLedgerReads | None = None,
+    ) -> None:
+        """Bind the optional repository used to read inventory facts.
+
+        ``claim_reads`` is the ledger and asset register the purchases' ledger
+        statements are checked against. Without it no statement is checked, so
+        only a caller that reads the projection, not one that files it, omits it.
+        """
         self._inventory_repository = inventory_repository
+        self._claim_reads = claim_reads
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve inventory bindings for the selected calculation context."""
@@ -650,9 +723,27 @@ class InventorySourceResolver:
         )
         if isinstance(ledgers, CalculationSourceResolution):
             return ledgers
-        # Each row is one book and the activity block of the return is one activity, so a row is
-        # an activity's only when every declared activity keeps its book. One book among several
-        # activities would otherwise read as the return's one activity.
+        refusal = self._books_refusal(context, ledgers, binding_ids=binding_ids)
+        if refusal is not None:
+            return refusal
+        return _resolve_inventory_rows(
+            ledgers,
+            revision=context.revision,
+            binding_ids=binding_ids,
+            bindings_by_operation=template.by_operation,
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+        )
+
+    def _books_refusal(
+        self, context: CalculationSourceContext, ledgers: tuple[InventoryLedger, ...], *, binding_ids: tuple[str, ...]
+    ) -> CalculationSourceResolution | None:
+        """Hold the rows back unless every declared activity keeps its book and each purchase's statement stands.
+
+        Each row is one book and the activity block of the return is one activity, so a row is
+        an activity's only when every declared activity keeps its book. One book among several
+        activities would otherwise read as the return's one activity.
+        """
         activities = _direct_estimation_activities(context)
         if activities is None or activities.regime_undeclared or activities.count != len(ledgers):
             return _activity_books_refusal(
@@ -663,12 +754,36 @@ class InventorySourceResolver:
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
             )
-        return _resolve_inventory_rows(
-            ledgers,
-            binding_ids=binding_ids,
-            bindings_by_operation=template.by_operation,
+        return self._claim_refusal(ledgers, binding_ids=binding_ids, filing_year=context.filing_year)
+
+    def _claim_refusal(
+        self, ledgers: tuple[InventoryLedger, ...], *, binding_ids: tuple[str, ...], filing_year: int
+    ) -> CalculationSourceResolution | None:
+        """Hold the rows back while a purchase's ledger statement does not stand, or is missing."""
+        if self._claim_reads is None or self._inventory_repository is None:
+            return None
+        try:
+            findings = inventory_claim_findings(
+                self._inventory_repository.load(), ledgers, filing_year=filing_year, reads=self._claim_reads
+            )
+        except (InventoryLedgerError, *STORAGE_DEGRADATION_ERRORS):
+            return self._storage_refusal(binding_ids)
+        if not findings:
+            return None
+        return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
+            unresolved_binding_ids=binding_ids,
+            diagnostics=tuple(
+                _diagnostic(
+                    reason="source_domain_not_ready",
+                    state=finding.state,
+                    message=finding.message,
+                    remedy=finding.remedy,
+                    fact=finding.fact,
+                )
+                for finding in findings
+            ),
         )
 
     def _storage_refusal(self, binding_ids: tuple[str, ...]) -> CalculationSourceResolution:
@@ -679,4 +794,4 @@ class InventorySourceResolver:
         )
 
 
-__all__ = ["InventoryLedgerRepositoryProtocol", "InventorySourceResolver"]
+__all__ = ["InventoryLedgerRepositoryProtocol", "InventorySourceResolver", "revision_carries_inventory_purchases"]

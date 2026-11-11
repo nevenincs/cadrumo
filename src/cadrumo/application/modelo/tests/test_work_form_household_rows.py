@@ -348,3 +348,89 @@ def test_the_design_maximum_of_descendants_is_served_in_stored_order(operation: 
     assert [row.index for row in group.rows] == list(range(1, _CHILD_LIMIT + 1))
     assert [cells["FNACDLG"] for cells in _cells(group)] == [f"{2000 + index}-01-01" for index in range(_CHILD_LIMIT)]
     assert len(group.rows) == group.max_rows
+
+
+def test_an_ascendant_without_a_nif_blocks_filing_and_leads_to_the_profile_in_every_language(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    record = _record(
+        UserProfileFact(path="renta_family.ascendientes_count", value="1"),
+        UserProfileFact(path="renta_family.ascendiente.0.birth_date", value="1950-02-03"),
+        UserProfileFact(path="renta_family.ascendiente.0.apellidos_nombre", value="Navarro Gil Carmen"),
+    )
+    revision = _calculated(operation, record)
+
+    words = {
+        language: [
+            line
+            for line in form_issue_lines(_form(operation, revision, language), language)
+            if "household_row_fact_unstated" in line.technical
+        ]
+        for language in OutputLanguage
+    }
+
+    for language, lines in words.items():
+        (line,) = lines
+        assert line.level is ModeloFormAttention.BLOCKS, language
+        assert line.surface is SourceSurface.PROFILE, language
+        assert line.where not in (None, ""), language
+        assert line.action, language
+    assert len({lines[0].message for lines in words.values()}) == len(OutputLanguage)
+    assert words[OutputLanguage.EN][0].message == "Ascendant: 1 recorded, 1 without tax ID (NIF)."
+    notes = [
+        note for note in _form(operation, revision).calculation_notes if note.reason == "household_row_fact_unstated"
+    ]
+    assert [note.withholds_filing for note in notes] == [True]
+
+
+def test_a_descendant_without_a_name_blocks_filing_and_names_the_fact_in_every_language(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    child_born = date(operation.supported_filing_years().years[-1] - 9, 2, 3)
+    record = _record(
+        UserProfileFact(path="renta_family.descendientes_count", value="1"),
+        UserProfileFact(path="renta_family.descendiente.0.birth_date", value=child_born.isoformat()),
+    )
+    revision = _calculated(operation, record)
+
+    words = {
+        language: [
+            line
+            for line in form_issue_lines(_form(operation, revision, language), language)
+            if "household_row_fact_unstated" in line.technical
+        ]
+        for language in OutputLanguage
+    }
+
+    for language, lines in words.items():
+        (line,) = lines
+        assert line.level is ModeloFormAttention.BLOCKS, language
+        assert line.surface is SourceSurface.PROFILE, language
+        assert line.action, language
+    assert len({lines[0].message for lines in words.values()}) == len(OutputLanguage)
+    assert words[OutputLanguage.EN][0].message == "Descendant: 1 recorded, 1 without surnames and name."
+
+
+def test_a_descendant_without_a_birth_date_names_the_fact_in_every_language(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    record = _record(
+        UserProfileFact(path="renta_family.descendientes_count", value="1"),
+        UserProfileFact(path="renta_family.descendiente.0.apellidos_nombre", value="Ortega Navarro Pablo"),
+    )
+    revision = _calculated(operation, record)
+
+    words = {
+        language: [
+            line
+            for line in form_issue_lines(_form(operation, revision, language), language)
+            if "household_row_fact_unstated" in line.technical
+        ]
+        for language in OutputLanguage
+    }
+
+    for language, lines in words.items():
+        (line,) = lines
+        assert line.level is ModeloFormAttention.BLOCKS, language
+    assert len({lines[0].message for lines in words.values()}) == len(OutputLanguage)
+    assert words[OutputLanguage.EN][0].message == "Descendant: 1 recorded, 1 without date of birth."

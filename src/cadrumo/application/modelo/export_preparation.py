@@ -96,6 +96,7 @@ from ..filing.runtime import RegistrySchemaAccessor, filing_profile_from_taxpaye
 from .action_errors import (
     ModeloPriorDomiciliationElectionRefusedError,
     ModeloRevisionNotSealedError,
+    export_period_unmappable_error,
 )
 from .export_contracts import (
     ModeloExportCommand,
@@ -276,9 +277,8 @@ def compose_export_dictionary_values(
 def resolve_work_unit_period(work_unit: WorkUnit) -> Period:
     """Return the typed :class:`~cadrumo.core.period.Period` carried by the work unit."""
     if work_unit.period.filing_year != work_unit.filing_year:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_period_unmappable",
-            context={"work_unit_id": work_unit.work_unit_id, "period": work_unit.period.registry_token},
+        raise export_period_unmappable_error(
+            work_unit_id=work_unit.work_unit_id, period=work_unit.period.registry_token
         )
     return work_unit.period
 

@@ -138,7 +138,6 @@ def _c(value: str) -> CasillaId:
 
 _LATER_NEUTRAL_BINDINGS: dict[str, Decimal] = {
     "renta-profile-incremento-guarderia": Decimal("0"),
-    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-maritime-gross-navigation-income": Decimal("0"),
     "renta-maritime-annual-salary": Decimal("0"),
     "renta-maritime-qualifying-days": Decimal("0"),

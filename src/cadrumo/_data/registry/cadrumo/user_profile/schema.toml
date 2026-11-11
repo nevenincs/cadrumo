@@ -48,6 +48,13 @@ description = "Incremento por gastos de custodia, prorrateado por meses y limita
 legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
 
 [[derived_selectors]]
+pattern = "renta_family.incremento_guarderia_cotizaciones_{filing_year}"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Incremento por gastos de custodia, prorrateado por meses y limitado por descendiente, además, por las cotizaciones de la madre tras su nacimiento (art. 81.2 LIRPF hasta la Ley 31/2022)."
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
+
+[[derived_selectors]]
 pattern = "renta_family.deduccion_maternidad_{filing_year}"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
@@ -81,6 +88,13 @@ derived_from = ["irpf.estimation_regime", "taxpayer_type.irpf_income_categories"
 entry_surface = "aeat config profile edit --irpf-estimation-regime REGIME"
 description = "Clave de la modalidad de la estimacion directa que consigna la casilla 0168 del Modelo 100 (N normal, S simplificada); ausente fuera de la estimacion directa o sin rendimientos de actividades economicas."
 legal_refs = ["ley-35-2006:art-30"]
+
+[[derived_selectors]]
+pattern = "irpf.estimation_directa_actividad_tipo_clave"
+derived_from = ["activities.tipo_actividad", "irpf.estimation_regime", "taxpayer_type.irpf_income_categories"]
+entry_surface = "aeat config profile edit-row activities ROW --value tipo_actividad=CODE"
+description = "Clave del tipo de actividad que consigna la casilla 0166 del Modelo 100 (TACT): el tipo de actividad censal comun a las actividades declaradas; ausente fuera de la estimacion directa o sin rendimientos de actividades economicas."
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-30"]
 
 [[derived_selectors]]
 pattern = "irpf.activity_income_cash_criterion_elected"
@@ -924,6 +938,18 @@ description = "IAE section/group/epigraph where applicable."
 model_selectors = ["activities.iae_epigraph"]
 legal_refs = ["rdleg-1175-1990:art-unico"]
 
+[[sections.fields]]
+key = "tipo_actividad"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Censal tipo de actividad of the activity (Modelo 036 casillas 403 and 404): A01 to A05 for activities in the IAE (A03 resto empresariales, A04 artisticas y deportivas, A05 resto profesionales), B01 to B05 for agrarian and fishing activities outside it. Modelo 100 casilla 0166 states it. Operator-declared; absent means undeclared, never inferred from the IAE epigraph, which does not record its seccion."
+enum_values = ["A01", "A02", "A03", "A04", "A05", "B01", "B02", "B03", "B04", "B05"]
+model_selectors = ["activities.tipo_actividad"]
+legal_refs = ["orden-eha-1274-2007:art-1", "ley-35-2006:art-27"]
+source_refs = ["aeat-m036-activity-code-table-2026-03-26"]
+
 [[sections]]
 key = "irpf"
 title = "IRPF and withholding"
@@ -1721,6 +1747,7 @@ model_selectors = [
   "DescendantInfo.alta_posterior_nacimiento_mes",
   "DescendantInfo.gastos_guarderia_euros",
   "DescendantInfo.gastos_guarderia_mensuales",
+  "DescendantInfo.cotizaciones_ss_madre_euros",
   "DescendantInfo.nif",
   "DescendantInfo.apellidos_nombre",
 ]

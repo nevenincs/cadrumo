@@ -151,6 +151,19 @@ profile:
           label: Tevékenység leírása
         iae_epigraph:
           label: IAE-epigrafus
+        tipo_actividad:
+          choices:
+            A01: Ingatlan bérbeadók
+            A02: Független állattenyésztés
+            A03: Máshová nem sorolt egyéb vállalkozói tevékenységek
+            A04: Művészeti vagy sport jellegű szakmai tevékenységek
+            A05: Egyéb szakmai tevékenységek
+            B01: Mezőgazdasági tevékenység
+            B02: Függő állattenyésztési tevékenység
+            B03: Erdészeti tevékenység
+            B04: Tutajos kagylótenyésztés
+            B05: Halászati tevékenység, a tutajos kagylótenyésztés kivételével
+          label: Tevékenység típusa (Modelo 036)
       attribution_entity_socios:
         base_imponible_assigned:
           label: Tagra jutó adóalap

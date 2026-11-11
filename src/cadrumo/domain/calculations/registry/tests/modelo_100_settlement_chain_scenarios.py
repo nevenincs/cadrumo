@@ -121,7 +121,6 @@ def binding_values() -> dict[BindingId, Decimal]:
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
         "renta-profile-incremento-guarderia": Decimal("0"),
-        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

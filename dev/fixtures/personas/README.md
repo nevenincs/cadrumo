@@ -127,10 +127,12 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[clock].as_of` | date | the scenario instant |
 | `[profile]` | table | wizard question id → answer |
 | `[fields]` | table | profile schema path → value, for facts no wizard question asks |
-| `[[activities]]` | array | censo activity rows: `description`, `iae_epigraph` |
+| `[[activities]]` | array | censo activity rows: `description`, `iae_epigraph`, `tipo_actividad` |
 | `[[elections]]` | array | dated elections: `question` (wizard id), `value`, `year` (token) |
 | `[[household.descendants]]` | array | one descendant row |
 | `[[household.ascendants]]` | array | one ascendant row |
+| `[[own_accounts]]` | array | bank accounts the taxpayer holds, with the charge and refund roles they are designated for |
+| `[[prior_carries]]` | array | per Modelo 100 year, the negative general bases of earlier ejercicios still pending |
 | `[[withholding_certificates]]` | array | retenciones soportadas declared by a payer |
 | `[[rental_properties]]` | array | declarative facts for a let dwelling |
 | `[[officers]]` | array | company officers (`identity`, `role`, `remunerated`) |
@@ -189,12 +191,51 @@ Descendant keys are the canonical descendant leaves: `birth_date`, `relacion`,
 `rentas_anuales`, `declaracion_propia`, `prorrata_minimo`,
 `meses_madre_trabajo`, `alta_posterior_nacimiento_mes`,
 `segundo_ciclo_infantil_inicio_mes`, `gastos_guarderia`,
-`gastos_guarderia_mensuales`. `identity` supplies the `nif` leaf. Ascendant keys
+`gastos_guarderia_mensuales`, `cotizaciones_ss_madre`. `identity` supplies the `nif` leaf. Ascendant keys
 are `birth_date`, `fallecimiento`, `convivientes`, with `identity` for `nif`.
 Values are written in the leaf's canonical string form (dates as date tables),
 because the descendant and ascendant operations refuse a row whose canonical
 re-projection differs from what was supplied: omit a leaf whose value is its
 default (`custodia_compartida = false`, ordinary `relacion`).
+
+### Own accounts
+
+A Renta refund is paid only into an account the taxpayer states as his own: the
+Manual práctico de Renta says the devolución is made "mediante transferencia
+bancaria a la cuenta que el contribuyente indique como de su titularidad" in
+the Modelo 100. A persona whose stated result is a refund therefore declares
+that account, or its export is refused for want of one.
+
+| key | meaning |
+| --- | --- |
+| `label` | operator name of the account |
+| `holding` | `titular` or `cotitular` |
+| `iban` | synthetic ES IBAN that passes the mod-97 check; the catalogue never holds a real account number |
+| `designations` | optional array of `{ role = "charge" \| "refund", modelo = "<id>" }`; an absent `modelo` covers every modelo, a present one is one of the persona's `modelos`; one role and scope is designated once across the persona |
+
+The materialiser registers each account and designates it through the
+`ledger.own_account` operation (`add`, then `designate`), in the full scope.
+
+### Prior carries
+
+A Modelo 100 carries the negative general bases still pending from the four
+previous ejercicios (Ley 35/2006 art. 50.3) in casillas 1380, 1382, 1385 and
+1388, read from the previous return. Where the profile holds no earlier return,
+as for the return of the support floor, those carries are unknown and the
+calculation refuses until the taxpayer states them. One entry per Modelo 100
+year states them:
+
+| key | meaning |
+| --- | --- |
+| `year` | year token of the Modelo 100 the statement belongs to; stated once per year |
+| `nothing_pending` | `true`: no carry is pending; the only admitted value |
+| `pending` | instead of `nothing_pending`, a table of box to positive canonical amount; a box left out holds nothing |
+
+The statement answers only the carries no earlier return supplies. The helper
+`attest_prior_carries` in `src/cadrumo/entrypoints/tests/persona_prior_carries.py`
+makes it through the operations the refusal's door names: the declaration's
+form read, then the edit check and apply, after the return is created and
+before it is calculated.
 
 ### Withholding certificates
 

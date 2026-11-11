@@ -1315,10 +1315,17 @@ errors:
       field %{field_id}, which the AEAT record design gives %{field_length} positions.
       Cutting it would declare something else. Check that value or amount and export
       again.'
+    refused_modelo_household_row_fact_unstated: 'The declaration stays refused: your
+      profile does not state a household fact that the official design requires. Add
+      it in your profile, then calculate again.'
     refused_modelo_instalment_election: 'This return cannot be paid in two instalments:
       that needs a result to pay large enough to leave a second instalment of at least
       one cent, a return that is not corrective and is filed within its filing period,
       and, for a direct-debited second instalment, a Spanish account of yours.'
+    refused_modelo_inventory_purchase_ledger_row: 'The declaration stays refused:
+      a purchase of your inventory does not say which ledger entry books it, or names
+      one that does not match it. Say which entry books each purchase, or that none
+      does, then calculate again.'
     refused_modelo_iva_wallet_reconciliation_blocked: 'The Modelo 303 cannot be calculated
       until the compensation carried from earlier periods has a source: record it
       in the IVA balance.'
@@ -1335,6 +1342,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: Modelo 303 rectificativa amendments
       require exactly one canonical motive on an applicable reviewed record design;
       the motive is forbidden elsewhere.
+    refused_modelo_operation_subject_not_work_unit: This request does not name the
+      declaration its saved calculation belongs to; open that declaration and make
+      the request again from there.
     refused_modelo_payment_election_capability: The selected payment method is not
       supported yet.
     refused_modelo_payment_election_incompatible: The selected payment election requires

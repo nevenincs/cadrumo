@@ -1098,7 +1098,6 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-profile-incremento-guarderia": Decimal("0"),
-        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),

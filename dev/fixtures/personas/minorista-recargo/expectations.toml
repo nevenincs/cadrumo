@@ -246,13 +246,23 @@ grounding = "cited"
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-casillas = { "0599" = "0.00", "0604" = "4112.40" }
+casillas = { "0599" = "0.00", "0604" = "4112.40", "0177" = "0.00", "0181" = "31171.40", "0182" = "0.00", "0183" = "0.00", "0218" = "36355.80" }
 concepts = { ingresos_actividad = "58000.00", gastos_actividad = "36355.80", provision_dificil_justificacion = "1082.21", rendimiento_neto_actividad = "20561.99", minimo_personal = "5550.00" }
 derivation = """
 Rendimiento neto = 58000.00 - 36355.80 - 1082.21 = 20561.99.
 0604 sums the pagos fraccionados of the year's filed Modelo 130 returns: 749.04 + 1202.53 + 790.41 + 1370.42 = 4112.40.
+0181 (compras de existencias) = MIN-COM-1..4 at acquisition cost: 8581.60 + 6814.80 + 6183.80 + 9591.20 = 31171.40.
+Under recargo de equivalencia she deducts no IVA soportado (LIVA art. 154.Dos), so the IVA and the recargo
+are part of the price (Manual Renta parte 1, compras de existencias: 2025 line 17591, 2024 line 17348,
+2023 line 16728, 2022 line 14543; IVA soportado no deducible as mayor coste: 2025 lines 17601-17604,
+2024 lines 17360-17361, 2023 lines 16735-16736, 2022 lines 14550-14551).
+Each purchase claims the ledger row that pays it, so the rows leave the ledger expenses: 0183 = 0.00.
+The closing equals the opening (7400.00), so 0177 = 0182 = 0.00. 0218 is the sum of casillas 0181 to 0217:
+0181 31171.40 + RETA 12 x 294.00 = 3528.00 + suministros del local 4 x 254.10 = 1016.40 + MIN-IBI-1 640.00 = 36355.80,
+the gastos_actividad above. MIN-IBI-1 is the IBI of the shop, a deductible tributo of the activity (casilla 0186), imputed
+on its accrual date, 1 January, the first day of its período impositivo (TRLRHL art. 75; LIRPF art. 14.1.b).
 """
-legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "rd-439-2007:art-30", "rd-439-2007:art-110", "ley-37-1992:art-154", "ley-35-2006:art-14"]
 grounding = "cited"
 
 [[values]]
@@ -260,12 +270,13 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:da-56"
-casillas = { "0599" = "0.00", "0604" = "4025.82" }
+casillas = { "0599" = "0.00", "0604" = "4025.82", "0177" = "0.00", "0181" = "31171.40", "0182" = "0.00", "0183" = "0.00", "0218" = "36355.80" }
 concepts = { ingresos_actividad = "58000.00", gastos_actividad = "36355.80", provision_dificil_justificacion = "1515.09", rendimiento_neto_actividad = "20129.11", minimo_personal = "5550.00" }
 derivation = """
 The same year as the value above where LIRPF disposición adicional quincuagésima sexta governs: provisión = 7 %
 of 21644.20 = 1515.09, so the rendimiento neto is 58000.00 - 36355.80 - 1515.09 = 20129.11.
 0604 sums the pagos fraccionados of the year's filed Modelo 130 returns under the same rate: 733.27 + 1177.21 + 773.78 + 1341.56 = 4025.82.
+The 0177, 0181, 0182, 0183 and 0218 figures do not depend on the provisión rate and are the value above.
 """
-legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110", "ley-37-1992:art-154", "ley-35-2006:art-14"]
 grounding = "cited"

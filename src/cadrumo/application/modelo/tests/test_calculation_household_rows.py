@@ -162,3 +162,23 @@ def test_the_mesh_rows_and_the_profile_rows_join_and_a_row_both_state_is_refused
     assert joined[(_CHILD_NAME, 1)] == "Ortega Navarro Pablo"
     with pytest.raises(AggregationValidationError):
         calculation_row_binding_values({(_CHILD_NAME, 1): "Otro Nombre"}, channels)
+
+
+def test_household_notes_reach_the_calculation_through_its_profile_diagnostics(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    born = date(_snapshot(authority_operation).filing_year - 78, 1, 8)
+    channels = _channels(
+        authority_operation,
+        UserProfileFact(path="renta_family.ascendientes_count", value="2"),
+        UserProfileFact(path="renta_family.ascendiente.0.birth_date", value=born.isoformat()),
+        UserProfileFact(path="renta_family.ascendiente.0.apellidos_nombre", value="Navarro Gil Carmen"),
+    )
+
+    reasons = sorted(
+        diagnostic.reason for diagnostic in channels.profile_diagnostics if diagnostic.reason.startswith("household_")
+    )
+
+    # One ascendant is stored without the NIF the design requires, and one more is stated than stored.
+    assert reasons == ["household_row_fact_unstated", "household_rows_incomplete"]
+    assert _PARENT_NAME in {key[0] for key in calculation_row_binding_values({}, channels)}

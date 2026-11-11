@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
@@ -34,6 +35,7 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ..aggregation.renta_imputation import ActivityImputationCriterion, declared_imputation_criteria
+from ..user_profile.completeness import profile_section_rows
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -203,6 +205,57 @@ def inject_derived_estimation_modality_fact(
     if regime:
         fact_index["irpf.estimation_directa"] = regime in {normal, simplified}
     return _ESTIMATION_MODALITY_DERIVED_PATHS
+
+
+_ACTIVITY_TIPO_CLAVE_PATH = "irpf.estimation_directa_actividad_tipo_clave"
+_ACTIVITY_SECTION = "activities"
+_ACTIVITY_TIPO_FIELD = "tipo_actividad"
+
+
+def _declared_activity_tipos(fact_index: Mapping[str, UserProfileFactValue]) -> tuple[str | None, ...]:
+    """Return each declared activity row's censal tipo de actividad, ``None`` for a row that states none."""
+    present = [path for path, value in fact_index.items() if str(value).strip()]
+    tipos: list[str | None] = []
+    for row in profile_section_rows(_ACTIVITY_SECTION, present):
+        path = ".".join(part for part in (_ACTIVITY_SECTION, row, _ACTIVITY_TIPO_FIELD) if part)
+        tipo = str(fact_index.get(path, "")).strip()
+        tipos.append(tipo or None)
+    return tuple(tipos)
+
+
+def inject_derived_activity_tipo_clave_fact(fact_index: dict[str, UserProfileFactValue]) -> tuple[str, ...]:
+    """State casilla 0166's tipo de actividad clave from the activities' censal tipo de actividad.
+
+    The box sits in the estimacion directa block, so it is stated only for a filer
+    whose declared regime is direct estimation and who declares economic-activity
+    income (LIRPF arts. 27 and 30); outside that block its absence is decided. The
+    clave is the censal tipo de actividad the taxpayer declares per activity, the
+    same codification the return uses since the 2021 design. It is stated when
+    every declared activity names one and they agree, because the calculation
+    fills one block. Otherwise the path stays absent and undecided: no activity,
+    an activity without its tipo, or activities of different tipos leave a gap
+    the operator answers, and a clave is never read off an IAE epigraph, whose
+    seccion the profile does not record.
+
+    Returns the paths this injector decided, so a decided absence is not reported
+    as a structural gap while an undeclared tipo still is.
+    """
+    fact_index.pop(_ACTIVITY_TIPO_CLAVE_PATH, None)
+    if fact_index.get("irpf.estimation_directa") is not True or not profile_declares_economic_activity(fact_index):
+        return (_ACTIVITY_TIPO_CLAVE_PATH,)
+    tipos = _declared_activity_tipos(fact_index)
+    declared = {tipo for tipo in tipos if tipo is not None}
+    if not tipos or None in tipos or len(declared) != 1:
+        return ()
+    (tipo,) = declared
+    try:
+        clave = TipoActividad(tipo)
+    except ValueError as exc:
+        raise ProfileBindingResolutionError(
+            f"the profile declares tipo de actividad {tipo!r}, which is not a censal tipo de actividad",
+        ) from exc
+    fact_index[_ACTIVITY_TIPO_CLAVE_PATH] = clave.value
+    return (_ACTIVITY_TIPO_CLAVE_PATH,)
 
 
 def inject_derived_cash_election_fact(
@@ -971,6 +1024,13 @@ def inject_derived_incremento_guarderia_facts(
     or hand-planted, and deferring to one would substitute an operator's number
     for the law's.
 
+    Two derived facts exist and an edition declares the one that states its law. The
+    plain one is the increment as the reformed art. 81.3 sets it. The other also
+    limits each child's increment by the mother's cotizaciones stated on that
+    child's row, which art. 81.2 required until the Ley 31/2022 reform; a child that
+    needs the figure and lacks it leaves that fact absent, like the cases below. The
+    code decides nothing from a year: the editions bind one fact or the other.
+
     Leaves the fact ABSENT rather than writing a zero when either the cap
     parameter or the eligibility ceilings are unresolvable. A zero would read as
     a computed "no increment due" and silently withhold a real deducción; an
@@ -984,8 +1044,16 @@ def inject_derived_incremento_guarderia_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.incremento_guarderia_{snapshot_authored_year(snapshot)}"
-    if key not in declared_selectors:
+    authored_year = snapshot_authored_year(snapshot)
+    consumers = tuple(
+        (key, limited)
+        for key, limited in (
+            (f"renta_family.incremento_guarderia_{authored_year}", False),
+            (f"renta_family.incremento_guarderia_cotizaciones_{authored_year}", True),
+        )
+        if key in declared_selectors
+    )
+    if not consumers:
         return
 
     cap_anual = guarderia_cap_anual(snapshot)
@@ -996,12 +1064,18 @@ def inject_derived_incremento_guarderia_facts(
         return
 
     profile = renta_family_profile_from_facts(fact_index)
-    fact_index[key] = profile.incremento_guarderia_0613(
-        snapshot.filing_year,
-        thresholds=thresholds,
-        cap_anual=cap_anual,
-        context=context,
-    )
+    for key, limited in consumers:
+        increment = profile.incremento_guarderia_0613(
+            snapshot.filing_year,
+            thresholds=thresholds,
+            cap_anual=cap_anual,
+            context=context,
+            cotizaciones_limit_applies=limited,
+        )
+        if increment is None:
+            fact_index.pop(key, None)
+        else:
+            fact_index[key] = increment
 
 
 def inject_derived_state_attribution_facts(

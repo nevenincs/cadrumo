@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
@@ -244,6 +245,17 @@ def test_validate_casilla_input_ids_rejects_non_decimal_numeric_value() -> None:
     }
 
 
+def _assert_refusal_door(error: Modelo100BorradorBindingError, scenario: str, outcome: NoRecoveryOutcome) -> None:
+    """The refusal carries a declared verdict that names no action and says why none exists."""
+    failure = error.precondition_failure
+    assert failure is not None
+    assert failure.subject_leaf_key == "modelo.work.calculate"
+    assert failure.scenario_id == f"modelo.work.calculate.borrador_snapshot.{scenario}"
+    assert failure.verdict.action is None
+    assert failure.verdict.no_recovery_outcome is outcome
+    assert error.terminal_precondition_verdict == failure.verdict
+
+
 def _save_snapshot(
     repository: Borrador100SnapshotRepository,
     values: dict[str, Decimal | str],
@@ -370,6 +382,7 @@ def test_borrador_resolution_rejects_registry_without_borrador_capability(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.unsupported_modelo"
     assert exc_info.value.context == {"modelo": "303"}
+    _assert_refusal_door(exc_info.value, "modelo_unsupported", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 def test_borrador_resolution_supplies_precedence_bindings_and_holds_a_credit_only_for_comparison(
@@ -470,6 +483,7 @@ def test_borrador_resolution_refuses_a_snapshot_keyed_outside_the_revision_witho
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.forbidden_bindings"
     assert exc_info.value.context == {"bindings": [stored_key]}
+    _assert_refusal_door(exc_info.value, "bindings_forbidden", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 def test_borrador_binding_error_has_stable_service_error_code() -> None:
@@ -566,6 +580,7 @@ def test_borrador_resolution_rejects_registry_unmarked_binding_values(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.forbidden_bindings"
     assert exc_info.value.context == {"bindings": [_UNMARKED_BINDING]}
+    _assert_refusal_door(exc_info.value, "bindings_forbidden", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(
@@ -584,6 +599,7 @@ def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.decimal_value_invalid"
     assert exc_info.value.context == {"binding_id": _DECIMAL_BINDING}
+    _assert_refusal_door(exc_info.value, "value_invalid", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 @pytest.mark.parametrize(
@@ -619,6 +635,7 @@ def test_borrador_resolution_rejects_non_finite_string_and_decimal_values(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.decimal_value_invalid"
     assert exc_info.value.context == {"binding_id": _DECIMAL_BINDING}
+    _assert_refusal_door(exc_info.value, "value_invalid", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(
@@ -657,6 +674,7 @@ def test_borrador_resolution_rejects_non_modelo_100_consumers(
         == "application.modelo.borrador_binding.errors.registry_snapshot_modelo_mismatch"
     )
     assert exc_info.value.context == {"snapshot_modelo": "100", "command_modelo": "303"}
+    _assert_refusal_door(exc_info.value, "registry_modelo_mismatch", NoRecoveryOutcome.TERMINAL)
 
 
 def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
@@ -681,6 +699,7 @@ def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
         "filing_year": _YEAR - 1,
         "period": _PERIOD,
     }
+    _assert_refusal_door(exc_info.value, "registry_axis_mismatch", NoRecoveryOutcome.TERMINAL)
 
 
 def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(
@@ -747,3 +766,24 @@ def test_borrador_resolution_rejects_bucket_or_axis_mismatch(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.snapshot_bucket_mismatch"
     assert exc_info.value.context is None
+    _assert_refusal_door(exc_info.value, "bucket_mismatch", NoRecoveryOutcome.OPERATOR_DECISION)
+
+
+def test_borrador_resolution_rejects_a_snapshot_of_another_filing_year_with_a_door(
+    snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    snapshot_id = _save_snapshot(snapshot_repository, {_DECIMAL_BINDING: Decimal("1")})
+
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
+        resolve_modelo_100_borrador_bindings(
+            _command(borrador_snapshot_id=snapshot_id, filing_year=_YEAR - 1),
+            registry_snapshot=published_snapshot("100", filing_year=_YEAR - 1, period=_PERIOD),
+            snapshot_repository=snapshot_repository,
+            operation=authority_operation,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.snapshot_axis_mismatch"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["snapshot_year"] == _YEAR
+    _assert_refusal_door(exc_info.value, "axis_mismatch", NoRecoveryOutcome.OPERATOR_DECISION)

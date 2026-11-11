@@ -28,7 +28,13 @@ from ...domain.attachments.service import AttachmentBytesContent, AttachmentInge
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
-from .action_errors import M303Exonerado390AttestationUnadmissibleError, M303FilingEvidenceError
+from .action_errors import M303FilingEvidenceError
+from .m303_exonerado_390_attestation_refusal import (
+    PeriodAttestationRefusal,
+    RequestAttestationRefusal,
+    period_attestation_unadmissible,
+    request_attestation_unadmissible,
+)
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_ordinary_evidence_coordinate import ordinary_m303_evidence_coordinate_supported
 from .profile_readiness_gate import load_modelo_work_profile
@@ -98,10 +104,7 @@ def admit_m303_exonerado_390_applicability_attestation(
         period=request.period,
         current_at=captured_at,
     ):
-        raise M303Exonerado390AttestationUnadmissibleError(
-            "Modelo 390 applicability can be observed only after its period ends and not after it is captured",
-            context={"reason": "observation_timing", "period": request.period.registry_token},
-        )
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.OBSERVATION_TIMING, request.period)
     attestation = M303Exonerado390ApplicabilityAttestation(
         schema_version=1,
         role="m303_exonerado_390_applicability",
@@ -146,16 +149,16 @@ def resolve_m303_exonerado_390_not_applicable_attestation(
     """Resolve one current, custody-verified ordinary M303 non-applicability reference."""
     _require_ordinary_coordinate(filing_year=filing_year, period=period, operation=operation)
     profile = _current_profile(bucket_id=bucket_id, operation=operation, profile=profile)
-    attachment_id, sha256 = _parse_filing_evidence_reference(evidence_reference)
+    attachment_id, sha256 = _parse_filing_evidence_reference(evidence_reference, period=period)
     attachment = store.load_manifest(attachment_id)
     if attachment.sha256 != sha256 or attachment.bucket_id != bucket_id:
-        raise AttachmentValidationError("Modelo 390 applicability evidence does not belong to this profile bucket")
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.EVIDENCE_OTHER_PROFILE, period)
     if (
         attachment.kind is not AttachmentKind.M303_EXONERADO_390_APPLICABILITY_ATTESTATION
         or attachment.source is not AttachmentSource.INLINE
         or attachment.mime_type != _ATTESTATION_MIME_TYPE
     ):
-        raise AttachmentValidationError("attachment is not Modelo 390 applicability evidence")
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.EVIDENCE_NOT_ATTESTATION, period)
     store.verify_blob(attachment.attachment_id)
     current_at = validate_utc_aware(clock())
     attestation = _parse_attachment_attestation(
@@ -187,10 +190,7 @@ def m303_exonerado_390_filing_evidence_reference(*, attachment_id: str, sha256: 
             sha256=sha256,
         )
     except (ValidationError, AttachmentValidationError) as exc:
-        raise M303Exonerado390AttestationUnadmissibleError(
-            "Modelo 390 applicability attachment identity is invalid",
-            context={"reason": "malformed_identity"},
-        ) from exc
+        raise request_attestation_unadmissible(RequestAttestationRefusal.MALFORMED_IDENTITY) from exc
     return admission.filing_evidence_reference()
 
 
@@ -208,9 +208,9 @@ def _current_profile(
     try:
         bucket_identity = UUID(bucket_id)
     except ValueError as exc:
-        raise AttachmentValidationError("Modelo 390 applicability evidence bucket is invalid") from exc
+        raise request_attestation_unadmissible(RequestAttestationRefusal.PROFILE_BUCKET_INVALID) from exc
     if profile is None or profile.record.profile_id != str(bucket_identity):
-        raise AttachmentValidationError("Modelo 390 applicability evidence requires the authenticated current profile")
+        raise request_attestation_unadmissible(RequestAttestationRefusal.PROFILE_NOT_CURRENT)
     return profile
 
 
@@ -220,7 +220,7 @@ def _require_ordinary_not_applicable_request(
     _require_ordinary_coordinate(filing_year=request.filing_year, period=request.period, operation=operation)
     require_modelo_390_question_in_period(request.period, operation=operation)
     if request.asserted_value is M303Exonerado390ApplicabilityAssertion.APPLICABLE:
-        raise AttachmentValidationError("applicable Modelo 390 evidence is not supported by the ordinary path")
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.APPLICABLE_UNSUPPORTED, request.period)
 
 
 def modelo_390_question_asked(period: Period, *, operation: PinnedAuthorityOperation) -> bool:
@@ -247,10 +247,7 @@ def require_modelo_390_question_in_period(period: Period, *, operation: PinnedAu
 
 def _require_ordinary_coordinate(*, filing_year: int, period: Period, operation: PinnedAuthorityOperation) -> None:
     if not ordinary_m303_evidence_coordinate_supported(filing_year=filing_year, period=period, operation=operation):
-        raise AttachmentValidationError(
-            "Modelo 390 applicability evidence supports only a quarterly or monthly Modelo 303 whose selected "
-            "record design declares the ordinary evidence header fields"
-        )
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.COORDINATE_UNSUPPORTED, period)
 
 
 def _observation_timing_holds(
@@ -273,7 +270,7 @@ def _require_observation_timing(
     if not _observation_timing_holds(
         observed_at=observed_at, captured_at=captured_at, period=period, current_at=current_at
     ):
-        raise AttachmentValidationError("Modelo 390 applicability observation timing is invalid")
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.STORED_OBSERVATION_TIMING, period)
 
 
 def _attestation_source_reference(request: M303Exonerado390ApplicabilityAttestationRequest) -> str:
@@ -284,13 +281,13 @@ def _filing_evidence_reference(attachment_id: str, sha256: str) -> FilingEvidenc
     return FilingEvidenceReference(reference=f"{_ATTESTATION_REFERENCE_PREFIX}{attachment_id}:{sha256}")
 
 
-def _parse_filing_evidence_reference(reference: FilingEvidenceReference) -> tuple[str, str]:
+def _parse_filing_evidence_reference(reference: FilingEvidenceReference, *, period: Period) -> tuple[str, str]:
     prefix, separator, payload = reference.reference.partition(":")
     if prefix != _ATTESTATION_REFERENCE_PREFIX.removesuffix(":") or not separator:
-        raise AttachmentValidationError("Modelo 390 applicability evidence reference is invalid")
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.EVIDENCE_REFERENCE_INVALID, period)
     attachment_id, separator, sha256 = payload.partition(":")
     if not separator or attachment_id != sha256:
-        raise AttachmentValidationError("Modelo 390 applicability evidence reference is invalid")
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.EVIDENCE_REFERENCE_INVALID, period)
     return attachment_id, sha256
 
 
@@ -315,7 +312,7 @@ def _require_matching_attestation(
         or attestation.period != period
         or attestation.profile_witness != profile_witness
     ):
-        raise AttachmentValidationError("Modelo 390 applicability evidence does not match this filing coordinate")
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.EVIDENCE_COORDINATE_MISMATCH, period)
     _require_observation_timing(
         observed_at=attestation.observed_at,
         captured_at=captured_at,
@@ -343,7 +340,7 @@ def _require_no_conflicting_attestation(
         if attestation.filing_year == filing_year and attestation.period == period:
             values.add(attestation.asserted_value)
     if values != {M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE}:
-        raise AttachmentValidationError("Modelo 390 applicability evidence has conflicting assertions")
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.CONFLICTING_ASSERTIONS, period)
 
 
 __all__ = [

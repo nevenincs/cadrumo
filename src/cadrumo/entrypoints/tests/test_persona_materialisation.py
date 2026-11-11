@@ -36,6 +36,7 @@ from ...application.modelo.work_create_operation import (
     ModeloWorkCreateRequest,
     ModeloWorkCreateSuccess,
 )
+from ...application.operations.error_detail import served_words_language
 from ...application.operations.public_period import PublicPeriod
 from ...application.retencion_soportada_certificado.contracts import RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID
 from ...application.retencion_soportada_certificado.requests import RetencionSoportadaListRequest
@@ -48,6 +49,7 @@ from ...application.user_profile.profile_operation_contracts import (
 from ...application.user_profile.projections import record_to_path_values
 from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
+from ...core.i18n.render import tr
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecordStatus
@@ -410,6 +412,24 @@ def test_a_history_replay_files_and_calculates_each_declared_return_with_aeat_co
         )
         for filing in persona.aeat_filings
     }
+
+
+def test_a_stopped_operation_settles_with_the_words_the_application_serves_for_it(tmp_path: Path) -> None:
+    with materialised_persona("autonomo-fontanero", tmp_path, ReplayScope.PROFILE) as materialised:
+        world = materialised.world
+        with pytest.raises(PersonaMaterialisationError) as raised:
+            settle_operation(
+                world,
+                MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+                ModeloWorkRevisionRequest(profile_id=world.profile_id, work_unit_id="abcdef012345"),
+            )
+    served = tr("errors.error.modelo_work_selector_unit_not_found", locale=served_words_language().value)
+
+    assert str(raised.value) == (
+        f"{MODELO_WORK_REVISION_OPERATION_DEFINITION_ID} settled failed (ERROR_MODELO_WORK_SELECTOR_UNIT_NOT_FOUND): "
+        f"{served}"
+    )
+    assert "no detail" not in str(raised.value)
 
 
 def test_a_replay_states_each_informative_party_filing_name_readable_through_the_counterparty_view(

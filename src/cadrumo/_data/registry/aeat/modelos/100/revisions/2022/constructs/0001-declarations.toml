@@ -32,6 +32,7 @@ formulas = [
     "renta-matrimonio-vigente-todo-anio",
     "renta-matrimonio-mes-inicio",
     "renta-matrimonio-mes-fin",
+    "renta-incremento-guarderia-0613",
     "renta-resultado-declaracion",
 ]
 application_links = [

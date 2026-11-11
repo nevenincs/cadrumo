@@ -668,6 +668,7 @@ application:
         authority_reconciliation: Closing value check
       history_kind:
         described: Described
+        ledger_row_stated: Purchase's ledger entry stated
         movement_corrected: Movement corrected
         movement_reversed: Movement reversed
         opening_corrected: Opening corrected
@@ -695,6 +696,20 @@ application:
           and year %{year}. Open it instead of creating another.
         activity_not_found: No inventory record book exists for this activity and
           year %{year}. Create it first, or check the activity and year.
+        claimed_transaction_amount_mismatch: 'Purchase %{movement_id} of the %{year}
+          inventory does not match its ledger entry: the base, IVA and recargo must
+          be equal to the cent. Correct the purchase or choose another entry.'
+        claimed_transaction_double_claim: The ledger entry that purchase %{movement_id}
+          names is already claimed by another inventory or by an asset in your register.
+          Each ledger entry belongs to one register only.
+        claimed_transaction_missing: Purchase %{movement_id} of the %{year} inventory
+          names a ledger entry that is not an active entry of your ledger. Choose
+          the entry that books this purchase.
+        claimed_transaction_not_eur: The ledger entry that purchase %{movement_id}
+          names is not in euros. Only entries in euros can be named for now.
+        claimed_transaction_substrate_missing: The ledger entry that purchase %{movement_id}
+          names states no taxable base or IVA, so it cannot be compared. Complete
+          the entry first.
         closing_authority_conflict: A different closing value is already recorded
           for this activity and year.
         closing_authority_invalid: This closing value could not be recorded because
@@ -723,12 +738,17 @@ application:
         later_closing_authority_recorded: The %{later_year} closing value of this
           activity starts from this closing, so the %{year} stock facts can no longer
           change.
+        ledger_row_not_purchase: Only an inventory purchase can name the ledger entry
+          that books it, and %{movement_id} is not a purchase.
         movement_already_superseded: This movement was already corrected or reversed.
         movement_not_found: The %{year} inventory of this activity does not have this
           movement.
         movement_outside_year: This movement is dated outside the %{year} inventory.
         prior_closing_document_needed: This closing value needs the previous year's
           closing document. Add it and try again.
+        recargo_with_deductible_iva: A purchase that bears recargo de equivalencia
+          deducts no IVA (article 154.Dos of the Ley del IVA). State a deductible
+          IVA proportion of zero.
         stock_would_go_negative: 'This would take stock below zero: %{sku} would need
           more units than remain.'
     workbench:
@@ -1570,6 +1590,12 @@ application:
           export it as it stands.
         what_to_do: Calculate the declaration again, check it and record it again;
           the new record replaces this one.
+      household_row_fact_unstated:
+        what: A person in your household is recorded without a fact the declaration
+          requires, so the declaration cannot be checked, exported or filed until
+          you state it.
+        what_to_do: State the missing fact for that person in your profile, then calculate
+          again.
       household_rows_incomplete:
         what: Your profile states more people in this group than it records, so the
           declaration uses only the people recorded and does not treat the group as
@@ -1592,6 +1618,10 @@ application:
           and a bank fee or a discount could explain it.
         what_to_do: Check the withholding against your client's invoice or certificate
           in your records, correct the record if it differs, and calculate again.
+      inventory_book_claimed_purchase:
+        what: A purchase of stock is left out of your expenses, because your inventory
+          declares it as a purchase of stock.
+        what_to_do: No action is needed.
       invoice_category_counterparty_mismatch:
         what: The VAT treatment of an invoice does not fit its customer's country,
           so the invoice was left out.
@@ -1856,6 +1886,11 @@ application:
         is left out of the instalment for the period ending {period_end}.'
       amortization_box_unbound: '{element}: this edition has no box for its depreciation
         charge, so it adds nothing to this calculation.'
+      book_claimed_purchase: The ledger entry of {row_date} for {row_amount} is a
+        purchase in your inventory, so it is declared as a purchase of stock rather
+        than as an expense.
+      book_claimed_purchase_undated: A ledger entry is a purchase in your inventory,
+        so it is declared as a purchase of stock rather than as an expense.
       claim_gap_accrued: '{element}: no depreciation charge is recorded from {start}
         to {end}. {amount} accrued, and box {box} declares only what is recorded.'
       claim_gap_free_method: '{element}: no depreciation charge is recorded from {start}
@@ -1923,9 +1958,15 @@ application:
       disposal_zero_result: '{element}: its sale on {date}, at {transmission_value}
         of transmission value against {net_value} of net value, neither gains nor
         loses, so no box carries it.'
+      household_row_fact_unstated: '{group}: {recorded} recorded, {omitting} without
+        {leaf}.'
       household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
+      inventory_purchase_claim_refused: '{count} purchases of the {year} inventory
+        name a ledger entry that does not match them.'
+      inventory_purchase_ledger_row_unstated: '{count} purchases of the {year} inventory
+        do not say which ledger entry books them.'
       m347_provincia_unrecorded: 'Declared parties without a province code: {parties}.'
       m347_provincia_unstated: The province of {party}'s tax domicile is missing.
       m349_operation_unclassified: Invoice {invoice} with {party} does not say which
@@ -1990,6 +2031,10 @@ application:
         states a withholding of {amount}, but its NIF does not show whether the issuer
         pays IRPF or Impuesto sobre Sociedades. Check the invoice's NIF.
     calc_diagnostic_words:
+      household_leaf:
+        apellidos_nombre: surnames and name
+        birth_date: date of birth
+        nif: tax ID (NIF)
       income_class:
         actividad_economica: economic activities
         arrendamiento_inmueble_urbano: urban property rental
@@ -2330,6 +2375,69 @@ application:
         entry has no invoice, so the draft is still open and picks the document up.'
       detail_row_identity_conflict: A detail row you entered does not match the row
         your records give for the same declarant; correct or remove it before calculating.
+      exonerado_390_attestation_applicable_unsupported: Only the statement that the
+        Modelo 390 does not apply can be recorded here. A Modelo 390 that does apply
+        for period %{period} of %{filing_year} is not recorded on this path. Nothing
+        was saved.
+      exonerado_390_attestation_conflicting_assertions: Another attestation on record
+        for period %{period} of %{filing_year} contradicts this one, so none can back
+        the Modelo 303. Nothing was calculated. Decide which statement stands before
+        relying on an attestation for this period.
+      exonerado_390_attestation_coordinate_unsupported: 'Modelo 390 applicability
+        evidence cannot be recorded for period %{period} of %{filing_year}: it exists
+        only for a quarterly or monthly Modelo 303 whose record design declares the
+        ordinary evidence header fields. Nothing was saved.'
+      exonerado_390_attestation_evidence_coordinate_mismatch: The attestation you
+        named does not match period %{period} of %{filing_year} and the current profile,
+        or it says the Modelo 390 applies, so it cannot back this Modelo 303. Nothing
+        was calculated. Record a new attestation for this period and try again.
+      exonerado_390_attestation_evidence_not_attestation: The attachment you named
+        is not a Modelo 390 applicability attestation, so it cannot back the Modelo
+        303 for period %{period} of %{filing_year}. Nothing was calculated. Record
+        an attestation for this period and try again.
+      exonerado_390_attestation_evidence_other_profile: The attestation you named
+        belongs to another profile or carries a different SHA-256, so it cannot back
+        the Modelo 303 for period %{period} of %{filing_year}. Nothing was calculated.
+        Record a new attestation for this period and try again.
+      exonerado_390_attestation_evidence_reference_invalid: The attachment id and
+        SHA-256 you gave do not form a valid attestation reference, so they cannot
+        back the Modelo 303 for period %{period} of %{filing_year}. Nothing was calculated.
+        Record a new attestation for this period and use the values it reports.
+      exonerado_390_attestation_evidence_unusable: The attestation you named cannot
+        be verified from this profile's custody, so it cannot back the Modelo 303
+        for period %{period} of %{filing_year}. Nothing was calculated. Record a new
+        attestation for this period and try again.
+      exonerado_390_attestation_incomplete_identity: Give both the attachment id and
+        its SHA-256 for the Modelo 390 applicability attestation, or neither. Nothing
+        was calculated.
+      exonerado_390_attestation_malformed_identity: 'The attachment id and SHA-256
+        you gave are not a valid identity pair: each is 64 hexadecimal characters
+        and the two are equal. Nothing was calculated. Give the values the attestation
+        reported when it was recorded.'
+      exonerado_390_attestation_not_modelo_303_work_unit: Declaration %{work_unit_id}
+        is not a Modelo 303, and the Modelo 390 applicability attestation belongs
+        to a Modelo 303. Nothing was saved. Name a Modelo 303 declaration or give
+        the period instead.
+      exonerado_390_attestation_observation_timing: 'The Modelo 390 applicability
+        attestation for period %{period} of %{filing_year} cannot be recorded: it
+        can be observed only after the period ends, and not after the moment it is
+        recorded. Nothing was saved. Record it again with an observation time that
+        is on or after the end of the period and not in the future.'
+      exonerado_390_attestation_profile_bucket_invalid: The profile id you named is
+        not a valid profile identifier, so no Modelo 390 applicability attestation
+        was recorded. Nothing was saved.
+      exonerado_390_attestation_profile_not_current: The Modelo 390 applicability
+        attestation needs the profile you are signed in to, and the profile on record
+        is not it. Nothing was saved. Check the profile status.
+      exonerado_390_attestation_stored_observation_timing: The Modelo 390 applicability
+        attestation on record for period %{period} of %{filing_year} was observed
+        at a time its period does not allow, so it cannot back this Modelo 303. Nothing
+        was calculated. Record a new attestation with a valid observation time and
+        try again.
+      exonerado_390_attestation_unknown_attachment: The attestation you named is not
+        on record in this profile, so it cannot back the Modelo 303 for period %{period}
+        of %{filing_year}. Nothing was calculated. Record a new attestation for this
+        period and use the values it reports.
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision
@@ -2413,6 +2521,12 @@ application:
       filed_observation_split_storage_context: The IVA compensation history store
         is a different database than the calculation observation store
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
+      input_required: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
+        yet: the input %{binding} (box %{boxes}) has no value. Supply it, then calculate
+        again. Nothing was saved.'
+      input_required_unprinted: 'Modelo %{modelo} %{period} %{filing_year} cannot
+        be calculated yet: the input %{binding} has no value. Supply it, then calculate
+        again. Nothing was saved.'
       iva_wallet_amount_mismatch: 'IVA wallet reconciliation is blocked for Modelo
         303: the supplied prior-compensation amount disagrees with the amount the
         wallet authority holds. Re-run the wallet reconciliation, or correct the supplied
@@ -2538,6 +2652,18 @@ application:
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before
         calculating.'
+      previous_filing_unobserved: 'Modelo %{modelo} %{period} %{filing_year} cannot
+        be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
+        (%{source_period}) does not show boxes %{source_boxes}, which box %{boxes}
+        carries from it as the input %{binding}. A box it does not show is unknown,
+        not zero: record that return with those boxes, or state the amount of the
+        input %{binding} yourself, then calculate again. Nothing was saved.'
+      previous_filing_unobserved_unprinted: 'Modelo %{modelo} %{period} %{filing_year}
+        cannot be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
+        (%{source_period}) does not show boxes %{source_boxes}, which the input %{binding}
+        carries from it. A box it does not show is unknown, not zero: record that
+        return with those boxes, or state the amount of the input %{binding} yourself,
+        then calculate again. Nothing was saved.'
       prior_carries_nothing_open: 'Modelo %{modelo} for %{filing_year} has no amount
         from earlier years left to state as not pending: each one already holds a
         value or your statement, or the declaration carries none. Nothing was changed.'

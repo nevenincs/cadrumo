@@ -1425,10 +1425,17 @@ errors:
       camp %{field_id}, al qual el disseny de registre de l''AEAT dona %{field_length}
       posicions. Retallar-lo declararia una altra dada. Revisa aquesta dada o import
       i torna a exportar.'
+    refused_modelo_household_row_fact_unstated: 'La declaració continua rebutjada:
+      el teu perfil no indica una dada de la llar que el disseny oficial exigeix.
+      Afegeix-la al perfil i torna a calcular.'
     refused_modelo_instalment_election: 'Aquesta declaració no es pot pagar en dos
       terminis: cal un resultat a ingressar que deixi un segon termini d''almenys
       un cèntim, que no sigui rectificativa i es presenti dins de termini i, si domicilies
       el segon termini, un compte espanyol teu.'
+    refused_modelo_inventory_purchase_ledger_row: 'La declaració continua rebutjada:
+      una compra del teu inventari no indica quin moviment la registra, o n''indica
+      un que no hi coincideix. Indica quin moviment registra cada compra, o que cap
+      no la registra, i torna a calcular.'
     refused_modelo_iva_wallet_reconciliation_blocked: 'El Model 303 no es pot calcular
       fins que la compensació de períodes anteriors tingui suport: registra-la al
       Saldo d''IVA.'
@@ -1445,6 +1452,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: Les rectificatives del model 303 requereixen
       exactament un motiu canònic en un disseny de registre aplicable i revisat; el
       motiu està prohibit en els altres casos.
+    refused_modelo_operation_subject_not_work_unit: Aquesta sol·licitud no indica
+      la declaració a què pertany el seu càlcul desat; obre aquesta declaració i torna-la
+      a fer des d'allà.
     refused_modelo_payment_election_capability: El mètode de pagament escollit encara
       no està disponible.
     refused_modelo_payment_election_incompatible: L'opció de pagament escollida requereix

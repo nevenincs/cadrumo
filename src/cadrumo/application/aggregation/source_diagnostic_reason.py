@@ -293,6 +293,12 @@ CalculationSourceDiagnosticReason = Literal[
     # purchase and sees it absent from the expense total is owed the reason, and
     # the amount it names is exactly the one the register replaced.
     "register_owned_capital_acquisition",
+    # A ledger expense row withheld from every Modelo 100 expense total because a
+    # purchase movement of an inventory book claims it: the book carries the same
+    # money into casilla 0181 as its acquisition cost. Nothing is missing from the
+    # return. It persists with the draft so a later change to the claimed rows is
+    # seen as drift.
+    "inventory_book_claimed_purchase",
     # A Modelo 193 payment-year record for income accrued in an earlier year,
     # whose base and withholding amounts no official source settles: the
     # withholding was declared in the accrual year's Modelo 123, and the record
@@ -354,4 +360,8 @@ CalculationSourceDiagnosticReason = Literal[
     # is not stopped, but the group is not proven complete: the filer described
     # people the profile does not yet hold.
     "household_rows_incomplete",
+    # A household row that omits a fact the official design requires of every row of its
+    # group, such as an ascendant stored with no NIF. The declaration cannot be checked,
+    # exported or filed until the filer states it; nothing stands in for it.
+    "household_row_fact_unstated",
 ]

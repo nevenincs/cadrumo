@@ -49,6 +49,12 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "contact.fiscal_address" = "Calle de la Ficción 12, 3.º B, 28039 Madrid"
 "contact.contact_person_phone" = "910000001"
 
+[[own_accounts]]
+label = "Cuenta nómina"
+holding = "titular"
+iban = "ES5500000000000000000001"
+designations = [{ role = "refund", modelo = "100" }]
+
 [[household.descendants]]
 identity = "asalariada.hijo"
 birth_date = { year = "horizon-9", month = 5, day = 11 }
@@ -62,6 +68,11 @@ convivencia = "true"
 prorrata_minimo = "true"
 meses_madre_trabajo = "01;02;03;04;05;06;07;08;09;10;11;12"
 gastos_guarderia_mensuales = "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220"
+# Until the Ley 31/2022 reform art. 81.2 LIRPF limited each child's guardería increment by the mother's
+# cotizaciones devengadas after the birth (Manual práctico de Renta 2022, cap. 18, "Límites de la
+# deducción"). The daughter was born the year before, so all of the year follows her birth; the figure is the
+# one the employer's certificate below records.
+cotizaciones_ss_madre = "2332.80"
 
 [[household.ascendants]]
 identity = "asalariada.madre"
@@ -87,3 +98,12 @@ year = "horizon-2"
 period = "0A"
 casillas = { "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
 reason = "Bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+
+# No negative general base of an earlier ejercicio is pending: this synthetic
+# taxpayer has had no year with a negative base. Where the profile holds no
+# earlier return, as for the return of the support floor, the Modelo 100 cannot
+# read the four pending carries (casillas 1380, 1382, 1385 and 1388) and never
+# takes them as zero, so the taxpayer states that none is pending.
+[[prior_carries]]
+year = "horizon-1"
+nothing_pending = true

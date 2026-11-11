@@ -68,7 +68,6 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         values.update(
             {
                 "renta-profile-incremento-guarderia": Decimal("0"),
-                "renta-profile-cotizaciones-ss-madre": Decimal("0"),
                 # The maternity deducción's own profile fact, neutral zero for
                 # the same reason as its four siblings above: this scenario is
                 # an art. 85 imputed-real-estate example and claims no

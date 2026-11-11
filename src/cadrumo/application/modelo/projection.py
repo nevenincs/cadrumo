@@ -112,7 +112,6 @@ _PROJECTION_SOURCE_OWNED_KINDS: frozenset[BindingSourceKind] = frozenset({Bindin
 _VERB_BASELINE_DECIMAL_BINDINGS: Mapping[str, Decimal] = {
     "renta-profile-declaration-type": Decimal("1"),
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
-    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
     "renta-profile-marriage-month-end": Decimal("0"),
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),

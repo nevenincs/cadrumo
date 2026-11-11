@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "386b34c87695028c1358b04bfa9b2847e5c21be2756efd210854c23b7baca323"
+source_state_digest = "ce1a1b1107f08af69f80b9152f2122ac5de3f119472f554f7e796d245175f8f4"
 design_sources = [
     { source_ref = "aeat-dr-100-2023-dictionary", sha256 = "a9b8d0e24878b550870666870107b66af2df3eb7d341739e59accce6f1108024" },
     { source_ref = "aeat-dr-100-2023-input-dictionary", sha256 = "183692c1a5a4785d9a04508e2ab928b25e44742ced448e19359ea7afb22c37cd" },
@@ -2333,6 +2333,7 @@ blocks = [
     { kind = "field", id = "field-51", casilla_id = "0225" },
     { kind = "field", id = "field-52", casilla_id = "0236" },
     { kind = "field", id = "field-53", casilla_id = "0226" },
+    { kind = "repeating", id = "inventory-activity-rows", row_source = "row_set_binding", binding_id = "renta-inventory-activity-closing-increase-0177", max_rows = 6, columns = [{ key = "box-0177", heading_key = "modelo.schema.100.form.column.box-0177.heading", casilla_id = "0177", binding_id = "renta-inventory-activity-closing-increase-0177" }, { key = "box-0181", heading_key = "modelo.schema.100.form.column.box-0181.heading", casilla_id = "0181", binding_id = "renta-inventory-activity-acquisition-cost-0181" }, { key = "box-0182", heading_key = "modelo.schema.100.form.column.box-0182.heading", casilla_id = "0182", binding_id = "renta-inventory-activity-closing-decrease-0182" }] },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]

@@ -17,8 +17,13 @@ records no trace and the group stays unknown, like an unanswered one.
 A stated count larger than the stored rows (three stated, one recorded) is an
 incomplete group, never a complete one. The stored rows are still served, and the
 resolver raises one ``household_rows_incomplete`` diagnostic per object whose
-fact states the two numbers, so the group is not read as proven complete;
-:class:`RegistrySnapshot`, the pinned registry snapshot.
+fact states the two numbers, so the group is not read as proven complete.
+
+A leaf the official design requires of every row (the selector's ``required``)
+is owed by each stored row that states no value for it. The resolver then raises
+one ``household_row_fact_unstated`` diagnostic per object and leaf, whose fact
+counts the rows that omit it. The cell stays unknown; nothing stands in for the
+missing value. :class:`RegistrySnapshot` is the pinned registry snapshot.
 """
 
 from __future__ import annotations
@@ -122,6 +127,53 @@ def _incomplete_diagnostic(
     )
 
 
+def _unstated_diagnostic(
+    selector: ProfileRowsSelector,
+    omitting: int,
+    recorded: int,
+    *,
+    bucket_id: str,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="household_row_fact_unstated",
+        source_kind=BindingSourceKind.PROFILE.value,
+        binding_source=BindingSourceKind.PROFILE,
+        message=(
+            f"profile object {selector.object_path!r} records {recorded} rows, "
+            f"{omitting} of them without the required {selector.leaf!r}"
+        ),
+        resolver_id=resolver_id,
+        source_ref=f"profile:{bucket_id}:rows:{selector.object_path}.{selector.leaf}",
+        fact=CalculationNoteFact.of(
+            CalculationNoteSentence.HOUSEHOLD_ROW_FACT_UNSTATED,
+            group=selector.object_path,
+            leaf=selector.leaf,
+            omitting=omitting,
+            recorded=recorded,
+        ),
+    )
+
+
+def _unstated_note(
+    selector: ProfileRowsSelector, recorded: int, stated_rows: int, *, bucket_id: str, resolver_id: str
+) -> CalculationSourceDiagnostic | None:
+    """The note for a required leaf that some stored rows omit, or ``None`` when none does."""
+    omitting = recorded - stated_rows
+    if not selector.required or omitting <= 0:
+        return None
+    return _unstated_diagnostic(selector, omitting, recorded, bucket_id=bucket_id, resolver_id=resolver_id)
+
+
+def _incomplete_note(
+    selector: ProfileRowsSelector, stated: Decimal | None, recorded: int, *, bucket_id: str, resolver_id: str
+) -> CalculationSourceDiagnostic | None:
+    """The note for a stated count larger than the stored rows, or ``None`` when it is not."""
+    if stated is None or stated <= recorded:
+        return None
+    return _incomplete_diagnostic(selector, stated, recorded, bucket_id=bucket_id, resolver_id=resolver_id)
+
+
 def _bound_casillas(snapshot: RegistrySnapshot, binding_id: BindingId) -> tuple[CasillaId, ...]:
     return tuple(
         casilla.id
@@ -183,32 +235,39 @@ def resolve_profile_row_values(
     Returns:
         The row values keyed by binding and row index, one source trace per
         binding whose rows are stored or whose object states a count of zero, and
-        one diagnostic per object whose stated count exceeds its stored rows.
+        one diagnostic per object whose stated count exceeds its stored rows, and
+        one per required leaf that a stored row omits.
 
     ``snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
     """
     values: dict[RowBindingKey, RowBindingValue] = {}
     provenance: list[CalculationSourceProvenance] = []
-    diagnostics: dict[str, CalculationSourceDiagnostic] = {}
+    incomplete: dict[str, CalculationSourceDiagnostic] = {}
+    unstated: list[CalculationSourceDiagnostic] = []
     for binding in profile_row_bindings(snapshot):
         provider = binding.provider
         if binding.id in caller_binding_ids or not isinstance(provider, ProfileProvider) or provider.rows is None:
             continue
         selector = provider.rows
         indexes = _row_indexes(selector, fact_index)
-        values.update(_stored_row_values(binding.id, selector, indexes, fact_index))
+        stored = _stored_row_values(binding.id, selector, indexes, fact_index)
+        values.update(stored)
+        omitted = _unstated_note(selector, len(indexes), len(stored), bucket_id=bucket_id, resolver_id=resolver_id)
+        if omitted is not None:
+            unstated.append(omitted)
         stated = _stated_count(selector, fact_index)
-        if stated is not None and stated > len(indexes) and selector.object_path not in diagnostics:
-            diagnostics[selector.object_path] = _incomplete_diagnostic(
-                selector, stated, len(indexes), bucket_id=bucket_id, resolver_id=resolver_id
+        if selector.object_path not in incomplete:
+            short = _incomplete_note(selector, stated, len(indexes), bucket_id=bucket_id, resolver_id=resolver_id)
+            if short is not None:
+                incomplete[selector.object_path] = short
+        if indexes or stated == 0:
+            provenance.append(
+                _row_provenance(
+                    snapshot, binding.id, bucket_id=bucket_id, fingerprint=fingerprint, resolver_id=resolver_id
+                )
             )
-        if not indexes and stated != 0:
-            continue
-        provenance.append(
-            _row_provenance(snapshot, binding.id, bucket_id=bucket_id, fingerprint=fingerprint, resolver_id=resolver_id)
-        )
     return ProfileRowResolution(
         row_binding_values=values,
         provenance=tuple(provenance),
-        diagnostics=tuple(diagnostics.values()),
+        diagnostics=(*incomplete.values(), *unstated),
     )

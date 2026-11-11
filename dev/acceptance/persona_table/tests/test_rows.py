@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 from datetime import date
 from functools import cache
 from pathlib import Path
@@ -11,7 +12,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
-from cadrumo.tests.personas import Persona, YearEnvelope, persona_ids, read_persona
+from cadrumo.tests.personas import Persona, PersonaCatalogueError, YearEnvelope, persona_ids, read_persona
 
 from ..rows import (
     GREEN,
@@ -247,3 +248,70 @@ def test_a_refusal_the_export_or_verify_stage_settled_with_is_read_back_by_its_c
         "REFUSED_MODELO_EXPORT_NAME_TOO_WIDE",
         "INTEGRITY_STORAGE_VALIDATION",
     }
+
+
+def _floor_plan(*, dropped: bool = True) -> PlannedRow:
+    envelope = _envelope()
+    return dataclasses.replace(_plan(), year=envelope.floor, floor_source_dropped=dropped)
+
+
+def test_a_floor_year_refusal_after_a_dropped_prior_year_source_is_neither_fail_nor_green() -> None:
+    row = TableRow.from_plan(_floor_plan(), Stage.REFUSED)
+    verify_refused = TableRow.from_plan(_floor_plan(), Stage.PASSED, verify=Stage.INCOMPLETE)
+    assert row.verdict is Verdict.FLOOR_SOURCE
+    assert verify_refused.verdict is Verdict.FLOOR_SOURCE
+    assert row.verdict not in GREEN
+
+
+def test_a_value_mismatch_stays_a_fail_beside_a_dropped_source() -> None:
+    row = TableRow.from_plan(_floor_plan(), Stage.MISMATCH, verify=Stage.INCOMPLETE, export=Stage.REFUSED)
+    assert row.verdict is Verdict.FAIL
+
+
+def test_a_stated_casilla_left_without_a_value_is_unresolved_not_a_mismatch() -> None:
+    floor = TableRow.from_plan(_floor_plan(), Stage.UNRESOLVED, verify=Stage.REFUSED, export=Stage.REFUSED)
+    plain = TableRow.from_plan(_plan(), Stage.UNRESOLVED, verify=Stage.REFUSED, export=Stage.REFUSED)
+    assert floor.verdict is Verdict.FLOOR_SOURCE
+    assert plain.verdict is Verdict.FAIL
+
+
+def test_a_refusal_without_a_dropped_source_stays_a_fail() -> None:
+    row = TableRow.from_plan(_floor_plan(dropped=False), Stage.REFUSED)
+    assert row.verdict is Verdict.FAIL
+
+
+def test_the_dropped_source_flag_survives_both_json_forms_and_old_lines_load_without_it(tmp_path: Path) -> None:
+    row = TableRow.from_plan(_floor_plan(), Stage.REFUSED)
+    write_rows(tmp_path / "rows.jsonl", [row])
+    assert list(read_rows([tmp_path / "rows.jsonl"])) == [row]
+    restored = TableRow.from_json(row.to_baseline_json(row.horizon), horizon=row.horizon)
+    assert (restored.floor_source_dropped, restored.verdict) == (True, Verdict.FLOOR_SOURCE)
+    plain = TableRow.from_plan(_plan(), Stage.REFUSED)
+    old_line = json.loads(plain.to_json())
+    del old_line["floor_source_dropped"]
+    assert TableRow.from_json(json.dumps(old_line)).floor_source_dropped is False
+    assert "floor_source_dropped" not in plain.to_baseline_json(plain.horizon)
+
+
+def test_the_planner_marks_floor_year_rows_whose_prior_year_history_the_floor_dropped() -> None:
+    envelope = _envelope()
+    marked = unmarked = 0
+    for persona_id in persona_ids():
+        for horizon in replay_horizons(envelope):
+            lowered = dataclasses.replace(envelope, horizon=horizon)
+            try:
+                persona = read_persona(persona_id, envelope=lowered, omit_below_floor=horizon != envelope.horizon)
+            except PersonaCatalogueError:
+                continue
+            before = {
+                record.year.resolve(lowered, biographical=True) for record in persona.below_floor if record.history
+            }
+            for row in planned_rows(persona, horizon, envelope):
+                expected = row.year == envelope.floor and envelope.floor - 1 in before
+                assert row.floor_source_dropped is expected, (persona_id, horizon, row.key)
+                marked += expected
+                unmarked += not expected and row.year == envelope.floor
+    assert marked
+    assert unmarked
+    persona = read_persona("autonomo-fontanero", envelope=envelope)
+    assert not any(row.floor_source_dropped for row in planned_rows(persona, envelope.horizon, envelope))

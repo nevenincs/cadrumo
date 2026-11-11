@@ -36,6 +36,8 @@ from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindin
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
 )
+from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ...domain.contribuyente.inventory.ledger_claims import InventoryPurchaseClaim, document_purchase_claims
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
@@ -62,6 +64,7 @@ from .activity_asset_expense_reconciliation import (
     RegisterOwnedAcquisition,
     UnregisteredAmortizationRow,
     amortization_labelled_expense_categories,
+    book_claimed_purchase_diagnostics,
     classify_ledger_expenses_against_asset_register,
     dwelling_ownership_share,
     issues_the_register_does_not_answer,
@@ -76,6 +79,7 @@ from .activity_asset_ledger_reconciliation import (
     capital_good_transaction_ids,
     possibly_durable_expense_findings,
 )
+from .inventory import InventoryLedgerRepositoryProtocol, revision_carries_inventory_purchases
 from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_actividad_assets import (
     ActivityAssetExpenseObservation,
@@ -206,20 +210,38 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         usage_ratio_profile_loader: UsageRatioProfileLoader,
         activity_asset_history_repository: ActivityAssetHistoryRepository,
+        inventory_repository: InventoryLedgerRepositoryProtocol | None = None,
         imputation_filings: Callable[[CalculationSourceContext], ImputationFilingHistory] | None = None,
     ) -> None:
-        """Initialize the resolver with its required catalogue read capabilities."""
+        """Initialize the resolver with its required catalogue read capabilities.
+
+        ``inventory_repository`` holds the books whose purchases claim ledger rows;
+        each claimed row is withheld here, because the book carries the purchase.
+        """
         self._ports = ports
         self._prorrata_register_repository = prorrata_register_repository
         self._usage_ratio_profile_loader = usage_ratio_profile_loader
         self._activity_asset_history_repository = activity_asset_history_repository
+        self._inventory_repository = inventory_repository
         self._imputation_filings = imputation_filings
+
+    def _inventory_claims(self, context: CalculationSourceContext) -> tuple[InventoryPurchaseClaim, ...]:
+        """Every purchase claim of every book, when this edition gives the books' purchases a casilla.
+
+        A claim on a row of another year still owns that row. An edition without
+        that casilla keeps every claimed row among the expenses, since withholding
+        it there would declare the purchase nowhere.
+        """
+        if self._inventory_repository is None or not revision_carries_inventory_purchases(context.revision):
+            return ()
+        return document_purchase_claims(self._inventory_repository.load())
 
     def _aggregate(
         self,
         context: CalculationSourceContext,
         *,
         asset_history: ActivityAssetHistory,
+        inventory_claims: tuple[InventoryPurchaseClaim, ...],
     ) -> RentaLedgerExpenseAggregation | CalculationSourceResolution:
         try:
             profile = context.profile
@@ -246,7 +268,9 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     profile_decode_context=profile.profile_decode_context if profile is not None else None,
                     operation=operation,
                     ownership_share=dwelling_ownership_share(asset_history.revisions),
-                    register_owned_transaction_ids=register_acquisition_transaction_ids(asset_history.revisions),
+                    register_owned_transaction_ids=register_acquisition_transaction_ids(
+                        asset_history.revisions, inventory_claims
+                    ),
                     criteria=declared_imputation_criteria(
                         profile.record if profile is not None else None,
                         self._imputation_filings(context) if self._imputation_filings is not None else None,
@@ -266,6 +290,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         *,
         asset_history: ActivityAssetHistory,
         amortization_boxes: frozenset[CasillaId],
+        inventory_claims: tuple[InventoryPurchaseClaim, ...],
     ) -> LedgerExpenseRegisterClassification:
         labelled = amortization_labelled_expense_categories(
             effective_date=date(aggregation.period.filing_year, 12, 31),
@@ -292,6 +317,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 )
                 for observation in aggregation.observations
             ),
+            inventory_claims=inventory_claims,
         )
 
     def _diagnostics(
@@ -352,6 +378,11 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                 resolver_id=self.resolver_id,
             )
+            + book_claimed_purchase_diagnostics(
+                classification.book_claimed,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
+            )
             + unregistered_amortization_row_diagnostics(
                 (*classification.unregistered, *refused),
                 resolver_id=self.resolver_id,
@@ -406,14 +437,15 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
 
         try:
             asset_history = self._activity_asset_history_repository.load()
-        except STORAGE_DEGRADATION_ERRORS as exc:
+            inventory_claims = self._inventory_claims(context)
+        except (InventoryLedgerError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        aggregation = self._aggregate(context, asset_history=asset_history)
+        aggregation = self._aggregate(context, asset_history=asset_history, inventory_claims=inventory_claims)
         if isinstance(aggregation, CalculationSourceResolution):
             return aggregation
         with source_context_operation(context) as operation:
@@ -421,6 +453,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 aggregation,
                 asset_history=asset_history,
                 amortization_boxes=frozenset(activity_asset_amortization_casillas(context.revision).values()),
+                inventory_claims=inventory_claims,
             )
             refused = refused_amortization_rows(
                 aggregation.issues,

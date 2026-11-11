@@ -25,6 +25,7 @@ from .registered_requests import (
     INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
     INVENTORY_NOT_FOUND_REFUSAL_CODE,
@@ -41,6 +42,7 @@ from .registered_requests import (
     InventoryInspectRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementClaimRequest,
     InventoryMovementCorrectRequest,
     InventoryMovementReverseRequest,
     InventoryRestoreRequest,
@@ -67,6 +69,7 @@ INVENTORY_LEDGER_CHANGE_REQUEST_TYPES: dict[str, type[BaseModel]] = {
     INVENTORY_CORRECT_OPERATION_DEFINITION_ID: InventoryCorrectRequest,
     INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID: InventoryMovementCorrectRequest,
     INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID: InventoryMovementReverseRequest,
+    INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID: InventoryMovementClaimRequest,
     INVENTORY_RETIRE_OPERATION_DEFINITION_ID: InventoryRetireRequest,
     INVENTORY_RESTORE_OPERATION_DEFINITION_ID: InventoryRestoreRequest,
 }

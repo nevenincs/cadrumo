@@ -11,7 +11,7 @@ Functions, imported from their defining modules:
     :class:`ValuationMethod`, refusing LIFO.
     :func:`compute_inventory_valuation` — value closing stock and
     COGS for one ledger.
-    :func:`compute_inventory_anexo_d_projection` — project complete 2025
+    :func:`compute_inventory_anexo_d_projection` — project complete
     acquisition cost and stock variation to ``0181``, ``0177``, and ``0182``.
 
 The package initializer exports no symbols.
