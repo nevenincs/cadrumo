@@ -1,0 +1,41 @@
+# Which income families of the IRPF income-category vocabulary (fact
+# irpf-income-category-vocabulary) the annual return calculates.
+#
+# Entries:
+# - irpf_income_family.<token>.computed: "true" when the application derives
+#   the family's casilla figures from the taxpayer's records, "false" when it has
+#   no calculator for the family yet. The vocabulary fact owns the token set;
+#   every token it declares must be covered here, so a family added there
+#   without a decision about its calculator is refused rather than assumed
+#   computed.
+#
+# A family marked "false" is not "absent": the return keeps its casillas
+# unresolved and the operator is told, instead of the family silently
+# contributing nothing.
+
+[fact]
+fact_id = "irpf-income-family-calculator-coverage"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "irpf-income-family-calculator-coverage:design"
+date_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-33"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["rendimientos del capital"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "irpf_income_family.actividad_economica.computed", value = "true" },
+  { key = "irpf_income_family.trabajo.computed", value = "true" },
+  { key = "irpf_income_family.capital_inmobiliario.computed", value = "true" },
+  { key = "irpf_income_family.capital_mobiliario.computed", value = "false" },
+  { key = "irpf_income_family.ganancias_patrimoniales.computed", value = "false" },
+  { key = "irpf_income_family.pension.computed", value = "true" },
+]

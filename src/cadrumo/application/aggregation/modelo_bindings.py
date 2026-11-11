@@ -87,6 +87,7 @@ from ..invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPorts,
 )
 from .errors import AggregationValidationError
+from .income_family_not_computed import income_family_not_computed_diagnostics
 from .irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
 from .modelo_bindings_actividad_assets import (
     ActivityAssetDisposalExcess,
@@ -316,6 +317,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         )
         payment_year_values: dict[BindingId, Decimal] = {}
         instalment_basis_values: dict[BindingId, Decimal] = {}
+        income_family_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
         with source_context_operation(context) as operation:
             profile_decode_context = operation.profile_decode_context()
             activity_category_matcher = modelo_bindings_activity_category_matcher(operation)
@@ -342,6 +344,14 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         employment_category_matcher=employment_category_matcher,
                     )
                     instalment_basis_values = self._instalment_basis_withholding(context, aggregation)
+                    income_family_diagnostics = income_family_not_computed_diagnostics(
+                        context,
+                        self._ports.transaction_reader.partition_by_date_range(
+                            aggregation_period.start_date, aggregation_period.end_date
+                        ).in_window.values(),
+                        authority=operation,
+                        resolver_id=self.resolver_id,
+                    )
                 elif context.modelo == form_for_role("renta.objective_instalment"):
                     aggregation = self._aggregate_objective_instalment(
                         context,
@@ -379,10 +389,10 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
-        return self._assemble_resolution(
-            context, aggregation, profile_decode_context, disposal_excess, criteria
-        ).model_copy(
+        resolution = self._assemble_resolution(context, aggregation, profile_decode_context, disposal_excess, criteria)
+        return resolution.model_copy(
             update={
+                "diagnostics": (*resolution.diagnostics, *income_family_diagnostics),
                 "payment_year_binding_values": payment_year_values,
                 "instalment_basis_binding_values": instalment_basis_values,
             }

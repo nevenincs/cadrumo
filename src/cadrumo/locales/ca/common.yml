@@ -3521,6 +3521,8 @@ desktop:
       actividad_economica: Activitat econòmica
       arrendamiento_local: Arrendament de local
       arrendamiento_vivienda_afecto: Arrendament d'habitatge afecte
+      capital_mobiliario: Rendiments del capital mobiliari
+      ganancias_patrimoniales: Guanys i pèrdues patrimonials
       trabajo: Treball
     issue:
       next: Següent problema de preparació

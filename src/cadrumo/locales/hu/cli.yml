@@ -102,8 +102,8 @@ cli:
         razon_social_help: Egy szervezet teljes cégneve (razón social vagy denominación),
           sosem kereskedelmi név.
         rendering_help: Egy rövidebb alak, amelyet egy keskenyebb mezőhöz adsz meg,
-          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak úgy
-          rövidül, ahogy megadod.
+          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak
+          úgy rövidül, ahogy megadod.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
         segundo_apellido_help: Egy természetes személy második vezetékneve. Csak a
           --no-second-surname kapcsolóval együtt hagyd el.
@@ -3397,6 +3397,8 @@ cli:
       irpf_id_column: irpf-category (ezt az értéket add meg)
       irpf_purpose_activity_income_withholding: szakmai tevékenységi visszatartás
         (nettó bevétel vagy kiadás)
+      irpf_purpose_capital_gain: vagyoni nyereség vagy veszteség (még nincs kiszámítva)
+      irpf_purpose_capital_mobiliario_yield: ingó tőkéből származó jövedelem (kamat, osztalék)
       irpf_purpose_employment_income: munkaviszonyból származó jövedelem (nem nettó
         számlákhoz)
       irpf_purpose_rent_expense_withholding: nettó bérleti díj visszatartása

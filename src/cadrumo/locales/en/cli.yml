@@ -3204,6 +3204,8 @@ cli:
       irpf_id_column: irpf-category (pass this exact value)
       irpf_purpose_activity_income_withholding: professional activity withholding
         (received or paid net)
+      irpf_purpose_capital_gain: capital gain or loss (not computed yet)
+      irpf_purpose_capital_mobiliario_yield: movable capital yield (interest, dividends)
       irpf_purpose_employment_income: employment income (not for net-paid invoices)
       irpf_purpose_rent_expense_withholding: net-paid rent expense withholding
       irpf_usage_example: 'Net-paid rent example: --category-id {rent_category} --irpf-category

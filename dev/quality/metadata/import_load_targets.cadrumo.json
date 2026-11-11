@@ -525,6 +525,7 @@
         "cadrumo.application.aggregation.grouping",
         "cadrumo.application.aggregation.impatriado_income_bindings",
         "cadrumo.application.aggregation.impatriado_income_ledger",
+        "cadrumo.application.aggregation.income_family_not_computed",
         "cadrumo.application.aggregation.inventory",
         "cadrumo.application.aggregation.inventory_claim_findings",
         "cadrumo.application.aggregation.invoice_devengo",

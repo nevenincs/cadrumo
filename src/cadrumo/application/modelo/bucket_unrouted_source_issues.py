@@ -73,6 +73,8 @@ def _durable_register_note_reason(diagnostic: CalculationSourceDiagnostic) -> _D
         return "household_rows_incomplete"
     if diagnostic.reason == "household_row_fact_unstated":
         return "household_row_fact_unstated"
+    if diagnostic.reason == "income_family_not_computed":
+        return "income_family_not_computed"
     return None
 
 
@@ -204,6 +206,7 @@ _DurableSourceIssueReason = Literal[
     "ledger_expense_may_be_durable",
     "household_rows_incomplete",
     "household_row_fact_unstated",
+    "income_family_not_computed",
     "advisory_binding_value",
     "credit_source_disagreement",
     "credit_cross_check_absent",

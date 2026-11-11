@@ -1691,6 +1691,14 @@ application:
           el grup per complet.
         what_to_do: Afegeix al teu perfil les persones que falten o corregeix el nombre,
           i torna a calcular.
+      income_family_not_computed:
+        what: L'aplicació encara no calcula una de les famílies de renda que apareixen
+          als teus registres o al teu perfil, així que aquesta declaració queda sense
+          resoldre fins que introdueixis a mà les xifres d'aquesta família.
+        what_to_do: Introdueix les xifres a les caselles d'aquesta família amb `aeat
+          app modelo work set-value` i torna a calcular. Reclassifica una fila amb
+          `aeat app ledger classify TX --irpf-category ...` només si estava classificada
+          a la família equivocada.
       inferred_retencion_excluded_from_credit:
         what: Part de la retenció de les teves factures emeses s'ha calculat a partir
           del que va pagar el client, així que s'ha deixat fora de la teva deducció

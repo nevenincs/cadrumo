@@ -378,6 +378,10 @@ class CalculationSourceIssue(BaseModel):
     ``household_row_fact_unstated`` is a stored household row that omits a fact
     the official design requires of every row, such as an ascendant's NIF: it
     withholds checking, exporting and filing until the profile states the fact.
+    ``income_family_not_computed`` is an income family the taxpayer has, by
+    classified ledger rows or a profile declaration, and the application has no
+    calculator for: it withholds checking, exporting and filing until the
+    family's casillas are entered by hand.
     ``fact`` states such a note's own row, element, interval and amount.
     ``binding_source`` is ``None`` only where the condition names no binding
     source kind. ``precedence_tier_divergence`` is a filed figure for
@@ -418,6 +422,7 @@ class CalculationSourceIssue(BaseModel):
         "ledger_expense_may_be_durable",
         "household_rows_incomplete",
         "household_row_fact_unstated",
+        "income_family_not_computed",
         "advisory_binding_value",
         "credit_source_disagreement",
         "credit_cross_check_absent",

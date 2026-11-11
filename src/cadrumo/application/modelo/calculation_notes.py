@@ -91,6 +91,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "credit_source_disagreement",
         "precedence_tier_divergence",
         "household_row_fact_unstated",
+        "income_family_not_computed",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.

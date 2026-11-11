@@ -1657,6 +1657,14 @@ application:
           nem tekinti teljesnek.
         what_to_do: Vedd fel a hiányzó személyeket a profilodba, vagy javítsd a számot,
           majd számolj újra.
+      income_family_not_computed:
+        what: Az alkalmazás még nem számítja ki a nyilvántartásaidban vagy a profilodban
+          szereplő egyik jövedelemcsaládot, ezért a bevallás addig marad megoldatlan,
+          amíg kézzel meg nem adod a család összegeit.
+        what_to_do: Add meg az összegeket a család rovataiban az `aeat app modelo
+          work set-value` paranccsal, majd számíts újra. Csak akkor sorold át a tételt
+          az `aeat app ledger classify TX --irpf-category ...` paranccsal, ha tévesen
+          sorolták be.
       inferred_retencion_excluded_from_credit:
         what: A kiállított számláin szereplő levonás egy részét az ügyfél által kifizetett
           összegből számoltuk ki, ezért kimaradt a jóváírásból, és a szükségesnél

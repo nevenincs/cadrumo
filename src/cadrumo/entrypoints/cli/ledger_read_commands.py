@@ -169,6 +169,10 @@ def _irpf_purpose_label(purpose: str) -> str:
         return tr("cli.ledger.categories.irpf_purpose_rent_expense_withholding")
     if purpose == "employment_income":
         return tr("cli.ledger.categories.irpf_purpose_employment_income")
+    if purpose == "capital_mobiliario_yield":
+        return tr("cli.ledger.categories.irpf_purpose_capital_mobiliario_yield")
+    if purpose == "capital_gain":
+        return tr("cli.ledger.categories.irpf_purpose_capital_gain")
     return purpose
 
 

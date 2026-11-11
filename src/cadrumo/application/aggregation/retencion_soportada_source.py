@@ -86,6 +86,7 @@ __all__ = [
     "RETENCION_SOPORTADA_SOURCE_REF_PREFIX",
     "RetencionSoportadaClassState",
     "RetencionSoportadaSourceResolver",
+    "declared_irpf_income_categories",
 ]
 
 RETENCION_SOPORTADA_SOURCE_REF_PREFIX: Final[str] = "retencion-soportada:"
@@ -134,7 +135,7 @@ def _attestation_source_ref(attestation: RetencionSoportadaAbsence) -> str:
     return f"{RETENCION_SOPORTADA_SOURCE_REF_PREFIX}{retencion_soportada_absence_key(attestation.identity)}"
 
 
-def _declared_categories(context: CalculationSourceContext) -> frozenset[str] | None:
+def declared_irpf_income_categories(context: CalculationSourceContext) -> frozenset[str] | None:
     """Return the profile's income categories in force at the period's end, or ``None`` when it declares none."""
     if context.profile is None:
         return None
@@ -293,7 +294,7 @@ class RetencionSoportadaSourceResolver:
             return empty_source_resolution(self.resolver_id, self.owned_sources)
         by_class = _records_by_class(records)
         attested = {item.income_class: item for item in attestations}
-        declared = _declared_categories(context)
+        declared = declared_irpf_income_categories(context)
         activity_epigraphs = declared_activity_epigraphs(context)
         binding_values: dict[BindingId, Decimal] = {}
         unresolved: list[BindingId] = []

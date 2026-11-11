@@ -364,4 +364,11 @@ CalculationSourceDiagnosticReason = Literal[
     # group, such as an ascendant stored with no NIF. The declaration cannot be checked,
     # exported or filed until the filer states it; nothing stands in for it.
     "household_row_fact_unstated",
+    # An income family the taxpayer has (ledger rows classified to it, or a profile
+    # that declares it) and the application has no calculator for yet. Distinct from
+    # "unrouted_observation", whose remedy is to reclassify the row so a binding takes
+    # it: here the classification is correct and no binding exists to take it, so
+    # reclassifying would push the filer to falsify the category. The family's casillas
+    # stay unresolved until the filer enters their figures by hand.
+    "income_family_not_computed",
 ]

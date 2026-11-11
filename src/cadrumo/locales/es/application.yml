@@ -1702,6 +1702,14 @@ application:
           completo.
         what_to_do: Añade a tu perfil las personas que faltan o corrige el número,
           y vuelve a calcular.
+      income_family_not_computed:
+        what: La aplicación todavía no calcula una de las familias de renta que aparecen
+          en tus registros o en tu perfil, así que esta declaración queda sin resolver
+          hasta que introduzcas a mano las cifras de esa familia.
+        what_to_do: Introduce las cifras en las casillas de esa familia con `aeat
+          app modelo work set-value` y vuelve a calcular. Reclasifica una fila con
+          `aeat app ledger classify TX --irpf-category ...` solo si estaba clasificada
+          en la familia equivocada.
       inferred_retencion_excluded_from_credit:
         what: Parte de la retención de tus facturas emitidas se ha calculado a partir
           de lo que pagó el cliente, así que se ha dejado fuera de tu deducción y

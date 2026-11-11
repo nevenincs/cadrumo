@@ -3428,6 +3428,9 @@ cli:
       irpf_id_column: irpf-category (passa aquest valor exacte)
       irpf_purpose_activity_income_withholding: retenció d'activitat professional
         cobrada o pagada neta
+      irpf_purpose_capital_gain: guany o pèrdua patrimonial (encara no calculada)
+      irpf_purpose_capital_mobiliario_yield: rendiments del capital mobiliari (interessos,
+        dividends)
       irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
       irpf_purpose_rent_expense_withholding: retenció de lloguer pagat net
       irpf_usage_example: 'Lloguer net: --category-id {rent_category} --irpf-category

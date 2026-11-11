@@ -106,8 +106,8 @@ cli:
         razon_social_help: La razón social o denominación completa de una entidad,
           nunca un nombre comercial.
         rendering_help: Una forma más corta que indicas para un campo más estrecho,
-          como ANCHO=TEXTO. Repítelo una vez por ancho; un nombre nunca se acorta sin
-          que lo indiques.
+          como ANCHO=TEXTO. Repítelo una vez por ancho; un nombre nunca se acorta
+          sin que lo indiques.
         scope_help: El territorio a efectos de IVA en el que está establecida la contraparte.
         segundo_apellido_help: El segundo apellido de una persona física. Omítelo
           solo junto con --no-second-surname.
@@ -3456,6 +3456,9 @@ cli:
       irpf_id_column: irpf-category (pasa este valor exacto)
       irpf_purpose_activity_income_withholding: retención por actividad profesional
         cobrada o pagada neta
+      irpf_purpose_capital_gain: ganancia o pérdida patrimonial (aún no calculada)
+      irpf_purpose_capital_mobiliario_yield: rendimientos del capital mobiliario (intereses,
+        dividendos)
       irpf_purpose_employment_income: rendimientos del trabajo (no para facturas netas)
       irpf_purpose_rent_expense_withholding: retención de alquiler pagado neto
       irpf_usage_example: 'Alquiler neto: --category-id {rent_category} --irpf-category
