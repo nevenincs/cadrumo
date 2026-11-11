@@ -70,12 +70,15 @@ _RESOLUTION_DEPTH: Final[int] = 6
 #: Adding a run's output to this mapping is the mistake the gate exists to stop
 #: -- send it to `.tmp/logs/` through `allocate_run_directory` instead.
 _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
+    "dev/acceptance/persona_table/sweep.py": "the pytest module the persona table runner collects; read, never written",
     "dev/ci/python-runtime-matrix.json": "the pinned interpreter matrix the runtime gates read",
+    "dev/desktop_agent_live/fixtures/ledger-seed.csv": "synthetic bank movements a disposable root seeds; read only",
     "dev/docs/terminology/evaluation/held-out-queries.json": "the committed query set a sweep is measured against",
     "dev/docs/terminology/ratification/synonym-candidates.json": "the reviewed synonym queue; mining preserves review",
     "dev/docs/terminology/relevance/relevance.json": "the committed mapping coverage is measured against",
     "dev/quality/import_checker.py": "the module the import gate spawns; read, never written",
     "dev/quality/import_load_worker.py": "the module the load probe spawns; read, never written",
+    "dev/quality/metadata/refusal_shape_ratchet.json": "the shrink-only refusal-shape ratchet; its diff is reviewed",
     "dev/quality/secure_store_write_path.toml": "the declared write paths the gate checks source against",
     "dev/registry/analysis/casilla_lineage_ledger.toml": "the reviewed lineage ledger; its diff is the artefact",
     "dev/registry/analysis/casilla_lineage_rulings.toml": "the authored rulings the lineage seed resolves against",
@@ -83,6 +86,9 @@ _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
     "dev/registry/analysis/legal_citation_period_ledger.toml": "authored citation exceptions, each with a reason",
     "dev/registry/analysis/regulatory_prose_parser_channel.toml": (
         "the authored channel ledger; its diff is the artefact"
+    ),
+    "dev/registry/analysis/year_independence_baseline.txt": (
+        "the shrink-only year-independence baseline; its diff is the artefact"
     ),
     "dev/registry/conformance_vectors/modelo_200_2025_y_siguientes.toml": (
         "a pinned vector the export proof compares against"
