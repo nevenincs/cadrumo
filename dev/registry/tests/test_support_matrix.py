@@ -57,9 +57,9 @@ def test_modelo_130_303_390_have_fichero_boe_export() -> None:
     """Ground truth: 130 / 303 / 390 are the periodic-return modelos with a fixed-width export layout.
 
     The row probes the latest edition. When that edition is authored below filing
-    grade because AEAT has not published its record design, it carries no layout
-    and the row says so; the fixed-width export stays on the newest filing-grade
-    edition.
+    grade, the row reports that edition's own layout, which it carries only once
+    a layout is generated from AEAT's record design for it; the newest
+    filing-grade edition always keeps its fixed-width export.
     """
     authority = compiled_bundled_authority()
     entries = _entries()
@@ -81,8 +81,9 @@ def test_modelo_130_303_390_have_fichero_boe_export() -> None:
             continue
         latest = revisions[entry.latest_revision_id]
         assert latest.authority_grade is not RegistryAuthorityGrade.FILING, modelo_id
-        assert not latest.export_layouts, modelo_id
-        assert not entry.has_fixed_width_export, modelo_id
+        assert entry.has_fixed_width_export is (
+            ExportLayoutFormat.FIXED_WIDTH in {layout.format for layout in latest.export_layouts}
+        ), modelo_id
 
 
 def test_modelo_100_uses_xml_dictionary_export_not_fixed_width() -> None:

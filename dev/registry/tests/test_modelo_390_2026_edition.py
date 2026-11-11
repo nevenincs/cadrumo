@@ -1,10 +1,11 @@
-"""Modelo 390 ejercicio 2026 follows the form Orden HAC/27/2026 approves, at applicability grade.
+"""Modelo 390 ejercicio 2026 follows the form Orden HAC/27/2026 approves, at calculation grade.
 
 The Orden replaces the modelo 390 form from ejercicio 2026 and adds one box,
 [112], the pago a cuenta on fuel supplies deducted in the year, which the form's
-own caption subtracts from the result of the liquidation. AEAT has not
-published the matching diseno de registro, so the edition carries no generated
-export layout and claims no filing grade; the previous edition is unchanged.
+own caption subtracts from the result of the liquidation. The edition's export
+layout is generated from AEAT's own diseno de registro for that ejercicio. It
+claims no filing grade while its filed-declaracion extraction profile awaits a
+filed return to anchor on; the previous edition is unchanged.
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NEW_BOX = "iva.anual.pago-cuenta-carburantes-deposito-fiscal"
 _RESULT = "iva.anual.resultado-liquidacion"
 _FORM = "boe-modelo-390-2026-form"
+_DESIGN = "aeat-dr-390-2026"
 _DAYS = {"treinta": 30, "treinta y un": 31}
 
 
@@ -67,7 +69,7 @@ def _result_formula(revision: ModeloRevision) -> FormulaDefinition:
     return formula
 
 
-def test_the_first_year_of_the_new_form_is_authored_at_applicability_grade() -> None:
+def test_the_first_year_of_the_new_form_is_authored_at_calculation_grade() -> None:
     _, catalogues = _modelo()
     year = _first_year()
     revision = _selected(year)
@@ -76,8 +78,9 @@ def test_the_first_year_of_the_new_form_is_authored_at_applicability_grade() -> 
     )
 
     assert resolution.projection_direction is TemporalProjectionDirection.AUTHORED
-    assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
-    assert revision.export_layouts == ()
+    assert revision.authority_grade is RegistryAuthorityGrade.CALCULATION
+    (layout,) = revision.export_layouts
+    assert _DESIGN in {str(source) for source in layout.source_refs}
     assert _selected(year - 1).authority_grade is RegistryAuthorityGrade.FILING
     assert _selected(year - 1).export_layouts
 
@@ -118,8 +121,8 @@ def test_the_window_follows_the_statutory_plazo_of_the_following_january() -> No
 def test_filing_grade_is_refused_for_the_new_form_and_kept_for_the_previous_year() -> None:
     authority = compiled_bundled_authority()
     year = _first_year()
-    applicability = authority.snapshot("390", filing_year=year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY)
-    assert str(applicability.revision.id) == str(_selected(year).id)
+    calculation = authority.snapshot("390", filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    assert str(calculation.revision.id) == str(_selected(year).id)
     with pytest.raises(RegistryValidationError) as refusal:
         authority.snapshot("390", filing_year=year, period="0A", grade=RegistryAuthorityGrade.FILING)
     failure = refusal.value.registry_failure

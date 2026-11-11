@@ -1,7 +1,9 @@
 """A revision without a record design follows its predecessor only where its own form proves it.
 
 Modelo 390 for ejercicio 2026 has an official form (Orden HAC/27/2026, anexo
-IV) and no AEAT diseño de registro. Its generated candidate is checked against
+IV) that renumbers no page of its predecessor. The subject is that edition with
+its own generated export layout set aside, which is exactly a revision holding
+the form and no diseño de registro. Its generated candidate is checked against
 that form read independently of the generator: each continued box must stand
 on the form page printing its page label. Each refusal is proven on a scratch
 copy of the form's extracted text, beside the unmodified copy reproducing the
@@ -18,7 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormLayoutSeedSource,
@@ -62,6 +65,17 @@ def _editions() -> tuple[str, str, str]:
         position for position, revision_id in enumerate(ids) if _FORM in revisions[revision_id].source_refs
     )
     return ids[candidate - 2], ids[candidate - 1], ids[candidate]
+
+
+def _without_record_design(revision: ModeloRevision) -> ModeloRevision:
+    """The edition as a revision holding only its form: no export layout or design gives it an own position."""
+    sources = _registry()[1]
+    kept = tuple(
+        ref
+        for ref in revision.source_refs
+        if (source := sources.get(str(ref))) is None or source.kind is not RegistrySourceKind.RECORD_DESIGN
+    )
+    return revision.model_copy(update={"export_layouts": (), "source_refs": kept})
 
 
 def _layout(revision: str) -> FormLayoutDefinition:
@@ -162,7 +176,11 @@ def _generate_from(data_root: Path) -> tuple[FormLayoutDefinition, tuple[str, ..
         revision=modelo.revisions[predecessor_id], layout=modelo.revisions[predecessor_id].form_layouts[0]
     )
     outcome = generate_revision_layout(
-        "390", modelo.revisions[candidate_id], sources=sources, data_root=data_root, predecessor=predecessor
+        "390",
+        _without_record_design(modelo.revisions[candidate_id]),
+        sources=sources,
+        data_root=data_root,
+        predecessor=predecessor,
     )
     assert outcome.layout is not None
     return outcome.layout, outcome.notes

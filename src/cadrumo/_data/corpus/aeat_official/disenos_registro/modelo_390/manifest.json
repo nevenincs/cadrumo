@@ -1,7 +1,7 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "390",
-  "retrieved_at": "2026-05-03",
+  "retrieved_at": "2026-11-10",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
@@ -14,12 +14,12 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 19,
+  "artefact_count": 20,
   "artefacts": [
     {
       "modelo": "390",
       "title": "390 - Ejercicio 2025 (actualizado 05/12/2025) (544 KB - xlsx )",
-      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
       "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/390_2025.xlsx",
       "stored_path": "files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx",
       "original_filename": "dr390e2025.xlsx",
@@ -246,6 +246,18 @@
       "bytes": 39556,
       "sha256": "be90d01d4d975199c972215ffcf11caa494b3e2e72ca4072c2bb8da6da7d3e87",
       "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "390",
+      "title": "390 - Ejercicio 2026 y siguientes (544 KB - xlsx )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/dr390e2026.xlsx",
+      "stored_path": "files/20-390-ejercicio-2026-y-siguientes-544-kb-xlsx.xlsx",
+      "original_filename": "dr390e2026.xlsx",
+      "content_type": "",
+      "bytes": 556940,
+      "sha256": "5ce047995347c2b5ad6e5d4e407f126eeb9bd214602ed7c99e9f85175176ec15",
+      "retrieved_at": "2026-11-10"
     }
   ]
 }
