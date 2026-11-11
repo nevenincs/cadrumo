@@ -253,38 +253,18 @@ def test_filing_requires_exact_grant_and_reports_actual_noop(repos: Repos) -> No
     assert retained_unit.current_filing_record_id == published.record.filing_record_id
 
 
-@pytest.mark.parametrize("changed_witness", ["second_grant", "retimed_grant"])
-def test_filing_refuses_a_grant_without_unique_current_verification_witness(
-    repos: Repos,
-    changed_witness: str,
-) -> None:
-    """An old or ambiguous granting report cannot authorize a fresh filing."""
+def test_filing_refuses_a_grant_retimed_away_from_the_revision_lock(repos: Repos) -> None:
+    """A grant whose run no longer matches the instant the revision was locked cannot authorize a filing."""
     _work_units, calculations, filings, reports, _events = repos
     work_unit, draft, report_id = _verified_target(repos)
     catalogue = reports.load()
     grant = catalogue.get(report_id)
     assert grant is not None
-    if changed_witness == "second_grant":
-        second = VerificationReport.model_validate(
-            {
-                **grant.model_dump(mode="python"),
-                "verified_by": "operator-B",
-                "verification_report_id": derive_verification_report_id(
-                    calculation_revision_id=grant.calculation_revision_id,
-                    completeness_status=grant.completeness_status,
-                    findings=grant.findings,
-                    verified_by="operator-B",
-                ),
-            },
-            strict=True,
-        )
-        reports.save(upsert_verification_report(catalogue, second))
-    else:
-        retimed = VerificationReport.model_validate(
-            {**grant.model_dump(mode="python"), "run_at": T3},
-            strict=True,
-        )
-        reports.save(upsert_verification_report(catalogue, retimed))
+    retimed = VerificationReport.model_validate(
+        {**grant.model_dump(mode="python"), "run_at": T3},
+        strict=True,
+    )
+    reports.save(upsert_verification_report(catalogue, retimed))
 
     with pytest.raises(VerificationReportNotFoundError):
         _file(repos, work_unit, draft, report_id)
@@ -294,6 +274,40 @@ def test_filing_refuses_a_grant_without_unique_current_verification_witness(
     assert all(
         record.calculation_revision_id != draft.calculation_revision_id for record in filings.load().records.values()
     )
+
+
+def test_a_stray_grant_that_does_not_match_the_lock_neither_authorizes_nor_blocks_filing(repos: Repos) -> None:
+    """Another actor's grant beside the lock's own, as a lost lock write once left it, is not a witness.
+
+    Filing on the stray grant is refused; filing on the grant the revision's
+    lock names goes ahead, so the declaration is not left unfileable.
+    """
+    _work_units, _calculations, _filings, reports, _events = repos
+    work_unit, draft, report_id = _verified_target(repos)
+    catalogue = reports.load()
+    grant = catalogue.get(report_id)
+    assert grant is not None
+    stray = VerificationReport.model_validate(
+        {
+            **grant.model_dump(mode="python"),
+            "verified_by": "operator-B",
+            "verification_report_id": derive_verification_report_id(
+                calculation_revision_id=grant.calculation_revision_id,
+                completeness_status=grant.completeness_status,
+                findings=grant.findings,
+                verified_by="operator-B",
+            ),
+        },
+        strict=True,
+    )
+    reports.save(VerificationReportCatalogue(reports={**catalogue.reports, stray.verification_report_id: stray}))
+
+    with pytest.raises(VerificationReportNotFoundError):
+        _file(repos, work_unit, draft, stray.verification_report_id)
+    published = _file(repos, work_unit, draft, report_id)
+
+    assert published.published is True
+    assert published.record.calculation_revision_id == draft.calculation_revision_id
 
 
 @pytest.mark.parametrize("race", ["report", "calculation", "work_unit", "filing"])
