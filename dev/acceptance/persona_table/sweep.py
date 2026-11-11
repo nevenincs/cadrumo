@@ -14,7 +14,7 @@ from __future__ import annotations
 import dataclasses
 import os
 import re
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from functools import cache
 from pathlib import Path
@@ -59,7 +59,6 @@ from cadrumo.application.operations.public_scalar import restore_scalar
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from cadrumo.domain.deadlines.engine import indexed_deadline_window_year
 from cadrumo.entrypoints.tests.persona_materialisation import (
     PERSONA_ACTOR,
     MaterialisedPersona,
@@ -86,10 +85,10 @@ from .rows import (
     PlannedRow,
     Stage,
     TableRow,
+    ended,
     in_force,
     is_unsupported,
     not_run,
-    opened,
     planned_rows,
     replay_horizons,
     select,
@@ -125,23 +124,8 @@ def _persona(persona_id: str) -> Persona:
 def _plan(persona_id: str, horizon: int) -> list[PlannedRow]:
     persona, envelope = _persona(persona_id), _envelope()
     today = persona.as_of.resolve(dataclasses.replace(envelope, horizon=horizon))
-    rows = opened(planned_rows(persona, horizon, envelope), _window_opens_on, today)
+    rows = ended(planned_rows(persona, horizon, envelope), today)
     return select(rows, modelos=_listed(MODELOS_ENV), years=tuple(int(year) for year in _listed(YEARS_ENV)))
-
-
-@cache
-def _window_openings(year: int) -> dict[tuple[str, str], date]:
-    """The day the registry opens each modelo's filing window for a period of ``year``."""
-    found: dict[tuple[str, str], date] = {}
-    with bundled_indexed_authority().operation() as operation:
-        for modelo, _selection, window in indexed_deadline_window_year(operation, year).dated:
-            key = (modelo, window.period.registry_token)
-            found[key] = min(found.get(key, window.opens_on), window.opens_on)
-    return found
-
-
-def _window_opens_on(modelo: str, year: int, period: str) -> date | None:
-    return _window_openings(year).get((modelo, period))
 
 
 def _cases() -> list[pytest.ParameterSet]:

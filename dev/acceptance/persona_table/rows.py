@@ -11,12 +11,13 @@ from __future__ import annotations
 
 import dataclasses
 import json
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
+from cadrumo.domain.period import period_end_date
 from cadrumo.tests.personas import (
     ExpectedValue,
     Persona,
@@ -319,17 +320,15 @@ def _planned(persona_id: str, horizon: int, key: tuple[str, int, str], values: l
     )
 
 
-def opened(
-    rows: Sequence[PlannedRow], opens_on: Callable[[str, int, str], date | None], today: date
-) -> list[PlannedRow]:
-    """The rows whose filing window has opened by ``today``, the persona's scenario day.
+def ended(rows: Sequence[PlannedRow], today: date) -> list[PlannedRow]:
+    """The rows whose period has ended by ``today``, the persona's scenario day.
 
     A return whose period has not ended at the scenario clock is not owed yet:
     no honest figures, attestation or filing exist for it, so it is not a row
-    of that replay. ``opens_on`` gives the registry's window opening day, or
-    ``None`` when the registry serves no window for the return.
+    of that replay. A return whose period has ended is owed even before its
+    filing window opens; only its local filing waits for the window.
     """
-    return [row for row in rows if (opens := opens_on(row.modelo, row.year, row.period)) is None or opens <= today]
+    return [row for row in rows if period_end_date(row.year, row.period) < today]
 
 
 def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, str]:
