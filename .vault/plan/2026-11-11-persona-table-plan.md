@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:f38379c9b921fe98268072151765f3f98d842f085da6d2279da87c12442a4438'
+body_hash: 'sha256:814381f7a21ee31f6f23327edf587d1cec6a6ad6e0d79e7f0ee7ac9890c2f428'
 ---
 
 # `persona-table` plan
@@ -72,6 +72,7 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S24` - Finish moving login, session, access and custody authority from the tax package into the runtime package; `src/cadrumo/application/user_profile, src/cadrumo_runtime`.
 - [ ] `P02.S32` - Re-land the test year-literal clean-up with test years derived from a closed year, proving the runtime-host tests in root (reverted 2026-11-11 as 25d6f78646; batch 0ca3be17c7 is in history); `src, dev/quality`.
 - [ ] `P02.S34` - Clear the year-independence baseline for modelos outside the persona table (036, 216, 222, 296, 322, 345), the IRNR convenio fact gaps and Sociedades 200/202, each item settled from the official text; `src/cadrumo/_data/registry`.
+- [ ] `P02.S36` - Give the Modelo 100 groups that have neither a source nor a multi-row entry path a source or an entry route, one decision per group: capital mobiliario, imputed property income, capital gains (funds, shares, rights, crypto, other property), the deductions annexes A and B, the carries of anexo C, special regimes and objective estimation (listed with casilla ranges in 2026-11-11-renta-rental-income-source-adr); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation`.
 
 ### Phase `P03` - Desktop re-entry
 
