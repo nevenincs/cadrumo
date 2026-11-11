@@ -111,17 +111,22 @@ Rows. Each interest-bearing position gives one `RegistroB11` occurrence, and eac
 
 Source family. The capital-mobiliario rows get one `BindingSourceKind` member, enrolled in the shared dispatch beside `activity_asset_disposal` with its registration row, validator and resolver. There is no modelo-name branch. The calculation revision records the profile and ledger revisions it consumed, so the drift gate sees later edits.
 
-Not computed here. Each of these is a blocking finding and leaves the affected casilla unresolved:
+Not computed here. Each item is classified under PRIME's ruling of 2026-11-11 23:25, which binds every slice. An item the application does not compute is a blocking finding when leaving it out could lower the tax or misstate an identifying fact. It may be a served non-blocking limitation only when leaving it out can only raise the tax and no stored fact shows that it applies.
+
+Blocking findings, each leaving the affected casilla unresolved, because each is income whose omission lowers the tax:
 
 - 0028, bonified interest (DT 6.a);
 - 0030, Letras del Tesoro;
 - 0031, other financial assets;
 - 0032 to 0035, insurance, capitalisation and preferentes;
-- 0039, the DT 4.a reduction, and 0043 and 0044;
 - the whole base-general block, 0046 to 0056;
 - foreign-source income and income in kind;
 - related-party loans (the general-base share under LIRPF art. 46.a);
-- the prima de emisión and capital-reduction rules (art. 25.1.e).
+- the prima de emisión and capital-reduction rules (art. 25.1.e). No concept token admits such a receipt, so its row stays unlinked and raises `income_family_not_computed`. Classifying it as a dividend would misstate both the income and the later acquisition cost.
+
+Not computed and not offered, shown as a non-blocking limitation:
+
+- 0039, the DT 4.a reduction, and 0043 and 0044, its accumulated deferred capital. The reduction applies only to insurance income (0032), which is itself a blocking finding above. So leaving it out can only raise the tax, and no stored fact shows that it applies. The limitation is served at verification and in the export result, names the casillas, and says that the return may overstate the tax.
 
 Hypotheses that may change within these constraints: the field and token names; the source-kind name; whether the concept vocabulary is its own fact or a family in an existing one; whether the position record lives in the profile or in a ledger-side register with the same custody.
 
