@@ -715,8 +715,8 @@ errors:
     integrity_justificante_verification: La verificación del justificante con la AEAT
       no se pudo completar.
     integrity_modelos_operator_layer: Los valores del operador guardados para este
-      cálculo se contradicen. Cadrumo los escribió él mismo, así que el registro se
-      ha alterado o dañado y no se puede aplicar nada de él.
+      cálculo se contradicen. La aplicación los escribió ella misma, así que el registro
+      se ha alterado o dañado y no se puede aplicar nada de él.
     integrity_outbound_storage: El contenido descargado no superó las comprobaciones
       de integridad (hash, tamaño o etiqueta).
     integrity_outbound_storage_corruption: Un fichero de metadatos sidecar contiene
@@ -780,12 +780,12 @@ errors:
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
     operator_layer_attestation_kinds_conflict: El registro guardado declara el enlace
-      %{binding_id} a la vez sin importe y con un importe declarado. Cadrumo escribió
-      ese registro él mismo, así que se ha alterado o dañado y el cálculo no puede
-      usarlo.
+      %{binding_id} a la vez sin importe y con un importe declarado. La aplicación
+      escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
+      no puede usarlo.
     operator_layer_value_attestation_not_canonical: La declaración de valor guardada
-      para el enlace %{binding_id} no contiene un importe decimal canónico. Cadrumo
-      escribió ese registro él mismo, así que se ha alterado o dañado y el cálculo
+      para el enlace %{binding_id} no contiene un importe decimal canónico. La aplicación
+      escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
       no puede usarlo.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.

@@ -2974,7 +2974,7 @@ application:
         ahora existe una declaración suya con otra cifra. Esta declaración (modelo
         %{target_modelo} de %{target_filing_year}, periodo %{target_period}) debe
         seguir a aquella, así que indica la cifra de nuevo o retira tu indicación.
-      cross_period_dependency_operator_attested: Cadrumo no tiene ninguna declaración
+      cross_period_dependency_operator_attested: La aplicación no tiene ninguna declaración
         del modelo %{source_modelo} de %{source_filing_year}, periodo %{source_period},
         así que la cifra %{value} que esta declaración (modelo %{target_modelo} de
         %{target_filing_year}, periodo %{target_period}) toma de ella es la que indicaste

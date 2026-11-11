@@ -663,8 +663,8 @@ errors:
     integrity_justificante_verification: The receipt verification with the AEAT could
       not be completed.
     integrity_modelos_operator_layer: The stored operator values for this calculation
-      contradict each other. Cadrumo wrote them itself, so the record was altered
-      or damaged and nothing can be applied from it.
+      contradict each other. The application wrote them itself, so the record was
+      altered or damaged and nothing can be applied from it.
     integrity_outbound_storage: The fetched payload failed integrity checks (hash,
       size or `etag`).
     integrity_outbound_storage_corruption: A sidecar metadata file contains a field
@@ -723,10 +723,7 @@ errors:
       decrypted under the current master key.
     integrity_storage_validation: A storage parameter failed validation.
     operator_layer_attestation_kinds_conflict: The stored record states binding %{binding_id}
-      both as having no amount and as having a stated amount. Cadrumo wrote that record
-      itself, so it was altered or damaged and the calculation cannot use it.
-    operator_layer_value_attestation_not_canonical: The stored value statement for
-      binding %{binding_id} does not hold a canonical decimal amount. Cadrumo wrote
+      both as having no amount and as having a stated amount. The application wrote
       that record itself, so it was altered or damaged and the calculation cannot
       use it.
     profile_import_signature: The profile archive failed its signature or integrity
@@ -737,6 +734,10 @@ errors:
     canonical_authority_cache_cycle: The authority component loader detected a recursive
       load cycle.
     canonical_calibration_deadline_elapsed: Profile key-derivation calibration exceeded
+    operator_layer_value_attestation_not_canonical: The stored value statement for
+      binding %{binding_id} does not hold a canonical decimal amount. The application
+      wrote that record itself, so it was altered or damaged and the calculation cannot
+      use it.
       its total time limit.
     canonical_internal_invariant: An internal application invariant was violated.
     canonical_invoice_row_parse: An invoice-import row could not be parsed.

@@ -2971,8 +2971,8 @@ application:
         ara n'existeix una declaració amb una altra xifra. Aquesta declaració (model
         %{target_modelo} de %{target_filing_year}, període %{target_period}) ha de
         seguir aquella, així que indica la xifra de nou o retira la teva indicació.
-      cross_period_dependency_operator_attested: Cadrumo no té cap declaració del
-        model %{source_modelo} de %{source_filing_year}, període %{source_period},
+      cross_period_dependency_operator_attested: L'aplicació no té cap declaració
+        del model %{source_modelo} de %{source_filing_year}, període %{source_period},
         així que la xifra %{value} que aquesta declaració (model %{target_modelo}
         de %{target_filing_year}, període %{target_period}) en pren és la que vas
         indicar tu. Conserva aquella declaració anterior com a justificant.

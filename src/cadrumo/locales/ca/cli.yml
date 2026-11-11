@@ -1707,7 +1707,7 @@ cli:
           d'una xifra escrita.
         attest_prior_carries_yes_help: Confirma la declaració i registra-la a l'autoliquidació
         attest_prior_value_help: Indica la xifra que una declaració pren d'una declaració
-          anterior que Cadrumo no desa, com el Model 100 de l'any passat presentat
+          anterior que l'aplicació no desa, com el Model 100 de l'any passat presentat
           en un altre lloc. Mostra el valor i la comprovació del canvi; amb --yes
           registra la xifra com a declarada per tu per a aquella declaració, diferent
           d'una xifra escrita. Es rebutja si la declaració anterior està desada, perquè

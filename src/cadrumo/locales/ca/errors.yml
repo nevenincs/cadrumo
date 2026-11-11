@@ -721,8 +721,8 @@ errors:
     integrity_justificante_verification: La verificació del justificant amb l'AEAT
       no s'ha pogut completar.
     integrity_modelos_operator_layer: Els valors de l'operador desats per a aquest
-      càlcul es contradiuen. Cadrumo els va escriure ell mateix, així que el registre
-      s'ha alterat o malmès i no se'n pot aplicar res.
+      càlcul es contradiuen. L'aplicació els va escriure ella mateixa, així que el
+      registre s'ha alterat o malmès i no se'n pot aplicar res.
     integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
       d'integritat (resum, mida o etiqueta).
     integrity_outbound_storage_corruption: S'ha detectat corrupció a l'emmagatzematge
@@ -788,13 +788,13 @@ errors:
       pogut desxifrar amb la clau mestra actual.
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
     operator_layer_attestation_kinds_conflict: El registre desat declara l'enllaç
-      %{binding_id} alhora sense import i amb un import declarat. Cadrumo va escriure
-      aquest registre ell mateix, així que s'ha alterat o malmès i el càlcul no el
-      pot fer servir.
+      %{binding_id} alhora sense import i amb un import declarat. L'aplicació va escriure
+      aquest registre ella mateixa, així que s'ha alterat o malmès i el càlcul no
+      el pot fer servir.
     operator_layer_value_attestation_not_canonical: La declaració de valor desada
-      per a l'enllaç %{binding_id} no conté un import decimal canònic. Cadrumo va
-      escriure aquest registre ell mateix, així que s'ha alterat o malmès i el càlcul
-      no el pot fer servir.
+      per a l'enllaç %{binding_id} no conté un import decimal canònic. L'aplicació
+      va escriure aquest registre ella mateixa, així que s'ha alterat o malmès i el
+      càlcul no el pot fer servir.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
     windows_credential_record: La credencial de Windows no compleix el format requerit

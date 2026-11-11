@@ -1696,11 +1696,11 @@ cli:
           elkülönítve.
         attest_prior_carries_yes_help: A kijelentés megerősítése és rögzítése a bevallásban
         attest_prior_value_help: Kijelented azt az összeget, amelyet egy bevallás
-          egy olyan korábbi bevallásból vesz át, amelyet a Cadrumo nem tárol, például
-          a máshol benyújtott tavalyi Modelo 100-ból. Megmutatja az értéket és a módosítás
-          ellenőrzését; a --yes kapcsolóval az adott bevallásra általad kijelentett
-          összegként rögzíti, a beírt számtól külön. Elutasítja, ha a korábbi bevallás
-          tárolva van, mert ekkor a bevallás azt követi.
+          egy olyan korábbi bevallásból vesz át, amelyet az alkalmazás nem tárol,
+          például a máshol benyújtott tavalyi Modelo 100-ból. Megmutatja az értéket
+          és a módosítás ellenőrzését; a --yes kapcsolóval az adott bevallásra általad
+          kijelentett összegként rögzíti, a beírt számtól külön. Elutasítja, ha a
+          korábbi bevallás tárolva van, mert ekkor a bevallás azt követi.
         autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja
           (LISIVA 9.1.c cikk + 79.4 cikk): bérbeadásra áttért saját fejlesztésű ingatlanok
           építési vagy felújítási költsége. Az asszisztens automatikusan alkalmazza
