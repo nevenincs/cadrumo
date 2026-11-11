@@ -1202,6 +1202,13 @@ errors:
       está soportado.
     refused_filing_calculate: El cálculo o resumen de la declaración no superó sus
       invariantes.
+    refused_filing_export_field_overflow: El campo {export_field_id} del registro
+      {export_record_id} admite {field_length} caracteres en el diseño oficial, pero
+      su valor necesita {value_length}. El diseño no prevé acortarlo, así que no se
+      ha escrito nada. Revisa el valor de origen y vuelve a exportar.
+    refused_filing_export_required_record_absent: El diseño oficial exige al menos
+      un registro {export_record_id}, pero esta declaración no tiene ninguno, así
+      que no hay nada que escribir en este formato y no se ha escrito nada.
     refused_financial_aggregation_category_coverage: Una transacción no tiene cobertura
       de categoría o de perfil. Clasifica la transacción antes de agregar.
     refused_financial_aggregation_missing_classification: Aún hay transacciones del
@@ -1224,6 +1231,8 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
       en casa guardado no coincide con el censo, que es la fuente legal vinculante.
       Alinéalo con el valor del censo.
+    refused_fixed_width_value_overflow: Un valor necesita {value_length} posiciones,
+      pero su campo de ancho fijo admite {field_length}; se rechaza en lugar de acortarlo.
     refused_flow_answer: El flujo guiado rechazó la respuesta.
     refused_flow_checkpoint: El flujo guiado rechazó la operación de guardar y reanudar.
     refused_flow_navigation: El flujo guiado rechazó la petición de navegación.

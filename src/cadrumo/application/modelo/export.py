@@ -60,7 +60,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.payment_instalment_split import first_instalment_share
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
-from ...domain.filing.errors import FilingExportError
+from ...domain.filing.errors import FILING_EXPORT_REFUSALS, FilingExportError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.filing.software_identity import (
     AeatProductSoftwareIdentity,
@@ -584,6 +584,8 @@ def _write_export_staging(
             mutation_writer=mutation_writer,
             states_whole_return=True,
         )
+    except FILING_EXPORT_REFUSALS:
+        raise
     except FilingExportError as exc:
         # Surface the underlying FilingExportError cause in the typed context
         # (aeat-cli-contract: structured provenance
@@ -617,6 +619,8 @@ def _consume_export_payload(
             schema_provider=schema_provider,
             states_whole_return=True,
         )
+    except FILING_EXPORT_REFUSALS:
+        raise
     except FilingExportError as exc:
         raise export_write_failure(command, exc) from exc
 
