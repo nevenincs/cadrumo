@@ -40,7 +40,7 @@ from ...application.user_profile.view_operation import (
 )
 from ...application.user_profile.view_reader import read_profile_view_page
 from ...domain.user_profile.values import ProfileSetupState
-from ...tests.personas import ExpectedValue
+from ...tests.personas import ExpectedValue, YearEnvelope, values_in_force
 from .persona_materialisation import (
     PERSONA_ACTOR,
     PersonaWorld,
@@ -105,10 +105,10 @@ def _calculated(world: PersonaWorld, *, year: int, period: str) -> dict[str, obj
     return {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
 
 
-def _stated_withholding(values: tuple[ExpectedValue, ...]) -> ExpectedValue:
+def _stated_withholding(values: tuple[ExpectedValue, ...], envelope: YearEnvelope) -> ExpectedValue:
     (stated,) = (
         value
-        for value in values
+        for _year, value in values_in_force(values, envelope)
         if value.modelo == _MODELO
         and value.grounding != "unverified"
         and any(casilla == _WITHHOLDING_CASILLA for casilla, _amount in value.casillas)
@@ -144,7 +144,7 @@ def test_a_persona_without_activity_completes_setup_and_reaches_its_modelo_100(t
     # the replay that completes it and then records them.
     with materialised_persona(persona_id, tmp_path / "history", ReplayScope.HISTORY, reuse=True) as filed:
         assert all(item.block != "setup" for item in filed.not_loaded)
-        stated = _stated_withholding(filed.persona.expectations.values)
+        stated = _stated_withholding(filed.persona.expectations.values, filed.world.envelope)
         casillas = _calculated(filed.world, year=stated.year.resolve(filed.world.envelope), period=stated.period)
 
     expected = Decimal(dict(stated.casillas)[_WITHHOLDING_CASILLA])

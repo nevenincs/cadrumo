@@ -162,3 +162,19 @@ The art. 110.3.c minoración (casilla 13) depends on the prior-year return and i
 """
 legal_ref = ["rd-439-2007:art-7", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
+
+[[values]]
+modelo = "130"
+period = "1T"
+year = "horizon"
+governed_by = "ley-35-2006:da-56"
+casillas = { "01" = "1000.00", "02" = "535.00", "03" = "465.00", "04" = "93.00", "05" = "0.00", "06" = "0.00", "07" = "93.00" }
+parameters = { provision_rate = "0.07", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+The same income and gastos as the value above; only the provision differs. LIRPF disposición adicional
+quincuagésima sexta (Ley 31/2022, art. 60.2) raises the RIRPF art. 30.2.4.ª percentage to 7 % "durante el
+período impositivo 2023", so in a year that provision governs: provisión = 7 % of (1000.00 - 500.00) = 35.00, under the 2000.00 cap.
+02 = 500.00 + 35.00 = 535.00; 03 = 465.00; 04 = 20 % of 03 = 93.00; 05 = 0 (first quarter); 06 = 0.00; 07 = 04 - 05 - 06 = 93.00.
+"""
+legal_ref = ["rd-439-2007:art-7", "rd-439-2007:art-30", "ley-35-2006:da-56", "rd-439-2007:art-110"]
+grounding = "verified"

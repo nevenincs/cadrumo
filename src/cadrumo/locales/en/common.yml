@@ -88,6 +88,18 @@ aggregation:
         nothing, and its VAT identification cannot answer this.
       missing_counterparty_identification_state: An intra-community transaction requires
         the Member State in which the counterparty is VAT-identified.
+      recargo_departs_from_published_rate: The recargo de equivalencia %{declared}
+        charged on base %{base} at the %{rate} IVA rate departs from the %{recargo_rate}
+        the law pairs with that rate on %{date} (%{provision}), which gives %{expected}.
+        Correct the row, or issue a factura rectificativa.
+      recargo_rate_unmodelled: 'The recargo de equivalencia %{declared} charged at
+        the %{rate} IVA rate on %{date} cannot be checked: the registry publishes
+        no recargo rate for that IVA rate on that date. It stays unresolved until
+        the rate is published.'
+      recargo_tobacco_rung_unsupported: The recargo de equivalencia %{declared} on
+        base %{base} is the labores del tabaco rate of %{recargo_rate} (%{provision}),
+        which the 303 declares on its own rung. That rung is not supported yet, so
+        the row stays unresolved rather than being declared at the general recargo.
       rectification_consumed_more_than_once: A corrected IVA entry may be rectified
         only once.
       sectorized_apportionment_duplicate_sectors: The sectorised IVA apportionment
@@ -3764,6 +3776,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Cash basis
       invoice_category_contradicted: IVA category
       invoice_deduction_family_unresolved: Deduction
+      invoice_recargo_not_declarable: Surcharge
       invoice_recargo_split_unresolved: Surcharge
       linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
@@ -3792,6 +3805,7 @@ desktop:
       invoice_category_contradicted: The IVA category does not fit the country
       invoice_deduction_family_unresolved: The invoice does not show which deduction
         applies
+      invoice_recargo_not_declarable: The surcharge is not the legal rate on its base
       invoice_recargo_split_unresolved: The surcharge does not divide between its
         VAT rates
       linked_movement_contradicts_invoice: Differs from its invoice

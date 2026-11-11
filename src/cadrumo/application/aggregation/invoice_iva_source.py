@@ -78,6 +78,10 @@ class InvoiceIvaFindingReason(StrEnum):
     #: rates and differs from the sum of each rate's LIVA art. 161 share, so no
     #: figure says which Modelo 303 recargo casilla holds which part.
     RECARGO_SPLIT_UNRESOLVED = "invoice_recargo_split_unresolved"
+    #: An issued invoice whose recargo de equivalencia at one IVA rate is more
+    #: than a cent from base times the LIVA art. 161 rate for that date, is the
+    #: labores del tabaco rate no casilla is bound for, or has no published rate.
+    RECARGO_NOT_DECLARABLE = "invoice_recargo_not_declarable"
 
 
 class InvoiceIvaFinding(BaseModel):
@@ -406,6 +410,10 @@ def _screen_findings(screen: ScreenedInvoiceIva) -> list[InvoiceIvaFinding]:
     findings.extend(
         InvoiceIvaFinding(reason=InvoiceIvaFindingReason.RECARGO_SPLIT_UNRESOLVED, invoice_id=invoice.invoice_id)
         for invoice in screen.recargo_split_unresolved
+    )
+    findings.extend(
+        InvoiceIvaFinding(reason=InvoiceIvaFindingReason.RECARGO_NOT_DECLARABLE, invoice_id=invoice.invoice_id)
+        for invoice in screen.recargo_not_declarable
     )
     return findings
 

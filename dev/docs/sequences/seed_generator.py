@@ -54,7 +54,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.tests.persona_invoices import GeneratedDocument, generated_documents
-from cadrumo.tests.personas import LedgerRow, Persona, YearEnvelope
+from cadrumo.tests.personas import LedgerRow, Persona, YearEnvelope, values_in_force
 from dev.paths import REPO_ROOT, UTF_8
 
 from .persona_profile import SANDBOX_PERSONA_ID, pinned_persona, profile_option_arguments
@@ -385,8 +385,8 @@ def _carry_frames(persona: Persona, envelope: YearEnvelope, *, name: str) -> lis
     expected = next(
         (
             value
-            for value in persona.expectations.values
-            if value.modelo == _M303 and value.period == first and value.year.resolve(envelope) == year
+            for value_year, value in values_in_force(persona.expectations.values, envelope)
+            if value.modelo == _M303 and value.period == first and value_year == year
         ),
         None,
     )

@@ -100,6 +100,7 @@ export const READINESS_REASONS = [
   "invoice_cash_accounting_regime_unmodelled",
   "linked_movement_contradicts_invoice",
   "invoice_recargo_split_unresolved",
+  "invoice_recargo_not_declarable",
 ] as const;
 export type LedgerPreflightReason = (typeof READINESS_REASONS)[number];
 

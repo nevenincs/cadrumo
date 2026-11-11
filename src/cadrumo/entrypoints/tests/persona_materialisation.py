@@ -221,9 +221,11 @@ from ...tests.personas import (
     PersonaDate,
     PersonaDocument,
     ProfileValue,
+    ProvisionPeriods,
     WithholdingCertificate,
     YearEnvelope,
     filed_period_order,
+    governed_provisions,
     persona_inputs_digest,
     read_persona,
 )
@@ -314,9 +316,22 @@ class MaterialisedPersona:
 
 
 def year_envelope(operation: PinnedAuthorityOperation) -> YearEnvelope:
-    """The registry's supported filing-year envelope, as the persona reader takes it."""
+    """The registry's supported filing-year envelope, as the persona reader takes it.
+
+    It carries the governed periods of every provision a persona's stated value is limited
+    to, read from the legal register: absent a declared reach, the governed span is the
+    provision's own in-force span.
+    """
     support = operation.supported_filing_years()
-    return YearEnvelope(floor=support.floor, horizon=support.horizon)
+    provisions: list[tuple[str, ProvisionPeriods]] = []
+    for provision in sorted(governed_provisions()):
+        reference = operation.legal_reference(provision)
+        if reference.governs_periods_from is not None:
+            periods = ProvisionPeriods(first=reference.governs_periods_from, last=reference.governs_periods_to)
+        else:
+            periods = ProvisionPeriods(first=reference.effective_from, last=reference.effective_to)
+        provisions.append((provision, periods))
+    return YearEnvelope(floor=support.floor, horizon=support.horizon, provisions=tuple(provisions))
 
 
 def scenario_instant(persona: Persona, envelope: YearEnvelope) -> datetime:

@@ -90,6 +90,20 @@ aggregation:
         állapít meg, és az IVA-azonosítás erre nem ad választ.
       missing_counterparty_identification_state: A Közösségen belüli ügylethez meg
         kell adni azt a tagállamot, amelyben a partner héa-azonosítóval rendelkezik.
+      recargo_departs_from_published_rate: A(z) %{base} alapra %{rate} ÁFA-kulccsal
+        felszámított %{declared} kiegyenlítő pótlék (recargo de equivalencia) eltér
+        attól a %{recargo_rate} kulcstól, amelyet a törvény %{date} napján ehhez a
+        kulcshoz rendel (%{provision}), és amely %{expected} összeget ad. Javítsd
+        a sort, vagy állíts ki helyesbítő számlát (factura rectificativa).
+      recargo_rate_unmodelled: 'A(z) %{rate} ÁFA-kulccsal %{date} napján felszámított
+        %{declared} kiegyenlítő pótlék nem ellenőrizhető: a nyilvántartás erre a kulcsra
+        ezen a napon nem tesz közzé pótlékkulcsot. Feloldatlan marad, amíg a kulcsot
+        közzé nem teszik.'
+      recargo_tobacco_rung_unsupported: A(z) %{base} alapra számított %{declared}
+        kiegyenlítő pótlék a dohánytermékek (labores del tabaco) %{recargo_rate} kulcsa
+        (%{provision}), amelyet a 303-as nyomtatvány külön sorban vall be. Ez a sor
+        még nem támogatott, ezért a sor feloldatlan marad, és nem kerül az általános
+        pótlék közé.
       rectification_consumed_more_than_once: Egy már helyesbített IVA-tétel csak egyszer
         helyesbíthető.
       sectorized_apportionment_duplicate_sectors: A szektorizált áfa-megosztás ugyanazt
@@ -3799,6 +3813,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Pénzforgalmi
       invoice_category_contradicted: IVA-kategória
       invoice_deduction_family_unresolved: Levonás
+      invoice_recargo_not_declarable: Pótlék
       invoice_recargo_split_unresolved: Pótlék
       linked_movement_contradicts_invoice: Számla
       missing_business_classification: Besorolás
@@ -3827,6 +3842,7 @@ desktop:
       invoice_category_contradicted: Az IVA-kategória nem illik az országhoz
       invoice_deduction_family_unresolved: A számlából nem derül ki, melyik levonás
         illeti meg
+      invoice_recargo_not_declarable: A pótlék nem a törvényes kulcs az adóalapján
       invoice_recargo_split_unresolved: A pótlék nem osztható fel az áfakulcsai között
       linked_movement_contradicts_invoice: Eltér a számlájától
       missing_business_classification: Hiányzik a besorolás

@@ -18,7 +18,14 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
-from cadrumo.tests.personas import ExpectedDeadline, ExpectedObligation, ExpectedValue, Persona, YearEnvelope
+from cadrumo.tests.personas import (
+    ExpectedDeadline,
+    ExpectedObligation,
+    ExpectedValue,
+    Persona,
+    YearEnvelope,
+    values_in_force,
+)
 
 from .receipt import CheckStatus, ObligationCheck, ValueCheck
 
@@ -34,9 +41,14 @@ def _states_figures(value: ExpectedValue) -> bool:
 
 
 def asserted_values(persona: Persona, envelope: YearEnvelope) -> tuple[tuple[int, ExpectedValue], ...]:
-    """Every value the journey asserts, with its resolved year: casillas, not-sourced casillas or a refusal."""
+    """Every value the journey asserts, with its resolved year: casillas, not-sourced casillas or a refusal.
+
+    Where a provision governs the year, the value limited to it stands in for the plain one.
+    """
     return tuple(
-        (value.year.resolve(envelope), value) for value in persona.expectations.values if _states_figures(value)
+        (year, value)
+        for year, value in values_in_force(persona.expectations.values, envelope)
+        if _states_figures(value)
     )
 
 

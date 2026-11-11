@@ -1,16 +1,16 @@
 ---
 tags:
-  - '#adr'
-  - '#recargo-equivalencia-source-of-truth'
+  - "#adr"
+  - "#recargo-equivalencia-source-of-truth"
 date: '2026-08-07'
-modified: '2026-11-04'
-body_schema: 'body-v1'
-body_hash: 'sha256:29a765884a4fb1d88cbcc9759a9bf01427e84fa4339cc0a25ff371a84098f0fa'
 related:
   - "[[2026-08-07-recargo-equivalencia-source-of-truth-research]]"
+superseded_by: '2026-11-11-recargo-equivalencia-source-of-truth-derived-cuota-adr'
+modified: '2026-11-11'
+body_schema: 'body-v1'
+body_hash: 'sha256:6d8905c8b07b96b110354ec4b819e9d7e62e1c5612274f1e67e8c64a5699d904'
 ---
-
-# `recargo-equivalencia-source-of-truth` adr: `the invoice or the table: what establishes a recargo de equivalencia cuota` | (**status:** `accepted`)
+# `recargo-equivalencia-source-of-truth` adr: `the invoice or the table: what establishes a recargo de equivalencia cuota` | (**status:** `superseded`)
 
 ## Problem Statement
 
