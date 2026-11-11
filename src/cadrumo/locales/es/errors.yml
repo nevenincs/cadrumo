@@ -714,6 +714,16 @@ errors:
       NIE ni CIF español válido.
     integrity_justificante_verification: La verificación del justificante con la AEAT
       no se pudo completar.
+    integrity_modelo_export_field_unrenderable: 'No se ha escrito nada: el campo %{field_id}
+      (casilla %{casilla_id}) no se puede escribir a partir de su valor, porque el
+      diseño de registro oficial que lleva la aplicación y ese valor no concuerdan.
+      El defecto está en el diseño de exportación, no en tus datos, así que cambiar
+      tus datos no lo arregla.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'No se ha escrito nada:
+      el campo %{field_id} no se puede escribir a partir de su valor, porque el diseño
+      de registro oficial que lleva la aplicación y ese valor no concuerdan. El defecto
+      está en el diseño de exportación, no en tus datos, así que cambiar tus datos
+      no lo arregla.'
     integrity_modelos_operator_layer: Los valores del operador guardados para este
       cálculo se contradicen. La aplicación los escribió ella misma, así que el registro
       se ha alterado o dañado y no se puede aplicar nada de él.

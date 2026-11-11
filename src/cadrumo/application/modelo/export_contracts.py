@@ -235,6 +235,14 @@ class ModeloExportUnrepresentableCharacterError(ModeloPreconditionErrorMixin, Mo
     process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"field_value"})
 
 
+class ModeloExportFieldUnrenderableError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Integrity: the official record design and a value disagree, so a field cannot be written.
+
+    Nothing is written. The fault is in the export design the application
+    carries, not in the filer's data, so no filer action repairs it.
+    """
+
+
 class ModeloExportUnsupportedError(ModeloExportError):
     """Raised when a modelo revision has no renderable local fichero-BOE export layout."""
 

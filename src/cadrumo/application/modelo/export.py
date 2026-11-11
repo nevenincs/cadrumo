@@ -63,6 +63,7 @@ from ...domain.calculations.registry.schema_exports import ExportLayoutDefinitio
 from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
 from ...domain.filing.errors import (
     FilingExportError,
+    FilingExportFieldUnrenderableError,
     FilingExportRequiredRecordAbsentError,
     FilingExportUnrepresentableCharacterError,
     FilingExportValueOverflowError,
@@ -138,6 +139,7 @@ from .export_contracts import (
     ModeloIvaWalletDecisionProvenance,
     PreparedModeloExport,
 )
+from .export_field_refusal import export_field_unrenderable_refusal
 from .export_ports import ModeloExportPorts
 from .export_preparation import (
     approve_export_draft,
@@ -639,6 +641,8 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
         )
     if isinstance(exc, FilingExportUnrepresentableCharacterError):
         return _export_unrepresentable_character_refusal(command, exc)
+    if isinstance(exc, FilingExportFieldUnrenderableError):
+        return export_field_unrenderable_refusal(command, exc)
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(
             translated_message=exc.translated_message,

@@ -320,6 +320,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.text_value.writable",
         "modelo.export.text_value.unrepresentable_character",
     ),
+    # The official record design and the value disagree; the fault is in the
+    # design the application carries, so no filer action repairs it.
+    _profile(
+        "modelo.export",
+        "modelo.export.field.renderable",
+        "modelo.export.field.unrenderable",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
     _profile(
         "modelo.export",
         "modelo.export.period.maps_to_filing_period",

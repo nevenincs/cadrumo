@@ -720,6 +720,16 @@ errors:
       ni CIF espanyol vàlid.
     integrity_justificante_verification: La verificació del justificant amb l'AEAT
       no s'ha pogut completar.
+    integrity_modelo_export_field_unrenderable: 'No s''ha escrit res: el camp %{field_id}
+      (casella %{casilla_id}) no es pot escriure a partir del seu valor, perquè el
+      disseny de registre oficial que porta l''aplicació i aquest valor no concorden.
+      El defecte és al disseny d''exportació, no a les teves dades, així que canviar
+      les teves dades no ho arregla.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'No s''ha escrit res: el
+      camp %{field_id} no es pot escriure a partir del seu valor, perquè el disseny
+      de registre oficial que porta l''aplicació i aquest valor no concorden. El defecte
+      és al disseny d''exportació, no a les teves dades, així que canviar les teves
+      dades no ho arregla.'
     integrity_modelos_operator_layer: Els valors de l'operador desats per a aquest
       càlcul es contradiuen. L'aplicació els va escriure ella mateixa, així que el
       registre s'ha alterat o malmès i no se'n pot aplicar res.

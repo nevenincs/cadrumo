@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import (
@@ -25,6 +26,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import (
     FilingExportError,
+    FilingExportFieldUnrenderableError,
     FilingExportUnrepresentableCharacterError,
     FilingExportValidationError,
     FilingExportValueOverflowError,
@@ -616,7 +618,17 @@ def format_field(field: ExportFieldDefinition, value: object, *, record: ExportR
             data_type=field.data_type.value,
         ) from exc
     except RegistryValidationError as exc:
-        raise FilingExportValidationError(f"export field {field.id!r} cannot render its fixed-width value") from exc
+        raise FilingExportFieldUnrenderableError(
+            field_id=field.id,
+            casilla_id=field.casilla_id,
+            data_type=field.data_type.value,
+            reason=str(exc),
+            precondition_verdict=filing_no_recovery_verdict(
+                FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+                facts={"error_type": "FilingExportFieldUnrenderableError", "field_id": field.id},
+                outcome=NoRecoveryOutcome.TERMINAL,
+            ),
+        ) from exc
 
 
 __all__ = [

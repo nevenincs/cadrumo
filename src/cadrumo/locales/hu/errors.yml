@@ -673,6 +673,14 @@ errors:
       NIE vagy CIF.
     integrity_justificante_verification: Az AEAT-tal való bizonylat-ellenőrzést nem
       sikerült elvégezni.
+    integrity_modelo_export_field_unrenderable: 'Semmi sem íródott ki: a(z) %{field_id}
+      mező (casilla %{casilla_id}) nem írható ki az értékéből, mert az alkalmazás
+      által hordozott hivatalos rekordterv és az érték nem egyezik. A hiba a kiviteli
+      tervben van, nem a te adataidban, ezért az adataid módosítása nem javítja ki.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'Semmi sem íródott ki:
+      a(z) %{field_id} mező nem írható ki az értékéből, mert az alkalmazás által hordozott
+      hivatalos rekordterv és az érték nem egyezik. A hiba a kiviteli tervben van,
+      nem a te adataidban, ezért az adataid módosítása nem javítja ki.'
     integrity_modelos_operator_layer: A számításhoz mentett kezelői értékek ellentmondanak
       egymásnak. Az alkalmazás maga írta őket, ezért a rekord megváltozott vagy megsérült,
       és semmi sem alkalmazható belőle.

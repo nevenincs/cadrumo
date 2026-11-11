@@ -113,6 +113,40 @@ class FilingExportRequiredRecordAbsentError(FilingExportValidationError):
         )
 
 
+class FilingExportFieldUnrenderableError(TerminalPreconditionErrorMixin[object], FilingExportValidationError):
+    """Raised when the record design and a value disagree so that the field cannot be written.
+
+    An integer slot given a fractional amount is the example. The export
+    refuses instead of rounding or cutting, and names the field, its casilla
+    when it has one, its data type and the codec's reason. No change to the
+    filer's data repairs it: the fault is in the design the application
+    carries.
+    """
+
+    def __init__(
+        self,
+        *,
+        field_id: str,
+        casilla_id: str | None,
+        data_type: str,
+        reason: str,
+        precondition_verdict: object | None = None,
+    ) -> None:
+        """Construct the refusal for one field."""
+        self.field_id: str = field_id
+        self.casilla_id: str | None = casilla_id
+        self.data_type: str = data_type
+        self.reason: str = reason
+        context: dict[str, object] = {"field_id": field_id, "data_type": data_type, "reason": reason}
+        if casilla_id is not None:
+            context["casilla_id"] = casilla_id
+        super().__init__(
+            f"export field {field_id!r} cannot be rendered from its value",
+            context=context,
+            precondition_verdict=precondition_verdict,
+        )
+
+
 class FilingExportUnrepresentableCharacterError(TerminalPreconditionErrorMixin[object], FilingExportValidationError):
     """Raised when a text value holds a character its record design cannot write.
 

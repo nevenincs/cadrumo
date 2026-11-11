@@ -662,6 +662,14 @@ errors:
       NIF, NIE or CIF.
     integrity_justificante_verification: The receipt verification with the AEAT could
       not be completed.
+    integrity_modelo_export_field_unrenderable: 'Nothing was written: field %{field_id}
+      (casilla %{casilla_id}) cannot be written from its value, because the official
+      record design the application carries and that value disagree. The defect is
+      in the export design, not in your data, so changing your data will not fix it.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'Nothing was written: field
+      %{field_id} cannot be written from its value, because the official record design
+      the application carries and that value disagree. The defect is in the export
+      design, not in your data, so changing your data will not fix it.'
     integrity_modelos_operator_layer: The stored operator values for this calculation
       contradict each other. The application wrote them itself, so the record was
       altered or damaged and nothing can be applied from it.
