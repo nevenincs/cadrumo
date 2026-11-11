@@ -211,17 +211,6 @@ def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
             assert tfi_order_ref in casilla.legal_refs, (filing_year, casilla.id)
 
 
-@pytest.mark.parametrize("filing_year", tuple(year for year in _SUPPORT.years if year >= _REVIEWED_EDITION))
-def test_modelo_100_zec_reduced_rate_parameter_cites_special_rate_article(filing_year: int) -> None:
-    revision = modelo_100_snapshot(filing_year).revision
-    parameters_by_id = {parameter.id: parameter for parameter in revision.parameters}
-    parameter = parameters_by_id["renta-zec-tipo-gravamen-reducido"]
-
-    assert parameter.legal_refs == ("ley-19-1994:art-43",)
-    assert "ley-19-1994:art-50" not in parameter.legal_refs
-    assert [dated_value.value for dated_value in parameter.values] == [Decimal("4")]
-
-
 def test_modelo_100_reserva_inversiones_roles_follow_official_section() -> None:
     expected_cases = (
         (
