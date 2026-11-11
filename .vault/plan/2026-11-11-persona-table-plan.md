@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:814381f7a21ee31f6f23327edf587d1cec6a6ad6e0d79e7f0ee7ac9890c2f428'
+body_hash: 'sha256:478e47bbd40bfeb5e0dfba7464bb4cf97f3899f377912d61653d6de322e2e306'
 ---
 
 # `persona-table` plan
@@ -73,6 +73,12 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S32` - Re-land the test year-literal clean-up with test years derived from a closed year, proving the runtime-host tests in root (reverted 2026-11-11 as 25d6f78646; batch 0ca3be17c7 is in history); `src, dev/quality`.
 - [ ] `P02.S34` - Clear the year-independence baseline for modelos outside the persona table (036, 216, 222, 296, 322, 345), the IRNR convenio fact gaps and Sociedades 200/202, each item settled from the official text; `src/cadrumo/_data/registry`.
 - [ ] `P02.S36` - Give the Modelo 100 groups that have neither a source nor a multi-row entry path a source or an entry route, one decision per group: capital mobiliario, imputed property income, capital gains (funds, shares, rights, crypto, other property), the deductions annexes A and B, the carries of anexo C, special regimes and objective estimation (listed with casilla ranges in 2026-11-11-renta-rental-income-source-adr); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation`.
+- [ ] `P02.S37` - Compute interest on accounts and deposits into the savings base with its withholding, from linked ledger rows on a typed position record, and raise a blocking finding for income families with no calculator (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
+- [ ] `P02.S38` - Compute domestic dividends and participation income from linked ledger rows (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
+- [ ] `P02.S39` - Integrate the savings base for capital mobiliario with attested prior savings losses (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
+- [ ] `P02.S40` - Compute the pension-plan contribution reduction and its excess carry (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
+- [ ] `P02.S41` - Compute the donations deduction with Ley 49/2002 recurrence (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
+- [ ] `P02.S42` - Compute imputed property income for days a property is not let, on the rental property record (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
 
 ### Phase `P03` - Desktop re-entry
 
