@@ -1606,10 +1606,7 @@ application:
         what: The application does not compute one of the income families in your
           records or profile yet, so this return stays unresolved until you enter
           that family's figures by hand.
-        what_to_do: Enter the figures in that family's casillas with `aeat app modelo
-          work set-value`, then calculate again. Reclassify a row with `aeat app ledger
-          classify TX --irpf-category ...` only if it was classified to the wrong
-          family.
+        what_to_do: "Enter the figures in that family's casillas by hand, then calculate again. Reclassify a row only if it was classified to the wrong family."
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
