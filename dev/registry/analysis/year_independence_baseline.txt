@@ -23,7 +23,6 @@ casilla-member|296|03|binding|present=2024-2025|absent=2023
 casilla-member|303|18|binding|present=2023|absent=2025
 edition-only|036|application_links|modelo-036-workflow|2025-02-03-y-siguientes|uncited appearing boundary
 edition-only|036|bindings|modelo-036-profile-censo-status|2025-02-03-y-siguientes|uncited appearing boundary
-edition-only|036|casillas|decl.event-kind|2025-02-03-y-siguientes|uncited appearing boundary
 edition-only|100|application_links|modelo-100-portal|2025|uncited appearing boundary
 edition-only|100|bindings|renta-inventory-activity-acquisition-cost-0181|2025|uncited appearing boundary
 edition-only|100|bindings|renta-inventory-activity-closing-decrease-0182|2025|uncited appearing boundary
@@ -58,9 +57,6 @@ edition-only|100|parameters|renta-ric-mantenimiento-plazo-anos|2025|uncited appe
 edition-only|100|parameters|renta-ric-materializacion-plazo-anos|2025|uncited appearing boundary
 edition-only|100|parameters|renta-ric-reduccion-rate-maximo|2025|uncited appearing boundary
 edition-only|100|parameters|renta-zec-tipo-gravamen-reducido|2025|uncited appearing boundary
-edition-only|123|casillas|09|2024-y-siguientes|uncited appearing boundary
-edition-only|123|casillas|12|2024-y-siguientes|uncited appearing boundary
-edition-only|123|casillas|14|2024-y-siguientes|uncited appearing boundary
 edition-only|123|verification_predicates|implies-nonzero:base-total-implica-retenciones-total|2024-y-siguientes|uncited appearing boundary
 edition-only|193|bindings|modelo-193-perceptor-row-isin|2025-y-siguientes|uncited appearing boundary
 edition-only|202|bindings|modelo-202-cuota-base-ejercicio-anterior|2025-y-siguientes|uncited appearing boundary

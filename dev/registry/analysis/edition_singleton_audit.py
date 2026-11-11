@@ -15,11 +15,13 @@ are outside this audit.
 A singleton is cited when both of its boundaries are explained:
 
 * appearing: some cited legal reference came into force after the preceding
-  edition began and no later than the end of this edition. A casilla instead
-  states the boundary through its continuity origin (new on the form, with
-  evidence).
+  edition began and no later than the end of this edition. A casilla may
+  instead state the boundary through its continuity origin (new on the form,
+  with evidence), or be the grounded continuation of a preceding-edition
+  casilla renumbered by the form.
 * disappearing: some cited legal reference expired within this edition. A
-  casilla instead is explicitly removed by the following edition.
+  casilla may instead be explicitly removed by the following edition, or
+  continue under another number there (same grounded continuity identity).
 
 The first edition in scope has no appearing boundary and the last has no
 disappearing one. Years come only from the registry support envelope.
@@ -84,6 +86,7 @@ class DeclarationView:
     states_new_on_form: bool = False
     removed_by_next_edition: bool = False
     calculated: bool = True
+    grounded_continuidad_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,11 +129,19 @@ class EditionSingletonFinding:
         return "uncited " + " and ".join(missing) + " boundary"
 
 
-def _appearing_cited(declaration: DeclarationView, previous: EditionView | None, edition: EditionView) -> bool:
-    if previous is None:
-        return True
-    if declaration.family == _CASILLA_FAMILY:
-        return declaration.states_new_on_form
+def _renumbered_in(declaration: DeclarationView, edition: EditionView | None) -> bool:
+    """Whether the neighbouring edition carries this declaration's grounded continuation under another number."""
+    if edition is None or declaration.grounded_continuidad_id is None:
+        return False
+    return any(
+        other.family == declaration.family
+        and other.declaration_id != declaration.declaration_id
+        and other.grounded_continuidad_id == declaration.grounded_continuidad_id
+        for other in edition.declarations
+    )
+
+
+def _window_opens(declaration: DeclarationView, previous: EditionView, edition: EditionView) -> bool:
     return any(
         previous.valid_from < window.effective_from
         and (edition.valid_to is None or window.effective_from <= edition.valid_to)
@@ -138,15 +149,27 @@ def _appearing_cited(declaration: DeclarationView, previous: EditionView | None,
     )
 
 
-def _disappearing_cited(declaration: DeclarationView, following: EditionView | None, edition: EditionView) -> bool:
-    if following is None:
-        return True
-    if declaration.family == _CASILLA_FAMILY:
-        return declaration.removed_by_next_edition
+def _window_closes(declaration: DeclarationView, following: EditionView, edition: EditionView) -> bool:
     return any(
         window.effective_to is not None and edition.valid_from <= window.effective_to < following.valid_from
         for window in declaration.legal_windows
     )
+
+
+def _appearing_cited(declaration: DeclarationView, previous: EditionView | None, edition: EditionView) -> bool:
+    if previous is None:
+        return True
+    if declaration.family == _CASILLA_FAMILY and declaration.states_new_on_form:
+        return True
+    return _renumbered_in(declaration, previous) or _window_opens(declaration, previous, edition)
+
+
+def _disappearing_cited(declaration: DeclarationView, following: EditionView | None, edition: EditionView) -> bool:
+    if following is None:
+        return True
+    if declaration.family == _CASILLA_FAMILY and declaration.removed_by_next_edition:
+        return True
+    return _renumbered_in(declaration, following) or _window_closes(declaration, following, edition)
 
 
 def _presence(editions: Sequence[EditionView]) -> dict[tuple[str, str], list[int]]:
@@ -227,6 +250,13 @@ def _carries_calculation(casilla: object) -> bool:
     )
 
 
+def _grounded_continuidad_id(origin: object, item: object) -> str | None:
+    continuidad_id = getattr(item, "continuidad_id", None)
+    if origin is CasillaLineageOrigin.GROUNDED and continuidad_id is not None:
+        return str(continuidad_id)
+    return None
+
+
 def _declaration_view(
     family: str, item: object, catalogues: RegistryCatalogues, removed: frozenset[str]
 ) -> DeclarationView | None:
@@ -241,6 +271,7 @@ def _declaration_view(
         states_new_on_form=origin in _NEW_ON_FORM_ORIGINS and bool(getattr(item, "continuidad_evidence", None)),
         removed_by_next_edition=family == _CASILLA_FAMILY and str(declaration_id) in removed,
         calculated=family != _CASILLA_FAMILY or _carries_calculation(item),
+        grounded_continuidad_id=_grounded_continuidad_id(origin, item),
     )
 
 

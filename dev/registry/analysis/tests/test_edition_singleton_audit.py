@@ -93,6 +93,34 @@ def test_casilla_stating_it_is_new_on_the_form_and_removed_next_edition_is_clean
     assert singleton_findings("100", _editions({YEARS[1]: (casilla,)})) == ()
 
 
+def _casilla(
+    declaration_id: str, *, continuidad: str | None = None, windows: tuple[LegalWindow, ...] = ()
+) -> DeclarationView:
+    return DeclarationView("casillas", declaration_id, windows, grounded_continuidad_id=continuidad)
+
+
+def test_casilla_renumbered_by_the_form_is_one_declaration_not_a_singleton() -> None:
+    old, new = _casilla("alfa", continuidad="linea"), _casilla("beta", continuidad="linea")
+    renumbered = {YEARS[0]: (old,), **dict.fromkeys(YEARS[1:], (new,))}
+    assert singleton_findings("100", _editions(renumbered)) == ()
+    vanished = {YEARS[0]: (old,), **dict.fromkeys(YEARS[1:], (_casilla("beta", continuidad="otra"),))}
+    assert [f.declaration_id for f in singleton_findings("100", _editions(vanished))] == ["alfa"]
+
+
+def test_casilla_citing_a_provision_entering_force_in_its_edition_is_not_flagged() -> None:
+    casilla = _casilla("gamma", windows=(_in_force_from(YEARS[-1]),))
+    assert singleton_findings("100", _editions({YEARS[-1]: (casilla,)})) == ()
+
+
+def test_casilla_in_one_edition_with_neither_continuation_nor_provision_is_flagged() -> None:
+    other = _casilla("delta", continuidad="otra")
+    stray = _casilla("gamma", windows=(_in_force_from(YEARS[0]),))
+    findings = singleton_findings("100", _editions({YEARS[1]: (stray,), YEARS[2]: (other,)}))
+    assert [(f.declaration_id, f.reason) for f in findings if f.declaration_id == "gamma"] == [
+        ("gamma", "uncited appearing and disappearing boundary")
+    ]
+
+
 def test_editions_of_different_period_tracks_are_not_compared() -> None:
     formula = _declaration("trimestral")
     editions = [_edition(YEARS[0], formula, track=("1T",)), _edition(YEARS[1], track=("01",))]
