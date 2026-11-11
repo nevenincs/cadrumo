@@ -156,6 +156,15 @@ attestation still blocks. Every in-envelope dependency, including one whose retu
 in the application, keeps the rule above unchanged, and the all-zero exemption is
 unaffected.
 
+Widened the same day on the operator's own decision ("registry is projected, yes attestation
+is enough"): the attestation satisfies any decimal-channel `previous_filing_binding` or
+scalar relation-prefill dependency whose upstream return the application does not hold (no
+work unit, filing record or captured observation), inside or outside the envelope. In the
+envelope the existing doors stay and the attest action is served beside them. A present
+source still governs, and a conflicting attestation is refused with a blocking finding. Row
+channels stay sourced from records. The clean evidence kind is
+`operator_attested_absent_upstream`.
+
 ## Codification candidates
 
 - **Rule slug:** `cross-period-filing-clean-state`.
