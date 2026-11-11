@@ -22,6 +22,8 @@ from typing import cast
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.operations import profile_operation_subject
@@ -49,9 +51,11 @@ from ..staged_check_contracts import (
 from ..staged_check_words import BLOCKER_FIX_LOCALE_KEYS, BLOCKER_WORDS_LOCALE_KEYS
 from .bulk_classify_operation_support import PROFILE_ID, BulkClassifySubject
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+_NOW = datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC)
 _PROFILE = PROFILE_ID
 # A received invoice of 2000.00 plus 420.00 IVA, settled net of a 300.00 withholding.
 _CASH = Decimal("2120.00")
@@ -64,12 +68,12 @@ def _received(amount: Decimal) -> Transaction:
     """One stored, classified movement of money received."""
     raw = RawTransaction(
         provider_transaction_id="withholding-row",
-        booked_date=date(2026, 5, 2),
-        value_date=date(2026, 5, 2),
+        booked_date=date(_YEAR, 5, 2),
+        value_date=date(_YEAR, 5, 2),
         amount=amount,
         currency="EUR",
         counterparty="Cliente SL",
-        description="FACTURA 2026-04",
+        description=f"FACTURA {_YEAR}-04",
         provenance=RawProvenance(
             source_path=Path(__file__),
             source_sha256="c" * 64,
@@ -147,7 +151,7 @@ def test_a_signed_draft_amount_is_held_back_as_a_sign_and_not_as_a_missing_amoun
         operation=authority_operation,
         drafts=(
             _draft(
-                booked_date="2026-05-02",
+                booked_date=date(_YEAR, 5, 2).isoformat(),
                 amount="-50.00",
                 currency="EUR",
                 direction=TransactionDirection.OUTGOING.value,
@@ -171,7 +175,7 @@ def test_the_same_amount_without_its_sign_is_not_held_back(
         operation=authority_operation,
         drafts=(
             _draft(
-                booked_date="2026-05-02",
+                booked_date=date(_YEAR, 5, 2).isoformat(),
                 amount="50.00",
                 currency="EUR",
                 direction=TransactionDirection.OUTGOING.value,
@@ -339,7 +343,7 @@ def test_the_currency_a_new_movement_carries_is_still_required_of_it(
         operation=authority_operation,
         drafts=(
             _draft(
-                booked_date="2026-05-02",
+                booked_date=date(_YEAR, 5, 2).isoformat(),
                 amount="50.00",
                 direction=TransactionDirection.OUTGOING.value,
                 description="SUMINISTRO",

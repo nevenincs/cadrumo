@@ -11,13 +11,18 @@ required page refuses blank, a gated or optional page accepts it.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....core.flows import CopyRefKind, FlowWidgetKind
 from ..definition import CopyRef, FlowCondition, FlowPage
 from ..validators import validate_widget_shape
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,20 +53,24 @@ def _page(
 
 
 def test_date_accepts_iso_and_canonicalises_to_the_iso_string() -> None:
-    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE), "2026-01-05")
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE), date(_YEAR, 1, 5).isoformat())
 
     assert verdict.ok
-    assert canonical == "2026-01-05"
+    assert canonical == date(_YEAR, 1, 5).isoformat()
 
 
 def test_date_strips_surrounding_whitespace_before_parsing() -> None:
-    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE), "  2026-01-05  ")
+    canonical, verdict = validate_widget_shape(
+        _page(widget=FlowWidgetKind.DATE), f"  {date(_YEAR, 1, 5).isoformat()}  "
+    )
 
     assert verdict.ok
-    assert canonical == "2026-01-05"
+    assert canonical == date(_YEAR, 1, 5).isoformat()
 
 
-@pytest.mark.parametrize("raw", ["2026-1-5", "2026-13-01", "2026-02-30", "05/01/2026", "not-a-date"])
+@pytest.mark.parametrize(
+    "raw", [f"{_YEAR}-1-5", f"{_YEAR}-13-01", f"{_YEAR}-02-30", date(_YEAR, 1, 5).strftime("%d/%m/%Y"), "not-a-date"]
+)
 def test_date_rejects_non_iso_or_impossible_values(raw: str) -> None:
     """Non-zero-padded, out-of-range, and day-first forms all fail the ISO shape."""
     canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE), raw)

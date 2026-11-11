@@ -13,6 +13,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.errors.hierarchy import InternalInvariantError
@@ -45,6 +46,8 @@ from .bulk_classify_operation_support import PROFILE_ID, BulkClassifySubject
 from .in_memory_transaction_repository import InMemoryTransactionRepository
 from .test_classification_rule_plan import BUCKET, transaction
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
@@ -64,7 +67,7 @@ def _receipt(condition: OperationTerminalCondition, effect: OperationEffect) -> 
             subject_ref=profile_operation_subject(str(PROFILE_ID)),
         ),
         revision=1,
-        settled_at=datetime(2026, 5, 1, tzinfo=UTC),
+        settled_at=datetime(_YEAR, 5, 1, tzinfo=UTC),
         condition=condition,
         effect=effect,
         result_ref="d" * 64 if condition is OperationTerminalCondition.SUCCEEDED else None,

@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import tr
 from ....domain.transactions.enums import TransactionDirection
@@ -21,6 +23,8 @@ from ..id_resolution import (
     resolve_lineage_transaction_id,
     resolve_transaction_id,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -161,8 +165,8 @@ def test_five_prefix_conditions_render_distinct_text() -> None:
 def _raw(*, provider_id: str, amount: str, description: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 5, 1),
-        value_date=date(2026, 5, 1),
+        booked_date=date(_YEAR, 5, 1),
+        value_date=date(_YEAR, 5, 1),
         amount=Decimal(amount),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -172,7 +176,7 @@ def _raw(*, provider_id: str, amount: str, description: str) -> RawTransaction:
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 5, 1, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": description},
@@ -202,7 +206,7 @@ def _lineage_entry(previous_transaction_id: str) -> TransactionEditLineageEntry:
         previous_transaction_id=previous_transaction_id,
         actor="operator",
         source_command="aeat app ledger update",
-        edited_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
+        edited_at=datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC),
     )
 
 

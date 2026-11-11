@@ -14,6 +14,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.aggregation import BindingSourceKind, IntracomOperationType
@@ -39,6 +40,8 @@ from ..source_resolver import (
     InvoiceCatalogueSourceResolver,
 )
 from ..source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -70,7 +73,7 @@ def _invoice(
     operation_type: IntracomOperationType | None = None,
 ) -> Invoice:
     total = Decimal("1000.00")
-    issued_at = date(2026, 1, 15)
+    issued_at = date(_YEAR, 1, 15)
     invoice_id = derive_invoice_id(
         kind=kind,
         invoice_number=number,
@@ -132,13 +135,13 @@ def test_source_resolver_translates_reader_failure_to_diagnostic() -> None:
     )
     _modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in _modelos if candidate.id == "349")
-    revision = select_revision(modelo, filing_year=2026, period="1T")
+    revision = select_revision(modelo, filing_year=_YEAR, period="1T")
 
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="349",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         revision=revision,
     )
     resolution = resolver.resolve(context)
@@ -157,14 +160,14 @@ def test_source_resolver_projects_an_invoice_through_the_reader_port() -> None:
     )
     _modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in _modelos if candidate.id == "349")
-    revision = select_revision(modelo, filing_year=2026, period="1T")
+    revision = select_revision(modelo, filing_year=_YEAR, period="1T")
 
     resolution = _resolver(build_invoice_catalogue([invoice])).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             revision=revision,
         ),
     )
@@ -177,7 +180,7 @@ def test_source_resolver_projects_an_invoice_through_the_reader_port() -> None:
 def _invoice_family_context(source: BindingSourceKind) -> CalculationSourceContext:
     modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "349")
-    revision = select_revision(modelo, filing_year=2026, period="1T")
+    revision = select_revision(modelo, filing_year=_YEAR, period="1T")
     bindings = tuple(
         BindingDefinition.model_validate(
             {**binding.model_dump(), "provider": {**binding.provider.model_dump(), "kind": source.value}},
@@ -187,8 +190,8 @@ def _invoice_family_context(source: BindingSourceKind) -> CalculationSourceConte
     return CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="349",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         revision=revision.model_copy(update={"bindings": bindings}),
     )
 
@@ -363,7 +366,7 @@ def test_m347_combined_provenance_preserves_both_invoice_directions() -> None:
         _domestic_invoice(
             kind=kind,
             number=number,
-            issued_at=date(2025, 2, 10),
+            issued_at=date(_YEAR - 1, 2, 10),
             counterparty_tax_id=tax_id,
             counterparty_name="Counterparty SL",
             base_total=Decimal("4000"),
@@ -374,7 +377,7 @@ def test_m347_combined_provenance_preserves_both_invoice_directions() -> None:
             (InvoiceKind.RECEIVED, "347-RECEIVED", "B00015016"),
         )
     )
-    context = _m347_context(2025)
+    context = _m347_context(_YEAR - 1)
     resolution = _resolver(build_invoice_catalogue(invoices)).resolve(context)
 
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("9680")
@@ -416,7 +419,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
     supplier_q1 = _domestic_invoice(
         kind=InvoiceKind.RECEIVED,
         number="P-001",
-        issued_at=date(2025, 2, 10),
+        issued_at=date(_YEAR - 1, 2, 10),
         counterparty_tax_id="B00015016",
         counterparty_name="PROVEEDOR GRANDE SL",
         base_total=Decimal("2500.00"),
@@ -425,7 +428,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
     supplier_q3 = _domestic_invoice(
         kind=InvoiceKind.RECEIVED,
         number="P-002",
-        issued_at=date(2025, 8, 10),
+        issued_at=date(_YEAR - 1, 8, 10),
         counterparty_tax_id="B00015016",
         counterparty_name="PROVEEDOR GRANDE SL",
         base_total=Decimal("2500.00"),
@@ -434,7 +437,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
     customer_q4 = _domestic_invoice(
         kind=InvoiceKind.ISSUED,
         number="V-001",
-        issued_at=date(2025, 11, 20),
+        issued_at=date(_YEAR - 1, 11, 20),
         counterparty_tax_id="B00015057",
         counterparty_name="CLIENTE GRANDE SL",
         base_total=Decimal("6611.57"),
@@ -443,7 +446,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
     small_supplier = _domestic_invoice(
         kind=InvoiceKind.RECEIVED,
         number="P-003",
-        issued_at=date(2025, 5, 5),
+        issued_at=date(_YEAR - 1, 5, 5),
         counterparty_tax_id="B00010157",
         counterparty_name="PROVEEDOR PEQUENO SA",
         base_total=Decimal("826.45"),
@@ -452,7 +455,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
 
     resolution = _resolver(
         build_invoice_catalogue([supplier_q1, supplier_q3, customer_q4, small_supplier]),
-    ).resolve(_m347_context(2025))
+    ).resolve(_m347_context(_YEAR - 1))
 
     rows = sorted(_rows_by_index(resolution.row_binding_values), key=lambda row: str(row["nif"]))
     assert rows == [
@@ -499,14 +502,14 @@ def test_m347_resolution_with_no_declarable_counterparty_returns_no_rows() -> No
     small_supplier = _domestic_invoice(
         kind=InvoiceKind.RECEIVED,
         number="P-004",
-        issued_at=date(2025, 5, 5),
+        issued_at=date(_YEAR - 1, 5, 5),
         counterparty_tax_id="B00010157",
         counterparty_name="PROVEEDOR PEQUENO SA",
         base_total=Decimal("826.45"),
         iva_total=Decimal("173.55"),
     )
 
-    resolution = _resolver(build_invoice_catalogue([small_supplier])).resolve(_m347_context(2025))
+    resolution = _resolver(build_invoice_catalogue([small_supplier])).resolve(_m347_context(_YEAR - 1))
 
     assert dict(resolution.row_binding_values) == {}
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
@@ -526,9 +529,9 @@ def test_m349_operador_rows_travel_once_as_typed_detail_rows() -> None:
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=select_revision(modelo, filing_year=2026, period="1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision=select_revision(modelo, filing_year=_YEAR, period="1T"),
         ),
     )
 
@@ -569,14 +572,14 @@ def test_m347_names_received_invoices_whose_registry_entry_may_fall_in_another_y
     previous December's it leaves out; an issued invoice, or a received one
     issued earlier in the year, is not named.
     """
-    declared_december = _received("P-DIC", date(2025, 12, 18))
-    previous_december = _received("P-DIC-2024", date(2024, 12, 20))
-    november = _received("P-NOV", date(2025, 11, 5))
-    issued_december = _received("V-DIC", date(2025, 12, 18), kind=InvoiceKind.ISSUED)
+    declared_december = _received("P-DIC", date(_YEAR - 1, 12, 18))
+    previous_december = _received(f"P-DIC-{_YEAR - 2}", date(_YEAR - 2, 12, 20))
+    november = _received("P-NOV", date(_YEAR - 1, 11, 5))
+    issued_december = _received("V-DIC", date(_YEAR - 1, 12, 18), kind=InvoiceKind.ISSUED)
 
     resolution = _resolver(
         build_invoice_catalogue([declared_december, previous_december, november, issued_december]),
-    ).resolve(_m347_context(2025))
+    ).resolve(_m347_context(_YEAR - 1))
 
     advisories = _dating_advisories(resolution)
     assert len(advisories) == 1
@@ -584,14 +587,14 @@ def test_m347_names_received_invoices_whose_registry_entry_may_fall_in_another_y
     assert advisory.reason == "unsettled_legal_reading"
     assert advisory.asserted_legal_refs == ("rd-1065-2007:art-35", "rd-1624-1992:art-69")
     assert "declares the received invoices P-DIC issued in December" in advisory.message
-    assert "leaves out the received invoices P-DIC-2024 issued in December 2024" in advisory.message
+    assert f"leaves out the received invoices P-DIC-{_YEAR - 2} issued in December {_YEAR - 2}" in advisory.message
     assert "P-NOV" not in advisory.message
     assert "V-DIC" not in advisory.message
 
 
 def test_m347_is_silent_on_dating_without_a_received_invoice_at_a_year_boundary() -> None:
-    resolution = _resolver(build_invoice_catalogue([_received("P-NOV", date(2025, 11, 5))])).resolve(
-        _m347_context(2025),
+    resolution = _resolver(build_invoice_catalogue([_received("P-NOV", date(_YEAR - 1, 11, 5))])).resolve(
+        _m347_context(_YEAR - 1),
     )
 
     assert _dating_advisories(resolution) == []
@@ -601,7 +604,7 @@ def _lease(number: str, tenant_tax_id: str, base: str, **premises: object) -> In
     invoice = _domestic_invoice(
         kind=InvoiceKind.ISSUED,
         number=number,
-        issued_at=date(2025, 6, 1),
+        issued_at=date(_YEAR - 1, 6, 1),
         counterparty_tax_id=tenant_tax_id,
         counterparty_name=f"INQUILINO {tenant_tax_id}",
         base_total=Decimal(base),
@@ -627,7 +630,7 @@ def test_m347_relates_each_leased_premises_in_its_own_inmueble_row_whatever_its_
     big = _lease("ALQ-1", "B00015016", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
     small = _lease("ALQ-2", "B00015057", "1000.00", situacion_inmueble="3")
 
-    resolution = _resolver(build_invoice_catalogue([big, small])).resolve(_m347_context(2025))
+    resolution = _resolver(build_invoice_catalogue([big, small])).resolve(_m347_context(_YEAR - 1))
 
     rows: dict[int, dict[str, object]] = {}
     for (binding_id, row_index), value in resolution.row_binding_values.items():
@@ -669,7 +672,7 @@ def test_m347_names_the_inmueble_fields_a_recorded_lease_leaves_open() -> None:
     without_referencia = _lease("ALQ-2", "B00015057", "4000.00", situacion_inmueble="2")
 
     resolution = _resolver(build_invoice_catalogue([without_situacion, without_referencia])).resolve(
-        _m347_context(2025),
+        _m347_context(_YEAR - 1),
     )
 
     by_ref = {item.source_ref: item for item in resolution.diagnostics}
@@ -684,10 +687,10 @@ def test_m347_raises_no_inmueble_advisory_for_a_complete_lease_or_without_leases
     complete = _lease(
         "ALQ-1", "B00015016", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
     )
-    ordinary = _received("P-NOV", date(2025, 11, 5))
+    ordinary = _received("P-NOV", date(_YEAR - 1, 11, 5))
 
-    with_lease = _resolver(build_invoice_catalogue([complete])).resolve(_m347_context(2025))
-    without_lease = _resolver(build_invoice_catalogue([ordinary])).resolve(_m347_context(2025))
+    with_lease = _resolver(build_invoice_catalogue([complete])).resolve(_m347_context(_YEAR - 1))
+    without_lease = _resolver(build_invoice_catalogue([ordinary])).resolve(_m347_context(_YEAR - 1))
 
     assert (
         _advisory_refs(with_lease)
@@ -708,7 +711,7 @@ def test_m347_a_withheld_lease_stays_declared_because_art_34_1_d_has_the_landlor
         {**lease.model_dump(), "retention_rate": Decimal("0.19"), "retention_amount": Decimal("760.00")},
     )
 
-    resolution = _resolver(build_invoice_catalogue([withheld_lease])).resolve(_m347_context(2025))
+    resolution = _resolver(build_invoice_catalogue([withheld_lease])).resolve(_m347_context(_YEAR - 1))
 
     assert "m347-exclusion:withheld-issued-invoice" not in _advisory_refs(resolution)
     assert resolution.binding_values["modelo-347-declarante-numero-inmuebles"] == Decimal("1")

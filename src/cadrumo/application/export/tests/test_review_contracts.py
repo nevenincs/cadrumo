@@ -9,6 +9,8 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....core.hashing import content_hash_hex
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..managed_artifact_ports import ArtifactCreationReceipt, ManagedArtifactKind
@@ -26,6 +28,8 @@ from ..review_snapshot import (
     ReviewStatus,
     seal_review_snapshot,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,9 +69,9 @@ def _selection() -> CalculationReviewSelection:
         work_unit_id="a" * 64,
         calculation_revision_id="b" * 64,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
-        registry_snapshot_ref=RegistrySnapshotRef(modelo="303", revision_id="2026", modelo_year=2026, period="1T"),
+        registry_snapshot_ref=RegistrySnapshotRef(modelo="303", revision_id=str(_YEAR), modelo_year=_YEAR, period="1T"),
         authority_generation="c" * 64,
         registry_digest="d" * 64,
     )

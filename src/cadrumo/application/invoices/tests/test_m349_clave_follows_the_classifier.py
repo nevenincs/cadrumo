@@ -22,6 +22,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
@@ -34,6 +35,8 @@ from ....domain.iva.classification import (
 from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ..source_observations import iva_category_for_operation_type
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
@@ -41,7 +44,7 @@ def _eu_inbound_b2b(*, kind: TransactionKind) -> IvaInvoiceClassificationCriteri
     """EU_MEMBER to ES B2B RECEIVED criteria differing only by supply ``kind``."""
     return IvaInvoiceClassificationCriteria.model_validate(
         {
-            "transaction_date": date(2026, 3, 1),
+            "transaction_date": date(_YEAR, 3, 1),
             "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
             "issuer_identification_state": EUMemberState.from_registry("de"),
             "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),

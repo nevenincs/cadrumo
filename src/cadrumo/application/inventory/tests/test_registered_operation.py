@@ -12,6 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ....core.config import override_settings
@@ -70,6 +71,8 @@ from ..registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
 from ..service import InventoryLedgerResult
 from .registered_operation_conformance_support import build_inventory_conformance_closing_authority_record
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -112,14 +115,14 @@ def _ledger_with_private_evidence() -> InventoryLedger:
     )
     movement = MovementRecord.from_purchase_acquisition(
         movement_id="purchase-1",
-        movement_date=date(2026, 3, 15),
+        movement_date=date(_YEAR, 3, 15),
         sku="widget",
         quantity=Decimal("5"),
         acquisition_cost=acquisition,
     )
     return InventoryLedger(
         actividad_id="act-1",
-        year=2026,
+        year=_YEAR,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("100.00"),
         closing_authority_record=None,
@@ -161,7 +164,7 @@ def test_closing_authority_request_round_trips_a_stored_actor_longer_than_64(act
 
 def test_closing_authority_request_refuses_a_non_utc_decision_instant() -> None:
     decision = build_inventory_conformance_closing_authority_record("inventory-closing-seed").decision
-    offset = datetime(2026, 3, 1, 12, 0, tzinfo=timezone(timedelta(hours=2)))
+    offset = datetime(_YEAR, 3, 1, 12, 0, tzinfo=timezone(timedelta(hours=2)))
 
     with pytest.raises(ValidationError) as refused:
         InventoryClosingAuthorityDecisionRequest.model_validate({**dict(decision), "decided_at": offset})
@@ -240,7 +243,7 @@ def test_create_projection_accepts_only_receipt_correlated_typed_refusal() -> No
         code=INVENTORY_VALIDATION_REFUSAL_CODE,
         reason="inventory_validation",
         actividad_id="act-1",
-        year=2026,
+        year=_YEAR,
     )
     private_result = InventoryOperationExecutionResult(
         operation_id="create",
@@ -401,7 +404,7 @@ def test_profile_mismatch_refuses_before_phase_or_service_factory(
         payload=InventoryCreateRequest(
             profile_id=_PROFILE,
             actividad_id="act-1",
-            year=2026,
+            year=_YEAR,
             valuation_method="fifo",
         ),
     )
@@ -474,7 +477,7 @@ def test_unclassified_validation_error_keeps_mutation_effect_unknown() -> None:
     request = InventoryCreateRequest(
         profile_id=_PROFILE,
         actividad_id="act-1",
-        year=2026,
+        year=_YEAR,
         valuation_method="fifo",
     )
 
@@ -503,7 +506,7 @@ def test_only_known_service_input_validation_settles_as_none_effect_refusal() ->
     request = InventoryCreateRequest(
         profile_id=_PROFILE,
         actividad_id="act-1",
-        year=2026,
+        year=_YEAR,
         valuation_method="fifo",
     )
 

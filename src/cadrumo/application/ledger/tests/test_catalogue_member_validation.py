@@ -12,6 +12,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.iva.schema import IvaCashAccountingTreatment
 from ....domain.transactions import models as transaction_models
@@ -21,6 +23,8 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..actions_common import remove_transaction, replace_transaction, upsert_transaction
 from ..actions_export import ledger_export_row
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -33,7 +37,7 @@ def _authority_operation() -> Iterator[None]:
 
 
 def _transaction(provider_id: str) -> Transaction:
-    booked = date(2025, 3, 4)
+    booked = date(_YEAR - 1, 3, 4)
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
@@ -49,7 +53,7 @@ def _transaction(provider_id: str) -> Transaction:
                     source_sha256="c" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(2025, 3, 5, 9, 0, tzinfo=UTC),
+                    ingested_at=datetime(_YEAR - 1, 3, 5, 9, 0, tzinfo=UTC),
                     provider_name="member check provider",
                 ),
                 raw_fields={"Concepto": provider_id},
@@ -82,7 +86,7 @@ def _relabelled(transaction: Transaction, label: str) -> Transaction:
 
 def test_each_replacement_proves_one_transaction(monkeypatch: pytest.MonkeyPatch) -> None:
     ledger = _ledger(40)
-    replacements = [_relabelled(transaction, "Cierre 2025") for transaction in ledger.values()]
+    replacements = [_relabelled(transaction, f"Cierre {_YEAR - 1}") for transaction in ledger.values()]
     derivations: list[str] = []
     derive = transaction_models.derive_transaction_id
 
@@ -95,7 +99,7 @@ def test_each_replacement_proves_one_transaction(monkeypatch: pytest.MonkeyPatch
         ledger = replace_transaction(ledger, old_transaction_id=replacement.transaction_id, replacement=replacement)
 
     assert len(derivations) == len(replacements)
-    assert {transaction.group_label for transaction in ledger.values()} == {"Cierre 2025"}
+    assert {transaction.group_label for transaction in ledger.values()} == {f"Cierre {_YEAR - 1}"}
 
 
 def test_an_assembled_catalogue_equals_a_validated_one() -> None:

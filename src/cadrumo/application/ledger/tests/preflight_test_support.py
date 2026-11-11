@@ -6,6 +6,8 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.categories.spending_category import SpendingCategory
@@ -14,6 +16,8 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
+_YEAR = filing_year_envelope().horizon
+
 BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 
 
@@ -21,14 +25,14 @@ def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-Q2_2026 = _period(2026, "2T")
-EVENT_2026 = _period(2026, "EVENT-1")
+Q2_2026 = _period(_YEAR, "2T")
+EVENT_2026 = _period(_YEAR, "EVENT-1")
 
 
 def raw_transaction(
     provider_id: str,
     *,
-    booked_date: date = date(2026, 4, 5),
+    booked_date: date = date(_YEAR, 4, 5),
     amount: Decimal = Decimal("121.00"),
     currency: str = "EUR",
 ) -> RawTransaction:
@@ -45,7 +49,7 @@ def raw_transaction(
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": BindingSourceKind.LEDGER_TRANSACTION.value},
@@ -68,7 +72,7 @@ def preflight_transaction(
     counterparty_identification_state: EUMemberState | None = None,
     irpf_category: str | None = None,
     usage_ratio_id: str | None = None,
-    booked_date: date = date(2026, 4, 5),
+    booked_date: date = date(_YEAR, 4, 5),
     currency: str = "EUR",
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
 ) -> Transaction:
@@ -90,7 +94,7 @@ def preflight_transaction(
             "irpf_category": irpf_category,
             "usage_ratio_id": usage_ratio_id,
             "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

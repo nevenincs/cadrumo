@@ -39,6 +39,7 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import resolve_iva_classification_catalogue
@@ -74,6 +75,8 @@ from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..regime_contradiction import draft_prints_a_repercutido_line
 from .counterparty_establishment_support import InMemoryCounterpartyEstablishmentRepository
 
+_YEAR = filing_year_envelope().horizon
+
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than `from .. import`: the ledger package facade is
 #: inert and its tests may not import through it.
@@ -85,7 +88,7 @@ _BUCKET_ID = "37373737-3737-4737-8737-373737373737"
 _SPANISH_CIF = "B00015016"
 _GERMAN_IVA = "DE811234567"
 _GREEK_IVA = "EL123456789"
-_ASSERTED_AT = datetime(2026, 5, 12, 9, 30, tzinfo=UTC)
+_ASSERTED_AT = datetime(_YEAR, 5, 12, 9, 30, tzinfo=UTC)
 
 _LAS_PALMAS = "35001"
 _MADRID = "28013"
@@ -889,7 +892,7 @@ def test_the_collected_flat_rate_reaches_the_spanish_registry_lookup() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         rates = charged_iva_rates(_FLAT_RATE_DRAFT)
 
-        assert spanish_iva_was_charged(rates, on_date=date(2026, 5, 12), operation=_authority_operation_for_test)
+        assert spanish_iva_was_charged(rates, on_date=date(_YEAR, 5, 12), operation=_authority_operation_for_test)
 
 
 def test_a_draft_charging_nothing_still_reports_no_rate() -> None:
@@ -914,7 +917,7 @@ def test_reading_the_flat_carrier_is_what_makes_the_lane_visible() -> None:
         assert _structured_carriers_only(_FLAT_RATE_DRAFT) == ()
         assert not spanish_iva_was_charged(
             _structured_carriers_only(_FLAT_RATE_DRAFT),
-            on_date=date(2026, 5, 12),
+            on_date=date(_YEAR, 5, 12),
             operation=_authority_operation_for_test,
         )
         assert charged_iva_rates(_FLAT_RATE_DRAFT) != ()

@@ -9,6 +9,7 @@ import pytest
 
 from cadrumo.application.inventory.registered_projections import InventoryLedgerProjection
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.inventory.corrections import InventoryChangeStamp, retire_ledger
 from cadrumo.domain.contribuyente.inventory.records import (
     InventoryLedger,
@@ -17,15 +18,17 @@ from cadrumo.domain.contribuyente.inventory.records import (
     ValuationMethod,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 
 
 def _ledger(opening: str) -> InventoryLedger:
     return InventoryLedger(
         actividad_id="act-1",
-        year=2026,
+        year=_YEAR,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal(opening),
         closing_authority_record=None,
@@ -47,10 +50,10 @@ def _retired(opening: str) -> InventoryLedger:
 def test_a_retired_book_with_facts_carries_a_real_sentence_key() -> None:
     advisories = InventoryLedgerProjection.from_ledger(_retired("10.00")).advisories
 
-    assert [(item.code, item.year) for item in advisories] == [("retired_book_leaves_year_unresolved", 2026)]
-    sentence = tr(advisories[0].key, year=2026)
+    assert [(item.code, item.year) for item in advisories] == [("retired_book_leaves_year_unresolved", _YEAR)]
+    sentence = tr(advisories[0].key, year=_YEAR)
     assert sentence != advisories[0].key
-    assert "2026" in sentence
+    assert str(_YEAR) in sentence
 
 
 def test_a_retired_empty_book_and_a_live_book_say_nothing() -> None:

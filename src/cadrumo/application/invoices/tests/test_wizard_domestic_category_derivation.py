@@ -28,13 +28,32 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import IvaCategory
 
 from ..creation_wizard import derived_domestic_category
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_DAY = date(2025, 6, 15)
+_DAY = date(_YEAR, 6, 15)
+
+
+def _published_five_percent_windows() -> tuple[tuple[date, date], ...]:
+    """Return the closed windows in which the registry publishes a 5 % Spanish rate, oldest first."""
+    with bundled_indexed_authority().operation() as operation:
+        fact = operation.governed_fact("iva-rate-schedule")
+    windows = [
+        (variant.valid_from, variant.valid_to)
+        for variant in fact.variants
+        if any(selector.name == "member_state" and selector.value == "es" for selector in variant.selectors)
+        and any(entry.key == "pct" and entry.value == Decimal(5) for entry in variant.payload.entries)
+    ]
+    assert windows, "the registry publishes no 5 % Spanish window"
+    assert all(start is not None and end is not None for start, end in windows)
+    return tuple(sorted(windows))
 
 
 @pytest.mark.parametrize(
@@ -69,8 +88,8 @@ def test_an_unstated_rate_derives_nothing() -> None:
 def test_a_rate_outside_its_force_window_derives_nothing() -> None:
     """The silence most likely to be mistaken for an unhandled case.
 
-    5 % was a real Spanish rate inside the 2023 to September 2024 food window
-    and is not one in June 2025, so it resolves to no tier at all. Deriving
+    5 % was a real Spanish rate inside its published food windows and is not
+    one once they closed, so it resolves to no tier at all. Deriving
     anyway would ground an invoice on a rate that did not exist on its date.
 
     A rate resolving to MORE than one tier is refused by the same condition, for
@@ -79,6 +98,7 @@ def test_a_rate_outside_its_force_window_derives_nothing() -> None:
     that half is defensive rather than exercised, and saying so is more honest
     than implying the branch is covered.
     """
+    assert _published_five_percent_windows()[-1][1] < _DAY
     assert derived_domestic_category(country_code="ES", iva_rate=Decimal("5"), on_date=_DAY) is None
 
 
@@ -89,7 +109,7 @@ def test_the_same_rate_derives_again_once_its_window_reopens() -> None:
     that had never heard of 5 % at all, and the test would be asserting
     ignorance rather than a date judgement.
     """
-    inside_the_window = date(2024, 3, 1)
+    inside_the_window = _published_five_percent_windows()[0][0]
 
     assert derived_domestic_category(
         country_code="ES", iva_rate=Decimal("5"), on_date=inside_the_window

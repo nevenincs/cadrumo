@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect
 from ....core.time.clock import now
@@ -59,6 +61,8 @@ from ..registered_requests import (
 from ..registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
 from ..service import InventoryMovementCommand, InventoryService
 
+_YEAR = filing_year_envelope().horizon
+
 
 @dataclass(frozen=True, slots=True)
 class InventoryOperationConformanceCase:
@@ -96,7 +100,7 @@ def prepare_inventory_operation_conformance_case(
         service.create(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             valuation_method="fifo",
             opening_stock=Decimal("0"),
             actor="conformance-seed",
@@ -104,7 +108,7 @@ def prepare_inventory_operation_conformance_case(
         return InventoryOperationConformanceCase(
             request=InventoryListRequest(profile_id=profile_id),
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             expected_effect=OperationEffect.NONE,
         )
 
@@ -114,12 +118,12 @@ def prepare_inventory_operation_conformance_case(
             request=InventoryCreateRequest(
                 profile_id=profile_id,
                 actividad_id=actividad_id,
-                year=2026,
+                year=_YEAR,
                 valuation_method="fifo",
                 opening_stock=PublicDecimal(decimal="0.00"),
             ),
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             expected_effect=OperationEffect.UPDATED,
         )
 
@@ -128,7 +132,7 @@ def prepare_inventory_operation_conformance_case(
         service.create(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             valuation_method="fifo",
             opening_stock=Decimal("100.00"),
             actor="conformance-seed",
@@ -137,14 +141,14 @@ def prepare_inventory_operation_conformance_case(
             request=InventoryMovementAddRequest(
                 profile_id=profile_id,
                 actividad_id=actividad_id,
-                year=2026,
+                year=_YEAR,
                 movement_id="inventory-cogs-1",
-                movement_date=date(2026, 3, 15),
+                movement_date=date(_YEAR, 3, 15),
                 kind=MovementKind.COGS,
                 quantity=PublicDecimal(decimal="1"),
             ),
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             expected_effect=OperationEffect.UPDATED,
         )
 
@@ -153,7 +157,7 @@ def prepare_inventory_operation_conformance_case(
         service.create(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             valuation_method="fifo",
             opening_stock=Decimal("100.00"),
             actor="conformance-seed",
@@ -162,10 +166,10 @@ def prepare_inventory_operation_conformance_case(
             request=InventoryValuationPreviewRequest(
                 profile_id=profile_id,
                 actividad_id=actividad_id,
-                year=2026,
+                year=_YEAR,
             ),
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             expected_effect=OperationEffect.UPDATED,
         )
 
@@ -174,7 +178,7 @@ def prepare_inventory_operation_conformance_case(
         service.create(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             valuation_method="fifo",
             opening_stock=Decimal("100.00"),
             actor="conformance-seed",
@@ -184,11 +188,11 @@ def prepare_inventory_operation_conformance_case(
             request=InventoryClosingAuthorityRecordRequest(
                 profile_id=profile_id,
                 actividad_id=actividad_id,
-                year=2026,
+                year=_YEAR,
                 authority_record=authority_record,
             ),
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             expected_effect=OperationEffect.UPDATED,
         )
 
@@ -207,7 +211,7 @@ def _prepare_ledger_change_case(
     service.create(
         bucket_id=bucket_id,
         actividad_id=actividad_id,
-        year=2026,
+        year=_YEAR,
         valuation_method="fifo",
         opening_stock=Decimal("100.00"),
         actor="conformance-seed",
@@ -219,10 +223,10 @@ def _prepare_ledger_change_case(
         service.movement_add(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             movement=InventoryMovementCommand(
                 movement_id="seed-cogs",
-                movement_date=date(2026, 3, 15),
+                movement_date=date(_YEAR, 3, 15),
                 kind=MovementKind.COGS,
                 quantity=Decimal("1"),
             ),
@@ -232,16 +236,16 @@ def _prepare_ledger_change_case(
         service.retire(
             bucket_id=bucket_id,
             actividad_id=actividad_id,
-            year=2026,
+            year=_YEAR,
             correction_id="seed-retire",
             reason=InventoryRetirementReason.CREATED_IN_ERROR,
             actor="conformance-seed",
         )
-    change = {"profile_id": profile_id, "actividad_id": actividad_id, "year": 2026, "correction_id": "case-1"}
+    change = {"profile_id": profile_id, "actividad_id": actividad_id, "year": _YEAR, "correction_id": "case-1"}
     reason = InventoryCorrectionReason.KEYING_ERROR
     requests: dict[str, BaseModel] = {
         INVENTORY_INSPECT_OPERATION_DEFINITION_ID: InventoryInspectRequest(
-            profile_id=profile_id, actividad_id=actividad_id, year=2026
+            profile_id=profile_id, actividad_id=actividad_id, year=_YEAR
         ),
         INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID: InventoryDescribeRequest.model_validate(
             {**change, "label": "Hardware"}
@@ -255,7 +259,7 @@ def _prepare_ledger_change_case(
                 "target_movement_id": "seed-cogs",
                 "reason": reason,
                 "movement_id": "seed-cogs-b",
-                "movement_date": date(2026, 3, 16),
+                "movement_date": date(_YEAR, 3, 16),
                 "kind": MovementKind.COGS,
                 "quantity": PublicDecimal(decimal="1"),
             }
@@ -271,7 +275,7 @@ def _prepare_ledger_change_case(
     return InventoryOperationConformanceCase(
         request=requests[definition_id],
         actividad_id=actividad_id,
-        year=2026,
+        year=_YEAR,
         expected_effect=(
             OperationEffect.NONE
             if definition_id == INVENTORY_INSPECT_OPERATION_DEFINITION_ID
@@ -293,7 +297,7 @@ def build_inventory_conformance_closing_authority_record(
     prior_source_fingerprint = "c" * 64
     prior_closing_fingerprint = fingerprint_prior_authoritative_closing(
         actividad_id=actividad_id,
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         authoritative_closing_value=Decimal("100.00"),
         authoritative_source_fingerprint=prior_source_fingerprint,
         evidence=continuity,
@@ -302,7 +306,7 @@ def build_inventory_conformance_closing_authority_record(
         decision=InventoryClosingAuthorityDecisionRequest(
             decision_id="inventory-closing-decision-2026",
             actividad_id=actividad_id,
-            filing_year=2026,
+            filing_year=_YEAR,
             authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
             reason="Conformance fixture records the evidenced movement-derived authority.",
             actor="conformance-operator",
@@ -318,8 +322,8 @@ def build_inventory_conformance_closing_authority_record(
         ),
         prior_closing_link=InventoryPriorClosingLinkRequest(
             actividad_id=actividad_id,
-            current_filing_year=2026,
-            prior_filing_year=2025,
+            current_filing_year=_YEAR,
+            prior_filing_year=_YEAR - 1,
             prior_authoritative_closing_value=PublicDecimal(decimal="100.00"),
             current_opening_value=PublicDecimal(decimal="100.00"),
             prior_authoritative_source_fingerprint=prior_source_fingerprint,

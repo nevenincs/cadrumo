@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import (
@@ -37,6 +38,8 @@ from ..classification_assembly import (
 from ..classifier_inputs import collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CUSTOMER_NIF = "12345678Z"
@@ -45,7 +48,7 @@ _CUSTOMER_NIF = "12345678Z"
 #: identification: the printed country code beside it says where the party
 #: IS, which is a different fact and settles nothing here.
 _FRENCH_IVA_NUMBER = "FR40303265045"
-_DATE = date(2026, 4, 2)
+_DATE = date(_YEAR, 4, 2)
 
 
 def _inputs(*, printed_identifier: str | None = _CUSTOMER_NIF):
