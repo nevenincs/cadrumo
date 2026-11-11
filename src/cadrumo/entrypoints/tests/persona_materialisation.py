@@ -26,7 +26,7 @@ import json
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from functools import cache
@@ -555,7 +555,7 @@ def _decimal_text(value: Decimal) -> str:
     return format(value, "f")
 
 
-def _carries_iva_amount(row: LedgerRow) -> bool:
+def carries_iva_amount(row: LedgerRow) -> bool:
     """Whether single classification can carry the row's IVA cuota.
 
     Classification takes no recargo de equivalencia amount and checks base,
@@ -567,7 +567,7 @@ def _carries_iva_amount(row: LedgerRow) -> bool:
     return row.recargo_amount is None
 
 
-def _statement(rows: Sequence[LedgerRow], envelope: YearEnvelope) -> str:
+def bank_statement(rows: Sequence[LedgerRow], envelope: YearEnvelope) -> str:
     """Bank movements in the statement columns ``app ledger import --file`` reads."""
     lines = [_STATEMENT_HEADER]
     balance = Decimal("0.00")
@@ -590,7 +590,7 @@ def _statement(rows: Sequence[LedgerRow], envelope: YearEnvelope) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _classify_patch(
+def classify_patch(
     persona: Persona, row: LedgerRow
 ) -> tuple[LedgerClassifyPatch, tuple[LedgerClassifyPatchField, ...]]:
     values: dict[LedgerClassifyPatchField, str] = {"business_classification": row.classification}
@@ -603,7 +603,7 @@ def _classify_patch(
         ("iva_category", row.iva_category),
         ("taxable_base", row.taxable_base),
         ("iva_rate", row.iva_rate),
-        ("iva_amount", row.iva_amount if _carries_iva_amount(row) else None),
+        ("iva_amount", row.iva_amount if carries_iva_amount(row) else None),
         ("deduction_fact_kind", row.deduction_kind),
     )
     for field, value in optional:
@@ -621,7 +621,7 @@ def _public_percentage(fraction: Decimal | None) -> PublicDecimal | None:
     return None if fraction is None else PublicDecimal(decimal=str(fraction * 100))
 
 
-def _party_name(persona: Persona, role: str) -> str:
+def party_name(persona: Persona, role: str) -> str:
     counterparty = persona.identities.role(role)
     return counterparty.legal_name or f"{counterparty.field('name')} {counterparty.field('surnames')}"
 
@@ -633,7 +633,7 @@ def _invoice_request(persona: Persona, row: LedgerRow, world: PersonaWorld) -> I
     if row.counterparty is None:
         raise PersonaMaterialisationError(f"{persona.id} {row.ref}: an invoice names its counterparty")
     counterparty = persona.identities.role(row.counterparty)
-    name = _party_name(persona, row.counterparty)
+    name = party_name(persona, row.counterparty)
     return InvoiceAddRequest(
         profile_id=world.profile_id,
         kind=InvoiceKind(row.invoice_kind),
@@ -744,14 +744,14 @@ def _replay_household(persona: Persona, world: PersonaWorld) -> None:
         )
 
 
-def _declared_withholding(persona: Persona) -> list[WithholdingCertificate]:
+def declared_withholding(persona: Persona) -> list[WithholdingCertificate]:
     """The certificates the record operation takes: those the taxpayer declares, which need no certificate bytes."""
     return [item for item in persona.withholding_certificates if item.origin == "operator_declaration"]
 
 
 def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
     zero = PublicDecimal(decimal="0.00")
-    for certificate in _declared_withholding(persona):
+    for certificate in declared_withholding(persona):
         payer = persona.identities.role(certificate.payer)
         recorded = run_operation(
             world,
@@ -761,7 +761,7 @@ def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
                 ejercicio=certificate.ejercicio.resolve(world.envelope),
                 income_class=RetencionSoportadaClase(certificate.income_class),
                 payer_tax_id=payer.value,
-                payer_legal_name=_party_name(persona, certificate.payer),
+                payer_legal_name=party_name(persona, certificate.payer),
                 importe_integro_dinerario=PublicDecimal(decimal=str(certificate.importe_integro)),
                 valoracion_especie=zero,
                 retencion=PublicDecimal(decimal=str(certificate.retencion)),
@@ -779,7 +779,7 @@ def _imported_transactions(persona: Persona, world: PersonaWorld) -> dict[str, s
     """Import the statement and map each ledger ref to the transaction it became."""
     rows = persona.ledger
     statement = world.workdir / f"{persona.id}-statement.csv"
-    statement.write_text(_statement(rows, world.envelope), encoding="utf-8", newline="\n")
+    statement.write_text(bank_statement(rows, world.envelope), encoding="utf-8", newline="\n")
     result = run_operation(
         world,
         LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -807,7 +807,7 @@ def _imported_transactions(persona: Persona, world: PersonaWorld) -> dict[str, s
 def _replay_ledger(persona: Persona, world: PersonaWorld, transactions: Mapping[str, str]) -> dict[str, str]:
     """Classify every row, then record each row's invoice and link it; returns ledger ref to invoice id."""
     for row in persona.ledger:
-        patch, fields = _classify_patch(persona, row)
+        patch, fields = classify_patch(persona, row)
         settle_operation(
             world,
             LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
@@ -841,12 +841,12 @@ def _replay_ledger(persona: Persona, world: PersonaWorld, transactions: Mapping[
     return invoices
 
 
-def _document_path(persona: Persona, document: PersonaDocument, world: PersonaWorld) -> Path:
+def document_path(persona: Persona, document: PersonaDocument, *, envelope: YearEnvelope, workdir: Path) -> Path:
     """The file evidence intake reads: the specimen itself, or the generated invoice written to the workdir."""
     if document.path is not None:
         return document.path
-    generated = render_facturae(persona, document, world.envelope)
-    target = world.workdir / "documents" / generated.file_name
+    generated = render_facturae(persona, document, envelope)
+    target = workdir / "documents" / generated.file_name
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(generated.text, encoding="utf-8", newline="\n")
     return target
@@ -855,7 +855,7 @@ def _document_path(persona: Persona, document: PersonaDocument, world: PersonaWo
 def _replay_documents(persona: Persona, world: PersonaWorld, transactions: Mapping[str, str]) -> dict[str, str]:
     evidence: dict[str, str] = {}
     for document in persona.documents:
-        source = _document_path(persona, document, world)
+        source = document_path(persona, document, envelope=world.envelope, workdir=world.workdir)
         added = run_operation(
             world,
             LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
@@ -883,10 +883,10 @@ def _replay_documents(persona: Persona, world: PersonaWorld, transactions: Mappi
     return evidence
 
 
-def _inventory_statement(persona: Persona, book: InventoryBook, world: PersonaWorld) -> Path:
+def inventory_statement(persona: Persona, book: InventoryBook, *, envelope: YearEnvelope, workdir: Path) -> Path:
     """The taxpayer's statement behind one inventory book, written to the workdir as the PDF evidence intake keeps."""
-    year = book.year.resolve(world.envelope)
-    target = world.workdir / "inventory" / f"{persona.id}-{book.activity}-{year}.pdf"
+    year = book.year.resolve(envelope)
+    target = workdir / "inventory" / f"{persona.id}-{book.activity}-{year}.pdf"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(f"%PDF-1.4\n% {book.statement} ({year})\n%%EOF\n".encode())
     return target
@@ -916,7 +916,7 @@ def _replay_inventory(persona: Persona, world: PersonaWorld) -> None:
         )
         if created.outcome != "created":
             raise PersonaMaterialisationError(f"{where}: create refused: {created.model_dump_json()}")
-        source = _inventory_statement(persona, book, world)
+        source = inventory_statement(persona, book, envelope=world.envelope, workdir=world.workdir)
         stored = run_operation(
             world,
             INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
@@ -962,7 +962,7 @@ def filing_key(modelo: str, year: int, period: str) -> str:
     return f"{modelo}:{year}:{period}"
 
 
-def _history_periods(
+def history_periods(
     persona: Persona, envelope: YearEnvelope
 ) -> list[tuple[int, str, FiledReturns | CalculatedReturns]]:
     """Every filed and calculated return of the persona, in the order the windows of their periods close."""
@@ -971,7 +971,7 @@ def _history_periods(
     return sorted(found, key=lambda item: (item[0], filed_period_order(item[1])))
 
 
-def _preceding_quarter(year: int, period: str) -> PublicPeriod:
+def preceding_quarter(year: int, period: str) -> PublicPeriod:
     """The quarter before ``period``, whose compensation balance a Modelo 303 period starts from."""
     quarter = int(period[0])
     if quarter == 1:
@@ -1015,7 +1015,7 @@ def _seed_compensation_carried_in(persona: Persona, world: PersonaWorld) -> None
             MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
             ModeloIvaWalletSeedRequest(
                 profile_id=world.profile_id,
-                period=_preceding_quarter(filed.year.resolve(world.envelope), filed.periods[0]),
+                period=preceding_quarter(filed.year.resolve(world.envelope), filed.periods[0]),
                 amount=_decimal_text(filed.iva_compensation_carried_in.normalize()),
             ),
         )
@@ -1043,13 +1043,31 @@ def _record_local_observations(persona: Persona, world: PersonaWorld) -> None:
         )
 
 
-_RENT_WITHHOLDING_MODELO = "115"
+RENT_WITHHOLDING_MODELO = "115"
+"""The modelo whose evidence the retención on a rent payment for leased premises is captured as."""
+PROFESSIONAL_WITHHOLDING_MODELO = "111"
+"""The modelo whose evidence the retención on a professional's fees is captured as."""
 _URBAN_RENT_SCHEME = RetencionScheme("arrendamiento_urbano")
+_PROFESSIONAL_SCHEME = RetencionScheme("actividades_profesionales")
+#: Modelo 190 clave G, subclave 01: professional income withheld at the general rate of RIRPF art. 95.1.
+_PROFESSIONAL_CLAVE = "G"
+_PROFESSIONAL_GENERAL_RATE_SUBCLAVE = "01"
 _PERCENT = Decimal("100")
 _CENTS = Decimal("0.01")
 
 
-def _rent_payments(persona: Persona, premises: LeasedPremises) -> list[LedgerRow]:
+@dataclass(frozen=True, slots=True)
+class WithholdingCapture:
+    """The withholding one payment's retención is captured as: its modelo, the quarter paid and the evidence."""
+
+    modelo: str
+    period: Period
+    evidence: InvoiceWithholdingEvidenceRequest
+    kind: str
+    """``rent`` or ``professional``, naming the capture in a refusal."""
+
+
+def rent_payments(persona: Persona, premises: LeasedPremises) -> list[LedgerRow]:
     """The received ledger rows from the premises' landlord that carry a retención: one per rent payment."""
     return [
         row
@@ -1061,27 +1079,32 @@ def _rent_payments(persona: Persona, premises: LeasedPremises) -> list[LedgerRow
     ]
 
 
-def _rent_capture(
+def _paid_quarter(paid_on: date) -> Period:
+    return Period.from_year_and_code(paid_on.year, f"{(paid_on.month - 1) // 3 + 1}T")
+
+
+def rent_withholding_capture(
     persona: Persona,
-    world: PersonaWorld,
     premises: LeasedPremises,
     row: LedgerRow,
     *,
-    transactions: Mapping[str, str],
-    invoices: Mapping[str, str],
-) -> ModeloInvoiceWithholdingCaptureRequest:
+    envelope: YearEnvelope,
+    operation: PinnedAuthorityOperation,
+    invoice_id: str,
+    payment_event_id: str,
+) -> WithholdingCapture:
     """The withholding capture of one rent payment: its invoice, its bank movement and the premises it pays for."""
     if row.taxable_base is None or row.retencion_amount is None or row.retencion_rate is None:
         raise PersonaMaterialisationError(f"{persona.id} {row.ref}: a rent payment states its base and retención")
-    paid_on = row.operation_date(world.envelope)
-    with validating_governed_facts(world.operation):
+    paid_on = row.operation_date(envelope)
+    with validating_governed_facts(operation):
         evidence = InvoiceWithholdingEvidenceRequest(
-            invoice_id=invoices[row.ref],
+            invoice_id=invoice_id,
             income_kind=WithholdingIncomeKind.URBAN_RENT,
             scheme=_URBAN_RENT_SCHEME,
             recipient_tax_status=WithholdingRecipientTaxStatus(premises.landlord_tax_status),
             recipient_tax_regime=WithholdingRecipientTaxRegime(premises.landlord_tax_regime),
-            payment_event_id=transactions[row.ref],
+            payment_event_id=payment_event_id,
             payment_occurred_on=paid_on,
             allocation_id=row.ref,
             allocated_base=row.taxable_base,
@@ -1099,41 +1122,12 @@ def _rent_capture(
                 withholding_percentage=(row.retencion_rate * _PERCENT).quantize(_CENTS),
             ),
         )
-    quarter = Period.from_year_and_code(paid_on.year, f"{(paid_on.month - 1) // 3 + 1}T")
-    return ModeloInvoiceWithholdingCaptureRequest.from_inputs(
-        profile_id=world.profile_id,
-        command=PerModeloAggregationCommand(modelo=_RENT_WITHHOLDING_MODELO, period=quarter),
-        evidence=evidence,
+    return WithholdingCapture(
+        modelo=RENT_WITHHOLDING_MODELO, period=_paid_quarter(paid_on), evidence=evidence, kind="rent"
     )
 
 
-def _capture_rent_withholding(
-    persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
-) -> None:
-    """Capture the retención the taxpayer withheld on every rent payment for leased premises, as Modelo 115 evidence."""
-    for premises in persona.leased_premises:
-        for row in _rent_payments(persona, premises):
-            captured = run_operation(
-                world,
-                MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
-                _rent_capture(persona, world, premises, row, transactions=transactions, invoices=invoices),
-                ModeloInvoiceWithholdingCaptureProjection,
-            )
-            if captured.outcome != "captured":
-                raise PersonaMaterialisationError(
-                    f"{persona.id} {row.ref}: rent withholding refused ({captured.refusal_reason}, "
-                    f"{captured.refusal_defects})"
-                )
-
-
-_PROFESSIONAL_WITHHOLDING_MODELO = "111"
-_PROFESSIONAL_SCHEME = RetencionScheme("actividades_profesionales")
-#: Modelo 190 clave G, subclave 01: professional income withheld at the general rate of RIRPF art. 95.1.
-_PROFESSIONAL_CLAVE = "G"
-_PROFESSIONAL_GENERAL_RATE_SUBCLAVE = "01"
-
-
-def _professional_fee_payments(persona: Persona) -> list[LedgerRow]:
+def professional_fee_payments(persona: Persona) -> list[LedgerRow]:
     """The received ledger rows carrying a retención that pay no leased premises: a professional's fees.
 
     A received invoice bears a retención the taxpayer practises only as the
@@ -1151,14 +1145,15 @@ def _professional_fee_payments(persona: Persona) -> list[LedgerRow]:
     ]
 
 
-def _professional_fee_capture(
+def professional_withholding_capture(
     persona: Persona,
-    world: PersonaWorld,
     row: LedgerRow,
     *,
-    transactions: Mapping[str, str],
-    invoices: Mapping[str, str],
-) -> ModeloInvoiceWithholdingCaptureRequest:
+    envelope: YearEnvelope,
+    operation: PinnedAuthorityOperation,
+    invoice_id: str,
+    payment_event_id: str,
+) -> WithholdingCapture:
     """The withholding capture of one professional's invoice paid by the taxpayer, for the Modelo 111 of its quarter.
 
     The persona's professionals are resident individuals taxed under the IRPF,
@@ -1173,15 +1168,15 @@ def _professional_fee_capture(
         or row.retencion_rate is None
     ):
         raise PersonaMaterialisationError(f"{persona.id} {row.ref}: a professional fee states its base and retención")
-    paid_on = row.operation_date(world.envelope)
-    with validating_governed_facts(world.operation):
+    paid_on = row.operation_date(envelope)
+    with validating_governed_facts(operation):
         evidence = InvoiceWithholdingEvidenceRequest(
-            invoice_id=invoices[row.ref],
+            invoice_id=invoice_id,
             income_kind=WithholdingIncomeKind.PROFESSIONAL,
             scheme=_PROFESSIONAL_SCHEME,
             recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
             recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-            payment_event_id=transactions[row.ref],
+            payment_event_id=payment_event_id,
             payment_occurred_on=paid_on,
             allocation_id=row.ref,
             allocated_base=row.taxable_base,
@@ -1189,10 +1184,10 @@ def _professional_fee_capture(
             allocated_settlement=abs(row.amount),
             idempotency_key=f"{persona.id}:{row.ref}",
             modelo_190_detail=WithholdingObservation(
-                source_id=invoices[row.ref],
+                source_id=invoice_id,
                 source_allocation_id=row.ref,
                 perceptor_tax_id=persona.identities.role(row.counterparty).value,
-                perceptor_legal_name=_party_name(persona, row.counterparty),
+                perceptor_legal_name=party_name(persona, row.counterparty),
                 country_code="ES",
                 transaction_date=paid_on,
                 clave=RetencionClave.from_registry(_PROFESSIONAL_CLAVE),
@@ -1204,30 +1199,61 @@ def _professional_fee_capture(
                 porcentaje_retencion=(row.retencion_rate * _PERCENT).quantize(_CENTS),
             ),
         )
-    quarter = Period.from_year_and_code(paid_on.year, f"{(paid_on.month - 1) // 3 + 1}T")
-    return ModeloInvoiceWithholdingCaptureRequest.from_inputs(
-        profile_id=world.profile_id,
-        command=PerModeloAggregationCommand(modelo=_PROFESSIONAL_WITHHOLDING_MODELO, period=quarter),
-        evidence=evidence,
+    return WithholdingCapture(
+        modelo=PROFESSIONAL_WITHHOLDING_MODELO, period=_paid_quarter(paid_on), evidence=evidence, kind="professional"
     )
+
+
+def _capture(persona: Persona, world: PersonaWorld, row: LedgerRow, capture: WithholdingCapture) -> None:
+    captured = run_operation(
+        world,
+        MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
+        ModeloInvoiceWithholdingCaptureRequest.from_inputs(
+            profile_id=world.profile_id,
+            command=PerModeloAggregationCommand(modelo=capture.modelo, period=capture.period),
+            evidence=capture.evidence,
+        ),
+        ModeloInvoiceWithholdingCaptureProjection,
+    )
+    if captured.outcome != "captured":
+        raise PersonaMaterialisationError(
+            f"{persona.id} {row.ref}: {capture.kind} withholding refused ({captured.refusal_reason}, "
+            f"{captured.refusal_defects})"
+        )
+
+
+def _capture_rent_withholding(
+    persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
+) -> None:
+    """Capture the retención the taxpayer withheld on every rent payment for leased premises, as Modelo 115 evidence."""
+    for premises in persona.leased_premises:
+        for row in rent_payments(persona, premises):
+            capture = rent_withholding_capture(
+                persona,
+                premises,
+                row,
+                envelope=world.envelope,
+                operation=world.operation,
+                invoice_id=invoices[row.ref],
+                payment_event_id=transactions[row.ref],
+            )
+            _capture(persona, world, row, capture)
 
 
 def _capture_professional_withholding(
     persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
 ) -> None:
     """Capture the retención the taxpayer withheld on every professional's invoice, as Modelo 111 evidence."""
-    for row in _professional_fee_payments(persona):
-        captured = run_operation(
-            world,
-            MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
-            _professional_fee_capture(persona, world, row, transactions=transactions, invoices=invoices),
-            ModeloInvoiceWithholdingCaptureProjection,
+    for row in professional_fee_payments(persona):
+        capture = professional_withholding_capture(
+            persona,
+            row,
+            envelope=world.envelope,
+            operation=world.operation,
+            invoice_id=invoices[row.ref],
+            payment_event_id=transactions[row.ref],
         )
-        if captured.outcome != "captured":
-            raise PersonaMaterialisationError(
-                f"{persona.id} {row.ref}: professional withholding refused ({captured.refusal_reason}, "
-                f"{captured.refusal_defects})"
-            )
+        _capture(persona, world, row, capture)
 
 
 def _finding_names(verified: ModeloWorkVerifyPublicResultV2) -> str:
@@ -1267,7 +1293,7 @@ def _replay_history(
     _capture_professional_withholding(persona, world, transactions=transactions, invoices=invoices)
     filings: dict[str, str] = {}
     calculations: dict[str, str] = {}
-    for year, period, filed in _history_periods(persona, world.envelope):
+    for year, period, filed in history_periods(persona, world.envelope):
         where = f"{persona.id} Modelo {filed.modelo} {year} {period}"
         created = settle_operation(
             world,
@@ -1408,7 +1434,7 @@ def _not_loaded(persona: Persona, scope: ReplayScope, *, setup_complete: bool | 
                 ),
             )
         )
-    recargo = [row.ref for row in persona.ledger if not _carries_iva_amount(row)]
+    recargo = [row.ref for row in persona.ledger if not carries_iva_amount(row)]
     if recargo:
         found.append(
             NotLoaded(
