@@ -45,7 +45,12 @@ from ....application.operator_actions.models import PreconditionVerdict
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
+from ....core.errors.error_codes import (
+    ErrorCategory,
+    get_registered_error_code,
+    public_error_context,
+    resolve_error_message,
+)
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
@@ -333,6 +338,12 @@ def test_an_unstated_carry_with_no_earlier_return_is_refused_naming_every_open_c
             assert str(year) in message
             assert all(box in message for box in _CARRY_BOXES), message
             assert not any(binding_id in message for binding_id in _PENDING_CARRIES), message
+        # The context the refusal is recorded and rendered with names boxes, never a registry binding.
+        context = public_error_context(error)
+        assert context is not None
+        assert context["boxes"] == ", ".join(sorted(_CARRY_BOXES)), context
+        assert "binding_id" not in context, context
+        assert not any(binding_id in value for value in context.values() for binding_id in _PENDING_CARRIES), context
         verdict = error.terminal_precondition_verdict
         assert isinstance(verdict, PreconditionVerdict)
         assert verdict.failed_condition_id == "modelo.work.calculate.prior_carries.stated"
