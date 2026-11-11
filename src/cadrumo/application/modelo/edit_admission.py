@@ -31,6 +31,7 @@ from ...core.time.clock import now as clock_now
 from ...domain.calculations.registry.binding_temporal import binding_applies_to_period
 from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
@@ -339,6 +340,36 @@ def _current_edit_calculation_head(
     return head
 
 
+def _active_work_unit(work_unit_id: str, work_catalogue: WorkUnitCatalogue) -> WorkUnit | ModeloEditRefusedV1:
+    """Resolve the work unit afresh, refusing an absent or discarded one."""
+    work_unit = work_catalogue.get(work_unit_id)
+    if work_unit is None:
+        return _refused(ModeloEditRefusalCode.TARGET_ABSENT, "select an existing work unit", "work_unit_absent")
+    if work_unit.state is WorkUnitState.DESCARTADO:
+        return _refused(ModeloEditRefusalCode.ADMISSION_DENIED, "select an active work unit", "work_unit_discarded")
+    return work_unit
+
+
+def _offered_attestable_binding_ids(
+    snapshot: RegistrySnapshot,
+    *,
+    operation: PinnedAuthorityOperation,
+    observation_repository: CalculationObservationRepositoryProtocol | None,
+    filing_catalogue: ModeloRecordCatalogue | None,
+    work_catalogue: WorkUnitCatalogue,
+) -> frozenset[BindingId]:
+    """The carry bindings a stated figure may be offered for; none without the sources that show the gap."""
+    if observation_repository is None or filing_catalogue is None:
+        return frozenset[BindingId]()
+    return attestable_carry_binding_ids(
+        snapshot,
+        operation=operation,
+        observation_repository=observation_repository,
+        filing_catalogue=filing_catalogue,
+        work_catalogue=work_catalogue,
+    )
+
+
 def admit_modelo_edit_baseline(
     *,
     work_unit_id: str,
@@ -364,11 +395,9 @@ def admit_modelo_edit_baseline(
     supplies the ``observation_repository`` and ``filing_catalogue`` that show
     the application holds no source for the carry; without them none is offered.
     """
-    work_unit = work_catalogue.get(work_unit_id)
-    if work_unit is None:
-        return _refused(ModeloEditRefusalCode.TARGET_ABSENT, "select an existing work unit", "work_unit_absent")
-    if work_unit.state is WorkUnitState.DESCARTADO:
-        return _refused(ModeloEditRefusalCode.ADMISSION_DENIED, "select an active work unit", "work_unit_discarded")
+    work_unit = _active_work_unit(work_unit_id, work_catalogue)
+    if isinstance(work_unit, ModeloEditRefusedV1):
+        return work_unit
     current_revision_id = work_unit.current_calculation_revision_id
     head = _current_edit_calculation_head(work_unit, calculation_catalogue, current_revision_id)
     if isinstance(head, ModeloEditRefusedV1):
@@ -390,16 +419,12 @@ def admit_modelo_edit_baseline(
         snapshot,
         period=work_unit.period.registry_token,
         layout=operation.form_layout(str(work_unit.modelo), snapshot.revision.id),
-        attestable_binding_ids=(
-            frozenset()
-            if observation_repository is None or filing_catalogue is None
-            else attestable_carry_binding_ids(
-                snapshot,
-                operation=operation,
-                observation_repository=observation_repository,
-                filing_catalogue=filing_catalogue,
-                work_catalogue=work_catalogue,
-            )
+        attestable_binding_ids=_offered_attestable_binding_ids(
+            snapshot,
+            operation=operation,
+            observation_repository=observation_repository,
+            filing_catalogue=filing_catalogue,
+            work_catalogue=work_catalogue,
         ),
     )
     if len(surface) > MAX_MODELO_EDIT_SURFACE_ENTRIES:

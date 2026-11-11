@@ -67,12 +67,14 @@ if TYPE_CHECKING:
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ...domain.modelos.filing_record import ModeloRecordCatalogue
     from ...domain.modelos.protocols import (
         CalculationRevisionCatalogueRepositoryProtocol,
         ModeloRecordCatalogueRepositoryProtocol,
         VerificationReportCatalogueRepositoryProtocol,
     )
     from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+    from ...domain.transactions.own_accounts import OwnAccountRegister
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
     from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
@@ -265,7 +267,7 @@ def read_modelo_workbench_form(
         operation=operation,
         operation_contracts=operation_contracts,
         observation_repository=ports.observations,
-        filing_catalogue=None if ports.filings is None else ports.filings.load(),
+        filing_catalogue=_filing_catalogue(ports),
     )
     loaded = load_modelo_work_form(
         bucket_id,
@@ -283,22 +285,21 @@ def read_modelo_workbench_form(
         bucket_events=ports.bucket_events,
         activity_assets=ports.activity_assets,
         credit_resolutions=ports.credit_resolutions,
-        transactions=None if ports.ledger is None else ports.ledger.transactions,
+        transactions=_ledger_transactions(ports),
         m303_arrivals=ports.m303_arrivals,
     )
     form = loaded.form
     head_id = form.calculation_revision_id
     head, report = _head_and_report(head_id, ports=ports, operation=operation)
     is_m303 = str(unit.modelo) == form_for_role("iva.periodic")
-    load_profile = ports.profile
-    profile = None if load_profile is None else load_profile()
+    profile = _loaded_profile(ports)
     snapshot = modelo_form_snapshot(operation, unit.modelo, unit.filing_year, unit.period, form.registry_revision_id)
     return ModeloWorkbenchFormReadV1(
         load=loaded,
         admission=admission,
         calculation_revision_id=head_id,
         verification_report_id=None if report is None else report.verification_report_id,
-        asks_m303_evidence=is_m303 and (head is None or head.filing_instance_evidence is None),
+        asks_m303_evidence=is_m303 and _lacks_filing_instance_evidence(head),
         asks_modelo_390=is_m303 and modelo_390_question_asked(unit.period, operation=operation),
         registry_revision_id=form.registry_revision_id,
         tax_id_format=runtime_tax_id_format(authority=operation),
@@ -309,20 +310,50 @@ def read_modelo_workbench_form(
             form=form,
             verified=loaded.verified,
             filed=loaded.filed,
-            own_accounts=None if ports.own_accounts is None else ports.own_accounts.load(),
-            amended=head is not None and head.amendment_identity is not None,
+            own_accounts=_own_accounts(ports),
+            amended=_is_amendment(head),
         ),
         receipt=_receipt(unit, loaded, ports=ports, language=language),
         profile_requirements=_profile_requirements(unit, profile, operation=operation, language=language),
         ledger_hold=_ledger_hold(
             unit, form.registry_revision_id, profile, ports=ports, operation=operation, language=language
         ),
-        source_requirements=(
-            ()
-            if ports.reconciliation_sources is None
-            else reconciliation_source_requirements(ports.reconciliation_sources(unit, snapshot), language)
-        ),
+        source_requirements=_source_requirements(unit, snapshot, ports=ports, language=language),
     )
+
+
+def _filing_catalogue(ports: ModeloWorkbenchReadPorts) -> ModeloRecordCatalogue | None:
+    return None if ports.filings is None else ports.filings.load()
+
+
+def _ledger_transactions(ports: ModeloWorkbenchReadPorts) -> TransactionCatalogueRepositoryProtocol | None:
+    return None if ports.ledger is None else ports.ledger.transactions
+
+
+def _loaded_profile(ports: ModeloWorkbenchReadPorts) -> ModeloWorkProfile | None:
+    load_profile = ports.profile
+    return None if load_profile is None else load_profile()
+
+
+def _own_accounts(ports: ModeloWorkbenchReadPorts) -> OwnAccountRegister | None:
+    return None if ports.own_accounts is None else ports.own_accounts.load()
+
+
+def _lacks_filing_instance_evidence(head: CalculationRevision | None) -> bool:
+    return head is None or head.filing_instance_evidence is None
+
+
+def _is_amendment(head: CalculationRevision | None) -> bool:
+    return head is not None and head.amendment_identity is not None
+
+
+def _source_requirements(
+    unit: WorkUnit, snapshot: RegistrySnapshot, *, ports: ModeloWorkbenchReadPorts, language: OutputLanguage
+) -> tuple[ReconciliationSourceRequirementV1, ...]:
+    """The sources an annual summary reconciles against, worded in ``language``; none without a reader."""
+    if ports.reconciliation_sources is None:
+        return ()
+    return reconciliation_source_requirements(ports.reconciliation_sources(unit, snapshot), language)
 
 
 def _head_and_report(

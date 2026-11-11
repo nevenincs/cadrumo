@@ -395,39 +395,42 @@ def _assert_casilla_06_sums_retenciones(
 
 
 # ---------------------------------------------------------------------------
-# No-silent-under-declaration advisory: casilla 06 (base total) implies
-# casilla 09 (retenciones total) -- modelo verify nonzero guards.
+# No-silent-under-declaration advisory: the base total implies the retenciones
+# total -- modelo verify nonzero guards, on every edition.
 # ---------------------------------------------------------------------------
 
+# The guard's operands per edition: the Orden HAC/56/2024 annex renumbers the
+# base and retenciones totals but leaves the rule itself unchanged.
+_BASE_IMPLIES_RETENCIONES_OPERANDS: dict[str, tuple[CasillaId, CasillaId]] = {
+    _RETENCIONES_SUM_REVISION: (_M123_2019_2023_BASE_CASILLA, _M123_2019_2023_RETENCIONES_CASILLA),
+    _SPLIT_BASE_REVISION: (_M123_BASE_TOTAL_CASILLA, validated_casilla_id("09")),
+}
 
-def test_m123_split_base_revision_carries_base_total_implies_retenciones_total_advisory() -> None:
-    """The M123 split-base revision guards the base-to-retenciones handoff on every supported year it covers.
 
-    Casilla 06 (base total = [04] + [05]) and casilla 09 (retenciones total =
-    [07] + [08]) are both formula-computed from independently manual leaf
-    casillas. A positive base total with a zero retenciones total has no
-    legitimate cause under RD 439/2007 arts. 75 and 90: art. 75 identifies
-    capital-mobiliario rents subject to withholding and the type-based
-    exceptions, while art. 90 sets the positive rate for the withholding base.
-    The ADVISORY `implies_nonzero` predicate therefore surfaces a finding
-    rather than silently granting VERIFICADO_COMPLETO.
+def test_m123_every_supported_year_carries_base_total_implies_retenciones_total_advisory() -> None:
+    """Every supported M123 year guards the base-to-retenciones handoff.
+
+    A positive withholding base with a zero withholding has no legitimate cause
+    under RD 439/2007 arts. 75 and 90: art. 75 identifies capital-mobiliario
+    rents subject to withholding and the type-based exceptions, while art. 90
+    sets the positive rate for the withholding base. Neither depends on the
+    form edition, so the ADVISORY `implies_nonzero` predicate is authored once
+    and inherited; the split-base edition only renumbers its operands (base
+    total [06] = [04] + [05], retenciones total [09] = [07] + [08]).
     """
-    revision_start = compiled_bundled_authority().modelo("123").revisions[_SPLIT_BASE_REVISION].valid_from.year
-    covered_years = tuple(year for year in _SUPPORT.years if year >= revision_start)
-    assert covered_years
-    for filing_year in covered_years:
-        _assert_base_total_implies_retenciones_total(_snapshot_split_base(filing_year))
+    assert _SUPPORT.years
+    for filing_year in _SUPPORT.years:
+        snapshot = compiled_bundled_authority().snapshot("123", filing_year=filing_year, period="1T")
+        _assert_base_total_implies_retenciones_total(snapshot)
 
 
 def _assert_base_total_implies_retenciones_total(snapshot: RegistrySnapshot) -> None:
-    assert snapshot.revision.id == _SPLIT_BASE_REVISION
-    # Named for the revision it lives on, matching its sibling
-    # `modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positivas`;
-    # the revision is `2024-y-siguientes`, not `2024`.
-    predicate_id = f"modelo-123-{_SPLIT_BASE_REVISION}-base-total-implica-retenciones-total"
+    revision_id = str(snapshot.revision.id)
+    base, retenciones = _BASE_IMPLIES_RETENCIONES_OPERANDS[revision_id]
+    predicate_id = f"modelo-123-{revision_id}-base-total-implica-retenciones-total"
     predicate = next(p for p in snapshot.revision.verification_predicates if p.predicate_id == predicate_id)
 
-    assert predicate.expression == 'implies_nonzero(["06", "09"])'
+    assert predicate.expression == f'implies_nonzero(["{base}", "{retenciones}"])'
     assert predicate.finding_kind == "ADVISORY", (
         "must stay non-blocking: a category whose payer applied no withholding "
         "in one leaf while the other leaf covers it must not refuse the draft"
