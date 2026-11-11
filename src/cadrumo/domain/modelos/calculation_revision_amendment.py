@@ -17,7 +17,6 @@ from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import SourceReference
-from ..calculations.registry.temporal import select_revision_metadata_for_year
 from .errors import ModeloValidationError
 from .filing_record import FilingDeclarationKind
 
@@ -87,14 +86,19 @@ def _registry_m303_rectificativa_declarations(
     *,
     operation: PinnedAuthorityOperation,
 ) -> Mapping[str, str]:
-    """Resolve M303 amendment declarations from the dated registry mapping."""
-    today = today_madrid()
-    select_revision_metadata_for_year(operation.modelo_directory("303"), filing_year=today.year, on=today)
+    """Resolve M303 amendment declarations from the dated registry mapping.
+
+    The mapping names every revision whose record design carries the motive, so
+    the caller's revision decides the answer. Today's calendar year selects no
+    revision here: in a year with a mid-year design boundary two revisions are in
+    force at once, and a year-only selection would refuse every 303 export of
+    those weeks whatever period it files.
+    """
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-303-rectificativa-record-design-mapping",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today,
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
