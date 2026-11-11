@@ -20,7 +20,10 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import persona
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -31,6 +34,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
     mutate_encrypted_secure_object_json,
 )
 from ....application.calculations.observations_repository import observation_key
+from ....application.modelo.action_errors import ModeloCrossPeriodCleanStateError
 from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -41,6 +45,7 @@ from ....application.modelo.projection_operation import (
     require_unresolved_boxes_carry_no_value,
 )
 from ....application.modelo.reconciliation_sources import ReconciliationSourceNeed, ReconciliationSourceStanding
+from ....application.modelo.verification_cross_period import require_cross_period_clean_state
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.modelo.work_missing_input import (
@@ -496,3 +501,35 @@ def test_a_second_quarter_carries_the_filed_first_quarter_payment_into_box_05(
     result = _calculate_m130_quarter(objects, operation, year=year)
 
     assert result.revision.casilla_values["05"] == first_quarter_payment
+
+
+def test_filing_a_quarter_whose_earlier_source_the_registry_refuses_names_no_door(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
+) -> None:
+    """At the support floor the prior-year Modelo 100 the 2T reads lies outside the envelope, so no create is offered."""
+    year = operation.supported_filing_years().floor
+    _seed_profile(year, "actividad_economica")
+    second_quarter = _create_m130_quarter(objects, operation, year=year, period_code="2T")
+
+    with pytest.raises(ModeloCrossPeriodCleanStateError) as refused:
+        require_cross_period_clean_state(
+            second_quarter,
+            observation_repository=CalculationObservationRepository(objects=objects),
+            filing_repository=ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+            verification_repository=VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID),
+            justificante_repository=JustificanteRepository(),
+            taxpayer_tax_id=_TAXPAYER,
+            activity_start_date=date(year - 5, 1, 1),
+            subject_leaf_key="modelo.work.file",
+            operation=operation,
+            work_unit_repository=WorkUnitCatalogueRepository(objects=objects),
+        )
+
+    verdict = refused.value.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    assert verdict.failed_condition_id == "modelo.work.file.cross_period_dependency.clean"
+    assert verdict.action is None
+    (evidence,) = verdict.evidence
+    assert evidence.values["source_modelo"] == "100"
+    assert evidence.values["year"] == year - 1

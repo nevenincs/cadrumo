@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from cadrumo.application.calculations.observations_repository import CalculationObservationRepositoryProtocol
 
@@ -43,7 +43,8 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationReportCatalogue,
 )
-from ...domain.modelos.work_unit import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations.cross_period_clean_state import evaluate_cross_period_clean_state
 from ..calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
@@ -55,7 +56,12 @@ from ..calculations.cross_period_models import (
 from ..calculations.m111_no_retenciones import m111_no_retenciones_periods_from_profile_values
 from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloCrossPeriodCleanStateError
-from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
+from .preconditions import (
+    ModeloPreconditionFailure,
+    build_modelo_precondition_failure,
+    build_modelo_precondition_failure_for_scenario,
+)
+from .reconciliation_sources import source_declaration_need
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -594,6 +600,138 @@ def _iva_wallet_decision_covers_cross_period_dependency(
     return _wallet_decision_has_supported_authority(decision)
 
 
+_STANDING_ROUTED_BLOCKERS: Final[frozenset[CrossPeriodCleanStateBlocker]] = frozenset(
+    {
+        CrossPeriodCleanStateBlocker.MISSING_OBSERVATION,
+        CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD,
+        CrossPeriodCleanStateBlocker.SUPERSEDED_DEPENDENCY,
+        CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION,
+        CrossPeriodCleanStateBlocker.MISSING_COMPLETE_VERIFICATION_REPORT,
+    }
+)
+"""Blockers the source declaration's own work settles, so its standing names the door."""
+
+_FILED_CAPTURE_BLOCKERS: Final[frozenset[CrossPeriodCleanStateBlocker]] = frozenset(
+    {
+        CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA,
+        CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
+        CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
+        CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
+        CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD,
+        CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,
+    }
+)
+"""Blockers of a filed source that only its capture from the AEAT settles: its values or its official evidence."""
+
+_UNROUTED_SCENARIO: Final[str] = "unclean"
+_FILED_CAPTURE_SCENARIO: Final[str] = "filed_evidence_missing"
+
+type CrossPeriodDoor = tuple[str, dict[str, str | int] | None]
+"""The ``cross_period_dependency`` scenario suffix and the facts its action binds, ``None`` when door-less."""
+
+
+def cross_period_door(
+    evidence: CrossPeriodDependencyEvidence,
+    *,
+    bucket_id: str,
+    work_catalogue: WorkUnitCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> CrossPeriodDoor:
+    """The door the first blocker of an unclean source names.
+
+    A blocker the source declaration's own work settles routes by where that
+    declaration stands: create, calculate, verify or file it. Creating is
+    offered only for a declaration the registry admits for that period and
+    whose values are not already observed. A filed source whose values or
+    official evidence are missing is captured from the AEAT. A member fan-in
+    source, or any other blocker, names no command, as none settles it.
+    """
+    requirement = evidence.requirement
+    if not evidence.blockers or requirement.requires_member_fan_in:
+        return _UNROUTED_SCENARIO, None
+    first = evidence.blockers[0]
+    if first in _STANDING_ROUTED_BLOCKERS:
+        need = source_declaration_need(
+            requirement.source_modelo,
+            requirement.period,
+            bucket_id=bucket_id,
+            work_catalogue=work_catalogue,
+            calculation_catalogue=calculation_catalogue,
+        )
+        if need is not None:
+            if need.unit is not None or _declaration_creatable(evidence, operation=operation):
+                return need.door()
+            return _UNROUTED_SCENARIO, None
+    if first in _FILED_CAPTURE_BLOCKERS or first is CrossPeriodCleanStateBlocker.MISSING_OBSERVATION:
+        return _FILED_CAPTURE_SCENARIO, {
+            "modelos": requirement.source_modelo,
+            "period": requirement.period.registry_token,
+            "year": requirement.filing_year,
+        }
+    return _UNROUTED_SCENARIO, None
+
+
+def _declaration_creatable(evidence: CrossPeriodDependencyEvidence, *, operation: PinnedAuthorityOperation) -> bool:
+    """Whether creating the source declaration is the way on.
+
+    Not when its values are already observed, as they came from a filing, nor
+    when the registry refuses that modelo and period, such as a year outside
+    the support envelope.
+    """
+    if evidence.observation_source_kind is not None:
+        return False
+    requirement = evidence.requirement
+    try:
+        operation.snapshot(
+            requirement.source_modelo,
+            filing_year=requirement.filing_year,
+            period=requirement.period.registry_token,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
+        )
+    except RegistrySnapshotError:
+        return False
+    return True
+
+
+def cross_period_door_reader(
+    *,
+    bucket_id: str,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None,
+    operation: PinnedAuthorityOperation | None,
+) -> Callable[[CrossPeriodDependencyEvidence], CrossPeriodDoor]:
+    """Route unclean sources by :func:`cross_period_door`, reading the catalogues once and only when one is unclean.
+
+    Without the work-unit catalogue or a pinned operation no standing can be
+    read, so every source stays door-less rather than being sent to a wrong
+    command.
+    """
+    catalogues: list[tuple[WorkUnitCatalogue, CalculationRevisionCatalogue]] = []
+
+    def door(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodDoor:
+        if work_unit_repository is None or operation is None:
+            return _UNROUTED_SCENARIO, None
+        if not catalogues:
+            revisions = (
+                calculation_repository.load(operation=operation)
+                if calculation_catalogue is None
+                else calculation_catalogue
+            )
+            catalogues.append((work_unit_repository.load(), revisions))
+        work_catalogue, revisions = catalogues[0]
+        return cross_period_door(
+            evidence,
+            bucket_id=bucket_id,
+            work_catalogue=work_catalogue,
+            calculation_catalogue=revisions,
+            operation=operation,
+        )
+
+    return door
+
+
 def require_cross_period_clean_state(
     work_unit: WorkUnit,
     *,
@@ -615,6 +753,7 @@ def require_cross_period_clean_state(
     target_revision: CalculationRevision | None = None,
     subject_leaf_key: str = "modelo.work.verify",
     operation: PinnedAuthorityOperation | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> None:
     """Refuse the action while a registry-declared prior period is not cleanly evidenced.
 
@@ -642,6 +781,13 @@ def require_cross_period_clean_state(
         operation=operation,
     )
     failures_by_finding_id: dict[int, ModeloPreconditionFailure] = {}
+    door_of = cross_period_door_reader(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        calculation_catalogue=calculation_catalogue,
+        operation=operation,
+    )
 
     def _observe_blocking_finding(
         finding: ModeloVerificationFinding,
@@ -664,10 +810,10 @@ def require_cross_period_clean_state(
             )
             return
         requirement = evidence.requirement
-        failures_by_finding_id[id(finding)] = build_modelo_precondition_failure(
+        scenario, action_argument_values = door_of(evidence)
+        failures_by_finding_id[id(finding)] = build_modelo_precondition_failure_for_scenario(
             subject_leaf_key=subject_leaf_key,
-            condition_id=f"{subject_leaf_key}.cross_period_dependency.clean",
-            scenario_id=f"{subject_leaf_key}.cross_period_dependency.unclean",
+            scenario_id=f"{subject_leaf_key}.cross_period_dependency.{scenario}",
             evidence_id=f"{subject_leaf_key}.cross_period_dependency",
             evidence_values={
                 "work_unit_id": work_unit.work_unit_id,
@@ -679,6 +825,7 @@ def require_cross_period_clean_state(
                 "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+            action_argument_values=action_argument_values,
         )
 
     findings = cross_period_clean_state_findings(
@@ -704,8 +851,11 @@ def require_cross_period_clean_state(
 
 __all__ = [
     "IVA_COMPENSATION_CARRY_LEGAL_REF",
+    "CrossPeriodDoor",
     "cross_period_clean_state_findings",
     "cross_period_clean_state_verdict_for_work_unit",
+    "cross_period_door",
+    "cross_period_door_reader",
     "cross_period_expected_member_sets_from_profile",
     "registry_modality_finding",
     "require_cross_period_clean_state",

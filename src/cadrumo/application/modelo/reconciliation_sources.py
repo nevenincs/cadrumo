@@ -54,6 +54,12 @@ class ReconciliationSourceStanding(StrEnum):
     """The declaration is verified and not filed."""
 
 
+_STANDING_SCENARIOS: Final[dict[ReconciliationSourceStanding, str]] = {
+    ReconciliationSourceStanding.MISSING: "source_uncalculated",
+    ReconciliationSourceStanding.UNVERIFIED: "source_unverified",
+    ReconciliationSourceStanding.UNFILED: "source_unfiled",
+}
+
 _STANDING_LOCALE_KEYS: Final[dict[ReconciliationSourceStanding, str]] = {
     ReconciliationSourceStanding.MISSING: "application.modelo.reconciliation_sources.standing.missing",
     ReconciliationSourceStanding.UNVERIFIED: "application.modelo.reconciliation_sources.standing.unverified",
@@ -89,6 +95,20 @@ class ReconciliationSourceNeed:
         if self.unit is None:
             return create_work_step(modelo=self.modelo, period=self.period)
         return open_work_step(self.unit)
+
+    def door(self) -> tuple[str, dict[str, str | int]]:
+        """The precondition scenario this standing declares, and the facts its action binds.
+
+        ``source_absent`` creates the declaration; the others name the existing
+        declaration the calculate, verify or file action moves on.
+        """
+        if self.unit is None:
+            return "source_absent", {
+                "modelo": self.modelo,
+                "period": self.period.registry_token,
+                "year": self.period.filing_year,
+            }
+        return _STANDING_SCENARIOS[self.standing], {"work_unit_id": self.unit.work_unit_id}
 
 
 class ReconciliationSourceRequirementV1(BaseModel):
@@ -170,11 +190,36 @@ def source_period_needs(
     ):
         if _filed_values_stored(modelo, period, observations=observations, operation=operation):
             continue
-        unit = _declaration(modelo, period, bucket_id=bucket_id, work_catalogue=work_catalogue)
-        standing = _standing(unit, calculation_catalogue)
-        if standing is not None:
-            needs.append(ReconciliationSourceNeed(modelo=modelo, period=period, standing=standing, unit=unit))
+        need = source_declaration_need(
+            modelo,
+            period,
+            bucket_id=bucket_id,
+            work_catalogue=work_catalogue,
+            calculation_catalogue=calculation_catalogue,
+        )
+        if need is not None:
+            needs.append(need)
     return tuple(needs)
+
+
+def source_declaration_need(
+    modelo: str,
+    period: Period,
+    *,
+    bucket_id: str,
+    work_catalogue: WorkUnitCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+) -> ReconciliationSourceNeed | None:
+    """Where the declaration of one source period stands; ``None`` once its calculation is filed.
+
+    This reads declaration work alone: whether its filed values are stored is
+    the caller's question.
+    """
+    unit = _declaration(modelo, period, bucket_id=bucket_id, work_catalogue=work_catalogue)
+    standing = _standing(unit, calculation_catalogue)
+    if standing is None:
+        return None
+    return ReconciliationSourceNeed(modelo=modelo, period=period, standing=standing, unit=unit)
 
 
 def _source_periods(
@@ -241,5 +286,6 @@ __all__ = [
     "ReconciliationSourceStanding",
     "reconciliation_source_needs",
     "reconciliation_source_requirements",
+    "source_declaration_need",
     "source_period_needs",
 ]

@@ -174,6 +174,31 @@ def _iva_wallet_profiles(
     )
 
 
+# Where an earlier declaration stands names the work that moves it on.
+_SOURCE_STANDING_DOORS: tuple[tuple[str, str], ...] = (
+    ("source_absent", "operator.modelo.work.create"),
+    ("source_uncalculated", "operator.modelo.work.calculate"),
+    ("source_unverified", "operator.modelo.work.verify"),
+    ("source_unfiled", "operator.modelo.work.file"),
+)
+
+
+def _cross_period_door_profiles(subject_leaf_key: str) -> tuple[ManifestActionProfile, ...]:
+    """An unclean source routed by its first blocker: its own work, or its capture once filed."""
+    return tuple(
+        _profile(
+            subject_leaf_key,
+            f"{subject_leaf_key}.cross_period_dependency.clean",
+            f"{subject_leaf_key}.cross_period_dependency.{scenario}",
+            action_id=action_id,
+        )
+        for scenario, action_id in (
+            *_SOURCE_STANDING_DOORS,
+            ("filed_evidence_missing", "operator.live.filed.pull"),
+        )
+    )
+
+
 MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     _profile(
         "modelo.work.create",
@@ -396,12 +421,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             f"modelo.work.calculate.prior_filing.{scenario}",
             action_id=action_id,
         )
-        for scenario, action_id in (
-            ("source_absent", "operator.modelo.work.create"),
-            ("source_uncalculated", "operator.modelo.work.calculate"),
-            ("source_unverified", "operator.modelo.work.verify"),
-            ("source_unfiled", "operator.modelo.work.file"),
-        )
+        for scenario, action_id in _SOURCE_STANDING_DOORS
     ),
     _profile(
         "modelo.work.calculate",
@@ -507,6 +527,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.file.cross_period_dependency.clean",
         "modelo.work.file.cross_period_dependency.unclean",
     ),
+    *_cross_period_door_profiles("modelo.work.file"),
     _profile(
         "modelo.work.file",
         "modelo.work.file.activity_start_date.present",
@@ -692,6 +713,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.cross_period_dependency.clean",
         "modelo.work.verify.cross_period_dependency.unclean",
     ),
+    *_cross_period_door_profiles("modelo.work.verify"),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.activity_start_date.present",

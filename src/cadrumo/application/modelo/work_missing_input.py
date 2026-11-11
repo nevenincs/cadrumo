@@ -23,7 +23,7 @@ from ..operations.next_step import OperationNextStepErrorMixin, OperationNextSte
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .printed_boxes import PrintedBoxes, first_printed_dependent
 from .projection_next_steps import open_work_step
-from .reconciliation_sources import ReconciliationSourceNeed, ReconciliationSourceStanding
+from .reconciliation_sources import ReconciliationSourceNeed
 
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _MISSING_BINDING_MESSAGES = frozenset(
@@ -273,12 +273,6 @@ class ModeloPriorPeriodUnfiledError(OperationNextStepErrorMixin, ModeloWorkMissi
 
 _PRIOR_FILING_SCENARIO_PREFIX: Final[str] = "modelo.work.calculate.prior_filing"
 _PRIOR_PERIOD_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.prior_period_unfiled"
-_STANDING_SCENARIOS: Final[Mapping[ReconciliationSourceStanding, str]] = {
-    ReconciliationSourceStanding.MISSING: "source_uncalculated",
-    ReconciliationSourceStanding.UNVERIFIED: "source_unverified",
-    ReconciliationSourceStanding.UNFILED: "source_unfiled",
-}
-
 type SourcePeriodNeeds = Callable[[tuple[tuple[str, Period], ...]], tuple[ReconciliationSourceNeed, ...]]
 """Where each (source modelo, period) stands, for the periods that owe a return."""
 
@@ -311,17 +305,6 @@ def _same_ejercicio_periods_read(
     )
 
 
-def _prior_filing_door(need: ReconciliationSourceNeed) -> tuple[str, Mapping[str, str | int]]:
-    """The scenario the earliest unfiled period's standing declares, and the facts its action binds."""
-    if need.unit is None:
-        return "source_absent", {
-            "modelo": need.modelo,
-            "period": need.period.registry_token,
-            "year": need.period.filing_year,
-        }
-    return _STANDING_SCENARIOS[need.standing], {"work_unit_id": need.unit.work_unit_id}
-
-
 def prior_period_unfiled(
     missing: ModeloWorkMissingInputError,
     *,
@@ -343,7 +326,7 @@ def prior_period_unfiled(
     if not needs:
         return None
     first = needs[0]
-    scenario, action_argument_values = _prior_filing_door(first)
+    scenario, action_argument_values = first.door()
     scenario_id = f"{_PRIOR_FILING_SCENARIO_PREFIX}.{scenario}"
     failure = build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
