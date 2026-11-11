@@ -17,10 +17,10 @@ use cadrumo_application::error::application::Cause;
 use cadrumo_application::provisioning::{
     browser::DriverManifest,
     connection::{Network, Resolve},
-    engine::{EngineConfig, SERVER_WAIT},
+    engine::EngineConfig,
     items::FULL_CHECK_BUDGET,
     local_ai::{
-        Placement, ServerCall, StartFailureKind,
+        Placement, ServerCall,
         loopback::{ExchangeFailure, ExchangePhase},
         registry,
     },
@@ -1010,61 +1010,6 @@ fn a_local_ai_check_that_timed_out_is_recorded_with_the_request_and_its_timeout(
             ] if category == "program_not_running"
                 && why == "generate_request_failed"
                 && io_kind == "TimedOut"
-        ),
-        "{:?}",
-        error.causes
-    );
-}
-
-#[test]
-fn a_local_ai_server_that_never_came_is_recorded_apart_from_a_request_that_timed_out() {
-    let cause = NotRunningCause::NoServerWithin {
-        budget: SERVER_WAIT,
-        latest_start: None,
-    };
-    let error = setup_failed(
-        ItemId::LocalAi,
-        FailureCategory::ProgramNotRunning,
-        Some(&cause),
-        None,
-    );
-    assert_eq!(error.io_kind, None);
-    assert!(
-        matches!(
-            &error.causes[..],
-            [
-                Cause::Application { reason: Some(category), .. },
-                Cause::Application { reason: Some(why), .. },
-            ] if category == "program_not_running" && why == "server_wait_expired"
-        ),
-        "{:?}",
-        error.causes
-    );
-}
-
-#[test]
-fn a_wait_that_ran_out_after_a_failed_start_is_recorded_with_that_start() {
-    let cause = NotRunningCause::NoServerWithin {
-        budget: SERVER_WAIT,
-        latest_start: Some(StartFailureKind::Closed),
-    };
-    let error = setup_failed(
-        ItemId::LocalAi,
-        FailureCategory::ProgramNotRunning,
-        Some(&cause),
-        None,
-    );
-    assert_eq!(error.io_kind, None);
-    assert!(
-        matches!(
-            &error.causes[..],
-            [
-                Cause::Application { reason: Some(category), .. },
-                Cause::Application { reason: Some(why), .. },
-                Cause::Application { reason: Some(start), .. },
-            ] if category == "program_not_running"
-                && why == "server_wait_expired"
-                && start == "server_closed_before_listening"
         ),
         "{:?}",
         error.causes
@@ -2228,70 +2173,10 @@ fn part_results(track: &SetupTrack) -> Vec<Option<(bool, Option<wire::Failure>, 
         .collect()
 }
 
-/// The events the engine reports once the program is installed and the setup begins
-/// to wait for the server, before any model part begins.
-fn program_then_server_wait() -> Vec<Event> {
-    let item = ItemId::LocalAi;
-    let mut events: Vec<Event> = program_then_model().into_iter().take(5).collect();
-    events.push(Event::Phase {
-        item,
-        step: SetupStep::Download,
-    });
-    events.push(Event::WaitingForServer { item });
-    events
-}
-
 #[test]
-fn a_setup_that_stops_waiting_for_the_server_fails_the_model_parts_that_waited() {
-    let mut track = local_ai_track();
-    for event in program_then_server_wait() {
-        take_event(&mut track, event);
-    }
-    settle(
-        &mut track,
-        &ended(
-            Ended::Failed,
-            Some(ItemId::LocalAi),
-            Some(FailureCategory::ProgramNotRunning),
-        ),
-    );
-    // On the previous attribution the program part carried the failure and the model
-    // parts showed no result at all.
-    assert_eq!(
-        part_results(&track),
-        [
-            Some((true, None, 100)),
-            Some((false, Some(wire::Failure::ProgramNotRunning), 0)),
-            Some((false, Some(wire::Failure::ProgramNotRunning), 0)),
-        ]
-    );
-}
-
-#[test]
-fn a_cancel_during_the_server_wait_fails_no_part() {
-    for failure in [None, Some(FailureCategory::Cancelled)] {
-        let mut track = local_ai_track();
-        for event in program_then_server_wait() {
-            take_event(&mut track, event);
-        }
-        settle(
-            &mut track,
-            &ended(Ended::Cancelled, Some(ItemId::LocalAi), failure),
-        );
-        // The model parts that waited were never begun, so none shows the failure the
-        // cancel gave the item; the finished program part stays changed.
-        assert_eq!(
-            part_results(&track),
-            [Some((true, None, 100)), None, None],
-            "a cancel with failure {failure:?} left a failure on a model part"
-        );
-    }
-}
-
-#[test]
-fn a_failure_outside_the_server_wait_keeps_its_own_part() {
+fn a_failure_in_a_part_keeps_it_to_that_part() {
     let mut downloading = local_ai_track();
-    for event in program_then_server_wait().into_iter().take(4) {
+    for event in program_then_model().into_iter().take(4) {
         take_event(&mut downloading, event);
     }
     settle(
@@ -2312,7 +2197,11 @@ fn a_failure_outside_the_server_wait_keeps_its_own_part() {
     );
 
     let mut pulling = local_ai_track();
-    let mut events = program_then_server_wait();
+    let mut events: Vec<Event> = program_then_model().into_iter().take(5).collect();
+    events.push(Event::Phase {
+        item: ItemId::LocalAi,
+        step: SetupStep::Download,
+    });
     events.extend(program_then_model().into_iter().skip(5));
     for event in events {
         take_event(&mut pulling, event);
@@ -2447,4 +2336,46 @@ fn only_a_command_that_names_the_local_ai_or_every_item_reaches_it() {
     assert!(reaches_local_ai(&[ItemId::LocalAi]));
     assert!(reaches_local_ai(&[ItemId::Browser, ItemId::LocalAi]));
     assert!(!reaches_local_ai(&[ItemId::Browser]));
+}
+
+#[test]
+fn local_ai_facts_name_each_stored_model_by_its_listed_name() {
+    let served = LocalAiServed {
+        engine: LocalEngine::LlamaCpp,
+        server: ServedServer::Dormant,
+        stored: vec![
+            ("listed0".to_owned(), true),
+            ("listed1".to_owned(), false),
+            ("unlisted".to_owned(), true),
+        ],
+    };
+    let named = [
+        ("listed0".to_owned(), "synthetic-held:1".to_owned()),
+        ("listed1".to_owned(), "synthetic-absent:1".to_owned()),
+    ];
+
+    assert_eq!(
+        local_ai_facts(&served, &named),
+        serde_json::json!({
+            "engine": "llamacpp",
+            "server": "dormant",
+            "models": [
+                {"name": "synthetic-held:1", "stored": true},
+                {"name": "synthetic-absent:1", "stored": false},
+            ],
+        })
+    );
+    for (server, word) in [
+        (ServedServer::Running, "running"),
+        (ServedServer::StartFailed, "start_failed"),
+    ] {
+        let facts = local_ai_facts(
+            &LocalAiServed {
+                server,
+                ..served.clone()
+            },
+            &named,
+        );
+        assert_eq!(facts["server"], word);
+    }
 }

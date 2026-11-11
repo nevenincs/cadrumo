@@ -20,6 +20,7 @@ from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .host.credential_frame import wipe
+from .local_ai_relay import LocalAiFacts, relay_local_ai
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.domain.record import LocalEngine, LocalPlacement
 
@@ -116,6 +117,9 @@ class AdminRequest(BaseModel):
     conversation_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
     engine: LocalEngine | None = None
     placement: LocalPlacement | None = None
+    # The runtime manager's served facts of the selected local engine, which a
+    # catalogue read relays in place of the agent's probe of a sleeping server.
+    local_ai: LocalAiFacts | None = None
 
 
 def _read_exact(stream: socket.socket, size: int, *, deadline: float) -> bytearray:
@@ -287,7 +291,7 @@ class AdminServer:
     def _dispatch_request(self, request: AdminRequest, secret: bytearray | None, deadline: float) -> JsonValue:
         if self._stop.is_set() or time.monotonic() >= deadline:
             raise ValueError("admin_request_expired")
-        return self._service.admin(
+        answer = self._service.admin(
             request.action,
             provider=request.provider,
             expected_revision=request.expected_revision,
@@ -305,6 +309,8 @@ class AdminServer:
             engine=request.engine,
             placement=request.placement,
         )
+        # The manager owns the local server's state; its facts describe that lane.
+        return relay_local_ai(answer, request.local_ai) if request.action == "catalog" else answer
 
     def close(self) -> None:
         """Close admission and await the bounded current exchange."""

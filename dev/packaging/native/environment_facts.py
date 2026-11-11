@@ -173,6 +173,7 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         PACKAGE_PYTHON_VARIABLE,
         PACKAGE_RELAY_VARIABLE,
     )
+    from cadrumo_agent_service.adapters.local_ai_demand import SERVICE_SLOTS
     from cadrumo_agent_service.host.launch_environment import (
         ADVERTISED_VARIABLES,
         GATEWAY_SLOTS,
@@ -207,6 +208,7 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         "advertised_variables": sorted(ADVERTISED_VARIABLES),
         "gateway_arguments": list(GATEWAY_ARGUMENTS),
         "gateway_slots": sorted(GATEWAY_SLOTS),
+        "service_slots": sorted(SERVICE_SLOTS),
         "composed": sorted(composed),
         "reserved_exit_codes": [
             {"owner": reserved.owner, "first": reserved.first, "last": reserved.last}

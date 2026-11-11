@@ -4953,6 +4953,7 @@ desktop:
     progress_label: Progreso de {name}
     rail_busy: Configurando los componentes
     rail_incomplete: La configuración no ha terminado
+    ready_dormant: Listo. Se pone en marcha cuando se lee un documento.
     refused_browser_not_removed: Cadrumo no ha podido quitar el navegador. Compruébalo
       de nuevo e inténtalo otra vez.
     refused_busy: Ya hay una configuración en curso en otro sitio. Espera a que termine.

@@ -5,7 +5,10 @@ takes two things. From each of its ``catalog.models[]`` it takes the model
 value, the facts a selection is checked against: vision, size, context window
 and licence, and whether the lane's local server holds the model. From its
 ``background_requests`` record it takes whether a background run may carry
-images and PDFs, and the reply options it honours.
+images and PDFs, and the reply options it honours. From its ``health`` it
+takes only whether the agent states the lane's local engine not running: then
+the agent did not read the server, and what it says the server holds is
+unknown, as for a server that sleeps until a document is read.
 Every other field is left unread. The model facts are validated with the
 declared catalogue's own rules, so a value either catalogue would refuse is
 refused here too, and a lane whose entries do not validate yields no live
@@ -33,6 +36,9 @@ _FACT_FIELDS: Final = ("vision", "size_bytes", "context_length", "licence")
 
 _INSTALLED_FIELD: Final = "installed"
 """Whether the lane's local server holds the model; an entry that does not state it leaves it unknown."""
+
+_ENGINE_NOT_RUNNING: Final = "not_running"
+"""The engine state with which the agent says it could not read the lane's local server."""
 
 _MEDIA_FIELDS: Final = ((ModelRunMediaKind.IMAGE, "accepts_images"), (ModelRunMediaKind.PDF, "accepts_pdfs"))
 """Each attachment family a background run may carry, and the served field that says whether the lane takes it."""
@@ -62,7 +68,7 @@ class ServedCatalogModels(LiveCatalogModels):
         models = catalog.get("models") if isinstance(catalog, Mapping) else None
         if not isinstance(models, list):
             return None
-        return _entries(models)
+        return _entries(models, server_read=_server_read(record))
 
     @override
     def lane_background(self, provider: str, transport: str) -> LiveLaneBackground | None:
@@ -126,12 +132,20 @@ class _ReadOnce:
         return self._document
 
 
-def _entries(models: list[object]) -> tuple[LiveCatalogModel, ...] | None:
+def _server_read(record: Mapping[str, object]) -> bool:
+    """Whether the agent read the lane's local server: not where it states the lane's engine not running."""
+    health = record.get("health")
+    engine = health.get("engine") if isinstance(health, Mapping) else None
+    return not (isinstance(engine, Mapping) and engine.get("state") == _ENGINE_NOT_RUNNING)
+
+
+def _entries(models: list[object], *, server_read: bool) -> tuple[LiveCatalogModel, ...] | None:
     entries: list[LiveCatalogModel] = []
     for model in models:
         if not isinstance(model, Mapping) or "model" not in model:
             return None
-        read = {"id": model["model"], _INSTALLED_FIELD: model.get(_INSTALLED_FIELD)} | {
+        installed = model.get(_INSTALLED_FIELD) if server_read else None
+        read = {"id": model["model"], _INSTALLED_FIELD: installed} | {
             field: model[field] for field in _FACT_FIELDS if field in model
         }
         try:

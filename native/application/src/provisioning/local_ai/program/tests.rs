@@ -733,27 +733,23 @@ fn a_damaged_program_is_recorded_and_reads_as_damaged_until_a_start_succeeds() {
     );
     let latest = latest_start_failure(programs);
     assert_eq!(latest, Some(StartFailureKind::ProgramDamaged));
-    // A wait that runs out after such a start, and a quick look with no server running,
-    // read the program as unusable; any other kind, or none, reads as not running.
-    let waited = NotRunningCause::NoServerWithin {
-        budget: START_BUDGET,
-        latest_start: latest,
-    };
-    assert_eq!(waited.category(), FailureCategory::EngineProgramUnusable);
+    // A look with no server running reads the program as unusable after such a start,
+    // as not running after any other failed start, and as present, its server dormant,
+    // when no start failed.
     assert_eq!(
-        StartFailureKind::category_after(latest),
-        FailureCategory::EngineProgramUnusable
+        StartFailureKind::observation_without_server(latest),
+        Observation::Failed(FailureCategory::EngineProgramUnusable)
     );
-    for other in [
-        None,
-        Some(StartFailureKind::Launch),
-        Some(StartFailureKind::Closed),
-    ] {
+    for other in [StartFailureKind::Launch, StartFailureKind::Closed] {
         assert_eq!(
-            StartFailureKind::category_after(other),
-            FailureCategory::ProgramNotRunning
+            StartFailureKind::observation_without_server(Some(other)),
+            Observation::Failed(FailureCategory::ProgramNotRunning)
         );
     }
+    assert_eq!(
+        StartFailureKind::observation_without_server(None),
+        Observation::Present
+    );
     clear_start_failure(programs);
     assert_eq!(latest_start_failure(programs), None);
 }

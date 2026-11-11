@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-31'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:827ca1dee6e30a170887ce1ea04bdc3d0b904edc45c4be7ec981f224def89d34'
+body_hash: 'sha256:f11933c62022534ea8b34144969d37b804bfa2deaf550c13c6910c04809d29d6'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -351,7 +351,9 @@ Accepted 2026-10-17 under `2026-10-17-single-binary-process-tree-adr`, which the
 
 ## The manager supervises the local AI server
 
-Under `2026-10-24-rust-component-provisioning-adr` (constraint 12), the manager also supervises the local AI server that the Rust component engine installs: it starts it while the local AI is set up, restarts it after a crash, stops it on exit, at session end and before the engine replaces or removes the program, and contains it so nothing outlives the manager. The server binds one fixed Cadrumo loopback address from the canonical environment definition. The manager still holds no profile or credential authority; the local AI server is installation-wide, public software outside custody.
+Under `2026-10-24-rust-component-provisioning-adr` (constraint 12), the manager also supervises the local AI server that the Rust component engine installs: it keeps the server dormant while the local AI is set up and starts it only when the agent service demands it through an admitted manager IPC verb, restarts it after a crash while it is demanded, stops it after 5 minutes holding no model, stops it on exit, at session end and before the engine replaces or removes the program, and contains it so nothing outlives the manager. The server binds one fixed Cadrumo loopback address from the canonical environment definition. The manager still holds no profile or credential authority; the local AI server is installation-wide, public software outside custody.
+
+(Amended 2026-11-11 under `2026-11-07-local-inference-engine-adr`, amendment 2026-11-11, accepted by the coordinator under delegated design authority; before that this read: "it starts it while the local AI is set up, restarts it after a crash, stops it on exit".)
 
 ## Amendment 2026-10-31 - the manager manages the environment-selected root
 

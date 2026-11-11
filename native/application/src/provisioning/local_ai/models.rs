@@ -604,8 +604,10 @@ impl Models {
 
     /// The quick check of `model` while llama.cpp is the selected engine: the quick check
     /// of the store, then whether the router recorded in `router`, the llama-server's
-    /// folder, presents the model. A model stored whole that the router does not present
-    /// yet is absent, and with no router recorded there it reads `program_not_running`.
+    /// folder, presents the model. A model stored whole that the running router does not
+    /// present yet is absent. With no router recorded there the server is dormant, and
+    /// its next start presents every model stored whole, so such a model is present; the
+    /// program's own reading says whether a demanded start failed.
     /// A model that states no llama.cpp context and has none recorded can never be
     /// presented, so it reads not in this build before anything is fetched for it.
     /// Files only: no server is asked.
@@ -628,7 +630,7 @@ impl Models {
         match llama_server::presented_by_router(router, model.name()) {
             Some(true) => Observation::Present,
             Some(false) => Observation::Absent,
-            None => Observation::Failed(FailureCategory::ProgramNotRunning),
+            None => Observation::Present,
         }
     }
 

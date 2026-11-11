@@ -93,7 +93,13 @@ export type SetupRow = {
   /** The removals the row offers, in the order they are listed; the window
    * offers no other. */
   removals: readonly SetupRemoval[];
+  /** What the local AI's server does while it is ready: dormant, it starts
+   * when a document is read. Null, or absent, on every other row and state. */
+  server?: SetupServer | null;
 };
+
+/** What the local AI's server does while its row is ready. */
+export type SetupServer = "dormant";
 
 /** A status read or a full check this window started. A settled check has
  * already replaced `rows`; a failed one leaves the earlier rows, except a

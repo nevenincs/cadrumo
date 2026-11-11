@@ -4862,6 +4862,7 @@ desktop:
     progress_label: Progress of {name}
     rail_busy: Setting up components
     rail_incomplete: Setup isn't finished
+    ready_dormant: Ready. It starts when a document is read.
     refused_browser_not_removed: Cadrumo couldn't remove the browser. Check it again,
       then try once more.
     refused_busy: Setup is already running elsewhere. Wait for it to finish.
