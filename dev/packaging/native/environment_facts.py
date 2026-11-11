@@ -179,6 +179,7 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         agent_launch_environment,
     )
     from cadrumo_agent_service.host.native_refusal import NativeLaunchRefusalCode
+    from cadrumo_agent_service.providers.domain.record import LocalEngine
     from cadrumo_client.contracts.contracts import (
         NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE,
         RESERVED_HOST_EXIT_CODES,
@@ -196,6 +197,8 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         received=request["received"],
         # Any profile: the gateway is always started inside one, and its folder is a slot.
         profile_id=uuid.UUID("00000000-0000-4000-8000-000000000000"),
+        # The host always names the profile's engine; any declared engine composes the same facts.
+        local_engine=LocalEngine.LLAMACPP,
     )
     return {
         "agent_variable": PACKAGE_AGENT_VARIABLE,
