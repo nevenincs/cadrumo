@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import re
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import asdict, dataclass, field
+from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
+from cadrumo.domain.period import period_end_date
 from cadrumo.tests.personas import (
     ExpectedValue,
     Persona,
@@ -25,6 +28,8 @@ from cadrumo.tests.personas import (
     filed_period_order,
     values_in_force,
 )
+
+from .counterparties import is_compared
 
 
 class Stage(StrEnum):
@@ -77,6 +82,8 @@ VERDICT_MEANING: dict[Verdict, str] = {
 GREEN = frozenset({Verdict.PASSED})
 """Verdicts a row is green at; a diff reports a row entering or leaving this set."""
 
+_STAGE_REFUSAL = re.compile(r"^(?:verify|export): \S+ \S+ (?P<code>[A-Z][A-Z0-9_]+)")
+"""A verify or export reason as the runner writes it: the stage, the operation, how it settled, its code."""
 _UNSUPPORTED_MARKERS = ("UNSUPPORTED", "NOT_SUPPORTED")
 _ANNUAL = "0A"
 
@@ -232,6 +239,11 @@ def classify(row: TableRow) -> Verdict:
     return Verdict.PASSED if passed else Verdict.FAIL
 
 
+def stage_refusal_codes(*reasons: str) -> set[str]:
+    """The codes the verify and export stages settled with, read from the reasons the runner wrote for them."""
+    return {match["code"] for reason in reasons if (match := _STAGE_REFUSAL.match(reason))}
+
+
 def is_unsupported(code: str) -> bool:
     """Whether a refusal code says the application does not support the return."""
     return any(marker in code for marker in _UNSUPPORTED_MARKERS)
@@ -245,15 +257,18 @@ def replay_horizons(envelope: YearEnvelope) -> tuple[int, ...]:
 def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list[PlannedRow]:
     """The returns ``persona`` owes when replayed under ``horizon``, one per modelo, year and period.
 
-    A return is owed when an obligation states it applicable or a value is
-    stated for it. Values stated per counterparty (informative returns) are
-    not compared yet, so they do not make a row's oracle. ``persona`` is read under any envelope; its year tokens are
-    resolved here against ``horizon``, and a return whose year falls outside
-    ``envelope.floor..horizon`` is not a row of this replay.
+    A return is owed when an obligation states it applicable, the persona's
+    history files or calculates it, or a value is stated for it and no
+    obligation states it not applicable. Values stated per counterparty are an
+    oracle only for the informative returns whose type-2 record the table
+    compares (``counterparties.DESIGNS``). ``persona`` is read under any envelope; its year
+    tokens are resolved here against ``horizon``, and a return whose year falls
+    outside ``envelope.floor..horizon`` is not a row of this replay.
     """
     shifted = dataclasses.replace(envelope, horizon=horizon)
     stated = _stated_values(persona, shifted)
-    keys = _owed_keys(persona, shifted) | set(stated)
+    stated_only = set(stated) - _obligation_keys(persona, shifted, applicable=False)
+    keys = _obligation_keys(persona, shifted, applicable=True) | _history_keys(persona, shifted) | stated_only
     return [
         _planned(persona.id, horizon, (modelo, year, period), stated.get((modelo, year, period), []))
         for modelo, year, period in sorted(keys, key=chain_order)
@@ -262,24 +277,40 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
 
 
 def _stated_values(persona: Persona, envelope: YearEnvelope) -> dict[tuple[str, int | None, str], list[ExpectedValue]]:
-    """The values in force per return, leaving out per-counterparty values; a return with only concepts maps to none."""
+    """The values in force per return, leaving out per-counterparty values the table cannot compare.
+
+    A return with only concepts maps to none.
+    """
     stated: dict[tuple[str, int | None, str], list[ExpectedValue]] = {}
     for year, value in in_force(persona.expectations.values, envelope):
-        if value.counterparty is not None:
+        if value.counterparty is not None and not is_compared(value):
             continue
         found = stated.setdefault((value.modelo, year, value.period), [])
-        if value.casillas or value.not_sourced or value.refusal is not None:
+        if value.casillas or value.not_sourced or value.refusal is not None or is_compared(value):
             found.append(value)
     return stated
 
 
-def _owed_keys(persona: Persona, envelope: YearEnvelope) -> set[tuple[str, int | None, str]]:
-    """The returns an obligation states applicable, with years resolved on ``envelope``."""
+def _obligation_keys(persona: Persona, envelope: YearEnvelope, *, applicable: bool) -> set[tuple[str, int | None, str]]:
+    """The returns an obligation states applicable (or not), with years resolved on ``envelope``.
+
+    A return stated not applicable does not exist, so a value stated for it is
+    a cross-check rather than a filing and makes no row.
+    """
     return {
         (item.modelo, _year(item.year, envelope), period)
         for item in persona.expectations.obligations
-        if item.applicable is True
+        if item.applicable is applicable
         for period in item.periods
+    }
+
+
+def _history_keys(persona: Persona, envelope: YearEnvelope) -> set[tuple[str, int | None, str]]:
+    """The returns the persona's history files or calculates, which the table runs live in chain order."""
+    return {
+        (block.modelo, _year(block.year, envelope), period)
+        for block in (*persona.filed_returns, *persona.calculated_returns)
+        for period in block.periods
     }
 
 
@@ -295,6 +326,17 @@ def _planned(persona_id: str, horizon: int, key: tuple[str, int, str], values: l
         grounding=_grounding(values),
         sources=tuple(dict.fromkeys(source for value in values for source in value.legal_ref)),
     )
+
+
+def ended(rows: Sequence[PlannedRow], today: date) -> list[PlannedRow]:
+    """The rows whose period has ended by ``today``, the persona's scenario day.
+
+    A return whose period has not ended at the scenario clock is not owed yet:
+    no honest figures, attestation or filing exist for it, so it is not a row
+    of that replay. A return whose period has ended is owed even before its
+    filing window opens; only its local filing waits for the window.
+    """
+    return [row for row in rows if period_end_date(row.year, row.period) < today]
 
 
 def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, str]:

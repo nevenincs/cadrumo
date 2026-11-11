@@ -7,8 +7,8 @@ of every row it no longer holds are one write against one exact custody revision
 so a stated zero is a real answer and a person left out is removed.
 
 The leaves are the ones an ascendant row can state and the declaration reads: the
-NIF or NIE, the date of birth, the date of death and the number of descendants the
-ascendant lives with. The row limit is the one the declaration's own design states.
+NIF or NIE, the surnames and name, the date of birth, the date of death and the number
+of descendants the ascendant lives with. The row limit is the one the declaration's own design states.
 Every refusal names the row by its position and never echoes what was typed;
 :class:`UserProfileRecord`, the stored taxpayer profile record.
 """
@@ -30,6 +30,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.contribuyente.household_person_name import admitted_household_person_name, household_person_name_limit
 from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .edit_baseline import require_profile_edit_baseline
@@ -45,6 +46,7 @@ ASCENDANT_OBJECT_PATH: Final = "renta_family.ascendiente"
 ASCENDANT_COUNT_PATH: Final = "renta_family.ascendientes_count"
 
 _NIF_LEAF: Final = "nif"
+_NAME_LEAF: Final = "apellidos_nombre"
 _BIRTH_DATE_LEAF: Final = "birth_date"
 _DEATH_DATE_LEAF: Final = "fallecimiento"
 _COHABITING_LEAF: Final = "convivientes"
@@ -59,9 +61,10 @@ _BIRTH_DATE_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascenda
 _DEATH_DATE_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_death_date_invalid"
 _DEATH_BEFORE_BIRTH_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_death_before_birth"
 _NIF_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_nif_invalid"
+_NAME_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_name_invalid"
 _COHABITING_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_convivientes_invalid"
 
-_LEAF_ORDER: Final = (_NIF_LEAF, _BIRTH_DATE_LEAF, _DEATH_DATE_LEAF, _COHABITING_LEAF)
+_LEAF_ORDER: Final = (_NIF_LEAF, _NAME_LEAF, _BIRTH_DATE_LEAF, _DEATH_DATE_LEAF, _COHABITING_LEAF)
 
 
 class ProfileAscendantFact(BaseModel):
@@ -149,6 +152,13 @@ def _date(raw: str, *, position: int, message_key: str) -> date:
     return parsed
 
 
+def _person_name(raw: str, *, position: int, operation: PinnedAuthorityOperation) -> str:
+    admitted = admitted_household_person_name(raw, authority=operation)
+    if admitted is None:
+        _refuse(_NAME_INVALID_LOCALE_KEY, row=position, limit=household_person_name_limit(authority=operation))
+    return admitted
+
+
 def _cohabiting(raw: str, *, position: int, operation: PinnedAuthorityOperation) -> str:
     limit = resolve_form_codes(_FORM_ROW_CODES_FACT, authority=operation).integer(_COHABITING_BOUND_KEY)
     text = raw.strip()
@@ -168,6 +178,8 @@ def _row_facts(row: ProfileAscendantRow, *, position: int, operation: PinnedAuth
     birth = _date(supplied[_BIRTH_DATE_LEAF], position=position, message_key=_BIRTH_DATE_INVALID_LOCALE_KEY)
     if _NIF_LEAF in supplied:
         stored[_NIF_LEAF] = _tax_id(supplied[_NIF_LEAF], position=position, operation=operation)
+    if _NAME_LEAF in supplied:
+        stored[_NAME_LEAF] = _person_name(supplied[_NAME_LEAF], position=position, operation=operation)
     stored[_BIRTH_DATE_LEAF] = birth.isoformat()
     if _DEATH_DATE_LEAF in supplied:
         death = _date(supplied[_DEATH_DATE_LEAF], position=position, message_key=_DEATH_DATE_INVALID_LOCALE_KEY)

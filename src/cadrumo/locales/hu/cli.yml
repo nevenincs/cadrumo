@@ -2610,18 +2610,19 @@ cli:
             sosem kerül felülírásra. Válassz másik --output értéket, vagy előbb helyezd
             át a meglévő fájlt; egyetlen profil sem került beolvasásra.
       ascendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,NIF=<NIF vagy NIE>][,FALLECIMIENTO=ÉÉÉÉ-HH-NN][,CONVIVIENTES=<azon
-          leszármazottak száma, akikkel a felmenő együtt él>]. Ismételhető; a NACIMIENTO
-          minden sorban kötelező.
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,NIF=<NIF vagy NIE>][,APELLIDOS_NOMBRE=<vezeték-
+          és utónév>][,FALLECIMIENTO=ÉÉÉÉ-HH-NN][,CONVIVIENTES=<azon leszármazottak
+          száma, akikkel a felmenő együtt él>]. Ismételhető; a NACIMIENTO minden sorban
+          kötelező.
         add_help: Egy vagy több felmenő hozzáadása az aktív profilhoz, vagy a --none
           megadásával annak rögzítése, hogy nincs egy sem.
         help: A adózó felmenőinek megadása a 100-as modell családi szakaszához.
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
           %{total} felmenő van.
         invalid_row: Az --ascendiente sor nem olvasható. KULCS=ÉRTÉK párokat használj
-          a NACIMIENTO, NIF, FALLECIMIENTO és CONVIVIENTES kulcsokkal, mindegyiket
-          legfeljebb egyszer és értékkel; a hiba kontextusa megnevezi a kulcsot, ha
-          az azonosítható.
+          a NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO és CONVIVIENTES kulcsokkal,
+          mindegyiket legfeljebb egyszer és értékkel; a hiba kontextusa megnevezi
+          a kulcsot, ha az azonosítható.
         list_help: Az aktív profilon megadott felmenők listázása, és annak jelzése,
           hogy a profil szerint nincs egy sem.
         remove_help: Egy felmenő eltávolítása 0-alapú index szerint az aktív profilról.
@@ -2771,9 +2772,9 @@ cli:
             a --yes kapcsolóval a törléshez.'
         yes_help: Kifejezetten megerősíti a törlést
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
-          Ismételhető. Futtasd az `aeat config profile descendiente` parancsot alparancs
-          nélkül a vezetett bevitelhez.
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX][,APELLIDOS_NOMBRE=<vezeték-
+          és utónév>]. Ismételhető. Futtasd az `aeat config profile descendiente`
+          parancsot alparancs nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
         ambiguous_relacion_advisory: A(z) %{indices} leszármazottnál az anyai munkavégzés
           hónapjai az alapértelmezett kapcsolattal szerepelnek. A nyilvántartás nem

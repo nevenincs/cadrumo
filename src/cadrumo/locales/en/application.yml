@@ -3621,6 +3621,8 @@ application:
         does not keep for an ascendant.
       ascendant_limit_unknown: The declaration design states no limit for ascendants,
         so the list cannot be checked or saved.
+      ascendant_name_invalid: The surnames and name of ascendant %{row} cannot be
+        blank and can have at most %{limit} characters.
       ascendant_nif_invalid: The NIF or NIE of ascendant %{row} is not valid; check
         its letters and digits.
       ascendant_rows_over_limit: A declaration lists at most %{limit} ascendants,
@@ -3651,6 +3653,8 @@ application:
         store.
       descendant_limit_unknown: The declaration design states no limit for descendants,
         so the list cannot be checked or saved.
+      descendant_name_invalid: The surnames and name of descendant %{row} cannot be
+        blank and can have at most %{limit} characters.
       descendant_nif_invalid: The NIF or NIE of descendant %{row} is not valid; check
         its letters and digits.
       descendant_rows_over_limit: A declaration lists at most %{limit} descendants,
@@ -3705,6 +3709,8 @@ application:
         Available fields: %{fields}.'
     family_rows:
       ascendiente:
+        apellidos_nombre:
+          label: Ascendant's surnames and name (surnames first)
         birth_date:
           label: Date of birth
         convivientes:

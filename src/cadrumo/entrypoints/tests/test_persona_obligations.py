@@ -11,10 +11,18 @@ copied: nothing here edits an expected value to agree with a run.
 An expectation grounded ``unverified`` is a known gap and is not asserted. A
 value stated only as named concepts, or per counterparty, carries no registry
 casilla and is not re-derived here. A value that states a ``refusal`` asserts
-that the application refuses the period with that error code; a casilla stated
+that the application refuses the period's calculation with that error code, or,
+when its ``refusal_stage`` is verify or export, that the calculation completes
+(the persona table asserts the later stage's refusal); a casilla stated
 ``not_sourced`` asserts that the application does not yet carry the figure the
 law gives; an obligation that states a ``calendar_advice`` asserts that the
 calendar advises it instead of showing a window row.
+
+The stated periods run in chain order, quarters before the annual returns, and
+a quarter whose verification is granted is filed locally before the next one
+calculates, so a later quarter reads its predecessors as filed (RIRPF art.
+110.1.a: casilla 05 of a Modelo 130 deducts the earlier quarters' pagos).
+Local filing records a PRESENTADO revision and submits nothing.
 """
 
 from __future__ import annotations
@@ -33,7 +41,11 @@ from ...application.modelo.m303_attestation_operation import (
     ModeloWorkM303AttestationPublicResultV2,
     ModeloWorkM303AttestationRequest,
 )
-from ...application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from ...application.modelo.operation_shared import (
+    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+)
 from ...application.modelo.revision_selection_operation import (
     MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
     ModeloWorkRevisionProjection,
@@ -53,6 +65,15 @@ from ...application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
     ModeloWorkCreateRequest,
     ModeloWorkCreateSuccess,
+)
+from ...application.modelo.work_filing_contracts import (
+    ModeloWorkFileApproval,
+    ModeloWorkFilePublicResultV2,
+    ModeloWorkFileRequest,
+)
+from ...application.modelo.work_verification_contracts import (
+    ModeloWorkVerifyPublicResultV2,
+    ModeloWorkVerifyRequest,
 )
 from ...application.operations.public_period import PublicPeriod
 from ...application.operations.public_scalar import PublicNamedScalar, restore_scalar
@@ -291,11 +312,21 @@ def _m303_evidence(
     )
 
 
-def _calculated_casillas(materialised: MaterialisedPersona, modelo: str, year: int, period: str) -> dict[str, object]:
+@dataclass(frozen=True, slots=True)
+class _Calculated:
+    """One return's casilla values, or ``{"refusal": reason}``, and its revision when it is not yet filed."""
+
+    values: dict[str, object]
+    unfiled: tuple[str, str] | None = None
+    """The work unit and calculation revision of a return the history has not filed."""
+
+
+def _calculated_casillas(materialised: MaterialisedPersona, modelo: str, year: int, period: str) -> _Calculated:
     """The casilla values the application holds for one return, or the operation's refusal as ``{"refusal": reason}``."""
     world = materialised.world
     key = filing_key(modelo, year, period)
     revision_id = materialised.filings.get(key) or materialised.calculations.get(key)
+    unfiled: tuple[str, str] | None = None
     try:
         if revision_id is not None:
             selected = run_operation(
@@ -312,6 +343,8 @@ def _calculated_casillas(materialised: MaterialisedPersona, modelo: str, year: i
                 subject=selected.unit.work_unit_id,
             )
             values: tuple[PublicNamedScalar, ...] = snapshot.calculation.casilla_values
+            if key not in materialised.filings:
+                unfiled = (selected.unit.work_unit_id, revision_id)
         else:
             created = settle_operation(
                 world,
@@ -325,7 +358,7 @@ def _calculated_casillas(materialised: MaterialisedPersona, modelo: str, year: i
             )
             outcome = getattr(created, "outcome", None)
             if not isinstance(outcome, ModeloWorkCreateSuccess):
-                return {"refusal": f"work creation refused: {outcome}"}
+                return _Calculated({"refusal": f"work creation refused: {outcome}"})
             work_unit_id = outcome.unit.work_unit_id
             calculated = run_operation(
                 world,
@@ -343,9 +376,51 @@ def _calculated_casillas(materialised: MaterialisedPersona, modelo: str, year: i
                 subject=work_unit_id,
             )
             values = calculated.calculation.casilla_values
+            unfiled = (work_unit_id, calculated.calculation_revision_id)
     except PersonaMaterialisationError as error:
-        return {"refusal": str(error)}
-    return {item.key: restore_scalar(item.value) for item in values}
+        return _Calculated({"refusal": str(error)})
+    return _Calculated({item.key: restore_scalar(item.value) for item in values}, unfiled)
+
+
+def _file_if_verified(world: PersonaWorld, work_unit_id: str, revision_id: str) -> str | None:
+    """File a quarter locally when its verification is granted, so the next quarter builds on it.
+
+    Returns why the quarter stayed unfiled, or ``None`` once it is filed. An
+    unfiled quarter is no problem of its own: a later quarter that reads it
+    refuses, and its problem carries this reason.
+    """
+    try:
+        verified = run_operation(
+            world,
+            MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+            ModeloWorkVerifyRequest(calculation_revision_id=revision_id, actor=PERSONA_ACTOR),
+            ModeloWorkVerifyPublicResultV2,
+            subject=work_unit_id,
+        )
+        if not verified.granted_verificado_completo:
+            return f"verify {verified.completeness_status}, {verified.finding_count} findings"
+        run_operation(
+            world,
+            MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+            ModeloWorkFileRequest(
+                approval=ModeloWorkFileApproval(
+                    calculation_revision_id=revision_id,
+                    verification_report_id=verified.verification_report_id,
+                ),
+                actor=PERSONA_ACTOR,
+            ),
+            ModeloWorkFilePublicResultV2,
+            subject=work_unit_id,
+        )
+    except PersonaMaterialisationError as error:
+        return str(error)
+    return None
+
+
+def _chain_order(key: tuple[str, str]) -> tuple[bool, str, str]:
+    """Quarters before the annual returns, each in period order, then by modelo."""
+    modelo, period = key
+    return (not period.endswith("T"), period, modelo)
 
 
 @pytest.mark.parametrize("case", _cases(_value_years))
@@ -365,17 +440,35 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
     }
     legal_refs = {(value.modelo, value.period): value.legal_ref for value in stated}
     refusals = {(value.modelo, value.period): value.refusal for value in stated if value.refusal is not None}
+    refusal_stages = {
+        (value.modelo, value.period): value.refusal_stage for value in stated if value.refusal is not None
+    }
     not_sourced = {
         (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.not_sourced}
         for value in stated
     }
 
     problems: list[str] = []
+    left_unfiled: dict[str, str] = {}
     with materialised_persona(case.persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
-        for (modelo, period), casillas in expected.items():
-            calculated = _calculated_casillas(materialised, modelo, case.year, period)
+        for modelo, period in sorted(expected, key=_chain_order):
+            casillas = expected[modelo, period]
+            result = _calculated_casillas(materialised, modelo, case.year, period)
+            calculated = result.values
+            if (
+                result.unfiled is not None
+                and period.endswith("T")
+                and (unfiled := _file_if_verified(materialised.world, *result.unfiled)) is not None
+            ):
+                left_unfiled[modelo] = f"{period} left unfiled: {unfiled}"
             where = f"Modelo {modelo} {case.year} {period} ({legal_refs[modelo, period]})"
             if (refusal := refusals.get((modelo, period))) is not None:
+                if refusal_stages[modelo, period] != "calculate":
+                    # A later stage refuses a completed calculation; the persona
+                    # table asserts that stage's refusal against the written file.
+                    if "refusal" in calculated:
+                        problems.append(f"{where}: calculation refused: {calculated['refusal']}")
+                    continue
                 if refusal not in str(calculated.get("refusal", "")):
                     problems.append(
                         f"{where}: expected the stated refusal {refusal}, got "
@@ -383,7 +476,8 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
                     )
                 continue
             if "refusal" in calculated:
-                problems.append(f"{where}: calculation refused: {calculated['refusal']}")
+                earlier = f" ({left_unfiled[modelo]})" if modelo in left_unfiled else ""
+                problems.append(f"{where}: calculation refused: {calculated['refusal']}{earlier}")
                 continue
             problems.extend(
                 f"{where} casilla {casilla}: expected {amount}, got {actual}"

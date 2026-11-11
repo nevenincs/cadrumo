@@ -60,15 +60,13 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "does-intracomunitario" = false
 "third-party-transactions-above-347-threshold" = true
 
-# The cap term of the art. 81 LIRPF deduction for a mother of a child under
-# three. He has no child, so no contribution counts towards it: a stated zero,
-# not an unknown.
-[fields]
-"renta_family.cotizaciones_ss_madre_2024" = "0"
-
+# The censal tipo de actividad (Modelo 036 casillas 403 and 404, AEAT guide
+# "aeat-m036-activity-code-table-2026-03-26"), which Modelo 100 casilla 0166 states:
+# IAE sección primera, epígrafe 504.2: actividad empresarial, so A03.
 [[activities]]
 description = "Instalaciones de fontanería, calefacción y aire acondicionado"
 iae_epigraph = "504.2"
+tipo_actividad = "A03"
 
 [[elections]]
 question = "irpf-activity-income-imputation-criterion"
@@ -165,10 +163,18 @@ periods = ["0A"]
 
 # His first Modelo 130 return is calculated but not filed by the replay.
 # Casilla 13 depends on the prior year's Renta, which the replay brings in from
-# his AEAT filing above. The later quarters are not calculated: their casilla 05
-# reads casilla 07 of the earlier quarters' filed returns, and with 1T unfiled
-# the calculation refuses for that missing input.
+# his AEAT filing above. The later quarters' casilla 05 reads casilla 07 of the
+# earlier quarters' filed returns, so they calculate once 1T is filed.
 [[calculated_returns]]
 modelo = "130"
 year = "horizon-1"
 periods = ["1T"]
+
+# A synthetic titular account (checksum-valid, not a real bank) designated for a
+# Modelo 100 refund: AEAT pays a refund by transfer to the account the taxpayer
+# states as held in the return (Manual Renta, devolución; art. 132.1 RGAT).
+[[own_accounts]]
+label = "Cuenta principal"
+holding = "titular"
+iban = "ES4400000000000000000005"
+designations = [{ role = "refund", modelo = "100" }]

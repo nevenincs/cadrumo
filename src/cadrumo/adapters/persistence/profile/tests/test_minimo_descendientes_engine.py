@@ -180,7 +180,6 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
             **resolution.binding_values,
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-incremento-guarderia": Decimal("0"),
-            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),

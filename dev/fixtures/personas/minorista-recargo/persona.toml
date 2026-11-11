@@ -56,9 +56,26 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "does-intracomunitario" = false
 "third-party-transactions-above-347-threshold" = true
 
+# The censal tipo de actividad (Modelo 036 casillas 403 and 404, AEAT guide
+# "aeat-m036-activity-code-table-2026-03-26"), which Modelo 100 casilla 0166 states:
+# IAE sección primera, epígrafe 651.2: actividad empresarial, so A03.
 [[activities]]
 description = "Comercio al por menor de prendas de vestir"
 iae_epigraph = "651.2"
+tipo_actividad = "A03"
+
+# The shop holds clothing for sale at every closing. Her count at the end of
+# the year, valued at acquisition price, equals the previous closing, so the
+# book opens and closes at the same stock and records no movement. The Modelo
+# 100 rows of the stock variation (casillas 0177 and 0182) read no variation on
+# her statement, never by default.
+[[inventory]]
+activity = "comercio-prendas-vestir"
+year = "horizon-1"
+valuation_method = "fifo"
+opening_stock = "7400.00"
+closing_stock = "7400.00"
+statement = "Las existencias de prendas de vestir de la tienda, valoradas a precio de adquisición, sumaban 7400,00 euros al cierre del ejercicio anterior y 7400,00 euros al cierre de este."
 
 [[elections]]
 question = "irpf-activity-income-imputation-criterion"

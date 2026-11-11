@@ -1384,6 +1384,9 @@ errors:
       datos que el fichero declara sobre ti o sobre esta declaración (identificación,
       cuenta bancaria o datos propios del modelo). Complétalos en tu perfil o en las
       opciones de la exportación y vuelve a exportar.'
+    refused_modelo_export_required_record_absent: El diseño oficial exige al menos
+      un registro %{export_record_id}, pero esta declaración no tiene ninguno, así
+      que no hay nada que escribir en este formato y no se ha escrito nada.
     refused_modelo_export_value_overflow: 'No se ha escrito nada: un valor no cabe
       en el campo %{field_id}, al que el diseño de registro de la AEAT da %{field_length}
       posiciones. Recortarlo declararía otro dato. Revisa ese dato o importe y vuelve

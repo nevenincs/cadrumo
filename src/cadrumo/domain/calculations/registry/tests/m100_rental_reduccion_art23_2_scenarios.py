@@ -44,7 +44,6 @@ def calculate(
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-incremento-guarderia": Decimal("0"),
-            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

@@ -270,11 +270,11 @@ parameters = { pago_rate = "0.20" }
 derivation = """
 01 = 9600.00 + 5800.00 + 2900.00 = 18300.00. 02 = 4000.00 + 2450.00 + 240.00 + 960.00 = 7650.00.
 03 = 10650.00; 04 = 2130.00; 05 = previous positive 07 = 1120.00; 07 = 1010.00.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
-refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "130"
@@ -285,11 +285,11 @@ parameters = { pago_rate = "0.20" }
 derivation = """
 01 = 18300.00 + 4600.00 + 3100.00 = 26000.00. 02 = 7650.00 + 1900.00 + 240.00 + 960.00 = 10750.00.
 03 = 15250.00; 04 = 3050.00; 05 = 1120.00 + 1010.00 = 2130.00; 07 = 920.00.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
-refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "130"
@@ -300,11 +300,11 @@ parameters = { pago_rate = "0.20" }
 derivation = """
 01 = 26000.00 + 6400.00 + 3700.00 = 36100.00. 02 = 10750.00 + 2650.00 + 240.00 + 960.00 = 14600.00.
 03 = 21500.00; 04 = 4300.00; 05 = 2130.00 + 920.00 = 3050.00; 07 = 1250.00.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
-refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "347"
@@ -350,14 +350,12 @@ grounding = "verified"
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-casillas = { "0599" = "0.00" }
-not_sourced = { "0604" = "4300.00" }
+casillas = { "0599" = "0.00", "0604" = "4300.00" }
 concepts = { ingresos_actividad = "36100.00", gastos_actividad = "14600.00", rendimiento_neto_actividad = "21500.00", minimo_personal = "5550.00" }
 derivation = """
 Activity income is the 130 4T cumulative figure: 36100.00 - 14600.00 = 21500.00, with no provision for gastos de difícil justificación under the normal modality.
 0604 pagos fraccionados = 1120.00 + 1010.00 + 920.00 + 1250.00 = 4300.00. No withheld activity income, so 0599 = 0.
 Mínimo personal 5550.00 (under 65). Cuota and resultado are not asserted: they depend on the state and Madrid scales.
 """
-legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30"]
+legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 0604 sums the pagos fraccionados of this year's Modelo 130 returns as filed (LIRPF art. 99, RIRPF art. 110), and none is filed: the first quarter cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation leaves 0604 unresolved for that missing input; the figure is what the filed quarters would give."

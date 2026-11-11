@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import calendar
 import csv
+import dataclasses
 import re
 import tomllib
 from collections.abc import Mapping
@@ -25,6 +26,7 @@ from pathlib import Path
 from typing import Final, Literal, cast, override
 
 from ..core.decimal.grammar import try_parse_canonical_decimal
+from ..core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from .inventory import REPO_ROOT
 from .run_artifact import file_inputs_digest
 
@@ -127,10 +129,17 @@ class YearToken:
 
     def resolve(self, envelope: YearEnvelope, *, biographical: bool = False) -> int:
         """Return the calendar year, refusing one outside the envelope unless it is a biographical early date."""
-        year = (envelope.horizon if self.anchor == "horizon" else envelope.floor) + self.offset
+        year = self._shifted(envelope)
         if year > envelope.horizon or (year < envelope.floor and not biographical):
             raise PersonaCatalogueError(f"year token {self} resolves outside the supported envelope")
         return year
+
+    def precedes_floor(self, envelope: YearEnvelope) -> bool:
+        """Whether the token's year lies below the envelope floor, a year the application refuses."""
+        return self._shifted(envelope) < envelope.floor
+
+    def _shifted(self, envelope: YearEnvelope) -> int:
+        return (envelope.horizon if self.anchor == "horizon" else envelope.floor) + self.offset
 
     @override
     def __str__(self) -> str:
@@ -244,6 +253,24 @@ class Election:
     question: str
     value: str
     year: YearToken
+
+
+@dataclass(frozen=True, slots=True)
+class OwnAccountDesignation:
+    """The modelo role an own account is designated for; an absent ``modelo`` covers every modelo."""
+
+    role: Literal["charge", "refund"]
+    modelo: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class OwnAccount:
+    """A bank account the persona holds, with the roles it is designated for."""
+
+    label: str
+    holding: Literal["titular", "cotitular"]
+    iban: str
+    designations: tuple[OwnAccountDesignation, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -422,10 +449,19 @@ class LedgerRow:
     retencion_rate: Decimal | None
     retencion_amount: Decimal | None
     document: str | None
+    accrual: tuple[YearToken, int, int] | None = None
+    """The year, month and day the gasto or ingreso accrues, where it differs from the movement and no invoice dates it."""
 
     def operation_date(self, envelope: YearEnvelope) -> date:
         """Return the movement's calendar date under ``envelope``."""
         return date(self.year.resolve(envelope), self.month, self.day)
+
+    def accrual_date(self, envelope: YearEnvelope) -> date | None:
+        """Return the stated accrual date under ``envelope``, or ``None`` when the row states none."""
+        if self.accrual is None:
+            return None
+        year, month, day = self.accrual
+        return date(year.resolve(envelope), month, day)
 
     @property
     def reverse_charge(self) -> bool:
@@ -496,9 +532,12 @@ class ExpectedValue:
     legal_ref: tuple[str, ...]
     grounding: Literal["verified", "cited", "unverified"]
     reason: str | None
-    #: The error code the application refuses this period's calculation with; ``reason``
-    #: states why. The casillas then record what the law gives, and are not compared.
+    #: The error code the application refuses this period with; ``reason`` states why.
+    #: The casillas then record what the law gives, and are not compared.
     refusal: str | None = None
+    #: The stage that refuses: the calculation itself, or its verification or export
+    #: once the calculation has completed (a value wider than its export slot).
+    refusal_stage: Literal["calculate", "verify", "export"] = "calculate"
     #: Casillas with the figure the law gives that the calculation leaves unresolved;
     #: ``reason`` states the gap. They are asserted not to carry that figure.
     not_sourced: tuple[tuple[str, str], ...] = ()
@@ -515,6 +554,48 @@ class Expectations:
     obligations: tuple[ExpectedObligation, ...]
     deadlines: tuple[ExpectedDeadline, ...]
     values: tuple[ExpectedValue, ...]
+
+
+type BelowFloorBlock = Literal[
+    "filed_returns",
+    "calculated_returns",
+    "local_observations",
+    "aeat_filings",
+    "expectations.obligations",
+    "expectations.deadlines",
+    "expectations.values",
+]
+
+_HISTORY_BLOCKS: Final[frozenset[BelowFloorBlock]] = frozenset(
+    {"filed_returns", "calculated_returns", "local_observations", "aeat_filings"}
+)
+
+
+@dataclass(frozen=True, slots=True)
+class BelowFloorRecord:
+    """A dated persona record a read left out because its year resolves below the envelope floor.
+
+    The application refuses every year below the floor, so such a record can be
+    neither replayed nor compared; a return of a supported year that depends on
+    it meets the application's own refusal instead.
+    """
+
+    block: BelowFloorBlock
+    modelo: str
+    year: YearToken
+    periods: tuple[str, ...]
+
+    @property
+    def history(self) -> bool:
+        """Whether the record is a return the replay records, rather than an expectation it compares."""
+        return self.block in _HISTORY_BLOCKS
+
+    def reason(self, envelope: YearEnvelope) -> str:
+        """Why the record is left out under ``envelope``."""
+        return (
+            f"Modelo {self.modelo} {self.year} ({', '.join(self.periods)}) resolves below the supported "
+            f"envelope floor {envelope.floor}, a year the application refuses"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -540,6 +621,8 @@ class Persona:
     A family the persona lists as empty is a declaration that it has no member;
     a family it leaves out is unstated.
     """
+    own_accounts: tuple[OwnAccount, ...]
+    """The bank accounts the persona states as its own, each with the charge and refund roles it is designated for."""
     withholding_certificates: tuple[WithholdingCertificate, ...]
     rental_properties: tuple[RentalProperty, ...]
     officers: tuple[Officer, ...]
@@ -553,6 +636,8 @@ class Persona:
     documents: tuple[PersonaDocument, ...]
     expectations: Expectations
     identities: IdentityCatalogue
+    below_floor: tuple[BelowFloorRecord, ...] = ()
+    """The dated records a read under a lowered horizon left out, their year lying below the envelope floor."""
 
     def identity(self, reference: str | IdentityRef) -> str:
         """Return the value an identity role or a role field reference names."""
@@ -753,6 +838,7 @@ _PERSONA_TABLES = frozenset(
         "activities",
         "elections",
         "household",
+        "own_accounts",
         "withholding_certificates",
         "rental_properties",
         "officers",
@@ -838,6 +924,39 @@ def _household(rows: object, where: str, leaves: frozenset[str], roles: _Roles) 
         identity = roles(table["identity"], here) if "identity" in table else None
         members.append(HouseholdMember(identity=identity, leaves=tuple(values)))
     return tuple(members)
+
+
+def _own_account_designation(table: _Table, where: str, modelos: tuple[str, ...]) -> OwnAccountDesignation:
+    _keys(table, where, required=frozenset({"role"}), optional=frozenset({"modelo"}))
+    modelo = _optional_string(table, "modelo", where)
+    if modelo is not None and modelo not in modelos:
+        raise _fail(where, f"modelo {modelo!r} is not one of the persona's modelos {list(modelos)}")
+    return OwnAccountDesignation(
+        role=_choice(_string(table, "role", where), ("charge", "refund"), where), modelo=modelo
+    )
+
+
+def _own_account(table: _Table, where: str, modelos: tuple[str, ...]) -> OwnAccount:
+    _keys(table, where, required=frozenset({"label", "holding", "iban"}), optional=frozenset({"designations"}))
+    iban = normalise_iban(_string(table, "iban", where))
+    if not IBAN_SHAPE_RE.match(iban) or iban_mod_97(iban) != 1:
+        raise _fail(where, "iban is not a checksum-valid ISO 13616 account number")
+    return OwnAccount(
+        label=_string(table, "label", where),
+        holding=_choice(_string(table, "holding", where), ("titular", "cotitular"), where),
+        iban=iban,
+        designations=tuple(
+            _own_account_designation(item, f"{where} designations[{index}]", modelos)
+            for index, item in enumerate(_tables(table.get("designations"), where))
+        ),
+    )
+
+
+def _check_designations(accounts: tuple[OwnAccount, ...], where: str) -> None:
+    """Refuse two designations of one role and scope, which the register holds once."""
+    keys = [(item.role, item.modelo) for account in accounts for item in account.designations]
+    if len(keys) != len(set(keys)):
+        raise _fail(where, "two designations state one role and scope")
 
 
 def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertificate:
@@ -1148,6 +1267,9 @@ LEDGER_COLUMNS: tuple[str, ...] = (
 )
 """The ``ledger.csv`` header, in order."""
 
+LEDGER_ACCRUAL_COLUMNS: tuple[str, ...] = ("accrual_year", "accrual_month", "accrual_day")
+"""Optional trailing ``ledger.csv`` columns: a row's accrual date, stated where the devengo criterion needs it."""
+
 
 def _cell(row: Mapping[str, str], column: str) -> str | None:
     return row[column] or None
@@ -1185,6 +1307,7 @@ def _ledger_row(row: Mapping[str, str], where: str, roles: _Roles) -> LedgerRow:
         retencion_rate=_cell_amount(row, "retencion_rate", where),
         retencion_amount=_cell_amount(row, "retencion_amount", where),
         document=_cell(row, "document"),
+        accrual=_accrual(row, where),
     )
     if not 1 <= month <= 12 or not 1 <= day <= 31:
         raise _fail(where, "month or day out of range")
@@ -1192,6 +1315,19 @@ def _ledger_row(row: Mapping[str, str], where: str, roles: _Roles) -> LedgerRow:
         raise _fail(where, "a row needs a ref, a description and EUR")
     _check_invoice_arithmetic(ledger_row, where)
     return ledger_row
+
+
+def _accrual(row: Mapping[str, str], where: str) -> tuple[YearToken, int, int] | None:
+    cells = [row.get(column) or None for column in LEDGER_ACCRUAL_COLUMNS]
+    if all(cell is None for cell in cells):
+        return None
+    year, month, day = cells
+    if year is None or month is None or day is None:
+        raise _fail(where, "an accrual date states its year, month and day")
+    accrual = (YearToken.parse(year, where=f"{where}.accrual_year"), int(month), int(day))
+    if not 1 <= accrual[1] <= 12 or not 1 <= accrual[2] <= 31:
+        raise _fail(where, "accrual month or day out of range")
+    return accrual
 
 
 def _check_invoice_arithmetic(row: LedgerRow, where: str) -> None:
@@ -1205,10 +1341,13 @@ def _check_invoice_arithmetic(row: LedgerRow, where: str) -> None:
 
 
 def _parse_ledger(text: str, *, where: str, roles: _Roles) -> tuple[LedgerRow, ...]:
-    """Parse ``ledger.csv`` text; a header other than :data:`LEDGER_COLUMNS` is refused."""
+    """Parse ``ledger.csv`` text; a header other than :data:`LEDGER_COLUMNS`, optionally followed by
+    :data:`LEDGER_ACCRUAL_COLUMNS`, is refused."""
     reader = csv.DictReader(text.splitlines())
-    if tuple(reader.fieldnames or ()) != LEDGER_COLUMNS:
-        raise _fail(where, f"header must be {','.join(LEDGER_COLUMNS)}")
+    if tuple(reader.fieldnames or ()) not in (LEDGER_COLUMNS, LEDGER_COLUMNS + LEDGER_ACCRUAL_COLUMNS):
+        raise _fail(
+            where, f"header must be {','.join(LEDGER_COLUMNS)}, optionally with {','.join(LEDGER_ACCRUAL_COLUMNS)}"
+        )
     rows = tuple(_ledger_row(row, f"{where}:{index + 2}", roles) for index, row in enumerate(reader))
     refs = [row.ref for row in rows]
     if len(set(refs)) != len(refs):
@@ -1262,6 +1401,7 @@ def _documents(document: _Table, where: str, persona_id: str, refs: frozenset[st
 
 
 _GROUNDING: tuple[Literal["verified", "cited", "unverified"], ...] = ("verified", "cited", "unverified")
+_REFUSAL_STAGES: tuple[Literal["calculate", "verify", "export"], ...] = ("calculate", "verify", "export")
 
 
 def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) -> Expectations:
@@ -1340,6 +1480,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                     "derivation",
                     "reason",
                     "refusal",
+                    "refusal_stage",
                     "not_sourced",
                     "governed_by",
                 }
@@ -1359,6 +1500,9 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 raise _fail(here, "a refusal names the application error code")
             if reason is None:
                 raise _fail(here, "a refusal says in its reason why the application refuses")
+        refusal_stage = _choice(_optional_string(table, "refusal_stage", here) or "calculate", _REFUSAL_STAGES, here)
+        if refusal is None and "refusal_stage" in table:
+            raise _fail(here, "a refusal stage belongs to a stated refusal")
         casillas = _string_map(table, "casillas", here)
         not_sourced = _string_map(table, "not_sourced", here)
         if not_sourced:
@@ -1382,6 +1526,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 grounding=grounding,
                 reason=reason,
                 refusal=refusal,
+                refusal_stage=refusal_stage,
                 not_sourced=not_sourced,
                 governed_by=governed_by,
             )
@@ -1455,8 +1600,16 @@ def parse_persona(
     expectations_document: _Table,
     catalogue: IdentityCatalogue,
     envelope: YearEnvelope,
+    omit_below_floor: bool = False,
 ) -> Persona:
-    """Validate one persona's parsed files against the catalogue contract and the year envelope."""
+    """Validate one persona's parsed files against the catalogue contract and the year envelope.
+
+    A year outside the envelope is refused. With ``omit_below_floor``, for a
+    read under a horizon lowered below the registry's own, a return-history
+    record or an expectation whose year falls below the floor is left out and
+    listed in :attr:`Persona.below_floor` instead; every other token stays
+    refused there.
+    """
     where = f"{persona_id}/persona.toml"
     if persona_document.get("format") != CATALOGUE_FORMAT:
         raise _fail(where, f"format must be {CATALOGUE_FORMAT}, found {persona_document.get('format')!r}")
@@ -1494,6 +1647,12 @@ def parse_persona(
                 year=YearToken.parse(table["year"], where=f"{here}.year"),
             )
         )
+    modelos = _strings(head, "modelos", where)
+    own_accounts = tuple(
+        _own_account(table, f"{where} own_accounts[{index}]", modelos)
+        for index, table in enumerate(_tables(persona_document.get("own_accounts"), where))
+    )
+    _check_designations(own_accounts, f"{where} own_accounts")
     ledger = _parse_ledger(ledger_text, where=f"{persona_id}/ledger.csv", roles=roles)
     persona = Persona(
         id=persona_id,
@@ -1501,7 +1660,7 @@ def parse_persona(
         summary=_string(head, "summary", where),
         taxpayer=roles(head["taxpayer"], where),
         fiscal_year=YearToken.parse(head["fiscal_year"], where=f"{where}.fiscal_year"),
-        modelos=_strings(head, "modelos", where),
+        modelos=modelos,
         as_of=_date(clock["as_of"], f"{where} [clock].as_of", biographical=False),
         profile=tuple(
             ProfileAnswer(question_id=key, value=_profile_value(key, value, f"{where} [profile].{key}", roles))
@@ -1513,6 +1672,7 @@ def parse_persona(
         descendants=_household(household.get("descendants"), f"{where} descendants", _DESCENDANT_LEAVES, roles),
         ascendants=_household(household.get("ascendants"), f"{where} ascendants", _ASCENDANT_LEAVES, roles),
         household_families=tuple(family for family in ("descendants", "ascendants") if family in household),
+        own_accounts=own_accounts,
         withholding_certificates=tuple(
             _withholding(table, f"{where} withholding_certificates[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("withholding_certificates"), where))
@@ -1565,9 +1725,61 @@ def parse_persona(
             raise _fail(f"{persona_id}/documents.toml", f"{document.id}: its row does not name it in ledger.csv")
     _check_returns(persona)
     _check_inventory(persona)
+    if omit_below_floor:
+        persona = _without_records_below_floor(persona, envelope)
     _check_years(persona, envelope)
     _check_aeat_filings(persona, envelope)
     return persona
+
+
+type _DatedRecord = (
+    FiledReturns
+    | CalculatedReturns
+    | LocalObservation
+    | AeatFiling
+    | ExpectedObligation
+    | ExpectedDeadline
+    | ExpectedValue
+)
+
+
+def _record_periods(record: _DatedRecord) -> tuple[str, ...]:
+    if isinstance(record, FiledReturns | CalculatedReturns | ExpectedObligation):
+        return record.periods
+    return (record.period,)
+
+
+def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Persona:
+    """``persona`` without its return-history records and expectations below the envelope floor, listing them."""
+    dropped: list[BelowFloorRecord] = []
+
+    def kept[Record: _DatedRecord](block: BelowFloorBlock, records: tuple[Record, ...]) -> tuple[Record, ...]:
+        inside: list[Record] = []
+        for record in records:
+            if record.year.precedes_floor(envelope):
+                dropped.append(
+                    BelowFloorRecord(
+                        block=block, modelo=record.modelo, year=record.year, periods=_record_periods(record)
+                    )
+                )
+            else:
+                inside.append(record)
+        return tuple(inside)
+
+    expectations = persona.expectations
+    return dataclasses.replace(
+        persona,
+        filed_returns=kept("filed_returns", persona.filed_returns),
+        calculated_returns=kept("calculated_returns", persona.calculated_returns),
+        local_observations=kept("local_observations", persona.local_observations),
+        aeat_filings=kept("aeat_filings", persona.aeat_filings),
+        expectations=Expectations(
+            obligations=kept("expectations.obligations", expectations.obligations),
+            deadlines=kept("expectations.deadlines", expectations.deadlines),
+            values=kept("expectations.values", expectations.values),
+        ),
+        below_floor=tuple(dropped),
+    )
 
 
 def _check_returns(persona: Persona) -> None:
@@ -1650,8 +1862,11 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         raise _fail(persona.id, str(error)) from None
 
 
-def read_persona(persona_id: str, *, envelope: YearEnvelope) -> Persona:
-    """Read and validate one persona of the catalogue under the registry's year ``envelope``."""
+def read_persona(persona_id: str, *, envelope: YearEnvelope, omit_below_floor: bool = False) -> Persona:
+    """Read and validate one persona of the catalogue under the registry's year ``envelope``.
+
+    ``omit_below_floor`` is as :func:`parse_persona` takes it.
+    """
     directory = PERSONAS_ROOT / persona_id
     if not (directory / "persona.toml").is_file():
         raise PersonaCatalogueError(f"unknown persona {persona_id!r}")
@@ -1663,6 +1878,7 @@ def read_persona(persona_id: str, *, envelope: YearEnvelope) -> Persona:
         expectations_document=_read_toml(directory / "expectations.toml"),
         catalogue=identity_catalogue(),
         envelope=envelope,
+        omit_below_floor=omit_below_floor,
     )
 
 
@@ -1678,10 +1894,13 @@ __all__ = [
     "BIOGRAPHICAL_DATE_KEYS",
     "CATALOGUE_FORMAT",
     "DECLARATIVE_BLOCKS",
+    "LEDGER_ACCRUAL_COLUMNS",
     "LEDGER_COLUMNS",
     "PERSONAS_ROOT",
     "ActivityRow",
     "AeatFiling",
+    "BelowFloorBlock",
+    "BelowFloorRecord",
     "CalculatedReturns",
     "Election",
     "Expectations",
@@ -1700,6 +1919,8 @@ __all__ = [
     "LedgerRow",
     "LocalObservation",
     "Officer",
+    "OwnAccount",
+    "OwnAccountDesignation",
     "Persona",
     "PersonaCatalogueError",
     "PersonaDate",

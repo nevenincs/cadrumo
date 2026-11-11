@@ -31,6 +31,7 @@ from .export_fragment_provenance import (
 from .export_tree_models import ExportTreeTransportProfile
 from .export_tree_serialization import require_safe_identifier
 from .joined_record_design import JoinedRecordDesignField, design_view
+from .note_governed_enumerations import note_governed_enumerations_for
 from .note_literals import NoteLiteralDeclaration
 from .render_profile_eligibility import (
     has_absent_naturaleza,
@@ -630,8 +631,12 @@ def _numeric_field_derivation(
             allowed_values=pinned_values or None,
             derivation_code="numeric-enumeration-v1" if pinned_values else "numeric-integer-v1",
         )
+    # The render profile's design identity is the parser-read source; the
+    # profile validation refuses any other before a field is derived.
+    identity = render_profile.design_identity
     return numeric_derivation(
         joined_field,
         export_record_id=export_record_id,
         note_governed_amounts=note_governed_amounts,
+        note_governed_enumerations=note_governed_enumerations_for(str(identity.source_ref), identity.source_sha256),
     )

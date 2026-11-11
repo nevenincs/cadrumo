@@ -168,7 +168,6 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": False,
             "renta-profile-incremento-guarderia": Decimal("0"),
-            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-profile-marriage-full-year": False,
             "renta-profile-deduccion-maternidad": Decimal("0"),
             "renta-profile-marriage-month-start": Decimal("0"),

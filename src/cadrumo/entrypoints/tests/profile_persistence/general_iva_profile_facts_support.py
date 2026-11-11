@@ -41,6 +41,5 @@ def renta_single_taxpayer_facts(*, birth_date: date) -> tuple[UserProfileFact, .
         UserProfileFact(path="renta_filing.declaration_type", value="1"),
         UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-        UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
         UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
     )

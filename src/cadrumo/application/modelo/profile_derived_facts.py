@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
@@ -34,6 +35,7 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ..aggregation.renta_imputation import ActivityImputationCriterion, declared_imputation_criteria
+from ..user_profile.completeness import profile_section_rows
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -203,6 +205,57 @@ def inject_derived_estimation_modality_fact(
     if regime:
         fact_index["irpf.estimation_directa"] = regime in {normal, simplified}
     return _ESTIMATION_MODALITY_DERIVED_PATHS
+
+
+_ACTIVITY_TIPO_CLAVE_PATH = "irpf.estimation_directa_actividad_tipo_clave"
+_ACTIVITY_SECTION = "activities"
+_ACTIVITY_TIPO_FIELD = "tipo_actividad"
+
+
+def _declared_activity_tipos(fact_index: Mapping[str, UserProfileFactValue]) -> tuple[str | None, ...]:
+    """Return each declared activity row's censal tipo de actividad, ``None`` for a row that states none."""
+    present = [path for path, value in fact_index.items() if str(value).strip()]
+    tipos: list[str | None] = []
+    for row in profile_section_rows(_ACTIVITY_SECTION, present):
+        path = ".".join(part for part in (_ACTIVITY_SECTION, row, _ACTIVITY_TIPO_FIELD) if part)
+        tipo = str(fact_index.get(path, "")).strip()
+        tipos.append(tipo or None)
+    return tuple(tipos)
+
+
+def inject_derived_activity_tipo_clave_fact(fact_index: dict[str, UserProfileFactValue]) -> tuple[str, ...]:
+    """State casilla 0166's tipo de actividad clave from the activities' censal tipo de actividad.
+
+    The box sits in the estimacion directa block, so it is stated only for a filer
+    whose declared regime is direct estimation and who declares economic-activity
+    income (LIRPF arts. 27 and 30); outside that block its absence is decided. The
+    clave is the censal tipo de actividad the taxpayer declares per activity, the
+    same codification the return uses since the 2021 design. It is stated when
+    every declared activity names one and they agree, because the calculation
+    fills one block. Otherwise the path stays absent and undecided: no activity,
+    an activity without its tipo, or activities of different tipos leave a gap
+    the operator answers, and a clave is never read off an IAE epigraph, whose
+    seccion the profile does not record.
+
+    Returns the paths this injector decided, so a decided absence is not reported
+    as a structural gap while an undeclared tipo still is.
+    """
+    fact_index.pop(_ACTIVITY_TIPO_CLAVE_PATH, None)
+    if fact_index.get("irpf.estimation_directa") is not True or not profile_declares_economic_activity(fact_index):
+        return (_ACTIVITY_TIPO_CLAVE_PATH,)
+    tipos = _declared_activity_tipos(fact_index)
+    declared = {tipo for tipo in tipos if tipo is not None}
+    if not tipos or None in tipos or len(declared) != 1:
+        return ()
+    (tipo,) = declared
+    try:
+        clave = TipoActividad(tipo)
+    except ValueError as exc:
+        raise ProfileBindingResolutionError(
+            f"the profile declares tipo de actividad {tipo!r}, which is not a censal tipo de actividad",
+        ) from exc
+    fact_index[_ACTIVITY_TIPO_CLAVE_PATH] = clave.value
+    return (_ACTIVITY_TIPO_CLAVE_PATH,)
 
 
 def inject_derived_cash_election_fact(

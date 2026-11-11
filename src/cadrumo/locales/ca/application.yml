@@ -3803,6 +3803,8 @@ application:
         no guarda per a un ascendent.
       ascendant_limit_unknown: El disseny de la declaració no indica cap límit d'ascendents,
         així que la llista no es pot comprovar ni desar.
+      ascendant_name_invalid: Els cognoms i el nom de l'ascendent %{row} no poden
+        quedar en blanc i admeten com a màxim %{limit} caràcters.
       ascendant_nif_invalid: El NIF o NIE de l'ascendent %{row} no és vàlid; revisa'n
         les lletres i xifres.
       ascendant_rows_over_limit: Una declaració inclou com a màxim %{limit} ascendents
@@ -3835,6 +3837,8 @@ application:
         emmagatzema.
       descendant_limit_unknown: El disseny de la declaració no indica cap límit de
         descendents, així que la llista no es pot comprovar ni desar.
+      descendant_name_invalid: Els cognoms i el nom del descendent %{row} no poden
+        quedar en blanc i admeten com a màxim %{limit} caràcters.
       descendant_nif_invalid: El NIF o NIE del descendent %{row} no és vàlid; revisa'n
         les lletres i xifres.
       descendant_rows_over_limit: Una declaració inclou com a màxim %{limit} descendents
@@ -3890,6 +3894,8 @@ application:
         Camps disponibles: %{fields}.'
     family_rows:
       ascendiente:
+        apellidos_nombre:
+          label: Cognoms i nom de l'ascendent (primer els cognoms)
         birth_date:
           label: Data de naixement
         convivientes:

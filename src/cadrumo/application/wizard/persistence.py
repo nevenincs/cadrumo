@@ -359,6 +359,7 @@ def _descendant_from_row(row: Mapping[str, str], *, operation: PinnedAuthorityOp
         gastos_guarderia_euros=guarderia["gastos_guarderia_euros"],
         gastos_guarderia_mensuales=guarderia["gastos_guarderia_mensuales"],
         nif=row.get("nif") or None,
+        apellidos_nombre=row.get("apellidos-nombre") or None,
     )
 
 
@@ -591,6 +592,7 @@ def _descendant_declaration_answers(
         ("prorrata-minimo", _optional_bool_answer(descendant.prorrata_minimo)),
         ("dependencia-economica", _optional_bool_answer(descendant.dependencia_economica)),
         ("nif", descendant.nif),
+        ("apellidos-nombre", descendant.apellidos_nombre),
     )
 
 
