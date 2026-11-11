@@ -14,7 +14,7 @@ from ...domain.calculations.registry.export_value_policy import (
     validate_export_wire_value,
 )
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
 
 _M190_SIGNED_PAIRS = (
@@ -74,7 +74,10 @@ _M190_NEGATIVE_SIGN = project_export_value(ExportValuePolicy.SIGNED_COMPONENT_SI
 def _span(field: ExportFieldDefinition) -> tuple[int, int]:
     """Return the field's one-based start and exclusive end as the layout declares them."""
     if field.offset is None or field.length is None:
-        raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
+        raise FilingExportDesignIntegrityError(
+            "modelo 190 signed component declaration is incomplete or changed",
+            translated_message="errors.integrity.filing_export_m190_component_declaration",
+        )
     return field.offset, field.offset + field.length
 
 
@@ -86,10 +89,16 @@ def _field_wire(wire: str, field: ExportFieldDefinition) -> str:
 def _m190_reviewed_source_ref(signed: ExportFieldDefinition, source_digests: Mapping[str, str] | None) -> str:
     refs = tuple(map(str, signed.source_refs))
     if len(refs) != 1:
-        raise FilingExportValidationError("modelo 190 signed components lack their exact reviewed source digest")
+        raise FilingExportDesignIntegrityError(
+            "modelo 190 signed components lack their exact reviewed source digest",
+            translated_message="errors.integrity.filing_export_m190_source_digest",
+        )
     source_ref = refs[0]
     if source_digests is None or source_digests.get(source_ref) != _M190_REVIEWED_SOURCES.get(source_ref):
-        raise FilingExportValidationError("modelo 190 signed components lack their exact reviewed source digest")
+        raise FilingExportDesignIntegrityError(
+            "modelo 190 signed components lack their exact reviewed source digest",
+            translated_message="errors.integrity.filing_export_m190_source_digest",
+        )
     return source_ref
 
 
@@ -97,7 +106,10 @@ def _require_m190_reviewed_context(by_id: Mapping[str, ExportFieldDefinition], r
     for identifier in _M190_CONTEXT_FIELD_IDS:
         context_field = by_id.get(identifier)
         if context_field is None or tuple(map(str, context_field.source_refs)) != refs:
-            raise FilingExportValidationError("modelo 190 signed condition context differs from reviewed source")
+            raise FilingExportDesignIntegrityError(
+                "modelo 190 signed condition context differs from reviewed source",
+                translated_message="errors.integrity.filing_export_m190_context_differs",
+            )
 
 
 def _m190_component_shape_matches(
@@ -135,13 +147,25 @@ def _require_m190_component_declaration(
     sign_id, amount_id, binding, retention_id, _ = pair
     sign, amount, retention = by_id.get(sign_id), by_id.get(amount_id), by_id.get(retention_id)
     if sign is None or amount is None or retention is None:
-        raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
+        raise FilingExportDesignIntegrityError(
+            "modelo 190 signed component declaration is incomplete or changed",
+            translated_message="errors.integrity.filing_export_m190_component_declaration",
+        )
     if not _m190_component_shape_matches(sign, amount, retention):
-        raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
+        raise FilingExportDesignIntegrityError(
+            "modelo 190 signed component declaration is incomplete or changed",
+            translated_message="errors.integrity.filing_export_m190_component_declaration",
+        )
     if not _m190_component_binding_matches(sign, amount, binding):
-        raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
+        raise FilingExportDesignIntegrityError(
+            "modelo 190 signed component declaration is incomplete or changed",
+            translated_message="errors.integrity.filing_export_m190_component_declaration",
+        )
     if not _m190_component_sources_match(sign, amount, source_ref):
-        raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
+        raise FilingExportDesignIntegrityError(
+            "modelo 190 signed component declaration is incomplete or changed",
+            translated_message="errors.integrity.filing_export_m190_component_declaration",
+        )
     return sign, amount, retention
 
 
@@ -153,9 +177,15 @@ def _require_m190_component_wire(
     try:
         validate_export_wire_value(ExportValuePolicy.SIGNED_COMPONENT_SIGN, marker)
     except RegistryValidationError as exc:
-        raise FilingExportValidationError("modelo 190 signed component has invalid wire bytes") from exc
+        raise FilingExportDesignIntegrityError(
+            "modelo 190 signed component has invalid wire bytes",
+            translated_message="errors.integrity.filing_export_m190_component_wire",
+        ) from exc
     if not magnitude.isascii() or not magnitude.isdigit():
-        raise FilingExportValidationError("modelo 190 signed component has invalid wire bytes")
+        raise FilingExportDesignIntegrityError(
+            "modelo 190 signed component has invalid wire bytes",
+            translated_message="errors.integrity.filing_export_m190_component_wire",
+        )
     return marker, magnitude
 
 

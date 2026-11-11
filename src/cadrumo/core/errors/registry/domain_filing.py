@@ -488,6 +488,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.filing.errors.FilingExportIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_FILING_EXPORT",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_filing_export",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDesignIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_FILING_EXPORT_DESIGN",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_filing_export_design",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.filing.errors.FilingExportValueOverflowError",
         ErrorCode(
             code="ERROR_FILING_EXPORT_VALUE_OVERFLOW",

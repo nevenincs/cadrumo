@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ..domain.filing.errors import FilingExportIntegrityError
 from ..domain.modelos.errors import CalculationRevisionIntegrityError, ModeloOperatorLayerIntegrityError
 from .operator_actions.models import PreconditionVerdict
 
@@ -50,6 +51,12 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
         return cli_exception_no_recovery_verdict(
             CliExceptionPrecondition.STORED_DATA_VALID,
             facts={"record": "calculation_revision", "valid": False},
+            outcome=NoRecoveryOutcome.TERMINAL,
+        )
+    if isinstance(current, FilingExportIntegrityError):
+        return cli_exception_no_recovery_verdict(
+            CliExceptionPrecondition.EXPORT_DESIGN_CONSISTENT,
+            facts={"record": "filing_export_design", "valid": False},
             outcome=NoRecoveryOutcome.TERMINAL,
         )
     if (
@@ -178,6 +185,7 @@ class CliExceptionPrecondition(StrEnum):
     VALIDATION_BOUNDARY = "cli.validation.boundary_clean"
     UNEXPECTED_BOUNDARY = "cli.runtime.unexpected_absent"
     STORED_DATA_VALID = "cli.storage.persisted_data_valid"
+    EXPORT_DESIGN_CONSISTENT = "cli.export.design.consistent"
     COMMAND_GROUP_AVAILABLE = "cli.command_group.available"
     REFUSAL_RETRIED = "cli.refusal.completed"
     CONFIG_BOUNDARY = "cli.config.boundary_clean"

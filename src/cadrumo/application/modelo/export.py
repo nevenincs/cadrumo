@@ -65,6 +65,7 @@ from ...domain.filing.errors import (
     FilingExportDeclaredPartyNameError,
     FilingExportError,
     FilingExportFieldUnrenderableError,
+    FilingExportIntegrityError,
     FilingExportRequiredRecordAbsentError,
     FilingExportUnrepresentableCharacterError,
     FilingExportValueOverflowError,
@@ -140,7 +141,11 @@ from .export_contracts import (
     ModeloIvaWalletDecisionProvenance,
     PreparedModeloExport,
 )
-from .export_field_refusal import export_field_unrenderable_refusal, export_unrepresentable_character_refusal
+from .export_field_refusal import (
+    export_design_integrity_refusal,
+    export_field_unrenderable_refusal,
+    export_unrepresentable_character_refusal,
+)
 from .export_ports import ModeloExportPorts
 from .export_preparation import (
     approve_export_draft,
@@ -648,6 +653,8 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
         return export_unrepresentable_character_refusal(command, exc)
     if isinstance(exc, FilingExportFieldUnrenderableError):
         return export_field_unrenderable_refusal(command, exc)
+    if isinstance(exc, FilingExportIntegrityError) and exc.translated_message is not None:
+        return export_design_integrity_refusal(command, exc)
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(translated_message=exc.translated_message, context=refusal_context)
     return ModeloExportError(
