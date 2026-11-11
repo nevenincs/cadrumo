@@ -97,6 +97,7 @@ from .rows import (
     stage_refusal_codes,
     write_rows,
 )
+from .unchecked import persona_at
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -127,16 +128,8 @@ def _persona(persona_id: str) -> Persona:
 
 @cache
 def _persona_at(persona_id: str, horizon: int) -> Persona:
-    """The persona as the replay under ``horizon`` reads it: records below the floor left out and listed.
-
-    A persona that cannot be read at that horizon is not replayed there (the replay records it as not run), so
-    its rows are planned from the persona as read at the registry's own horizon.
-    """
-    envelope = dataclasses.replace(_envelope(), horizon=horizon)
-    try:
-        return read_persona(persona_id, envelope=envelope, omit_below_floor=horizon != _envelope().horizon)
-    except PersonaCatalogueError:
-        return _persona(persona_id)
+    """The persona as the replay under ``horizon`` reads it; see :func:`.unchecked.persona_at`."""
+    return persona_at(persona_id, horizon, _envelope())
 
 
 def _plan(persona_id: str, horizon: int) -> list[PlannedRow]:

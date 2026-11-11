@@ -35,21 +35,26 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
+from cadrumo.tests.personas import YearEnvelope
 
 from .diff import diff_tables, render_diff, row_id
 from .provenance import ProvenanceError, meta_path, prepare_authority, read_meta, write_meta
 from .render import render_table, summary_line
-from .rows import GREEN, TableRow, latest_rows, read_rows
+from .rows import GREEN, TableRow, latest_rows, read_rows, with_unchecked
 
 BASELINE = Path(__file__).with_name("baseline")
 _SWEEP = Path(__file__).with_name("sweep.py")
 
 
 @cache
+def _envelope() -> YearEnvelope:
+    with bundled_indexed_authority().operation() as operation:
+        return year_envelope(operation)
+
+
 def _horizon() -> int:
     """The registry's horizon, on which the baseline's year tokens resolve."""
-    with bundled_indexed_authority().operation() as operation:
-        return year_envelope(operation).horizon
+    return _envelope().horizon
 
 
 def _rows_from(paths: Sequence[Path]) -> dict[tuple[str, str, int, str], TableRow]:
@@ -57,7 +62,8 @@ def _rows_from(paths: Sequence[Path]) -> dict[tuple[str, str, int, str], TableRo
     files: list[Path] = []
     for path in paths:
         files += sorted(path.glob("*.jsonl")) if path.is_dir() else [path]
-    return latest_rows(read_rows(files, horizon=_horizon()))
+    latest = latest_rows(read_rows(files, horizon=_horizon()))
+    return {row.key: row for row in with_unchecked(latest.values(), _envelope())}
 
 
 def _run(args: argparse.Namespace) -> int:

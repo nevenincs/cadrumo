@@ -54,6 +54,21 @@ def summary_line(rows: list[TableRow]) -> str:
     return ", ".join(parts)
 
 
+def row_label(row: TableRow) -> str:
+    """The row id ``persona|modelo|year|period``."""
+    return f"{row.persona}|{row.modelo}|{row.year}|{row.period}"
+
+
+def _unchecked_section(rows: Iterable[TableRow]) -> list[str]:
+    """The rows whose stated values the table could not all compare, each with what it could not check."""
+    held = [row for row in rows if row.verdict is Verdict.UNCHECKED]
+    if not held:
+        return []
+    lines = [f"Unchecked ({len(held)}): stated values the table does not compare.", ""]
+    lines += [f"- {row_label(row)}: {', '.join(row.unchecked)}" for row in held]
+    return [*lines, ""]
+
+
 def _cell(text: object) -> str:
     return str(text).replace("|", "\\|").replace("\n", " ")
 
@@ -83,6 +98,7 @@ def render_table(
             + ", ".join(f"{lane} {green}/{total}" for lane, (green, total) in lane_counts(ordered, lanes).items()),
             "",
         ]
+    lines += _unchecked_section(ordered)
     lines += ["Verdicts:", ""]
     lines += [f"- `{verdict.value}`: {meaning}." for verdict, meaning in VERDICT_MEANING.items()]
     lines += [
@@ -117,4 +133,4 @@ def render_table(
     return "\n".join(lines) + "\n"
 
 
-__all__ = ["counts", "lane_counts", "red_stage", "render_table", "summary_line"]
+__all__ = ["counts", "lane_counts", "red_stage", "render_table", "row_label", "summary_line"]
