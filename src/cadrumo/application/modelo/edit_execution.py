@@ -23,6 +23,13 @@ snapshot -- and applies the submitted intents to it:
   the source tiers win again;
 * an address the submission does not name keeps its operator value.
 
+Setting a casilla of an income family the application does not calculate binds
+the family's entered figures to the ledger rows present now: the operator layer
+records the digest of the family's rows in the filing window. An edit that sets
+none of the family's casillas keeps the earlier digest, and one that leaves the
+family with no entered casilla drops it. The edit itself is never refused for
+it; a later calculation raises the family's finding again if the rows moved.
+
 The resulting calculation records the new operator layer, so the next edit or
 recalculation starts from it. Every value, channel and precondition failure
 returns a typed no-effect refusal; none escapes as a raw exception.
@@ -51,7 +58,9 @@ from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.irpf_income_categories import irpf_income_family_casilla_sections
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.filing.schema import ModeloScalar
@@ -66,6 +75,12 @@ from ...domain.modelos.calculation_revision_operator_layer import (
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnitCatalogue
+from ..aggregation.income_family_not_computed import (
+    income_family_casilla_ids,
+    income_family_entry_digests_after_edit,
+    income_family_row_digests,
+)
+from ..aggregation.modelo_bindings import aggregation_period_for_modelo
 from ..calculations.cross_period_clean_state import attestable_carry_sources
 from ..calculations.cross_period_models import CrossPeriodDependencyRequirement
 from .action_errors import ModeloClearedCasillaSourceFedError
@@ -111,6 +126,7 @@ from .work_missing_input import ModeloPriorCarryAbsenceUnstatedError, ModeloPrio
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 _UNSUPPORTED_RECONSIDERATION = "resubmit without this intent once its capability lands, or split the submission"
 
@@ -200,6 +216,7 @@ class _OperatorState:
     cleared_casilla_ids: set[CasillaId] = field(default_factory=set)
     attested_binding_ids: set[BindingId] = field(default_factory=set)
     value_attestations: dict[BindingId, ValueAttestation] = field(default_factory=dict)
+    income_family_entry_digests: dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def from_context(cls, context: CalculationCallerContext) -> _OperatorState:
@@ -211,6 +228,7 @@ class _OperatorState:
             cleared_casilla_ids=set(context.cleared_casilla_ids),
             attested_binding_ids=set(layer.attested_binding_ids),
             value_attestations=dict(layer.value_attestations),
+            income_family_entry_digests=dict(layer.income_family_entry_digests),
         )
 
     def operator_sets(self, casilla_id: CasillaId) -> bool:
@@ -227,6 +245,7 @@ class _OperatorState:
             binding_overrides=dict(sorted(self.binding_overrides.items())),
             attested_binding_ids=tuple(sorted(self.attested_binding_ids)),
             value_attestations=dict(sorted(self.value_attestations.items())),
+            income_family_entry_digests=dict(sorted(self.income_family_entry_digests.items())),
         )
 
 
@@ -380,6 +399,40 @@ def _apply_binding_intents(
             return _parse_refusal(value)
         state.binding_overrides[binding_id] = value
     return None
+
+
+def _income_family_entry_digests(
+    state: _OperatorState,
+    submission: ModeloEditSubmissionV1,
+    *,
+    revision: ModeloRevision,
+    operation: PinnedAuthorityOperation,
+    transactions: TransactionCatalogueRepositoryProtocol,
+) -> dict[str, str]:
+    """Bind the operator's figures for each uncomputed income family to the family's ledger rows present now."""
+    baseline = submission.baseline
+    if str(baseline.modelo) != form_for_role("renta.annual", authority=operation):
+        return state.income_family_entry_digests
+    window = aggregation_period_for_modelo(filing_year=baseline.filing_year, code=baseline.period.registry_token)
+    sections = irpf_income_family_casilla_sections(effective_date=window.end_date, authority=operation)
+
+    def current(families: frozenset[str]) -> dict[str, str]:
+        rows = transactions.partition_by_date_range(window.start_date, window.end_date).in_window.values()
+        return income_family_row_digests(rows, families)
+
+    return income_family_entry_digests_after_edit(
+        state.income_family_entry_digests,
+        family_casilla_ids=income_family_casilla_ids(
+            revision, {str(family): family_sections for family, family_sections in sections.items()}
+        ),
+        entered_casilla_ids=frozenset(state.decimal_casilla_inputs) | frozenset(state.text_casilla_inputs),
+        set_casilla_ids=frozenset(
+            intent.address.casilla_id
+            for intent in submission.scalar_intents
+            if intent.kind is ModeloEditScalarIntentKind.SET_TYPED_VALUE
+        ),
+        current_digests=current,
+    )
 
 
 def _refuse_unaddressable_intents(submission: ModeloEditSubmissionV1) -> ModeloEditExecutionNoEffectV1 | None:
@@ -653,6 +706,7 @@ def _execute_modelo_edit(
             record_operator_layer=True,
             attested_binding_ids=replay.attested_binding_ids,
             value_attestations=replay.value_attestations,
+            income_family_entry_digests=replay.income_family_entry_digests,
             binding_values=replay.binding_values,
             enum_binding_values=replay.enum_binding_values,
             detail_rows=replay.detail_rows,
@@ -719,6 +773,9 @@ def _prepare_edit(
     )
     if refusal is not None:
         return refusal
+    state.income_family_entry_digests = _income_family_entry_digests(
+        state, submission, revision=snapshot.revision, operation=operation, transactions=ports.transaction_repository
+    )
     detail_rows = reconstruct_detail_rows(
         current_detail_rows=context.detail_rows,
         detail_row_intents=submission.detail_row_intents,

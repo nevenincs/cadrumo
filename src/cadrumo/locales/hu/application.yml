@@ -2031,6 +2031,7 @@ application:
       household_row_fact_unstated: '{group}: {recorded} rögzítve, ebből {omitting}
         {leaf} nélkül.'
       household_rows_incomplete: '{group}: {stated} megadva, {recorded} rögzítve.'
+      income_family_rows_changed_since_entry: 'Egy jövedelemcsalád tételei megváltoztak, miután kézzel megadtad az összegeit; most {count} tétele van ebben az évben, ezért add meg újra az összegeit.'
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       inventory_purchase_claim_refused: A(z) {year}. évi készlet {count} vásárlása

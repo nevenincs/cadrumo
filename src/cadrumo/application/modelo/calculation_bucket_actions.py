@@ -528,6 +528,7 @@ def resolve_bucket_aggregation_source_resolution(
     enum_binding_values: Mapping[BindingId, str] | None,
     filing_period_date: date | None,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    income_family_entry_digests: Mapping[str, str] | None = None,
 ) -> CalculationSourceResolution:
     """Resolve the mesh, then enforce its final exclusive ownership set."""
     source_resolution = resolve_bucket_source_mesh(
@@ -546,6 +547,7 @@ def resolve_bucket_aggregation_source_resolution(
         filing_period_date=filing_period_date,
         profile=preparation.profile,
         transaction_repository=transaction_repository,
+        income_family_entry_digests=income_family_entry_digests,
     )
     reject_caller_overrides_of_source_bindings(
         revision=preparation.snapshot.revision,
@@ -693,6 +695,7 @@ def _caller_operator_layer(
     enum_binding_values: Mapping[BindingId, str] | None,
     attested_binding_ids: tuple[BindingId, ...],
     value_attestations: Mapping[BindingId, ValueAttestation],
+    income_family_entry_digests: Mapping[str, str],
 ) -> CalculationOperatorLayer:
     """Project the validated caller tier of one run onto the persisted operator layer.
 
@@ -712,6 +715,7 @@ def _caller_operator_layer(
         },
         attested_binding_ids=attested_binding_ids,
         value_attestations=dict(value_attestations),
+        income_family_entry_digests=dict(income_family_entry_digests),
     )
 
 
@@ -774,6 +778,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     record_operator_layer: bool = False,
     attested_binding_ids: tuple[BindingId, ...] = (),
     value_attestations: Mapping[BindingId, ValueAttestation] | None = None,
+    income_family_entry_digests: Mapping[str, str] | None = None,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -809,6 +814,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         foreign_asset_row_observations=foreign_asset_row_observations,
         detail_rows=detail_rows,
         profile=profile,
+        income_family_entry_digests=income_family_entry_digests or {},
     )
     preparation = run.preparation
     printed = snapshot_printed_boxes(ports.operation, preparation.snapshot)
@@ -828,6 +834,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 enum_binding_values=enum_binding_values,
                 attested_binding_ids=attested_binding_ids,
                 value_attestations=value_attestations or {},
+                income_family_entry_digests=income_family_entry_digests or {},
             )
             if record_operator_layer
             else None
@@ -1011,6 +1018,7 @@ def _resolve_bucket_aggregation_run(
     foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
     detail_rows: tuple[ModeloDetailRow, ...],
     profile: ModeloWorkProfile | None,
+    income_family_entry_digests: Mapping[str, str] | None = None,
 ) -> _BucketAggregationRun:
     """Validate the caller channels, resolve the source mesh and reconcile the two."""
     preparation = _prepare_bucket_aggregation_calculation(
@@ -1048,6 +1056,7 @@ def _resolve_bucket_aggregation_run(
             enum_binding_values=enum_binding_values,
             filing_period_date=filing_period_date,
             transaction_repository=memoized_transaction_repository,
+            income_family_entry_digests=income_family_entry_digests,
         )
     except RegistryValidationError as error:
         # A stored earlier return that does not show the boxes a carry reads is

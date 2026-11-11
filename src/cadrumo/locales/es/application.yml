@@ -2073,6 +2073,7 @@ application:
       household_row_fact_unstated: '{group}: {recorded} registradas, {omitting} sin
         {leaf}.'
       household_rows_incomplete: '{group}: {stated} indicadas, {recorded} registradas.'
+      income_family_rows_changed_since_entry: 'Las filas del libro de una familia de renta han cambiado después de que introdujeras sus cifras a mano; ahora tiene {count} filas este año, así que vuelve a introducir sus cifras.'
       instalment_free_gap: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no suma nada a la casilla
         {box}.'

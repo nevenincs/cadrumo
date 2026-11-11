@@ -217,6 +217,9 @@ class CalculationSourceContext(BaseModel):
     # may share. Transient: a resolver reads it, nothing persists it from here.
     caller_binding_values: dict[BindingId, Decimal] = Field(default_factory=dict, exclude=True, repr=False)
     caller_enum_binding_values: dict[BindingId, str] = Field(default_factory=dict, exclude=True, repr=False)
+    # Per income family without a calculator, the digest of its ledger rows when the
+    # operator entered its figures by hand; replayed from the operator layer, transient.
+    income_family_entry_digests: dict[str, str] = Field(default_factory=dict, exclude=True, repr=False)
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None

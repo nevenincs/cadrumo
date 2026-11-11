@@ -187,6 +187,8 @@ class CalculationNoteSentence(StrEnum):
     """A household row omits a fact the official design requires of every row of its group."""
     PROFILE_FACT_UNRECORDED = "profile_fact_unrecorded"
     """A profile fact a calculation compares is unrecorded, so the box built on it stays open."""
+    INCOME_FAMILY_ROWS_CHANGED_SINCE_ENTRY = "income_family_rows_changed_since_entry"
+    """An income family's ledger rows changed after the operator entered its figures by hand."""
     PRIOR_FILING_UNRECORDED = "prior_filing_unrecorded"
     """A box is built on a figure of an earlier filing, and that filing is not recorded, so the box stays open."""
     WITHHOLDING_INVOICE_KIND_UNDECLARED = "withholding_invoice_kind_undeclared"

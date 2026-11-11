@@ -83,6 +83,7 @@ def resolve_bucket_source_mesh(
     filing_period_date: date | None = None,
     profile: ModeloWorkProfile | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    income_family_entry_digests: Mapping[str, str] | None = None,
 ) -> CalculationSourceResolution:
     """Resolve enrolled sources against one pinned operation and profile.
 
@@ -103,10 +104,7 @@ def resolve_bucket_source_mesh(
             asset_profile_id=work_unit.bucket_id,
         )
         iva_investment_asset_profile_id = work_unit.bucket_id
-    from ..aggregation.source_mesh import (
-        CalculationSourceContext,
-        ModeloSourceResolver,
-    )
+    from ..aggregation.source_mesh import CalculationSourceContext, ModeloSourceResolver
     from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 
     renta_catalogue_read_ports = InvoiceCatalogueReadPorts(
@@ -122,6 +120,7 @@ def resolve_bucket_source_mesh(
         revision=snapshot.revision,
         caller_binding_values=dict(binding_values or {}),
         caller_enum_binding_values=dict(enum_binding_values or {}),
+        income_family_entry_digests=dict(income_family_entry_digests or {}),
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         profile=profile,

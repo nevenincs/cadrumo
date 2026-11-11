@@ -97,6 +97,7 @@ _COVERAGE_SUBJECT: Final = "IRPF income-family calculator coverage"
 _COVERAGE_FACT_ID = "irpf-income-family-calculator-coverage"
 _COVERAGE_PREFIX = "irpf_income_family."
 _COVERAGE_SUFFIX = ".computed"
+_SECTIONS_SUFFIX = ".casilla_sections"
 _NOT_COMPUTED = "false"
 _COVERAGE_VERDICTS: Final = frozenset({"true", _NOT_COMPUTED})
 _COVERAGE_FACT = StringMappingFact(
@@ -178,6 +179,27 @@ def irpf_income_categories_without_calculator(
     return frozenset(uncovered)
 
 
+def irpf_income_family_casilla_sections(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> dict[IrpfIncomeCategory, frozenset[str]]:
+    """Return, for each income family the annual return does not calculate, the casilla sections holding its figures.
+
+    A Modelo 100 casilla belongs to a family when any token of its declared
+    section path is one of the family's sections. Every family without a
+    calculator must name at least one, so a hand-entered figure for it can
+    always be recognised as the family's.
+    """
+    entries = _COVERAGE_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
+    return {
+        token: frozenset(
+            unique_mapping_tokens(entries, f"{_COVERAGE_PREFIX}{token}{_SECTIONS_SUFFIX}", subject=_COVERAGE_SUBJECT)
+        )
+        for token in irpf_income_categories_without_calculator(effective_date=effective_date, authority=authority)
+    }
+
+
 def require_irpf_income_category(
     value: object,
     *,
@@ -221,6 +243,7 @@ __all__ = [
     "irpf_income_categories_without_calculator",
     "irpf_income_category_actividad_economica_token",
     "irpf_income_category_choices",
+    "irpf_income_family_casilla_sections",
     "require_irpf_income_category",
     "resolve_irpf_income_category_catalogue",
 ]

@@ -1966,6 +1966,7 @@ application:
       household_row_fact_unstated: '{group}: {recorded} recorded, {omitting} without
         {leaf}.'
       household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
+      income_family_rows_changed_since_entry: 'An income family''s ledger rows changed after you entered its figures by hand; it now has {count} rows this year, so enter its figures again.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       inventory_purchase_claim_refused: '{count} purchases of the {year} inventory

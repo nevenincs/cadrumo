@@ -8,6 +8,12 @@
 #   every token it declares must be covered here, so a family added there
 #   without a decision about its calculator is refused rather than assumed
 #   computed.
+# - irpf_income_family.<token>.casilla_sections: required for every family
+#   marked "false"; the comma-separated Modelo 100 casilla section tokens that
+#   hold the family's figures. A casilla belongs to the family when any token of
+#   its declared section path is listed here, so the operator's hand-entered
+#   figures for the family are recognised from the edition's own sections
+#   rather than from a casilla list that changes between editions.
 #
 # A family marked "false" is not "absent": the return keeps its casillas
 # unresolved and the operator is told, instead of the family silently
@@ -36,6 +42,8 @@ entries = [
   { key = "irpf_income_family.trabajo.computed", value = "true" },
   { key = "irpf_income_family.capital_inmobiliario.computed", value = "true" },
   { key = "irpf_income_family.capital_mobiliario.computed", value = "false" },
+  { key = "irpf_income_family.capital_mobiliario.casilla_sections", value = "rdto_capital_mobiliario,rdto_capital_mobiliario_res" },
   { key = "irpf_income_family.ganancias_patrimoniales.computed", value = "false" },
+  { key = "irpf_income_family.ganancias_patrimoniales.casilla_sections", value = "gp_acciones,gp_acciones_res,gp_derechos,gp_derechos_res,gp_fondos,gp_fondos_res,gp_fondos_coti,gp_fondos_coti_res,gp_otras_ganancias,gp_otras_ganancias_res,gp_otras_ganancias_ejer_ant,gp_otras_ganancias_ejer_ant_res,gp_otros_criptomonedas,gp_otros_criptomonedas_res,gp_otros_elementos,gp_otros_elementos_res,gp_otros_inmuebles,gp_otros_inmuebles_res,gp_premios,gp_premios_res,gp_reinversion,gp_reinversion_res,gp_patrimoniales_res,g_cambio_residencia_ext,g_cambio_residencia_ext_res" },
   { key = "irpf_income_family.pension.computed", value = "true" },
 ]

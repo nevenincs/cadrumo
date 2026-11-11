@@ -119,6 +119,7 @@ class CallerContextCalculationInputs:
     enum_binding_values: dict[BindingId, str]
     attested_binding_ids: tuple[BindingId, ...]
     value_attestations: Mapping[BindingId, ValueAttestation]
+    income_family_entry_digests: Mapping[str, str]
     detail_rows: tuple[ModeloDetailRow, ...]
     filing_instance_evidence: FilingInstanceEvidence | None
     m210_official_tipo_renta_code: str | None
@@ -153,6 +154,7 @@ def caller_context_calculation_inputs(
         enum_binding_values=enum_binding_values,
         attested_binding_ids=layer.attested_binding_ids,
         value_attestations=layer.value_attestations,
+        income_family_entry_digests=layer.income_family_entry_digests,
         detail_rows=context.detail_rows,
         filing_instance_evidence=context.filing_instance_evidence,
         m210_official_tipo_renta_code=context.m210_official_tipo_renta_code,

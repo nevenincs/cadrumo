@@ -2068,6 +2068,7 @@ application:
       household_row_fact_unstated: '{group}: {recorded} registrades, {omitting} sense
         {leaf}.'
       household_rows_incomplete: '{group}: {stated} indicades, {recorded} registrades.'
+      income_family_rows_changed_since_entry: 'Les files del llibre d''una família de renda han canviat després que n''introduïssis les xifres a mà; ara té {count} files aquest any, així que torna a introduir-ne les xifres.'
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
