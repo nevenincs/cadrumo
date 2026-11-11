@@ -154,9 +154,47 @@ errors:
     certificado_not_a_pdf: The supplied file is not a PDF; expected the Certificado
       de Situación Censal downloaded from Sede.
   context_labels:
+    accepted: accepted
+    actual_value: actual value
     area: area
+    candidate: candidate
+    casilla_id: casilla
+    casilla_ids: casillas
+    casillas: casillas
+    count: count
+    currency: currency
+    detail: detail
+    ejercicio: tax year
     entry_count: entry count
+    expected: expected
+    export_format: export format
+    field: field
+    fields: fields
+    filing_period: filing period
+    filing_year: filing year
+    got: received
+    key: key
+    kind: kind
+    limit: limit
+    match_count: match count
+    modelo: modelo
+    name: name
+    operation: operation
+    path: path
+    period: period
+    position: position
+    profile: profile
+    provider: provider
     reason: reason
+    remedy: remedy
+    revision: revision
+    row: row
+    section: section
+    state: state
+    status: status
+    tax_year: tax year
+    value: value
+    year: year
   error:
     canonical_tui_operation_outcome_unknown: 'Operation %{operation_id} was submitted,
       but its outcome is unknown: the change may have been saved in full, in part

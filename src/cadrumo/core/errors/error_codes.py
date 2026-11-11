@@ -48,13 +48,57 @@ INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset(
     {"prompt_key", "question_id", "flow_id", "missing", "missing_flags", "terminal_precondition_verdict"}
 )
 
-ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = ("area", "entry_count", "reason")
+ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = (
+    "accepted",
+    "actual_value",
+    "area",
+    "candidate",
+    "casilla_id",
+    "casilla_ids",
+    "casillas",
+    "count",
+    "currency",
+    "detail",
+    "ejercicio",
+    "entry_count",
+    "expected",
+    "export_format",
+    "field",
+    "fields",
+    "filing_period",
+    "filing_year",
+    "got",
+    "key",
+    "kind",
+    "limit",
+    "match_count",
+    "modelo",
+    "name",
+    "operation",
+    "path",
+    "period",
+    "position",
+    "profile",
+    "provider",
+    "reason",
+    "remedy",
+    "revision",
+    "row",
+    "section",
+    "state",
+    "status",
+    "tax_year",
+    "value",
+    "year",
+)
 """Finite vocabulary translated for human-facing error context labels.
 
 Error contexts themselves remain extensible structured data.  Only this
 declared operator-facing label subset is sent through the locale catalogue;
-unknown context keys use the same human-readable fallback shape without
-constructing an unregistered translation key.
+unknown context keys use a humanized fallback without constructing an
+unregistered translation key.  The fallback is English-shaped, so a key an
+operator reads in a refusal belongs in this vocabulary; the fallback is
+reserved for diagnostic identifiers whose label carries no meaning to translate.
 """
 
 

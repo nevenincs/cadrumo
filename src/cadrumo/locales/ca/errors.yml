@@ -164,9 +164,47 @@ errors:
     certificado_not_a_pdf: El fitxer proporcionat no és un PDF; s'esperava el Certificado
       de Situación Censal descarregat de la Seu.
   context_labels:
+    accepted: acceptat
+    actual_value: valor real
     area: àrea
+    candidate: candidat
+    casilla_id: casella
+    casilla_ids: caselles
+    casillas: caselles
+    count: recompte
+    currency: moneda
+    detail: detall
+    ejercicio: exercici
     entry_count: nombre d'entrades
+    expected: esperat
+    export_format: format d'exportació
+    field: camp
+    fields: camps
+    filing_period: període de presentació
+    filing_year: exercici de presentació
+    got: rebut
+    key: clau
+    kind: tipus
+    limit: límit
+    match_count: nombre de coincidències
+    modelo: model
+    name: nom
+    operation: operació
+    path: ruta
+    period: període
+    position: posició
+    profile: perfil
+    provider: proveïdor
     reason: motiu
+    remedy: solució
+    revision: revisió
+    row: fila
+    section: secció
+    state: estat
+    status: estat
+    tax_year: exercici
+    value: valor
+    year: any
   error:
     canonical_tui_operation_outcome_unknown: 'L''operació %{operation_id} s''ha enviat,
       però el seu resultat és desconegut: pot ser que el canvi s''hagi desat sencer,
