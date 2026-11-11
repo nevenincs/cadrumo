@@ -39,7 +39,7 @@ from .invoice_row_materialization import invoice_party_reference
 from .party_name_rows import RowValues, file_party_names
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 from .schema_exports import ExportFieldDataType
-from .withholding_bindings import DeclaredWithholdingParty
+from .withholding_party_rows import DeclaredWithholdingParty
 
 if TYPE_CHECKING:
     from ....core.period import Period

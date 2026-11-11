@@ -10,7 +10,8 @@ from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_row_values
-from ....domain.calculations.registry.withholding_bindings import DeclaredWithholdingParty
+from ....domain.calculations.registry.tests.authored_editions import revision_covering
+from ....domain.calculations.registry.withholding_party_rows import DeclaredWithholdingParty
 from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from ....domain.filing.declared_party_name_filing import PartyNameRefusals
 from ....domain.filing.errors import FilingExportDeclaredPartyNameMissingError
@@ -580,8 +581,8 @@ class TestModelo180PerceptorName:
                 _obs(
                     nif=nif,
                     scheme=RetencionScheme("arrendamiento_urbano"),
-                    base="2000",
-                    retencion="380",
+                    base="1900",
+                    retencion="361",
                     source_id="r1",
                     name="NOMBRE IMPRESO SL",
                     property_detail=_property("office-a", "1234567VK4713S0001AA"),
@@ -597,7 +598,9 @@ class TestModelo180PerceptorName:
         parties: tuple[DeclaredWithholdingParty, ...],
         refusals: PartyNameRefusals | None = None,
     ) -> dict[int, object]:
-        revision = operation.revision_with_export_layouts("180", "2023-y-siguientes")
+        revision = operation.revision_with_export_layouts(
+            "180", str(revision_covering("180", _P_2025_ANNUAL.filing_year).id)
+        )
         rows = resolve_retenciones_aggregation_binding_row_values(
             revision, self._aggregation(operation), parties=parties, party_name_refusals=refusals
         )

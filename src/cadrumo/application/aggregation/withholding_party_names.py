@@ -14,7 +14,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Final, NamedTuple
 
-from ...domain.calculations.registry.withholding_bindings import DeclaredWithholdingParty
+from ...domain.calculations.registry.withholding_party_rows import DeclaredWithholdingParty
 from ...domain.filing.errors import FilingExportDeclaredPartyNameError
 from ..invoices.source_party_names import RefusedParty, refused_party_diagnostics
 from ..invoices.source_resolver_ports import CounterpartyFilingNameReader

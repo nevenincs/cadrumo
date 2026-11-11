@@ -24,11 +24,8 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role, form_role_validator, resolve_form_codes
-from ...domain.calculations.registry.withholding_bindings import (
-    PENDING_PERCEPTOR_NAME,
-    PENDING_PERCEPTOR_NIF,
-    WithholdingObservation,
-)
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ...domain.calculations.registry.withholding_party_rows import PENDING_PERCEPTOR_NAME, PENDING_PERCEPTOR_NIF
 from .retenciones import Modelo193CapitalDetail, RetencionObservation
 
 _PENDING_FLAG_ROLE = "payee_pendiente_flag"

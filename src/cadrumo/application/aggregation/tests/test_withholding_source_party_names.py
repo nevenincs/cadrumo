@@ -15,6 +15,7 @@ import pytest
 from ....core.aggregation import AggregationCaptureKind, RetencionClave
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from ...invoices.source_resolver_ports import InvoiceSourcePersistenceError
@@ -32,6 +33,7 @@ from .withholding_observation_support import perceptor_observation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NAME_BINDING = "modelo-190-perceptor-row-name"
+_EXERCISE = newest_authored_edition("190")
 _NAMED = "00001500M"
 _UNNAMED = "00001501Y"
 _NATURAL = DeclaredPartyFilingName(
@@ -65,8 +67,8 @@ def _resolver(filing_names: _FilingNames | None) -> WithholdingSourceResolver:
     for quarter in ("1T", "2T", "3T", "4T"):
         repository.replace_observations(
             modelo="111",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, quarter),
+            filing_year=_EXERCISE,
+            period=Period.from_year_and_code(_EXERCISE, quarter),
             observations=[_observation(_NAMED, quarter), _observation(_UNNAMED, quarter)] if quarter == "1T" else [],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
@@ -88,9 +90,9 @@ def _context(operation: PinnedAuthorityOperation) -> CalculationSourceContext:
         operation=operation,
         bucket_id="operator",
         modelo="190",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "0A"),
-        revision=operation.revision_with_export_layouts("190", "2024"),
+        filing_year=_EXERCISE,
+        period=Period.from_year_and_code(_EXERCISE, "0A"),
+        revision=operation.revision_with_export_layouts("190", str(revision_covering("190", _EXERCISE).id)),
         profile=withholding_work_profile(operation),
     )
 

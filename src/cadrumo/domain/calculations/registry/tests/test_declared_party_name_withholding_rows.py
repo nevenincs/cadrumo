@@ -25,12 +25,11 @@ from ..authority import bundled_indexed_authority
 from ..party_name_composition import PartyNameComponent
 from ..schema import ModeloRevision
 from ..schema_exports import ExportFieldDefinition
-from ..withholding_bindings import (
+from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_row_values
+from ..withholding_party_rows import (
     PENDING_PERCEPTOR_NAME,
     PENDING_PERCEPTOR_NIF,
     DeclaredWithholdingParty,
-    WithholdingObservation,
-    resolve_withholding_binding_row_values,
     withholding_party,
 )
 from .authored_editions import authored_revisions, filing_year_envelope
