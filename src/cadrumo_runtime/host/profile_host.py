@@ -620,9 +620,10 @@ class RuntimeProfileHost:
         Once the body releases its guard, remove live admission first and let
         the canonical supervisor settle before containing the worker. Neither
         this retirement nor a drain receipt establishes a domain outcome.
-        ``None`` means a held fence prevented this observation; polling must
-        leave that invocation alone. An unreadable binding also retires access
-        without claiming that a successor was committed.
+        ``None`` means a held fence prevented this observation, or custody was
+        replaced again while it was being observed; polling must leave that
+        invocation alone and look again. An unreadable binding also retires
+        access without claiming that a successor was committed.
         """
         # Only one caller may prove retirement. Another admission must not
         # mistake the denial fence for completed process containment.
@@ -644,7 +645,13 @@ class RuntimeProfileHost:
                     # clean the obsolete receipt against proven successor custody;
                     # an unreadable binding never authorizes destructive cleanup.
                     sign_in = SignInGenerationCustody(root=self.store.root, binding=current)
-                    revoke_profile_sign_in(sign_in)
+                    try:
+                        revoke_profile_sign_in(sign_in)
+                    except AutomationCustodyError:
+                        # Custody was replaced again after ``current`` was read.
+                        # Fencing a superseded successor proves nothing; retire
+                        # against the newer one on the next observation.
+                        return None
                     self._sign_in_generation = sign_in.observe().current
                 worker = self.owner.begin_drain()
             finally:
