@@ -105,13 +105,6 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option("from_date", ("--from",), TEXT_VALUE, "cli.overview.calendar.from_help", required=True),
             _option("to_date", ("--to",), TEXT_VALUE, "cli.overview.calendar.to_help", required=True),
             _option(
-                "allow_incomplete",
-                ("--allow-incomplete",),
-                FLAG_VALUE,
-                "cli.overview.calendar.allow_incomplete_help",
-                default=False,
-            ),
-            _option(
                 "show_suppressed",
                 ("--show-suppressed",),
                 FLAG_VALUE,
@@ -147,13 +140,6 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "cli.overview.agenda.horizon_help",
                 default=_AGENDA_HORIZON_DAYS,
             ),
-            _option(
-                "allow_incomplete",
-                ("--allow-incomplete",),
-                FLAG_VALUE,
-                "cli.overview.agenda.allow_incomplete_help",
-                default=False,
-            ),
         ),
     ),
     _leaf(
@@ -164,13 +150,6 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         (
             _option("from_date", ("--from",), TEXT_VALUE, "cli.overview.backlog.from_help"),
             _option("to_date", ("--to",), TEXT_VALUE, "cli.overview.backlog.to_help"),
-            _option(
-                "allow_incomplete",
-                ("--allow-incomplete",),
-                FLAG_VALUE,
-                "cli.overview.backlog.allow_incomplete_help",
-                default=False,
-            ),
         ),
     ),
     _leaf(

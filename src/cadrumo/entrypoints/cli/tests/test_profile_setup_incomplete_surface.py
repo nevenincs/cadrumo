@@ -47,7 +47,6 @@ _CALENDAR = (
     "--to",
     "2026-03-31",
     "--all-profiles",
-    "--allow-incomplete",
 )
 
 

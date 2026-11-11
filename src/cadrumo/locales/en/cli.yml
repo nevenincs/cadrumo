@@ -3782,7 +3782,6 @@ cli:
       no_active_profile_message: No active profile is configured.
   overview:
     agenda:
-      allow_incomplete_help: Render the agenda even when profile data is incomplete.
       date_help: As-of date for the agenda (ISO YYYY-MM-DD); defaults to today.
       errors:
         invalid_horizon: --horizon must be a positive integer (days).
@@ -3792,7 +3791,6 @@ cli:
       horizon_help: Forward window (days) the `due_soon` cohort honours.
     app_help: Review the active tax workspace
     backlog:
-      allow_incomplete_help: Render the backlog even when profile data is incomplete.
       from_help: Inclusive start date (ISO YYYY-MM-DD); defaults to 365 days before
         today.
       help: List overdue obligations you have not yet recorded as filed. Sorted oldest
@@ -3802,7 +3800,6 @@ cli:
     calendar:
       all_profiles_help: Render the calendar for every registered profile instead
         of the active one. Each block is prefixed with a profile header line.
-      allow_incomplete_help: Render the calendar even when profile data is incomplete.
       from_help: Inclusive start date for the calendar window (ISO YYYY-MM-DD).
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies public holidays and business-day shifts. Local-only;
@@ -3870,12 +3867,8 @@ cli:
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
       year_help: Filing year (e.g. 2026).
-    refused_incomplete_profile: 'The active profile has not answered facts this projection
-      depends on: %{requirements}. Complete them with ''aeat config profile edit'',
-      or pass --allow-incomplete to inspect the provisional result.'
     refused_undeclared_taxpayer_model: 'The active profile does not declare a taxpayer
-      model, so filing obligations cannot be derived. Supply: %{requirements}. Or
-      rerun with --allow-incomplete to inspect the provisional result.'
+      model, so filing obligations cannot be derived. Supply: %{requirements}.'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No declaration drafts are saved - this is normal

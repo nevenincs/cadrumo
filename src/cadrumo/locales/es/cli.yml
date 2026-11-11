@@ -4065,7 +4065,6 @@ cli:
       no_active_profile_message: No hay ningún perfil activo.
   overview:
     agenda:
-      allow_incomplete_help: Generar la agenda aunque los datos del perfil estén incompletos.
       date_help: Fecha de referencia para la agenda (ISO YYYY-MM-DD); por defecto,
         hoy.
       errors:
@@ -4076,8 +4075,6 @@ cli:
       horizon_help: Ventana hacia adelante (en días) que considera la cohorte `due_soon`.
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     backlog:
-      allow_incomplete_help: Generar la lista de tareas pendientes aunque los datos
-        del perfil estén incompletos.
       from_help: Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días
         antes de hoy.
       help: Lista las obligaciones vencidas que aún no has registrado como presentadas.
@@ -4088,8 +4085,6 @@ cli:
       all_profiles_help: Mostrar el calendario de todos los perfiles registrados en
         lugar del activo. Cada bloque va precedido de una línea de cabecera con el
         nombre del perfil.
-      allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
-        incompletos.
       from_help: Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
@@ -4162,12 +4157,8 @@ cli:
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2026).
-    refused_incomplete_profile: 'El perfil activo no ha respondido a datos de los
-      que depende esta proyección: %{requirements}. Complétalos con ''aeat config
-      profile edit'', o usa --allow-incomplete para consultar el resultado provisional.'
     refused_undeclared_taxpayer_model: 'El perfil activo no declara un modelo de contribuyente,
-      por lo que no se pueden derivar las obligaciones de presentación. Indica: %{requirements}.
-      O vuelve a ejecutar con --allow-incomplete para consultar el resultado provisional.'
+      por lo que no se pueden derivar las obligaciones de presentación. Indica: %{requirements}.'
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
       drafts_empty_with_work_units: No hay borradores de declaraciones guardados;

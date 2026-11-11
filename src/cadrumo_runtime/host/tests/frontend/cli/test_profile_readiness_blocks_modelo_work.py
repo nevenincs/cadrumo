@@ -205,7 +205,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
                 "app", "overview", "calendar",
                 "--from", "2026-01-01",
                 "--to", "2026-12-31",
-                "--show-suppressed", "--allow-incomplete",
+                "--show-suppressed",
             ],
         )  # fmt: skip
         assert calendar.exit_code == 0, calendar.output
