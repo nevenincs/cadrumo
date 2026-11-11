@@ -12,11 +12,13 @@ import pytest
 from .personas import (
     PERSONAS_ROOT,
     PersonaCatalogueError,
+    ProvisionPeriods,
     YearEnvelope,
     cadastral_control_characters,
     identity_catalogue,
     parse_identity_catalogue,
     parse_persona,
+    values_in_force,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -351,3 +353,88 @@ def test_a_calendar_advice_stands_in_for_an_owed_window() -> None:
 def test_a_malformed_calendar_advice_is_refused(obligation: dict[str, object], message: str) -> None:
     with pytest.raises(PersonaCatalogueError, match=message):
         _expectations_with(obligation=obligation)
+
+
+def _governed_expectations(*, provision: str = "provision-x") -> dict[str, Any]:
+    """The persona's expectations with a second copy of its first value limited to ``provision``."""
+    document = copy.deepcopy(_document("expectations.toml"))
+    plain = document["values"][0]
+    governed = copy.deepcopy(plain)
+    governed["governed_by"] = provision
+    governed["legal_ref"] = [*plain["legal_ref"], "provision-x"]
+    governed["derivation"] = "the figures the provision gives"
+    document["values"] = [plain, governed]
+    return document
+
+
+def _parse_expectations(document: dict[str, Any]) -> Any:
+    return parse_persona(
+        _PERSONA,
+        persona_document=_document("persona.toml"),
+        ledger_text=(PERSONAS_ROOT / _PERSONA / "ledger.csv").read_text(encoding="utf-8"),
+        documents_document=_document("documents.toml"),
+        expectations_document=document,
+        catalogue=identity_catalogue(),
+        envelope=_ENVELOPE,
+    ).expectations
+
+
+def _envelope_governing(first: int, last: int | None) -> YearEnvelope:
+    from datetime import date
+
+    return YearEnvelope(
+        floor=_ENVELOPE.floor,
+        horizon=_ENVELOPE.horizon,
+        provisions=(
+            (
+                "provision-x",
+                ProvisionPeriods(first=date(first, 1, 1), last=None if last is None else date(last, 12, 31)),
+            ),
+        ),
+    )
+
+
+def test_a_governed_value_replaces_the_plain_one_only_in_the_years_its_provision_governs() -> None:
+    expectations = _parse_expectations(_governed_expectations())
+    plain, governed = expectations.values
+    year = plain.year.resolve(_ENVELOPE)
+
+    inside = values_in_force(expectations.values, _envelope_governing(year, year))
+    assert [value for _year, value in inside] == [governed]
+
+    before = values_in_force(expectations.values, _envelope_governing(year + 1, None))
+    after = values_in_force(expectations.values, _envelope_governing(_ENVELOPE.floor, year - 1))
+    assert [value for _year, value in before] == [plain]
+    assert [value for _year, value in after] == [plain]
+
+
+def test_a_governed_value_cites_its_provision_among_its_legal_references() -> None:
+    document = _governed_expectations(provision="provision-y")
+    with pytest.raises(PersonaCatalogueError, match="one of its legal references"):
+        _parse_expectations(document)
+
+
+def test_values_of_one_period_following_two_provisions_in_the_same_year_are_refused() -> None:
+    from datetime import date
+
+    document = _governed_expectations()
+    other = copy.deepcopy(document["values"][1])
+    other["governed_by"] = "provision-z"
+    other["legal_ref"] = [*other["legal_ref"], "provision-z"]
+    document["values"].append(other)
+    expectations = _parse_expectations(document)
+    year = expectations.values[0].year.resolve(_ENVELOPE)
+    every_year = ProvisionPeriods(first=date(year, 1, 1), last=None)
+    envelope = YearEnvelope(
+        floor=_ENVELOPE.floor,
+        horizon=_ENVELOPE.horizon,
+        provisions=(("provision-x", every_year), ("provision-z", every_year)),
+    )
+    with pytest.raises(PersonaCatalogueError, match="in the same year"):
+        values_in_force(expectations.values, envelope)
+
+
+def test_a_provision_the_envelope_does_not_carry_is_refused_rather_than_ignored() -> None:
+    expectations = _parse_expectations(_governed_expectations())
+    with pytest.raises(PersonaCatalogueError, match="does not carry the governed periods"):
+        values_in_force(expectations.values, _ENVELOPE)
