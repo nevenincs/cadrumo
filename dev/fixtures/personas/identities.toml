@@ -316,7 +316,7 @@ role = "traductora.proveedor-software"
 persona = "traductora-profesional"
 kind = "cif"
 value = "B00000307"
-legal_name = "Herramientas Traducción Albufera, S.L."
+legal_name = "Herramientas de Traducción Albufera, S.L."
 
 [[identities]]
 role = "minorista.mayorista"
@@ -421,7 +421,7 @@ role = "fontanero.comunidad"
 persona = "autonomo-fontanero"
 kind = "cif"
 value = "H00000018"
-legal_name = "Comunidad de Propietarios C/ Olivar 12"
+legal_name = "Comunidad de Propietarios Calle Olivar 12"
 
 [[identities]]
 role = "arrendador.pagador-pension"
