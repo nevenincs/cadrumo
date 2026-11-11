@@ -458,10 +458,14 @@ def settle_operation(
     terminal = asyncio.run(settle())
     result = _public_result(world, terminal)
     if terminal.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-        detail = "no detail" if result is None else result.model_dump_json(exclude={"profile_id"})
-        raise PersonaMaterialisationError(
-            f"{definition_id} settled {terminal.terminal_condition} ({terminal.failure_error_code}): {detail}"
+        # A refusal names its registered code through its refusal reference; only a failure has an error code.
+        code = (
+            terminal.refusal_ref
+            if terminal.terminal_condition is OperationTerminalCondition.REFUSED
+            else terminal.failure_error_code
         )
+        detail = "no detail" if result is None else result.model_dump_json(exclude={"profile_id"})
+        raise PersonaMaterialisationError(f"{definition_id} settled {terminal.terminal_condition} ({code}): {detail}")
     return result
 
 

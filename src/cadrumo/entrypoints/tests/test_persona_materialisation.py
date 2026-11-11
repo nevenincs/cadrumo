@@ -337,7 +337,7 @@ def test_a_history_replay_files_and_calculates_each_declared_return_with_aeat_co
             for key, revision_id in (*materialised.filings.items(), *materialised.calculations.items())
         }
         # Casilla 05 of a later Modelo 130 quarter reads casilla 07 of the earlier quarters' filed returns; the
-        # first quarter is calculated but unfiled, so the next quarter's calculation refuses for that input.
+        # first quarter is calculated but unfiled, so the next quarter's calculation refuses naming that quarter.
         created = settle_operation(
             world,
             MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
@@ -350,7 +350,7 @@ def test_a_history_replay_files_and_calculates_each_declared_return_with_aeat_co
         )
         outcome = getattr(created, "outcome", None)
         assert isinstance(outcome, ModeloWorkCreateSuccess)
-        with pytest.raises(PersonaMaterialisationError, match="ERROR_MODELO_WORK_INPUT_REQUIRED"):
+        with pytest.raises(PersonaMaterialisationError, match="REFUSED_MODELO_PRIOR_PERIOD_UNFILED"):
             settle_operation(
                 world,
                 MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
