@@ -291,7 +291,7 @@ concepts = { ingresos_actividad = "20650.00", gastos_actividad = "5608.00", prov
 derivation = """
 Ingresos = all issued bases 20650.00. Gastos = RETA 12 x 294.00 + software 4 x 120.00 + corrección 4 x 400.00 = 5608.00.
 Provisión = 5 % of 15042.00 = 752.10; rendimiento neto = 14289.90.
-0599 retenciones = 480.00 + 285.00 + 420.00 + 352.50 + 360.00 + 240.00 + 540.00 + 307.50 = 2985.00. 0604 = 0.00: RIRPF art. 109.1 exempts her from Modelo 130, so she made no pago fraccionado.
+0599 retenciones = 480.00 + 285.00 + 420.00 + 352.50 + 360.00 + 240.00 + 540.00 + 307.50 = 2985.00. 0604 = 0.00: RIRPF art. 109.2 exempts her from Modelo 130, so she made no pago fraccionado.
 Cuota is not asserted: it depends on the state and Valencian scales.
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30", "rd-439-2007:art-109"]
