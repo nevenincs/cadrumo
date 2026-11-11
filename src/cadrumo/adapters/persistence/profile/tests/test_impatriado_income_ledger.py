@@ -25,12 +25,15 @@ from cadrumo.application.aggregation.tests.impatriado_income_ledger_support impo
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
+_YEAR = filing_year_envelope().horizon
+
+_ANNUAL_PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _M151_MODELO = Modelo("151").value
 _BASE_CASILLA: CasillaId = validated_casilla_id("impatriado.base-liquidable-general")
 _M151_SOURCE_JURISDICTIONS = frozenset({"ES"})
@@ -57,20 +60,20 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
             "row-in-period",
             amount=Decimal("30000.00"),
             source_jurisdiction="ES",
-            value_date=date(2024, 6, 1),
+            value_date=date(_YEAR, 6, 1),
         )
         out_of_period = impatriado_transaction(
             "row-out-of-period",
             amount=Decimal("45000.00"),
             source_jurisdiction="ES",
-            value_date=date(2025, 1, 15),
+            value_date=date(_YEAR + 1, 1, 15),
         )
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((in_period, out_of_period)))
 
         result = aggregate_impatriado_income_ledger_from_repositories(
             bucket_id=_BUCKET_ID,
-            period=_ANNUAL_2024,
+            period=_ANNUAL_PERIOD,
             modelo=_M151_MODELO,
             target_casilla_id=_BASE_CASILLA,
             source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -83,8 +86,8 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
     assert result.issues == ()
     assert result.out_of_window_summary is not None
     assert result.out_of_window_summary.count == 1
-    assert result.out_of_window_summary.min_filing_date == date(2025, 1, 15)
-    assert result.out_of_window_summary.max_filing_date == date(2025, 1, 15)
+    assert result.out_of_window_summary.min_filing_date == date(_YEAR + 1, 1, 15)
+    assert result.out_of_window_summary.max_filing_date == date(_YEAR + 1, 1, 15)
 
 
 def test_repository_backed_aggregation_summarizes_previously_silent_out_of_window_rows(
@@ -102,13 +105,13 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
             "row-in-year",
             amount=Decimal("20000.00"),
             source_jurisdiction="ES",
-            value_date=date(2024, 3, 1),
+            value_date=date(_YEAR, 3, 1),
         )
         wrong_direction_out_of_year = impatriado_transaction(
             "row-wrong-direction-out-of-year",
             amount=Decimal("15000.00"),
             source_jurisdiction="ES",
-            value_date=date(2025, 2, 1),
+            value_date=date(_YEAR + 1, 2, 1),
             direction=TransactionDirection.OUTGOING,
         )
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
@@ -116,7 +119,7 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
 
         result = aggregate_impatriado_income_ledger_from_repositories(
             bucket_id=_BUCKET_ID,
-            period=_ANNUAL_2024,
+            period=_ANNUAL_PERIOD,
             modelo=_M151_MODELO,
             target_casilla_id=_BASE_CASILLA,
             source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -128,8 +131,8 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
     assert result.issues == ()
     assert result.out_of_window_summary is not None
     assert result.out_of_window_summary.count == 1
-    assert result.out_of_window_summary.min_filing_date == date(2025, 2, 1)
-    assert result.out_of_window_summary.max_filing_date == date(2025, 2, 1)
+    assert result.out_of_window_summary.min_filing_date == date(_YEAR + 1, 2, 1)
+    assert result.out_of_window_summary.max_filing_date == date(_YEAR + 1, 2, 1)
 
 
 def test_repository_backed_aggregation_partition_matches_full_scan(
@@ -148,19 +151,19 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
             "row-parity-in-year",
             amount=Decimal("20000.00"),
             source_jurisdiction="ES",
-            value_date=date(2024, 3, 1),
+            value_date=date(_YEAR, 3, 1),
         )
         out_of_year = impatriado_transaction(
             "row-parity-out-of-year",
             amount=Decimal("10000.00"),
             source_jurisdiction="ES",
-            value_date=date(2025, 1, 15),
+            value_date=date(_YEAR + 1, 1, 15),
         )
         foreign_out_of_year = impatriado_transaction(
             "row-parity-foreign-out-of-year",
             amount=Decimal("5000.00"),
             source_jurisdiction="FR",
-            value_date=date(2023, 6, 1),
+            value_date=date(_YEAR - 1, 6, 1),
         )
         catalogue = TransactionCatalogue.from_transactions((in_year, out_of_year, foreign_out_of_year))
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
@@ -168,7 +171,7 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
 
         partitioned = aggregate_impatriado_income_ledger_from_repositories(
             bucket_id=_BUCKET_ID,
-            period=_ANNUAL_2024,
+            period=_ANNUAL_PERIOD,
             modelo=_M151_MODELO,
             target_casilla_id=_BASE_CASILLA,
             source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -178,7 +181,7 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
         full_scan = aggregate_impatriado_income_ledger(
             catalogue,
             bucket_id=_BUCKET_ID,
-            period=_ANNUAL_2024,
+            period=_ANNUAL_PERIOD,
             modelo=_M151_MODELO,
             target_casilla_id=_BASE_CASILLA,
             source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
@@ -193,8 +196,8 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     assert partitioned.issues == ()
     assert partitioned.out_of_window_summary is not None
     assert partitioned.out_of_window_summary.count == 2
-    assert partitioned.out_of_window_summary.min_filing_date == date(2023, 6, 1)
-    assert partitioned.out_of_window_summary.max_filing_date == date(2025, 1, 15)
+    assert partitioned.out_of_window_summary.min_filing_date == date(_YEAR - 1, 6, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(_YEAR + 1, 1, 15)
 
     full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
     assert full_scan_issue_ids == {out_of_year.transaction_id, foreign_out_of_year.transaction_id}
