@@ -62,6 +62,7 @@ from .filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_c
 from .filed_capture_queries import (
     await_filed_register_walk,
     filed_data_capture_failure_row,
+    plan_filed_capture_pair_queries,
     plan_filed_capture_queries,
     walk_or_failure_row,
 )
@@ -837,14 +838,49 @@ async def _settle_bulk_filed_capture_report(
     )
 
 
+def _exact_pairs_scope(pairs: Sequence[tuple[str, int]]) -> tuple[tuple[str, ...], int, int]:
+    """Derive the report scope from exact pairs: modelos in first-seen order and the year span."""
+    if not pairs:
+        raise ValueError("filed bulk capture requires at least one modelo/year pair")
+    if len(set(pairs)) != len(pairs):
+        raise ValueError("filed bulk capture requires unique modelo/year coordinates")
+    years = [year for _code, year in pairs]
+    return tuple(dict.fromkeys(code for code, _year in pairs)), min(years), max(years)
+
+
+def _bulk_capture_scope(
+    *,
+    year_from: int | None,
+    year_to: int | None,
+    modelos: tuple[str, ...] | None,
+    pairs: Sequence[tuple[str, int]] | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[tuple[str, ...], int, int]:
+    """Resolve the report scope: modelos, first year and last year.
+
+    An exact ``pairs`` sequence replaces the modelo list and year range.
+    """
+    if pairs is not None:
+        if modelos is not None or year_from is not None or year_to is not None:
+            raise ValueError("filed bulk capture takes either exact pairs or modelos with a year range")
+        return _exact_pairs_scope(pairs)
+    if year_from is None or year_to is None:
+        raise ValueError("filed bulk capture requires a year range when no exact pairs are given")
+    resolved_modelos = modelos if modelos is not None else operation.modelo_ids()
+    if len(set(resolved_modelos)) != len(resolved_modelos):
+        raise ValueError("filed bulk capture requires unique modelo/year coordinates")
+    return resolved_modelos, year_from, year_to
+
+
 async def capture_filed_data_bulk(
     *,
     filed_data_port: FiledDataCapturePort,
-    year_from: int,
-    year_to: int,
     output_root: Path,
     ports: FiledObservationPersistencePorts,
+    year_from: int | None = None,
+    year_to: int | None = None,
     modelos: tuple[str, ...] | None = None,
+    pairs: Sequence[tuple[str, int]] | None = None,
     limit: int | None = None,
     dry_run: bool = False,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
@@ -861,11 +897,17 @@ async def capture_filed_data_bulk(
     :func:`capture_filed_data`.
 
     Args:
-        year_from: First filing year to query.
-        year_to: Last filing year to query.
+        year_from: First filing year to query; required unless ``pairs`` is given.
+        year_to: Last filing year to query; required unless ``pairs`` is given.
         output_root: Root the captured observations and artefacts persist under.
         ports: Composed filed-observation persistence and transformation ports.
         modelos: Modelo codes to walk; every registry modelo when omitted.
+        pairs: Exact ``(modelo, year)`` pairs to query, in the given order,
+            instead of the modelos-by-years rectangle. Exclusive with
+            ``modelos``, ``year_from`` and ``year_to``. The report's modelos
+            and year span are derived from the pairs; its pair accounting
+            still lists the whole span, and pairs outside ``pairs`` stay
+            unattempted rather than reading as empty.
         limit: Cap on captured observations; unbounded when omitted.
         filed_data_port: Composed register acquisition capability. Its outer
             implementation owns session and browser lifecycles.
@@ -885,7 +927,7 @@ async def capture_filed_data_bulk(
         effect_guard: Optional authorization fence around each local persisted effect.
         on_session_write: Record a provider session write in the operation receipt.
     """
-    if year_from > year_to:
+    if year_from is not None and year_to is not None and year_from > year_to:
         raise LiveApplicationInputError(
             translated_message="live.errors.year_range_invalid",
         )
@@ -899,6 +941,7 @@ async def capture_filed_data_bulk(
                 output_root=output_root,
                 ports=ports,
                 modelos=modelos,
+                pairs=pairs,
                 limit=limit,
                 dry_run=dry_run,
                 sync_run_repository=sync_run_repository,
@@ -907,9 +950,13 @@ async def capture_filed_data_bulk(
                 on_session_write=on_session_write,
                 operation=indexed_operation,
             )
-    resolved_modelos = modelos if modelos is not None else operation.modelo_ids()
-    if len(set(resolved_modelos)) != len(resolved_modelos):
-        raise ValueError("filed bulk capture requires unique modelo/year coordinates")
+    resolved_modelos, year_from, year_to = _bulk_capture_scope(
+        year_from=year_from,
+        year_to=year_to,
+        modelos=modelos,
+        pairs=pairs,
+        operation=operation,
+    )
     accumulator = FiledCaptureAccumulator(operation=operation)
     pair_outcomes = {
         (code, year): FiledCapturePairOutcome(
@@ -924,12 +971,15 @@ async def capture_filed_data_bulk(
         for code in resolved_modelos
         for year in range(year_to, year_from - 1, -1)
     }
-    query_pairs, failures = plan_filed_capture_queries(
-        resolved_modelos,
-        year_from=year_from,
-        year_to=year_to,
-        operation=operation,
-    )
+    if pairs is not None:
+        query_pairs, failures = plan_filed_capture_pair_queries(pairs, operation=operation)
+    else:
+        query_pairs, failures = plan_filed_capture_queries(
+            resolved_modelos,
+            year_from=year_from,
+            year_to=year_to,
+            operation=operation,
+        )
     pair_total = await _announce_bulk_capture_plan(
         query_pairs=query_pairs,
         failures=failures,
