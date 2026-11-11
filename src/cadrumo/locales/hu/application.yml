@@ -1570,6 +1570,11 @@ application:
           alapján választott ügylettípust, és az más is lehet.
         what_to_do: Ellenőrizd ezeknek a számláknak az ügylettípusát a nyilvántartásodban,
           és ha eltér, módosítsd.
+      m349_operation_unclassified:
+        what: Egy másik uniós országbeli partnerrel kiállított, áfa nélküli számla
+          nem tünteti fel, milyen Közösségen belüli ügyletet rögzít, ezért az uniós
+          ügyletek listája kihagyja.
+        what_to_do: Nyisd meg a számlát, add meg az ügylettípusát, majd számolj újra.
       missing_transaction_evidence:
         what: Egy áfát tartalmazó tételhez nincs csatolva számla vagy bizonylat.
         what_to_do: Csatold a számlát vagy a bizonylatot a nyilvántartásaid megfelelő
@@ -1839,6 +1844,8 @@ application:
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       m347_provincia_unrecorded: 'Tartománykód nélküli partnerek: {parties}.'
       m347_provincia_unstated: Hiányzik {party} adóügyi lakcímének tartománya.
+      m349_operation_unclassified: A(z) {invoice} számla ({party}) nem tünteti fel,
+        milyen Közösségen belüli ügyletet rögzít.
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
         költségként kerül levonásra, a leírása pedig tartós eszközre utal.
       prior_filing_unrecorded: A(z) {box} mező kiszámításához rögzítsd a(z) {year}.

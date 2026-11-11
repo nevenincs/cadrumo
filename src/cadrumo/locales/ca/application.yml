@@ -1608,6 +1608,12 @@ application:
           amb la UE segons la categoria d'IVA de la factura, i podria ser un altre.
         what_to_do: Revisa el tipus d'operació d'aquestes factures als teus registres
           i canvia'l si és diferent.
+      m349_operation_unclassified:
+        what: Una factura amb una contrapart d'un altre país de la UE i sense IVA
+          no indica quina operació intracomunitària recull, així que el llistat d'operacions
+          amb la UE la deixa fora.
+        what_to_do: Obre la factura i indica'n el tipus d'operació; després torna
+          a calcular.
       missing_transaction_evidence:
         what: Un apunt amb IVA no té factura ni document adjunt.
         what_to_do: Adjunta la factura o el justificant a aquest apunt als teus registres.
@@ -1874,6 +1880,8 @@ application:
         a la casella {box}.'
       m347_provincia_unrecorded: 'Declarats sense codi de província: {parties}.'
       m347_provincia_unstated: Falta la província del domicili fiscal de {party}.
+      m349_operation_unclassified: La factura {invoice} amb {party} no indica quina
+        operació intracomunitària recull.
       possibly_durable_expense: El moviment del {row_date} per {row_amount} es dedueix
         com a despesa corrent i la seva descripció sembla la d'un element durador.
       prior_filing_unrecorded: Per calcular la casella {box}, registra el teu Modelo

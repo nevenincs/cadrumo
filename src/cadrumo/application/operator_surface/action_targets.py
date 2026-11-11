@@ -184,6 +184,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "ledger.evidence.review.list", ("app", "ledger", "evidence", "review", "list"), "EvidenceReviewListResult"
     ),
     ActionTarget(
+        "ledger.invoice.update",
+        ("app", "ledger", "invoice", "update"),
+        "CatalogueInvoiceUpdatePayload",
+        required_inputs=("invoice_id",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "ledger.link",
         ("app", "ledger", "link"),
         "LedgerLinkResult",

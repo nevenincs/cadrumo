@@ -14,7 +14,9 @@ import pytest
 
 from cadrumo_client.contracts.command_program import CommandProgram
 
+from ....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from ....application.modelo.action_errors import ModeloProfileReadinessError
+from ....application.modelo.calculation_notes import note_record_verdict
 from ....application.modelo.iva_wallet_refusal import (
     ModeloIvaWalletReconciliationBlockedError,
     raise_iva_wallet_precondition,
@@ -37,11 +39,13 @@ from ....application.operator_surface.action_targets import (
 )
 from ....application.operator_surface.manifest import ReconciledOperatorLeaf
 from ....application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from ....core.aggregation import BindingSourceKind
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ..common import resolve_cli_precondition_action
 from ..operator_surface_reconciliation import operator_surface_target_reconciliation
@@ -260,6 +264,42 @@ def test_an_override_refusal_without_its_period_is_an_invariant_breach() -> None
             evidence_values={"reason": "local_recurrence_requires_override"},
             local_amount=Decimal("325.50"),
         )
+
+
+def test_an_unclassified_m349_invoice_note_opens_the_live_invoice_update_with_the_invoice_named(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    invoice_id = "inv-0001"
+    diagnostic = CalculationSourceDiagnostic(
+        reason="m349_operation_unclassified",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        resolver_id="invoice_catalogue",
+        source_ref=f"invoice:{invoice_id}",
+        fact=CalculationNoteFact.of(
+            CalculationNoteSentence.M349_OPERATION_UNCLASSIFIED,
+            rows=(invoice_id,),
+            invoice="DE-1",
+            party="EU Counterparty GmbH (DE123456789)",
+        ),
+        message="invoice 'DE-1' states no Modelo 349 operation",
+        remedy="Set the invoice's operation type, then calculate again.",
+    )
+    verdict = note_record_verdict(diagnostic)
+    assert verdict is not None
+
+    served = resolve_recorded_precondition_action(verdict)
+    (leaf,) = operator_surface_target_reconciliation("ledger.invoice.update").leaves
+
+    assert served.action is not None
+    assert served.action.action_id == "operator.ledger.invoice.update.operation_type"
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    bound = {item.argument_name: item for item in served.argument_bindings}
+    assert bound["invoice_id"].value == invoice_id
+    assert bound["operation_type"].status is ActionArgumentStatus.MISSING
+    assert served.missing_argument_names == ("operation_type",)
+    assert leaf.input_schema is not None
+    assert set(leaf.input_schema.required_input_names) <= set(bound)
 
 
 def test_a_real_missing_profile_facts_refusal_records_an_action_that_resolves_to_the_live_leaf(

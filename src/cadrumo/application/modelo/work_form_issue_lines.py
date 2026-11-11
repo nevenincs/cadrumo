@@ -527,7 +527,9 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
     )
 
 
-_INVOICE_ROW_SENTENCES: Final = frozenset({CalculationNoteSentence.M347_PROVINCIA_UNSTATED})
+_INVOICE_ROW_SENTENCES: Final = frozenset(
+    {CalculationNoteSentence.M347_PROVINCIA_UNSTATED, CalculationNoteSentence.M349_OPERATION_UNCLASSIFIED}
+)
 """The note sentences whose one row is an invoice of the counterparty the note is about."""
 
 

@@ -1614,6 +1614,12 @@ application:
           ser otro.
         what_to_do: Revisa el tipo de operación de esas facturas en tus registros
           y cámbialo si es distinto.
+      m349_operation_unclassified:
+        what: Una factura con una contraparte de otro país de la UE y sin IVA no indica
+          qué operación intracomunitaria recoge, así que el listado de operaciones
+          con la UE la deja fuera.
+        what_to_do: Abre la factura e indica su tipo de operación; después vuelve
+          a calcular.
       missing_transaction_evidence:
         what: Un apunte con IVA no tiene factura ni documento adjunto.
         what_to_do: Adjunta la factura o el justificante a ese apunte en tus registros.
@@ -1875,6 +1881,8 @@ application:
         {box}.'
       m347_provincia_unrecorded: 'Declarados sin código de provincia: {parties}.'
       m347_provincia_unstated: Falta la provincia del domicilio fiscal de {party}.
+      m349_operation_unclassified: La factura {invoice} con {party} no indica qué
+        operación intracomunitaria recoge.
       possibly_durable_expense: El movimiento del {row_date} por {row_amount} se deduce
         como gasto corriente y su descripción parece la de un elemento duradero.
       prior_filing_unrecorded: Para calcular la casilla {box}, registra tu Modelo

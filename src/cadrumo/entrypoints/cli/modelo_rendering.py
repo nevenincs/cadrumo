@@ -234,7 +234,16 @@ def source_diagnostic_notice(
             else note_fact_text(diagnostic.fact, element_names=diagnostic.element_names)
         ),
         context=context,
+        action=_record_action(diagnostic),
     )
+
+
+def _record_action(diagnostic: CalculationSourceDiagnostic) -> ResolvedPreconditionAction | None:
+    """The live command that opens the record a note names, where the note names one."""
+    from ...application.modelo.calculation_notes import note_record_verdict
+
+    verdict = note_record_verdict(diagnostic)
+    return None if verdict is None else resolve_cli_precondition_action(verdict)
 
 
 def recorded_note_notice(note: RecordedCalculationNote, *, code: str) -> Notice:

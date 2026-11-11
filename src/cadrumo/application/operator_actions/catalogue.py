@@ -328,6 +328,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.invoice.update.operation_type",
+            target_command_key="ledger.invoice.update",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="invoice_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="invoice_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="operation_type",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="operation_type",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.evidence.review.list",
             target_command_key="ledger.evidence.review.list",
         ),
