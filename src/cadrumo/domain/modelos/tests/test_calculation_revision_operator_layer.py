@@ -26,7 +26,7 @@ from ..calculation_revision import (
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
-from ..calculation_revision_operator_layer import CalculationOperatorLayer, ValueAttestation
+from ..calculation_revision_operator_layer import AttestedSource, CalculationOperatorLayer, ValueAttestation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -258,3 +258,58 @@ def test_a_binding_cannot_be_both_attested_as_no_amount_and_value_attested() -> 
                 )
             },
         )
+
+
+def _relation_attested_layer(*quarters: str) -> CalculationOperatorLayer:
+    first, *rest = quarters
+    year = _attestation_year()
+    return CalculationOperatorLayer(
+        binding_overrides={_BINDING: "2400.5"},
+        value_attestations={
+            _BINDING: ValueAttestation(
+                source_modelo="130",
+                source_filing_year=year,
+                source_period=first,
+                further_sources=tuple(
+                    AttestedSource(source_modelo="130", source_filing_year=year, source_period=quarter)
+                    for quarter in rest
+                ),
+            )
+        },
+    )
+
+
+def test_a_statement_for_a_relation_names_every_source_period_it_covers() -> None:
+    layer = _relation_attested_layer("1T", "2T", "3T", "4T")
+
+    (attestation,) = layer.value_attestations.values()
+    assert [source.source_period for source in attestation.sources] == ["1T", "2T", "3T", "4T"]
+    assert layer.identity_payload()["value_attestations"] == {
+        _BINDING: {
+            "source_modelo": "130",
+            "source_filing_year": _attestation_year(),
+            "source_period": "1T",
+            "further_sources": [
+                {"source_modelo": "130", "source_filing_year": _attestation_year(), "source_period": quarter}
+                for quarter in ("2T", "3T", "4T")
+            ],
+        }
+    }
+    assert CalculationOperatorLayer.model_validate_json(layer.model_dump_json()) == layer
+
+
+def test_a_single_source_statement_keeps_the_stored_identity_payload_without_the_source_list() -> None:
+    (attestation,) = _value_attested_layer().value_attestations.values()
+
+    assert attestation.identity_payload() == {
+        "source_modelo": "100",
+        "source_filing_year": _attestation_year(),
+        "source_period": "0A",
+    }
+    assert [source.source_period for source in attestation.sources] == ["0A"]
+
+
+def test_the_sources_a_statement_covers_move_the_revision_identity() -> None:
+    assert _revision_id(_relation_attested_layer("1T", "2T")) != _revision_id(
+        _relation_attested_layer("1T", "2T", "3T", "4T")
+    )

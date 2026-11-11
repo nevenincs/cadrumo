@@ -35,17 +35,20 @@ from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloEditAdmittedV1,
     ModeloEditApplyRequestV1,
+    ModeloEditBindingIntentKind,
     ModeloEditCorrectionAddressV1,
     ModeloEditHeldChangeV1,
     ModeloEditHeldKind,
     ModeloEditParseReason,
     ModeloEditParseRequestV1,
+    ModeloEditPermittedSurfaceEntryV1,
     ModeloEditPreflightEvaluatedV1,
     ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloScalarEditIntentV1,
 )
@@ -107,6 +110,7 @@ from ...domain.modelos.calculation_repository import CalculationRevisionPersiste
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..adapter_composition_work_ports import build_calculation_action_ports
+from ..operation_composition_inputs import build_modelo_workbench_read_ports
 from .executor_context_stand_ins import RecordedEvents, RecordedOperands, UninterruptedCancellation
 from .production_operation_registry import production_operation_registry
 
@@ -253,6 +257,8 @@ def _workbench_read_ports(
         calculations=ports.calculation_repository,
         verifications=verifications,
         bucket_events=ports.bucket_event_repository,
+        filings=ports.filing_repository,
+        observations=ports.observation_repository,
     )
 
 
@@ -836,3 +842,60 @@ def test_preflight_reports_what_becomes_of_each_held_change_by_its_box(
         assert box.state_digest not in result.model_dump_json()
     with pytest.raises(ValidationError):
         ModeloEditApplyRequestV1(operation_id="a" * 64, submission=submission)
+
+
+#: The carry a first-quarter Modelo 130 reads from the previous ejercicio's Modelo 100.
+_PRIOR_YEAR_NET_INCOME = "irpf.previous_year_economic_activity_net_income"
+
+
+def _offered_intents(surface: tuple[ModeloEditPermittedSurfaceEntryV1, ...]) -> tuple[ModeloEditBindingIntentKind, ...]:
+    (entry,) = (
+        entry
+        for entry in surface
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        and entry.binding_id == _PRIOR_YEAR_NET_INCOME
+    )
+    return tuple(entry.allowed_intents)
+
+
+def test_the_form_read_offers_the_statement_of_a_carry_whose_earlier_filing_nothing_is_held_for(tmp_path: Path) -> None:
+    floor = filing_year_envelope().floor
+    with seeded_operator_work(tmp_path, modelo="130", filing_year=floor, period_code="1T") as work:
+        read = read_modelo_workbench_form(
+            work.work_unit_id,
+            bucket_id=work.work_unit.bucket_id,
+            ports=build_modelo_workbench_read_ports(work.work_unit.bucket_id, work.operation),
+            operation=work.operation,
+            operation_contracts=production_operation_registry().public_contract_set,
+            language=OutputLanguage.EN,
+        )
+
+    assert isinstance(read.admission, ModeloEditAdmittedV1)
+    offered = _offered_intents(read.admission.baseline.permitted_surface)
+    assert ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE in offered
+    assert ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE in offered
+
+
+def test_a_renewed_baseline_keeps_offering_the_statement_while_nothing_is_held(tmp_path: Path) -> None:
+    floor = filing_year_envelope().floor
+    with seeded_operator_work(tmp_path, modelo="130", filing_year=floor, period_code="1T") as work:
+        contracts = production_operation_registry().public_contract_set
+        executor = ModeloEditRenewExecutor(ports_factory=build_modelo_workbench_read_ports, contracts=lambda: contracts)
+        expired = work.admit(issued_at=datetime.now(UTC) - timedelta(minutes=10))
+        assert isinstance(expired, ModeloEditAdmittedV1)
+        renewed, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
+            ModeloEditRenewRequest(
+                profile_id=_profile_id(work),
+                baseline=ModeloEditApplyBaselineV1.from_baseline(expired.baseline),
+                output_language=OutputLanguage.EN,
+            ),
+            ModeloEditRenewalProjectionV1,
+        )
+
+    assert renewed.renewed_baseline is not None
+    assert ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE in _offered_intents(
+        renewed.renewed_baseline.to_baseline().permitted_surface
+    )

@@ -39,7 +39,7 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
-from ..calculations.cross_period_clean_state import attestable_previous_filing_binding_ids
+from ..calculations.cross_period_clean_state import attestable_carry_binding_ids
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..operations.registry import OperationPublicContractSetV1
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
@@ -212,9 +212,9 @@ def permitted_binding_entry(
     of lines, and one the calculation does not read for ``period`` changes
     nothing the declaration shows.
 
-    ``attestable_binding_ids`` names the previous-filing bindings the application
-    holds no source for
-    (:func:`~cadrumo.application.calculations.cross_period_clean_state.attestable_previous_filing_binding_ids`).
+    ``attestable_binding_ids`` names the scalar previous-filing and
+    relation-prefill bindings the application holds no source for
+    (:func:`~cadrumo.application.calculations.cross_period_clean_state.attestable_carry_binding_ids`).
     Only a carry override among them takes a stated figure
     (``ATTEST_PRIOR_VALUE``); where a source exists the dependency follows it,
     so a figure stated over it is refused here and never reads as proof.
@@ -393,7 +393,7 @@ def admit_modelo_edit_baseline(
         attestable_binding_ids=(
             frozenset()
             if observation_repository is None or filing_catalogue is None
-            else attestable_previous_filing_binding_ids(
+            else attestable_carry_binding_ids(
                 snapshot,
                 operation=operation,
                 observation_repository=observation_repository,

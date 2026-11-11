@@ -59,13 +59,14 @@ from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_operator_layer import (
     ATTESTED_ZERO,
+    AttestedSource,
     CalculationOperatorLayer,
     ValueAttestation,
 )
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ..calculations.cross_period_clean_state import attestable_previous_filing_sources
+from ..calculations.cross_period_clean_state import attestable_carry_sources
 from ..calculations.cross_period_models import CrossPeriodDependencyRequirement
 from .action_errors import ModeloClearedCasillaSourceFedError
 from .calculation_action_ports import CalculationActionPorts
@@ -299,18 +300,18 @@ def _attest_prior_value(
     state: _OperatorState,
     intent: ModeloBindingEditIntentV1,
     *,
-    source: CrossPeriodDependencyRequirement | None,
+    sources: tuple[CrossPeriodDependencyRequirement, ...] | None,
     grammar: ModeloEditValueGrammarV1 | None,
     tax_id_format: SpanishTaxIdFormat | None,
 ) -> ModeloEditExecutionNoEffectV1 | None:
-    """Record the operator's stated figure for a carry whose earlier filing lies outside the envelope.
+    """Record the operator's stated figure for a scalar carry whose earlier filings the application does not hold.
 
     The value takes the same path as an override; the operator layer also names
-    the earlier filing it stands in for. A binding the pinned envelope does not
-    refuse is not attestable, however the baseline came to offer it.
+    every earlier filing it stands in for. A binding with a held source, or a
+    row-set binding, is not attestable, however the baseline came to offer it.
     """
     binding_id = intent.address.binding_id
-    if source is None or grammar is None or grammar.channel is not ModeloEditValueChannel.DECIMAL:
+    if sources is None or len(sources) == 0 or grammar is None or grammar.channel is not ModeloEditValueChannel.DECIMAL:
         return _domain_refusal(
             ModeloEditRefusalCode.DISALLOWED_INTENT,
             address=intent.address,
@@ -321,10 +322,19 @@ def _attest_prior_value(
     if isinstance(value, ModeloEditParseRefusalV1):
         return _parse_refusal(value)
     state.binding_overrides[binding_id] = value
+    first, *rest = sources
     state.value_attestations[binding_id] = ValueAttestation(
-        source_modelo=source.source_modelo,
-        source_filing_year=source.filing_year,
-        source_period=source.period.registry_token,
+        source_modelo=first.source_modelo,
+        source_filing_year=first.filing_year,
+        source_period=first.period.registry_token,
+        further_sources=tuple(
+            AttestedSource(
+                source_modelo=item.source_modelo,
+                source_filing_year=item.filing_year,
+                source_period=item.period.registry_token,
+            )
+            for item in rest
+        ),
     )
     return None
 
@@ -334,7 +344,7 @@ def _apply_binding_intents(
     submission: ModeloEditSubmissionV1,
     *,
     tax_id_format: SpanishTaxIdFormat | None,
-    attestable_sources: Mapping[BindingId, CrossPeriodDependencyRequirement],
+    attestable_sources: Mapping[BindingId, tuple[CrossPeriodDependencyRequirement, ...]],
 ) -> ModeloEditExecutionNoEffectV1 | None:
     """Apply every binding intent to the operator state, refusing the first invalid one."""
     for intent in submission.binding_intents:
@@ -354,7 +364,7 @@ def _apply_binding_intents(
             refusal = _attest_prior_value(
                 state,
                 intent,
-                source=attestable_sources.get(binding_id),
+                sources=attestable_sources.get(binding_id),
                 grammar=grammar,
                 tax_id_format=tax_id_format,
             )
@@ -699,7 +709,7 @@ def _prepare_edit(
         state,
         submission,
         tax_id_format=tax_id_format,
-        attestable_sources=attestable_previous_filing_sources(
+        attestable_sources=attestable_carry_sources(
             snapshot,
             operation=operation,
             observation_repository=ports.observation_repository,

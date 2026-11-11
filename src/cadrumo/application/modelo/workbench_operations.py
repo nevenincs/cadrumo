@@ -459,6 +459,8 @@ class ModeloEditRenewExecutor:
                 calculation_catalogue=ports.calculations.load(operation=operation),
                 operation=operation,
                 operation_contracts=self._contracts(),
+                observation_repository=ports.observations,
+                filing_catalogue=None if ports.filings is None else ports.filings.load(),
             )
             return ModeloEditRenewalProjectionV1(
                 result_version=1,

@@ -941,6 +941,7 @@ def _require_modelo_export_clean_state(
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
         workflow_profile=workflow_profile,
         target_revision=revision,
+        work_unit_repository=export_ports.work_unit,
     )
 
 
