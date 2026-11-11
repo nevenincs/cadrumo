@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:349749f0a0dba7163be284f13cca81939f09023f9bf702189b4e3962e71d0260'
+body_hash: 'sha256:14f113b70fb789f98e9908146e4a6f554335c05388cf91e123fd356832cb6acd'
 related:
   - "[[2026-11-11-profile-password-custody-plan]]"
 ---
@@ -63,7 +63,15 @@ related:
 - `S03` `verify:` `pytest custody/tests test_profile_view_kdf_fallback_notice` -> `pass`
 - `S03` `verify:` `ruff ty radon lint-imports` -> `pass`
 - `S03` `by:` `PERF-CUSTODY`
+- `S04` `M` `src/cadrumo_runtime/host/profile_connection_login.py`
+- `S04` `A` `src/cadrumo_runtime/host/tests/test_sign_in_kdf_strengthening_follow.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_retirement.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_password_kdf_sign_in_strengthening.py`
+- `S04` `verify:` `pytest test_sign_in_kdf_strengthening_follow test_password_kdf_sign_in_strengthening` -> `pass`
+- `S04` `verify:` `ruff ty radon lint-imports` -> `pass`
+- `S04` `by:` `PERF-CUSTODY`
 
 ## Notes
 
 - `S03` `test_profile_worker` browser-descendant tests fail in this worktree: worker resolves Chromium under the worktree var/storage/components, absent outside root
+- `S04` host suite 595 passed; 2 failures also fail with S04 set aside (automation requester TUI renew, modelo revision repeat effect); worktree workers run root code under -I
