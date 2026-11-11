@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 import time
 from datetime import datetime, timedelta
@@ -52,8 +53,9 @@ pytestmark = [
 
 
 def test_cli_and_tui_activity_renew_shared_login_then_idle_pushes_desktop_sign_out(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
+    caplog.set_level(logging.DEBUG, logger="cadrumo_runtime.host.profile_connection_sessions")
     # Native login observation, keychain and runtime wall clock are explicit
     # fixture ports; transport, custody, receipts and notifications are real.
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
@@ -99,6 +101,9 @@ def test_cli_and_tui_activity_renew_shared_login_then_idle_pushes_desktop_sign_o
             runtime.clock.ahead += idle_window * 0.75
             reply = runtime.session(connection, session_id, "session_activity")
             assert isinstance(reply, ProfileStatus) and reply.status.denial is None
+            # Each accepted report says so, with the time it bought, so a log shows whether input arrived.
+            noted = [record for record in caplog.records if record.getMessage() == "person_activity_noted"]
+            assert noted and noted[-1].__dict__["idle_seconds_left"] > 0
             assert all(runtime.lease(identity).expires_at > runtime.clock() for _, identity in clients)
             assert runtime.sign_in(watcher).presence is SignInPresence.PRESENT
             assert not ended
