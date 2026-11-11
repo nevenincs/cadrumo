@@ -765,7 +765,8 @@ def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence
     assert context["motive_applicable"] == "true", result.output
     assert context["motive_present"] == "false", result.output
     assert context["terminal_condition"] == "refused", result.output
-    assert context["effect"] == "unknown", result.output
+    # Refused before the amendment writes anything: nothing may have changed.
+    assert context["effect"] == "none", result.output
     assert _profile_amend_catalogue_state(runtime_profile=_operator_profile, bucket_id=bucket_id) == before
 
 
