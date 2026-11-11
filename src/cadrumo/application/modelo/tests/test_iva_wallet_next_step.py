@@ -26,7 +26,11 @@ from ...operations.error_detail import build_operation_error_detail
 from ...operations.next_step import OperationOpenIvaWalletOpeningBalanceStepV1, error_next_step
 from ..iva_wallet_binding import apply_iva_compensation_decision_binding
 from ..iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
-from ..preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS, MODELO_PRECONDITION_PROFILES
+from ..preconditions import (
+    IVA_WALLET_OPENING_BALANCE_SCENARIOS,
+    IVA_WALLET_OVERRIDE_SCENARIOS,
+    MODELO_PRECONDITION_PROFILES,
+)
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
@@ -156,16 +160,22 @@ def test_unseeded_carry_refusal_names_the_opening_balance_command_in_every_suppo
 
 @pytest.mark.parametrize("leaf", ["modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export"])
 def test_every_refusal_the_opening_balance_settles_names_the_command_on_every_leaf(leaf: str) -> None:
-    """The declared profile of each opening-balance scenario carries the action; no other wallet scenario does."""
+    """Opening-balance scenarios name the seed, override scenarios the override; no other wallet scenario names one."""
     scenarios = {
         profile.scenario_id.rsplit(".", 1)[-1]: profile
         for profile in MODELO_PRECONDITION_PROFILES
         if profile.condition_id == f"{leaf}.iva_wallet.ready"
     }
     assert set(IVA_WALLET_OPENING_BALANCE_SCENARIOS) <= set(scenarios)
+    assert set(IVA_WALLET_OVERRIDE_SCENARIOS) <= set(scenarios)
     for scenario, profile in scenarios.items():
         if scenario in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
             assert profile.action is not None, f"{leaf} {scenario} names no action"
             assert profile.action.action_id == "operator.modelo.iva_wallet.seed"
+        elif scenario in IVA_WALLET_OVERRIDE_SCENARIOS:
+            assert profile.action is not None, f"{leaf} {scenario} names no action"
+            assert profile.action.action_id == "operator.modelo.iva_wallet.override"
         else:
-            assert profile.action is None, f"{leaf} {scenario} is not settled by the opening balance"
+            assert profile.action is None, (
+                f"{leaf} {scenario} is settled by neither the opening balance nor an override"
+            )
