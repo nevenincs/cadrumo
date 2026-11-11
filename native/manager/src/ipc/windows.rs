@@ -1015,7 +1015,6 @@ mod tests {
             .unwrap()
             .expect("this process is listed");
         let desktop = crate::supervision::process::open_process(parent)
-            .ok()
             .expect("the test runner outlives its test process")
             .identity
             .image;
