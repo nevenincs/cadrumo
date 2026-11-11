@@ -260,13 +260,14 @@ export function useUserProfile(
       },
       latest: () => state.data,
       async save(base, edit) {
-        if (
-          !alive ||
-          saving ||
-          state.error === "unknown" ||
-          state.data?.profile_id !== base.profile_id
-        )
+        // A save while another is held, or after one whose outcome is
+        // unknown, is not sent: the page shows that save, or that unknown
+        // outcome, as why. A base read for another profile is shown as one.
+        if (!alive || saving || state.error === "unknown") return false;
+        if (state.data?.profile_id !== base.profile_id) {
+          update({ error: state.data ? "conflict" : "not_signed_in" });
           return false;
+        }
         saving = true;
         update({ saving: true, error: null, saved: false });
         let committed = false;

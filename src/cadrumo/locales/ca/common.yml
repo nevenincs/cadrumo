@@ -4783,6 +4783,7 @@ desktop:
     search: Cerca dades del perfil
     search_placeholder: Cerca
     sections: Seccions
+    setup_completed_notice: La configuració del teu perfil és completa.
     signed_out: Inicia sessió per veure i editar el teu perfil.
     title: El teu perfil
     unavailable: No s’ha pogut carregar el teu perfil. Actualitza per tornar-ho a
