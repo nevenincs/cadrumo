@@ -609,6 +609,75 @@ errors:
       Z, and a CIF with A-H, J, N, P-S, U, V or W.'
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
+    calculation_revision_amendment_metadata_unpaired: It records an amendment without
+      its reason, or a reason without its amendment. The application wrote this record
+      itself, so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_closed_rows_disagree: Its closed record rows disagree with
+      its saved binding values. The application wrote this record itself, so it was
+      altered or damaged, and no change to your data repairs it.
+    calculation_revision_closed_rows_foreign: Its closed record rows belong to another
+      work unit or registry snapshot. The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_handoff_outputs_disagree: 'Its annual-summary handoff values
+      differ from the Modelo 390 casillas it holds: %{casilla_ids}. The application
+      wrote this record itself, so it was altered or damaged, and no change to your
+      data repairs it.'
+    calculation_revision_handoff_outputs_missing: 'Its annual-summary handoff names
+      Modelo 390 casillas the calculation does not hold: %{casilla_ids}. The application
+      wrote this record itself, so it was altered or damaged, and no change to your
+      data repairs it.'
+    calculation_revision_handoff_target_mismatch: Its annual-summary handoff for Modelo
+      303 points at a different calculation than the one that holds it. The application
+      wrote this record itself, so it was altered or damaged, and no change to your
+      data repairs it.
+    calculation_revision_identity_mismatch: Its stored identifier %{calculation_revision_id}
+      is not the one derived from its inputs (%{derived_id}). The application wrote
+      this record itself, so it was altered or damaged, and no change to your data
+      repairs it.
+    calculation_revision_lifecycle_order: It was last updated (%{updated_at}) before
+      it was created (%{created_at}). The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_observations_missing: It holds casilla values but none of
+      the observations they come from. The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_observations_projection_mismatch: Its casilla values differ
+      from what its observations give. The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_operator_layer_cleared_overlap: 'It sets and also clears
+      the same casillas: %{casilla_ids}. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.'
+    calculation_revision_rectificativa_context_missing: It is a rectificativa but
+      was not checked against the filing it corrects. The application wrote this record
+      itself, so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_identity_without_value: A stored row source identity
+      has no row value behind it. The application wrote this record itself, so it
+      was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_index_mismatch: A row casilla's position differs from
+      the position of its source row %{row_index} of %{binding_id}. The application
+      wrote this record itself, so it was altered or damaged, and no change to your
+      data repairs it.
+    calculation_revision_row_source_identity_absent: Row %{row_index} of %{binding_id}
+      has no stored source identity. The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_source_identity_mismatch: The source identity stored
+      for row %{row_index} of %{binding_id} differs from the one its casilla records.
+      The application wrote this record itself, so it was altered or damaged, and
+      no change to your data repairs it.
+    calculation_revision_row_source_shared: Row %{row_index} of %{binding_id} feeds
+      more than one row casilla. The application wrote this record itself, so it was
+      altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_source_value_not_decimal: The stored value of row %{row_index}
+      of %{binding_id} is not a number. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_value_mismatch: A row casilla's value differs from its
+      source row %{row_index} of %{binding_id}. The application wrote this record
+      itself, so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_values_provenance_mismatch: Its row casilla values and
+      their provenance cover different rows. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_secure_row_fields_missing: Its saved copy lacks the stored
+      row fields every such copy must carry. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.
     canonical_actividad_asset_history_persistence: The encrypted activity-asset history
       could not be reopened safely.
     canonical_aeat_sync_workspace_projection: The loaded AEAT authorities cannot form
@@ -670,6 +739,9 @@ errors:
       %{field_id} cannot be written from its value, because the official record design
       the application carries and that value disagree. The defect is in the export
       design, not in your data, so changing your data will not fix it.'
+    integrity_modelos_calculation_revision: The saved calculation contradicts itself,
+      so nothing can be applied from it. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.
     integrity_modelos_operator_layer: The stored operator values for this calculation
       contradict each other. The application wrote them itself, so the record was
       altered or damaged and nothing can be applied from it.

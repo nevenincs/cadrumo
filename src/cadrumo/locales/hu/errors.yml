@@ -618,6 +618,75 @@ errors:
     validate_expects_str: Az azonosítóérvényesítés szöveges értéket vár; {got_type}
       érkezett.
   integrity:
+    calculation_revision_amendment_metadata_unpaired: Módosítást rögzít indok nélkül,
+      vagy indokot módosítás nélkül. Ezt a rekordot maga az alkalmazás írta, ezért
+      módosult vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_closed_rows_disagree: A lezárt rekordsorai nem egyeznek a
+      mentett kötésértékeivel. Ezt a rekordot maga az alkalmazás írta, ezért módosult
+      vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_closed_rows_foreign: A lezárt rekordsorai másik munkaegységhez
+      vagy másik regiszter-pillanatképhez tartoznak. Ezt a rekordot maga az alkalmazás
+      írta, ezért módosult vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_handoff_outputs_disagree: 'Az éves összesítő átadásának értékei
+      eltérnek a tartalmazott 390-es modell rovatoktól: %{casilla_ids}. Ezt a rekordot
+      maga az alkalmazás írta, ezért módosult vagy megsérült, és az adataid módosítása
+      nem javítja ki.'
+    calculation_revision_handoff_outputs_missing: 'Az éves összesítő átadása olyan
+      390-es modell rovatokat nevez meg, amelyeket a számítás nem tartalmaz: %{casilla_ids}.
+      Ezt a rekordot maga az alkalmazás írta, ezért módosult vagy megsérült, és az
+      adataid módosítása nem javítja ki.'
+    calculation_revision_handoff_target_mismatch: A 303-as modell éves összesítőjének
+      átadása egy másik számításra mutat, mint amelyik tartalmazza. Ezt a rekordot
+      maga az alkalmazás írta, ezért módosult vagy megsérült, és az adataid módosítása
+      nem javítja ki.
+    calculation_revision_identity_mismatch: A mentett azonosítója (%{calculation_revision_id})
+      nem egyezik a bemeneteiből levezetettel (%{derived_id}). Ezt a rekordot maga
+      az alkalmazás írta, ezért módosult vagy megsérült, és az adataid módosítása
+      nem javítja ki.
+    calculation_revision_lifecycle_order: Utoljára (%{updated_at}) a létrehozása (%{created_at})
+      előtt módosult. Ezt a rekordot maga az alkalmazás írta, ezért módosult vagy
+      megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_observations_missing: Rovatértékeket tartalmaz, de egyiknek
+      a forrásmegfigyelését sem. Ezt a rekordot maga az alkalmazás írta, ezért módosult
+      vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_observations_projection_mismatch: A rovatértékei eltérnek
+      attól, amit a megfigyelései adnak. Ezt a rekordot maga az alkalmazás írta, ezért
+      módosult vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_operator_layer_cleared_overlap: 'Ugyanazokat a rovatokat
+      beállítja és törli is: %{casilla_ids}. Ezt a rekordot maga az alkalmazás írta,
+      ezért módosult vagy megsérült, és az adataid módosítása nem javítja ki.'
+    calculation_revision_rectificativa_context_missing: Pótló bevallás, de nem vetették
+      össze a kijavított bevallással. Ezt a rekordot maga az alkalmazás írta, ezért
+      módosult vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_row_identity_without_value: Egy mentett sorforrás-azonosság
+      mögött nincs sorérték. Ezt a rekordot maga az alkalmazás írta, ezért módosult
+      vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_row_index_mismatch: Egy sorrovat helye eltér a forrássora
+      helyétől (%{binding_id}, %{row_index}. sor). Ezt a rekordot maga az alkalmazás
+      írta, ezért módosult vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_row_source_identity_absent: A(z) %{binding_id} %{row_index}.
+      sorához nincs mentett forrásazonosság. Ezt a rekordot maga az alkalmazás írta,
+      ezért módosult vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_row_source_identity_mismatch: A(z) %{binding_id} %{row_index}.
+      sorához mentett forrásazonosság eltér attól, amelyet a rovata rögzít. Ezt a
+      rekordot maga az alkalmazás írta, ezért módosult vagy megsérült, és az adataid
+      módosítása nem javítja ki.
+    calculation_revision_row_source_shared: A(z) %{binding_id} %{row_index}. sora
+      több sorrovatot is táplál. Ezt a rekordot maga az alkalmazás írta, ezért módosult
+      vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_row_source_value_not_decimal: A(z) %{binding_id} %{row_index}.
+      sorának mentett értéke nem szám. Ezt a rekordot maga az alkalmazás írta, ezért
+      módosult vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_row_value_mismatch: Egy sorrovat értéke eltér a forrássorától
+      (%{binding_id}, %{row_index}. sor). Ezt a rekordot maga az alkalmazás írta,
+      ezért módosult vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_row_values_provenance_mismatch: A sorrovat-értékei és azok
+      eredete különböző sorokat fednek le. Ezt a rekordot maga az alkalmazás írta,
+      ezért módosult vagy megsérült, és az adataid módosítása nem javítja ki.
+    calculation_revision_secure_row_fields_missing: A mentett példányából hiányoznak
+      a sormezők, amelyeket minden ilyen példánynak tartalmaznia kell. Ezt a rekordot
+      maga az alkalmazás írta, ezért módosult vagy megsérült, és az adataid módosítása
+      nem javítja ki.
     canonical_actividad_asset_history_persistence: A titkosított eszköztörténet nem
       nyitható meg újra biztonságosan.
     canonical_aeat_sync_workspace_projection: A már betöltött AEAT-forrásokból nem
@@ -681,6 +750,9 @@ errors:
       a(z) %{field_id} mező nem írható ki az értékéből, mert az alkalmazás által hordozott
       hivatalos rekordterv és az érték nem egyezik. A hiba a kiviteli tervben van,
       nem a te adataidban, ezért az adataid módosítása nem javítja ki.'
+    integrity_modelos_calculation_revision: A mentett számítás ellentmond önmagának,
+      ezért semmi nem alkalmazható belőle. Ezt a rekordot maga az alkalmazás írta,
+      ezért módosult vagy megsérült, és az adataid módosítása nem javítja ki.
     integrity_modelos_operator_layer: A számításhoz mentett kezelői értékek ellentmondanak
       egymásnak. Az alkalmazás maga írta őket, ezért a rekord megváltozott vagy megsérült,
       és semmi sem alkalmazható belőle.
