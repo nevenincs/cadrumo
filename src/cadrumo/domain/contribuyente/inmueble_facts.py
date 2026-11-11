@@ -33,7 +33,6 @@ from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.parsing.dates import parse_iso8601_date
 from .arrendamiento_record import ArrendamientoRecord, Inquilino
 from .inmueble_record import (
-    AnejoInmueble,
     InmuebleRecord,
     InmuebleTitularidad,
     MejoraInmueble,
@@ -48,6 +47,7 @@ ENTRY_SEPARATOR: Final = ";"
 _PART_SEPARATOR: Final = ":"
 _CENTS: Final = Decimal("0.01")
 _YEAR: Final = re.compile(r"^\d{4}$")
+_WHOLE_NUMBER: Final = re.compile(r"^\d{1,9}$")
 _ROW_PATH: Final = re.compile(r"^(?P<section>[a-z_]+)\.(?P<row>\d+)\.(?P<leaf>[a-z0-9_]+)$")
 
 _TITULARIDAD_LEAVES: Final = (
@@ -57,16 +57,6 @@ _TITULARIDAD_LEAVES: Final = (
     "porcentaje_propiedad",
     "porcentaje_usufructo",
 )
-_ANEJO_LEAVES: Final = (
-    "anejo_referencia_catastral",
-    "anejo_adquisicion_titulo",
-    "anejo_fecha_adquisicion",
-    "anejo_importe_adquisicion",
-    "anejo_gastos_tributos_adquisicion",
-    "anejo_valor_suelo",
-    "anejo_valores_catastrales",
-)
-
 type RowValues = Mapping[str, str]
 
 
@@ -121,6 +111,12 @@ def _money(raw: str, *, leaf: str) -> Decimal:
 def money_text(value: Decimal) -> str:
     """Render an amount in its one stored form: exactly two decimals."""
     return format(value.quantize(_CENTS), "f")
+
+
+def _whole_number(raw: str, *, leaf: str) -> int:
+    if not _WHOLE_NUMBER.fullmatch(raw):
+        raise _refuse("write a whole number", leaf=leaf)
+    return int(raw)
 
 
 def _boolean(raw: str, *, leaf: str) -> bool:
@@ -236,7 +232,9 @@ def _titularidad(row: RowValues) -> InmuebleTitularidad | None:
         {
             "regimen": row["titularidad_regimen"],
             "titular": row["titular"],
-            "hijo_ordinal": _optional(row, "titular_hijo_ordinal", int),
+            "hijo_ordinal": _optional(
+                row, "titular_hijo_ordinal", lambda raw: _whole_number(raw, leaf="titular_hijo_ordinal")
+            ),
             "porcentaje_propiedad": _optional(row, "porcentaje_propiedad", _percentage("porcentaje_propiedad")),
             "porcentaje_usufructo": _optional(row, "porcentaje_usufructo", _percentage("porcentaje_usufructo")),
         },
@@ -251,38 +249,6 @@ def _percentage(leaf: str) -> Callable[[str], Decimal]:
         return value
 
     return read
-
-
-def _anejo(row: RowValues) -> AnejoInmueble | None:
-    if not any(leaf in row for leaf in _ANEJO_LEAVES):
-        return None
-    if "anejo_referencia_catastral" not in row:
-        raise _refuse("an accessory property states its cadastral reference", leaf="anejo_referencia_catastral")
-    return _validated(
-        AnejoInmueble,
-        {
-            "referencia_catastral": row["anejo_referencia_catastral"],
-            "adquisicion_titulo": row.get("anejo_adquisicion_titulo"),
-            "fecha_adquisicion": _optional(
-                row, "anejo_fecha_adquisicion", lambda raw: _date(raw, leaf="anejo_fecha_adquisicion")
-            ),
-            "importe_adquisicion": _optional(
-                row, "anejo_importe_adquisicion", lambda raw: _money(raw, leaf="anejo_importe_adquisicion")
-            ),
-            "gastos_tributos_adquisicion": _optional(
-                row,
-                "anejo_gastos_tributos_adquisicion",
-                lambda raw: _money(raw, leaf="anejo_gastos_tributos_adquisicion"),
-            ),
-            "valor_suelo": _optional(row, "anejo_valor_suelo", lambda raw: _money(raw, leaf="anejo_valor_suelo")),
-            "valores_catastrales": _optional(
-                row,
-                "anejo_valores_catastrales",
-                lambda raw: parse_valores_catastrales(raw, leaf="anejo_valores_catastrales"),
-            )
-            or (),
-        },
-    )
 
 
 def inmueble_from_row(clave: int, row: RowValues) -> InmuebleRecord:
@@ -317,7 +283,10 @@ def inmueble_from_row(clave: int, row: RowValues) -> InmuebleRecord:
             )
             or (),
             "usos": _optional(row, "usos", lambda raw: parse_usos(raw, leaf="usos")) or (),
-            "anejo": _anejo(row),
+            "inmueble_principal": _optional(
+                row, "inmueble_principal", lambda raw: _whole_number(raw, leaf="inmueble_principal")
+            ),
+            "importes_movimientos": row.get("importes_movimientos"),
             "amortizacion_acumulada": money_of("amortizacion_acumulada"),
             "amortizacion_acumulada_desde": date_of("amortizacion_acumulada_desde"),
         },
@@ -343,7 +312,7 @@ def arrendamiento_from_row(clave: int, row: RowValues) -> ArrendamientoRecord:
         ArrendamientoRecord,
         {
             "clave": clave,
-            "inmueble": int(row["inmueble"]),
+            "inmueble": _whole_number(row["inmueble"], leaf="inmueble"),
             "fecha_contrato": date_of("fecha_contrato"),
             "fecha_inicio": date_of("fecha_inicio"),
             "fecha_fin": date_of("fecha_fin"),
@@ -357,6 +326,7 @@ def arrendamiento_from_row(clave: int, row: RowValues) -> ArrendamientoRecord:
             "renta_inicial": money_of("renta_inicial"),
             "renta_ultima_contrato_anterior": money_of("renta_ultima_contrato_anterior"),
             "arrendatario_pariente_art24": flag_of("arrendatario_pariente_art24"),
+            "incumple_lau_17_6": flag_of("incumple_lau_17_6"),
         },
     )
 
@@ -379,6 +349,8 @@ def inmueble_row_values(record: InmuebleRecord) -> dict[str, str]:
         "usos": serialise_usos(record.usos) or None,
         "amortizacion_acumulada": _amount(record.amortizacion_acumulada),
         "amortizacion_acumulada_desde": record.amortizacion_acumulada_desde,
+        "inmueble_principal": record.inmueble_principal,
+        "importes_movimientos": record.importes_movimientos,
     }
     if record.titularidad is not None:
         titularidad = record.titularidad
@@ -388,17 +360,6 @@ def inmueble_row_values(record: InmuebleRecord) -> dict[str, str]:
             "titular_hijo_ordinal": titularidad.hijo_ordinal,
             "porcentaje_propiedad": titularidad.porcentaje_propiedad,
             "porcentaje_usufructo": titularidad.porcentaje_usufructo,
-        }
-    if record.anejo is not None:
-        anejo = record.anejo
-        optional |= {
-            "anejo_referencia_catastral": anejo.referencia_catastral,
-            "anejo_adquisicion_titulo": anejo.adquisicion_titulo,
-            "anejo_fecha_adquisicion": anejo.fecha_adquisicion,
-            "anejo_importe_adquisicion": _amount(anejo.importe_adquisicion),
-            "anejo_gastos_tributos_adquisicion": _amount(anejo.gastos_tributos_adquisicion),
-            "anejo_valor_suelo": _amount(anejo.valor_suelo),
-            "anejo_valores_catastrales": serialise_valores_catastrales(anejo.valores_catastrales) or None,
         }
     values.update({leaf: _enum_text(value) for leaf, value in optional.items() if value is not None})
     return values
@@ -418,6 +379,7 @@ def arrendamiento_row_values(record: ArrendamientoRecord) -> dict[str, str]:
         "renta_inicial": _amount(record.renta_inicial),
         "renta_ultima_contrato_anterior": _amount(record.renta_ultima_contrato_anterior),
         "arrendatario_pariente_art24": record.arrendatario_pariente_art24,
+        "incumple_lau_17_6": record.incumple_lau_17_6,
     }
     values = {
         "inmueble": str(record.inmueble),

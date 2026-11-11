@@ -16,9 +16,8 @@ import typer
 
 from cadrumo_client.commands.output import activate_subcommand_output_language
 
-from ....application.user_profile.rental_records import canonical_arrendamiento_values
 from ....core.external_constants import OutputLanguage
-from ....domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, inmuebles_from_facts
+from ....domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION
 from ..common import emit_envelope
 from ..config_rental_payloads import (
     ConfigProfileArrendamientoAddResult,
@@ -36,6 +35,7 @@ from .rental_row_doors import (
     merged_row,
     open_rental_door,
     require_row,
+    settled_row,
     stored_rows,
     submit_add,
     submit_edit,
@@ -58,12 +58,6 @@ def _row_line(row: int, facts: Mapping[str, str]) -> str:
     )
 
 
-def _canonical(state: RentalDoorState, values: Mapping[str, str], *, clave: int = 0) -> dict[str, str]:
-    return canonical_arrendamiento_values(
-        values, inmuebles=inmuebles_from_facts(state.path_values), operation=state.authority, clave=clave
-    )
-
-
 def _edit(
     ctx: typer.Context, row: int, values: list[str] | None, clear: list[str] | None
 ) -> tuple[RentalDoorState, bool, dict[str, str]]:
@@ -71,8 +65,9 @@ def _edit(
     state = open_rental_door(ctx)
     changes = checked_values(state, ARRENDAMIENTO_SECTION, values, clears)
     before = require_row(ARRENDAMIENTO_SECTION, row, stored_rows(state, ARRENDAMIENTO_SECTION))
-    after = _canonical(state, merged_row(before, changes, clears), clave=row)
-    changed, _current = submit_edit(state, ARRENDAMIENTO_SECTION, row, before, after)
+    after = merged_row(before, changes, clears)
+    changed, current = submit_edit(state, ARRENDAMIENTO_SECTION, row, before, after)
+    after = settled_row(ARRENDAMIENTO_SECTION, row, current)
     return state, changed, after
 
 
@@ -84,8 +79,8 @@ def arrendamiento_add(
     """Add one lease from ``--value LEAF=VALUE`` facts; the property it names must exist."""
     activate_subcommand_output_language(ctx, output_language)
     state = open_rental_door(ctx)
-    stored = _canonical(state, checked_values(state, ARRENDAMIENTO_SECTION, value))
-    row, current = submit_add(state, ARRENDAMIENTO_SECTION, stored)
+    row, current = submit_add(state, ARRENDAMIENTO_SECTION, checked_values(state, ARRENDAMIENTO_SECTION, value))
+    stored = settled_row(ARRENDAMIENTO_SECTION, row, current)
     emit_envelope(
         ctx,
         command="config.profile.arrendamiento.add",

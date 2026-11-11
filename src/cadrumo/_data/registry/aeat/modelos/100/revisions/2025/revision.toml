@@ -9021,11 +9021,6 @@ position = 119
 
 [[revisions."2025".family_positions]]
 family = "parameters"
-id = "renta-rental-ejercicio-amendment-year"
-position = 0
-
-[[revisions."2025".family_positions]]
-family = "parameters"
 id = "renta-rental-rehab-lookback-years"
 position = 1
 

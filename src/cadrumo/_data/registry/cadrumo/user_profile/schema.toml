@@ -76,6 +76,20 @@ description = "Porcentaje atribuible al Estado derivado exclusivamente del regim
 legal_refs = ["ley-12-2002:art-29"]
 
 [[derived_selectors]]
+pattern = "renta_capital_inmobiliario.reduccion_art_23_2_aplicable"
+derived_from = ["renta_arrendamiento.uso_vivienda", "renta_arrendamiento.fecha_contrato", "renta_arrendamiento.zona_tensionada", "renta_arrendamiento.incumple_lau_17_6"]
+entry_surface = "aeat config profile arrendamiento edit"
+description = "Si la reduccion del art. 23.2 LIRPF alcanza el arrendamiento del ejercicio: no alcanza al que no es de vivienda ni, en el regimen de tramos, al que incumple el art. 17.6 LAU."
+legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-23-2021", "ley-35-2006:dt-38"]
+
+[[derived_selectors]]
+pattern = "renta_capital_inmobiliario.reduccion_art_23_2_tier"
+derived_from = ["renta_arrendamiento.fecha_contrato", "renta_arrendamiento.zona_tensionada", "renta_arrendamiento.primer_arrendamiento_vivienda", "renta_arrendamiento.inquilinos", "renta_arrendamiento.arrendatario_entidad_tipo", "renta_arrendamiento.arrendatario_entidad_finalidad", "renta_arrendamiento.rehabilitacion_fecha", "renta_arrendamiento.renta_inicial", "renta_arrendamiento.renta_ultima_contrato_anterior"]
+entry_surface = "aeat config profile arrendamiento edit"
+description = "Regimen o tramo de la reduccion del art. 23.2 LIRPF del arrendamiento del ejercicio: el 60 por ciento anterior a la Ley 12/2023, o el 90, 70, 60 o 50 por ciento."
+legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-23-2021", "ley-35-2006:dt-38"]
+
+[[derived_selectors]]
 pattern = "irpf.estimation_directa"
 derived_from = ["irpf.estimation_regime"]
 entry_surface = "aeat config profile edit --irpf-estimation-regime REGIME"
@@ -1662,71 +1676,24 @@ description = "Usos distintos del arrendamiento como intervalos fechados: TIPO:D
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
 
 [[sections.fields]]
-key = "anejo_referencia_catastral"
-type = "string"
+key = "inmueble_principal"
+type = "integer"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Referencia catastral del anejo del inmueble, si lo hay (casilla 0090)."
+description = "Solo para un anejo (casillas 0074 y 0090): identificador de fila del inmueble principal con el que se arrienda, otra fila de esta misma seccion."
+minimum = "0"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
 
 [[sections.fields]]
-key = "anejo_adquisicion_titulo"
+key = "importes_movimientos"
 type = "enum"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Titulo de adquisicion del anejo (casillas 0133 a 0147): onerosa o lucrativa."
-enum_values = ["onerosa", "lucrativa"]
-legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
-
-[[sections.fields]]
-key = "anejo_fecha_adquisicion"
-type = "date"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Fecha de adquisicion del anejo."
-legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
-
-[[sections.fields]]
-key = "anejo_importe_adquisicion"
-type = "money"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Importe de adquisicion del anejo."
-minimum = "0"
-legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
-
-[[sections.fields]]
-key = "anejo_gastos_tributos_adquisicion"
-type = "money"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Gastos y tributos de adquisicion del anejo."
-minimum = "0"
-legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
-
-[[sections.fields]]
-key = "anejo_valor_suelo"
-type = "money"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Valor del suelo del anejo cuando la escritura lo declara."
-minimum = "0"
-legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
-
-[[sections.fields]]
-key = "anejo_valores_catastrales"
-type = "string"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Valores catastrales por ejercicio del IBI del anejo: ANO:TOTAL:CONSTRUCCION separados por punto y coma."
-legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+description = "Si los movimientos del libro mayor vinculados al inmueble recogen los importes del inmueble completo o solo la parte propia del contribuyente; se exige solo cuando el porcentaje de propiedad es inferior a 100."
+enum_values = ["inmueble_completo", "parte_propia"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
 
 [[sections.fields]]
 key = "amortizacion_acumulada"
@@ -1884,6 +1851,15 @@ sensitivity = "identity"
 effective_dated = true
 description = "El arrendatario es pariente dentro del grado del articulo 24 de la Ley 35/2006."
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+
+[[sections.fields]]
+key = "incumple_lau_17_6"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "El inmueble esta en zona tensionada y el contrato incumple el articulo 17.6 de la Ley de Arrendamientos Urbanos."
+legal_refs = ["ley-35-2006:art-23"]
 
 [[sections]]
 key = "renta_taxpayer"

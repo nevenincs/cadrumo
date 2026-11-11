@@ -444,6 +444,8 @@ profile:
           label: Data de fi
         fecha_inicio:
           label: Data d'inici
+        incumple_lau_17_6:
+          label: Incompleix l'art. 17.6 LAU (zona tensionada)
         inmueble:
           label: Immoble arrendat (clau de fila)
         inquilinos:
@@ -509,23 +511,6 @@ profile:
           label: Amortització acumulada atestada
         amortizacion_acumulada_desde:
           label: Data a la qual es refereix l'amortització acumulada
-        anejo_adquisicion_titulo:
-          choices:
-            lucrativa: Lucrativa
-            onerosa: Onerosa
-          label: Títol d'adquisició de l'annex
-        anejo_fecha_adquisicion:
-          label: Data d'adquisició de l'annex
-        anejo_gastos_tributos_adquisicion:
-          label: Despeses i tributs d'adquisició de l'annex
-        anejo_importe_adquisicion:
-          label: Import d'adquisició de l'annex
-        anejo_referencia_catastral:
-          label: Referència cadastral de l'annex
-        anejo_valor_suelo:
-          label: Valor del sòl de l'annex
-        anejo_valores_catastrales:
-          label: Valors cadastrals de l'annex per exercici de l'IBI
         direccion:
           label: Adreça de l'immoble
         fecha_adquisicion:
@@ -536,6 +521,13 @@ profile:
           label: Despeses i tributs d'adquisició
         importe_adquisicion:
           label: Import d'adquisició
+        importes_movimientos:
+          choices:
+            inmueble_completo: Imports de l'immoble sencer
+            parte_propia: La teva part
+          label: Imports dels moviments vinculats
+        inmueble_principal:
+          label: Immoble principal (clau de fila)
         mejoras:
           label: Millores anteriors al llibre major
         naturaleza:

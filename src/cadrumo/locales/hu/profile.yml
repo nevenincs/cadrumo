@@ -447,6 +447,8 @@ profile:
           label: Záró dátum
         fecha_inicio:
           label: Kezdő dátum
+        incumple_lau_17_6:
+          label: Megsérti a LAU 17.6. cikkét (feszített zóna)
         inmueble:
           label: Bérbeadott ingatlan (sorkulcs)
         inquilinos:
@@ -511,23 +513,6 @@ profile:
           label: Igazolt halmozott értékcsökkenés
         amortizacion_acumulada_desde:
           label: A halmozott értékcsökkenés vonatkozási napja
-        anejo_adquisicion_titulo:
-          choices:
-            lucrativa: Ingyenes
-            onerosa: Visszterhes
-          label: A tartozék szerzésének jogcíme
-        anejo_fecha_adquisicion:
-          label: A tartozék szerzésének dátuma
-        anejo_gastos_tributos_adquisicion:
-          label: A tartozék szerzési költségei és adói
-        anejo_importe_adquisicion:
-          label: A tartozék szerzési értéke
-        anejo_referencia_catastral:
-          label: A tartozék kataszteri hivatkozási száma
-        anejo_valor_suelo:
-          label: A tartozék telekértéke
-        anejo_valores_catastrales:
-          label: A tartozék kataszteri értékei IBI-évenként
         direccion:
           label: Az ingatlan címe
         fecha_adquisicion:
@@ -538,6 +523,13 @@ profile:
           label: Szerzési költségek és adók
         importe_adquisicion:
           label: Szerzési érték
+        importes_movimientos:
+          choices:
+            inmueble_completo: A teljes ingatlan összegei
+            parte_propia: Saját tulajdonrész
+          label: A kapcsolt főkönyvi tételek összegei
+        inmueble_principal:
+          label: Főingatlan (sorkulcs)
         mejoras:
           label: A főkönyv előtti felújítások
         naturaleza:

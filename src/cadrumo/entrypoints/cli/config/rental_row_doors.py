@@ -5,8 +5,9 @@ view once, judges the row it is about to write against the rest of the profile,
 and submits one registered row operation bound to the exact revision and content
 digest it read. A profile that moved in between refuses the write.
 
-The doors differ only in the record they build, so the canonical form of a row is
-computed by the caller and this module moves it to and from the profile.
+A door only parses: the registered row operation admits the row and stores its
+canonical form, the same for the generic row command and for these doors, and the
+door reports the row the settled view states.
 """
 
 from __future__ import annotations
@@ -111,6 +112,11 @@ def count_after(section: str, current: ProfileViewCollection) -> int:
     return len(rows_from_facts(section, facts_of(current)))
 
 
+def settled_row(section: str, row: int, current: ProfileViewCollection) -> dict[str, str]:
+    """Return the facts the settled view states for row: the stored form the operation admitted."""
+    return require_row(section, row, rows_from_facts(section, facts_of(current)))
+
+
 def submit_add(state: RentalDoorState, section: str, stored: dict[str, str]) -> tuple[int, ProfileViewCollection]:
     """Add one row; return its stable position and the settled view."""
     completed, current = execute_profile_mutation(
@@ -198,6 +204,7 @@ __all__ = [
     "merged_row",
     "open_rental_door",
     "require_row",
+    "settled_row",
     "stored_rows",
     "submit_add",
     "submit_edit",

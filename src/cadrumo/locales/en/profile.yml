@@ -446,6 +446,8 @@ profile:
           label: End date
         fecha_inicio:
           label: Start date
+        incumple_lau_17_6:
+          label: Breaches art. 17.6 LAU (tensioned zone)
         inmueble:
           label: Let property (row key)
         inquilinos:
@@ -510,23 +512,6 @@ profile:
           label: Attested cumulative amortisation
         amortizacion_acumulada_desde:
           label: Date the cumulative amortisation refers to
-        anejo_adquisicion_titulo:
-          choices:
-            lucrativa: For free
-            onerosa: For value
-          label: Accessory acquisition title
-        anejo_fecha_adquisicion:
-          label: Accessory acquisition date
-        anejo_gastos_tributos_adquisicion:
-          label: Accessory acquisition expenses and taxes
-        anejo_importe_adquisicion:
-          label: Accessory acquisition amount
-        anejo_referencia_catastral:
-          label: Accessory cadastral reference
-        anejo_valor_suelo:
-          label: Accessory land value
-        anejo_valores_catastrales:
-          label: Accessory cadastral values by IBI year
         direccion:
           label: Property address
         fecha_adquisicion:
@@ -537,6 +522,13 @@ profile:
           label: Acquisition expenses and taxes
         importe_adquisicion:
           label: Acquisition amount
+        importes_movimientos:
+          choices:
+            inmueble_completo: Whole-property amounts
+            parte_propia: Your own share
+          label: Amounts in the linked ledger rows
+        inmueble_principal:
+          label: Principal property (row key)
         mejoras:
           label: Improvements before the ledger
         naturaleza:

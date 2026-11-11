@@ -1235,3 +1235,29 @@ source_refs = ["boe-lirpf-statutory-facts", "aeat-renta-2022-manual-parte1"]
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["días que efectivamente el trabajador ha estado"]
+
+# Derived from the lease the profile holds for the ejercicio: whether the art. 23.2
+# reduction reaches it, and the regime or tier that sets its rate.
+[[revisions."2022".bindings]]
+id = "renta-rental-reduccion-art-23-2-aplicable"
+provider = { kind = "profile", profile_key = "renta_capital_inmobiliario.reduccion_art_23_2_aplicable" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-23-2021"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["arrendamiento de bienes inmuebles destinados a vivienda", "en su redacción vigente a 31 de diciembre de 2021"]
+
+[[revisions."2022".bindings]]
+id = "renta-rental-reduccion-art-23-2-tier"
+provider = { kind = "profile", profile_key = "renta_capital_inmobiliario.reduccion_art_23_2_tier" }
+value = { data_type = "enum", channel = "enum" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-23-2021"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["arrendamiento de bienes inmuebles destinados a vivienda", "en su redacción vigente a 31 de diciembre de 2021"]

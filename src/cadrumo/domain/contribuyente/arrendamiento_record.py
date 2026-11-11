@@ -91,6 +91,7 @@ class ArrendamientoRecord(BaseModel):
     renta_inicial: Decimal | None = Field(default=None, ge=0)
     renta_ultima_contrato_anterior: Decimal | None = Field(default=None, ge=0)
     arrendatario_pariente_art24: bool | None = None
+    incumple_lau_17_6: bool | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

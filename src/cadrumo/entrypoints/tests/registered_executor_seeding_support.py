@@ -406,6 +406,7 @@ def seeded_repeatable_row(
         expected_content_digest=cast(str, baseline["expected_content_digest"]),
         schema=operation.profile_schema(),
         profile_decode_context=decode_context,
+        authority=operation,
     )
     return str(mutation.row_index), {
         "expected_revision": mutation.record.record_revision,

@@ -130,6 +130,7 @@ def test_real_encrypted_overview_pages_round_trip_every_field(tmp_path: Path) ->
                 expected_content_digest=baseline.content_digest,
                 schema=authority.profile_schema(),
                 profile_decode_context=authority.profile_decode_context(),
+                authority=authority,
             )
             collection = _collection(profile_id, authority)
             assert len(collection.pages) > 1

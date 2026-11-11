@@ -2,9 +2,9 @@
 
 A record holds what stays true of a property from one ejercicio to the next:
 where it is, who holds it and in what right, how it was acquired, its dated
-cadastral values, the uses other than letting it has had and one optional
-accessory property. It never holds an annual total: amounts come from the
-ledger rows that prove them.
+cadastral values, the uses other than letting it has had and, for an
+accessory, the property it is let with. It never holds an annual total:
+amounts come from the ledger rows that prove them.
 
 Every refusal is a typed error that names the field and never echoes the value
 typed. A fact the taxpayer has not stated stays ``None``; the calculation that
@@ -78,6 +78,13 @@ class AdquisicionTitulo(StrEnum):
 
     ONEROSA = "onerosa"
     LUCRATIVA = "lucrativa"
+
+
+class ImportesMovimientos(StrEnum):
+    """Whether the ledger rows linked to a co-owned property hold whole-property amounts or the taxpayer's own share."""
+
+    INMUEBLE_COMPLETO = "inmueble_completo"
+    PARTE_PROPIA = "parte_propia"
 
 
 class UsoInmuebleTipo(StrEnum):
@@ -194,26 +201,6 @@ class MejoraInmueble(BaseModel):
     importe: Decimal = Field(gt=0)
 
 
-class AnejoInmueble(BaseModel):
-    """The accessory property that is let together with the property (casillas 0090 and 0133 to 0147)."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    referencia_catastral: str
-    adquisicion_titulo: AdquisicionTitulo | None = None
-    fecha_adquisicion: date | None = None
-    importe_adquisicion: Decimal | None = Field(default=None, ge=0)
-    gastos_tributos_adquisicion: Decimal | None = Field(default=None, ge=0)
-    valor_suelo: Decimal | None = Field(default=None, ge=0)
-    valores_catastrales: tuple[ValorCatastral, ...] = ()
-
-    @field_validator("referencia_catastral")
-    @classmethod
-    @pydantic_validation_boundary
-    def _reference_shape(cls, value: str) -> str:
-        return canonical_referencia_catastral(value, field="anejo_referencia_catastral")
-
-
 def canonical_referencia_catastral(raw: str, *, field: str) -> str:
     """Return the cadastral reference in its canonical upper-case form or refuse it."""
     canonical = raw.strip().upper()
@@ -242,7 +229,8 @@ class InmuebleRecord(BaseModel):
     mejoras: tuple[MejoraInmueble, ...] = ()
     valores_catastrales: tuple[ValorCatastral, ...] = ()
     usos: tuple[UsoInmueble, ...] = ()
-    anejo: AnejoInmueble | None = None
+    inmueble_principal: int | None = Field(default=None, ge=0)
+    importes_movimientos: ImportesMovimientos | None = None
     amortizacion_acumulada: Decimal | None = Field(default=None, ge=0)
     amortizacion_acumulada_desde: date | None = None
 
@@ -273,8 +261,14 @@ class InmuebleRecord(BaseModel):
         ):
             raise _refuse("the land value cannot exceed the acquisition amount", field="valor_suelo")
         _require_distinct_years(self.valores_catastrales, field="valores_catastrales")
-        if self.anejo is not None:
-            _require_distinct_years(self.anejo.valores_catastrales, field="anejo_valores_catastrales")
+        if self.inmueble_principal is not None and self.inmueble_principal == self.clave:
+            raise _refuse("an accessory property cannot be its own principal", field="inmueble_principal")
+        share = self.titularidad.porcentaje_propiedad if self.titularidad is not None else None
+        if share is not None and share < _PERCENT_CEILING and self.importes_movimientos is None:
+            raise _refuse(
+                "a co-owned property states whether its ledger rows hold whole-property or own-share amounts",
+                field="importes_movimientos",
+            )
         for index, uso in enumerate(self.usos):
             if any(uso.overlaps(other) for other in self.usos[index + 1 :]):
                 raise _refuse("two uses of the same type cannot share a day", field="usos")
@@ -293,7 +287,7 @@ def _require_distinct_years(values: tuple[ValorCatastral, ...], *, field: str) -
 
 __all__ = [
     "AdquisicionTitulo",
-    "AnejoInmueble",
+    "ImportesMovimientos",
     "InmuebleNaturaleza",
     "InmuebleRecord",
     "InmuebleSituacion",

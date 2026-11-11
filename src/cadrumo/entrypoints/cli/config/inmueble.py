@@ -1,14 +1,15 @@
 """Operator-facing door for the ``renta_inmueble`` property records.
 
 Four verbs are mounted under ``config profile inmueble``: ``add``, ``edit``,
-``list`` and ``remove``. Each reads the complete profile facts once and submits a
-registered row operation bound to the exact revision and content digest it read.
+``list`` and ``remove``. Each reads the complete profile facts once, parses the leaves
+typed and submits a registered row operation bound to the exact revision and content
+digest it read. The operation judges the row; the door only parses.
 
 A row states identification and structural facts only: where the property is, who
 holds it and in what right, how it was acquired, its dated cadastral values, the
-uses other than letting and one optional accessory property. It never states an
-annual total; amounts come from the ledger. A property that a lease still names
-cannot be removed.
+uses other than letting and, for an accessory, its principal property. It never states an
+annual total; amounts come from the ledger. A property that a lease or an accessory
+still names cannot be removed.
 """
 
 from __future__ import annotations
@@ -19,9 +20,8 @@ import typer
 
 from cadrumo_client.commands.output import activate_subcommand_output_language
 
-from ....application.user_profile.rental_records import canonical_inmueble_values, require_inmueble_removable
 from ....core.external_constants import OutputLanguage
-from ....domain.contribuyente.inmueble_facts import INMUEBLE_SECTION, arrendamientos_from_facts
+from ....domain.contribuyente.inmueble_facts import INMUEBLE_SECTION
 from ..common import emit_envelope
 from ..config_rental_payloads import (
     ConfigProfileInmuebleAddResult,
@@ -37,6 +37,7 @@ from .rental_row_doors import (
     merged_row,
     open_rental_door,
     require_row,
+    settled_row,
     stored_rows,
     submit_add,
     submit_edit,
@@ -67,8 +68,8 @@ def inmueble_add(
     """Add one property from ``--value LEAF=VALUE`` facts; it is stored only if it coheres as a record."""
     activate_subcommand_output_language(ctx, output_language)
     state = open_rental_door(ctx)
-    stored = canonical_inmueble_values(checked_values(state, INMUEBLE_SECTION, value))
-    row, current = submit_add(state, INMUEBLE_SECTION, stored)
+    row, current = submit_add(state, INMUEBLE_SECTION, checked_values(state, INMUEBLE_SECTION, value))
+    stored = settled_row(INMUEBLE_SECTION, row, current)
     emit_envelope(
         ctx,
         command="config.profile.inmueble.add",
@@ -92,8 +93,9 @@ def inmueble_edit(
     state = open_rental_door(ctx)
     values = checked_values(state, INMUEBLE_SECTION, value, clears)
     before = require_row(INMUEBLE_SECTION, row, stored_rows(state, INMUEBLE_SECTION))
-    after = canonical_inmueble_values(merged_row(before, values, clears), clave=row)
-    changed, _current = submit_edit(state, INMUEBLE_SECTION, row, before, after)
+    after = merged_row(before, values, clears)
+    changed, current = submit_edit(state, INMUEBLE_SECTION, row, before, after)
+    after = settled_row(INMUEBLE_SECTION, row, current)
     emit_envelope(
         ctx,
         command="config.profile.inmueble.edit",
@@ -131,7 +133,6 @@ def inmueble_remove(
     activate_subcommand_output_language(ctx, output_language)
     state = open_rental_door(ctx)
     require_row(INMUEBLE_SECTION, row, stored_rows(state, INMUEBLE_SECTION))
-    require_inmueble_removable(row, arrendamientos_from_facts(state.path_values))
     current = submit_remove(state, INMUEBLE_SECTION, row)
     total = count_after(INMUEBLE_SECTION, current)
     emit_envelope(

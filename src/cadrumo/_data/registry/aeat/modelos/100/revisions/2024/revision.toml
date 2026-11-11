@@ -632,8 +632,7 @@ fields = { legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"], source_ref
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "0150" }
-fields = { input_kind = "manual", legal_refs = ["ley-35-2006:art-23"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"] }
-removed_fields = ["formula"]
+fields = { legal_refs = ["ley-35-2006:art-23", "ley-35-2006:dt-38"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"] }
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "0151" }
@@ -9224,9 +9223,23 @@ family = "parameters"
 selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-clase-admite-intangible"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
-[[revisions."2024".family_removals]]
+[[revisions."2024".family_overrides]]
 family = "formulas"
-selector = {revision = "2023", id = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2-redaccion-2021"}
+selector = {revision = "2023", id = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-23", "ley-35-2006:dt-38"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["rendimientos netos positivos", "90 por 100", "70 por 100", "60 por 100", "50 por 100"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "renta-rental-reduccion-art-23-2-aplicable"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-23", "ley-35-2006:dt-38"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "renta-rental-reduccion-art-23-2-tier"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-23", "ley-35-2006:dt-38"]}
+sequence_removals = {legal_refs = [0]}
 
 [[revisions."2024".family_positions]]
 family = "formulas"

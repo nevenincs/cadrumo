@@ -25,7 +25,13 @@ from ..inmueble_facts import (
     parse_valores_catastrales,
     serialise_valores_catastrales,
 )
-from ..inmueble_record import InmuebleRecord, InmuebleSituacion, TitularidadRegimen, UsoInmuebleTipo
+from ..inmueble_record import (
+    ImportesMovimientos,
+    InmuebleRecord,
+    InmuebleSituacion,
+    TitularidadRegimen,
+    UsoInmuebleTipo,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -34,7 +40,6 @@ CATASTRAL = "9872023VH5797S0001WX"
 DAY = date(YEAR - 5, 1, 1).isoformat()
 MIDDLE = date(YEAR - 5, 6, 1).isoformat()
 LATER = date(YEAR - 5, 12, 31).isoformat()
-ACCESSORY = "9872023VH5797S0002EQ"
 TENANT = "X0001500M"
 
 
@@ -55,9 +60,8 @@ def _property_row() -> dict[str, str]:
         "mejoras": f"{date(YEAR - 6, 5, 1).isoformat()}:1500.00",
         "valores_catastrales": f"{YEAR}:90000.00:54000.00;{YEAR - 1}:88000.00:52800.00",
         "usos": f"vivienda_habitual:{date(YEAR - 12, 4, 1).isoformat()}:{date(YEAR - 8, 12, 31).isoformat()}",
-        "anejo_referencia_catastral": ACCESSORY,
-        "anejo_importe_adquisicion": "9000.00",
-        "anejo_valores_catastrales": f"{YEAR}:4000.00:2000.00",
+        "inmueble_principal": "1",
+        "importes_movimientos": "parte_propia",
         "amortizacion_acumulada": "21000.00",
         "amortizacion_acumulada_desde": date(YEAR, 1, 1).isoformat(),
     }
@@ -75,6 +79,7 @@ def _lease_row() -> dict[str, str]:
         "renta_inicial": "850.00",
         "renta_ultima_contrato_anterior": "900.00",
         "arrendatario_pariente_art24": "false",
+        "incumple_lau_17_6": "false",
     }
 
 
@@ -88,8 +93,8 @@ def test_a_property_round_trips_through_its_stored_facts() -> None:
     assert record.titularidad is not None
     assert record.titularidad.regimen is TitularidadRegimen.PLENO_DOMINIO
     assert record.usos[0].tipo is UsoInmuebleTipo.VIVIENDA_HABITUAL
-    assert record.anejo is not None
-    assert record.anejo.referencia_catastral == ACCESSORY
+    assert record.inmueble_principal == 1
+    assert record.importes_movimientos is ImportesMovimientos.PARTE_PROPIA
 
 
 def test_a_lease_round_trips_through_its_stored_facts() -> None:
@@ -120,7 +125,8 @@ def test_a_minimal_property_states_nothing_it_was_not_told() -> None:
     record = inmueble_from_row(0, {"situacion": "4"})
 
     assert record.titularidad is None
-    assert record.anejo is None
+    assert record.inmueble_principal is None
+    assert record.importes_movimientos is None
     assert record.valores_catastrales == ()
     assert inmueble_row_values(record) == {"situacion": "4"}
 
@@ -150,7 +156,10 @@ def test_a_minimal_property_states_nothing_it_was_not_told() -> None:
         ({"amortizacion_acumulada_desde": ""}, "amortizacion_acumulada"),
         ({"importe_adquisicion": "1.234"}, "importe_adquisicion"),
         ({"fecha_adquisicion": "4 March"}, "fecha_adquisicion"),
-        ({"anejo_referencia_catastral": "SHORT"}, "anejo_referencia_catastral"),
+        ({"inmueble_principal": "0"}, "inmueble_principal"),
+        ({"inmueble_principal": "first"}, "inmueble_principal"),
+        ({"importes_movimientos": ""}, "importes_movimientos"),
+        ({"importes_movimientos": "mitad"}, "importes_movimientos"),
     ],
 )
 def test_a_property_that_does_not_cohere_is_refused_naming_the_leaf(change: dict[str, str], leaf: str) -> None:
@@ -167,9 +176,18 @@ def test_a_property_without_a_situation_is_refused() -> None:
         inmueble_from_row(0, {"referencia_catastral": CATASTRAL})
 
 
-def test_an_accessory_needs_its_reference_and_a_titular_needs_its_regime() -> None:
-    with pytest.raises(ProfileAnswerTypeError):
-        inmueble_from_row(0, {"situacion": "5", "anejo_valor_suelo": "10.00"})
+def test_the_ledger_scope_is_required_only_below_a_full_share() -> None:
+    full = {"situacion": "5", "titularidad_regimen": "pleno_dominio", "titular": "primer_declarante"}
+
+    assert inmueble_from_row(0, full | {"porcentaje_propiedad": "100"}).importes_movimientos is None
+    with pytest.raises(ProfileAnswerTypeError) as refusal:
+        inmueble_from_row(0, full | {"porcentaje_propiedad": "99.99"})
+    assert (refusal.value.context or {}).get("key") == "importes_movimientos"
+    shared = inmueble_from_row(0, full | {"porcentaje_propiedad": "50", "importes_movimientos": "inmueble_completo"})
+    assert shared.importes_movimientos is ImportesMovimientos.INMUEBLE_COMPLETO
+
+
+def test_a_titular_needs_its_regime() -> None:
     with pytest.raises(ProfileAnswerTypeError):
         inmueble_from_row(0, {"situacion": "5", "titular": "conyuge"})
 
@@ -182,6 +200,7 @@ def test_combined_holding_states_both_percentages_and_the_pair_cannot_exceed_one
         "titular_hijo_ordinal": "2",
         "porcentaje_propiedad": "60",
         "porcentaje_usufructo": "40",
+        "importes_movimientos": "parte_propia",
     }
 
     assert inmueble_from_row(0, combined).titularidad is not None

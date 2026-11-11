@@ -169,15 +169,10 @@ _PROPERTY_LEAVES: Final[tuple[str, ...]] = (
     "mejoras",
     "valores_catastrales",
     "usos",
-    "anejo_referencia_catastral",
-    "anejo_adquisicion_titulo",
-    "anejo_fecha_adquisicion",
-    "anejo_importe_adquisicion",
-    "anejo_gastos_tributos_adquisicion",
-    "anejo_valor_suelo",
-    "anejo_valores_catastrales",
     "amortizacion_acumulada",
     "amortizacion_acumulada_desde",
+    "inmueble_principal",
+    "importes_movimientos",
 )
 _LEASE_LEAVES: Final[tuple[str, ...]] = (
     "inmueble",
@@ -194,6 +189,7 @@ _LEASE_LEAVES: Final[tuple[str, ...]] = (
     "renta_inicial",
     "renta_ultima_contrato_anterior",
     "arrendatario_pariente_art24",
+    "incumple_lau_17_6",
 )
 
 PATHS_INTRODUCED_IN_V7: Final[frozenset[str]] = frozenset(
