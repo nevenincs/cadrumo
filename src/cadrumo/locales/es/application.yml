@@ -1040,6 +1040,7 @@ application:
         undetermined_establishment: No consta dónde está establecida una de las partes
         unmodelled_invoice_class: La clase de factura que declara no tiene representación
           aquí
+        unnumbered_invoice: El número de factura leído no es un número
         unresolved_direction: No está claro qué parte emitió el documento
     entry_options:
       deduction_fact_kind:
