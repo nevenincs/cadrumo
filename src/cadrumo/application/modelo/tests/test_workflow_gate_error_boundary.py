@@ -38,8 +38,8 @@ def _aborted_result(
 ) -> WorkflowResult:
     """Build a realistic ABORTED workflow result with nested steps."""
 
-    started = datetime(1980, 5, 21, 6, 49, 48, 69357, tzinfo=UTC)
-    ended = datetime(1980, 5, 21, 6, 49, 48, 240000, tzinfo=UTC)
+    started = datetime(2026, 5, 21, 6, 49, 48, 69357, tzinfo=UTC)
+    ended = datetime(2026, 5, 21, 6, 49, 48, 240000, tzinfo=UTC)
     return WorkflowResult(
         run_id="1de72c8978487300",
         started_at=started,

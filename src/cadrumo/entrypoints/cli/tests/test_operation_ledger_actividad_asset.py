@@ -86,7 +86,6 @@ from ....application.actividad_asset.operation_dtos import (
 from ....application.actividad_asset.result_requirements import ActivityAssetInspectionRevision
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection, asset_schedule_history
 from ....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from ....domain.renta.actividad_asset.election import (
@@ -109,9 +108,6 @@ from ....domain.renta.actividad_asset.lifecycle import (
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ....domain.renta.actividad_asset.schedule import ScheduleAuthority, ScheduledAmortizationCharge, schedule_charge
 from .. import operation_ledger_actividad_asset as bridge
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -138,7 +134,7 @@ def _revision(*, number: int = 1, supersedes: str | None = None) -> ActivityAsse
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="bridge allocation",
         ),
-        in_service_date=date(_YEAR - 1, 1, 1),
+        in_service_date=date(2025, 1, 1),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
@@ -156,18 +152,18 @@ def _schedule(revision: ActivityAssetRevision) -> ScheduledAmortizationCharge:
     return schedule_charge(
         revision,
         ScheduleAuthority(
-            tax_year=_YEAR - 1,
+            tax_year=2025,
             asset_kind=AssetKind.MATERIAL,
             method=AmortizationMethod.LINEAR,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
-            maximum_period_ends_on=date(_YEAR - 1 + 10, 1, 1),
+            maximum_period_ends_on=date(2035, 1, 1),
             authority_generation=_AUTHORITY.logical_generation,
             source_reference="bridge-pinned-source",
         ),
-        covered_from=date(_YEAR - 1, 1, 1),
-        covered_until=date(_YEAR, 1, 1),
-        history=asset_schedule_history((), (revision,), asset_id=revision.asset_id, tax_year=_YEAR - 1),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        history=asset_schedule_history((), (revision,), asset_id=revision.asset_id, tax_year=2025),
     )
 
 
@@ -328,8 +324,8 @@ def test_forecast_bridge_preserves_dates_and_explicit_decimal_wire_fact(monkeypa
         bridge.forecast_activity_asset(
             _context(),
             asset_id=revision.asset_id,
-            covered_from=date(_YEAR - 1, 1, 1),
-            covered_until=date(_YEAR, 1, 1),
+            covered_from=date(2025, 1, 1),
+            covered_until=date(2026, 1, 1),
             requested_free_amount=Decimal("12.50"),
             supersedes_claim_id=None,
         )
@@ -395,7 +391,7 @@ def test_claim_bridge_correlates_exact_claim_identity_and_update_effect(monkeypa
 def test_filing_handoff_bridge_correlates_requested_frame_without_effect(monkeypatch: pytest.MonkeyPatch) -> None:
     projection_row = ClaimProjection(
         target_casilla_id="0208",
-        tax_year=_YEAR - 1,
+        tax_year=2025,
         claim_ids=("c" * 64,),
         amount=Decimal("78.00"),
     )
@@ -407,17 +403,17 @@ def test_filing_handoff_bridge_correlates_requested_frame_without_effect(monkeyp
         intangible_m100=empty_row,
         material_m130=M130AccrualProjection(
             target_casilla_id="02",
-            tax_year=_YEAR - 1,
+            tax_year=2025,
             amount=Decimal("78.00"),
             contributions=(M130Contribution(asset_id="asset-1", amount=Decimal("78.00"), claim_id="c" * 64),),
         ),
-        intangible_m130=M130AccrualProjection(target_casilla_id="02", tax_year=_YEAR - 1, amount=Decimal("0.00")),
+        intangible_m130=M130AccrualProjection(target_casilla_id="02", tax_year=2025, amount=Decimal("0.00")),
     )
     projection = ActivityAssetFilingHandoffProjection(
         profile_id=_PROFILE,
         authority=_AUTHORITY,
         outcome="succeeded",
-        tax_year=_YEAR - 1,
+        tax_year=2025,
         m130_period="4T",
         filing_handoff=ActivityAssetFilingHandoffSnapshot.from_domain(handoff),
     )
@@ -433,7 +429,7 @@ def test_filing_handoff_bridge_correlates_requested_frame_without_effect(monkeyp
         request_type=ActivityAssetFilingHandoffRequest,
     )
 
-    assert bridge.filing_handoff_activity_asset(_context(), tax_year=_YEAR - 1, m130_period="4T") is projection
+    assert bridge.filing_handoff_activity_asset(_context(), tax_year=2025, m130_period="4T") is projection
     request = cast(ActivityAssetFilingHandoffRequest, requests[0])
     assert request.profile_id == _PROFILE
     assert (request.tax_year, request.m130_period) == (projection.tax_year, projection.m130_period)
@@ -539,10 +535,10 @@ def test_form_options_bridge_carries_the_kind_and_year(monkeypatch: pytest.Monke
         authority=_AUTHORITY,
         outcome="succeeded",
         options=ActivityAssetFormOptionsView(
-            tax_year=_YEAR - 1,
+            tax_year=2025,
             asset_kind=AssetKind.MATERIAL,
             regime=DirectEstimationRegime.NORMAL,
-            edition=ActivityAssetEdition(revision_id="bridge-edition", authored_filing_year=_YEAR - 1, projected=False),
+            edition=ActivityAssetEdition(revision_id="bridge-edition", authored_filing_year=2025, projected=False),
             methods=(AmortizationMethod.LINEAR,),
             declared_activities=(),
             method_facts=(),
@@ -558,11 +554,9 @@ def test_form_options_bridge_carries_the_kind_and_year(monkeypatch: pytest.Monke
         request_type=ActivityAssetFormOptionsRequest,
     )
 
-    assert (
-        bridge.form_options_activity_asset(_context(), asset_kind=AssetKind.MATERIAL, tax_year=_YEAR - 1) is projection
-    )
+    assert bridge.form_options_activity_asset(_context(), asset_kind=AssetKind.MATERIAL, tax_year=2025) is projection
     request = cast(ActivityAssetFormOptionsRequest, requests[0])
-    assert (request.asset_kind, request.tax_year) == (AssetKind.MATERIAL, _YEAR - 1)
+    assert (request.asset_kind, request.tax_year) == (AssetKind.MATERIAL, 2025)
 
 
 def test_acquisition_candidates_bridge_sends_the_exact_profile(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -628,7 +622,7 @@ def test_read_bridge_refuses_a_refusal_the_receipt_did_not_settle(monkeypatch: p
 
 def _baja_snapshot() -> ActivityAssetDisposalSnapshot:
     return ActivityAssetDisposalSnapshot(
-        disposal_date=date(_YEAR, 6, 30),
+        disposal_date=date(2026, 6, 30),
         reason=ActivityAssetDisposalReason.SALE,
         proceeds=PublicDecimal(decimal="900.00"),
         transmission_costs=PublicDecimal(decimal="10.00"),
@@ -672,7 +666,7 @@ def test_disposal_calculate_bridge_has_no_effect_with_or_without_a_stated_baja(
         outcome="succeeded",
         asset_id="bridge-asset",
         calculation=ActivityAssetDisposalCalculationView(
-            disposal_date=date(_YEAR, 6, 30),
+            disposal_date=date(2026, 6, 30),
             reason=ActivityAssetDisposalReason.WITHDRAWAL,
             acquisition_value=PublicDecimal(decimal="900.00"),
             deducted=PublicDecimal(decimal="100.00"),

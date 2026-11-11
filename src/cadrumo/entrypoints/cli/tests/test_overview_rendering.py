@@ -30,7 +30,6 @@ from ....application.overview.next_actions import OverviewStatusNextStepId
 from ....core.i18n.render import lookup_translation
 from ....core.json_contract import Notice, ResolvedNoticeAction
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import TaxpayerProfile
 from ..common import action_text_lines
 from ..overview_rendering import (
@@ -38,9 +37,6 @@ from ..overview_rendering import (
     overview_coverage_notices,
     overview_status_output,
 )
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -358,9 +354,9 @@ def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap()
         iva_regime=IVARegime("SIMPLIFICADO"),
         enrollment=ModeloEnrollment(large_company=False),
     )
-    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 4, 20))
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     with bundled_indexed_authority().operation() as operation:
-        calendar = build_overview_calendar(profile, rng, operation=operation, today=date(_YEAR, 4, 1))
+        calendar = build_overview_calendar(profile, rng, operation=operation, today=date(2026, 4, 1))
 
     _, lines, notices = overview_calendar_output(calendar, rng, evidence_notices=())
 

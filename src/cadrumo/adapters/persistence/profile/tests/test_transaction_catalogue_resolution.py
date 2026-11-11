@@ -11,15 +11,12 @@ import pytest
 
 from .....application.workflow.active_profile import require_active_profile_bucket_id
 from .....core.errors.hierarchy import NoActiveProfileError
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..transactions import TransactionCatalogueRepository
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -40,8 +37,8 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _transaction(provider_id: str) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR, 5, 1),
-        value_date=date(_YEAR, 5, 1),
+        booked_date=date(2026, 5, 1),
+        value_date=date(2026, 5, 1),
         amount=Decimal("42.00"),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -51,7 +48,7 @@ def _transaction(provider_id: str) -> Transaction:
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(1980, 5, 1, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},

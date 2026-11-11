@@ -26,7 +26,7 @@ from cadrumo.application.user_profile.tests.profile_values import complete_profi
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
@@ -47,7 +47,7 @@ pytestmark = [
 # edition before it.
 _REVIEWED_EDITION = newest_authored_edition("100")
 
-_CAPTURED_AT = datetime(filing_year_envelope().horizon, 6, 29, 12, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
 
 #: The withholding the synthetic payer's certificate states.
 _CERTIFIED_RETENCION = Decimal("4200")

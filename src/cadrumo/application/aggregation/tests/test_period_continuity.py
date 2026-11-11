@@ -21,17 +21,11 @@ from itertools import pairwise
 import pytest
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEARS = filing_year_envelope().years
+_YEARS = (2024, 2025, 2026)  # 2024 is a leap year: exercises Feb-29 month ends.
 _QUARTER_TOKENS = ("1T", "2T", "3T", "4T")
-
-
-def test_the_supported_years_include_a_leap_year() -> None:
-    """The continuity walks below only exercise Feb-29 month ends if the span holds a leap year."""
-    assert any(calendar.isleap(year) for year in _YEARS)
 
 
 def _quarter_period(year: int, quarter_index: int) -> Period:

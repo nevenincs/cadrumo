@@ -53,7 +53,7 @@ from ..supervisor_refusal import validated_refusal_receipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(1980, 9, 28, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 9, 28, 12, 0, tzinfo=UTC)
 _DETAIL_REF: ContentDigest = "e" * 64
 _REFUSAL_CODE = "REFUSED_RUNTIME_FRONTEND"
 _OTHER_REFUSAL_CODE = "REFUSED_WIZARD_MISSING_FLAG"

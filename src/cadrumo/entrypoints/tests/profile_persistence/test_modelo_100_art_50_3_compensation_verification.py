@@ -31,7 +31,6 @@ import pytest
 from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
     supported_authored_exercises,
     supported_exercises_with_projection,
 )
@@ -95,7 +94,7 @@ _VERIFIED_FILING_YEARS = supported_authored_exercises(_MODELO)
 #: The verified exercises whose prior return is itself a supported one.
 _YEARS_WITH_SUPPORTED_PRIOR = _VERIFIED_FILING_YEARS[1:]
 _PROFILE_ID = "10010000-0000-4100-8100-000000000503"
-_CLOCK = datetime(filing_year_envelope().horizon, 6, 30, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 _NOT_AT_MAXIMUM_KEY = "application.modelo.findings.application_not_required_maximum"
 

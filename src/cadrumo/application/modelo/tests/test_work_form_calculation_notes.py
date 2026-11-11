@@ -24,7 +24,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -56,11 +55,9 @@ from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_wor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
-_MODELO, _YEAR, _QUARTER = "130", _YEAR, "1T"
+_MODELO, _YEAR, _QUARTER = "130", 2026, "1T"
 _PRINTED = "01"
-_CLOCK = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 _WORK_UNIT = "c" * 64
 
 

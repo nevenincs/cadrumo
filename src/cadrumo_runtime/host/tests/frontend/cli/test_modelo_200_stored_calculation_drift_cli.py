@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -11,7 +10,6 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.tests.log_records import delivered_text
 
 from ...native_profile_facts import native_general_iva_facts
@@ -21,10 +19,6 @@ from .profile_cli_support import invoke_protected_profile
 __all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = str(filing_year_envelope().horizon)
-_REVISION = str(revision_covering("200", int(_YEAR)).id)
-_ACTIVITY_START = date(int(_YEAR), 1, 1).isoformat()
 
 
 def _invoke(arguments: list[str]):
@@ -55,8 +49,8 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     work = _invoke(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "200", "--year", _YEAR, "--period", "0A",
-            "--revision", _REVISION, "--name", f"SA M200 {_YEAR}", "--by", "s421",
+            "--modelo", "200", "--year", "2026", "--period", "0A",
+            "--revision", "2025-y-siguientes", "--name", "SA M200 2026", "--by", "s421",
         ],
     )  # fmt: skip
     assert work.exit_code == 0, work.output
@@ -64,8 +58,8 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     calculation = _invoke(
         [
             "app", "modelo", "work", "calculate",
-            "--modelo", "200", "--year", _YEAR, "--period", "0A",
-            "--revision", _REVISION,
+            "--modelo", "200", "--year", "2026", "--period", "0A",
+            "--revision", "2025-y-siguientes",
             "--casilla", "DP200012:00501=100000",
             "--casilla", "DP200013:00417=0",
             "--casilla", "DP200013:00418=0",
@@ -85,7 +79,7 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     assert calculation.exit_code == 0, calculation.output
 
     profile_edit = invoke_protected_profile(
-        "sa-drift", "edit", "--quiet", "--activity-start-date", _ACTIVITY_START, json_output=True
+        "sa-drift", "edit", "--quiet", "--activity-start-date", "2026-01-01", json_output=True
     )
     assert profile_edit.exit_code == 0, profile_edit.output
 
@@ -93,8 +87,8 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     verification = _invoke(
         [
             "app", "modelo", "work", "verify",
-            "--modelo", "200", "--year", _YEAR, "--period", "0A",
-            "--revision", _REVISION, "--by", "s421",
+            "--modelo", "200", "--year", "2026", "--period", "0A",
+            "--revision", "2025-y-siguientes", "--by", "s421",
         ],
     )  # fmt: skip
 
@@ -103,9 +97,9 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     assert "Traceback" not in delivered_text(caplog)
     response = json.loads(verification.output)
     report = response["result"]
-    assert report["registry_snapshot_ref"]["revision_id"] == _REVISION
+    assert report["registry_snapshot_ref"]["revision_id"] == "2025-y-siguientes"
     assert report["completeness_status"] == "complete"
     assert report["granted_verificado_completo"] is True
     assert report["findings"]
     assert all(finding["kind"] == "advisory" for finding in report["findings"])
-    assert any(_ACTIVITY_START in finding["message"] for finding in report["findings"])
+    assert any("2026-01-01" in finding["message"] for finding in report["findings"])

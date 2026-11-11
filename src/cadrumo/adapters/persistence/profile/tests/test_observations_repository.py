@@ -27,15 +27,12 @@ from cadrumo.application.calculations.observations_repository import (
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-_YEAR = filing_year_envelope().horizon
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +54,7 @@ def test_observation_key_error_build_error_envelope() -> None:
 
 def _unvalidated_period(filing_year: int) -> Period:
     """A period a model copy carries outside four digits, which no validated construction can reach."""
-    return Period.from_year_and_code(_YEAR, "1T").model_copy(update={"filing_year": filing_year})
+    return Period.from_year_and_code(2026, "1T").model_copy(update={"filing_year": filing_year})
 
 
 def test_observation_key_raises_on_year_below_range() -> None:
@@ -80,14 +77,14 @@ def test_observation_key_succeeds_on_boundary_years() -> None:
 
 
 def test_observation_key_derives_storage_token_from_typed_period() -> None:
-    period = Period.from_year_and_code(_YEAR, "ext-2t")
+    period = Period.from_year_and_code(2026, "ext-2t")
 
-    assert str(period) == f"{_YEAR} EXT-2T"
-    assert observation_key("369", period) == f"369:{_YEAR}:EXT-2T"
+    assert str(period) == "2026 EXT-2T"
+    assert observation_key("369", period) == "369:2026:EXT-2T"
 
 
 def test_observation_key_rejects_untyped_combined_period() -> None:
-    combined_period: object = f"{_YEAR} 1T"
+    combined_period: object = "2026 1T"
 
     with pytest.raises(ObservationKeyError) as excinfo:
         methodcaller("__call__", "303", combined_period)(observation_key)
@@ -102,14 +99,14 @@ def test_observation_key_rejects_untyped_combined_period() -> None:
 
 def test_iva_wallet_decision_key_raises_on_empty_nif() -> None:
     with pytest.raises(ObservationKeyError) as excinfo:
-        iva_wallet_decision_key("   ", Period.from_year_and_code(_YEAR, "1T"))
+        iva_wallet_decision_key("   ", Period.from_year_and_code(2024, "1T"))
 
     assert str(excinfo.value) == "application.calculations.observations.errors.taxpayer_nif_blank"
 
 
 def test_iva_wallet_decision_key_raises_on_blank_nif() -> None:
     with pytest.raises(ObservationKeyError) as excinfo:
-        iva_wallet_decision_key("", Period.from_year_and_code(_YEAR, "1T"))
+        iva_wallet_decision_key("", Period.from_year_and_code(2024, "1T"))
 
     assert str(excinfo.value) == "application.calculations.observations.errors.taxpayer_nif_blank"
 
@@ -134,7 +131,7 @@ def test_iva_wallet_decision_key_raises_on_year_above_range() -> None:
 
 
 def test_iva_wallet_decision_key_succeeds() -> None:
-    key = iva_wallet_decision_key("12345678A", Period.from_year_and_code(_YEAR, "1T"))
+    key = iva_wallet_decision_key("12345678A", Period.from_year_and_code(2024, "1T"))
     assert key.startswith("iva-wallet-decision:")
 
 
@@ -146,10 +143,10 @@ def test_iva_wallet_decision_key_succeeds() -> None:
 def _make_decision(*, taxpayer_nif: str) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
-        target_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, "1T"),
-        target_registry_snapshot_ref=m303_registry_snapshot_ref(_YEAR, "1T"),
-        source_registry_snapshot_refs=(m303_registry_snapshot_ref(_YEAR, "1T"),),
+        target_year=2024,
+        target_period=Period.from_year_and_code(2024, "1T"),
+        target_registry_snapshot_ref=m303_registry_snapshot_ref(2024, "1T"),
+        source_registry_snapshot_refs=(m303_registry_snapshot_ref(2024, "1T"),),
         selected_authority="local_recurrence",
         selected_amount=Decimal("1234.56"),
         wallet_amount=None,
@@ -158,11 +155,11 @@ def _make_decision(*, taxpayer_nif: str) -> IvaCompensationReconciliationDecisio
             IvaCompensationAuthoritySource(
                 source_kind="local_recurrence",
                 amount=Decimal("1234.56"),
-                source_locator=f"test:local-recurrence:{_YEAR}:1T",
+                source_locator="test:local-recurrence:2024:1T",
                 source_modelo="303",
-                source_filing_year=_YEAR,
-                source_periods=(Period.from_year_and_code(_YEAR, "1T"),),
-                registry_snapshot_refs=(m303_registry_snapshot_ref(_YEAR, "1T"),),
+                source_filing_year=2024,
+                source_periods=(Period.from_year_and_code(2024, "1T"),),
+                registry_snapshot_refs=(m303_registry_snapshot_ref(2024, "1T"),),
             ),
         ),
         override_amount=None,
@@ -170,7 +167,7 @@ def _make_decision(*, taxpayer_nif: str) -> IvaCompensationReconciliationDecisio
         blocked=False,
         stale_wallet=False,
         reason_identity="aeat_wallet_validated",
-        decided_at=datetime(1980, 4, 1, tzinfo=UTC),
+        decided_at=datetime(2024, 4, 1, tzinfo=UTC),
     )
 
 
@@ -218,13 +215,13 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
     from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
-    decided_at = datetime(1980, 6, 1, 12, 0, 0, tzinfo=UTC)
+    decided_at = datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)
     decision = IvaCompensationReconciliationDecision(
         taxpayer_nif="87654321B",
-        target_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, "2T"),
-        target_registry_snapshot_ref=m303_registry_snapshot_ref(_YEAR, "2T"),
-        source_registry_snapshot_refs=(m303_registry_snapshot_ref(_YEAR, "2T"),),
+        target_year=2025,
+        target_period=Period.from_year_and_code(2025, "2T"),
+        target_registry_snapshot_ref=m303_registry_snapshot_ref(2025, "2T"),
+        source_registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "2T"),),
         selected_authority="local_recurrence",
         selected_amount=Decimal("500.00"),
         wallet_amount=None,
@@ -233,11 +230,11 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
             IvaCompensationAuthoritySource(
                 source_kind="local_recurrence",
                 amount=Decimal("500.00"),
-                source_locator=f"test:local-recurrence:{_YEAR}:2T",
+                source_locator="test:local-recurrence:2025:2T",
                 source_modelo="303",
-                source_filing_year=_YEAR,
-                source_periods=(Period.from_year_and_code(_YEAR, "2T"),),
-                registry_snapshot_refs=(m303_registry_snapshot_ref(_YEAR, "2T"),),
+                source_filing_year=2025,
+                source_periods=(Period.from_year_and_code(2025, "2T"),),
+                registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "2T"),),
             ),
         ),
         override_amount=None,
@@ -252,6 +249,6 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
         repo = IvaWalletDecisionRepository()
         repo.save_decision(decision)
 
-        loaded = repo.load_decision("87654321B", Period.from_year_and_code(_YEAR, "2T"))
+        loaded = repo.load_decision("87654321B", Period.from_year_and_code(2025, "2T"))
 
     assert loaded == decision, f"Expected decision to be found via hashed key; got {loaded!r}"

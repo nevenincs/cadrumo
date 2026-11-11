@@ -26,7 +26,6 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..enums import TransactionDirection
 from ..gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL
 from ..irpf_categories import (
@@ -39,9 +38,6 @@ from ..irpf_categories import (
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-_YEAR = filing_year_envelope().horizon
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
@@ -52,7 +48,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
         yield operation
 
 
-_NOW = datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 _RENT_CATEGORY = "arrendamiento_local"
 # A Renta income-type tag: a different classification axis carried in the same
 # field, with no withholding treatment and therefore no relaxation.
@@ -74,8 +70,8 @@ def _employment_category() -> str:
 def _raw(*, amount: Decimal) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id="row-irpf-catalogue",
-        booked_date=date(_YEAR - 1, 2, 10),
-        value_date=date(_YEAR - 1, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=amount,
         currency="EUR",
         counterparty="Contraparte SL",

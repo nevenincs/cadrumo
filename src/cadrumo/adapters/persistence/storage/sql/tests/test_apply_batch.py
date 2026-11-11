@@ -36,7 +36,7 @@ def _write(key: str, body: bytes, *, expected_revision_id: str | None = None) ->
         object_key=key,
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
-        written_at=datetime(1980, 1, 1, tzinfo=UTC),
+        written_at=datetime(2026, 1, 1, tzinfo=UTC),
         payload=body,
         expected_revision_id=expected_revision_id,
     )

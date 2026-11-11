@@ -19,7 +19,7 @@ from ..models import OperationIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(1980, 8, 13, 19, 0, tzinfo=UTC)
+_NOW = datetime(2026, 8, 13, 19, 0, tzinfo=UTC)
 _OPERATION_ID = "a" * 64
 _INTERACTION_ID = "b" * 64
 _TOKEN = "c" * 64
@@ -84,7 +84,7 @@ def test_interaction_request_refuses_naive_expiry_and_extra_frontend_state() -> 
     }
     with pytest.raises(ValidationError):
         TypeAdapter(OperationInteractionRequest).validate_python(
-            {**values, "expires_at": datetime(1980, 8, 13, 19, 0)},
+            {**values, "expires_at": datetime(2026, 8, 13, 19, 0)},
         )
     with pytest.raises(ValidationError):
         TypeAdapter(OperationInteractionRequest).validate_python(

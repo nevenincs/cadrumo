@@ -45,7 +45,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
-NOW = datetime(1980, 9, 26, tzinfo=UTC)
+NOW = datetime(2026, 9, 26, tzinfo=UTC)
 PROFILE_INPUT = "synthetic-enrollment-password"
 
 

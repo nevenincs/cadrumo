@@ -16,7 +16,6 @@ from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -157,15 +156,12 @@ def test_a_capped_issue_stored_before_outcomes_loads_without_one() -> None:
 def test_a_revision_stored_before_outcomes_loads_and_replays_to_its_stored_id() -> None:
     """A whole stored revision, its issue in the old shape, passes the identity check the load runs."""
     issue = _capped_issue()
-    clock = datetime(1980, 4, 6, 10, 0, tzinfo=UTC)
+    clock = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
     revision = CalculationRevision(
         calculation_revision_id=_STORED_CAPPED_REVISION_ID,
         work_unit_id=_WORK_UNIT,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="130",
-            revision_id=str(revision_covering("130", filing_year_envelope().horizon).id),
-            modelo_year=filing_year_envelope().horizon,
-            period="1T",
+            modelo="130", revision_id="2019-y-siguientes", modelo_year=2026, period="1T"
         ),
         state=CalculationRevisionState.PRESENTADO,
         casilla_values={},

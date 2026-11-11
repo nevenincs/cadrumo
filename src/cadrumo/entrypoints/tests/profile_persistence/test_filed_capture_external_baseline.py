@@ -50,7 +50,6 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
@@ -154,7 +153,7 @@ def test_live_capture_creates_exact_immediately_amendable_baseline(
         .current_for(
             bucket_id=_PROFILE_ID,
             modelo="130",
-            filing_year=filing_year_envelope().horizon,
+            filing_year=2026,
             period=observation.period,
         )
     )

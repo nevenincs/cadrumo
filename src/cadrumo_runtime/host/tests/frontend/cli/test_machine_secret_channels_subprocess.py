@@ -32,7 +32,6 @@ from cadrumo.application.user_profile.profile_pointer import observe_active_prof
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 from cadrumo.tests.inventory import SRC_CADRUMO
 from cadrumo.tests.process_support import fixture_arguments, native_python
@@ -861,7 +860,7 @@ _COLD_LEAVES: tuple[tuple[str, tuple[str, ...], str | None], ...] = (
             "plantilla-media",
             "set",
             "--year",
-            str(filing_year_envelope().horizon),
+            "2024",
             "--average-workforce",
             "3.50",
             "--state",
@@ -876,14 +875,7 @@ _COLD_LEAVES: tuple[tuple[str, tuple[str, ...], str | None], ...] = (
     ),
     (
         "plantilla-media-remove",
-        (
-            "--profile-secrets-stdin",
-            "config",
-            "profile",
-            "plantilla-media",
-            "remove",
-            str(filing_year_envelope().horizon + 1),
-        ),
+        ("--profile-secrets-stdin", "config", "profile", "plantilla-media", "remove", "2099"),
         _PROFILE_AUTHENTICATION,
     ),
     (
@@ -911,7 +903,7 @@ _COLD_LEAVES: tuple[tuple[str, tuple[str, ...], str | None], ...] = (
 
 #: The leaves that refuse by contract rather than succeed, per setup state:
 #: an unfinished record cannot pass ``validate`` or be promoted, the profile
-#: has no descendant at index 0 and no average workforce declared for the year after the horizon,
+#: has no descendant at index 0 and no average workforce declared for 2099,
 #: and logout has no saved proof. Deleting the selected profile is a preflight
 #: that succeeds: only the runtime's teardown, under ``--yes``, removes it.
 _COLD_REFUSALS = {

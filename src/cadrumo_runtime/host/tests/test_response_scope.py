@@ -59,7 +59,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(1980, 9, 26, 12, tzinfo=UTC)
+_NOW = datetime(2026, 9, 26, 12, tzinfo=UTC)
 
 
 def _changed[T: BaseModel](model: T, **updates: object) -> T:

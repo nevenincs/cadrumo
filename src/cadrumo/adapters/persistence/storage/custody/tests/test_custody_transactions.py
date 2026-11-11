@@ -61,7 +61,6 @@ from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.core.profile_publication import ProfilePublicationKind
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -78,8 +77,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _PROFILE_ID = UUID("327b296d-8377-4be0-b13a-ca4d8f692e1d")
 _OTHER_PROFILE_ID = UUID("57c9594e-65de-470b-b768-4a4dd1323597")
-# The owner floors are read as of this instant, so it lies in the supported window.
-_INSTANT = datetime(filing_year_envelope().horizon, 8, 13, 12, 34, 56, tzinfo=UTC)
+_INSTANT = datetime(2026, 8, 13, 12, 34, 56, tzinfo=UTC)
 
 
 def _observe_pointer(root: Path) -> BucketPointer:
@@ -541,7 +539,7 @@ def test_delete_revalidates_owner_hold_records_before_destruction(tmp_path: Path
     journal = service.prepare_delete(profile_id=_PROFILE_ID, now=_INSTANT)
     FilingRetentionAuthority(root=tmp_path).record_filing_catalogue(
         profile_id=_PROFILE_ID,
-        records=(_filed_record(filed_at=datetime(filing_year_envelope().horizon, 8, 1, tzinfo=UTC)),),
+        records=(_filed_record(filed_at=datetime(2026, 8, 1, tzinfo=UTC)),),
         observed_at=_INSTANT + timedelta(seconds=1),
     )
 

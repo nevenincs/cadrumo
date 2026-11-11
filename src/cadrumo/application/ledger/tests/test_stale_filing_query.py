@@ -17,12 +17,9 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.ledger_filing_snapshot import FiledRegisterState
 from ....domain.transactions.models import TransactionCatalogue
 from ..stale_filing_query import LedgerStaleFilingV1, read_stale_ledger_filings
-
-_YEAR = filing_year_envelope().horizon
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -42,7 +39,7 @@ class _WorkUnit:
     def __init__(self, *, bucket_id: str) -> None:
         self.bucket_id = bucket_id
         self.modelo = "303"
-        self.filing_year = _YEAR
+        self.filing_year = 2024
         self.period = _Period("1T")
 
 
@@ -110,7 +107,7 @@ def test_a_drifted_filing_owned_by_this_bucket_is_reported() -> None:
     assert findings == (
         LedgerStaleFilingV1(
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2024,
             period="1T",
             calculation_revision_id="rev-1",
             work_unit_id="wu-1",

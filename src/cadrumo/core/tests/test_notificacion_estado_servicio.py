@@ -21,7 +21,7 @@ from ..notificacion_estado_servicio import NotificacionEstadoServicio, resolve_n
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-PUESTA_A_DISPOSICION = date(1986, 3, 3)
+PUESTA_A_DISPOSICION = date(2026, 3, 2)
 """An arbitrary delivery date. Deliberately spans a weekend in every window
 below, so a dias-habiles implementation would disagree with these expectations."""
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
@@ -12,7 +12,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
@@ -47,8 +46,6 @@ from ..evidence_read_operation import (
     build_ledger_evidence_query_registration,
 )
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -71,13 +68,13 @@ def _record(evidence_id: str, source_path: str, media_kind: MediaKind) -> Purcha
             "media_kind": media_kind,
             "supplier": "Proveedor Sintetico SL",
             "invoice_number": "SYN-001",
-            "invoice_date": date(_YEAR, 4, 1).isoformat(),
+            "invoice_date": "2026-04-01",
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
             "notes": "nota escrita por la persona",
-            "created_at": datetime(_YEAR, 4, 2, 10, 30, tzinfo=UTC),
-            "updated_at": datetime(_YEAR, 4, 3, 9, 0, tzinfo=UTC),
+            "created_at": datetime(2026, 4, 2, 10, 30, tzinfo=UTC),
+            "updated_at": datetime(2026, 4, 3, 9, 0, tzinfo=UTC),
         }
     )
 
@@ -267,11 +264,11 @@ async def test_the_query_releases_every_record_with_its_file_name_and_no_host_pa
     assert windows.media_kind is MediaKind.PDF and posix.media_kind is MediaKind.IMAGE
     assert windows.source_sha256 == "a" * 64 and windows.attachment_id == "a" * 64
     assert windows.supplier == "Proveedor Sintetico SL"
-    assert windows.invoice_number == "SYN-001" and windows.invoice_date == date(_YEAR, 4, 1).isoformat()
+    assert windows.invoice_number == "SYN-001" and windows.invoice_date == "2026-04-01"
     assert (windows.taxable_base, windows.iva_rate, windows.iva_amount) == ("100.00", "0.21", "21.00")
     assert windows.notes == "nota escrita por la persona"
-    assert windows.created_at == datetime(_YEAR, 4, 2, 10, 30, tzinfo=UTC)
-    assert windows.updated_at == datetime(_YEAR, 4, 3, 9, 0, tzinfo=UTC)
+    assert windows.created_at == datetime(2026, 4, 2, 10, 30, tzinfo=UTC)
+    assert windows.updated_at == datetime(2026, 4, 3, 9, 0, tzinfo=UTC)
     document = released.model_dump_json()
     assert [fragment for fragment in _HOST_PATH_FRAGMENTS if fragment in document] == []
     assert "source_path" not in document

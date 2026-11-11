@@ -3,10 +3,10 @@
 The instructions: agrarian data "no se consignarán en este apartado [I], sino en el
 apartado II". Worked by hand for one first quarter:
 
-- consulting: income 10000, expenses 2500, so 01 = 10000, 02 = 2500, 03 = 7500, 04 = 1500;
+- consulting: income 10000, expenses 2000, so 01 = 10000, 02 = 2000, 03 = 8000, 04 = 1600;
 - agrarian B01: sales 30000 (its expenses 20000 count nowhere on the form),
   so 08 = 30000 and 09 = 600 at the 2 per cent;
-- 12 = 1500 + 600 = 2100.
+- 12 = 1600 + 600 = 2200.
 """
 
 from __future__ import annotations
@@ -17,7 +17,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -43,7 +42,7 @@ from .renta_income_aggregation_support import catalogue_read_ports, raw_transact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_DECLARED = newest_authored_edition("100")
+_DECLARED = 2025
 _INCOME_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _VOLUME_BINDING = "modelo-130-volumen-ingresos-agrario"
 _AGRARIAN_WITHHELD_BINDING = "modelo-130-retenciones-agrarias"
@@ -101,7 +100,7 @@ _FARMING = TipoActividad.B01_AGRICOLA
 def _mixed_quarter() -> tuple[Transaction, ...]:
     return (
         _sale("consulting-sale", "10000.00", _CONSULTING),
-        _purchase("consulting-cost", "2500.00", _CONSULTING),
+        _purchase("consulting-cost", "2000.00", _CONSULTING),
         _sale("farm-sale", "30000.00", _FARMING),
         _purchase("farm-cost", "20000.00", _FARMING),
     )
@@ -167,7 +166,7 @@ def test_a_mixed_quarter_splits_between_the_two_apartados(*, operation: PinnedAu
 
     boxes = _calculated(operation, {**income.binding_values, **expenses.binding_values})
 
-    expected = {"01": "10000", "02": "2500", "03": "7500", "04": "1500", "08": "30000", "09": "600", "12": "2100"}
+    expected = {"01": "10000", "02": "2000", "03": "8000", "04": "1600", "08": "30000", "09": "600", "12": "2200"}
     assert {box: boxes[box] for box in expected} == {box: Decimal(value) for box, value in expected.items()}, boxes
 
 

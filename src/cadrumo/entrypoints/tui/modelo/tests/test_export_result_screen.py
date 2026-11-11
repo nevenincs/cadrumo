@@ -40,7 +40,6 @@ from .....core.i18n.render import tr
 from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationEffect, OperationTerminalCondition
 from .....core.period import Period
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from .....domain.transactions.own_accounts import OwnAccountRole
 from ....adapter_composition_ports import build_modelo_export_ports
@@ -56,8 +55,6 @@ from ..export_result import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 _REVISION_ID = "a" * 64
 _FILE_SHA256 = "c" * 64
@@ -81,7 +78,7 @@ def _publicly_projected(settled: ModeloExportSettledResult) -> ModeloExportPubli
         revision=4,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(_YEAR + 1, 1, 20, 9, 0, tzinfo=UTC),
+        settled_at=datetime(2027, 1, 20, 9, 0, tzinfo=UTC),
         result_ref="f" * 64,
     )
     projected = projector(settled, terminal)
@@ -103,13 +100,13 @@ def _filing_file_receipt(
             work_unit_id="b" * 64,
             bucket_id="bucket-operator",
             modelo="189",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
             output_path=tmp_path / "modelo-189.txt",
             byte_size=500,
             file_sha256=_FILE_SHA256,
             format="fichero-boe",
-            exported_at=datetime(_YEAR + 1, 1, 20, 9, 0, tzinfo=UTC),
+            exported_at=datetime(2027, 1, 20, 9, 0, tzinfo=UTC),
             actor="operator",
             bucket_event_id="event-1",
             software_identity_grade=software_identity_grade,
@@ -132,12 +129,12 @@ def _report_receipt(
             verification_report_id=None,
             filing_record_id=None,
             modelo="303",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "2T"),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "2T"),
             document_format=document_format,
             report_language=OutputLanguage.ES,
             output_path=tmp_path / f"modelo-303-report.{document_format.value}",
-            byte_size=4096,
+            byte_size=2048,
             file_sha256=_FILE_SHA256,
             report_sha256="d" * 64,
             row_count=12,
@@ -291,7 +288,7 @@ async def test_a_calculation_summary_pdf_is_named_as_that_artefact_and_claims_wh
             ),
             "completeness": tr("tui.modelo.export.result.completeness.not_assessed"),
             "output_path": str(tmp_path / "modelo-303-report.pdf"),
-            "byte_size": "4096",
+            "byte_size": "2048",
         }
         assert tr("tui.modelo.export.artefact.calculation_report_pdf") != tr(
             "tui.modelo.export.artefact.calculation_report_csv"

@@ -27,7 +27,6 @@ from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import IvaCategory
 from ..enums import BusinessClassification, TransactionDirection
 from ..errors import LLMClassifierError
@@ -41,19 +40,16 @@ from ..llm import (
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-_YEAR = filing_year_envelope().horizon
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_NOW = datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="row-saturate",
-        booked_date=date(_YEAR - 1, 3, 1),
-        value_date=date(_YEAR - 1, 3, 1),
+        booked_date=date(2025, 3, 1),
+        value_date=date(2025, 3, 1),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Restaurante Sol",
@@ -142,7 +138,7 @@ def test_iva_choices_cover_every_grounded_category(operation: PinnedAuthorityOpe
 
 
 def test_saturation_spec_allow_list_matches_every_category(operation: PinnedAuthorityOperation) -> None:
-    spec = prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation)
+    spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
     catalogue = resolve_iva_category_catalogue(authority=operation)
     assert spec.allowed_iva_categories() == frozenset(catalogue.all_categories)
     # The default spec asks for no IVA category at all.
@@ -155,7 +151,7 @@ def test_saturation_spec_allow_list_matches_every_category(operation: PinnedAuth
 
 
 def test_rendered_prompt_requests_iva_category_without_numbers(operation: PinnedAuthorityOperation) -> None:
-    prompt = prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation).render(_transaction())
+    prompt = prompt_spec_with_saturation_fields(year=2025, operation=operation).render(_transaction())
     assert "iva_category" in prompt
     assert IvaCategory("domestic_general").value in prompt
     # Explicitly instructs the model not to compute a figure.
@@ -171,7 +167,7 @@ def test_rendered_prompt_requests_iva_category_without_numbers(operation: Pinned
 
 
 def test_parse_accepts_grounded_iva_category(operation: PinnedAuthorityOperation) -> None:
-    spec = prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation)
+    spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
     stdout = (
         '{"classification": "BUSINESS", "confidence": 0.9, "reason": "business meal", '
         '"category": "manutencion_dietas_nacional", "iva_category": "domestic_reduced"}'
@@ -181,7 +177,7 @@ def test_parse_accepts_grounded_iva_category(operation: PinnedAuthorityOperation
 
 
 def test_parse_rejects_hallucinated_iva_category(operation: PinnedAuthorityOperation) -> None:
-    spec = prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation)
+    spec = prompt_spec_with_saturation_fields(year=2025, operation=operation)
     stdout = '{"classification": "BUSINESS", "confidence": 0.9, "reason": "x", "iva_category": "not_a_real_category"}'
     with pytest.raises(LLMClassifierError, match=r"no JSON candidate matched"):
         parse_response(stdout, spec=spec)

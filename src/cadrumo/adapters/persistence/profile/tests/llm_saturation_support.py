@@ -23,11 +23,7 @@ from cadrumo.domain.transactions.llm import prompt_spec_with_saturation_fields
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
-
-NOW = datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC)
+NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 BUCKET = "17171717-1717-4717-8717-171717171717"
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 _DEFAULT_SPENDING_CATEGORY = SpendingCategory.from_registry("arrendamiento_local")
@@ -61,7 +57,7 @@ print({response_json!r})
         name="claude",
         command=(sys.executable, "-c", script),
         model=model,
-        spec=prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation),
+        spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
     )
 
 
@@ -79,8 +75,8 @@ def seed_unclassified(repository: TransactionCatalogueRepository, *, amount: Dec
     """Persist one ACTIVE, NOT_YET_PROCESSED transaction and return its id."""
     raw = RawTransaction(
         provider_transaction_id="row-saturate-1",
-        booked_date=date(_YEAR - 1, 5, 1),
-        value_date=date(_YEAR, 5, 1),
+        booked_date=date(2025, 5, 1),
+        value_date=date(2026, 5, 1),
         amount=amount,
         currency="EUR",
         counterparty="Restaurante Sol",
@@ -111,8 +107,8 @@ def seed_business(
     """Persist one ACTIVE BUSINESS transaction with no IVA substrate and return its id."""
     raw = RawTransaction(
         provider_transaction_id="row-derive-1",
-        booked_date=date(_YEAR - 1, 5, 1),
-        value_date=date(_YEAR, 5, 1),
+        booked_date=date(2025, 5, 1),
+        value_date=date(2026, 5, 1),
         amount=amount,
         currency="EUR",
         counterparty="Arrendador SL",

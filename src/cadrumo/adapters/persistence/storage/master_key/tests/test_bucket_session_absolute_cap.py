@@ -21,7 +21,7 @@ from ..idle_timeout import evaluate_idle
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-_NOW = datetime(1980, 7, 24, 12, 0, 0, tzinfo=UTC)
+_NOW = datetime(2026, 7, 24, 12, 0, 0, tzinfo=UTC)
 _DEK = bytes(range(32, 64))
 _BUCKET_ID = "88888888-8888-4888-8888-888888888888"
 

@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _OPERATION_ID = "c" * 64
-_NOW = datetime(1980, 10, 18, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 10, 18, 12, 0, tzinfo=UTC)
 
 
 def _observe_reply() -> dict[str, Any]:

@@ -19,7 +19,6 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -59,8 +58,6 @@ from ..workbench_projection import project_modelo_workbench_form, restore_modelo
 from .work_form_fixture import built_form, form_casilla, read_before_calculation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _MESSAGE_KEY = "application.modelo.findings.oss_evidence_missing"
 _LEGAL_REF = "ley-37-1992:art-99"
@@ -103,7 +100,7 @@ def test_each_finding_reads_where_the_form_shows_it_most_urgent_first(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
     say = _say(language)
-    built = built_form(operation, "130", _YEAR, "1T", language=language)
+    built = built_form(operation, "130", 2026, "1T", language=language)
     shown = form_casilla(built, "01")
     stale = _finding(None, ModeloVerificationFindingKind.STALE_CALCULATION, ModeloVerificationFindingSeverity.WARNING)
     absent = _finding(
@@ -157,12 +154,12 @@ def _asks_for(casilla_id: str) -> Callable[[ModeloFormField], ModeloFormField]:
 
 
 def test_a_missing_value_the_missing_list_already_names_is_left_out(operation: PinnedAuthorityOperation) -> None:
-    built = map_form_fields(built_form(operation, "130", _YEAR, "1T"), _asks_for("01"))
+    built = map_form_fields(built_form(operation, "130", 2026, "1T"), _asks_for("01"))
     missing = _finding("01", ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA)
 
     assert form_issue_lines(_with_issues(built, missing), OutputLanguage.EN) == ()
     recorded_elsewhere = form_issue_lines(
-        _with_issues(built_form(operation, "130", _YEAR, "1T"), missing), OutputLanguage.EN
+        _with_issues(built_form(operation, "130", 2026, "1T"), missing), OutputLanguage.EN
     )
     assert [line.address for line in recorded_elsewhere] == [form_casilla(built, "01").address]
 
@@ -170,7 +167,7 @@ def test_a_missing_value_the_missing_list_already_names_is_left_out(operation: P
 def test_a_value_every_record_carries_leads_to_its_table(operation: PinnedAuthorityOperation) -> None:
     say = _say(OutputLanguage.EN)
     form = _with_issues(
-        built_form(operation, "347", _YEAR, "0A"),
+        built_form(operation, "347", 2026, "0A"),
         _finding(_RECORD_COLUMN, ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA),
     )
 
@@ -190,7 +187,7 @@ def test_a_calculation_note_about_records_leads_to_the_ledger(operation: PinnedA
     say = _say(OutputLanguage.EN)
     reason = sorted(RECORDS_REASONS)[0]
     note = ModeloFormCalculationNote(reason=reason, attention=note_attention(reason, box=None))
-    form = built_form(operation, "130", _YEAR, "1T").model_copy(update={"calculation_notes": (note,)})
+    form = built_form(operation, "130", 2026, "1T").model_copy(update={"calculation_notes": (note,)})
 
     (line,) = form_issue_lines(form, OutputLanguage.EN)
 
@@ -212,7 +209,7 @@ def test_a_note_the_gate_derives_is_put_right_by_calculating_again(
         reason=reason, attention=note_attention(reason, box=None), withholds_filing=gate_refuses(reason, None)
     )
     other = ModeloFormCalculationNote(reason="source_issue", attention=note_attention("source_issue", box=None))
-    form = built_form(operation, "130", _YEAR, "1T").model_copy(update={"calculation_notes": (note, other)})
+    form = built_form(operation, "130", 2026, "1T").model_copy(update={"calculation_notes": (note, other)})
 
     derived, kept = form_issue_lines(form, OutputLanguage.EN)
 
@@ -233,9 +230,7 @@ def test_a_calculation_note_without_facts_says_its_kind_then_what_its_resolver_w
     note = ModeloFormCalculationNote(
         reason="source_issue", attention=note_attention("source_issue", box=None), message=written
     )
-    form = built_form(operation, "130", _YEAR, "1T", language=language).model_copy(
-        update={"calculation_notes": (note,)}
-    )
+    form = built_form(operation, "130", 2026, "1T", language=language).model_copy(update={"calculation_notes": (note,)})
 
     (line,) = form_issue_lines(form, language)
 
@@ -252,7 +247,7 @@ def test_the_public_read_carries_each_notes_written_account(operation: PinnedAut
     note = ModeloFormCalculationNote(
         reason="source_issue", attention=note_attention("source_issue", box=None), message=written
     )
-    form = built_form(operation, "130", _YEAR, "1T").model_copy(update={"calculation_notes": (note,)})
+    form = built_form(operation, "130", 2026, "1T").model_copy(update={"calculation_notes": (note,)})
 
     projection = project_modelo_workbench_form(
         UUID("13000000-0000-4000-8000-000000000456"), form.work_unit_id, read_before_calculation(form, operation)
@@ -268,7 +263,7 @@ def test_the_verdict_says_what_the_check_concluded(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
     say = _say(language)
-    form = built_form(operation, "130", _YEAR, "1T", language=language)
+    form = built_form(operation, "130", 2026, "1T", language=language)
 
     unchecked = form_verdict(form, language)
     passed = form_verdict(form.model_copy(update={"verification": VerificationCompletenessStatus.COMPLETE}), language)
@@ -288,7 +283,7 @@ def test_the_verdict_says_what_the_check_concluded(
 def test_the_public_read_carries_the_lines_and_verdict_in_the_forms_language(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    built = built_form(operation, "130", _YEAR, "1T", language=OutputLanguage.ES)
+    built = built_form(operation, "130", 2026, "1T", language=OutputLanguage.ES)
     form = _with_issues(built, _finding("01"), _finding(None, ModeloVerificationFindingKind.ADVISORY))
     read = read_before_calculation(form, operation)
 
@@ -366,7 +361,7 @@ def test_every_block_and_check_the_header_counts_has_its_line(
 def test_a_failed_result_a_blocking_finding_already_names_is_not_listed_twice(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    built = _failed_results(built_form(operation, "130", _YEAR, "1T"))
+    built = _failed_results(built_form(operation, "130", 2026, "1T"))
     (failed,) = [
         field
         for field in built.fields()
@@ -407,7 +402,7 @@ def _locked_beside_typed(
     The built form carries no edit admission, so the second box is the form's own field
     made typeable through the model's re-derivation rather than a hand-built copy.
     """
-    built = built_form(operation, "100", _YEAR, "0A", language=language)
+    built = built_form(operation, "100", 2025, "0A", language=language)
 
     def typeable(field: ModeloFormField) -> ModeloFormField:
         if field.box == _TYPED_BOX:

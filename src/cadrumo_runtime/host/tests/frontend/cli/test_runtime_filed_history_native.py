@@ -11,7 +11,6 @@ import pytest
 
 from cadrumo.application.live.filed_history_operation import FILED_HISTORY_OPERATION_DEFINITION_ID
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -20,8 +19,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -70,7 +67,7 @@ def test_native_filed_history_refuses_finite_period_before_provider_access(tmp_p
     with native_api_cli_session(
         tmp_path,
         scope_for_destination=lambda client_id: _scope(
-            client_id, periods=frozenset({Period.from_year_and_code(_YEAR, "1T")})
+            client_id, periods=frozenset({Period.from_year_and_code(2025, "1T")})
         ),
         prepare_profile=lambda _profile_id, _root: None,
         invoke_cli=run_cadrumo_cli,

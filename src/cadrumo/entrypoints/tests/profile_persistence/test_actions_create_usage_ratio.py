@@ -17,7 +17,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -30,8 +29,6 @@ from ....adapters.persistence.profile.tests.ledger_action_persistence_support im
 )
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
@@ -39,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Retain the profile record required by real ledger port composition."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as runtime:
-        seed_modelo_ready_profile(bucket_id=BUCKET_ID, at=datetime(_YEAR, 5, 1, tzinfo=UTC))
+        seed_modelo_ready_profile(bucket_id=BUCKET_ID, at=datetime(2026, 5, 1, tzinfo=UTC))
         yield runtime.repository
 
 
@@ -66,7 +63,7 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
         result = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
@@ -77,7 +74,7 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
                 idempotency_key="phone-usage-ratio",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     persisted = transaction_repository.load().get(result.ref.transaction_id)
@@ -105,7 +102,7 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
@@ -115,7 +112,7 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
                 usage_ratio_id=category.value,
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     assert transaction_repository.load().transactions == {}
@@ -137,7 +134,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
@@ -147,7 +144,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
                 usage_ratio_id="home_office_area",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     with (
@@ -157,7 +154,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
@@ -167,7 +164,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
                 usage_ratio_id=category.value,
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 31, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
         )
 
     assert transaction_repository.load().transactions == {}
@@ -189,7 +186,7 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
@@ -199,7 +196,7 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
                 usage_ratio_id=category.value,
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     assert transaction_repository.load().transactions == {}

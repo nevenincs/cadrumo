@@ -22,7 +22,6 @@ from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.filing.schema import (
     ModeloDraft,
@@ -47,16 +46,14 @@ from .draft_review_test_support import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = filing_year_envelope().horizon
-
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
 _REVIEW_MISSING_CASILLA: CasillaId = validated_casilla_id("04", surface="_REVIEW_MISSING_CASILLA")
 _REVIEW_INFO_CASILLA: CasillaId = validated_casilla_id("05", surface="_REVIEW_INFO_CASILLA")
 PROFILE_ID = "23232323-2323-4232-8232-232323232323"
 _OTHER_PROFILE_ID = "44444444-4444-4444-8444-444444444444"
 _ACTIVE_PROFILE_ID = "45454545-4545-4454-8454-454545454545"
-_CORRUPT_ROW_WRITTEN_AT = datetime(_YEAR, 5, 27, 10, 0, 0, tzinfo=UTC)
+_CORRUPT_ROW_WRITTEN_AT = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
 
 
 # ── shared helpers ────────────────────────────────────────────────
@@ -115,8 +112,8 @@ def test_adapters_return_empty_when_source_missing(tmp_path: Path, operation: Pi
 def _raw(*, source_row_index: int = 1, description: str = "Office") -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=f"prov-{source_row_index}",
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
         amount=Decimal("12.34"),
         currency="EUR",
         counterparty=None,
@@ -126,7 +123,7 @@ def _raw(*, source_row_index: int = 1, description: str = "Office") -> RawTransa
             source_sha256="a" * 64,
             source_row_index=source_row_index,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
             provider_name="csv",
         ),
         raw_fields={"Concepto": description},
@@ -275,7 +272,7 @@ def _invoice(
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": invoice_number,
-            "issued_at": date(_YEAR, 4, 1),
+            "issued_at": date(2026, 4, 1),
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -396,8 +393,8 @@ def adapters_draft(
         status=status,
         values=values,
         findings=findings,
-        created_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
-        updated_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
+        created_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+        updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         schema_version=_schema_version(modelo, period),
     )
 

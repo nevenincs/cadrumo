@@ -16,7 +16,6 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import (
     POST_UPDATE_EVENT_PAYLOADS,
     PRESERVED_CREATE_AUDIT_FIELDS,
@@ -27,8 +26,6 @@ from .ledger_action_persistence_support import (
     BUCKET_ID,
     repositories,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -60,14 +57,14 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="draft description",
                 idempotency_key="cash-row",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,
@@ -79,7 +76,7 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("60.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="corrected description",
@@ -90,7 +87,7 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
                 source_command="aeat app ledger update",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
     reloaded = transaction_repository.load()
     events = tuple(event_repository.load().for_bucket(BUCKET_ID))

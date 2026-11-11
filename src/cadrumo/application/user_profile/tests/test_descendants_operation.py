@@ -75,7 +75,7 @@ def test_family_omission_cannot_clear_rows_and_payload_repr_hides_personal_value
         )
     descendant = ProfileDescendantRow(
         facts=(
-            ProfileDescendantFact(field_key="birth_date", value="1980-03-04"),
+            ProfileDescendantFact(field_key="birth_date", value="2020-03-04"),
             ProfileDescendantFact(field_key="nif", value="12345678Z"),
         )
     )

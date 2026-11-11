@@ -25,7 +25,6 @@ from .....domain.buckets.event import (
     derive_bucket_event_id,
 )
 from .....domain.buckets.event_repository import BucketEventHistoryPersistenceError
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.envelope.contract import Envelope
 from ...storage.secure_object_namespaces import BUCKET_EVENT_HISTORY_NAMESPACE
 from ...storage.tests.secure_sql import (
@@ -34,11 +33,9 @@ from ...storage.tests.secure_sql import (
 )
 from ..buckets import BucketEventHistoryRepository
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_OCCURRED_AT = datetime(_YEAR, 5, 28, 9, 0, 0, tzinfo=UTC)
+_OCCURRED_AT = datetime(2026, 5, 28, 9, 0, 0, tzinfo=UTC)
 _NAMESPACE = BUCKET_EVENT_HISTORY_NAMESPACE.namespace
 _OBJECT_KEY = BUCKET_EVENT_HISTORY_NAMESPACE.require_default_object_key()
 _CATALOGUE_VERSION = BUCKET_EVENT_HISTORY_NAMESPACE.schema_version
@@ -89,7 +86,7 @@ def test_bucket_event_history_survives_encrypted_storage_roundtrip(
             actor="cli/aeat",
             object_type=BucketEventObjectType.CALCULATION_REVISION,
             object_id="r" * 64,
-            payload={"modelo": "303", "filing_year": str(_YEAR - 1), "period": "1T"},
+            payload={"modelo": "303", "filing_year": "2025", "period": "1T"},
         )
         event_b = _build_event(
             bucket_id=bucket_id,
@@ -110,7 +107,7 @@ def test_bucket_event_history_survives_encrypted_storage_roundtrip(
 
         assert loaded == catalogue
         loaded_a = loaded.events[event_a.event_id]
-        assert loaded_a.payload == {"modelo": "303", "filing_year": str(_YEAR - 1), "period": "1T"}
+        assert loaded_a.payload == {"modelo": "303", "filing_year": "2025", "period": "1T"}
         assert loaded_a.event_type is BucketEventType.MODELO_CALCULATION_CREATED
         assert loaded_a.object_type is BucketEventObjectType.CALCULATION_REVISION
         loaded_b = loaded.events[event_b.event_id]
@@ -152,7 +149,7 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
             actor="cli/aeat",
             object_type=BucketEventObjectType.CALCULATION_REVISION,
             object_id="r" * 64,
-            payload={"modelo": "303", "filing_year": str(_YEAR - 1), "period": "1T"},
+            payload={"modelo": "303", "filing_year": "2025", "period": "1T"},
         )
         catalogue = BucketEventHistoryCatalogue(events={event.event_id: event})
         repo = BucketEventHistoryRepository()

@@ -25,7 +25,6 @@ import pytest
 from textual.pilot import Pilot
 from textual.widget import Widget
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ..components.host import ScreenHostApp
 from ..modelo.workbench.factory import InstalledModeloWorkbench
@@ -46,8 +45,8 @@ _SURFACES = [
     pytest.param(("question_mark",), id="help"),
 ]
 _ADDRESSES = [
-    pytest.param({"modelo": "130", "filing_year": filing_year_envelope().horizon, "period_code": "1T"}, id="compact"),
-    pytest.param({"modelo": "100", "filing_year": newest_authored_edition("100"), "period_code": "0A"}, id="dense"),
+    pytest.param({"modelo": "130", "filing_year": 2026, "period_code": "1T"}, id="compact"),
+    pytest.param({"modelo": "100", "filing_year": 2024, "period_code": "0A"}, id="dense"),
 ]
 
 

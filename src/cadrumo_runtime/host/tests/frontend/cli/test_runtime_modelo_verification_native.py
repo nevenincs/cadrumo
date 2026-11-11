@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -30,7 +29,6 @@ from cadrumo.application.user_profile.tests.profile_values import complete_profi
 from cadrumo.core.config import load_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import create_m130_work_unit, operator_profile_facts
 from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
@@ -44,8 +42,6 @@ from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixtu
 
 from .cli_runner import invoke_unbound_cli
 from .native_api_cli_support import native_api_cli_session
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -73,22 +69,14 @@ def test_native_cli_verify_and_file_preserve_settled_results_and_noop_notices(tm
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         register_cli_profile(
             label=_LABEL,
-            facts=operator_profile_facts(activity_start_date=date(_YEAR, 10, 1).isoformat()),
+            facts=operator_profile_facts(activity_start_date="2025-10-01"),
             log_in=False,
         )
         close_active_bucket_session()
 
         with native_profile_view_server(root):
             created = _protected(
-                "create",
-                "--modelo",
-                "130",
-                "--year",
-                str(_YEAR),
-                "--period",
-                "4T",
-                "--revision",
-                revision_covering("130", _YEAR).id,
+                "create", "--modelo", "130", "--year", "2025", "--period", "4T", "--revision", "2019-y-siguientes"
             )
             assert created.exit_code == 0, created.output
             work_unit_id = require_schema_envelope(created.output)["work_unit_id"]
@@ -144,7 +132,7 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
             authority_operation.profile_schema(),
             facts=tuple(
                 UserProfileFact(path=path, value=value)
-                for path, value in operator_profile_facts(activity_start_date=date(_YEAR, 10, 1).isoformat()).items()
+                for path, value in operator_profile_facts(activity_start_date="2025-10-01").items()
             ),
         )
         populated = upsert_test_profile_facts(profile_id, facts, root=root)
@@ -197,7 +185,7 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
                     ),
                 )
             ),
-            periods=frozenset((Period.from_year_and_code(_YEAR, "4T"),)),
+            periods=frozenset((Period.from_year_and_code(2025, "4T"),)),
             allow_period_independent=False,
             allow_delegation=False,
         )

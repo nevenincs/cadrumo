@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -18,7 +17,6 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....application.storage_write_policy import inspect_storage_write_policy
 from ....core.bucket_pointer import pointer_path
 from ....core.config import Settings, override_settings
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..common import (
     RequestedCliLeaf,
     attach_cli_policy_refusal_projection,
@@ -30,9 +28,6 @@ from ..common import (
 from ..main import cli_app
 from .cli_runner import cadrumo_click_command
 from .error_boundary_scope import suspend_error_boundary
-
-_YEAR = filing_year_envelope().horizon
-
 
 app = cli_app()
 
@@ -169,7 +164,7 @@ def test_real_explicit_database_refusal_attaches_the_closed_projection(tmp_path:
                 "ledger",
                 "add",
                 "--date",
-                date(_YEAR, 1, 1).isoformat(),
+                "2026-01-01",
                 "--amount",
                 "1.00",
                 "--direction",
@@ -291,7 +286,7 @@ def test_requested_leaf_binding_clears_between_sequential_root_invocations(tmp_p
                 "ledger",
                 "add",
                 "--date",
-                date(_YEAR, 1, 1).isoformat(),
+                "2026-01-01",
                 "--amount",
                 "1.00",
                 "--direction",

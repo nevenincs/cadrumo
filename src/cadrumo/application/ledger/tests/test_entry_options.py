@@ -15,7 +15,6 @@ import pytest
 import yaml
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
@@ -67,8 +66,6 @@ from ..entry_options_operation import (
 from ..manual_update import command_from_patch
 from ..models import ManualLedgerTransactionPatch
 from .transaction_row_support import outgoing_manual_row
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -277,7 +274,7 @@ def test_a_dated_catalogue_is_read_on_the_day_asked_and_the_undated_ones_ignore_
 
 def test_the_request_names_a_day_or_none() -> None:
     assert LedgerEntryOptionsRequest(profile_id=_PROFILE).on_date is None
-    assert LedgerEntryOptionsRequest(profile_id=_PROFILE, on_date=date(_YEAR, 1, 31)).on_date == date(_YEAR, 1, 31)
+    assert LedgerEntryOptionsRequest(profile_id=_PROFILE, on_date=date(2026, 1, 31)).on_date == date(2026, 1, 31)
     with pytest.raises(ValidationError):
         LedgerEntryOptionsRequest.model_validate({"profile_id": str(_PROFILE), "on_date": "not-a-day"})
 
@@ -528,7 +525,7 @@ def test_admission_binds_the_exact_profile() -> None:
 def test_each_invoice_class_is_filed_under_what_it_means_to_a_form(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    served = ledger_entry_options(uuid4(), operation=authority_operation, on_date=date(_YEAR, 4, 15))
+    served = ledger_entry_options(uuid4(), operation=authority_operation, on_date=date(2026, 4, 15))
     family = next(item for item in served.families if item.family == "invoice_class")
     # The registry's three classes: a form starts on the ordinary one, a rectificativa names
     # what it rectifies, and a simplificada may leave the tax id out.

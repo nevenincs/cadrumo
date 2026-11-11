@@ -7,7 +7,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from .....domain.calculations.registry.schema_formula import FormulaExpression
@@ -17,12 +16,10 @@ from ..translator import TranslationError, translate_formula
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 
 def _m130_layout():
-    revision = published_revision("130", revision_covering("130", _YEAR).id)
-    return plan_layout(revision, bracket_filter_date=date(_YEAR, 12, 31))
+    revision = published_revision("130", "2019-y-siguientes")
+    return plan_layout(revision, bracket_filter_date=date(2025, 12, 31))
 
 
 def test_text_comparison_uses_exact_and_refuses_blank_or_numeric_cells():

@@ -20,12 +20,12 @@ def table_document(heading: str, columns: tuple[str, ...], values: tuple[str, ..
 ACTIVITIES_HTML = table_document(
     "Relación de Actividades",
     ("Sección", "Epígrafe", "Denominación", "Estado", "F.Inicio", "F.Baja", "Locales", "Num.Ref."),
-    ("Profesional", "999", "ACTIVIDAD SINTÉTICA", "Alta", "01/01/1980", "", "", "SYNTHETIC-1"),
+    ("Profesional", "999", "ACTIVIDAD SINTÉTICA", "Alta", "01/01/2024", "", "", "SYNTHETIC-1"),
 )
 OBLIGATIONS_HTML = table_document(
     "Obligaciones tributarias",
     ("Descripción de la obligación", "Periodicidad", "F. Alta Efec.", "F. Baja Efec.", "F. Ult. Modif.", "Estado"),
-    ("OBLIGACIÓN SINTÉTICA", "Trimestral", "01/01/1980", "", "01/01/1980", "Alta"),
+    ("OBLIGACIÓN SINTÉTICA", "Trimestral", "01/01/2024", "", "01/01/2024", "Alta"),
 )
 TAX_HTML = """
 <h1>Situación tributaria</h1>

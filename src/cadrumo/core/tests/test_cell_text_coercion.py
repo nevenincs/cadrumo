@@ -23,8 +23,8 @@ def test_the_default_rendering_leaves_both_axes_off() -> None:
     assert coerce_cell_text(None) == ""
     assert coerce_cell_text("  spaced  ") == "spaced"
     assert coerce_cell_text(3.0) == "3.0"
-    assert coerce_cell_text(date(1986, 4, 17)) == "1986-04-17"
-    assert coerce_cell_text(datetime(1986, 4, 17, 10, 30, 5, 123456)) == "1986-04-17 10:30:05.123456"
+    assert coerce_cell_text(date(2026, 4, 17)) == "2026-04-17"
+    assert coerce_cell_text(datetime(2026, 4, 17, 10, 30, 5, 123456)) == "2026-04-17 10:30:05.123456"
 
 
 def test_the_integral_float_axis_drops_the_spurious_decimal() -> None:
@@ -42,19 +42,19 @@ def test_the_integral_float_axis_is_off_by_default() -> None:
 
 def test_the_temporal_axis_pins_iso_8601_and_truncates_to_seconds() -> None:
     """A booking stamp is archived ISO-8601 at whole-second resolution."""
-    assert coerce_cell_text(datetime(1986, 4, 17, 10, 30, 5, 123456), temporal_as_iso=True) == "1986-04-17 10:30:05"
-    assert coerce_cell_text(date(1986, 4, 17), temporal_as_iso=True) == "1986-04-17"
+    assert coerce_cell_text(datetime(2026, 4, 17, 10, 30, 5, 123456), temporal_as_iso=True) == "2026-04-17 10:30:05"
+    assert coerce_cell_text(date(2026, 4, 17), temporal_as_iso=True) == "2026-04-17"
 
 
 def test_the_temporal_axis_is_off_by_default() -> None:
     """Sub-second precision survives unless the archiving rendering is requested."""
-    stamp = datetime(1986, 4, 17, 10, 30, 5, 123456)
+    stamp = datetime(2026, 4, 17, 10, 30, 5, 123456)
     assert coerce_cell_text(stamp) != coerce_cell_text(stamp, temporal_as_iso=True)
 
 
 def test_the_two_axes_are_disjoint_by_type() -> None:
     """Enabling both changes nothing for a value only one of them governs."""
-    stamp = datetime(1986, 4, 17, 10, 30, 5, 123456)
+    stamp = datetime(2026, 4, 17, 10, 30, 5, 123456)
     assert coerce_cell_text(stamp, integral_floats_as_int=True, temporal_as_iso=True) == coerce_cell_text(
         stamp,
         temporal_as_iso=True,

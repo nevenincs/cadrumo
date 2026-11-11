@@ -38,7 +38,6 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.schema import RegistrySnapshot
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.filing.schema import ModeloValueKind
 from ......domain.modelos.calculation_revision import CalculationRevisionState
 from ....components.theme import install_cadrumo_themes
@@ -95,7 +94,7 @@ def _form(
     return registry_form_of(
         operation,
         modelo="303",
-        year=filing_year_envelope().horizon,
+        year=2026,
         code="1T",
         bucket_id="13000000-0000-4000-8000-000000000455",
         work_unit_id="e" * 64,

@@ -13,7 +13,6 @@ from cadrumo.application.inventory.registered_projections import (
     InventoryMovementProjection,
 )
 from cadrumo.application.inventory.registered_requests import InventoryAcquisitionCostRequest
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryLedger,
@@ -21,8 +20,6 @@ from cadrumo.domain.contribuyente.inventory.records import (
     ValuationMethod,
     load_inventory_acquisition_cost,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,7 +62,7 @@ def _cost() -> InventoryAcquisitionCost:
 def _movement() -> MovementRecord:
     return MovementRecord.from_purchase_acquisition(
         movement_id="mv-1",
-        movement_date=date(_YEAR, 3, 1),
+        movement_date=date(2026, 3, 1),
         sku="widget",
         quantity=Decimal("10"),
         acquisition_cost=_cost(),
@@ -83,7 +80,7 @@ def test_a_movement_withholds_its_purchase_facts_unless_they_are_named() -> None
 def test_the_named_detail_returns_what_a_correction_would_otherwise_ask_for() -> None:
     ledger = InventoryLedger(
         actividad_id="act-1",
-        year=_YEAR,
+        year=2026,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("0.00"),
         closing_authority_record=None,

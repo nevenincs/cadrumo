@@ -10,7 +10,6 @@ import textwrap
 from collections.abc import Generator
 from contextlib import ExitStack
 from contextvars import ContextVar
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -26,7 +25,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 with bundled_indexed_authority().operation() as _operation:
     _FILING_YEAR = _operation.supported_filing_years().horizon
-    _ACTIVITY_START = date(_operation.supported_filing_years().floor, 1, 1).isoformat()
 _PRIOR_YEAR = _FILING_YEAR - 1
 
 _CLI_HARNESS = """
@@ -706,7 +704,7 @@ def test_cross_locale_non_granted_verify_reuses_one_report_for_one_draft(
         modelo="130",
         year=str(_FILING_YEAR),
         period="1T",
-        activity_start_date=_ACTIVITY_START,
+        activity_start_date="2020-01-01",
         record_prior_year_renta=True,
         installed_process_world=installed_process_world,
     )

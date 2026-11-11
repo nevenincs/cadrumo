@@ -28,12 +28,10 @@ from pydantic import ValidationError
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
 from ....core.json_contract import strict_round_trip
 from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..overview_results import OverviewCalendarEventPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
 _NIF = "12345678Z"
 
 
@@ -46,7 +44,7 @@ def _event(
     return OverviewCalendarEvent(
         event_type=event_type,
         notificacion_estado_servicio=notificacion_estado_servicio,
-        event_date=date(_YEAR, 4, 15),
+        event_date=date(2026, 4, 15),
         source="live-snapshot",
         summary="Modelo 303 1T filed",
         reference_id="REF-303-1T",

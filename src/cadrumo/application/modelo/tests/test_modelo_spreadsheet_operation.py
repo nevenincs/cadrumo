@@ -28,7 +28,6 @@ from ....core.operations import (
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.relations import relation_source_requirements
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -60,7 +59,7 @@ from ..modelo_spreadsheet_registration import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_PERIOD = PublicPeriod(filing_year=filing_year_envelope().horizon, code="1T")
+_PERIOD = PublicPeriod(filing_year=2026, code="1T")
 
 
 @pytest.mark.parametrize("verb", ["pull", "calculate", "verify"])
@@ -262,7 +261,7 @@ def test_prefill_admission_uses_only_published_source_periods_and_requires_a_pin
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     # The published Renta revision declares both settlement and evidence
     # relations; the quarterly 130 revision selected here previously had none.
-    period = PublicPeriod(filing_year=newest_authored_edition("100"), code="0A")
+    period = PublicPeriod(filing_year=2024, code="0A")
     payload = ModeloSpreadsheetExportRequest(
         profile_id=_PROFILE,
         modelo="100",

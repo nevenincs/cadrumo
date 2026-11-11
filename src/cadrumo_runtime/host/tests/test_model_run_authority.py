@@ -195,7 +195,7 @@ def _harness(definition_id: str, authority_operation: PinnedAuthorityOperation, 
             dek_epoch=uuid4(),
         ),
     )
-    instant = datetime(1980, 10, 18, 12, tzinfo=UTC)
+    instant = datetime(2026, 10, 18, 12, tzinfo=UTC)
     session = AccessSession(
         session_id=uuid4(),
         binding=identity.binding,

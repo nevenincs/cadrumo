@@ -6,19 +6,16 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 USD_AMOUNT = Decimal("100.00")
-
-_BOOKING_DAY = date(filing_year_envelope().horizon, 1, 15)
 
 
 def usd_raw(provider_id: str, *, amount: Decimal = USD_AMOUNT) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=_BOOKING_DAY,
-        value_date=_BOOKING_DAY,
+        booked_date=date(2024, 1, 15),
+        value_date=date(2024, 1, 15),
         amount=amount,
         currency="USD",
         counterparty="Acme Corp",

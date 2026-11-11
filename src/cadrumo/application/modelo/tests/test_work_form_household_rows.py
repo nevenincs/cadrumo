@@ -1,4 +1,4 @@
-"""The newest authored Modelo 100 form serves descendants and ascendants as row groups read from the stored household.
+"""The 2025 Modelo 100 form serves descendants and ascendants as row groups read from the stored household.
 
 Each case runs the real path: a real profile record goes through the production
 profile resolver, its row values and source traces are persisted onto a
@@ -20,7 +20,6 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
 )
@@ -44,12 +43,8 @@ from .work_form_fixture import built_form, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_YEAR = newest_authored_edition("100")
-"""The exercise of the newest authored Modelo 100 edition."""
-_CHILD_BIRTH = date(_YEAR - 6, 3, 14)
-"""A child of six in that exercise."""
 _BUCKET = "0de41ce4-0000-4000-8000-000000000702"
-_T0 = datetime(1980, 11, 2, 10, 0, tzinfo=UTC)
+_T0 = datetime(2026, 11, 2, 10, 0, tzinfo=UTC)
 _CHILD_LIMIT = 15
 _ASCENDANT_LIMIT = 4
 
@@ -73,7 +68,7 @@ def _descendant_facts(
 
 
 def _calculated(operation: PinnedAuthorityOperation, record: UserProfileRecord) -> CalculationRevision:
-    snapshot = form_snapshot(operation, "100", _YEAR, "0A")
+    snapshot = form_snapshot(operation, "100", 2025, "0A")
     resolution = resolve_profile_sourced_bindings(
         snapshot, bucket_id=_BUCKET, profile_record=record, operation=operation
     )
@@ -130,7 +125,7 @@ def _group(
 def _form(
     operation: PinnedAuthorityOperation, revision: CalculationRevision, language: OutputLanguage = OutputLanguage.EN
 ) -> ModeloWorkForm:
-    return built_form(operation, "100", _YEAR, "0A", revision=revision, language=language)
+    return built_form(operation, "100", 2025, "0A", revision=revision, language=language)
 
 
 def _incomplete_lines(
@@ -221,7 +216,7 @@ def test_a_zero_count_that_is_not_plain_text_zero_still_proves_the_group_empty(
 def test_a_count_larger_than_the_stored_rows_serves_the_stored_rows_and_says_the_group_is_incomplete(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    child = DescendantInfo(birth_date=_CHILD_BIRTH, convive_con_contribuyente=True, nif="12345678Z")
+    child = DescendantInfo(birth_date=date(2019, 3, 14), convive_con_contribuyente=True, nif="12345678Z")
     facts = (
         *_descendant_facts(operation, (child,)),
         UserProfileFact(path="renta_family.descendientes_count", value="3"),
@@ -246,7 +241,7 @@ def test_a_count_larger_than_the_stored_rows_serves_the_stored_rows_and_says_the
 
 
 def test_the_incomplete_finding_is_worded_in_every_language(operation: PinnedAuthorityOperation) -> None:
-    child = DescendantInfo(birth_date=_CHILD_BIRTH, convive_con_contribuyente=True)
+    child = DescendantInfo(birth_date=date(2019, 3, 14), convive_con_contribuyente=True)
     facts = (
         *_descendant_facts(operation, (child,)),
         UserProfileFact(path="renta_family.descendientes_count", value="3"),
@@ -267,7 +262,7 @@ def test_the_incomplete_finding_is_worded_in_every_language(operation: PinnedAut
 def test_a_count_equal_to_the_stored_rows_or_a_household_without_a_count_raises_nothing(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    child = DescendantInfo(birth_date=_CHILD_BIRTH, convive_con_contribuyente=True, nif="12345678Z")
+    child = DescendantInfo(birth_date=date(2019, 3, 14), convive_con_contribuyente=True, nif="12345678Z")
     rows = _descendant_facts(operation, (child,))
     counted = _calculated(
         operation, _record(*rows, UserProfileFact(path="renta_family.descendientes_count", value="1"))
@@ -304,7 +299,7 @@ def test_each_incomplete_group_is_one_finding_not_one_per_box(operation: PinnedA
         UserProfileFact(path="renta_family.descendientes_count", value="4"),
         UserProfileFact(path="renta_family.ascendientes_count", value="2"),
         UserProfileFact(path="renta_family.ascendiente.0.birth_date", value="1950-02-03"),
-        UserProfileFact(path="renta_family.descendiente.0.birth_date", value=_CHILD_BIRTH.isoformat()),
+        UserProfileFact(path="renta_family.descendiente.0.birth_date", value="2019-03-14"),
     )
 
     lines = _incomplete_lines(operation, _calculated(operation, record))
@@ -319,7 +314,7 @@ def test_one_descendant_is_one_row_with_its_stored_facts_and_unknown_cells_elsew
     operation: PinnedAuthorityOperation,
 ) -> None:
     child = DescendantInfo(
-        birth_date=_CHILD_BIRTH,
+        birth_date=date(2019, 3, 14),
         convive_con_contribuyente=True,
         nif="12345678Z",
         apellidos_nombre="Ortega Navarro Pablo",
@@ -332,7 +327,7 @@ def test_one_descendant_is_one_row_with_its_stored_facts_and_unknown_cells_elsew
     assert [row.index for row in group.rows] == [1]
     (cells,) = _cells(group)
     assert cells["NIFDLG"] == "12345678Z"
-    assert cells["FNACDLG"] == _CHILD_BIRTH.isoformat()
+    assert cells["FNACDLG"] == "2019-03-14"
     assert cells["APENOMDLG"] == "Ortega Navarro Pablo"
     # No stored leaf states the official disability clave, so that cell stays unknown.
     assert cells["MINUSDLG"] is None

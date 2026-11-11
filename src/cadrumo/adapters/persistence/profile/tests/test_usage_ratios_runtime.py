@@ -16,10 +16,7 @@ from cadrumo.application.ledger.ratios import (
     validate_ratios_for_bucket,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -37,7 +34,7 @@ class TestRuntimeFacade:
                 bucket_id=profile.bucket_id,
                 category=SpendingCategory.from_registry("arrendamiento_vivienda_afecto"),
                 ratio=Decimal("0.42"),
-                year=_YEAR,
+                year=2025,
                 operation=operation,
             )
 
@@ -48,7 +45,7 @@ class TestRuntimeFacade:
             assert report.profile_present is True
             assert report.overrides_count == 1
 
-            rows = list_eligible_ratios_for_bucket(bucket_id=profile.bucket_id, year=_YEAR, operation=operation)
+            rows = list_eligible_ratios_for_bucket(bucket_id=profile.bucket_id, year=2025, operation=operation)
             targeted = next(
                 row for row in rows if row.category == SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
             )
@@ -73,7 +70,7 @@ class TestRuntimeFacade:
                     bucket_id=_OTHER_BUCKET_ID,
                     category=SpendingCategory.from_registry("arrendamiento_vivienda_afecto"),
                     ratio=Decimal("0.42"),
-                    year=_YEAR,
+                    year=2025,
                     operation=operation,
                 )
 

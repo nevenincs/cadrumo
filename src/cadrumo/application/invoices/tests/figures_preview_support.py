@@ -8,8 +8,6 @@ from datetime import date
 from typing import Any
 from uuid import UUID
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.iva.schema import InvoiceKind
@@ -18,10 +16,8 @@ from ..catalogue_creation_ports import CatalogueInvoiceRateError
 from ..figures_preview_contracts import InvoiceFiguresPreviewLine, InvoiceFiguresPreviewRequest
 from ..figures_preview_operation import preview_invoice_figures
 
-_YEAR = filing_year_envelope().horizon
-
 PROFILE = UUID("5aa00000-0000-4000-8000-0000000000bb")
-APRIL = date(_YEAR, 4, 15)
+APRIL = date(2026, 4, 15)
 RECORDING_PROFILE = UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
 
 

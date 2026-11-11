@@ -14,7 +14,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationPublicDefinitionRegistrationV1
@@ -34,8 +33,6 @@ from ..registered_operation import (
 from ..requests import RetencionSoportadaListRequest, RetencionSoportadaRemoveRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
@@ -65,13 +62,13 @@ def _request(definition_id: str, payload: BaseModel) -> OperationRequest[BaseMod
 
 
 def _list_payload(profile_id: UUID = _PROFILE) -> RetencionSoportadaListRequest:
-    return RetencionSoportadaListRequest(profile_id=profile_id, ejercicio=_YEAR)
+    return RetencionSoportadaListRequest(profile_id=profile_id, ejercicio=2024)
 
 
 def _remove_payload() -> RetencionSoportadaRemoveRequest:
     return RetencionSoportadaRemoveRequest(
         profile_id=_PROFILE,
-        ejercicio=_YEAR,
+        ejercicio=2024,
         income_class=RetencionSoportadaClase.TRABAJO,
         payer_ref="a" * 64,
         expected_revision_id="rev-1",

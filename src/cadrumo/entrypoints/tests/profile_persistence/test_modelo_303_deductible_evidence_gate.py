@@ -69,7 +69,6 @@ from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind
@@ -118,11 +117,11 @@ def bucket_id() -> str:
 
 
 _TAX_ID = persona_tax_id("alta.titular")
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2026
 _PERIOD = "1T"
-_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
-_CALCULATED_AT = datetime(_YEAR, 4, 5, 10, 0, tzinfo=UTC)
-_VERIFIED_AT = datetime(_YEAR, 4, 6, 10, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_CALCULATED_AT = datetime(2026, 4, 5, 10, 0, tzinfo=UTC)
+_VERIFIED_AT = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
 
 
 def _inward_export_ports(
@@ -663,7 +662,7 @@ def test_a_linked_invoice_blocks_until_its_factura_is_stored_then_verifies_and_f
                 counterparty_name="Proveedor Ejemplo SL",
                 counterparty_tax_id="B00015016",
                 counterparty_country="ES",
-                invoice_number=f"F{_YEAR}-0042",
+                invoice_number="F2026-0042",
                 issued_at=date(_YEAR, 2, 15),
                 taxable_base=Decimal("200.00"),
                 iva_rate=Decimal("21"),
@@ -743,7 +742,7 @@ def test_a_linked_invoice_blocks_until_its_factura_is_stored_then_verifies_and_f
 
         add_attachment(
             AttachmentStore(objects=profile.repository),
-            content=AttachmentBytesContent(data=f"%PDF-1.4 synthetic factura F{_YEAR}-0042".encode()),
+            content=AttachmentBytesContent(data=b"%PDF-1.4 synthetic factura F2026-0042"),
             request=AttachmentIngestionRequest(
                 kind=AttachmentKind.INVOICE_PDF,
                 source=AttachmentSource.LOCAL_FILE,
@@ -1078,7 +1077,7 @@ def test_the_form_offers_the_check_again_once_evidence_is_attached_after_a_block
 
 def _work_unit() -> WorkUnit:
     period = Period.from_year_and_code(_YEAR, _PERIOD)
-    revision_id = str(open_ended_revision("303").id)
+    revision_id = "2026-y-siguientes"
     modelo = ModeloCode("303")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(

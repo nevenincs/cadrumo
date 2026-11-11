@@ -18,7 +18,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
@@ -40,8 +39,6 @@ from ..apoderado_contracts import (
 from ..apoderado_execution import ApoderadoOperationExecutor, ApoderadoOperationPorts
 from ..apoderado_operation import build_apoderado_operation_definitions, build_apoderado_operation_registrations
 from ..apoderado_service import ApoderadoStatus
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,7 +76,7 @@ def test_apoderado_definitions_bind_the_real_public_graph_and_one_use_identity_s
 
 
 _PIN = cast(PinnedAuthorityOperation, object())
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 def _registry() -> OperationRegistry:
@@ -207,7 +204,7 @@ def test_apoderado_public_status_is_complete_and_rejects_a_foreign_profile() -> 
         represented_nif="12345678Z",
         granted_scopes=("ALL",),
         catalogue_version="v1",
-        configured_at=datetime(1980, 1, 1, tzinfo=UTC),
+        configured_at=datetime(2026, 1, 1, tzinfo=UTC),
     )
     snapshot = ApoderadoStatusSnapshot.from_status(status)
     assert snapshot.bucket_id == _PROFILE

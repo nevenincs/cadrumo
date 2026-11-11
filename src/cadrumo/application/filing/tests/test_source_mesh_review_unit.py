@@ -20,7 +20,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.hashing import content_hash_hex
@@ -45,7 +44,7 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
         counterparty_tax_id=_COUNTERPARTY_CIF,
         counterparty_country="ES",
         invoice_number=invoice_number,
-        issued_at=date(filing_year_envelope().horizon, 3, 10),
+        issued_at=date(2026, 3, 10),
         taxable_base=taxable_base,
         iva_rate=Decimal("21"),
         currency="EUR",

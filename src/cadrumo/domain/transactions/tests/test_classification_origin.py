@@ -16,7 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..classification_origin import (
     CLASSIFICATION_DECISION_FIELDS,
     ClassificationOrigin,
@@ -29,9 +28,6 @@ from ..enums import BusinessClassification, TransactionDirection
 from ..models import Transaction, TransactionCatalogue
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..service import set_classification
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 
@@ -50,7 +46,7 @@ def _row(
         {
             "raw": RawTransaction(
                 provider_transaction_id="synthetic-origin-row",
-                booked_date=date(_YEAR, 4, 10),
+                booked_date=date(2026, 4, 10),
                 amount=Decimal("121.00"),
                 currency="EUR",
                 description="synthetic row",
@@ -59,7 +55,7 @@ def _row(
                     source_sha256="b" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
+                    ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
                     provider_name="csv",
                 ),
                 raw_fields={"source": "synthetic"},
@@ -248,7 +244,7 @@ def test_a_write_that_changes_a_tax_bearing_fact_records_who_wrote_it(
 def test_a_change_to_the_movements_money_or_date_is_a_change_to_a_tax_bearing_fact() -> None:
     """The amount and the dates live on the raw movement, and decide the base and the period all the same."""
     current = _row(BusinessClassification.BUSINESS, classified_by="rule:vendor-map", origin=_AUTOMATIC)
-    for change in ({"amount": Decimal("242.00")}, {"booked_date": date(_YEAR, 7, 1)}, {"currency": "USD"}):
+    for change in ({"amount": Decimal("242.00")}, {"booked_date": date(2026, 7, 1)}, {"currency": "USD"}):
         moved = current.model_copy(update={"raw": current.raw.model_copy(update=change)})
         stamped = with_classification_origin(moved, replaces=current, written=_PERSON, decided=False)
         assert set(change) <= CLASSIFICATION_DECISION_FIELDS

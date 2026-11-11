@@ -18,7 +18,6 @@ from .....core.prorrata_exclusions import Art104TresExclusion
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.iva_category_catalogue import require_iva_category
 from .....domain.calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
@@ -28,8 +27,6 @@ from ..transactions import TransactionCatalogueRepository
 from .test_iva_ledger_prorrata_apportionment import fully_taxable_purchase_row, fully_taxable_sale_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
-
-_EXERCISE = filing_year_envelope().horizon
 _BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"
 _SETTLEMENT = "4T"
 
@@ -40,7 +37,7 @@ def _sale(
     category: str = "domestic_general",
     article: str | None = None,
     excluded: bool = False,
-    year: int = _EXERCISE,
+    year: int = 2026,
 ) -> Transaction:
     original = fully_taxable_sale_row(name)
     data = original.model_dump()
@@ -77,13 +74,13 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
             _sale("second-sale"),
             _sale("exempt-sale", category="domestic_exempt", article=None if unclassified else "art_20_uno_8"),
             _sale("excluded-sale", excluded=True),
-            _sale("prior-year-sale", year=_EXERCISE - 1),
+            _sale("prior-year-sale", year=2025),
             fully_taxable_purchase_row("purchase-not-turnover"),
         )
         transactions.save(TransactionCatalogue.from_transactions(rows))
         aggregation = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET,
-            period=Period.from_year_and_code(_EXERCISE, "0A"),
+            period=Period.from_year_and_code(2026, "0A"),
             transaction_repository=transactions,
             invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
             prorrata_register_repository=prorrata,
@@ -110,11 +107,11 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
         }
         original = dict(values)
         diagnostics = collect_prorrata_regularizacion_diagnostics(
-            operation.snapshot("303", filing_year=_EXERCISE, period="4T").revision,
+            operation.snapshot("303", filing_year=2026, period="4T").revision,
             values,
             modelo="303",
             period_token=_SETTLEMENT,
-            filing_year=_EXERCISE,
+            filing_year=2026,
             bucket_id=_BUCKET,
             prorrata_register_repository=prorrata,
             transaction_repository=transactions,
@@ -162,11 +159,11 @@ def test_unreadable_register_keeps_its_degraded_storage_advisory(tmp_path: Path,
             )
             assert tampered.rowcount == 1
         diagnostics = collect_prorrata_regularizacion_diagnostics(
-            operation.snapshot("303", filing_year=_EXERCISE, period=period).revision,
+            operation.snapshot("303", filing_year=2026, period=period).revision,
             {},
             modelo="303",
             period_token=period,
-            filing_year=_EXERCISE,
+            filing_year=2026,
             bucket_id=_BUCKET,
             prorrata_register_repository=prorrata,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),

@@ -29,7 +29,6 @@ from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngress
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.errors.error_codes import build_error_envelope
-from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
@@ -37,7 +36,6 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -52,8 +50,6 @@ from cadrumo.domain.iva_compensation.errors import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _HISTORY_BUCKET_ID = "30330300-0000-4000-8000-000000000303"
 _CONFLICT_BUCKET_ID = "30330300-0000-4000-8000-000000000304"
@@ -114,24 +110,24 @@ def test_three_year_filed_history_repository_projects_compensation_lots(
         repository = IvaCompensationHistoryRepository()
         observations = (
             filed_303_compensation_observation(
-                filing_year=_YEAR - 2,
+                filing_year=2024,
                 period="4T",
                 resultado=Decimal("-100.00"),
             ),
             filed_303_compensation_observation(
-                filing_year=_YEAR - 1,
+                filing_year=2025,
                 period="2T",
                 resultado=Decimal("25.00"),
                 applied=Decimal("40.00"),
                 posterior=Decimal("60.00"),
             ),
             filed_303_compensation_observation(
-                filing_year=_YEAR - 1,
+                filing_year=2025,
                 period="4T",
                 resultado=Decimal("-75.00"),
             ),
             filed_303_compensation_observation(
-                filing_year=_YEAR,
+                filing_year=2026,
                 period="1T",
                 resultado=Decimal("10.00"),
                 applied=Decimal("20.00"),
@@ -143,19 +139,19 @@ def test_three_year_filed_history_repository_projects_compensation_lots(
             repository.save_period(_history_state_from_filed_observation(observation, operation=operation))
 
         reloaded = IvaCompensationHistoryRepository().list_periods()
-        report = build_iva_compensation_carry_forward_report(reloaded, as_of_year=_YEAR, operation=operation)
+        report = build_iva_compensation_carry_forward_report(reloaded, as_of_year=2026, operation=operation)
 
     assert tuple(state.source_observation_key for state in reloaded) == (
-        f"303:{_YEAR - 2}:4T:{_YEAR - 2}3034T000001",
-        f"303:{_YEAR - 1}:2T:{_YEAR - 1}3032T000001",
-        f"303:{_YEAR - 1}:4T:{_YEAR - 1}3034T000001",
-        f"303:{_YEAR}:1T:{_YEAR}3031T000001",
+        "303:2024:4T:20243034T000001",
+        "303:2025:2T:20253032T000001",
+        "303:2025:4T:20253034T000001",
+        "303:2026:1T:20263031T000001",
     )
     assert [(state.filing_year, state.period) for state in reloaded] == [
-        (_YEAR - 2, Period.from_year_and_code(_YEAR - 2, "4T")),
-        (_YEAR - 1, Period.from_year_and_code(_YEAR - 1, "2T")),
-        (_YEAR - 1, Period.from_year_and_code(_YEAR - 1, "4T")),
-        (_YEAR, Period.from_year_and_code(_YEAR, "1T")),
+        (2024, Period.from_year_and_code(2024, "4T")),
+        (2025, Period.from_year_and_code(2025, "2T")),
+        (2025, Period.from_year_and_code(2025, "4T")),
+        (2026, Period.from_year_and_code(2026, "1T")),
     ]
     assert [
         (
@@ -169,16 +165,16 @@ def test_three_year_filed_history_repository_projects_compensation_lots(
         for lot in report.lots
     ] == [
         (
-            _YEAR - 2,
-            Period.from_year_and_code(_YEAR - 2, "4T"),
+            2024,
+            Period.from_year_and_code(2024, "4T"),
             Decimal("100.00"),
             Decimal("60.00"),
             Decimal("40.00"),
             IvaCompensationExpiryReviewState.ACTIVE,
         ),
         (
-            _YEAR - 1,
-            Period.from_year_and_code(_YEAR - 1, "4T"),
+            2025,
+            Period.from_year_and_code(2025, "4T"),
             Decimal("75.00"),
             Decimal("0"),
             Decimal("75.00"),
@@ -215,7 +211,7 @@ def test_a_filing_with_no_posterior_casilla_still_carries_the_credit_it_generate
     nothing else in the chain watches.
     """
     observation = filed_303_compensation_observation(
-        filing_year=_YEAR - 1,
+        filing_year=2025,
         period="4T",
         resultado=Decimal("-100.00"),
     )
@@ -263,24 +259,20 @@ def test_iva_compensation_history_refuses_a_non_303_envelope() -> None:
                 provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 expediente_id=observation.expediente_id,
                 status=observation.status,
-                source_observation_key=f"130:{observation.ejercicio}:4T:test",
+                source_observation_key="130:2024:4T:test",
                 operation=_authority_operation_for_test,
             )
 
 
 def test_iva_compensation_period_key_raises_localized_year_range_error() -> None:
     # A period cannot be built outside four digits, so the guard is reached with one that was not validated.
-    unvalidated = Period.from_year_and_code(_YEAR, "1T").model_copy(update={"filing_year": 999})
+    unvalidated = Period.from_year_and_code(2026, "1T").model_copy(update={"filing_year": 999})
 
     with pytest.raises(IvaCompensationYearRangeError) as excinfo:
         iva_compensation_period_key(unvalidated)
 
     assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_year_range"
-    assert excinfo.value.context == {
-        "filing_year": 999,
-        "min_year": FOUR_DIGIT_YEAR_FIRST,
-        "max_year": FOUR_DIGIT_YEAR_LAST,
-    }
+    assert excinfo.value.context == {"filing_year": 999, "min_year": 1000, "max_year": 9999}
 
 
 def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric(
@@ -321,7 +313,7 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
     ):
         seed_iva_compensation_period(
             taxpayer_nif=TAXPAYER_REF,
-            period=Period.from_year_and_code(_YEAR - 2, "2T"),
+            period=Period.from_year_and_code(2024, "2T"),
             amount=Decimal("100.00"),
             repository=IvaCompensationHistoryRepository(),
             operation=_authority_operation_for_test,
@@ -330,7 +322,7 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
         with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
             seed_iva_compensation_period(
                 taxpayer_nif=TAXPAYER_REF,
-                period=Period.from_year_and_code(_YEAR - 2, "2T"),
+                period=Period.from_year_and_code(2024, "2T"),
                 amount=Decimal("50.00"),
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
@@ -338,7 +330,7 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
 
         assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
         assert excinfo.value.context == {
-            "filing_year": _YEAR - 2,
+            "filing_year": 2024,
             "period": "2T",
             "existing_provenance": "operator_seed",
         }

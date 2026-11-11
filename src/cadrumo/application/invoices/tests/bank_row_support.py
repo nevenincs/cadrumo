@@ -6,20 +6,16 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-
-_YEAR = filing_year_envelope().horizon
 
 
 def incoming_bank_transaction() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="bank-row-1",
-        booked_date=date(_YEAR, 4, 2),
-        value_date=date(_YEAR, 4, 2),
+        booked_date=date(2026, 4, 2),
+        value_date=date(2026, 4, 2),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Cliente SL",
@@ -29,7 +25,7 @@ def incoming_bank_transaction() -> Transaction:
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(_YEAR, 4, 2, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 2, tzinfo=UTC),
             provider_name="csv",
         ),
         raw_fields={"amount": "121.00"},

@@ -23,11 +23,8 @@ import pytest
 
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from .....domain.bienes_inversion.vocabulary import BienInversionKind
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -54,8 +51,8 @@ def test_two_repository_instances_both_land_their_records() -> None:
     The baseline the interleaved case below is measured against: nothing about
     using two repository instances loses a record on its own.
     """
-    BienesInversionIvaRegisterRepository().add(_record("bien-2022", year=_YEAR - 1))
-    BienesInversionIvaRegisterRepository().add(_record("bien-2023", year=_YEAR))
+    BienesInversionIvaRegisterRepository().add(_record("bien-2022", year=2022))
+    BienesInversionIvaRegisterRepository().add(_record("bien-2023", year=2023))
 
     identifiers = [item.identifier for item in BienesInversionIvaRegisterRepository().load().records]
     assert sorted(identifiers) == ["bien-2022", "bien-2023"]
@@ -81,8 +78,8 @@ def test_a_concurrent_add_does_not_discard_the_other_record() -> None:
         nonlocal interloper_written
         if not interloper_written:
             interloper_written = True
-            BienesInversionIvaRegisterRepository().add(_record("bien-2023", year=_YEAR))
-        return BienesInversionIvaRegister(records=(*current.records, _record("bien-2022", year=_YEAR - 1)))
+            BienesInversionIvaRegisterRepository().add(_record("bien-2023", year=2023))
+        return BienesInversionIvaRegister(records=(*current.records, _record("bien-2022", year=2022)))
 
     # Reaches through the repository's storage kernel deliberately: the point is
     # to interleave INSIDE one guarded add, which the public method does not
@@ -100,11 +97,11 @@ def test_a_duplicate_identifier_is_still_refused_and_not_retried() -> None:
     duplicate refusal into a loop or, worse, into an eventual success.
     """
     repo = BienesInversionIvaRegisterRepository()
-    repo.add(_record("bien-2022", year=_YEAR - 1))
+    repo.add(_record("bien-2022", year=2022))
 
     from .....domain.bienes_inversion.register import BienInversionRecordError
 
     with pytest.raises(BienInversionRecordError):
-        BienesInversionIvaRegisterRepository().add(_record("bien-2022", year=_YEAR - 1))
+        BienesInversionIvaRegisterRepository().add(_record("bien-2022", year=2022))
 
     assert len(BienesInversionIvaRegisterRepository().load().records) == 1

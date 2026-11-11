@@ -16,13 +16,11 @@ resolution behaviour are all asserted against real catalogue state.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
 from typing import Any
 
 import pytest
 from click.testing import Result
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.models import derive_transaction_id
 from ....tests.cli_envelope import unwrap_cli_result
 from ...tests.ledger_corpus_support import load_active_catalogue
@@ -32,8 +30,6 @@ from .profile_world_fixtures import recorded_fx_isolated_backend
 __all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -50,7 +46,7 @@ def _add_row(*, amount: str, description: str, idempotency_key: str) -> str:
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 5, 2).isoformat(),
+            "2026-05-02",
             "--amount",
             amount,
             "--direction",

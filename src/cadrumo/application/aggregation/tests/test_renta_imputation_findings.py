@@ -12,10 +12,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    supported_authored_exercises,
-)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
@@ -239,7 +235,7 @@ def test_a_filed_return_contradicting_its_own_year_blocks(operation: PinnedAutho
 
 def test_counting_a_filed_election_lets_the_fourth_year_return() -> None:
     """A first cash year N binds N, N+1 and N+2; N+3 may return to accrual."""
-    first = filing_year_envelope().floor
+    first = 2020
     filings = ImputationFilingHistory(stated={first: _COBROS, first + 1: _COBROS, first + 2: _COBROS})
     for year, expected in ((first + 2, None), (first + 3, _ACCRUAL)):
         criteria = ImputationCriteria(facts=declared((year, DEVENGO)), filings=filings)
@@ -249,20 +245,20 @@ def test_counting_a_filed_election_lets_the_fourth_year_return() -> None:
 
 
 def test_losing_the_election_to_commercial_accounting_is_no_conflict() -> None:
-    year = EARLIER
+    year = 2024
     facts = (*declared((year, DEVENGO)), in_year(ACCOUNTING, True, year))
     criteria = ImputationCriteria(facts=facts, filings=ImputationFilingHistory(stated={year - 1: _COBROS}))
     assert criteria.usable(year) is _ACCRUAL
 
 
 def test_a_filed_statement_never_fills_an_undeclared_year() -> None:
-    criteria = ImputationCriteria(filings=ImputationFilingHistory(stated={EARLIER: _ACCRUAL}))
-    assert criteria.declared(EARLIER) is None
-    assert criteria.usable(EARLIER) is None
+    criteria = ImputationCriteria(filings=ImputationFilingHistory(stated={2024: _ACCRUAL}))
+    assert criteria.declared(2024) is None
+    assert criteria.usable(2024) is None
 
 
 def test_an_undated_regime_opens_cash_as_setup_writes_it() -> None:
-    year = EARLIER
+    year = 2024
     facts = (
         in_year(CRITERION, CASH, year),
         in_year(ACCOUNTING, False, year),
@@ -289,7 +285,7 @@ def _flag_observation(year: int, casilla: str, value: str) -> RegistryModeloObse
 
 
 def test_the_filing_history_reads_the_marked_box_and_the_record_date(operation: PinnedAuthorityOperation) -> None:
-    year = LATER
+    year = 2025
     filed = build_modelo_filing_record_for_test(modelo="100").model_copy(
         update={
             "filing_year": year - 1,
@@ -328,7 +324,7 @@ def test_the_filing_history_reads_the_marked_box_and_the_record_date(operation: 
 def test_each_election_box_states_its_criterion_by_its_mark(
     operation: PinnedAuthorityOperation, box: str, mark: str, criterion: ActivityImputationCriterion
 ) -> None:
-    year = LATER
+    year = 2025
     history = imputation_filing_history(
         bucket_id=BUCKET_ID,
         year=year,
@@ -344,7 +340,7 @@ def test_each_election_box_states_its_criterion_by_its_mark(
 
 
 def test_a_box_that_is_not_an_election_box_states_nothing(operation: PinnedAuthorityOperation) -> None:
-    year = LATER
+    year = 2025
     history = imputation_filing_history(
         bucket_id=BUCKET_ID,
         year=year,
@@ -359,7 +355,7 @@ def test_a_box_that_is_not_an_election_box_states_nothing(operation: PinnedAutho
     assert history.stated == {}
 
 
-@pytest.mark.parametrize("edition", supported_authored_exercises("100"))
+@pytest.mark.parametrize("edition", [2022, 2023, 2024, 2025])
 def test_the_election_boxes_keep_their_roles_in_each_edition(edition: int) -> None:
     roles = {
         str(casilla.id): casilla.semantic_role
@@ -418,7 +414,7 @@ def _elected(operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, 
     return exported.get("E1ITEMP")
 
 
-@pytest.mark.parametrize("edition", supported_authored_exercises("100"))
+@pytest.mark.parametrize("edition", [2022, 2023, 2024, 2025])
 @pytest.mark.parametrize(("criterion", "marked"), [(CASH, True), (DEVENGO, False)])
 def test_casilla_0169_states_the_year_criterion_in_each_edition(
     operation: PinnedAuthorityOperation, edition: int, criterion: str, marked: bool
@@ -426,7 +422,7 @@ def test_casilla_0169_states_the_year_criterion_in_each_edition(
     regime = UserProfileFact(path=REGIME, value="directa_simplificada")
     facts = (in_year(CRITERION, criterion, edition), regime)
     assert _elected(operation, facts, edition) is marked
-    assert _elected(operation, facts, edition + 1 if edition < LATER else edition - 1) is None
+    assert _elected(operation, facts, edition + 1 if edition < 2025 else edition - 1) is None
     revision = published_snapshot("100", filing_year=edition, period="0A").revision
     binding = next(item for item in revision.bindings if str(item.id) == _CASILLA_0169_BINDING)
     assert "rd-439-2007:art-7" in binding.legal_refs
@@ -435,7 +431,7 @@ def test_casilla_0169_states_the_year_criterion_in_each_edition(
 def test_casilla_0169_stays_absent_when_undeclared_or_outside_direct_estimation(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    year = LATER
+    year = 2025
     assert _elected(operation, (UserProfileFact(path=REGIME, value="directa_normal"),), year) is None
     objetiva = (UserProfileFact(path=REGIME, value="objetiva"), in_year(CRITERION, CASH, year))
     assert _elected(operation, objetiva, year) is None

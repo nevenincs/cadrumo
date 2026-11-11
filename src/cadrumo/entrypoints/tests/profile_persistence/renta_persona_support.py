@@ -57,7 +57,6 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
@@ -140,7 +139,7 @@ class Persona:
     categories: str
     regime: str = "directa_normal"
     criterion: str | None = None
-    activity_start: date = date(filing_year_envelope().floor - 1, 1, 1)
+    activity_start: date = date(2020, 1, 1)
     iae_epigraph: str = "844"
 
 
@@ -438,7 +437,7 @@ def create_work(objects: SecureObjectRepository, *, modelo: str, period: str, re
 def calculate_and_file_quarter(objects: SecureObjectRepository, period: str) -> CalculationRevision:
     """Calculate one Modelo 130 quarter from the ledger and file it locally, so the next quarter carries it."""
     units = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=objects)
-    work_unit_id = create_work(objects, modelo="130", period=period, revision_id=str(open_ended_revision("130").id))
+    work_unit_id = create_work(objects, modelo="130", period=period, revision_id="2019-y-siguientes")
     revision = calculate_revision_from_bucket_aggregation(
         work_unit_id,
         casilla_inputs={validated_casilla_id("16"): Decimal("0"), validated_casilla_id("18"): Decimal("0")},

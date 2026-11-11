@@ -33,7 +33,7 @@ class TestAccessor:
         resolution = _resolution(
             binding_values={"b.decimal": Decimal("1")},
             enum_binding_values={"b.enum": "x"},
-            date_binding_values={"b.date": date(1980, 1, 1)},
+            date_binding_values={"b.date": date(2026, 1, 1)},
         )
 
         assert profile_resolved_binding_ids(resolution) == frozenset(
@@ -48,7 +48,7 @@ class TestAccessor:
         [
             ("binding_values", {"only": Decimal("0")}),
             ("enum_binding_values", {"only": "v"}),
-            ("date_binding_values", {"only": date(1980, 1, 1)}),
+            ("date_binding_values", {"only": date(2026, 1, 1)}),
         ],
     )
     def test_each_channel_alone_is_sufficient(self, channel: str, value: object) -> None:

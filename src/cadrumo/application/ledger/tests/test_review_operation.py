@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import date
 from uuid import UUID
 
 import pytest
@@ -16,7 +15,6 @@ from ....core.hashing import canonical_json_bytes
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
 from ...operations.models import OperationRequest
@@ -38,8 +36,6 @@ from ..review_operation import (
 )
 from ..transaction_projection import LedgerTransactionProjection
 from .registration_access_context_support import registration_access_context
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -89,8 +85,8 @@ def _access_context(
 def _transaction(transaction_id: str) -> LedgerTransactionProjection:
     payload = LedgerTransactionPayload(
         transaction_id=transaction_id,
-        date=date(_YEAR, 1, 2).isoformat(),
-        booked_date=date(_YEAR, 1, 2).isoformat(),
+        date="2026-01-02",
+        booked_date="2026-01-02",
         amount="10.00",
         currency="EUR",
         direction="incoming",
@@ -98,8 +94,8 @@ def _transaction(transaction_id: str) -> LedgerTransactionProjection:
         business_classification="business",
         lifecycle_state="active",
         classified_by="operator",
-        created_at="1980-01-02T10:00:00Z",
-        modified_at="1980-01-02T10:00:00Z",
+        created_at="2026-01-02T10:00:00Z",
+        modified_at="2026-01-02T10:00:00Z",
     )
     return LedgerTransactionProjection.from_payload(payload)
 
@@ -111,7 +107,7 @@ def _row(
 ) -> LedgerReviewRowProjection:
     return LedgerReviewRowProjection(
         id=transaction_id,
-        date=date(_YEAR, 1, 2).isoformat(),
+        date="2026-01-02",
         amount="10.00",
         description="Canonical review row",
         status=LedgerReviewStatus.PENDING,
@@ -152,7 +148,7 @@ def test_review_request_hides_malformed_private_filter_text() -> None:
     ("filters", "expected_period"),
     [
         ((), None),
-        (("period=1T", f"year={_YEAR}"), Period.from_year_and_code(_YEAR, "1T")),
+        (("period=1T", "year=2026"), Period.from_year_and_code(2026, "1T")),
     ],
 )
 def test_review_access_uses_only_canonical_period_scope_and_never_commit(

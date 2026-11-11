@@ -24,7 +24,7 @@ from .conformance_family_contract import (
 
 _DIAGNOSTIC_ID = "conformance-diagnostic-1"
 _PHONE_STATE = AuthDiagnosticPhoneState.APP_PROMPTED_NOT_ACCEPTED
-_CAPTURED_AT = datetime(1980, 5, 19, 8, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
 _SEEDED_PAYLOAD: dict[str, object] = {
     "diagnostic_id": _DIAGNOSTIC_ID,
     "reason": "post-auth-landing-timeout",

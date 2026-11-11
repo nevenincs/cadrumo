@@ -59,13 +59,9 @@ from cadrumo.application.aggregation.withholding_recognition import (
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
-
-_YEAR = filing_year_envelope().horizon
-_NEXT = _YEAR + 1
-_AFTER = _YEAR + 2
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 _PROFESSIONAL_SCHEME = RetencionScheme("actividades_profesionales")
@@ -88,7 +84,7 @@ def _command(
     *,
     allocation_id: str = "allocation-1",
     payment_id: str = "payment-1",
-    paid_on: date = date(_YEAR, 4, 2),
+    paid_on: date = date(2025, 4, 2),
     taxable_base: str = "300.00",
     retencion_amount: str = "57.00",
     income_kind: WithholdingIncomeKind = WithholdingIncomeKind.PROFESSIONAL,
@@ -136,7 +132,7 @@ def _command(
             liability_settlement=Decimal(liability_settlement),
         ),
         recognition_evidence=WithholdingRecognitionEvidence(
-            applicable_year=_YEAR,
+            applicable_year=2025,
             recipient_tax_status=recipient_status,
             recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
             income_kind=income_kind,
@@ -156,7 +152,7 @@ def _capital_command(
     payment_id: str | None = None,
     paid_on: date | None = None,
     exigibility_id: str = "capital-exigibility-2025-12",
-    exigible_on: date = date(_YEAR, 12, 15),
+    exigible_on: date = date(2025, 12, 15),
     settlement_amount: str = "0.00",
     modelo_193_pending_payment: Modelo193PendingPaymentEvidence | None = None,
 ) -> WithholdingEvidenceCaptureCommand:
@@ -181,7 +177,7 @@ def _capital_command(
             liability_settlement=Decimal("405.00"),
         ),
         recognition_evidence=WithholdingRecognitionEvidence(
-            applicable_year=_YEAR,
+            applicable_year=2025,
             recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
             recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
             income_kind=WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL,
@@ -255,7 +251,7 @@ def _rent_property(key: str, cadastral_reference: str) -> Modelo180PropertyEvide
         cadastral_reference=cadastral_reference,
         recipient_province_code="28",
         modality="1",
-        accrual_year=_YEAR,
+        accrual_year=2025,
         withholding_percentage=Decimal("19.00"),
         address=Modelo180StructuredAddress(
             province_code="28",
@@ -275,33 +271,33 @@ def test_professional_payment_producer_reopens_and_feeds_pinned_m111_resolver(tm
     """Two partial 2T payments feed Modelo 111, despite a 1T invoice source."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, _service = _producer_for(profile.repository)
-        first = producer.capture(_command(), cadence=quarterly_filer_cadence(_YEAR))
+        first = producer.capture(_command(), cadence=quarterly_filer_cadence(2025))
         second = producer.capture(
             _command(
                 allocation_id="allocation-2",
                 payment_id="payment-2",
-                paid_on=date(_YEAR, 6, 30),
+                paid_on=date(2025, 6, 30),
                 taxable_base="200.00",
                 retencion_amount="38.00",
             ),
-            cadence=quarterly_filer_cadence(_YEAR),
+            cadence=quarterly_filer_cadence(2025),
         )
 
-        assert first is not None and first.scope.period == Period.from_year_and_code(_YEAR, "2T")
-        assert first.recognition.recognized_on == date(_YEAR, 4, 2)
+        assert first is not None and first.scope.period == Period.from_year_and_code(2025, "2T")
+        assert first.recognition.recognized_on == date(2025, 4, 2)
         assert second is not None and second.scope == first.scope
 
         _reopened_producer, reopened_service = _producer_for(profile.repository)
         state = reopened_service.read_window(first.scope)
         assert len(state.entries) == 4
         persisted = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
-            "111", Period.from_year_and_code(_YEAR, "2T")
+            "111", Period.from_year_and_code(2025, "2T")
         )
         assert len(persisted) == 2
-        assert {row.accrued_on for row in persisted} == {date(_YEAR, 4, 2).isoformat(), date(_YEAR, 6, 30).isoformat()}
+        assert {row.accrued_on for row in persisted} == {"2025-04-02", "2025-06-30"}
         annual_detail = PercepcionObservationRepositoryAdapter(
             objects=profile.repository
-        ).load_annual_source_observations("111", _YEAR)
+        ).load_annual_source_observations("111", 2025)
         assert len(annual_detail) == 2
         assert {row.clave for row in annual_detail} == {RetencionClave.from_registry("G")}
         assert {row.source_allocation_id for row in annual_detail} == {"allocation-1", "allocation-2"}
@@ -309,7 +305,7 @@ def test_professional_payment_producer_reopens_and_feeds_pinned_m111_resolver(tm
         assert sum((row.retencion_practicada for row in annual_detail), Decimal("0")) == Decimal("95.00")
 
         with bundled_indexed_authority().operation() as operation:
-            snapshot = operation.snapshot("111", filing_year=_YEAR, period="2T")
+            snapshot = operation.snapshot("111", filing_year=2025, period="2T")
             resolution = RetencionesAggregationSourceResolver(
                 ports=RetencionObservationPorts(
                     repository=RetencionObservationRepositoryAdapter(objects=profile.repository)
@@ -318,8 +314,8 @@ def test_professional_payment_producer_reopens_and_feeds_pinned_m111_resolver(tm
                 CalculationSourceContext(
                     bucket_id="synthetic-professional-producer",
                     modelo="111",
-                    filing_year=_YEAR,
-                    period=Period.from_year_and_code(_YEAR, "2T"),
+                    filing_year=2025,
+                    period=Period.from_year_and_code(2025, "2T"),
                     revision=snapshot.revision,
                 )
             )
@@ -336,17 +332,17 @@ def _capture_unpaid_capital_and_reopen(
     producer, _service = _producer_for(repository)
     unpaid = producer.capture(
         _capital_command(
-            modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(_YEAR, 12, 15))
+            modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(2025, 12, 15))
         ),
-        cadence=quarterly_filer_cadence(_YEAR),
+        cadence=quarterly_filer_cadence(2025),
     )
 
     assert unpaid is not None
     assert unpaid.scope == WithholdingWindowScope(
         modelo="123",
-        period=Period.from_year_and_code(_YEAR, "4T"),
+        period=Period.from_year_and_code(2025, "4T"),
     )
-    assert unpaid.recognition.recognized_on == date(_YEAR, 12, 15)
+    assert unpaid.recognition.recognized_on == date(2025, 12, 15)
     assert unpaid.recognition.recognition_event_id == "capital-exigibility-2025-12"
     assert unpaid.recognition.settlement_event_id is None
 
@@ -355,11 +351,11 @@ def _capture_unpaid_capital_and_reopen(
     assert len(before_settlement.entries) == 1
     persisted = RetencionObservationRepositoryAdapter(objects=repository).load_observations("123", unpaid.scope.period)
     assert len(persisted) == 1
-    assert persisted[0].accrued_on == date(_YEAR, 12, 15).isoformat()
+    assert persisted[0].accrued_on == "2025-12-15"
     assert persisted[0].modelo_193_capital is not None
     assert persisted[0].modelo_193_capital.settlement_event is None
     pending_at_accrual = materialize_modelo_193_disclosure_phases(
-        persisted, filing_year=_YEAR, pending_disclosure_years=published_pending_disclosure_years()
+        persisted, filing_year=2025, pending_disclosure_years=published_pending_disclosure_years()
     )
     assert len(pending_at_accrual) == 1
     pending = pending_at_accrual[0]
@@ -381,9 +377,9 @@ def _settle_capital_later(
     """Replace the unpaid generation with the later settlement and check the single entry carries it."""
     settled_command = _capital_command(
         payment_id="capital-settlement-2026-01",
-        paid_on=date(_NEXT, 1, 20),
+        paid_on=date(2026, 1, 20),
         settlement_amount="405.00",
-        modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(_NEXT, 1, 20)),
+        modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(2026, 1, 20)),
     ).model_copy(
         update={
             "mode": WithholdingMutationMode.REPLACE,
@@ -393,11 +389,11 @@ def _settle_capital_later(
             "idempotency_key": "capital-settlement-capture-2026-01",
         }
     )
-    settled = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(_YEAR))
+    settled = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(2025))
 
     assert settled is not None
     assert settled.scope == unpaid.scope
-    assert settled.recognition.recognized_on == date(_YEAR, 12, 15)
+    assert settled.recognition.recognized_on == date(2025, 12, 15)
     assert settled.recognition.recognition_event_id == unpaid.recognition.recognition_event_id
     assert settled.recognition.settlement_event_id == "capital-settlement-2026-01"
     after_settlement = reopened_service.read_window(unpaid.scope)
@@ -408,7 +404,7 @@ def _settle_capital_later(
     assert after_settlement.entries[0].retencion.modelo_193_capital is not None
     assert after_settlement.entries[0].retencion.modelo_193_capital.settlement_event == WithholdingDatedEvent(
         event_id="capital-settlement-2026-01",
-        occurred_on=date(_NEXT, 1, 20),
+        occurred_on=date(2026, 1, 20),
     )
     return settled_command, settled
 
@@ -433,27 +429,27 @@ def _assert_settlement_adds_no_second_123_liability(
 
     pending_after_settlement = materialize_modelo_193_disclosure_phases(
         persisted_after_settlement,
-        filing_year=_YEAR,
+        filing_year=2025,
         pending_disclosure_years=published_pending_disclosure_years(),
     )
     settlement_phase = materialize_modelo_193_disclosure_phases(
         persisted_after_settlement,
-        filing_year=_NEXT,
+        filing_year=2026,
         pending_disclosure_years=published_pending_disclosure_years(),
     )
     assert [row.phase for row in pending_after_settlement] == [Modelo193DisclosurePhase.PENDING]
     assert [row.phase for row in settlement_phase] == [Modelo193DisclosurePhase.SETTLED_PRIOR_ACCRUAL]
     settled_row = settlement_phase[0]
-    assert settled_row.original_accrual_year == _YEAR
+    assert settled_row.original_accrual_year == 2025
     assert settled_row.settlement_event_id == "capital-settlement-2026-01"
     assert settled_row.annual_detail.perceptor_tax_id == "00001500M"
-    assert settled_row.annual_detail.accrual_year == _YEAR
+    assert settled_row.annual_detail.accrual_year == 2025
     assert settled_row.annual_detail.pendiente_flag is None
     assert settled_row.amount_authority_advisory is not None
     assert (
         materialize_modelo_193_disclosure_phases(
             persisted_after_settlement,
-            filing_year=_AFTER,
+            filing_year=2027,
             pending_disclosure_years=published_pending_disclosure_years(),
         )
         == ()
@@ -467,7 +463,7 @@ def _assert_replay_is_idempotent_and_stale_baseline_refused(
     settled: WithholdingEvidenceCaptureResult,
     settled_command: WithholdingEvidenceCaptureCommand,
 ) -> None:
-    replay = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(_YEAR))
+    replay = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(2025))
     assert replay is not None and replay.mutation.replayed
     assert len(reopened_service.read_window(unpaid.scope).entries) == 1
 
@@ -478,7 +474,7 @@ def _assert_replay_is_idempotent_and_stale_baseline_refused(
         }
     )
     with pytest.raises(WithholdingObservationMutationError, match="stale_baseline"):
-        reopened_producer.capture(stale, cadence=quarterly_filer_cadence(_YEAR))
+        reopened_producer.capture(stale, cadence=quarterly_filer_cadence(2025))
     assert len(reopened_service.read_window(unpaid.scope).entries) == 1
 
     audit = reopened_service.read_generation(unpaid.scope, settled.mutation.baseline.generation_id)
@@ -525,7 +521,7 @@ def test_modelo_193_pending_evidence_accepts_only_the_grounded_keys(
 
 def test_modelo_193_unsupported_cause_and_same_year_settlement_refuse_before_mutation(tmp_path: Path) -> None:
     """Unsupported unpaid facts and a contradictory same-year payment leave 123 absent."""
-    original = _capital_pending_payment_detail(transaction_date=date(_YEAR, 12, 15))
+    original = _capital_pending_payment_detail(transaction_date=date(2025, 12, 15))
     with pytest.raises(ValidationError, match="nonpayment_cause"):
         Modelo193PendingPaymentEvidence(
             perception_key="B",
@@ -537,15 +533,15 @@ def test_modelo_193_unsupported_cause_and_same_year_settlement_refuse_before_mut
         producer, service = _producer_for(profile.repository)
         contradictory = _capital_command(
             payment_id="capital-settlement-2025-12",
-            paid_on=date(_YEAR, 12, 20),
+            paid_on=date(2025, 12, 20),
             settlement_amount="405.00",
-            modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(_YEAR, 12, 20)),
+            modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(2025, 12, 20)),
         )
 
         with pytest.raises(WithholdingProducerError, match="nonpayment_cause_conflicts_with_same_year_settlement"):
-            producer.capture(contradictory, cadence=quarterly_filer_cadence(_YEAR))
+            producer.capture(contradictory, cadence=quarterly_filer_cadence(2025))
 
-        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(_YEAR, "4T"))
+        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "4T"))
         assert service.read_window(scope).entries == ()
         assert (
             RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("123", scope.period)
@@ -563,9 +559,9 @@ def test_capital_exigibility_is_required_before_a_123_window_is_mutated(tmp_path
         )
 
         with pytest.raises(WithholdingRecognitionError, match="missing_exigibility_evidence"):
-            producer.capture(missing_exigibility, cadence=quarterly_filer_cadence(_YEAR))
+            producer.capture(missing_exigibility, cadence=quarterly_filer_cadence(2025))
 
-        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(_YEAR, "4T"))
+        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "4T"))
         assert service.read_window(scope).entries == ()
         assert (
             RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("123", scope.period)
@@ -581,10 +577,10 @@ def test_capital_producer_refuses_noncapital_scheme_before_a_123_window_is_mutat
         with pytest.raises(WithholdingProducerError, match="scheme_income_kind_mismatch"):
             producer.capture(
                 _capital_command(scheme=RetencionScheme("actividades_profesionales")),
-                cadence=quarterly_filer_cadence(_YEAR),
+                cadence=quarterly_filer_cadence(2025),
             )
 
-        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(_YEAR, "4T"))
+        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "4T"))
         assert service.read_window(scope).entries == ()
 
 
@@ -595,9 +591,9 @@ def test_invalid_recognition_refuses_before_any_encrypted_projection_write(tmp_p
         command = _command(recipient_status=WithholdingRecipientTaxStatus.NONRESIDENT)
 
         with pytest.raises(WithholdingRecognitionError, match="irnr_unsupported"):
-            producer.capture(command, cadence=quarterly_filer_cadence(_YEAR))
+            producer.capture(command, cadence=quarterly_filer_cadence(2025))
 
-        scope = Period.from_year_and_code(_YEAR, "2T")
+        scope = Period.from_year_and_code(2025, "2T")
         assert RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("111", scope) == ()
         assert (
             service.read_window(
@@ -614,10 +610,10 @@ def test_omitted_capture_does_not_create_a_window(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, _service = _producer_for(profile.repository)
 
-        assert producer.capture(None, cadence=quarterly_filer_cadence(_YEAR)) is None
+        assert producer.capture(None, cadence=quarterly_filer_cadence(2025)) is None
         assert (
             RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
-                "111", Period.from_year_and_code(_YEAR, "2T")
+                "111", Period.from_year_and_code(2025, "2T")
             )
             == ()
         )
@@ -629,13 +625,13 @@ def test_missing_modelo_190_detail_refuses_before_any_encrypted_projection_write
         producer, service = _producer_for(profile.repository)
 
         with pytest.raises(ValueError, match="Modelo 190 annual detail"):
-            producer.capture(_command(modelo_190_detail=None), cadence=quarterly_filer_cadence(_YEAR))
+            producer.capture(_command(modelo_190_detail=None), cadence=quarterly_filer_cadence(2025))
 
-        scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(_YEAR, "2T"))
+        scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
         assert service.read_window(scope).entries == ()
         assert (
             PercepcionObservationRepositoryAdapter(objects=profile.repository).load_annual_source_observations(
-                "111", _YEAR
+                "111", 2025
             )
             == ()
         )
@@ -646,7 +642,7 @@ def test_correction_replaces_active_m111_and_m190_projections_without_erasing_hi
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, service = _producer_for(profile.repository)
         original_command = _command()
-        original = producer.capture(original_command, cadence=quarterly_filer_cadence(_YEAR))
+        original = producer.capture(original_command, cadence=quarterly_filer_cadence(2025))
         assert original is not None
 
         corrected_liability = original_command.liability_snapshot.model_copy(
@@ -661,7 +657,7 @@ def test_correction_replaces_active_m111_and_m190_projections_without_erasing_hi
                 "liability_snapshot": corrected_liability,
                 "modelo_190_detail": _annual_detail(
                     payment_id="payment-1",
-                    paid_on=date(_YEAR, 4, 2),
+                    paid_on=date(2025, 4, 2),
                     taxable_base="280.00",
                     retencion_amount="53.20",
                 ),
@@ -672,12 +668,12 @@ def test_correction_replaces_active_m111_and_m190_projections_without_erasing_hi
                 "idempotency_key": "corrected-capture-1",
             }
         )
-        result = producer.capture(corrected, cadence=quarterly_filer_cadence(_YEAR))
+        result = producer.capture(corrected, cadence=quarterly_filer_cadence(2025))
         assert result is not None
         state = service.read_window(result.scope)
         assert len(state.entries) == 2
         annual = PercepcionObservationRepositoryAdapter(objects=profile.repository).load_annual_source_observations(
-            "111", _YEAR
+            "111", 2025
         )
         assert len(annual) == 1
         assert annual[0].percibido_dinerario == Decimal("280.00")
@@ -694,12 +690,12 @@ def test_income_scheme_mismatch_refuses_without_choosing_another_modelo(tmp_path
 
         with pytest.raises(WithholdingProducerError, match="scheme_income_kind_mismatch"):
             producer.capture(
-                _command(scheme=RetencionScheme("arrendamiento_urbano")), cadence=quarterly_filer_cadence(_YEAR)
+                _command(scheme=RetencionScheme("arrendamiento_urbano")), cadence=quarterly_filer_cadence(2025)
             )
 
         assert (
             RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
-                "111", Period.from_year_and_code(_YEAR, "2T")
+                "111", Period.from_year_and_code(2025, "2T")
             )
             == ()
         )
@@ -747,15 +743,15 @@ def test_liability_dimensions_refuse_before_a_second_projection_write(
     """Each monetary dimension is bounded independently at the atomic boundary."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, service = _producer_for(profile.repository)
-        producer.capture(_amounts_command(first), cadence=quarterly_filer_cadence(_YEAR))
+        producer.capture(_amounts_command(first), cadence=quarterly_filer_cadence(2025))
 
         with pytest.raises(WithholdingObservationMutationError, match=expected):
             producer.capture(
                 _amounts_command(second, allocation_id="allocation-2", payment_id="payment-2"),
-                cadence=quarterly_filer_cadence(_YEAR),
+                cadence=quarterly_filer_cadence(2025),
             )
 
-        scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(_YEAR, "2T"))
+        scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
         assert len(service.read_window(scope).entries) == 2
 
 
@@ -764,8 +760,8 @@ def test_exact_liability_cap_and_replay_do_not_double_count(tmp_path: Path) -> N
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, service = _producer_for(profile.repository)
         first = _command(taxable_base="300.00", retencion_amount="57.00", settlement_amount="300.00")
-        producer.capture(first, cadence=quarterly_filer_cadence(_YEAR))
-        replay = producer.capture(first, cadence=quarterly_filer_cadence(_YEAR))
+        producer.capture(first, cadence=quarterly_filer_cadence(2025))
+        replay = producer.capture(first, cadence=quarterly_filer_cadence(2025))
         producer.capture(
             _command(
                 allocation_id="allocation-2",
@@ -774,7 +770,7 @@ def test_exact_liability_cap_and_replay_do_not_double_count(tmp_path: Path) -> N
                 retencion_amount="38.00",
                 settlement_amount="200.00",
             ),
-            cadence=quarterly_filer_cadence(_YEAR),
+            cadence=quarterly_filer_cadence(2025),
         )
         assert replay is not None and replay.mutation.replayed
         assert len(service.read_window(replay.scope).entries) == 4
@@ -790,7 +786,7 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(
             _command(
                 allocation_id="rent-q1-a",
                 payment_id="rent-payment-q1-a",
-                paid_on=date(_YEAR, 3, 20),
+                paid_on=date(2025, 3, 20),
                 taxable_base="200.00",
                 retencion_amount="38.00",
                 settlement_amount="200.00",
@@ -798,13 +794,13 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(
                 scheme=RetencionScheme("arrendamiento_urbano"),
                 property_detail=_rent_property("office-a", "1234567VK4713S0001AA"),
             ),
-            cadence=quarterly_filer_cadence(_YEAR),
+            cadence=quarterly_filer_cadence(2025),
         )
         producer.capture(
             _command(
                 allocation_id="rent-q2-a",
                 payment_id="rent-payment-q2-a",
-                paid_on=date(_YEAR, 4, 20),
+                paid_on=date(2025, 4, 20),
                 taxable_base="100.00",
                 retencion_amount="19.00",
                 settlement_amount="100.00",
@@ -812,13 +808,13 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(
                 scheme=RetencionScheme("arrendamiento_urbano"),
                 property_detail=_rent_property("office-a", "1234567VK4713S0001AA"),
             ),
-            cadence=quarterly_filer_cadence(_YEAR),
+            cadence=quarterly_filer_cadence(2025),
         )
         producer.capture(
             _command(
                 allocation_id="rent-q2-b",
                 payment_id="rent-payment-q2-b",
-                paid_on=date(_YEAR, 5, 20),
+                paid_on=date(2025, 5, 20),
                 taxable_base="200.00",
                 retencion_amount="38.00",
                 settlement_amount="200.00",
@@ -826,14 +822,14 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(
                 scheme=RetencionScheme("arrendamiento_urbano"),
                 property_detail=_rent_property("office-b", "1234567VK4713S0002BB"),
             ),
-            cadence=quarterly_filer_cadence(_YEAR),
+            cadence=quarterly_filer_cadence(2025),
         )
 
         repository = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        annual_source = repository.load_annual_source_observations("115", _YEAR)
+        annual_source = repository.load_annual_source_observations("115", 2025)
         assert len(annual_source) == 3
         result = aggregate_retenciones_180(
-            annual_source, period=Period.from_year_and_code(_YEAR, "0A"), operation=authority_operation
+            annual_source, period=Period.from_year_and_code(2025, "0A"), operation=authority_operation
         )
         assert result.type2_record_count == 2
         assert result.total_perceptors == 1

@@ -23,14 +23,13 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import (
     persona_facts_beneath,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 WITHHOLDING_FILER_PROFILE_ID: Final[str] = "7c1d2e3f-4a5b-4c6d-8e7f-90a1b2c3d4e5"
-_CLOCK: Final[datetime] = datetime(filing_year_envelope().horizon, 1, 2, 9, tzinfo=UTC)
+_CLOCK: Final[datetime] = datetime(2025, 1, 2, 9, tzinfo=UTC)
 
 LARGE_COMPANY_FACTS: Final[tuple[UserProfileFact, ...]] = (UserProfileFact(path="censo.large_company", value=True),)
 """A large company: the Modelo 111, 115 and 123 schedules all make it monthly (RIRPF art. 108.1)."""

@@ -47,7 +47,7 @@ def _spanish_account() -> OwnBankAccountDetails:
         label="synthetic main account",
         holding=OwnAccountHolding.TITULAR,
         iban=_ES_IBAN,
-        opened_on=date(1980, 1, 15),
+        opened_on=date(2020, 1, 15),
     )
 
 
@@ -62,8 +62,8 @@ def _foreign_account() -> OwnBankAccountDetails:
         bank_city="Ankara",
         bank_country_code="TR",
         currency="TRY",
-        opened_on=date(1981, 3, 1),
-        closed_on=date(1990, 6, 30),
+        opened_on=date(2021, 3, 1),
+        closed_on=date(2026, 6, 30),
     )
 
 
@@ -104,7 +104,7 @@ def test_the_register_survives_encrypted_storage_field_for_field(tmp_path: Path)
         assert loaded == written
         assert [account.own_account_id for account in loaded.accounts] == ["acc-01", "acc-02"]
         assert loaded.account("acc-02").bank_city == "Ankara"
-        assert loaded.account("acc-02").closed_on == date(1990, 6, 30)
+        assert loaded.account("acc-02").closed_on == date(2026, 6, 30)
         assert loaded.designations == _designations()
         assert loaded.last_ordinal == 2
 
@@ -146,9 +146,9 @@ def test_a_refused_change_writes_nothing(tmp_path: Path) -> None:
             )
         with pytest.raises(OwnAccountRegisterValidationError, match="already closed"):
             repository.mutate(
-                lambda current: current.with_closed_account("acc-01", date(1990, 1, 1)).with_closed_account(
+                lambda current: current.with_closed_account("acc-01", date(2026, 1, 1)).with_closed_account(
                     "acc-01",
-                    date(1990, 1, 2),
+                    date(2026, 1, 2),
                 ),
             )
 

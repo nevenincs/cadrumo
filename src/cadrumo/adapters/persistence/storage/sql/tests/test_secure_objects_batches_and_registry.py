@@ -47,7 +47,7 @@ def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Pa
             object_key="existing-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 21, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 21, 0, 0, tzinfo=UTC),
             payload=b"existing-payload",
         )
 
@@ -59,7 +59,7 @@ def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Pa
                         object_key="new-key",
                         classification=SensitivityClass.FINANCIAL,
                         schema_version=1,
-                        written_at=datetime(1980, 5, 22, 21, 5, 0, tzinfo=UTC),
+                        written_at=datetime(2026, 5, 22, 21, 5, 0, tzinfo=UTC),
                         payload=b"must-roll-back",
                     ),
                     SecureObjectWrite(
@@ -67,7 +67,7 @@ def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Pa
                         object_key="existing-key",
                         classification=SensitivityClass.FINANCIAL,
                         schema_version=1,
-                        written_at=datetime(1980, 5, 22, 21, 6, 0, tzinfo=UTC),
+                        written_at=datetime(2026, 5, 22, 21, 6, 0, tzinfo=UTC),
                         payload=b"stale-batch-overwrite",
                         expected_revision_id="e" * 64,
                     ),
@@ -95,7 +95,7 @@ def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Pa
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 22, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 22, 0, 0, tzinfo=UTC),
             payload=b"raw-before",
         )
         with sqlite3.connect(db_path) as con:
@@ -110,7 +110,7 @@ def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Pa
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 22, 5, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 22, 5, 0, tzinfo=UTC),
             payload=b"raw-after",
             expected_revision_id=first_revision_id,
         )
@@ -138,7 +138,7 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 22, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 22, 0, 0, tzinfo=UTC),
             payload=b"raw-before",
         )
         with sqlite3.connect(db_path) as con:
@@ -153,7 +153,7 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 22, 5, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 22, 5, 0, tzinfo=UTC),
             payload=b"raw-current",
         )
         with sqlite3.connect(db_path) as con:
@@ -169,7 +169,7 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
                 hashed_object_key=raw_key,
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,
-                written_at=datetime(1980, 5, 22, 22, 10, 0, tzinfo=UTC),
+                written_at=datetime(2026, 5, 22, 22, 10, 0, tzinfo=UTC),
                 payload=b"raw-stale-overwrite",
                 expected_revision_id=first_revision_id,
             )
@@ -207,7 +207,7 @@ def test_secure_object_load_many_matches_repeated_single_loads_and_uses_one_targ
                 object_key=object_key,
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,
-                written_at=datetime(1980, 5, 23, 9, offset, 0, tzinfo=UTC),
+                written_at=datetime(2026, 5, 23, 9, offset, 0, tzinfo=UTC),
                 payload=payload,
             )
 
@@ -266,7 +266,7 @@ def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_p
             object_key="readable-row",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 23, 10, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 23, 10, 0, 0, tzinfo=UTC),
             payload=b"readable-payload",
         )
         repo.save(
@@ -274,7 +274,7 @@ def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_p
             object_key="schema-row",
             classification=SensitivityClass.FINANCIAL,
             schema_version=2,
-            written_at=datetime(1980, 5, 23, 10, 5, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 23, 10, 5, 0, tzinfo=UTC),
             payload=b"future-schema-payload",
         )
 
@@ -338,7 +338,7 @@ def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
 
     with ephemeral_secure_repo(tmp_path, "peek.db") as (_, _, repo):
         namespace = "cadrumo-test.peek"
-        written_at = datetime(1980, 5, 21, 9, 15, 0, tzinfo=UTC)
+        written_at = datetime(2026, 5, 21, 9, 15, 0, tzinfo=UTC)
         repo.save(
             namespace=namespace,
             object_key="peek-key-non-default",
@@ -371,7 +371,7 @@ def test_peek_metadata_reflects_on_disk_schema_version_drift(tmp_path: Path) -> 
             object_key="drift-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 21, 8, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 21, 8, 0, 0, tzinfo=UTC),
             payload=b"drift-payload",
         )
         before = repo.peek_metadata(namespace, "drift-key")
@@ -406,7 +406,7 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
             object_key=natural_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 21, 7, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 21, 7, 0, 0, tzinfo=UTC),
             payload=b"first-writer-payload",
         )
         SecureObjectRepository(engine=engine).save(
@@ -414,7 +414,7 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
             object_key=natural_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=2,
-            written_at=datetime(1980, 5, 21, 8, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 21, 8, 0, 0, tzinfo=UTC),
             payload=b"second-writer-payload",
         )
 

@@ -10,7 +10,6 @@ import typer
 
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.shared_contracts import DefaultKind
 
@@ -19,8 +18,6 @@ from ..modelo_projection_command_specs import MODELO_PROJECTION_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-_PRIOR_YEAR = _YEAR - 1
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "a" * 64
 
@@ -57,15 +54,15 @@ def test_project_recovery_uses_admitted_year_and_retains_write_effect(
     monkeypatch.setattr(modelo_projection_commands, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
     monkeypatch.setattr(modelo_projection_commands, "run_modelo_project", refuse)
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        modelo_projection_commands.modelo_project(cast(typer.Context, object()), year=_YEAR, ccaa="madrid")
+        modelo_projection_commands.modelo_project(cast(typer.Context, object()), year=2025, ccaa="madrid")
     assert calls == 1
-    assert str(caught.value) == tr(key, year=_YEAR)
+    assert str(caught.value) == tr(key, year=2025)
     assert caught.value.context == {
         "reason": code,
         "operation_id": _OPERATION_ID,
         "terminal_condition": "failed",
         "effect": "updated",
-        "year": _YEAR,
+        "year": 2025,
     }
 
 
@@ -81,12 +78,10 @@ def test_compare_does_not_invent_which_of_two_years_failed(monkeypatch: pytest.M
     monkeypatch.setattr(modelo_projection_commands, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
     monkeypatch.setattr(modelo_projection_commands, "run_modelo_compare", refuse)
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        modelo_projection_commands.modelo_compare(
-            cast(typer.Context, object()), year=[_YEAR, _PRIOR_YEAR], modelo="100"
-        )
+        modelo_projection_commands.modelo_compare(cast(typer.Context, object()), year=[2025, 2024], modelo="100")
     assert calls == 1
     assert str(caught.value) == tr(
-        "cli.app.modelo.compare.recover_no_work_units", modelo="100", year_a=_PRIOR_YEAR, year_b=_YEAR
+        "cli.app.modelo.compare.recover_no_work_units", modelo="100", year_a=2024, year_b=2025
     )
     assert caught.value.context == {
         "reason": code,
@@ -94,8 +89,8 @@ def test_compare_does_not_invent_which_of_two_years_failed(monkeypatch: pytest.M
         "terminal_condition": "failed",
         "effect": "none",
         "modelo": "100",
-        "year_a": _PRIOR_YEAR,
-        "year_b": _YEAR,
+        "year_a": 2024,
+        "year_b": 2025,
     }
 
 
@@ -110,9 +105,9 @@ def test_compare_does_not_invent_which_of_two_years_failed(monkeypatch: pytest.M
 )
 def test_compare_recovery_catalogue_is_complete_in_each_language(language: str, key: str) -> None:
     with override_settings(cadrumo_output_language=language):
-        message = tr(key, modelo="130", year_a=_PRIOR_YEAR, year_b=_YEAR)
+        message = tr(key, modelo="130", year_a=2025, year_b=2026)
     assert message != key
-    assert "130" in message and str(_PRIOR_YEAR) in message and str(_YEAR) in message
+    assert "130" in message and "2025" in message and "2026" in message
     assert "{" not in message and "}" not in message
 
 

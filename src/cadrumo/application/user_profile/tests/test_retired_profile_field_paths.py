@@ -36,9 +36,9 @@ _RETIRED_FACTS = (
     UserProfileFact(path="taxpayer_type.sal_reserva_especial_dotada", value="0"),
     UserProfileFact(path="taxpayer_type.sal_capital_social", value="5000"),
     UserProfileFact(path="taxpayer_type.ley_49_2002_special_regime_option_declared", value=True),
-    UserProfileFact(path="taxpayer_type.ley_49_2002_special_regime_option_date", value="1984-02-03"),
+    UserProfileFact(path="taxpayer_type.ley_49_2002_special_regime_option_date", value="2024-02-03"),
     UserProfileFact(path="taxpayer_type.ley_49_2002_special_regime_renunciation_declared", value=False),
-    UserProfileFact(path="taxpayer_type.ley_49_2002_special_regime_renunciation_date", value="1986-05-11"),
+    UserProfileFact(path="taxpayer_type.ley_49_2002_special_regime_renunciation_date", value="2026-05-11"),
     UserProfileFact(path="irpf.professional_income_withholding_ge_70pct", value=True),
     UserProfileFact(path="irpf.objective_estimation_modulos_iae_epigraph", value="972.1"),
     *(

@@ -67,12 +67,7 @@ from .activity_asset_operation_test_support import (
 from .prorrata_bienes_operation_test_support import prepare_bienes_inversion_operation_conformance_case
 from .registered_executor_payload_context import PayloadBuilder, PayloadContext, PayloadResult
 from .registered_executor_scenario_constants import LEDGER_LIST_PRIVATE_FILTER_SENTINEL, OWN_ACCOUNT_SYNTHETIC_IBAN
-from .registered_executor_seeding_support import (
-    CONFORMANCE_PRIOR_YEAR,
-    CONFORMANCE_YEAR,
-    seed_conformance_invoice,
-    seeded_ledger_track_transaction_id,
-)
+from .registered_executor_seeding_support import seed_conformance_invoice, seeded_ledger_track_transaction_id
 
 _EVIDENCE_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 
@@ -126,11 +121,7 @@ def _ledger_own_account(ctx: PayloadContext) -> PayloadResult:
 def _ledger_remove(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     created = _seed_unprocessed_outgoing(
-        ctx,
-        ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 15),
-        amount="12.00",
-        description="conformance removal dry run seed",
+        ctx, ports, booked_date=date(2025, 1, 15), amount="12.00", description="conformance removal dry run seed"
     )
     return ctx.request(
         ctx.profile_subject,
@@ -148,7 +139,7 @@ def _ledger_allocate(ctx: PayloadContext) -> PayloadResult:
     created = _seed_unprocessed_outgoing(
         ctx,
         ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 17),
+        booked_date=date(2025, 1, 17),
         amount="20.00",
         description="conformance business-share allocation seed",
     )
@@ -167,7 +158,7 @@ def _ledger_classify_single(ctx: PayloadContext) -> PayloadResult:
     created = _seed_unprocessed_outgoing(
         ctx,
         ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 19),
+        booked_date=date(2025, 1, 19),
         amount="22.00",
         description="conformance single classification seed",
     )
@@ -187,14 +178,14 @@ def _ledger_classify_bulk(ctx: PayloadContext) -> PayloadResult:
     created_valid = _seed_unprocessed_outgoing(
         ctx,
         ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 20),
+        booked_date=date(2025, 1, 20),
         amount="23.00",
         description=f"conformance bulk classification valid {ctx.profile_id.hex}",
     )
     created_invalid = _seed_unprocessed_outgoing(
         ctx,
         ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 20),
+        booked_date=date(2025, 1, 20),
         amount="24.00",
         description=f"conformance bulk classification invalid {ctx.profile_id.hex}",
     )
@@ -248,11 +239,7 @@ def _ledger_evidence_stored(ctx: PayloadContext) -> PayloadResult:
 def _ledger_split_manual(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     created = _seed_unprocessed_outgoing(
-        ctx,
-        ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 21),
-        amount="20.00",
-        description="conformance manual split seed",
+        ctx, ports, booked_date=date(2025, 1, 21), amount="20.00", description="conformance manual split seed"
     )
     return ctx.request(
         ctx.profile_subject,
@@ -271,11 +258,7 @@ def _ledger_split_manual(ctx: PayloadContext) -> PayloadResult:
 def _ledger_merge(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     created = _seed_unprocessed_outgoing(
-        ctx,
-        ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 22),
-        amount="20.00",
-        description="conformance manual merge seed",
+        ctx, ports, booked_date=date(2025, 1, 22), amount="20.00", description="conformance manual merge seed"
     )
     split = split_transaction(
         bucket_id=str(ctx.profile_id),
@@ -302,11 +285,7 @@ def _ledger_merge(ctx: PayloadContext) -> PayloadResult:
 def _ledger_update(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     created = _seed_unprocessed_outgoing(
-        ctx,
-        ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 18),
-        amount="21.00",
-        description="conformance ledger update seed",
+        ctx, ports, booked_date=date(2025, 1, 18), amount="21.00", description="conformance ledger update seed"
     )
     return ctx.request(
         ctx.profile_subject,
@@ -322,11 +301,7 @@ def _ledger_update(ctx: PayloadContext) -> PayloadResult:
 def _ledger_reset(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     _seed_unprocessed_outgoing(
-        ctx,
-        ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 16),
-        amount="13.00",
-        description="conformance catalogue reset seed",
+        ctx, ports, booked_date=date(2025, 1, 16), amount="13.00", description="conformance catalogue reset seed"
     )
     return ctx.request(
         ctx.profile_subject,
@@ -358,7 +333,7 @@ def _ledger_add(ctx: PayloadContext) -> PayloadResult:
         ctx.profile_subject,
         {
             "profile_id": ctx.profile_id,
-            "booked_date": date(CONFORMANCE_PRIOR_YEAR, 1, 20).isoformat(),
+            "booked_date": "2025-01-20",
             "amount": "23.00",
             "direction": TransactionDirection.OUTGOING,
             "description": "conformance manual add",
@@ -377,7 +352,7 @@ def _ledger_check(ctx: PayloadContext) -> PayloadResult:
             "kind": InvoiceKind.RECEIVED,
             "bucket_id": str(ctx.profile_id),
             "invoice_number": "CHECK-2025-001",
-            "issued_at": date(CONFORMANCE_PRIOR_YEAR, 5, 1),
+            "issued_at": date(2025, 5, 1),
             "counterparty_name": "Conformance Supplier",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -406,7 +381,7 @@ def _ledger_check(ctx: PayloadContext) -> PayloadResult:
         ctx.profile_subject,
         {
             "profile_id": ctx.profile_id,
-            "period": PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_YEAR, "1T")),
+            "period": PublicPeriod.from_period(Period.from_year_and_code(2026, "1T")),
         },
     )
 
@@ -416,7 +391,7 @@ def _ledger_preflight(ctx: PayloadContext) -> PayloadResult:
     create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=str(ctx.profile_id),
-            booked_date=date(CONFORMANCE_YEAR, 1, 15),
+            booked_date=date(2026, 1, 15),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="conformance preflight selected-period issue",
@@ -433,7 +408,7 @@ def _ledger_preflight(ctx: PayloadContext) -> PayloadResult:
     create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=str(ctx.profile_id),
-            booked_date=date(CONFORMANCE_YEAR, 4, 15),
+            booked_date=date(2026, 4, 15),
             amount=Decimal("242.00"),
             direction=TransactionDirection.OUTGOING,
             description="conformance preflight outside-period issue",
@@ -451,7 +426,7 @@ def _ledger_preflight(ctx: PayloadContext) -> PayloadResult:
         ctx.profile_subject,
         {
             "profile_id": ctx.profile_id,
-            "period": PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_YEAR, "1T")),
+            "period": PublicPeriod.from_period(Period.from_year_and_code(2026, "1T")),
         },
     )
 
@@ -459,11 +434,7 @@ def _ledger_preflight(ctx: PayloadContext) -> PayloadResult:
 def _ledger_history(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     created = _seed_unprocessed_outgoing(
-        ctx,
-        ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 15),
-        amount="12.00",
-        description="conformance history seed",
+        ctx, ports, booked_date=date(2025, 1, 15), amount="12.00", description="conformance history seed"
     )
     return ctx.request(
         ctx.profile_subject,
@@ -478,7 +449,7 @@ def _ledger_history(ctx: PayloadContext) -> PayloadResult:
 def _ledger_view(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     created = _seed_unprocessed_outgoing(
-        ctx, ports, booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 15), amount="12.00", description="conformance view seed"
+        ctx, ports, booked_date=date(2025, 1, 15), amount="12.00", description="conformance view seed"
     )
     reject_llm_suggestion(
         LLMClassificationSuggestion(
@@ -571,7 +542,7 @@ def _ledger_known_values(ctx: PayloadContext) -> PayloadResult:
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=str(ctx.profile_id),
-                booked_date=date(CONFORMANCE_PRIOR_YEAR, 1 + index, 15),
+                booked_date=date(2025, 1 + index, 15),
                 amount=Decimal(10 + index),
                 direction=TransactionDirection.OUTGOING,
                 description=description,
@@ -591,10 +562,10 @@ def _ledger_list(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     for index, (booked_date, description) in enumerate(
         (
-            (date(CONFORMANCE_PRIOR_YEAR, 1, 15), "ledger list page A"),
-            (date(CONFORMANCE_PRIOR_YEAR, 2, 15), "ledger list page B"),
-            (date(CONFORMANCE_PRIOR_YEAR, 3, 15), "ledger list page C"),
-            (date(CONFORMANCE_PRIOR_YEAR, 4, 15), "ledger list outside period"),
+            (date(2025, 1, 15), "ledger list page A"),
+            (date(2025, 2, 15), "ledger list page B"),
+            (date(2025, 3, 15), "ledger list page C"),
+            (date(2025, 4, 15), "ledger list outside period"),
         )
     ):
         create_manual_transaction(
@@ -615,7 +586,7 @@ def _ledger_list(ctx: PayloadContext) -> PayloadResult:
         ctx.profile_subject,
         {
             "profile_id": ctx.profile_id,
-            "filters": ("period=1T", f"year={CONFORMANCE_PRIOR_YEAR}", "classification=not_yet_processed"),
+            "filters": ("period=1T", "year=2025", "classification=not_yet_processed"),
             "group": LEDGER_LIST_PRIVATE_FILTER_SENTINEL,
             "limit": 2,
             "offset": 1,
@@ -681,14 +652,14 @@ def _ledger_actividad_asset(ctx: PayloadContext) -> PayloadResult:
         values.update(
             asset_id=asset_seed.revision.asset_id,
             disposal=ActivityAssetDisposalSnapshot(
-                disposal_date=date(CONFORMANCE_YEAR, 6, 30),
+                disposal_date=date(2025, 6, 30),
                 reason=ActivityAssetDisposalReason.SALE,
                 proceeds=PublicDecimal(decimal="250.00"),
                 transmission_costs=PublicDecimal(decimal="10.00"),
             ),
         )
     elif action == "form-options":
-        values.update(asset_kind=AssetKind.MATERIAL, tax_year=CONFORMANCE_YEAR)
+        values.update(asset_kind=AssetKind.MATERIAL, tax_year=2025)
     elif action in {"list", "acquisition-candidates"}:
         pass
     elif action == "correct":
@@ -702,16 +673,14 @@ def _ledger_actividad_asset(ctx: PayloadContext) -> PayloadResult:
         )
     elif action == "forecast":
         values.update(
-            asset_id=asset_seed.revision.asset_id,
-            covered_from=date(CONFORMANCE_YEAR, 1, 1),
-            covered_until=date(CONFORMANCE_YEAR + 1, 1, 1),
+            asset_id=asset_seed.revision.asset_id, covered_from=date(2025, 1, 1), covered_until=date(2026, 1, 1)
         )
     elif action == "claim":
         values.update(
             forecast=ScheduledAmortizationChargeSnapshot.from_domain(asset_seed.forecast),
         )
     else:
-        values.update(tax_year=CONFORMANCE_YEAR, m130_period="4T")
+        values.update(tax_year=2025, m130_period="4T")
     return ctx.request(ctx.profile_subject, values)
 
 
@@ -725,7 +694,7 @@ def _ledger_invoice_add(ctx: PayloadContext) -> PayloadResult:
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "invoice_number": "CONFORMANCE-INVOICE-2025-ADD",
-            "issued_at": date(CONFORMANCE_PRIOR_YEAR, 5, 1),
+            "issued_at": date(2025, 5, 1),
             "taxable_base": {"decimal": "100.00"},
             "iva_rate": {"decimal": "21"},
             "currency": "EUR",
@@ -743,7 +712,7 @@ def _ledger_invoice_preview(ctx: PayloadContext) -> PayloadResult:
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "invoice_number": "CONFORMANCE-INVOICE-2025-PREVIEW",
-            "issued_at": date(CONFORMANCE_PRIOR_YEAR, 5, 1),
+            "issued_at": date(2025, 5, 1),
             "currency": "EUR",
             "lines": (
                 InvoiceFiguresPreviewLine(
@@ -792,11 +761,7 @@ def _ledger_participation_rebuild(ctx: PayloadContext) -> PayloadResult:
 def _ledger_review(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     created = _seed_unprocessed_outgoing(
-        ctx,
-        ports,
-        booked_date=date(CONFORMANCE_PRIOR_YEAR, 1, 15),
-        amount="21.00",
-        description="conformance review seed",
+        ctx, ports, booked_date=date(2025, 1, 15), amount="21.00", description="conformance review seed"
     )
     return ctx.request(
         ctx.profile_subject,

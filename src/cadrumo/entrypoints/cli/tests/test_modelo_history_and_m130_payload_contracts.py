@@ -23,12 +23,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..modelo_query_results import M130AccumulatedPayload, ModeloHistoryResult, ModeloLifecycleEventPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 _HEX64 = "a" * 64
 
@@ -37,7 +34,7 @@ def _event(**overrides: object) -> dict[str, object]:
     fields: dict[str, object] = {
         "event_id": _HEX64,
         "event_type": BucketEventType.MODELO_FILED,
-        "occurred_at": datetime(1980, 4, 1, 9, 0, tzinfo=UTC),
+        "occurred_at": datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
         "actor": "cadrumo.app.modelo.file",
         "object_type": BucketEventObjectType.WORK_UNIT,
         "object_id": "work-1",
@@ -115,7 +112,7 @@ def test_history_event_wire_form_is_unchanged() -> None:
 
     assert wire["event_type"] == "modelo.filed"
     assert wire["object_type"] == BucketEventObjectType.WORK_UNIT.value
-    assert wire["occurred_at"].startswith("1980-04-01T09:00:00")
+    assert wire["occurred_at"].startswith("2026-04-01T09:00:00")
 
 
 def test_history_event_preserves_actor_at_persisted_boundary() -> None:
@@ -136,7 +133,7 @@ def test_history_event_preserves_actor_at_persisted_boundary() -> None:
 )
 def test_history_envelope_refuses_impossible_filters_and_counts(overrides: dict[str, object]) -> None:
     """The envelope's own scalar fields must not carry impossible values."""
-    fields: dict[str, object] = {"modelo": "130", "year": _YEAR, "period": "1T", "count": 0, "events": []}
+    fields: dict[str, object] = {"modelo": "130", "year": 2024, "period": "1T", "count": 0, "events": []}
     fields.update(overrides)
 
     with pytest.raises(ValidationError):
@@ -145,6 +142,6 @@ def test_history_envelope_refuses_impossible_filters_and_counts(overrides: dict[
 
 def test_history_envelope_accepts_a_censo_lifecycle_period_token() -> None:
     """``period`` stays a free token: the censo words are valid filters, not codes."""
-    result = ModeloHistoryResult(modelo="036", year=_YEAR, period="alta", count=0, events=[])
+    result = ModeloHistoryResult(modelo="036", year=2026, period="alta", count=0, events=[])
 
     assert result.period == "alta"

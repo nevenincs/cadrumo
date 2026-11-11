@@ -21,7 +21,6 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaSet,
 )
 from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
@@ -40,7 +39,7 @@ def test_calendar_year_never_claims_filing_period_authority(action: AccessAction
         profile_id=profile_id,
         expected_revision=1,
         expected_content_digest="0" * 64,
-        year=filing_year_envelope().horizon,
+        year=2025,
         change=ProfilePlantillaMediaSet(average_workforce="12.50", state=PlantillaMediaState.OBSERVED),
     )
     resolved = resolve_operation_access(

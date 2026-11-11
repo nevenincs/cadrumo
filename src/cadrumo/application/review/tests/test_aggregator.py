@@ -18,7 +18,6 @@ from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.filing.schema import (
     ModeloDraft,
     ModeloValidationFinding,
@@ -39,8 +38,6 @@ from ..enums import ReviewItemKind, ReviewSeverity, ReviewState
 from .draft_review_test_support import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-_YEAR = filing_year_envelope().horizon
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
 _PROFILE_ID = "23232323-2323-4232-8232-232323232323"
 
@@ -49,8 +46,8 @@ def _summary(text: str = "demo") -> tr:
     return tr("translation")
 
 
-# The published Modelo 130 revision for the exercise, so the draft passes the current-coordinate gate.
-_TEST_REVISION_ID = revision_covering("130", _YEAR).id
+# The published Modelo 130 revision for 2026, so the draft passes the current-coordinate gate.
+_TEST_REVISION_ID = "2019-y-siguientes"
 
 
 def _schema_version(modelo: str = "130") -> str:
@@ -66,8 +63,8 @@ def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
     settings = _build_settings(tmp_path)
     raw = RawTransaction(
         provider_transaction_id="prov-1",
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
         amount=Decimal("12.34"),
         currency="EUR",
         counterparty=None,
@@ -77,7 +74,7 @@ def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
             provider_name="csv",
         ),
         raw_fields={"Concepto": "Bank fee"},
@@ -96,7 +93,7 @@ def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
         code="casilla-out-of-range",
         message=_summary("range"),
     )
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     snapshot_ref = RegistrySnapshotRef(
         modelo="130",
         revision_id=_TEST_REVISION_ID,
@@ -127,8 +124,8 @@ def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
         status=ModeloDraftStatus.BORRADOR,
         values=values,
         findings=(finding,),
-        created_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
-        updated_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
+        created_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+        updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         schema_version=_schema_version(),
     )
 

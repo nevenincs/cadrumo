@@ -45,7 +45,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import CasillaObservationValueKind, RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
@@ -57,13 +56,12 @@ from .observation_seeding_support import save_stamped_observation
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "5a1c7e20-0000-4000-8000-00000000d1d0"
-_HORIZON = filing_year_envelope().horizon
-_T0 = datetime(_HORIZON, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(_HORIZON, 1, 10, 11, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _DECLARANTE_NIF: CasillaId = validated_casilla_id("DPNIF_D", surface="_DECLARANTE_NIF")
 _DECLARANTE_NAME: CasillaId = validated_casilla_id("DP_APENOM_D", surface="_DECLARANTE_NAME")
 _M347_DECLARATION_KIND: CasillaId = validated_casilla_id("decl.tipo-declaracion", surface="_M347_DECLARATION_KIND")
-_M100_YEAR = newest_authored_edition("100")
+_M100_YEAR = 2024
 _ANNUAL = "0A"
 _BASE_LIQUIDABLE_NEGATIVA_GENERAL: CasillaId = validated_casilla_id("1391", surface="_BASE_LIQUIDABLE_NEGATIVA")
 #: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
@@ -85,7 +83,6 @@ _SOURCED_ELSEWHERE = frozenset(
         "collectible_invoice",
         "payable_invoice",
         "retencion_soportada",
-        "inventory",
     },
 )
 __all__ = ["secure_objects"]
@@ -108,7 +105,7 @@ def _seed_profile(*identity: UserProfileFact, without: Collection[str] = ()) -> 
             (
                 *identity,
                 UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="censo.activity_start_date", value=date(1990, 1, 1)),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
             ),
             without=without,
@@ -172,7 +169,7 @@ def _calculate(
 
 
 def _calculate_m100(secure_objects: SecureObjectRepository) -> BucketAggregationCalculationResult:
-    """Run the live Modelo 100 calculation with every non-profile, non-relation binding at zero.
+    """Run the live Modelo 100 2024 calculation with every non-profile, non-relation binding at zero.
 
     The annual formulas read the prior-year negative base carry and the M130
     and M131 instalment relations directly, so those legs are seeded as filed
@@ -255,7 +252,7 @@ def test_the_declaration_kind_reaches_modelo_347_from_the_filing_context(
         UserProfileFact(path="identity.surnames", value="Garcia Lopez"),
     )
 
-    result = _calculate(secure_objects, modelo="347", filing_year=_HORIZON)
+    result = _calculate(secure_objects, modelo="347", filing_year=2025)
 
     assert _text_observation(result, _M347_DECLARATION_KIND) == "original"
     assert result.revision.input_values_by_casilla_id[_M347_DECLARATION_KIND] == "original"

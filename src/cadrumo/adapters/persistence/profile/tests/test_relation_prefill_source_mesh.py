@@ -34,11 +34,6 @@ from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from .....domain.calculations.registry.relations import RegistryFoldRequirement, relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.calculations.registry.tests.authored_editions import (
-    authored_revisions,
-    filing_year_envelope,
-    open_ended_revision,
-)
 from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -59,19 +54,6 @@ _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
 _M130_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
-_HORIZON = filing_year_envelope().horizon
-_M100_YEAR = newest_authored_edition("100")
-_M202_YEAR = open_ended_revision("202").valid_from.year
-
-
-def _previous_m202_edition_year() -> int:
-    """The last exercise of the M202 edition authored right before the open-ended one."""
-    previous = authored_revisions("202")[-2]
-    assert previous.valid_to is not None
-    return previous.valid_to.year
-
-
-_M202_PRIOR_EDITION_YEAR = _previous_m202_edition_year()
 
 
 @cache
@@ -105,7 +87,7 @@ def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
     return tuple(
         registry_grounded_modelo_observation(
             modelo="115",
-            filing_year=_HORIZON,
+            filing_year=2026,
             period=period,
             casilla_values=casilla_values,
         )
@@ -128,7 +110,7 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
                 )
             )
 
-        snapshot = _snapshot("180", _HORIZON, "0A")
+        snapshot = _snapshot("180", 2026, "0A")
         prefill = resolve_relations_from_local_store(
             snapshot, repository=repository, operation=_authority_operation_for_test
         )
@@ -141,8 +123,8 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="180",
-                filing_year=_HORIZON,
-                period=Period.from_year_and_code(_HORIZON, "0A"),
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "0A"),
                 revision=snapshot.revision,
             ),
         )
@@ -167,8 +149,8 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         # a distinct-NIF count from the retención store); only the monetary
         # base/retenciones relations remain on the relation_prefill source.
         assert {item.source_ref for item in source_resolution.provenance} == {
-            f"modelo-180-115-base-anual:115:{_HORIZON}:1T,2T,3T,4T:02",
-            f"modelo-180-115-retenciones-anual:115:{_HORIZON}:1T,2T,3T,4T:03",
+            "modelo-180-115-base-anual:115:2026:1T,2T,3T,4T:02",
+            "modelo-180-115-retenciones-anual:115:2026:1T,2T,3T,4T:03",
         }
         resolved_prefill = {item.relation: item for item in prefill.values if item.value is not None}
         provenance_by_relation = {item.relation_id: item for item in source_resolution.provenance}
@@ -208,7 +190,7 @@ def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_em
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()
-            snapshot = _snapshot("180", _HORIZON, "0A")
+            snapshot = _snapshot("180", 2026, "0A")
             result = resolve_relations_from_local_store(
                 snapshot,
                 repository=repository,
@@ -246,7 +228,7 @@ def test_resolve_relations_produced_values_carry_provenance_string_when_resolved
                     )
                 )
 
-            snapshot = _snapshot("180", _HORIZON, "0A")
+            snapshot = _snapshot("180", 2026, "0A")
             result = resolve_relations_from_local_store(
                 snapshot, repository=repository, operation=_authority_operation_for_test
             )
@@ -296,7 +278,7 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store
-        snapshot = _snapshot("202", _M202_YEAR, "2P")
+        snapshot = _snapshot("202", 2025, "2P")
 
         declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
         consumption_index = relation_consumption_index(snapshot.revision)
@@ -319,8 +301,8 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="202",
-                filing_year=_M202_YEAR,
-                period=Period.from_year_and_code(_M202_YEAR, "2P"),
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "2P"),
                 revision=snapshot.revision,
             ),
         )
@@ -358,7 +340,7 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
 
 def test_relation_consumption_index_traverses_committed_m100_settlement_expression() -> None:
     """The relation prefill path must retain both real M100 instalment relation leaves."""
-    snapshot = _snapshot("100", _M100_YEAR, "0A")
+    snapshot = _snapshot("100", 2024, "0A")
     index = relation_consumption_index(snapshot.revision)
     formula_relation_ids = {
         binding.id
@@ -394,7 +376,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — cold-start
-        snapshot = _snapshot("202", _M202_YEAR, "2P")
+        snapshot = _snapshot("202", 2025, "2P")
         with caplog.at_level(logging.DEBUG, logger=logger_name):
             RelationPrefillSourceResolver(
                 repository=repository,
@@ -405,8 +387,8 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
                 CalculationSourceContext(
                     bucket_id="operator",
                     modelo="202",
-                    filing_year=_M202_YEAR,
-                    period=Period.from_year_and_code(_M202_YEAR, "2P"),
+                    filing_year=2025,
+                    period=Period.from_year_and_code(2025, "2P"),
                     revision=snapshot.revision,
                 ),
             )
@@ -435,7 +417,7 @@ def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
-        snapshot = _snapshot("202", _M202_PRIOR_EDITION_YEAR, "1P")
+        snapshot = _snapshot("202", 2024, "1P")
 
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
@@ -446,8 +428,8 @@ def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="202",
-                filing_year=_M202_PRIOR_EDITION_YEAR,
-                period=Period.from_year_and_code(_M202_PRIOR_EDITION_YEAR, "1P"),
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "1P"),
                 revision=snapshot.revision,
             ),
         )
@@ -463,7 +445,7 @@ def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_pat
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
-        snapshot = _snapshot("202", _M202_PRIOR_EDITION_YEAR, "2P")
+        snapshot = _snapshot("202", 2024, "2P")
 
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
@@ -474,8 +456,8 @@ def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_pat
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="202",
-                filing_year=_M202_PRIOR_EDITION_YEAR,
-                period=Period.from_year_and_code(_M202_PRIOR_EDITION_YEAR, "2P"),
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "2P"),
                 revision=snapshot.revision,
             ),
         )
@@ -500,7 +482,7 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — relation cannot resolve
-        snapshot = _snapshot("202", _M202_YEAR, "2P")
+        snapshot = _snapshot("202", 2025, "2P")
 
         # Any declared relation binding serves as the template: the copy below
         # takes a fresh id, so nothing in the revision consumes it.
@@ -529,8 +511,8 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="202",
-                filing_year=_M202_YEAR,
-                period=Period.from_year_and_code(_M202_YEAR, "2P"),
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "2P"),
                 revision=orphaned_revision,
             ),
         )
@@ -608,7 +590,7 @@ def _modelo_130_pagos_observations(values_by_period: dict[str, Decimal]) -> tupl
     return tuple(
         registry_grounded_modelo_observation(
             modelo="130",
-            filing_year=_M100_YEAR,
+            filing_year=2024,
             period=period,
             # Original autoliquidaciones: no earlier filing of the quarter, so casilla 18 is zero.
             casilla_values={_M130_RESULTADO_FINAL_CASILLA: value, _M130_PRIOR_RESULT_CASILLA: Decimal("0")},
@@ -638,16 +620,14 @@ def testscoped_relation_source_requirements_drops_pre_activity_quarters() -> Non
     calendar boundary (1T ends 31-Mar), not from the relation formula.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        snapshot = _snapshot("100", _M100_YEAR, "0A")
-        # Activity started 1 April: 1T (ends 31 March) is STRICTLY before it.
+        snapshot = _snapshot("100", 2024, "0A")
+        # Activity started 2024-04-01: 1T (ends 2024-03-31) is STRICTLY before it.
         scoped = scoped_relation_source_requirements(
-            snapshot, date(_M100_YEAR, 4, 1), operation=_authority_operation_for_test
+            snapshot, date(2024, 4, 1), operation=_authority_operation_for_test
         )
         assert _m130_pagos_requirement(scoped).periods == ("2T", "3T", "4T")
-        # Full-year filer (activity 1 January): the alta-containing 1T is in scope; nothing dropped.
-        full = scoped_relation_source_requirements(
-            snapshot, date(_M100_YEAR, 1, 1), operation=_authority_operation_for_test
-        )
+        # Full-year filer (activity 2024-01-01): the alta-containing 1T is in scope; nothing dropped.
+        full = scoped_relation_source_requirements(snapshot, date(2024, 1, 1), operation=_authority_operation_for_test)
         assert _m130_pagos_requirement(full).periods == ("1T", "2T", "3T", "4T")
         # None (fail-closed / non-operator context): no scoping.
         none = scoped_relation_source_requirements(snapshot, None, operation=_authority_operation_for_test)
@@ -675,11 +655,11 @@ def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Pa
                     stamped_revision_id=revision_id_for_observation(observation),
                 )
             )
-        snapshot = _snapshot("100", _M100_YEAR, "0A")
+        snapshot = _snapshot("100", 2024, "0A")
         prefill = resolve_relations_from_local_store(
             snapshot,
             repository=repository,
-            activity_start_date=date(_M100_YEAR, 4, 1),
+            activity_start_date=date(2024, 4, 1),
             operation=_authority_operation_for_test,
         )
         m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")
@@ -704,11 +684,11 @@ def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> 
                     stamped_revision_id=revision_id_for_observation(observation),
                 )
             )
-        snapshot = _snapshot("100", _M100_YEAR, "0A")
+        snapshot = _snapshot("100", 2024, "0A")
         prefill = resolve_relations_from_local_store(
             snapshot,
             repository=repository,
-            activity_start_date=date(_M100_YEAR, 4, 1),
+            activity_start_date=date(2024, 4, 1),
             operation=_authority_operation_for_test,
         )
         m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")

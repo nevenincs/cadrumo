@@ -38,7 +38,6 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import directa
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -55,8 +54,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -96,8 +93,8 @@ def _seed_canonical_transactions(
     ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation)
     seeded: dict[str, str] = {}
     for label, booked_date, amount, taxable_base, iva_amount in (
-        ("source", date(_YEAR, 2, 15), "121.00", "100.00", "21.00"),
-        ("outside", date(_YEAR - 1, 2, 10), "60.50", "50.00", "10.50"),
+        ("source", date(2025, 2, 15), "121.00", "100.00", "21.00"),
+        ("outside", date(2026, 2, 10), "60.50", "50.00", "10.50"),
     ):
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
@@ -138,7 +135,7 @@ class _CanonicalParticipation:
 def _calculate_and_verify_303(
     api: NativeApiCliSession[dict[str, str]], authority_operation: PinnedAuthorityOperation
 ) -> tuple[str, str]:
-    """Create, calculate and verify the first-quarter modelo 303 work unit under the human password."""
+    """Create, calculate and verify the 2025 1T modelo 303 work unit under the human password."""
     created = api.invoke_password(
         "app",
         "modelo",
@@ -147,7 +144,7 @@ def _calculate_and_verify_303(
         "--modelo",
         "303",
         "--year",
-        str(_YEAR),
+        "2025",
         "--period",
         "1T",
     )
@@ -155,7 +152,7 @@ def _calculate_and_verify_303(
     work_unit_id = unwrap_cli_result(created).get("work_unit_id")
     assert isinstance(work_unit_id, str) and work_unit_id
 
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2025, "1T")
     _reauthenticate_profile(
         profile_label=api.profile_label,
         profile_id=api.profile_id,
@@ -164,9 +161,9 @@ def _calculate_and_verify_303(
     IvaWalletDecisionRepository().save_decision(
         IvaCompensationReconciliationDecision(
             taxpayer_nif=directa_normal_tax_id(),
-            target_year=_YEAR,
+            target_year=2025,
             target_period=period,
-            target_registry_snapshot_ref=published_snapshot("303", filing_year=_YEAR, period="1T").snapshot_ref,
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
             source_registry_snapshot_refs=(),
             selected_authority="aeat_wallet",
             selected_amount=Decimal("0.00"),
@@ -177,8 +174,8 @@ def _calculate_and_verify_303(
             blocked=False,
             stale_wallet=False,
             reason_identity="first_period_zero_aeat_wallet",
-            wallet_captured_at=datetime(_YEAR, 4, 1, 10, tzinfo=UTC),
-            decided_at=datetime(_YEAR, 4, 1, 10, tzinfo=UTC),
+            wallet_captured_at=datetime(2025, 4, 1, 10, tzinfo=UTC),
+            decided_at=datetime(2025, 4, 1, 10, tzinfo=UTC),
         )
     )
     close_active_bucket_session()
@@ -209,7 +206,7 @@ def _read_canonical_participation(
 ) -> _CanonicalParticipation:
     """Only the in-window source transaction participates in the verified revision."""
     seeded = api.prepared
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2025, "1T")
     _reauthenticate_profile(
         profile_label=api.profile_label,
         profile_id=api.profile_id,
@@ -235,7 +232,7 @@ def _read_canonical_participation(
     assert canonical_entry.work_unit_id == work_unit.work_unit_id
     assert canonical_entry.modelo == work_unit.modelo
     assert canonical_entry.period == period
-    assert canonical_entry.filing_year == _YEAR
+    assert canonical_entry.filing_year == 2025
     assert canonical_entry.filing_record_id is None
     assert participation_repository.load(seeded["outside"]).participations == ()
     canonical_payload = canonical_index.model_dump(mode="json")
@@ -347,7 +344,7 @@ def test_native_participation_reads_canonical_index_rebuilds_and_requires_commit
     """Lookup preserves the verified index; rebuild prunes stale cache under COMMIT authority."""
 
     def prepare_profile(profile_id: UUID, root: Path) -> dict[str, str]:
-        facts_by_path = persona_fact_strings({"censo.activity_start_date": date(_YEAR, 1, 1).isoformat()})
+        facts_by_path = persona_fact_strings({"censo.activity_start_date": "2025-01-01"})
         facts = complete_profile_facts(
             authority_operation.profile_schema(),
             facts=tuple(UserProfileFact(path=path, value=value) for path, value in facts_by_path.items()),

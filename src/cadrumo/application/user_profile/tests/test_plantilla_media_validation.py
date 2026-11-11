@@ -13,7 +13,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.plantilla_media import (
     PlantillaMediaState,
@@ -32,11 +31,10 @@ from ..validation import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _ROOT = "irpf.plantilla_media"
-_YEAR = filing_year_envelope().horizon
 
 
 def _instance(
-    index: int, *, year: object = _YEAR - 1, workforce: object = Decimal("12.50"), state: object = "observed"
+    index: int, *, year: object = 2024, workforce: object = Decimal("12.50"), state: object = "observed"
 ) -> tuple[UserProfileFact, ...]:
     return (
         UserProfileFact(path=f"{_ROOT}.{index}.year", value=year),
@@ -53,12 +51,12 @@ def _issues(*facts: UserProfileFact) -> set[tuple[str, str]]:
 
 
 def test_well_formed_instances_are_admitted() -> None:
-    assert _issues(*_instance(0), *_instance(1, year=_YEAR, workforce=7, state="committed")) == set()
+    assert _issues(*_instance(0), *_instance(1, year=2025, workforce=7, state="committed")) == set()
 
 
 @pytest.mark.parametrize(
     "year",
-    (FOUR_DIGIT_YEAR_FIRST - 1, FOUR_DIGIT_YEAR_LAST + 1, 0, -_YEAR, Decimal(f"{_YEAR}.5"), True),
+    (FOUR_DIGIT_YEAR_FIRST - 1, FOUR_DIGIT_YEAR_LAST + 1, 0, -2024, Decimal("2024.5"), True),
     ids=str,
 )
 def test_a_year_not_written_with_four_digits_or_not_whole_is_refused(year: object) -> None:
@@ -111,10 +109,10 @@ def test_a_path_that_is_not_an_instance_subfield_is_refused(path: str) -> None:
 def test_the_typed_projection_keeps_the_year_the_exact_decimal_and_the_state() -> None:
     values = {
         fact.path: fact.value
-        for fact in (*_instance(0, year=_YEAR, state="committed"), *_instance(1, workforce=Decimal("3.10")))
+        for fact in (*_instance(0, year=2025, state="committed"), *_instance(1, workforce=Decimal("3.10")))
     }
 
     assert plantilla_media_years(values) == (
-        PlantillaMediaYear(year=_YEAR - 1, average_workforce=Decimal("3.10"), state=PlantillaMediaState.OBSERVED),
-        PlantillaMediaYear(year=_YEAR, average_workforce=Decimal("12.50"), state=PlantillaMediaState.COMMITTED),
+        PlantillaMediaYear(year=2024, average_workforce=Decimal("3.10"), state=PlantillaMediaState.OBSERVED),
+        PlantillaMediaYear(year=2025, average_workforce=Decimal("12.50"), state=PlantillaMediaState.COMMITTED),
     )

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -53,7 +53,6 @@ from cadrumo.core.operations import OperationEffect
 from cadrumo.core.period import Period
 from cadrumo.domain.attachments.m303_filing_evidence import M303Exonerado390ApplicabilityAssertion
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import UserProfileFact
@@ -64,9 +63,8 @@ from cadrumo.entrypoints.tests.production_operation_registry import production_o
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
-_YEAR = filing_grade_exercises("390")[-1]
-_CLOCK = datetime(_YEAR + 1, 1, 2, 10, tzinfo=UTC)
-_OBSERVED_AT = datetime(_YEAR, 12, 31, 12, tzinfo=UTC)
+_CLOCK = datetime(2026, 1, 2, 10, tzinfo=UTC)
+_OBSERVED_AT = datetime(2025, 12, 31, 12, tzinfo=UTC)
 
 
 class _Events:
@@ -102,12 +100,12 @@ class _Context:
 
 
 def _work_unit(operation: PinnedAuthorityOperation, *, modelo: str, period: Period) -> WorkUnit:
-    snapshot = operation.snapshot(modelo, filing_year=_YEAR, period=period.registry_token)
+    snapshot = operation.snapshot(modelo, filing_year=2025, period=period.registry_token)
     ports = build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation)
     return create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo=modelo,
-        filing_year=_YEAR,
+        filing_year=2025,
         period=period,
         revision_id=snapshot.revision.id,
         ports=ports.work_lifecycle_ports,
@@ -122,8 +120,8 @@ def _attestation(
     admission = admit_m303_exonerado_390_applicability_attestation(
         bucket_id=_PROFILE_ID,
         request=M303Exonerado390ApplicabilityAttestationRequest(
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "4T"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
             asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
             observed_at=_OBSERVED_AT,
         ),
@@ -183,7 +181,7 @@ def test_m303_calculation_persists_exact_authored_evidence(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(_YEAR, period_code)
+    period = Period.from_year_and_code(2025, period_code)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
         seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
         # This synthetic taxpayer's declared activity begins in the selected
@@ -192,7 +190,7 @@ def test_m303_calculation_persists_exact_authored_evidence(
             _PROFILE_ID,
             (
                 UserProfileFact(
-                    path="censo.activity_start_date", value=date(_YEAR, 10 if period_code == "4T" else 1, 1).isoformat()
+                    path="censo.activity_start_date", value="2025-10-01" if period_code == "4T" else "2025-01-01"
                 ),
             ),
         )
@@ -228,7 +226,7 @@ def test_other_modelo_calculates_without_m303_evidence(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
         seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
         with bound_test_profile_record(_PROFILE_ID):
-            work_unit = _work_unit(operation, modelo="130", period=Period.from_year_and_code(_YEAR, "1T"))
+            work_unit = _work_unit(operation, modelo="130", period=Period.from_year_and_code(2025, "1T"))
             # First-quarter prior-period answers are genuinely zero for this
             # new synthetic activity, and the registry requires them explicitly.
             inputs = ModeloCalculationInputFieldsV1(
@@ -272,7 +270,7 @@ def test_a_calculation_refused_before_any_write_reports_no_effect(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
         seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
         with bound_test_profile_record(_PROFILE_ID):
-            work_unit = _work_unit(operation, modelo="390", period=Period.from_year_and_code(_YEAR, "0A"))
+            work_unit = _work_unit(operation, modelo="390", period=Period.from_year_and_code(2025, "0A"))
             inputs = ModeloCalculationInputFieldsV1(
                 binding_overrides=(
                     ModeloCalculationOverride(key="modelo-390-prorrata-regularizacion-anual", value="0"),
@@ -311,19 +309,17 @@ def test_a_refused_annual_summary_names_where_each_quarter_stands_and_offers_the
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
         seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
-        upsert_test_profile_facts(
-            _PROFILE_ID, (UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1).isoformat()),)
-        )
+        upsert_test_profile_facts(_PROFILE_ID, (UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),))
         with bound_test_profile_record(_PROFILE_ID):
-            first = _work_unit(operation, modelo="303", period=Period.from_year_and_code(_YEAR, "1T"))
+            first = _work_unit(operation, modelo="303", period=Period.from_year_and_code(2025, "1T"))
             _execute(
                 work_unit=first,
                 evidence=ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(joint_return_elected=True),
                 operation=operation,
                 store=AttachmentStore(),
             )
-            second = _work_unit(operation, modelo="303", period=Period.from_year_and_code(_YEAR, "2T"))
-            annual = _work_unit(operation, modelo="390", period=Period.from_year_and_code(_YEAR, "0A"))
+            second = _work_unit(operation, modelo="303", period=Period.from_year_and_code(2025, "2T"))
+            annual = _work_unit(operation, modelo="390", period=Period.from_year_and_code(2025, "0A"))
             with pytest.raises(ModeloCrossPeriodCleanStateError) as refused:
                 _execute(
                     work_unit=annual,

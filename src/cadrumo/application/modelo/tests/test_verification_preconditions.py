@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -29,8 +28,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CALCULATION_REVISION_ID = "a" * 64
 _WORK_UNIT_ID = "b" * 64
-_EXERCISE = filing_year_envelope().horizon
-_M303_REVISION_ID = str(revision_serving_period("303", _EXERCISE, "1T").id)
 _LEGAL_REFS = ("ley-58-2003:art-119",)
 
 
@@ -59,13 +56,13 @@ def blocked_report(findings: tuple[ModeloVerificationFinding, ...]) -> Verificat
         calculation_revision_id=_CALCULATION_REVISION_ID,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id=_M303_REVISION_ID,
-            modelo_year=_EXERCISE,
+            revision_id="2026-y-siguientes",
+            modelo_year=2026,
             period="1T",
         ),
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
-        run_at=datetime(_EXERCISE, 8, 10, 12, tzinfo=UTC),
+        run_at=datetime(2026, 8, 10, 12, tzinfo=UTC),
         verified_by="operator",
         granted_verificado_completo=False,
     )
@@ -79,7 +76,7 @@ def test_registry_snapshot_failure_is_terminal_without_an_operator_action() -> N
         condition_id="modelo.work.verify.registry_snapshot.available",
         scenario_id="modelo.work.verify.registry_snapshot.unavailable",
         evidence_id="modelo.work.verify.registry_snapshot",
-        evidence_values={"modelo": "303", "year": _EXERCISE, "period": "1T"},
+        evidence_values={"modelo": "303", "year": 2026, "period": "1T"},
         provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
     )
 

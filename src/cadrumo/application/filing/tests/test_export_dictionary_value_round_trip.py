@@ -12,7 +12,6 @@ from ....core.export_layout_format import ExportLayoutFormat
 from ....core.resources.bundled_data import resolve_corpus_binary
 from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.calculations.registry.export_xml_dictionary import XML_DICTIONARY_BOOLEAN_TYPES, xml_dictionary_entries
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision,
     published_revision_definitions,
@@ -50,7 +49,7 @@ def test_every_xml_dictionary_can_export_populated_values(boolean_value: bool) -
                     elif data_type.startswith(("N", "P")):
                         value = Decimal(1).scaleb(-int(data_type[-1]))
                     elif data_type == "FEC":
-                        value = date(filing_year_envelope().horizon, 3, 14)
+                        value = date(2025, 3, 14)
                     elif data_type == "TIT":
                         value = "declarante"
                     else:
@@ -73,7 +72,7 @@ def test_every_xml_dictionary_can_export_populated_values(boolean_value: bool) -
 
 
 def test_xml_attribute_values_retain_repeated_occurrences_and_ignore_element_text() -> None:
-    layout = published_revision("100", str(newest_authored_edition("100"))).export_layouts[0]
+    layout = published_revision("100", "2024").export_layouts[0]
     assert layout.dictionary_source_ref is not None
     source = published_source_reference(str(layout.dictionary_source_ref))
     sources = {str(source.id): source}

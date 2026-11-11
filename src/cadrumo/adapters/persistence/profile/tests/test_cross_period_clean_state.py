@@ -32,7 +32,6 @@ from .....core.period import Period
 from .....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
 from ...storage.tests.secure_sql import isolated_runtime_profile
@@ -59,8 +58,6 @@ from .cross_period_clean_state_support import (
 )
 from .published_authority_support import published_authority_operation
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
@@ -86,7 +83,7 @@ def test_m100_payer_side_retencion_returns_are_no_dependency_self_filed_enforced
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         verdict = evaluate_clean_state(
-            published_authority_operation().snapshot("100", filing_year=_YEAR - 2, period="0A"),
+            published_authority_operation().snapshot("100", filing_year=2024, period="0A"),
         )
 
     sources = {item.requirement.source_modelo for item in verdict.dependencies}
@@ -102,7 +99,7 @@ def test_m100_payer_side_retencion_returns_are_no_dependency_self_filed_enforced
 def test_m100_pagos_fraccionados_conditional_on_economic_activity(tmp_path: Path) -> None:
     """130/131 scope out for a declared employee and stay enforced otherwise."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
-        snap = published_authority_operation().snapshot("100", filing_year=_YEAR - 2, period="0A")
+        snap = published_authority_operation().snapshot("100", filing_year=2024, period="0A")
 
         def evaluate_activity_state(
             taxpayer_files_economic_activity: bool | None,
@@ -135,7 +132,7 @@ def test_m100_pagos_fraccionados_scopes_out_mutually_exclusive_m131(tmp_path: Pa
     """A direct-estimation autonomo owes M130, not M131, so only M130 stays enforced."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         verdict = evaluate_clean_state(
-            published_authority_operation().snapshot("100", filing_year=_YEAR - 1, period="0A"),
+            published_authority_operation().snapshot("100", filing_year=2025, period="0A"),
             taxpayer_files_economic_activity=True,
             not_applicable_source_modelos=frozenset({"131"}),
         )
@@ -157,7 +154,7 @@ def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
-        snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR - 1, period="0A")
+        snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
         verdict = evaluate_clean_state(
             snapshot,
             taxpayer_files_economic_activity=False,
@@ -178,13 +175,13 @@ def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp
     assert all(
         item.clean
         for item in verdict.dependencies
-        if item.requirement.source_modelo == "100" and item.requirement.filing_year == _YEAR - 2
+        if item.requirement.source_modelo == "100" and item.requirement.filing_year == 2024
     )
 
 
 def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
-        snapshot = published_authority_operation().snapshot("180", filing_year=_YEAR, period="0A")
+        snapshot = published_authority_operation().snapshot("180", filing_year=2026, period="0A")
 
     requirements = cross_period_dependency_requirements(snapshot)
 
@@ -193,7 +190,7 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
         for requirement in requirements
         if requirement.origin is CrossPeriodDependencyOrigin.REGISTRY_RELATION
         and requirement.source_modelo == "115"
-        and requirement.period == Period.from_year_and_code(_YEAR, "1T")
+        and requirement.period == Period.from_year_and_code(2026, "1T")
     )
     source_binding = next(
         binding for binding in snapshot.revision.bindings if binding.id == relation_requirement.origin_ids[0]
@@ -203,7 +200,7 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
 
 
 def test_cross_period_requirements_preserve_previous_filing_presence_policy() -> None:
-    snapshot = published_authority_operation().snapshot("130", filing_year=_YEAR, period="1T")
+    snapshot = published_authority_operation().snapshot("130", filing_year=2026, period="1T")
     binding = next(
         binding
         for binding in snapshot.revision.bindings
@@ -284,19 +281,19 @@ def test_cross_period_dependency_inventory_documents_patrimonio_and_foreign_asse
         bundled_indexed_authority().operation() as operation,
     ):
         inventories = tuple(
-            cross_period_dependency_inventory(operation, filing_year=filing_year) for filing_year in (_YEAR - 1, _YEAR)
+            cross_period_dependency_inventory(operation, filing_year=filing_year) for filing_year in (2025, 2026)
         )
 
     inventories_by_year = {inventory.filing_year: inventory for inventory in inventories}
-    inventory_prior = inventories_by_year[_YEAR - 1]
-    inventory_horizon = inventories_by_year[_YEAR]
+    inventory_2025 = inventories_by_year[2025]
+    inventory_2026 = inventories_by_year[2026]
 
-    m714_items = tuple(item for item in inventory_prior.items if item.target_modelo == "714")
+    m714_items = tuple(item for item in inventory_2025.items if item.target_modelo == "714")
     assert len(m714_items) == 1
-    assert m714_items[0].target_period == Period.from_year_and_code(_YEAR - 1, "0A")
+    assert m714_items[0].target_period == Period.from_year_and_code(2025, "0A")
     assert m714_items[0].source_modelos == ("100",)
-    assert all(requirement.filing_year == _YEAR - 1 for requirement in m714_items[0].dependencies)
-    assert "714" not in inventory_horizon.target_modelos
+    assert all(requirement.filing_year == 2025 for requirement in m714_items[0].dependencies)
+    assert "714" not in inventory_2026.target_modelos
 
     for inventory in inventories:
         m720_items = tuple(item for item in inventory.items if item.target_modelo == "720")
@@ -621,7 +618,7 @@ def test_empty_pre_activity_span_produces_no_cross_period_blocker_for_genuine_fi
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         verdict = evaluate_clean_state(
             snapshot_390(),
-            activity_start_date=date(_YEAR, 1, 1),
+            activity_start_date=date(2026, 1, 1),
         )
 
     assert verdict.requires_clean_state is True
@@ -633,7 +630,7 @@ def test_empty_pre_activity_span_produces_no_cross_period_blocker_for_genuine_fi
     assert all(evidence.no_prior_obligation is not None for evidence in suppressed)
     assert all(
         evidence.no_prior_obligation is not None
-        and evidence.no_prior_obligation.activity_start_date == date(_YEAR, 1, 1)
+        and evidence.no_prior_obligation.activity_start_date == date(2026, 1, 1)
         and evidence.no_prior_obligation.provenance_kind is NoPriorObligationProvenanceKind.OPERATOR_DECLARED
         for evidence in suppressed
     )
@@ -653,7 +650,7 @@ def test_alta_containing_period_stays_in_scope_as_first_obligation(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         verdict = evaluate_clean_state(
             snapshot_390(),
-            activity_start_date=date(_YEAR - 1, 10, 1),
+            activity_start_date=date(2025, 10, 1),
         )
 
     fourth_quarter = Period.from_year_and_code(M390_YEAR, "4T")
@@ -675,16 +672,16 @@ def test_activity_start_scoping_applies_to_both_requirement_origins(tmp_path: Pa
     while trapped on the other.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
-        relation_snapshot = published_authority_operation().snapshot("180", filing_year=_YEAR, period="0A")
-        previous_filing_snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
+        relation_snapshot = published_authority_operation().snapshot("180", filing_year=2026, period="0A")
+        previous_filing_snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="4T")
 
         relation_verdict = evaluate_clean_state(
             relation_snapshot,
-            activity_start_date=date(_YEAR, 7, 1),
+            activity_start_date=date(2026, 7, 1),
         )
         previous_filing_verdict = evaluate_clean_state(
             previous_filing_snapshot,
-            activity_start_date=date(_YEAR, 10, 15),
+            activity_start_date=date(2026, 10, 15),
         )
 
     relation_suppressed = suppressed_pre_activity(relation_verdict)
@@ -716,7 +713,7 @@ def test_real_prior_filing_post_dating_alta_still_blocks_anti_tautology(tmp_path
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         verdict = evaluate_clean_state(
             snapshot_390(),
-            activity_start_date=date(_YEAR - 1, 1, 1),
+            activity_start_date=date(2025, 1, 1),
         )
 
     assert verdict.requires_clean_state is True
@@ -728,7 +725,7 @@ def test_real_prior_filing_post_dating_alta_still_blocks_anti_tautology(tmp_path
 
 @cache
 def _snapshot_202() -> RegistrySnapshot:
-    return published_authority_operation().snapshot("202", filing_year=_YEAR, period="2P")
+    return published_authority_operation().snapshot("202", filing_year=2026, period="2P")
 
 
 def test_first_year_modalidad_cuota_suppresses_m202_dependency_through_evaluator(tmp_path: Path) -> None:
@@ -745,7 +742,7 @@ def test_first_year_modalidad_cuota_suppresses_m202_dependency_through_evaluator
         verdict = evaluate_clean_state(
             _snapshot_202(),
             taxpayer_tax_id="B00015016",
-            activity_start_date=date(_YEAR, 2, 1),
+            activity_start_date=date(2026, 2, 1),
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
         )
 
@@ -776,7 +773,7 @@ def test_mandatory_modalidad_base_keeps_m202_dependency_in_scope_through_evaluat
         verdict = evaluate_clean_state(
             _snapshot_202(),
             taxpayer_tax_id="B00015016",
-            activity_start_date=date(_YEAR, 2, 1),
+            activity_start_date=date(2026, 2, 1),
             modelo_202_modality=Modelo202Modality.ART_40_3_MANDATORY,
         )
 
@@ -799,7 +796,7 @@ def test_incomplete_modality_keeps_m202_dependency_in_scope_through_evaluator(tm
             verdict = evaluate_clean_state(
                 _snapshot_202(),
                 taxpayer_tax_id="B00015016",
-                activity_start_date=date(_YEAR, 2, 1),
+                activity_start_date=date(2026, 2, 1),
                 modelo_202_modality=modality,
             )
             assert suppressed_first_year_fractional(verdict) == ()
@@ -819,7 +816,7 @@ def test_non_first_year_keeps_m202_dependency_in_scope_through_evaluator(tmp_pat
         verdict = evaluate_clean_state(
             _snapshot_202(),
             taxpayer_tax_id="B00015016",
-            activity_start_date=date(_YEAR - 1, 6, 1),
+            activity_start_date=date(2025, 6, 1),
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
         )
 
@@ -844,7 +841,7 @@ def test_partition_keeps_non_calendar_anchors_in_scope(tmp_path: Path) -> None:
     forged = tuple(requirement.model_copy(update={"period": instalment_period}) for requirement in requirements[:1])
     partition = partition_cross_period_requirements_by_activity_start(
         forged,
-        activity_start_date=date(_YEAR + 1, 1, 1),
+        activity_start_date=date(2099, 1, 1),
     )
     assert partition.suppressed == ()
     assert partition.in_scope == forged

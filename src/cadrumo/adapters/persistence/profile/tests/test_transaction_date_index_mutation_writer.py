@@ -11,7 +11,6 @@ import pytest
 from sqlalchemy import delete
 
 from .....core.time.clock import now
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.models import TransactionCatalogue
 from ...storage.errors import SecureObjectRevisionConflictError
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -20,8 +19,6 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
 from .test_transaction_date_index import dated_transaction
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 _BUCKET = "44444444-4444-4444-8444-444444444444"
 
@@ -29,7 +26,7 @@ _BUCKET = "44444444-4444-4444-8444-444444444444"
 def _catalogue() -> TransactionCatalogue:
     row = dated_transaction(
         provider_id="admitted-index",
-        filing_date=date(_YEAR, 2, 10),
+        filing_date=date(2026, 2, 10),
         amount=Decimal("12.00"),
         description="synthetic routing fixture",
     )
@@ -54,7 +51,7 @@ def test_non_routing_edit_preserves_index_state_and_reads_the_updated_row(tmp_pa
             current=current, replacement=replacement, extra_writes=()
         )
 
-        partition = repository.partition_by_date_range(date(_YEAR, 1, 1), date(_YEAR, 3, 31))
+        partition = repository.partition_by_date_range(date(2026, 1, 1), date(2026, 3, 31))
         assert partition.index_complete is index_present
         assert partition.in_window.transactions[current.transaction_id] == replacement
 
@@ -83,12 +80,12 @@ def test_lazy_index_rebuild_is_admitted_once_and_unchanged_sync_is_a_noop(tmp_pa
             mutation_writer=admitted,
         )
         tracked = TransactionCatalogueRepository(bucket_id=_BUCKET, objects=objects)
-        partition = tracked.partition_by_date_range(date(_YEAR, 1, 1), date(_YEAR, 3, 31))
+        partition = tracked.partition_by_date_range(date(2026, 1, 1), date(2026, 3, 31))
         assert partition.in_window == catalogue
         assert not partition.index_complete and admissions == 0
         tracked._sync_date_index(catalogue)
         assert admissions == 1
-        assert tracked.partition_by_date_range(date(_YEAR, 1, 1), date(_YEAR, 3, 31)).index_complete
+        assert tracked.partition_by_date_range(date(2026, 1, 1), date(2026, 3, 31)).index_complete
         tracked._sync_date_index(catalogue)
         assert admissions == 1, "equal prepared maps must return without entering writer admission"
 
@@ -128,5 +125,5 @@ def test_concurrent_convergence_rejects_prepared_baseline_then_reloads_without_a
         )
         tracked = TransactionCatalogueRepository(bucket_id=_BUCKET, objects=objects)
         tracked._sync_date_index(catalogue)
-        assert tracked.load_for_date_range(date(_YEAR, 1, 1), date(_YEAR, 3, 31)) == catalogue
+        assert tracked.load_for_date_range(date(2026, 1, 1), date(2026, 3, 31)) == catalogue
     assert admissions == len(conflicts) == 1 and confirmed == 0

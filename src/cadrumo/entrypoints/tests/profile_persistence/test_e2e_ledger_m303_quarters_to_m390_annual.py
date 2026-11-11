@@ -85,7 +85,6 @@ from cadrumo.core.i18n.render import output_language, tr
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
@@ -137,21 +136,19 @@ from .m303_m390_chain_support import (
     workflow_profile,
 )
 
-_FIRST_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 __all__ = ["bucket_id", "secure_objects"]
 
 
-def test_first_activity_exercise_m303_calculates_linked_invoices_without_joint_return(
+def test_first_activity_2026_m303_calculates_linked_invoices_without_joint_return(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The desktop's first calculation reaches persistence and its public projection with real ledger sources."""
-    store_profile(secure_objects, activity_start_date=date(_FIRST_YEAR, 1, 1))
+    store_profile(secure_objects, activity_start_date=date(2026, 1, 1))
     persist_year_of_invoices(
         secure_objects,
-        filing_year=_FIRST_YEAR,
+        filing_year=2026,
         facts_by_period={
             "1T": {
                 "issued_base": Decimal("11428.57"),
@@ -171,8 +168,8 @@ def test_first_activity_exercise_m303_calculates_linked_invoices_without_joint_r
         counterparty_name="Cliente de prueba SL",
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
-        invoice_number=f"EMI-{_FIRST_YEAR}-1T",
-        issued_at=date(_FIRST_YEAR, 2, 10),
+        invoice_number="EMI-2026-1T",
+        issued_at=date(2026, 2, 10),
         taxable_base=Decimal("11428.57"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -191,22 +188,22 @@ def test_first_activity_exercise_m303_calculates_linked_invoices_without_joint_r
             )
         )
     )
-    period = Period.from_year_and_code(_FIRST_YEAR, "1T")
-    snapshot = operation.snapshot("303", filing_year=_FIRST_YEAR, period="1T")
+    period = Period.from_year_and_code(2026, "1T")
+    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
     work = create_work_unit(
         bucket_id=BUCKET_ID,
         modelo="303",
-        filing_year=_FIRST_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(
             work_unit_repository=WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects),
             bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         ),
-        clock=datetime(_FIRST_YEAR, 4, 1, tzinfo=UTC),
+        clock=datetime(2026, 4, 1, tzinfo=UTC),
         operation=operation,
     )
-    evidence = general_m303_filing_evidence(period, reference="test:first-activity-exercise", operation=operation)
+    evidence = general_m303_filing_evidence(period, reference="test:first-2026", operation=operation)
     assert evidence.m303 is not None and evidence.m303.joint_return_elected is False
     result = calculate_modelo_work_revision(
         work_unit_id=work.work_unit_id,

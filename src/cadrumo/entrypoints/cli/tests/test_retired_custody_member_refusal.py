@@ -21,7 +21,6 @@ live surface came to be uncovered without anyone noticing.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
 
 import pytest
 from click.testing import Result
@@ -32,11 +31,7 @@ from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
 from ....adapters.persistence.storage.bucket.tests.bucket_layout import provision_bucket_directory
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .profile_lifecycle_support import create_profile_via_cli
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -98,9 +93,9 @@ def test_overview_calendar_refuses_cleanly_on_a_retired_custody_member() -> None
         "overview",
         "calendar",
         "--from",
-        date(_YEAR, 1, 1).isoformat(),
+        "2026-01-01",
         "--to",
-        date(_YEAR, 3, 31).isoformat(),
+        "2026-03-31",
         "--all-profiles",
     )
     # Admit the fixture's runtime while custody is valid, so the later refusal

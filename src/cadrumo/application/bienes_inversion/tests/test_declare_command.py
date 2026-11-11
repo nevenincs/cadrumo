@@ -18,7 +18,6 @@ from cadrumo.domain.bienes_inversion.vocabulary import BienInversionDisposalRegi
 
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..declare_command import (
     BienInversionDeclarationCommand,
     BienInversionDisposalIncompleteError,
@@ -27,9 +26,6 @@ from ..declare_command import (
     resolve_bien_inversion_disposal,
 )
 from ..service import BienesInversionRegisterService
-
-_FIRST_YEAR = filing_year_envelope().floor
-_DISPOSAL_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -59,7 +55,7 @@ def _command(**overrides: object) -> BienInversionDeclarationCommand:
     payload: dict[str, object] = {
         "identifier": "bien-1",
         "description": "Delivery van",
-        "acquisition_year": _FIRST_YEAR,
+        "acquisition_year": 2024,
         "acquisition_ledger_id": "a" * 64,
         "cuota_soportada": Decimal("2100.00"),
         "prorrata_inicial_pct": Decimal("60"),
@@ -82,7 +78,7 @@ def test_a_declaration_with_no_disposal_carries_none() -> None:
 def test_a_year_without_a_regime_is_refused() -> None:
     """A disposal year alone cannot say how the remaining window is imputed."""
     with pytest.raises(BienInversionDisposalIncompleteError) as excinfo:
-        resolve_bien_inversion_disposal(disposal_year=_DISPOSAL_YEAR, disposal_regime=None)
+        resolve_bien_inversion_disposal(disposal_year=2026, disposal_regime=None)
 
     assert excinfo.value.missing == "regime"
 
@@ -101,12 +97,12 @@ def test_a_regime_without_a_year_is_refused() -> None:
 def test_both_halves_together_build_the_disposal() -> None:
     """The supported path, so the refusals above are not vacuous."""
     disposal = resolve_bien_inversion_disposal(
-        disposal_year=_DISPOSAL_YEAR,
+        disposal_year=2026,
         disposal_regime=BienInversionDisposalRegime.from_registry("exenta_o_no_sujeta"),
     )
 
     assert disposal is not None
-    assert disposal.year == _DISPOSAL_YEAR
+    assert disposal.year == 2026
     assert disposal.regime == BienInversionDisposalRegime.from_registry("exenta_o_no_sujeta")
 
 
@@ -122,7 +118,7 @@ def test_the_declaration_reaches_the_register_intact() -> None:
     assert len(stored) == 1
     record = stored[0]
     assert record.identifier == "bien-1"
-    assert record.acquisition_year == _FIRST_YEAR
+    assert record.acquisition_year == 2024
     assert record.cuota_soportada == Decimal("2100.00")
     assert record.prorrata_inicial_pct == Decimal("60")
     assert record.prorrata_sector_id == "sector-2"
@@ -134,14 +130,12 @@ def test_a_declared_disposal_is_carried_onto_the_record() -> None:
     """The pairing is not merely validated; it lands on the persisted record."""
     service = _register()
     outcome = declare_bien_inversion(
-        _command(
-            disposal_year=_DISPOSAL_YEAR, disposal_regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        _command(disposal_year=2026, disposal_regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
         service=service,
     )
 
     assert outcome.record.disposal is not None
-    assert outcome.record.disposal.year == _DISPOSAL_YEAR
+    assert outcome.record.disposal.year == 2026
     assert outcome.record.disposal.regime == BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
 
 
@@ -149,6 +143,6 @@ def test_a_half_declared_disposal_never_reaches_the_register() -> None:
     """The refusal must fire before persistence, not after a partial write."""
     service = _register()
     with pytest.raises(BienInversionDisposalIncompleteError):
-        declare_bien_inversion(_command(disposal_year=_DISPOSAL_YEAR), service=service)
+        declare_bien_inversion(_command(disposal_year=2026), service=service)
 
     assert service.list_all().records == ()

@@ -23,7 +23,6 @@ from pydantic import AnyHttpUrl
 from sqlalchemy import select
 
 from .....core.period import Period
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from ...storage.errors import SecureObjectRowIdentityError
@@ -38,8 +37,7 @@ from ..justificante import JustificanteRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-_PRESENTED_AT = datetime(_YEAR, 5, 27, 11, 15, 0, tzinfo=UTC)
+_PRESENTED_AT = datetime(2026, 5, 27, 11, 15, 0, tzinfo=UTC)
 _FOREIGN_CSV = "ZXCV1234QWER5678"
 
 
@@ -49,15 +47,15 @@ def _populated_justificante() -> Justificante:
     return Justificante(
         csv="ABCD12345678EFGH",
         modelo="303",
-        period=Period.from_year_and_code(_YEAR, "1T"),
-        ejercicio=str(_YEAR),
-        presentation_id=f"PRES-{_YEAR}-001-XYZ",
+        period=Period.from_year_and_code(2025, "1T"),
+        ejercicio="2025",
+        presentation_id="PRES-2025-001-XYZ",
         presented_at=_PRESENTED_AT,
         tax_id="12345678Z",
         total_a_ingresar=Decimal("12345.67"),
         total_a_devolver=Decimal("456.78"),
         verification_url=AnyHttpUrl(justificante_wlpl_cotejo_url("ABCD12345678EFGH")),
-        source_pdf_path=Path(f"justificantes/303-{_YEAR}-1T-ABCD.pdf"),
+        source_pdf_path=Path("justificantes/303-2025-1T-ABCD.pdf"),
         source_pdf_sha256="a" * 64,
         parsed_at=_PRESENTED_AT,
     )
@@ -97,8 +95,8 @@ def test_justificante_survives_encrypted_storage_roundtrip(
         assert loaded.total_a_ingresar == Decimal("12345.67")
         assert loaded.total_a_devolver == Decimal("456.78")
         assert str(loaded.verification_url).endswith("/ABCD12345678EFGH")
-        assert loaded.source_pdf_path == Path(f"justificantes/303-{_YEAR}-1T-ABCD.pdf")
-        assert loaded.presentation_id == f"PRES-{_YEAR}-001-XYZ"
+        assert loaded.source_pdf_path == Path("justificantes/303-2025-1T-ABCD.pdf")
+        assert loaded.presentation_id == "PRES-2025-001-XYZ"
 
 
 def test_justificante_corrupted_persisted_csv_refuses_at_load(tmp_path: Path) -> None:

@@ -33,10 +33,7 @@ from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.classifier_input_source import ClassifierInputSource
 
 from .....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import IvaTerritorialScope
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -51,7 +48,7 @@ def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepositor
     return runtime_profile.repository
 
 
-_ASSERTED_AT = datetime(_YEAR, 4, 17, 11, 5, tzinfo=UTC)
+_ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
 
 
 def _fully_populated_fact() -> ConfirmedCounterpartyFacts:

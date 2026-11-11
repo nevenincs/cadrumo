@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NAMESPACE = "cadrumo.batch.session"
 _OTHER_NAMESPACE = "cadrumo.batch.session.other"
-_T0 = datetime(1980, 10, 1, 9, 0, 0, tzinfo=UTC)
+_T0 = datetime(2026, 10, 1, 9, 0, 0, tzinfo=UTC)
 #: Past the ephemeral session's 60-minute idle and absolute deadlines.
 _AFTER_DEADLINE = _T0 + timedelta(minutes=61)
 _KEYS = ("row-alpha", "row-beta", "row-gamma", "row-delta")

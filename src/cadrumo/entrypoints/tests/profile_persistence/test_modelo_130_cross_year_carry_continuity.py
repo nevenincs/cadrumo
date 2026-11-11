@@ -64,7 +64,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -88,11 +87,11 @@ _BUCKET_ID = _PROFILE_ID
 
 #: The two distinct renta years the enrollment exercises. Renta year N's
 #: annual M100 net income feeds renta year N+1's M130 casilla-13 minoración.
-_YEAR_N_PLUS_1 = filing_year_envelope().horizon
-_YEAR_N = _YEAR_N_PLUS_1 - 1
+_YEAR_N = 2025
+_YEAR_N_PLUS_1 = 2026
 
-#: M130 revision open-ended (both renta years resolve to it).
-_REVISION = str(open_ended_revision(_MODELO).id)
+#: M130 revision covering 2019 onward (both renta years resolve to it).
+_REVISION = "2019-y-siguientes"
 
 #: The prior-year minoración binding (M100 net income, filing_year_delta -1)
 #: and the casilla it drives.
@@ -122,7 +121,7 @@ _M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
 _PRIOR_YEAR_NET_INCOME = Decimal("8000")
 _EXPECTED_MINORACION = Decimal("100.00")
 
-_CLOCK = datetime(_YEAR_N_PLUS_1, 5, 1, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
 
 #: A representative first-quarter scenario, identical in shape across both renta
 #: years: a modest actividad-económica result recorded as ledger rows, since

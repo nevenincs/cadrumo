@@ -1,6 +1,6 @@
 """Persistence-adapter integration tests for Modelo 100 borrador bindings.
 
-The borrador may supply the tax-residence enum, which takes its value from
+The 2025 borrador may supply the tax-residence enum, which takes its value from
 it, and may hold the work-withholding credit, which it only cross-checks: the
 credit is the taxpayer's to evidence, so the borrador never supplies it.
 """
@@ -16,7 +16,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -63,7 +62,7 @@ from .file_flow_test_support import calculation_ports_for_test
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_YEAR = newest_authored_edition("100")
+_YEAR = 2025
 _PERIOD = "0A"
 _DECIMAL_BINDING: BindingId = "renta-retencion-soportada-trabajo"
 _ENUM_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
@@ -129,7 +128,7 @@ def _save_snapshot(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         registry_snapshot_ref=_modelo_100_registry_snapshot().snapshot_ref,
-        captured_at=datetime(_YEAR + 1, 4, 3, 10, 0, tzinfo=UTC),
+        captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_R210_SIMULATOR_URL,
         state=SnapshotLifecycleState.ACTIVE,
         binding_values=values,
@@ -185,8 +184,8 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
                     *RENTA_UNMARRIED_TAXPAYER_FACTS,
                 )
             ),
-            created_at=datetime(_YEAR + 1, 4, 1, tzinfo=UTC),
-            updated_at=datetime(_YEAR + 1, 4, 1, tzinfo=UTC),
+            created_at=datetime(2026, 4, 1, tzinfo=UTC),
+            updated_at=datetime(2026, 4, 1, tzinfo=UTC),
             context=profile_creation_context_for_test(),
         ),
     )
@@ -200,14 +199,14 @@ def _seed_work_unit_and_borrador_snapshot(
     snapshot_repository: Borrador100SnapshotRepository,
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, str]:
-    """Seed the profile, create the renta work unit and save a snapshot sourcing both bindings."""
+    """Seed the profile, create the 2025 renta work unit and save a snapshot sourcing both bindings."""
     _seed_profile_with_birth_date(objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
-        revision_id=str(revision_covering("100", _YEAR).id),
+        revision_id="2025",
         ports=WorkLifecyclePorts(
             work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
         ),

@@ -22,7 +22,6 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ....domain.calculations.registry.queries import PinnedRegistryQueryService
 from ....domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.renta.errors import RentaValidationError
 from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
@@ -52,11 +51,7 @@ _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
 
 def _registry_target_for(observation) -> str:
     with bundled_indexed_authority().operation() as operation:
-        rows = (
-            PinnedRegistryQueryService(operation)
-            .formulas_for_scope("100", filing_year=newest_authored_edition("100"), period="0A")
-            .rows
-        )
+        rows = PinnedRegistryQueryService(operation).formulas_for_scope("100", filing_year=2025, period="0A").rows
     targets = {
         row.target_casilla_id
         for row in rows
@@ -70,7 +65,7 @@ def _registry_target_for(observation) -> str:
 def _files_in_no_box(casilla_id: str) -> bool:
     """Whether the registry keeps *casilla_id* as an internal node no official record addresses."""
     with bundled_indexed_authority().operation() as operation:
-        casillas = operation.snapshot("100", filing_year=newest_authored_edition("100"), period="0A").revision.casillas
+        casillas = operation.snapshot("100", filing_year=2025, period="0A").revision.casillas
     (casilla,) = (casilla for casilla in casillas if casilla.id == casilla_id)
     return casilla.internal_only
 

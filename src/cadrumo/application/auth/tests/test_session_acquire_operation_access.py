@@ -125,7 +125,7 @@ def test_login_projection_preserves_result_and_refuses_uncertain_effect(effect: 
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=effect,
-        settled_at=datetime(1980, 9, 30, tzinfo=UTC),
+        settled_at=datetime(2026, 9, 30, tzinfo=UTC),
         result_ref="b" * 64,
     )
     if effect is OperationEffect.UNKNOWN:

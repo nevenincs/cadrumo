@@ -24,11 +24,6 @@ from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import (
-    newest_authored_edition,
-    open_ended_revision,
-    revision_serving_period,
-)
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.categories.spending_category_catalogue import require_spending_category
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -66,7 +61,7 @@ from .usage_ratio_support import no_stored_usage_ratios
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = newest_authored_edition("100")
+_YEAR = 2025
 _QUARTER = Period.from_year_and_code(_YEAR, "1T")
 _ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 _USAGE_RATIO = Decimal("0.20")
@@ -329,7 +324,7 @@ def test_the_iva_refusal_blocks_through_the_source_mesh_without_any_preflight() 
             modelo="303",
             filing_year=_YEAR,
             period=_QUARTER,
-            revision=ledger_source_mesh_revision("303", str(revision_serving_period("303", _YEAR, "1T").id)),
+            revision=ledger_source_mesh_revision("303", "2022"),
         ),
     )
     assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["iva_selected_scope_evidence_failure"]
@@ -351,7 +346,7 @@ def _gasto_resolution(row: Transaction, *, profile: ModeloWorkProfile | None = N
             modelo="130",
             filing_year=_YEAR,
             period=_QUARTER,
-            revision=ledger_source_mesh_revision("130", str(open_ended_revision("130").id)),
+            revision=ledger_source_mesh_revision("130", "2019-y-siguientes"),
             profile=profile,
         ),
     )

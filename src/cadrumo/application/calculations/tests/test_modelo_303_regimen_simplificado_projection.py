@@ -20,7 +20,6 @@ from ....core.filing_projection_ref import (
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.form_codes import resolve_form_codes
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.m303_regimen_simplificado_projection import (
     m303_iae_epigraph_wire_value,
@@ -30,7 +29,6 @@ from ....domain.calculations.registry.m303_regimen_simplificado_projection impor
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.errors import IvaValidationError
@@ -44,7 +42,6 @@ from ....domain.iva.regimen_simplificado_rows import (
 )
 from ..m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 
-_YEAR = filing_year_envelope().horizon
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -64,8 +61,8 @@ def _activity_ref() -> M303RegimenSimplificadoActivityProjectionRef:
     )
 
 
-def _resolved_annual_orden():
-    registry_snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
+def _resolved_annual_orden_for_2026():
+    registry_snapshot = published_snapshot("303", filing_year=2026, period="1T")
     return resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -75,10 +72,10 @@ def _resolved_annual_orden():
 
 
 def test_non_applicable_projection_retains_the_typed_contract_without_source_text_inference() -> None:
-    annual_orden = _resolved_annual_orden()
+    annual_orden = _resolved_annual_orden_for_2026()
     projected = project_m303_regimen_simplificado_rows(
         projection_refs=(_activity_ref(),),
-        rows=RegimenSimplificadoFilingRows(ejercicio=_YEAR - 1, activities=()),
+        rows=RegimenSimplificadoFilingRows(ejercicio=2025, activities=()),
         orden=(),
         agricultural_authority=annual_orden.agricultural_authority,
         applicable=False,
@@ -90,8 +87,8 @@ def test_non_applicable_projection_retains_the_typed_contract_without_source_tex
 
 
 def test_projection_rejects_missing_or_duplicate_typed_references() -> None:
-    rows = RegimenSimplificadoFilingRows(ejercicio=_YEAR - 1, activities=())
-    annual_orden = _resolved_annual_orden()
+    rows = RegimenSimplificadoFilingRows(ejercicio=2025, activities=())
+    annual_orden = _resolved_annual_orden_for_2026()
     with pytest.raises(RegistryValidationError, match="requires typed"):
         project_m303_regimen_simplificado_rows(
             projection_refs=(),
@@ -114,34 +111,16 @@ def test_projection_rejects_missing_or_duplicate_typed_references() -> None:
         )
 
 
-def _epoch_ids(key: str) -> tuple[str, ...]:
-    """Return the revision ids the published form-row codes classify under one DP30302 epoch kind."""
-    return tuple(sorted(resolve_form_codes("form-row-codes", authority=PublishedGovernedFactSource()).codes(key)))
-
-
-def _fact_shapes_outside_each_epoch_design() -> list[tuple[str, M303RegimenSimplificadoFact, int | None]]:
-    """Pair every classified DP30302 revision with the fact shapes its record design never admits.
-
-    The single-page record has no indexed mesa or oven worksheets; the early
-    multi-page records print the oven days unindexed and carry no oven surface; the
-    late records index the oven days, so the unindexed form is refused.
-    """
-    horno_days = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE
-    horno_surface = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE
-    single_page = _epoch_ids("m303.dp30302.single_page_epochs")
-    early = _epoch_ids("m303.dp30302.early_epochs")
-    late = _epoch_ids("m303.dp30302.late_epochs")
-    assert single_page and early and late
-    return [
-        *((revision_id, M303RegimenSimplificadoFact.MESAS_NUMERO, 1) for revision_id in single_page),
-        *((revision_id, horno_days, None) for revision_id in single_page),
-        *((revision_id, horno_surface, 1) for revision_id in early),
-        *((revision_id, horno_days, 1) for revision_id in early),
-        *((revision_id, horno_days, None) for revision_id in late),
-    ]
-
-
-@pytest.mark.parametrize("revision_id, fact, sub_index", _fact_shapes_outside_each_epoch_design())
+@pytest.mark.parametrize(
+    "revision_id, fact, sub_index",
+    [
+        ("2022", M303RegimenSimplificadoFact.MESAS_NUMERO, 1),
+        ("2022", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE, None),
+        ("2023", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE, 1),
+        ("2024-hasta-08-y-2t", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE, 1),
+        ("2025", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE, None),
+    ],
+)
 def test_epoch_admission_refuses_fact_shapes_outside_the_selected_design(
     revision_id: str,
     fact: M303RegimenSimplificadoFact,
@@ -182,7 +161,7 @@ def test_projection_identity_never_uses_json_serialisation() -> None:
 def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    registry_snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
+    registry_snapshot = published_snapshot("303", filing_year=2026, period="1T")
     scope_decision = M303RegimenSimplificadoScopeDecision(
         scope=m303_regime_composition_simplified_scope("simplified", authority=PublishedGovernedFactSource()),
     )
@@ -240,7 +219,7 @@ def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal(
         agricultural_authority=annual_orden.agricultural_authority,
         applicable=True,
         calculation_result=calculate_m303_regimen_simplificado_result(
-            period=Period.from_year_and_code(_YEAR, "1T"),
+            period=Period.from_year_and_code(2026, "1T"),
             scope_decision=scope_decision,
             rows=RegimenSimplificadoFilingRows(ejercicio=annual_activity.ejercicio, activities=(activity,)),
             regimen_snapshot=regimen_snapshot,
@@ -260,7 +239,7 @@ def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The two live same-IAE pairs remain distinct through typed projection refs."""
-    registry_snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
+    registry_snapshot = published_snapshot("303", filing_year=2026, period="1T")
     scope_decision = M303RegimenSimplificadoScopeDecision(
         scope=m303_regime_composition_simplified_scope("simplified", authority=PublishedGovernedFactSource()),
     )
@@ -274,11 +253,11 @@ def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
     assert tuple(activity.auxiliary_activity_indicator for activity in annual_activities) == ("1", "2")
     evidence = FilingEvidenceReference(reference="test:s75:canonical-iae-discriminator")
     rows = RegimenSimplificadoFilingRows(
-        ejercicio=_YEAR,
+        ejercicio=2026,
         activities=tuple(
             ActividadNoAgricolaSimplificado(
                 orden_id=activity.orden_id,
-                ejercicio=_YEAR,
+                ejercicio=2026,
                 activity_id=activity.orden_id,
                 iae_epigrafe=iae_epigrafe,
                 auxiliary_activity_indicator=activity.auxiliary_activity_indicator,
@@ -324,7 +303,7 @@ def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
         agricultural_authority=regimen_snapshot.orden.agricultural_authority,
         applicable=True,
         calculation_result=calculate_m303_regimen_simplificado_result(
-            period=Period.from_year_and_code(_YEAR, "1T"),
+            period=Period.from_year_and_code(2026, "1T"),
             scope_decision=scope_decision,
             rows=rows,
             regimen_snapshot=regimen_snapshot,
@@ -347,7 +326,7 @@ def test_m303_iae_epigraph_wire_value_refuses_noncanonical_or_unrepresentable_id
 
 
 def test_agricultural_projection_refuses_without_official_code_crosswalk() -> None:
-    annual_orden = _resolved_annual_orden()
+    annual_orden = _resolved_annual_orden_for_2026()
     agricultural_authority = annual_orden.agricultural_authority
     evidence = FilingEvidenceReference(reference="test:s73:agricultural-crosswalk")
     agricultural = ActividadAgricolaSimplificado(

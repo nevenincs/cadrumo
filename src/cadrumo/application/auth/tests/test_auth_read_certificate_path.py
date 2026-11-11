@@ -117,7 +117,7 @@ def _run(
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(1980, 10, 11, tzinfo=UTC),
+        settled_at=datetime(2026, 10, 11, tzinfo=UTC),
         result_ref="b" * 64,
     )
     projection = project_auth_read_result(recorder.result, receipt)

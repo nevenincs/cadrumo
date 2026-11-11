@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -15,7 +15,6 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -37,9 +36,7 @@ from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-_REVISION_ID = str(revision_serving_period("303", _YEAR, "1T").id)
-_NOW = datetime(_YEAR, 6, 3, 14, 0, tzinfo=UTC)
+_NOW = datetime(2026, 6, 3, 14, 0, tzinfo=UTC)
 #: The ``secure_objects`` fixture is scoped to this bucket; parents must live in it.
 _BUCKET_ID = SECURE_OBJECTS_BUCKET_ID
 _TX_ID = "c" * 64
@@ -47,11 +44,11 @@ _TX_ID = "c" * 64
 
 _EVIDENCE_CASILLA: CasillaId = validated_casilla_id("00501")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
-_SOURCE_REFS = (f"boe-modelo-303-{_YEAR}-form",)
+_SOURCE_REFS = ("boe-modelo-303-2025-form",)
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
-    revision_id=_REVISION_ID,
-    modelo_year=_YEAR,
+    revision_id="2022",
+    modelo_year=2026,
     period="1T",
 )
 
@@ -70,8 +67,8 @@ def _evidence() -> LedgerFilingEvidence:
             LedgerEvidenceRow(
                 transaction_id=_TX_ID,
                 fingerprint="a" * 64,
-                booked_date=date(_YEAR, 1, 31).isoformat(),
-                value_date=date(_YEAR, 2, 1).isoformat(),
+                booked_date="2026-01-31",
+                value_date="2026-02-01",
                 amount=Decimal("121.00"),
                 currency="EUR",
                 direction="outgoing",
@@ -113,21 +110,21 @@ def _evidence() -> LedgerFilingEvidence:
 
 def _seed_parent_work_unit(secure_objects: SecureObjectRepository) -> None:
     """Persist the WorkUnit every saved revision must belong to."""
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period,
-            revision_id=_REVISION_ID,
+            revision_id="2022",
         ),
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("303"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
-        revision_id=_REVISION_ID,
-        name=f"303-{_YEAR}-1T",
+        revision_id="2022",
+        name="303-2026-1T",
         created_at=_NOW,
         updated_at=_NOW,
     )
@@ -140,12 +137,12 @@ def _revision(evidence: LedgerFilingEvidence | None, *, operation: PinnedAuthori
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
-        revision_id=_REVISION_ID,
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2022",
     )
     filing_instance_evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(_YEAR, "1T"), reference="test:ledger-filing-evidence-roundtrip", operation=operation
+        Period.from_year_and_code(2026, "1T"), reference="test:ledger-filing-evidence-roundtrip", operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,

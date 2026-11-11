@@ -63,7 +63,6 @@ from ......domain.calculations.registry.authority import PinnedAuthorityOperatio
 from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
 from ......domain.calculations.registry.schema_references import TemporalProjectionDirection
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ......domain.modelos.calculation_revision import CalculationRevisionState
 from ......domain.modelos.codes import ModeloCode
 from ......domain.modelos.verification_report import ModeloVerificationFinding
@@ -335,13 +334,12 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         ),
     )
     every = [income, expenses, net, base, quota, withholding, result, working]
-    year = filing_year_envelope().horizon
-    period = Period.from_year_and_code(year, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     return ModeloWorkForm(
         modelo="130",
         filing_year=period.filing_year,
         period=period,
-        registry_revision_id=revision_covering("130", year).id,
+        registry_revision_id="2019-y-siguientes",
         year_projection=authored_year_projection(period),
         work_unit_id="a" * 64,
         calculation_revision_id=("b" * 64) if calculated else None,

@@ -136,7 +136,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
                 casilla_inputs={},
                 binding_values=modelo_303_engine_inputs(),
                 iva_compensation_decision=loaded_decision,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_121,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -195,7 +195,7 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
                 casilla_inputs={},
                 binding_values=modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_173,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -270,7 +270,7 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(
                 casilla_inputs={},
                 binding_values={},
                 iva_compensation_decision=report.decision,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_237,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -289,7 +289,7 @@ def test_a_filed_envelope_replaces_the_calculation_grade_carry_of_a_calculated_p
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "X0001500M"
-    decided_1t_at = datetime(TARGET_YEAR, 3, 19, 12, 0, 0, tzinfo=UTC)
+    decided_1t_at = datetime(2026, 3, 19, 12, 0, 0, tzinfo=UTC)
     with secure_backend(tmp_path):
         store_operator_profile_with_tax_id(taxpayer_nif)
         work_repo, calc_repo, event_repo = work_unit_repositories()
@@ -313,7 +313,7 @@ def test_a_filed_envelope_replaces_the_calculation_grade_carry_of_a_calculated_p
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 3, 31),
+                filing_period_date=date(2026, 3, 31),
                 ports=_calculation_ports_278,
                 clock=decided_1t_at,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -339,7 +339,7 @@ def test_a_filed_envelope_replaces_the_calculation_grade_carry_of_a_calculated_p
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_300,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -377,7 +377,7 @@ def test_a_filed_envelope_replaces_the_calculation_grade_carry_of_a_calculated_p
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_327,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -395,7 +395,7 @@ def test_a_filed_envelope_replaces_the_calculation_grade_carry_of_a_calculated_p
         assert decision.selected_amount == Decimal("0")
         assert decision.local_recurrence_amount == Decimal("0")
         assert any(
-            source.source_locator == f"observation-envelope:303:{TARGET_YEAR}:1T"
+            source.source_locator == "observation-envelope:303:2026:1T"
             and source.source_periods == (period(TARGET_YEAR, "1T"),)
             for source in decision.authority_sources
         )
@@ -410,10 +410,10 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
         store_prior_303_compensation(
             observation_repo,
             amount=Decimal("450.00"),
-            filing_year=TARGET_YEAR - 1,
+            filing_year=2025,
             period="4T",
         )
-        target_year = TARGET_YEAR
+        target_year = 2026
         target_period = "1T"
         snapshot = snapshot_303(filing_year=target_year, period=target_period)
         local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
@@ -430,7 +430,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
                 pending=Decimal("450.00"),
                 target_year=target_year,
                 target_period=period(target_year, target_period),
-                generation_year=TARGET_YEAR - 1,
+                generation_year=2025,
                 generation_period="4T",
             ),
             repository=observation_repo,
@@ -443,7 +443,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
 
         assert report.decision.selected_authority == "aeat_wallet"
         assert report.decision.local_recurrence_amount == Decimal("450.00")
-        assert report.prefill_report.prefilled[0].source_filing_year == TARGET_YEAR - 1
+        assert report.prefill_report.prefilled[0].source_filing_year == 2025
         assert report.prefill_report.prefilled[0].source_periods == ("4T",)
 
         work_unit, work_repo, calc_repo, event_repo = work_unit_repositories_with_modelo_303_work_unit(
@@ -462,7 +462,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=report.decision,
-                filing_period_date=date(TARGET_YEAR, 3, 31),
+                filing_period_date=date(2026, 3, 31),
                 ports=_calculation_ports_403,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -499,7 +499,7 @@ def _calculate_credit_1t(
             casilla_inputs={},
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             iva_compensation_decision=None,
-            filing_period_date=date(TARGET_YEAR, 3, 31),
+            filing_period_date=date(2026, 3, 31),
             ports=_calculation_ports_435,
             clock=DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
@@ -625,7 +625,7 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_525,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -662,7 +662,7 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 9, 30),
+                filing_period_date=date(2026, 9, 30),
                 ports=_calculation_ports_555,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -671,8 +671,8 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(
             ).revision
 
         decisions = IvaWalletDecisionRepository()
-        decision_2t = decisions.load_decision(taxpayer_nif, period(TARGET_YEAR, "2T"))
-        decision_3t = decisions.load_decision(taxpayer_nif, period(TARGET_YEAR, "3T"))
+        decision_2t = decisions.load_decision(taxpayer_nif, period(2026, "2T"))
+        decision_3t = decisions.load_decision(taxpayer_nif, period(2026, "3T"))
 
     assert revision_2t.casilla_values[M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
     assert revision_3t.casilla_values[M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
@@ -718,7 +718,7 @@ def test_compensated_filed_envelope_reports_its_validated_credit_to_wallet(
     assert decision.blocked is True
     assert decision.divergence == "wallet_missing"
     assert any(
-        source.source_locator == f"observation-envelope:303:{TARGET_YEAR}:1T" and source.amount == persisted_credit
+        source.source_locator == "observation-envelope:303:2026:1T" and source.amount == persisted_credit
         for source in decision.authority_sources
     )
 
@@ -863,10 +863,7 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
                 observation_repository=observations,
             )
         assert initial is not None
-        assert any(
-            source.source_locator == f"observation-envelope:303:{TARGET_YEAR}:1T"
-            for source in initial.authority_sources
-        )
+        assert any(source.source_locator == "observation-envelope:303:2026:1T" for source in initial.authority_sources)
 
         conflicting = (
             ResultDisposition.DEVOLUCION

@@ -24,16 +24,13 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-
-_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_Q1_2026 = Period.from_year_and_code(2026, "1T")
 _PARITY_BUCKET_ID = "5c5c5c5c-5c5c-4c5c-8c5c-5c5c5c5c5c5c"
 
 
@@ -66,27 +63,27 @@ def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_qu
         cash_purchase = cash_accounting_transaction(
             "cross-quarter-devengo",
             direction=TransactionDirection.OUTGOING,
-            booked_date=date(_YEAR, 4, 15),
+            booked_date=date(2026, 4, 15),
             taxable_base=Decimal("1000.00"),
             iva_amount=Decimal("210.00"),
             cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
-            operation_date=date(_YEAR, 3, 20),
+            operation_date=date(2026, 3, 20),
             cash_accounting_payment_evidence=(
                 IvaCashAccountingPaymentEvidence(
-                    payment_date=date(_YEAR, 4, 15),
+                    payment_date=date(2026, 4, 15),
                     taxable_base=Decimal("1000.00"),
                     iva_amount=Decimal("210.00"),
                 ),
             ),
         )
         catalogue = TransactionCatalogue.from_transactions((cash_purchase,))
-        pure = _pure_projection(catalogue, period=_Q1, operation=operation)
+        pure = _pure_projection(catalogue, period=_Q1_2026, operation=operation)
 
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PARITY_BUCKET_ID) as profile:
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(catalogue)
             repository_backed = aggregate_iva_ledger_observations_from_repositories(
                 bucket_id=profile.bucket_id,
-                period=_Q1,
+                period=_Q1_2026,
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=profile.bucket_id),
                 transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
                 invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),

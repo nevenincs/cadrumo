@@ -8,7 +8,6 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -27,11 +26,10 @@ from cadrumo.domain.modelos.filing_record import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "30330300-0000-4000-8000-000000000900"
-_EXERCISE = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_EXERCISE, "1T")
-_T1 = datetime(_EXERCISE, 4, 10, 9, 0, tzinfo=UTC)
-_T2 = datetime(_EXERCISE, 4, 12, 9, 0, tzinfo=UTC)
-_T3 = datetime(_EXERCISE, 4, 14, 9, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2026, "1T")
+_T1 = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_T2 = datetime(2026, 4, 12, 9, 0, tzinfo=UTC)
+_T3 = datetime(2026, 4, 14, 9, 0, tzinfo=UTC)
 _WORK_UNIT_ID = "a" * 64
 
 
@@ -62,7 +60,7 @@ def _record(
         "calculation_revision_id": revision_id,
         "bucket_id": _BUCKET_ID,
         "modelo": ModeloCode("130"),
-        "filing_year": _EXERCISE,
+        "filing_year": 2026,
         "period": _PERIOD,
         "filed_at": filed_at,
         "filed_by": "operator-A",
@@ -131,15 +129,15 @@ def test_latest_confirmed_differs_from_current_while_a_correction_is_pending() -
             pending.filing_record_id: pending,
         },
     )
-    assert catalogue.current_for(bucket_id=_BUCKET_ID, modelo="130", filing_year=_EXERCISE, period=_PERIOD) == pending
-    latest = catalogue.latest_confirmed_for(bucket_id=_BUCKET_ID, modelo="130", filing_year=_EXERCISE, period=_PERIOD)
+    assert catalogue.current_for(bucket_id=_BUCKET_ID, modelo="130", filing_year=2026, period=_PERIOD) == pending
+    latest = catalogue.latest_confirmed_for(bucket_id=_BUCKET_ID, modelo="130", filing_year=2026, period=_PERIOD)
     assert latest is not None and latest.filing_record_id == confirmed.filing_record_id
 
 
 def test_empty_chain_has_no_latest_confirmed_entry() -> None:
     assert (
         ModeloRecordCatalogue().latest_confirmed_for(
-            bucket_id=_BUCKET_ID, modelo="130", filing_year=_EXERCISE, period=_PERIOD
+            bucket_id=_BUCKET_ID, modelo="130", filing_year=2026, period=_PERIOD
         )
         is None
     )

@@ -156,7 +156,6 @@ from .registered_executor_outcome_modelo import MODELO_OUTCOME_ASSERTIONS
 from .registered_executor_scenario_constants import (
     CREDENTIAL_INPUT,
 )
-from .registered_executor_seeding_support import CONFORMANCE_PRIOR_YEAR
 
 
 def assert_expected_reads(ctx: ExecutorOutcome) -> None:
@@ -577,7 +576,7 @@ def _assert_overview_status_read(ctx: ExecutorOutcome, result) -> None:
             profile_id=ctx.profile_id,
             kind=OverviewReadKind.STATUS,
             output_language=OutputLanguage.ES,
-            period=PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T")),
+            period=PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")),
         )
         _, period_observed = asyncio.run(
             ctx.driver.run(

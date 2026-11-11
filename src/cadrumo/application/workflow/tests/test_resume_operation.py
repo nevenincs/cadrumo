@@ -20,7 +20,6 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import ObligationStatus
 from ...modelo.calculation_action_ports import CalculationActionPortsFactory
 from ...modelo.selectors import ModeloCalculationRevisionSelector
@@ -57,9 +56,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(1980, 4, 12, 9, tzinfo=UTC)
-_YEAR = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_NOW = datetime(2026, 4, 12, 9, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 def _registration():
@@ -106,8 +104,8 @@ def _obligation() -> WorkflowObligationSnapshot:
         WorkflowObligationFacts(
             modelo=Modelo("303"),
             period=_PERIOD,
-            opens_on=date(_YEAR, 4, 1),
-            closes_on=date(_YEAR, 4, 20),
+            opens_on=date(2025, 4, 1),
+            closes_on=date(2025, 4, 20),
             status=ObligationStatus.UPCOMING,
         )
     )
@@ -120,7 +118,7 @@ def _success() -> WorkflowResumeSuccess:
             source="visible_target",
             modelo="303",
             period=PublicPeriod.from_period(_PERIOD),
-            filing_year=_YEAR,
+            filing_year=2025,
             work_unit_id=None,
             short_work_unit_id=None,
             calculation_revision_id=None,

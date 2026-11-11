@@ -34,7 +34,6 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.operation_access import (
     OperationPage,
     OperationProjected,
@@ -334,10 +333,7 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
             update={
                 "scope": subject.proposal.scope.model_copy(
                     update={
-                        "periods": frozenset(
-                            Period.from_year_and_code(filing_year_envelope().floor, f"{month:02d}")
-                            for month in range(1, 13)
-                        )
+                        "periods": frozenset(Period.from_year_and_code(2024, f"{month:02d}") for month in range(1, 13))
                     }
                 )
             }

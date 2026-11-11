@@ -120,7 +120,6 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.tabular import normalize_tabular_bytes
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.llm import PromptSpec
 from ...domain.transactions.models import Transaction
@@ -151,8 +150,6 @@ from .dependency_operation_gating_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 _PACKAGE = "cadrumo"
@@ -465,14 +462,14 @@ def _local_ai_gating_problems(
 # -- Local AI consumer drivers -----------------------------------------------------
 
 _HEADERS = ("fecha", "concepto", "importe")
-_TABLE = f"fecha;concepto;importe\n{_YEAR}-01-05;Cuota mensual;-12,50\n".encode()
+_TABLE = b"fecha;concepto;importe\n2026-01-05;Cuota mensual;-12,50\n"
 
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="row-consumer-gating",
-        booked_date=date(_YEAR, 3, 1),
-        value_date=date(_YEAR, 3, 1),
+        booked_date=date(2026, 3, 1),
+        value_date=date(2026, 3, 1),
         amount=Decimal("50.00"),
         currency="EUR",
         counterparty="Office SL",
@@ -482,7 +479,7 @@ def _transaction() -> Transaction:
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual",
         ),
         raw_fields={"Concepto": "office supplies"},

@@ -35,12 +35,11 @@ from .....domain.calculations.registry.bindings import (
 from .....domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2025
 _M130_CARRY = "modelo-130-resultados-negativos-anteriores"
 _M131_CARRY = "modelo-131-resultados-negativos-anteriores"
 _M130_INCOME = "modelo-130-actividad-economica-ingresos-cumulative"

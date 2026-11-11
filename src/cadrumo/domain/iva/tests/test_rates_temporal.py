@@ -21,7 +21,6 @@ from ...calculations.registry.authority import PinnedAuthorityOperation, bundled
 from ...calculations.registry.authority_artifact import AuthorityComponentQuery, GovernedFactComponentQuery
 from ...calculations.registry.facts.schema import GovernedFact
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ..errors import IvaRateNotFoundError, IvaRateOverlapError
 from ..lookup import lookup_rate, rate_kinds_for_declared_rate, resolve_iva_rate, tier_rates_within
@@ -354,14 +353,14 @@ def test_rate_lookup_retains_the_matched_authority_provenance(operation: PinnedA
     resolved = resolve_iva_rate(
         _ES,
         _SUPER_REDUCED,
-        _COEXISTING_2_ROWS[0][0],
+        date(2024, 11, 1),
         rate_role="coexisting-2",
         operation=operation,
     )
 
     assert resolved.fact_id == "iva-rate-schedule"
     assert resolved.date_axis.value == "devengo_date"
-    assert resolved.effective_date == _COEXISTING_2_ROWS[0][0]
+    assert resolved.effective_date == date(2024, 11, 1)
     assert {selector.name: selector.value for selector in resolved.matched_selectors} == {
         "member_state": "es",
         "kind": "super_reduced",
@@ -413,8 +412,8 @@ def test_es_general_rate_turns_where_the_statute_turns_it() -> None:
     table's reach rather than the law. Both sides are the published rate.
     """
     with bundled_indexed_authority().operation() as pinned, validating_governed_facts(pinned):
-        before = lookup_rate(_ES, _GENERAL, _RDL_20_2012_GENERAL_RATE_START - timedelta(days=1), operation=pinned)
-        after = lookup_rate(_ES, _GENERAL, _RDL_20_2012_GENERAL_RATE_START, operation=pinned)
+        before = lookup_rate(_ES, _GENERAL, date(2012, 8, 31), operation=pinned)
+        after = lookup_rate(_ES, _GENERAL, date(2012, 9, 1), operation=pinned)
 
     assert (before.pct, before.published_on_date) == (Decimal("18"), True)
     assert (after.pct, after.published_on_date) == (Decimal("21"), True)
@@ -486,16 +485,7 @@ def test_a_declared_zero_resolves_to_the_zero_tier_on_every_date(operation: Pinn
     ``DOMESTIC_ZERO`` from ``EXPORT_THIRD_COUNTRY_ZERO_RATED``. The rate axis
     structurally cannot express it, so it must not pretend to answer it.
     """
-    last_window_end = max(
-        end for _start, end in (*_COEXISTING_5_ROWS, *_COEXISTING_2_ROWS, *_COEXISTING_7_5_ROWS) if end
-    )
-    for on_date in (
-        _COEXISTING_5_ROWS[0][0] - timedelta(days=1),
-        _COEXISTING_5_ROWS[0][0] + timedelta(days=45),
-        _COEXISTING_2_ROWS[0][0] + timedelta(days=45),
-        last_window_end + timedelta(days=1),
-        date(filing_year_envelope().horizon, 6, 1),
-    ):
+    for on_date in (date(2024, 3, 15), date(2024, 8, 15), date(2024, 11, 15), date(2025, 6, 1), date(2026, 6, 1)):
         assert rate_kinds_for_declared_rate(_ES, Decimal("0"), on_date, operation=operation) == (_ZERO,), (
             f"0 % must resolve to the zero tier on {on_date.isoformat()}: the table's silence about a zero "
             "record is incomplete coverage, not a statement that zero-rating was unlawful that day"
@@ -515,9 +505,9 @@ def test_the_zero_exemption_does_not_leak_into_the_dated_temporary_rates(
     Each rate is checked both INSIDE its own window and OUTSIDE it, so the
     assertion fails if the window collapses in either direction.
     """
-    inside_summer = _COEXISTING_5_ROWS[0][0] + timedelta(days=45)
-    inside_autumn = _COEXISTING_2_ROWS[0][0] + timedelta(days=45)
-    after = date(filing_year_envelope().horizon, 6, 1)
+    inside_summer = date(2024, 8, 15)
+    inside_autumn = date(2024, 11, 15)
+    after = date(2025, 6, 1)
 
     assert rate_kinds_for_declared_rate(_ES, Decimal("0.05"), inside_summer, operation=operation) == (_REDUCED,)
     assert rate_kinds_for_declared_rate(_ES, Decimal("0.02"), inside_autumn, operation=operation) == (_SUPER_REDUCED,)
@@ -525,7 +515,7 @@ def test_the_zero_exemption_does_not_leak_into_the_dated_temporary_rates(
 
     for withdrawn in (Decimal("0.02"), Decimal("0.05"), Decimal("0.075")):
         assert rate_kinds_for_declared_rate(_ES, withdrawn, after, operation=operation) == (), (
-            f"{withdrawn} must not resolve once the temporary windows closed, and a date-blind fix "
+            f"{withdrawn} must not resolve in 2025 -- the temporary windows closed, and a date-blind fix "
             "would silently re-admit a rate the statute withdrew"
         )
 

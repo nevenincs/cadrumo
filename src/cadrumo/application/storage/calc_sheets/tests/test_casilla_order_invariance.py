@@ -34,7 +34,6 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from .....domain.calculations.registry.schema import RegistrySnapshot
@@ -43,17 +42,15 @@ from ..engine import build_export_plan, registry_sha
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = filing_year_envelope().horizon
-
 # (modelo, filing_year, period, on) — export-capable modelos whose workbook plan
 # builds, spanning a small revision (M130, 20 casillas) through the largest
 # corpus member (M200, 3250) so the invariant is proven at both ends of the size
 # range the rename would touch.
 _COVERED = [
-    ("130", _YEAR, "1T", date(_YEAR, 4, 1)),
-    ("111", _YEAR, "1T", date(_YEAR, 4, 1)),
-    ("303", _YEAR, "1T", date(_YEAR, 4, 1)),
-    ("200", _YEAR, "0A", date(_YEAR + 1, 7, 1)),
+    ("130", 2025, "1T", date(2025, 4, 1)),
+    ("111", 2025, "1T", date(2025, 4, 1)),
+    ("303", 2025, "1T", date(2025, 4, 1)),
+    ("200", 2025, "0A", date(2026, 7, 1)),
 ]
 
 

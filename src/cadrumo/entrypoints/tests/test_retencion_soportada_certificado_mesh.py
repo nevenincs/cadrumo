@@ -64,7 +64,6 @@ from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.renta.retencion_soportada import RetencionSoportadaOrigen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
@@ -76,10 +75,10 @@ _TAXPAYER = "00000000T"
 _PAYER_A = "B00010090"
 _PAYER_B = "B00010165"
 _PAYER_WRONG_CONTROL = "B00000001"
-_EJERCICIO = newest_authored_edition("100")
+_EJERCICIO = 2025
 _BINDING = "renta-retencion-soportada-trabajo"
 _LEGAL_REFS = ("ley-35-2006:art-99", "rd-439-2007:art-108")
-_SOURCE_REFS = (f"aeat-modelo-100-instructions-{_EJERCICIO}",)
+_SOURCE_REFS = ("aeat-modelo-100-instructions-2025",)
 
 
 class _Cancellation:
@@ -257,9 +256,9 @@ def test_recorded_certificates_resolve_to_the_hand_summed_class_credit(
         assert isinstance(own, OperationRefusalEvidence)
 
         revision = ModeloRevision(
-            id=f"{_EJERCICIO}-retencion-soportada-test",
-            localization_key=f"test.schema.revision.{_EJERCICIO}-retencion-soportada-test.label",
-            valid_from=date(_EJERCICIO, 1, 1),
+            id="2025-retencion-soportada-test",
+            localization_key="test.schema.revision.2025-retencion-soportada-test.label",
+            valid_from=date(2025, 1, 1),
             period_selector=PeriodSelector(years=(_EJERCICIO,), periods=("0A",)),
             legal_refs=_LEGAL_REFS,
             source_refs=_SOURCE_REFS,
@@ -413,7 +412,7 @@ def test_a_fingerprint_whose_kept_bytes_were_replaced_is_refused(
             object_key=genuine,
             classification=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
             schema_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
-            written_at=datetime(_EJERCICIO + 1, 4, 2, 9, 0, tzinfo=UTC),
+            written_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
             payload=row.payload,
         )
         refused, context = _run_in(operation, _request(_PAYER_A, retencion="100.00", fingerprint=genuine))

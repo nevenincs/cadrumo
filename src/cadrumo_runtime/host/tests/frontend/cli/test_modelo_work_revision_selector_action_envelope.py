@@ -10,7 +10,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     create_m130_work_unit,
     create_modelo_operator_profile,
@@ -23,8 +22,6 @@ from .modelo_profile_seed import seed_profile
 __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
-
-_YEAR = filing_year_envelope().horizon
 
 _LOCALES = ("en", "es", "ca", "hu")
 _VERBS = ("verify", "file")
@@ -170,7 +167,7 @@ def test_verify_and_file_absent_targets_report_declared_no_action_envelopes_in_a
                     "--modelo",
                     "130",
                     "--year",
-                    str(_YEAR),
+                    "2025",
                     "--period",
                     "1T",
                 ],
@@ -183,7 +180,7 @@ def test_verify_and_file_absent_targets_report_declared_no_action_envelopes_in_a
                 condition="work_address.resolved",
                 evidence_values={
                     "modelo": "130",
-                    "filing_year": _YEAR,
+                    "filing_year": 2025,
                     "period": "1T",
                     "registry_revision_id": "",
                     "bucket_id": "",

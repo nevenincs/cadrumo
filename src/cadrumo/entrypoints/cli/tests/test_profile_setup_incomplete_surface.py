@@ -23,7 +23,6 @@ discovery guard refuses first.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
 
 import pytest
 from click.testing import Result
@@ -32,11 +31,7 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .profile_lifecycle_support import create_profile_via_cli
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -48,9 +43,9 @@ _CALENDAR = (
     "overview",
     "calendar",
     "--from",
-    date(_YEAR, 1, 1).isoformat(),
+    "2026-01-01",
     "--to",
-    date(_YEAR, 3, 31).isoformat(),
+    "2026-03-31",
     "--all-profiles",
 )
 

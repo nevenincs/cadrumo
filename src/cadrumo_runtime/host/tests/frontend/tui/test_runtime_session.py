@@ -23,7 +23,6 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo.entrypoints.tui.operations.destination import OperationsCatalogueScreen
@@ -115,7 +114,7 @@ class _Client(FrontendClient):
             operations=frozenset({"user-profile.view"}),
             actions=frozenset({AccessAction.SUBMIT}),
             disclosures=frozenset(),
-            periods=frozenset({Period.from_year_and_code(filing_year_envelope().horizon, "1T")}),
+            periods=frozenset({Period.from_year_and_code(2025, "1T")}),
             allow_period_independent=False,
             allow_delegation=False,
         )
@@ -296,7 +295,7 @@ async def test_status_shows_exact_allowlisted_scope_without_human_calls_or_clien
         assert str(client.profile_id) in str(app.query_one("#restricted-profile", Static).render())
         assert "user-profile.view" in str(app.query_one("#restricted-operations", Static).render())
         assert "submit" in str(app.query_one("#restricted-scope-actions", Static).render())
-        assert f"{filing_year_envelope().horizon} 1T" in str(app.query_one("#restricted-periods", Static).render())
+        assert "2025 1T" in str(app.query_one("#restricted-periods", Static).render())
         assert client.human_calls == 0
         assert await click_when_laid_out(pilot, app.query_one("#restricted-close", Button))
         await settle(pilot)

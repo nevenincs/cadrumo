@@ -22,8 +22,6 @@ from typing import override
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -48,8 +46,6 @@ from .action_port_fakes import (
     empty_usage_ratio_profile,
 )
 from .in_memory_transaction_repository import InMemoryTransactionRepository
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -101,8 +97,8 @@ class ClassificationScenario:
 def transaction(*, provider_id: str, description: str) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR - 2, 4, 10),
-        value_date=date(_YEAR - 2, 4, 10),
+        booked_date=date(2024, 4, 10),
+        value_date=date(2024, 4, 10),
         amount=Decimal("10.00"),
         currency="EUR",
         counterparty="Supplier SL",
@@ -112,7 +108,7 @@ def transaction(*, provider_id: str, description: str) -> Transaction:
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="test",
         ),
         raw_fields={},
@@ -124,8 +120,8 @@ def transaction(*, provider_id: str, description: str) -> Transaction:
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": "ES",
             "group_label": None,
-            "created_at": datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC),
-            "modified_at": datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC),
+            "created_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            "modified_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
         }
     )
 

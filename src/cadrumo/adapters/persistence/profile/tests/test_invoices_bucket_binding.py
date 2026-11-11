@@ -27,7 +27,6 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate
 from .....domain.invoices.errors import InvoicePersistenceError
@@ -37,8 +36,6 @@ from ..invoices import InvoiceCatalogueRepository
 from .issued_invoice_support import issued_consulting_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-_YEAR = filing_year_envelope().horizon
 
 _BUCKET_A = "60606060-6060-4060-8060-606060606060"
 _BUCKET_B = "61616161-6161-4161-8161-616161616161"
@@ -107,7 +104,7 @@ def test_loading_a_foreign_bucket_invoice_is_refused() -> None:
     catalogue = _catalogue(_invoice("INV-FOREIGN", bucket_id=_BUCKET_B))
     envelope = Envelope[InvoiceCatalogue](
         schema_version=INVOICE_CATALOGUE_NAMESPACE.schema_version,
-        written_at=datetime(_YEAR, 4, 1, 12, 0, tzinfo=UTC),
+        written_at=datetime(2026, 4, 1, 12, 0, tzinfo=UTC),
         classification=INVOICE_CATALOGUE_NAMESPACE.sensitivity,
         payload=catalogue,
     )

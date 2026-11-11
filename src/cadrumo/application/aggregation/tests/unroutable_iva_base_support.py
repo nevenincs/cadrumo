@@ -6,14 +6,12 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR, 2, 10, 12, 0, tzinfo=UTC)
+_NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
 
 
 def domestic_zero_sale() -> Transaction:
@@ -26,8 +24,8 @@ def domestic_zero_sale() -> Transaction:
     """
     raw = RawTransaction(
         provider_transaction_id="zero-rated-1",
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=Decimal("500.00"),
         currency="EUR",
         counterparty="Comprador Nacional SL",
@@ -64,8 +62,8 @@ def domestic_general_sale() -> Transaction:
     """A fully-covered domestic sale, the negative control."""
     raw = RawTransaction(
         provider_transaction_id="general-1",
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=Decimal("1210.00"),
         currency="EUR",
         counterparty="Comprador Nacional SL",

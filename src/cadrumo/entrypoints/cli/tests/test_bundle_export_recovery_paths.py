@@ -37,7 +37,7 @@ from ....domain.user_profile.errors import ProfileExportError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WHEN = datetime(1980, 9, 27, tzinfo=UTC)
+_WHEN = datetime(2026, 9, 27, tzinfo=UTC)
 
 
 def _request(destination: Path) -> ProfileBundleExportRequest:

@@ -85,7 +85,6 @@ from cadrumo.core.calculation_report_format import CalculationReportDocumentForm
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ModeloRecordCatalogue
 from cadrumo.domain.modelos.verification_report import VerificationReportCatalogue
@@ -494,7 +493,7 @@ def test_a_revision_the_store_no_longer_holds_is_refused(
                 "registry_snapshot_ref": RegistrySnapshotRef(
                     modelo="130",
                     revision_id="another-revision",
-                    modelo_year=filing_year_envelope().horizon,
+                    modelo_year=2026,
                     period="1T",
                 ),
             },

@@ -13,7 +13,6 @@ from .....application.ledger.tests.manual_transaction_support import create_manu
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -33,8 +32,6 @@ from .ledger_action_persistence_support import (
     repositories,
 )
 
-_YEAR = filing_year_envelope().horizon
-
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 
 
@@ -48,7 +45,7 @@ def seed_revision_citing_transaction(
     operation: PinnedAuthorityOperation,
 ) -> str:
     """Seed one real revision in ``state`` that cites ``transaction_id``."""
-    period = Period.from_year_and_code(_YEAR, period_code)
+    period = Period.from_year_and_code(2026, period_code)
     registry_snapshot_ref = operation.snapshot(
         "303",
         filing_year=period.filing_year,
@@ -57,7 +54,7 @@ def seed_revision_citing_transaction(
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=registry_snapshot_ref.revision_id,
     )
@@ -77,12 +74,12 @@ def seed_revision_citing_transaction(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=registry_snapshot_ref.revision_id,
         name=f"303-2026-{period_code}",
-        created_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
-        updated_at=datetime(_YEAR, 5, 2, 8, 0, tzinfo=UTC),
+        created_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        updated_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
         current_calculation_revision_id=revision_id,
     )
     verified_at: datetime | None = None
@@ -90,10 +87,10 @@ def seed_revision_citing_transaction(
     discarded_at: datetime | None = None
     discarded_by: str | None = None
     if state is CalculationRevisionState.VERIFICADO_COMPLETO:
-        verified_at = datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC)
+        verified_at = datetime(2026, 5, 2, 9, 0, tzinfo=UTC)
         verified_by = "operator-A"
     elif state is CalculationRevisionState.DESCARTADO:
-        discarded_at = datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC)
+        discarded_at = datetime(2026, 5, 2, 9, 0, tzinfo=UTC)
         discarded_by = "operator-A"
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -106,12 +103,12 @@ def seed_revision_citing_transaction(
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         observations=registry_grounded_observations(
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period.registry_token,
             casilla_values={_REVISION_CASILLA: Decimal("1")},
         ),
-        created_at=datetime(_YEAR, 5, 2, 8, 0, tzinfo=UTC),
-        updated_at=datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC),
+        created_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
+        updated_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         verified_at=verified_at,
         verified_by=verified_by,
         discarded_at=discarded_at,
@@ -145,13 +142,13 @@ def create_row(
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("1200.00"),
                 direction=TransactionDirection.INCOMING,
                 description=description,
                 idempotency_key=idempotency_key,
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
     return created.ref.transaction_id

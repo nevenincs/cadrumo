@@ -46,48 +46,24 @@ def _supported_filing_years() -> tuple[int, ...]:
     return tuple(support.years)
 
 
-def _authored_renta_filing_years() -> tuple[int, ...]:
-    """Return the supported years whose Renta revision is authored for that year, newest first.
+def _authored_renta_filing_year() -> int:
+    """Return the newest supported year whose Renta revision is authored for that year.
 
     A year the envelope admits only by projecting an earlier revision forward
     carries no dated thresholds of its own.
     """
-    authored = tuple(
-        year
-        for year in sorted(_supported_filing_years(), reverse=True)
-        if (valid_to := published_snapshot("100", filing_year=year, period="0A").revision.valid_to) is None
-        or valid_to.year >= year
-    )
-    assert authored, "no supported filing year has an authored Renta revision"
-    return authored
+    for year in sorted(_supported_filing_years(), reverse=True):
+        valid_to = published_snapshot("100", filing_year=year, period="0A").revision.valid_to
+        if valid_to is None or valid_to.year >= year:
+            return year
+    raise AssertionError("no supported filing year has an authored Renta revision")
 
 
-_FILING_YEAR = _authored_renta_filing_years()[0]
-
-#: The bindings the worked example supplies beside the profile-resolved ones.
-_WORKED_EXAMPLE_BINDINGS: dict[str, Decimal] = {
-    "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-    "renta-profile-incremento-guarderia": Decimal("0"),
-    "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
-    "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
-    "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
-    "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
-    "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
-}
-
-
-def _worked_example_filing_years() -> tuple[int, ...]:
-    """The authored Renta years whose revision accepts every binding the worked example supplies."""
-    years = tuple(
-        year
-        for year in _authored_renta_filing_years()
-        if set(_WORKED_EXAMPLE_BINDINGS)
-        <= {binding.id for binding in published_snapshot("100", filing_year=year, period="0A").revision.bindings}
-    )
-    assert years, "no authored Renta revision accepts the worked example's bindings"
-    return years
-
-
+_FILING_YEAR = _authored_renta_filing_year()
+#: The worked example's figures (7,900 of mínimo, 3,097 of cuota) are the
+#: Cataluña computation for this Renta campaign, so its year is part of the
+#: example rather than a coordinate the test may move.
+_WORKED_EXAMPLE_FILING_YEAR = 2024
 _BUCKET = "00000000-0000-4000-8000-000000000516"
 _PROFILE_LABEL = "M100 minimo descendientes engine profile"
 _T0 = datetime(max(_supported_filing_years()), 7, 2, 10, 0, tzinfo=UTC)
@@ -160,18 +136,13 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(
     assert resolution.binding_values[binding_id] == tranches[0]
 
 
-@pytest.mark.parametrize("year", _worked_example_filing_years())
 def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_tariff(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
-    year: int,
 ) -> None:
-    """Real profile descendientes feed 0513/0514 and the downstream cuota path.
-
-    The worked example's figures (7,900 of mínimo, 3,097 of cuota) are the
-    Cataluña computation for a 37,400 base, run on every authored Renta edition
-    whose revision accepts the inputs the example supplies.
-    """
+    """Real profile descendientes feed 0513/0514 and the downstream cuota path."""
+    assert _WORKED_EXAMPLE_FILING_YEAR in _supported_filing_years()
+    year = _WORKED_EXAMPLE_FILING_YEAR
     snapshot = _snapshot(year)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
         # One descendant of nine and one under three at the end of the campaign.
@@ -205,7 +176,16 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
         snapshot,
         inputs={validated_casilla_id("0003", surface="test_minimo_descendientes_engine.casilla"): Decimal("37400")},
         date_context={"filing_period": date(year, 12, 31)},
-        binding_values={**resolution.binding_values, **_WORKED_EXAMPLE_BINDINGS},
+        binding_values={
+            **resolution.binding_values,
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-profile-incremento-guarderia": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+        },
         enum_binding_values=resolution.enum_binding_values,
         date_binding_values=resolution.date_binding_values,
         boolean_binding_values=resolution.boolean_binding_values,

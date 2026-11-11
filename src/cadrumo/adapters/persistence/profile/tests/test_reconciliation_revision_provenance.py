@@ -18,7 +18,6 @@ from .....application.modelo.reconciliation_records import (
     list_modelo_reconciliations,
 )
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.calculation_repository import upsert_calculation_revision
 from .....domain.modelos.calculation_revision import CalculationRevisionState
 from ..buckets import BucketEventHistoryRepository
@@ -35,11 +34,9 @@ from .test_reconcile_value_comparison import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_M131_YEAR = filing_year_envelope().horizon
-
 
 def test_exact_revision_selection_and_historical_provenance(operation: PinnedAuthorityOperation) -> None:
-    unit = seed_work_unit(modelo="131", filing_year=_M131_YEAR, period="1T")
+    unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
     reconcile_value_comparison_persist_filed_revision(unit, total_ingresar=Decimal("500"))
     repository = CalculationRevisionCatalogueRepository()
     filed = repository.load(operation=operation).for_work_unit(unit.work_unit_id)[0]
@@ -89,7 +86,7 @@ def test_exact_revision_selection_and_historical_provenance(operation: PinnedAut
     del legacy["calculation_revision_id"]
     assert ModeloReconciliationRecord.model_validate_json(json.dumps(legacy)).calculation_revision_id is None
 
-    other = seed_work_unit(modelo="131", filing_year=_M131_YEAR, period="2T")
+    other = seed_work_unit(modelo="131", filing_year=2024, period="2T")
     reconcile_value_comparison_persist_filed_revision(other, total_ingresar=Decimal("600"))
     other_revision = repository.load(operation=operation).for_work_unit(other.work_unit_id)[0]
     for target in ["a" * 64, other_revision.calculation_revision_id]:
@@ -100,7 +97,7 @@ def test_exact_revision_selection_and_historical_provenance(operation: PinnedAut
 
 
 def test_history_retains_stored_coordinates_after_authority_changes(operation: PinnedAuthorityOperation) -> None:
-    unit = seed_work_unit(modelo="131", filing_year=_M131_YEAR, period="1T")
+    unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
     prepared = prepare_parsed_justificante(
         work_unit=unit,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
@@ -123,10 +120,10 @@ def test_optional_only_scope_discloses_zero_compared_fields(
 ) -> None:
     from .....application.modelo import reconciliation_comparison
 
-    unit = seed_work_unit(modelo="131", filing_year=_M131_YEAR, period="1T")
+    unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
     reconcile_value_comparison_persist_filed_revision(unit, total_ingresar=Decimal("600"))
     revision = CalculationRevisionCatalogueRepository().load(operation=operation).for_work_unit(unit.work_unit_id)[0]
-    snapshot = operation.snapshot("131", filing_year=_M131_YEAR, period="1T")
+    snapshot = operation.snapshot("131", filing_year=2024, period="1T")
     policy = replace(
         snapshot.verification_policy(),
         computed_casilla_ids=frozenset(),

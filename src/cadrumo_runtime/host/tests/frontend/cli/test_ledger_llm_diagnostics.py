@@ -17,7 +17,6 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 from cadrumo.core.config_support import LLMProvider, RetiredLLMProvider
 from cadrumo.core.i18n.render import tr
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.classification_origin import ClassificationOrigin
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -39,8 +38,6 @@ from .cli_runner import invoke_cached_cli
 
 # Seeded rows and stored records decode against registry facts, so the test
 # body holds the same authority lease a CLI invocation holds.
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 __all__ = ["diagnostics_native_profile"]
@@ -71,7 +68,7 @@ def seed_ledger_llm_usage_records() -> None:
         output_tokens=40,
         cost_estimate_usd=Decimal("0.0012"),
         cache_hit=False,
-        created_at=datetime(_YEAR, 4, 1, 9, 0, tzinfo=UTC),
+        created_at=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
         request_id="req-1",
     )
     second = LLMResponse(
@@ -82,7 +79,7 @@ def seed_ledger_llm_usage_records() -> None:
         output_tokens=10,
         cost_estimate_usd=Decimal("0.0003"),
         cache_hit=True,
-        created_at=datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC),
+        created_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
         request_id="req-2",
     )
     unpriced = LLMResponse(
@@ -93,7 +90,7 @@ def seed_ledger_llm_usage_records() -> None:
         output_tokens=5,
         cost_estimate_usd=None,
         cache_hit=False,
-        created_at=datetime(_YEAR, 4, 3, 9, 0, tzinfo=UTC),
+        created_at=datetime(2026, 4, 3, 9, 0, tzinfo=UTC),
         request_id="req-3",
     )
     for response in (first, second, unpriced):
@@ -103,8 +100,8 @@ def seed_ledger_llm_usage_records() -> None:
 def _raw(provider_id: str, amount: Decimal) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
         amount=amount,
         currency="EUR",
         counterparty="Supplier SL",
@@ -114,7 +111,7 @@ def _raw(provider_id: str, amount: Decimal) -> RawTransaction:
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},
@@ -232,9 +229,9 @@ def test_llm_diagnostics_usage_window_and_threshold_keep_confidence_independent(
             "ledger",
             "llm-diagnostics",
             "--since",
-            date(_YEAR, 4, 2).isoformat(),
+            "2026-04-02",
             "--until",
-            date(_YEAR, 4, 2).isoformat(),
+            "2026-04-02",
             "--low-confidence-below",
             "0.99",
         ],
@@ -243,8 +240,8 @@ def test_llm_diagnostics_usage_window_and_threshold_keep_confidence_independent(
     payload = unwrap_cli_result(result)
 
     claude = {row["provider"]: row for row in payload["confidence_providers"]}["claude"]
-    assert payload["since"] == date(_YEAR, 4, 2).isoformat()
-    assert payload["until"] == date(_YEAR, 4, 2).isoformat()
+    assert payload["since"] == "2026-04-02"
+    assert payload["until"] == "2026-04-02"
     assert payload["total_calls"] == 1
     only_usage = payload["usage_providers"]
     assert len(only_usage) == 1
@@ -270,15 +267,15 @@ def test_llm_diagnostics_reversed_usage_window_keeps_confidence(
             "ledger",
             "llm-diagnostics",
             "--since",
-            date(_YEAR, 4, 3).isoformat(),
+            "2026-04-03",
             "--until",
-            date(_YEAR, 4, 1).isoformat(),
+            "2026-04-01",
         ],
     )
     assert result.exit_code == 0, result.output
     payload = unwrap_cli_result(result)
-    assert payload["since"] == date(_YEAR, 4, 3).isoformat()
-    assert payload["until"] == date(_YEAR, 4, 1).isoformat()
+    assert payload["since"] == "2026-04-03"
+    assert payload["until"] == "2026-04-01"
     assert payload["usage_providers"] == []
     assert payload["total_calls"] == 0
     assert payload["total_cost_estimate_usd"] == "0"

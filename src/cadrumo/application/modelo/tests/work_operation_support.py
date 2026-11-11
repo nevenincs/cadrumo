@@ -10,31 +10,28 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 
-FIRST_QUARTER_YEAR = filing_year_envelope().horizon
-FIRST_QUARTER_PERIOD = Period.from_year_and_code(FIRST_QUARTER_YEAR, "1T")
-FIRST_QUARTER_REVISION_ID = str(revision_serving_period("303", FIRST_QUARTER_YEAR, "1T").id)
+FIRST_QUARTER_PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 def first_quarter_unit(profile_id: UUID) -> WorkUnit:
-    instant = datetime(FIRST_QUARTER_YEAR, 3, 10, tzinfo=UTC)
+    instant = datetime(2026, 3, 10, tzinfo=UTC)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=str(profile_id),
             modelo="303",
-            filing_year=FIRST_QUARTER_YEAR,
+            filing_year=2026,
             period=FIRST_QUARTER_PERIOD,
-            revision_id=FIRST_QUARTER_REVISION_ID,
+            revision_id="2026-y-siguientes",
         ),
         bucket_id=str(profile_id),
         modelo="303",
-        filing_year=FIRST_QUARTER_YEAR,
+        filing_year=2026,
         period=FIRST_QUARTER_PERIOD,
-        revision_id=FIRST_QUARTER_REVISION_ID,
+        revision_id="2026-y-siguientes",
         name="First quarter",
         created_at=instant,
         updated_at=instant,

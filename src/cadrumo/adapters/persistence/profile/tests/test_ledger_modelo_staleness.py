@@ -51,7 +51,6 @@ from .....application.ledger.models import ManualLedgerTransactionPatch
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import IvaCategory
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -75,9 +74,8 @@ from .verified_ledger_revision_support import verified_303_ledger_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC)
-_FILING_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
+_FILING_PERIOD = Period.from_year_and_code(2025, "1T")
 _BUCKET_ID = "16161616-1616-4616-8616-161616161616"
 
 
@@ -87,8 +85,8 @@ _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 def _txn(*, taxable_base: Decimal) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="provider-row-stale",
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -139,7 +137,7 @@ def _verified_revision(snapshot, tx_id: str, *, operation: PinnedAuthorityOperat
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2025,
         period=_FILING_PERIOD,
         revision_id=registry_snapshot_ref.revision_id,
     )
@@ -236,10 +234,10 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(
         work_unit_id=revision.work_unit_id,
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("303"),
-        filing_year=_YEAR,
+        filing_year=2025,
         period=_FILING_PERIOD,
         revision_id=revision.registry_snapshot_ref.revision_id,
-        name=f"303-{_YEAR}-1T",
+        name="303-2025-1T",
         created_at=_NOW,
         updated_at=_NOW,
         current_calculation_revision_id=revision.calculation_revision_id,

@@ -60,7 +60,6 @@ from .....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.thread_file_io_probe import recording_file_io
 from ...storage.errors import RepositoryError
 from .. import journal as journal_module
@@ -68,15 +67,13 @@ from ..journal import OperationJournalRepository
 from ..journal_validation import OperationJournalRecord
 from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 if TYPE_CHECKING:
     from _typeshed import TraceFunction
 
 
-STARTED = datetime(_YEAR, 8, 13, 20, tzinfo=UTC)
+STARTED = datetime(2026, 8, 13, 20, tzinfo=UTC)
 
 
 def journal_snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
@@ -837,7 +834,7 @@ def test_operation_journal_refuses_raw_history_corruption(tmp_path: Path, corrup
         case "sequence":
             history[0]["sequence"] = 2
         case "timestamp":
-            history[0]["timestamp"] = datetime(_YEAR, 8, 13, 20, 3, tzinfo=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+            history[0]["timestamp"] = "2026-08-13T20:03:00Z"
         case "revision":
             history[1]["revision"] = 3
         case "terminal":

@@ -30,7 +30,6 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -41,23 +40,20 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_EXERCISE = filing_year_envelope().horizon
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 
 def _revision() -> ModeloRevision:
-    return published_authority_operation().revision_with_export_layouts(
-        "303", str(revision_serving_period("303", _EXERCISE, "1T").id)
-    )
+    return published_authority_operation().revision_with_export_layouts("303", "2022")
 
 
 def _transaction(provider_id: str) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_EXERCISE, 2, 10),
-        value_date=date(_EXERCISE, 2, 10),
+        booked_date=date(2026, 2, 10),
+        value_date=date(2026, 2, 10),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Cliente o proveedor",
@@ -67,7 +63,7 @@ def _transaction(provider_id: str) -> Transaction:
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_EXERCISE, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -83,7 +79,7 @@ def _transaction(provider_id: str) -> Transaction:
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
-            "classified_at": datetime(_EXERCISE, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -123,8 +119,8 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="303",
-                filing_year=_EXERCISE,
-                period=Period.from_year_and_code(_EXERCISE, "1T"),
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
                 revision=_revision(),
             ),
         )
@@ -147,6 +143,6 @@ def test_transaction_catalogue_refuses_new_legacy_drift_fixture(runtime_profile:
             object_key=transaction_index_object_key(_BUCKET_ID),
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(_EXERCISE, 6, 4, 12, 0, tzinfo=UTC),
+            written_at=datetime(2026, 6, 4, 12, 0, tzinfo=UTC),
             payload=b"{}",
         )

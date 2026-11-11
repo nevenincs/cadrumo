@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 
 _BUCKET_ID = "74747474-7474-4474-8474-747474747474"
-_INSTANT = datetime(1980, 7, 12, 18, 0, tzinfo=UTC)
+_INSTANT = datetime(2026, 7, 12, 18, 0, tzinfo=UTC)
 
 
 def test_fresh_state_uses_one_cadrumo_identity_across_persistence_boundaries(tmp_path: Path) -> None:

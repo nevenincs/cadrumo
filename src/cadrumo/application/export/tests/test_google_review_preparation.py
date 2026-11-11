@@ -6,8 +6,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....core.errors.hierarchy import InternalInvariantError
 from ...storage.calc_sheets.records import SheetExportPlan, SheetReviewMetadata
 from ...storage.calc_sheets.tests.review_fixture import review_label, review_snapshot
@@ -26,8 +24,6 @@ from ..publication_receipt import (
     ReadableExportAuthorization,
     ReadablePayloadCategory,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,7 +68,7 @@ def test_preparation_binds_sealed_baseline_and_publication() -> None:
         selection=snapshot.selection,
         publication=receipt,
         authorization=_authorization(receipt),
-        exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
         label=review_label,
     )
     assert plan.metadata.snapshot_digest == snapshot.snapshot_digest
@@ -89,7 +85,7 @@ def test_stale_saved_revision_is_refused() -> None:
             selection=snapshot.selection,
             publication=receipt,
             authorization=_authorization(receipt),
-            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=review_label,
         )
 
@@ -104,7 +100,7 @@ def test_exact_active_profile_is_required(monkeypatch: pytest.MonkeyPatch) -> No
             selection=snapshot.selection,
             publication=receipt,
             authorization=_authorization(receipt),
-            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=review_label,
         )
 
@@ -120,7 +116,7 @@ def test_uncertain_create_is_not_reprepared_for_population() -> None:
             selection=snapshot.selection,
             publication=receipt,
             authorization=_authorization(receipt),
-            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=review_label,
         )
 
@@ -137,7 +133,7 @@ def test_ledger_disclosure_is_required_for_supporting_rows() -> None:
             selection=snapshot.selection,
             publication=receipt,
             authorization=authorization,
-            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=review_label,
         )
 
@@ -163,7 +159,7 @@ def test_published_copy_cannot_be_reprepared_for_overwrite() -> None:
             selection=snapshot.selection,
             publication=receipt,
             authorization=_authorization(receipt),
-            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=review_label,
         )
 
@@ -180,7 +176,7 @@ def test_wrong_root_disclosure_is_refused() -> None:
             selection=snapshot.selection,
             publication=receipt,
             authorization=authorization,
-            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=review_label,
         )
 
@@ -211,7 +207,7 @@ def test_partial_transport_outcome_is_retained_as_partial() -> None:
         publication=receipt,
         authorization=_authorization(receipt),
         prepared=port,
-        exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
         label=review_label,
     )
     assert result == uncertain
@@ -229,7 +225,7 @@ def test_unrelated_transport_receipt_cannot_be_settled_as_this_export() -> None:
             publication=receipt,
             authorization=_authorization(receipt),
             prepared=port,
-            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=review_label,
         )
 
@@ -254,7 +250,7 @@ def test_allocated_id_alone_is_not_a_completed_publication() -> None:
             publication=receipt,
             authorization=_authorization(receipt),
             prepared=port,
-            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=review_label,
         )
 
@@ -280,7 +276,7 @@ def test_prepared_label_cannot_hide_existing_artifact_effects() -> None:
             publication=receipt,
             authorization=_authorization(receipt),
             prepared=port,
-            exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=review_label,
         )
     assert port.calls == 0

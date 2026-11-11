@@ -19,7 +19,6 @@ See Also:
 
 from __future__ import annotations
 
-import calendar
 from collections.abc import Iterator
 from datetime import date
 
@@ -36,17 +35,10 @@ from cadrumo.application.modelo.tests.memoized_transaction_catalogue_support imp
     memoized_transaction,
     memoized_transaction_ids,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "51515151-5151-4151-9151-515151515151"
-_YEAR = filing_year_envelope().horizon
-
-
-def _window(month: int) -> tuple[date, date]:
-    """Return the first and last day of one calendar month of the exercise."""
-    return date(_YEAR, month, 1), date(_YEAR, month, calendar.monthrange(_YEAR, month)[1])
 
 
 @pytest.fixture(scope="module")
@@ -72,8 +64,8 @@ def test_load_round_trip_exposes_storage_changes(
     runtime_profile: TestRuntimeProfile,
     repository: TransactionCatalogueRepository,
 ) -> None:
-    first_transaction = memoized_transaction("provider-row-1", date(_YEAR, 1, 15))
-    added_transaction = memoized_transaction("provider-row-2", date(_YEAR, 2, 15))
+    first_transaction = memoized_transaction("provider-row-1", date(2024, 1, 15))
+    added_transaction = memoized_transaction("provider-row-2", date(2024, 2, 15))
     repository.save(memoized_catalogue(first_transaction))
     first_load = repository.load()
     assert memoized_transaction_ids(first_load) == {first_transaction.transaction_id}
@@ -91,14 +83,14 @@ def test_date_range_reads_honor_exact_window(
     runtime_profile: TestRuntimeProfile,
     repository: TransactionCatalogueRepository,
 ) -> None:
-    january_transaction = memoized_transaction("provider-row-1", date(_YEAR, 1, 15))
-    added_january_transaction = memoized_transaction("provider-row-2", date(_YEAR, 1, 25))
-    april_transaction = memoized_transaction("provider-row-3", date(_YEAR, 4, 10))
+    january_transaction = memoized_transaction("provider-row-1", date(2024, 1, 15))
+    added_january_transaction = memoized_transaction("provider-row-2", date(2024, 1, 25))
+    april_transaction = memoized_transaction("provider-row-3", date(2024, 4, 10))
     repository.save(memoized_catalogue(january_transaction, april_transaction))
-    january_window = _window(1)
+    january_window = (date(2024, 1, 1), date(2024, 1, 31))
 
     first_january_load = repository.load_for_date_range(*january_window)
-    april_load = repository.load_for_date_range(*_window(4))
+    april_load = repository.load_for_date_range(date(2024, 4, 1), date(2024, 4, 30))
 
     assert memoized_transaction_ids(first_january_load) == {january_transaction.transaction_id}
     assert memoized_transaction_ids(april_load) == {april_transaction.transaction_id}
@@ -118,11 +110,11 @@ def test_full_and_date_range_reads_select_their_respective_rows(
     runtime_profile: TestRuntimeProfile,
     repository: TransactionCatalogueRepository,
 ) -> None:
-    january_transaction = memoized_transaction("provider-row-1", date(_YEAR, 1, 15))
-    february_transaction = memoized_transaction("provider-row-2", date(_YEAR, 2, 15))
+    january_transaction = memoized_transaction("provider-row-1", date(2024, 1, 15))
+    february_transaction = memoized_transaction("provider-row-2", date(2024, 2, 15))
     repository.save(memoized_catalogue(january_transaction, february_transaction))
     full_load = repository.load()
-    february_load = repository.load_for_date_range(*_window(2))
+    february_load = repository.load_for_date_range(date(2024, 2, 1), date(2024, 2, 29))
 
     assert memoized_transaction_ids(full_load) == {
         january_transaction.transaction_id,
@@ -135,9 +127,9 @@ def test_targeted_id_reads_are_canonical_and_independent(
     runtime_profile: TestRuntimeProfile,
     repository: TransactionCatalogueRepository,
 ) -> None:
-    first_transaction = memoized_transaction("provider-row-1", date(_YEAR, 1, 15))
-    second_transaction = memoized_transaction("provider-row-2", date(_YEAR, 2, 15))
-    added_transaction = memoized_transaction("provider-row-3", date(_YEAR, 3, 15))
+    first_transaction = memoized_transaction("provider-row-1", date(2024, 1, 15))
+    second_transaction = memoized_transaction("provider-row-2", date(2024, 2, 15))
+    added_transaction = memoized_transaction("provider-row-3", date(2024, 3, 15))
     repository.save(memoized_catalogue(first_transaction, second_transaction))
     first = repository.load_by_ids((second_transaction.transaction_id, first_transaction.transaction_id))
     assert memoized_transaction_ids(first) == {first_transaction.transaction_id, second_transaction.transaction_id}
@@ -154,10 +146,10 @@ def test_targeted_id_reads_match_the_current_persisted_partition(
     runtime_profile: TestRuntimeProfile,
     repository: TransactionCatalogueRepository,
 ) -> None:
-    january_transaction = memoized_transaction("provider-row-1", date(_YEAR, 1, 15))
-    february_transaction = memoized_transaction("provider-row-2", date(_YEAR, 2, 15))
+    january_transaction = memoized_transaction("provider-row-1", date(2024, 1, 15))
+    february_transaction = memoized_transaction("provider-row-2", date(2024, 2, 15))
     repository.save(memoized_catalogue(january_transaction, february_transaction))
-    partition = repository.partition_by_date_range(date(_YEAR, 1, 1), date(_YEAR, 3, 31))
+    partition = repository.partition_by_date_range(date(2024, 1, 1), date(2024, 3, 31))
     targeted = repository.load_by_ids((january_transaction.transaction_id,))
 
     assert memoized_transaction_ids(partition.in_window) == {
@@ -181,14 +173,14 @@ def test_partition_reads_honor_exact_window(
     repository: TransactionCatalogueRepository,
 ) -> None:
     """Partitioning retains every row while selecting the requested window."""
-    january_transaction = memoized_transaction("provider-row-1", date(_YEAR, 1, 15))
-    added_january_transaction = memoized_transaction("provider-row-2", date(_YEAR, 1, 25))
-    april_transaction = memoized_transaction("provider-row-3", date(_YEAR, 4, 10))
+    january_transaction = memoized_transaction("provider-row-1", date(2024, 1, 15))
+    added_january_transaction = memoized_transaction("provider-row-2", date(2024, 1, 25))
+    april_transaction = memoized_transaction("provider-row-3", date(2024, 4, 10))
     repository.save(memoized_catalogue(january_transaction, april_transaction))
-    january_window = _window(1)
+    january_window = (date(2024, 1, 1), date(2024, 1, 31))
 
     first_january_partition = repository.partition_by_date_range(*january_window)
-    april_partition = repository.partition_by_date_range(*_window(4))
+    april_partition = repository.partition_by_date_range(date(2024, 4, 1), date(2024, 4, 30))
 
     assert memoized_transaction_ids(first_january_partition.in_window) == {january_transaction.transaction_id}
     assert memoized_transaction_ids(april_partition.in_window) == {april_transaction.transaction_id}
@@ -208,8 +200,8 @@ def test_exists_save_and_bucket_id_are_exposed_by_concrete_repository(
     runtime_profile: TestRuntimeProfile,
     repository: TransactionCatalogueRepository,
 ) -> None:
-    first_transaction = memoized_transaction("provider-row-1", date(_YEAR, 1, 15))
-    replacement_transaction = memoized_transaction("provider-row-2", date(_YEAR, 3, 15))
+    first_transaction = memoized_transaction("provider-row-1", date(2024, 1, 15))
+    replacement_transaction = memoized_transaction("provider-row-2", date(2024, 3, 15))
 
     assert repository.bucket_id == runtime_profile.bucket_id
     assert repository.exists() is False
@@ -217,7 +209,7 @@ def test_exists_save_and_bucket_id_are_exposed_by_concrete_repository(
     repository.save(memoized_catalogue(first_transaction))
     assert repository.exists() is True
 
-    march_window = _window(3)
+    march_window = (date(2024, 3, 1), date(2024, 3, 31))
     assert memoized_transaction_ids(repository.load()) == {first_transaction.transaction_id}
     assert memoized_transaction_ids(repository.load_for_date_range(*march_window)) == set()
     assert memoized_transaction_ids(repository.partition_by_date_range(*march_window).in_window) == set()

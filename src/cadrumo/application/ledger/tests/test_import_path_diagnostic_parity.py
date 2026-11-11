@@ -22,8 +22,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.import_fingerprints import derive_import_fingerprint
 from ....domain.transactions.models import TransactionCatalogue, derive_transaction_id
@@ -33,8 +31,6 @@ from ...transactions.import_diagnostics import import_ledger_with_diagnostics
 from ..actions_import import evaluate_import_rows
 from ..protocols import ParsedLedgerRowProtocol
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SOURCE_PATH = Path("project/data/example.csv")
@@ -43,8 +39,8 @@ _SOURCE_PATH = Path("project/data/example.csv")
 def _raw(provider_id: str, *, description: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR - 1, 4, 5),
-        value_date=date(_YEAR - 1, 4, 5),
+        booked_date=date(2025, 4, 5),
+        value_date=date(2025, 4, 5),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -54,7 +50,7 @@ def _raw(provider_id: str, *, description: str) -> RawTransaction:
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(_YEAR - 1, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2025, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},
@@ -89,9 +85,7 @@ def test_an_imported_row_keeps_the_operation_date_its_source_states_and_invents_
         bucket_id="preview",
         catalogue=TransactionCatalogue(),
         parsed_rows=(
-            ParsedLedgerRowFake(
-                raw=raws[0], direction=TransactionDirection.OUTGOING, operation_date=date(_YEAR, 3, 30)
-            ),
+            ParsedLedgerRowFake(raw=raws[0], direction=TransactionDirection.OUTGOING, operation_date=date(2026, 3, 30)),
             ParsedLedgerRowFake(raw=raws[1], direction=TransactionDirection.OUTGOING),
         ),
     )

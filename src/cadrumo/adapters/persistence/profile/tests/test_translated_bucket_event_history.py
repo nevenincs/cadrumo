@@ -28,7 +28,7 @@ def _event(marker: str) -> BucketEvent:
     return build_bucket_event(
         bucket_id=_BUCKET_ID,
         event_type=BucketEventType.PROFILE_VALUES_UPDATED,
-        occurred_at=datetime(1980, 5, 1, 12, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
         actor="test",
         object_type=BucketEventObjectType.PROFILE,
         object_id=marker,

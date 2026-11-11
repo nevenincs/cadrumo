@@ -33,7 +33,6 @@ from .....application.ledger.tests.manual_transaction_support import (
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.currency.service import CurrencyNormalizationService
 from .....domain.invoices.enums import IvaRate, PaymentStatus
@@ -64,8 +63,6 @@ from ..transactions import (
     TransactionCatalogueRepository,
 )
 from .published_authority_support import published_authority_operation
-
-_YEAR = filing_year_envelope().horizon
 
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 BUCKET_ID = "26262626-2626-4626-8626-262626262626"
@@ -224,7 +221,7 @@ def _persist_verified_revision_citing_transaction(
     operation: PinnedAuthorityOperation,
 ) -> None:
     source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     registry_snapshot_ref = (
         published_authority_operation()
         .snapshot(
@@ -237,7 +234,7 @@ def _persist_verified_revision_citing_transaction(
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=registry_snapshot_ref.revision_id,
     )
@@ -259,7 +256,7 @@ def _persist_verified_revision_citing_transaction(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=registry_snapshot_ref.revision_id,
         name="303-2026-1T",
@@ -278,7 +275,7 @@ def _persist_verified_revision_citing_transaction(
         casilla_values={_REVISION_CASILLA: _Decimal("1")},
         observations=registry_grounded_observations(
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period.registry_token,
             casilla_values={_REVISION_CASILLA: _Decimal("1")},
         ),

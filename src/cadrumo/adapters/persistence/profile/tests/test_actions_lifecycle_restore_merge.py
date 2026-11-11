@@ -13,11 +13,8 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .merge_test_support import BUCKET_ID, repositories, split_setup
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -36,7 +33,7 @@ def _merged_state(secure_objects: SecureObjectRepository):
             child_transaction_ids=split.child_transaction_ids,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 5, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
         )
     return transaction_repository, event_repository, parent.ref.transaction_id, split, merge.merged_transaction_id
 
@@ -53,7 +50,7 @@ def _restore(secure_objects, transaction_repository, event_repository, transacti
             transaction_id=transaction_id,
             actor="operator-B",
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, day, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, day, 9, 0, tzinfo=UTC),
         )
 
 
@@ -69,7 +66,7 @@ def _archive(secure_objects, transaction_repository, event_repository, transacti
             transaction_id=transaction_id,
             actor="operator-B",
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, day, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, day, 9, 0, tzinfo=UTC),
         )
 
 

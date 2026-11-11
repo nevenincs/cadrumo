@@ -25,7 +25,7 @@ _BUCKET_ID = "bafde89c-041e-4756-882b-933aaf16cad8"  # was '11111111-1111-1111-1
 _OTHER_BUCKET_ID = "05d17100-b346-429d-a760-a0fdedcf8623"  # was '22222222-2222-2222-2222-222222222222'
 _DEK = b"d" * 32
 _OTHER_DEK = b"e" * 32
-_NOW = datetime(1980, 1, 1, tzinfo=UTC)
+_NOW = datetime(2026, 1, 1, tzinfo=UTC)
 _CONTEXT = b"cadrumo.column.hashed_lookup.v1"
 _OTHER_CONTEXT = b"cadrumo.tests.other_context.v1"
 

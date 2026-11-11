@@ -7,7 +7,7 @@ what any authority resolves.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from typing import Final
 
 import pytest
@@ -16,7 +16,6 @@ from ....core.time.clock import frozen_clock
 from ...calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.schema_references import TemporalSupportEnvelope
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..validation_pass import answer_once, invoice_validation_pass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -43,7 +42,7 @@ class _Counter:
         return slot, on
 
 
-_ON: Final = date(filing_year_envelope().horizon, 12, 31)
+_ON: Final = date(2024, 12, 31)
 
 
 def test_outside_a_pass_every_question_is_asked() -> None:
@@ -78,11 +77,11 @@ def test_a_different_date_or_argument_is_a_different_question() -> None:
     counter = _Counter()
     with validating_governed_facts(_Authority()), invoice_validation_pass():
         answer_once(counter, "RATE_2", _ON)
-        answer_once(counter, "RATE_2", _ON + timedelta(days=1))
+        answer_once(counter, "RATE_2", date(2025, 1, 1))
         answer_once(counter, "RATE_7.5", _ON)
         answer_once(counter, slot="RATE_2", on=_ON)
 
-    assert counter.calls == [("RATE_2", _ON), ("RATE_2", _ON + timedelta(days=1)), ("RATE_7.5", _ON), ("RATE_2", _ON)]
+    assert counter.calls == [("RATE_2", _ON), ("RATE_2", date(2025, 1, 1)), ("RATE_7.5", _ON), ("RATE_2", _ON)]
 
 
 def test_an_answer_is_never_served_under_another_authority() -> None:
@@ -116,9 +115,9 @@ def test_a_pass_straddling_midnight_asks_again() -> None:
     """Projections defaulting to today must not reuse yesterday's answer."""
     counter = _Counter()
     with validating_governed_facts(_Authority()), invoice_validation_pass():
-        with frozen_clock(datetime(1980, 3, 1, 22, 30, tzinfo=UTC)):
+        with frozen_clock(datetime(2026, 3, 1, 22, 30, tzinfo=UTC)):
             answer_once(counter, "RATE_21", _ON)
-        with frozen_clock(datetime(1980, 3, 1, 23, 30, tzinfo=UTC)):
+        with frozen_clock(datetime(2026, 3, 1, 23, 30, tzinfo=UTC)):
             answer_once(counter, "RATE_21", _ON)
 
     assert len(counter.calls) == 2

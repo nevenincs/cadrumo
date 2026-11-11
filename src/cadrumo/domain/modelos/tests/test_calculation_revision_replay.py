@@ -9,7 +9,6 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ..errors import ModeloValidationError
 from .calculation_revision_test_support import (
@@ -22,12 +21,10 @@ from .calculation_revision_test_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_EXERCISE = filing_year_envelope().horizon
-
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="720",
-    revision_id=str(revision_covering("720", _EXERCISE).id),
-    modelo_year=_EXERCISE,
+    revision_id="2013-y-siguientes",
+    modelo_year=2026,
     period="0A",
 )
 
@@ -211,7 +208,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_casilla_keys() -> 
     """A stored revision with malformed casilla keys must not construct."""
     from datetime import UTC, datetime
 
-    created = datetime(1980, 5, 26, 10, 0, 0, tzinfo=UTC)
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     with pytest.raises(ValidationError, match="String should match pattern"):
         CalculationRevision(
             calculation_revision_id="0" * 64,
@@ -231,7 +228,7 @@ def test_calculation_revision_rejects_legacy_inputs_snapshot_key() -> None:
     """Persisted revisions must use input_values_by_casilla_id, not inputs_snapshot."""
     from datetime import UTC, datetime
 
-    created = datetime(1980, 5, 26, 10, 0, 0, tzinfo=UTC)
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     output_values = {OUTPUT_CASILLA_002: Decimal("15.00")}
     revision_id = derive_calculation_revision_id(
         work_unit_id="a" * 64,
@@ -266,7 +263,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
     """A stored revision with malformed binding ids must not construct."""
     from datetime import UTC, datetime
 
-    created = datetime(1980, 5, 26, 10, 0, 0, tzinfo=UTC)
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     with pytest.raises(ValidationError, match="String should match pattern"):
         CalculationRevision(
             calculation_revision_id="0" * 64,
@@ -299,7 +296,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
 def test_calculation_revision_normalises_row_binding_values() -> None:
     from datetime import UTC, datetime
 
-    created = datetime(1980, 7, 5, 10, 0, 0, tzinfo=UTC)
+    created = datetime(2026, 7, 5, 10, 0, 0, tzinfo=UTC)
     row_binding_values = {"modelo-720-asset-row-class": {"2": "V", "1": "C"}}
     revision_id = derive_calculation_revision_id(
         work_unit_id="a" * 64,
@@ -333,7 +330,7 @@ def test_calculation_revision_rejects_overlapping_binding_and_relation_replay_id
     """A replay id must belong to exactly one engine channel."""
     from datetime import UTC, datetime
 
-    created = datetime(1980, 5, 26, 10, 0, 0, tzinfo=UTC)
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     replay_id = "renta-modelo-130-pagos-fraccionados"
     revision_id = derive_calculation_revision_id(
         work_unit_id="a" * 64,

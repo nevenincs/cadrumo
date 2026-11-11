@@ -18,7 +18,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.modelo_localization import resolve_modelo_localization
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.locales_root_fixture import locales_root_scope
 from ..work_form import build_modelo_work_form
 from ..work_form_field_vocabulary import ModeloFormCasillaAddressV1
@@ -28,7 +27,7 @@ from .work_form_fixture import uncalculated_review
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "151"
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2025
 _PERIOD = "0A"
 
 

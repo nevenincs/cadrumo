@@ -68,10 +68,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from .generate_base import SEDE_ORIGIN, declared_filing_years
-
-#: The exercise the resumen anual specimen is filed for: the second before the declared horizon.
-_SPECIMEN_EXERCISE = declared_filing_years().horizon - 2
+from .generate_base import SEDE_ORIGIN
 
 
 @dataclass(frozen=True)
@@ -103,8 +100,8 @@ class Modelo190Fixture:
 
 MODELO_190_FIXTURES: tuple[Modelo190Fixture, ...] = (
     Modelo190Fixture(
-        filename=f"190/{_SPECIMEN_EXERCISE}-0A.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="190/2024-0A.pdf",
+        ejercicio="2024",
         tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",
         contact_phone="000000000",

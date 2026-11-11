@@ -20,7 +20,6 @@ import pytest
 from sqlalchemy import select
 
 from .....core.foreign_asset_obligation import M720AssetClassCode
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.foreign_assets.register import (
     ForeignAssetDeclarationEntry,
     ForeignAssetRegister,
@@ -38,7 +37,6 @@ from .foreign_asset_authoring import declare_foreign_asset, register_asset
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_BEFORE_THE_WINDOW = filing_year_envelope().floor - 1
 _ACCOUNT_REF = "m720a_" + "a" * 32
 _REAL_ESTATE_REF = "m720a_" + "b" * 32
 
@@ -51,7 +49,7 @@ def _account() -> ForeignAssetRegisterEntry:
         country_code="DE",
         identifier=M720AssetIdentifier(scheme=M720IdentifierScheme.IBAN, value="DE89370400440532013000"),
         description="synthetic savings account",
-        held_since=date(_BEFORE_THE_WINDOW, 1, 1),
+        held_since=date(2015, 1, 1),
     )
 
 
@@ -63,7 +61,7 @@ def _real_estate() -> ForeignAssetRegisterEntry:
         country_code="PT",
         identifier=M720AssetIdentifier(scheme=M720IdentifierScheme.NONE),
         description="synthetic flat",
-        held_since=date(_BEFORE_THE_WINDOW, 1, 1),
+        held_since=date(2015, 1, 1),
     )
 
 

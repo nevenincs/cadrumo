@@ -24,19 +24,18 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState
 
 from .ready_profile_support import seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_T0 = datetime(1980, 6, 5, 9, 0, 0, tzinfo=UTC)
+_T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
 _DISCARD_PROFILE_ID = "13000000-0000-4000-8000-000000000231"
 _MODELO = "130"
-_FILING_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = 2026
 _PERIOD_CODE = "1T"
-_REVISION_ID = revision_covering(_MODELO, _FILING_YEAR).id
+_REVISION_ID = "2019-y-siguientes"
 
 
 @pytest.fixture

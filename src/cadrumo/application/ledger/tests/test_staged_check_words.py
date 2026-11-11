@@ -16,7 +16,6 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ..actions_manual import transaction_from_command
@@ -33,11 +32,9 @@ from ..staged_check_contracts import (
     StagedBlockerKind,
 )
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_NOW = datetime(_YEAR, 3, 2, 10, tzinfo=UTC)
+_NOW = datetime(2026, 3, 2, 10, tzinfo=UTC)
 _ID = "a" * 64
 
 _TOKEN = re.compile(r"[a-z]+_[a-z_]+")
@@ -54,7 +51,7 @@ def _stored(
     return transaction_from_command(
         ManualLedgerTransactionCommand(
             bucket_id=str(uuid4()),
-            booked_date=date(_YEAR, 3, 2),
+            booked_date=date(2026, 3, 2),
             amount=Decimal("36.30"),
             currency="EUR",
             direction=direction,

@@ -20,12 +20,8 @@ from ....application.live.notification_document_capture_operation import (
     NotificationDocumentCaptureRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_notification_document_capture as bridge
 from .operation_bridge_support import bind_profile_submission
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -33,7 +29,7 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "a" * 64
 _CERT = "2699101808461"
 _CERT2 = "2699101808462"
-_FETCHED_AT = datetime(_YEAR, 3, 6, 7, 8, tzinfo=UTC)
+_FETCHED_AT = datetime(2025, 3, 6, 7, 8, tzinfo=UTC)
 _DETAIL_URL = f"https://sede.example/notification?ncc={_CERT}"
 _DIGEST = "d" * 64
 

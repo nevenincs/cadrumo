@@ -23,7 +23,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterator
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -71,7 +71,6 @@ from ....domain.calculations.registry.authority import (
 )
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
@@ -96,11 +95,12 @@ _Repos = tuple[
     BucketEventHistoryRepository,
 ]
 
+_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
+_T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
+
 _M130_MODELO = "130"
-_M130_FILING_YEAR = filing_year_envelope().horizon
-_T0 = datetime(_M130_FILING_YEAR, 1, 15, 12, 0, 0, tzinfo=UTC)
-_T1 = datetime(_M130_FILING_YEAR, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T2 = datetime(_M130_FILING_YEAR, 4, 14, 14, 0, 0, tzinfo=UTC)
+_M130_FILING_YEAR = 2026
 _M130_PERIOD = "1T"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
@@ -135,9 +135,7 @@ def _seed_runtime_profile_record(bucket_id: str) -> None:
                     UserProfileFact(path="identity.name", value="Ana"),
                     UserProfileFact(path="identity.surnames", value="Verifier"),
                     UserProfileFact(path="activities.description", value="design services"),
-                    UserProfileFact(
-                        path="censo.activity_start_date", value=date(_M130_FILING_YEAR - 6, 1, 1).isoformat()
-                    ),
+                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
                 )
             ),
             created_at=_T0,
@@ -320,7 +318,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
             modelo=_M130_MODELO,
             filing_year=_M130_FILING_YEAR,
             period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
-            revision_id=str(revision_covering(_M130_MODELO, _M130_FILING_YEAR).id),
+            revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_T0,
             operation=operation,
@@ -382,7 +380,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
             modelo=_M130_MODELO,
             filing_year=_M130_FILING_YEAR,
             period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
-            revision_id=str(revision_covering(_M130_MODELO, _M130_FILING_YEAR).id),
+            revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_T0,
             operation=operation,
@@ -475,7 +473,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
             modelo=_M130_MODELO,
             filing_year=_M130_FILING_YEAR,
             period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
-            revision_id=str(revision_covering(_M130_MODELO, _M130_FILING_YEAR).id),
+            revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_T0,
             operation=operation,

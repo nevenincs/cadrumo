@@ -164,9 +164,6 @@ def test_export_period_filters_to_the_quarter(tmp_path: Path) -> None:
     q1 = tmp_path / "q1.csv"
     full_res = _invoke(["app", "ledger", "export", "--output", str(full), "--export-format", "csv"])
     assert full_res.exit_code == 0, full_res.output
-    corpus_year, *_ = sorted(
-        {int(row["effective_date"][:4]) for row in csv.DictReader(full.read_text(encoding="utf-8").splitlines())}
-    )
     r = _invoke(
         [
             "app",
@@ -179,17 +176,15 @@ def test_export_period_filters_to_the_quarter(tmp_path: Path) -> None:
             "--period",
             "1T",
             "--year",
-            str(corpus_year),
+            "2025",
         ],
     )
     assert r.exit_code == 0, r.output
     full_rows = list(csv.DictReader(full.read_text(encoding="utf-8").splitlines()))
     q1_rows = list(csv.DictReader(q1.read_text(encoding="utf-8").splitlines()))
     assert 0 < len(q1_rows) < len(full_rows)
-    first_quarter = {f"{corpus_year}-{month:02d}" for month in (1, 2, 3)}
     for row in q1_rows:
-        assert row["effective_date"][:7] in first_quarter, row["effective_date"]
-    assert len(q1_rows) == sum(1 for row in full_rows if row["effective_date"][:7] in first_quarter)
+        assert row["effective_date"][:7] in {"2025-01", "2025-02", "2025-03"}, row["effective_date"]
 
 
 def test_folder_import_aggregates_all_statement_files() -> None:

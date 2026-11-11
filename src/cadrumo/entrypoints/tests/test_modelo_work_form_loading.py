@@ -72,7 +72,6 @@ from ...core.casilla_id import validated_casilla_id
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.calculation_revision_sources import CalculationNoteSentence
@@ -85,10 +84,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _C06 = validated_casilla_id("06")
 _C02 = validated_casilla_id("02")
 _C13 = validated_casilla_id("13")
-_YEAR = filing_year_envelope().horizon
-_REFERENCE_DAY = date(_YEAR, 4, 2)
-_FILED_AT = datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC)
-_IMPORTED_AT = datetime(_YEAR, 4, 2, 8, 30, tzinfo=UTC)
+_REFERENCE_DAY = date(2026, 4, 2)
+_FILED_AT = datetime(2026, 4, 15, 10, 0, tzinfo=UTC)
+_IMPORTED_AT = datetime(2026, 4, 2, 8, 30, tzinfo=UTC)
 _SNAPSHOT_ID = "e" * 64
 _EDITABLE = frozenset(
     {
@@ -240,17 +238,11 @@ def test_only_the_registry_declared_target_of_the_projection_offers_it(tmp_path:
     The quarterly declaration the estimate is built from, and the annual return of a
     year whose revision the projection declaration was not authored against, do not.
     """
-    with seeded_operator_work(
-        tmp_path / "annual", modelo="100", filing_year=newest_authored_edition("100"), period_code="0A"
-    ) as work:
+    with seeded_operator_work(tmp_path / "annual", modelo="100", filing_year=2025, period_code="0A") as work:
         assert _load(work, None).form.projectable is True
-    with seeded_operator_work(
-        tmp_path / "quarter", modelo="130", filing_year=newest_authored_edition("100"), period_code="1T"
-    ) as work:
+    with seeded_operator_work(tmp_path / "quarter", modelo="130", filing_year=2025, period_code="1T") as work:
         assert _load(work, None).form.projectable is False
-    with seeded_operator_work(
-        tmp_path / "earlier", modelo="100", filing_year=filing_year_envelope().floor, period_code="0A"
-    ) as work:
+    with seeded_operator_work(tmp_path / "earlier", modelo="100", filing_year=2024, period_code="0A") as work:
         assert _load(work, None).form.projectable is False
 
 
@@ -319,7 +311,7 @@ def test_the_form_asks_for_exactly_what_the_real_verification_finds_missing(tmp_
         work.recalculate()
         _verify(work)
         verified = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
-        manifest = work.operation.snapshot("130", filing_year=_YEAR, period="1T").revision.completeness_manifest
+        manifest = work.operation.snapshot("130", filing_year=2026, period="1T").revision.completeness_manifest
 
     missing = {
         str(issue.finding.casilla_id)
@@ -343,7 +335,7 @@ def test_the_form_asks_for_exactly_what_the_real_verification_finds_missing(tmp_
     assert verified.result.direction is ModeloFormResultDirection.NIL
 
     assert verified.deadline is not None
-    assert verified.deadline.nominal_closes_on == date(_YEAR, 4, 20)
+    assert verified.deadline.nominal_closes_on == date(2026, 4, 20)
     assert verified.deadline.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
     assert verified.deadline.days_remaining == (verified.deadline.closes_on - _REFERENCE_DAY).days
 

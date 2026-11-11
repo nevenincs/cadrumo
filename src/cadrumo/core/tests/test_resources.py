@@ -12,11 +12,6 @@ from ..resources.bundled_data import bundled_path, packaged_data
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _newest_edition(manual: str) -> str:
-    """Return the newest edition directory the bundled manual corpus holds for one manual."""
-    return max(edition.name for edition in packaged_data("corpus", "manuals", manual).iterdir() if edition.is_dir())
-
-
 def test_packaged_data_directories_exist() -> None:
     """The bundled root and top-level subtrees resolve to directories."""
 
@@ -37,8 +32,8 @@ def test_representative_leaves_are_files() -> None:
     """Every representative leaf across every top-level subtree resolves to a real file."""
 
     cases: tuple[tuple[str, ...], ...] = (
-        ("corpus", "manuals", "iva", _newest_edition("iva"), "manifest.json"),
-        ("corpus", "manuals", "renta", _newest_edition("renta"), "part1", "source.pdf"),
+        ("corpus", "manuals", "iva", "2025", "manifest.json"),
+        ("corpus", "manuals", "renta", "2025", "part1", "source.pdf"),
         ("corpus", "aeat_official", "disenos_registro", "modelo_100", "manifest.json"),
         ("corpus", "normatives", "html", "ley-27-2014-art-100.html"),
         ("registry", "aeat", "modelos", "036", "manifest.toml"),

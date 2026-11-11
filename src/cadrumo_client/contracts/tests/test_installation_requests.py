@@ -44,7 +44,6 @@ from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_taxonomy import StorageArea
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 
 from ..contracts import RefusalCode, RefusalError
@@ -98,10 +97,9 @@ from ..profile_access import Reply, Request
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
 _PROFILE = "6f1f6a0e-6f3c-4a55-9d1e-3b0a7c1d2e4f"
 _DIGEST = "ab" * 32
-_INSTANT = datetime(1980, 3, 4, 5, 6, 7, tzinfo=UTC)
+_INSTANT = datetime(2026, 3, 4, 5, 6, 7, tzinfo=UTC)
 _HOST_FILE = str(Path(__file__).resolve())
 _HOST_DIRECTORY = Path(__file__).resolve().parent
 _PROOF = "synthetic-installation-passphrase"
@@ -318,8 +316,8 @@ def _completed_replies() -> dict[InstallationAct, InstallationCompleted]:
             work_unit_id=_DIGEST,
             calculation_revision_id=_DIGEST,
             modelo="303",
-            filing_year=_YEAR,
-            period=PublicPeriod(filing_year=_YEAR, code="1T"),
+            filing_year=2026,
+            period=PublicPeriod(filing_year=2026, code="1T"),
             revision_state="BORRADOR",
             has_ledger_evidence=True,
             built_by="operator",

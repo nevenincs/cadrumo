@@ -58,11 +58,6 @@ from ....domain.calculations.registry.m303_schema_vocabulary import (
 )
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import (
-    authored_revisions,
-    filing_year_envelope,
-    split_exercise_revisions,
-)
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
@@ -111,21 +106,16 @@ from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-# The September design is the first whose record carries the rectificativa motive field.
-_EARLY_DESIGN_REVISION, _FIRST_MOTIVE_DESIGN_REVISION = split_exercise_revisions(
-    "303", early_period="2T", late_period="3T"
-)
 _BUCKET_ID = "0479178a-6678-4c43-8b7d-46fba6483f11"  # was 'm303-rectificativa-motive'
 _TAX_ID = "X0001500M"
 _CSV = "S92RECTIFICA2025"
 _RECEIPT = "1234567890123"
-_NOW = datetime(1980, 8, 14, 8, 0, 0, tzinfo=UTC)
+_NOW = datetime(2026, 8, 14, 8, 0, 0, tzinfo=UTC)
 
 
 @lru_cache(maxsize=1)
 def _snapshot() -> RegistrySnapshot:
-    return published_snapshot(Modelo("303").value, filing_year=_YEAR, period="1T")
+    return published_snapshot(Modelo("303").value, filing_year=2025, period="1T")
 
 
 @lru_cache(maxsize=1)
@@ -134,21 +124,21 @@ def _filing_evidence(*, operation: PinnedAuthorityOperation):
     record_design = m303_rectificativa_record_design_from_snapshot(snapshot)
     assert record_design is not None
     projection = snapshot.supplementary_ordenes[Modelo("303")].require_projection(
-        ejercicio=_YEAR,
+        ejercicio=2025,
         registry_revision_id=snapshot.revision.id,
     )
     scope = M303RegimenSimplificadoScopeDecision(
         scope=m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource()),
     )
     regimen_snapshot = M303RegimenSimplificadoSnapshot(
-        filing_year=_YEAR,
+        filing_year=2025,
         registry_revision_id=snapshot.revision.id,
         scope_decision=scope,
         orden=m303_annual_orden_snapshot_from_projection(projection),
         record_design=record_design,
     )
     return general_m303_filing_evidence_from_regimen_snapshot(
-        Period.from_year_and_code(_YEAR, "1T"),
+        Period.from_year_and_code(2025, "1T"),
         reference="test:s92:general-scope",
         regimen_snapshot=regimen_snapshot,
         operation=operation,
@@ -158,12 +148,12 @@ def _filing_evidence(*, operation: PinnedAuthorityOperation):
 def _authorities(
     *, motive: M303RectificativaMotive = M303RectificativaMotive.RECTIFICACIONES, operation: PinnedAuthorityOperation
 ):
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2025, "1T")
     snapshot = _snapshot()
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo=Modelo("303").value,
-        filing_year=_YEAR,
+        filing_year=2025,
         period=period,
         revision_id=snapshot.revision.id,
     )
@@ -171,7 +161,7 @@ def _authorities(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
         modelo=Modelo("303"),
-        filing_year=_YEAR,
+        filing_year=2025,
         period=period,
         revision_id=snapshot.revision.id,
         name="M303 S92",
@@ -216,7 +206,7 @@ def _authorities(
         calculation_revision_id=baseline_revision_id,
         bucket_id=_BUCKET_ID,
         modelo=Modelo("303"),
-        filing_year=_YEAR,
+        filing_year=2025,
         period=period,
         filed_at=_NOW,
         filed_by="aeat-import",
@@ -232,7 +222,7 @@ def _authorities(
     receipt = Justificante(
         csv=_CSV,
         modelo=Modelo("303").value,
-        ejercicio=str(_YEAR),
+        ejercicio="2025",
         period=period,
         presentation_id=_RECEIPT,
         presented_at=_NOW,
@@ -290,7 +280,7 @@ def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         iva_regime=IVARegime("GENERAL"),
-        activity_start_date=date(1980, 1, 1),
+        activity_start_date=date(2000, 1, 1),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
@@ -370,7 +360,7 @@ def test_context_free_missing_and_cross_context_rectificativa_refuse(*, operatio
             context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: context},
         )
 
-    wrong_period_target = target.model_copy(update={"period": Period.from_year_and_code(_YEAR, "2T")})
+    wrong_period_target = target.model_copy(update={"period": Period.from_year_and_code(2025, "2T")})
     cross_context = context.model_copy(
         update={"filing_records": ModeloRecordCatalogue(records={target.filing_record_id: wrong_period_target})}
     )
@@ -419,13 +409,13 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting(*, opera
             "disagrees with the taxpayer or filing coordinate",
         ),
         (
-            context.model_copy(update={"justificantes": (receipt.model_copy(update={"ejercicio": str(_YEAR - 1)}),)}),
+            context.model_copy(update={"justificantes": (receipt.model_copy(update={"ejercicio": "2024"}),)}),
             "disagrees with the taxpayer or filing coordinate",
         ),
         (
             context.model_copy(
                 update={
-                    "justificantes": (receipt.model_copy(update={"period": Period.from_year_and_code(_YEAR, "2T")}),)
+                    "justificantes": (receipt.model_copy(update={"period": Period.from_year_and_code(2025, "2T")}),)
                 }
             ),
             "disagrees with the taxpayer or filing coordinate",
@@ -477,7 +467,7 @@ def test_encrypted_persistence_reloads_and_revalidates_joined_authority(
         assert loaded is not None
         assert loaded.amendment_identity == revision.amendment_identity
 
-        wrong_target = target.model_copy(update={"period": Period.from_year_and_code(_YEAR, "2T")})
+        wrong_target = target.model_copy(update={"period": Period.from_year_and_code(2025, "2T")})
         filing_repo.save(ModeloRecordCatalogue(records={target.filing_record_id: wrong_target}))
         with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid") as crossed:
             calculation_repo.load()
@@ -668,38 +658,28 @@ def test_public_amend_service_refuses_missing_motive_before_identity_with_real_p
             )
 
 
-def _motive_capability_cases() -> tuple[tuple[int, str, str, bool], ...]:
-    """Return each authored 303 revision with a coordinate it serves and whether its design carries the motive."""
-    revisions = authored_revisions("303")
-    first_with_motive = revisions.index(_FIRST_MOTIVE_DESIGN_REVISION)
-    return tuple(
-        (
-            revision.valid_from.year,
-            next(code for code in revision.period_selector.periods_for_year(revision.valid_from.year) if "T" in code),
-            str(revision.id),
-            position >= first_with_motive,
-        )
-        for position, revision in enumerate(revisions)
-    )
-
-
 @pytest.mark.parametrize(
-    ("filing_year", "period", "expected_revision_id", "carries_motive"),
-    _motive_capability_cases(),
-    ids=lambda value: str(value),
+    ("filing_year", "period", "expected_revision_id"),
+    (
+        (2023, "1T", None),
+        (2024, "2T", None),
+        (2024, "3T", "2024-desde-09-y-3t"),
+        (2025, "1T", "2025"),
+        (2026, "1T", "2026-hasta-01-y-1t"),
+        (2026, "2T", "2026-y-siguientes"),
+    ),
 )
 def test_motive_capability_is_selected_only_from_exact_registry_evidence(
     filing_year: int,
     period: str,
-    expected_revision_id: str,
-    carries_motive: bool,
+    expected_revision_id: str | None,
 ) -> None:
     snapshot = published_snapshot(Modelo("303").value, filing_year=filing_year, period=period)
     record_design = m303_rectificativa_record_design_from_snapshot(snapshot)
-    assert snapshot.revision.id == expected_revision_id
-    if not carries_motive:
+    if expected_revision_id is None:
         assert record_design is None
         return
+    assert snapshot.revision.id == expected_revision_id
     assert record_design is not None
     assert m303_rectificativa_motive_is_applicable(
         registry_revision_id=snapshot.revision.id,
@@ -712,7 +692,7 @@ def test_motive_capability_is_selected_only_from_exact_registry_evidence(
     (
         ("id", "aeat-dr-303-future"),
         ("sha256", "f" * 64),
-        ("record_design_epoch", str(_YEAR + 1)),
+        ("record_design_epoch", "2027"),
     ),
 )
 def test_motive_capability_refuses_source_digest_and_epoch_inference(
@@ -722,7 +702,7 @@ def test_motive_capability_refuses_source_digest_and_epoch_inference(
     record_design = evidence.m303.regimen_simplificado.regimen_snapshot.record_design
     mutated = record_design.model_copy(update={field: replacement})
     assert not m303_rectificativa_motive_is_applicable(
-        registry_revision_id=_snapshot().revision.id,
+        registry_revision_id="2025",
         record_design=mutated,
     )
 
@@ -730,12 +710,12 @@ def test_motive_capability_refuses_source_digest_and_epoch_inference(
 def test_a_revision_whose_design_carries_no_motive_is_not_applicable_rather_than_missing(
     *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The design before the motive field was introduced has none, so it admits none."""
+    """The early-2024 design has no rectificativa motive field, so it admits none."""
     evidence = _filing_evidence(operation=operation)
     record_design = evidence.m303.regimen_simplificado.regimen_snapshot.record_design
 
     assert not m303_rectificativa_motive_is_applicable(
-        registry_revision_id=_EARLY_DESIGN_REVISION.id,
+        registry_revision_id="2024-hasta-08-y-2t",
         record_design=record_design,
     )
 

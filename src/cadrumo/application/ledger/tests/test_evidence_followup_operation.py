@@ -11,7 +11,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
@@ -94,8 +93,6 @@ from ....core.time.clock import now
 from ....domain.attachments.enums import AttachmentSource
 from ...tests.access_authority_support import assert_admitted_alike_without_commit_door
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -103,9 +100,9 @@ _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _ATTACHMENT_ID = "a" * 64
 _EVIDENCE_REFERENCE = "evidence-followup-reference"
 _DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
-_VALID_RECORDED_AT = datetime(_YEAR, 10, 3, 12, 30, tzinfo=UTC)
-_NAIVE_RECORDED_AT = datetime(_YEAR, 10, 3, 12, 30)
-_OFFSET_RECORDED_AT = datetime(_YEAR, 10, 3, 14, 30, tzinfo=timezone(timedelta(hours=2)))
+_VALID_RECORDED_AT = datetime(2026, 10, 3, 12, 30, tzinfo=UTC)
+_NAIVE_RECORDED_AT = datetime(2026, 10, 3, 12, 30)
+_OFFSET_RECORDED_AT = datetime(2026, 10, 3, 14, 30, tzinfo=timezone(timedelta(hours=2)))
 
 _DEFINITION_IDS = (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
@@ -319,7 +316,7 @@ def _sample_attachment() -> AttachmentReviewItem:
         bytes_size=64,
         source=AttachmentSource.GOOGLE_DRIVE,
         provider_locator=_DRIVE_FILE_ID,
-        captured_at=datetime(_YEAR, 9, 30, 11, 30, tzinfo=UTC).isoformat(),
+        captured_at="2026-09-30T11:30:00+00:00",
         linked_invoice_ids=(),
         pending_review=True,
     )

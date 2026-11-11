@@ -25,14 +25,9 @@ import pytest
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import NoticeSeverity
 from ....core.register_scoping_signal import RegisterScopingSignal
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome, expected_but_not_found_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
-_YEAR_BEFORE = _YEAR - 1
-_YEAR_BEFORE_THAT = _YEAR - 2
 
 _PROFILE = (FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
 _REGISTER = (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)
@@ -45,7 +40,7 @@ _BOTH = (
 def _pair(
     *,
     modelo: str = "303",
-    ejercicio: int = _YEAR,
+    ejercicio: int = 2025,
     signals: tuple[FiledHistoryDiscoverySignal, ...] = _PROFILE,
     row_count: int = 0,
     refused: bool = False,
@@ -83,9 +78,9 @@ def test_a_pair_that_answered_with_no_rows_is_a_genuine_empty() -> None:
 def test_the_run_partitions_refusals_away_from_empties() -> None:
     run = FiledHistoryOnboardingRun(
         pairs=(
-            _pair(modelo="303", ejercicio=_YEAR, refused=True),
-            _pair(modelo="100", ejercicio=_YEAR_BEFORE, row_count=0),
-            _pair(modelo="130", ejercicio=_YEAR_BEFORE, row_count=3),
+            _pair(modelo="303", ejercicio=2025, refused=True),
+            _pair(modelo="100", ejercicio=2024, row_count=0),
+            _pair(modelo="130", ejercicio=2024, row_count=3),
         ),
     )
     assert {pair.modelo for pair in run.refused_pairs} == {"303"}
@@ -105,7 +100,7 @@ def test_the_warning_fires_for_a_profile_expected_pair_with_no_rows() -> None:
     # Machine-queryable context is the contract; the message is localised prose.
     assert notice.context is not None
     assert notice.context["missing_count"] == "1"
-    assert notice.context["pairs"] == f"303/{_YEAR}"
+    assert notice.context["pairs"] == "303/2025"
 
 
 def test_the_warning_never_fires_for_a_register_only_pair() -> None:
@@ -140,19 +135,19 @@ def test_the_warning_stays_quiet_when_every_expected_pair_produced_rows() -> Non
 def test_the_warning_names_every_missing_pair_not_just_a_count() -> None:
     run = FiledHistoryOnboardingRun(
         pairs=(
-            _pair(modelo="303", ejercicio=_YEAR),
-            _pair(modelo="130", ejercicio=_YEAR_BEFORE),
-            _pair(modelo="100", ejercicio=_YEAR_BEFORE_THAT, signals=_REGISTER),
+            _pair(modelo="303", ejercicio=2025),
+            _pair(modelo="130", ejercicio=2024),
+            _pair(modelo="100", ejercicio=2023, signals=_REGISTER),
         ),
     )
     notice = expected_but_not_found_notice(run)
     assert notice is not None
     assert notice.context is not None
     named = notice.context["pairs"]
-    assert f"303/{_YEAR}" in named
-    assert f"130/{_YEAR_BEFORE}" in named
+    assert "303/2025" in named
+    assert "130/2024" in named
     # The register-only pair is absent from the named set.
-    assert f"100/{_YEAR_BEFORE_THAT}" not in named
+    assert "100/2023" not in named
     assert notice.context["missing_count"] == "2"
 
 
@@ -179,9 +174,9 @@ def test_the_note_counts_profile_pairs_separately_from_register_only_pairs() -> 
     # they are the locale-independent part of the note.
     run = FiledHistoryOnboardingRun(
         pairs=(
-            _pair(modelo="303", ejercicio=_YEAR, signals=_PROFILE),
-            _pair(modelo="100", ejercicio=_YEAR_BEFORE, signals=_REGISTER),
-            _pair(modelo="130", ejercicio=_YEAR_BEFORE, signals=_REGISTER),
+            _pair(modelo="303", ejercicio=2025, signals=_PROFILE),
+            _pair(modelo="100", ejercicio=2024, signals=_REGISTER),
+            _pair(modelo="130", ejercicio=2024, signals=_REGISTER),
         ),
     )
     note = run.denominator_note
@@ -207,7 +202,7 @@ def test_a_pair_nominated_by_nothing_is_refused() -> None:
 
     with pytest.raises(ValidationError, match="signals"):
         FiledHistoryPairOutcome(
-            modelo="303", ejercicio=_YEAR, signals=(), walk_attempted=True, walk_completed=True, reached_count=0
+            modelo="303", ejercicio=2025, signals=(), walk_attempted=True, walk_completed=True, reached_count=0
         )
 
 
@@ -316,7 +311,7 @@ def test_preview_register_rows_are_present_without_persisted_captures() -> None:
     """Actual positive rows remain positive when the preview deliberately writes nothing."""
     pair = FiledHistoryPairOutcome(
         modelo="100",
-        ejercicio=_YEAR,
+        ejercicio=2025,
         signals=_PROFILE,
         walk_attempted=True,
         walk_completed=True,

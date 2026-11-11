@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
-
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -15,8 +12,6 @@ from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.schema import InvoiceKind
 from ..creation_wizard import create_invoice_via_wizard
 from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = "29292929-2929-4292-8292-292929292929"
@@ -35,7 +30,7 @@ def test_wizard_preserves_all_four_declared_facts_and_idempotent_noop(
                 counterparty_nif="B00010157",
                 counterparty_name="Synthetic supplier",
                 invoice_number="WIZARD-R1",
-                invoice_date=date(_YEAR, 5, 1).isoformat(),
+                invoice_date="2026-05-01",
                 taxable_base="100.00",
                 iva_rate="21",
                 currency="EUR",
@@ -68,7 +63,7 @@ def test_wizard_accumulates_new_and_existing_field_refusals_before_write(
             counterparty_nif="B00010157",
             counterparty_name="",
             invoice_number="WIZARD-BAD",
-            invoice_date=date(_YEAR, 5, 1).isoformat(),
+            invoice_date="2026-05-01",
             taxable_base="invalid",
             iva_rate="21",
             currency="EUR",

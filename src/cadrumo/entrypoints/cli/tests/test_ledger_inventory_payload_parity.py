@@ -15,7 +15,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.inventory.registered_projections import InventoryLedgerProjection
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryLedger,
@@ -33,10 +32,6 @@ from ..ledger_business_payloads import (
 from ..operation_ledger_inventory import ledger_payload_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
-_MOVEMENT_DATE = date(_YEAR, 3, 1).isoformat()
-_COMPACT_DATE = f"{_YEAR}0301"
 
 
 def _acquisition() -> InventoryAcquisitionCost:
@@ -82,7 +77,7 @@ def _canonical_ledger() -> InventoryLedger:
     """Return a populated ledger of the shape the inventory service returns."""
     return InventoryLedger(
         actividad_id="act-1",
-        year=_YEAR,
+        year=2026,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("100.00"),
         closing_authority_record=None,
@@ -97,7 +92,7 @@ def _canonical_ledger() -> InventoryLedger:
         period_movements=(
             MovementRecord.from_purchase_acquisition(
                 movement_id="mv-1",
-                movement_date=date(_YEAR, 3, 1),
+                movement_date=date(2026, 3, 1),
                 sku="widget",
                 quantity=Decimal("5"),
                 acquisition_cost=_acquisition(),
@@ -120,7 +115,7 @@ def _layer(**overrides: object) -> InventoryStockLayerPayload:
 def _movement(**overrides: object) -> InventoryMovementPayload:
     fields: dict[str, object] = {
         "movement_id": "mv-1",
-        "movement_date": _MOVEMENT_DATE,
+        "movement_date": "2026-03-01",
         "kind": MovementKind.PURCHASE.value,
         "sku": "widget",
         "quantity": "5",
@@ -146,7 +141,7 @@ def _movement(**overrides: object) -> InventoryMovementPayload:
 def _ledger_row(**overrides: object) -> InventoryLedgerPayload:
     fields: dict[str, object] = {
         "actividad_id": "act-1",
-        "year": _YEAR,
+        "year": 2026,
         "valuation_method": ValuationMethod.FIFO.value,
         "opening_stock": "100.00",
         "schema_version": "3",
@@ -168,7 +163,7 @@ class TestCanonicalBridge:
 
         assert result.valuation_method == ValuationMethod.FIFO.value
         assert result.period_movements[0].kind == MovementKind.PURCHASE.value
-        assert result.period_movements[0].movement_date == _MOVEMENT_DATE
+        assert result.period_movements[0].movement_date == "2026-03-01"
         assert result.opening_layers[0].sku == "widget"
 
     def test_bridge_output_is_wire_identical(self) -> None:
@@ -217,11 +212,11 @@ class TestMovementBounds:
         with pytest.raises(ValidationError):
             _movement(kind="bogus")
 
-    @pytest.mark.parametrize("bad_date", ["not-a-date", f"{_YEAR}-13-45", f"01/03/{_YEAR}", _COMPACT_DATE, ""])
+    @pytest.mark.parametrize("bad_date", ["not-a-date", "2026-13-45", "01/03/2026", "20260301", ""])
     def test_malformed_movement_date_is_refused(self, bad_date: str) -> None:
         """The compact ``YYYYMMDD`` form is refused alongside every other malformed shape.
 
-        :meth:`datetime.date.fromisoformat` alone accepts ``YYYYMMDD`` (Python
+        :meth:`datetime.date.fromisoformat` alone accepts ``20260301`` (Python
         3.11+ extended it to the compact ISO form), but that shape cannot
         round-trip through :class:`~domain.contribuyente.inventory.MovementRecord`,
         which only accepts the extended ``YYYY-MM-DD`` form. Accepting it here
@@ -233,11 +228,11 @@ class TestMovementBounds:
     def test_compact_movement_date_refused_by_payload_and_by_canonical_record_alike(self) -> None:
         """The wire payload and the canonical domain record agree: compact form is refused."""
         with pytest.raises(ValidationError):
-            _movement(movement_date=_COMPACT_DATE)
+            _movement(movement_date="20260301")
 
         canonical_kwargs = {
             "movement_id": "mv-1",
-            "movement_date": _COMPACT_DATE,
+            "movement_date": "20260301",
             "kind": MovementKind.PURCHASE,
             "sku": "widget",
             "quantity": Decimal("5"),
@@ -276,7 +271,7 @@ class TestLedgerBounds:
     """Canonical ``InventoryLedger`` bounds, re-asserted on the wire strings."""
 
     def test_well_formed_ledger_validates(self) -> None:
-        assert _ledger_row().year == _YEAR
+        assert _ledger_row().year == 2026
 
     def test_bogus_valuation_method_is_refused(self) -> None:
         with pytest.raises(ValidationError):

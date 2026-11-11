@@ -3,19 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import time
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from .generate_base import SEDE_ORIGIN, declared_filing_years, open_ended_revision_start, presentation_timestamp
-
-#: The exercise these specimens are filed for: the second before the declared horizon.
-_SPECIMEN_EXERCISE = declared_filing_years().horizon - 2
-#: The first day of the Modelo 036 design the registry leaves open, which the census
-#: specimens are presented on.
-_M036_DESIGN_START = open_ended_revision_start("036")
+from .generate_base import SEDE_ORIGIN
 
 
 @dataclass(frozen=True)
@@ -49,8 +42,8 @@ class Modelo349Fixture:
 
 MODELO_349_FIXTURES: tuple[Modelo349Fixture, ...] = (
     Modelo349Fixture(
-        filename=f"349/{_SPECIMEN_EXERCISE}-1T.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="349/2024-1T.pdf",
+        ejercicio="2024",
         periodo="1T",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
@@ -163,8 +156,8 @@ class Modelo180Fixture:
 
 MODELO_180_FIXTURES: tuple[Modelo180Fixture, ...] = (
     Modelo180Fixture(
-        filename=f"180/{_SPECIMEN_EXERCISE}-0A.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="180/2024-0A.pdf",
+        ejercicio="2024",
         tax_id="Y0001006P",
         full_name="DEMO ARRENDADOR SL",
         total_perceptores="3",
@@ -287,8 +280,8 @@ class Modelo369Fixture:
 
 MODELO_369_FIXTURES: tuple[Modelo369Fixture, ...] = (
     Modelo369Fixture(
-        filename=f"369/{_SPECIMEN_EXERCISE}-1T.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="369/2024-1T.pdf",
+        ejercicio="2024",
         periodo="1T",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
@@ -378,8 +371,8 @@ class Modelo193Fixture:
 
 MODELO_193_FIXTURES: tuple[Modelo193Fixture, ...] = (
     Modelo193Fixture(
-        filename=f"193/{_SPECIMEN_EXERCISE}-0A.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="193/2024-0A.pdf",
+        ejercicio="2024",
         tax_id="Y0001006P",
         full_name="DEMO CAPITAL SL",
         total_perceptores="2",
@@ -508,8 +501,8 @@ class Modelo115Fixture:
 
 MODELO_115_FIXTURES: tuple[Modelo115Fixture, ...] = (
     Modelo115Fixture(
-        filename=f"115/{_SPECIMEN_EXERCISE}-1T.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="115/2024-1T.pdf",
+        ejercicio="2024",
         periodo="1T",
         tax_id="Y0001006P",
         full_name="DEMO ARRENDATARIO SL",
@@ -638,8 +631,8 @@ class Modelo720Fixture:
 
 MODELO_720_FIXTURES: tuple[Modelo720Fixture, ...] = (
     Modelo720Fixture(
-        filename=f"720/{_SPECIMEN_EXERCISE}-0A.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="720/2024-0A.pdf",
+        ejercicio="2024",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
     ),
@@ -737,20 +730,20 @@ class Modelo036Fixture:
     tax_id: str
     full_name: str
     event_kind: str
-    presented_at: str = presentation_timestamp(_M036_DESIGN_START, time(10))
+    presented_at: str = "2025-02-03 10:00:00"
 
 
 MODELO_036_FIXTURES: tuple[Modelo036Fixture, ...] = (
     Modelo036Fixture(
-        filename=f"036/{_M036_DESIGN_START.year}-0A.pdf",
-        ejercicio=str(_M036_DESIGN_START.year),
+        filename="036/2025-0A.pdf",
+        ejercicio="2025",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
         event_kind="Alta",
     ),
     Modelo036Fixture(
-        filename=f"036/{_M036_DESIGN_START.year}-alta.pdf",
-        ejercicio=str(_M036_DESIGN_START.year),
+        filename="036/2025-alta.pdf",
+        ejercicio="2025",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
         event_kind="Alta",

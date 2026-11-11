@@ -20,7 +20,6 @@ valid year.
 
 from __future__ import annotations
 
-import calendar
 from collections.abc import Iterator
 from datetime import date, datetime
 from decimal import Decimal
@@ -33,15 +32,10 @@ from ....domain.calculations.registry.binding_targets import revision_bindings_b
 from ....domain.calculations.registry.binding_value_contract import BindingValueChannel, BindingValueContract
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import ModeloBuilderError
 from ..draft_construction import binding_input, draft_input_channels, snapshot_bound_casilla_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEARS = filing_year_envelope().years
-_LEAP_YEAR = next(year for year in _YEARS if calendar.isleap(year))
-_COMMON_YEAR = next(year for year in _YEARS if not calendar.isleap(year))
 
 
 @pytest.fixture(autouse=True)
@@ -66,7 +60,7 @@ class TestFamiliesTheLiteralChainHandled:
 
     def test_text_still_coerces_a_non_string_scalar(self) -> None:
         """``rectified_year`` is declared text but carries an int year."""
-        assert binding_input("b", _YEARS[-1], _binding("text")) == str(_YEARS[-1])
+        assert binding_input("b", 2024, _binding("text")) == "2024"
 
     def test_integer_returns_an_int(self) -> None:
         assert binding_input("b", "7", _binding("integer")) == 7
@@ -144,20 +138,14 @@ class TestUnknownDataType:
 class TestCalendarDateBindings:
     """Calendar dates survive filing values and reject ambiguous scalar inputs."""
 
-    @pytest.mark.parametrize(
-        "value",
-        (date(_LEAP_YEAR, 2, 29), date(_LEAP_YEAR, 2, 29).isoformat(), f"{_LEAP_YEAR}0229"),
-    )
+    @pytest.mark.parametrize("value", (date(2024, 2, 29), "2024-02-29", "20240229"))
     def test_calendar_date_round_trips(self, value: date | str) -> None:
-        assert binding_input("b", value, _binding("date")) == date(_LEAP_YEAR, 2, 29)
+        assert binding_input("b", value, _binding("date")) == date(2024, 2, 29)
 
     def test_absence_remains_absent(self) -> None:
         assert binding_input("b", None, _binding("date")) is None
 
-    @pytest.mark.parametrize(
-        "value",
-        (f"{_COMMON_YEAR}-02-29", "", int(f"{_LEAP_YEAR}0229"), True, datetime(_LEAP_YEAR, 2, 29)),
-    )
+    @pytest.mark.parametrize("value", ("2023-02-29", "", 20240229, True, datetime(2024, 2, 29)))
     def test_invalid_dates_and_non_calendar_types_refuse(self, value: object) -> None:
         with pytest.raises(ModeloBuilderError) as excinfo:
             binding_input("b", value, _binding("date"))

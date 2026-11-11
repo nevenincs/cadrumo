@@ -21,37 +21,32 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
-
-_YEAR = filing_year_envelope().horizon
-
 __all__ = ["build_package_bytes", "build_package_path", "review_package_revision", "review_package_work_unit"]
 
-_REVISION_ID = revision_serving_period("303", _YEAR, "2T").id
-_NOW = datetime(_YEAR, 7, 4, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
 _SURFACE = "review_package_bytes_support"
 _BASE_CASILLA = validated_casilla_id("base", surface=_SURFACE)
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface=_SURFACE)
 
 
 def review_package_work_unit(*, bucket_id: str) -> WorkUnit:
-    """Return the 303 second-quarter draft work unit used by the package tests."""
-    period = Period.from_year_and_code(_YEAR, "2T")
+    """Return the 303 second-quarter 2026 draft work unit used by the package tests."""
+    period = Period.from_year_and_code(2026, "2T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
-        revision_id=_REVISION_ID,
+        revision_id="2026-y-siguientes",
     )
     return WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
-        revision_id=_REVISION_ID,
-        name=f"303-{_YEAR}-2T",
+        revision_id="2026-y-siguientes",
+        name="303-2026-2T",
         created_at=_NOW,
         updated_at=_NOW,
         state=WorkUnitState.BORRADOR,

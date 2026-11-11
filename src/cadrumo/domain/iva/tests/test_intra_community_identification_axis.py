@@ -53,7 +53,6 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
 
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, PartyFact, TransactionKind
 from ..components import category_cuota_is_zero_by_law
 from ..establishment import country_code_for_printed_tax_identifier
@@ -77,8 +76,7 @@ def _registry_authority_scope() -> Iterator[None]:
         yield
 
 
-_YEAR = filing_year_envelope().horizon
-_DATE = date(_YEAR, 6, 15)
+_DATE = date(2025, 6, 15)
 
 _R99 = "R99_fallthrough"
 
@@ -461,7 +459,7 @@ def _outbound(
             kind=kind,
             direction=InvoiceKind.ISSUED,
             customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
-            transaction_date=date(_YEAR, 3, 11),
+            transaction_date=date(2026, 3, 11),
         ),
         operation=operation,
     ).category

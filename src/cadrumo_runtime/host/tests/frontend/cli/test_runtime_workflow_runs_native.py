@@ -31,7 +31,6 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
@@ -56,8 +55,6 @@ from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -66,9 +63,9 @@ pytestmark = [
 ]
 
 _LABEL = "Native workflow run reader"
-_FIRST = Period.from_year_and_code(_YEAR - 1, "1T")
-_SECOND = Period.from_year_and_code(_YEAR - 1, "2T")
-_NOW = datetime(_YEAR, 4, 12, 9, tzinfo=UTC)
+_FIRST = Period.from_year_and_code(2025, "1T")
+_SECOND = Period.from_year_and_code(2025, "2T")
+_NOW = datetime(2026, 4, 12, 9, tzinfo=UTC)
 _RUN_ID = "a" * 16
 _MISSING_ID = "b" * 16
 
@@ -87,8 +84,8 @@ def _run(run_id: str, *, period: Period | None) -> WorkflowResult:
             WorkflowObligationFacts(
                 modelo=Modelo("130"),
                 period=period,
-                opens_on=date(_YEAR - 1, 4, 1),
-                closes_on=date(_YEAR - 1, 4, 20),
+                opens_on=date(2025, 4, 1),
+                closes_on=date(2025, 4, 20),
                 status=ObligationStatus.UPCOMING,
             )
             if period is not None

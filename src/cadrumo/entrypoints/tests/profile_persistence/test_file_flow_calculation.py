@@ -378,15 +378,14 @@ def test_work_unit_creation_refuses_unresolvable_registry_snapshot(repos: Repos)
     """An unsupported filing coordinate is rejected before calculation state exists."""
 
     from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
-    from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
     wu_repo, _, _, _, _ = repos
-    # Modelo 130 one year below the floor sits below the support floor, so the envelope
+    # Modelo 130 at year 2010 sits below the support floor, so the envelope
     # turns the request away before the corpus is consulted -- which is also
-    # true of it: the revision does not begin that early. The refusal
+    # true of it: the earliest revision is ``2019-y-siguientes``. The refusal
     # names the gate that actually fired, and reports the second fact too.
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        seed_work_unit(wu_repo, filing_year=filing_year_envelope().floor - 1)
+        seed_work_unit(wu_repo, filing_year=2010)
 
 
 def test_draft_calculation_commits_revision_pointer_and_event_together(

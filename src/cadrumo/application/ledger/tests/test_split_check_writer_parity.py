@@ -11,7 +11,6 @@ from typing import Final, cast
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import TransactionLifecycleState
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -20,8 +19,6 @@ from ..models import SplitChildCommand
 from ..split_check_operation import LedgerSplitCheckPart, LedgerSplitCheckResult, check_split
 from ..split_operation import LEDGER_SPLIT_CHILDREN_MAX, LEDGER_SPLIT_PART_DESCRIPTION_MAX, LedgerSplitChildRequest
 from .split_check_support import SPLIT_CHECK_PROFILE, recorded_split_answer, split_parent
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -58,7 +55,7 @@ def _writer_shape_takes(parent: Transaction, children: tuple[SplitChildCommand, 
         built = writer.build_initial_split_children(
             parent=parent,
             children=children,
-            occurred_at=datetime(_YEAR, 5, 1, tzinfo=UTC),
+            occurred_at=datetime(2024, 5, 1, tzinfo=UTC),
             actor="operator",
             source_command="synthetic",
         )

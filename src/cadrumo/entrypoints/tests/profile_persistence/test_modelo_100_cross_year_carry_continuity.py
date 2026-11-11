@@ -71,7 +71,6 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_editions
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -101,16 +100,17 @@ _PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
 )
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 1391.
-_YEAR_N, _YEAR_N_PLUS_1 = newest_authored_editions(_MODELO, 2)
+_YEAR_N = 2024
+_YEAR_N_PLUS_1 = 2025
 
 #: Distinct prior-year generated saldo per source year so a cross-year
 #: contamination (year N's carry leaking into year N+1) would surface.
 _SALDO_BY_SOURCE_YEAR: dict[int, Decimal] = {
-    _YEAR_N - 1: Decimal("4000.00"),
-    _YEAR_N: Decimal("2500.00"),
+    2023: Decimal("4000.00"),
+    2024: Decimal("2500.00"),
 }
 
-_CLOCK = datetime(filing_year_envelope().horizon, 6, 30, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 
 def _snapshot(filing_year: int) -> RegistrySnapshot:
@@ -187,17 +187,17 @@ def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
         seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK)
-        _seed_prior_year_saldo(source_year=_YEAR_N - 1, saldo=_SALDO_BY_SOURCE_YEAR[_YEAR_N - 1], obs_repo=obs_repo)
+        _seed_prior_year_saldo(source_year=2023, saldo=_SALDO_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
         revision = _calculate_100(filing_year=_YEAR_N, obs_repo=obs_repo)
-    assert Decimal(revision.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[_YEAR_N - 1]
+    assert Decimal(revision.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[2023]
 
 
 def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end enrollment: M100 general-base saldo carry across two renta years.
 
     Drives the REAL M100 ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` for two distinct renta
-    years (N, N+1), each sourcing the prior year's 1391 generated saldo
-    (N-1, N), records each through the ``cross-year observation`` (CALC;
+    years (2024, 2025), each sourcing the prior year's 1391 generated saldo
+    (2023, 2024), records each through the ``cross-year observation`` (CALC;
     evidence = the _produced-value count from the real engine run), and
     cross-checks the recorded two-year set against the cross-year claim.
     Year N's prior filing is in the store but must not contaminate Year N+1's
@@ -214,8 +214,8 @@ def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
         seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK)
-        _seed_prior_year_saldo(source_year=_YEAR_N - 1, saldo=_SALDO_BY_SOURCE_YEAR[_YEAR_N - 1], obs_repo=obs_repo)
-        _seed_prior_year_saldo(source_year=_YEAR_N, saldo=_SALDO_BY_SOURCE_YEAR[_YEAR_N], obs_repo=obs_repo)
+        _seed_prior_year_saldo(source_year=2023, saldo=_SALDO_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
+        _seed_prior_year_saldo(source_year=2024, saldo=_SALDO_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
 
         revision_n = _calculate_100(filing_year=_YEAR_N, obs_repo=obs_repo)
 
@@ -223,5 +223,5 @@ def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: P
 
     # Cross-renta wiring invariant: each year's opening pending equals the prior
     # year's end-of-year generated saldo, year-isolated.
-    assert Decimal(revision_n.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[_YEAR_N - 1]
-    assert Decimal(revision_n1.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[_YEAR_N]
+    assert Decimal(revision_n.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[2023]
+    assert Decimal(revision_n1.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[2024]

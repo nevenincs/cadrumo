@@ -21,7 +21,6 @@ from datetime import date
 
 import pytest
 
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.legal_text import legal_text_match
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..dt12_reduccion import (
@@ -32,11 +31,10 @@ from ..errors import PensionReduccionError
 from ..modelo_fact_context import ModeloFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-_EXERCISE = filing_year_envelope().horizon
 _CONTEXT = ModeloFactResolutionContext(
     authority=PublishedGovernedFactSource(),
-    filing_period=date(_EXERCISE, 12, 31),
-    devengo_date=date(_EXERCISE, 12, 31),
+    filing_period=date(2025, 12, 31),
+    devengo_date=date(2025, 12, 31),
 )
 # DT 12ª apartado 4 (added by Ley 26/2014), read from the published provision:
 # contingencias in the span it names keep the eighth-following-ejercicio window, and
@@ -56,12 +54,11 @@ class TestDt12WindowGeneralBranch:
     """Contingencia >= 2015: the general contingencia-plus-two window."""
 
     def test_general_branch_window(self) -> None:
-        first = _TRANSITIONAL_LAST_CONTINGENCIA + 1
         cases = (
-            (first, first, True, first + 2),
-            (first, first + 2, True, first + 2),
-            (first, first + 3, False, first + 2),
-            (first + 1, first, False, first + 3),
+            (2024, 2024, True, 2026),
+            (2024, 2026, True, 2026),
+            (2023, 2026, False, 2025),
+            (2024, 2023, False, 2026),
         )
         for contingencia_year, rescate_year, expected_eligible, expected_through_year in cases:
             verdict = dt12_regime_window_eligibility(
@@ -126,16 +123,15 @@ class TestDt12WindowInputGuards:
     """The predicate defends against implausible year inputs."""
 
     def test_implausible_year_raises(self) -> None:
-        plausible = _EXERCISE
         cases = (
-            (0, plausible),
-            (999, plausible),
-            (10000, plausible),
-            (-1, plausible),
-            (plausible, 0),
-            (plausible, 999),
-            (plausible, 10000),
-            (plausible, -1),
+            (0, 2024),
+            (999, 2024),
+            (10000, 2024),
+            (-1, 2024),
+            (2024, 0),
+            (2024, 999),
+            (2024, 10000),
+            (2024, -1),
         )
         for contingencia_year, rescate_year in cases:
             with pytest.raises(PensionReduccionError):

@@ -20,7 +20,6 @@ from ......application.modelo.work_form_findings import ModeloFormIssue
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......core.i18n.render import tr
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -44,7 +43,7 @@ def _records_changed(form: ModeloWorkForm) -> ModeloWorkForm:
         message_locale_key="application.modelo.findings.ledger_snapshot_drift_removed",
         message_facts={
             "modelo": "130",
-            "filing_year": filing_year_envelope().horizon,
+            "filing_year": 2026,
             "period": "1T",
             "anchored": True,
             "changed_count": 0,

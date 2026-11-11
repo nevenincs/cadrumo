@@ -43,7 +43,6 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ..justificantes.generate_base import declared_filing_years
 from ..provenance import FIXTURE_PROVENANCE_SYNTHETIC, SYNTHETIC_FIXTURE_PRODUCER
 
 _FIXTURES_DIR = Path(__file__).parent
@@ -79,26 +78,22 @@ _CUOTA_LIQUIDA_AUTONOMICA_CASILLA = validated_casilla_id(
 # subtract the escala applied to the 5.550 EUR mínimo from each cuota íntegra.
 # ---------------------------------------------------------------------------
 
-#: The corpus runs from the exercise before the declared floor to the one after it,
-#: written relative to the floor.
-_FLOOR = declared_filing_years().floor
-
 _CORPUS_VALUES: dict[int, dict[CasillaId, Decimal]] = {
-    _FLOOR - 1: {
+    2021: {
         _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
         _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3582.75"),
         _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3845.85"),
         _CUOTA_LIQUIDA_ESTATAL_CASILLA: Decimal("3582.75"),
         _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: Decimal("3845.85"),
     },
-    _FLOOR: {
+    2022: {
         _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
         _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3055.50"),
         _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3166.35"),
         _CUOTA_LIQUIDA_ESTATAL_CASILLA: Decimal("3055.50"),
         _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: Decimal("3166.35"),
     },
-    _FLOOR + 1: {
+    2023: {
         _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
         _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3055.50"),
         _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3166.35"),

@@ -32,8 +32,6 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_EXERCISE = filing_year_envelope().horizon
-
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
 
@@ -81,7 +79,7 @@ class LedgerIvaAggregationSourceResolver(modelo_bindings.LedgerIvaAggregationSou
 
 @cache
 def _m303_revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("303", filing_year=_EXERCISE, period="1T").revision
+    return published_authority_operation().snapshot("303", filing_year=2025, period="1T").revision
 
 
 def _recargo_invoice(invoice_number: str, *, issued_at: date, taxable_base: Decimal) -> Invoice:
@@ -131,7 +129,7 @@ def test_an_invoice_recargo_is_declared_though_the_ledger_carries_none(
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo.save(
         build_invoice_catalogue(
-            (_recargo_invoice("RECARGO-1T", issued_at=date(_EXERCISE, 2, 10), taxable_base=Decimal("10000.00")),),
+            (_recargo_invoice("RECARGO-1T", issued_at=date(2025, 2, 10), taxable_base=Decimal("10000.00")),),
         ),
     )
 
@@ -143,8 +141,8 @@ def test_an_invoice_recargo_is_declared_though_the_ledger_carries_none(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=_EXERCISE,
-            period=Period.from_year_and_code(_EXERCISE, "1T"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
             revision=revision,
         ),
     )

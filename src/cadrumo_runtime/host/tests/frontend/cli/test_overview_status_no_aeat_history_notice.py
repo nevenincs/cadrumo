@@ -22,14 +22,11 @@ import pytest
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .overview_native_support import invoke_native_overview
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -135,9 +132,9 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
         repository = CalculationObservationRepository()
         repository.save(
             repository.prepare_observation_envelope(
-                RegistryModeloObservation(modelo="130", filing_year=_YEAR, period="1T"),
+                RegistryModeloObservation(modelo="130", filing_year=2025, period="1T"),
                 source_kind="aeat_sede_justificante",
-                stamped_revision_id=str(published_snapshot("130", filing_year=_YEAR, period="1T").revision.id),
+                stamped_revision_id=str(published_snapshot("130", filing_year=2025, period="1T").revision.id),
             ),
         )
 

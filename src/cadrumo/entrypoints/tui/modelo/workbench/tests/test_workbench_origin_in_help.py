@@ -29,7 +29,6 @@ from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..casilla_list import CasillaList
@@ -41,7 +40,7 @@ from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_IMPORTED_AT = datetime(filing_year_envelope().horizon, 4, 2, 10, 30, tzinfo=UTC)
+_IMPORTED_AT = datetime(2026, 4, 2, 10, 30, tzinfo=UTC)
 _INCOME = "01"
 
 

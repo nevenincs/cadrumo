@@ -18,15 +18,12 @@ from pydantic import ValidationError
 
 from ....core.errors.hierarchy import InternalInvariantError
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import StoredTransactionDriftError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..profile.transactions import TransactionCatalogueRepository
 from ..storage.tests.secure_sql import isolated_runtime_profile
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -36,8 +33,8 @@ _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 def _transaction() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="scope-row-1",
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(2024, 4, 10),
+        value_date=date(2024, 4, 10),
         amount=Decimal("50.00"),
         currency="EUR",
         counterparty="Supplier SL",
@@ -47,7 +44,7 @@ def _transaction() -> Transaction:
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(1980, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": "Office supplies"},

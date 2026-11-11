@@ -10,7 +10,6 @@ from pydantic import ValidationError
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.filing.schema import ModeloDraft, ModeloValueKind
 from ....domain.submission.models import ModeloDraftStatus
@@ -23,10 +22,9 @@ def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-_ENVELOPE = filing_year_envelope()
-_ANNUAL_CURRENT = _period(_ENVELOPE.horizon, "0A")
-_Q1_FLOOR = _period(_ENVELOPE.floor, "1T")
-_Q1_CURRENT = _period(_ENVELOPE.horizon, "1T")
+_ANNUAL_2026 = _period(2026, "0A")
+_Q1_2024 = _period(2024, "1T")
+_Q1_2026 = _period(2026, "1T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
 _M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("gastos-deducibles-previos")
 _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("05")
@@ -68,7 +66,7 @@ def _valid_bindings() -> dict[str, Decimal]:
 def test_builds_frozen_draft_through_registry_runtime(operation: PinnedAuthorityOperation) -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period=_Q1_CURRENT,
+        period=_Q1_2026,
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
@@ -76,7 +74,7 @@ def test_builds_frozen_draft_through_registry_runtime(operation: PinnedAuthority
     )
 
     assert isinstance(draft, ModeloDraft)
-    assert draft.period == _Q1_CURRENT
+    assert draft.period == _Q1_2026
     assert draft.schema_version.startswith("registry:130:")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         draft.status = ModeloDraftStatus.BORRADOR
@@ -85,7 +83,7 @@ def test_builds_frozen_draft_through_registry_runtime(operation: PinnedAuthority
 def test_approved_status_uses_application_approval_path(operation: PinnedAuthorityOperation) -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period=_Q1_CURRENT,
+        period=_Q1_2026,
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
@@ -101,8 +99,8 @@ def test_approved_status_uses_application_approval_path(operation: PinnedAuthori
 
 @pytest.mark.parametrize(
     "period",
-    (_Q1_CURRENT, _Q1_FLOOR),
-    ids=("horizon-q1", "floor-q1"),
+    (_Q1_2026, _Q1_2024),
+    ids=("2026-q1", "2024-q1"),
 )
 def test_typed_period_input_is_passed_to_draft_without_string_roundtrip(
     period: Period,
@@ -128,7 +126,7 @@ def test_string_period_input_is_rejected_at_helper_boundary(operation: PinnedAut
     with pytest.raises(ModeloBuilderError, match=r"requires a core\.Period"):
         build_registry_filing_draft(
             modelo="130",
-            period=f"{_ENVELOPE.horizon}Q1",
+            period="2026Q1",
             operation=operation,
             casilla_values=_valid_inputs(),
             binding_values=_valid_bindings(),
@@ -140,7 +138,7 @@ def test_string_period_input_is_rejected_at_helper_boundary(operation: PinnedAut
 def test_non_approved_status_clears_approval_fields(operation: PinnedAuthorityOperation) -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period=_Q1_CURRENT,
+        period=_Q1_2026,
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
@@ -159,7 +157,7 @@ def test_unsupported_modelo_fails_at_registry_boundary(operation: PinnedAuthorit
     with pytest.raises(ModeloBuilderError) as refusal:
         build_registry_filing_draft(
             modelo="999",
-            period=_ANNUAL_CURRENT,
+            period=_ANNUAL_2026,
             operation=operation,
             casilla_values={_RENTA_MINIMO_ESTATAL_CASILLA: Decimal("5550.00")},
         )
@@ -171,7 +169,7 @@ def test_duplicate_casilla_and_binding_ids_are_rejected(operation: PinnedAuthori
     with pytest.raises(ModeloBuilderError, match="duplicate casilla/binding input ids"):
         build_registry_filing_draft(
             modelo="130",
-            period=_Q1_CURRENT,
+            period=_Q1_2026,
             operation=operation,
             casilla_values=_valid_inputs(),
             binding_values={**_valid_bindings(), _M130_INGRESOS_CASILLA: Decimal("99")},
@@ -182,7 +180,7 @@ def test_duplicate_casilla_and_binding_ids_are_rejected(operation: PinnedAuthori
 def test_values_are_registry_projected_and_sorted(operation: PinnedAuthorityOperation) -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period=_Q1_CURRENT,
+        period=_Q1_2026,
         operation=operation,
         casilla_values=_valid_inputs(ingresos=Decimal("12000")),
         binding_values=_valid_bindings(),
@@ -207,7 +205,7 @@ def test_values_are_registry_projected_and_sorted(operation: PinnedAuthorityOper
 def test_draft_id_is_deterministic_for_same_registry_inputs(operation: PinnedAuthorityOperation) -> None:
     a = build_registry_filing_draft(
         modelo="130",
-        period=_Q1_CURRENT,
+        period=_Q1_2026,
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
@@ -215,7 +213,7 @@ def test_draft_id_is_deterministic_for_same_registry_inputs(operation: PinnedAut
     )
     b = build_registry_filing_draft(
         modelo="130",
-        period=_Q1_CURRENT,
+        period=_Q1_2026,
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
@@ -243,7 +241,7 @@ def test_decimal_inputs_are_coerced_before_registry_build(
 
     draft = build_registry_filing_draft_from_decimals(
         modelo="130",
-        period=_Q1_CURRENT,
+        period=_Q1_2026,
         operation=operation,
         casilla_decimals=casilla_decimals,
         binding_decimals={key: str(value) for key, value in _valid_bindings().items()},
@@ -265,7 +263,7 @@ def test_decimal_helper_rejects_noncanonical_casilla_keys(operation: PinnedAutho
     ):
         build_registry_filing_draft_from_decimals(
             modelo="130",
-            period=_Q1_CURRENT,
+            period=_Q1_2026,
             operation=operation,
             casilla_decimals=bad_inputs,
             binding_decimals=_valid_bindings(),
@@ -285,7 +283,7 @@ def test_invalid_decimal_strings_raise(raw_value: str, operation: PinnedAuthorit
     with pytest.raises(InvalidOperation, match=r"ConversionSyntax|InvalidOperation|conversion"):
         build_registry_filing_draft_from_decimals(
             modelo="130",
-            period=_Q1_CURRENT,
+            period=_Q1_2026,
             operation=operation,
             casilla_decimals=bad_inputs,
             binding_decimals=_valid_bindings(),

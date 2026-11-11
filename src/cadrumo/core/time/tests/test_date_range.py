@@ -22,8 +22,8 @@ from ..date_range import validate_inclusive_date_range, validate_inclusive_iso_d
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_EARLY = date(1986, 1, 1)
-_LATE = date(1986, 2, 1)
+_EARLY = date(2026, 1, 1)
+_LATE = date(2026, 2, 1)
 
 
 class TestDateBounds:
@@ -50,25 +50,25 @@ class TestDateBounds:
 class TestIsoBounds:
     def test_reversed_iso_pair_is_refused(self) -> None:
         with pytest.raises(CoreValidationError):
-            validate_inclusive_iso_date_range("1986-02-01", "1986-01-01")
+            validate_inclusive_iso_date_range("2026-02-01", "2026-01-01")
 
     def test_ordered_iso_pair_is_accepted(self) -> None:
-        validate_inclusive_iso_date_range("1986-01-01", "1986-02-01")
+        validate_inclusive_iso_date_range("2026-01-01", "2026-02-01")
 
     def test_equal_iso_bounds_are_accepted(self) -> None:
-        validate_inclusive_iso_date_range("1986-01-01", "1986-01-01")
+        validate_inclusive_iso_date_range("2026-01-01", "2026-01-01")
 
-    @pytest.mark.parametrize("bad", ["not-a-date", "1986-13-01", "01/01/1986", "1986-01"])
+    @pytest.mark.parametrize("bad", ["not-a-date", "2026-13-01", "01/01/2026", "2026-01"])
     def test_non_iso_text_is_refused(self, bad: str) -> None:
         """The bounds are compared as dates, so unparseable text cannot pass silently."""
         with pytest.raises(CoreValidationError):
-            validate_inclusive_iso_date_range(bad, "1986-02-01")
+            validate_inclusive_iso_date_range(bad, "2026-02-01")
         with pytest.raises(CoreValidationError):
-            validate_inclusive_iso_date_range("1986-01-01", bad)
+            validate_inclusive_iso_date_range("2026-01-01", bad)
 
     @pytest.mark.parametrize(
         ("since", "until"),
-        [(None, None), ("1986-01-01", None), (None, "1986-02-01")],
+        [(None, None), ("2026-01-01", None), (None, "2026-02-01")],
     )
     def test_open_iso_bounds_are_accepted(self, since: str | None, until: str | None) -> None:
         validate_inclusive_iso_date_range(since, until)
@@ -77,11 +77,11 @@ class TestIsoBounds:
         """Hyphenated ISO text happens to sort correctly; the check must not rely on it.
 
         ``date.fromisoformat`` also accepts the compact ``YYYYMMDD`` form, whose
-        text ordering disagrees with its date ordering: ``"1986-02-01"`` sorts
-        *before* ``"19860101"`` as text because ``"-"`` precedes ``"0"``. A
+        text ordering disagrees with its date ordering: ``"2026-02-01"`` sorts
+        *before* ``"20260101"`` as text because ``"-"`` precedes ``"0"``. A
         string comparison would therefore refuse this genuinely-ordered window.
         """
-        validate_inclusive_iso_date_range("19860101", "1986-02-01")
-        assert "1986-02-01" < "19860101", "the discriminating premise of this test"
+        validate_inclusive_iso_date_range("20260101", "2026-02-01")
+        assert "2026-02-01" < "20260101", "the discriminating premise of this test"
         with pytest.raises(CoreValidationError):
-            validate_inclusive_iso_date_range("19860301", "1986-02-01")
+            validate_inclusive_iso_date_range("20260301", "2026-02-01")

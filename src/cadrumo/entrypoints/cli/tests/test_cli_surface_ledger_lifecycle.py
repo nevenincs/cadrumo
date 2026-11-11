@@ -12,7 +12,6 @@ import pytest
 from click.testing import Result
 
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from ....tests.cli_envelope import unwrap_cli_result
 from ....tests.cli_json_support import require_json_object
@@ -24,8 +23,6 @@ from .scenario_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
-
-_YEAR = filing_year_envelope().horizon
 
 __all__ = ["cli_surface_isolated_backend"]
 
@@ -45,7 +42,7 @@ def _create_manual_ledger_row(description: str, *, amount: str = "25.00", key: s
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 5, 3).isoformat(),
+            "2026-05-03",
             "--amount",
             amount,
             "--direction",
@@ -131,7 +128,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
             "kind": InvoiceKind.RECEIVED,
             "bucket_id": bucket_id,
             "invoice_number": "P-2026-CLI-001",
-            "issued_at": date(_YEAR, 5, 3),
+            "issued_at": date(2026, 5, 3),
             "counterparty_name": "Proveedor SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",

@@ -14,7 +14,6 @@ import pytest
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import LiveApplicationInputError
 from ..justificante import resolve_period_declaration
 from ..justificante_ports import JustificanteDeclaration
@@ -22,7 +21,7 @@ from ..justificante_ports import JustificanteDeclaration
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = Modelo("130").value
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2026
 _EXP_1T = "202613000010001A"
 _EXP_2T = "202613000020002B"
 _PERIOD_1T = Period.from_year_and_code(_YEAR, "1T")
@@ -47,8 +46,8 @@ def _declaration(
 
 
 _DECLARATIONS = (
-    _declaration(period=_PERIOD_1T, expediente_id=_EXP_1T, presented_at=datetime(_YEAR, 4, 18, 9, 0, tzinfo=UTC)),
-    _declaration(period=_PERIOD_2T, expediente_id=_EXP_2T, presented_at=datetime(_YEAR, 7, 18, 9, 0, tzinfo=UTC)),
+    _declaration(period=_PERIOD_1T, expediente_id=_EXP_1T, presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC)),
+    _declaration(period=_PERIOD_2T, expediente_id=_EXP_2T, presented_at=datetime(2026, 7, 18, 9, 0, tzinfo=UTC)),
 )
 
 
@@ -108,14 +107,12 @@ def test_other_year_declaration_does_not_match_same_quarter() -> None:
 
 
 def test_refiled_period_resolves_to_the_latest_active_filing() -> None:
-    early = _declaration(
-        period=_PERIOD_1T, expediente_id=_EXP_1T, presented_at=datetime(_YEAR, 4, 18, 9, 0, tzinfo=UTC)
-    )
+    early = _declaration(period=_PERIOD_1T, expediente_id=_EXP_1T, presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC))
     refile_exp = "202613000010099Z"
     late = _declaration(
         period=_PERIOD_1T,
         expediente_id=refile_exp,
-        presented_at=datetime(_YEAR, 5, 2, 11, 0, tzinfo=UTC),
+        presented_at=datetime(2026, 5, 2, 11, 0, tzinfo=UTC),
     )
     resolved = resolve_period_declaration(
         declarations=(early, late),
@@ -134,14 +131,14 @@ def test_later_cancellation_does_not_win_over_earlier_active_filing() -> None:
     accepted = _declaration(
         period=_PERIOD_1T,
         expediente_id=_EXP_1T,
-        presented_at=datetime(_YEAR, 4, 18, 9, 0, tzinfo=UTC),
+        presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
         estado="ALTA",
     )
     cancelled_exp = "202613000010088Y"
     cancelled = _declaration(
         period=_PERIOD_1T,
         expediente_id=cancelled_exp,
-        presented_at=datetime(_YEAR, 5, 10, 9, 0, tzinfo=UTC),
+        presented_at=datetime(2026, 5, 10, 9, 0, tzinfo=UTC),
         estado="Anulada",
     )
     resolved = resolve_period_declaration(

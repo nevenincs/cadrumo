@@ -3,20 +3,16 @@
 from __future__ import annotations
 
 import sys
-from datetime import date
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .profile_cli_support import invoke_native_profile_revealing
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -112,19 +108,15 @@ def test_native_m036_five_commands_round_trip_real_worker_records(tmp_path: Path
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-m036-operation", facts=_PROFILE_FACTS)
 
-        alta = _record_event(
-            profile, "alta", declared_on=date(_YEAR - 1, 1, 1).isoformat(), receipt="receipt-alta", note="Alta note"
-        )
+        alta = _record_event(profile, "alta", declared_on="2025-01-01", receipt="receipt-alta", note="Alta note")
         modificacion = _record_event(
             profile,
             "modificacion",
-            declared_on=date(_YEAR - 1, 3, 1).isoformat(),
+            declared_on="2025-03-01",
             receipt="receipt-modificacion",
             note="Modification note",
         )
-        baja = _record_event(
-            profile, "baja", declared_on=date(_YEAR, 1, 1).isoformat(), receipt="receipt-baja", note="Baja note"
-        )
+        baja = _record_event(profile, "baja", declared_on="2026-01-01", receipt="receipt-baja", note="Baja note")
         rows = _list_returns_each_recorded_event(
             profile,
             {

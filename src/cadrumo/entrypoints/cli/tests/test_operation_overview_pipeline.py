@@ -18,18 +18,14 @@ from ....application.overview.pipeline_projection import PipelineHealthSnapshot,
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_overview_pipeline as bridge
 from .. import overview_commands as handler
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD = Period.from_year_and_code(2025, "1T")
 _PUBLIC_PERIOD = PublicPeriod.from_period(_PERIOD)
 _OPERATION_ID = "a" * 64
 
@@ -112,7 +108,7 @@ def test_bridge_submits_exact_profile_period_and_language(monkeypatch: pytest.Mo
     [
         (_projection(profile_id=_OTHER), OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
         (
-            _projection(period=PublicPeriod.from_period(Period.from_year_and_code(_YEAR, "2T"))),
+            _projection(period=PublicPeriod.from_period(Period.from_year_and_code(2025, "2T"))),
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
         ),
@@ -169,7 +165,7 @@ def test_handler_presentation_error_retains_completed_receipt(monkeypatch: pytes
         handler, "emit_envelope", lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("private"))
     )
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        handler.overview_pipeline(cast(typer.Context, cast(object, None)), year=_YEAR, period="1T")
+        handler.overview_pipeline(cast(typer.Context, cast(object, None)), year=2025, period="1T")
     assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID
     assert refused.value.context["effect"] == OperationEffect.NONE.value

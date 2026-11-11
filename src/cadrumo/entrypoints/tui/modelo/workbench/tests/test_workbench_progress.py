@@ -28,7 +28,6 @@ from ......application.modelo.work_form_wording import day_text
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -65,7 +64,7 @@ def _assumed(form: ModeloWorkForm, count: int) -> ModeloWorkForm:
 
 
 def test_a_filed_declaration_is_done_whatever_its_form_still_marks_and_says_when() -> None:
-    recorded = datetime(filing_year_envelope().horizon, 4, 15, 10, 0, tzinfo=UTC)
+    recorded = datetime(2026, 4, 15, 10, 0, tzinfo=UTC)
     form = synthetic_form(needs_input=True).model_copy(update={"filing": ModeloFormFiling(recorded_at=recorded)})
 
     progress = workbench_progress(form, staged=0, verified=True, filed=True)
@@ -82,9 +81,7 @@ def test_a_verified_declaration_offers_the_file_first_and_recording_after_one_at
     revision = form.calculation_revision_id
     assert revision is not None
     filed_file = ModeloFormExport(
-        exported_at=datetime(filing_year_envelope().horizon, 4, 2, 9, 0, tzinfo=UTC),
-        calculation_revision_id=revision,
-        current=True,
+        exported_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC), calculation_revision_id=revision, current=True
     )
     progress = workbench_progress(form, staged=0, verified=True, filed=False)
     exported = workbench_progress(

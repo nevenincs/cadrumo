@@ -24,12 +24,12 @@ from ..bucket_session import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-_NOW = datetime(1980, 5, 14, 12, 0, 0, tzinfo=UTC)
+_NOW = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
 _DEK = bytes(range(32, 64))
 _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 _OTHER_BUCKET_ID = "77777777-7777-4777-8777-777777777777"
-_NAIVE = datetime(1980, 5, 14, 12, 0, 0)
-_PLUS_ONE = datetime(1980, 5, 14, 13, 0, 0, tzinfo=timezone(timedelta(hours=1)))
+_NAIVE = datetime(2026, 5, 14, 12, 0, 0)
+_PLUS_ONE = datetime(2026, 5, 14, 13, 0, 0, tzinfo=timezone(timedelta(hours=1)))
 
 
 def _open_session(

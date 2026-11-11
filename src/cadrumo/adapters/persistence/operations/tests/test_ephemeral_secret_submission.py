@@ -52,17 +52,14 @@ from .....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.errors import RepositoryError
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository
 from .supervision_support import run_to_settlement
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(_YEAR, 8, 24, 12, tzinfo=UTC)
+_NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
 _SECRET = b"s114-runtime-canary-4b9f1a"
 _INPUT_KIND = "profile.unlock_input"
 _PROFILE_ID = UUID("8bca3f7c-ec82-4f74-862d-c4ae3a548579")

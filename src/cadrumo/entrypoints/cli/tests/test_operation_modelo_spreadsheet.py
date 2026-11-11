@@ -29,17 +29,13 @@ from ....application.modelo.modelo_spreadsheet_operation_projections import (
 from ....application.operations.models import OperationId
 from ....application.operations.public_period import PublicPeriod
 from ....core.operations import OperationEffect, OperationTerminalCondition
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_modelo_spreadsheet as bridge
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = UUID("12345678-1234-4234-8234-123456789abc")
-_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
-_REVISION = "test-revision"
+_PERIOD = PublicPeriod(filing_year=2025, code="1T")
+_REVISION = "2025-r1"
 
 
 def _ctx() -> typer.Context:
@@ -100,7 +96,7 @@ def _base_projection() -> dict[str, Any]:
 
 
 def test_export_submits_local_output_election_and_requires_updated_receipt(monkeypatch, tmp_path: Path) -> None:
-    output = tmp_path / f"modelo-303-{_YEAR}-1T.xlsx"
+    output = tmp_path / "modelo-303-2025-1T.xlsx"
     result_projection = _model(
         ModeloSpreadsheetExportProjection,
         **_base_projection(),

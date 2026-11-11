@@ -4,8 +4,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.calculations.registry.bindings import CasillaObservation, CasillaObservationValueKind
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.modelos.calculation_revision import (
@@ -17,8 +15,6 @@ from ....domain.modelos.calculation_revision_rendering import CalculationRenderi
 from ...storage.calc_sheets.tests.test_form_context_fields import snapshot_with_binding_context
 from ...storage.calc_sheets.tests.test_form_workbook import form_source as form_source
 from ..review_form_data import capture_review_form
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -46,8 +42,8 @@ def test_binding_context_preserves_saved_whole_scalar_or_unknown(form_source, sa
         rendering_snapshot=rendering,
         filing_instance_evidence=None,
         source_provenance=(),
-        created_at=datetime(_YEAR, 10, 7, tzinfo=UTC),
-        updated_at=datetime(_YEAR, 10, 7, tzinfo=UTC),
+        created_at=datetime(2026, 10, 7, tzinfo=UTC),
+        updated_at=datetime(2026, 10, 7, tzinfo=UTC),
     )
     saved = capture_review_form(revision)
     assert saved is not None
@@ -95,8 +91,8 @@ def test_source_text_observation_is_retained_even_without_numeric_or_manual_map(
         ),
         filing_instance_evidence=None,
         source_provenance=(),
-        created_at=datetime(_YEAR, 10, 7, tzinfo=UTC),
-        updated_at=datetime(_YEAR, 10, 7, tzinfo=UTC),
+        created_at=datetime(2026, 10, 7, tzinfo=UTC),
+        updated_at=datetime(2026, 10, 7, tzinfo=UTC),
     )
     saved = capture_review_form(revision)
     assert saved is not None

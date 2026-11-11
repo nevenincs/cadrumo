@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, time
 from decimal import Decimal
 
 from reportlab.lib.pagesizes import A4
@@ -11,15 +10,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ....core.money.rounding import round_to_cents
-from .generate_base import SEDE_ORIGIN, declared_filing_years, presentation_timestamp
-
-#: The corpus spans the exercise before the declared floor through the second after
-#: it, so it covers the legacy Modelo 303 design's last exercises and the
-#: redesigned one's first; every specimen exercise is written relative to the floor.
-_FLOOR = declared_filing_years().floor
-#: The presentation instant every corpus receipt prints, at the start of the
-#: corpus's last exercise.
-_CORPUS_PRESENTED_AT = presentation_timestamp(date(_FLOOR + 2, 1, 1), time(10))
+from .generate_base import SEDE_ORIGIN
 
 
 def _fmt_spanish(d: Decimal) -> str:
@@ -82,7 +73,7 @@ class Modelo303CorpusFixture:
     # Justificante receipt fields â€” required by the sidecar roundtrip test.
     # csv must match SANITIZED{modelo}{ejercicio} to satisfy _CSV_SYNTHETIC_RE.
     csv: str = ""
-    presented_at: str = _CORPUS_PRESENTED_AT
+    presented_at: str = "2024-01-01 10:00:00"
 
 
 def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal, Decimal, Decimal, Decimal]:
@@ -116,8 +107,8 @@ def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal,
 MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
     # --- 2022 (legacy) revision: 2021-2T through 2022-4T ---
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR - 1}-2T.pdf",
-        ejercicio=str(_FLOOR - 1),
+        filename="303/2021-2T.pdf",
+        ejercicio="2021",
         periodo="2T",
         tax_id="Y0001006P",
         new_template=False,
@@ -131,8 +122,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR - 1}-3T.pdf",
-        ejercicio=str(_FLOOR - 1),
+        filename="303/2021-3T.pdf",
+        ejercicio="2021",
         periodo="3T",
         tax_id="Y0001006P",
         new_template=False,
@@ -146,8 +137,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR - 1}-4T.pdf",
-        ejercicio=str(_FLOOR - 1),
+        filename="303/2021-4T.pdf",
+        ejercicio="2021",
         periodo="4T",
         tax_id="Y0001006P",
         new_template=False,
@@ -161,8 +152,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR}-1T.pdf",
-        ejercicio=str(_FLOOR),
+        filename="303/2022-1T.pdf",
+        ejercicio="2022",
         periodo="1T",
         tax_id="Y0001006P",
         new_template=False,
@@ -176,8 +167,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR}-2T.pdf",
-        ejercicio=str(_FLOOR),
+        filename="303/2022-2T.pdf",
+        ejercicio="2022",
         periodo="2T",
         tax_id="Y0001006P",
         new_template=False,
@@ -191,8 +182,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("15000.00"), Decimal("9600.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR}-3T.pdf",
-        ejercicio=str(_FLOOR),
+        filename="303/2022-3T.pdf",
+        ejercicio="2022",
         periodo="3T",
         tax_id="Y0001006P",
         new_template=False,
@@ -206,8 +197,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR}-4T.pdf",
-        ejercicio=str(_FLOOR),
+        filename="303/2022-4T.pdf",
+        ejercicio="2022",
         periodo="4T",
         tax_id="Y0001006P",
         new_template=False,
@@ -222,8 +213,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
     ),
     # --- Explicit post-2022 revision family: 2023-1T onward ---
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR + 1}-1T.pdf",
-        ejercicio=str(_FLOOR + 1),
+        filename="303/2023-1T.pdf",
+        ejercicio="2023",
         periodo="1T",
         tax_id="Y0001006P",
         new_template=True,
@@ -237,8 +228,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR + 1}-2T.pdf",
-        ejercicio=str(_FLOOR + 1),
+        filename="303/2023-2T.pdf",
+        ejercicio="2023",
         periodo="2T",
         tax_id="Y0001006P",
         new_template=True,
@@ -252,8 +243,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("13800.00"), Decimal("8700.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR + 1}-3T.pdf",
-        ejercicio=str(_FLOOR + 1),
+        filename="303/2023-3T.pdf",
+        ejercicio="2023",
         periodo="3T",
         tax_id="Y0001006P",
         new_template=True,
@@ -267,8 +258,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("15000.00"), Decimal("9300.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR + 1}-4T.pdf",
-        ejercicio=str(_FLOOR + 1),
+        filename="303/2023-4T.pdf",
+        ejercicio="2023",
         periodo="4T",
         tax_id="Y0001006P",
         new_template=True,
@@ -282,8 +273,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("16800.00"), Decimal("10500.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR + 2}-1T.pdf",
-        ejercicio=str(_FLOOR + 2),
+        filename="303/2024-1T.pdf",
+        ejercicio="2024",
         periodo="1T",
         tax_id="Y0001006P",
         new_template=True,
@@ -297,8 +288,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR + 2}-2T.pdf",
-        ejercicio=str(_FLOOR + 2),
+        filename="303/2024-2T.pdf",
+        ejercicio="2024",
         periodo="2T",
         tax_id="Y0001006P",
         new_template=True,
@@ -312,8 +303,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR + 2}-3T.pdf",
-        ejercicio=str(_FLOOR + 2),
+        filename="303/2024-3T.pdf",
+        ejercicio="2024",
         periodo="3T",
         tax_id="Y0001006P",
         new_template=True,
@@ -327,8 +318,8 @@ MODELO_303_CORPUS_FIXTURES: tuple[Modelo303CorpusFixture, ...] = (
         c71=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[4],
     ),
     Modelo303CorpusFixture(
-        filename=f"303/{_FLOOR + 2}-4T.pdf",
-        ejercicio=str(_FLOOR + 2),
+        filename="303/2024-4T.pdf",
+        ejercicio="2024",
         periodo="4T",
         tax_id="Y0001006P",
         new_template=True,
@@ -564,7 +555,7 @@ class Modelo130CorpusFixture:
     # Justificante receipt fields â€” required by the sidecar roundtrip test.
     # csv must match SANITIZED{modelo}{ejercicio} to satisfy _CSV_SYNTHETIC_RE.
     csv: str = ""
-    presented_at: str = _CORPUS_PRESENTED_AT
+    presented_at: str = "2024-01-01 10:00:00"
 
 
 def _compute_m130_closure(c03: Decimal) -> Decimal:
@@ -607,120 +598,120 @@ def _compute_m130_closure(c03: Decimal) -> Decimal:
 
 MODELO_130_CORPUS_FIXTURES: tuple[Modelo130CorpusFixture, ...] = (
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR - 1}-2T.pdf",
-        ejercicio=str(_FLOOR - 1),
+        filename="130/2021-2T.pdf",
+        ejercicio="2021",
         periodo="2T",
         tax_id="Y0001006P",
         c03=Decimal("5000.00"),
         c19=_compute_m130_closure(Decimal("5000.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR - 1}-3T.pdf",
-        ejercicio=str(_FLOOR - 1),
+        filename="130/2021-3T.pdf",
+        ejercicio="2021",
         periodo="3T",
         tax_id="Y0001006P",
         c03=Decimal("7500.00"),
         c19=_compute_m130_closure(Decimal("7500.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR - 1}-4T.pdf",
-        ejercicio=str(_FLOOR - 1),
+        filename="130/2021-4T.pdf",
+        ejercicio="2021",
         periodo="4T",
         tax_id="Y0001006P",
         c03=Decimal("10000.00"),
         c19=_compute_m130_closure(Decimal("10000.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR}-1T.pdf",
-        ejercicio=str(_FLOOR),
+        filename="130/2022-1T.pdf",
+        ejercicio="2022",
         periodo="1T",
         tax_id="Y0001006P",
         c03=Decimal("5200.00"),
         c19=_compute_m130_closure(Decimal("5200.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR}-2T.pdf",
-        ejercicio=str(_FLOOR),
+        filename="130/2022-2T.pdf",
+        ejercicio="2022",
         periodo="2T",
         tax_id="Y0001006P",
         c03=Decimal("7800.00"),
         c19=_compute_m130_closure(Decimal("7800.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR}-3T.pdf",
-        ejercicio=str(_FLOOR),
+        filename="130/2022-3T.pdf",
+        ejercicio="2022",
         periodo="3T",
         tax_id="Y0001006P",
         c03=Decimal("9100.00"),
         c19=_compute_m130_closure(Decimal("9100.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR}-4T.pdf",
-        ejercicio=str(_FLOOR),
+        filename="130/2022-4T.pdf",
+        ejercicio="2022",
         periodo="4T",
         tax_id="Y0001006P",
         c03=Decimal("11000.00"),
         c19=_compute_m130_closure(Decimal("11000.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR + 1}-1T.pdf",
-        ejercicio=str(_FLOOR + 1),
+        filename="130/2023-1T.pdf",
+        ejercicio="2023",
         periodo="1T",
         tax_id="Y0001006P",
         c03=Decimal("5400.00"),
         c19=_compute_m130_closure(Decimal("5400.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR + 1}-2T.pdf",
-        ejercicio=str(_FLOOR + 1),
+        filename="130/2023-2T.pdf",
+        ejercicio="2023",
         periodo="2T",
         tax_id="Y0001006P",
         c03=Decimal("8100.00"),
         c19=_compute_m130_closure(Decimal("8100.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR + 1}-3T.pdf",
-        ejercicio=str(_FLOOR + 1),
+        filename="130/2023-3T.pdf",
+        ejercicio="2023",
         periodo="3T",
         tax_id="Y0001006P",
         c03=Decimal("10500.00"),
         c19=_compute_m130_closure(Decimal("10500.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR + 1}-4T.pdf",
-        ejercicio=str(_FLOOR + 1),
+        filename="130/2023-4T.pdf",
+        ejercicio="2023",
         periodo="4T",
         tax_id="Y0001006P",
         c03=Decimal("13000.00"),
         c19=_compute_m130_closure(Decimal("13000.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR + 2}-1T.pdf",
-        ejercicio=str(_FLOOR + 2),
+        filename="130/2024-1T.pdf",
+        ejercicio="2024",
         periodo="1T",
         tax_id="Y0001006P",
         c03=Decimal("5600.00"),
         c19=_compute_m130_closure(Decimal("5600.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR + 2}-2T.pdf",
-        ejercicio=str(_FLOOR + 2),
+        filename="130/2024-2T.pdf",
+        ejercicio="2024",
         periodo="2T",
         tax_id="Y0001006P",
         c03=Decimal("8400.00"),
         c19=_compute_m130_closure(Decimal("8400.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR + 2}-3T.pdf",
-        ejercicio=str(_FLOOR + 2),
+        filename="130/2024-3T.pdf",
+        ejercicio="2024",
         periodo="3T",
         tax_id="Y0001006P",
         c03=Decimal("11200.00"),
         c19=_compute_m130_closure(Decimal("11200.00")),
     ),
     Modelo130CorpusFixture(
-        filename=f"130/{_FLOOR + 2}-4T.pdf",
-        ejercicio=str(_FLOOR + 2),
+        filename="130/2024-4T.pdf",
+        ejercicio="2024",
         periodo="4T",
         tax_id="Y0001006P",
         c03=Decimal("14000.00"),
@@ -861,7 +852,7 @@ class Modelo390CorpusFixture:
     # Justificante receipt fields â€” required by the sidecar roundtrip test.
     # csv must match SANITIZED{modelo}{ejercicio} to satisfy _CSV_SYNTHETIC_RE.
     csv: str = ""
-    presented_at: str = _CORPUS_PRESENTED_AT
+    presented_at: str = "2024-01-01 10:00:00"
 
 
 def _compute_m390_closure(
@@ -920,8 +911,8 @@ def _m390_fixture(
 
 
 MODELO_390_CORPUS_FIXTURES: tuple[Modelo390CorpusFixture, ...] = (
-    _m390_fixture(f"390/{_FLOOR}-0A.pdf", str(_FLOOR), "Y0001006P", Decimal("10500.00"), Decimal("8400.00")),
-    _m390_fixture(f"390/{_FLOOR + 1}-0A.pdf", str(_FLOOR + 1), "Y0001006P", Decimal("12600.00"), Decimal("9800.00")),
+    _m390_fixture("390/2022-0A.pdf", "2022", "Y0001006P", Decimal("10500.00"), Decimal("8400.00")),
+    _m390_fixture("390/2023-0A.pdf", "2023", "Y0001006P", Decimal("12600.00"), Decimal("9800.00")),
 )
 
 _M390_BOX_X = 414.0  # x-position for box number text (within anchor 407-425)

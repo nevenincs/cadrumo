@@ -43,7 +43,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
@@ -51,7 +50,7 @@ from ...adapter_composition_ports import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 _LEGAL_REFS = ("ley-35-2006:art-99",)
 _SOURCE_REFS = ("boe-modelo-130-2025-form",)
 
@@ -60,9 +59,7 @@ _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="prior f
 
 
 def _stamped_revision_id() -> str:
-    return str(
-        published_authority_operation().snapshot("130", filing_year=_PERIOD.filing_year, period="1T").revision.id
-    )
+    return str(published_authority_operation().snapshot("130", filing_year=2026, period="1T").revision.id)
 
 
 def _schema_provider() -> CasillaSchemaProvider:
@@ -94,7 +91,7 @@ def _prior_observation(*, value: str) -> RegistryModeloObservation:
     """
     return RegistryModeloObservation(
         modelo="130",
-        filing_year=_PERIOD.filing_year,
+        filing_year=2026,
         period="1T",
         observations=(
             CasillaObservation(

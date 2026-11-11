@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 OPERATION_ID = "a" * 64
 _INTERACTION_ID = "b" * 64
-NOW = datetime(1980, 9, 27, tzinfo=UTC)
+NOW = datetime(2026, 9, 27, tzinfo=UTC)
 
 
 class _SafeReview(BaseModel):

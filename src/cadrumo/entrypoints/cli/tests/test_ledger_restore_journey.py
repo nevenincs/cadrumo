@@ -18,12 +18,10 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from datetime import date
 
 import pytest
 from click.testing import Result
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
@@ -32,13 +30,11 @@ __all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
 _ROWS = (
-    (date(_YEAR, 3, 1).isoformat(), "49.99", "Software subscription"),
-    (date(_YEAR, 3, 5).isoformat(), "120.00", "Office chair"),
-    (date(_YEAR, 3, 9).isoformat(), "15.50", "Domain renewal"),
-    (date(_YEAR, 3, 12).isoformat(), "300.00", "Accountant fee"),
+    ("2026-03-01", "49.99", "Software subscription"),
+    ("2026-03-05", "120.00", "Office chair"),
+    ("2026-03-09", "15.50", "Domain renewal"),
+    ("2026-03-12", "300.00", "Accountant fee"),
 )
 
 

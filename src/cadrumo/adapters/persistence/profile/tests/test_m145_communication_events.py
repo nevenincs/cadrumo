@@ -29,7 +29,6 @@ from .....application.modelo.m145_communication_records import (
 )
 from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..buckets import BucketEventHistoryRepository
@@ -37,8 +36,6 @@ from ..m145_communication_records import build_m145_communication_records_ports
 from .m145_communication_support import communication_command, valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-_YEAR = filing_year_envelope().horizon
 
 _ACTOR = "m145-event-test"
 _FORBIDDEN_TERMS = (
@@ -131,7 +128,7 @@ def test_m145_communication_lifecycle_emits_communication_specific_events(
         assert event.bucket_id == runtime.bucket_id
         assert event.payload["communication_record_id"] == created.communication_record_id
         assert event.payload["modelo"] == "145"
-        assert event.payload["communication_year"] == str(_YEAR)
+        assert event.payload["communication_year"] == "2026"
         assert event.payload["period"] == "comunicacion"
         assert event.payload["revision_id"] == created.revision_id
         assert event.payload["state"] in {"created", "delivered_to_payer", "locally_completed"}

@@ -102,7 +102,6 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.operations import OperationEffect, OperationLifecycle
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import (
@@ -149,9 +148,8 @@ from ..navigation import (
 from ..operations.controller_port import OperationControllerPort
 from ..operations.modal import OperationModal
 
-_YEAR: Final[int] = filing_year_envelope().horizon
 _BUCKET: Final[str] = "00000000-0000-4000-8000-000000000001"
-_AT: Final[datetime] = datetime(_YEAR, 9, 3, 10, tzinfo=UTC)
+_AT: Final[datetime] = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
@@ -278,7 +276,7 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
             operation_contracts=_operation_contracts(),
         )
 
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     action = ActionReference(action_id="operator.profile.edit")
     overview = AeatSyncWorkspaceOverviewRowV1(
         area=AeatSyncOverviewArea.CENSUS,
@@ -299,7 +297,7 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
     )
     filed = AeatSyncWorkspaceFiledDeclarationRowV1(
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         local_filing_state=AeatSyncLocalFilingState.FILED,
         local_filed_at=_AT,
@@ -309,8 +307,8 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
         justificante_observed_at=_AT,
     )
     notification = AeatSyncWorkspaceNotificationRowV1(
-        issued_on=date(_YEAR, 9, 1),
-        read_on=date(_YEAR, 9, 2) if notification_read else None,
+        issued_on=date(2026, 9, 1),
+        read_on=date(2026, 9, 2) if notification_read else None,
         read_state=AeatSyncNotificationReadState.READ if notification_read else AeatSyncNotificationReadState.UNREAD,
         category=AeatSyncNotificationCategory.FORMAL,
         document_custody_state=(
@@ -320,7 +318,7 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
     )
     comparison = AeatSyncWorkspaceEvidenceComparisonRowV1(
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         local_state=AeatSyncSourceState.PRESENT,
         aeat_state=AeatSyncSourceState.ABSENT,
@@ -330,7 +328,7 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
     )
     reconciliation = AeatSyncWorkspaceReconciliationRowV1(
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         local_state=AeatSyncSourceState.PRESENT,
         aeat_state=AeatSyncSourceState.ABSENT,
@@ -439,13 +437,13 @@ def _declaration_catalogues(
 ]:
     if scenario in {WorkbenchFixtureScenario.EMPTY, WorkbenchFixtureScenario.UNAVAILABLE}:
         return WorkUnitCatalogue(), CalculationRevisionCatalogue(), ModeloRecordCatalogue(), ()
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     casilla = validated_casilla_id("01")
-    registry_snapshot_ref = operation.snapshot("130", filing_year=_YEAR, period="1T").snapshot_ref
+    registry_snapshot_ref = operation.snapshot("130", filing_year=2026, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=registry_snapshot_ref.revision_id,
     )
@@ -467,7 +465,7 @@ def _declaration_catalogues(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET,
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=registry_snapshot_ref.revision_id,
         name="Fixture declaration",
@@ -499,7 +497,7 @@ def _declaration_catalogues(
         calculation_revision_id=revision_id,
         bucket_id=_BUCKET,
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         filed_at=_AT,
         filed_by="fixture",
@@ -546,28 +544,28 @@ def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCale
         observed_at=_AT if availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE} else None,
         reason_code=None if availability is HomeAvailability.AVAILABLE else "fixture.calendar.refused",
     )
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     entries: tuple[OverviewCalendarEntry, ...] = ()
     if scenario not in {WorkbenchFixtureScenario.EMPTY, WorkbenchFixtureScenario.UNAVAILABLE}:
         entries = (
             OverviewCalendarEntry(
                 modelo="130",
-                filing_year=_YEAR,
+                filing_year=2026,
                 period=period,
-                opens_on=date(_YEAR, 1, 1),
-                closes_on=date(_YEAR, 4, 30),
-                adjusted_closes_on=date(_YEAR, 4, 30),
+                opens_on=date(2026, 1, 1),
+                closes_on=date(2026, 4, 30),
+                adjusted_closes_on=date(2026, 4, 30),
                 shift_reason="fixture",
                 holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
-                evaluated_on=date(_YEAR, 2, 1),
+                evaluated_on=date(2026, 2, 1),
                 status=ObligationStatus.UPCOMING,
                 user_state=OverviewPeriodState.DUE,
-                filing_evidence=OverviewCalendarFilingEvidence(modelo="130", filing_year=_YEAR, period=period),
+                filing_evidence=OverviewCalendarFilingEvidence(modelo="130", filing_year=2026, period=period),
             ),
         )
     calendar = OverviewCalendar(
-        range=OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
-        evaluated_on=date(_YEAR, 2, 1),
+        range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        evaluated_on=date(2026, 2, 1),
         entries=entries,
         generated_at=_AT,
     )
@@ -575,7 +573,7 @@ def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCale
     return project_declarations_calendar(
         calendar=calendar,
         evidence=evidence,
-        as_of=date(_YEAR, 2, 1),
+        as_of=date(2026, 2, 1),
         schedule_observation=DeclarationsCalendarSourceObservationV1(
             source=DeclarationsCalendarSource.SCHEDULE,
             availability=availability,
@@ -841,7 +839,7 @@ def _ledger_projection(scenario: WorkbenchFixtureScenario) -> LedgerWorkspacePro
             LedgerWorkspaceEntryRefV1(
                 transaction_id=_LEDGER_TX_A,
                 review_status="pending",
-                date=date(_YEAR, 3, 14).isoformat(),
+                date="2026-03-14",
                 amount="1250.00",
                 currency="EUR",
                 direction="outgoing",
@@ -852,7 +850,7 @@ def _ledger_projection(scenario: WorkbenchFixtureScenario) -> LedgerWorkspacePro
             LedgerWorkspaceEntryRefV1(
                 transaction_id=_LEDGER_TX_B,
                 review_status="reviewed",
-                date=date(_YEAR, 3, 2).isoformat(),
+                date="2026-03-02",
                 amount="480.50",
                 currency="EUR",
                 direction="incoming",

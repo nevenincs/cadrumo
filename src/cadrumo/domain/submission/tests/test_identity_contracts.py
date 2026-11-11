@@ -19,7 +19,6 @@ from pydantic import ValidationError
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..models import (
     ModeloPresentado,
     SubmissionAttempt,
@@ -28,9 +27,8 @@ from ..models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_EXERCISE = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_EXERCISE, "1T")
-_SUBMITTED_AT = datetime(1980, 5, 27, 10, 0, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
+_SUBMITTED_AT = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
 _DRAFT_ID = "d" * 64
 
 

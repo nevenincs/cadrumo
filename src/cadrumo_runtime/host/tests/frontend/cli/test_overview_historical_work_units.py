@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 from collections.abc import Iterator, Sequence
 from contextvars import ContextVar
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -15,7 +14,6 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
@@ -24,8 +22,6 @@ from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .overview_native_support import invoke_native_overview
-
-_FLOOR = filing_year_envelope().floor
 
 pytestmark = [
     pytest.mark.integration,
@@ -117,10 +113,10 @@ def _seed_historical_m130_m303_work() -> dict[tuple[str, int, str], str]:
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     targets = (
-        ("130", _FLOOR, "1T"),
-        ("303", _FLOOR, "1T"),
-        ("130", _FLOOR + 1, "2T"),
-        ("303", _FLOOR + 1, "2T"),
+        ("130", 2022, "1T"),
+        ("303", 2022, "1T"),
+        ("130", 2023, "2T"),
+        ("303", 2023, "2T"),
     )
     return {
         (modelo, year, period): _create_historical_work_unit(
@@ -167,9 +163,9 @@ def test_calendar_surfaces_created_historical_m130_m303_work_units() -> None:
             "overview",
             "calendar",
             "--from",
-            date(_FLOOR, 1, 1).isoformat(),
+            "2022-01-01",
             "--to",
-            date(_FLOOR + 1, 12, 31).isoformat(),
+            "2023-12-31",
         ],
     )
 
@@ -195,7 +191,7 @@ def test_backlog_default_surface_includes_created_historical_m130_m303_work_unit
 
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
-    assert payload["range"]["from_date"] <= date(_FLOOR, 1, 1).isoformat()
+    assert payload["range"]["from_date"] <= "2022-01-01"
     items = _backlog_entries_by_target(payload["items"])
     for (modelo, year, period), work_unit_id in created.items():
         item = items[(modelo, year, f"{year} {period}")]
@@ -212,7 +208,7 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
     work_unit_id = _create_historical_work_unit(
         bucket_id=bucket_id,
         modelo="130",
-        year=_FLOOR,
+        year=2022,
         period="1T",
         filed_calculation_revision_id=_FILED_CALCULATION_REVISION_ID,
         current_filing_record_id=_CURRENT_FILING_RECORD_ID,
@@ -240,14 +236,14 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
             "overview",
             "calendar",
             "--from",
-            date(_FLOOR, 1, 1).isoformat(),
+            "2022-01-01",
             "--to",
-            date(_FLOOR, 12, 31).isoformat(),
+            "2022-12-31",
         ],
     )
 
     assert calendar_result.exit_code == 0, calendar_result.output
     entries = _calendar_entries_by_target(unwrap_schema_envelope(calendar_result.output)["entries"])
-    entry = entries[("130", f"{_FLOOR} 1T")]
+    entry = entries[("130", "2022 1T")]
     assert entry["user_state"] == "filed"
     assert entry["local_filing_state"] == "ready_to_file"

@@ -16,7 +16,6 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormSectionDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ..engine import build_export_plan
@@ -28,8 +27,6 @@ from ..records import TabName
 from ..translator import translate_formula
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _PREFIX = "modelo-369-exterior-fichero.3-prestaciones-de-servicios-"
 _COUNTRY = _PREFIX + "codigo-de-pais-em-de-consumo-1"
@@ -43,7 +40,7 @@ def _unused():
 
 @pytest.fixture
 def row_source():
-    snapshot = published_snapshot("369", filing_year=_YEAR, period="EXT-3T")
+    snapshot = published_snapshot("369", filing_year=2025, period="EXT-3T")
     expression = FormulaExpression(
         op="if_then_else",
         args=(_unused(), FormulaExpression(literal=Decimal(0)), FormulaExpression(binding=_QUOTA)),

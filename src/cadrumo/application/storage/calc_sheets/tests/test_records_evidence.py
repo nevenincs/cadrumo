@@ -10,7 +10,6 @@ from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ..records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
@@ -27,8 +26,6 @@ from ..records import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 
 _IVA_DEVENGADO_CUOTA_CASILLA: CasillaId = validated_casilla_id("iva.devengado.cuota")
 _RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("resultado.contable")
@@ -39,12 +36,12 @@ _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 def _metadata() -> SheetExportMetadata:
     return SheetExportMetadata(
         modelo_id="303",
-        revision_id=revision_serving_period("303", _YEAR, "1T").id,
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id="2022",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         engine_version="test",
         registry_sha="abcd1234",
-        exported_at=datetime(1980, 6, 3, 15, 0, tzinfo=UTC),
+        exported_at=datetime(2026, 6, 3, 15, 0, tzinfo=UTC),
     )
 
 

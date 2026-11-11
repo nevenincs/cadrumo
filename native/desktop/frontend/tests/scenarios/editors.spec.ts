@@ -1,5 +1,4 @@
 import { expect, test, type Page } from "@playwright/test";
-import { fixtureDay, fixtureYear } from "../../src/dev/fixtureDates";
 
 // Each typed editor alone on the primitives page, in a real browser. The
 // expected values are written out from the languages' own conventions.
@@ -179,27 +178,27 @@ test("a points percent holds the points", async ({ page }) => {
 });
 
 for (const [locale, typed, shown] of [
-  ["en", `10/31/${fixtureYear}`, `Oct 31, ${fixtureYear}`],
-  ["es", `31/10/${fixtureYear}`, `31 oct ${fixtureYear}`],
-  ["ca", `31/10/${fixtureYear}`, `31 d’oct. ${fixtureYear}`],
-  ["hu", `${fixtureYear}. 10. 31.`, `${fixtureYear}. okt. 31.`],
+  ["en", "10/31/2026", "Oct 31, 2026"],
+  ["es", "31/10/2026", "31 oct 2026"],
+  ["ca", "31/10/2026", "31 d’oct. 2026"],
+  ["hu", "2026. 10. 31.", "2026. okt. 31."],
 ] as const)
   test(`a date reads and shows ${locale} order`, async ({ page }) => {
     const entry = await open(page, { field: { kind: "date" }, locale });
     await entry.fill(typed);
-    await expect(held(page)).toHaveText(fixtureDay(10, 31));
-    await expect(checked(page)).toHaveText(`value ${fixtureDay(10, 31)}`);
+    await expect(held(page)).toHaveText("2026-10-31");
+    await expect(checked(page)).toHaveText("value 2026-10-31");
     await elsewhere(page);
     await expect(entry).toHaveValue(shown);
   });
 
-// A backend hands a day as `YYYY-MM-DD` and an amount as `19800.00`. At rest the
+// A backend hands a day as `2026-06-15` and an amount as `19800.00`. At rest the
 // field shows them in the window's language, and canonical text typed or pasted
 // is read and then restyled when the field is left.
 for (const [locale, shown] of [
-  ["en", `Jun 15, ${fixtureYear}`],
-  ["es", `15 jun ${fixtureYear}`],
-  ["hu", `${fixtureYear}. jún. 15.`],
+  ["en", "Jun 15, 2026"],
+  ["es", "15 jun 2026"],
+  ["hu", "2026. jún. 15."],
 ] as const)
   test(`a held ISO day shows in ${locale} at rest, and one typed restyles on leaving`, async ({
     page,
@@ -207,12 +206,12 @@ for (const [locale, shown] of [
     const rest = await open(page, {
       field: { kind: "date" },
       locale,
-      value: fixtureDay(6, 15),
+      value: "2026-06-15",
     });
     await expect(rest).toHaveValue(shown);
     const entry = await open(page, { field: { kind: "date" }, locale });
-    await entry.fill(fixtureDay(6, 15));
-    await expect(held(page)).toHaveText(fixtureDay(6, 15));
+    await entry.fill("2026-06-15");
+    await expect(held(page)).toHaveText("2026-06-15");
     await elsewhere(page);
     await expect(entry).toHaveValue(shown);
   });
@@ -242,10 +241,10 @@ test("a date also reads ISO, and refuses what names no day", async ({
   page,
 }) => {
   const entry = await open(page, { field: { kind: "date" }, locale: "es" });
-  await entry.fill(fixtureDay(10, 23));
-  await expect(checked(page)).toHaveText(`value ${fixtureDay(10, 23)}`);
-  await entry.fill(`31/13/${fixtureYear}`);
-  await expect(held(page)).toHaveText(`31/13/${fixtureYear}`);
+  await entry.fill("2026-10-23");
+  await expect(checked(page)).toHaveText("value 2026-10-23");
+  await entry.fill("31/13/2026");
+  await expect(held(page)).toHaveText("31/13/2026");
   await expect(checked(page)).toHaveText("refused date_not_in_calendar");
   await entry.fill("31/10/26");
   await expect(checked(page)).toHaveText("refused not_a_date");
@@ -259,27 +258,27 @@ const openCalendar = (page: Page) =>
 test("the calendar works by keyboard", async ({ page }) => {
   await open(page, {
     field: { kind: "date" },
-    value: fixtureDay(10, 15),
+    value: "2026-10-15",
   });
   await openCalendar(page);
-  await expect(dayIn(page, fixtureDay(10, 15))).toBeFocused();
+  await expect(dayIn(page, "2026-10-15")).toBeFocused();
   await page.keyboard.press("ArrowRight");
-  await expect(dayIn(page, fixtureDay(10, 16))).toBeFocused();
+  await expect(dayIn(page, "2026-10-16")).toBeFocused();
   await page.keyboard.press("ArrowDown");
-  await expect(dayIn(page, fixtureDay(10, 23))).toBeFocused();
+  await expect(dayIn(page, "2026-10-23")).toBeFocused();
   await page.keyboard.press("PageDown");
-  await expect(dayIn(page, fixtureDay(11, 23))).toBeFocused();
+  await expect(dayIn(page, "2026-11-23")).toBeFocused();
   await page.keyboard.press("PageUp");
-  await expect(dayIn(page, fixtureDay(10, 23))).toBeFocused();
+  await expect(dayIn(page, "2026-10-23")).toBeFocused();
   await page.keyboard.press("Escape");
-  await expect(held(page)).toHaveText(fixtureDay(10, 15));
+  await expect(held(page)).toHaveText("2026-10-15");
   await openCalendar(page);
-  await expect(dayIn(page, fixtureDay(10, 15))).toBeFocused();
+  await expect(dayIn(page, "2026-10-15")).toBeFocused();
   await page.keyboard.press("ArrowLeft");
-  await expect(dayIn(page, fixtureDay(10, 14))).toBeFocused();
+  await expect(dayIn(page, "2026-10-14")).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(held(page)).toHaveText(fixtureDay(10, 14));
-  await expect(dayIn(page, fixtureDay(10, 14))).toHaveCount(0);
+  await expect(held(page)).toHaveText("2026-10-14");
+  await expect(dayIn(page, "2026-10-14")).toHaveCount(0);
 });
 
 for (const [locale, first, month] of [
@@ -289,11 +288,7 @@ for (const [locale, first, month] of [
   ["hu", "H", "október"],
 ] as const)
   test(`the calendar's week and months follow ${locale}`, async ({ page }) => {
-    await open(page, {
-      field: { kind: "date" },
-      locale,
-      value: fixtureDay(10, 15),
-    });
+    await open(page, { field: { kind: "date" }, locale, value: "2026-10-15" });
     await openCalendar(page);
     const headers = page.locator("[data-slot=popover-content] thead th");
     await expect(headers.first()).toContainText(first);
@@ -307,13 +302,13 @@ for (const [locale, first, month] of [
 
 test("the calendar respects limits", async ({ page }) => {
   await open(page, {
-    field: { kind: "date", min: fixtureDay(10, 5), max: fixtureDay(10, 25) },
-    value: fixtureDay(10, 15),
+    field: { kind: "date", min: "2026-10-05", max: "2026-10-25" },
+    value: "2026-10-15",
   });
   await openCalendar(page);
-  await expect(dayIn(page, fixtureDay(10, 4))).toBeDisabled();
-  await expect(dayIn(page, fixtureDay(10, 26))).toBeDisabled();
-  await expect(dayIn(page, fixtureDay(10, 5))).toBeEnabled();
+  await expect(dayIn(page, "2026-10-04")).toBeDisabled();
+  await expect(dayIn(page, "2026-10-26")).toBeDisabled();
+  await expect(dayIn(page, "2026-10-05")).toBeEnabled();
 });
 
 for (const timezoneId of [
@@ -327,14 +322,14 @@ for (const timezoneId of [
     test("a picked or shown day is that day", async ({ page }) => {
       const entry = await open(page, {
         field: { kind: "date" },
-        value: fixtureDay(1, 1),
+        value: "2026-01-01",
       });
-      await expect(entry).toHaveValue(`Jan 1, ${fixtureYear}`);
+      await expect(entry).toHaveValue("Jan 1, 2026");
       await openCalendar(page);
-      await expect(dayIn(page, fixtureDay(1, 1))).toBeFocused();
-      await dayIn(page, fixtureDay(1, 31)).click();
-      await expect(held(page)).toHaveText(fixtureDay(1, 31));
-      await expect(entry).toHaveValue(`Jan 31, ${fixtureYear}`);
+      await expect(dayIn(page, "2026-01-01")).toBeFocused();
+      await dayIn(page, "2026-01-31").click();
+      await expect(held(page)).toHaveText("2026-01-31");
+      await expect(entry).toHaveValue("Jan 31, 2026");
     });
   });
 

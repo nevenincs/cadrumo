@@ -21,15 +21,12 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.errors import TransactionNotFoundError
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     OTHER_BUCKET_ID,
     repositories,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,14 +45,14 @@ def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
         first = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="first bucket row",
                 idempotency_key="first",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=OTHER_BUCKET_ID,
@@ -66,14 +63,14 @@ def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=OTHER_BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="other bucket row",
                 idempotency_key="first",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
 
     with ledger_ports_for_test(
@@ -112,7 +109,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
         ready = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="ready row",
@@ -124,7 +121,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
                 idempotency_key="ready-status",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,
@@ -135,14 +132,14 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
         pending = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="pending row",
                 idempotency_key="pending-status",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,
@@ -155,7 +152,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
             transaction_id=pending.ref.transaction_id,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 3, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 3, 8, 0, tzinfo=UTC),
         )
 
     with ledger_ports_for_test(
@@ -166,7 +163,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
     ) as ports:
         report = summarize_manual_transactions(
             bucket_id=BUCKET_ID,
-            period=Period.from_year_and_code(_YEAR, "05"),
+            period=Period.from_year_and_code(2026, "05"),
             ports=ports,
         )
 
@@ -194,26 +191,26 @@ def test_summarize_manual_transactions_counts_an_excluded_row_without_failing(
         excluded = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 4),
+                booked_date=date(2026, 5, 4),
                 amount=Decimal("40.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="excluded row",
                 idempotency_key="excluded-status",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 8, 0, tzinfo=UTC),
         )
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 5),
+                booked_date=date(2026, 5, 5),
                 amount=Decimal("15.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="pending row",
                 idempotency_key="pending-beside-excluded",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 5, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 5, 8, 0, tzinfo=UTC),
         )
         mark_transaction_reviewed_excluded(
             bucket_id=BUCKET_ID,
@@ -224,7 +221,7 @@ def test_summarize_manual_transactions_counts_an_excluded_row_without_failing(
             bucket_event_repository=event_repository,
             work_unit_repository=ports.work_unit_repository,
             calculation_repository=ports.calculation_repository,
-            occurred_at=datetime(_YEAR, 5, 6, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 6, 8, 0, tzinfo=UTC),
         )
 
     with ledger_ports_for_test(

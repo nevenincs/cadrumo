@@ -11,14 +11,11 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -80,11 +77,11 @@ def test_explain_renders_envelope_for_known_modelo(_native_profile: NativeCliPro
 
     result = _invoke(
         _native_profile,
-        ["app", "overview", "explain", "303", "--year", str(_YEAR)],
+        ["app", "overview", "explain", "303", "--year", "2026"],
     )
     assert result.exit_code == 0
     assert "modelo\t303" in result.output
-    assert f"year\t{_YEAR}" in result.output
+    assert "year\t2026" in result.output
     assert "applicable\t" in result.output
     assert "rationale\t" in result.output
     assert "profile_fact\ttax_id\t" in result.output
@@ -113,7 +110,7 @@ def test_explain_refuses_unknown_modelo(_native_profile: NativeCliProfileFixture
 
     result = _invoke(
         _native_profile,
-        ["app", "overview", "explain", "999999", "--year", str(_YEAR)],
+        ["app", "overview", "explain", "999999", "--year", "2026"],
     )
     assert result.exit_code != 0
 
@@ -138,7 +135,7 @@ def test_explain_721_returns_structured_payload_not_crash(_native_profile: Nativ
 
     result = _invoke(
         _native_profile,
-        ["--language", "en", "app", "overview", "explain", "721", "--year", str(_YEAR)],
+        ["--language", "en", "app", "overview", "explain", "721", "--year", "2024"],
     )
     assert result.exit_code == 0
     assert "OverviewExplainError" not in result.output

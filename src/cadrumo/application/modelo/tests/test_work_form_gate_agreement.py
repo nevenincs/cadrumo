@@ -25,7 +25,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -70,10 +69,8 @@ from .work_form_fixture import built_form, form_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 _BUCKET = "13000000-0000-4000-8000-000000000455"
-_CLOCK = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 _HELD: dict[str, Decimal | str] = {"rendimientos_integros": Decimal("1200.00"), "tipo_renta": "01"}
 _FILE_ACTIONS = frozenset(
     {ModeloFormNextAction.EXPORT, ModeloFormNextAction.EXPORT_AGAIN, ModeloFormNextAction.RECORD_AFTER_FILE}
@@ -81,15 +78,15 @@ _FILE_ACTIONS = frozenset(
 
 
 def work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
-    period = Period.from_year_and_code(_YEAR, "0A")
-    revision_id = str(form_snapshot(operation, "210", _YEAR, "0A").revision.id)
+    period = Period.from_year_and_code(2025, "0A")
+    revision_id = str(form_snapshot(operation, "210", 2025, "0A").revision.id)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=_BUCKET, modelo="210", filing_year=_YEAR, period=period, revision_id=revision_id
+            bucket_id=_BUCKET, modelo="210", filing_year=2025, period=period, revision_id=revision_id
         ),
         bucket_id=_BUCKET,
         modelo=ModeloCode("210"),
-        filing_year=_YEAR,
+        filing_year=2025,
         period=period,
         revision_id=revision_id,
         name="210-2025-0A",
@@ -109,7 +106,7 @@ def work_form_gate_agreement_revision(
     ``stale`` holds the stamp of a revision screened otherwise, or of one never stamped.
     """
     stamp = (
-        calculation_screen_stamp(form_snapshot(operation, "210", _YEAR, "0A"), operation=operation)
+        calculation_screen_stamp(form_snapshot(operation, "210", 2025, "0A"), operation=operation)
         if stale is None
         else stale[0]
     )
@@ -126,7 +123,7 @@ def work_form_gate_agreement_revision(
         ),
         work_unit_id=unit.work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="210", revision_id=unit.revision_id, modelo_year=_YEAR, period="0A"
+            modelo="210", revision_id=unit.revision_id, modelo_year=2025, period="0A"
         ),
         state=CalculationRevisionState.BORRADOR,
         casilla_values={},
@@ -169,7 +166,7 @@ def _disagreement() -> SourceDisagreementFact:
     """An operator value over a different carried one, on a figure the filed return carries."""
     return SourceDisagreementFact.of(
         modelo="210",
-        filing_year=_YEAR,
+        filing_year=2025,
         period="0A",
         work_unit_id="e" * 64,
         registry_revision_id="test",
@@ -205,12 +202,12 @@ def checked_form(
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> ModeloWorkForm:
     """A checked form whose result boxes the calculation produced, so only the note can block it."""
-    plain = built_form(operation, "210", _YEAR, "0A", held=_HELD, entered=frozenset(_HELD))
+    plain = built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset(_HELD))
     results = {str(casilla_id): Decimal("0.00") for casilla_id in result_fields(plain)}
     form = built_form(
         operation,
         "210",
-        _YEAR,
+        2025,
         "0A",
         held={**_HELD, **results},
         entered=frozenset(_HELD),
@@ -335,7 +332,7 @@ def test_an_amortization_note_leaves_the_check_as_the_next_step_of_an_unchecked_
 def test_an_unresolved_working_figure_is_worth_checking_yet_held_as_the_gates_hold_it(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = built_form(operation, "210", _YEAR, "0A", entered=frozenset())
+    form = built_form(operation, "210", 2025, "0A", entered=frozenset())
     unprinted = [
         str(field.address.casilla_id)
         for field in form.fields()
@@ -367,7 +364,7 @@ def test_an_unrouted_one_stop_shop_row_is_the_modelo_369_checks_and_the_gates_ad
 
 
 def _stale_stamps(operation: PinnedAuthorityOperation) -> list[CalculationScreenStamp | None]:
-    current = calculation_screen_stamp(form_snapshot(operation, "210", _YEAR, "0A"), operation=operation)
+    current = calculation_screen_stamp(form_snapshot(operation, "210", 2025, "0A"), operation=operation)
     return [None, CalculationScreenStamp(contract_version=current.contract_version, digest="0" * 64)]
 
 
@@ -445,7 +442,7 @@ def _refusal(*facts: str) -> ModeloEditRefusedV1:
 def test_rules_short_of_calculation_grade_halt_the_next_step_through_the_read(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = built_form(operation, "210", _YEAR, "0A", entered=frozenset())
+    form = built_form(operation, "210", 2025, "0A", entered=frozenset())
     profile = UUID(_BUCKET)
 
     halted = _read(form, _refusal("registry_authority_grade"), operation)

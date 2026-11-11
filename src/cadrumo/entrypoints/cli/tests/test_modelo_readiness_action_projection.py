@@ -14,13 +14,9 @@ from ....application.user_profile.commands import ProfilePreflightRequirement
 from ....core.aggregation import BindingSourceKind
 from ....core.i18n.render import tr
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ..modelo_readiness_commands import modelo_readiness_commands_readiness_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
-_REVISION_ID = str(revision_serving_period("303", _YEAR, "1T").id)
 
 
 def test_readiness_locale_projection_is_total_over_native_binding_codes() -> None:
@@ -43,12 +39,12 @@ def test_binding_readiness_locale_projection_resolves_every_key_in_every_catalog
 
 
 def test_readiness_payload_preserves_facts_without_selecting_actions() -> None:
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     report = ProjectionModeloReadiness(
         profile_id="11111111-1111-4111-8111-111111111111",
         modelo="303",
-        revision_id=_REVISION_ID,
-        filing_year=_YEAR,
+        revision_id="2026-y-siguientes",
+        filing_year=2026,
         period=period,
         missing=(
             ProfilePreflightRequirement(
@@ -86,8 +82,8 @@ def test_readiness_payload_preserves_facts_without_selecting_actions() -> None:
         report,
         authority_generation="a" * 64,
         modelo="303",
-        revision_id=_REVISION_ID,
-        filing_year=_YEAR,
+        revision_id="2026-y-siguientes",
+        filing_year=2026,
     )
 
     assert payload.authority_generation == "a" * 64

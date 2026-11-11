@@ -16,7 +16,6 @@ import pytest
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
@@ -166,19 +165,18 @@ class TestTaxpayerProfileProjection:
         assert iva.redeme_enrolled is True
 
     def test_mapping_projection_carries_cross_period_group_roster(self) -> None:
-        year = filing_year_envelope().horizon
         profile = taxpayer_profile_from_mapping(
             {
                 "identity.tax_id": "12345678Z",
                 "activities.description": "Grupo IVA",
-                f"cross_period.group_member_roster.322.{year}.12": "B00010082, A00010009",
-                f"iva_grupo.member_roster.{year}.11": "C00010231;D00010249",
+                "cross_period.group_member_roster.322.2026.12": "B00010082, A00010009",
+                "iva_grupo.member_roster.2026.11": "C00010231;D00010249",
             },
             tax_id_default="00000000T",
         )
 
         assert [item.source_modelo for item in profile.cross_period_group_member_rosters] == ["322", "322"]
-        assert [item.filing_year for item in profile.cross_period_group_member_rosters] == [year, year]
+        assert [item.filing_year for item in profile.cross_period_group_member_rosters] == [2026, 2026]
         assert [item.period.registry_token for item in profile.cross_period_group_member_rosters] == ["11", "12"]
         assert profile.cross_period_group_member_rosters[0].member_nifs == ("C00010231", "D00010249")
         assert profile.cross_period_group_member_rosters[1].member_nifs == ("A00010009", "B00010082")

@@ -18,7 +18,6 @@ from ....domain.calculations.registry.export import derive_export_layouts_from_b
 from ....domain.calculations.registry.form_context import resolve_form_context_field
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -62,10 +61,8 @@ from ..work_form_service import load_modelo_work_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 _BUCKET = "13000000-0000-4000-8000-000000000455"
-_NOW = datetime(_YEAR, 1, 1, tzinfo=UTC)
+_NOW = datetime(2026, 1, 1, tzinfo=UTC)
 # This NIF belongs to the canonical generic fixture pool, independently of any persona.
 _IDENTITY = {
     "identity.tax_id": "12345678Z",

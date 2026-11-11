@@ -32,7 +32,6 @@ from ......core.external_constants import OutputLanguage
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from .workbench_fixture import (
     authored_year_projection,
     fed_by,
@@ -123,13 +122,12 @@ def sectioned_form(*, last_quarter_applies: bool | None = False) -> ModeloWorkFo
         ),
     )
     every = [*first_fields, missing_last_quarter, assumed_last_quarter, other_assumed]
-    year = filing_year_envelope().horizon
-    period = Period.from_year_and_code(year, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     return ModeloWorkForm(
         modelo="303",
         filing_year=period.filing_year,
         period=period,
-        registry_revision_id=revision_serving_period("303", year, "1T").id,
+        registry_revision_id="2026-y-siguientes",
         year_projection=authored_year_projection(period),
         work_unit_id="c" * 64,
         calculation_revision_id="d" * 64,

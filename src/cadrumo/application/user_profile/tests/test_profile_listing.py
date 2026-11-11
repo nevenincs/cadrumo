@@ -21,7 +21,7 @@ def _summary(number: int, label: str) -> ProfileSummary:
         profile_id=_profile(number),
         label=label,
         label_revision=1,
-        published_at=datetime(1980, 3, 4, tzinfo=UTC),
+        published_at=datetime(2026, 3, 4, tzinfo=UTC),
         publication_kind=ProfilePublicationKind.ENROLL,
     )
 

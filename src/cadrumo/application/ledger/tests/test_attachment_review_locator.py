@@ -6,13 +6,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.models import Attachment
 from ..attachment_review import project
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -29,7 +25,7 @@ def _project_locator(reference: str) -> str:
         source_reference=reference,
         mime_type="application/pdf",
         bytes_size=42,
-        captured_at=datetime(_YEAR, 8, 23, tzinfo=UTC),
+        captured_at=datetime(2026, 8, 23, tzinfo=UTC),
     )
     return project(attachment).provider_locator
 

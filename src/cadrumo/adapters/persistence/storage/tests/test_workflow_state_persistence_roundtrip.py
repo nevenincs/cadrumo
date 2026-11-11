@@ -25,7 +25,7 @@ from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_WORKFLOW_TIMESTAMP = datetime(1980, 5, 25, 13, 45, 0, tzinfo=UTC)
+_WORKFLOW_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 
 
 def _populated_workflow_state() -> WorkflowState:

@@ -62,12 +62,7 @@ def test_an_authored_year_below_the_support_floor_still_reads_as_authored_histor
 def test_a_modelo_the_registry_does_not_know_is_unresolvable() -> None:
     with bundled_indexed_authority().operation() as operation:
         outcome = revision_carry_outcome(
-            _stamp(
-                revision_id=str(newest_authored_edition("100")),
-                year=newest_authored_edition("100"),
-                modelo="999",
-            ),
-            operation=operation,
+            _stamp(revision_id="2025", year=newest_authored_edition("100"), modelo="999"), operation=operation
         )
 
     assert outcome.refused

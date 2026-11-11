@@ -17,7 +17,6 @@ from ...core.modelo import Modelo
 from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.portals.categories import PortalCategory
 from ...domain.portals.errors import PortalRegistryError
 from ...domain.portals.registry import PORTAL_REGISTRY
@@ -37,8 +36,6 @@ from ..modelo.registry_discovery import (
 from ..reference_catalogue_contracts import ModeloSupportMatrixResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _CEDED = ("600", "620", "650", "660")
 
@@ -62,22 +59,22 @@ def test_modelo_listing_is_the_registry_listing_with_local_work_posture(operatio
 def test_modelo_listing_narrows_by_tax_domain_and_by_year(operation: PinnedAuthorityOperation) -> None:
     everything = catalogue.list_modelos(operation=operation)
     iva = catalogue.list_modelos(domain=TaxDomain("iva"), operation=operation)
-    in_year = catalogue.list_modelos(year=_YEAR, domain=TaxDomain("irpf"), operation=operation)
+    in_year = catalogue.list_modelos(year=2025, domain=TaxDomain("irpf"), operation=operation)
 
     assert iva.domain_filter == "iva"
     assert {row.tax_domain for row in iva.modelos} == {"iva"}
     assert "303" in {row.code for row in iva.modelos}
     assert {row.code for row in iva.modelos} < {row.code for row in everything.modelos}
-    assert in_year.year_filter == _YEAR and in_year.domain_filter == "irpf"
+    assert in_year.year_filter == 2025 and in_year.domain_filter == "irpf"
     assert {row.tax_domain for row in in_year.modelos} == {"irpf"}
 
 
 def test_describe_composes_a_filing_year_and_period_into_one_revision(operation: PinnedAuthorityOperation) -> None:
-    exact = catalogue.describe_modelo("130", year=_YEAR, period=" 1T ", operation=operation)
+    exact = catalogue.describe_modelo("130", year=2025, period=" 1T ", operation=operation)
     latest = catalogue.describe_modelo("130", period="1T", operation=operation)
 
     assert exact.code == "130"
-    assert exact.filing_year == _YEAR and exact.period == "1T"
+    assert exact.filing_year == 2025 and exact.period == "1T"
     assert latest.filing_year is None and latest.period == "1T"
     assert exact.revision == latest.revision
 
@@ -85,15 +82,15 @@ def test_describe_composes_a_filing_year_and_period_into_one_revision(operation:
 @pytest.mark.parametrize("period", [None, "", "   "])
 def test_a_filing_year_without_a_period_is_incomplete(operation: PinnedAuthorityOperation, period: str | None) -> None:
     with pytest.raises(catalogue.DiscoveryScopeIncompleteError):
-        catalogue.describe_modelo("130", year=_YEAR, period=period, operation=operation)
+        catalogue.describe_modelo("130", year=2025, period=period, operation=operation)
 
 
 def test_an_invalid_period_token_names_the_tokens_the_modelo_declares(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(catalogue.DiscoveryPeriodTokenError) as refused:
-        catalogue.list_casillas("130", year=_YEAR, period="ZZ", operation=operation)
+        catalogue.list_casillas("130", year=2025, period="ZZ", operation=operation)
 
     assert refused.value.declared_tokens == ("1T", "2T", "3T", "4T")
-    assert (refused.value.period_code, refused.value.filing_year) == ("ZZ", _YEAR)
+    assert (refused.value.period_code, refused.value.filing_year) == ("ZZ", 2025)
     assert all(token in str(refused.value) for token in refused.value.declared_tokens)
 
 
@@ -101,7 +98,7 @@ def test_an_invalid_period_token_for_an_unknown_modelo_carries_the_period_refusa
     operation: PinnedAuthorityOperation,
 ) -> None:
     with pytest.raises(catalogue.DiscoveryPeriodTokenError) as refused:
-        catalogue.list_formulas("999", year=_YEAR, period="ZZ", operation=operation)
+        catalogue.list_formulas("999", year=2025, period="ZZ", operation=operation)
 
     assert refused.value.declared_tokens == ()
     assert str(refused.value) == refused.value.detail
@@ -109,26 +106,26 @@ def test_an_invalid_period_token_for_an_unknown_modelo_carries_the_period_refusa
 
 def test_a_year_that_is_a_period_token_is_not_a_period(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(catalogue.DiscoveryPeriodTokenError):
-        catalogue.describe_casilla("130", "03", year=_YEAR, period=str(_YEAR), operation=operation)
+        catalogue.describe_casilla("130", "03", year=2025, period="2025", operation=operation)
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
 def test_a_census_event_the_modelo_declares_scopes_a_read_together_with_its_filing_year(
     operation: PinnedAuthorityOperation, token: str
 ) -> None:
-    as_of = date(_YEAR, 12, 31)
-    scoped = catalogue.describe_modelo("036", year=_YEAR, period=token, as_of=as_of, operation=operation)
+    as_of = date(2024, 12, 31)
+    scoped = catalogue.describe_modelo("036", year=2024, period=token, as_of=as_of, operation=operation)
     registry = registry_describe_modelo_for_registry_scope(
-        "036", filing_year=_YEAR, period=token, as_of=as_of, operation=operation
+        "036", filing_year=2024, period=token, as_of=as_of, operation=operation
     )
 
-    assert (scoped.filing_year, scoped.period) == (_YEAR, token)
+    assert (scoped.filing_year, scoped.period) == (2024, token)
     assert (scoped.revision, scoped.authority_grade) == (registry.revision, registry.authority_grade)
 
 
 def test_a_census_event_is_refused_for_a_modelo_that_does_not_declare_it(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(catalogue.DiscoveryPeriodTokenError) as refused:
-        catalogue.describe_modelo("130", year=_YEAR, period="alta", operation=operation)
+        catalogue.describe_modelo("130", year=2025, period="alta", operation=operation)
 
     assert "alta" not in refused.value.declared_tokens
 
@@ -165,14 +162,14 @@ def test_the_redirect_ignores_surrounding_whitespace_and_leaves_other_codes_alon
 
 
 def test_casillas_narrow_by_kind_requiredness_form_box_and_number(operation: PinnedAuthorityOperation) -> None:
-    everything = catalogue.list_casillas("130", year=_YEAR, period="1T", operation=operation)
+    everything = catalogue.list_casillas("130", year=2025, period="1T", operation=operation)
     computed = catalogue.list_casillas(
-        "130", year=_YEAR, period="1T", input_kind=InputKind.COMPUTED, operation=operation
+        "130", year=2025, period="1T", input_kind=InputKind.COMPUTED, operation=operation
     )
-    required = catalogue.list_casillas("130", year=_YEAR, period="1T", required=True, operation=operation)
-    by_number = catalogue.list_casillas("130", year=_YEAR, period="1T", casilla_number="03", operation=operation)
-    blank_number = catalogue.list_casillas("130", year=_YEAR, period="1T", casilla_number="  ", operation=operation)
-    boxed = catalogue.list_casillas("303", year=_YEAR, period="1T", form_number="46", operation=operation)
+    required = catalogue.list_casillas("130", year=2025, period="1T", required=True, operation=operation)
+    by_number = catalogue.list_casillas("130", year=2025, period="1T", casilla_number="03", operation=operation)
+    blank_number = catalogue.list_casillas("130", year=2025, period="1T", casilla_number="  ", operation=operation)
+    boxed = catalogue.list_casillas("303", year=2025, period="1T", form_number="46", operation=operation)
 
     assert everything.casilla_count == len(everything.rows) > len(computed.rows) > 0
     assert {row.input_kind for row in computed.rows} == {"computed"}
@@ -180,16 +177,16 @@ def test_casillas_narrow_by_kind_requiredness_form_box_and_number(operation: Pin
     assert [row.number for row in by_number.rows] == ["03"]
     assert blank_number.rows == everything.rows
     registry_boxed = registry_casillas_for_registry_scope(
-        "303", filing_year=_YEAR, period="1T", form_number="46", operation=operation
+        "303", filing_year=2025, period="1T", form_number="46", operation=operation
     )
     assert [row.casilla_id for row in boxed.rows] == [row.casilla_id for row in registry_boxed.rows]
-    unboxed = catalogue.list_casillas("303", year=_YEAR, period="1T", operation=operation)
+    unboxed = catalogue.list_casillas("303", year=2025, period="1T", operation=operation)
     assert 0 < boxed.casilla_count < unboxed.casilla_count
 
 
 def test_a_single_casilla_carries_its_formula_only_when_it_is_computed(operation: PinnedAuthorityOperation) -> None:
-    computed = catalogue.describe_casilla("130", "03", year=_YEAR, period="1T", operation=operation)
-    bound = catalogue.describe_casilla("130", "01", year=_YEAR, period="1T", operation=operation)
+    computed = catalogue.describe_casilla("130", "03", year=2025, period="1T", operation=operation)
+    bound = catalogue.describe_casilla("130", "01", year=2025, period="1T", operation=operation)
     unscoped = catalogue.describe_casilla("130", "03", operation=operation)
 
     assert (
@@ -198,7 +195,7 @@ def test_a_single_casilla_carries_its_formula_only_when_it_is_computed(operation
         and "op" in (computed.formula_expression or {})
     )
     assert bound.input_kind == "bound" and bound.formula_id is None and bound.formula_expression is None
-    assert (computed.filing_year, unscoped.filing_year) == (_YEAR, None)
+    assert (computed.filing_year, unscoped.filing_year) == (2025, None)
     assert unscoped.formula_id == computed.formula_id
 
 
@@ -301,8 +298,8 @@ _RETAINED: tuple[tuple[str, Callable[[PinnedAuthorityOperation], tuple[BaseModel
     (
         "describe-scoped",
         lambda op: (
-            registry_describe_modelo_for_registry_scope("130", filing_year=_YEAR, period="1T", operation=op),
-            catalogue.describe_modelo("130", year=_YEAR, period="1T", operation=op),
+            registry_describe_modelo_for_registry_scope("130", filing_year=2025, period="1T", operation=op),
+            catalogue.describe_modelo("130", year=2025, period="1T", operation=op),
         ),
     ),
     (
@@ -315,18 +312,18 @@ _RETAINED: tuple[tuple[str, Callable[[PinnedAuthorityOperation], tuple[BaseModel
     (
         "casillas-scoped",
         lambda op: (
-            registry_casillas_for_registry_scope("303", filing_year=_YEAR, period="1T", operation=op),
-            catalogue.list_casillas("303", year=_YEAR, period="1T", operation=op),
+            registry_casillas_for_registry_scope("303", filing_year=2025, period="1T", operation=op),
+            catalogue.list_casillas("303", year=2025, period="1T", operation=op),
         ),
     ),
     (
         "casillas-filtered",
         lambda op: (
             registry_casillas_for_registry_scope(
-                "303", filing_year=_YEAR, period="1T", input_kind=InputKind.MANUAL, required=True, operation=op
+                "303", filing_year=2025, period="1T", input_kind=InputKind.MANUAL, required=True, operation=op
             ),
             catalogue.list_casillas(
-                "303", year=_YEAR, period="1T", input_kind=InputKind.MANUAL, required=True, operation=op
+                "303", year=2025, period="1T", input_kind=InputKind.MANUAL, required=True, operation=op
             ),
         ),
     ),
@@ -340,8 +337,8 @@ _RETAINED: tuple[tuple[str, Callable[[PinnedAuthorityOperation], tuple[BaseModel
     (
         "casilla-scoped",
         lambda op: (
-            registry_casilla_for_registry_scope("130", "03", filing_year=_YEAR, period="1T", operation=op),
-            catalogue.describe_casilla("130", "03", year=_YEAR, period="1T", operation=op),
+            registry_casilla_for_registry_scope("130", "03", filing_year=2025, period="1T", operation=op),
+            catalogue.describe_casilla("130", "03", year=2025, period="1T", operation=op),
         ),
     ),
     (
@@ -354,8 +351,8 @@ _RETAINED: tuple[tuple[str, Callable[[PinnedAuthorityOperation], tuple[BaseModel
     (
         "formulas-scoped",
         lambda op: (
-            registry_formulas_for_registry_scope("130", filing_year=_YEAR, period="1T", operation=op),
-            catalogue.list_formulas("130", year=_YEAR, period="1T", operation=op),
+            registry_formulas_for_registry_scope("130", filing_year=2025, period="1T", operation=op),
+            catalogue.list_formulas("130", year=2025, period="1T", operation=op),
         ),
     ),
     (
@@ -380,9 +377,9 @@ def test_an_answer_carries_every_field_of_the_registry_report_it_projects(
 
 
 def test_the_restored_fields_are_named_per_query(operation: PinnedAuthorityOperation) -> None:
-    casillas = catalogue.list_casillas("303", year=_YEAR, period="1T", operation=operation)
-    casilla = catalogue.describe_casilla("130", "03", year=_YEAR, period="1T", operation=operation)
-    formulas = catalogue.list_formulas("130", year=_YEAR, period="1T", operation=operation)
+    casillas = catalogue.list_casillas("303", year=2025, period="1T", operation=operation)
+    casilla = catalogue.describe_casilla("130", "03", year=2025, period="1T", operation=operation)
+    formulas = catalogue.list_formulas("130", year=2025, period="1T", operation=operation)
 
     assert {"code", "filing_year", "filing_period", "period"} <= set(casillas.model_dump())
     assert {"section", "data_type", "binding", "formula", "form_number"} <= set(casillas.rows[0].model_dump())

@@ -29,7 +29,6 @@ from ....core.operations import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
@@ -54,8 +53,6 @@ from ..llm_diagnostics_operation import (
     resolve_ledger_llm_diagnostics_access,
 )
 from ..llm_diagnostics_ports import LlmDiagnosticsPorts, LlmUsageDiagnosticRecord
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -124,8 +121,8 @@ def _access_request() -> OperationRequest[BaseModel]:
 
 def _report() -> LlmDiagnosticsReport:
     return LlmDiagnosticsReport(
-        since=date(_YEAR, 1, 31),
-        until=date(_YEAR, 1, 1),
+        since=date(2026, 1, 31),
+        until=date(2026, 1, 1),
         low_confidence_threshold=Decimal("0.5000"),
         usage_providers=(
             LlmUsageCostProviderMetrics(
@@ -267,7 +264,7 @@ def test_later_actions_replay_the_admission_from_a_fresh_session_and_any_fronten
         _submitted(profile_id=_OTHER),
         _submitted(definition_id="ledger.other"),
         _submitted(action=AccessAction.START),
-        _submitted(periods=frozenset({Period.from_year_and_code(_YEAR, "1T")})),
+        _submitted(periods=frozenset({Period.from_year_and_code(2026, "1T")})),
     ):
         with pytest.raises(ProfileAccessRefusedError) as refused:
             resolve_ledger_llm_diagnostics_access(
@@ -312,7 +309,7 @@ def test_result_release_rejects_foreign_subject_and_terminal_effect() -> None:
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(_YEAR, 10, 1, tzinfo=UTC),
+        settled_at=datetime(2026, 10, 1, tzinfo=UTC),
         result_ref="b" * 64,
     )
     assert project_ledger_llm_diagnostics_result(private, receipt) == projection

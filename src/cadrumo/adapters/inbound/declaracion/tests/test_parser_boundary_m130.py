@@ -90,7 +90,7 @@ def test_modelo_130_synthetic_fixture_extracts_partial_casillas() -> None:
     extracted = {value.casilla_id: value.printed_value for value in filing.values}
     assert filing.extraction_profile_provisional is True
     assert set(extracted.keys()) == {M130_RENDIMIENTO_NETO_CASILLA, M130_RESULTADO_CASILLA}, (
-        f"{MODELO_130_SYNTHETIC_FIXTURE.stem}: expected casillas {{03, 19}}, got {set(extracted.keys())!r}"
+        f"2024-1T: expected casillas {{03, 19}}, got {set(extracted.keys())!r}"
     )
     assert isinstance(extracted[M130_RESULTADO_CASILLA], Decimal)
     assert isinstance(extracted[M130_RENDIMIENTO_NETO_CASILLA], Decimal)

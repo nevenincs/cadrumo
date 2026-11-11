@@ -1,6 +1,5 @@
 import { expect, type Frame, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { fixtureInstant } from "../../src/dev/fixtureDates";
 import { fileURLToPath } from "node:url";
 import { seedLayout } from "./layout";
 import { label } from "./strings";
@@ -248,7 +247,7 @@ export async function signInHost(
               case "profile_views_notifications":
                 state.viewReads.push({ command, ...args });
                 return {
-                  captured_at: fixtureInstant(10, 20, "09:00:00Z"),
+                  captured_at: "2026-10-20T09:00:00Z",
                   row_count: 4,
                   unread: 2,
                 };

@@ -18,15 +18,12 @@ from ....application.ledger.invoice_evidence_operation_dtos import (
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.iva.schema import InvoiceKind
 from ..ledger_business_payloads import EvidenceConfirmResult
 from ..ledger_evidence_commands import evidence_confirm_payload, require_exact_evidence_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _EVIDENCE_ID = "e" * 16
@@ -63,7 +60,7 @@ def ledger_evidence_confirm_cli_projection() -> LedgerEvidenceConfirmProjection:
         bucket_id=str(_PROFILE),
         kind=InvoiceKind.RECEIVED,
         invoice_number="FAC-2024-0007",
-        issued_at=date(_YEAR, 11, 20),
+        issued_at=date(2024, 11, 20),
         counterparty_name="Mayorista Ejemplo SL",
         counterparty_tax_id="B00015016",
         counterparty_country="ES",

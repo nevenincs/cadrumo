@@ -29,7 +29,6 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.operator_action_enums import ActionConditionality
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .modelo_operation_test_support import MODELO_OPERATION_TEST_ACTOR
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
@@ -37,9 +36,8 @@ from .registered_executor_case_support import OperationRuntimeCloseWitness, conf
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CREATE = "modelo.work.create"
-_YEAR = filing_year_envelope().horizon
-_CLOCK = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_CLOCK = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
 _RAW_TOKEN = re.compile(r"sha256:|[a-z]+-\d+-\d{4}:|:art-|\b[a-z_]+\.[a-z_]+\b")
 _DECLARED_FACTS = {
     "preferences.output_language": "en",

@@ -48,7 +48,7 @@ def test_notification_snapshot_payloads_refuse_malformed_identity_time_url_and_c
 
     from ..app_live_notifications_results import NotificationsCaptureResult, NotificationSnapshotListingPayload
 
-    instant = datetime(1980, 8, 1, tzinfo=UTC)
+    instant = datetime(2026, 8, 1, tzinfo=UTC)
     with pytest.raises(ValidationError):
         NotificationSnapshotListingPayload(snapshot_id="bad", captured_at=instant, row_count=0)
     with pytest.raises(ValidationError):
@@ -72,8 +72,6 @@ def test_notification_snapshot_payloads_refuse_malformed_identity_time_url_and_c
 # handler tests inject its typed public result so the CLI projection can be
 # checked without trying to share in-process storage with a profile worker.
 
-_FETCHED_AT = datetime(1980, 3, 6, 7, 8, tzinfo=UTC)
-_FETCHED_EARLIER = datetime(1980, 3, 5, 7, 8, tzinfo=UTC)
 _CERT = "2699101808461"
 _CERT2 = "2699101808462"
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -120,7 +118,7 @@ def _view_projection(*, parsed: bool = False) -> NotificationDocumentViewPublicR
         document_sha256="d" * 64,
         byte_size=123,
         source_url=_DETAIL_URL,
-        fetched_at=_FETCHED_AT,
+        fetched_at=datetime(2025, 3, 6, 7, 8, tzinfo=UTC),
         sancion_parsed=parsed,
         sancion=_sancion(_CERT) if parsed else None,
         parse_refusal=None if parsed else "No extractable text layer",
@@ -132,12 +130,12 @@ def _history_projection(*, count: int = 2) -> NotificationDocumentHistoryPublicR
     rows = (
         NotificationDocumentHistoryEntryPublicV1(
             certificado_id=_CERT,
-            fetched_at=_FETCHED_AT,
+            fetched_at=datetime(2025, 3, 6, 7, 8, tzinfo=UTC),
             sancion=_sancion(_CERT),
         ),
         NotificationDocumentHistoryEntryPublicV1(
             certificado_id=_CERT2,
-            fetched_at=_FETCHED_EARLIER,
+            fetched_at=datetime(2025, 3, 5, 7, 8, tzinfo=UTC),
             sancion=_sancion(_CERT2),
         ),
     )
@@ -284,7 +282,7 @@ def test_document_pull_preserves_comparecencia_and_already_in_custody_notices(mo
         document_sha256="d" * 64,
         byte_size=123,
         source_url=_DETAIL_URL,
-        fetched_at=_FETCHED_AT,
+        fetched_at=datetime(2025, 3, 6, 7, 8, tzinfo=UTC),
         sancion_parsed=False,
         sancion=None,
         parse_refusal="No extractable text layer",
@@ -324,7 +322,7 @@ def test_document_pull_preserves_comparecencia_and_already_in_custody_notices(mo
     assert by_code["live.notifications.document.already_in_custody"].context == {
         "certificado_id": _CERT,
         "document_sha256": "d" * 64,
-        "fetched_at": _FETCHED_AT.isoformat(),
+        "fetched_at": "2025-03-06T07:08:00+00:00",
     }
     assert any(line.startswith("notice\tlive.notifications.document.already_in_custody\t") for line in emitted["lines"])
 
@@ -350,7 +348,7 @@ def test_a_document_payload_cannot_claim_a_reading_it_does_not_carry() -> None:
         "document_sha256": "a" * 64,
         "byte_size": 12,
         "source_url": _DETAIL_URL,
-        "fetched_at": datetime(1980, 8, 1, tzinfo=UTC),
+        "fetched_at": datetime(2026, 8, 1, tzinfo=UTC),
     }
     with pytest.raises(ValidationError):
         NotificationDocumentViewResult(**shared, sancion_parsed=True, sancion=None, parse_refusal="no text layer")

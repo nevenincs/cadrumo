@@ -52,7 +52,7 @@ from ..modal import OperationModal, OperationModalOutcomeV1
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _OPERATION_ID = "b" * 64
-_NOW = datetime(1980, 10, 23, tzinfo=UTC)
+_NOW = datetime(2026, 10, 23, tzinfo=UTC)
 _DEADLINE_SECONDS = 10
 
 

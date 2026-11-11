@@ -8,28 +8,25 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
 from ....application.operations.public_period import PublicPeriod
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..modelo_spreadsheet_cli import filing_period_or_refusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def test_modelo_spreadsheet_cli_converts_the_filing_coordinate_to_a_closed_period() -> None:
     """The registered request receives the same canonical period the CLI parsed."""
 
-    period = filing_period_or_refusal(modelo="303", period="1T", year=_YEAR)
+    period = filing_period_or_refusal(modelo="303", period="1T", year=2026)
     public_period = PublicPeriod.from_period(period)
 
-    assert period == Period.from_year_and_code(_YEAR, "1T")
+    assert period == Period.from_year_and_code(2026, "1T")
     assert public_period.filing_year == period.filing_year
     assert public_period.code == period.registry_token
 
 
 def test_modelo_spreadsheet_cli_period_refuses_combined_shape() -> None:
     """Calendar-shaped period input refuses before registry snapshot lookup."""
-    year = _YEAR
+    year = 2026
     combined_period = f"{year}Q1"
 
     with pytest.raises(CliRefusedBoundaryError) as raised:

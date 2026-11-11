@@ -39,7 +39,6 @@ from cadrumo.domain.modelos.work_unit import WorkUnit
 
 from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .....application.modelo.reconciliation_records import ModeloReconciliationDiffKind, ModeloReconciliationVerdict
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .reconciliation_persist_support import (
     persist_filed_revision,
     reconcile_parsed_declaracion,
@@ -50,9 +49,9 @@ from .reconciliation_persist_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_TAX_ID = "00000000T"
+_CLOCK = datetime(2026, 4, 20, tzinfo=UTC)
 _MODELO_130 = "130"
-_FILING_YEAR = filing_year_envelope().horizon
-_CLOCK = datetime(_FILING_YEAR, 4, 20, tzinfo=UTC)
+_FILING_YEAR = 2026
 _PERIOD = "1T"
 _seed_work_unit = partial(seed_active_work_unit, modelo=_MODELO_130, filing_year=_FILING_YEAR, period=_PERIOD)
 _persist_filed_revision = partial(persist_filed_revision, clock=_CLOCK)

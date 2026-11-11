@@ -9,14 +9,12 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from datetime import date
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 
 from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
 
@@ -30,7 +28,7 @@ _PROFILE_FACTS = {
     "identity.surnames": "Disagreements",
     "identity.tax_id": "12345678Z",
     "activities.description": "synthetic disagreement profile",
-    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
+    "censo.activity_start_date": "2020-01-01",
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",
@@ -75,7 +73,7 @@ def _invoke(profile: RegisteredCliProfile, *command: str) -> Result:
 
 @pytest.mark.windows_only
 def test_native_commands_refuse_where_there_is_no_calculation_to_answer(native_profile: RegisteredCliProfile) -> None:
-    address = ("--modelo", "100", "--year", str(newest_authored_edition("100")), "--period", "0A")
+    address = ("--modelo", "100", "--year", "2025", "--period", "0A")
 
     accepted = _invoke(native_profile, "accept-disagreement", _FINDING_ID, *address, "--reason", _REASON)
     revoked = _invoke(native_profile, "revoke-disagreement", _FINDING_ID, *address, "--expected-revision", "e" * 64)

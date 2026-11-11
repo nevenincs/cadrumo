@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import (
@@ -30,10 +28,9 @@ pytestmark = [
 ]
 
 _MODELO = "100"
-_FILING_YEAR = newest_authored_edition(_MODELO)
-_YEAR = str(_FILING_YEAR)
+_YEAR = "2025"
 _PERIOD = "0A"
-_REVISION = str(revision_covering(_MODELO, _FILING_YEAR).id)
+_REVISION = "2025"
 
 
 def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight(tmp_path: Path) -> None:
@@ -57,7 +54,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight(tmp_
                 "identity.name": "Operator",
                 "identity.surnames": "Readiness",
                 "activities.description": "design",
-                "censo.activity_start_date": date(_FILING_YEAR - 1, 1, 1).isoformat(),
+                "censo.activity_start_date": "2024-01-01",
                 "contact.postcode": "28013",
                 "tax_residence.ccaa": "madrid",
                 "taxpayer_type.irpf_income_categories": "actividad_economica",

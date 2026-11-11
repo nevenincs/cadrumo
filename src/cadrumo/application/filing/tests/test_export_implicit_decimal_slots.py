@@ -50,7 +50,6 @@ from functools import cache
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
@@ -60,16 +59,14 @@ from ..record_field_renderer import format_field
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _MODELO = "303"
-_FILING_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = 2025
 _PERIOD = "4T"
-#: The shipped field ids carry the exercise the serving design edition starts in.
-_EPOCH = revision_serving_period(_MODELO, _FILING_YEAR, _PERIOD).valid_from.year
 
 #: Régimen simplificado slots, addressed by the diseño geometry quoted above.
-_INDICE_DE_CUOTA = f"m303-{_EPOCH}.dp30302.f008"  # longitud 6, "1 entero y 5 decimales"
-_PORCENTAJE_INGRESO_A_CUENTA = f"m303-{_EPOCH}.dp30302.f010"  # longitud 5, "3 enteros y 2 decimales"
-_NUMERO_UNIDADES = f"m303-{_EPOCH}.dp30302.f024"  # longitud 10, "8 enteros y 2 decimales"
-_INDICE_CORRECTOR_TEMPORADA = f"m303-{_EPOCH}.dp30302.f040"  # longitud 3, "1 entero y 2 decimales"
+_INDICE_DE_CUOTA = "m303-2025.dp30302.f008"  # longitud 6, "1 entero y 5 decimales"
+_PORCENTAJE_INGRESO_A_CUENTA = "m303-2025.dp30302.f010"  # longitud 5, "3 enteros y 2 decimales"
+_NUMERO_UNIDADES = "m303-2025.dp30302.f024"  # longitud 10, "8 enteros y 2 decimales"
+_INDICE_CORRECTOR_TEMPORADA = "m303-2025.dp30302.f040"  # longitud 3, "1 entero y 2 decimales"
 
 
 @cache

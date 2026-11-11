@@ -35,7 +35,6 @@ import pytest
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .test_config_reset import (
     OVERRIDE_REASON,
@@ -47,9 +46,6 @@ from .test_config_reset import (
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-#: The supported year before the horizon: its filings are inside the four-year retention window.
-_PRIOR_YEAR = filing_year_envelope().horizon - 1
 
 _PROFILE_ID = "61616161-6161-4161-8161-616161616161"
 _CUSTODY_ENVELOPE = "custody/envelope.v1.json"
@@ -75,7 +71,7 @@ def test_resume_pauses_when_a_content_covered_custody_record_changed(tmp_path: P
         # The filing is what HOLDS the reset at a pause. Without one, a confirmed
         # start runs straight through to the erase and leaves no window in which
         # a target could be tampered with.
-        persist_filing(_PROFILE_ID, filing_year=_PRIOR_YEAR, seed="7")
+        persist_filing(_PROFILE_ID, filing_year=2025, seed="7")
 
         operation = start_config_reset(
             confirmed=True,

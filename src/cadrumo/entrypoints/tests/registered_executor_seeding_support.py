@@ -64,7 +64,6 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ...domain.deadlines.models import ObligationStatus
 from ...domain.invoices.catalogue import InvoiceCatalogue
@@ -173,13 +172,6 @@ class ConformanceProfileSeed:
 def _seed_track_participation(profile_id: UUID, operation: PinnedAuthorityOperation) -> object:
     return _seeded_ledger_track_with_finalized_participation(profile_id, operation=operation)
 
-
-CONFORMANCE_YEAR: Final = filing_year_envelope().horizon
-"""The exercise the registered-operation scenarios file, calculate and read against."""
-CONFORMANCE_PRIOR_YEAR: Final = CONFORMANCE_YEAR - 1
-"""The exercise before it, which prior-period and carry scenarios settle."""
-CONFORMANCE_EARLIER_YEAR: Final = CONFORMANCE_PRIOR_YEAR - 1
-"""The exercise before the prior one."""
 
 _TRACK_PARTICIPATION_SEED: Final = ConformanceProfileSeed(
     key="ledger track with a finalized participation", apply=_seed_track_participation
@@ -492,8 +484,8 @@ def seeded_justificante_snapshot(profile_id: UUID):
     pdf_bytes = b"%PDF-1.4\nregistered executor conformance\n%%EOF"
     return build_justificante_capture_service(str(profile_id)).capture(
         modelo="130",
-        filing_year=CONFORMANCE_YEAR,
-        period=Period.from_year_and_code(CONFORMANCE_YEAR, "1T"),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         expediente_id="202613000010001A",
         csv="ABCD1234EFGH5678",
         pdf_bytes=pdf_bytes,
@@ -510,8 +502,8 @@ def seeded_expedientes_snapshot(profile_id: UUID):
         declarations=(
             ExpedientesDeclaration(
                 modelo="303",
-                ejercicio=CONFORMANCE_PRIOR_YEAR,
-                period=Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T"),
+                ejercicio=2025,
+                period=Period.from_year_and_code(2025, "1T"),
                 expediente_id="12345678901234567890",
                 estado="ALTA",
                 tipo_solicitud="PresentaciÃ³n",
@@ -631,7 +623,7 @@ def seed_conformance_invoice(profile_id: UUID) -> Invoice:
             "kind": InvoiceKind.RECEIVED,
             "bucket_id": str(profile_id),
             "invoice_number": "CONFORMANCE-INVOICE-2025-001",
-            "issued_at": date(CONFORMANCE_PRIOR_YEAR, 5, 1),
+            "issued_at": date(2025, 5, 1),
             "counterparty_name": "Conformance Supplier",
             "notes": "Conformance note preserved by partial update",
             "counterparty_tax_id": "B00015016",

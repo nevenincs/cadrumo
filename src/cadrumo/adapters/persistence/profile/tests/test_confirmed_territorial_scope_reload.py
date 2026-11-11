@@ -25,11 +25,8 @@ from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from .....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.classification import require_iva_territorial_scope
 from .....domain.iva.schema import IvaTerritorialScope
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -49,7 +46,7 @@ def _confirmed_fact() -> ConfirmedCounterpartyFacts:
         tax_identifier="B00015016",
         territorial_scope=IvaTerritorialScope.from_registry("es_ceuta_melilla"),
         asserted_by="operator@example.test",
-        asserted_at=datetime(_YEAR, 4, 17, 11, 5, tzinfo=UTC),
+        asserted_at=datetime(2026, 4, 17, 11, 5, tzinfo=UTC),
     )
 
 
@@ -109,7 +106,7 @@ def test_reload_under_a_leased_authority_returns_both_projected_axes(
         territorial_scope=require_iva_territorial_scope("es_canarias", operation=operation),
         identification_state=require_eu_member_state("FR", authority=operation),
         asserted_by="operator@example.test",
-        asserted_at=datetime(_YEAR, 4, 17, 11, 5, tzinfo=UTC),
+        asserted_at=datetime(2026, 4, 17, 11, 5, tzinfo=UTC),
     )
     CounterpartyEstablishmentRepository(objects=secure_objects).save(original)
 

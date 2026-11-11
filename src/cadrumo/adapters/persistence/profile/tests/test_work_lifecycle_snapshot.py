@@ -18,17 +18,13 @@ from cadrumo.application.modelo.action_errors import WorkUnitMutationRefusedErro
 from cadrumo.application.modelo.work_lifecycle import discard_work_unit, rename_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
-
-_YEAR = filing_year_envelope().horizon
-_REVISION_ID = revision_covering("130", _YEAR).id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "9a9a9a9a-9a9a-49a9-89a9-9a9a9a9a9a9a"
-_START = datetime(1980, 9, 1, 9, tzinfo=UTC)
+_START = datetime(2026, 9, 1, 9, tzinfo=UTC)
 
 
 class _AfterSnapshotRepository(WorkUnitCatalogueRepository):
@@ -54,20 +50,20 @@ class _AfterSnapshotRepository(WorkUnitCatalogueRepository):
 
 
 def _unit() -> WorkUnit:
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period,
-            revision_id=_REVISION_ID,
+            revision_id="2019-y-siguientes",
         ),
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
-        revision_id=_REVISION_ID,
+        revision_id="2019-y-siguientes",
         name="Original display",
         created_at=_START,
         updated_at=_START,

@@ -47,7 +47,6 @@ from .....domain.calculations.registry.bindings import (
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -80,16 +79,14 @@ _SALDO_INICIAL_CUMPLIDO: CasillaId = validated_casilla_id(
     surface="_SALDO_INICIAL_CUMPLIDO",
 )  # opening pending cumplido (bound from prior 01499)
 
-_YEAR_N_PLUS_1 = filing_year_envelope().horizon
-_YEAR_N = _YEAR_N_PLUS_1 - 1
+_YEAR_N = 2025
+_YEAR_N_PLUS_1 = 2026
 
 #: Distinct prior-year stock per source year + condition-state so a cross-year
 #: contamination (or a condition-state channel swap) surfaces.
-_PRIOR_YEAR = _YEAR_N - 1
-
 _STOCK_BY_SOURCE_YEAR: dict[int, dict[CasillaId, Decimal]] = {
-    _PRIOR_YEAR: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("8000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("5000.00")},
-    _YEAR_N: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("3000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("12000.00")},
+    2024: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("8000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("5000.00")},
+    2025: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("3000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("12000.00")},
 }
 
 _M200_PAGOS_RELATION = "modelo-200-pagos-fraccionados-anuales"
@@ -102,7 +99,7 @@ _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
 }
 _PROFILE_ENUM_BINDINGS: dict[str, str] = {"modelo-200-profile-legal-entity-form": "sl"}
 
-_CLOCK = datetime(_YEAR_N_PLUS_1 + 1, 1, 20, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
 def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservationRepository) -> None:
@@ -212,14 +209,11 @@ def test_opening_dotaciones_stock_resolves_from_prior_year_per_condition_state(t
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_prior_saldo_final(source_year=_PRIOR_YEAR, obs_repo=obs_repo)
+        _seed_prior_saldo_final(source_year=2024, obs_repo=obs_repo)
         resolved = _resolve_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
         result = _calculate_200(filing_year=_YEAR_N, relation_values=resolved, obs_repo=obs_repo)
-    assert (
-        Decimal(result.values[_SALDO_INICIAL_NO_CUMPLIDO])
-        == _STOCK_BY_SOURCE_YEAR[_PRIOR_YEAR][_SALDO_FINAL_NO_CUMPLIDO]
-    )
-    assert Decimal(result.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[_PRIOR_YEAR][_SALDO_FINAL_CUMPLIDO]
+    assert Decimal(result.values[_SALDO_INICIAL_NO_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_NO_CUMPLIDO]
+    assert Decimal(result.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_CUMPLIDO]
     # The two channels carry distinct values — a channel swap would surface here.
     assert result.values[_SALDO_INICIAL_NO_CUMPLIDO] != result.values[_SALDO_INICIAL_CUMPLIDO]
 
@@ -233,8 +227,8 @@ def test_dotaciones_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_prior_saldo_final(source_year=_PRIOR_YEAR, obs_repo=obs_repo)
-        _seed_prior_saldo_final(source_year=_YEAR_N, obs_repo=obs_repo)
+        _seed_prior_saldo_final(source_year=2024, obs_repo=obs_repo)
+        _seed_prior_saldo_final(source_year=2025, obs_repo=obs_repo)
 
         resolved_n = _resolve_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
         result_n = _calculate_200(filing_year=_YEAR_N, relation_values=resolved_n, obs_repo=obs_repo)
@@ -242,11 +236,8 @@ def test_dotaciones_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
         resolved_n1 = _resolve_relations(filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
         result_n1 = _calculate_200(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1, obs_repo=obs_repo)
 
+    assert Decimal(result_n.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_CUMPLIDO]
+    assert Decimal(result_n1.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2025][_SALDO_FINAL_CUMPLIDO]
     assert (
-        Decimal(result_n.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[_PRIOR_YEAR][_SALDO_FINAL_CUMPLIDO]
-    )
-    assert Decimal(result_n1.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[_YEAR_N][_SALDO_FINAL_CUMPLIDO]
-    assert (
-        Decimal(result_n1.values[_SALDO_INICIAL_NO_CUMPLIDO])
-        == _STOCK_BY_SOURCE_YEAR[_YEAR_N][_SALDO_FINAL_NO_CUMPLIDO]
+        Decimal(result_n1.values[_SALDO_INICIAL_NO_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2025][_SALDO_FINAL_NO_CUMPLIDO]
     )

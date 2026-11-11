@@ -53,7 +53,6 @@ import {
   sale,
   servidorRow,
 } from "./support/assetContract";
-import { fixtureDay } from "../src/dev/fixtureDates";
 
 // The Assets tab's writes against the scenario register: creating and
 // correcting from the requests the forms make, bajas, forecasts and claims.
@@ -464,9 +463,7 @@ test("a baja is judged by the backend, which refuses by key and facts", async ()
     const found = await refused(dispose(disposal));
     return [found.detail.refusal.code, found.detail.refusal.reason_key];
   };
-  expect(
-    await reasonOf({ ...sale, disposal_date: fixtureDay(1, 1, -6) }),
-  ).toEqual([
+  expect(await reasonOf({ ...sale, disposal_date: "2020-01-01" })).toEqual([
     "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
     "ledger.actividad_asset.errors.disposal_before_service",
   ]);
@@ -510,7 +507,7 @@ test("a baja ends the plan at the year of its last day, lists the element out of
   expect(event).toMatchObject({ kind: "baja", affects_calculation: true });
   expect(event.changes).toEqual([
     ...[
-      ["disposal.disposal_date", fixtureDay(6, 30, -1)],
+      ["disposal.disposal_date", "2025-06-30"],
       ["disposal.reason", "sale"],
       ["disposal.proceeds", "9000.00"],
       ["disposal.transmission_costs", "150.00"],
@@ -543,7 +540,7 @@ test("a baja ends the plan at the year of its last day, lists the element out of
   );
   expect(again.detail.refusal).toMatchObject({
     reason_key: "ledger.actividad_asset.errors.disposal_already_recorded",
-    reason_facts: [{ key: "disposal_date", value: fixtureDay(6, 30, -1) }],
+    reason_facts: [{ key: "disposal_date", value: "2025-06-30" }],
   });
 });
 
@@ -608,7 +605,7 @@ test("the figures of a baja are the backend's: a stated baja previews and writes
     )
   ).calculation;
   expect(recorded).toMatchObject({
-    disposal_date: fixtureDay(6, 30, -1),
+    disposal_date: "2025-06-30",
     reason: "sale",
   });
   // An element whose opening history is unknown cannot be worked out.
@@ -685,14 +682,14 @@ test("a forecast works out a span and records nothing; a claim is recorded once 
   expect(year.claims.filter((found) => found.effective)).toHaveLength(2);
   expect(cents(year.claimed.decimal)).toBe(cents("2880.00"));
   const overlap = (await refused(
-    ask({ covered_from: fixtureDay(1, 1), covered_until: fixtureDay(1, 1, 1) }),
+    ask({ covered_from: "2026-01-01", covered_until: "2027-01-01" }),
   )) as Refused;
   expect(overlap.detail.refusal).toMatchObject({
     code: "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT",
     reason_key: "ledger.actividad_asset.errors.claims_overlap",
   });
   const crossing = await refused(
-    ask({ covered_from: fixtureDay(7, 1), covered_until: fixtureDay(2, 1, 1) }),
+    ask({ covered_from: "2026-07-01", covered_until: "2027-02-01" }),
   );
   expect(crossing.detail.refusal.reason_key).toBe(
     "ledger.actividad_asset.errors.covered_interval_outside_tax_year",
@@ -796,7 +793,7 @@ test("a baja over a year no edition covers leaves the minimum unresolved, and sa
   const read = await settled<LedgerResult<typeof CALCULATE>>(
     port.submit(CALCULATE, {
       asset_id: "plotter",
-      disposal: { ...sale, disposal_date: fixtureDay(6, 30) },
+      disposal: { ...sale, disposal_date: "2026-06-30" },
     } as never),
   );
   expect(read.calculation!.minimum).toBeNull();
@@ -898,7 +895,7 @@ test("a later affectation after the element entered service is refused", async (
   const late = await refused(
     port.submit(CALCULATE, {
       asset_id: "furgoneta",
-      disposal: { ...sale, later_affectation_on: fixtureDay(1, 1, -2) },
+      disposal: { ...sale, later_affectation_on: "2024-01-01" },
     } as never),
   );
   expect(late.detail.refusal.reason_key).toBe(

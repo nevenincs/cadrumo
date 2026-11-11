@@ -38,7 +38,6 @@ from ....domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
@@ -53,7 +52,6 @@ if TYPE_CHECKING:
 
 _SETTLEMENT = "direct_annual_settlement"
 _EVIDENCE = "factual_evidence"
-_SOURCE_YEAR = filing_year_envelope().horizon - 1
 
 
 def _supported_years() -> tuple[int, ...]:
@@ -67,9 +65,9 @@ def _m100(filing_year: int | None = None) -> RegistrySnapshot:
     return published_snapshot("100", filing_year=year, period="0A")
 
 
-def _m200_newest_filing_grade() -> RegistrySnapshot:
-    """The newest filing-grade Modelo 200 relation-prefills both a settlement and an evidence carry."""
-    return published_snapshot("200", filing_year=filing_grade_exercises("200")[-1], period="0A")
+def _m200_2025() -> RegistrySnapshot:
+    """Modelo 200 2025 relation-prefills both a settlement and an evidence carry."""
+    return published_snapshot("200", filing_year=2025, period="0A")
 
 
 def _requirements_by_binding(snapshot: RegistrySnapshot) -> dict[str, RegistryFoldRequirement]:
@@ -167,10 +165,10 @@ def test_the_prefilled_binding_treatment_defaults_to_undeclared() -> None:
         binding_id="probe-binding",
         value=Decimal("1234.56"),
         source_modelo="130",
-        source_filing_year=_SOURCE_YEAR,
+        source_filing_year=2024,
         source_periods=("4T",),
         source_registry_snapshot_refs=(),
-        resolved_at=datetime(1980, 8, 8, 12, 0, tzinfo=UTC),
+        resolved_at=datetime(2026, 8, 8, 12, 0, tzinfo=UTC),
     )
 
     assert binding.dependency_treatment == ""
@@ -190,7 +188,7 @@ def test_direct_previous_filing_treatment_reaches_the_prefilled_provenance() -> 
     from datetime import UTC, datetime
     from decimal import Decimal
 
-    snapshot = published_snapshot("303", filing_year=filing_year_envelope().horizon, period="1T")
+    snapshot = published_snapshot("303", filing_year=2025, period="1T")
     requirement = next(
         item
         for item in previous_filing_observation_requirements(
@@ -207,7 +205,7 @@ def test_direct_previous_filing_treatment_reaches_the_prefilled_provenance() -> 
         {binding_id: Decimal("1.00")},
         observations=(),
         activity_start_date=None,
-        resolved_at=datetime(1980, 8, 13, 12, 0, tzinfo=UTC),
+        resolved_at=datetime(2026, 8, 13, 12, 0, tzinfo=UTC),
     )
 
     assert len(prefilled) == 1
@@ -232,10 +230,10 @@ def test_carrying_the_treatment_does_not_withhold_the_value() -> None:
             value=amount,
             dependency_treatment=treatment,
             source_modelo="193",
-            source_filing_year=_SOURCE_YEAR,
+            source_filing_year=2024,
             source_periods=("0A",),
             source_registry_snapshot_refs=(),
-            resolved_at=datetime(1980, 8, 8, 12, 0, tzinfo=UTC),
+            resolved_at=datetime(2026, 8, 8, 12, 0, tzinfo=UTC),
         )
         assert binding.value == amount, f"{treatment} withheld the value"
         assert binding.dependency_treatment == treatment
@@ -243,5 +241,5 @@ def test_carrying_the_treatment_does_not_withhold_the_value() -> None:
 
 def test_modelo_200_declared_settlement_and_evidence_treatments_remain_distinct() -> None:
     """Real published relations carry both treatments through the resolver join."""
-    treatments = _grounded_treatments(_m200_newest_filing_grade())
+    treatments = _grounded_treatments(_m200_2025())
     assert {_SETTLEMENT, _EVIDENCE} <= set(treatments.values())

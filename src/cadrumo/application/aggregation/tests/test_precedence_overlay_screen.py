@@ -12,7 +12,6 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.source_disagreement import (
     DisagreementBooleanValue,
     DisagreementDateValue,
@@ -42,7 +41,6 @@ _CALLER = SourceDisagreementRole.CALLER
 _BINDING = "test-binding"
 _RELATION = "test-fold-slot"
 _CASILLA = "01"
-_YEAR = filing_year_envelope().horizon
 
 
 def _tier(
@@ -69,8 +67,8 @@ def _overlay(*tiers: PrecedenceTier) -> PrecedenceOverlay:
         pytest.param("binding_values", Decimal("-0.00"), Decimal("0"), False, id="decimal-signed-zero"),
         pytest.param("enum_binding_values", "madrid", "madrid", False, id="enum-same-token"),
         pytest.param("enum_binding_values", "madrid", "Madrid", True, id="enum-token-against-label"),
-        pytest.param("date_binding_values", date(_YEAR, 3, 1), date(_YEAR, 3, 1), False, id="date-same-day"),
-        pytest.param("date_binding_values", date(_YEAR, 3, 1), date(_YEAR, 3, 2), True, id="date-next-day"),
+        pytest.param("date_binding_values", date(2020, 3, 1), date(2020, 3, 1), False, id="date-same-day"),
+        pytest.param("date_binding_values", date(2020, 3, 1), date(2020, 3, 2), True, id="date-next-day"),
         pytest.param("boolean_binding_values", True, True, False, id="boolean-same"),
         pytest.param("boolean_binding_values", True, False, True, id="boolean-flipped"),
         pytest.param("relation_values", Decimal("5"), Decimal("5.000"), False, id="relation-scale-only"),
@@ -146,18 +144,18 @@ def test_every_transition_states_both_tiers_values_and_provenance(
 
 def test_three_tiers_state_every_value_in_order_and_keep_the_highest() -> None:
     overlay = _overlay(
-        _tier(_PROFILE, date_binding_values={_BINDING: date(_YEAR, 1, 1)}),
-        _tier(_BORRADOR, date_binding_values={_BINDING: date(_YEAR, 1, 2)}),
-        _tier(_CALLER, date_binding_values={_BINDING: date(_YEAR, 1, 3)}),
+        _tier(_PROFILE, date_binding_values={_BINDING: date(2020, 1, 1)}),
+        _tier(_BORRADOR, date_binding_values={_BINDING: date(2020, 1, 2)}),
+        _tier(_CALLER, date_binding_values={_BINDING: date(2020, 1, 3)}),
     )
 
     (divergence,) = overlay.divergences
     assert [(source.role, source.value) for source in divergence.sources] == [
-        (_PROFILE, DisagreementDateValue(value=date(_YEAR, 1, 1))),
-        (_BORRADOR, DisagreementDateValue(value=date(_YEAR, 1, 2))),
-        (_CALLER, DisagreementDateValue(value=date(_YEAR, 1, 3))),
+        (_PROFILE, DisagreementDateValue(value=date(2020, 1, 1))),
+        (_BORRADOR, DisagreementDateValue(value=date(2020, 1, 2))),
+        (_CALLER, DisagreementDateValue(value=date(2020, 1, 3))),
     ]
-    assert overlay.resolution.date_binding_values[_BINDING] == date(_YEAR, 1, 3)
+    assert overlay.resolution.date_binding_values[_BINDING] == date(2020, 1, 3)
 
 
 def test_a_middle_tier_that_differs_is_reported_even_when_the_highest_equals_the_lowest() -> None:

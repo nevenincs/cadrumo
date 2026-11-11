@@ -84,8 +84,8 @@ _EVERY_VALUE_SHAPE: dict[str, object] = {
     "ratio": 0.1,
     "tiny": 1e-07,
     "flag": False,
-    "day": date(1985, 1, 1),
-    "moment": datetime(1985, 1, 2, 3, 4, 5, tzinfo=UTC),
+    "day": date(2025, 1, 1),
+    "moment": datetime(2025, 1, 2, 3, 4, 5, tzinfo=UTC),
     "clock": time(6, 7, 8),
     "empty_array": [],
     "scalars": [1, 2, 3],
@@ -94,7 +94,7 @@ _EVERY_VALUE_SHAPE: dict[str, object] = {
     "empty_table": {},
     "key with space": "quoted key",
     "revisions": {
-        "1985": {
+        "2025": {
             "review_status": "reviewed",
             "period_selector": {"periods": ["1T", "2T"]},
             "casillas": [
@@ -120,27 +120,27 @@ def test_render_toml_accepts_the_tuples_freeze_produces() -> None:
 
 def test_render_toml_writes_arrays_of_tables_as_array_headers() -> None:
     """Casilla-shaped rows keep the ``[[...]]`` block form the source files use."""
-    rendered = render_toml({"revisions": {"1985": {"casillas": [{"id": "01"}, {"id": "02"}]}}})
+    rendered = render_toml({"revisions": {"2025": {"casillas": [{"id": "01"}, {"id": "02"}]}}})
 
-    assert rendered == '[[revisions.1985.casillas]]\nid = "01"\n\n[[revisions.1985.casillas]]\nid = "02"\n'
+    assert rendered == '[[revisions.2025.casillas]]\nid = "01"\n\n[[revisions.2025.casillas]]\nid = "02"\n'
 
 
 def test_render_toml_places_comments_above_their_table_and_the_parser_drops_them() -> None:
-    document = {"revisions": {"1985": {"casillas": [{"id": "01"}, {"id": "02"}]}}}
+    document = {"revisions": {"2025": {"casillas": [{"id": "01"}, {"id": "02"}]}}}
 
     rendered = render_toml(
         document,
-        comments={(): "head: one\nhead: two", ("revisions", "1985", "casillas", 1): "row: second"},
+        comments={(): "head: one\nhead: two", ("revisions", "2025", "casillas", 1): "row: second"},
     )
 
     assert rendered.splitlines() == [
         "# head: one",
         "# head: two",
-        "[[revisions.1985.casillas]]",
+        "[[revisions.2025.casillas]]",
         'id = "01"',
         "",
         "# row: second",
-        "[[revisions.1985.casillas]]",
+        "[[revisions.2025.casillas]]",
         'id = "02"',
     ]
     assert parse_toml(rendered) == document

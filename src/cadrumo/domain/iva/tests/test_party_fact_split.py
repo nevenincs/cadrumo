@@ -27,7 +27,6 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -47,7 +46,7 @@ def _registry_authority_scope() -> Iterator[None]:
         yield
 
 
-_DATE = date(filing_year_envelope().horizon, 3, 10)
+_DATE = date(2026, 3, 10)
 
 
 def _classification_fact_entries(*, on: date) -> dict[str, str]:

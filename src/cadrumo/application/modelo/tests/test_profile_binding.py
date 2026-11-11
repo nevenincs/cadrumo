@@ -26,7 +26,6 @@ from ....domain.calculations.registry.binding_terminal_origin import TerminalOri
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ....domain.calculations.registry.schema_formula import FormulaExpression
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_snapshot,
@@ -41,11 +40,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000476"
 _BUCKET_ID = _PROFILE_ID
-_YEAR = newest_authored_edition("100")
+_YEAR = 2025
 _PERIOD = "0A"
 _CCAA_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
 _SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-incn-decimal-binding"
-_CLOCK = datetime(filing_year_envelope().horizon, 5, 21, 10, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
 
 def _sourced_binding_ids(result: CalculationSourceResolution) -> set[BindingId]:

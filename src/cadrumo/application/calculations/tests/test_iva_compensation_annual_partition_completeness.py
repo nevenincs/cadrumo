@@ -13,7 +13,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...aggregation.source_mesh import CalculationSourceContext
 from ...modelo.tests.advisory_diagnostic_repositories import EmptyObservationRepository
@@ -22,8 +21,6 @@ from ..iva_compensation_annual_partition import (
     annual_source_evidence_diagnostics,
 )
 from ..observations_repository import ObservationEnvelopePayload
-
-_YEAR = filing_grade_exercises("390")[-1]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -44,7 +41,7 @@ class _StaleObservationRepository(EmptyObservationRepository):
 
 @cache
 def _snapshot() -> RegistrySnapshot:
-    return published_snapshot("390", filing_year=_YEAR, period="0A")
+    return published_snapshot("390", filing_year=2025, period="0A")
 
 
 def test_missing_required_m303_periods_emit_a_typed_annual_source_evidence_failure() -> None:
@@ -58,8 +55,8 @@ def test_missing_required_m303_periods_emit_a_typed_annual_source_evidence_failu
             CalculationSourceContext(
                 bucket_id="annual-partition-completeness",
                 modelo="390",
-                filing_year=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "0A"),
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
                 revision=snapshot.revision,
             ),
         )
@@ -98,8 +95,8 @@ def test_annual_evidence_diagnostics_name_only_the_actual_unresolved_binding() -
 def test_stale_m303_source_is_refused_during_carry_admission_and_leaves_bindings_unresolved() -> None:
     stale_observation = ObservationEnvelopePayload.model_validate(
         {
-            "observation": RegistryModeloObservation(modelo="303", filing_year=_YEAR, period="1T"),
-            "captured_at": datetime(_YEAR + 1, 1, 1, tzinfo=UTC),
+            "observation": RegistryModeloObservation(modelo="303", filing_year=2025, period="1T"),
+            "captured_at": datetime(2026, 1, 1, tzinfo=UTC),
             "source_kind": "app_filing",
             "stamped_revision_id": "stale-revision",
         },
@@ -108,15 +105,15 @@ def test_stale_m303_source_is_refused_during_carry_admission_and_leaves_bindings
     snapshot = _snapshot()
     with bundled_indexed_authority().operation() as authority_operation:
         resolution = IvaCompensationAnnualPartitionSourceResolver(
-            repository=_StaleObservationRepository(stale_observation, Period.from_year_and_code(_YEAR, "1T")),
+            repository=_StaleObservationRepository(stale_observation, Period.from_year_and_code(2025, "1T")),
             registry_snapshot=snapshot,
             operation=authority_operation,
         ).resolve(
             CalculationSourceContext(
                 bucket_id="annual-partition-completeness",
                 modelo="390",
-                filing_year=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "0A"),
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
                 revision=snapshot.revision,
             ),
         )

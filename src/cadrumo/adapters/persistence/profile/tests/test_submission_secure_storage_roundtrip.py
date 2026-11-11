@@ -21,7 +21,6 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.period import Period
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.submission.models import (
     ModeloPresentado,
     SubmissionAttempt,
@@ -33,12 +32,10 @@ from ...storage.tests.secure_sql import (
 )
 from ..submission import SubmissionRepository
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
-_ACKNOWLEDGED_AT = datetime(_YEAR, 5, 27, 10, 30, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
+_ACKNOWLEDGED_AT = datetime(2026, 5, 27, 10, 30, 0, tzinfo=UTC)
 
 
 def _populated_filing() -> ModeloPresentado:
@@ -99,7 +96,7 @@ def test_submitted_filing_survives_encrypted_storage_roundtrip(tmp_path: Path) -
         assert loaded == original
         assert loaded.status is SubmissionStatus.ACEPTADA
         assert loaded.period == _PERIOD
-        assert loaded.period.filing_year == _YEAR
+        assert loaded.period.filing_year == 2025
         assert loaded.period.registry_token == _PERIOD.registry_token
         assert loaded.justificante_csv == "ABCD12345678EFGH"
         assert loaded.justificante_pdf_path == Path("justificantes/303-2025Q1-ABCD.pdf")

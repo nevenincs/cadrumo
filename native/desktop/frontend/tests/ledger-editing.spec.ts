@@ -37,7 +37,6 @@ import {
 } from "../src/shell/ledgerStage";
 import { hexId, movement } from "./support/ledger";
 import { planRecorded, recordedCheck } from "./support/stagedCheck";
-import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
 
 // What editing the movements grid makes of typed, pasted and filled text,
 // and how the page counts and reviews what is staged. No page is opened.
@@ -77,7 +76,7 @@ const rowSubject = (row: LedgerRow, sealed = false): EditSubject => ({
 
 test("each column stages the field it shows, and a new movement the field it fills", () => {
   const booked = movement(A);
-  const valued = movement(B, { value_date: fixtureDay(10, 7) });
+  const valued = movement(B, { value_date: "2026-10-07" });
   expect(columnField("date", booked)).toBe("booked_date");
   expect(columnField("date", valued)).toBe("value_date");
   expect(columnField("category", booked)).toBe("category_id");
@@ -107,11 +106,9 @@ test("typed values go through the product's one grammar, and refusals echo them"
     kind: "value",
     value: { value: "0.21" },
   });
-  expect(
-    parseCell("date", "booked_date", `05/10/${fixtureYear}`, labels),
-  ).toMatchObject({
+  expect(parseCell("date", "booked_date", "05/10/2026", labels)).toMatchObject({
     kind: "refused",
-    refusal: { key: "date_not_iso", suggestion: fixtureDay(10, 5) },
+    refusal: { key: "date_not_iso", suggestion: "2026-10-05" },
   });
   expect(parseCell("text", "description", "uno\tdos", labels)).toMatchObject({
     kind: "refused",

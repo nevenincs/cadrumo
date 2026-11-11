@@ -15,7 +15,6 @@ from ....core.config import override_settings
 from ....core.modelo import Modelo
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import ObligationStatus
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
@@ -50,10 +49,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(1980, 4, 12, 9, tzinfo=UTC)
-_YEAR = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
-_NEXT = Period.from_year_and_code(_YEAR, "2T")
+_NOW = datetime(2026, 4, 12, 9, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
+_NEXT = Period.from_year_and_code(2025, "2T")
 
 
 def _run(*, period: Period | None = _PERIOD, detail_period: Period | None = None) -> WorkflowResult:
@@ -61,8 +59,8 @@ def _run(*, period: Period | None = _PERIOD, detail_period: Period | None = None
         WorkflowObligationFacts(
             modelo=Modelo("303"),
             period=period,
-            opens_on=date(_YEAR, 4, 1),
-            closes_on=date(_YEAR, 4, 20),
+            opens_on=date(2025, 4, 1),
+            closes_on=date(2025, 4, 20),
             status=ObligationStatus.UPCOMING,
         )
         if period is not None
@@ -73,7 +71,7 @@ def _run(*, period: Period | None = _PERIOD, detail_period: Period | None = None
             kind="deadline_context",
             modelo=Modelo("303"),
             period=detail_period,
-            opens_on=date(_YEAR, 4, 1),
+            opens_on=date(2025, 4, 1),
         )
         if detail_period is not None
         else None

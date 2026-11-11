@@ -3,7 +3,6 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ..reconciliation_records import (
     ModeloReconciliationDiff,
@@ -13,7 +12,6 @@ from ..reconciliation_records import (
 )
 
 RECONCILIATION_PROFILE_FIXTURE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_RECONCILED_AT = datetime(filing_year_envelope().horizon, 3, 10, 12, tzinfo=UTC)
 
 
 def reconciliation_history_entry_fixture(
@@ -21,7 +19,7 @@ def reconciliation_history_entry_fixture(
     event_id: str,
     work_unit_id: str = "1" * 64,
     bucket_id: UUID = RECONCILIATION_PROFILE_FIXTURE,
-    reconciled_at: datetime = _RECONCILED_AT,
+    reconciled_at: datetime = datetime(2026, 3, 10, 12, tzinfo=UTC),
     source_path: str = "C:/synthetic/evidence/receipt.pdf",
     actor: str = "synthetic-test-operator",
 ) -> ModeloReconciliationHistoryEntry:

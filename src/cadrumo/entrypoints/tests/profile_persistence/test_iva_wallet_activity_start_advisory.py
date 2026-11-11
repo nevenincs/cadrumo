@@ -20,7 +20,6 @@ from cadrumo.domain.iva_compensation.reconciliation import (
 )
 from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support import (
     BUCKET_ID,
-    TARGET_YEAR,
     TAXPAYER_NIF,
     create_modelo_303_work_unit,
     period,
@@ -71,7 +70,7 @@ def test_declared_activity_start_persists_an_uncontrasted_first_period_zero(
         assert (
             IvaWalletDecisionRepository().load_decision(
                 TAXPAYER_NIF,
-                period(TARGET_YEAR, "1T"),
+                period(2026, "1T"),
             )
             == decision
         )
@@ -114,4 +113,4 @@ def test_missing_activity_start_still_blocks_the_first_period_zero(
         assert decision.reason_identity is IvaCompensationDecisionReason.NO_USABLE_AUTHORITY
 
         # The blocked decision is refused at calculation, which therefore stores none.
-        assert IvaWalletDecisionRepository().load_decision(TAXPAYER_NIF, period(TARGET_YEAR, "1T")) is None
+        assert IvaWalletDecisionRepository().load_decision(TAXPAYER_NIF, period(2026, "1T")) is None

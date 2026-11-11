@@ -11,7 +11,6 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
@@ -19,8 +18,6 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 )
 
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -56,7 +53,7 @@ def test_m360_commands_sign_in_through_the_runtime_and_refuse_a_wrong_password(t
         profile.register(label="native-m360-operation", facts={})
 
         listed = unwrap_cli_result(_invoke(profile, profile.passphrase, "app", "modelo", "m360", "list"))
-        absent = _invoke(profile, profile.passphrase, "app", "modelo", "m360", "remove", str(_YEAR))
+        absent = _invoke(profile, profile.passphrase, "app", "modelo", "m360", "remove", "2025")
         refused = _invoke(profile, "not-the-passphrase-of-this-profile", "app", "modelo", "m360", "list")
 
     assert listed["solicitudes"] == []

@@ -15,7 +15,6 @@ from lxml.etree import XMLParser, fromstring
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.storage.calc_sheets.records import TabName
 from cadrumo.core.config import override_settings
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -27,8 +26,6 @@ pytestmark = [
     pytest.mark.windows_only,
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def _export(profile: NativeCliProfileFixture, output: Path, *extra: str) -> Result:
@@ -51,7 +48,7 @@ def _export(profile: NativeCliProfileFixture, output: Path, *extra: str) -> Resu
                 "--modelo",
                 "303",
                 "--year",
-                str(_YEAR),
+                "2025",
                 "--period",
                 "1T",
                 "--output",
@@ -69,7 +66,7 @@ def test_the_workbook_lands_at_the_chosen_path_described_by_the_facts_of_its_byt
         profile.register(label="native-spreadsheet-export", facts={})
         export_directory = tmp_path / "exports"
         export_directory.mkdir()
-        output = export_directory / f"modelo-303-{_YEAR}-1T.xlsx"
+        output = export_directory / "modelo-303-2025-1T.xlsx"
 
         result = _export(profile, output)
 
@@ -79,7 +76,7 @@ def test_the_workbook_lands_at_the_chosen_path_described_by_the_facts_of_its_byt
         assert payload["output_path"] == str(output)
         assert payload["byte_size"] == len(landed)
         assert payload["sha256"] == hashlib.sha256(landed).hexdigest()
-        assert (payload["modelo"], payload["period"], payload["year"]) == ("303", "1T", _YEAR)
+        assert (payload["modelo"], payload["period"], payload["year"]) == ("303", "1T", 2025)
         assert payload["casilla_count"] > 0
         with zipfile.ZipFile(output) as workbook:
             assert "xl/workbook.xml" in workbook.namelist()
@@ -99,7 +96,7 @@ def test_an_existing_file_is_refused_untouched_and_replaced_only_on_explicit_cho
         profile.register(label="native-spreadsheet-export-existing", facts={})
         export_directory = tmp_path / "exports"
         export_directory.mkdir()
-        output = export_directory / f"modelo-303-{_YEAR}-1T.xlsx"
+        output = export_directory / "modelo-303-2025-1T.xlsx"
         output.write_bytes(b"an earlier export")
 
         refused = _export(profile, output)
@@ -119,7 +116,7 @@ def test_an_existing_file_is_refused_untouched_and_replaced_only_on_explicit_cho
 def test_a_missing_parent_directory_is_refused_before_any_file_is_written(tmp_path: Path) -> None:
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-spreadsheet-export-missing-parent", facts={})
-        output = tmp_path / "absent" / f"modelo-303-{_YEAR}-1T.xlsx"
+        output = tmp_path / "absent" / "modelo-303-2025-1T.xlsx"
 
         refused = _export(profile, output)
 

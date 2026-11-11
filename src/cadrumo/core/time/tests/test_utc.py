@@ -28,10 +28,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("o
 _TZ_PLUS2 = timezone(timedelta(hours=2))
 _TZ_MINUS5 = timezone(timedelta(hours=-5))
 
-_NAIVE = datetime(1984, 6, 15, 12, 0, 0)
-_UTC_AWARE = datetime(1984, 6, 15, 12, 0, 0, tzinfo=UTC)
-_PLUS2_AWARE = datetime(1984, 6, 15, 14, 0, 0, tzinfo=_TZ_PLUS2)
-_MINUS5_AWARE = datetime(1984, 6, 15, 7, 0, 0, tzinfo=_TZ_MINUS5)
+_NAIVE = datetime(2024, 6, 15, 12, 0, 0)
+_UTC_AWARE = datetime(2024, 6, 15, 12, 0, 0, tzinfo=UTC)
+_PLUS2_AWARE = datetime(2024, 6, 15, 14, 0, 0, tzinfo=_TZ_PLUS2)
+_MINUS5_AWARE = datetime(2024, 6, 15, 7, 0, 0, tzinfo=_TZ_MINUS5)
 
 
 @pytest.mark.parametrize(

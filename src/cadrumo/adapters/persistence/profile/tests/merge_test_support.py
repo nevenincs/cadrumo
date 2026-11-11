@@ -13,10 +13,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, Sp
 from cadrumo.domain.transactions.enums import TransactionDirection
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
-
-_YEAR = filing_year_envelope().horizon
 
 BUCKET_ID = "25252525-2525-4525-8525-252525252525"
 
@@ -38,7 +35,7 @@ def split_setup(
 ):
     parent_command = ManualLedgerTransactionCommand(
         bucket_id=BUCKET_ID,
-        booked_date=date(_YEAR, 5, 2),
+        booked_date=date(2026, 5, 2),
         amount=parent_amount,
         direction=direction,
         counterparty="Vendor SL",
@@ -54,7 +51,7 @@ def split_setup(
         parent = create_manual_transaction(
             parent_command,
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
     half = parent_amount / Decimal("2")
     with ledger_ports_for_test(
@@ -72,6 +69,6 @@ def split_setup(
             ),
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
     return parent, split

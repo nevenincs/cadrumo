@@ -21,7 +21,6 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import (
     BusinessClassification,
     SplitRole,
@@ -41,8 +40,6 @@ from ..models import SplitChildCommand, SplitTransactionResult
 from .full_catalogue_commit_harness import FullCatalogueCommitHarness
 from .personal_manual_row_support import personal_outgoing_manual_row
 from .registration_access_context_support import registration_access_context
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -121,7 +118,7 @@ def _child_transaction(parent: Transaction, child: SplitChildCommand, *, index: 
             source_sha256="f" * 64,
             source_row_index=index + 1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR, 5, 4, 9, 31, tzinfo=UTC),
+            ingested_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
             provider_name="ledger-split",
         ),
         raw_fields={"parent_transaction_id": parent.transaction_id, "split_index": str(index)},
@@ -331,7 +328,7 @@ def test_result_projector_requires_matching_success_receipt() -> None:
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(_YEAR, 5, 4, tzinfo=UTC),
+        settled_at=datetime(2026, 5, 4, tzinfo=UTC),
         result_ref="a" * 64,
     )
 

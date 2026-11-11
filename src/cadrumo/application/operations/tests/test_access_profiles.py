@@ -20,7 +20,6 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 from ....core.operations import OperationFrontendProjection
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import access_resolution as access_module
 from ..access_resolution import (
@@ -40,8 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _DEFINITION_ID = "test.access"
-_YEAR = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 
 _PROFILE_NAMES = tuple(
     sorted(name for name, value in vars(access_module).items() if isinstance(value, OperationAccessProfile))
@@ -276,7 +274,7 @@ def test_fresh_single_period_access_needs_held_authority_before_reading() -> Non
 def test_fresh_single_period_access_binds_the_period_read_under_held_authority() -> None:
     authority = cast(Any, object())
     read_under: list[object] = []
-    other_period = Period.from_year_and_code(_YEAR, "2T")
+    other_period = Period.from_year_and_code(2026, "2T")
 
     def read_period(operation: object) -> Period:
         read_under.append(operation)

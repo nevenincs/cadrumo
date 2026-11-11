@@ -57,7 +57,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienInversionIvaRecord
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
@@ -69,12 +68,9 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "77777777-7777-4777-8777-777777777777"
-#: The newest exercise with a filing-grade annual Modelo 390, so the 4T and annual designs both exist.
-_FILING_YEAR = filing_grade_exercises("390")[-1]
-#: Acquired two exercises before the filing: regularisation has run for two years.
-_ACQUISITION_YEAR = _FILING_YEAR - 2
+_FILING_YEAR = 2024
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "4T")
-_CREATED_AT = datetime(_FILING_YEAR + 1, 1, 20, 9, 0, tzinfo=UTC)
+_CREATED_AT = datetime(2025, 1, 20, 9, 0, tzinfo=UTC)
 _BINDING_ID = "modelo-303-bienes-inversion-regularizacion-casilla-43"
 _CASILLA_43_ID: CasillaId = validated_casilla_id("43", surface="test casilla id")
 _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
@@ -167,13 +163,13 @@ def _work_unit(*, revision_id: str, modelo: str = "303", period: Period = _PERIO
 
 def _record() -> BienInversionIvaRecord:
     return BienInversionIvaRecord(
-        identifier=f"bi-{_ACQUISITION_YEAR}-maquina",
+        identifier="bi-2022-maquina",
         description="Maquina afecta a la actividad",
-        acquisition_year=_ACQUISITION_YEAR,
+        acquisition_year=2022,
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=Decimal("80"),
         kind=BienInversionKind.from_registry("mueble"),
-        acquisition_ledger_id=f"ledger-bi-{_ACQUISITION_YEAR}-maquina",
+        acquisition_ledger_id="ledger-bi-2022-maquina",
     )
 
 
@@ -187,7 +183,7 @@ def _seed_taxpayer_profile(*, setup_state: ProfileSetupState) -> None:
             UserProfileFact(path="identity.name", value="Asset IVA Test"),
             UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="activities.description", value="investment-goods source-mesh acceptance"),
-            UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1)),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
         )
     )
     seed_test_profile_record(

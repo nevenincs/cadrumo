@@ -16,7 +16,6 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.deadlines.recargo import build_recovery_for_overdue
 from ....domain.modelos.codes import ModeloCode
@@ -26,10 +25,10 @@ from ..work_plazo import modelo_work_deadline_posture
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "d" * 64
+_REVISION_ID = "130-2019-y-siguientes"
 _MODELO = "130"
 _PERIOD_CODE = "1T"
-_FILING_YEAR = filing_year_envelope().horizon
-_REVISION_ID = f"{_MODELO}-{revision_covering(_MODELO, _FILING_YEAR).id}"
+_FILING_YEAR = 2026
 
 
 def _work_unit(period: Period) -> WorkUnit:

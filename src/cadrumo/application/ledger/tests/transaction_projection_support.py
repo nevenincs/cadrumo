@@ -2,17 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import date
-
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..transaction_projection import LedgerTransactionProjection
-
-_YEAR = filing_year_envelope().horizon
 
 _DEFAULT_FIELDS: dict[str, object] = {
     "transaction_id": "b" * 64,
-    "date": date(_YEAR, 4, 15).isoformat(),
-    "booked_date": date(_YEAR, 4, 15).isoformat(),
+    "date": "2026-04-15",
+    "booked_date": "2026-04-15",
     "value_date": None,
     "amount": "121.00",
     "currency": "EUR",
@@ -46,8 +41,8 @@ _DEFAULT_FIELDS: dict[str, object] = {
     "source_jurisdiction": None,
     "value_in_eur": None,
     "fx_rate": None,
-    "created_at": "1980-04-15T09:30:00+00:00",
-    "modified_at": "1980-04-15T09:30:00+00:00",
+    "created_at": "2026-04-15T09:30:00+00:00",
+    "modified_at": "2026-04-15T09:30:00+00:00",
 }
 
 

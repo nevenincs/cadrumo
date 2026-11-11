@@ -102,7 +102,6 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     verify_revision,
 )
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
-    M303_YEAR,
     build_verified_modelo_303_revision,
 )
 
@@ -672,7 +671,7 @@ def test_verified_modelo_303_reports_its_own_casillas_and_publishes_them(
     )
 
     assert str(result.modelo) == "303"
-    assert result.period == Period.from_year_and_code(M303_YEAR, _M303_PERIOD_CODE)
+    assert result.period == Period.from_year_and_code(2026, _M303_PERIOD_CODE)
     assert result.calculation_revision_id == verified.calculation_revision_id
     assert result.row_count > 0
     assert result.software_identity_grade is not None, (

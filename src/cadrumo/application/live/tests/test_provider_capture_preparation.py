@@ -23,7 +23,6 @@ from ....core.config import override_settings
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.capabilities import OperationOwnedResource
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
@@ -197,13 +196,10 @@ class _Capabilities:
         return cast(SyncRunRecordRepositoryProtocol, object())
 
 
-_YEAR = filing_year_envelope().horizon
-
-
 def _run_filed_single(capabilities: _Capabilities, output_root: Path) -> Awaitable[object]:
     executor = FiledSingleCaptureExecutor(capabilities.compose, capabilities.browser, capabilities.preflight)
     payload = FiledSingleCaptureRequest(
-        profile_id=_PROFILE_ID, output_root=output_root, modelo="303", year=_YEAR, period="1T"
+        profile_id=_PROFILE_ID, output_root=output_root, modelo="303", year=2025, period="1T"
     )
     return executor.execute(_request(FILED_SINGLE_CAPTURE_DEFINITION_ID, payload), _UNREACHED_CONTEXT)
 
@@ -212,14 +208,14 @@ def _run_filed_bulk(capabilities: _Capabilities, output_root: Path) -> Awaitable
     executor = FiledBulkCaptureExecutor(
         capabilities.compose, capabilities.browser, capabilities.preflight, capabilities.sync_runs
     )
-    payload = FiledBulkCaptureRequest(profile_id=_PROFILE_ID, output_root=output_root, year_from=_YEAR, year_to=_YEAR)
+    payload = FiledBulkCaptureRequest(profile_id=_PROFILE_ID, output_root=output_root, year_from=2025, year_to=2025)
     return executor.execute(_request(FILED_BULK_CAPTURE_DEFINITION_ID, payload), _UNREACHED_CONTEXT)
 
 
 def _run_filed_source(capabilities: _Capabilities, output_root: Path) -> Awaitable[object]:
     executor = FiledSourceCaptureExecutor(capabilities.compose, capabilities.browser, capabilities.preflight)
     payload = FiledSourceCaptureRequest(
-        profile_id=_PROFILE_ID, output_root=output_root, modelo="303", year=_YEAR, period="1T"
+        profile_id=_PROFILE_ID, output_root=output_root, modelo="303", year=2025, period="1T"
     )
     return executor.execute(_request(FILED_SOURCE_CAPTURE_DEFINITION_ID, payload), _UNREACHED_CONTEXT)
 
@@ -238,7 +234,7 @@ def _run_filed_history(capabilities: _Capabilities, output_root: Path) -> Awaita
 def _run_iva_history(capabilities: _Capabilities, output_root: Path) -> Awaitable[object]:
     executor = IvaWalletHistoryCaptureExecutor(capabilities.compose, capabilities.browser, capabilities.preflight)
     payload = IvaWalletHistoryCaptureRequest(
-        profile_id=_PROFILE_ID, output_root=output_root, year_from=_YEAR, year_to=_YEAR
+        profile_id=_PROFILE_ID, output_root=output_root, year_from=2025, year_to=2025
     )
     return executor.execute(_request(IVA_WALLET_HISTORY_CAPTURE_DEFINITION_ID, payload), _UNREACHED_CONTEXT)
 
@@ -248,9 +244,9 @@ def _run_iva_evidence(capabilities: _Capabilities, output_root: Path) -> Awaitab
     payload = IvaRemoteStateCaptureRequest(
         profile_id=_PROFILE_ID,
         output_root=output_root,
-        year_from=_YEAR,
-        year_to=_YEAR,
-        target_year=_YEAR,
+        year_from=2025,
+        year_to=2025,
+        target_year=2025,
         target_period="1T",
     )
     return executor.execute(_request(IVA_REMOTE_STATE_CAPTURE_DEFINITION_ID, payload), _UNREACHED_CONTEXT)

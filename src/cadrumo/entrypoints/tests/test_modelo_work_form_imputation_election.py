@@ -28,7 +28,6 @@ from ...application.aggregation.renta_imputation import (
 from ...application.modelo.work_form_service import load_modelo_work_form
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -86,8 +85,8 @@ def test_the_form_asks_for_the_election_exactly_where_its_revision_reads_the_cri
 
 def test_the_flag_follows_the_revisions_own_bindings_and_not_the_modelo_number() -> None:
     with bundled_indexed_authority().operation() as operation:
-        reading = operation.revision_for_context("100", filing_year=filing_year_envelope().horizon, period="0A")
-        silent = operation.revision_for_context("303", filing_year=filing_year_envelope().horizon, period="1T")
+        reading = operation.revision_for_context("100", filing_year=2025, period="0A")
+        silent = operation.revision_for_context("303", filing_year=2025, period="1T")
         assert revision_reads_imputation_criterion(reading) is True
         assert revision_reads_imputation_criterion(silent) is False
         without_ledger = reading.model_copy(

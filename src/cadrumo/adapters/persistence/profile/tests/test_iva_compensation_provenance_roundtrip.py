@@ -44,22 +44,18 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from .....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from .iva_compensation_history_support import period_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-
-_FILING_YEAR = _YEAR - 1
-_PRESENTED_AT = datetime(_YEAR, 1, 20, 10, 30, tzinfo=UTC)
-_EXPEDIENTE = f"{_FILING_YEAR}30300000001Z"
+_PRESENTED_AT = datetime(2026, 1, 20, 10, 30, tzinfo=UTC)
+_EXPEDIENTE = "202530300000001Z"
 _DIGEST = "b" * 64
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
-    revision_id=str(revision_serving_period("303", _FILING_YEAR, "4T").id),
-    modelo_year=_FILING_YEAR,
+    revision_id="2025",
+    modelo_year=2025,
     period="4T",
 )
 
@@ -70,8 +66,8 @@ def _fully_populated_state() -> IvaCompensationPeriodState:
         return IvaCompensationPeriodState(
             taxpayer_nif="12345678Z",
             provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "4T"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             expediente_id=_EXPEDIENTE,
             status="presentada",
@@ -83,7 +79,7 @@ def _fully_populated_state() -> IvaCompensationPeriodState:
             final_result_amount=Decimal("0.00"),
             generated_amount=Decimal("50.00"),
             available_end_amount=Decimal("125.00"),
-            source_observation_key=f"303:{_FILING_YEAR}:4T:{_EXPEDIENTE}",
+            source_observation_key="303:2025:4T:202530300000001Z",
             source_artefact_sha256=_DIGEST,
         )
 
@@ -106,14 +102,14 @@ def test_the_provenance_pair_survives_a_strict_round_trip(tmp_path: Path) -> Non
 def test_app_filing_history_round_trips_through_list_and_load_under_a_bundled_authority_scope(
     tmp_path: Path,
 ) -> None:
-    """A local filing must decode through the repository's own authority lease.
+    """A local 2025 filing must decode through the repository's own authority lease.
 
     The profile-persistence package scopes its tests to a session authority
     operation.  Leaving only that validation scope preserves the
     real isolated storage runtime while making this a regression for the
     adapter boundary rather than an accidental consumer of its caller's lease.
     """
-    original = period_state(filing_year=_FILING_YEAR, period="4T", generated=Decimal("75.00"))
+    original = period_state(filing_year=2025, period="4T", generated=Decimal("75.00"))
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = IvaCompensationHistoryRepository()
@@ -197,14 +193,14 @@ def test_an_operator_declared_state_cannot_carry_an_aeat_expediente() -> None:
         IvaCompensationPeriodState(
             taxpayer_nif="12345678Z",
             provenance=IvaCompensationStateProvenance.OPERATOR_SEED,
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "4T"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             expediente_id=_EXPEDIENTE,
             presented_at=_PRESENTED_AT,
             generated_amount=Decimal("0.00"),
             available_end_amount=Decimal("10.00"),
-            source_observation_key=f"303:seed:{_FILING_YEAR}:4T",
+            source_observation_key="303:seed:2025:4T",
         )
 
 
@@ -219,13 +215,13 @@ def test_an_aeat_capture_without_an_expediente_refuses() -> None:
         IvaCompensationPeriodState(
             taxpayer_nif="12345678Z",
             provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "4T"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             presented_at=_PRESENTED_AT,
             generated_amount=Decimal("0.00"),
             available_end_amount=Decimal("10.00"),
-            source_observation_key=f"303:{_FILING_YEAR}:4T",
+            source_observation_key="303:2025:4T",
         )
 
 
@@ -251,14 +247,14 @@ def test_status_is_refused_on_every_non_aeat_provenance(
         IvaCompensationPeriodState(
             taxpayer_nif="12345678Z",
             provenance=provenance,
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "4T"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             status="presentada",
             presented_at=_PRESENTED_AT,
             generated_amount=Decimal("0.00"),
             available_end_amount=Decimal("10.00"),
-            source_observation_key=f"303:{_FILING_YEAR}:4T",
+            source_observation_key="303:2025:4T",
         )
 
 

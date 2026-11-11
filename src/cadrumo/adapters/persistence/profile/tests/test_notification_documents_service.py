@@ -240,7 +240,7 @@ def _record_fields() -> _RecordFields:
         "document_sha256": "a" * 64,
         "byte_size": 12,
         "source_url": DETAIL_URL,
-        "fetched_at": datetime(1980, 2, 13, tzinfo=UTC),
+        "fetched_at": datetime(2026, 2, 13, tzinfo=UTC),
     }
 
 

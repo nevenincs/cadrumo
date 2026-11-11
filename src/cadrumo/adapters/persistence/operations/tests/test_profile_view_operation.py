@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import replace
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -49,7 +49,6 @@ from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
@@ -308,7 +307,7 @@ def test_status_page_ready_record_projects_only_declared_facts(tmp_path: Path) -
             ("identity.surnames", "Operator"),
             ("identity.tax_id", "00000000T"),
             ("activities.description", "Servicios"),
-            ("censo.activity_start_date", date(filing_year_envelope().horizon, 1, 1).isoformat()),
+            ("censo.activity_start_date", "2026-01-01"),
             ("taxpayer_type.irpf_income_categories", "actividad_economica"),
             ("irpf.estimation_regime", "directa_normal"),
             ("tax_residence.ccaa", "madrid"),

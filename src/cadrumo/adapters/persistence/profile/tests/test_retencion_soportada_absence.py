@@ -38,7 +38,6 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from .....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from .....domain.calculations.registry.schema_references import PeriodSelector
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from .....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
 from .....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
@@ -56,9 +55,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _TAXPAYER = "00000000T"
 _PAYER = "B00000001"
-_EJERCICIO = filing_year_envelope().horizon
+_EJERCICIO = 2025
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
-_AT = datetime(_EJERCICIO + 1, 4, 2, 9, 0, tzinfo=UTC)
+_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 _NOTE = "Synthetic note: the employer paid below the withholding threshold."
 _LEGAL_REFS = ("ley-35-2006:art-99", "rd-439-2007:art-108")
 _SOURCE_REFS = ("aeat-modelo-100-instructions-2025",)
@@ -79,9 +78,9 @@ def _binding(binding_id: str, income_class: str) -> BindingDefinition:
 
 def _revision(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id=f"{_EJERCICIO}-retencion-soportada-absence-test",
-        localization_key=f"test.schema.revision.{_EJERCICIO}-retencion-soportada-absence-test.label",
-        valid_from=date(_EJERCICIO, 1, 1),
+        id="2025-retencion-soportada-absence-test",
+        localization_key="test.schema.revision.2025-retencion-soportada-absence-test.label",
+        valid_from=date(2025, 1, 1),
         period_selector=PeriodSelector(years=(_EJERCICIO,), periods=("0A",)),
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
@@ -255,7 +254,7 @@ def test_an_attestation_for_a_class_with_payer_records_is_refused(
 def test_an_unsupported_ejercicio_is_refused_before_storage(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    unsupported = filing_year_envelope().floor - 1
+    unsupported = 2000
     with isolated_runtime_profile(tmp_path=tmp_path):
         with pytest.raises(RetencionSoportadaAbsenceRefusedError) as refused:
             attest_retencion_soportada_absence(
@@ -314,7 +313,7 @@ def test_categories_that_exclude_the_class_are_a_proven_zero_resting_on_the_prof
         (UserProfileFact(path=_CATEGORIES, value="pension"),),
         (UserProfileFact(path=_CATEGORIES, value="trabajo,actividad_economica"),),
         # A declaration that starts after the ejercicio says nothing about it.
-        (UserProfileFact(path=_CATEGORIES, value="actividad_economica", valid_from=date(_EJERCICIO + 1, 1, 1)),),
+        (UserProfileFact(path=_CATEGORIES, value="actividad_economica", valid_from=date(2026, 1, 1)),),
     ],
     ids=["no-declaration", "pension-is-work-income", "declared", "declared-only-after-the-ejercicio"],
 )

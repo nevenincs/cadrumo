@@ -31,7 +31,7 @@ def verified_303_ledger_revision(
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
     ledger_filing_evidence: LedgerFilingEvidence | None = None,
 ) -> CalculationRevision:
-    """Return a Modelo 303 revision verified complete at ``at`` whose one casilla is fed by the row ``tx_id``."""
+    """Return a 2025 Modelo 303 revision verified complete at ``at`` whose one casilla is fed by the row ``tx_id``."""
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
@@ -52,7 +52,7 @@ def verified_303_ledger_revision(
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         observations=registry_grounded_observations(
             modelo="303",
-            filing_year=registry_snapshot_ref.modelo_year,
+            filing_year=2025,
             period=period.registry_token,
             casilla_values={_REVISION_CASILLA: Decimal("1")},
         ),

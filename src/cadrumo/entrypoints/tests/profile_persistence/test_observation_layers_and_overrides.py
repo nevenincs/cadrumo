@@ -36,8 +36,6 @@ from cadrumo.domain.calculations.registry.bindings import CasillaObservation, Re
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import T0
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
-
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -45,9 +43,8 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-_CAPTURED_AT = datetime(_YEAR, 4, 1, 9, 30, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_CAPTURED_AT = datetime(2026, 4, 1, 9, 30, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
 _CASILLA = validated_casilla_id("19")
 _OFFICIAL_METADATA = {"aeat_register_status": "ALTA", "aeat_expediente_id": "202513000000001Z"}
 
@@ -55,7 +52,7 @@ _OFFICIAL_METADATA = {"aeat_register_status": "ALTA", "aeat_expediente_id": "202
 def _observation(value: str) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2025,
         period="1T",
         observations=(
             CasillaObservation(
@@ -185,9 +182,9 @@ def test_an_override_is_audited_evented_and_cleared(tmp_path: Path, operation: P
         work_unit = create_work_unit(
             bucket_id=profile.bucket_id,
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2025,
             period=_PERIOD,
-            revision_id=str(open_ended_revision("130").id),
+            revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(
                 work_unit_repository=ports.work_unit_repository,
                 bucket_event_repository=ports.bucket_event_repository,
@@ -199,7 +196,7 @@ def test_an_override_is_audited_evented_and_cleared(tmp_path: Path, operation: P
 
         recorded = record_operator_local_observation(
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2025,
             period=_PERIOD,
             casilla_values={_CASILLA: Decimal("275.00")},
             reason="AEAT figure misread from the receipt",
@@ -218,7 +215,7 @@ def test_an_override_is_audited_evented_and_cleared(tmp_path: Path, operation: P
 
         cleared = clear_operator_local_observation(
             "130",
-            _YEAR,
+            2025,
             _PERIOD,
             reason="receipt re-read",
             actor="operator-B",
@@ -243,7 +240,7 @@ def test_an_override_is_audited_evented_and_cleared(tmp_path: Path, operation: P
             assert event.payload["work_unit_id"] == work_unit.work_unit_id
             assert (event.payload["modelo"], event.payload["filing_year"], event.payload["period"]) == (
                 "130",
-                str(_YEAR),
+                "2025",
                 "1T",
             )
         assert events[BucketEventType.MODELO_OBSERVATION_OVERRIDDEN].payload["reason"] == (
@@ -260,7 +257,7 @@ def test_clearing_without_an_override_is_refused(tmp_path: Path) -> None:
         with pytest.raises(ModeloLocalObservationError) as refusal:
             clear_operator_local_observation(
                 "130",
-                _YEAR,
+                2025,
                 _PERIOD,
                 reason="nothing to clear",
                 actor="operator-A",
@@ -284,7 +281,7 @@ def test_an_override_requires_an_actor_and_a_reason(
         with pytest.raises(ModeloLocalObservationError) as refusal:
             record_operator_local_observation(
                 modelo="130",
-                filing_year=_YEAR,
+                filing_year=2025,
                 period=_PERIOD,
                 casilla_values={_CASILLA: Decimal("1.00")},
                 reason=reason,

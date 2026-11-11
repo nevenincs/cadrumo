@@ -8,7 +8,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
@@ -42,14 +41,12 @@ from ..history_operation import (
 )
 from .registration_access_context_support import registration_access_context
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _TRANSACTION_ID = "c" * 64
-_OCCURRED_AT = datetime(_YEAR, 7, 31, 12, 30, tzinfo=UTC)
+_OCCURRED_AT = datetime(2026, 7, 31, 12, 30, tzinfo=UTC)
 
 
 def _unexpected_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:

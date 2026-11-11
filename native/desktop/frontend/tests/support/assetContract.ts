@@ -17,7 +17,6 @@ import {
   SCENARIO_ELEMENTS,
   creationDraft,
 } from "../../src/dev/assetsRegister";
-import { fixtureDay } from "../../src/dev/fixtureDates";
 import {
   servedEditionOf,
   servedSupport,
@@ -208,7 +207,7 @@ export const VEHICLE_ELEMENT = creationDraft("vehicle");
 export const SHIFT_HOURS = creationDraft("shift_hours");
 
 export const sale = {
-  disposal_date: fixtureDay(6, 30, -1),
+  disposal_date: "2025-06-30",
   reason: "sale",
   proceeds: { decimal: "9000.00" },
   transmission_costs: { decimal: "150.00" },

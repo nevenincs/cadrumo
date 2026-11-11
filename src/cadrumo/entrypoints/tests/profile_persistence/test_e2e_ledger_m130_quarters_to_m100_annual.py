@@ -74,7 +74,6 @@ from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
@@ -129,7 +128,7 @@ def bucket_id() -> str:
     return BUCKET_ID
 
 
-_M130_REVISION = str(open_ended_revision("130").id)
+_M130_REVISION = "2019-y-siguientes"
 
 
 M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
@@ -296,7 +295,7 @@ def _seed_taxpayer_profile() -> None:
                 UserProfileFact(path="activities.description", value="design services"),
                 # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
                 UserProfileFact(path="activities.iae_epigraph", value="844"),
-                UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1)),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
                 *cash_criterion_facts(YEAR),
             )
@@ -319,7 +318,7 @@ def calculate_m100_annual(
     binding_values: dict[BindingId, Decimal] | None = None,
     text_casilla_inputs: dict[CasillaId, str] | None = None,
 ) -> CalculationRevision:
-    """Run the live annual M100 calc, leaving the pagos relations to fold."""
+    """Run the live M100/2024/0A annual calc, leaving the pagos relations to fold."""
     _seed_taxpayer_profile()
     wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
@@ -420,7 +419,7 @@ def test_a_locally_filed_quarter_records_the_kind_its_revision_states(
 def test_verify_accepts_autonoma_m100_with_official_m130_observations(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """An internally consistent annual M100 draft passes verify replay.
+    """An internally consistent M100/2024 draft passes verify replay.
 
     The annual activity values are produced from real persisted ledger rows,
     and 0604 is folded from four imported AEAT-attested M130 observations.
@@ -520,7 +519,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     # ``Aux/VERSION`` names this product build, not the selected authority.
     # The export boundary derives it from PACKAGE_VERSION and writes a complete
     # mandatory Aux block before dictionary-addressed financial meaning.
-    output = tmp_path / f"modelo-100-{YEAR}-0A.xml"
+    output = tmp_path / "modelo-100-2024-0A.xml"
     receipt = export_revision_for_test(
         ModeloExportCommand(
             calculation_revision_id=annual.calculation_revision_id,
@@ -578,13 +577,13 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
 
     Completes the operator flow calculate → VERIFY on the same vertical, and
     proves the cross-period clean-state safety invariant fires end-to-end: the
-    M130 quarters and the prior-year M100 carry were filed locally through
+    M130 quarters and the prior-year M100/2023 carry were filed locally through
     ``persist_filed_revision_observation`` with the NON-official ``app_filing``
-    source_kind. Filing a dependent period (the annual M100) whose upstream evidence is
+    source_kind. Filing a dependent period (M100/2024) whose upstream evidence is
     local-only — not an external AEAT justificante / CSV register / live capture —
     must NOT be granted verificado-completo. The verify gate therefore returns a
     BLOCKING ``cross_period_dependency_unclean`` finding naming the non-official
-    prior-year filing (modelo 100 of the prior exercise), per
+    prior-year filing (modelo 100 / 2023), per
     ``no-silent-under-declaration`` and
     ``sensitive-financial-data-secure-storage-only``. This is the correct refusal, not a defect: it
     proves the chain reaches the verify gate and the safety guard engages on a
@@ -623,7 +622,7 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
     assert any(
         finding.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
         and finding.message_facts.get("source_modelo") == "130"
-        and finding.message_facts.get("source_filing_year") == YEAR
+        and finding.message_facts.get("source_filing_year") == 2024
         and finding.message_facts.get("source_period") == "1T"
         and "missing_current_filing_record" in str(finding.message_facts.get("blocker_codes", "")).split("|")
         for finding in unclean

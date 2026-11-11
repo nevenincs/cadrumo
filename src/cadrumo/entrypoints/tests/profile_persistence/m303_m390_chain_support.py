@@ -55,7 +55,7 @@ from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, Prorra
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, split_exercise_revisions
+from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -118,7 +118,7 @@ IRENE_YEAR = split_exercise_revisions("303", early_period="2T", late_period="3T"
 IRENE_TAX_ID = "B00015016"
 
 
-FILE_AT = datetime(YEAR, 4, 10, 12, 0, tzinfo=UTC)
+FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
 
 
 # Her local filings land well after every quarter and the annual summary fell due.
@@ -243,13 +243,7 @@ def wallet_decision(
     )
 
 
-#: An activity start older than every supported exercise.
-ACTIVITY_START_BEFORE_SUPPORT = date(filing_year_envelope().floor - 1, 1, 1)
-
-
-def store_profile(
-    secure_objects: SecureObjectRepository, *, activity_start_date: date = ACTIVITY_START_BEFORE_SUPPORT
-) -> None:
+def store_profile(secure_objects: SecureObjectRepository, *, activity_start_date: date = date(2020, 1, 1)) -> None:
     """Seed the ready taxpayer profile the M303 gates read."""
     seed_test_profile_record(
         create_user_profile_record(

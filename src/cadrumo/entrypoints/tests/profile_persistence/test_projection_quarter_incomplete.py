@@ -41,12 +41,11 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .projection_m130_seeding_support import QuarterSeeding, run_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2025
 #: The answers about earlier filings the first quarter refuses without, by binding.
 _EARLIER_FILING_ANSWERS = (
     ("irpf.previous_year_economic_activity_net_income", "13000"),
@@ -68,7 +67,7 @@ _FACTS = (
 
 @contextmanager
 def _bare_quarter(tmp_path: Path) -> Generator[SeededOperatorWork]:
-    """The first-quarter Modelo 130 of a profile, calculated with none of the earlier-filing answers."""
+    """The 2025 first-quarter Modelo 130 of a profile, calculated with none of the earlier-filing answers."""
     with (
         profile_adapter_composition(),
         seeded_operator_work(
@@ -182,7 +181,7 @@ def test_the_refusal_serves_the_step_that_opens_the_quarter(tmp_path: Path) -> N
             assert isinstance(step, OperationOpenWorkStepV1)
             # The very declaration whose form states what is open.
             assert step.work_unit_id == quarter.work_unit_id
-            assert "130" in step.words and str(_YEAR) in step.words
+            assert "130" in step.words and "2025" in step.words
             assert "`" not in step.words and "--" not in step.words
             offers[language] = step.words
             # The step survives the stored detail's round trip, as the relay releases it.

@@ -21,12 +21,9 @@ from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..calculation_revision_rendering import CalculationRenderingSnapshot, retain_registry_schema_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_EXERCISE = filing_year_envelope().horizon
 
 
 class _PresentationFields(BaseModel):
@@ -85,7 +82,7 @@ def test_saved_rendering_keeps_complete_json_bytes_after_class_serializers_are_r
     modelo_id: str, period: str
 ) -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.reading_snapshot(modelo_id, filing_year=_EXERCISE, period=period)
+        snapshot = operation.reading_snapshot(modelo_id, filing_year=2026, period=period)
         ordinary = snapshot.model_dump(mode="json")
         assert "localization_key" not in ordinary["revision"]
         original = CalculationRenderingSnapshot.capture(
@@ -110,7 +107,7 @@ def test_saved_rendering_keeps_complete_json_bytes_after_class_serializers_are_r
 
 def test_saved_rendering_refuses_tampered_fields_hidden_by_ordinary_registry_serialization() -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot("131", filing_year=_EXERCISE, period="1T")
+        snapshot = operation.snapshot("131", filing_year=2026, period="1T")
         original = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
         )
@@ -131,7 +128,7 @@ def test_saved_rendering_snapshot_roundtrips_complete_registry_fields(
     predecessor_type: type[DeclaredPredecessor | NoPredecessor],
 ) -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot(modelo_id, filing_year=_EXERCISE, period="2T")
+        snapshot = operation.snapshot(modelo_id, filing_year=2026, period="2T")
         assert isinstance(snapshot.revision.predecessor, predecessor_type)
         original = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
@@ -147,7 +144,7 @@ def test_saved_rendering_snapshot_roundtrips_complete_registry_fields(
 
 def test_an_existing_valid_rendering_without_directory_context_keeps_its_shape_and_digest() -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot("720", filing_year=_EXERCISE, period="0A")
+        snapshot = operation.snapshot("720", filing_year=2026, period="0A")
         original = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
         )
@@ -164,7 +161,7 @@ def test_an_existing_valid_rendering_without_directory_context_keeps_its_shape_a
 
 def test_directory_context_is_bound_to_the_saved_rendering_digest() -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot("131", filing_year=_EXERCISE, period="1T")
+        snapshot = operation.snapshot("131", filing_year=2026, period="1T")
         original = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
         )
@@ -178,7 +175,7 @@ def test_directory_context_is_bound_to_the_saved_rendering_digest() -> None:
 @pytest.mark.parametrize("missing_context", (False, True), ids=("missing-sibling", "missing-directory"))
 def test_a_saved_selected_view_refuses_missing_sibling_authority(missing_context: bool) -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot("303", filing_year=_EXERCISE, period="2T")
+        snapshot = operation.snapshot("303", filing_year=2026, period="2T")
         original = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
         )
@@ -195,7 +192,7 @@ def test_a_saved_selected_view_refuses_missing_sibling_authority(missing_context
 @pytest.mark.parametrize("modelo_id", ("303", "131"), ids=("declared-predecessor", "grounded-root"))
 def test_saved_rendering_snapshot_refuses_flat_predecessor_objects(modelo_id: str) -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot(modelo_id, filing_year=_EXERCISE, period="2T")
+        snapshot = operation.snapshot(modelo_id, filing_year=2026, period="2T")
         original = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
         )

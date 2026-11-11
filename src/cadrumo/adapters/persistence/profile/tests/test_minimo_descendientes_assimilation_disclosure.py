@@ -38,7 +38,6 @@ from .....core.casilla_id import CasillaId
 from .....core.descendant_relacion import DescendantRelacion
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.schema import ModeloRevision
-from .....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from .....domain.user_profile.values import UserProfileFact
@@ -53,7 +52,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["advisory_profile_bucket"]
 
 _BUCKET_ID = "6c6c6c6c-6c6c-4c6c-8c6c-6c6c6c6c6c6c"
-_FILING_YEAR = newest_authored_edition("100")
+_FILING_YEAR = 2024
 _ANNUAL_PERIOD = "0A"
 _ESTATAL_CASILLA: CasillaId = "0513"
 _CLAIMED = {_ESTATAL_CASILLA: Decimal("2400")}

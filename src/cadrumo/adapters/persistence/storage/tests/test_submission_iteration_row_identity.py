@@ -27,7 +27,6 @@ from datetime import UTC, datetime
 import pytest
 
 from .....core.period import Period
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from ...profile.submission import SubmissionRepository
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
@@ -38,9 +37,8 @@ _runtime_profile = default_bucket_runtime_profile_fixture()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
-_HORIZON_YEAR = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_HORIZON_YEAR, "1T")
-_SUBMITTED_AT = datetime(1980, 4, 27, 10, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2026, "1T")
+_SUBMITTED_AT = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
 
 
 def _filing(draft_id: str) -> ModeloPresentado:

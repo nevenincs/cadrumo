@@ -29,7 +29,6 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.tests.published_authority import (
-    published_legal_reference,
     published_snapshot,
     published_supported_filing_years,
 )
@@ -64,24 +63,14 @@ _LEY_7_2024: _Tranches = (*_LEY_31_2022[:4], (Decimal("300000"), None, Decimal("
 _BASE_AHORRO_VALUE = Decimal("350000.00")
 
 
-#: Each wording of art. 93.2.e).2.º paired with the published provision whose
-#: validity window says which exercises it governs. The tranches above are the
-#: independent oracle; the registry only supplies the legal window.
-_REDACTIONS: tuple[tuple[str, _Tranches], ...] = (
-    ("ley-35-2006:art-93-ahorro-2021", _LEY_11_2020),
-    ("ley-35-2006:art-93-ahorro-2023", _LEY_31_2022),
-    ("ley-35-2006:art-93-ahorro", _LEY_7_2024),
-)
-
-
 def _escala_del_ahorro(year: int) -> _Tranches:
-    for reference_id, tranches in _REDACTIONS:
-        provision = published_legal_reference(reference_id)
-        if provision.effective_from.year <= year and (
-            provision.effective_to is None or year <= provision.effective_to.year
-        ):
-            return tranches
-    raise AssertionError(f"no redaction of art. 93.2.e).2.º is enrolled here for {year}")
+    if year <= 2020:
+        raise AssertionError(f"no redaction of art. 93.2.e).2.º is enrolled here for {year}")
+    if year <= 2022:
+        return _LEY_11_2020
+    if year <= 2024:
+        return _LEY_31_2022
+    return _LEY_7_2024
 
 
 def _expected_cuota(base: Decimal, tranches: _Tranches) -> Decimal:

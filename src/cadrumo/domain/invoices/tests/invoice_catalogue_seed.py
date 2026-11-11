@@ -20,9 +20,6 @@ from typing import Final
 
 from pydantic import BaseModel
 
-from ...calculations.registry.authority import bundled_indexed_authority
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
-
 CENT: Final = Decimal("0.01")
 
 SLOT_FRACTIONS: Final[Mapping[str, Decimal | None]] = {
@@ -38,56 +35,30 @@ SLOT_FRACTIONS: Final[Mapping[str, Decimal | None]] = {
 }
 """The fraction each slot carries, written out from the statute."""
 
-
-def _registry_transitional_windows() -> Mapping[str, tuple[date, date]]:
-    """Read the span each coexisting Spanish rate slot was offered from the governed rate schedule."""
-    spans: dict[str, list[date]] = {}
-    with bundled_indexed_authority().operation() as operation:
-        for variant in operation.governed_fact("iva-rate-schedule").variants:
-            selectors = {selector.name: selector.value for selector in variant.selectors}
-            role = str(selectors.get("rate_role"))
-            if selectors.get("member_state") != "es" or not role.startswith("coexisting-"):
-                continue
-            assert variant.valid_from is not None
-            assert variant.valid_to is not None
-            spans.setdefault(f"RATE_{role.removeprefix('coexisting-')}", []).extend(
-                (variant.valid_from, variant.valid_to)
-            )
-    return {slot: (min(days), max(days)) for slot, days in spans.items()}
-
-
-TRANSITIONAL_WINDOWS: Final[Mapping[str, tuple[date, date]]] = _registry_transitional_windows()
+TRANSITIONAL_WINDOWS: Final[Mapping[str, tuple[date, date]]] = {
+    "RATE_5": (date(2023, 1, 1), date(2024, 9, 30)),
+    "RATE_2": (date(2024, 10, 1), date(2024, 12, 31)),
+    "RATE_7.5": (date(2024, 10, 1), date(2024, 12, 31)),
+}
 """The transitional slots and the devengo dates they were in force.
 
-The spans are the governed schedule's own coexisting-track bounds: the 5 % food
-rate of RD-ley 20/2022 and the 2 % and 7.5 % rates RD-ley 4/2024 put in its
-place. The statutory fractions stay written out above, so the cuota arithmetic
-is still independent of the registry.
+RD-ley 20/2022 put the 5 % food rate in force for 2023 until RD-ley 4/2024
+replaced it with the 2 % and 7.5 % rates for the last quarter of 2024.
 """
 
-_FILING_YEARS: Final = filing_year_envelope()
-_FX_RATE_DATE: Final = date(_FILING_YEARS.floor, 1, 2)
-
-STANDING_DEVENGO: Final = date(_FILING_YEARS.horizon, 7, 7)
-"""A mid-year day on which only the standing rates apply."""
-
-
-def window_middle(slot: str) -> date:
-    """Return a day strictly inside the span ``slot`` was offered."""
-    start, end = TRANSITIONAL_WINDOWS[slot]
-    return start + (end - start) // 2
-
-
-def _devengo_dates() -> tuple[date, ...]:
-    edges: set[date] = set()
-    for start, end in TRANSITIONAL_WINDOWS.values():
-        edges |= {start - timedelta(days=1), start, end, end + timedelta(days=1)}
-    middles = {window_middle(slot) for slot in TRANSITIONAL_WINDOWS}
-    spread = {date(_FILING_YEARS.floor, 1, 3), STANDING_DEVENGO}
-    return tuple(sorted(edges | middles | spread))
-
-
-DEVENGO_DATES: Final = _devengo_dates()
+DEVENGO_DATES: Final = (
+    date(2022, 1, 3),
+    date(2022, 12, 31),
+    date(2023, 1, 1),
+    date(2023, 6, 15),
+    date(2024, 9, 30),
+    date(2024, 10, 1),
+    date(2024, 11, 15),
+    date(2024, 12, 31),
+    date(2025, 1, 1),
+    date(2025, 7, 7),
+    date(2026, 3, 3),
+)
 """Every date a transitional slot enters or leaves force, the days either side, and a spread."""
 
 COUNTERPARTIES: Final = (
@@ -178,11 +149,11 @@ def _variant(index: int, base_total: Decimal, iva_total: Decimal) -> Mapping[str
         {
             "currency": "USD",
             "fx_rate": "0.9137",
-            "fx_rate_date": _FX_RATE_DATE.isoformat(),
+            "fx_rate_date": "2024-01-02",
             "fx_rate_source": "ECB",
-            "fx_rate_observation_date": (_FX_RATE_DATE - timedelta(days=4)).isoformat(),
+            "fx_rate_observation_date": "2023-12-29",
         },
-        {"created_at": "1980-02-03T10:11:12+00:00", "updated_at": "1980-02-04T09:00:00+00:00"},
+        {"created_at": "2025-02-03T10:11:12+00:00", "updated_at": "2025-02-04T09:00:00+00:00"},
     )
     return variants[index % len(variants)]
 
@@ -217,7 +188,7 @@ def seed_payloads() -> list[dict[str, object]]:
         seed_payload(
             SeedCase(
                 index,
-                TRANSITIONAL_WINDOWS["RATE_2"][1],
+                date(2024, 12, 31),
                 ("RATE_2", "RATE_21"),
                 counterparty=(None, "ES"),
                 extra={"invoice_class": "SIMPLIFICADA"},
@@ -226,7 +197,7 @@ def seed_payloads() -> list[dict[str, object]]:
     )
     # The devengo is the operation date: a 2 % line issued after the window
     # closed is still in force when the operation happened inside it.
-    payloads.append(seed_payload(SeedCase(index + 1, TRANSITIONAL_WINDOWS["RATE_2"][1], ("RATE_2",), issued_offset=2)))
+    payloads.append(seed_payload(SeedCase(index + 1, date(2024, 12, 31), ("RATE_2",), issued_offset=2)))
     return payloads
 
 

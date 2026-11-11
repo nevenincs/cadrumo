@@ -46,7 +46,6 @@ from ..workbench_generation_contracts import (
 )
 from .workbench_generation_support import (
     NOW,
-    YEAR,
     ChangingLedgerStore,
     Repository,
     StableStore,
@@ -136,7 +135,7 @@ def test_calendar_evidence_scope_preserves_available_empty_for_historical_filing
     """A prior-year filing is outside the query, not orphaned or never captured."""
     historical = modelo_record()
     schedule = OverviewCalendar(
-        range=OverviewCalendarRange(from_date=date(YEAR, 1, 1), to_date=date(YEAR, 12, 31)),
+        range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
         entries=(),
         generated_at=NOW,
         evaluated_on=NOW.date(),
@@ -328,7 +327,7 @@ def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
     from ..overview.home import HomeAvailability, HomeZoneState
     from ..workbench_generation_home import secure_profile_home_input
 
-    observed_at = datetime(YEAR, 9, 4, tzinfo=UTC)
+    observed_at = datetime(2026, 9, 4, tzinfo=UTC)
     home = secure_profile_home_input(
         observed_at=observed_at,
         account_session=HomeAccountSession(posture=HomeSessionPosture.NO_PROFILE),
@@ -452,8 +451,8 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
         return HomeDeclarationResume(
             work_unit_id=unit * 64,
             modelo="303",
-            filing_year=YEAR,
-            period=Period.from_year_and_code(YEAR, "3T"),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "3T"),
             name=f"{unit}-declaration",
             state=state,
         )
@@ -475,7 +474,7 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
     )
     only = offered[0]
     assert only.reason_code == "declaration_needs_review"
-    assert (only.modelo, only.filing_year) == ("303", YEAR)
+    assert (only.modelo, only.filing_year) == ("303", 2026)
     assert only.period is not None, "an addressed action without its period cannot be acted on"
     assert only.action.action.action_id == "operator.modelo.work.revisions"
 
@@ -533,10 +532,10 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
                 verified_by="operator",
             ),
             calculation_revision_id="b" * 64,
-            registry_snapshot_ref=published_snapshot("303", filing_year=YEAR, period="1T").snapshot_ref,
+            registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
             completeness_status=status,
             findings=findings,
-            run_at=datetime(YEAR, 9, 4, tzinfo=UTC),
+            run_at=datetime(2026, 9, 4, tzinfo=UTC),
             verified_by="operator",
             granted_verificado_completo=False,
         )

@@ -78,7 +78,7 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
                 casilla_inputs={},
                 binding_values=modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_60,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -137,7 +137,7 @@ def test_in_scope_period_rejects_supplied_first_period_zero_decision(
                         casilla_inputs={},
                         binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                         iva_compensation_decision=supplied_decision,
-                        filing_period_date=date(TARGET_YEAR, 6, 30),
+                        filing_period_date=date(2026, 6, 30),
                         ports=_calculation_ports_108,
                         clock=DECIDED_AT,
                         filing_instance_evidence=general_m303_filing_evidence(
@@ -172,7 +172,7 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                     iva_compensation_decision=None,
                     filing_instance_evidence=filing_instance_evidence(work_unit.period, operation=operation),
-                    filing_period_date=date(TARGET_YEAR, 3, 31),
+                    filing_period_date=date(2026, 3, 31),
                     ports=_calculation_ports_138,
                     clock=DECIDED_AT,
                 ).revision
@@ -191,7 +191,7 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
 
             seed_iva_compensation_period(
                 taxpayer_nif=taxpayer_nif,
-                period=period(TARGET_YEAR - 1, "4T"),
+                period=period(2025, "4T"),
                 amount=Decimal("450.00"),
                 seeded_at=DECIDED_AT,
                 repository=IvaCompensationHistoryRepository(),
@@ -215,7 +215,7 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                     iva_compensation_decision=None,
                     filing_instance_evidence=filing_instance_evidence(work_unit.period, operation=operation),
-                    filing_period_date=date(TARGET_YEAR, 3, 31),
+                    filing_period_date=date(2026, 3, 31),
                     ports=_calculation_ports_175,
                     clock=DECIDED_AT,
                 )
@@ -244,9 +244,7 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
             assert refreshed.divergence == "wallet_missing"
             assert refreshed.local_recurrence_amount == Decimal("450.00")
             assert refreshed.blocked is True
-            assert any(
-                source.source_periods == (period(TARGET_YEAR - 1, "4T"),) for source in refreshed.authority_sources
-            )
+            assert any(source.source_periods == (period(2025, "4T"),) for source in refreshed.authority_sources)
 
 
 def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303_engine(
@@ -282,7 +280,7 @@ def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303
                     "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
                 },
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_221,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -344,7 +342,7 @@ def test_explicit_nonzero_binding_conflicts_with_prior_zero_seed(
                     "modelo-303-compensacion-pendiente-anteriores": Decimal("1.00"),
                 },
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_273,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(

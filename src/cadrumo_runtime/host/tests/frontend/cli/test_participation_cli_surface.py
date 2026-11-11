@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -23,7 +22,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.ledger.participation_read import get_transaction_participation
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.participation_index import (
     TransactionRevisionParticipation,
@@ -35,8 +33,6 @@ from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -109,7 +105,7 @@ def _seed_transaction_id(profile: NativeCliProfileFixture) -> str:
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 5, 2).isoformat(),
+            "2026-05-02",
             "--amount",
             "121.00",
             "--direction",
@@ -148,7 +144,7 @@ def test_participation_rebuild_dispatches_not_swallowed_as_id(tmp_path: Path) ->
         "identity.name": "Participation",
         "identity.surnames": "Rebuilder",
         "activities.description": "design",
-        "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
+        "censo.activity_start_date": "2025-01-01",
     }
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-participation-rebuild", facts=facts)
@@ -175,7 +171,7 @@ def test_participation_lookup_still_works_for_transaction_id(tmp_path: Path) -> 
         "identity.name": "Participation",
         "identity.surnames": "Lookup",
         "activities.description": "design",
-        "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
+        "censo.activity_start_date": "2025-01-01",
     }
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-participation-lookup", facts=facts)
@@ -201,8 +197,8 @@ def test_get_transaction_participation_reads_real_index(tmp_path: Path) -> None:
                     calculation_revision_id="b" * 64,
                     work_unit_id="c" * 64,
                     modelo=ModeloCode("303"),
-                    filing_year=_YEAR,
-                    period=Period.from_year_and_code(_YEAR, "2T"),
+                    filing_year=2024,
+                    period=Period.from_year_and_code(2024, "2T"),
                     revision_state="presentado",
                     filing_record_id="d" * 64,
                 ),

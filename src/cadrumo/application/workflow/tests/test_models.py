@@ -24,7 +24,6 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
@@ -42,11 +41,10 @@ from ..run_models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_RUN_STARTED_AT = datetime(1980, 4, 12, 9, 0, 0, tzinfo=UTC)
-_YEAR = filing_year_envelope().horizon
+_RUN_STARTED_AT = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 
 
-def _period(year: int = _YEAR, code: str = "1T") -> Period:
+def _period(year: int = 2026, code: str = "1T") -> Period:
     return Period.from_year_and_code(year, code)
 
 
@@ -63,7 +61,7 @@ class TestComputeRunId:
         value or a changed recipe moved the id, and that is how the previous
         expectation came to be the hash of a tax id the fixtures no longer use.
         """
-        started = datetime(1980, 4, 12, 9, 0, 0, tzinfo=UTC)
+        started = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
         tax_id = "X0001500M"
         a = compute_run_id(tax_id=tax_id, modelo="130", period=_period(), started_at=started)
         b = compute_run_id(tax_id=tax_id, modelo="130", period=_period(), started_at=started)
@@ -77,7 +75,7 @@ class TestComputeRunId:
 
     def test_a_changed_seed_changes_the_id(self) -> None:
         """Each seed component is in the hash, so none can be silently dropped."""
-        started = datetime(1980, 4, 12, 9, 0, 0, tzinfo=UTC)
+        started = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
         baseline = compute_run_id(tax_id="X0001500M", modelo="130", period=_period(), started_at=started)
 
         assert compute_run_id(tax_id="X0001500M", modelo="100", period=_period(), started_at=started) != baseline
@@ -96,14 +94,14 @@ class TestComputeRunId:
 
     def test_differs_by_tax_id(self) -> None:
         """Different tax ids produce different ids."""
-        started = datetime(1980, 4, 12, 9, 0, 0, tzinfo=UTC)
+        started = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
         a = compute_run_id(tax_id="A", modelo="130", period=_period(), started_at=started)
         b = compute_run_id(tax_id="B", modelo="130", period=_period(), started_at=started)
         assert a != b
 
     def test_rejects_combined_string_period(self) -> None:
         """A combined token must not enter the workflow run-id contract."""
-        combined_period = cast(Any, f"{_YEAR}Q1")
+        combined_period = cast(Any, "2026Q1")
         with pytest.raises(TypeError, match=r"cadrumo\.core\.period\.Period"):
             compute_run_id(
                 tax_id="X0001500M",
@@ -117,7 +115,7 @@ class TestWorkflowStepValidation:
     """Strict pydantic validation on workflow step records."""
 
     def test_deadline_details_are_one_closed_context_shape(self) -> None:
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         step = WorkflowStep(
             stage=WorkflowStage.COMPUTING_DEADLINES,
             started_at=now,
@@ -128,8 +126,8 @@ class TestWorkflowStepValidation:
                 kind="deadline_context",
                 modelo=Modelo("303"),
                 period=_period(),
-                opens_on=date(_YEAR, 4, 1),
-                closes_on=date(_YEAR, 4, 20),
+                opens_on=datetime(2026, 4, 1, tzinfo=UTC).date(),
+                closes_on=datetime(2026, 4, 20, tzinfo=UTC).date(),
             ),
         )
         assert isinstance(step.details, WorkflowDeadlineContextDetails)
@@ -139,7 +137,7 @@ class TestWorkflowStepValidation:
 
     @pytest.mark.parametrize("legacy_key", ("next_action", "error_message", "provider_operator_impact", "key"))
     def test_details_reject_legacy_prose_and_arbitrary_fields(self, legacy_key: str) -> None:
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         with pytest.raises(ValidationError, match=legacy_key):
             WorkflowStep.model_validate(
                 {
@@ -157,7 +155,7 @@ class TestWorkflowStepValidation:
             )
 
     def test_deadline_details_reject_a_role_without_a_window(self) -> None:
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         with pytest.raises(ValidationError, match="deadline_role and filing_window"):
             WorkflowStep.model_validate(
                 {
@@ -176,7 +174,7 @@ class TestWorkflowStepValidation:
             )
 
     def test_summary_requires_an_abstract_locale_key(self) -> None:
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         with pytest.raises(ValidationError, match="stable dotted locale key"):
             WorkflowStep(
                 stage=WorkflowStage.LOADING_PROFILE,
@@ -188,7 +186,7 @@ class TestWorkflowStepValidation:
 
     def test_summary_rejects_an_unemitted_dotted_locale_key(self) -> None:
         """Only engine-produced identities may enter persisted workflow records."""
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         with pytest.raises(ValidationError, match="closed workflow producer keys"):
             WorkflowStep(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
@@ -199,7 +197,7 @@ class TestWorkflowStepValidation:
             )
 
     def test_actionable_precondition_verdict_round_trips_without_command_prose(self) -> None:
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         verdict = PreconditionVerdict(
             failed_condition_id="workflow.draft.ready",
             evidence=(
@@ -252,7 +250,7 @@ class TestWorkflowStepValidation:
         evidence_key: str,
         evidence_value: str,
     ) -> None:
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         verdict = PreconditionVerdict(
             failed_condition_id="workflow.draft.ready",
             evidence=(
@@ -277,7 +275,7 @@ class TestWorkflowStepValidation:
             )
 
     def test_refusal_details_require_the_typed_precondition_verdict(self) -> None:
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         with pytest.raises(ValidationError, match="require a typed precondition verdict"):
             WorkflowStep(
                 stage=WorkflowStage.VALIDATING_DRAFT,
@@ -292,7 +290,7 @@ class TestWorkflowStepValidation:
             )
 
     def test_no_recovery_verdict_round_trips_as_a_closed_outcome(self) -> None:
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         verdict = PreconditionVerdict(
             failed_condition_id="workflow.submission.safe",
             evidence=(
@@ -319,8 +317,8 @@ class TestWorkflowStepValidation:
 
     def test_ended_at_must_not_precede_started_at(self) -> None:
         """A completed step must have ``ended_at >= started_at``."""
-        now = datetime(1980, 4, 12, 12, 0, tzinfo=UTC)
-        earlier = datetime(1980, 4, 12, 10, 0, tzinfo=UTC)
+        now = datetime(2026, 4, 12, 12, 0, tzinfo=UTC)
+        earlier = datetime(2026, 4, 12, 10, 0, tzinfo=UTC)
         with pytest.raises(ValidationError, match=r"precedes started_at"):
             WorkflowStep(
                 stage=WorkflowStage.LOADING_PROFILE,
@@ -335,7 +333,7 @@ class TestWorkflowResultTerminal:
     """Terminal-state invariants on the result envelope."""
 
     def _step(self) -> WorkflowStep:
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         return WorkflowStep(
             stage=WorkflowStage.LOADING_PROFILE,
             started_at=now,
@@ -371,7 +369,7 @@ class TestWorkflowResultTerminal:
     )
     def test_terminal_result_rejects_invalid_combinations(self, overrides: dict[str, Any], match: str) -> None:
         """Terminal workflow results reject impossible stage/reason combinations."""
-        now = datetime(1980, 4, 12, tzinfo=UTC)
+        now = datetime(2026, 4, 12, tzinfo=UTC)
         values: dict[str, Any] = {
             "run_id": "a" * 16,
             "started_at": now,
@@ -388,7 +386,7 @@ class TestWorkflowResultTerminal:
 
     def test_json_round_trip(self) -> None:
         """Result records survive a full JSON round-trip."""
-        now = datetime(1980, 4, 12, 9, 0, 0, tzinfo=UTC)
+        now = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
         original = WorkflowResult(
             run_id="0" * 16,
             started_at=now,
@@ -410,14 +408,14 @@ def test_workflow_obligation_projection_carries_stable_recovery_facts() -> None:
     """The real domain deadline projects to stable persisted facts only."""
     deadline = ModeloDeadline(
         modelo=Modelo("303"),
-        period=_period(),
-        opens_on=date(_YEAR, 4, 1),
-        closes_on=date(_YEAR, 4, 20),
-        # A close moved one day later by a weekend or holiday.
-        adjusted_closes_on=date(_YEAR, 4, 21),
+        period=_period(2025),
+        opens_on=date(2025, 4, 1),
+        closes_on=date(2025, 4, 20),
+        # The 20th is a Sunday, so the filer has until the Monday.
+        adjusted_closes_on=date(2025, 4, 21),
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         shift_reason="domingo",
-        payment_cutoff_on=date(_YEAR, 4, 15),
+        payment_cutoff_on=date(2025, 4, 15),
         status=ObligationStatus.OVERDUE,
         boe_references=("orden-hfp-105-2017:art-1",),
         recovery=Recovery(
@@ -437,7 +435,7 @@ def test_workflow_obligation_projection_carries_stable_recovery_facts() -> None:
     payload = projected.model_dump(mode="json")
 
     assert projected.modelo == Modelo("303")
-    assert projected.period == _period()
+    assert projected.period == _period(2025)
     assert projected.recovery is not None
     assert projected.recovery.still_filable is True
     assert projected.recovery.recargo_band_id == "completed_months_2"

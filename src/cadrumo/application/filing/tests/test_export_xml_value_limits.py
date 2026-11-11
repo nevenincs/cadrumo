@@ -26,11 +26,6 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
-from ....domain.calculations.registry.tests.authored_editions import (
-    newest_authored_edition,
-    supported_authored_exercises,
-)
-from ....domain.calculations.registry.tests.published_authority import published_source_reference
 from ....domain.filing.protocols import ModeloInputValue
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
@@ -47,14 +42,19 @@ from .export_support import filer_with_nothing_else, m151_producer_snapshot
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _XSD = "{http://www.w3.org/2001/XMLSchema}"
-_YEAR = newest_authored_edition("100")
+_YEAR = 2025
+_XSD_FILES = {
+    2022: "27-100-esquema-xsd-ejercicio-2022-actualizado-07-11-2024-675-kb-ejecutable.xsd",
+    2023: "28-100-esquema-xsd-ejercicio-2023-actualizado-19-01-2026-709-kb-ejecutable.xsd",
+    2024: "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd",
+    2025: "03-100-esquema-xsd-ejercicio-2025-actualizado-24-06-2026-793-kb-ejecutable.xsd",
+}
 
 
 @cache
 def _bundled_xsd(year: int = _YEAR) -> Element[str]:
-    # The schema is the official design file the registry publishes for the exercise; its facets are the oracle.
-    source = published_source_reference(f"aeat-dr-100-{year}-xsd")
-    root = DefusedElementTree.parse(Path(bundled_path() / source.corpus_path)).getroot()
+    path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files", _XSD_FILES[year])
+    root = DefusedElementTree.parse(Path(path)).getroot()
     assert root is not None
     return root
 
@@ -627,7 +627,7 @@ def test_a_facet_this_check_cannot_apply_refuses_rather_than_passes(facet: str) 
     assert refused.value.context == {"source_id": "literal", "type_name": "tipo_Limitado"}
 
 
-@pytest.mark.parametrize("year", supported_authored_exercises("100"))
+@pytest.mark.parametrize("year", [2022, 2023, 2024, 2025])
 def test_every_row_the_dictionary_places_has_a_place_in_its_edition(
     operation: PinnedAuthorityOperation, year: int
 ) -> None:

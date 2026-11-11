@@ -18,7 +18,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
@@ -50,16 +49,15 @@ from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_YEAR, "2T")
-_BOOKED = date(_YEAR, 4, 15)
+_PERIOD = Period.from_year_and_code(2026, "2T")
+_BOOKED = date(2026, 4, 15)
 _UNACCEPTED = IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE
 _CASILLA_59_BASE: BindingId = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 
 
 @cache
 def _modelo_303_revision() -> ModeloRevision:
-    return published_snapshot("303", filing_year=_YEAR, period="2T").revision
+    return published_snapshot("303", filing_year=2026, period="2T").revision
 
 
 def _raw(provider_id: str, amount: Decimal) -> RawTransaction:
@@ -76,7 +74,7 @@ def _raw(provider_id: str, amount: Decimal) -> RawTransaction:
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(1980, 4, 16, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 16, 9, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -106,7 +104,7 @@ def _row(
         "iva_amount": iva,
         "iva_category": IvaCategory(category),
         "lifecycle_state": TransactionLifecycleState.ACTIVE,
-        "classified_at": datetime(1980, 4, 16, 10, 0, tzinfo=UTC),
+        "classified_at": datetime(2026, 4, 16, 10, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if direction is TransactionDirection.OUTGOING:
@@ -144,7 +142,7 @@ def _cash_sale(provider_id: str) -> Transaction:
     return _row(
         provider_id,
         cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),
-        operation_date=date(_YEAR, 3, 20),
+        operation_date=date(2026, 3, 20),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
                 payment_date=_BOOKED,

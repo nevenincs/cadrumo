@@ -58,19 +58,16 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
-_EXERCISE = filing_year_envelope().horizon
-_REVISION_ID = str(revision_serving_period("303", _EXERCISE, "1T").id)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _PROFILE_LABEL = "operator"
-_DRAFT_STORAGE_WRITTEN_AT = datetime(1980, 5, 26, 10, 0, 0, tzinfo=UTC)
-_SESSION_PROBE_NOW = datetime(_EXERCISE, 5, 26, 12, 0, 0, tzinfo=UTC)
+_DRAFT_STORAGE_WRITTEN_AT = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
+_SESSION_PROBE_NOW = datetime(2026, 5, 26, 12, 0, 0, tzinfo=UTC)
 _EXPIRED_SESSION_AUTHENTICATED_AT = _SESSION_PROBE_NOW - timedelta(minutes=30)
 _LIVE_SESSION_AUTHENTICATED_AT = _SESSION_PROBE_NOW - timedelta(minutes=5)
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
@@ -128,11 +125,11 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     now = _DRAFT_STORAGE_WRITTEN_AT
 
-    period = Period.from_year_and_code(_EXERCISE, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        revision_id=_REVISION_ID,
-        modelo_year=_EXERCISE,
+        revision_id="2026-v1",
+        modelo_year=2026,
         period="1T",
     )
     # The repository files a draft under its content address, so the corrupted
@@ -157,7 +154,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
             values=(),
             created_at=now,
             updated_at=now,
-            schema_version=registry_schema_version(modelo="303", revision_id=_REVISION_ID),
+            schema_version=registry_schema_version(modelo="303", revision_id="2026-v1"),
         ),
     )
     secure_object_repository_for_active_bucket().save(

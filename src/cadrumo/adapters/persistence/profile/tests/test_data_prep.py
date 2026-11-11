@@ -43,15 +43,12 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from .issued_invoice_support import paid_servicios_invoice
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
-_PERIOD_1T_2026 = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD_1T_2026 = Period.from_year_and_code(2026, "1T")
 
 
 _tx_repository = bucket_scoped_transaction_catalogue_fixture(_BUCKET_ID, name="_tx_repository")
@@ -71,7 +68,7 @@ def _raw(provider_id: str, *, booked_date: date, amount: Decimal = Decimal("100.
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+            ingested_at=datetime(2026, 1, 1, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": BindingSourceKind.LEDGER_TRANSACTION.value},
@@ -81,7 +78,7 @@ def _raw(provider_id: str, *, booked_date: date, amount: Decimal = Decimal("100.
 def _transaction(
     provider_id: str,
     *,
-    booked_date: date = date(_YEAR, 2, 10),
+    booked_date: date = date(2026, 2, 10),
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
     category_id: str | None = None,
     taxable_base: Decimal | None = None,
@@ -106,7 +103,7 @@ def _transaction(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
-            "classified_at": datetime(_YEAR, 2, 11, tzinfo=UTC)
+            "classified_at": datetime(2026, 2, 11, tzinfo=UTC)
             if business_classification != BusinessClassification.NOT_YET_PROCESSED
             else None,
             "classified_by": "manual",
@@ -114,7 +111,7 @@ def _transaction(
     )
 
 
-def _invoice(*, issued_at: date = date(_YEAR, 2, 5)) -> Invoice:
+def _invoice(*, issued_at: date = date(2026, 2, 5)) -> Invoice:
     return paid_servicios_invoice("INV-001", issued_at=issued_at)
 
 
@@ -128,8 +125,8 @@ def _evidence(*, evidence_id: str = "ev-001") -> PurchaseInvoiceEvidence:
             # The bytes' in-store home; equals source_sha256 for a real `evidence add`.
             "attachment_id": "a" * 64,
             "media_kind": MediaKind.PDF,
-            "created_at": datetime(_YEAR, 2, 5, tzinfo=UTC),
-            "updated_at": datetime(_YEAR, 2, 5, tzinfo=UTC),
+            "created_at": datetime(2026, 2, 5, tzinfo=UTC),
+            "updated_at": datetime(2026, 2, 5, tzinfo=UTC),
         },
     )
 
@@ -140,7 +137,7 @@ def _work_unit(*, modelo: str = "130", period: Period = _PERIOD_1T_2026, name: s
         modelo=modelo,
         filing_year=period.filing_year,
         period=period,
-        revision_id=revision_covering(modelo, period.filing_year).id,
+        revision_id="2019-y-siguientes",
     )
     return WorkUnit(
         work_unit_id=work_unit_id,
@@ -148,10 +145,10 @@ def _work_unit(*, modelo: str = "130", period: Period = _PERIOD_1T_2026, name: s
         modelo=ModeloCode(modelo),
         filing_year=period.filing_year,
         period=period,
-        revision_id=revision_covering(modelo, period.filing_year).id,
+        revision_id="2019-y-siguientes",
         name=name,
-        created_at=datetime(_YEAR, 2, 1, tzinfo=UTC),
-        updated_at=datetime(_YEAR, 2, 1, tzinfo=UTC),
+        created_at=datetime(2026, 2, 1, tzinfo=UTC),
+        updated_at=datetime(2026, 2, 1, tzinfo=UTC),
     )
 
 
@@ -212,7 +209,7 @@ def test_fresh_bucket_declares_no_import_action_and_a_concrete_work_create_actio
     assert work_step.next_action.action.action_id == "operator.modelo.work.create"
     assert {binding.argument_name: binding.value for binding in work_step.next_action.argument_bindings} == {
         "modelo": "130",
-        "year": _YEAR,
+        "year": 2026,
         "period": "1T",
     }
 
@@ -247,7 +244,7 @@ def test_out_of_period_transaction_does_not_satisfy_import_step(
     falsely mark the import step done for that scope."""
 
     _tx_repository.save(
-        TransactionCatalogue.from_transactions((_transaction("row-q3", booked_date=date(_YEAR, 8, 1)),)),
+        TransactionCatalogue.from_transactions((_transaction("row-q3", booked_date=date(2026, 8, 1)),)),
     )
 
     walkthrough = _walkthrough(_tx_repository, operation=operation)

@@ -19,7 +19,6 @@ from .....application.ledger.action_ports import LedgerActionPorts
 from .....application.ledger.manual_update import update_manual_transaction, update_manual_transaction_fields
 from .....application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import TransactionCatalogue
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -30,8 +29,6 @@ from ..transactions import TransactionCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
-
-_YEAR = filing_year_envelope().horizon
 
 _BUCKET = "41414141-4141-4141-8141-414141414141"
 
@@ -59,7 +56,7 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _seed_command() -> ManualLedgerTransactionCommand:
     return ManualLedgerTransactionCommand(
         bucket_id=_BUCKET,
-        booked_date=date(_YEAR, 2, 11),
+        booked_date=date(2026, 2, 11),
         amount=Decimal("121.00"),
         direction=TransactionDirection.OUTGOING,
         description="material oficina",
@@ -80,7 +77,7 @@ def _seed(profile: TestRuntimeProfile, repository: TransactionCatalogueRepositor
         created = create_manual_transaction(
             _seed_command(),
             ports=ports,
-            occurred_at=datetime(_YEAR, 2, 11, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 2, 11, 8, 0, tzinfo=UTC),
         )
     return created.ref.transaction_id
 
@@ -107,7 +104,7 @@ def test_a_field_update_loads_the_catalogue_once(counted: _Counted) -> None:
     result = update_manual_transaction_fields(
         bucket_id=_BUCKET,
         transaction_id=transaction_id,
-        patch=ManualLedgerTransactionPatch(group_label=f"Cierre {_YEAR}"),
+        patch=ManualLedgerTransactionPatch(group_label="Cierre 2025"),
         actor="operator",
         source_command="aeat app ledger update",
         ports=ports,

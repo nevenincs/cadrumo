@@ -22,7 +22,6 @@ from ....core.tax_domain import TaxDomain
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ids import FormulaId
 from ....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import ModeloBuilderError
 from ..runtime import (
     RegistryCasillaCollection,
@@ -35,8 +34,7 @@ from ..runtime import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TEST_MODELO = "130"
-_TEST_YEAR = filing_year_envelope().horizon
-_SYNTHETIC_REVISION_ID = str(_TEST_YEAR)
+_TEST_YEAR = 2026
 _TEST_PERIOD = Period.from_year_and_code(_TEST_YEAR, "1T")
 _CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
 _CASILLA_02: CasillaId = validated_casilla_id("02", surface="_CASILLA_02")
@@ -279,12 +277,12 @@ def _modelo_999_snapshot(revision: ModeloRevision) -> RegistrySnapshot:
         jurisdiction="ES-AEAT",
         legal_refs=("ley-58-2003:art-29",),
         source_refs=("aeat-manual",),
-        revisions={_SYNTHETIC_REVISION_ID: revision},
+        revisions={"2025": revision},
     )
     return RegistrySnapshot(
         modelo=modelo,
         revision=revision,
-        filing_year=_TEST_YEAR,
+        filing_year=2025,
         period="0A",
         legal={},
         sources={},
@@ -303,10 +301,10 @@ def _modelo_999_snapshot(revision: ModeloRevision) -> RegistrySnapshot:
 def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> None:
     revision = ModeloRevision.model_validate(
         {
-            "id": _SYNTHETIC_REVISION_ID,
+            "id": "2025",
             "localization_key": "test.schema.revision.2025.label",
-            "valid_from": date(_TEST_YEAR, 1, 1),
-            "period_selector": {"years": (_TEST_YEAR,), "periods": ("0A",)},
+            "valid_from": date(2025, 1, 1),
+            "period_selector": {"years": (2025,), "periods": ("0A",)},
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "casillas": (
@@ -337,10 +335,10 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.ambiguous_casilla_schema"
     assert exc_info.value.context is not None
-    assert exc_info.value.context["schema_version"] == f"registry:999:{_SYNTHETIC_REVISION_ID}"
+    assert exc_info.value.context["schema_version"] == "registry:999:2025"
     assert exc_info.value.context["modelo"] == "999"
-    assert exc_info.value.context["revision_id"] == _SYNTHETIC_REVISION_ID
-    assert exc_info.value.context["filing_year"] == _TEST_YEAR
+    assert exc_info.value.context["revision_id"] == "2025"
+    assert exc_info.value.context["filing_year"] == 2025
     assert exc_info.value.context["period"] == "0A"
     assert "casilla reference token '01' is ambiguous" in str(exc_info.value.context["casilla_ids"])
 
@@ -348,10 +346,10 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
 def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
     revision = ModeloRevision.model_validate(
         {
-            "id": _SYNTHETIC_REVISION_ID,
+            "id": "2025",
             "localization_key": "test.schema.revision.2025.label",
-            "valid_from": date(_TEST_YEAR, 1, 1),
-            "period_selector": {"years": (_TEST_YEAR,), "periods": ("0A",)},
+            "valid_from": date(2025, 1, 1),
+            "period_selector": {"years": (2025,), "periods": ("0A",)},
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "casillas": (

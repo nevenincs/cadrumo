@@ -22,7 +22,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import EjercicioOrdenNotYetPublishedError, NoRevisionForPeriodError
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -46,9 +45,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _IMPORTS = "iva.anual.soportado.importaciones"
 """Modelo 390's IVA paid on imports, which the form prints as box [53] by its layout placement."""
-_YEAR = filing_grade_exercises("390")[-1]
+_YEAR = 2025
 _WORK_UNIT = "d" * 64
-_CLOCK = datetime(filing_year_envelope().horizon, 1, 20, 9, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 1, 20, 9, 0, tzinfo=UTC)
 
 
 def test_every_number_a_layout_placement_states_is_the_number_the_gate_reads(

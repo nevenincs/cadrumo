@@ -40,7 +40,6 @@ from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.date_partition import (
@@ -135,7 +134,7 @@ def _actividad_transaction(
                     source_sha256="a" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
+                    ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
                     provider_name="CSV provider",
                 ),
                 raw_fields={"Concepto": provider_id},
@@ -152,7 +151,7 @@ def _actividad_transaction(
             "iva_amount": iva_amount,
             "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -160,8 +159,7 @@ def _actividad_transaction(
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_FILING_YEAR = filing_year_envelope().horizon
-_NOW = datetime(1980, 2, 10, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 2, 10, 12, 0, tzinfo=UTC)
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
 
@@ -193,12 +191,12 @@ def _provenance(provider_id: str) -> RawProvenance:
 
 @cache
 def _m303_revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("303", filing_year=_FILING_YEAR, period="1T").revision
+    return published_authority_operation().snapshot("303", filing_year=2025, period="1T").revision
 
 
 @cache
 def _m130_revision() -> ModeloRevision:
-    return published_authority_operation().revision_with_export_layouts("130", str(open_ended_revision("130").id))
+    return published_authority_operation().revision_with_export_layouts("130", "2019-y-siguientes")
 
 
 def _without_fact(revision: ModeloRevision, source: str, fact: str) -> ModeloRevision:
@@ -213,8 +211,8 @@ def _without_fact(revision: ModeloRevision, source: str, fact: str) -> ModeloRev
 def _iva_sale() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="enrol-iva",
-        booked_date=date(_FILING_YEAR, 2, 10),
-        value_date=date(_FILING_YEAR, 2, 10),
+        booked_date=date(2026, 2, 10),
+        value_date=date(2026, 2, 10),
         amount=Decimal("1210.00"),
         currency="EUR",
         counterparty="Cliente SL",
@@ -255,8 +253,8 @@ def _resolve_iva(repository: TransactionCatalogueRepository) -> CalculationSourc
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
             revision=_without_fact(_m303_revision(), "ledger_iva_aggregation", "base_amount_sum"),
         ),
     )
@@ -274,7 +272,7 @@ def _renta_net_paid_invoice() -> Transaction:
     """
     return _actividad_transaction(
         "enrol-renta",
-        value_date=date(_FILING_YEAR, 2, 10),
+        value_date=date(2026, 2, 10),
         amount=Decimal("2120.00"),
         taxable_base=Decimal("2000.00"),
         iva_rate=Decimal("0.21"),
@@ -310,14 +308,14 @@ def _resolve_renta(repository: TransactionCatalogueRepository) -> CalculationSou
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="130",
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
             revision=_without_fact(
                 _m130_revision(),
                 "ledger_renta_income_aggregation",
                 "declared_withheld_amount_sum",
             ),
-            profile=_cash_criterion_profile(_FILING_YEAR),
+            profile=_cash_criterion_profile(2026),
         ),
     )
 

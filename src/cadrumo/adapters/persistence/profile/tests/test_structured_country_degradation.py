@@ -94,7 +94,6 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.domain.iva.schema import IvaCategory
@@ -113,8 +112,6 @@ from .evidence_test_support import (
 from .evidence_test_support import runtime_profile as runtime_profile
 from .evidence_test_support import seeded_filer_profile as seeded_filer_profile
 from .invoice_confirmation_test_support import InvoiceAuthorityFixture, invoice_draft_extraction_kwargs
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -1071,7 +1068,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
                 ),
             )
             assembly = assemble_classification_criteria(
-                transaction_date=date(_YEAR, 4, 2),
+                transaction_date=date(2026, 4, 2),
                 direction=InvoiceKind.ISSUED,
                 inputs=collect_classifier_inputs(draft),
                 declared=declared,
@@ -1137,7 +1134,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
                 ),
             )
             assembly = assemble_classification_criteria(
-                transaction_date=date(_YEAR, 4, 2),
+                transaction_date=date(2026, 4, 2),
                 direction=InvoiceKind.ISSUED,
                 inputs=collect_classifier_inputs(draft),
                 declared=declared,

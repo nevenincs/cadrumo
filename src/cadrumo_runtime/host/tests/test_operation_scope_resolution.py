@@ -53,7 +53,6 @@ from cadrumo.core.period import Period, PeriodError
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
@@ -153,7 +152,7 @@ class _ScopeRead:
 
     def __init__(self, operation: PinnedAuthorityOperation) -> None:
         self.operation = operation
-        self.period = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
+        self.period = Period.from_year_and_code(2026, "1T")
         self.calls: list[AccessAction] = []
         self.contexts: list[str] = []
         self.entered = asyncio.Event()
@@ -228,7 +227,7 @@ def harness(authority_operation: PinnedAuthorityOperation, tmp_path: Path) -> _H
             dek_epoch=uuid4(),
         ),
     )
-    instant = datetime(1980, 10, 7, 12, tzinfo=UTC)
+    instant = datetime(2026, 10, 7, 12, tzinfo=UTC)
     session = AccessSession(
         session_id=uuid4(),
         binding=identity.binding,

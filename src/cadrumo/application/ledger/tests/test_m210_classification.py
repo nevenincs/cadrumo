@@ -24,7 +24,6 @@ from typing import TypedDict
 import pytest
 
 from ....core.irnr import M210PayerMode
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
@@ -34,20 +33,18 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ...tests.ledger_partition_support import CatalogueTransactionRepository
 from ..m210_classification import resolve_m210_income_classification
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "13131313-1313-4313-8313-131313131313"
 _CODE = "01"
-_M210_EFFECTIVE_DATE = date(_YEAR - 1, 1, 1)
+_M210_EFFECTIVE_DATE = date(2025, 1, 1)
 _SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)
 
 
 def _transaction(*, provider_id: str, direction: TransactionDirection) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR, 3, 10),
+        booked_date=date(2026, 3, 10),
         value_date=None,
         amount=Decimal("1000.00"),
         currency="EUR",
@@ -58,7 +55,7 @@ def _transaction(*, provider_id: str, direction: TransactionDirection) -> Transa
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR, 3, 10, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2026, 3, 10, 9, 30, tzinfo=UTC),
             provider_name="test",
         ),
         raw_fields={},
@@ -70,8 +67,8 @@ def _transaction(*, provider_id: str, direction: TransactionDirection) -> Transa
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": "ES",
             "group_label": None,
-            "created_at": datetime(_YEAR, 3, 10, 9, 30, tzinfo=UTC),
-            "modified_at": datetime(_YEAR, 3, 10, 9, 30, tzinfo=UTC),
+            "created_at": datetime(2026, 3, 10, 9, 30, tzinfo=UTC),
+            "modified_at": datetime(2026, 3, 10, 9, 30, tzinfo=UTC),
         }
     )
 

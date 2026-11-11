@@ -17,7 +17,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -28,8 +27,6 @@ from ..modelo_amend_wizard_results import WorkAmendWizardResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
 
 def _valid_kwargs(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
@@ -38,9 +35,9 @@ def _valid_kwargs(**overrides: object) -> dict[str, object]:
         "calculation_revision_id": "c" * 64,
         "bucket_id": "bucket-1",
         "modelo": "303",
-        "filing_year": _YEAR,
-        "period": Period.from_year_and_code(_YEAR, "1T"),
-        "filed_at": datetime(1980, 4, 1, tzinfo=UTC),
+        "filing_year": 2026,
+        "period": Period.from_year_and_code(2026, "1T"),
+        "filed_at": datetime(2026, 4, 1, tzinfo=UTC),
         "filed_by": "operator",
         "notes": None,
         "aeat_accepted": False,

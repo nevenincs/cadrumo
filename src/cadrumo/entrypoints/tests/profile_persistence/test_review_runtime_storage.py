@@ -30,12 +30,10 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "cf394ec1-128f-4d57-b66d-2d57f35aaf35"
-_Q1 = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
+_Q1_2026 = Period.from_year_and_code(2026, "1T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
     "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
@@ -67,7 +65,9 @@ _MODELO_130_BINDING_INPUTS = {
 
 def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path: Path) -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=_Q1.filing_year, period=_Q1)
+        schema_provider = build_runtime_schema_provider(
+            modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026
+        )
         draft = _ready_modelo_130_draft(operation=_authority_operation_for_test)
 
         with (
@@ -89,7 +89,9 @@ def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path
 
 def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_default(tmp_path: Path) -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=_Q1.filing_year, period=_Q1)
+        schema_provider = build_runtime_schema_provider(
+            modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026
+        )
         draft = _ready_modelo_130_draft(operation=_authority_operation_for_test)
 
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -123,7 +125,7 @@ def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_defau
 def _ready_modelo_130_draft(*, operation: PinnedAuthorityOperation) -> ModeloDraft:
     return build_registry_filing_draft_from_decimals(
         modelo="130",
-        period=_Q1,
+        period=_Q1_2026,
         operation=operation,
         casilla_decimals=_MODELO_130_CASILLA_INPUTS,
         binding_decimals=_MODELO_130_BINDING_INPUTS,

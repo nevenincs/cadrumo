@@ -16,7 +16,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..modelo_review_package_results import (
     ModeloReviewPackageBuildResult,
     ModeloReviewPackageCounterSignResult,
@@ -26,12 +25,9 @@ from ..modelo_review_package_results import (
     ModeloReviewPackageVerifyResult,
 )
 
-_YEAR = filing_year_envelope().horizon
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-_BUILT_AT = datetime(_YEAR, 6, 1, 8, 0, tzinfo=UTC)
+_BUILT_AT = datetime(2026, 6, 1, 8, 0, tzinfo=UTC)
 
 
 def _build_kwargs(tmp_path: Path, **overrides: object) -> dict[str, object]:
@@ -40,8 +36,8 @@ def _build_kwargs(tmp_path: Path, **overrides: object) -> dict[str, object]:
         "work_unit_id": "b" * 64,
         "calculation_revision_id": "c" * 64,
         "modelo": "130",
-        "filing_year": _YEAR,
-        "period": Period.model_validate({"filing_year": _YEAR, "code": "1T"}),
+        "filing_year": 2026,
+        "period": Period.model_validate({"filing_year": 2026, "code": "1T"}),
         "revision_state": "VERIFICADO_COMPLETO",
         "has_ledger_evidence": True,
         "output_path": str(tmp_path / "review.zip"),

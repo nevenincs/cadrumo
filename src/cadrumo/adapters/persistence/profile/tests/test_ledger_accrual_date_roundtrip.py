@@ -27,7 +27,6 @@ from cadrumo.application.ledger.models import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import TransactionDirection
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
@@ -35,10 +34,9 @@ from .ledger_action_persistence_support import BUCKET_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = filing_year_envelope().horizon
-_BOOKED = date(_YEAR, 4, 2)
-_ACCRUED = date(_YEAR, 3, 30)
-_CORRECTED = date(_YEAR, 3, 28)
+_BOOKED = date(2026, 4, 2)
+_ACCRUED = date(2026, 3, 30)
+_CORRECTED = date(2026, 3, 28)
 
 
 @pytest.fixture

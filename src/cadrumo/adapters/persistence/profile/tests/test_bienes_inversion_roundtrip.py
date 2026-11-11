@@ -26,15 +26,12 @@ from .....domain.bienes_inversion.register import (
     BienInversionIvaRecord,
 )
 from .....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.sql.engine import get_engine
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -43,20 +40,18 @@ def _populated_register() -> BienesInversionIvaRegister:
     movable = BienInversionIvaRecord(
         identifier="bi-2022-furgoneta",
         description="Furgoneta de reparto afecta a la actividad",
-        acquisition_year=_YEAR - 2,
+        acquisition_year=2022,
         cuota_soportada=Decimal("4200.00"),
         prorrata_inicial_pct=Decimal("80"),
         kind=BienInversionKind.from_registry("mueble"),
         art108_elegible=True,
         acquisition_ledger_id="ledger-2022-furgoneta",
-        disposal=BienInversionDisposal(
-            year=_YEAR, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     real_estate = BienInversionIvaRecord(
         identifier="bi-2021-local",
         description="Local comercial afecto",
-        acquisition_year=_YEAR - 1,
+        acquisition_year=2021,
         cuota_soportada=Decimal("31500.00"),
         prorrata_inicial_pct=Decimal("65"),
         kind=BienInversionKind.from_registry("inmueble"),
@@ -81,7 +76,7 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         assert movable.kind == BienInversionKind.from_registry("mueble")
         assert movable.art108_elegible is True
         assert movable.disposal is not None
-        assert movable.disposal.year == _YEAR
+        assert movable.disposal.year == 2024
         assert movable.disposal.regime == BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
         real_estate = loaded.records[1]
         assert real_estate.kind == BienInversionKind.from_registry("inmueble")

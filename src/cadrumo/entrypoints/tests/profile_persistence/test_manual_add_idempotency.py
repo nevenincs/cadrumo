@@ -43,8 +43,8 @@ from ....application.ledger.tests.manual_transaction_support import create_manua
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 _DEFAULT_AMOUNT = Decimal("25.00")
-_DEFAULT_BOOKED_DATE = date(1980, 5, 2)
-_DEFAULT_OCCURRED_AT = datetime(1980, 5, 4, 9, 30, tzinfo=UTC)
+_DEFAULT_BOOKED_DATE = date(2026, 5, 2)
+_DEFAULT_OCCURRED_AT = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 
 
 class _ManualTransactionBaseArgs(TypedDict):
@@ -84,26 +84,6 @@ def _created_event_count(event_repository: BucketEventHistoryRepository, *, buck
     )
 
 
-def _first_row(
-    objects: SecureObjectRepository,
-    *,
-    description: str,
-    idempotency_key: str,
-    amount: Decimal | None = None,
-    booked_date: date = _DEFAULT_BOOKED_DATE,
-    occurred_at: datetime = _DEFAULT_OCCURRED_AT,
-):
-    """Seed the keyed row on this module's dates, which the support defaults do not share."""
-    return create_manual_row(
-        objects,
-        description=description,
-        idempotency_key=idempotency_key,
-        amount=amount,
-        booked_date=booked_date,
-        occurred_at=occurred_at,
-    )
-
-
 def _add(
     objects: SecureObjectRepository,
     transaction_repository: TransactionCatalogueRepository,
@@ -134,13 +114,13 @@ def _add(
 
 def test_retried_keyed_add_is_guarded_noop(secure_objects: SecureObjectRepository) -> None:
     """Same key + identical content on retry: one row, one event, created_at unchanged, no-op signal."""
-    repo, events, first = _first_row(secure_objects, description="cash sale", idempotency_key="k-001")
+    repo, events, first = create_manual_row(secure_objects, description="cash sale", idempotency_key="k-001")
     first_tx = repo.load().get(first.ref.transaction_id)
     assert first_tx is not None
     first_created_at = first_tx.created_at
 
     second = _add(
-        secure_objects, repo, events, idempotency_key="k-001", occurred_at=datetime(1980, 5, 4, 10, 0, tzinfo=UTC)
+        secure_objects, repo, events, idempotency_key="k-001", occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC)
     )
 
     catalogue = repo.load()
@@ -155,14 +135,14 @@ def test_retried_keyed_add_is_guarded_noop(secure_objects: SecureObjectRepositor
 
 def test_keyed_add_three_retries_still_one_row_one_event(secure_objects: SecureObjectRepository) -> None:
     """3+ retries of an identical keyed add collapse to exactly one row and one creation event."""
-    repo, events, first = _first_row(secure_objects, description="cash sale", idempotency_key="k-002")
+    repo, events, first = create_manual_row(secure_objects, description="cash sale", idempotency_key="k-002")
     for minute in (31, 32, 33):
         outcome = _add(
             secure_objects,
             repo,
             events,
             idempotency_key="k-002",
-            occurred_at=datetime(1980, 5, 4, 9, minute, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, minute, tzinfo=UTC),
         )
         assert outcome.bucket_event_ids == ()
         assert outcome.ref.transaction_id == first.ref.transaction_id
@@ -178,14 +158,14 @@ def test_interleaved_retry_through_fresh_repo_is_noop(secure_objects: SecureObje
     the committed catalogue, so the second add reads the first's row and writes
     nothing rather than tearing a double-write.
     """
-    repo, events, first = _first_row(secure_objects, description="cash sale", idempotency_key="k-003")
+    repo, events, first = create_manual_row(secure_objects, description="cash sale", idempotency_key="k-003")
     fresh_repo, fresh_events = repositories(secure_objects)
     second = _add(
         secure_objects,
         fresh_repo,
         fresh_events,
         idempotency_key="k-003",
-        occurred_at=datetime(1980, 5, 5, 8, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 5, 8, 0, tzinfo=UTC),
     )
     assert second.ref.transaction_id == first.ref.transaction_id
     assert second.bucket_event_ids == ()
@@ -195,7 +175,7 @@ def test_interleaved_retry_through_fresh_repo_is_noop(secure_objects: SecureObje
 
 def test_same_key_different_content_raises_conflict(secure_objects: SecureObjectRepository) -> None:
     """Reusing a key for a different movement is a conflict refusal, never a silent overwrite."""
-    repo, events, _ = _first_row(secure_objects, description="cash sale", idempotency_key="k-004")
+    repo, events, _ = create_manual_row(secure_objects, description="cash sale", idempotency_key="k-004")
     with pytest.raises(TransactionValidationError):
         _add(
             secure_objects,
@@ -236,7 +216,7 @@ def test_same_key_differing_only_in_recargo_raises_conflict(secure_objects: Secu
         create_manual_transaction(
             ManualLedgerTransactionCommand(**base, recargo_amount=Decimal("2.60")),
             ports=ports,
-            occurred_at=datetime(1980, 5, 4, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
     assert len(repo.load().transactions) == 1
     assert _created_event_count(events) == 1
@@ -265,7 +245,7 @@ def test_same_key_differing_only_in_source_jurisdiction_raises_conflict(
         create_manual_transaction(
             ManualLedgerTransactionCommand(**base, source_jurisdiction="PT"),
             ports=ports,
-            occurred_at=datetime(1980, 5, 4, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
     assert len(repo.load().transactions) == 1
     assert _created_event_count(events) == 1
@@ -300,7 +280,7 @@ def test_same_key_differing_only_in_investment_asset_id_raises_conflict(
         retry = create_manual_transaction(
             ManualLedgerTransactionCommand(**base),
             ports=ports,
-            occurred_at=datetime(1980, 5, 4, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
     assert retry.ref.transaction_id == first.ref.transaction_id
     assert retry.bucket_event_ids == ()
@@ -309,7 +289,7 @@ def test_same_key_differing_only_in_investment_asset_id_raises_conflict(
         create_manual_transaction(
             ManualLedgerTransactionCommand(**base, investment_asset_id="bi-0001"),
             ports=ports,
-            occurred_at=datetime(1980, 5, 4, 11, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 11, 0, tzinfo=UTC),
         )
     assert tuple(repo.load().transactions) == (first.ref.transaction_id,)
     assert _created_event_count(events) == 1
@@ -360,7 +340,7 @@ def test_same_key_differing_only_in_classified_by_override_raises_conflict(
                 classified_by_override="rule:travel",
             ),
             ports=ports,
-            occurred_at=datetime(1980, 5, 4, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
 
     # The refusal is loud, and the stored provenance is neither overwritten nor lost.
@@ -406,7 +386,7 @@ def test_same_key_repeating_the_same_classified_by_override_is_a_noop(
                 classified_by_override="rule:office-supplies",
             ),
             ports=ports,
-            occurred_at=datetime(1980, 5, 4, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
     assert retry.ref.transaction_id == first.ref.transaction_id
     assert retry.bucket_event_ids == ()
@@ -416,7 +396,7 @@ def test_same_key_repeating_the_same_classified_by_override_is_a_noop(
 
 def test_deliberate_duplicate_via_distinct_keys_two_rows(secure_objects: SecureObjectRepository) -> None:
     """Two genuinely-distinct movements with identical content but distinct keys both persist."""
-    repo, events, first = _first_row(secure_objects, description="retainer", idempotency_key="dup-A")
+    repo, events, first = create_manual_row(secure_objects, description="retainer", idempotency_key="dup-A")
     second = _add(secure_objects, repo, events, description="retainer", idempotency_key="dup-B")
     assert first.ref.transaction_id != second.ref.transaction_id
     assert set(repo.load().transactions) == {first.ref.transaction_id, second.ref.transaction_id}
@@ -431,14 +411,14 @@ def test_keyless_identical_same_day_movements_both_persist(secure_objects: Secur
         repo,
         events,
         description="cash tip",
-        occurred_at=datetime(1980, 5, 4, 9, 30, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     second = _add(
         secure_objects,
         repo,
         events,
         description="cash tip",
-        occurred_at=datetime(1980, 5, 4, 14, 15, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 4, 14, 15, tzinfo=UTC),
     )
     assert first.ref.transaction_id != second.ref.transaction_id
     assert set(repo.load().transactions) == {first.ref.transaction_id, second.ref.transaction_id}
@@ -448,7 +428,7 @@ def test_keyless_identical_same_day_movements_both_persist(secure_objects: Secur
 
 def test_same_key_across_two_buckets_yields_two_distinct_rows(secure_objects: SecureObjectRepository) -> None:
     """A reused idempotency key in a different bucket is a distinct row (bucket-scoped id), no false no-op."""
-    repo_a, _events_a, first = _first_row(secure_objects, description="cash sale", idempotency_key="shared")
+    repo_a, _events_a, first = create_manual_row(secure_objects, description="cash sale", idempotency_key="shared")
     repo_b, events_b = repositories(secure_objects, bucket_id=OTHER_BUCKET_ID)
     second = _add(secure_objects, repo_b, events_b, idempotency_key="shared", bucket_id=OTHER_BUCKET_ID)
     assert first.ref.transaction_id != second.ref.transaction_id
@@ -467,18 +447,18 @@ def test_zero_amount_add_is_refused_not_silently_deduped(secure_objects: SecureO
 
 def test_keyed_retry_is_clock_free_across_boundary_timestamps(secure_objects: SecureObjectRepository) -> None:
     """The keyed id is clock-free: a retry at a boundary timestamp still resolves to the no-op."""
-    repo, events, first = _first_row(
+    repo, events, first = create_manual_row(
         secure_objects,
         description="cash sale",
         idempotency_key="bound-1",
-        occurred_at=datetime(1980, 5, 4, 0, 0, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 4, 0, 0, 0, tzinfo=UTC),
     )
     retry = _add(
         secure_objects,
         repo,
         events,
         idempotency_key="bound-1",
-        occurred_at=datetime(1980, 5, 4, 23, 59, 59, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 4, 23, 59, 59, tzinfo=UTC),
     )
     assert retry.ref.transaction_id == first.ref.transaction_id
     assert retry.bucket_event_ids == ()
@@ -495,7 +475,7 @@ def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects:
     constant — a different movement yields a different fingerprint, so a dropped
     or content-independent fingerprint would surface as an inequality here.
     """
-    repo, _events, created = _first_row(secure_objects, description="cash sale", idempotency_key="fp-1")
+    repo, _events, created = create_manual_row(secure_objects, description="cash sale", idempotency_key="fp-1")
     original = repo.load().get(created.ref.transaction_id)
     assert original is not None
     assert original.import_fingerprint is not None
@@ -528,21 +508,20 @@ def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects:
 
 def test_import_recognises_a_prior_manual_movement(secure_objects: SecureObjectRepository) -> None:
     """A movement entered manually is recognised by a later import of the same movement (no reduplication)."""
-    imported_row = parsed_import_transaction()
-    repo, events, manual = _first_row(
+    repo, events, manual = create_manual_row(
         secure_objects,
         description="provider import row",
         idempotency_key="m-1",
         amount=Decimal("80.00"),
-        booked_date=imported_row.raw.booked_date,
+        booked_date=date(2026, 5, 1),
     )
     outcome = import_ledger_transactions(
         bucket_id=BUCKET_ID,
-        parsed_rows=(imported_row,),
+        parsed_rows=(parsed_import_transaction(),),
         ports=compose_ledger_import_ports(),
         transaction_repository=repo,
         bucket_event_repository=events,
-        occurred_at=datetime(1980, 5, 6, 9, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 6, 9, 0, tzinfo=UTC),
     )
     assert outcome.summary.imported == 0
     assert outcome.summary.skipped == 1

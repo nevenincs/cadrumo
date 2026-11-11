@@ -21,7 +21,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from .....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -31,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "51515151-5151-4151-8151-515151515151"
 _ACTIVIDAD = "retail"
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2025
 
 _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 

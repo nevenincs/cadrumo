@@ -209,7 +209,7 @@ def test_live_api_key_still_cannot_use_rotation_human_scope() -> None:
             published_authority=Availability.AVAILABLE,
         ),
     )
-    instant = datetime(1980, 9, 27, 12, tzinfo=UTC)
+    instant = datetime(2026, 9, 27, 12, tzinfo=UTC)
     binding = ProfileAccessBinding(
         profile_id=profile_id,
         installation_id=uuid4(),
@@ -352,7 +352,7 @@ def test_rotation_projector_checks_terminal_identity_and_validated_outcome() -> 
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(1980, 9, 27, 12, tzinfo=UTC),
+        settled_at=datetime(2026, 9, 27, 12, tzinfo=UTC),
         result_ref="b" * 64,
     )
     projected = project_profile_rotation_result(outcome, receipt)

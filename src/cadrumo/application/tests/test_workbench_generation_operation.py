@@ -114,7 +114,6 @@ from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.core.operator_action_enums import OperatorActionAxis
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
@@ -136,8 +135,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR, 9, 27, 18, tzinfo=UTC)
+_NOW = datetime(2026, 9, 27, 18, tzinfo=UTC)
 
 
 @dataclass
@@ -232,7 +230,7 @@ def _generation(
 
 
 def _declarations(profile_id: UUID) -> DeclarationsWorkspaceProjectionV1:
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     unit_id, revision_id, filing_id = "a" * 64, "b" * 64, "c" * 64
     sources = {
         DeclarationsWorkspaceZone.DECLARATIONS: (DeclarationsWorkspaceSource.LOCAL_DECLARATIONS,),
@@ -264,7 +262,7 @@ def _declarations(profile_id: UUID) -> DeclarationsWorkspaceProjectionV1:
             DeclarationsWorkspaceDeclarationRefV1(
                 work_unit_id=unit_id,
                 modelo="130",
-                filing_year=_YEAR,
+                filing_year=2026,
                 period=period,
                 state=WorkUnitState.BORRADOR,
                 has_current_calculation=True,
@@ -276,7 +274,7 @@ def _declarations(profile_id: UUID) -> DeclarationsWorkspaceProjectionV1:
                 calculation_revision_id=revision_id,
                 work_unit_id=unit_id,
                 modelo="130",
-                filing_year=_YEAR,
+                filing_year=2026,
                 period=period,
                 state=CalculationRevisionState.PRESENTADO,
                 created_at=_NOW,
@@ -291,7 +289,7 @@ def _declarations(profile_id: UUID) -> DeclarationsWorkspaceProjectionV1:
                 work_unit_id=unit_id,
                 calculation_revision_id=revision_id,
                 modelo="130",
-                filing_year=_YEAR,
+                filing_year=2026,
                 period=period,
                 filed_at=_NOW,
                 local_status=ModeloRecordStatus.VIGENTE,
@@ -306,7 +304,7 @@ def _declarations(profile_id: UUID) -> DeclarationsWorkspaceProjectionV1:
                 fact_id="event-1",
                 work_unit_id=unit_id,
                 modelo="130",
-                filing_year=_YEAR,
+                filing_year=2026,
                 period=period,
                 occurred_at=_NOW,
                 kind=DeclarationsLifecycleKind.CREATED,
@@ -316,8 +314,8 @@ def _declarations(profile_id: UUID) -> DeclarationsWorkspaceProjectionV1:
 
 
 def _calendar_with_recovery() -> DeclarationsCalendarProjectionV1:
-    deadline = date(_YEAR, 4, 20)
-    as_of = date(_YEAR, 9, 27)
+    deadline = date(2026, 4, 20)
+    as_of = date(2026, 9, 27)
     sources = (
         DeclarationsCalendarSourceStateV1(
             source=DeclarationsCalendarSource.SCHEDULE,
@@ -337,14 +335,14 @@ def _calendar_with_recovery() -> DeclarationsCalendarProjectionV1:
     return DeclarationsCalendarProjectionV1(
         as_of=as_of,
         generated_at=_NOW,
-        query_range=OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
+        query_range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
         sources=sources,
         entries=(
             DeclarationsCalendarEntryRefV1(
                 modelo="130",
-                filing_year=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "1T"),
-                opens_on=date(_YEAR, 4, 1),
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                opens_on=date(2026, 4, 1),
                 closes_on=deadline,
                 adjusted_closes_on=deadline,
                 shift_reason="fixture",
@@ -359,7 +357,7 @@ def _calendar_with_recovery() -> DeclarationsCalendarProjectionV1:
                 evidence_conflicted=False,
                 source=OverviewCalendarEntrySource.REGISTRY_DEADLINE,
                 recovery_action=declare_next_action(
-                    "operator.modelo.work.create", modelo="130", year=_YEAR, period="1T"
+                    "operator.modelo.work.create", modelo="130", year=2026, period="1T"
                 ),
             ),
         ),
@@ -368,9 +366,9 @@ def _calendar_with_recovery() -> DeclarationsCalendarProjectionV1:
 
 def _empty_calendar() -> DeclarationsCalendarProjectionV1:
     return DeclarationsCalendarProjectionV1(
-        as_of=date(_YEAR, 9, 27),
+        as_of=date(2026, 9, 27),
         generated_at=_NOW,
-        query_range=OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
+        query_range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
         sources=(
             DeclarationsCalendarSourceStateV1(
                 source=DeclarationsCalendarSource.SCHEDULE,
@@ -588,19 +586,19 @@ def test_secure_canonical_generation_round_trips_without_search_documents(popula
             profile_id=str(profile_id),
             setup_state=ProfileSetupState.INCOMPLETE,
         )
-        period = Period.from_year_and_code(_YEAR, "1T")
-        revision_id = operation.snapshot("130", filing_year=_YEAR, period="1T").revision.id
+        period = Period.from_year_and_code(2026, "1T")
+        revision_id = operation.snapshot("130", filing_year=2026, period="1T").revision.id
         unit = WorkUnit(
             work_unit_id=derive_work_unit_id(
                 bucket_id=str(profile_id),
                 modelo="130",
-                filing_year=_YEAR,
+                filing_year=2026,
                 period=period,
                 revision_id=revision_id,
             ),
             bucket_id=str(profile_id),
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period,
             revision_id=revision_id,
             name="declaration",
@@ -621,11 +619,11 @@ def test_secure_canonical_generation_round_trips_without_search_documents(popula
         static_projection = static_result.projection
         if populated_review:
             rows = build_modelo_work_review_casillas(
-                snapshot=operation.snapshot("130", filing_year=_YEAR, period="1T"),
+                snapshot=operation.snapshot("130", filing_year=2026, period="1T"),
                 revision=None,
                 operation=operation,
             )
-            values = (None, Decimal("123.4500"), 0, False, "", date(_YEAR, 1, 1))
+            values = (None, Decimal("123.4500"), 0, False, "", date(2026, 1, 1))
             rows = tuple(
                 row.model_copy(update={"value": values[index]}) if index < len(values) else row
                 for index, row in enumerate(rows)
@@ -633,7 +631,7 @@ def test_secure_canonical_generation_round_trips_without_search_documents(popula
             review = ModeloWorkReview(
                 bucket_id=str(profile_id),
                 modelo=unit.modelo,
-                filing_year=_YEAR,
+                filing_year=2026,
                 period=period,
                 registry_revision_id=revision_id,
                 work_unit_id=unit.work_unit_id,
@@ -706,7 +704,7 @@ def test_secure_canonical_generation_round_trips_without_search_documents(popula
             ("integer", "0"),
             ("boolean", "false"),
             ("string", ""),
-            ("date", f"{_YEAR}-01-01"),
+            ("date", "2026-01-01"),
         ]
         assert public_review.calculation_revision_id is None
         assert public_review.progress.denominator is None
@@ -752,17 +750,17 @@ def test_malformed_decimal_date_and_utc_values_refuse_at_public_boundary() -> No
                 "surcharge_pct": "NaN",
                 "interest_applies": False,
                 "legal_ref": "law",
-                "rate_reference_on": f"{_YEAR}-09-27",
+                "rate_reference_on": "2026-09-27",
                 "assessment_status": "unassessed",
             }
         )
     with pytest.raises(ValueError, match="invalid public-mirror decimal"):
         restore_public_mirror("not-a-decimal", Decimal, str)
     with pytest.raises(ValidationError, match="invalid date scalar"):
-        PublicScalarValueV1(kind="date", text=f"{_YEAR}-99-99")
+        PublicScalarValueV1(kind="date", text="2026-99-99")
     valid = project_workbench_generation(uuid4(), _generation())
     tampered = valid.model_dump(mode="json")
-    tampered["generation"]["assembled_at"] = f"{_YEAR}-09-27T20:00:00+02:00"
+    tampered["generation"]["assembled_at"] = "2026-09-27T20:00:00+02:00"
     with pytest.raises(ValidationError, match="UTC"):
         WorkbenchGenerationOperationProjection.model_validate_json(json.dumps(tampered))
 

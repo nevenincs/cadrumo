@@ -24,7 +24,6 @@ from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.deadlines.models import M303RegimeComposition
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
@@ -56,10 +55,8 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-
 _BUCKET_ID = "e3030000-0000-4000-8000-000000000058"
-_CLOCK = datetime(_YEAR, 4, 1, tzinfo=UTC)
+_CLOCK = datetime(2026, 4, 1, tzinfo=UTC)
 _DEFAULT_M303_REGIME_COMPOSITION = M303RegimeComposition.from_registry("general")
 
 
@@ -268,10 +265,10 @@ def _store_profile(
 def test_complete_evidence_matches_work_unit_registry_and_active_censo(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     work_unit = _work_unit(period)
     evidence = _evidence(period, operation=operation)
-    registry_snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="1T")
+    registry_snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile()
@@ -295,7 +292,7 @@ def test_complete_evidence_matches_work_unit_registry_and_active_censo(
 def test_evidence_scope_disagreeing_with_active_censo_refuses(
     tmp_path: Path, composition: M303RegimeComposition, *, operation: PinnedAuthorityOperation
 ) -> None:
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile(composition=composition)
@@ -305,7 +302,7 @@ def test_evidence_scope_disagreeing_with_active_censo_refuses(
         ):
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(period),
-                registry_snapshot=published_authority_operation().snapshot("303", filing_year=_YEAR, period="1T"),
+                registry_snapshot=published_authority_operation().snapshot("303", filing_year=2026, period="1T"),
                 evidence=_evidence(period, operation=operation),
                 casilla_values={},
                 observations=(),
@@ -322,7 +319,7 @@ def test_structurally_valid_noncanonical_simplified_result_refuses_before_persis
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The persisted result must be the calculator replay, not merely well-formed evidence."""
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     canonical_evidence = _simplified_evidence(period, operation=operation)
     regimen = canonical_evidence.m303.regimen_simplificado
     canonical_result = regimen.calculation_result
@@ -356,7 +353,7 @@ def test_structurally_valid_noncanonical_simplified_result_refuses_before_persis
         with bound_test_profile_record(_BUCKET_ID), pytest.raises(M303FilingEvidenceError) as raised_divergent_result:
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(period),
-                registry_snapshot=published_authority_operation().snapshot("303", filing_year=_YEAR, period="1T"),
+                registry_snapshot=published_authority_operation().snapshot("303", filing_year=2026, period="1T"),
                 evidence=evidence,
                 casilla_values={},
                 observations=(),
@@ -372,9 +369,9 @@ def test_structurally_valid_noncanonical_simplified_result_refuses_before_persis
 def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observation(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    period = Period.from_year_and_code(_YEAR, "4T")
+    period = Period.from_year_and_code(2026, "4T")
     work_unit = _work_unit(period)
-    registry_snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
+    registry_snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="4T")
     endpoint_ids = tuple(
         casilla.id
         for casilla in registry_snapshot.revision.casillas
@@ -406,7 +403,7 @@ def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observati
     )
     observations = registry_grounded_observations(
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period="4T",
         casilla_values=values,
     )
@@ -429,8 +426,8 @@ def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observati
 def test_incomplete_a28_endpoint_population_refuses_before_persistence(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    period = Period.from_year_and_code(_YEAR, "4T")
-    registry_snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
+    period = Period.from_year_and_code(2026, "4T")
+    registry_snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="4T")
     endpoint = next(
         casilla
         for casilla in registry_snapshot.revision.casillas
@@ -472,7 +469,7 @@ def test_incomplete_a28_endpoint_population_refuses_before_persistence(
                 casilla_values={endpoint.id: Decimal("0")},
                 observations=registry_grounded_observations(
                     modelo="303",
-                    filing_year=_YEAR,
+                    filing_year=2026,
                     period="4T",
                     casilla_values={endpoint.id: Decimal("0")},
                 ),

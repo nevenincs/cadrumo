@@ -62,7 +62,7 @@ def _fields(**overrides: str | None) -> ExtractedInvoiceResponse:
     payload: dict[str, str | None] = {
         "supplier_tax_id": _SPANISH_CIF,
         "invoice_number": "2026-0142",
-        "invoice_date": "10/03/1980",
+        "invoice_date": "10/03/2026",
         "taxable_base": "100,00",
         "iva_rate": "21",
         "iva_amount": "21,00",
@@ -242,7 +242,7 @@ class TestAuthoredResponseParsesAndGrounds:
             {
                 "supplier_tax_id": "IE9825613K",
                 "invoice_number": "INV-2026-0142",
-                "invoice_date": "10/03/1980",
+                "invoice_date": "10/03/2026",
                 "taxable_base": "1.234,56",
                 "iva_rate": "23",
                 "iva_amount": "283,95",
@@ -260,7 +260,7 @@ class TestAuthoredResponseParsesAndGrounds:
 
         assert draft.supplier_tax_id == "IE9825613K"
         assert draft.invoice_number == "INV-2026-0142"
-        assert draft.invoice_date == "1980-03-10"
+        assert draft.invoice_date == "2026-03-10"
         assert draft.taxable_base == Decimal("1234.56")
         assert draft.iva_rate == Decimal("23")
         assert draft.iva_amount == Decimal("283.95")
@@ -310,7 +310,7 @@ class TestFabricatedValuesAreDroppedRatherThanTrusted:
         [
             pytest.param("supplier_tax_id", "B1234567X", id="tax-id-invalid-check-character"),
             pytest.param("supplier_tax_id", "DE000", id="tax-id-wrong-shape-for-its-prefix"),
-            pytest.param("invoice_date", "31/02/1980", id="date-that-does-not-exist"),
+            pytest.param("invoice_date", "31/02/2026", id="date-that-does-not-exist"),
             pytest.param("invoice_date", "sometime in March", id="date-as-prose"),
             pytest.param("taxable_base", "about a thousand euros", id="amount-as-prose"),
             pytest.param("iva_amount", "NaN", id="amount-non-finite"),

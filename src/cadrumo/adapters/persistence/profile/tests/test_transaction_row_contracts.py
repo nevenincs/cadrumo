@@ -31,7 +31,6 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from .....core.time.utc import UtcInstant
 from .....domain.calculations.registry.authority import bundled_indexed_authority
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import Transaction
@@ -39,8 +38,6 @@ from .....domain.transactions.raw_transaction import RawProvenance, RawTransacti
 from ...storage.envelope.contract import Envelope
 from ...storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ..transaction_row_contracts import require_persisted_transaction_timestamps
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -213,8 +210,8 @@ def test_lone_surrogate_row_is_still_refused_by_the_composed_read() -> None:
 def _stored_row() -> dict[str, object]:
     raw = RawTransaction(
         provider_transaction_id="witness-row",
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(2024, 4, 10),
+        value_date=date(2024, 4, 10),
         amount=Decimal("77.00"),
         currency="EUR",
         counterparty="Witness Supplier SL",
@@ -224,7 +221,7 @@ def _stored_row() -> dict[str, object]:
             source_sha256="c" * 64,
             source_row_index=3,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(1980, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="witness provider",
         ),
         raw_fields={"Concepto": "witness"},
@@ -236,8 +233,8 @@ def _stored_row() -> dict[str, object]:
             "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
-            "created_at": datetime(1980, 4, 14, 9, 30, tzinfo=UTC),
-            "modified_at": datetime(1980, 6, 1, 16, 45, tzinfo=UTC),
+            "created_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            "modified_at": datetime(2024, 6, 1, 16, 45, tzinfo=UTC),
         },
     )
     envelope = Envelope[Transaction](
@@ -266,8 +263,8 @@ _ROW_TIMESTAMP_CASES: tuple[tuple[str, dict[str, object], str], ...] = (
     ("stored as written", {}, "accept"),
     ("created_at missing", {"created_at": _REMOVED}, "refuse"),
     ("modified_at missing", {"modified_at": _REMOVED}, "refuse"),
-    ("non-utc offset", {"created_at": "1980-04-14T10:30:00+01:00"}, "refuse"),
-    ("naive timestamp", {"modified_at": "1980-06-01T16:45:00"}, "refuse"),
+    ("non-utc offset", {"created_at": "2024-04-14T10:30:00+01:00"}, "refuse"),
+    ("naive timestamp", {"modified_at": "2024-06-01T16:45:00"}, "refuse"),
     ("number", {"created_at": 1713087000}, "refuse"),
     ("explicit null", {"modified_at": None}, "refuse"),
 )

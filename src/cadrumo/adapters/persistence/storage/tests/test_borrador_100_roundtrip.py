@@ -39,17 +39,14 @@ from cadrumo.application.live.errors import LiveApplicationInputError
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_template_path
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
-#: The newest Modelo 100 edition the registry authors.
-_FILING_YEAR = newest_authored_edition("100")
-_PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")
+_PERIOD = Period.from_year_and_code(2024, "0A")
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="100",
-    revision_id=str(revision_covering("100", _FILING_YEAR).id),
-    modelo_year=_FILING_YEAR,
+    revision_id="2024",
+    modelo_year=2024,
     period="0A",
 )
 _BUCKET_ID = "50505050-5050-4050-8050-505050505050"
@@ -89,21 +86,21 @@ def _borrador_detail_url(expediente_id: str) -> str:
         configured_template_path(
             "sede_paths",
             "borrador_100_detail_template",
-            year=_FILING_YEAR,
+            year=2024,
             expediente_id=expediente_id,
         ),
     )
 
 
 def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
-    captured_at = datetime(1980, 4, 12, 11, 30, 0, tzinfo=UTC)
+    captured_at = datetime(2024, 4, 12, 11, 30, 0, tzinfo=UTC)
     binding_values = {
         _CERTIFICATE: Decimal("8750.50"),
         _RESIDENCE: "madrid",
     }
     source_url = _borrador_detail_url("202410013522456T")
     snapshot_id = derive_borrador_100_snapshot_id(
-        filing_year=_FILING_YEAR,
+        filing_year=2024,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         source_url=source_url,
@@ -113,7 +110,7 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         modelo="100",
-        filing_year=_FILING_YEAR,
+        filing_year=2024,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=captured_at,
@@ -130,14 +127,14 @@ def _save_superseded_original(
     successor = _populated_snapshot(bucket_id=bucket_id)
     repo.save(successor)
 
-    captured_at = datetime(1980, 3, 11, 9, 15, 0, tzinfo=UTC)
+    captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
     binding_values = {
         _CERTIFICATE: Decimal("8120.00"),
         _RESIDENCE: "madrid",
     }
     source_url = _borrador_detail_url("202410013522401X")
     snapshot_id = derive_borrador_100_snapshot_id(
-        filing_year=_FILING_YEAR,
+        filing_year=2024,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         source_url=source_url,
@@ -147,7 +144,7 @@ def _save_superseded_original(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         modelo="100",
-        filing_year=_FILING_YEAR,
+        filing_year=2024,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=captured_at,
@@ -284,7 +281,7 @@ def _snapshot_with_values(
     source_url = "file-import:sha256:" + source_digit * 64
     return Borrador100Snapshot(
         snapshot_id=derive_borrador_100_snapshot_id(
-            filing_year=_FILING_YEAR,
+            filing_year=2024,
             period=_PERIOD,
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             source_url=source_url,
@@ -292,10 +289,10 @@ def _snapshot_with_values(
         ),
         bucket_id=bucket_id,
         modelo="100",
-        filing_year=_FILING_YEAR,
+        filing_year=2024,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        captured_at=datetime(1980, 4, 12, 11, 30, 0, tzinfo=UTC),
+        captured_at=datetime(2024, 4, 12, 11, 30, 0, tzinfo=UTC),
         source_url=source_url,
         state=SnapshotLifecycleState.ACTIVE,
         binding_values=binding_values,
@@ -341,7 +338,7 @@ def test_borrador_100_snapshot_id_tells_text_nine_from_decimal_nine() -> None:
 
     def derive(value: str | Decimal) -> str:
         return derive_borrador_100_snapshot_id(
-            filing_year=_FILING_YEAR,
+            filing_year=2024,
             period=_PERIOD,
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             source_url="file-import:sha256:" + "4" * 64,

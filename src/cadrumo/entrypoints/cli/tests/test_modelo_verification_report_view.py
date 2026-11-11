@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,15 +9,11 @@ from pydantic import ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 
 if TYPE_CHECKING:
     from ....domain.modelos.verification_report import VerificationReport
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
-_RUN_AT = datetime(1980, 5, 27, 10, 0, 0, tzinfo=UTC)
 
 _VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
     "0100",
@@ -27,8 +22,8 @@ _VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
 _TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
-    revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
-    modelo_year=_YEAR,
+    revision_id="2026-y-siguientes",
+    modelo_year=2026,
     period="1T",
 )
 
@@ -105,6 +100,7 @@ def test_iva_compensation_annual_source_evidence_finding_resolves_from_each_supp
 
 def test_verification_report_lines_preserve_persisted_findings_without_recovery_reconstruction() -> None:
     """Report history renders factual findings and never invents a recovery command."""
+    from datetime import UTC, datetime
 
     from ....domain.modelos.verification_report import (
         ModeloVerificationFinding,
@@ -117,7 +113,7 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
     from ..modelo_rendering import verification_report_lines, verification_report_payload
     from ..modelo_results import VerificationReportListResult, VerificationReportShowResult
 
-    run_at = _RUN_AT
+    run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "a" * 64
     findings = (
         ModeloVerificationFinding(
@@ -166,6 +162,7 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
 
 def test_verification_report_payload_resolves_the_exact_registry_recovery_verdict() -> None:
     """A live verification exposes only the typed action paired by the application."""
+    from datetime import UTC, datetime
 
     from ....application.modelo.verification_preconditions import (
         VerificationFindingPreconditionProjection,
@@ -208,7 +205,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
-        run_at=_RUN_AT,
+        run_at=datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC),
         verified_by="test-actor",
         granted_verificado_completo=False,
     )
@@ -241,6 +238,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
 
 def test_verification_report_lines_omits_recovery_when_granted() -> None:
     """A granted verification report has neither findings nor a recovery field."""
+    from datetime import UTC, datetime
 
     from ....domain.modelos.verification_report import (
         VerificationCompletenessStatus,
@@ -249,7 +247,7 @@ def test_verification_report_lines_omits_recovery_when_granted() -> None:
     )
     from ..modelo_rendering import verification_report_lines
 
-    run_at = _RUN_AT
+    run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "b" * 64
     report_id = derive_verification_report_id(
         calculation_revision_id=calc_id,
@@ -282,6 +280,7 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
     ``source_refs``. The grounding is pulled from the persisted finding, never
     invented.
     """
+    from datetime import UTC, datetime
 
     from ....domain.modelos.verification_report import (
         ModeloVerificationFinding,
@@ -297,7 +296,7 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
     )
     from ..modelo_results import VerificationReportShowResult
 
-    run_at = _RUN_AT
+    run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "c" * 64
     legal = ("ley-37-1992:art-88", "rd-1624-1992:art-71")
     sources = ("aeat-modelo-303-instructions",)
@@ -357,6 +356,7 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
     ``missing_required_casilla_ids`` list against the bare ``count`` so the page's
     "lists which ones" claim cannot silently regress to a count-only view.
     """
+    from datetime import UTC, datetime
 
     from ....domain.modelos.verification_report import (
         VerificationCompletenessStatus,
@@ -369,7 +369,7 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
     )
     from ..modelo_results import VerificationReportShowResult
 
-    run_at = _RUN_AT
+    run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "d" * 64
     report_id = derive_verification_report_id(
         calculation_revision_id=calc_id,
@@ -416,6 +416,7 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
 
 def _blocked_report() -> VerificationReport:
     """Build one real, fully-validated canonical report to project."""
+    from datetime import UTC, datetime
 
     from ....domain.modelos.verification_report import (
         ModeloVerificationFinding,
@@ -447,7 +448,7 @@ def _blocked_report() -> VerificationReport:
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
-        run_at=_RUN_AT,
+        run_at=datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC),
         verified_by="test-actor",
         granted_verificado_completo=False,
     )
@@ -495,7 +496,7 @@ def test_narrowing_the_status_left_the_json_wire_form_untouched() -> None:
     wire = verification_report_payload(_blocked_report()).model_dump(mode="json")
 
     assert wire["completeness_status"] == "blocked"
-    assert wire["run_at"] == _RUN_AT.isoformat()
+    assert wire["run_at"] == "2026-05-27T10:00:00+00:00"
 
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])

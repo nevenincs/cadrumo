@@ -11,7 +11,6 @@ from pydantic import BaseModel, ValidationError
 from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ....application.invoices.catalogue_creation import CatalogueInvoiceCreateResult, build_catalogue_invoice
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoiceRemoveResult, CatalogueInvoiceUpdateResult
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 from ..command_schema import command_schema_types
@@ -25,8 +24,6 @@ from ..ledger_catalogue_invoice_results import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def _invoice_record_payload(invoice: Invoice) -> dict[str, object]:
@@ -63,7 +60,7 @@ def _canonical_invoice_payload() -> dict[str, object]:
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-STRICT-001",
-        issued_at=date(_YEAR, 3, 10),
+        issued_at=date(2026, 3, 10),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -114,7 +111,7 @@ def test_catalogue_invoice_record_projects_a_canonical_invoice() -> None:
     payload = CatalogueInvoiceRecordPayload.model_validate(_canonical_invoice_payload())
 
     assert payload.kind is InvoiceKind.RECEIVED
-    assert payload.issued_at == date(_YEAR, 3, 10)
+    assert payload.issued_at == date(2026, 3, 10)
     assert payload.grand_total == Decimal("121.00")
     assert len(payload.lines) == 1
     assert payload.lines[0].iva_rate == "RATE_21"

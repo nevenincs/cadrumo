@@ -18,7 +18,7 @@ def _render(snapshot: ReviewSnapshot) -> SheetExportPlan[SheetReviewMetadata]:
     return build_review_workbook(
         snapshot,
         publication_id=UUID(int=2),
-        exported_at=datetime(1980, 10, 5, tzinfo=UTC),
+        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
         label=lambda key: key,
     )
 

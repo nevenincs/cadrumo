@@ -17,7 +17,6 @@ import {
 import type { LedgerRow } from "../src/shell/ledger";
 import { hexId, movement } from "./support/ledger";
 import { recordedCheck } from "./support/stagedCheck";
-import { fixtureDay } from "../src/dev/fixtureDates";
 
 // The staged-changes store. No page is opened.
 
@@ -310,15 +309,15 @@ test("the effective row is the stored row plus its changes; identity fields are 
     changesIdentity(rowA, { description: { kind: "set", value: "OTRA" } }),
   ).toEqual(["description"]);
   // A booked date behind a value date is not the effective date.
-  const valued = movement(A, { value_date: fixtureDay(10, 6) });
+  const valued = movement(A, { value_date: "2026-10-06" });
   expect(
     changesIdentity(valued, {
-      booked_date: { kind: "set", value: fixtureDay(10, 1) },
+      booked_date: { kind: "set", value: "2026-10-01" },
     }),
   ).toEqual([]);
   expect(
     changesIdentity(rowA, {
-      booked_date: { kind: "set", value: fixtureDay(10, 1) },
+      booked_date: { kind: "set", value: "2026-10-01" },
     }),
   ).toEqual(["booked_date"]);
   expect(

@@ -17,7 +17,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
@@ -41,22 +40,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_YEAR = filing_year_envelope().horizon
-_INSTANT = datetime(_YEAR, 3, 10, 12, tzinfo=UTC)
+_INSTANT = datetime(2026, 3, 10, 12, tzinfo=UTC)
 
 
 def _unit(profile: UUID, period_code: str, *, discarded: bool = False) -> WorkUnit:
-    period = Period.from_year_and_code(_YEAR, period_code)
-    revision_id = str(revision_serving_period("303", _YEAR, period_code).id)
+    period = Period.from_year_and_code(2026, period_code)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(profile), modelo="303", filing_year=_YEAR, period=period, revision_id=revision_id
+            bucket_id=str(profile), modelo="303", filing_year=2026, period=period, revision_id="2026-y-siguientes"
         ),
         bucket_id=str(profile),
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
-        revision_id=revision_id,
+        revision_id="2026-y-siguientes",
         name=period_code,
         created_at=_INSTANT,
         updated_at=_INSTANT,
@@ -141,7 +138,7 @@ def test_profile_wide_access_requires_unrestricted_period_ceiling() -> None:
     assert resolved.request.period_independent and not resolved.request.periods
     assert resolved.policy.allow_period_independent and resolved.policy.requires_all_periods
     assert AccessAction.COMMIT not in resolved.policy.actions
-    for periods in (frozenset({Period.from_year_and_code(_YEAR, "1T")}), frozenset()):
+    for periods in (frozenset({Period.from_year_and_code(2026, "1T")}), frozenset()):
         scope = AccessScope(
             operations=frozenset({MODELO_WORK_LIST_OPERATION_DEFINITION_ID}),
             actions=frozenset({AccessAction.SUBMIT}),

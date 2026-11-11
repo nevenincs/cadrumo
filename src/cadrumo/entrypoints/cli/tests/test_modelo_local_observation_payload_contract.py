@@ -15,22 +15,20 @@ from pydantic import ValidationError
 
 from ....application.calculations.observations_repository import ObservationSourceKind
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ..modelo_results import FilingRecordLocalObservationResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-_CAPTURED_AT = datetime(1980, 6, 1, 8, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 6, 1, 8, 0, tzinfo=UTC)
 
 
 def _kwargs(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "action": "recorded",
         "modelo": "130",
-        "filing_year": _YEAR,
-        "period": Period.from_year_and_code(_YEAR, "1T"),
-        "revision_id": str(open_ended_revision("130").id),
+        "filing_year": 2026,
+        "period": Period.from_year_and_code(2026, "1T"),
+        "revision_id": "2020-y-siguientes",
         "observation_key": "obs-1",
         "source_kind": ObservationSourceKind.OPERATOR_MANUAL,
         "casilla_values": {"0001": "100.00"},

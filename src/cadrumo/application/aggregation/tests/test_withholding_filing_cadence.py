@@ -29,13 +29,11 @@ from cadrumo.application.user_profile.projections import projection_for_taxpayer
 from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.deadlines.engine import DeadlineEngine
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
 _QUARTERS = ("1T", "2T", "3T", "4T")
 _MONTHS = ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
 
@@ -61,7 +59,7 @@ def _calendar_periods(
 def test_an_ordinary_filer_is_quarterly_for_every_withholding_modelo(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    cadence = withholding_filer_cadence(authority_operation, filing_year=_YEAR)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025)
 
     for modelo in ("111", "115", "123"):
         schedule = cadence.schedule_for(modelo)
@@ -74,7 +72,7 @@ def test_a_large_company_files_every_withholding_modelo_monthly(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """RIRPF art. 108.1 gives all three modelos the same monthly plazo for this retenedor."""
-    cadence = withholding_filer_cadence(authority_operation, filing_year=_YEAR, facts=LARGE_COMPANY_FACTS)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=LARGE_COMPANY_FACTS)
 
     for modelo in ("111", "115", "123"):
         schedule = cadence.schedule_for(modelo)
@@ -85,7 +83,7 @@ def test_a_large_company_files_every_withholding_modelo_monthly(
 def test_a_public_administration_over_the_threshold_is_monthly_for_111_only(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    cadence = withholding_filer_cadence(authority_operation, filing_year=_YEAR, facts=PUBLIC_ADMINISTRATION_FACTS)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=PUBLIC_ADMINISTRATION_FACTS)
 
     assert cadence.schedule_for("111").scheduled_periods == _MONTHS
     assert cadence.schedule_for("123").quarterly_periods == _QUARTERS
@@ -94,7 +92,7 @@ def test_a_public_administration_over_the_threshold_is_monthly_for_111_only(
 def test_redeme_enrolment_does_not_change_the_withholding_schedule(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    cadence = withholding_filer_cadence(authority_operation, filing_year=_YEAR, facts=REDEME_FACTS)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=REDEME_FACTS)
 
     assert cadence.schedule_for("111").quarterly_periods == _QUARTERS
     assert cadence.schedule_for("123").quarterly_periods == _QUARTERS
@@ -110,10 +108,10 @@ def test_the_modelo_111_cadence_matches_the_calendar_windows(
     facts: tuple[UserProfileFact, ...],
 ) -> None:
     """The periods the cadence assigns are exactly the 111 windows the deadline engine admits."""
-    cadence = withholding_filer_cadence(authority_operation, filing_year=_YEAR, facts=facts)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=facts)
 
     assert set(cadence.schedule_for("111").scheduled_periods) == _calendar_periods(
-        authority_operation, modelo="111", filing_year=_YEAR, facts=facts
+        authority_operation, modelo="111", filing_year=2025, facts=facts
     )
 
 
@@ -123,30 +121,30 @@ def test_a_large_company_has_the_monthly_calendar_windows_of_the_other_two_model
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The cadence and the calendar agree for 115 and 123 as they already did for 111."""
-    admitted = _calendar_periods(authority_operation, modelo=modelo, filing_year=_YEAR, facts=LARGE_COMPANY_FACTS)
+    admitted = _calendar_periods(authority_operation, modelo=modelo, filing_year=2025, facts=LARGE_COMPANY_FACTS)
 
     assert admitted == set(_MONTHS)
-    cadence = withholding_filer_cadence(authority_operation, filing_year=_YEAR, facts=LARGE_COMPANY_FACTS)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=LARGE_COMPANY_FACTS)
     assert set(cadence.schedule_for(modelo).scheduled_periods) == admitted
 
 
 def test_a_quarterly_filer_captures_into_the_recognition_quarter(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    cadence = withholding_filer_cadence(authority_operation, filing_year=_YEAR)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025)
 
-    period = quarterly_withholding_capture_period(cadence, modelo="111", recognized_on=date(_YEAR, 5, 14))
+    period = quarterly_withholding_capture_period(cadence, modelo="111", recognized_on=date(2025, 5, 14))
 
-    assert period == Period.from_year_and_code(_YEAR, "2T")
+    assert period == Period.from_year_and_code(2025, "2T")
 
 
 def test_a_monthly_filer_capture_is_refused_with_a_no_action_verdict(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    cadence = withholding_filer_cadence(authority_operation, filing_year=_YEAR, facts=LARGE_COMPANY_FACTS)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=LARGE_COMPANY_FACTS)
 
     with pytest.raises(WithholdingFilingCadenceError) as raised:
-        quarterly_withholding_capture_period(cadence, modelo="111", recognized_on=date(_YEAR, 5, 14))
+        quarterly_withholding_capture_period(cadence, modelo="111", recognized_on=date(2025, 5, 14))
 
     error = raised.value
     assert error.refusal_code == "withholding_quarterly_window_not_scheduled"
@@ -158,7 +156,7 @@ def test_a_monthly_filer_capture_is_refused_with_a_no_action_verdict(
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
     assert dict(verdict.evidence[0].values) == {
         "modelo": "111",
-        "filing_year": str(_YEAR),
+        "filing_year": "2025",
         "period": "2T",
         "scheduled_periods": "|".join(_MONTHS),
         "monthly_windows_supported": False,
@@ -169,10 +167,10 @@ def test_a_large_company_capital_capture_is_refused_because_its_123_is_monthly(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Quarterly capture is still refused, now because the monthly cadence is scheduled."""
-    cadence = withholding_filer_cadence(authority_operation, filing_year=_YEAR, facts=LARGE_COMPANY_FACTS)
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025, facts=LARGE_COMPANY_FACTS)
 
     with pytest.raises(WithholdingFilingCadenceError) as raised:
-        quarterly_withholding_capture_period(cadence, modelo="123", recognized_on=date(_YEAR, 12, 15))
+        quarterly_withholding_capture_period(cadence, modelo="123", recognized_on=date(2025, 12, 15))
 
     context = raised.value.context
     assert context is not None
@@ -183,10 +181,10 @@ def test_a_large_company_capital_capture_is_refused_because_its_123_is_monthly(
 def test_the_annual_source_refuses_when_its_periodic_modelo_is_not_quarterly_all_year(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    ordinary = withholding_filer_cadence(authority_operation, filing_year=_YEAR)
+    ordinary = withholding_filer_cadence(authority_operation, filing_year=2025)
     require_quarterly_withholding_source(ordinary, annual_modelo="190", source_modelo="111")
 
-    monthly = withholding_filer_cadence(authority_operation, filing_year=_YEAR, facts=LARGE_COMPANY_FACTS)
+    monthly = withholding_filer_cadence(authority_operation, filing_year=2025, facts=LARGE_COMPANY_FACTS)
     with pytest.raises(WithholdingFilingCadenceError) as raised:
         require_quarterly_withholding_source(monthly, annual_modelo="190", source_modelo="111")
 
@@ -194,7 +192,7 @@ def test_the_annual_source_refuses_when_its_periodic_modelo_is_not_quarterly_all
     assert raised.value.context == {
         "annual_modelo": "190",
         "modelo": "111",
-        "filing_year": str(_YEAR),
+        "filing_year": "2025",
         "unscheduled_quarters": "|".join(_QUARTERS),
         "scheduled_periods": "|".join(_MONTHS),
         "monthly_windows_supported": False,
@@ -205,7 +203,7 @@ def test_an_absent_work_profile_is_refused_rather_than_read_as_quarterly(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     with pytest.raises(WithholdingFilingCadenceError) as raised:
-        withholding_filer_cadence_for_work_profile(None, filing_year=_YEAR, operation=authority_operation)
+        withholding_filer_cadence_for_work_profile(None, filing_year=2025, operation=authority_operation)
 
     assert raised.value.refusal_code == "withholding_filer_profile_absent"
     verdict = raised.value.terminal_precondition_verdict
@@ -218,7 +216,7 @@ def test_a_bucket_whose_profile_no_session_serves_is_refused(authority_operation
     with pytest.raises(WithholdingFilingCadenceError) as raised:
         load_bucket_withholding_filer_cadence(
             bucket_id="5e0f1a2b-3c4d-4e5f-8a6b-7c8d9e0f1a2b",
-            filing_year=_YEAR,
+            filing_year=2025,
             operation=authority_operation,
         )
 

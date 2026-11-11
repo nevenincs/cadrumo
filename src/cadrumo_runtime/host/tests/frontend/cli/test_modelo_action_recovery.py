@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import subprocess
 from collections.abc import Iterator
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -22,9 +21,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.operator_surface.verb_input_contracts import cli_argv_for
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision, revision_covering
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
-    SCENARIO_FILING_YEAR,
     m111_withholding_aggregate_arguments,
     m111_withholding_invoice_arguments,
 )
@@ -212,7 +209,7 @@ def _create_legal_profile(environment: dict[str, str]) -> None:
             "identity.legal_name": "Entidad de prueba SL",
             "activities.description": "actividad",
             "taxpayer_type.incn_prior_12_months": "500000",
-            "censo.activity_start_date": date(SCENARIO_FILING_YEAR - 2, 1, 15).isoformat(),
+            "censo.activity_start_date": "2024-01-15",
             "tax_residence.ccaa": "madrid",
         },
     )
@@ -279,7 +276,7 @@ def _create_work_unit(
 
 
 def _capture_m111_invoice_withholding(environment: dict[str, str]) -> None:
-    """Capture the Modelo 111 first-quarter invoice-backed retención through the installed console."""
+    """Capture the Modelo 111 2025 1T invoice-backed retención through the installed console."""
     created = _run_success(environment, m111_withholding_invoice_arguments())
     invoice_id = _result(created).get("invoice_id")
     assert isinstance(invoice_id, str) and invoice_id
@@ -290,9 +287,9 @@ def _create_calculable_m111_work(environment: dict[str, str]) -> str:
     work_unit_id = _create_work_unit(
         environment,
         modelo="111",
-        year=SCENARIO_FILING_YEAR,
+        year=2025,
         period="1T",
-        revision=str(open_ended_revision("111").id),
+        revision="2019-y-siguientes",
     )
     _capture_m111_invoice_withholding(environment)
     return work_unit_id
@@ -452,9 +449,9 @@ def test_installed_console_required_bindings_action_is_decision_support_then_hon
     work_unit_id = _create_work_unit(
         environment,
         modelo="202",
-        year=SCENARIO_FILING_YEAR,
+        year=2026,
         period="1P",
-        revision=str(revision_covering("202", SCENARIO_FILING_YEAR).id),
+        revision="2025-y-siguientes",
     )
     original = ["app", "modelo", "work", "calculate", work_unit_id]
     before = _work_state(storage_root=storage_root, work_unit_id=work_unit_id)
@@ -480,9 +477,9 @@ def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: 
     work_unit_id = _create_work_unit(
         environment,
         modelo="111",
-        year=SCENARIO_FILING_YEAR,
+        year=2025,
         period="1T",
-        revision=str(open_ended_revision("111").id),
+        revision="2019-y-siguientes",
     )
     _seed_discarded_work(storage_root=storage_root, work_unit_id=work_unit_id)
     before = _work_state(storage_root=storage_root, work_unit_id=work_unit_id)

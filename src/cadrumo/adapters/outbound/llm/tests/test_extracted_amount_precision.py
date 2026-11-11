@@ -30,7 +30,7 @@ def _reply_text(taxable_base: str) -> str:
     values = {
         "supplier_tax_id": "B00015016",
         "invoice_number": "F-145",
-        "invoice_date": "15/01/1980",
+        "invoice_date": "15/01/2026",
         "taxable_base": taxable_base,
         "iva_rate": "21",
         "currency": "EUR",

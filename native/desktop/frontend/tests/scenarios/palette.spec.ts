@@ -1,5 +1,4 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { fixtureInstant } from "../../src/dev/fixtureDates";
 import {
   pageViewId,
   WINDOW_VIEWS,
@@ -65,10 +64,8 @@ test("documentation results disappear immediately when the query changes, before
     hasText: "config sign-in-status",
   });
   await expect(oldResult).toBeVisible();
-  await target.clock.install({
-    time: new Date(fixtureInstant(11, 2, "12:00:00Z")),
-  });
-  await target.clock.pauseAt(new Date(fixtureInstant(11, 2, "12:00:01Z")));
+  await target.clock.install({ time: new Date("2026-11-02T12:00:00Z") });
+  await target.clock.pauseAt(new Date("2026-11-02T12:00:01Z"));
   await input(target).fill("zzzz-no-matching-document");
   await expect(oldResult).toHaveCount(0);
   await expect(palette(target).locator(".palette-note")).toHaveText(

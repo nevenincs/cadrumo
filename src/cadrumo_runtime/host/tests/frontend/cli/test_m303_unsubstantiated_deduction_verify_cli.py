@@ -21,7 +21,6 @@ calculate its self-assessed cuota and deduct it in the same return
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
@@ -34,7 +33,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_envelope_notices, unwrap_schema_envelope
 
@@ -52,8 +50,7 @@ __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = filing_year_envelope().horizon
-_OPERATION_DATE = date(_YEAR, 2, 15).isoformat()
+_OPERATION_DATE = "2025-02-15"
 _BASE = Decimal("200.00")
 _CUOTA = Decimal("42.00")
 _EVIDENCE_CONDITION = "modelo.work.verify.iva_selected_scope_evidence.complete"
@@ -125,7 +122,7 @@ def _add_purchase_without_invoice() -> str:
 
 
 def _calculate_1t() -> tuple[str, str]:
-    created = _invoke(["app", "modelo", "work", "create", "--modelo", "303", "--year", str(_YEAR), "--period", "1T"])
+    created = _invoke(["app", "modelo", "work", "create", "--modelo", "303", "--year", "2025", "--period", "1T"])
     assert created.exit_code == 0, created.output
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str)
@@ -209,7 +206,7 @@ def test_the_supplier_invoice_lets_the_intra_eu_acquisition_accrue_and_deduct_it
     _seed_quarter(request)
     evidence_id = register_purchase_invoice_evidence(tmp_path, label="intracomunitaria", base=_BASE, cuota=_CUOTA)
     _add_intra_eu_acquisition("--purchase-invoice-evidence-id", evidence_id)
-    created = _invoke(["app", "modelo", "work", "create", "--modelo", "303", "--year", str(_YEAR), "--period", "1T"])
+    created = _invoke(["app", "modelo", "work", "create", "--modelo", "303", "--year", "2025", "--period", "1T"])
     assert created.exit_code == 0, created.output
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str)

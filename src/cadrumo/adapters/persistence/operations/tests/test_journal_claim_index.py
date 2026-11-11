@@ -35,17 +35,14 @@ from .....application.operations.persistence.leases import (
 from .....core.directory_scan import scan_directory
 from .....core.locks import exclusive_file_lock
 from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.errors import RepositoryError
 from ..journal import OperationJournalRepository, SnapshotJournalRepository
 from ..journal_validation import OperationJournalRecord
 from ..lease import OperationLeaseFilesystemRepository
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_STARTED = datetime(_YEAR, 9, 1, 9, tzinfo=UTC)
+_STARTED = datetime(2026, 9, 1, 9, tzinfo=UTC)
 _DEFINITION_ID = "test.operation"
 
 type Outcome = tuple[str, str | None]

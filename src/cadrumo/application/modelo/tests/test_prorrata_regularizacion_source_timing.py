@@ -46,9 +46,9 @@ _ORACLE_PATH = Path(
     bundled_path("corpus", "manual_oracles", "modelo-303-2025-prorrata-general-regularizacion.json"),
 )
 _BUCKET_ID = "42080ff6-4479-4533-9513-7c44571b6592"  # was 'prorrata-source-timing'
-_FILING_YEAR = json.loads(_ORACLE_PATH.read_text(encoding="utf-8"))["filing_year"]
+_FILING_YEAR = 2025
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "4T")
-_CREATED_AT = datetime(_FILING_YEAR + 1, 1, 20, 9, 0, tzinfo=UTC)
+_CREATED_AT = datetime(2026, 1, 20, 9, 0, tzinfo=UTC)
 
 _CUOTA_DEDUCIBLE_TOTAL_ID: CasillaId = validated_casilla_id(
     "iva.cuota-deducible-total",

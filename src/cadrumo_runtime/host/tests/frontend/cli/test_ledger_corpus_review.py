@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterator
-from datetime import date
 from typing import Any
 
 import pytest
@@ -19,7 +18,6 @@ from cadrumo.application.ledger.models import LedgerSourceImportCommand
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.currency.service import CurrencyNormalizationService
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_import_ports, compose_ledger_read_ports
 from cadrumo.tests.inventory import FIXTURES_DIR
@@ -27,8 +25,6 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -49,7 +45,7 @@ _PROFILE_FACTS = {
     "identity.name": "Ledger",
     "identity.surnames": "Corpus Reviewer",
     "activities.description": "design",
-    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
+    "censo.activity_start_date": "2025-01-01",
 }
 
 
@@ -154,7 +150,7 @@ def test_review_filter_by_period_and_status(_corpus_profile: NativeCliProfileFix
 
 
 def test_preflight_and_check_surface_missing_facts(_corpus_profile: NativeCliProfileFixture) -> None:
-    preflight = _invoke(_corpus_profile, ["app", "ledger", "preflight", "--period", "1T", "--year", str(_YEAR)])
+    preflight = _invoke(_corpus_profile, ["app", "ledger", "preflight", "--period", "1T", "--year", "2025"])
     assert preflight.exit_code == 0, preflight.output
     check = _invoke(_corpus_profile, ["app", "ledger", "check"])
     assert check.exit_code == 0, check.output

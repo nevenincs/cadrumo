@@ -20,8 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -45,12 +43,9 @@ from ....domain.iva_compensation.reconciliation import (
 from .file_flow_test_support import calculation_ports_for_test
 from .ready_profile_taxpayer import ready_profile_tax_id
 
-_YEAR = filing_year_envelope().horizon
-_FLOOR_YEAR = filing_year_envelope().floor
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CLOCK = datetime(_YEAR, 5, 21, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _TAXPAYER_NIF = ready_profile_tax_id()
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
@@ -165,22 +160,22 @@ def test_modelo_303_declaration_year_resolves_from_work_unit_filing_year(
 ) -> None:
     """``decl.ejercicio`` carries the work unit's filing year, not ``0``."""
     revision = _calculate_303(
-        filing_year=_YEAR,
+        filing_year=2025,
         period="1T",
-        period_date=date(_YEAR, 3, 31),
+        period_date=date(2025, 3, 31),
         tmp_path=tmp_path,
         operation=operation,
     )
-    assert revision.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal(_YEAR)
+    assert revision.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2025")
 
 
 @pytest.mark.parametrize(
     ("period", "period_date", "expected_token"),
     [
-        ("1T", date(_YEAR, 3, 31), "1T"),
-        ("2T", date(_YEAR, 6, 30), "2T"),
-        ("3T", date(_YEAR, 9, 30), "3T"),
-        ("4T", date(_YEAR, 12, 31), "4T"),
+        ("1T", date(2026, 3, 31), "1T"),
+        ("2T", date(2026, 6, 30), "2T"),
+        ("3T", date(2026, 9, 30), "3T"),
+        ("4T", date(2026, 12, 31), "4T"),
     ],
 )
 def test_modelo_303_declaration_period_resolves_from_work_unit_period(
@@ -197,7 +192,7 @@ def test_modelo_303_declaration_period_resolves_from_work_unit_period(
     canonical observation envelope carries the real text scalar.
     """
     revision = _calculate_303(
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         period_date=period_date,
         tmp_path=tmp_path,
@@ -222,9 +217,9 @@ def test_modelo_303_declaration_casillas_carry_registry_provenance(
     the Decimal-only flat projection intentionally omits it.
     """
     revision = _calculate_303(
-        filing_year=_YEAR,
+        filing_year=2025,
         period="2T",
-        period_date=date(_YEAR, 6, 30),
+        period_date=date(2025, 6, 30),
         tmp_path=tmp_path,
         operation=operation,
     )
@@ -234,7 +229,7 @@ def test_modelo_303_declaration_casillas_carry_registry_provenance(
         assert observation.formula_id is None
         assert observation.legal_refs
         assert observation.source_refs
-    assert observations[_DECL_EJERCICIO_CASILLA].value == Decimal(_YEAR)
+    assert observations[_DECL_EJERCICIO_CASILLA].value == Decimal("2025")
     assert observations[_DECL_PERIODO_CASILLA].value == "2T"
     assert _DECL_PERIODO_CASILLA not in revision.casilla_values
     assert revision.input_values_by_casilla_id[_DECL_PERIODO_CASILLA] == "2T"
@@ -248,23 +243,22 @@ def test_modelo_303_declaration_year_distinguishes_two_filing_years(
     Anti-tautology: the value is read off the work unit, so a
     different work unit must yield a different ``decl.ejercicio``.
     """
-    revision_floor = _calculate_303(
-        filing_year=_FLOOR_YEAR,
+    revision_2024 = _calculate_303(
+        filing_year=2024,
         period="1T",
-        period_date=date(_FLOOR_YEAR, 3, 31),
-        tmp_path=tmp_path / "floor",
+        period_date=date(2024, 3, 31),
+        tmp_path=tmp_path / "y2024",
         operation=operation,
     )
-    revision_horizon = _calculate_303(
-        filing_year=_YEAR,
+    revision_2026 = _calculate_303(
+        filing_year=2026,
         period="1T",
-        period_date=date(_YEAR, 3, 31),
-        tmp_path=tmp_path / "horizon",
+        period_date=date(2026, 3, 31),
+        tmp_path=tmp_path / "y2026",
         operation=operation,
     )
-    assert revision_floor.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal(_FLOOR_YEAR)
-    assert revision_horizon.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal(_YEAR)
+    assert revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2024")
+    assert revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2026")
     assert (
-        revision_floor.casilla_values[_DECL_EJERCICIO_CASILLA]
-        != revision_horizon.casilla_values[_DECL_EJERCICIO_CASILLA]
+        revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA] != revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA]
     )

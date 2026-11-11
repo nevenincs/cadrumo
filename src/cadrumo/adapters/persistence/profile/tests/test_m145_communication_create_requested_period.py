@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .....application.modelo.m145_communication_period import M145CommunicationPeriod
 from .....application.modelo.m145_communication_records import (
@@ -23,18 +21,6 @@ from .m145_communication_support import valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-
-
-def _command_json(period_token: str) -> str:
-    return json.dumps(
-        {
-            "communication_year": _YEAR,
-            "period_token": period_token,
-            "field_values": {"perceptor.nif": "12345678Z"},
-        }
-    )
-
 
 @pytest.mark.parametrize("period_token", tuple(M145CommunicationPeriod))
 def test_create_records_the_requested_declared_communication_period(
@@ -45,7 +31,7 @@ def test_create_records_the_requested_declared_communication_period(
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
             M145CommunicationCreateCommand(
-                communication_year=_YEAR,
+                communication_year=2026,
                 period_token=period_token,
                 field_values=valid_field_values(),
             ),
@@ -60,8 +46,12 @@ def test_create_records_the_requested_declared_communication_period(
 
 
 def test_create_command_refuses_a_period_token_modelo_145_does_not_declare() -> None:
-    declared = M145CommunicationCreateCommand.model_validate_json(_command_json("variacion"))
+    declared = M145CommunicationCreateCommand.model_validate_json(
+        '{"communication_year": 2026, "period_token": "variacion", "field_values": {"perceptor.nif": "12345678Z"}}'
+    )
     assert declared.period_token is M145CommunicationPeriod.VARIATION
 
     with pytest.raises(ValidationError, match="period_token"):
-        M145CommunicationCreateCommand.model_validate_json(_command_json("alta"))
+        M145CommunicationCreateCommand.model_validate_json(
+            '{"communication_year": 2026, "period_token": "alta", "field_values": {"perceptor.nif": "12345678Z"}}'
+        )

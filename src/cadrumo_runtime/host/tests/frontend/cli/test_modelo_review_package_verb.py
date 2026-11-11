@@ -19,7 +19,6 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -41,8 +40,6 @@ from .modelo_profile_seed import seed_profile
 from .strict_cli_fixture_support import seeded_runtime_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_HORIZON = filing_year_envelope().horizon
 
 __all__ = ["seed_profile", "seeded_runtime_backend"]
 
@@ -120,7 +117,7 @@ def test_review_package_build_then_verify_end_to_end(tmp_path: Path, *, operatio
     build_payload = unwrap_schema_envelope(build_result.output)
     assert build_payload["calculation_revision_id"] == calculation_revision_id
     assert build_payload["modelo"] == "111"
-    assert build_payload["filing_year"] == _HORIZON
+    assert build_payload["filing_year"] == 2026
     assert build_payload["member_count"] == 4
     assert build_payload["has_ledger_evidence"] is False
     assert build_payload["built_by"] == "Ana"
@@ -252,7 +249,7 @@ def test_review_package_invalid_period_names_the_selected_modelo_tokens(tmp_path
             "--modelo",
             "100",
             "--year",
-            str(filing_year_envelope().floor),
+            "2024",
             "--period",
             "1T",
             "--output",
@@ -279,12 +276,12 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path, *, operatio
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = active_registry_revision_id(modelo="111", filing_year=_HORIZON, period="1T", operation=operation)
-    filing_period = Period.from_year_and_code(_HORIZON, "1T")
+    revision_id = active_registry_revision_id(modelo="111", filing_year=2026, period="1T", operation=operation)
+    filing_period = Period.from_year_and_code(2026, "1T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="111",
-        filing_year=_HORIZON,
+        filing_year=2026,
         period=filing_period,
         revision_id=revision_id,
     )
@@ -293,10 +290,10 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path, *, operatio
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("111"),
-        filing_year=_HORIZON,
+        filing_year=2026,
         period=filing_period,
         revision_id=revision_id,
-        name=f"111-{_HORIZON}-1T",
+        name="111-2026-1T",
         created_at=now,
         updated_at=now,
     )
@@ -315,7 +312,7 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path, *, operatio
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="111",
             revision_id=revision_id,
-            modelo_year=_HORIZON,
+            modelo_year=2026,
             period="1T",
         ),
         state=CalculationRevisionState.BORRADOR,

@@ -85,7 +85,7 @@ from cadrumo.application.modelo.review_package_recipient_registry_ports import R
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(1980, 7, 4, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-RECIPIENT-ENCRYPTION-TEST"
 _CRYPTO_CAPABILITY = RecipientEncryptionAdapter()
 
@@ -529,8 +529,8 @@ def test_encrypt_refuses_non_positive_valid_for(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "issued_at",
     (
-        pytest.param(datetime(1980, 7, 3, 12, 0), id="naive"),
-        pytest.param(datetime(1980, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
     ),
 )
 def test_encrypt_refuses_a_naive_or_non_utc_issued_at(tmp_path: Path, issued_at: datetime) -> None:
@@ -725,8 +725,8 @@ def test_ensure_recipient_encryption_keypair_mints_once_and_reuses(tmp_path: Pat
 @pytest.mark.parametrize(
     "generated_at",
     (
-        pytest.param(datetime(1980, 7, 3, 12, 0), id="naive"),
-        pytest.param(datetime(1980, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
     ),
 )
 def test_ensure_recipient_encryption_keypair_refuses_a_naive_or_non_utc_generated_at(

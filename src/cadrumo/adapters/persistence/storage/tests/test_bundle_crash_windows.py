@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "abababab-abab-4bab-8bab-abababababab"
 _MANIFEST_DIGEST = "a" * 64
-_INSTANT = datetime(1980, 7, 2, 12, 0, 0, tzinfo=UTC)
+_INSTANT = datetime(2026, 7, 2, 12, 0, 0, tzinfo=UTC)
 _PAYLOAD = b"sealed-archive encrypted payload bytes for the crash-window test" * 32
 
 

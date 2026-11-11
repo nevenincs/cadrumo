@@ -14,7 +14,6 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ids import RevisionId
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.row_casilla import DirectRowMaterializationProvenance
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
@@ -39,10 +38,6 @@ from ..source_resolution_operations import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_ENVELOPE = filing_year_envelope()
-_RULE_REVISION: RevisionId = str(_ENVELOPE.horizon)
-"""A revision id for the synthetic row-materialisation provenance; no registry lookup reads it."""
 
 
 def _merge_by_precedence(resolutions: Sequence[CalculationSourceResolution]) -> CalculationSourceResolution:
@@ -152,7 +147,7 @@ def _row_casilla_provenance(
     binding_id: str = "inventory-operation-a",
     row_index: int = 1,
     identity: RowSourceIdentity | None = None,
-    revision: RevisionId = _RULE_REVISION,
+    revision: RevisionId = "2025",
 ) -> DirectRowMaterializationProvenance:
     return DirectRowMaterializationProvenance(
         source_binding_id=binding_id,
@@ -249,7 +244,7 @@ def test_direct_materialization_rule_must_be_the_source_binding() -> None:
             source_row_index=1,
             source_identity=_row_identity(),
             materialization_rule_id="inventory-operation-b",
-            materialization_rule_version=_RULE_REVISION,
+            materialization_rule_version="2025",
         )
 
 
@@ -263,7 +258,7 @@ def test_row_casilla_serialized_hydration_refuses_duplicate_coordinates(field: s
         "source_row_index": 1,
         "source_identity": _row_identity().model_dump(mode="json"),
         "materialization_rule_id": "inventory-operation-a",
-        "materialization_rule_version": _RULE_REVISION,
+        "materialization_rule_version": "2025",
     }
     duplicate = value_row if field == "row_casilla_values" else provenance_row
 
@@ -557,23 +552,21 @@ def test_source_diagnostic_rejects_mismatched_binding_source_projection() -> Non
 
 
 def test_out_of_window_summary_source_diagnostic_carries_count_and_date_span() -> None:
-    span_start = date(_ENVELOPE.floor, 1, 1)
-    span_end = date(_ENVELOPE.horizon, 12, 31)
     diagnostic = out_of_window_summary_source_diagnostic(
         source_kind="ledger_renta_income_aggregation",
         resolver_id="ledger_renta_income_aggregation",
         count=27_516,
-        min_filing_date=span_start,
-        max_filing_date=span_end,
+        min_filing_date=date(2021, 1, 1),
+        max_filing_date=date(2030, 12, 31),
     )
 
     assert diagnostic.reason == "source_issue"
     assert diagnostic.out_of_window_count == 27_516
-    assert diagnostic.out_of_window_min_filing_date == span_start
-    assert diagnostic.out_of_window_max_filing_date == span_end
+    assert diagnostic.out_of_window_min_filing_date == date(2021, 1, 1)
+    assert diagnostic.out_of_window_max_filing_date == date(2030, 12, 31)
     assert "27516 ledger transaction(s)" in diagnostic.message
-    assert f"{span_start.isoformat()}..{span_end.isoformat()}" in diagnostic.message
-    assert diagnostic.model_dump(mode="json")["out_of_window_min_filing_date"] == span_start.isoformat()
+    assert "2021-01-01..2030-12-31" in diagnostic.message
+    assert diagnostic.model_dump(mode="json")["out_of_window_min_filing_date"] == "2021-01-01"
 
 
 def test_source_diagnostic_rejects_incomplete_out_of_window_summary() -> None:
@@ -599,8 +592,8 @@ def test_source_diagnostic_rejects_reversed_out_of_window_summary_span() -> None
             source_kind="ledger_renta_income_aggregation",
             message="period summary",
             out_of_window_count=2,
-            out_of_window_min_filing_date=date(_ENVELOPE.horizon, 6, 1),
-            out_of_window_max_filing_date=date(_ENVELOPE.horizon, 1, 1),
+            out_of_window_min_filing_date=date(2024, 6, 1),
+            out_of_window_max_filing_date=date(2024, 1, 1),
         )
 
     context = exc_info.value.errors()[0].get("ctx")
@@ -621,7 +614,7 @@ def test_source_provenance_projects_canonical_binding_source() -> None:
         parent_source_ref=None,
         relation_id="modelo-100-rel-130-pagos-fraccionados",
         source_modelo="130",
-        source_filing_year=_ENVELOPE.horizon,
+        source_filing_year=2026,
         source_periods=("1T",),
         source_casilla_ids=("19",),
         legal_refs=("rd-439-2007:art-110",),
@@ -1131,7 +1124,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
 
 
 def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> None:
-    revision = published_revision("303", str(open_ended_revision("303").id))
+    revision = published_revision("303", "2022")
 
     diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())
 
@@ -1153,7 +1146,7 @@ def test_a_kind_enrolled_with_nothing_to_run_is_never_unhandled() -> None:
     source, so leaving them outside the handled set is still reported: that is
     the gap the screen exists for.
     """
-    revision = published_revision("720", str(open_ended_revision("720").id))
+    revision = published_revision("720", "2013-y-siguientes")
     declared = {binding.source for binding in revision.bindings}
     assert {BindingSourceKind.MANUAL_INPUT, BindingSourceKind.FOREIGN_ASSET} <= declared
 

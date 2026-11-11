@@ -24,7 +24,6 @@ from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceIn
 from cadrumo.application.ledger.llm_classification import suggest_llm_classification
 from cadrumo.application.ledger.llm_evidence import resolve_llm_evidence
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -34,7 +33,6 @@ from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
 _INVOICE = "Factura Acme SL material de oficina base 100,00 IVA 21,00 total 121,00"
 _BUCKET_ID = "32323232-3232-4232-8232-323232323232"
 _NO_EVIDENCE_CLASSIFIER_SCRIPT = f"""
@@ -63,8 +61,8 @@ def _text_pdf(tmp_path: Path, line: str) -> Path:
 def _transaction(evidence_id: str | None, *, attachment_ids: tuple[str, ...] = ()) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="row-ev",
-        booked_date=date(_YEAR, 3, 1),
-        value_date=date(_YEAR, 3, 1),
+        booked_date=date(2025, 3, 1),
+        value_date=date(2025, 3, 1),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Acme SL",
@@ -74,7 +72,7 @@ def _transaction(evidence_id: str | None, *, attachment_ids: tuple[str, ...] = (
             source_sha256="f" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual",
         ),
         raw_fields={"Concepto": "office supplies"},

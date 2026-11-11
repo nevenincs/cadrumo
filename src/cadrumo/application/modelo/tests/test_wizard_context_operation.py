@@ -19,7 +19,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationFrontendProjection
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
@@ -45,19 +44,17 @@ _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 
 
 def wizard_context_operation_unit() -> WorkUnit:
-    year = filing_year_envelope().horizon
-    period = Period.from_year_and_code(year, "1T")
-    instant = datetime(year, 3, 10, 12, tzinfo=UTC)
-    revision_id = str(open_ended_revision("303").id)
+    period = Period.from_year_and_code(2026, "1T")
+    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="303", filing_year=year, period=period, revision_id=revision_id
+            bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=period, revision_id="2026-y-siguientes"
         ),
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=year,
+        filing_year=2026,
         period=period,
-        revision_id=revision_id,
+        revision_id="2026-y-siguientes",
         name="First-quarter return",
         created_at=instant,
         updated_at=instant,

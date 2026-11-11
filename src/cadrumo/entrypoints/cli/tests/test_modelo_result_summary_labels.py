@@ -18,7 +18,6 @@ from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -31,16 +30,14 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
 _PROFILE_ID = "33333333-3333-4333-8333-333333333333"
-_NOW = datetime(1980, 7, 2, 12, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
-_REVISION_ID = str(revision_covering("130", _YEAR).id)
+_NOW = datetime(2026, 7, 2, 12, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2026, "1T")
+_REVISION_ID = "2019-y-siguientes"
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="130",
     revision_id=_REVISION_ID,
-    modelo_year=_YEAR,
+    modelo_year=2026,
     period="1T",
 )
 
@@ -54,7 +51,7 @@ def _seed_m130_work_unit() -> WorkUnit:
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=_PERIOD,
         revision_id=_REVISION_ID,
     )
@@ -62,10 +59,10 @@ def _seed_m130_work_unit() -> WorkUnit:
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=_PERIOD,
         revision_id=_REVISION_ID,
-        name=f"130-{_YEAR}-1T",
+        name="130-2026-1T",
         created_at=_NOW,
         updated_at=_NOW,
     )

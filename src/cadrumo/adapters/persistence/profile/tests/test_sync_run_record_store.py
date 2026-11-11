@@ -25,7 +25,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_COMPLETED_AT = datetime(1980, 8, 10, 9, 30, tzinfo=UTC)
+_COMPLETED_AT = datetime(2026, 8, 10, 9, 30, tzinfo=UTC)
 
 
 @pytest.fixture

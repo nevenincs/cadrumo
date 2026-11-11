@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
-from datetime import date
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -20,7 +19,6 @@ from cadrumo.application.user_profile.login_session import resolve_login_target
 from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
@@ -31,8 +29,6 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -174,7 +170,7 @@ def test_native_cli_export_and_review_package_publish_canonical_receipts(
                 "identity.name": "Operator",
                 "identity.surnames": "Export Review",
                 "activities.description": "consulting",
-                "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
+                "censo.activity_start_date": "2025-01-01",
             },
         )
         bucket_id = resolve_login_target(_LABEL).bucket_id
@@ -186,7 +182,7 @@ def test_native_cli_export_and_review_package_publish_canonical_receipts(
         assert revision.verified_at is not None
         assert report_id
         work_unit_id = revision.work_unit_id
-        period = Period.from_year_and_code(_YEAR, "1T")
+        period = Period.from_year_and_code(2025, "1T")
         close_active_bucket_session()
 
         expected_period = _assert_export_receipt(

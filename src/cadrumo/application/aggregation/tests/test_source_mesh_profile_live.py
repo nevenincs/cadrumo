@@ -23,7 +23,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationWalletObservationProtocol,
@@ -38,9 +37,7 @@ from ..source_profile import ProfileSourceResolver
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
-_WALLET_YEAR = filing_year_envelope().horizon
-_RENTA_YEAR = newest_authored_edition("100")
-_CLOCK = datetime(_WALLET_YEAR, 5, 21, 10, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 _EXTERNAL = Settings.external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
@@ -77,7 +74,7 @@ def bucket_id() -> str:
 
 @cache
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return published_snapshot("100", filing_year=_RENTA_YEAR, period="0A")
+    return published_snapshot("100", filing_year=2025, period="0A")
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
@@ -131,8 +128,8 @@ class _WalletObservation:
 def _wallet(amount: Decimal) -> IvaCompensationWalletObservationProtocol:
     return _WalletObservation(
         taxpayer_nif="12345678Z",
-        target_year=_WALLET_YEAR,
-        target_period=Period.from_year_and_code(_WALLET_YEAR, "2T"),
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "2T"),
         total_pending=amount,
         source_url=WALLET_URL,
         captured_at=_CLOCK,
@@ -159,8 +156,8 @@ def test_profile_source_resolver_matches_direct_profile_binding_resolution(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="100",
-            filing_year=_RENTA_YEAR,
-            period=Period.from_year_and_code(_RENTA_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision=snapshot.revision,
         ),
     )
@@ -193,8 +190,8 @@ def test_profile_source_resolver_respects_caller_owned_precedence(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="100",
-            filing_year=_RENTA_YEAR,
-            period=Period.from_year_and_code(_RENTA_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision=snapshot.revision,
         ),
     )
@@ -222,14 +219,14 @@ def test_profile_source_snapshot_below_the_supported_floor_is_refused() -> None:
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "binding_id", "channel", "expected_value"),
     (
-        ("036", _WALLET_YEAR, "alta", "modelo-036-profile-censo-status", "enum", "alta"),
-        *(
-            ("100", year, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid")
-            for year in filing_year_envelope().years
-        ),
+        ("036", 2026, "alta", "modelo-036-profile-censo-status", "enum", "alta"),
+        ("100", 2022, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2023, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2024, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2025, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
         (
             "200",
-            _WALLET_YEAR,
+            2025,
             "0A",
             "modelo-200-profile-incn-prior-12-months",
             "decimal",
@@ -237,14 +234,14 @@ def test_profile_source_snapshot_below_the_supported_floor_is_refused() -> None:
         ),
         (
             "202",
-            _WALLET_YEAR,
+            2025,
             "1P",
             "modelo-202-incn-prior-12-months",
             "decimal",
             Decimal("500000"),
         ),
-        ("210", _WALLET_YEAR, "0A", "m210-profile-country-of-fiscal-residence", "enum", "FR"),
-        ("303", _WALLET_YEAR, "1T", "modelo-303-autoconsumo-promotor-base", "decimal", Decimal("123")),
+        ("210", 2025, "0A", "m210-profile-country-of-fiscal-residence", "enum", "FR"),
+        ("303", 2026, "1T", "modelo-303-autoconsumo-promotor-base", "decimal", Decimal("123")),
     ),
 )
 def test_profile_source_resolver_projects_each_registered_modelo_revision(
@@ -288,11 +285,11 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
 
 
 def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> None:
-    snapshot = published_snapshot("303", filing_year=_WALLET_YEAR, period="2T")
+    snapshot = published_snapshot("303", filing_year=2026, period="2T")
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif="12345678Z",
-        target_year=_WALLET_YEAR,
-        target_period=Period.from_year_and_code(_WALLET_YEAR, "2T"),
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "2T"),
         target_registry_snapshot_ref=snapshot.snapshot_ref,
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("1200"),
@@ -302,8 +299,8 @@ def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> Non
             source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
             captured_at=_CLOCK,
             source_modelo="303",
-            source_filing_year=_WALLET_YEAR,
-            source_periods=(Period.from_year_and_code(_WALLET_YEAR, "2T"),),
+            source_filing_year=2026,
+            source_periods=(Period.from_year_and_code(2026, "2T"),),
             registry_snapshot_refs=(snapshot.snapshot_ref,),
         ),
         decided_at=_CLOCK,
@@ -313,8 +310,8 @@ def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> Non
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=_WALLET_YEAR,
-            period=Period.from_year_and_code(_WALLET_YEAR, "2T"),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "2T"),
             revision=snapshot.revision,
         ),
     )

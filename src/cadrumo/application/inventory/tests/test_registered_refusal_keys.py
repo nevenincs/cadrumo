@@ -18,14 +18,11 @@ from cadrumo.application.inventory.registered_requests import InventoryInspectRe
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _REQUEST = InventoryInspectRequest(
-    profile_id=UUID("28282828-2828-4828-8828-282828282828"), actividad_id="A1", year=_YEAR
+    profile_id=UUID("28282828-2828-4828-8828-282828282828"), actividad_id="A1", year=2025
 )
 _FAMILY = "application.inventory.service.errors."
 
@@ -35,13 +32,13 @@ _FAMILY = "application.inventory.service.errors."
     [
         (
             InventoryActividadConflictError(
-                translated_message=f"{_FAMILY}activity_conflict", context={"actividad_id": "A1", "year": str(_YEAR)}
+                translated_message=f"{_FAMILY}activity_conflict", context={"actividad_id": "A1", "year": "2025"}
             ),
             "activity_conflict",
         ),
         (
             InventoryActividadNotFoundError(
-                translated_message=f"{_FAMILY}activity_not_found", context={"actividad_id": "A1", "year": str(_YEAR)}
+                translated_message=f"{_FAMILY}activity_not_found", context={"actividad_id": "A1", "year": "2025"}
             ),
             "activity_not_found",
         ),
@@ -65,13 +62,13 @@ def test_the_reason_key_is_the_family_key_of_the_reason(error: Exception, reason
     [
         (
             InventoryActividadConflictError(
-                translated_message=f"{_FAMILY}activity_conflict", context={"actividad_id": "A1", "year": str(_YEAR)}
+                translated_message=f"{_FAMILY}activity_conflict", context={"actividad_id": "A1", "year": "2025"}
             ),
             "activity_conflict",
         ),
         (
             InventoryActividadNotFoundError(
-                translated_message=f"{_FAMILY}activity_not_found", context={"actividad_id": "A1", "year": str(_YEAR)}
+                translated_message=f"{_FAMILY}activity_not_found", context={"actividad_id": "A1", "year": "2025"}
             ),
             "activity_not_found",
         ),
@@ -86,7 +83,7 @@ def test_the_refusal_serves_the_catalogue_sentence_of_its_reason_in_the_workers_
 ) -> None:
     with override_settings(cadrumo_output_language=language.value):
         refusal = refusal_for_error(request=_REQUEST, error=error)
-        expected = tr(f"{_FAMILY}{reason}", locale=language.value, year=str(_YEAR))
+        expected = tr(f"{_FAMILY}{reason}", locale=language.value, year="2025")
 
     assert refusal is not None
     assert refusal.refusal_words == expected
@@ -111,7 +108,7 @@ def test_the_refusal_serves_the_catalogue_sentence_of_its_reason_in_the_workers_
 def test_every_reason_a_frontend_used_to_word_itself_serves_a_finished_sentence(
     reason: InventoryRefusalReason, language: OutputLanguage
 ) -> None:
-    facts = {"actividad_id": "A1", "year": str(_YEAR), "valuation_method": "fifo"}
+    facts = {"actividad_id": "A1", "year": "2025", "valuation_method": "fifo"}
     with override_settings(cadrumo_output_language=language.value):
         words, served_language = served_refusal_words(reason, error_code="REFUSED_INVENTORY_SERVICE_INPUT", facts=facts)
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 from typing import cast
 
@@ -24,7 +23,6 @@ from cadrumo.domain.buckets.event import (
     BucketEventType,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction
@@ -45,8 +43,6 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .profile_cli_support import invoke_native_profile_revealing
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -324,7 +320,7 @@ def test_native_lifecycle_commands_preserve_full_results_history_and_blocker_ref
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 5, 7).isoformat(),
+            "2026-05-07",
             "--amount",
             "123.45",
             "--direction",

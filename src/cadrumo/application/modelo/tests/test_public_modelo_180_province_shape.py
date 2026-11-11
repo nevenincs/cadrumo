@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..invoice_withholding_capture_public import PublicModelo180Address, PublicModelo180Property
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -61,7 +60,7 @@ def test_a_recipient_province_outside_the_table_is_refused(province: str) -> Non
                 "address": _address(),
                 "recipient_province_code": province,
                 "modality": "1",
-                "accrual_year": filing_year_envelope().horizon,
+                "accrual_year": 2025,
                 "withholding_percentage": {"decimal": "19.00"},
             }
         )

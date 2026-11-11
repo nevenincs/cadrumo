@@ -32,14 +32,11 @@ from cadrumo.application.ledger.llm_review_workflow import (
     execute_reviewed_decision,
 )
 from cadrumo.application.ledger.models import ManualLedgerTransactionResult
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.models import BucketTransactionRef, Transaction
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,7 +49,7 @@ def _baseline() -> Transaction:
         {
             "raw": RawTransaction(
                 provider_transaction_id="unit-review-row",
-                booked_date=date(_YEAR, 1, 1),
+                booked_date=date(2026, 1, 1),
                 amount=Decimal("10.00"),
                 currency="EUR",
                 description="synthetic review row",
@@ -61,7 +58,7 @@ def _baseline() -> Transaction:
                     source_sha256="c" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+                    ingested_at=datetime(2026, 1, 1, tzinfo=UTC),
                     provider_name="csv",
                 ),
                 raw_fields={"description": "synthetic review row"},

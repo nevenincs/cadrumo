@@ -13,7 +13,6 @@ import json
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunMediaKind, ModelRunRefusalCode
 
 from ....adapters.outbound.llm.tests.model_run_support import TEXT_ONLY_LANE, serving_agent
@@ -34,8 +33,6 @@ from ....tests.llm_vision_evidence_support import png_image
 from ...ledger_llm_composition import compose_ledger_llm
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "70316d3b-62cd-4735-b831-c6712f01a418"
 
@@ -82,7 +79,7 @@ def _classify(evidence: ResolvedEvidence):
             vision_transaction("ev-1"),
             evidence,
             text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(year=_YEAR, operation=operation),
+            spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
             vision_classifier=None,
             settings=settings,
             ports=_llm_ports(settings),

@@ -29,7 +29,7 @@ from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_STARTED_AT = datetime(1980, 1, 1, tzinfo=UTC)
+_STARTED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 
 
@@ -105,7 +105,7 @@ def test_matching_resume_retains_the_exact_intent_without_preparing_another(
         provider="certificate",
         all_providers=False,
         operation_kind=kind,
-        started_at=datetime(1980, 2, 1, tzinfo=UTC),
+        started_at=datetime(2026, 2, 1, tzinfo=UTC),
     )
 
     assert prepared is state
@@ -181,7 +181,7 @@ def test_mismatched_resume_preserves_the_existing_intent(kind: AuthCleanupOperat
             provider="clave_movil" if mismatch == "provider" else "certificate",
             all_providers=False,
             operation_kind=requested_kind,
-            started_at=datetime(1980, 2, 1, tzinfo=UTC),
+            started_at=datetime(2026, 2, 1, tzinfo=UTC),
         )
 
     assert state.auth.cleanup_intent is intent

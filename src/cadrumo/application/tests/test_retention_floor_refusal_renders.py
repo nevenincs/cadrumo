@@ -31,7 +31,7 @@ from ..config_reset_models import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "6d1f0c58-9b42-4e7a-8c31-0af5e6b27d94"
-_SAFE_FROM = datetime(1985, 3, 1, tzinfo=UTC)
+_SAFE_FROM = datetime(2031, 3, 1, tzinfo=UTC)
 
 
 def _target(*, blocks_erase: bool, override_approved: bool, retained: int) -> ConfigResetTarget:
@@ -47,7 +47,7 @@ def _target(*, blocks_erase: bool, override_approved: bool, retained: int) -> Co
         ),
         phase=ConfigResetTargetPhase.POINTER_RECONCILED,
         retention=ConfigResetRetentionDecision(
-            assessed_at=datetime(1980, 8, 15, tzinfo=UTC),
+            assessed_at=datetime(2026, 8, 15, tzinfo=UTC),
             blocks_erase=blocks_erase,
             retained_record_count=retained,
             latest_safe_erase_date=_SAFE_FROM if blocks_erase else None,
@@ -78,7 +78,7 @@ def test_the_refusal_renders_both_of_its_numbers_and_the_statute() -> None:
     assert "%{" not in rendered, rendered
     # Both values reached the SENTENCE, not merely the context block beneath it.
     assert "4" in headline, headline
-    assert _SAFE_FROM.date().isoformat() in headline, headline
+    assert "2031-03-01" in headline, headline
     # Invariant across all four catalogues.
     assert "Ley 58/2003" in headline, headline
     assert "--override-retention" in headline, headline

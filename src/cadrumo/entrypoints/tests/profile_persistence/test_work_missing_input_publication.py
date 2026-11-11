@@ -32,7 +32,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
@@ -40,9 +39,9 @@ from .file_flow_test_support import calculation_ports_for_test
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 PROFILE_ID = "10000000-0000-4000-8000-000000000476"
-YEAR = newest_authored_edition("100")
+YEAR = 2025
 _PERIOD = Period.from_year_and_code(YEAR, "0A")
-_CLOCK = datetime(YEAR + 1, 5, 21, 10, tzinfo=UTC)
+_CLOCK = datetime(2026, 5, 21, 10, tzinfo=UTC)
 REQUIRED_BINDING = "renta-base-liquidable-negativa-general-anterior"
 
 
@@ -57,7 +56,7 @@ def work_missing_input_publication_profile() -> None:
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="economic activity"),
                 *RENTA_UNMARRIED_TAXPAYER_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value=date(YEAR - 5, 1, 1)),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 UserProfileFact(path="withholding.colegio_concertado", value=False),
                 # Modelo 123 is filed by whoever pays capital income subject to retención (RIRPF art. 108.1).
                 UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
@@ -97,7 +96,7 @@ def work_and_repositories(
     *,
     modelo: str = "100",
     period: Period = _PERIOD,
-    revision_id: str = str(revision_covering("100", YEAR).id),
+    revision_id: str = "2025",
 ):
     work_repo = WorkUnitCatalogueRepository()
     revision_repo = CalculationRevisionCatalogueRepository()
@@ -165,8 +164,8 @@ def test_same_tag_after_publication_remains_generic_and_published(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID):
         work_missing_input_publication_profile()
-        m123_period = Period.from_year_and_code(YEAR, "2T")
-        m123_snapshot = operation.snapshot("123", filing_year=YEAR, period="2T")
+        m123_period = Period.from_year_and_code(2025, "2T")
+        m123_snapshot = operation.snapshot("123", filing_year=2025, period="2T")
         unit, work_repo, revision_repo, event_repo = work_and_repositories(
             operation, modelo="123", period=m123_period, revision_id=m123_snapshot.revision.id
         )

@@ -44,7 +44,6 @@ from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -57,9 +56,7 @@ _PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\
 _PDF_SHA256 = hashlib.sha256(_PDF_BYTES).hexdigest()
 _OTHER_PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog/Rev 2>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 _OTHER_PDF_SHA256 = hashlib.sha256(_OTHER_PDF_BYTES).hexdigest()
-#: The horizon year is the newest supported filing year.
-_FILING_YEAR = filing_year_envelope().horizon
-_PERIOD_2T = Period.from_year_and_code(_FILING_YEAR, "2T")
+_PERIOD_2T = Period.from_year_and_code(2026, "2T")
 
 
 class _CaptureKwargs(TypedDict):
@@ -161,10 +158,10 @@ def _active_snapshot(
 ) -> JustificanteCaptureSnapshot:
     import base64
 
-    captured_at = datetime(1980, 7, 18, 10, 5, 0, tzinfo=UTC)
+    captured_at = datetime(2026, 7, 18, 10, 5, 0, tzinfo=UTC)
     snapshot_id = derive_justificante_capture_snapshot_id(
         modelo=Modelo("130").value,
-        filing_year=_FILING_YEAR,
+        filing_year=2026,
         period=_PERIOD_2T,
         pdf_sha256=pdf_sha256,
     )
@@ -172,7 +169,7 @@ def _active_snapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         modelo=Modelo("130").value,
-        filing_year=_FILING_YEAR,
+        filing_year=2026,
         period=_PERIOD_2T,
         expediente_id="202613000522456T",
         csv="ABCD1234EFGH5678",
@@ -212,20 +209,20 @@ def test_capture_rejects_pdf_hash_that_does_not_match_decoded_bytes() -> None:
         JustificanteCaptureSnapshot(
             snapshot_id=derive_justificante_capture_snapshot_id(
                 modelo=Modelo("130").value,
-                filing_year=_FILING_YEAR,
+                filing_year=2026,
                 period=_PERIOD_2T,
                 pdf_sha256=_OTHER_PDF_SHA256,
             ),
             bucket_id=_BUCKET_ID,
             modelo=Modelo("130").value,
-            filing_year=_FILING_YEAR,
+            filing_year=2026,
             period=_PERIOD_2T,
             expediente_id="202613000522456T",
             csv="ABCD1234EFGH5678",
             pdf_sha256=_OTHER_PDF_SHA256,
             pdf_base64=base64.b64encode(_PDF_BYTES).decode("ascii"),
             source_kind="aeat_sede_live_capture",
-            captured_at=datetime(1980, 7, 18, 10, 5, 0, tzinfo=UTC),
+            captured_at=datetime(2026, 7, 18, 10, 5, 0, tzinfo=UTC),
             state=SnapshotLifecycleState.ACTIVE,
         )
 
@@ -264,7 +261,7 @@ def test_discarded_capture_survives_roundtrip(tmp_path: Path) -> None:
         discarded = _active_snapshot(bucket_id=bucket_id).model_copy(
             update={
                 "state": SnapshotLifecycleState.DISCARDED,
-                "discarded_at": datetime(1980, 8, 1, 9, 0, 0, tzinfo=UTC),
+                "discarded_at": datetime(2026, 8, 1, 9, 0, 0, tzinfo=UTC),
                 "discarded_by": "operator-1",
                 "discard_reason": "superseded by a corrected filing",
             },
@@ -338,23 +335,23 @@ def test_service_capture_supersedes_prior_on_refile(tmp_path: Path) -> None:
         service = _service(bucket_id=bucket_id)
         first = service.capture(
             modelo=Modelo("130").value,
-            filing_year=_FILING_YEAR,
+            filing_year=2026,
             period=_PERIOD_2T,
             expediente_id="202613000522456T",
             csv="ABCD1234EFGH5678",
             pdf_bytes=_PDF_BYTES,
             pdf_sha256=_PDF_SHA256,
-            captured_at=datetime(1980, 7, 18, 10, 5, 0, tzinfo=UTC),
+            captured_at=datetime(2026, 7, 18, 10, 5, 0, tzinfo=UTC),
         )
         second = service.capture(
             modelo=Modelo("130").value,
-            filing_year=_FILING_YEAR,
+            filing_year=2026,
             period=_PERIOD_2T,
             expediente_id="202613000522456T",
             csv="ABCD1234EFGH5678",
             pdf_bytes=_OTHER_PDF_BYTES,
             pdf_sha256=_OTHER_PDF_SHA256,
-            captured_at=datetime(1980, 7, 20, 8, 0, 0, tzinfo=UTC),
+            captured_at=datetime(2026, 7, 20, 8, 0, 0, tzinfo=UTC),
         )
 
         assert second.snapshot_id != first.snapshot_id
@@ -372,13 +369,13 @@ def test_service_capture_is_idempotent_on_same_receipt(tmp_path: Path) -> None:
         service = _service(bucket_id=bucket_id)
         kwargs = _CaptureKwargs(
             modelo=Modelo("130").value,
-            filing_year=_FILING_YEAR,
+            filing_year=2026,
             period=_PERIOD_2T,
             expediente_id="202613000522456T",
             csv="ABCD1234EFGH5678",
             pdf_bytes=_PDF_BYTES,
             pdf_sha256=_PDF_SHA256,
-            captured_at=datetime(1980, 7, 18, 10, 5, 0, tzinfo=UTC),
+            captured_at=datetime(2026, 7, 18, 10, 5, 0, tzinfo=UTC),
         )
         first = service.capture(**kwargs)
         second = service.capture(**kwargs)

@@ -27,7 +27,6 @@ from ....domain.calculations.registry.invoice_legal_classification import requir
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.invoices.tests.invoice_catalogue_seed import window_middle
 from ....domain.iva.lookup import coexisting_tier_rates
 from ....domain.iva.schema import InvoiceKind, IvaRateKind, spanish_eu_member_state
 from ..errors import AggregationValidationError
@@ -41,7 +40,7 @@ _BASE = Decimal("1000.00")
 _RATE = Decimal("0.02")
 # A date inside the registry's temporary 2 % super-reducido window; only the
 # window's end date is load-bearing, and that is read from the registry.
-_WINDOW_PROBE = window_middle("RATE_2")
+_WINDOW_PROBE = date(2024, 11, 15)
 
 
 def _rate_until() -> date:

@@ -31,11 +31,8 @@ from cadrumo.application.aggregation.withholding_observation_service import (
 )
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -89,7 +86,7 @@ def entry(
                 scheme=RetencionScheme("actividades_economicas"),
                 taxable_base=Decimal("100"),
                 retencion_amount=Decimal("19"),
-                accrued_on=date(_YEAR, 3, 15).isoformat(),
+                accrued_on="2024-03-15",
             ),
         )
     return WithholdingProjectionEntry(
@@ -100,7 +97,7 @@ def entry(
             perceptor_tax_id="00001500M",
             perceptor_legal_name="Synthetic recipient",
             country_code="ES",
-            transaction_date=date(_YEAR, 3, 15),
+            transaction_date=date(2024, 3, 15),
             clave=RetencionClave.from_registry("A"),
             subclave="01",
             percibido_dinerario=Decimal("100"),
@@ -127,7 +124,7 @@ def test_append_commits_both_projections_and_exact_replay_is_a_noop(tmp_path: Pa
     """One real batch survives reopening and retains two same-recipient projections."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(_YEAR, "1T"))
+        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(2024, "1T"))
         command = WithholdingMutationEnvelope(
             scope=scope,
             mode=WithholdingMutationMode.APPEND,
@@ -165,7 +162,7 @@ def test_later_settlement_cannot_create_a_second_recognized_liability(tmp_path: 
     """Settlement metadata is not part of the projection identity."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(_YEAR, "3T"))
+        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "3T"))
         recognized = entry(
             suffix="due",
             retencion=True,
@@ -207,7 +204,7 @@ def test_stale_replace_refuses_without_partial_projection_change(tmp_path: Path)
     """A baseline mismatch leaves the real encrypted active window intact."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(_YEAR, "1T"))
+        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(2024, "1T"))
         initial = service.apply(
             WithholdingMutationEnvelope(
                 scope=scope,
@@ -242,7 +239,7 @@ def test_clear_retains_immutable_generation_history(tmp_path: Path) -> None:
     """Clear advances the head rather than deleting the audit history."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(_YEAR, "1T"))
+        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(2024, "1T"))
         initial = service.apply(
             WithholdingMutationEnvelope(
                 scope=scope,
@@ -269,7 +266,7 @@ def test_stale_adapter_writer_rolls_back_its_entire_batch(tmp_path: Path) -> Non
     """A stale head CAS leaves neither its idempotency claim nor projection behind."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, repository = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(_YEAR, "1T"))
+        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(2024, "1T"))
         initial = service.apply(
             WithholdingMutationEnvelope(
                 scope=scope,
@@ -313,7 +310,7 @@ def test_omitted_mutation_and_late_replay_preserve_the_original_generation(tmp_p
     """Omission is read-only and a replay names its own committed generation, not the current head."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(_YEAR, "1T"))
+        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(2024, "1T"))
         first = WithholdingMutationEnvelope(
             scope=scope,
             mode=WithholdingMutationMode.APPEND,
@@ -344,7 +341,7 @@ def test_same_key_different_command_and_stale_clear_refuse_without_changes(tmp_p
     """A replay-key conflict and a stale clear are both non-mutating refusals."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(_YEAR, "1T"))
+        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(2024, "1T"))
         initial_command = WithholdingMutationEnvelope(
             scope=scope,
             mode=WithholdingMutationMode.APPEND,
@@ -386,7 +383,7 @@ def test_repeated_same_recipient_scheme_survives_by_composite_identity(tmp_path:
     """Two payments to the same recipient and scheme remain distinct encrypted projection rows."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(_YEAR, "1T"))
+        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(2024, "1T"))
         result = service.apply(
             WithholdingMutationEnvelope(
                 scope=scope,
@@ -409,7 +406,7 @@ def test_clear_and_correction_generations_are_queryable(tmp_path: Path) -> None:
     """Immutable predecessor, correction, and clear generation records remain readable."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(_YEAR, "1T"))
+        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(2024, "1T"))
         initial = service.apply(
             WithholdingMutationEnvelope(
                 scope=scope,
@@ -451,7 +448,7 @@ def test_distinct_concurrent_appends_converge_after_a_real_head_cas_race(tmp_pat
     """The append retry reloads after a competing real commit and retains both allocations."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(_YEAR, "1T"))
+        scope = WithholdingWindowScope(modelo="190", period=Period.from_year_and_code(2024, "1T"))
         seed = service.apply(
             WithholdingMutationEnvelope(
                 scope=scope,
@@ -528,8 +525,8 @@ def test_same_source_cross_window_guard_rejects_combined_over_allocation(tmp_pat
     """Separate window heads share one source guard rather than separate limits."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(_YEAR, "1T"))
-        second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(_YEAR, "2T"))
+        first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "1T"))
+        second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
         first = entry(
             suffix="cross-window-one",
             retencion=True,
@@ -572,8 +569,8 @@ def test_cross_window_concurrent_guard_cas_retries_then_refuses_over_cap(
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         first_service, _first_workflow = _service_for(profile.repository)
         second_service, _second_workflow = _service_for(profile.repository)
-        first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(_YEAR, "1T"))
-        second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(_YEAR, "2T"))
+        first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "1T"))
+        second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
         first_command = WithholdingMutationEnvelope(
             scope=first_scope,
             mode=WithholdingMutationMode.APPEND,
@@ -626,8 +623,8 @@ def test_clear_releases_source_capacity_without_erasing_generation_history(tmp_p
     """A clear updates the derived guard atomically and leaves its audit queryable."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(_YEAR, "1T"))
-        second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(_YEAR, "2T"))
+        first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "1T"))
+        second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
         first_entry = entry(
             suffix="capacity-first",
             retencion=True,
@@ -682,7 +679,7 @@ def test_conflicting_source_revision_snapshots_refuse_before_any_window_write(tm
     """One source mutation cannot combine allocations from contradictory revisions."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
-        scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(_YEAR, "2T"))
+        scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
         with pytest.raises(WithholdingObservationMutationError, match="contradictory_liability_snapshot"):
             service.apply(
                 WithholdingMutationEnvelope(

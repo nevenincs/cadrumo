@@ -24,7 +24,7 @@ from .. import custody
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_AT = datetime(1980, 10, 12, 9, 0, tzinfo=UTC)
+_AT = datetime(2026, 10, 12, 9, 0, tzinfo=UTC)
 
 
 class _Win32CredentialError(Exception):

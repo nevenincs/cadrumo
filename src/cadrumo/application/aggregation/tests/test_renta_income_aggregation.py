@@ -31,7 +31,6 @@ from .renta_income_aggregation_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
-_YEAR = Q1_2024.filing_year
 _is_activity_income = m130_activity_category_matcher
 _is_employment_income = m130_employment_category_matcher
 
@@ -42,10 +41,10 @@ _is_employment_income = m130_employment_category_matcher
 
 def test_q1_window_includes_jan_mar_transactions() -> None:
     """Q1 cumulative window [Jan 1 to Mar 31] captures all three months."""
-    jan = income_transaction("jan", value_date=date(_YEAR, 1, 15), amount=Decimal("500.00"))
-    feb = income_transaction("feb", value_date=date(_YEAR, 2, 20), amount=Decimal("600.00"))
-    mar = income_transaction("mar", value_date=date(_YEAR, 3, 31), amount=Decimal("700.00"))
-    apr = income_transaction("apr", value_date=date(_YEAR, 4, 1), amount=Decimal("800.00"))
+    jan = income_transaction("jan", value_date=date(2024, 1, 15), amount=Decimal("500.00"))
+    feb = income_transaction("feb", value_date=date(2024, 2, 20), amount=Decimal("600.00"))
+    mar = income_transaction("mar", value_date=date(2024, 3, 31), amount=Decimal("700.00"))
+    apr = income_transaction("apr", value_date=date(2024, 4, 1), amount=Decimal("800.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, feb, mar, apr))
 
     result = aggregate_renta_income_ledger(
@@ -72,9 +71,9 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
 
 def test_q2_window_accumulates_jan_through_jun() -> None:
     """Q2 cumulative window [Jan 1 to Jun 30] includes Q1 rows too (YTD rule)."""
-    jan = income_transaction("jan", value_date=date(_YEAR, 1, 10), amount=Decimal("1000.00"))
-    may = income_transaction("may", value_date=date(_YEAR, 5, 5), amount=Decimal("2000.00"))
-    jul = income_transaction("jul", value_date=date(_YEAR, 7, 1), amount=Decimal("3000.00"))
+    jan = income_transaction("jan", value_date=date(2024, 1, 10), amount=Decimal("1000.00"))
+    may = income_transaction("may", value_date=date(2024, 5, 5), amount=Decimal("2000.00"))
+    jul = income_transaction("jul", value_date=date(2024, 7, 1), amount=Decimal("3000.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, may, jul))
 
     result = aggregate_renta_income_ledger(
@@ -99,7 +98,7 @@ def test_mixed_classification_applies_business_pct() -> None:
     """MIXED transaction contributes only its business fraction to casilla 01."""
     tx = income_transaction(
         "mixed",
-        value_date=date(_YEAR, 3, 1),
+        value_date=date(2024, 3, 1),
         amount=Decimal("1000.00"),
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.60"),
@@ -124,7 +123,7 @@ def test_mixed_classification_applies_business_pct() -> None:
 def test_personal_transaction_excluded_with_reason() -> None:
     tx = income_transaction(
         "personal",
-        value_date=date(_YEAR, 2, 1),
+        value_date=date(2024, 2, 1),
         business_classification=BusinessClassification.PERSONAL,
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
@@ -145,7 +144,7 @@ def test_personal_transaction_excluded_with_reason() -> None:
 
 
 def test_non_eur_transaction_excluded_with_reason() -> None:
-    tx = income_transaction("usd", value_date=date(_YEAR, 3, 1), currency="USD")
+    tx = income_transaction("usd", value_date=date(2024, 3, 1), currency="USD")
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
     result = aggregate_renta_income_ledger(
@@ -176,8 +175,8 @@ def test_outgoing_business_expense_is_skipped_silently_by_income_pipeline() -> N
         {
             "raw": raw_transaction(
                 "out",
-                booked_date=date(_YEAR, 3, 1),
-                value_date=date(_YEAR, 3, 1),
+                booked_date=date(2024, 3, 1),
+                value_date=date(2024, 3, 1),
                 amount=Decimal("121"),
             ),
             "direction": TransactionDirection.OUTGOING,
@@ -191,7 +190,7 @@ def test_outgoing_business_expense_is_skipped_silently_by_income_pipeline() -> N
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -217,7 +216,7 @@ def test_outgoing_personal_transaction_is_skipped_silently_by_income_pipeline() 
     """A personal OUTGOING row is neither income nor a deducible gasto."""
     tx = Transaction.model_validate(
         {
-            "raw": raw_transaction("out", booked_date=date(_YEAR, 3, 1), value_date=date(_YEAR, 3, 1)),
+            "raw": raw_transaction("out", booked_date=date(2024, 3, 1), value_date=date(2024, 3, 1)),
             "direction": TransactionDirection.OUTGOING,
             "group_label": None,
             "source_jurisdiction": "ES",
@@ -229,7 +228,7 @@ def test_outgoing_personal_transaction_is_skipped_silently_by_income_pipeline() 
             "iva_rate": None,
             "iva_amount": None,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -253,7 +252,7 @@ def test_inactive_transaction_skipped_silently() -> None:
     """ARCHIVED lifecycle state bypasses the pipeline without an issue record."""
     tx = income_transaction(
         "archived",
-        value_date=date(_YEAR, 2, 1),
+        value_date=date(2024, 2, 1),
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
@@ -295,10 +294,10 @@ def test_non_quarterly_period_raises() -> None:
 
 def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
     """The application partition path aggregates the supplied catalogue correctly."""
-    q1_tx1 = income_transaction("q1-a", value_date=date(_YEAR, 2, 1), amount=Decimal("2500.00"))
-    q1_tx2 = income_transaction("q1-b", value_date=date(_YEAR, 3, 15), amount=Decimal("1500.00"))
+    q1_tx1 = income_transaction("q1-a", value_date=date(2024, 2, 1), amount=Decimal("2500.00"))
+    q1_tx2 = income_transaction("q1-b", value_date=date(2024, 3, 15), amount=Decimal("1500.00"))
     # Q2-only transaction: excluded from Q1 window summary, included in Q2 window
-    q2_only = income_transaction("q2-only", value_date=date(_YEAR, 5, 10), amount=Decimal("3000.00"))
+    q2_only = income_transaction("q2-only", value_date=date(2024, 5, 10), amount=Decimal("3000.00"))
 
     catalogue = TransactionCatalogue.from_transactions((q1_tx1, q1_tx2, q2_only))
 
@@ -319,8 +318,8 @@ def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
     assert result_q1.issues == ()
     assert result_q1.out_of_window_summary is not None
     assert result_q1.out_of_window_summary.count == 1
-    assert result_q1.out_of_window_summary.min_filing_date == date(_YEAR, 5, 10)
-    assert result_q1.out_of_window_summary.max_filing_date == date(_YEAR, 5, 10)
+    assert result_q1.out_of_window_summary.min_filing_date == date(2024, 5, 10)
+    assert result_q1.out_of_window_summary.max_filing_date == date(2024, 5, 10)
     assert result_q1.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (q1_tx1, q1_tx2)),
         Decimal("0"),
@@ -360,10 +359,10 @@ def test_partitioned_aggregation_summarizes_previously_silent_out_of_window_rows
     repository-backed partition reports its count and date span instead of
     dropping it before aggregation.
     """
-    in_window = income_transaction("row-in-window", value_date=date(_YEAR, 2, 1), amount=Decimal("500.00"))
+    in_window = income_transaction("row-in-window", value_date=date(2024, 2, 1), amount=Decimal("500.00"))
     archived_out_of_window = income_transaction(
         "row-archived-out-of-window",
-        value_date=date(_YEAR, 5, 10),
+        value_date=date(2024, 5, 10),
         amount=Decimal("900.00"),
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
@@ -386,8 +385,8 @@ def test_partitioned_aggregation_summarizes_previously_silent_out_of_window_rows
     assert result.issues == ()
     assert result.out_of_window_summary is not None
     assert result.out_of_window_summary.count == 1
-    assert result.out_of_window_summary.min_filing_date == date(_YEAR, 5, 10)
-    assert result.out_of_window_summary.max_filing_date == date(_YEAR, 5, 10)
+    assert result.out_of_window_summary.min_filing_date == date(2024, 5, 10)
+    assert result.out_of_window_summary.max_filing_date == date(2024, 5, 10)
 
 
 def test_partitioned_aggregation_matches_full_scan() -> None:
@@ -398,11 +397,11 @@ def test_partitioned_aggregation_matches_full_scan() -> None:
     In-window observations and casilla totals/provenance must match; only the
     out-of-window issue taxonomy can differ.
     """
-    q1_row = income_transaction("row-q1", value_date=date(_YEAR, 2, 1), amount=Decimal("500.00"))
-    q3_row = income_transaction("row-q3", value_date=date(_YEAR, 8, 1), amount=Decimal("700.00"))
+    q1_row = income_transaction("row-q1", value_date=date(2024, 2, 1), amount=Decimal("500.00"))
+    q3_row = income_transaction("row-q3", value_date=date(2024, 8, 1), amount=Decimal("700.00"))
     archived_q3_row = income_transaction(
         "row-q3-archived",
-        value_date=date(_YEAR, 9, 1),
+        value_date=date(2024, 9, 1),
         amount=Decimal("300.00"),
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
@@ -442,8 +441,8 @@ def test_partitioned_aggregation_matches_full_scan() -> None:
     assert partitioned.issues == ()
     assert partitioned.out_of_window_summary is not None
     assert partitioned.out_of_window_summary.count == 2
-    assert partitioned.out_of_window_summary.min_filing_date == date(_YEAR, 8, 1)
-    assert partitioned.out_of_window_summary.max_filing_date == date(_YEAR, 9, 1)
+    assert partitioned.out_of_window_summary.min_filing_date == date(2024, 8, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2024, 9, 1)
 
     full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
     assert full_scan_issue_ids == {q3_row.transaction_id}
@@ -453,7 +452,7 @@ def test_partitioned_aggregation_matches_full_scan() -> None:
 def test_casilla_01_target_matches_expected_binding_contract() -> None:
     """Every observation targets casilla 01 — structural pin for the binding contract."""
     transactions = [
-        income_transaction(f"tx-{i}", value_date=date(_YEAR, 1, i + 1), amount=Decimal("100.00")) for i in range(5)
+        income_transaction(f"tx-{i}", value_date=date(2024, 1, i + 1), amount=Decimal("100.00")) for i in range(5)
     ]
     catalogue = TransactionCatalogue.from_transactions(transactions)
 
@@ -473,7 +472,7 @@ def test_casilla_01_target_matches_expected_binding_contract() -> None:
 
 def test_income_observation_rejects_legacy_target_casilla_key() -> None:
     transactions = [
-        income_transaction("tx-legacy-key", value_date=date(_YEAR, 1, 1), amount=Decimal("100.00")),
+        income_transaction("tx-legacy-key", value_date=date(2024, 1, 1), amount=Decimal("100.00")),
     ]
     result = aggregate_renta_income_ledger(
         TransactionCatalogue.from_transactions(transactions),

@@ -19,7 +19,6 @@ import pytest
 import typer
 
 from cadrumo.application.modelo.m145_communication_period import M145CommunicationPeriod
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.modelo_cli_support import parse_casilla_override, resolve_default_actor
 from cadrumo.entrypoints.cli.modelo_m145_parsing import (
     m145_actor_from_cli,
@@ -29,12 +28,10 @@ from cadrumo.entrypoints.cli.modelo_m145_parsing import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
 
 def test_m145_create_command_from_cli_parses_create_arguments() -> None:
     command = m145_create_command_from_cli(
-        year=_YEAR,
+        year=2026,
         period=M145CommunicationPeriod.COMMUNICATION,
         casilla_specs=[
             "perceptor.nif=12345678Z",
@@ -44,7 +41,7 @@ def test_m145_create_command_from_cli_parses_create_arguments() -> None:
         parse_casilla_override=parse_casilla_override,
     )
 
-    assert command.communication_year == _YEAR
+    assert command.communication_year == 2026
     assert command.period_token is M145CommunicationPeriod.COMMUNICATION
     assert command.field_values == {
         "perceptor.nif": "12345678Z",

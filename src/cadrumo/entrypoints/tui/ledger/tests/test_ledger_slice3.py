@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import asyncio
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import override
 
@@ -22,7 +21,6 @@ from .....application.operator_actions.models import ActionReference
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....domain.attachments.enums import AttachmentSource
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
@@ -48,8 +46,6 @@ from .workspace_fixtures import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
 TX = "a" * 64
 _TX_B = "b" * 64
 _INVOICE_D = "d" * 64
@@ -68,7 +64,7 @@ def _evidence_item() -> AttachmentReviewItem:
         bytes_size=512,
         source=AttachmentSource.GOOGLE_DRIVE,
         provider_locator="protected-provider-locator",
-        captured_at=datetime(_YEAR, 9, 3, 9, tzinfo=UTC).isoformat(),
+        captured_at="2026-09-03T09:00:00+00:00",
         linked_invoice_ids=(),
         pending_review=True,
     )

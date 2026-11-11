@@ -15,8 +15,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....core.classification.policies import SensitivityClass
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import (
@@ -30,12 +28,10 @@ from ....domain.transactions.models import TransactionCatalogue
 from ..actions_common import commit_with_guarded_events
 from ..persistence_ports import LedgerPersistenceConflictError
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "3f3f3f3f-3f3f-43f3-8f3f-3f3f3f3f3f3f"
-_AT = datetime(_YEAR, 7, 1, 9, 0, tzinfo=UTC)
+_AT = datetime(2026, 7, 1, 9, 0, tzinfo=UTC)
 
 #: Markers this module emits.
 _MARKERS = frozenset({"co-committed", "interloper"})

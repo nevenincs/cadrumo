@@ -51,7 +51,6 @@ from .....domain.calculations.registry.iva_compensation_annual_partition_binding
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -77,10 +76,9 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "ca06894b-1eb7-4f25-b325-531f43bc0e48"
-#: The annual M390 is the narrowest family here: its newest filing-grade exercise also serves M303.
-_FILING_YEAR = filing_grade_exercises("390")[-1]
+_FILING_YEAR = 2025
 _PRIOR_YEAR = _FILING_YEAR - 1
-_CAPTURED_AT = datetime(_FILING_YEAR + 1, 1, 20, 10, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 _KEY = "application.calculations.prorrata_regularizacion.unresolved"
 
 _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
@@ -351,9 +349,7 @@ def test_a_non_settlement_quarter_is_a_structural_zero(
     assert resolution.binding_values == {_M303_BINDING_ID: Decimal("0.00")}
     assert resolution.unresolved_binding_ids == ()
     assert resolution.diagnostics == ()
-    assert {row.source_ref for row in resolution.provenance} == {
-        f"303:{_FILING_YEAR}:3T:prorrata-regularizacion-settlement-only"
-    }
+    assert {row.source_ref for row in resolution.provenance} == {"303:2025:3T:prorrata-regularizacion-settlement-only"}
 
 
 def test_settlement_without_a_provisional_source_is_unresolved(
@@ -785,7 +781,7 @@ def test_modelo_390_restates_the_filed_settlement_regularisation(
     assert resolution.binding_values == {_M390_BINDING_ID: _MANUAL_CASILLA_44_REGULARIZACION}
     assert resolution.unresolved_binding_ids == ()
     assert resolution.diagnostics == ()
-    assert {row.source_ref for row in resolution.provenance} == {f"303:{_FILING_YEAR}:4T:44"}
+    assert {row.source_ref for row in resolution.provenance} == {"303:2025:4T:44"}
 
 
 def test_modelo_390_reads_only_the_explicitly_injected_observation_store(

@@ -35,7 +35,6 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
     unsupported_ledger_iva_observations,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import derive_flow_for_classification
 from ....domain.iva.schema import InvoiceKind, IvaLedgerObservationRole
@@ -46,9 +45,8 @@ from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_NOW = datetime(1980, 2, 10, 12, 0, tzinfo=UTC)
-_YEAR = filing_year_envelope().horizon
-_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
+_Q1_2025 = Period.from_year_and_code(2025, "1T")
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
 
@@ -63,11 +61,11 @@ def _revision(modelo_id: str) -> ModeloRevision:
     anything. Modelo 303 is quarterly and 390 annual, which is the only
     difference between them here.
     """
-    quarterly = modelo_id == "303"
+    period = "1T" if modelo_id == "303" else "0A"
     return published_snapshot(
         modelo_id,
-        filing_year=_Q1.filing_year if quarterly else filing_grade_exercises(modelo_id)[-1],
-        period="1T" if quarterly else "0A",
+        filing_year=_Q1_2025.filing_year,
+        period=period,
     ).revision
 
 
@@ -82,7 +80,7 @@ def _row(category: IvaCategory) -> IvaLedgerObservation:
     """
     return IvaLedgerObservation(
         ledger_id=f"residue-{category.value}",
-        transaction_date=date(_YEAR - 1, 6, 1),
+        transaction_date=date(2024, 6, 1),
         category=category,
         rate_kind=IvaRateKind("general"),
         flow_direction=derive_flow_for_classification(category=category, invoice_direction=InvoiceKind.RECEIVED),
@@ -132,8 +130,8 @@ def _sale(
     gross = Decimal(base) + Decimal(iva) + (recargo_amount or Decimal("0"))
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=gross,
         currency="EUR",
         counterparty="Minorista Recargo SL",
@@ -171,7 +169,7 @@ def _observations(*transactions: Transaction) -> tuple[IvaLedgerObservation, ...
     """Project real transactions through the production IVA aggregation."""
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions(transactions),
-        period=_Q1,
+        period=_Q1_2025,
     )
     assert result.observations, "the projection emitted no declarable observation to screen"
     return tuple(result.observations)
@@ -328,8 +326,8 @@ def _reverse_charge_purchase() -> Transaction:
     """
     raw = RawTransaction(
         provider_transaction_id="aic-1",
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=Decimal("1000.00"),
         currency="EUR",
         counterparty="Proveedor UE",
@@ -372,8 +370,8 @@ def _third_country_import() -> Transaction:
     """
     raw = RawTransaction(
         provider_transaction_id="import-1",
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=Decimal("1000.00"),
         currency="EUR",
         counterparty="Proveedor extracomunitario",

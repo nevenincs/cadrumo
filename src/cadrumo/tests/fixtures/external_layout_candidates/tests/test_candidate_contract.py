@@ -10,7 +10,6 @@ from shutil import copyfile
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources.bundled_data import bundled_path
 from ...provenance import RECOGNISED_FIXTURE_PROVENANCES
 from ..models import (
     AEAT_PUBLISHED_FACSIMILE_CLASSIFICATION,
@@ -98,15 +97,7 @@ def test_three_axis_adjudication_is_required_and_rejects_the_removed_legacy_flag
     assert adjudication.artifact_authenticity.verdict == "third_party_sample"
     assert adjudication.official_base_derivation.verdict == "verified_official_base_derivative"
     assert adjudication.registry_applicability.verdict == "current_authored_revision"
-    # The revision this sidecar names must be one the bundled registry authors for its
-    # modelo; which authored revision is current is asserted through the registry
-    # resolver by the declaration parser's candidate matrix, outside this core-only package.
-    authored_revisions = frozenset(
-        path.name
-        for path in bundled_path("registry", "aeat", "modelos", candidate.modelo, "revisions").iterdir()
-        if path.is_dir()
-    )
-    assert adjudication.registry_applicability.revision_id in authored_revisions
+    assert adjudication.registry_applicability.revision_id == "2019-y-siguientes"
 
     conflicting_payload = _adjudicated_payload()
     source_chain = conflicting_payload["source_chain"]
@@ -138,7 +129,7 @@ def test_pair_render_contract_distinguishes_exact_and_measured_similarity(compar
     [
         ("current_authored_revision", None),
         ("historical_authored_revision", None),
-        ("historical_layout_without_authored_revision", "unregistered-historical-layout"),
+        ("historical_layout_without_authored_revision", "2025"),
     ],
 )
 def test_registry_applicability_requires_a_revision_exactly_for_authored_verdicts(

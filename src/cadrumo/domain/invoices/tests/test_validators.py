@@ -13,7 +13,6 @@ from ...calculations.registry.eu_member_state_catalogue import resolve_eu_member
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.nif_iva_catalogue import nif_iva_format_for_country, resolve_nif_iva_catalogue
 from ...calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import InvoiceValidationError
 from ..validators import validate_country_code, validate_iva_number
 
@@ -301,9 +300,7 @@ def test_every_eu_member_state_except_spain_has_a_nif_iva_format(
     Spain is intentionally absent — Spanish identifiers use the checksum
     validator, not a structural pattern.
     """
-    catalogue = resolve_eu_member_state_catalogue(
-        effective_date=date(filing_year_envelope().horizon, 1, 1), authority=operation
-    )
+    catalogue = resolve_eu_member_state_catalogue(effective_date=date(2025, 1, 1), authority=operation)
     spain = catalogue.require("es")
     for member in catalogue.choices:
         if member == spain:

@@ -32,7 +32,6 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_work_unit
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
@@ -54,8 +53,6 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from ........frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from .......served_runtime import SyntheticLogin, connect_installed
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -63,7 +60,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native profile workers"),
 ]
 
-_TARGET = Period.from_year_and_code(_YEAR, "2T")
+_TARGET = Period.from_year_and_code(2025, "2T")
 
 
 def _declarations(client: FrontendClient) -> tuple[DeclarationsWorkspaceDeclarationRefV1, ...]:

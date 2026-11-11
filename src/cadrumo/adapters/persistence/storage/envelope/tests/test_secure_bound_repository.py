@@ -35,7 +35,7 @@ from ..secure_bound_repository import SecureBoundRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_ENVELOPE_WRITTEN_AT = datetime(1980, 5, 27, 9, 30, 0, tzinfo=UTC)
+_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 27, 9, 30, 0, tzinfo=UTC)
 
 
 class _RoundtripPayload(BaseModel):

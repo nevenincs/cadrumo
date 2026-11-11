@@ -15,7 +15,6 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.categories.spending_category_catalogue import require_spending_category
 from ..ratios import (
@@ -24,13 +23,11 @@ from ..ratios import (
     censo_override_warning,
 )
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _category(value: str, operation: PinnedAuthorityOperation) -> SpendingCategory:
-    return require_spending_category(value, effective_date=date(_YEAR, 12, 31), authority=operation)
+    return require_spending_category(value, effective_date=date(2025, 12, 31), authority=operation)
 
 
 def test_no_warning_for_non_home_office_category(operation: PinnedAuthorityOperation) -> None:
@@ -38,7 +35,7 @@ def test_no_warning_for_non_home_office_category(operation: PinnedAuthorityOpera
         category=_category("telefonia_movil", operation),
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
-        year=_YEAR,
+        year=2025,
         operation=operation,
     )
 
@@ -50,7 +47,7 @@ def test_warning_emitted_when_home_office_override_diverges(operation: PinnedAut
         category=_category("suministros_home_office_luz", operation),
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
-        year=_YEAR,
+        year=2025,
         operation=operation,
     )
 
@@ -72,7 +69,7 @@ def test_no_warning_when_suministros_override_matches_30pct_of_raw(
         category=_category("suministros_home_office_luz", operation),
         override_ratio=Decimal("0.060"),
         raw_afectacion_ratio=raw,
-        year=_YEAR,
+        year=2025,
         operation=operation,
     )
 
@@ -89,7 +86,7 @@ def test_no_warning_when_ownership_override_matches_raw_afectacion(operation: Pi
         category=_category("ibi_vivienda_afecto", operation),
         override_ratio=raw,
         raw_afectacion_ratio=raw,
-        year=_YEAR,
+        year=2025,
         operation=operation,
     )
 
@@ -101,7 +98,7 @@ def test_business_pct_is_none_when_censo_unset(operation: PinnedAuthorityOperati
         censo_business_pct_for(
             _category("suministros_home_office_luz", operation),
             None,
-            year=_YEAR,
+            year=2025,
             operation=operation,
         )
         is None
@@ -113,7 +110,7 @@ def test_business_pct_is_none_for_non_home_office_category(operation: PinnedAuth
         censo_business_pct_for(
             _category("telefonia_movil", operation),
             Decimal("0.20"),
-            year=_YEAR,
+            year=2025,
             operation=operation,
         )
         is None
@@ -131,7 +128,7 @@ def test_business_pct_for_suministros_is_the_degree_of_use_without_the_irpf_fact
 
     raw = Decimal("0.20")
 
-    for year in filing_year_envelope().years:
+    for year in (2022, 2025):
         suministros = censo_business_pct_for(
             _category("suministros_home_office_agua", operation),
             raw,
@@ -150,7 +147,7 @@ def test_business_pct_for_ownership_uses_raw_afectacion(operation: PinnedAuthori
     ownership = censo_business_pct_for(
         _category("comunidad_vivienda_afecto", operation),
         raw,
-        year=_YEAR,
+        year=2025,
         operation=operation,
     )
 
@@ -162,7 +159,7 @@ def test_warning_carries_censo_derived_ratio(operation: PinnedAuthorityOperation
         category=_category("ibi_vivienda_afecto", operation),
         override_ratio=Decimal("0.40"),
         raw_afectacion_ratio=Decimal("0.20"),
-        year=_YEAR,
+        year=2025,
         operation=operation,
     )
 

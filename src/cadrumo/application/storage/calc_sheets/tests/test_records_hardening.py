@@ -11,7 +11,6 @@ from pydantic import ValidationError
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.ids import LegalRefId
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ..errors import CalcSheetsRecordError
 from ..records import (
     OperatorInput,
@@ -31,8 +30,6 @@ from ..records import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = filing_year_envelope().horizon
-
 _IVA_DEVENGADO_BASE_CASILLA: CasillaId = validated_casilla_id(
     "iva.devengado.base",
     surface="_IVA_DEVENGADO_BASE_CASILLA",
@@ -43,12 +40,12 @@ _VALID_LEGAL_REF: LegalRefId = "ley-37-1992:art-99"
 def _metadata() -> SheetExportMetadata:
     return SheetExportMetadata(
         modelo_id="303",
-        revision_id=revision_serving_period("303", _YEAR, "1T").id,
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id="2022",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         engine_version="test",
         registry_sha="abcd1234",
-        exported_at=datetime(1980, 6, 4, 12, 0, tzinfo=UTC),
+        exported_at=datetime(2026, 6, 4, 12, 0, tzinfo=UTC),
     )
 
 

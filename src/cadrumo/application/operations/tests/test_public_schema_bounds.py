@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCodeText
 from ...aggregation.service import PerModeloAggregationCommand
 from ...inventory.registered_requests import InventoryPhysicalClosingObservationRequest
@@ -22,8 +19,6 @@ from ...modelo.work_plazo import M210PlazoResolution
 from ...workflow.resume_contracts import WorkflowResumeAmbiguity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 
 @pytest.mark.parametrize(
@@ -54,12 +49,12 @@ def test_public_modelo_code_exposes_and_enforces_its_ascii_wire_shape() -> None:
 def _resolution_for(modelo: str) -> M210PlazoResolution:
     context = {
         "modelo": modelo,
-        "filing_year": str(_YEAR),
+        "filing_year": "2025",
         "period": "0A",
         "resultado": "I",
         "deadline_window_id": "window",
-        "opens_on": date(_YEAR, 4, 1).isoformat(),
-        "closes_on": date(_YEAR, 5, 1).isoformat(),
+        "opens_on": "2025-04-01",
+        "closes_on": "2025-05-01",
         "legal_refs": "law",
         "source_refs": "source",
     }
@@ -79,7 +74,7 @@ def test_m210_producer_refuses_to_decide_a_role_without_authority() -> None:
 
 
 def test_aggregate_public_command_projects_an_empty_domain_request() -> None:
-    command = PerModeloAggregationCommand(modelo="193", period=Period.from_year_and_code(_YEAR, "0A"))
+    command = PerModeloAggregationCommand(modelo="193", period=Period.from_year_and_code(2025, "0A"))
     public = PublicModeloAggregateCommand.from_domain(command)
     assert public.to_domain() == command
     assert PublicModeloAggregateCommand.model_json_schema()["properties"]["foreign_asset_observations"]

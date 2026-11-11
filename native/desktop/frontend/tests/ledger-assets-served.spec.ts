@@ -80,7 +80,6 @@ import {
   words,
   claims,
 } from "./support/assetContract";
-import { fixtureDay } from "../src/dev/fixtureDates";
 
 // What the backend serves the Assets tab in place of the screens' own rules:
 // handoffs, counts, records, and the facts and shapes the options serve.
@@ -92,7 +91,7 @@ test("a forecast states the last day covered, which the backend turns into its b
   const ask = (extra: object) =>
     port.submit(FORECAST, {
       asset_id: "furgoneta",
-      covered_from: fixtureDay(7, 1),
+      covered_from: "2026-07-01",
       requested_free_amount: null,
       supersedes_claim_id: null,
       ...extra,
@@ -101,36 +100,32 @@ test("a forecast states the last day covered, which the backend turns into its b
     }>;
   const request = forecastRequest(
     "furgoneta",
-    { covered_from: fixtureDay(7, 1), covered_through: fixtureDay(12, 31) },
+    { covered_from: "2026-07-01", covered_through: "2026-12-31" },
     null,
   )!;
   expect(request).not.toHaveProperty("covered_until");
   const through = (await ask({ covered_through: request.covered_through }))
     .result!.forecast;
-  const until = (await ask({ covered_until: fixtureDay(1, 1, 1) })).result!
-    .forecast;
+  const until = (await ask({ covered_until: "2027-01-01" })).result!.forecast;
   expect(through).toMatchObject({
-    covered_from: fixtureDay(7, 1),
-    covered_until: fixtureDay(1, 1, 1),
-    covered_through: fixtureDay(12, 31),
+    covered_from: "2026-07-01",
+    covered_until: "2027-01-01",
+    covered_through: "2026-12-31",
   });
   expect(through.amount).toEqual(until.amount);
   // A shorter span is another forecast, and its last day is the one asked.
-  const shorter = (await ask({ covered_through: fixtureDay(9, 30) })).result!
+  const shorter = (await ask({ covered_through: "2026-09-30" })).result!
     .forecast;
   expect(shorter).toMatchObject({
-    covered_until: fixtureDay(10, 1),
-    covered_through: fixtureDay(9, 30),
+    covered_until: "2026-10-01",
+    covered_through: "2026-09-30",
   });
   expect(cents(shorter.amount.decimal)).toBeLessThan(
     cents(through.amount.decimal),
   );
   await expect(ask({})).rejects.toMatchObject({ reason: "invalid" });
   await expect(
-    ask({
-      covered_until: fixtureDay(1, 1, 1),
-      covered_through: fixtureDay(12, 30),
-    }),
+    ask({ covered_until: "2027-01-01", covered_through: "2026-12-30" }),
   ).rejects.toMatchObject({ reason: "invalid" });
 });
 
@@ -417,23 +412,23 @@ test("a record says what it did and the day it takes effect, and a replaced dota
   });
   // A baja takes effect on its own day, changed on its new one, and removing
   // it on the day it had.
-  const baja = { ...sale, disposal_date: fixtureDay(9, 30) };
+  const baja = { ...sale, disposal_date: "2026-09-30" };
   await settled(
     port.submit(DISPOSE, { asset_id: "taladro", disposal: baja } as never),
   );
   expect(await last("taladro")).toMatchObject({
     kind: "baja",
     event_kind: "baja_recorded",
-    effect_date: fixtureDay(9, 30),
+    effect_date: "2026-09-30",
   });
   const moved = bajaRequest(await inspect("taladro"), {
     ...baja,
-    disposal_date: fixtureDay(6, 30),
+    disposal_date: "2026-06-30",
   })!;
   await settled(port.submit(CORRECT, moved as never));
   expect(await last("taladro")).toMatchObject({
     event_kind: "baja_changed",
-    effect_date: fixtureDay(6, 30),
+    effect_date: "2026-06-30",
   });
   expect(
     (await listOf(port)).find((row) => row.asset_id === "taladro"),
@@ -443,7 +438,7 @@ test("a record says what it did and the day it takes effect, and a replaced dota
   );
   expect(await last("taladro")).toMatchObject({
     event_kind: "baja_removed",
-    effect_date: fixtureDay(6, 30),
+    effect_date: "2026-06-30",
   });
   expect(
     (await listOf(port)).find((row) => row.asset_id === "taladro"),
@@ -611,7 +606,7 @@ test("an element bought outside the ledger can own a later ledger payment, which
     ...NEW_ELEMENT,
     acquisition_shape: "acquired_outside_ledger",
     acquisition: "",
-    declared_acquisition_date: fixtureDay(1, 10),
+    declared_acquisition_date: "2026-01-10",
     declared_activity: firstActivity,
     acquisition_reference: "invoice held at the office",
   };
@@ -776,9 +771,9 @@ test("a year with nothing open says the plan's own reason, the absence's when th
       ...none,
       claimable_intervals: [
         {
-          covered_from: fixtureDay(1, 1),
-          covered_until: fixtureDay(1, 1, 1),
-          covered_through: fixtureDay(12, 31),
+          covered_from: "2026-01-01",
+          covered_until: "2027-01-01",
+          covered_through: "2026-12-31",
         },
       ],
     }),
@@ -859,13 +854,12 @@ test("the facts of a condition are drawn from the conditions the options serve, 
   );
   // A fact only the used condition states is left out of a new element's
   // request, even where it was typed before the condition changed.
-  const constructed = fixtureDay(1, 1, -25);
   const request = (await newRequest(
     port,
     {
       ...NEW_ELEMENT,
       acquired_condition: "new",
-      building_construction_date: constructed,
+      building_construction_date: "2001-01-01",
     },
     "made-cond",
   ))!;
@@ -875,11 +869,11 @@ test("the facts of a condition are drawn from the conditions the options serve, 
     {
       ...NEW_ELEMENT,
       acquired_condition: "used",
-      building_construction_date: constructed,
+      building_construction_date: "2001-01-01",
     },
     "made-cond-2",
   ))!;
-  expect(built.revision.building_construction_date).toBe(constructed);
+  expect(built.revision.building_construction_date).toBe("2001-01-01");
 });
 
 test("the shapes of a later payment are the ones the options serve", async () => {
@@ -919,7 +913,7 @@ test("a baja that has not yet left service keeps its pending amount, and one tha
   await settled(
     port.submit(DISPOSE, {
       asset_id: "furgoneta",
-      disposal: { ...sale, disposal_date: fixtureDay(3, 31, 1) },
+      disposal: { ...sale, disposal_date: "2027-03-31" },
     } as never),
   );
   const future = (await listOf(port)).find(
@@ -996,9 +990,9 @@ test("a kind the edition has no box for draws no box, and says which element goe
       {
         asset_id: "asset-aaa",
         kind: "box_unbound",
-        covered_from: fixtureDay(1, 1, -1),
-        covered_through: fixtureDay(12, 31, -1),
-        covered_until: fixtureDay(1, 1),
+        covered_from: "2025-01-01",
+        covered_through: "2025-12-31",
+        covered_until: "2026-01-01",
         accrued: null,
         words: served,
         words_language: "en",

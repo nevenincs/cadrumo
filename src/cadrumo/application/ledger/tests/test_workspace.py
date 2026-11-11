@@ -13,7 +13,6 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -37,12 +36,10 @@ from ..workspace import (
     project_ledger_workspace,
 )
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "31313131-3131-4131-8131-313131313131"
-_NOW = datetime(_YEAR, 9, 3, 10, 0, tzinfo=UTC)
+_NOW = datetime(2026, 9, 3, 10, 0, tzinfo=UTC)
 
 
 def _transaction() -> Transaction:
@@ -50,7 +47,7 @@ def _transaction() -> Transaction:
         {
             "raw": RawTransaction(
                 provider_transaction_id="synthetic-row",
-                booked_date=date(_YEAR, 8, 1),
+                booked_date=date(2026, 8, 1),
                 amount=Decimal("121.00"),
                 currency="EUR",
                 counterparty="SENSITIVE-COUNTERPARTY-CANARY",
@@ -86,7 +83,7 @@ def _invoice() -> Invoice:
             "kind": InvoiceKind.RECEIVED,
             "bucket_id": _BUCKET_ID,
             "invoice_number": "SENSITIVE-INVOICE-NUMBER-CANARY",
-            "issued_at": date(_YEAR, 8, 1),
+            "issued_at": date(2026, 8, 1),
             "counterparty_name": "SENSITIVE-COUNTERPARTY-CANARY",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -119,7 +116,7 @@ def _review(transaction: Transaction, *, bucket_id: str = _BUCKET_ID) -> LedgerR
         rows=(
             LedgerReviewRow(
                 id=transaction.transaction_id,
-                date=date(_YEAR, 8, 1).isoformat(),
+                date="2026-08-01",
                 amount="121.00",
                 description="SENSITIVE-REVIEW-CANARY",
                 status="pending",
@@ -397,7 +394,7 @@ def test_affected_revision_without_declaration_identity_is_never_silently_droppe
 
 
 def test_affected_declarations_keep_natural_addresses_counts_and_deterministic_order() -> None:
-    periods = (Period.from_year_and_code(_YEAR, "1T"), Period.from_year_and_code(_YEAR, "2T"))
+    periods = (Period.from_year_and_code(2026, "1T"), Period.from_year_and_code(2026, "2T"))
     units: list[WorkUnit] = []
     revisions: list[CalculationRevision] = []
     verdicts: list[LedgerFilingStalenessVerdict] = []
@@ -405,7 +402,7 @@ def test_affected_declarations_keep_natural_addresses_counts_and_deterministic_o
         work_unit_id = derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period,
             revision_id=f"revision-{index}",
         )
@@ -414,7 +411,7 @@ def test_affected_declarations_keep_natural_addresses_counts_and_deterministic_o
                 work_unit_id=work_unit_id,
                 bucket_id=_BUCKET_ID,
                 modelo="303",
-                filing_year=_YEAR,
+                filing_year=2026,
                 period=period,
                 revision_id=f"revision-{index}",
                 name=f"Synthetic {index}",

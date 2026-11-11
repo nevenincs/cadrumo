@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -10,7 +10,6 @@ from pydantic import ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ...calculations.registry.ids import LegalRefId, SourceRefId
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -20,17 +19,14 @@ _EVIDENCE_CASILLA: CasillaId = validated_casilla_id("00501")
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-modelo-303-2025-form",)
 _TRANSACTION_ID = "c" * 64
-_EXERCISE = filing_year_envelope().horizon
-_BOOKED_DATE = date(_EXERCISE, 1, 31).isoformat()
-_VALUE_DATE = date(_EXERCISE, 2, 1).isoformat()
 
 
 def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> None:
     row = LedgerEvidenceRow(
         transaction_id=_TRANSACTION_ID,
         fingerprint="a" * 64,
-        booked_date=_BOOKED_DATE,
-        value_date=_VALUE_DATE,
+        booked_date="2026-01-31",
+        value_date="2026-02-01",
         amount=Decimal("121.00"),
         currency="EUR",
         direction="outgoing",
@@ -67,7 +63,7 @@ def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> N
                 source_refs=_SOURCE_REFS,
             ),
         ),
-        captured_at=datetime(1980, 6, 3, 12, 30, tzinfo=UTC),
+        captured_at=datetime(2026, 6, 3, 12, 30, tzinfo=UTC),
     )
 
     restored = LedgerFilingEvidence.model_validate_json(evidence.model_dump_json())
@@ -83,7 +79,7 @@ def test_ledger_filing_evidence_records_are_frozen_and_strict() -> None:
     row = LedgerEvidenceRow(
         transaction_id=_TRANSACTION_ID,
         fingerprint="a" * 64,
-        booked_date=_BOOKED_DATE,
+        booked_date="2026-01-31",
         amount=Decimal("1.00"),
         currency="EUR",
         direction="incoming",
@@ -97,7 +93,7 @@ def test_ledger_filing_evidence_records_are_frozen_and_strict() -> None:
         LedgerEvidenceRow(
             transaction_id=_TRANSACTION_ID,
             fingerprint="short",
-            booked_date=_BOOKED_DATE,
+            booked_date="2026-01-31",
             amount=Decimal("1.00"),
             currency="EUR",
             direction="incoming",
@@ -120,7 +116,7 @@ def test_ledger_filing_evidence_rejects_ungrounded_rows_and_manual_entries() -> 
             {
                 "transaction_id": _TRANSACTION_ID,
                 "fingerprint": "a" * 64,
-                "booked_date": _BOOKED_DATE,
+                "booked_date": "2026-01-31",
                 "amount": Decimal("1.00"),
                 "currency": "EUR",
                 "direction": "incoming",
@@ -145,7 +141,7 @@ def test_ledger_filing_evidence_rejects_blank_grounding_refs() -> None:
         LedgerEvidenceRow(
             transaction_id=_TRANSACTION_ID,
             fingerprint="a" * 64,
-            booked_date=_BOOKED_DATE,
+            booked_date="2026-01-31",
             amount=Decimal("1.00"),
             currency="EUR",
             direction="incoming",

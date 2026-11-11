@@ -10,7 +10,6 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot, ManualFactBasisEntry
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -26,8 +25,7 @@ from ..ledger_filing_snapshot import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_CAPTURED = datetime(1980, 6, 2, 12, 0, tzinfo=UTC)
-_YEAR = filing_year_envelope().horizon
+_CAPTURED = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
 
 
 _MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("DP200012:00501")
@@ -49,8 +47,8 @@ def _tx(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR, 4, 5),
-        value_date=date(_YEAR, 4, 5),
+        booked_date=date(2026, 4, 5),
+        value_date=date(2026, 4, 5),
         amount=amount,
         currency="EUR",
         counterparty="Proveedor",

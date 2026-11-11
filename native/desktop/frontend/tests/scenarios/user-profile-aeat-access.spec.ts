@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { fixtureDay } from "../../src/dev/fixtureDates";
 import { label } from "../support/strings";
 import {
   open,
@@ -9,8 +8,6 @@ import {
   aeatEditor,
   profileAction,
 } from "../support/userProfilePage";
-
-const validUntil = fixtureDay(1, 31, 4);
 
 // The profile page's AEAT access editor: Cl@ve and certificate setup, masked write-only facts and stale-profile refusal.
 
@@ -139,7 +136,7 @@ test("the method and its route are edited in the window, with the facts each ask
   await method.selectOption("clave_movil");
   await route.selectOption("app_request");
   await dni.fill("12345678Z");
-  await validity.fill(validUntil);
+  await validity.fill("2030-01-31");
   await save(editor).click();
   await expect(editor).toContainText(label("desktop.profile.aeat.saved"));
   // The facts, then the method: each under the revision the one before left.
@@ -159,7 +156,7 @@ test("the method and its route are edited in the window, with the facts each ask
     "Request in app",
   );
   await expect(row(profile, "auth.fecha_validez")).toContainText("••••");
-  await expect(profile).not.toContainText(validUntil);
+  await expect(profile).not.toContainText("2030-01-31");
 });
 
 test("a certificate is chosen in the native dialog and its passphrase is kept out of the page", async ({

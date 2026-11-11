@@ -23,7 +23,6 @@ from ....application.modelo.filing_chain_reconciliation import (
 from ....core.json_contract import NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..operation_filed_projection import (
     capture_evidence_effect,
     capture_notice,
@@ -33,8 +32,6 @@ from ..operation_filed_projection import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "c" * 64
@@ -61,7 +58,7 @@ def _row(**update: object) -> FiledReconciliationV1:
         "outcome": FilingReconciliationOutcome.CONFIRMED.value,
         "bucket_id": str(_PROFILE),
         "modelo": "303",
-        "filing_year": _YEAR,
+        "filing_year": 2024,
         "period": "1T",
         "evidence_basis": "casillas",
         "notices": (),
@@ -108,7 +105,7 @@ def test_a_reconciliation_restores_its_period_basis_and_notice_context() -> None
     )
 
     assert result.outcome is FilingReconciliationOutcome.CONFIRMED
-    assert result.period == Period.from_year_and_code(_YEAR, "1T")
+    assert result.period == Period.from_year_and_code(2024, "1T")
     assert result.evidence_basis == "casillas"
     (notice,) = result.notices
     assert notice.code is FilingReconciliationNoticeCode.RECEIPT_TOTALS_ONLY

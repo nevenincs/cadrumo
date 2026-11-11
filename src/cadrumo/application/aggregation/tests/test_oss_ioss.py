@@ -24,7 +24,7 @@ implementations and unauthorised CLI surfaces.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
@@ -35,12 +35,10 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....core.directory_scan import scan_directory
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices import enums as invoice_enums
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role, resolve_iva_rate_slot
@@ -48,7 +46,6 @@ from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.oss import OssIossRegime
-from ....domain.iva.rates import IVA_RATE_FACT_ID
 from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.models import TransactionCatalogue
@@ -64,7 +61,6 @@ from ..oss_ioss import (
 )
 from ..oss_ioss_resolver import project_oss_ioss_invoices_from_repositories
 from ..oss_ioss_wire_geometry import record_row_slots
-from .oss_rate_change_support import ordinary_general_variants, variant_pct
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -95,32 +91,7 @@ def test_a_revision_missing_one_field_of_a_row_is_not_a_table_of_rows():
 # ---------------------------------------------------------------------------
 
 
-_SUPPLY_DATE = date(filing_year_envelope().horizon, 7, 15)
-
-
-@cache
-def _first_published_de_general_rate_day() -> date:
-    """The first day the published Germany general-rate table covers; an earlier supply is only projected."""
-    with bundled_indexed_authority().operation() as operation:
-        starts = [variant.valid_from for variant in ordinary_general_variants(operation)["de"]]
-    return min(start for start in starts if start is not None)
-
-
-@cache
-def _temporary_two_percent_window() -> tuple[date, date]:
-    """The first and last day the registry publishes the temporary Spanish 2 % rate."""
-    with bundled_indexed_authority().operation() as operation:
-        (variant,) = (
-            variant
-            for variant in operation.governed_fact(IVA_RATE_FACT_ID).variants
-            if {selector.name: selector.value for selector in variant.selectors}.get("member_state") == "es"
-            and variant_pct(variant) == Decimal("2")
-        )
-    assert variant.valid_from is not None
-    assert variant.valid_to is not None
-    return variant.valid_from, variant.valid_to
-
-
+_SUPPLY_DATE = date(2025, 7, 15)
 _DEFAULT_OSS_REGIME = OssIossRegime("union_scheme")
 _DEFAULT_DESTINATION = EUMemberState.from_registry("de")
 _DEFAULT_RATE_KIND = IvaRateKind("general")
@@ -187,7 +158,7 @@ def _historical_two_percent_oss_invoice(*, devengo_date: date) -> tuple[Invoice,
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": "OSS-HISTORIC-2-PCT",
-            "issued_at": date(devengo_date.year + 1, 6, 15),
+            "issued_at": date(2025, 6, 15),
             "operation_date": devengo_date,
             "operation_date_role": operation_performed_role(effective_date=devengo_date),
             "counterparty_name": "Cliente alemán",
@@ -206,17 +177,13 @@ def _historical_two_percent_oss_invoice(*, devengo_date: date) -> tuple[Invoice,
     return invoice, rate
 
 
-@pytest.mark.parametrize(
-    "observation_date",
-    [_temporary_two_percent_window()[0] - timedelta(days=1), _temporary_two_percent_window()[1] + timedelta(days=1)],
-    ids=("the_day_before_the_rate", "the_day_after_the_rate"),
-)
+@pytest.mark.parametrize("observation_date", [date(2024, 9, 30), date(2025, 1, 1)])
 def test_repository_projection_passes_invoice_devengo_to_rate_tier_classifier(
     monkeypatch: pytest.MonkeyPatch,
     observation_date: date,
 ) -> None:
     """Pass the invoice devengo to the real tier classifier as the observation clock changes."""
-    devengo_date, _last_day = _temporary_two_percent_window()
+    devengo_date = date(2024, 10, 1)
     invoice, rate = _historical_two_percent_oss_invoice(devengo_date=devengo_date)
 
     # The invoice is valid at devengo, while the same published slot is not
@@ -239,7 +206,7 @@ def test_repository_projection_passes_invoice_devengo_to_rate_tier_classifier(
     monkeypatch.setattr(oss_ioss_module, "iva_rate_kind", classify_at_date)
 
     projection = project_oss_ioss_invoices_from_repositories(
-        period=Period.from_year_and_code(devengo_date.year, f"{(devengo_date.month - 1) // 3 + 1}T"),
+        period=Period.from_year_and_code(2024, "4T"),
         ports=InvoiceCatalogueReadPorts(
             invoice_reader=_OneInvoiceReader(invoice),
             transaction_reader=_EmptyTransactionReader(),
@@ -345,7 +312,7 @@ def _projected_de_candidate(iva: Decimal) -> OssIossLedgerCandidate:
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
         iva=iva,
-        transaction_date=_first_published_de_general_rate_day() - timedelta(days=1),
+        transaction_date=date(2025, 6, 30),
     )
 
 

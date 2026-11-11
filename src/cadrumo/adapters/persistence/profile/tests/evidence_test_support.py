@@ -30,10 +30,6 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
-
 BUCKET_ID = "29292929-2929-4929-8929-292929292929"
 
 runtime_profile = bucket_scoped_runtime_profile_fixture(BUCKET_ID, autouse=False, name="runtime_profile")
@@ -89,7 +85,7 @@ def seed_filer_profile(*, tax_id: str | None = "12345678Z") -> None:
     the current profile record then establishes the filer's territory without
     claiming a taxpayer identity.
     """
-    clock = datetime(_YEAR, 1, 1, tzinfo=UTC)
+    clock = datetime(2026, 1, 1, tzinfo=UTC)
     facts = [UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28001")]
     if tax_id is not None:
         facts.insert(0, UserProfileFact(path="identity.tax_id", value=tax_id))

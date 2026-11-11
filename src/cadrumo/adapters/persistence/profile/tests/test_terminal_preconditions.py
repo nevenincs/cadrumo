@@ -37,7 +37,6 @@ from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bind
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
@@ -47,15 +46,13 @@ from cadrumo.tests.terminal_precondition_ast import call_name, fact_expressions,
 
 from .published_authority_support import published_authority_operation
 
-_YEAR = filing_year_envelope().horizon
-
 if TYPE_CHECKING:
     from pathlib import Path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_CAPTURED_AT = datetime(_YEAR, 8, 11, 10, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_CAPTURED_AT = datetime(2026, 8, 11, 10, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 @dataclass(frozen=True)

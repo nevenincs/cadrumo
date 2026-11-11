@@ -15,7 +15,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureC
 
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.m210_income_classification import (
     M210IncomeClassification,
@@ -44,15 +43,13 @@ from ...operations.registry import (
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .registration_access_context_support import registration_access_context
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _M210_CODE = "35"
-_M210_EFFECTIVE_DATE = date(_YEAR, 12, 31)
-_CREATED_AT = datetime(_YEAR, 2, 15, 12, 0, tzinfo=UTC)
+_M210_EFFECTIVE_DATE = date(2025, 12, 31)
+_CREATED_AT = datetime(2025, 2, 15, 12, 0, tzinfo=UTC)
 _GROSS_INCOME = Decimal("123456789012345678901234567890.12345678901234567890")
 _APPLICABLE_RATE = Decimal("0.2400000000000000000000000000000000000000")
 
@@ -110,7 +107,7 @@ def _m210_canonical_payload(operation: PinnedAuthorityOperation) -> LedgerTransa
     )
     raw = RawTransaction(
         provider_transaction_id="m210-view-projection-row",
-        booked_date=date(_YEAR, 2, 15),
+        booked_date=date(2025, 2, 15),
         value_date=None,
         amount=_GROSS_INCOME,
         currency="EUR",

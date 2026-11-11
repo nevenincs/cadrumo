@@ -20,14 +20,12 @@ from cadrumo.application.filing.history_repository import ModeloHistoryRepositor
 from cadrumo.core.period import Period
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.identifiers import ModeloIdentifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "77777777-7777-4777-8777-777777777777"
-_LATEST_SUBMITTED_AT = datetime(_YEAR, 5, 28, 11, 25, 0, tzinfo=UTC)
+_LATEST_SUBMITTED_AT = datetime(2026, 5, 28, 11, 25, 0, tzinfo=UTC)
 
 
 def _history_repository(profile) -> ModeloHistoryRepository:
@@ -48,19 +46,19 @@ def _populated_history() -> ModeloHistory:
         entries=(
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
-                period=Period.from_year_and_code(_YEAR - 1, "1T"),
+                period=Period.from_year_and_code(2025, "1T"),
                 submitted_at=_LATEST_SUBMITTED_AT - timedelta(days=90),
                 status="ACEPTADA",
             ),
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
-                period=Period.from_year_and_code(_YEAR - 1, "2T"),
+                period=Period.from_year_and_code(2025, "2T"),
                 submitted_at=_LATEST_SUBMITTED_AT - timedelta(days=30),
                 status="ACEPTADA",
             ),
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
-                period=Period.from_year_and_code(_YEAR - 1, "3T"),
+                period=Period.from_year_and_code(2025, "3T"),
                 submitted_at=_LATEST_SUBMITTED_AT,
                 status="RECHAZADA",
             ),
@@ -86,9 +84,9 @@ def test_filing_history_survives_encrypted_storage_roundtrip(
     # stay invisible).
     assert len(loaded.entries) == 3
     assert tuple(e.period for e in loaded.entries) == (
-        Period.from_year_and_code(_YEAR - 1, "1T"),
-        Period.from_year_and_code(_YEAR - 1, "2T"),
-        Period.from_year_and_code(_YEAR - 1, "3T"),
+        Period.from_year_and_code(2025, "1T"),
+        Period.from_year_and_code(2025, "2T"),
+        Period.from_year_and_code(2025, "3T"),
     )
     assert tuple(e.status for e in loaded.entries) == (
         "ACEPTADA",

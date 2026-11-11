@@ -11,7 +11,6 @@ import hashlib
 import json
 import sys
 from collections.abc import Iterator
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -27,11 +26,7 @@ from cadrumo.entrypoints.cli.retencion_soportada_results import (
 )
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -41,7 +36,7 @@ _PAYER_B = "B00010090"
 _PAYER_C = "B00010165"
 # Control digit 1 where the hand-derived CIF control of these digits is 0.
 _PAYER_BAD_CONTROL = "B00000001"
-_EJERCICIO = str(_YEAR)
+_EJERCICIO = "2025"
 _FIRST_CERTIFICATE = b"%PDF-1.4 first synthetic payer certificate"
 _SECOND_CERTIFICATE = b"%PDF-1.4 second synthetic payer certificate"
 _PROFILE_FACTS = {
@@ -50,7 +45,7 @@ _PROFILE_FACTS = {
     "identity.surnames": "Certificates",
     "identity.tax_id": _TAXPAYER,
     "activities.description": "synthetic payer certificate profile",
-    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
+    "censo.activity_start_date": "2020-01-01",
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",

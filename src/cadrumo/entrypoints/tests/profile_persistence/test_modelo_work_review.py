@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import importlib
-from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -101,17 +100,9 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
 )
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....domain.calculations.registry.tests.authored_editions import (
-    filing_grade_exercises,
-    filing_year_envelope,
-    newest_authored_edition,
-    open_ended_revision,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_YEAR = filing_year_envelope().horizon
-_ROW_DATE = date(_YEAR, 1, 31).isoformat()
 _M130 = ModeloCode("130")
 _M130_INCOME_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 
@@ -141,7 +132,7 @@ def _persist_work_unit(
     repos: Repos,
     *,
     modelo: ModeloCode = _M130,
-    filing_year: int = _YEAR,
+    filing_year: int = 2026,
     period_code: str = "1T",
 ) -> WorkUnit:
     work_repo, _, _, _, _ = repos
@@ -172,7 +163,7 @@ def _persist_work_unit(
         filing_year=filing_year,
         period=period,
         revision_id=revision_id,
-        name=f"130-{filing_year}-{period_code}",
+        name="130-2026-1T",
         created_at=T0,
         updated_at=T0,
     )
@@ -261,13 +252,13 @@ def test_a_work_review_capture_refuses_as_not_current_after_an_interleaved_write
 
 _M100 = ModeloCode("100")
 _M100_BOOLEAN_BINDING = "renta-profile-has-economic-activity"
-"""Declared on the boolean value channel by the newest Modelo 100 registry revision."""
+"""Declared on the boolean value channel by the Modelo 100 2025 registry revision."""
 
 
 def _persist_m100_revision_with_override(repos: Repos, raw_value: str) -> WorkUnit:
     """Persist a Modelo 100 revision whose boolean-channel binding override holds ``raw_value``."""
     work_repo, calculation_repo, _, _, _ = repos
-    unit = _persist_work_unit(repos, modelo=_M100, filing_year=newest_authored_edition("100"), period_code="0A")
+    unit = _persist_work_unit(repos, modelo=_M100, filing_year=2025, period_code="0A")
     overrides = {_M100_BOOLEAN_BINDING: raw_value}
     revision_id = derive_calculation_revision_id(
         work_unit_id=unit.work_unit_id,
@@ -455,7 +446,7 @@ def test_review_progress_is_undefined_without_a_revision_manifest(repos: Repos) 
     work_unit = _persist_work_unit(
         repos,
         modelo=ModeloCode("189"),
-        filing_year=filing_grade_exercises("189")[-1],
+        filing_year=2025,
         period_code="0A",
     )
 
@@ -575,9 +566,9 @@ def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> Non
 
 
 def _persist_303_revision(repos: Repos, *issues: CalculationSourceIssue) -> tuple[WorkUnit, CalculationRevision]:
-    """Persist a Modelo 303 1T work unit whose current revision carries ``issues``."""
+    """Persist a Modelo 303 2025 1T work unit whose current revision carries ``issues``."""
     work_repo, calculation_repo, _, _, _ = repos
-    work_unit = _persist_work_unit(repos, modelo=ModeloCode("303"), filing_year=_YEAR, period_code="1T")
+    work_unit = _persist_work_unit(repos, modelo=ModeloCode("303"), filing_year=2025, period_code="1T")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
@@ -645,7 +636,7 @@ def test_a_note_that_refuses_the_check_is_a_review_blocker_naming_the_same_recor
         fact=CalculationNoteFact.of(
             CalculationNoteSentence.UNROUTED_IVA_BASE,
             rows=("invoice:" + "a" * 64 + ":0",),
-            row_date=_ROW_DATE,
+            row_date="2025-01-31",
             row_amount=Decimal("1500.00"),
         ),
     )
@@ -666,7 +657,7 @@ def test_a_note_that_refuses_the_check_is_a_review_blocker_naming_the_same_recor
     assert blocker.axis is OperatorActionAxis.IMPORT_LEDGER_DATA
     assert dict(blocker.facts) == {
         "source_ref": "invoice:" + "a" * 64,
-        "row_date": _ROW_DATE,
+        "row_date": "2025-01-31",
         "row_amount": "1500.00",
     }
     assert {key: context[key] for key in ("source_ref", "row_date", "row_amount")} == dict(blocker.facts)
@@ -688,7 +679,7 @@ def test_a_revision_without_a_blocking_note_adds_no_review_blocker(repos: Repos)
 
 def test_review_progress_schema_refuses_unnamed_or_impossible_counts() -> None:
     denominator = ModeloWorkProgressDenominator(
-        registry_revision_id=str(open_ended_revision("130").id),
+        registry_revision_id="2019-y-siguientes",
         source_ref="aeat-dr-130-2019-v12",
     )
     with pytest.raises(ValidationError, match="undefined modelo work progress"):
@@ -962,7 +953,7 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
     work_unit = _persist_work_unit(
         repos,
         modelo=ModeloCode("100"),
-        filing_year=newest_authored_edition("100"),
+        filing_year=2025,
         period_code="0A",
     )
     snapshot = published_authority_operation().snapshot(

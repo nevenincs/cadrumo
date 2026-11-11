@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 
 from ...calculations.registry.authority import bundled_indexed_authority
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ...transactions.enums import BusinessClassification, TransactionDirection
 from ...transactions.models import Transaction, TransactionCatalogue
@@ -27,8 +26,7 @@ from ..service import suggest_reconciliations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = filing_year_envelope().horizon
-_ISSUED_ON = date(_YEAR, 2, 3)
+_ISSUED_ON = date(2026, 2, 3)
 
 
 @pytest.fixture(autouse=True)
@@ -74,8 +72,8 @@ def _incoming_transfer(amount: str) -> Transaction:
         {
             "raw": RawTransaction(
                 provider_transaction_id=f"bank-{amount}",
-                booked_date=date(_YEAR, 2, 10),
-                value_date=date(_YEAR, 2, 11),
+                booked_date=date(2026, 2, 10),
+                value_date=date(2026, 2, 11),
                 amount=Decimal(amount),
                 currency="EUR",
                 counterparty="Beta Logistica Mediterranea SL",
@@ -85,7 +83,7 @@ def _incoming_transfer(amount: str) -> Transaction:
                     source_sha256="c" * 64,
                     source_row_index=7,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(1980, 2, 12, 9, 0, tzinfo=UTC),
+                    ingested_at=datetime(2026, 2, 12, 9, 0, tzinfo=UTC),
                     provider_name="CSV provider",
                 ),
                 raw_fields={"Concepto": "TRANSFERENCIA RECIBIDA BETA LOGISTICA"},

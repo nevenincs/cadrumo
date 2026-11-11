@@ -17,7 +17,6 @@ from pydantic import ValidationError
 
 from ....application.export.tabular import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification
@@ -66,19 +65,12 @@ from ..modelo_query_results import LedgerIssuePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = filing_year_envelope().horizon
-_TXN_DATE = date(_YEAR, 4, 10).isoformat()
-_CREATED = f"{_TXN_DATE}T09:30:00+00:00"
-_MODIFIED = f"{date(_YEAR, 6, 1).isoformat()}T16:45:00+00:00"
-_APRIL_5 = date(_YEAR, 4, 5).isoformat()
-_EVENT_AT = f"{_APRIL_5}T10:00:00+00:00"
-
 
 def _transaction_payload(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "transaction_id": "a" * 64,
-        "date": _TXN_DATE,
-        "booked_date": _TXN_DATE,
+        "date": "2024-04-10",
+        "booked_date": "2024-04-10",
         "amount": "100.00",
         "currency": "EUR",
         "direction": "OUTGOING",
@@ -86,8 +78,8 @@ def _transaction_payload(**overrides: object) -> dict[str, object]:
         "business_classification": "BUSINESS",
         "lifecycle_state": "ACTIVE",
         "classified_by": "manual",
-        "created_at": _CREATED,
-        "modified_at": _MODIFIED,
+        "created_at": "2024-04-10T09:30:00+00:00",
+        "modified_at": "2024-06-01T16:45:00+00:00",
     }
     base.update(overrides)
     return base
@@ -95,7 +87,7 @@ def _transaction_payload(**overrides: object) -> dict[str, object]:
 
 def _period_payload(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
-        "filing_year": _YEAR,
+        "filing_year": 2026,
         "code": "1T",
     }
     base.update(overrides)
@@ -159,7 +151,7 @@ def test_classify_single_result_is_the_mutation_quintet() -> None:
             "transaction": _transaction_payload(),
         },
     )
-    assert result.transaction.created_at == _CREATED
+    assert result.transaction.created_at == "2024-04-10T09:30:00+00:00"
 
 
 def test_classify_branches_are_distinct_discriminated_shapes() -> None:
@@ -243,8 +235,8 @@ def test_list_row_payload_carries_full_contract_and_round_trips() -> None:
             "full_id": "a" * 64,
             "display_id": "aaaa",
             "transaction_id": "a" * 64,
-            "date": _TXN_DATE,
-            "booked_date": _TXN_DATE,
+            "date": "2024-04-10",
+            "booked_date": "2024-04-10",
             "amount": "100.00",
             "currency": "EUR",
             "direction": "OUTGOING",
@@ -253,15 +245,15 @@ def test_list_row_payload_carries_full_contract_and_round_trips() -> None:
             "lifecycle_state": "ACTIVE",
             "review_status": "pending",
             "classified_by": "manual",
-            "created_at": _CREATED,
-            "modified_at": _MODIFIED,
+            "created_at": "2024-04-10T09:30:00+00:00",
+            "modified_at": "2024-06-01T16:45:00+00:00",
             "group_label": "Proyecto Acme",
         },
     )
     # Non-negative amount + direction (money shape fixed by C1).
     assert row.amount == "100.00"
     assert row.direction == "OUTGOING"
-    assert row.created_at == _CREATED
+    assert row.created_at == "2024-04-10T09:30:00+00:00"
     assert row.group_label == "Proyecto Acme"
     assert LedgerListRowPayload.model_validate_json(row.model_dump_json()) == row
 
@@ -272,7 +264,7 @@ def test_history_events_are_typed_not_bare_dicts() -> None:
         "event_id": "e" * 64,
         "bucket_id": "default",
         "event_type": "LEDGER_TRANSACTION_CREATED",
-        "occurred_at": _CREATED,
+        "occurred_at": "2024-04-10T09:30:00+00:00",
         "actor": "operator",
         "object_type": "LEDGER_TRANSACTION",
         "object_id": "a" * 64,
@@ -303,8 +295,8 @@ def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
         "bucket_id": "default",
         "transaction_id": "a" * 64,
         "lifecycle_state": "ACTIVE",
-        "booked_date": _APRIL_5,
-        "effective_date": _APRIL_5,
+        "booked_date": "2026-04-05",
+        "effective_date": "2026-04-05",
         "amount": "42.00",
         "currency": "EUR",
         "direction": "OUTGOING",
@@ -377,8 +369,8 @@ def test_export_payload_accepts_application_intracommunity_rows() -> None:
                 bucket_id="default",
                 transaction_id="a" * 64,
                 lifecycle_state="ACTIVE",
-                booked_date=_APRIL_5,
-                effective_date=_APRIL_5,
+                booked_date="2026-04-05",
+                effective_date="2026-04-05",
                 amount="2000.00",
                 currency="EUR",
                 direction="INCOMING",
@@ -448,7 +440,7 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
                     "invoice_id": "b" * 64,
                     "kind": InvoiceKind.RECEIVED,
                     "invoice_number": "F-001",
-                    "issued_at": date(_YEAR, 4, 5),
+                    "issued_at": date(2026, 4, 5),
                     "counterparty_name": "Proveedor SL",
                     "counterparty_tax_id": "B00015016",
                     "counterparty_country": "ES",
@@ -482,7 +474,7 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
             "rows": [
                 {
                     "actividad_id": "act-1",
-                    "year": _YEAR,
+                    "year": 2026,
                     "valuation_method": "fifo",
                     "opening_stock": "10.00",
                     "opening_layers": [
@@ -496,7 +488,7 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
                     "period_movements": [
                         {
                             "movement_id": "m-1",
-                            "movement_date": _APRIL_5,
+                            "movement_date": "2026-04-05",
                             "kind": "purchase",
                             "quantity": "1",
                             "unit_cost": "10.00",
@@ -527,8 +519,8 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
                     "source_sha256": "e" * 64,
                     "attachment_id": "a" * 64,
                     "media_kind": "pdf",
-                    "created_at": _EVENT_AT,
-                    "updated_at": _EVENT_AT,
+                    "created_at": "2026-04-05T10:00:00+00:00",
+                    "updated_at": "2026-04-05T10:00:00+00:00",
                 },
             ],
         },
@@ -563,8 +555,8 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
 def test_transaction_payload_carries_d6_timestamps() -> None:
     """The nested TransactionPayload exposes created_at / modified_at."""
     payload = TransactionPayload.model_validate(_transaction_payload())
-    assert payload.created_at == _CREATED
-    assert payload.modified_at == _MODIFIED
+    assert payload.created_at == "2024-04-10T09:30:00+00:00"
+    assert payload.modified_at == "2024-06-01T16:45:00+00:00"
     with pytest.raises(ValueError):
         TransactionPayload.model_validate(_transaction_payload(created_at=None, modified_at=None))
 

@@ -69,13 +69,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 def test_visible_target_projects_into_a_selector_request_with_no_exact_operands() -> None:
     """The visible-target mapping must carry natural coordinates, not an exact work-unit lookup."""
-    target = visible_target("some-bucket", revision_id=LAW_SELECTED_REVISION_ID)
+    target = visible_target("some-bucket", revision_id="2019-y-siguientes")
 
     request = modelo_work_selector_request_for_target(target, bucket_id="some-bucket")
 
     assert request.modelo == "130"
     assert request.filing_year == FILING_YEAR
-    assert request.revision_id == LAW_SELECTED_REVISION_ID
+    assert request.revision_id == "2019-y-siguientes"
     assert request.bucket_id == "some-bucket"
     assert request.work_unit_id is None
     assert request.has_visible_target

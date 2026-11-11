@@ -50,7 +50,7 @@ def _line(sequence: int, *, service: str = "worker", level: str = "DEBUG", messa
                 "schema": "cadrumo-agent.log/1",
                 "pid": 4321,
                 "seq": sequence,
-                "timestamp": "1980-10-14T12:30:15.123+00:00",
+                "timestamp": "2026-10-14T12:30:15.123+00:00",
                 "level": level,
                 "service": service,
                 "name": "cadrumo_agent.worker.executor",
@@ -82,7 +82,7 @@ def test_original_level_identity_timestamp_and_operational_context(log_file: Pat
     written = _read(log_file)
     assert written.count("worker diagnostic") == 1
     assert f"[{level}]" in written
-    assert "1980-10-14T12:30:15.123Z" in written
+    assert "2026-10-14T12:30:15.123Z" in written
     assert '"process_id":4321' in written
     assert '"process_role":"extension_service"' in written
     assert '"worker_port":54321' in written

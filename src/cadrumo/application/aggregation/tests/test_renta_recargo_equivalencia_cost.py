@@ -18,7 +18,6 @@ import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from ....domain.calculations.registry.tests.authored_editions import open_ended_revision
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -40,7 +39,6 @@ from .test_renta_gasto_linked_invoice import YEAR
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CATEGORY = SpendingCategory.from_registry("suministros_cliente_directos")
-_M130_REVISION_ID = str(open_ended_revision("130").id)
 
 
 def _iva_block(regime: str) -> tuple[UserProfileFact, ...]:
@@ -73,7 +71,7 @@ def _purchase(*, base: str, iva: str, recargo: str | None = None) -> Transaction
 def _expense_box(regime: str, row: Transaction) -> Decimal:
     profile = cash_criterion_profile(YEAR, extra_facts=_iva_block(regime))
     resolution = resolve_m130(ActivityAssetHistory(), "1T", rows=(row,), profile=profile)
-    return resolution.binding_values[m130_binding_id(ledger_source_mesh_revision("130", _M130_REVISION_ID))]
+    return resolution.binding_values[m130_binding_id(ledger_source_mesh_revision("130", "2019-y-siguientes"))]
 
 
 def test_the_retailer_deducts_the_base_the_iva_and_the_recargo_as_cost() -> None:
@@ -137,7 +135,7 @@ def test_the_linked_invoice_states_the_iva_and_recargo_the_row_does_not_carry() 
 
     quarterly = resolve_m130(ActivityAssetHistory(), "1T", rows=(linked,), profile=profile, invoices=repository)
     unlinked = resolve_m130(ActivityAssetHistory(), "1T", rows=(bare,), profile=profile)
-    box = m130_binding_id(ledger_source_mesh_revision("130", _M130_REVISION_ID))
+    box = m130_binding_id(ledger_source_mesh_revision("130", "2019-y-siguientes"))
 
     assert quarterly.binding_values[box] == Decimal("8581.60")
     assert unlinked.binding_values[box] == Decimal("6800.00")

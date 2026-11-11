@@ -7,7 +7,6 @@ invariant site.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -18,7 +17,6 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind, ForeignAssetClass, RetencionScheme
 from ....core.errors.error_codes import build_error_envelope, get_registered_error_code
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import AggregationConfigError
 from ..service import (
     PerModeloAggregationContributor,
@@ -28,10 +26,9 @@ from ..service import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-_P_Q1 = Period.from_year_and_code(_YEAR, "1T")
-_P_ANNUAL = Period.from_year_and_code(_YEAR, "0A")
-_P_PRIOR_ANNUAL = Period.from_year_and_code(_YEAR - 1, "0A")
+_P_2025_Q1 = Period.from_year_and_code(2025, "1T")
+_P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+_P_2024_ANNUAL = Period.from_year_and_code(2024, "0A")
 
 
 # ---------------------------------------------------------------------------
@@ -73,11 +70,11 @@ def test_site5_command_rejects_cross_family_observations() -> None:
         valuation_amount=Decimal("50000.01"),
         currency_code="EUR",
         valuation_event=M720ValuationEvent.YEAR_END,
-        acquisition_date=date(_YEAR - 2, 1, 15).isoformat(),
+        acquisition_date="2023-01-15",
     )
     command = PerModeloAggregationCommand(
         modelo="111",
-        period=_P_Q1,
+        period=_P_2025_Q1,
         foreign_asset_observations=(obs,),
     )
     with (
@@ -101,13 +98,13 @@ def test_site6_result_rejects_duplicate_source_kinds() -> None:
             scheme=RetencionScheme("rendimientos_trabajo"),
             taxable_base=Decimal("1000.00"),
             retencion_amount=Decimal("150.00"),
-            accrued_on=date(_YEAR, 3, 1).isoformat(),
+            accrued_on="2025-03-01",
         )
-        cmd = PerModeloAggregationCommand(modelo="111", period=_P_Q1, retencion_observations=(obs,))
+        cmd = PerModeloAggregationCommand(modelo="111", period=_P_2025_Q1, retencion_observations=(obs,))
         agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation
         log = PerModeloAggregationLogFields(
             modelo="111",
-            period=_P_Q1,
+            period=_P_2025_Q1,
             provider=PerModeloAggregationContributor.RETENCIONES,
             observation_count=1,
             source_kind_count=1,
@@ -116,7 +113,7 @@ def test_site6_result_rejects_duplicate_source_kinds() -> None:
         with pytest.raises(ValidationError) as exc_info:
             PerModeloAggregationResult(
                 modelo="111",
-                period=_P_Q1,
+                period=_P_2025_Q1,
                 provider=PerModeloAggregationContributor.RETENCIONES,
                 aggregation=agg,
                 source_kinds=(
@@ -145,15 +142,15 @@ def test_site7_result_rejects_modelo_mismatch() -> None:
             operation_period="0A",
             taxable_base=Decimal("2000.00"),
             invoice_total=Decimal("2000.00"),
-            accrued_on=date(_YEAR, 3, 1).isoformat(),
+            accrued_on="2025-03-01",
             groi_verified=True,
             nif_iva_verified=True,
         )
-        cmd = PerModeloAggregationCommand(modelo="347", period=_P_ANNUAL, counterpart_observations=(obs,))
+        cmd = PerModeloAggregationCommand(modelo="347", period=_P_2025_ANNUAL, counterpart_observations=(obs,))
         agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation  # modelo=347
         log = PerModeloAggregationLogFields(
             modelo="349",
-            period=_P_ANNUAL,
+            period=_P_2025_ANNUAL,
             provider=PerModeloAggregationContributor.COUNTERPART,
             observation_count=1,
             source_kind_count=1,
@@ -162,7 +159,7 @@ def test_site7_result_rejects_modelo_mismatch() -> None:
         with pytest.raises(ValidationError) as exc_info:
             PerModeloAggregationResult(
                 modelo="349",  # mismatch: aggregation says 347
-                period=_P_ANNUAL,
+                period=_P_2025_ANNUAL,
                 provider=PerModeloAggregationContributor.COUNTERPART,
                 aggregation=agg,
                 source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
@@ -188,15 +185,15 @@ def test_site8_result_rejects_period_mismatch() -> None:
             operation_period="0A",
             taxable_base=Decimal("5000.00"),
             invoice_total=Decimal("5000.00"),
-            accrued_on=date(_YEAR, 6, 1).isoformat(),
+            accrued_on="2025-06-01",
             groi_verified=True,
             nif_iva_verified=True,
         )
-        cmd = PerModeloAggregationCommand(modelo="347", period=_P_ANNUAL, counterpart_observations=(obs,))
-        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation
+        cmd = PerModeloAggregationCommand(modelo="347", period=_P_2025_ANNUAL, counterpart_observations=(obs,))
+        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation  # period=2025
         log = PerModeloAggregationLogFields(
             modelo="347",
-            period=_P_PRIOR_ANNUAL,
+            period=_P_2024_ANNUAL,
             provider=PerModeloAggregationContributor.COUNTERPART,
             observation_count=1,
             source_kind_count=1,
@@ -205,7 +202,7 @@ def test_site8_result_rejects_period_mismatch() -> None:
         with pytest.raises(ValidationError) as exc_info:
             PerModeloAggregationResult(
                 modelo="347",
-                period=_P_PRIOR_ANNUAL,  # mismatch: aggregation says the current exercise
+                period=_P_2024_ANNUAL,  # mismatch: aggregation says 2025
                 provider=PerModeloAggregationContributor.COUNTERPART,
                 aggregation=agg,
                 source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
@@ -232,13 +229,13 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
             scheme=RetencionScheme("rendimientos_trabajo"),
             taxable_base=Decimal("1000.00"),
             retencion_amount=Decimal("150.00"),
-            accrued_on=date(_YEAR, 3, 1).isoformat(),
+            accrued_on="2025-03-01",
         )
-        cmd = PerModeloAggregationCommand(modelo="111", period=_P_Q1, retencion_observations=(obs,))
+        cmd = PerModeloAggregationCommand(modelo="111", period=_P_2025_Q1, retencion_observations=(obs,))
         agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation  # RetencionesAggregation
         log = PerModeloAggregationLogFields(
             modelo="111",
-            period=_P_Q1,
+            period=_P_2025_Q1,
             provider=PerModeloAggregationContributor.COUNTERPART,
             observation_count=1,
             source_kind_count=1,
@@ -247,7 +244,7 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
         with pytest.raises(ValidationError) as exc_info:
             PerModeloAggregationResult(
                 modelo="111",
-                period=_P_Q1,
+                period=_P_2025_Q1,
                 provider=PerModeloAggregationContributor.COUNTERPART,  # wrong provider for RetencionesAggregation
                 aggregation=agg,
                 source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),

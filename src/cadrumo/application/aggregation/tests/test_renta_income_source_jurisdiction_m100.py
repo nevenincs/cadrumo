@@ -13,7 +13,6 @@ from ....core.modelo import Modelo
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.models import TransactionCatalogue
 from ..renta_income_ledger import (
@@ -39,7 +38,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 _M100_MODELO = Modelo("100").value
-_YEAR = Q1_2024.filing_year
 
 
 # Source-jurisdiction provenance pass-through.
@@ -66,7 +64,7 @@ def test_renta_income_observation_preserves_es_source_jurisdiction() -> None:
     """
     tx = actividad_transaction_with_source(
         "ae-es-001",
-        value_date=date(_YEAR, 2, 1),
+        value_date=date(2024, 2, 1),
         amount=Decimal("3000.00"),
         source_jurisdiction="ES",
     )
@@ -105,13 +103,13 @@ def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
     fr_amount = Decimal("500.00")
     es_row = actividad_transaction_with_source(
         "ae-es-002",
-        value_date=date(_YEAR, 1, 15),
+        value_date=date(2024, 1, 15),
         amount=es_amount,
         source_jurisdiction="ES",
     )
     fr_row = actividad_transaction_with_source(
         "ae-fr-001",
-        value_date=date(_YEAR, 2, 10),
+        value_date=date(2024, 2, 10),
         amount=fr_amount,
         source_jurisdiction="FR",
     )
@@ -150,9 +148,9 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
     leaf 0171, not the M130 casilla 01.
     """
     jan_amount, dec_amount = Decimal("3000.00"), Decimal("5000.00")
-    jan = income_transaction("m100-jan", value_date=date(_YEAR, 1, 20), amount=jan_amount)
-    dec = income_transaction("m100-dec", value_date=date(_YEAR, 12, 28), amount=dec_amount)
-    prior = income_transaction("m100-prior", value_date=date(_YEAR - 1, 12, 31), amount=Decimal("999.00"))
+    jan = income_transaction("m100-jan", value_date=date(2024, 1, 20), amount=jan_amount)
+    dec = income_transaction("m100-dec", value_date=date(2024, 12, 28), amount=dec_amount)
+    prior = income_transaction("m100-prior", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, dec, prior))
 
     result = aggregate_renta_m100_income_ledger(
@@ -188,8 +186,8 @@ def test_partitioned_m100_aggregation_reports_out_of_period_catalogue_transactio
     visibility signal without allocating one issue per plaintext index entry.
     """
     jan_amount, prior_amount = Decimal("3000.00"), Decimal("999.00")
-    jan = income_transaction("m100-repo-jan", value_date=date(_YEAR, 1, 20), amount=jan_amount)
-    prior = income_transaction("m100-repo-prior", value_date=date(_YEAR - 1, 12, 31), amount=prior_amount)
+    jan = income_transaction("m100-repo-jan", value_date=date(2024, 1, 20), amount=jan_amount)
+    prior = income_transaction("m100-repo-prior", value_date=date(2023, 12, 31), amount=prior_amount)
     catalogue = TransactionCatalogue.from_transactions((jan, prior))
 
     result = aggregate_renta_m100_income_ledger_from_repositories(
@@ -210,8 +208,8 @@ def test_partitioned_m100_aggregation_reports_out_of_period_catalogue_transactio
     assert result.issues == ()
     assert result.out_of_window_summary is not None
     assert result.out_of_window_summary.count == 1
-    assert result.out_of_window_summary.min_filing_date == date(_YEAR - 1, 12, 31)
-    assert result.out_of_window_summary.max_filing_date == date(_YEAR - 1, 12, 31)
+    assert result.out_of_window_summary.min_filing_date == date(2023, 12, 31)
+    assert result.out_of_window_summary.max_filing_date == date(2023, 12, 31)
 
 
 def test_partitioned_m100_aggregation_matches_full_scan() -> None:
@@ -222,10 +220,8 @@ def test_partitioned_m100_aggregation_matches_full_scan() -> None:
     In-window observations and casilla totals/provenance must match; only the
     out-of-window issue taxonomy can differ.
     """
-    in_year = income_transaction("m100-parity-in-year", value_date=date(_YEAR, 6, 1), amount=Decimal("4000.00"))
-    prior_year = income_transaction(
-        "m100-parity-prior-year", value_date=date(_YEAR - 1, 12, 31), amount=Decimal("999.00")
-    )
+    in_year = income_transaction("m100-parity-in-year", value_date=date(2024, 6, 1), amount=Decimal("4000.00"))
+    prior_year = income_transaction("m100-parity-prior-year", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((in_year, prior_year))
     partitioned = aggregate_renta_m100_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -257,8 +253,8 @@ def test_partitioned_m100_aggregation_matches_full_scan() -> None:
     assert partitioned.issues == ()
     assert partitioned.out_of_window_summary is not None
     assert partitioned.out_of_window_summary.count == 1
-    assert partitioned.out_of_window_summary.min_filing_date == date(_YEAR - 1, 12, 31)
-    assert partitioned.out_of_window_summary.max_filing_date == date(_YEAR - 1, 12, 31)
+    assert partitioned.out_of_window_summary.min_filing_date == date(2023, 12, 31)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2023, 12, 31)
     assert {i.transaction_id for i in full_scan.issues} == {prior_year.transaction_id}
     assert full_scan.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
 
@@ -281,20 +277,20 @@ def test_m100_annual_income_rejects_non_annual_period() -> None:
 
 
 def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
-    """The newest authored M100 revision binds casilla 0171 to the income source and folds it.
+    """The real M100 2025 revision binds casilla 0171 to the income source and folds it.
 
     Uses the live registry revision so the binding id, selector, and casilla
     wiring under test are exactly what ships. Expected value derived from the
     input, never copied from engine output.
     """
-    revision = published_revision("100", str(revision_covering("100", newest_authored_edition("100")).id))
+    revision = published_revision("100", "2025")
     casilla_0171 = next(c for c in revision.casillas if c.id == M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA)
     assert str(casilla_0171.input_kind) == "bound"
     binding = next(b for b in revision.bindings if b.id == casilla_0171.binding)
     assert str(binding.source) == "ledger_renta_income_aggregation"
 
     base = Decimal("4200.00")
-    tx = income_transaction("m100-res", value_date=date(_YEAR, 6, 1), amount=base)
+    tx = income_transaction("m100-res", value_date=date(2024, 6, 1), amount=base)
     catalogue = TransactionCatalogue.from_transactions((tx,))
     aggregation = aggregate_renta_m100_income_ledger(
         catalogue,

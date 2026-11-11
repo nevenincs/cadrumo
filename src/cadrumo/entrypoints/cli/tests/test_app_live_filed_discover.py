@@ -31,45 +31,43 @@ from ....application.live.filed_history_discovery import (
 )
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import NoticeSeverity, SchemaEnvelope
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..app_live_command_specs import LIVE_COMMAND_SPECS
 from ..app_live_commands import filed_discover_notices, filed_discover_result_and_lines
 from ..app_live_filed_results import FiledDiscoverResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
 _SCHEMA_KEY = "app.live.filed.discover"
 
 
-def _offered_100() -> FiledDeclarationAvailabilityReport:
+def _offered_100_2024() -> FiledDeclarationAvailabilityReport:
     """A register option set offering one pair the profile below never expects."""
     return FiledDeclarationAvailabilityReport(
-        items=(FiledDeclarationAvailability(modelo="100", ejercicios=(_YEAR,)),),
-        discovered_at=datetime(_YEAR, 8, 7, 11, 0, tzinfo=UTC),
+        items=(FiledDeclarationAvailability(modelo="100", ejercicios=(2024,)),),
+        discovered_at=datetime(2026, 8, 7, 11, 0, tzinfo=UTC),
     )
 
 
-def _expects_303() -> ExpectedFiledDeclarationGrid:
+def _expects_303_2025() -> ExpectedFiledDeclarationGrid:
     return ExpectedFiledDeclarationGrid(
         modelos=("303",),
-        ejercicios=(_YEAR,),
+        ejercicios=(2025,),
         activity_start_declared=True,
     )
 
 
 def _profile_report() -> FiledHistoryDiscoveryReport:
-    return filed_history_discovery_report(expected=_expects_303(), availability=None)
+    return filed_history_discovery_report(expected=_expects_303_2025(), availability=None)
 
 
 def _both_signals_report() -> FiledHistoryDiscoveryReport:
-    return filed_history_discovery_report(expected=_expects_303(), availability=_offered_100())
+    return filed_history_discovery_report(expected=_expects_303_2025(), availability=_offered_100_2024())
 
 
 def _register_only_report() -> FiledHistoryDiscoveryReport:
     return filed_history_discovery_report(
         expected=ExpectedFiledDeclarationGrid(),
-        availability=_offered_100(),
+        availability=_offered_100_2024(),
     )
 
 

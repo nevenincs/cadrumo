@@ -14,7 +14,6 @@ from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistryValidationError
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (
@@ -46,9 +45,6 @@ from ..ledger_expenses import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_YEAR = filing_year_envelope().horizon
-
-
 def _supported_years() -> tuple[int, ...]:
     support = published_supported_filing_years()
     assert support is not None, "the published authority declares no support envelope"
@@ -60,7 +56,7 @@ def category_profiles(
     operation: PinnedAuthorityOperation,
 ) -> Mapping[SpendingCategory, CategoryProfile]:
     """Resolve the selected filing-year profiles from the injected operation."""
-    return resolve_category_profiles(_YEAR, operation=operation)
+    return resolve_category_profiles(2025, operation=operation)
 
 
 def _fact(
@@ -80,11 +76,11 @@ def _fact(
     return RentaDeductibleExpenseFact(
         transaction_id="a" * 64,
         invoice_id=invoice_id,
-        catalogue_id=f"ledger-{_YEAR}",
-        operation_date=date(_YEAR, 3, 8),
-        invoice_issue_date=date(_YEAR, 3, 7) if invoice_id is not None else None,
-        posting_date=date(_YEAR, 3, 9),
-        payment_date=date(_YEAR, 3, 10),
+        catalogue_id="ledger-2025",
+        operation_date=date(2025, 3, 8),
+        invoice_issue_date=date(2025, 3, 7) if invoice_id is not None else None,
+        posting_date=date(2025, 3, 9),
+        payment_date=date(2025, 3, 10),
         gross_amount=amount,
         taxable_base=base,
         iva_amount=iva,
@@ -95,7 +91,7 @@ def _fact(
 
 
 def _context(**overrides: object) -> RentaDeductibilityContext:
-    payload: dict[str, object] = {"profile_year": _YEAR}
+    payload: dict[str, object] = {"profile_year": 2025}
     payload.update(overrides)
     return RentaDeductibilityContext.model_validate(payload)
 
@@ -103,13 +99,13 @@ def _context(**overrides: object) -> RentaDeductibilityContext:
 def _citation() -> CategoryCitation:
     return CategoryCitation(
         source=CategoryCitationSource.MANUAL_RENTA,
-        reference=f"Manual practico Renta {_YEAR}",
+        reference="Manual practico Renta 2025",
         locator="test",
         url=parse_http_url(RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE),
         quote=tr("Texto de prueba para una regla de deducibilidad."),
-        source_ref=f"aeat-renta-{_YEAR}-manual-parte1",
-        valid_from=date(_YEAR, 1, 1),
-        valid_to=date(_YEAR, 12, 31),
+        source_ref="aeat-renta-2025-manual-parte1",
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
     )
 
 
@@ -136,12 +132,12 @@ def test_full_deductible_first_slice_fact_builds_binding_ready_observation(
         _context(),
     )
 
-    observation = build_renta_deductible_expense_observation(fact, result, tax_year=_YEAR)
+    observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
     assert result.status is RentaDeductibilityStatus.ELIGIBLE
     assert observation.source_kind is BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     assert observation.target_casilla_id == "0186"
-    assert observation.filing_date == date(_YEAR, 3, 7)
+    assert observation.filing_date == date(2025, 3, 7)
     assert observation.gross_amount == Decimal("294.00")
     assert observation.taxable_base == Decimal("273.00")
     assert observation.iva_amount == Decimal("21.00")
@@ -166,10 +162,10 @@ def test_transaction_only_fact_uses_operation_date_and_prevents_invoice_evidence
         _context(),
     )
 
-    observation = build_renta_deductible_expense_observation(fact, result, tax_year=_YEAR)
+    observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
     assert observation.target_casilla_id == "0203"
-    assert observation.filing_date == date(_YEAR, 3, 8)
+    assert observation.filing_date == date(2025, 3, 8)
     assert observation.invoice_id is None
     assert observation.invoice_evidence_status is RentaInvoiceEvidenceStatus.NONE
     assert observation.reconciliation_status is RentaReconciliationStatus.TRANSACTION_ONLY
@@ -191,7 +187,7 @@ def test_linked_refund_preserves_category_and_becomes_negative_observation(
         _context(),
     )
 
-    observation = build_renta_deductible_expense_observation(fact, result, tax_year=_YEAR)
+    observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
     assert observation.sign == -1
     assert observation.target_casilla_id == "0203"
@@ -309,9 +305,9 @@ def test_iva_deduction_ratio_is_inert_without_an_invoice_evidenced_base_split(
     """
     fact = RentaDeductibleExpenseFact(
         transaction_id="a" * 64,
-        catalogue_id=f"ledger-{_YEAR}",
-        operation_date=date(_YEAR, 3, 8),
-        posting_date=date(_YEAR, 3, 9),
+        catalogue_id="ledger-2025",
+        operation_date=date(2025, 3, 8),
+        posting_date=date(2025, 3, 9),
         gross_amount=Decimal("48.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
         activity_key="main",
@@ -471,11 +467,7 @@ def test_fixed_percentage_profiles_are_supported_by_the_evaluator(
     assert result.non_deductible_amount == Decimal("128.4000")
 
 
-@pytest.mark.parametrize(
-    "year, expected",
-    [(_YEAR - 1, Decimal("75")), (_YEAR, Decimal("100")), (_YEAR - 2, None)],
-    ids=("first-window", "second-window", "before-schedule"),
-)
+@pytest.mark.parametrize("year, expected", [(2025, Decimal("75")), (2026, Decimal("100")), (2024, None)])
 def test_evaluator_uses_the_declared_cap_for_the_requested_year(
     operation: PinnedAuthorityOperation, year: int, expected: Decimal | None
 ) -> None:
@@ -486,10 +478,8 @@ def test_evaluator_uses_the_declared_cap_for_the_requested_year(
             kind=require_proportionality_kind("statutory_cap", authority=operation),
             statutory_cap_period=require_statutory_cap_period("year_per_person", authority=operation),
             statutory_cap_schedule=(
-                StatutoryCapAmount(
-                    value=Decimal("75"), valid_from=date(_YEAR - 1, 1, 1), valid_to=date(_YEAR - 1, 12, 31)
-                ),
-                StatutoryCapAmount(value=Decimal("100"), valid_from=date(_YEAR, 1, 1), valid_to=date(_YEAR, 12, 31)),
+                StatutoryCapAmount(value=Decimal("75"), valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31)),
+                StatutoryCapAmount(value=Decimal("100"), valid_from=date(2026, 1, 1), valid_to=date(2026, 12, 31)),
             ),
             citations=(_citation(),),
             notes=tr("Regla de prueba con límites anuales."),
@@ -524,7 +514,7 @@ def test_non_deductible_profiles_cannot_become_observations(operation: PinnedAut
 
     assert result.status is RentaDeductibilityStatus.INELIGIBLE
     with pytest.raises(RentaValidationError, match="ineligible deductibility result"):
-        build_renta_deductible_expense_observation(fact, result, tax_year=_YEAR)
+        build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
 
 def test_exclusive_use_profiles_require_exclusive_business_use(operation: PinnedAuthorityOperation) -> None:
@@ -615,7 +605,7 @@ def test_tax_year_mismatch_is_rejected_before_observation_creation(
     )
 
     with pytest.raises(RentaValidationError, match="outside the requested tax year"):
-        build_renta_deductible_expense_observation(fact, result, tax_year=_YEAR - 1)
+        build_renta_deductible_expense_observation(fact, result, tax_year=2024)
 
 
 @pytest.mark.usefixtures("operation")
@@ -660,7 +650,7 @@ def test_observation_model_rejects_mismatched_first_slice_casilla(
         category_profiles[SpendingCategory.from_registry("gastos_bancarios")],
         _context(),
     )
-    observation = build_renta_deductible_expense_observation(fact, result, tax_year=_YEAR)
+    observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
     payload = observation.model_dump()
     payload["target_casilla_id"] = "0199"
 
@@ -677,7 +667,7 @@ def test_observation_model_rejects_legacy_target_casilla_key(
         category_profiles[SpendingCategory.from_registry("gastos_bancarios")],
         _context(),
     )
-    observation = build_renta_deductible_expense_observation(fact, result, tax_year=_YEAR)
+    observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
     payload = observation.model_dump()
     payload["target_casilla"] = payload.pop("target_casilla_id")
 

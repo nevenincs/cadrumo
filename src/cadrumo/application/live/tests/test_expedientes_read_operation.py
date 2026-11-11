@@ -21,7 +21,6 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
@@ -43,13 +42,11 @@ from ..expedientes_read_operation import (
 )
 from .read_executor_support import ExecutorEvents, ExecutorOperands
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("11111111-1111-4111-8111-111111111111")
 _OTHER_PROFILE = UUID("22222222-2222-4222-8222-222222222222")
-_NOW = datetime(_YEAR, 4, 15, 10, tzinfo=UTC)
+_NOW = datetime(2025, 4, 15, 10, tzinfo=UTC)
 
 
 class _EmptySnapshotRepository:
@@ -241,8 +238,8 @@ def test_list_executor_preserves_missing_profile_precedence_before_work(monkeypa
 def test_show_projection_preserves_period_and_all_existing_declaration_fields() -> None:
     declaration = ExpedientesDeclaration(
         modelo="303",
-        ejercicio=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        ejercicio=2025,
+        period=Period.from_year_and_code(2025, "1T"),
         expediente_id="12345678901234567890",
         estado="ALTA",
         tipo_solicitud="Presentación",

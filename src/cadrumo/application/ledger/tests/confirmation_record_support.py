@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
@@ -16,8 +14,6 @@ from ..confirmation_record import (
     ResolvedFinding,
 )
 from ..invoice_draft_records import FieldAmbiguityCandidate
-
-_YEAR = filing_year_envelope().horizon
 
 CONFIRMATION_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 CONFIRMATION_TRANSCRIPTION_SHA = "a" * 64
@@ -51,7 +47,7 @@ def populated_confirmation_record() -> InvoiceConfirmationRecord:
         transcription_sha256=CONFIRMATION_TRANSCRIPTION_SHA,
         extractor="exact_structured",
         confirmed_by="gestor@example.test",
-        confirmed_at=datetime(_YEAR - 2, 11, 15, 9, 0, tzinfo=UTC),
+        confirmed_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC),
         assertions=(
             FieldAssertion(
                 field="taxable_base",

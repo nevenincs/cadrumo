@@ -23,13 +23,10 @@ import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from ....core.config import override_settings
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 # Profile-scoped verbs an operator may reach on first contact. Each
@@ -40,7 +37,7 @@ def _m303_revision_id(*, filing_year: int, period: str) -> str:
 
 
 def _cold_start_verbs() -> tuple[tuple[str, ...], ...]:
-    m303_revision_id = _m303_revision_id(filing_year=_YEAR, period="1T")
+    m303_revision_id = _m303_revision_id(filing_year=2026, period="1T")
     return (
         (
             "app",
@@ -51,7 +48,7 @@ def _cold_start_verbs() -> tuple[tuple[str, ...], ...]:
             "--revision-id",
             m303_revision_id,
             "--year",
-            str(_YEAR),
+            "2026",
             "--period",
             "1T",
         ),
@@ -63,7 +60,7 @@ def _cold_start_verbs() -> tuple[tuple[str, ...], ...]:
             "--modelo",
             "303",
             "--year",
-            str(_YEAR),
+            "2026",
             "--period",
             "1T",
             "--revision",
@@ -86,7 +83,7 @@ def _cold_start_verbs() -> tuple[tuple[str, ...], ...]:
         ("app", "modelo", "work", "list"),
         ("app", "modelo", "work", "revisions"),
         ("app", "ledger", "list"),
-        ("app", "overview", "status", "--period", f"{_YEAR}Q1"),
+        ("app", "overview", "status", "--period", "2026Q1"),
     )
 
 
@@ -172,7 +169,7 @@ def test_cold_start_refusal_is_consistent_across_surfaces(_fresh_storage_root: P
 def test_overview_period_status_uses_refusal_boundary(_fresh_storage_root: Path) -> None:
     """`overview status --period` must not wrap no-profile as a bad parameter."""
 
-    result = invoke_cached_cli(["app", "overview", "status", "--period", f"{_YEAR}Q1"])
+    result = invoke_cached_cli(["app", "overview", "status", "--period", "2026Q1"])
 
     assert result.exit_code != 0, result.output
     assert "Invalid value" not in result.output
@@ -193,7 +190,7 @@ def test_bindings_list_missing_requires_an_active_profile(
             "--modelo",
             "303",
             "--year",
-            str(_YEAR),
+            "2026",
             "--period",
             "1T",
             "--missing",

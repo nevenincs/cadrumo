@@ -7,11 +7,8 @@ import pytest
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 __all__ = ["isolated_cli_backend"]
 
@@ -61,9 +58,9 @@ def test_invalid_domain_syntax_is_refused_at_parse_boundary() -> None:
 def test_domain_composes_with_year_filter() -> None:
     payload = unwrap_schema_envelope(
         invoke_cached_cli(
-            ["--format", "json", "app", "modelo", "list", "--domain", "iva", "--year", str(_YEAR)],
+            ["--format", "json", "app", "modelo", "list", "--domain", "iva", "--year", "2025"],
         ).output,
     )
     assert payload["domain_filter"] == "iva"
-    assert payload["year_filter"] == _YEAR
+    assert payload["year_filter"] == 2025
     assert all(row["tax_domain"] == "iva" for row in payload["modelos"]), payload

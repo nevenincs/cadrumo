@@ -36,7 +36,6 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.aeat_sync.models import AeatSyncOperationHandoffV1, AeatSyncOperationRequestV1
@@ -56,8 +55,6 @@ from cadrumo_client.transport.profile_mutations import (
 
 from .....frontend.tui.profile import aeat_auth_client, manager_client
 from .....frontend.tui.profile.manager_client import ProfileManagerClientComposition
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -272,12 +269,12 @@ def test_every_write_door_carries_exact_dialog_cas_and_reads_authorized_overview
     assert calls[-1].expected_revision == 11
 
     screen.overview = completed
-    workforce = screen._set_plantilla_media(_YEAR, Decimal("1.25"), PlantillaMediaState.OBSERVED)
+    workforce = screen._set_plantilla_media(2026, Decimal("1.25"), PlantillaMediaState.OBSERVED)
     assert isinstance(calls[-1], ProfilePlantillaMediaOperationRequest)
-    assert calls[-1].expected_revision == 12 and calls[-1].year == _YEAR
+    assert calls[-1].expected_revision == 12 and calls[-1].year == 2026
     assert calls[-1].change == ProfilePlantillaMediaSet(average_workforce="1.25", state=PlantillaMediaState.OBSERVED)
     screen.overview = workforce
-    screen._remove_plantilla_media(_YEAR)
+    screen._remove_plantilla_media(2026)
     assert isinstance(calls[-1], ProfilePlantillaMediaOperationRequest)
     assert calls[-1].expected_revision == 13
     assert calls[-1].change.kind == "remove"

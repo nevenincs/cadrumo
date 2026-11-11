@@ -3,18 +3,14 @@
 from __future__ import annotations
 
 import json
-from datetime import date
 from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_validation_fixtures import bucket, open_bucket_session
 from .scenario_support import invoke, set_profile_axis
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 __all__ = ["bucket", "open_bucket_session"]
@@ -41,7 +37,7 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 4, 15).isoformat(),
+            "2026-04-15",
             "--amount",
             "50.00",
             "--direction",
@@ -71,7 +67,7 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
     after the operator wizard updates the active profile."""
 
     set_profile_axis("irpf.special_regime", "impatriado")
-    set_profile_axis("irpf.special_regime_start_date", date(filing_year_envelope().floor, 1, 1).isoformat())
+    set_profile_axis("irpf.special_regime_start_date", "2023-01-01")
 
     result = invoke(
         [
@@ -79,7 +75,7 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 4, 15).isoformat(),
+            "2026-04-15",
             "--amount",
             "50.00",
             "--direction",
@@ -130,7 +126,7 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 4, 15).isoformat(),
+            "2026-04-15",
             "--amount",
             "50.00",
             "--direction",
@@ -167,7 +163,7 @@ def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 4, 15).isoformat(),
+            "2026-04-15",
             "--amount",
             "100.00",
             "--direction",

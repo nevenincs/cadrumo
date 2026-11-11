@@ -2,21 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..agenda import OverviewAgenda, build_overview_agenda
 from ..errors import OverviewAgendaError
 from .calendar_test_support import profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def test_agenda_horizon_must_be_positive() -> None:
@@ -24,7 +21,7 @@ def test_agenda_horizon_must_be_positive() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with pytest.raises(OverviewAgendaError) as exc_info:
             build_overview_agenda(
-                profile(), as_of=date(_YEAR, 1, 15), horizon_days=0, operation=_authority_operation_for_test
+                profile(), as_of=date(2026, 1, 15), horizon_days=0, operation=_authority_operation_for_test
             )
         # The refusal carries a typed translated_message key + context, not a raw
         # args[0] string; assert the locale-independent identity.
@@ -37,10 +34,10 @@ def test_agenda_returns_typed_envelope_with_required_fields() -> None:
     """The aggregator produces an OverviewAgenda envelope carrying the
     as_of date, horizon, generated_at, and the four cohort tuples."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        agenda = build_overview_agenda(profile(), as_of=date(_YEAR, 1, 15), operation=_authority_operation_for_test)
+        agenda = build_overview_agenda(profile(), as_of=date(2026, 1, 15), operation=_authority_operation_for_test)
 
         assert isinstance(agenda, OverviewAgenda)
-        assert agenda.as_of == date(_YEAR, 1, 15)
+        assert agenda.as_of == date(2026, 1, 15)
         assert agenda.horizon_days == 14
         assert isinstance(agenda.due_today, tuple)
         assert isinstance(agenda.due_soon, tuple)
@@ -53,7 +50,7 @@ def test_agenda_next_due_is_earliest_future_or_today_deadline() -> None:
     break uses (closes_on, modelo, period)."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         agenda = build_overview_agenda(
-            profile(), as_of=date(_YEAR, 1, 1), horizon_days=120, operation=_authority_operation_for_test
+            profile(), as_of=date(2026, 1, 1), horizon_days=120, operation=_authority_operation_for_test
         )
 
         if agenda.next_due is not None:
@@ -69,13 +66,13 @@ def test_agenda_partitions_entries_by_deadline_position() -> None:
     (as_of, as_of+horizon]; overdue entries close before as_of and
     carry LATE state."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        as_of = date(_YEAR, 4, 15)
+        as_of = date(2026, 4, 15)
         agenda = build_overview_agenda(profile(), as_of=as_of, horizon_days=30, operation=_authority_operation_for_test)
 
         for entry in agenda.due_today:
             assert entry.adjusted_closes_on == as_of
         for entry in agenda.due_soon:
-            assert as_of < entry.adjusted_closes_on <= as_of + timedelta(days=30)
+            assert as_of < entry.adjusted_closes_on <= date(2026, 5, 15)
         for entry in agenda.overdue:
             assert entry.adjusted_closes_on < as_of
             # Overdue cohort excludes already-filed obligations; the
@@ -87,7 +84,7 @@ def test_agenda_partitions_are_disjoint() -> None:
     """The same (modelo, period) cannot appear in more than one cohort."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         agenda = build_overview_agenda(
-            profile(), as_of=date(_YEAR, 4, 15), horizon_days=30, operation=_authority_operation_for_test
+            profile(), as_of=date(2026, 4, 15), horizon_days=30, operation=_authority_operation_for_test
         )
 
         seen: set[tuple[str, Period]] = set()

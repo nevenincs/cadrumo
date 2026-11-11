@@ -26,7 +26,6 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 
 from .....core.classification.policies import SensitivityClass
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
@@ -37,12 +36,10 @@ from .embedded_rendering_fixture import (
 )
 from .test_calculation_repository_roundtrip import _BUCKET_ID, _seed_parent_work_unit
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 _FIXTURE = Path(__file__).parent / "fixtures" / "calculation_catalogue_303_saved_before_absence_attestation.json.gz"
-_WRITTEN_AT = datetime(_YEAR, 11, 8, 12, 0, 0, tzinfo=UTC)
+_WRITTEN_AT = datetime(2026, 11, 8, 12, 0, 0, tzinfo=UTC)
 
 
 def _saved_payload() -> bytes:

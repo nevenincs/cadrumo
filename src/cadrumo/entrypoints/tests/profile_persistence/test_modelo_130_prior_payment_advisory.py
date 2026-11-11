@@ -67,7 +67,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
@@ -81,13 +80,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET = "00000000-0000-4000-8000-000000000130"
 _PROFILE_LABEL = "M130 prior payment advisory profile"
-_REVISION = str(open_ended_revision("130").id)
-_YEAR = filing_year_envelope().horizon
-_PRIOR_YEAR = _YEAR - 1
+_REVISION = "2019-y-siguientes"
+_YEAR = 2026
+_PRIOR_YEAR = 2025
 _PRIOR_YEAR_NET_INCOME = Decimal("8000")
 
-_T0 = datetime(_YEAR, 7, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(_YEAR, 7, 10, 11, 0, tzinfo=UTC)
+_T0 = datetime(2026, 7, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 7, 10, 11, 0, tzinfo=UTC)
 
 _ADVISORY_REASON = "prior_payment_not_deducted"
 _MINORACION_ADVISORY_REASON = "prior_payment_minoracion_not_captured"
@@ -135,7 +134,7 @@ _MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 # so casilla 01 folds a positive ingreso (and casilla 04 a positive pago
 # fraccionado). The amount only proves "positive activity"; it is not asserted.
 _INCOME_AMOUNT = Decimal("3000.00")
-_INCOME_DATE = date(_YEAR, 2, 14)  # inside both 1T (Jan-Mar) and 2T (Jan-Jun) windows
+_INCOME_DATE = date(2026, 2, 14)  # inside both 1T (Jan-Mar) and 2T (Jan-Jun) windows
 
 
 @pytest.fixture
@@ -260,7 +259,7 @@ def _income_transaction(objects: SecureObjectRepository) -> None:
                     source_sha256="b" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(_YEAR, 2, 14, 12, 0, tzinfo=UTC),
+                    ingested_at=datetime(2026, 2, 14, 12, 0, tzinfo=UTC),
                     provider_name="CSV provider",
                 ),
                 raw_fields={"Concepto": "income"},
@@ -276,7 +275,7 @@ def _income_transaction(objects: SecureObjectRepository) -> None:
             "iva_rate": None,
             "iva_amount": None,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(_YEAR, 2, 14, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 2, 14, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

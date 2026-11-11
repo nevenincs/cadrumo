@@ -10,10 +10,6 @@ from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    revision_serving_period,
-)
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
     IMPORT_INCOME_CASILLA,
@@ -61,13 +57,12 @@ def test_import_refuses_printed_number_metadata_token(repos: Repos, *, operation
     """External imports must not treat a printed number as a casilla reference."""
 
     _wu_repo, _, _, _, _ = repos
-    year = filing_year_envelope().horizon
     work_unit = create_work_unit(
         bucket_id=PROFILE_ID,
         modelo="303",
-        filing_year=year,
-        period=Period.from_year_and_code(year, "1T"),
-        revision_id=str(revision_serving_period("303", year, "1T").id),
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        revision_id="2025",
         ports=build_work_lifecycle_ports(bucket_id=PROFILE_ID),
         clock=T0,
         operation=operation,

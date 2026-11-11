@@ -15,7 +15,6 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..edit_models import ModeloEditHeldChangeV1, ModeloEditHeldKind
 from ..work_form_field_vocabulary import (
     ModeloFormEditability,
@@ -31,11 +30,9 @@ from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 
 def _entered(operation: PinnedAuthorityOperation) -> ModeloFormField:
-    field = next(field for field in built_form(operation, "130", _YEAR, "1T").fields() if not field.bindings)
+    field = next(field for field in built_form(operation, "130", 2026, "1T").fields() if not field.bindings)
     return revised_field(
         field,
         editability=ModeloFormEditability.EDITABLE_VALUE,

@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from datetime import date
 
 import pytest
 from click.testing import Result
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .profile_world_fixtures import (
     active_profile_isolated_backend,
@@ -19,8 +17,6 @@ __all__ = ["active_profile_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
@@ -29,14 +25,14 @@ def _invoke(args: Sequence[str]) -> Result:
 def test_preflight_requires_period_flag() -> None:
     """The verb requires --period; missing it surfaces as a Typer usage error."""
 
-    result = _invoke(["app", "ledger", "preflight", "--year", str(_YEAR)])
+    result = _invoke(["app", "ledger", "preflight", "--year", "2026"])
     assert result.exit_code != 0, result.output
 
 
 def test_preflight_empty_catalogue_is_ready() -> None:
     """An active bucket with no transactions stays ready but warns that zero is an operator assertion."""
 
-    result = _invoke(["app", "ledger", "preflight", "--period", "1T", "--year", str(_YEAR)])
+    result = _invoke(["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
     assert result.exit_code == 0, result.output
     assert "checked\t0" in result.output
     assert "issues\t0" in result.output
@@ -56,7 +52,7 @@ def test_preflight_empty_catalogue_is_ready() -> None:
 def test_preflight_empty_catalogue_json_notice_marks_warning() -> None:
     """The empty-ledger advisory is part of the JSON envelope, not only text output."""
 
-    result = _invoke(["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", str(_YEAR)])
+    result = _invoke(["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
@@ -69,7 +65,7 @@ def test_preflight_empty_catalogue_json_notice_marks_warning() -> None:
     assert notice["action"] is None
     assert notice["context"] == {
         "period": "1T",
-        "year": str(_YEAR),
+        "year": "2026",
     }
     assert "suggestion" not in notice
 
@@ -78,7 +74,7 @@ def test_preflight_rejects_malformed_period() -> None:
     """A period that does not match the canonical regex is rejected
     before the application service is reached."""
 
-    result = _invoke(["app", "ledger", "preflight", "--period", "not-a-period", "--year", str(_YEAR)])
+    result = _invoke(["app", "ledger", "preflight", "--period", "not-a-period", "--year", "2026"])
     assert result.exit_code != 0, result.output
 
 
@@ -100,7 +96,7 @@ def test_status_period_readiness_issues_include_tax_diagnostic_fields() -> None:
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 5, 2).isoformat(),
+            "2026-05-02",
             "--amount",
             "121.00",
             "--direction",
@@ -115,7 +111,7 @@ def test_status_period_readiness_issues_include_tax_diagnostic_fields() -> None:
     )
     assert add.exit_code == 0, add.output
 
-    result = _invoke(["app", "ledger", "status", "--period", "05", "--year", str(_YEAR)])
+    result = _invoke(["app", "ledger", "status", "--period", "05", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     # Not-ready is asserted through the ISSUES rather than the summary
@@ -142,7 +138,7 @@ def test_status_money_totals_are_labelled_as_business_scope() -> None:
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 5, 2).isoformat(),
+            "2026-05-02",
             "--amount",
             "121.00",
             "--direction",
@@ -170,7 +166,7 @@ def test_status_money_totals_are_labelled_as_business_scope() -> None:
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 5, 3).isoformat(),
+            "2026-05-03",
             "--amount",
             "900.00",
             "--direction",
@@ -185,7 +181,7 @@ def test_status_money_totals_are_labelled_as_business_scope() -> None:
     )
     assert personal.exit_code == 0, personal.output
 
-    result = _invoke(["app", "ledger", "status", "--period", "05", "--year", str(_YEAR)])
+    result = _invoke(["app", "ledger", "status", "--period", "05", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()

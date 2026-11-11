@@ -15,8 +15,6 @@ real lifecycle service; no test doubles stand in for the read.
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 from pydantic import SecretStr
 
@@ -40,7 +38,6 @@ from cadrumo.application.tests.operator_scope_fakes import (
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -239,9 +236,7 @@ def test_preflight_reports_a_profile_borne_soporte_as_configured() -> None:
 def test_preflight_reports_a_profile_borne_validity_date_as_configured() -> None:
     """The DNI holder's mirror of the same report field."""
 
-    _register_profile(
-        **{"auth.dni_nie": _TAX_ID, "auth.fecha_validez": date(filing_year_envelope().horizon + 1, 1, 1).isoformat()}
-    )
+    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.fecha_validez": "2030-01-01"})
     with override_settings(
         cadrumo_clave_movil_dni_nie=None,
         cadrumo_clave_movil_nie_soporte=None,

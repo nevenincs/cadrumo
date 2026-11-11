@@ -47,8 +47,6 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -91,10 +89,10 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2025
 _TAX_ID = ready_profile_tax_id()
-_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
-_FILE_AT = datetime(_YEAR, 4, 10, 12, 0, tzinfo=UTC)
+_T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
+_FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
 
 type RecargoTier = Literal["general", "reducido"]
 type RecargoAmountsByPeriod = dict[str, dict[RecargoTier, Decimal]]

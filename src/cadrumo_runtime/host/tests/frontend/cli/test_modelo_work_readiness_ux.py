@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import date
 from typing import Any
 
 import pytest
@@ -15,11 +14,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 from cadrumo.application.modelo.casilla_help import legal_ref_id_citation
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    open_ended_revision,
-    revision_covering,
-)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     MODELO_OPERATOR_PROFILE_LABEL,
@@ -36,10 +30,6 @@ from .modelo_profile_seed import seed_profile, seed_test_profile
 __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
-
-_YEAR = filing_year_envelope().horizon
-_M130_REVISION = str(open_ended_revision("130").id)
-_M349_REVISION = str(open_ended_revision("349").id)
 
 _REPRESENTANTE_PROFILE_PATHS = frozenset(
     {
@@ -205,9 +195,9 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", Modelo("130").value,
-            "--year", str(_YEAR),
+            "--year", "2025",
             "--period", "1T",
-            "--revision", _M130_REVISION,
+            "--revision", "2019-y-siguientes",
         ],
     )  # fmt: skip
 
@@ -231,8 +221,8 @@ def _assert_incomplete_readiness_json() -> dict[str, Any]:
             "--format", "json",
             "app", "modelo", "readiness",
             "--modelo", Modelo("130").value,
-            "--revision-id", _M130_REVISION,
-            "--year", str(_YEAR),
+            "--revision-id", "2019-y-siguientes",
+            "--year", "2026",
             "--period", "2T",
         ],
     )  # fmt: skip
@@ -265,8 +255,8 @@ def _assert_text_readiness_and_create_refuse_alike(profile_action: dict[str, Any
         [
             "app", "modelo", "readiness",
             "--modelo", Modelo("130").value,
-            "--revision-id", _M130_REVISION,
-            "--year", str(_YEAR),
+            "--revision-id", "2019-y-siguientes",
+            "--year", "2026",
             "--period", "2T",
         ],
     )  # fmt: skip
@@ -281,7 +271,7 @@ def _assert_text_readiness_and_create_refuse_alike(profile_action: dict[str, Any
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", Modelo("130").value,
-            "--year", str(_YEAR),
+            "--year", "2026",
             "--period", "2T",
         ],
     )  # fmt: skip
@@ -302,8 +292,8 @@ def _assert_completing_setup_clears_the_profile_refusal() -> None:
             "--format", "json",
             "app", "modelo", "readiness",
             "--modelo", Modelo("130").value,
-            "--revision-id", _M130_REVISION,
-            "--year", str(_YEAR),
+            "--revision-id", "2019-y-siguientes",
+            "--year", "2026",
             "--period", "2T",
         ],
     )  # fmt: skip
@@ -323,14 +313,14 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
 
 
 def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
-    create_modelo_operator_profile(activity_start_date=date(_YEAR, 5, 1).isoformat())
+    create_modelo_operator_profile(activity_start_date="2026-05-01")
 
     result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "303",
-            "--year", str(_YEAR),
+            "--year", "2026",
             "--period", "1T",
         ],
     )  # fmt: skip
@@ -341,8 +331,8 @@ def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
     assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
     message = payload["error"]["message"]
     assert "pre-activity period" in message
-    assert date(_YEAR, 5, 1).isoformat() in message
-    assert date(_YEAR, 3, 31).isoformat() in message
+    assert "2026-05-01" in message
+    assert "2026-03-31" in message
     assert "Traceback" not in result.output
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
@@ -351,14 +341,14 @@ def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
 
 
 def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None:
-    create_modelo_operator_profile(activity_start_date=date(_YEAR, 5, 1).isoformat())
+    create_modelo_operator_profile(activity_start_date="2026-05-01")
 
     result = invoke_modelo_scenario_cli(
         [
             "app", "modelo", "readiness",
             "--modelo", "303",
-            "--revision-id", str(published_snapshot("303", filing_year=_YEAR, period="1T").revision.id),
-            "--year", str(_YEAR),
+            "--revision-id", str(published_snapshot("303", filing_year=2026, period="1T").revision.id),
+            "--year", "2026",
             "--period", "1T",
         ],
     )  # fmt: skip
@@ -366,11 +356,8 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
     assert result.exit_code == 2, result.output
     assert "ready\tFalse" in result.output
     assert "profile_ready\tFalse" in result.output
-    assert (
-        f"profile_refusal\tModelo 303 {_YEAR} 1T is before the profile activity-start date {date(_YEAR, 5, 1).isoformat()}"
-        in result.output
-    )
-    assert f"filing period ends on {date(_YEAR, 3, 31).isoformat()}" in result.output
+    assert "profile_refusal\tModelo 303 2026 1T is before the profile activity-start date 2026-05-01" in result.output
+    assert "filing period ends on 2026-03-31" in result.output
     assert "pre-activity period" in result.output
     assert "profile_refusal_action\t" not in result.output
 
@@ -388,9 +375,9 @@ def test_m210_work_create_refuses_legacy_non_eea_irnr_missing_representante() ->
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "210",
-            "--year", str(_YEAR),
+            "--year", "2025",
             "--period", "EVENT-1",
-            "--revision", str(revision_covering("210", _YEAR).id),
+            "--revision", "2025",
         ],
     )  # fmt: skip
 
@@ -425,7 +412,7 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
             "activities.description": "design",
             "taxpayer_type.fiscal_residency": "non_resident_irnr",
             "taxpayer_type.country_of_fiscal_residence": "FR",
-            "censo.activity_start_date": date(_YEAR, 7, 15).isoformat(),
+            "censo.activity_start_date": "2026-07-15",
         },
     )
 
@@ -434,9 +421,9 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", Modelo("130").value,
-            "--year", str(_YEAR),
+            "--year", "2026",
             "--period", "2T",
-            "--revision", _M130_REVISION,
+            "--revision", "2019-y-siguientes",
         ],
     )  # fmt: skip
 
@@ -473,8 +460,8 @@ def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> 
             "--format", "json",
             "app", "modelo", "readiness",
             "--modelo", "349",
-            "--revision-id", _M349_REVISION,
-            "--year", str(_YEAR),
+            "--revision-id", "2020-y-siguientes",
+            "--year", "2026",
             "--period", "1T",
         ],
     )  # fmt: skip
@@ -493,9 +480,9 @@ def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> 
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "349",
-            "--year", str(_YEAR),
+            "--year", "2026",
             "--period", "1T",
-            "--revision", _M349_REVISION,
+            "--revision", "2020-y-siguientes",
         ],
     )  # fmt: skip
 
@@ -517,8 +504,8 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
             "--format", "json",
             "app", "modelo", "readiness",
             "--modelo", "200",
-            "--revision-id", str(published_snapshot("200", filing_year=_YEAR, period="0A").revision.id),
-            "--year", str(_YEAR),
+            "--revision-id", str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
+            "--year", "2026",
             "--period", "0A",
         ],
     )  # fmt: skip
@@ -536,9 +523,9 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "200",
-            "--year", str(_YEAR),
+            "--year", "2026",
             "--period", "0A",
-            "--revision", str(published_snapshot("200", filing_year=_YEAR, period="0A").revision.id),
+            "--revision", str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
         ],
     )  # fmt: skip
 
@@ -554,9 +541,9 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "200",
-            "--year", str(_YEAR),
+            "--year", "2026",
             "--period", "0A",
-            "--revision", str(published_snapshot("200", filing_year=_YEAR, period="0A").revision.id),
+            "--revision", str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
             "--allow-not-applicable",
         ],
     )  # fmt: skip
@@ -573,16 +560,16 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
 
 
 def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
-    create_modelo_operator_profile(activity_start_date=date(_YEAR, 7, 15).isoformat())
+    create_modelo_operator_profile(activity_start_date="2026-07-15")
 
     result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", Modelo("130").value,
-            "--year", str(_YEAR),
+            "--year", "2026",
             "--period", "2T",
-            "--revision", _M130_REVISION,
+            "--revision", "2019-y-siguientes",
         ],
     )  # fmt: skip
 
@@ -591,10 +578,10 @@ def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
     assert payload["status"] == "error"
     assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
     message = payload["error"]["message"]
-    assert f"Modelo {Modelo('130').value} 2T {_YEAR} is before" in message
+    assert f"Modelo {Modelo('130').value} 2T 2026 is before" in message
     assert "pre-activity period" in message
-    assert date(_YEAR, 7, 15).isoformat() in message
-    assert date(_YEAR, 6, 30).isoformat() in message
+    assert "2026-07-15" in message
+    assert "2026-06-30" in message
     assert "Traceback" not in result.output
 
     listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])

@@ -25,8 +25,8 @@ def _window(start: str, end: str) -> ValidityWindow:
 @pytest.mark.parametrize(
     "payload",
     [
-        pytest.param({"valid_to": date(1985, 12, 31)}, id="start-omitted"),
-        pytest.param({"valid_from": date(1985, 1, 1)}, id="end-omitted"),
+        pytest.param({"valid_to": date(2025, 12, 31)}, id="start-omitted"),
+        pytest.param({"valid_from": date(2025, 1, 1)}, id="end-omitted"),
         pytest.param({}, id="both-omitted"),
     ],
 )
@@ -43,64 +43,64 @@ def test_an_omitted_bound_is_refused_rather_than_defaulted(payload: dict[str, da
 
 def test_an_inverted_span_is_refused_where_it_is_written() -> None:
     with pytest.raises(ValidationError, match="ends before it starts"):
-        _window("1985-12-31", "1985-01-01")
+        _window("2025-12-31", "2025-01-01")
 
 
 def test_a_single_day_span_is_legal() -> None:
-    window = _window("1985-06-01", "1985-06-01")
+    window = _window("2025-06-01", "2025-06-01")
 
-    assert window.covers(date(1985, 6, 1))
-    assert window.years() == (1985,)
+    assert window.covers(date(2025, 6, 1))
+    assert window.years() == (2025,)
 
 
 def test_the_window_is_frozen_and_forbids_extra_fields() -> None:
-    window = _window("1985-01-01", "1985-12-31")
+    window = _window("2025-01-01", "2025-12-31")
 
     with pytest.raises(ValidationError):
-        window.valid_from = date(1984, 1, 1)
+        window.valid_from = date(2024, 1, 1)
 
     with pytest.raises(ValidationError):
         ValidityWindow.model_validate(
-            {"valid_from": date(1985, 1, 1), "valid_to": date(1985, 12, 31), "note": "x"},
+            {"valid_from": date(2025, 1, 1), "valid_to": date(2025, 12, 31), "note": "x"},
         )
 
 
 @pytest.mark.parametrize(
     ("moment", "expected"),
     [
-        pytest.param("1984-12-31", False, id="day-before"),
-        pytest.param("1985-01-01", True, id="first-day-inclusive"),
-        pytest.param("1985-12-31", True, id="last-day-inclusive"),
-        pytest.param("1986-01-01", False, id="day-after"),
+        pytest.param("2024-12-31", False, id="day-before"),
+        pytest.param("2025-01-01", True, id="first-day-inclusive"),
+        pytest.param("2025-12-31", True, id="last-day-inclusive"),
+        pytest.param("2026-01-01", False, id="day-after"),
     ],
 )
 def test_coverage_is_closed_at_both_ends(moment: str, expected: bool) -> None:
-    assert _window("1985-01-01", "1985-12-31").covers(date.fromisoformat(moment)) is expected
+    assert _window("2025-01-01", "2025-12-31").covers(date.fromisoformat(moment)) is expected
 
 
 def test_a_year_is_covered_when_the_span_touches_any_part_of_it() -> None:
     """A provision effective mid-year is in force for that whole filing year.
 
-    Containment would be the wrong test: it would report 1981 uncovered for a
-    provision that took effect on 1 July 1981 and is still in force, which is a
+    Containment would be the wrong test: it would report 2021 uncovered for a
+    provision that took effect on 1 July 2021 and is still in force, which is a
     statement about the calendar rather than about the law.
     """
-    mid_year_start = _window("1981-07-01", "1986-12-31")
+    mid_year_start = _window("2021-07-01", "2026-12-31")
 
-    assert mid_year_start.covers_year(1981)
-    assert mid_year_start.covers_year(1986)
-    assert not mid_year_start.covers_year(1980)
-    assert not mid_year_start.covers_year(1987)
+    assert mid_year_start.covers_year(2021)
+    assert mid_year_start.covers_year(2026)
+    assert not mid_year_start.covers_year(2020)
+    assert not mid_year_start.covers_year(2027)
 
 
 def test_years_enumerates_every_touched_year_ascending() -> None:
-    assert _window("1982-03-04", "1985-02-01").years() == (1982, 1983, 1984, 1985)
+    assert _window("2022-03-04", "2025-02-01").years() == (2022, 2023, 2024, 2025)
 
 
 def test_union_over_windows_collects_every_touched_year() -> None:
-    covered = years_covered_by_any([_window("1982-01-01", "1982-12-31"), _window("1985-01-01", "1986-12-31")])
+    covered = years_covered_by_any([_window("2022-01-01", "2022-12-31"), _window("2025-01-01", "2026-12-31")])
 
-    assert covered == frozenset({1982, 1985, 1986})
+    assert covered == frozenset({2022, 2025, 2026})
 
 
 def test_union_over_no_windows_is_empty() -> None:
@@ -109,15 +109,15 @@ def test_union_over_no_windows_is_empty() -> None:
 
 def test_a_corpus_year_needs_every_record_to_carry_evidence() -> None:
     """One record whose evidence stops early stops the corpus for that year."""
-    wide = [_window("1982-01-01", "1986-12-31")]
-    narrow = [_window("1985-01-01", "1985-12-31")]
+    wide = [_window("2022-01-01", "2026-12-31")]
+    narrow = [_window("2025-01-01", "2025-12-31")]
 
-    assert years_covered_by_every_group([wide, wide]) == frozenset({1982, 1983, 1984, 1985, 1986})
-    assert years_covered_by_every_group([wide, narrow]) == frozenset({1985})
+    assert years_covered_by_every_group([wide, wide]) == frozenset({2022, 2023, 2024, 2025, 2026})
+    assert years_covered_by_every_group([wide, narrow]) == frozenset({2025})
 
 
 def test_a_record_carrying_no_window_is_grounded_nowhere() -> None:
-    assert years_covered_by_every_group([[_window("1982-01-01", "1986-12-31")], []]) == frozenset()
+    assert years_covered_by_every_group([[_window("2022-01-01", "2026-12-31")], []]) == frozenset()
 
 
 def test_no_groups_yields_nothing_rather_than_everything() -> None:
@@ -127,6 +127,6 @@ def test_no_groups_yields_nothing_rather_than_everything() -> None:
 
 def test_a_record_may_carry_several_windows_and_their_union_counts() -> None:
     """Two disjoint evidence spans on one record cover both, and not the gap."""
-    split = [_window("1982-01-01", "1982-12-31"), _window("1985-01-01", "1985-12-31")]
+    split = [_window("2022-01-01", "2022-12-31"), _window("2025-01-01", "2025-12-31")]
 
-    assert years_covered_by_every_group([split]) == frozenset({1982, 1985})
+    assert years_covered_by_every_group([split]) == frozenset({2022, 2025})

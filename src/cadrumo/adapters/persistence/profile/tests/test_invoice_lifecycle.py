@@ -32,7 +32,6 @@ from .....application.invoices.catalogue_lifecycle import (
     update_catalogue_invoice,
 )
 from .....application.invoices.catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.enums import PaymentStatus, resolve_iva_rate_slot
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.invoices.models import Invoice, InvoiceLine
@@ -46,8 +45,6 @@ from ..catalogue_creation import (
 from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
-
-_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -69,7 +66,7 @@ def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
         counterparty_tax_id=_COUNTERPARTY_CIF,
         counterparty_country="ES",
         invoice_number=invoice_number,
-        issued_at=date(_YEAR, 3, 10),
+        issued_at=date(2026, 3, 10),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -109,7 +106,7 @@ def _two_invoices_sharing_a_prefix() -> tuple[str, list[Invoice]]:
     members: list[Invoice] = []
     seen: dict[str, Invoice] = {}
     for index in range(64):
-        invoice = _build(f"{_YEAR}-{index:04d}")
+        invoice = _build(f"2026-{index:04d}")
         head = invoice.invoice_id[0]
         members.append(invoice)
         if head in seen:
@@ -128,8 +125,8 @@ def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path: Path) -> Non
                 counterparty_name="Papeleria Sol SL",
                 counterparty_tax_id=_COUNTERPARTY_CIF,
                 counterparty_country="ES",
-                invoice_number=f"{_YEAR}-0142",
-                issued_at=date(_YEAR, 3, 10),
+                invoice_number="2026-0142",
+                issued_at=date(2026, 3, 10),
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
@@ -165,7 +162,7 @@ def test_remove_catalogue_invoice_refuses_linked_record(tmp_path: Path) -> None:
     """
     transaction_id = "a" * 64  # transaction ids are 64-char lowercase hex digests
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        linked_invoice = _build(f"{_YEAR}-0142", linked=(transaction_id,))
+        linked_invoice = _build("2026-0142", linked=(transaction_id,))
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         repository.save(build_invoice_catalogue([linked_invoice]))
 
@@ -194,8 +191,8 @@ def _linked_invoice(bucket_id: str):
     from .....domain.invoices.models import derive_invoice_id
 
     kind = InvoiceKind.RECEIVED
-    number = f"UPD-{_YEAR}-001"
-    issued = _date(_YEAR, 6, 1)
+    number = "UPD-2026-001"
+    issued = _date(2026, 6, 1)
     tax_id = "B00010157"
     return Invoice(
         invoice_id=derive_invoice_id(
@@ -396,7 +393,7 @@ def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> No
     from .....core.errors.error_codes import resolve_error_message
 
     transaction_id = "b" * 64
-    catalogue = build_invoice_catalogue([_build(f"{_YEAR}-0142")])
+    catalogue = build_invoice_catalogue([_build("2026-0142")])
     shared_char, members = _two_invoices_sharing_a_prefix()
 
     raised: list[InvoiceLookupRefusedError | InvoiceValidationError] = []
@@ -420,7 +417,7 @@ def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> No
     raised.append(ambiguous.value)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        linked_invoice = _build(f"{_YEAR}-0143", linked=(transaction_id,))
+        linked_invoice = _build("2026-0143", linked=(transaction_id,))
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         repository.save(build_invoice_catalogue([linked_invoice]))
 

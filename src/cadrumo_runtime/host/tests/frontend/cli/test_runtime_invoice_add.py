@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
-from datetime import date
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -27,7 +26,6 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
@@ -40,8 +38,6 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 from ...native_profile_facts import native_general_iva_facts
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -200,7 +196,7 @@ def _add_arguments(*, number: str) -> tuple[str, ...]:
         "--invoice-number",
         number,
         "--invoice-date",
-        date(_YEAR, 3, 10).isoformat(),
+        "2026-03-10",
         "--country-code",
         "ES",
         "--taxable-base",

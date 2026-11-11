@@ -19,7 +19,6 @@ from pydantic import ValidationError
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -39,11 +38,8 @@ _C07: CasillaId = validated_casilla_id("07")
 _C08: CasillaId = validated_casilla_id("08")
 _C09: CasillaId = validated_casilla_id("09")
 _BINDING = "modelo-130-pagos-fraccionados-anteriores"
-_EXERCISE = filing_year_envelope().horizon
-_SNAPSHOT_REF = RegistrySnapshotRef(
-    modelo="130", revision_id=str(revision_covering("130", _EXERCISE).id), modelo_year=_EXERCISE, period="1T"
-)
-_CREATED = datetime(1980, 4, 1, 9, 0, tzinfo=UTC)
+_SNAPSHOT_REF = RegistrySnapshotRef(modelo="130", revision_id="2019-y-siguientes", modelo_year=2026, period="1T")
+_CREATED = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)
 
 
 def _revision_id(operator_layer: CalculationOperatorLayer | None) -> str:

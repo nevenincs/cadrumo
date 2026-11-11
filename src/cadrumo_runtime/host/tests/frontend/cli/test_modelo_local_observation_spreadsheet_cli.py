@@ -22,7 +22,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
@@ -30,10 +29,6 @@ from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-# The newest authored Modelo 100 exercise consumes the prior exercise's observation.
-_YEAR = newest_authored_edition("100")
-_PRIOR_YEAR = _YEAR - 1
 
 
 @pytest.fixture
@@ -56,7 +51,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
     (``no-silent-under-declaration``) while still
     feeding the ``previous_filing`` calculation-prefill resolver.
     """
-    sheet = tmp_path / f"m100-{_PRIOR_YEAR}.csv"
+    sheet = tmp_path / "m100-2024.csv"
     sheet.write_text(
         "casilla_code,value\n1384,0\n1387,0\n1390,0\n1391,0\n0224,0\n1479,0\n1553,0\n1577,0\n",
         encoding="utf-8",
@@ -75,7 +70,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
             "--modelo",
             "100",
             "--year",
-            str(_PRIOR_YEAR),
+            "2024",
             "--period",
             "0A",
             "--by",
@@ -90,7 +85,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
     assert envelope["status"] == "warning"
     payload = unwrap_schema_envelope(result.output)
     assert payload["operation"] == "modelo.filing_record.observe_local"
-    assert payload["observation_key"] == f"100:{_PRIOR_YEAR}:0A"
+    assert payload["observation_key"] == "100:2024:0A"
     assert payload["source_kind"] == "operator_manual"
     assert payload["official_evidence"] is False
     assert payload["filing_record_created"] is False
@@ -114,13 +109,13 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
 
     with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()
-        observed = repository.load_observation("100", Period.from_year_and_code(_PRIOR_YEAR, "0A"))
+        observed = repository.load_observation("100", Period.from_year_and_code(2024, "0A"))
         assert observed is not None
         # non-official regardless of --set vs --file transport
         assert observed.source_kind == "operator_manual"
         assert observed.observation.casilla_values["1391"] == Decimal("0")
 
-        m100_snapshot = published_snapshot("100", filing_year=_YEAR, period="0A")
+        m100_snapshot = published_snapshot("100", filing_year=2025, period="0A")
         m100_prefill = resolve_bindings_from_local_store(
             m100_snapshot,
             repository=repository,
@@ -141,7 +136,7 @@ def test_observe_local_from_xlsx_spreadsheet_persists_values(
     tmp_path: Path,
 ) -> None:
     """An XLSX spreadsheet of casilla_code,value rows imports identically to CSV."""
-    sheet = tmp_path / f"m100-{_PRIOR_YEAR}.xlsx"
+    sheet = tmp_path / "m100-2024.xlsx"
     workbook = Workbook()
     worksheet = workbook.active
     assert worksheet is not None
@@ -163,7 +158,7 @@ def test_observe_local_from_xlsx_spreadsheet_persists_values(
             "--modelo",
             "100",
             "--year",
-            str(_PRIOR_YEAR),
+            "2023",
             "--period",
             "0A",
             "--by",
@@ -183,7 +178,7 @@ def test_observe_local_set_overrides_file_value_for_same_casilla(
     tmp_path: Path,
 ) -> None:
     """A ``--set`` flag for a casilla already present in ``--file`` wins."""
-    sheet = tmp_path / f"m100-{_PRIOR_YEAR}.csv"
+    sheet = tmp_path / "m100-2024.csv"
     sheet.write_text("casilla_code,value\n1391,0\n", encoding="utf-8")
 
     result = invoke_cached_cli(
@@ -199,7 +194,7 @@ def test_observe_local_set_overrides_file_value_for_same_casilla(
             "--modelo",
             "100",
             "--year",
-            str(_PRIOR_YEAR),
+            "2022",
             "--period",
             "0A",
             "--by",
@@ -236,7 +231,7 @@ def test_observe_local_rejects_invalid_casilla_code_in_spreadsheet(
             "--modelo",
             "100",
             "--year",
-            str(_PRIOR_YEAR),
+            "2021",
             "--period",
             "0A",
             "--file",
@@ -268,7 +263,7 @@ def test_observe_local_rejects_non_numeric_spreadsheet_value(
             "--modelo",
             "100",
             "--year",
-            str(_PRIOR_YEAR),
+            "2020",
             "--period",
             "0A",
             "--file",
@@ -303,7 +298,7 @@ def test_observe_local_requires_set_or_file(
             "--modelo",
             "100",
             "--year",
-            str(_PRIOR_YEAR),
+            "2024",
             "--period",
             "0A",
         ],

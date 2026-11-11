@@ -40,27 +40,23 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import ObligationStatus
 from ..action_rendering import resolved_precondition_action_json_cell
 from ..common import resolve_cli_precondition_action
 from ..modelo_work_runs_cli import workflow_run_payload, workflow_run_tab_line
 
-_YEAR = filing_year_envelope().horizon
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_T = datetime(_YEAR, 4, 12, 9, 0, tzinfo=UTC)
+_T = datetime(2026, 4, 12, 9, 0, tzinfo=UTC)
 _RAW_COMMAND_PATTERN = re.compile(r"(?i)(?:^|[\s`'\"])(?:aeat)\s+")
 
 
 def _obligation() -> WorkflowObligationFacts:
     return WorkflowObligationFacts(
         modelo=Modelo("130"),
-        period=Period.from_year_and_code(_YEAR, "1T"),
-        opens_on=date(_YEAR, 4, 1),
-        closes_on=date(_YEAR, 4, 20),
+        period=Period.from_year_and_code(2026, "1T"),
+        opens_on=date(2026, 4, 1),
+        closes_on=date(2026, 4, 20),
         status=ObligationStatus.UPCOMING,
     )
 

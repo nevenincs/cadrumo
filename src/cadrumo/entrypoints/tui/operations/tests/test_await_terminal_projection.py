@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _OPERATION_ID = "b" * 64
 _SUBJECT = profile_operation_subject(str(UUID("5aa00000-0000-4000-8000-0000000000aa")))
-_NOW = datetime(1980, 9, 29, tzinfo=UTC)
+_NOW = datetime(2026, 9, 29, tzinfo=UTC)
 _REQUEST_SCHEMA = OperationSchemaIdentityV1.from_model(
     schema_id=f"{INVOICE_ADD_OPERATION_DEFINITION_ID}.request", schema_version=1, model_type=InvoiceAddRequest
 )

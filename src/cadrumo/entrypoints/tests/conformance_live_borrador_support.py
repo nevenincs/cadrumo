@@ -41,7 +41,6 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionSurface
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ...tests.fixtures.borrador import generate as borrador_fixtures
 from ...tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years
@@ -54,13 +53,10 @@ from .conformance_family_contract import (
     RegisteredExecutorConformanceCase,
 )
 
-_YEAR = filing_year_envelope().horizon
-
-
 _ANNUAL = "0A"
 _SOURCE_URL = "file-import:sha256:" + "a" * 64
-_FIRST_CAPTURED_AT = datetime(_YEAR, 4, 1, 9, tzinfo=UTC)
-_SECOND_CAPTURED_AT = datetime(_YEAR, 4, 2, 9, tzinfo=UTC)
+_FIRST_CAPTURED_AT = datetime(2026, 4, 1, 9, tzinfo=UTC)
+_SECOND_CAPTURED_AT = datetime(2026, 4, 2, 9, tzinfo=UTC)
 _CERTIFICATE = "renta-retencion-soportada-trabajo"
 _FIRST_VALUES = {_CERTIFICATE: Decimal("100.00")}
 _SECOND_VALUES = {_CERTIFICATE: Decimal("1234.56")}
@@ -341,7 +337,7 @@ def _retained_borrador_prepare(context: ConformanceFamilyContext) -> Conformance
             verify=verify,
         )
     bindings = {_CERTIFICATE: Decimal("1720.25")}
-    captured = datetime(_YEAR, 4, 1, tzinfo=UTC)
+    captured = datetime(2026, 4, 1, tzinfo=UTC)
     snapshot = service.capture(
         filing_year=year,
         period=period,

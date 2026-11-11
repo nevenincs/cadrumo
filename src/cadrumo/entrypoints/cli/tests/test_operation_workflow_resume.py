@@ -28,21 +28,17 @@ from ....application.workflow.run_models import WorkflowObligationFacts
 from ....core.modelo import Modelo
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import ObligationStatus
 from .. import modelo_work_runs_cli
 from .. import operation_workflow_resume as bridge
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _RUN_ID = "b" * 16
 _OPERATION_ID = "a" * 64
-_NOW = datetime(_YEAR + 1, 4, 12, 9, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_NOW = datetime(2026, 4, 12, 9, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 def _completion() -> bridge.WorkflowResumeCompletion:
@@ -50,8 +46,8 @@ def _completion() -> bridge.WorkflowResumeCompletion:
         WorkflowObligationFacts(
             modelo=Modelo("303"),
             period=_PERIOD,
-            opens_on=date(_YEAR, 4, 1),
-            closes_on=date(_YEAR, 4, 20),
+            opens_on=date(2025, 4, 1),
+            closes_on=date(2025, 4, 20),
             status=ObligationStatus.UPCOMING,
         )
     )
@@ -60,7 +56,7 @@ def _completion() -> bridge.WorkflowResumeCompletion:
         source="workflow_run_id",
         modelo="303",
         period=PublicPeriod.from_period(_PERIOD),
-        filing_year=_YEAR,
+        filing_year=2025,
         work_unit_id=None,
         short_work_unit_id=None,
         calculation_revision_id=None,
@@ -94,7 +90,7 @@ def _completion() -> bridge.WorkflowResumeCompletion:
             source="workflow_run_id",
             modelo="303",
             period=_PERIOD,
-            filing_year=_YEAR,
+            filing_year=2025,
         ),
     )
 

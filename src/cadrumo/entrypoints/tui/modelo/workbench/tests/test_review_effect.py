@@ -27,7 +27,6 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......core.period import Period
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..review import EditReviewScreen, ReviewDecision, change_line
@@ -37,7 +36,6 @@ from .workbench_fixture import status_line_of
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _LANGUAGES = tuple(OutputLanguage)
-_YEAR = filing_year_envelope().horizon
 
 
 def _field(
@@ -79,8 +77,8 @@ def _effect(line: str) -> str:
 
 
 def test_a_replaced_value_names_the_place_it_came_from() -> None:
-    q4 = Period.from_year_and_code(_YEAR, "4T")
-    q3 = Period.from_year_and_code(_YEAR, "3T")
+    q4 = Period.from_year_and_code(2025, "4T")
+    q3 = Period.from_year_and_code(2025, "3T")
     imported = ModeloFormOrigin.IMPORTED
 
     with override_settings(cadrumo_output_language="en"):
@@ -94,14 +92,14 @@ def test_a_replaced_value_names_the_place_it_came_from() -> None:
         unnamed = _staged(_field(imported, None))
 
         assert _effect(change_line(records)) == "replaces the value from your records"
-        assert _effect(change_line(carried)) == f"replaces the value from modelo 130, 4th quarter {_YEAR}"
+        assert _effect(change_line(carried)) == "replaces the value from modelo 130, 4th quarter 2025"
         assert _effect(change_line(two_carried)) == "replaces the value from an earlier declaration"
         assert _effect(change_line(profile)) == "replaces the value from your profile"
         assert _effect(change_line(calculated)) == "replaces the calculated value"
         assert _effect(change_line(unnamed)) == "replaces the value from its source"
     with override_settings(cadrumo_output_language="es"):
         carried_es = _staged(_field(imported, _earlier(q4)), OutputLanguage.ES)
-        assert _effect(change_line(carried_es)) == f"sustituye el valor del modelo 130, 4.º trimestre {_YEAR}"
+        assert _effect(change_line(carried_es)) == "sustituye el valor del modelo 130, 4.º trimestre 2025"
 
 
 @pytest.mark.parametrize("language", _LANGUAGES, ids=[item.value for item in _LANGUAGES])

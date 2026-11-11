@@ -13,7 +13,6 @@ from ....application.overview.calendar_evidence import NO_AEAT_HISTORY_NOTICE_CO
 from ....application.overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..overview_rendering import (
     overview_agenda_output,
     overview_backlog_output,
@@ -27,9 +26,6 @@ from ..overview_results import (
     OverviewCalendarProfilePayload,
     OverviewCalendarResult,
 )
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -51,9 +47,9 @@ def _coverage_payload(**overrides: object) -> dict[str, object]:
 
 def _calendar_payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
-        "range": {"from_date": date(_YEAR, 1, 1).isoformat(), "to_date": date(_YEAR, 3, 31).isoformat()},
+        "range": {"from_date": "2026-01-01", "to_date": "2026-03-31"},
         "entries": [],
-        "generated_at": datetime(_YEAR, 1, 1, tzinfo=UTC).isoformat().replace("+00:00", "Z"),
+        "generated_at": "2026-01-01T00:00:00Z",
         "warnings": [],
         "completeness": {},
         "taxpayer_model_declared": True,
@@ -93,7 +89,7 @@ def test_single_calendar_and_derived_surfaces_require_coverage() -> None:
 
 def test_calendar_rendering_round_trips_the_canonical_coverage_partition() -> None:
     """The renderer retains every canonical coverage bucket in its JSON result."""
-    calendar_range = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 3, 31))
+    calendar_range = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 3, 31))
     coverage = ObligationCoverageReport(
         surfaced=("303",),
         confidently_excluded=("100",),
@@ -107,9 +103,9 @@ def test_calendar_rendering_round_trips_the_canonical_coverage_partition() -> No
     )
     calendar = OverviewCalendar(
         range=calendar_range,
-        evaluated_on=date(_YEAR, 1, 1),
+        evaluated_on=date(2026, 1, 1),
         entries=(),
-        generated_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+        generated_at=datetime(2026, 1, 1, tzinfo=UTC),
         coverage=coverage,
     )
 
@@ -117,7 +113,7 @@ def test_calendar_rendering_round_trips_the_canonical_coverage_partition() -> No
 
     assert rendered.coverage is not None
     assert rendered.coverage.model_dump(mode="json") == coverage.model_dump(mode="json")
-    assert rendered.generated_at == datetime(_YEAR, 1, 1, tzinfo=UTC).isoformat()
+    assert rendered.generated_at == "2026-01-01T00:00:00+00:00"
     assert rendered.completeness is not None
     assert rendered.taxpayer_model_declared is True
     assert rendered.incomplete_reason is None
@@ -152,12 +148,12 @@ def test_coverage_notices_bind_one_modelo_per_explanation_action() -> None:
 
 def test_calendar_projection_resolves_the_history_pull_action() -> None:
     """The application history finding becomes executable only at the CLI boundary."""
-    calendar_range = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 3, 31))
+    calendar_range = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 3, 31))
     calendar = OverviewCalendar(
         range=calendar_range,
-        evaluated_on=date(_YEAR, 1, 1),
+        evaluated_on=date(2026, 1, 1),
         entries=(),
-        generated_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+        generated_at=datetime(2026, 1, 1, tzinfo=UTC),
     )
     application_notice = Notice(
         severity=NoticeSeverity.INFO,
@@ -178,15 +174,15 @@ def test_calendar_projection_resolves_the_history_pull_action() -> None:
 
 def test_every_calendar_derived_renderer_retains_coverage() -> None:
     """Calendar profiles, agenda, and backlog preserve the same coverage JSON."""
-    calendar_range = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 3, 31))
+    calendar_range = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 3, 31))
     coverage = ObligationCoverageReport(
         advised=(AdvisedObligation(modelo="190", reason=CoverageAdviceReason.REGISTRY_UNMODELED),),
     )
     calendar = OverviewCalendar(
         range=calendar_range,
-        evaluated_on=date(_YEAR, 1, 1),
+        evaluated_on=date(2026, 1, 1),
         entries=(),
-        generated_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+        generated_at=datetime(2026, 1, 1, tzinfo=UTC),
         coverage=coverage,
     )
     profile, _, profile_notices = overview_calendar_profile_output(
@@ -196,18 +192,18 @@ def test_every_calendar_derived_renderer_retains_coverage() -> None:
     )
     agenda, _, _ = overview_agenda_output(
         OverviewAgenda(
-            as_of=date(_YEAR, 1, 1),
+            as_of=date(2026, 1, 1),
             horizon_days=14,
-            generated_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+            generated_at=datetime(2026, 1, 1, tzinfo=UTC),
             coverage=coverage,
         ),
     )
     backlog, _, _ = overview_backlog_output(
         OverviewBacklog(
             range=calendar_range,
-            as_of=date(_YEAR, 1, 1),
+            as_of=date(2026, 1, 1),
             late_count=0,
-            generated_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+            generated_at=datetime(2026, 1, 1, tzinfo=UTC),
             coverage=coverage,
         ),
         work_units_notice=None,

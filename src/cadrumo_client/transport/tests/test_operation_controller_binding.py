@@ -20,7 +20,6 @@ from cadrumo.application.operations.frontend_requests import OperationSubmission
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import InvoiceKind
 
 from ...contracts.contracts import RefusalCode, RefusalError
@@ -128,7 +127,7 @@ def _submit(client: _RecordingClient, deadline: float | None) -> OperationContro
         counterparty_name="Synthetic counterparty",
         counterparty_country="ES",
         invoice_number="SYNTHETIC-1",
-        issued_at=date(filing_year_envelope().horizon, 1, 1),
+        issued_at=date(2026, 1, 1),
         taxable_base=PublicDecimal(decimal="0"),
         currency="EUR",
     )

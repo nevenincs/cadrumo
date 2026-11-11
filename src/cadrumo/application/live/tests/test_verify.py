@@ -44,7 +44,7 @@ def _record_de1(svc: VerifyService, verdict: IdentityCheckVerdict, checked_at: d
 
 def _service_with_one_nif_iva_and_one_tgvi_observation() -> VerifyService:
     svc = _service()
-    ts = datetime(1980, 3, 15, tzinfo=UTC)
+    ts = datetime(2025, 3, 15, tzinfo=UTC)
     _record_de1(svc, IdentityCheckVerdict.VALID, ts)
     svc.record(
         bucket_id=_BUCKET_ID,
@@ -64,7 +64,7 @@ class TestRecord:
             surface=VerifySurface.NIF_IVA,
             nif="DE123456789",
             verdict=IdentityCheckVerdict.VALID,
-            checked_at=datetime(1980, 3, 15, 10, 0, tzinfo=UTC),
+            checked_at=datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
         )
         assert len(obs.observation_id) == 64
         assert obs.surface is VerifySurface.NIF_IVA
@@ -81,7 +81,7 @@ class TestRecord:
             nif="DE1",
             verdict=IdentityCheckVerdict.VALID,
             expected=IdentityCheckVerdict.VALID,
-            checked_at=datetime(1980, 3, 15, tzinfo=UTC),
+            checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
         miss = svc.record(
             bucket_id=_BUCKET_ID,
@@ -89,7 +89,7 @@ class TestRecord:
             nif="DE2",
             verdict=IdentityCheckVerdict.INVALID,
             expected=IdentityCheckVerdict.VALID,
-            checked_at=datetime(1980, 3, 15, tzinfo=UTC),
+            checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
         assert match.matched_expectation is True
         assert miss.matched_expectation is False
@@ -98,7 +98,7 @@ class TestRecord:
         self,
     ) -> None:
         svc = _service()
-        ts = datetime(1980, 3, 15, 10, 0, tzinfo=UTC)
+        ts = datetime(2025, 3, 15, 10, 0, tzinfo=UTC)
         a = _record_de1(svc, IdentityCheckVerdict.VALID, ts)
         b = _record_de1(svc, IdentityCheckVerdict.VALID, ts)
         assert a.observation_id == b.observation_id
@@ -108,7 +108,7 @@ class TestRecord:
         self,
     ) -> None:
         svc = _service()
-        ts = datetime(1980, 3, 15, 10, 0, tzinfo=UTC)
+        ts = datetime(2025, 3, 15, 10, 0, tzinfo=UTC)
         a = _record_de1(svc, IdentityCheckVerdict.VALID, ts)
         b = _record_de1(svc, IdentityCheckVerdict.INVALID, ts)
         assert a.observation_id != b.observation_id
@@ -131,7 +131,7 @@ class TestListObservations:
 
     def test_list_filters_by_nif(self) -> None:
         svc = _service()
-        ts = datetime(1980, 3, 15, tzinfo=UTC)
+        ts = datetime(2025, 3, 15, tzinfo=UTC)
         svc.record(
             bucket_id=_BUCKET_ID,
             surface=VerifySurface.NIF_IVA,
@@ -159,7 +159,7 @@ class TestShow:
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
             verdict=IdentityCheckVerdict.VALID,
-            checked_at=datetime(1980, 3, 15, tzinfo=UTC),
+            checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
         full = svc.show(bucket_id=_BUCKET_ID, observation_id=obs.observation_id)
         prefix = svc.show(bucket_id=_BUCKET_ID, observation_id=obs.observation_id[:8])
@@ -183,7 +183,7 @@ class TestShow:
                 surface=VerifySurface.NIF_IVA,
                 nif=f"DE{index:011d}",
                 verdict=IdentityCheckVerdict.VALID,
-                checked_at=datetime(1980, 3, 15, 10, index, tzinfo=UTC),
+                checked_at=datetime(2025, 3, 15, 10, index, tzinfo=UTC),
             )
             by_prefix.setdefault(obs.observation_id[:1], []).append(obs.observation_id)
 
@@ -205,14 +205,14 @@ class TestLatestForNif:
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
             verdict=IdentityCheckVerdict.VALID,
-            checked_at=datetime(1980, 1, 1, tzinfo=UTC),
+            checked_at=datetime(2025, 1, 1, tzinfo=UTC),
         )
         newer = svc.record(
             bucket_id=_BUCKET_ID,
             surface=VerifySurface.NIF_IVA,
             nif="DE1",
             verdict=IdentityCheckVerdict.INVALID,
-            checked_at=datetime(1980, 6, 1, tzinfo=UTC),
+            checked_at=datetime(2025, 6, 1, tzinfo=UTC),
         )
         latest = svc.latest_for_nif(
             bucket_id=_BUCKET_ID,
@@ -234,7 +234,7 @@ class TestLatestForNif:
 
 class TestBucketIsolation:
     def test_observations_are_bucket_scoped(self) -> None:
-        ts = datetime(1980, 3, 15, tzinfo=UTC)
+        ts = datetime(2025, 3, 15, tzinfo=UTC)
         persistence = InMemoryVerifyObservationPersistence()
         svc = VerifyService(persistence=persistence)
         svc.record(
@@ -285,8 +285,8 @@ class TestObservationIdentityAndInstantContracts:
             "surface": VerifySurface.NIF_IVA,
             "nif": "DE123456789",
             "verdict": "valid",
-            "checked_at": datetime(1980, 3, 15, 10, 0, tzinfo=UTC),
-            "persisted_at": datetime(1980, 3, 15, 11, 0, tzinfo=UTC),
+            "checked_at": datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
+            "persisted_at": datetime(2025, 3, 15, 11, 0, tzinfo=UTC),
         }
         base.update(overrides)
         return base
@@ -311,8 +311,8 @@ class TestObservationIdentityAndInstantContracts:
     @pytest.mark.parametrize(
         "instant",
         [
-            datetime(1980, 3, 15, 10, 0),
-            datetime(1980, 3, 15, 10, 0, tzinfo=timezone(timedelta(hours=1))),
+            datetime(2025, 3, 15, 10, 0),
+            datetime(2025, 3, 15, 10, 0, tzinfo=timezone(timedelta(hours=1))),
         ],
         ids=["naive", "offset-plus-one"],
     )
@@ -322,7 +322,7 @@ class TestObservationIdentityAndInstantContracts:
 
     def test_mixed_awareness_pair_is_refused(self) -> None:
         with pytest.raises(ValidationError):
-            VerifyObservation.model_validate(self._fields(persisted_at=datetime(1980, 3, 15, 11, 0)))
+            VerifyObservation.model_validate(self._fields(persisted_at=datetime(2025, 3, 15, 11, 0)))
 
     def test_derived_identity_round_trips_through_persistence(self) -> None:
         persistence = InMemoryVerifyObservationPersistence()
@@ -332,7 +332,7 @@ class TestObservationIdentityAndInstantContracts:
             surface=VerifySurface.TGVI,
             nif="ESB00015016",
             verdict=IdentityCheckVerdict.VALID,
-            checked_at=datetime(1980, 3, 15, 10, 0, tzinfo=UTC),
+            checked_at=datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
         )
 
         loaded = persistence.load(bucket_id=_BUCKET_ID, observation_id=recorded.observation_id)

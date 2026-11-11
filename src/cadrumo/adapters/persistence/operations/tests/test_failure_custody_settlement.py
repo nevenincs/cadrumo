@@ -70,13 +70,9 @@ from cadrumo.core.operations import (
 )
 from cadrumo.tests.log_records import delivered_records
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(_YEAR, 8, 26, 9, tzinfo=UTC)
+_NOW = datetime(2026, 8, 26, 9, tzinfo=UTC)
 _DEFINITION_ID = "operation.financial.operand.failure-custody"
 _OPERATION_ID = "4" * 64
 _DECLARATION = financial_operand_declaration()

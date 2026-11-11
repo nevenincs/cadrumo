@@ -17,7 +17,6 @@ from .....application.prorrata_register.service import (
 from .....application.prorrata_register.tests.provisional_override import record_aeat_autorizada
 from .....core.casilla_id import validated_casilla_id
 from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -27,8 +26,6 @@ from .modelo_303_filed_disposition import modelo_303_filed_disposition
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-_EXERCISE = filing_year_envelope().horizon
 
 _runtime_profile = bucket_scoped_runtime_profile_fixture("11961196-1196-4196-8196-119611961196")
 _PERCENTAGE = validated_casilla_id("iva.prorrata-porcentaje")
@@ -52,15 +49,15 @@ def _observation(
         {_PERCENTAGE: Decimal(percentage)}, source_locator=f"prorrata-race:{period}"
     )
     observation = registry_grounded_modelo_observation(
-        modelo="303", filing_year=_EXERCISE - 1, period=period, casilla_values=values
+        modelo="303", filing_year=2025, period=period, casilla_values=values
     )
-    revision = published_authority_operation().snapshot("303", filing_year=_EXERCISE - 1, period=period).revision.id
+    revision = published_authority_operation().snapshot("303", filing_year=2025, period=period).revision.id
     repository.save(
         repository.prepare_observation_envelope(
             observation,
             source_kind="aeat_sede_justificante",
             stamped_revision_id=str(revision),
-            captured_at=datetime(1980, 1, 10, hour, tzinfo=UTC),
+            captured_at=datetime(2026, 1, 10, hour, tzinfo=UTC),
             source_headers=headers,
             member_nif=member_nif,
         )
@@ -100,13 +97,11 @@ def test_new_monthly_source_invalidates_absent_row_and_recomputes_seed() -> None
     _observation("4T", "80", hour=10)
     repository = _RacingWholeSeedRepository(lambda: _observation("12", "90", hour=11))
 
-    result = _service(repository).seed_whole_carried(
-        _EXERCISE, observation_repository=CalculationObservationRepository()
-    )
+    result = _service(repository).seed_whole_carried(2026, observation_repository=CalculationObservationRepository())
 
     assert result.seed.source_period == "12"
     assert result.seed.entry.provisional_percentage == Decimal("90")
-    assert ProrrataRegisterRepository().load().entry_for(_EXERCISE) == result.seed.entry
+    assert ProrrataRegisterRepository().load().entry_for(2026) == result.seed.entry
 
 
 def test_concurrent_regulated_override_survives_target_revision_retry() -> None:
@@ -115,17 +110,17 @@ def test_concurrent_regulated_override_survives_target_revision_retry() -> None:
     repository = _RacingWholeSeedRepository(
         lambda: record_aeat_autorizada(
             _service(),
-            ejercicio=_EXERCISE,
+            ejercicio=2026,
             provisional_percentage=Decimal("55"),
-            authorisation_reference=f"AEAT-PRORRATA-RACE-{_EXERCISE}",
+            authorisation_reference="AEAT-PRORRATA-RACE-2026",
         )
     )
 
     with pytest.raises(ProrrataWholeSeedUnavailableError) as captured:
-        _service(repository).seed_whole_carried(_EXERCISE, observation_repository=CalculationObservationRepository())
+        _service(repository).seed_whole_carried(2026, observation_repository=CalculationObservationRepository())
 
     assert captured.value.reason == "regulated_override_standing"
-    standing = ProrrataRegisterRepository().load().entry_for(_EXERCISE)
+    standing = ProrrataRegisterRepository().load().entry_for(2026)
     assert standing is not None
     assert standing.provisional_percentage == Decimal("55")
     assert standing.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
@@ -136,10 +131,10 @@ def test_member_only_settlement_cannot_seed_whole_entity() -> None:
     _observation("4T", "80", hour=10, member_nif="12345678Z")
 
     with pytest.raises(ProrrataWholeSeedUnavailableError) as captured:
-        _service().seed_whole_carried(_EXERCISE, observation_repository=CalculationObservationRepository())
+        _service().seed_whole_carried(2026, observation_repository=CalculationObservationRepository())
 
     assert captured.value.reason == "source_absent"
-    assert ProrrataRegisterRepository().load().entry_for(_EXERCISE) is None
+    assert ProrrataRegisterRepository().load().entry_for(2026) is None
 
 
 def _sector_entry(year: int, *, provisional: str, definitive: str | None = None) -> ProrrataRegisterEntry:
@@ -164,7 +159,7 @@ def _sector_entry(year: int, *, provisional: str, definitive: str | None = None)
 
 def test_sector_carry_retry_uses_new_prior_definitive(monkeypatch: pytest.MonkeyPatch) -> None:
     """Sector carry derives inside CAS retry rather than retaining the first read."""
-    ProrrataRegisterRepository().upsert_entry(_sector_entry(_EXERCISE - 1, provisional="75", definitive="80"))
+    ProrrataRegisterRepository().upsert_entry(_sector_entry(2025, provisional="75", definitive="80"))
     repository = ProrrataRegisterRepository()
     original_mutate = repository._storage.mutate
     raced = False
@@ -174,23 +169,21 @@ def test_sector_carry_retry_uses_new_prior_definitive(monkeypatch: pytest.Monkey
             nonlocal raced
             if not raced:
                 raced = True
-                ProrrataRegisterRepository().upsert_entry(
-                    _sector_entry(_EXERCISE - 1, provisional="75", definitive="90")
-                )
+                ProrrataRegisterRepository().upsert_entry(_sector_entry(2025, provisional="75", definitive="90"))
             return mutation(current)
 
         return original_mutate(_apply)
 
     monkeypatch.setattr(repository._storage, "mutate", _mutate_with_interloper)
-    committed, entry = _service(repository).seed_sector_carried(_EXERCISE, "comercio")
+    committed, entry = _service(repository).seed_sector_carried(2026, "comercio")
 
     assert entry.provisional_percentage == Decimal("90")
-    assert committed.entry_for(_EXERCISE, sector_id="comercio") == entry
+    assert committed.entry_for(2026, sector_id="comercio") == entry
 
 
 def test_sector_settlement_retry_preserves_new_provisional(monkeypatch: pytest.MonkeyPatch) -> None:
     """Settlement re-reads current sector state after CAS conflict, preserving its new provisional."""
-    ProrrataRegisterRepository().upsert_entry(_sector_entry(_EXERCISE, provisional="70"))
+    ProrrataRegisterRepository().upsert_entry(_sector_entry(2026, provisional="70"))
     repository = ProrrataRegisterRepository()
     original_mutate = repository._storage.mutate
     raced = False
@@ -200,15 +193,15 @@ def test_sector_settlement_retry_preserves_new_provisional(monkeypatch: pytest.M
             nonlocal raced
             if not raced:
                 raced = True
-                ProrrataRegisterRepository().upsert_entry(_sector_entry(_EXERCISE, provisional="60"))
+                ProrrataRegisterRepository().upsert_entry(_sector_entry(2026, provisional="60"))
             return mutation(current)
 
         return original_mutate(_apply)
 
     monkeypatch.setattr(repository._storage, "mutate", _mutate_with_interloper)
-    producing_ref = published_authority_operation().snapshot("303", filing_year=_EXERCISE, period="4T").snapshot_ref
+    producing_ref = published_authority_operation().snapshot("303", filing_year=2026, period="4T").snapshot_ref
     committed, entry = _service(repository).settle_sector(
-        _EXERCISE,
+        2026,
         "comercio",
         con_derecho_volume=Decimal("90000"),
         sin_derecho_volume=Decimal("10000"),
@@ -217,4 +210,4 @@ def test_sector_settlement_retry_preserves_new_provisional(monkeypatch: pytest.M
 
     assert entry.provisional_percentage == Decimal("60")
     assert entry.definitive_percentage == Decimal("90")
-    assert committed.entry_for(_EXERCISE, sector_id="comercio") == entry
+    assert committed.entry_for(2026, sector_id="comercio") == entry

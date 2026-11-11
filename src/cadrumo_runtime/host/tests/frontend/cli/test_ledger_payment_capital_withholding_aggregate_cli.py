@@ -46,7 +46,6 @@ from cadrumo.application.user_profile.tests.profile_values import complete_profi
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
@@ -71,7 +70,7 @@ _CAPITAL_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="identity.name", value="Test"),
         UserProfileFact(path="identity.surnames", value="Payer"),
         UserProfileFact(path="activities.description", value="capital income payer activity"),
-        UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor, 1, 1)),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
         UserProfileFact(path="withholding.colegio_concertado", value=False),
     )
 )

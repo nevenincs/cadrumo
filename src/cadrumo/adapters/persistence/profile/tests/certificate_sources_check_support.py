@@ -23,7 +23,6 @@ from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_p
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 
 OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -47,7 +46,7 @@ PROFILE_LABEL_B = "gestor-route-snapshot-b"
 CERTIFICATE_BUNDLE_INPUT_B = "bucket-b-correct-horse"
 
 
-NOW = datetime(filing_year_envelope().horizon, 5, 28, 14, 10, 0, tzinfo=UTC)
+NOW = datetime(2099, 5, 28, 14, 10, 0, tzinfo=UTC)
 
 
 OPERATOR_PROBE_PORTS = fake_operator_probe_ports()

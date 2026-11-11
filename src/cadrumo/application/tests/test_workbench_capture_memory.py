@@ -17,7 +17,6 @@ from typing import Any, cast
 import pytest
 
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -34,8 +33,7 @@ from .workbench_generation_support import calendar_builds
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR, 9, 3, 10, 30, tzinfo=UTC)
+_NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
 
 
 @dataclass
@@ -179,7 +177,7 @@ def test_a_slot_never_hands_one_key_another_keys_value() -> None:
     mismatches: list[tuple[int, tuple[int, int]]] = []
 
     def worker(offset: int) -> None:
-        for step in range(1024):
+        for step in range(2000):
             key = (offset + step) % 7
             value = slot.reuse(key, lambda key=key: (key, key * key))
             if value != (key, key * key):
@@ -205,11 +203,11 @@ def test_a_slot_builds_once_per_unchanged_key() -> None:
 
         return run
 
-    today, tomorrow = date(_YEAR, 9, 3), date(_YEAR, 9, 4)
-    assert slot.reuse(today, build(today)) == today.isoformat()
-    assert slot.reuse(today, build(today)) == today.isoformat()
-    assert slot.reuse(tomorrow, build(tomorrow)) == tomorrow.isoformat()
-    assert slot.reuse(today, build(today)) == today.isoformat()
+    today, tomorrow = date(2026, 9, 3), date(2026, 9, 4)
+    assert slot.reuse(today, build(today)) == "2026-09-03"
+    assert slot.reuse(today, build(today)) == "2026-09-03"
+    assert slot.reuse(tomorrow, build(tomorrow)) == "2026-09-04"
+    assert slot.reuse(today, build(today)) == "2026-09-03"
     assert builds == [today, tomorrow, today]
 
 

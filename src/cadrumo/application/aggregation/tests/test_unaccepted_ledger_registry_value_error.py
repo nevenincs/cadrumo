@@ -7,12 +7,9 @@ from datetime import date
 import pytest
 
 from ....core.errors.error_codes import ErrorCategory, build_error_envelope, resolve_error_message
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import UnacceptedLedgerRegistryValueError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_EFFECTIVE = date(filing_year_envelope().horizon, 6, 30)
 
 
 def _refusal() -> UnacceptedLedgerRegistryValueError:
@@ -20,7 +17,7 @@ def _refusal() -> UnacceptedLedgerRegistryValueError:
         field="concepto_ingreso",
         value="retired_concept",
         transaction_id="0123456789abcdef",
-        effective_date=_EFFECTIVE,
+        effective_date=date(2026, 6, 30),
     )
 
 
@@ -34,14 +31,14 @@ def test_the_refusal_carries_its_registered_code_and_names_field_value_and_row()
     assert envelope.context["field"] == "concepto_ingreso"
     assert envelope.context["value"] == "retired_concept"
     assert envelope.context["transaction_id"] == "0123456789abcdef"
-    assert envelope.context["effective_date"] == _EFFECTIVE.isoformat()
+    assert envelope.context["effective_date"] == "2026-06-30"
 
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
 def test_every_locale_renders_every_fact_into_the_sentence(locale: str) -> None:
     message = resolve_error_message(_refusal(), locale=locale)
 
-    for fact in ("concepto_ingreso", "retired_concept", "0123456789abcdef", _EFFECTIVE.isoformat()):
+    for fact in ("concepto_ingreso", "retired_concept", "0123456789abcdef", "2026-06-30"):
         assert fact in message, (locale, message)
     assert "%{" not in message
     assert "errors.refused" not in message

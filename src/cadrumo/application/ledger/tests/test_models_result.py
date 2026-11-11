@@ -8,13 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import BucketTransactionRef, Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..models import ManualLedgerTransactionResult
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -24,8 +21,8 @@ _BUCKET_ID = "21212121-2121-4121-8121-212121212121"
 def test_manual_ledger_transaction_result_requires_matching_strict_shapes() -> None:
     raw = RawTransaction(
         provider_transaction_id="manual-row-1",
-        booked_date=date(_YEAR, 5, 1),
-        value_date=date(_YEAR, 5, 1),
+        booked_date=date(2026, 5, 1),
+        value_date=date(2026, 5, 1),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -35,7 +32,7 @@ def test_manual_ledger_transaction_result_requires_matching_strict_shapes() -> N
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR, 5, 1, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
             provider_name="manual",
         ),
         raw_fields={"source": "manual"},

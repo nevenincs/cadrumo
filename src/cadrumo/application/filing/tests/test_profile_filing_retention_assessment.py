@@ -23,7 +23,6 @@ from uuid import UUID
 import pytest
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -38,7 +37,7 @@ from ..retention import FilingRetentionAuthority
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE_ID = UUID("5f2b9c14-7d3e-4a61-9f08-2c6b1d5e4a37")
-_NOW = datetime(filing_year_envelope().horizon, 8, 15, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 8, 15, 12, 0, tzinfo=UTC)
 
 
 def _filed_record(*, filed_at: datetime, seed: str) -> ModeloRecord:

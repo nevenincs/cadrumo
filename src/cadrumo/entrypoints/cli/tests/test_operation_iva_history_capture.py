@@ -20,14 +20,10 @@ from ....application.live.iva_wallet_history_capture_operation import (
     IvaWalletHistoryCaptureRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_iva_commands as handler
 from .. import operation_iva_history_capture as bridge
 from ..app_live_iva_wallet_results import IvaWalletCaptureHistoryResult
 from .operation_bridge_support import bind_profile_submission
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -39,17 +35,17 @@ _OUTPUT_ROOT = Path("iva-history")
 def _projection() -> IvaWalletHistoryCapturePublicResultV1:
     return IvaWalletHistoryCapturePublicResultV1(
         output_root=str(_OUTPUT_ROOT),
-        year_from=_YEAR - 2,
-        year_to=_YEAR,
+        year_from=2023,
+        year_to=2025,
         captured_count=1,
-        observation_paths=(f"history/{_YEAR}/303.json",),
+        observation_paths=("history/2025/303.json",),
         artefact_refs=("sha256:abcd",),
         casilla_count=4,
         calculation_observation_count=1,
-        calculation_observation_keys=(f"history:{_YEAR}:303",),
+        calculation_observation_keys=("history:2025:303",),
         reloaded_history_count=1,
         failed_declaration_count=1,
-        failed_declarations=(f"303/{_YEAR - 1}/4T",),
+        failed_declarations=("303/2024/4T",),
     )
 
 
@@ -64,8 +60,8 @@ _bind = partial(
 def _read() -> bridge.IvaWalletHistoryCaptureRead:
     return bridge.read_iva_wallet_history_capture_for_cli(
         cast(typer.Context, cast(object, None)),
-        year_from=_YEAR - 2,
-        year_to=_YEAR,
+        year_from=2023,
+        year_to=2025,
         output_root=_OUTPUT_ROOT,
     )
 
@@ -85,8 +81,8 @@ def test_registered_history_capture_uses_exact_profile_and_preserves_accounting(
     assert request == IvaWalletHistoryCaptureRequest(
         profile_id=_PROFILE,
         output_root=_OUTPUT_ROOT,
-        year_from=_YEAR - 2,
-        year_to=_YEAR,
+        year_from=2023,
+        year_to=2025,
     )
     assert options["definition_id"] == IVA_WALLET_HISTORY_CAPTURE_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
@@ -101,7 +97,7 @@ def test_history_capture_without_a_named_root_leaves_the_default_to_the_worker(
     submitted, _bound_profiles = _bind(monkeypatch, _projection(), effect=OperationEffect.UPDATED)
 
     read = bridge.read_iva_wallet_history_capture_for_cli(
-        cast(typer.Context, cast(object, None)), year_from=_YEAR - 2, year_to=_YEAR, output_root=None
+        cast(typer.Context, cast(object, None)), year_from=2023, year_to=2025, output_root=None
     )
 
     request = submitted[0][0]
@@ -122,7 +118,7 @@ def test_mismatched_scope_or_receipt_refuses_with_correlated_operation(
     if mismatch == "output_root":
         projection = projection.model_copy(update={"output_root": "other-root"})
     elif mismatch == "year_range":
-        projection = projection.model_copy(update={"year_to": _YEAR - 1})
+        projection = projection.model_copy(update={"year_to": 2024})
     elif mismatch == "effect":
         effect = OperationEffect.NONE
     elif mismatch == "terminal":
@@ -162,7 +158,7 @@ def test_history_command_emits_existing_cli_payload_from_registered_projection(
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: envelopes.append(kwargs))
 
     handler.iva_wallet_pull_history_cmd(
-        cast(typer.Context, cast(object, None)), year_from=_YEAR - 2, year_to=_YEAR, output_root=_OUTPUT_ROOT
+        cast(typer.Context, cast(object, None)), year_from=2023, year_to=2025, output_root=_OUTPUT_ROOT
     )
 
     assert len(envelopes) == 1
@@ -170,16 +166,16 @@ def test_history_command_emits_existing_cli_payload_from_registered_projection(
     assert envelope["command"] == "app.live.iva_wallet.pull_history"
     result = cast(IvaWalletCaptureHistoryResult, envelope["result"])
     assert result.output_root == str(_OUTPUT_ROOT)
-    assert result.year_from == _YEAR - 2
-    assert result.year_to == _YEAR
+    assert result.year_from == 2023
+    assert result.year_to == 2025
     assert result.captured_count == 1
     assert result.casilla_count == 4
-    assert result.observation_paths == [f"history/{_YEAR}/303.json"]
+    assert result.observation_paths == ["history/2025/303.json"]
     assert result.artefact_refs == ["sha256:abcd"]
-    assert result.calculation_observation_keys == [f"history:{_YEAR}:303"]
+    assert result.calculation_observation_keys == ["history:2025:303"]
     assert result.reloaded_history_count == 1
     assert result.failed_declaration_count == 1
-    assert result.failed_declarations == [f"303/{_YEAR - 1}/4T"]
+    assert result.failed_declarations == ["303/2024/4T"]
     lines = envelope["lines"]
     assert isinstance(lines, tuple)
     assert "captured_count=1" in lines

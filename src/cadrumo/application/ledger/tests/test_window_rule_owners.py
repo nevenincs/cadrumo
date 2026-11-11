@@ -10,7 +10,6 @@ from typing import Final
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -32,15 +31,13 @@ from ..staged_check_contracts import LedgerStagedCell, LedgerStagedRow, StageFie
 from ..staged_identity import TRANSACTION_IDENTITY_FIELDS
 from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction, raw_transaction
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MOVED: Final[dict[StageFieldName, str]] = {
     "amount": "99.00",
     "description": "another narrative",
-    "value_date": date(_YEAR, 5, 1).isoformat(),
-    "booked_date": date(_YEAR, 5, 2).isoformat(),
+    "value_date": "2026-05-01",
+    "booked_date": "2026-05-02",
     "own_account_id": "account-2",
 }
 
@@ -58,7 +55,7 @@ def _invoice(kind: InvoiceKind, gross: Decimal) -> Invoice:
         {
             "kind": kind,
             "invoice_number": "F-1",
-            "issued_at": date(_YEAR, 4, 1),
+            "issued_at": date(2026, 4, 1),
             "counterparty_name": "Proveedor S.L.",
             "counterparty_tax_id": "B00015073",
             "counterparty_country": "ES",
@@ -92,7 +89,7 @@ def _invoices(*invoices: Invoice) -> InvoiceCatalogue:
     (
         ("amount", {"amount": Decimal("99.00")}, True),
         ("description", {"description": "another narrative"}, True),
-        ("value_date", {"value_date": date(_YEAR, 5, 1)}, True),
+        ("value_date", {"value_date": date(2026, 5, 1)}, True),
         ("counterparty", {"counterparty": "Otro"}, False),
     ),
 )
@@ -114,7 +111,7 @@ def test_binding_an_own_account_moves_the_id_and_the_field_says_so() -> None:
 
 def test_a_booked_date_is_identity_when_no_value_date_stands_before_it() -> None:
     raw = raw_transaction("identity").model_copy(update={"value_date": None})
-    moved = raw.model_copy(update={"booked_date": date(_YEAR, 5, 2)})
+    moved = raw.model_copy(update={"booked_date": date(2026, 5, 2)})
 
     assert derive_transaction_id(moved) != derive_transaction_id(raw)
     assert "booked_date" in TRANSACTION_IDENTITY_FIELDS
@@ -225,7 +222,7 @@ def test_a_derivable_reason_is_one_the_derivation_answers(operation: PinnedAutho
     rate, base, amount, derivable, _note = derive_iva_substrate(
         IvaCategory("domestic_general"),
         gross=Decimal("121.00"),
-        on_date=date(_YEAR, 4, 5),
+        on_date=date(2026, 4, 5),
         operation=operation,
     )
     assert derivable

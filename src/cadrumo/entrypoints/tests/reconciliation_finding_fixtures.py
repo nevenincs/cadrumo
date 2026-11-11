@@ -3,7 +3,6 @@
 from decimal import Decimal
 
 from ...core.casilla_id import validated_casilla_id
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -13,7 +12,7 @@ from ...domain.modelos.verification_report import (
 
 def reconciliation_findings() -> tuple[ModeloVerificationFinding, ...]:
     """Represent working drift, cross-model drift, and incomplete cross-model coverage."""
-    common = {"period_code": "1T", "filing_year": filing_year_envelope().horizon}
+    common = {"period_code": "1T", "filing_year": 2025}
     specifications = (
         (
             "pulled_filing_casilla_mismatch",

@@ -26,7 +26,6 @@ from ...application.workbench_generation_contracts import WorkbenchGenerationInp
 from ...application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -39,7 +38,7 @@ from ..ledger_action_composition import compose_ledger_action_ports
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
-_NOW = datetime(filing_year_envelope().horizon, 9, 3, 10, 30, tzinfo=UTC)
+_NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
 
 
 @dataclass
@@ -62,8 +61,8 @@ class _Store[ValueT]:
 def _row(provider_id: str) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(filing_year_envelope().horizon, 3, 1),
-        value_date=date(filing_year_envelope().horizon, 3, 1),
+        booked_date=date(2026, 3, 1),
+        value_date=date(2026, 3, 1),
         amount=Decimal("50.00"),
         currency="EUR",
         counterparty="Synthetic SL",

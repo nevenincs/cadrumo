@@ -14,12 +14,6 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import (
-    authored_revisions,
-    filing_year_envelope,
-    revision_last_exercise,
-    supported_authored_exercises,
-)
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -34,12 +28,7 @@ from ..result_disposition_resolution import resolve_modelo_result_disposition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_NOW = datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC)
-_M200_YEAR = supported_authored_exercises("200")[-1]
-#: Modelo 123 moved its result casilla between its oldest and its newest design.
-_M123_OLDEST_REVISION = authored_revisions("123")[0]
-_M123_NEWEST_REVISION = authored_revisions("123")[-1]
-_M123_OLDEST_LAST_EXERCISE = revision_last_exercise("123", str(_M123_OLDEST_REVISION.id))
+_NOW = datetime(2026, 1, 1, tzinfo=UTC)
 _BUCKET_ID = "915b0469-91b1-4787-a650-9aad55564dd3"  # was 'result-disposition-resolution-test'
 _M200_PRINTED_RESULT_NUMBER: CasillaId = validated_casilla_id(
     "00599",
@@ -164,16 +153,11 @@ def _registry_work_unit(*, modelo: str, filing_year: int, period_code: str) -> W
 @pytest.mark.parametrize(
     ("filing_year", "period_code", "revision_id", "result_casilla"),
     (
+        (2023, "4T", "2019-2023", validated_casilla_id("08", surface="result-disposition resolver test casilla id")),
         (
-            _M123_OLDEST_LAST_EXERCISE,
-            "4T",
-            str(_M123_OLDEST_REVISION.id),
-            validated_casilla_id("08", surface="result-disposition resolver test casilla id"),
-        ),
-        (
-            filing_year_envelope().horizon,
+            2026,
             "1T",
-            str(_M123_NEWEST_REVISION.id),
+            "2024-y-siguientes",
             validated_casilla_id("14", surface="result-disposition resolver test casilla id"),
         ),
     ),
@@ -210,7 +194,7 @@ def _casillas_printing(revision: ModeloRevision, number: str) -> tuple[CasillaId
 
 def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token() -> None:
     """A registry metadata token must not silently drive result disposition."""
-    work_unit = _registry_work_unit(modelo="200", filing_year=_M200_YEAR, period_code="0A")
+    work_unit = _registry_work_unit(modelo="200", filing_year=2025, period_code="0A")
     revision = _revision_with_casilla_values(
         work_unit,
         {_M200_PRINTED_RESULT_NUMBER: Decimal("5000.00")},
@@ -226,7 +210,7 @@ def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token
 
     # The design prints the result number on the equity-statement sheets too, so the
     # refusal names every casilla carrying it, the canonical result casilla among them.
-    revision_casillas = published_snapshot("200", filing_year=_M200_YEAR, period="0A").revision
+    revision_casillas = published_snapshot("200", filing_year=2025, period="0A").revision
     candidates = _casillas_printing(revision_casillas, _M200_PRINTED_RESULT_NUMBER)
     assert _M200_REFUND_RESULT_CASILLA in candidates
     refusal = (
@@ -239,7 +223,7 @@ def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token
 
 def test_resolve_modelo_result_disposition_rejects_ambiguous_printed_number_metadata_token() -> None:
     """A reused printed number must fail before result casilla filtering."""
-    work_unit = _registry_work_unit(modelo="200", filing_year=_M200_YEAR, period_code="0A")
+    work_unit = _registry_work_unit(modelo="200", filing_year=2025, period_code="0A")
     revision = _revision_with_casilla_values(
         work_unit,
         {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("5000.00")},
@@ -254,7 +238,7 @@ def test_resolve_modelo_result_disposition_rejects_ambiguous_printed_number_meta
         )
 
     candidates = _casillas_printing(
-        published_snapshot("200", filing_year=_M200_YEAR, period="0A").revision, _M200_AMBIGUOUS_PRINTED_NUMBER
+        published_snapshot("200", filing_year=2025, period="0A").revision, _M200_AMBIGUOUS_PRINTED_NUMBER
     )
     assert {_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA, _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA} <= set(
         candidates

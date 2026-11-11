@@ -10,7 +10,6 @@ from typing import Any, cast
 import pytest
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord
 from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarEvent, OverviewCalendarEventType
 from ..evidence import (
@@ -24,9 +23,8 @@ from .calendar_test_support import external_evidence, modelo_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-_OBSERVED_AT = datetime(_YEAR, 8, 31, 9, 15, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_OBSERVED_AT = datetime(2026, 8, 31, 9, 15, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 def _state(
@@ -84,7 +82,7 @@ def _observed_event(
 ) -> OverviewCalendarEvent:
     return OverviewCalendarEvent(
         event_type=OverviewCalendarEventType.FILING,
-        event_date=date(_YEAR, 4, 15),
+        event_date=date(2025, 4, 15),
         source="filed_declarations",
         summary="Observed filing",
         reference_id=reference_id or f"aeat-{modelo}-{period.registry_token}",
@@ -94,7 +92,7 @@ def _observed_event(
         status="ALTA",
         authenticated_identity=authenticated_identity,
         aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
-        aeat_submitted_at=submitted_at or datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
+        aeat_submitted_at=submitted_at or datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
         justificante_verified=False,
     )
 
@@ -131,7 +129,7 @@ def test_stale_local_values_and_their_source_timestamp_are_preserved() -> None:
     assert len(projection.evidence) == 1
     row = projection.evidence[0]
     assert row.local_filing_record_id is not None
-    assert row.local_filed_at == datetime(_YEAR, 4, 14, 12, 0, tzinfo=UTC)
+    assert row.local_filed_at == datetime(2025, 4, 14, 12, 0, tzinfo=UTC)
     assert row.aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED
 
 
@@ -193,7 +191,7 @@ def test_available_empty_and_never_captured_remain_distinct_source_states() -> N
 
 
 def test_natural_address_join_is_deterministic_and_preserves_both_axes() -> None:
-    period_2t = Period.from_year_and_code(_YEAR, "2T")
+    period_2t = Period.from_year_and_code(2025, "2T")
     records = (
         modelo_record(modelo="303", period=period_2t),
         modelo_record(modelo="130", period=_PERIOD),
@@ -215,7 +213,7 @@ def test_natural_address_join_is_deterministic_and_preserves_both_axes() -> None
     assert [
         (row.modelo, row.filing_year, row.period.registry_token if row.period is not None else None)
         for row in forward.evidence
-    ] == [("130", _YEAR, "1T"), ("303", _YEAR, "2T")]
+    ] == [("130", 2025, "1T"), ("303", 2025, "2T")]
     assert all(row.local_filing_record_id is not None for row in forward.evidence)
     assert all(row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED for row in forward.evidence)
 
@@ -223,11 +221,11 @@ def test_natural_address_join_is_deterministic_and_preserves_both_axes() -> None
 def test_equal_strength_same_address_claims_have_a_deterministic_primary_reference() -> None:
     earlier = _observed_event(
         reference_id="AEAT-REF-A",
-        submitted_at=datetime(_YEAR, 4, 15, 9, 0, tzinfo=UTC),
+        submitted_at=datetime(2025, 4, 15, 9, 0, tzinfo=UTC),
     )
     later = _observed_event(
         reference_id="AEAT-REF-B",
-        submitted_at=datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
+        submitted_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
     )
 
     forward = build_calendar_evidence_projection(local=_local(), aeat=_aeat(events=(earlier, later)))

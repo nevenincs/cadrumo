@@ -20,7 +20,6 @@ from ......application.modelo.work_form_wording import does_not_apply_words
 from ......core.config import override_settings
 from ......core.i18n.render import tr
 from ......core.period import Period
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..casilla_list import CasillaList
@@ -33,8 +32,6 @@ from .sectioned_form import LAST_QUARTER_PAGE, sectioned_form
 from .workbench_fixture import FakeActions, FakeReader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 _NOT_THIS_QUARTER = "Does not apply this quarter"
 _LOCALES = ("es", "en", "ca", "hu")
@@ -110,7 +107,7 @@ def test_a_heading_the_layout_prints_twice_is_listed_once_with_both_parts_counte
 
 @pytest.mark.parametrize("language", _LOCALES)
 def test_the_words_for_a_page_that_does_not_apply_name_the_period_in_every_language(language: str) -> None:
-    periods = [Period.from_year_and_code(_YEAR, code) for code in ("1T", "01", "0A")]
+    periods = [Period.from_year_and_code(2026, code) for code in ("1T", "01", "0A")]
     with override_settings(cadrumo_output_language="en"):
         english = [does_not_apply_words(period) for period in periods]
     with override_settings(cadrumo_output_language=language):

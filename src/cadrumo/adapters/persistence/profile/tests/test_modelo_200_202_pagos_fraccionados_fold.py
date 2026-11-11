@@ -23,7 +23,6 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.ids import RelationId
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -33,8 +32,6 @@ from ..calculation_observations import CalculationObservationRepository
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_FILING_YEAR = filing_year_envelope().horizon
 
 _REL_40_2: RelationId = "modelo-200-pagos-fraccionados-anuales-40-2"
 _REL_40_3: RelationId = "modelo-200-pagos-fraccionados-anuales"
@@ -60,7 +57,7 @@ def _m202_observation(
 
 def _resolve_m200_pagos_fraccionados(repository: CalculationObservationRepository) -> dict[RelationId, Decimal]:
     snapshot = published_authority_operation().snapshot(
-        "200", filing_year=_FILING_YEAR, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     with bundled_indexed_authority().operation() as operation:
         relation_vals = resolve_relations_from_local_store(snapshot, operation=operation, repository=repository)
@@ -75,14 +72,10 @@ def test_m200_fold_in_credits_modalidad_40_2_instalments(tmp_path: Path) -> None
         for period, amount in amounts.items():
             repository.save(
                 repository.prepare_observation_envelope(
-                    _m202_observation(
-                        filing_year=_FILING_YEAR, period=period, casilla_03=amount, casilla_34=Decimal("0")
-                    ),
+                    _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
                     source_kind="app_filing",
                     stamped_revision_id=revision_id_for_observation(
-                        _m202_observation(
-                            filing_year=_FILING_YEAR, period=period, casilla_03=amount, casilla_34=Decimal("0")
-                        )
+                        _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0"))
                     ),
                 )
             )
@@ -104,14 +97,10 @@ def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None
         for period, amount in amounts.items():
             repository.save(
                 repository.prepare_observation_envelope(
-                    _m202_observation(
-                        filing_year=_FILING_YEAR, period=period, casilla_03=Decimal("0"), casilla_34=amount
-                    ),
+                    _m202_observation(filing_year=2025, period=period, casilla_03=Decimal("0"), casilla_34=amount),
                     source_kind="app_filing",
                     stamped_revision_id=revision_id_for_observation(
-                        _m202_observation(
-                            filing_year=_FILING_YEAR, period=period, casilla_03=Decimal("0"), casilla_34=amount
-                        )
+                        _m202_observation(filing_year=2025, period=period, casilla_03=Decimal("0"), casilla_34=amount)
                     ),
                 )
             )
@@ -126,7 +115,7 @@ def _all_m202_relation_values(
     first_year_cuota: bool,
 ) -> dict[RelationId, Decimal | None]:
     snapshot = published_authority_operation().snapshot(
-        "200", filing_year=_FILING_YEAR, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     with bundled_indexed_authority().operation() as operation:
         relation_vals = resolve_relations_from_local_store(
@@ -169,14 +158,10 @@ def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) 
         for period, amount in amounts.items():
             repository.save(
                 repository.prepare_observation_envelope(
-                    _m202_observation(
-                        filing_year=_FILING_YEAR, period=period, casilla_03=amount, casilla_34=Decimal("0")
-                    ),
+                    _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
                     source_kind="app_filing",
                     stamped_revision_id=revision_id_for_observation(
-                        _m202_observation(
-                            filing_year=_FILING_YEAR, period=period, casilla_03=amount, casilla_34=Decimal("0")
-                        )
+                        _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0"))
                     ),
                 )
             )

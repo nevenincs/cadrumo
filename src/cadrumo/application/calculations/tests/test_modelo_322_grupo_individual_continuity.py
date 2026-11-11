@@ -12,14 +12,14 @@ inputs are the period's IVA ledger.
 This module is the cross-year behavior coverage for Modelo
 322. The ≥2-distinct-renta-years contract is met by driving the REAL
 registry calculation engine for the same monthly period (December) of two
-distinct renta years (the two newest supported ones) over deterministic application-owned
+distinct renta years (2025, 2026) over deterministic application-owned
 IVA ledger observations, feeding the five ledger_iva_aggregation cuota bindings.
 Both years are recorded through the
 ``cross-year observation`` and cross-checked against the authorization
 manifest via ``the cross-year behavior assertion``.
 
-The form is genuinely year-stable: it resolves
-for both years with identical structure and rates (the REGE
+The ``2008-2023`` revision is genuinely year-stable: it resolves
+for both 2025 and 2026 with identical structure and rates (the REGE
 individual form and the general/reduced/super-reduced rate set are
 unchanged across the two ejercicios), so the second year is a real
 filing, never a faked duplicate.
@@ -51,7 +51,6 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaLedgerObservationRole
@@ -62,16 +61,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _MODELO = "322"
 
 #: The two distinct renta years the enrollment spans, and the monthly period.
-_FIRST_YEAR, _SECOND_YEAR = filing_year_envelope().years[-2:]
-_RENTA_YEARS = (_FIRST_YEAR, _SECOND_YEAR)
+_RENTA_YEARS = (2025, 2026)
 _PERIOD = "12"
 
 #: Per-year IVA ledger detail (one repercutido + one soportado general-rate
 #: line). Values differ per year so the second year is a distinct real filing.
 _YEAR_IVA: dict[int, tuple[Decimal, Decimal]] = {
     # filing_year: (repercutido_cuota, soportado_cuota)
-    _FIRST_YEAR: (Decimal("210.00"), Decimal("80.00")),
-    _SECOND_YEAR: (Decimal("168.00"), Decimal("105.00")),
+    2025: (Decimal("210.00"), Decimal("80.00")),
+    2026: (Decimal("168.00"), Decimal("105.00")),
 }
 
 

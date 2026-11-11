@@ -36,16 +36,12 @@ from ....core.toml import load_toml
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.facts.resolution import ScalarFactQuery
 from ...calculations.registry.schema_base import DateAxis
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..retencion_facts import (
     AdministradorRetencionRates,
     administrador_retencion_legal_refs,
     load_administrador_retencion_rates,
 )
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -62,7 +58,7 @@ _REDUCIDA_FACT_ID = "lirpf-art-101:retencion-administrador-reducida"
 _UMBRAL_FACT_ID = "lirpf-art-101:retencion-administrador-incn-umbral-eur"
 _LIRPF_REF = "ley-35-2006:art-101"
 _RIRPF_REF = "rd-439-2007:art-80"
-_CURRENT_EFFECTIVE_DATE = date(_YEAR, 4, 1)
+_CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
 
 
 def _resolved_fact(fact_id: str):

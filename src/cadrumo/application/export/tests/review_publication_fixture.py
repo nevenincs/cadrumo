@@ -1,12 +1,11 @@
 """Independent synthetic baseline for saved-review integration acceptance."""
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
 
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from ..managed_artifact_ports import ArtifactCreationReceipt, ManagedArtifactKind
 from ..publication_receipt import (
@@ -30,10 +29,9 @@ from ..review_snapshot import (
     seal_review_snapshot,
 )
 
-_YEAR = filing_year_envelope().horizon
 PROFILE_ID = UUID(int=101)
 PUBLICATION_ID = UUID(int=102)
-EXPORTED_AT = datetime(1980, 10, 5, 14, 0, tzinfo=UTC)
+EXPORTED_AT = datetime(2026, 10, 5, 14, 0, tzinfo=UTC)
 EXPECTED_SELECTED_AMOUNTS = {"recorded-iva": "99.75", "proven-zero": "0.00", "adjustment": "-3.50"}
 LITERAL_COUNTERPARTY = '=IMPORTXML("https://example.invalid", "//amount")'
 
@@ -65,14 +63,9 @@ def acceptance_snapshot(*, ledger_only: bool = False, newer_revision: bool = Fal
             work_unit_id="b" * 64,
             calculation_revision_id=("d" if newer_revision else "c") * 64,
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="1T",
-            registry_snapshot_ref=RegistrySnapshotRef(
-                modelo="303",
-                revision_id=revision_serving_period("303", _YEAR, "1T").id,
-                modelo_year=_YEAR,
-                period="1T",
-            ),
+            registry_snapshot_ref=RegistrySnapshotRef(modelo="303", revision_id="2026", modelo_year=2026, period="1T"),
             authority_generation="e" * 64,
             registry_digest="f" * 64,
         )
@@ -81,7 +74,7 @@ def acceptance_snapshot(*, ledger_only: bool = False, newer_revision: bool = Fal
         LedgerEvidenceRow(
             transaction_id="1" * 64,
             fingerprint="2" * 64,
-            booked_date=date(_YEAR, 1, 12).isoformat(),
+            booked_date="2026-01-12",
             amount=Decimal("145.20"),
             currency="EUR",
             direction="outflow",
@@ -98,7 +91,7 @@ def acceptance_snapshot(*, ledger_only: bool = False, newer_revision: bool = Fal
         LedgerEvidenceRow(
             transaction_id="3" * 64,
             fingerprint="4" * 64,
-            booked_date=date(_YEAR, 2, 18).isoformat(),
+            booked_date="2026-02-18",
             amount=Decimal("18.15"),
             currency="EUR",
             direction="inflow",

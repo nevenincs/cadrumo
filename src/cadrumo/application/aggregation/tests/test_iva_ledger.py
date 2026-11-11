@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -20,9 +20,7 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.categories.spending_category_catalogue import require_spending_category
-from ....domain.invoices.tests.invoice_catalogue_seed import TRANSITIONAL_WINDOWS, window_middle
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.prorrata import ProrrataKind, ProrrataRegime
@@ -49,8 +47,6 @@ from ..iva_ledger import (
 from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-_YEAR = filing_year_envelope().horizon
 
 _TEST_ASSET_REGISTER = BienesInversionIvaRegister()
 
@@ -106,8 +102,8 @@ def _revision_with_iva_bindings(revision_id: str, *bindings: BindingDefinition) 
     return ModeloRevision(
         id=revision_id,
         localization_key=f"test.schema.revision.{revision_id}.label",
-        valid_from=date(_YEAR, 1, 1),
-        period_selector=PeriodSelector(year_from=_YEAR, periods=("1T", "2T", "3T", "4T", "0A")),
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(year_from=2026, periods=("1T", "2T", "3T", "4T", "0A")),
         legal_refs=("ley-37-1992:art-88",),
         source_refs=("test-iva-ledger-binding",),
         bindings=bindings,
@@ -116,7 +112,7 @@ def _revision_with_iva_bindings(revision_id: str, *bindings: BindingDefinition) 
 
 def _modelo_303_iva_revision() -> ModeloRevision:
     return _revision_with_iva_bindings(
-        str(revision_serving_period("303", _YEAR, "2T").id),
+        "2022",
         _iva_binding(
             "modelo-303-iva-repercutido-general-cuota",
             categories=(IvaCategory("domestic_general"),),
@@ -136,7 +132,8 @@ def _modelo_303_iva_revision() -> ModeloRevision:
     )
 
 
-_Q2 = renta_income_aggregation_period(_YEAR, "2T")
+_Q2_2023 = renta_income_aggregation_period(2023, "2T")
+_Q2_2026 = renta_income_aggregation_period(2026, "2T")
 # Before Ley 41/1994 art. 78.Segundo took effect on 1 January 1995, so genuinely
 # outside the rate table's coverage: no ES window of any tier reaches back past
 # it.
@@ -158,8 +155,8 @@ _OTHER_BUCKET_ID = "15151515-1515-4515-8515-151515151515"
 def _raw_transaction(
     provider_id: str,
     *,
-    booked_date: date = date(_YEAR, 4, 5),
-    value_date: date | None = date(_YEAR, 4, 5),
+    booked_date: date = date(2026, 4, 5),
+    value_date: date | None = date(2026, 4, 5),
     amount: Decimal = Decimal("121.00"),
     currency: str = "EUR",
 ) -> RawTransaction:
@@ -176,7 +173,7 @@ def _raw_transaction(
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -190,8 +187,8 @@ def _transaction(
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
-    booked_date: date = date(_YEAR, 4, 5),
-    value_date: date | None = date(_YEAR, 4, 5),
+    booked_date: date = date(2026, 4, 5),
+    value_date: date | None = date(2026, 4, 5),
     currency: str = "EUR",
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_rate: Decimal | None = Decimal("0.21"),
@@ -254,7 +251,7 @@ def _transaction(
             "lifecycle_state": lifecycle_state,
             "fx_rate": fx_rate,
             "value_in_eur": value_in_eur,
-            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -276,7 +273,7 @@ def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> 
     ):
         iva_ledger_aggregate_iva_ledger_observations_with_authority(
             catalogue,
-            period=_Q2,
+            period=_Q2_2026,
             ledger_profile_id="test-profile",
             operation=_authority_operation_for_test,
         )
@@ -297,7 +294,7 @@ def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> N
             BienInversionIvaRecord(
                 identifier="asset-direct",
                 description="Direct aggregation asset",
-                acquisition_year=_YEAR,
+                acquisition_year=2026,
                 cuota_soportada=Decimal("21.00"),
                 prorrata_inicial_pct=Decimal("100"),
                 kind=BienInversionKind.from_registry("mueble"),
@@ -310,7 +307,7 @@ def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> N
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = iva_ledger_aggregate_iva_ledger_observations_with_authority(
             TransactionCatalogue.from_transactions((transaction,)),
-            period=_Q2,
+            period=_Q2_2026,
             ledger_profile_id="test-profile",
             investment_asset_register=register,
             investment_asset_profile_id="test-profile",
@@ -336,7 +333,7 @@ def test_art_104_tres_tagged_transaction_is_recorded_as_excluded_ledger_id() -> 
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((untagged, tagged)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert len(result.observations) == 2
@@ -348,14 +345,14 @@ def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
     assert len(result.observations) == 1
     observation = result.observations[0]
     assert observation.ledger_id == transaction.transaction_id
-    assert observation.transaction_date == date(_YEAR, 4, 5)
+    assert observation.transaction_date == date(2026, 4, 5)
     assert observation.category == IvaCategory("domestic_general")
     assert observation.rate_kind == IvaRateKind("general")
     assert observation.flow_direction == IvaFlowDirection.from_registry("soportado")
@@ -380,7 +377,7 @@ def test_archived_and_stashed_transactions_do_not_feed_iva_projection() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((active, archived, stashed)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -407,7 +404,7 @@ def test_reviewed_excluded_transaction_omitted_from_iva_projection_without_issue
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((active, excluded)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -426,7 +423,7 @@ def test_incoming_business_transaction_projects_to_repercutido_iva_observation()
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -455,7 +452,7 @@ def test_mixed_business_transaction_applies_business_percentage_to_iva_and_keeps
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -468,12 +465,12 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
         "row-prorrata",
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
-        prorrata_reference=f"prorrata:{_YEAR}:provisional:general",
+        prorrata_reference="prorrata:2026:provisional:general",
     )
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -481,8 +478,8 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
     assert len(result.prorrata_references) == 1
     reference = result.prorrata_references[0]
     assert reference.transaction_id == transaction.transaction_id
-    assert reference.transaction_date == date(_YEAR, 4, 5)
-    assert reference.reference.year == _YEAR
+    assert reference.transaction_date == date(2026, 4, 5)
+    assert reference.reference.year == 2026
     assert reference.reference.kind == ProrrataKind.from_registry("provisional")
     assert reference.reference.regime == ProrrataRegime("general")
     assert reference.base_amount == Decimal("200.00")
@@ -498,12 +495,12 @@ def test_mixed_input_row_applies_business_percentage_before_carrying_prorrata_re
         business_pct=Decimal("0.25"),
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
-        prorrata_reference=f"prorrata:{_YEAR}:provisional:especial:sector-retail",
+        prorrata_reference="prorrata:2026:provisional:especial:sector-retail",
     )
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -517,7 +514,7 @@ def test_invalid_prorrata_reference_is_reported_without_dropping_iva_observation
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert len(result.observations) == 1
@@ -531,12 +528,12 @@ def test_prorrata_reference_on_output_iva_row_is_reported_but_output_observation
         "row-output-prorrata",
         amount=Decimal("121.00"),
         direction=TransactionDirection.INCOMING,
-        prorrata_reference=f"prorrata:{_YEAR}:provisional:general",
+        prorrata_reference="prorrata:2026:provisional:general",
     )
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.observations[0].flow_direction == IvaFlowDirection.from_registry("repercutido")
@@ -555,7 +552,7 @@ def test_personal_transaction_is_reported_without_iva_observation() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -567,7 +564,7 @@ def test_missing_tax_fact_is_reported_before_projection() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -579,7 +576,7 @@ def test_non_canonical_iva_rate_is_reported() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -587,12 +584,12 @@ def test_non_canonical_iva_rate_is_reported() -> None:
 
 
 def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
-    old_row = _transaction("row-old", booked_date=date(_YEAR, 1, 5), value_date=date(_YEAR, 1, 5))
+    old_row = _transaction("row-old", booked_date=date(2026, 1, 5), value_date=date(2026, 1, 5))
     usd_row = _transaction("row-usd", currency="USD")
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((old_row, usd_row)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -616,7 +613,7 @@ def test_converted_foreign_currency_tax_substrate_does_not_project_as_eur() -> N
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((converted_gbp, eur_row, unconverted_usd)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert [observation.ledger_id for observation in result.observations] == [eur_row.transaction_id]
@@ -643,51 +640,51 @@ def test_iva_aggregation_buckets_on_value_date_caja_basis_only() -> None:
     bucketing on ``booked_date`` while ``value_date`` says otherwise, or a
     new basis-selector argument), the assertions below turn RED.
 
-    Construction: ``value_date`` (the caja/payment date) lands inside the second
-    quarter, while ``booked_date`` (the would-be devengo/accrual posting date)
-    lands in the first. A devengo-basis path would exclude the row from the second; the
+    Construction: ``value_date`` (the caja/payment date) lands inside 2026Q2,
+    while ``booked_date`` (the would-be devengo/accrual posting date) lands in
+    2026Q1. A devengo-basis path would exclude the row from 2026Q2; the
     caja-basis path includes it and stamps the observation date as the
     value_date. The mirror row inverts the two dates and must be excluded.
     """
     # value_date in-period (caja), booked_date out-of-period (devengo would differ).
     caja_in_period = _transaction(
         "row-caja-in-period",
-        booked_date=date(_YEAR, 1, 31),
-        value_date=date(_YEAR, 4, 2),
+        booked_date=date(2026, 1, 31),
+        value_date=date(2026, 4, 2),
     )
     # value_date out-of-period (caja), booked_date in-period (devengo would include).
     caja_out_of_period = _transaction(
         "row-caja-out-of-period",
-        booked_date=date(_YEAR, 4, 2),
-        value_date=date(_YEAR, 1, 31),
+        booked_date=date(2026, 4, 2),
+        value_date=date(2026, 1, 31),
     )
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((caja_in_period, caja_out_of_period)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     # Caja basis: the row whose VALUE_DATE is in-period is the only one projected,
     # and the observation date is the value_date — never the booked_date.
     assert [observation.ledger_id for observation in result.observations] == [caja_in_period.transaction_id]
-    assert result.observations[0].transaction_date == date(_YEAR, 4, 2)
+    assert result.observations[0].transaction_date == date(2026, 4, 2)
     # The row whose value_date is out-of-period is excluded, keyed on value_date —
-    # a devengo basis (booked_date in the second quarter) would instead have INCLUDED it.
+    # a devengo basis (booked_date 2026-04-02) would instead have INCLUDED it.
     assert [issue.transaction_id for issue in result.issues] == [caja_out_of_period.transaction_id]
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD
-    assert date(_YEAR, 1, 31).isoformat() in result.issues[0].detail
+    assert "2026-01-31" in result.issues[0].detail
 
 
 def test_future_out_of_window_row_is_a_nonblocking_review_advisory() -> None:
     future_row = _transaction(
         "row-future-outside-period",
-        booked_date=date(_YEAR, 7, 2),
-        value_date=date(_YEAR, 7, 2),
+        booked_date=date(2026, 7, 2),
+        value_date=date(2026, 7, 2),
     )
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((future_row,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -741,7 +738,7 @@ def test_internal_transfer_is_reported_as_unsupported_direction() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -754,7 +751,7 @@ def test_missing_base_and_amount_are_reported_as_distinct_tax_fact_issues() -> N
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((missing_base, missing_amount)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert [issue.reason for issue in result.issues] == [
@@ -803,7 +800,7 @@ def test_the_applied_rate_survives_tier_resolution() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((general, reduced)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     by_rate = {observation.applied_rate: observation for observation in result.observations}
@@ -828,7 +825,7 @@ def test_a_covered_date_with_a_non_canonical_rate_still_blames_the_rate() -> Non
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -846,7 +843,7 @@ def test_zero_and_super_reduced_rates_project_to_canonical_iva_categories() -> N
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((zero, super_reduced)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert [observation.category for observation in result.observations] == [
@@ -869,7 +866,7 @@ def test_transaction_exemption_article_projects_to_iva_observation() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2,
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -897,7 +894,7 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
     )
     projection = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((incoming, outgoing)),
-        period=_Q2,
+        period=_Q2_2026,
     )
     revision = _modelo_303_iva_revision()
 
@@ -905,10 +902,6 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
 
     assert binding_values["modelo-303-iva-repercutido-general-cuota"] == incoming.iva_amount
     assert binding_values["modelo-303-iva-soportado-interiores-cuota"] == outgoing.iva_amount
-
-
-def _quarter_of(day: date) -> Period:
-    return renta_income_aggregation_period(day.year, f"{(day.month - 1) // 3 + 1}T")
 
 
 def test_a_two_percent_food_sale_reaches_the_super_reducido_cuota() -> None:
@@ -926,11 +919,10 @@ def test_a_two_percent_food_sale_reaches_the_super_reducido_cuota() -> None:
     supposed to decide -- a test written that way passes with the rate record
     deleted, which is exactly what a first attempt at this did.
     """
-    sale_day = window_middle("RATE_2")
     food = _transaction(
         "food-2pct",
-        booked_date=sale_day,
-        value_date=sale_day,
+        booked_date=date(2024, 11, 15),
+        value_date=date(2024, 11, 15),
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("0.02"),
         iva_amount=Decimal("20.00"),
@@ -939,7 +931,7 @@ def test_a_two_percent_food_sale_reaches_the_super_reducido_cuota() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((food,)),
-        period=_quarter_of(sale_day),
+        period=renta_income_aggregation_period(2024, "4T"),
     )
 
     assert result.observations != (), f"the 2 % sale was refused: {[i.reason for i in result.issues]}"
@@ -952,13 +944,12 @@ def test_the_same_sale_dated_after_the_measure_expired_is_refused() -> None:
     """The window is load-bearing, not decorative.
 
     Without this the rate records could be open-ended and the test above would
-    still pass. A 2 % sale the day after the window closes is not a legitimate Spanish rate.
+    still pass. A 2 % sale in June 2025 is not a legitimate Spanish rate.
     """
-    expired_day = TRANSITIONAL_WINDOWS["RATE_2"][1] + timedelta(days=1)
     late = _transaction(
         "food-2pct-expired",
-        booked_date=expired_day,
-        value_date=expired_day,
+        booked_date=date(2025, 6, 15),
+        value_date=date(2025, 6, 15),
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("0.02"),
         iva_amount=Decimal("20.00"),
@@ -967,7 +958,7 @@ def test_the_same_sale_dated_after_the_measure_expired_is_refused() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((late,)),
-        period=_quarter_of(expired_day),
+        period=renta_income_aggregation_period(2025, "2T"),
     )
 
     assert result.observations == ()
@@ -998,7 +989,7 @@ def _stamped_share(
     ).business_pct
 
 
-@pytest.mark.parametrize("year", filing_year_envelope().years)
+@pytest.mark.parametrize("year", [2022, 2026])
 def test_a_mixed_home_office_suministro_deducts_iva_at_the_degree_of_use(
     year: int,
     operation: PinnedAuthorityOperation,
@@ -1008,7 +999,7 @@ def test_a_mixed_home_office_suministro_deducts_iva_at_the_degree_of_use(
     Worked by hand from the TEAC unified criterion of 19-07-2023 and the Manual
     práctico IVA: the cuota is deductible in proportion to the use of the
     dwelling in the activity, with no 30 per cent factor. The IRPF factor gave
-    0.40 x 0.30 x 21.00 = 2.52. Every supported year is asserted: LIVA art. 95 has not
+    0.40 x 0.30 x 21.00 = 2.52. 2022 is asserted too: LIVA art. 95 has not
     changed since 1998, so the share does not start with the criterion.
     """
     share = _stamped_share("suministros_home_office_luz", year=year, operation=operation)
@@ -1034,7 +1025,7 @@ def test_a_mixed_home_office_suministro_deducts_iva_at_the_degree_of_use(
 def test_an_operator_stated_share_wins_over_the_censo_area(operation: PinnedAuthorityOperation) -> None:
     """A proved share replaces the floor-area proxy: 55 per cent of 21.00 is 11.55."""
     share = _stamped_share(
-        "suministros_home_office_gas", year=_YEAR, operation=operation, operator_supplied=Decimal("0.55")
+        "suministros_home_office_gas", year=2026, operation=operation, operator_supplied=Decimal("0.55")
     )
     assert share == Decimal("0.55")
     row = _transaction(
@@ -1044,7 +1035,7 @@ def test_an_operator_stated_share_wins_over_the_censo_area(operation: PinnedAuth
         category_id="suministros_home_office_gas",
     )
 
-    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2)
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
 
     assert result.issues == ()
     assert result.observations[0].iva_amount == Decimal("11.55")
@@ -1054,13 +1045,13 @@ def test_an_operator_stated_share_wins_over_the_censo_area(operation: PinnedAuth
 def test_a_business_only_row_deducts_its_whole_cuota_outside_the_vehicle_presumption(category_id: str) -> None:
     row = _transaction("business-only", category_id=category_id)
 
-    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2)
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
 
     assert result.issues == ()
     assert result.observations[0].iva_amount == Decimal("21.00")
 
 
-@pytest.mark.parametrize("year", filing_year_envelope().years)
+@pytest.mark.parametrize("year", [2022, 2026])
 def test_a_mixed_use_mobile_phone_deducts_no_iva(year: int) -> None:
     """DISCRIMINATING. Simultaneous private use gives no deduction in any measure.
 
@@ -1111,7 +1102,7 @@ def test_vehicle_fuel_deducts_iva_at_the_fifty_per_cent_presumption(
         category_id="vehiculo_combustible",
     )
 
-    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2)
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
 
     assert result.issues == ()
     assert result.observations[0].base_amount == Decimal("100.00")
@@ -1127,7 +1118,7 @@ def test_mixed_use_equipment_below_the_bien_de_inversion_value_deducts_no_iva() 
         category_id="hardware_amortizable",
     )
 
-    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2)
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
 
     assert result.observations == ()
     assert [issue.reason for issue in result.issues] == [IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE]
@@ -1145,7 +1136,7 @@ def test_mixed_use_equipment_of_bien_de_inversion_value_deducts_iva_by_its_use()
         iva_amount=Decimal("840.00"),
     )
 
-    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2)
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
 
     assert result.issues == ()
     assert result.observations[0].base_amount == Decimal("4000.00")

@@ -130,7 +130,7 @@ def _store(model_list: MemoryLocalModelListStore, *added: tuple[str, str], readi
         models=tuple(ListedModel(lane=lane, model=model) for lane, model in added),
         reading=None if reading is None else ListedModel(lane=reading[0], model=reading[1]),
         generation=new_settings_generation(),
-        updated_at=datetime(1980, 10, 27, 9, 0, tzinfo=UTC),
+        updated_at=datetime(2026, 10, 27, 9, 0, tzinfo=UTC),
     )
     expected = model_list.stored.revision if model_list.stored is not None else ABSENT_SECURE_OBJECT_REVISION_ID
     assert model_list.write(record, expected_revision=expected) is None

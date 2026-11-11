@@ -12,7 +12,6 @@ import pytest
 
 from cadrumo.application.aggregation.renta_imputation import ActivityImputationCriterion
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.setup_answers import SetupAnswers
 
 from ..errors import WizardMissingFlagError, WizardValidationError
@@ -35,7 +34,7 @@ from .registry_setup_flow_support import registry_setup_flow as registry_setup_f
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _REGIME_QUESTION_ID = "irpf-estimation-regime"
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2000
 
 
 def _question(flow: WizardFlow, question_id: str) -> WizardQuestion:

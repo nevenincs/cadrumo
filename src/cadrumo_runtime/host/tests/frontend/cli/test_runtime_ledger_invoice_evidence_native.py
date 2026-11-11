@@ -6,7 +6,6 @@ import json
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date
 from importlib.resources import files
 from pathlib import Path
 from typing import Any
@@ -16,7 +15,6 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config_support import LLMProvider
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
@@ -26,8 +24,6 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -42,7 +38,7 @@ _PROFILE_FACTS = {
     "identity.name": "Native",
     "identity.surnames": "Evidence",
     "activities.description": "design",
-    "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
+    "censo.activity_start_date": "2025-01-01",
     "contact.postcode": "28013",
 }
 _STRUCTURED_INVOICE = files("cadrumo.application.ledger.tests") / "_evidence_corpus" / "facturae_32_recargo_invoice.xml"

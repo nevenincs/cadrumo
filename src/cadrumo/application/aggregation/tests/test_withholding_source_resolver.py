@@ -31,7 +31,6 @@ from ....domain.calculations.registry import authority as registry_authority
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.user_profile.values import UserProfileFact
 from ...modelo.work_profile import ModeloWorkProfile
@@ -50,10 +49,6 @@ from .withholding_filer_profile_support import (
 from .withholding_observation_support import perceptor_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
-_FROM = filing_year_envelope().floor
-"""The first exercise the synthetic revisions cover, early enough to contain ``_YEAR``."""
 
 
 @pytest.fixture(autouse=True)
@@ -159,10 +154,10 @@ def _resolver(repository: _InMemoryPercepcionObservationRepository) -> Withholdi
 
 def _revision_with(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id=f"{_FROM}-y-siguientes",
-        localization_key=f"test.schema.revision.{_FROM}-y-siguientes.label",
-        valid_from=date(_FROM, 1, 1),
-        period_selector=PeriodSelector(year_from=_FROM, periods=("0A",)),
+        id="2024-y-siguientes",
+        localization_key="test.schema.revision.2024-y-siguientes.label",
+        valid_from=date(2024, 1, 1),
+        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
         legal_refs=_M190_WITHHOLDING_LEGAL_REFS,
         source_refs=_M190_WITHHOLDING_SOURCE_REFS,
         bindings=bindings,
@@ -184,8 +179,8 @@ def _non_withholding_revision() -> ModeloRevision:
     return ModeloRevision(
         id="303-no-withholding-test",
         localization_key="test.schema.revision.303-no-withholding-test.label",
-        valid_from=date(_YEAR, 1, 1),
-        period_selector=PeriodSelector(years=(_YEAR,), periods=("1T",)),
+        valid_from=date(2024, 1, 1),
+        period_selector=PeriodSelector(years=(2024,), periods=("1T",)),
         legal_refs=("ley-37-1992:art-1",),
         source_refs=("test-no-withholding-binding",),
     )
@@ -201,8 +196,8 @@ def _context(
         operation=operation,
         bucket_id="operator",
         modelo="190",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "0A"),
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "0A"),
         revision=revision,
         profile=profile,
     )
@@ -211,11 +206,11 @@ def _context(
 def test_resolver_materialises_distinct_percepcion_count(authority_operation: PinnedAuthorityOperation) -> None:
     """One perceptor under two claves -> percepciones count of 2 from the store."""
     binding = _percepcion_binding()
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2024, "1T")
     repository = _InMemoryPercepcionObservationRepository()
     repository.replace_observations(
         modelo="111",
-        filing_year=_YEAR,
+        filing_year=2024,
         period=period,
         observations=[
             perceptor_observation("00001500M", RetencionClave.from_registry("A")),
@@ -236,18 +231,18 @@ def _two_quarter_repository() -> _InMemoryPercepcionObservationRepository:
     repository = _InMemoryPercepcionObservationRepository()
     repository.replace_observations(
         modelo="111",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "1T"),
         observations=[perceptor_observation("00001500M", RetencionClave.from_registry("A"))],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     repository.replace_observations(
         modelo="111",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "2T"),
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "2T"),
         observations=[
             perceptor_observation("00001500M", RetencionClave.from_registry("A")).model_copy(
-                update={"transaction_date": date(_YEAR, 4, 2)}
+                update={"transaction_date": date(2024, 4, 2)}
             ),
             perceptor_observation("00001501Y", RetencionClave.from_registry("G")),
         ],
@@ -358,8 +353,8 @@ def test_resolver_silent_when_revision_declares_no_withholding_binding() -> None
         CalculationSourceContext(
             bucket_id="operator",
             modelo="303",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "1T"),
+            filing_year=2024,
+            period=Period.from_year_and_code(2024, "1T"),
             revision=_non_withholding_revision(),
         ),
     )
@@ -413,11 +408,11 @@ def test_resolve_decides_cadence_and_disclosure_years_from_the_supplied_operatio
 
     resolver = _resolver(_InMemoryPercepcionObservationRepository())
     cadence = withholding_source.withholding_filer_cadence_for_work_profile(
-        profile, filing_year=_YEAR, operation=authority_operation
+        profile, filing_year=2024, operation=authority_operation
     )
     detail = resolver.load_calculation_detail(
         modelo="193",
-        period=Period.from_year_and_code(_YEAR, "0A"),
+        period=Period.from_year_and_code(2024, "0A"),
         revision=_revision_with(binding),
         cadence=lambda: cadence,
         operation=authority_operation,

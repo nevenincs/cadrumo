@@ -15,7 +15,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import (
     SplitRole,
     TransactionLifecycleState,
@@ -36,8 +35,6 @@ from ..models import MergeTransactionsResult
 from .full_catalogue_commit_harness import FullCatalogueCommitHarness
 from .personal_manual_row_support import personal_outgoing_manual_row
 from .registration_access_context_support import registration_access_context
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -274,7 +271,7 @@ def test_result_projector_requires_matching_success_receipt() -> None:
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(_YEAR, 5, 4, tzinfo=UTC),
+        settled_at=datetime(2026, 5, 4, tzinfo=UTC),
         result_ref="b" * 64,
     )
 

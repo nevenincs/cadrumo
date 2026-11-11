@@ -28,7 +28,7 @@ _OWNER = "S-1-5-21-100-200-300-1001"
 _OTHER = "S-1-5-21-100-200-300-1002"
 _LOGON_SID = "S-1-5-5-0-1234"
 _OTHER_LOGON_SID = "S-1-5-5-0-9999"
-_TIME = datetime(1980, 10, 1, tzinfo=UTC)
+_TIME = datetime(2026, 10, 1, tzinfo=UTC)
 _TICKS = int((_TIME - datetime(1601, 1, 1, tzinfo=UTC)) // timedelta(microseconds=1)) * 10
 
 

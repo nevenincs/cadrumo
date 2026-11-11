@@ -19,38 +19,17 @@ from __future__ import annotations
 from decimal import Decimal
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .parser_boundary_m100_support import corpus_specimens
 from .parser_boundary_support import expected_casilla_values, split_by_supported_filing_year
 
-_M303_HISTORICAL_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
-    expected_casilla_values(
-        {"27": Decimal("12000.00"), "29": Decimal("7800.00"), "45": Decimal("7800.00"), "c46": Decimal("4200.00")},
-    ),
-    expected_casilla_values(
-        {"27": Decimal("13200.00"), "29": Decimal("8400.00"), "45": Decimal("8400.00"), "c46": Decimal("4800.00")},
-    ),
-    expected_casilla_values(
-        {"27": Decimal("14400.00"), "29": Decimal("9000.00"), "45": Decimal("9000.00"), "c46": Decimal("5400.00")},
-    ),
-    expected_casilla_values(
-        {"27": Decimal("12600.00"), "29": Decimal("8100.00"), "45": Decimal("8100.00"), "c46": Decimal("4500.00")},
-    ),
-    expected_casilla_values(
-        {"27": Decimal("15000.00"), "29": Decimal("9600.00"), "45": Decimal("9600.00"), "c46": Decimal("5400.00")},
-    ),
-    expected_casilla_values(
-        {"27": Decimal("16200.00"), "29": Decimal("10200.00"), "45": Decimal("10200.00"), "c46": Decimal("6000.00")},
-    ),
-    expected_casilla_values(
-        {"27": Decimal("18000.00"), "29": Decimal("11400.00"), "45": Decimal("11400.00"), "c46": Decimal("6600.00")},
-    ),
+_M303_HISTORICAL_CASES: tuple[tuple[str, int, str], ...] = (
+    ("2021-2T", 2021, "2T"),
+    ("2021-3T", 2021, "3T"),
+    ("2021-4T", 2021, "4T"),
+    ("2022-1T", 2022, "1T"),
+    ("2022-2T", 2022, "2T"),
+    ("2022-3T", 2022, "3T"),
+    ("2022-4T", 2022, "4T"),
 )
-_M303_CORPUS_CASES: tuple[tuple[str, int, str], ...] = corpus_specimens("303")
-# The specimens the historical-template expectations describe are the oldest ones; the
-# rest of the directory is the current printed template.
-_M303_HISTORICAL_CASES: tuple[tuple[str, int, str], ...] = _M303_CORPUS_CASES[
-    : len(_M303_HISTORICAL_EXPECTED_OLDEST_FIRST)
-]
 M303_HISTORICAL_PARAMS, M303_HISTORICAL_UNSUPPORTED_PARAMS = split_by_supported_filing_year(
     _M303_HISTORICAL_CASES, year_index=1
 )
@@ -59,9 +38,16 @@ M303_HISTORICAL_UNSUPPORTED_IDS: tuple[str, ...] = tuple(
     stem for stem, _year, _period in M303_HISTORICAL_UNSUPPORTED_PARAMS
 )
 
-M303_2023_2024_PARAMS: tuple[tuple[str, int, str], ...] = _M303_CORPUS_CASES[
-    len(_M303_HISTORICAL_EXPECTED_OLDEST_FIRST) :
-]
+M303_2023_2024_PARAMS: tuple[tuple[str, int, str], ...] = (
+    ("2023-1T", 2023, "1T"),
+    ("2023-2T", 2023, "2T"),
+    ("2023-3T", 2023, "3T"),
+    ("2023-4T", 2023, "4T"),
+    ("2024-1T", 2024, "1T"),
+    ("2024-2T", 2024, "2T"),
+    ("2024-3T", 2024, "3T"),
+    ("2024-4T", 2024, "4T"),
+)
 M303_2023_2024_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in M303_2023_2024_PARAMS)
 
 _M303_CORPUS_STEMS: tuple[str, ...] = tuple(
@@ -94,10 +80,26 @@ M303_HISTORICAL_PROFILE_CASILLAS: frozenset[str] = frozenset(
 )
 
 M303_C46_ALIAS: CasillaId = validated_casilla_id("c46", surface="declaracion_parser_boundary.casilla")
-M303_HISTORICAL_EXPECTED: dict[str, dict[CasillaId, Decimal]] = dict(
-    zip(
-        (stem for stem, _year, _period in _M303_HISTORICAL_CASES),
-        _M303_HISTORICAL_EXPECTED_OLDEST_FIRST,
-        strict=True,
-    )
-)
+M303_HISTORICAL_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
+    "2021-2T": expected_casilla_values(
+        {"27": Decimal("12000.00"), "29": Decimal("7800.00"), "45": Decimal("7800.00"), "c46": Decimal("4200.00")},
+    ),
+    "2021-3T": expected_casilla_values(
+        {"27": Decimal("13200.00"), "29": Decimal("8400.00"), "45": Decimal("8400.00"), "c46": Decimal("4800.00")},
+    ),
+    "2021-4T": expected_casilla_values(
+        {"27": Decimal("14400.00"), "29": Decimal("9000.00"), "45": Decimal("9000.00"), "c46": Decimal("5400.00")},
+    ),
+    "2022-1T": expected_casilla_values(
+        {"27": Decimal("12600.00"), "29": Decimal("8100.00"), "45": Decimal("8100.00"), "c46": Decimal("4500.00")},
+    ),
+    "2022-2T": expected_casilla_values(
+        {"27": Decimal("15000.00"), "29": Decimal("9600.00"), "45": Decimal("9600.00"), "c46": Decimal("5400.00")},
+    ),
+    "2022-3T": expected_casilla_values(
+        {"27": Decimal("16200.00"), "29": Decimal("10200.00"), "45": Decimal("10200.00"), "c46": Decimal("6000.00")},
+    ),
+    "2022-4T": expected_casilla_values(
+        {"27": Decimal("18000.00"), "29": Decimal("11400.00"), "45": Decimal("11400.00"), "c46": Decimal("6600.00")},
+    ),
+}

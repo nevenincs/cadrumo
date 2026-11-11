@@ -38,7 +38,6 @@ from .....core.classification.policies import SensitivityClass
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from .....domain.calculations.registry.authority import bundled_indexed_authority
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import StoredTransactionDriftError
@@ -52,8 +51,6 @@ from ...storage.sql.secure_object_records import SecureObjectRawRow
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -75,8 +72,8 @@ def _authority_operation() -> Iterator[None]:
 def _raw(provider_id: str, amount: Decimal, description: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(2024, 4, 10),
+        value_date=date(2024, 4, 10),
         amount=amount,
         currency="EUR",
         counterparty="Supplier SL",
@@ -86,7 +83,7 @@ def _raw(provider_id: str, amount: Decimal, description: str) -> RawTransaction:
             source_sha256="b" * 64,
             source_row_index=7,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(1980, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": description},
@@ -239,8 +236,8 @@ def test_transaction_catalogue_refuses_foreign_payload_rekeyed_under_an_indexed_
         assert TransactionCatalogueRepository(bucket_id=profile.bucket_id).load() == original
         assert (
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_for_date_range(
-                date(_YEAR, 4, 1),
-                date(_YEAR, 4, 30),
+                date(2024, 4, 1),
+                date(2024, 4, 30),
             )
             == original
         )
@@ -282,15 +279,15 @@ def test_transaction_catalogue_refuses_foreign_payload_rekeyed_under_an_indexed_
 
         with pytest.raises(SecureObjectRowIdentityError) as date_indexed_read:
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_for_date_range(
-                date(_YEAR, 4, 1),
-                date(_YEAR, 4, 30),
+                date(2024, 4, 1),
+                date(2024, 4, 30),
             )
         assert date_indexed_read.value.expected_identifier == expected_identifier
 
         with pytest.raises(SecureObjectRowIdentityError) as partitioned_read:
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
-                date(_YEAR, 4, 1),
-                date(_YEAR, 4, 30),
+                date(2024, 4, 1),
+                date(2024, 4, 30),
             )
         assert partitioned_read.value.expected_identifier == expected_identifier
 
@@ -300,8 +297,8 @@ def test_transaction_catalogue_load_uses_json_mode_for_derived_id_roundtrip(
 ) -> None:
     import json as _json
 
-    created = datetime(1980, 4, 14, 9, 30, tzinfo=UTC)
-    modified = datetime(1980, 6, 1, 16, 45, tzinfo=UTC)
+    created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+    modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
     transaction = Transaction.model_validate(
         {
             "raw": _raw("provider-json-mode", Decimal("121.00"), "Consulting invoice"),
@@ -383,7 +380,7 @@ def test_transaction_catalogue_save_skips_unchanged_secure_object_rows(
         updated_changed = changed.model_copy(
             update={
                 "group_label": "internet",
-                "modified_at": datetime(1980, 4, 15, 12, 0, tzinfo=UTC),
+                "modified_at": datetime(2024, 4, 15, 12, 0, tzinfo=UTC),
             },
         )
         assert updated_changed.transaction_id == changed.transaction_id
@@ -811,8 +808,8 @@ def test_transaction_catalogue_preserves_created_modified_at_through_encrypted_s
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-        created = datetime(1980, 4, 14, 9, 30, tzinfo=UTC)
-        modified = datetime(1980, 6, 1, 16, 45, tzinfo=UTC)
+        created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+        modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
         stamped = Transaction.model_validate(
             {
                 "raw": _raw("provider-row-ts", Decimal("77.00"), "Compra material oficina"),
@@ -853,8 +850,8 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-        created = datetime(1980, 4, 14, 9, 30, tzinfo=UTC)
-        modified = datetime(1980, 6, 1, 16, 45, tzinfo=UTC)
+        created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+        modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
         stamped = Transaction.model_validate(
             {
                 "raw": _raw("provider-row-ts", Decimal("77.00"), "Compra material oficina"),
@@ -908,8 +905,8 @@ def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-        created = datetime(1980, 4, 14, 9, 30, tzinfo=UTC)
-        modified = datetime(1980, 6, 1, 16, 45, tzinfo=UTC)
+        created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+        modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
         stamped = Transaction.model_validate(
             {
                 "raw": _raw("provider-row-ts-modified", Decimal("77.00"), "Compra material oficina"),
@@ -1092,7 +1089,7 @@ def test_cache_miss_on_content_edited_replacement_instance_still_detects_the_cha
         edited = loaded_transaction.model_copy(
             update={
                 "group_label": "edited-after-load",
-                "modified_at": datetime(1980, 5, 1, 8, 0, tzinfo=UTC),
+                "modified_at": datetime(2024, 5, 1, 8, 0, tzinfo=UTC),
             },
         )
         assert edited is not loaded_transaction
@@ -1182,15 +1179,15 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
                 "iva_amount": Decimal("210.00"),
                 "iva_category": IvaCategory("domestic_general"),
                 "cash_accounting_treatment": IvaCashAccountingTreatment("supplier_regime"),
-                "operation_date": date(_YEAR, 3, 20),
+                "operation_date": date(2026, 3, 20),
                 "cash_accounting_payment_evidence": (
                     IvaCashAccountingPaymentEvidence(
-                        payment_date=date(_YEAR, 4, 15),
+                        payment_date=date(2026, 4, 15),
                         taxable_base=Decimal("600.00"),
                         iva_amount=Decimal("126.00"),
                     ),
                     IvaCashAccountingPaymentEvidence(
-                        payment_date=date(_YEAR, 6, 10),
+                        payment_date=date(2026, 6, 10),
                         taxable_base=Decimal("400.00"),
                         iva_amount=Decimal("84.00"),
                     ),
@@ -1204,15 +1201,15 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
     assert loaded == original
     loaded_txn = loaded.transactions[cash_purchase.transaction_id]
     assert loaded_txn.cash_accounting_treatment == IvaCashAccountingTreatment("supplier_regime")
-    assert loaded_txn.operation_date == date(_YEAR, 3, 20)
+    assert loaded_txn.operation_date == date(2026, 3, 20)
     assert len(loaded_txn.cash_accounting_payment_evidence) == 2
     first, second = loaded_txn.cash_accounting_payment_evidence
     assert isinstance(first, IvaCashAccountingPaymentEvidence)
-    assert first.payment_date == date(_YEAR, 4, 15)
+    assert first.payment_date == date(2026, 4, 15)
     assert first.taxable_base == Decimal("600.00")
     assert first.iva_amount == Decimal("126.00")
     assert first.recargo_amount == Decimal("0")
-    assert second.payment_date == date(_YEAR, 6, 10)
+    assert second.payment_date == date(2026, 6, 10)
     assert second.taxable_base == Decimal("400.00")
     assert second.iva_amount == Decimal("84.00")
     total_base = sum((evidence.taxable_base for evidence in loaded_txn.cash_accounting_payment_evidence), Decimal("0"))

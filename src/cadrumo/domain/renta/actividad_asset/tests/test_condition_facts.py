@@ -36,7 +36,7 @@ def test_every_condition_is_tabled_and_every_fact_is_a_field_of_the_record() -> 
 
 
 def test_the_construction_date_is_stated_exactly_under_the_conditions_that_table_it() -> None:
-    built = date(1990, 1, 1)
+    built = date(2000, 1, 1)
     for condition, facts in ACQUIRED_CONDITION_FACTS.items():
         if "building_construction_date" in facts:
             assert _with_condition(condition, building_construction_date=built).building_construction_date == built

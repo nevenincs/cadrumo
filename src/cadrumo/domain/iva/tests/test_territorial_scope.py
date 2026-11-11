@@ -12,17 +12,14 @@ from datetime import date
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..classification import resolve_iva_classification_catalogue
 from ..schema import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON = date(filing_year_envelope().horizon, 1, 1)
-
 
 def test_member_names_preserved(operation: PinnedAuthorityOperation) -> None:
-    catalogue = resolve_iva_classification_catalogue(_ON, operation=operation)
+    catalogue = resolve_iva_classification_catalogue(date(2025, 1, 1), operation=operation)
     names = {member.value.upper() for member in catalogue.territorial_scopes}
     assert names == {
         "ES_MAINLAND",
@@ -42,11 +39,11 @@ def test_string_values_preserved() -> None:
 
 
 def test_strenum_value_lookup_round_trips(operation: PinnedAuthorityOperation) -> None:
-    catalogue = resolve_iva_classification_catalogue(_ON, operation=operation)
+    catalogue = resolve_iva_classification_catalogue(date(2025, 1, 1), operation=operation)
     for member in catalogue.territorial_scopes:
         assert catalogue.require_territorial_scope(member.value) == member
 
 
 def test_set_is_closed(operation: PinnedAuthorityOperation) -> None:
-    catalogue = resolve_iva_classification_catalogue(_ON, operation=operation)
+    catalogue = resolve_iva_classification_catalogue(date(2025, 1, 1), operation=operation)
     assert len(catalogue.territorial_scopes) == 5

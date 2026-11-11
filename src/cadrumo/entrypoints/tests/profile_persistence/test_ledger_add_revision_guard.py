@@ -22,7 +22,6 @@ from ....application.ledger.persistence_ports import LedgerPersistenceConflictEr
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -30,14 +29,13 @@ from ....domain.usage_ratios.model import UsageRatioProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
+_NOW = datetime(2026, 4, 15, 9, 30, tzinfo=UTC)
 
 
 def _manual_command(bucket_id: str, description: str) -> ManualLedgerTransactionCommand:
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
-        booked_date=date(_YEAR, 4, 15),
+        booked_date=date(2026, 4, 15),
         amount=Decimal("10.00"),
         direction=TransactionDirection.OUTGOING,
         description=description,
@@ -53,8 +51,8 @@ def _concurrent_row() -> Transaction:
         {
             "raw": RawTransaction(
                 provider_transaction_id="concurrent-unrelated-row",
-                booked_date=date(_YEAR, 4, 15),
-                value_date=date(_YEAR, 4, 15),
+                booked_date=date(2026, 4, 15),
+                value_date=date(2026, 4, 15),
                 amount=Decimal("10.00"),
                 currency="EUR",
                 counterparty="Synthetic counterparty",

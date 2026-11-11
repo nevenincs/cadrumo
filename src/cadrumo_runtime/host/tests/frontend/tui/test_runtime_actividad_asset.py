@@ -40,7 +40,6 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -64,8 +63,6 @@ from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_actividad_asset import RuntimeActivityAssetTuiActionsV1
 from .door_session_support import terminal_observation
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -139,7 +136,7 @@ def _revision() -> ActivityAssetRevision:
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="runtime TUI fixture",
         ),
-        in_service_date=date(_YEAR, 1, 1),
+        in_service_date=date(2025, 1, 1),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0.00"),

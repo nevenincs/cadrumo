@@ -16,12 +16,6 @@ from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.ids import BindingId
-from ...calculations.registry.tests.authored_editions import (
-    authored_revisions,
-    filing_year_envelope,
-    revision_before_first_declaring,
-    supported_authored_exercises,
-)
 from ..perceptor_clave_scope import (
     ClaveScopeToken,
     PerceptorClaveScope,
@@ -44,18 +38,6 @@ def _pinned_authority() -> Iterator[None]:
 
 _DESCENDANTS = validated_casilla_id("perc.descendientes-menores-3-total")
 _CONTRACT = validated_casilla_id("perc.contrato-relacion")
-_PENSION_TYPE_INDICATORS = (
-    "perc.prestacion-incapacidad",
-    "perc.prestacion-jubilacion",
-    "perc.prestacion-no-contributiva",
-    "perc.prestacion-resto",
-    "perc.prestacion-viudedad",
-)
-# The design that introduced the pension-type indicators also widened clave B's subclaves.
-_BEFORE_WIDENING = revision_before_first_declaring("190", _PENSION_TYPE_INDICATORS[0])
-assert _BEFORE_WIDENING.valid_to is not None
-_EARLIER_DESIGN_YEAR = _BEFORE_WIDENING.valid_to.year
-_WIDENED_DESIGN_YEAR = _EARLIER_DESIGN_YEAR + 1
 _UNSCOPED = validated_casilla_id("perc.percepcion-dineraria")
 
 
@@ -84,7 +66,7 @@ def test_a_malformed_token_is_refused(raw: str) -> None:
 
 
 def test_family_data_belongs_to_work_income_claves_only(operation: PinnedAuthorityOperation) -> None:
-    scope = _scope(operation, _EARLIER_DESIGN_YEAR)
+    scope = _scope(operation, 2024)
     assert scope.modelo_id == "190"
     assert scope.admits(_DESCENDANTS, "A", None)
     assert scope.admits(_DESCENDANTS, "B", "01")
@@ -97,26 +79,26 @@ def test_family_data_belongs_to_work_income_claves_only(operation: PinnedAuthori
 
 
 def test_each_design_edition_carries_its_own_subclave_list(operation: PinnedAuthorityOperation) -> None:
-    """The design that introduced the pension-type indicators widens clave B to subclaves 04 and 99."""
-    assert not _scope(operation, _EARLIER_DESIGN_YEAR).admits(_DESCENDANTS, "B", "04")
-    assert _scope(operation, _WIDENED_DESIGN_YEAR).admits(_DESCENDANTS, "B", "04")
-    assert _scope(operation, _WIDENED_DESIGN_YEAR).admits(_DESCENDANTS, "B", "99")
+    """The 2025 design widens clave B to subclaves 04 and 99; the 2024 one does not."""
+    assert not _scope(operation, 2024).admits(_DESCENDANTS, "B", "04")
+    assert _scope(operation, 2025).admits(_DESCENDANTS, "B", "04")
+    assert _scope(operation, 2025).admits(_DESCENDANTS, "B", "99")
 
 
 def test_an_ejercicio_before_every_variant_resolves_no_scope(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(RegistryValidationError):
-        _scope(operation, authored_revisions("190")[0].valid_from.year - 1)
+        _scope(operation, 2021)
 
 
 def test_row_casillas_map_to_the_row_bindings_that_fill_them(operation: PinnedAuthorityOperation) -> None:
-    revision = operation.snapshot("190", filing_year=_EARLIER_DESIGN_YEAR, period="0A").revision
+    revision = operation.snapshot("190", filing_year=2024, period="0A").revision
     bindings = row_field_value_bindings(revision)
     assert bindings[_DESCENDANTS] == "modelo-190-perceptor-row-descendientes-menores-3-total"
     assert _UNSCOPED in bindings
 
 
 def test_only_in_scope_rows_without_a_value_are_missing(operation: PinnedAuthorityOperation) -> None:
-    scope = _scope(operation, _EARLIER_DESIGN_YEAR)
+    scope = _scope(operation, 2024)
     value_binding = "modelo-190-perceptor-row-descendientes-menores-3-total"
     rows = {
         scope.row_clave_binding: {"0": "G", "1": "A", "2": "A", "3": "B", "4": "B"},
@@ -134,8 +116,8 @@ def test_only_in_scope_rows_without_a_value_are_missing(operation: PinnedAuthori
 
 
 def test_the_scope_names_only_declared_casillas_and_registry_claves(operation: PinnedAuthorityOperation) -> None:
-    scope = _scope(operation, _WIDENED_DESIGN_YEAR)
-    revision = operation.snapshot("190", filing_year=_WIDENED_DESIGN_YEAR, period="0A").revision
+    scope = _scope(operation, 2025)
+    revision = operation.snapshot("190", filing_year=2025, period="0A").revision
     declared = frozenset(casilla.id for casilla in revision.casillas)
     assert perceptor_clave_scope_failures(scope, casilla_ids=declared, authority=operation) == []
 
@@ -159,15 +141,14 @@ def test_the_snapshot_check_claims_only_revisions_carrying_perceptor_records(
 ) -> None:
     del operation  # the leased operation scopes the check's governed-fact read
     revision_bindings = frozenset({"modelo-190-perceptor-row-clave", "modelo-190-perceptor-row-subclave"})
-    exercise = filing_year_envelope().horizon
-    assert check_perceptor_clave_scope("111", frozenset(), frozenset(), revision_bindings, filing_year=exercise) == []
-    assert check_perceptor_clave_scope("190", frozenset(), frozenset(), frozenset(), filing_year=exercise) == []
+    assert check_perceptor_clave_scope("111", frozenset(), frozenset(), revision_bindings, filing_year=2025) == []
+    assert check_perceptor_clave_scope("190", frozenset(), frozenset(), frozenset(), filing_year=2025) == []
 
 
 def _revision_surface(
     operation: PinnedAuthorityOperation, filing_year: int
 ) -> tuple[frozenset[CasillaId], frozenset[BindingId]]:
-    # Older revisions can be applicability grade; the lowest rung admits every revision.
+    # The 2022 and 2023 revisions are applicability grade; the lowest rung admits every revision.
     revision = operation.snapshot(
         "190", filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
     ).revision
@@ -175,7 +156,7 @@ def _revision_surface(
     return casillas, frozenset(binding.id for binding in revision.bindings)
 
 
-@pytest.mark.parametrize("filing_year", supported_authored_exercises("190"))
+@pytest.mark.parametrize("filing_year", [2022, 2023, 2024, 2025])
 def test_every_revision_passes_the_check_under_its_own_year(
     operation: PinnedAuthorityOperation,
     filing_year: int,
@@ -188,17 +169,23 @@ def test_every_revision_passes_the_check_under_its_own_year(
 def test_a_revision_judged_by_a_later_edition_reports_the_casillas_it_lacks(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """The earlier revision is judged by its own design, never by a later edition.
+    """The 2024 revision is judged by the 2024 design, never by a later edition.
 
-    The later design introduced the B.01 pension-type indicators (positions
-    390-394) where the earlier design leaves 389-500 blank, so the earlier
-    revision declares none of them. Judged by the later edition, the same
-    revision surface reports exactly those five casillas.
+    The 2025 design introduced the B.01 pension-type indicators (positions
+    390-394) where the 2024 design leaves 389-500 blank, so the 2024 revision
+    declares none of them. Judged by the 2025 edition, the same revision
+    surface reports exactly those five casillas.
     """
-    casillas, bindings = _revision_surface(operation, _EARLIER_DESIGN_YEAR)
-    assert check_perceptor_clave_scope("190", casillas, frozenset(), bindings, filing_year=_WIDENED_DESIGN_YEAR) == [
+    casillas, bindings = _revision_surface(operation, 2024)
+    assert check_perceptor_clave_scope("190", casillas, frozenset(), bindings, filing_year=2025) == [
         f"perceptor clave scope names casilla {casilla_id!r}, which the revision does not declare"
-        for casilla_id in _PENSION_TYPE_INDICATORS
+        for casilla_id in (
+            "perc.prestacion-incapacidad",
+            "perc.prestacion-jubilacion",
+            "perc.prestacion-no-contributiva",
+            "perc.prestacion-resto",
+            "perc.prestacion-viudedad",
+        )
     ]
 
 
@@ -207,7 +194,7 @@ def test_a_year_without_a_scope_edition_is_refused_once_the_revision_declares_bi
 ) -> None:
     """A binding-free surface has no perceptor rows; a binding-bearing one needs an edition.
 
-    The ungoverned year this once used is now governed by its own edition,
+    The ungoverned year this once used, 2022, is now governed by its own edition,
     and so is every other supported filing year -- which is the first assertion
     here, derived from the registry rather than listed. That leaves no supported
     year for the refusal branch to be reached through, so the case it guarded is
@@ -219,7 +206,7 @@ def test_a_year_without_a_scope_edition_is_refused_once_the_revision_declares_bi
     declaring no binding carries no perceptor record for the scope to govern, so
     the check has no claim over it whatever year it is asked about.
     """
-    casillas, bindings = _revision_surface(operation, filing_year_envelope().floor)
+    casillas, bindings = _revision_surface(operation, 2022)
     assert bindings
 
     supported = operation.modelo_directory("190").supported_filing_years
@@ -234,7 +221,4 @@ def test_a_year_without_a_scope_edition_is_refused_once_the_revision_declares_bi
     ]
     assert ungoverned == [], f"supported filing year(s) {ungoverned} have no perceptor clave scope edition"
 
-    assert (
-        check_perceptor_clave_scope("190", casillas, frozenset(), frozenset(), filing_year=filing_year_envelope().floor)
-        == []
-    )
+    assert check_perceptor_clave_scope("190", casillas, frozenset(), frozenset(), filing_year=2022) == []

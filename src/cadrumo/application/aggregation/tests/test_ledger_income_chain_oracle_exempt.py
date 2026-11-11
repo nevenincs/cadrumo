@@ -48,7 +48,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
@@ -77,7 +76,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 def modelo_130_revision():
     """Resolve the shipped Modelo 130 revision used by this runtime oracle."""
-    return published_snapshot("130", filing_year=_FILING_YEAR, period="1T").revision
+    return published_snapshot("130", filing_year=2026, period="1T").revision
 
 
 # The invoice, stated once from the document and the cited rate.
@@ -90,7 +89,7 @@ _CASH = _TOTAL - _RETENCION
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 
-_FILING_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = 2026
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "1T")
 _VALUE_DATE = date(_FILING_YEAR, 3, 4)
 _BUCKET = "eeb87dd1-12bd-4e70-8f3e-751d9bb85455"  # was 'bucket-oracle-exempt'
@@ -115,7 +114,7 @@ def _invoice_row(*, declares_substrate: bool) -> Transaction:
         amount=_CASH,
         currency="EUR",
         counterparty="Clinica Ejemplo SL",
-        description=f"Servicios profesionales exentos F-{_FILING_YEAR}-042",
+        description="Servicios profesionales exentos F-2026-042",
         provenance=RawProvenance(
             source_path=Path(__file__),
             source_sha256="d" * 64,
@@ -124,7 +123,7 @@ def _invoice_row(*, declares_substrate: bool) -> Transaction:
             ingested_at=datetime(_FILING_YEAR, 4, 6, 9, 30, tzinfo=UTC),
             provider_name="CSV provider",
         ),
-        raw_fields={"Concepto": f"F-{_FILING_YEAR}-042"},
+        raw_fields={"Concepto": "F-2026-042"},
     )
     return Transaction.model_validate(
         {

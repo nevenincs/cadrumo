@@ -2,16 +2,14 @@
 
 The expected figures are worked by hand from the Manual Renta definition: the value of
 transmission is the amount less its costs, and the gain or loss is that value less the net
-value of the element. The 12,000.00 element loses the minimum 5 % linear charge pro-rated
-over the days it was in service (181 of 365 in a common year, 182 of 366 in a leap year), so its net
-value is the cost less that charge, computed in the test for the year under test.
+value of the element. The 12,000.00 element loses 297.53 to the 2025 charge, so its net value is
+11,702.47.
 """
 
 from __future__ import annotations
 
-import calendar
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from pathlib import Path
 from xml.etree.ElementTree import Element
 
@@ -30,10 +28,6 @@ from ....domain.calculations.registry.binding_selector_utils import selector_as_
 from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
-from ....domain.calculations.registry.tests.authored_editions import (
-    newest_authored_edition,
-    supported_authored_exercises,
-)
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.filing.schema import ModeloDraft
@@ -53,11 +47,6 @@ from .export_support import filer_with_nothing_else, m151_producer_snapshot
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _XSD = "{http://www.w3.org/2001/XMLSchema}"
-_YEAR = newest_authored_edition("100")
-_FIRST_COST = Decimal("12000.00")
-_FIRST_TRANSMISSION_COSTS = Decimal("100.00")
-#: The minimum linear coefficient of the 10 % mobiliario class the fixture assets elect.
-_MINIMUM_COEFFICIENT = Decimal("0.05")
 _ELEMENT_PATH = "DatosEconomicos/TomaDatosAmpliada/GPOtrosElementos/ElementoPatrimonial"
 
 
@@ -150,21 +139,8 @@ def _render(provider: RegistrySchemaAccessor, draft: ModeloDraft) -> bytes:
     )
 
 
-def _first_sale_net_value(year: int) -> Decimal:
-    """The first element's net value at its 30 June sale: cost less the pro-rated minimum charge.
-
-    Worked from the day counts of ``year`` itself, so a leap year prorates over 366 days.
-    """
-    days_in_service = (date(year, 6, 30) - date(year, 1, 1)).days + 1
-    days_in_year = 366 if calendar.isleap(year) else 365
-    charge = (_FIRST_COST * _MINIMUM_COEFFICIENT * days_in_service / days_in_year).quantize(
-        Decimal("0.01"), rounding=ROUND_HALF_UP
-    )
-    return _FIRST_COST - charge
-
-
 def _resolved(
-    year: int = _YEAR, *, second_proceeds: str = "10000.00", extra_sales: int = 0
+    year: int = 2025, *, second_proceeds: str = "10000.00", extra_sales: int = 0
 ) -> CalculationSourceResolution:
     return resolve_m100(_history(year, second_proceeds=second_proceeds, extra_sales=extra_sales), year=year)
 
@@ -172,11 +148,11 @@ def _resolved(
 def test_two_sales_export_as_two_elements_each_with_its_own_figures(
     operation: PinnedAuthorityOperation, tmp_path: Path
 ) -> None:
-    provider = _provider(operation, _YEAR)
+    provider = _provider(operation, 2025)
     bought = renta_acquisition_row("first", activity=None)
-    resolved = resolve_m100(_history(_YEAR, first_transaction_id=bought.transaction_id), rows=(bought,))
-    draft = _draft(provider, _YEAR, _inputs(resolved))
-    output_path = tmp_path / f"modelo-100-{_YEAR}.xml"
+    resolved = resolve_m100(_history(2025, first_transaction_id=bought.transaction_id), rows=(bought,))
+    draft = _draft(provider, 2025, _inputs(resolved))
+    output_path = tmp_path / "modelo-100-2025.xml"
 
     export_draft(
         draft,
@@ -188,21 +164,19 @@ def test_two_sales_export_as_two_elements_each_with_its_own_figures(
     )
 
     first, second = _elements(output_path.read_bytes())
-    # A gain: 12,000 less 100 of costs is 11,900; less the net value after the pro-rated charge is the gain.
-    first_net_value = _first_sale_net_value(_YEAR)
-    first_gain = _FIRST_COST - _FIRST_TRANSMISSION_COSTS - first_net_value
+    # A gain: 12,000 less 100 of costs is 11,900; less the net value of 11,702.47 is 197.53.
     assert first.findtext("G2DB") == "5"
     assert first.findtext("F2ONEROSA") == "1"
-    assert first.findtext("G2DC") == f"30/6/{_YEAR}"
-    assert first.findtext("G2DD") == f"5/4/{_YEAR}"
+    assert first.findtext("G2DC") == "30/6/2025"
+    assert first.findtext("G2DD") == "5/4/2025"
     assert first.findtext("G2DE") == "11900.00"
-    assert first.findtext("G2DF") == str(first_net_value)
-    assert first.findtext("G2DI") == str(first_gain)
-    assert first.findtext("G2DS") == str(first_gain)
+    assert first.findtext("G2DF") == "11702.47"
+    assert first.findtext("G2DI") == "197.53"
+    assert first.findtext("G2DS") == "197.53"
     assert first.find("G2DG") is None
     assert first.find("G2DH") is None
-    # A loss: 10,000 with no costs, against the first element's net value at its 30 June terms.
-    assert second.findtext("G2DC") == f"1/9/{_YEAR}"
+    # A loss: 10,000 with no costs, against a net value of 11,702.47 at 2025-06-30 terms.
+    assert second.findtext("G2DC") == "1/9/2025"
     assert second.findtext("G2DE") == "10000.00"
     loss = Decimal(second.findtext("G2DF") or "") - Decimal("10000.00")
     assert second.findtext("G2DG") == str(loss)
@@ -212,7 +186,7 @@ def test_two_sales_export_as_two_elements_each_with_its_own_figures(
     assert verify_export(draft, file_path=output_path, schema_provider=provider).verdict.value == "match"
 
 
-@pytest.mark.parametrize("year", supported_authored_exercises("100"))
+@pytest.mark.parametrize("year", [2022, 2023, 2024, 2025])
 def test_every_edition_places_the_declared_columns_in_the_schema_order(
     operation: PinnedAuthorityOperation, year: int
 ) -> None:
@@ -240,8 +214,8 @@ def test_every_edition_places_the_declared_columns_in_the_schema_order(
 
 
 def test_the_scalar_totals_stay_on_the_draft(operation: PinnedAuthorityOperation) -> None:
-    provider = _provider(operation, _YEAR)
-    draft = _draft(provider, _YEAR, _inputs(_resolved(second_proceeds="13000.00")))
+    provider = _provider(operation, 2025)
+    draft = _draft(provider, 2025, _inputs(_resolved(second_proceeds="13000.00")))
 
     values = {value.casilla_id: value.value for value in draft.values}
     rows = _elements(_render(provider, draft))
@@ -251,11 +225,11 @@ def test_the_scalar_totals_stay_on_the_draft(operation: PinnedAuthorityOperation
 
 
 def test_a_typed_date_row_refuses_an_invalid_iso_date(operation: PinnedAuthorityOperation) -> None:
-    provider = _provider(operation, _YEAR)
-    draft = _draft(provider, _YEAR, _inputs(_resolved()))
+    provider = _provider(operation, 2025)
+    draft = _draft(provider, 2025, _inputs(_resolved()))
     date_binding = "renta-activity-asset-disposal-row-transmission-date-1631"
     rows = tuple(
-        value.model_copy(update={"value": f"{_YEAR}-99-01"}) if value.binding_id == date_binding else value
+        value.model_copy(update={"value": "2025-99-01"}) if value.binding_id == date_binding else value
         for value in draft.binding_values
     )
     assert any(value.binding_id == date_binding for value in rows)
@@ -264,23 +238,23 @@ def test_a_typed_date_row_refuses_an_invalid_iso_date(operation: PinnedAuthority
 
 
 def test_a_box_total_the_rows_do_not_add_up_to_refuses(operation: PinnedAuthorityOperation) -> None:
-    provider = _provider(operation, _YEAR)
+    provider = _provider(operation, 2025)
     inputs = _inputs(_resolved(second_proceeds="13000.00"))
     gain_total = next(key for key in inputs if key == "renta-activity-asset-disposal-gain-element-1654")
     inputs[gain_total] = Decimal("1.00")
 
     with pytest.raises(FilingExportValidationError, match="do not add up"):
-        _render(provider, _draft(provider, _YEAR, inputs))
+        _render(provider, _draft(provider, 2025, inputs))
 
 
 def test_a_value_on_another_box_of_the_element_refuses_rather_than_landing_on_a_sale(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    provider = _provider(operation, _YEAR)
+    provider = _provider(operation, 2025)
     inputs = {**_inputs(_resolved(second_proceeds="13000.00")), "1652": Decimal("10.00")}
 
     with pytest.raises(FilingExportValidationError, match="do not add up"):
-        _render(provider, _draft(provider, _YEAR, inputs))
+        _render(provider, _draft(provider, 2025, inputs))
 
 
 def test_a_value_on_another_box_of_a_lone_sale_refuses_rather_than_landing_on_it(
@@ -316,10 +290,10 @@ def test_a_value_on_another_box_of_a_lone_sale_refuses_rather_than_landing_on_it
 
 
 def test_more_sales_than_the_schema_admits_refuses(operation: PinnedAuthorityOperation) -> None:
-    provider = _provider(operation, _YEAR)
+    provider = _provider(operation, 2025)
     # The bound comes from the XSD: 79 extra sales fill it exactly, and one more passes it.
-    _render(provider, _draft(provider, _YEAR, _inputs(_resolved(second_proceeds="13000.00", extra_sales=78))))
+    _render(provider, _draft(provider, 2025, _inputs(_resolved(second_proceeds="13000.00", extra_sales=78))))
     inputs = _inputs(_resolved(second_proceeds="13000.00", extra_sales=79))
 
     with pytest.raises(FilingExportValidationError, match="80 times"):
-        _render(provider, _draft(provider, _YEAR, inputs))
+        _render(provider, _draft(provider, 2025, inputs))

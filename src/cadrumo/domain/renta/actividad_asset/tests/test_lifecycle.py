@@ -1,16 +1,14 @@
-"""Contract tests for immutable activity-asset facts and their yearly schedules."""
+"""Contract tests for immutable activity-asset facts and 2025 schedules."""
 
 from __future__ import annotations
 
-from calendar import isleap
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from itertools import pairwise
 
 import pytest
 from pydantic import ValidationError
 
-from ....calculations.registry.tests.authored_editions import filing_year_envelope
 from ..election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod, DirectEstimationRegime
 from ..errors import ActividadAssetIncompleteError, ActividadAssetUnsupportedError, ActividadAssetValidationError
 from ..lifecycle import (
@@ -30,17 +28,6 @@ from .lineage_projection import resolve_current_transaction_id
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _NO_HISTORY = AssetScheduleHistory()
-_TAX_YEAR = filing_year_envelope().horizon
-_YEAR_START = date(_TAX_YEAR, 1, 1)
-_YEAR_END = date(_TAX_YEAR + 1, 1, 1)
-_MID_YEAR = date(_TAX_YEAR, 7, 1)
-_YEAR_DAYS = (_YEAR_END - _YEAR_START).days
-_SERVICE_DAYS_FROM_MID_YEAR = (_YEAR_END - _MID_YEAR).days
-
-
-def _accrued(amount: Decimal, rate: Decimal, days: int) -> Decimal:
-    """Return ``amount`` x ``rate`` x ``days`` / the days of the schedule year, rounded half-up to cents."""
-    return (amount * rate * days / _YEAR_DAYS).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def _linear_election(
@@ -94,7 +81,7 @@ def lifecycle_revision(**overrides: object) -> ActivityAssetRevision:
         "acquisition_shape": AcquisitionShape.PRIMARY_PURCHASE,
         "asset_kind": AssetKind.MATERIAL,
         "basis": _property_basis(),
-        "in_service_date": _YEAR_START,
+        "in_service_date": date(2025, 1, 1),
         "opening_history": OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
@@ -108,17 +95,17 @@ def lifecycle_revision(**overrides: object) -> ActivityAssetRevision:
 
 def _authority(revision: ActivityAssetRevision, **overrides: object) -> ScheduleAuthority:
     payload: dict[str, object] = {
-        "tax_year": _TAX_YEAR,
+        "tax_year": 2025,
         "asset_kind": revision.asset_kind,
         "method": AmortizationMethod.LINEAR,
         "election_fingerprint": revision.amortization.fingerprint,
         "annual_rate": Decimal("0.10"),
-        "authority_generation": f"{_TAX_YEAR}.1",
-        "source_reference": f"tabla-material-{_TAX_YEAR}",
+        "authority_generation": "2025.1",
+        "source_reference": "tabla-material-2025",
     }
     payload.update(overrides)
     if overrides.get("method", AmortizationMethod.LINEAR) is AmortizationMethod.LINEAR:
-        payload.setdefault("maximum_period_ends_on", date(_TAX_YEAR + 20, 1, 1))
+        payload.setdefault("maximum_period_ends_on", date(2045, 1, 1))
     return ScheduleAuthority.model_validate(payload)
 
 
@@ -210,8 +197,8 @@ def test_spousal_property_and_missing_opening_history_fail_closed() -> None:
         schedule_charge(
             missing,
             _authority(missing),
-            covered_from=_YEAR_START,
-            covered_until=date(_TAX_YEAR, 4, 1),
+            covered_from=date(2025, 1, 1),
+            covered_until=date(2025, 4, 1),
             history=_NO_HISTORY,
         )
 
@@ -223,10 +210,10 @@ def test_a_non_zero_opening_amount_requires_the_last_tax_year_it_covers() -> Non
         OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
-            covered_through_tax_year=_TAX_YEAR,
+            covered_through_tax_year=2022,
         )
     with pytest.raises(ValidationError, match="opening_covered_year_requires_amount"):
-        OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING, covered_through_tax_year=_TAX_YEAR)
+        OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING, covered_through_tax_year=2022)
 
 
 def test_an_opening_year_before_the_in_service_year_is_refused_and_the_in_service_year_is_accepted() -> None:
@@ -238,16 +225,16 @@ def test_an_opening_year_before_the_in_service_year_is_refused_and_the_in_servic
         )
 
     with pytest.raises(ValidationError, match="opening_year_before_in_service"):
-        lifecycle_revision(in_service_date=_MID_YEAR, opening_history=opening_through(_TAX_YEAR - 1))
+        lifecycle_revision(in_service_date=date(2020, 7, 1), opening_history=opening_through(2019))
 
-    accepted = lifecycle_revision(in_service_date=_MID_YEAR, opening_history=opening_through(_TAX_YEAR))
-    assert accepted.opening_history.covered_through_tax_year == _TAX_YEAR
+    accepted = lifecycle_revision(in_service_date=date(2020, 7, 1), opening_history=opening_through(2020))
+    assert accepted.opening_history.covered_through_tax_year == 2020
 
 
 def test_opening_year_changes_the_revision_identity() -> None:
     def revision_through(year: int) -> ActivityAssetRevision:
         return lifecycle_revision(
-            in_service_date=_YEAR_START,
+            in_service_date=date(2020, 1, 1),
             opening_history=OpeningAmortizationHistory(
                 status=OpeningHistoryStatus.KNOWN,
                 accumulated_amount=Decimal("3000"),
@@ -255,16 +242,16 @@ def test_opening_year_changes_the_revision_identity() -> None:
             ),
         )
 
-    assert revision_through(_TAX_YEAR).revision_id != revision_through(_TAX_YEAR + 1).revision_id
+    assert revision_through(2022).revision_id != revision_through(2023).revision_id
 
 
 def test_schedule_distinguishes_material_intangible_and_uses_actual_service_days() -> None:
-    material_revision = lifecycle_revision(in_service_date=_MID_YEAR)
+    material_revision = lifecycle_revision(in_service_date=date(2025, 7, 1))
     material = schedule_charge(
         material_revision,
         _authority(material_revision),
-        covered_from=_YEAR_START,
-        covered_until=_YEAR_END,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
         history=_NO_HISTORY,
     )
     intangible_revision = lifecycle_revision(
@@ -275,16 +262,14 @@ def test_schedule_distinguishes_material_intangible_and_uses_actual_service_days
     intangible = schedule_charge(
         intangible_revision,
         _authority(intangible_revision),
-        covered_from=_YEAR_START,
-        covered_until=_YEAR_END,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
         history=_NO_HISTORY,
     )
 
-    # 8,000 x 10% x the days in service / the days of the year, and 800 x 10% over the whole year,
-    # rounded half-up at emission.
-    assert material.service_days == _SERVICE_DAYS_FROM_MID_YEAR
-    assert material.amount == _accrued(Decimal("8000"), Decimal("0.10"), _SERVICE_DAYS_FROM_MID_YEAR)
-    assert intangible.amount == _accrued(Decimal("800"), Decimal("0.10"), _YEAR_DAYS)
+    # 8,000 x 10% x 184/365 and 800 x 10% x 365/365, rounded half-up at emission.
+    assert material.service_days == 184
+    assert material.amount == Decimal("403.29")
     assert intangible.amount == Decimal("80.00")
 
 
@@ -295,71 +280,60 @@ def test_rate_applies_to_the_basis_less_residual_value_and_is_capped_at_the_rema
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("7100"),
-            covered_through_tax_year=_TAX_YEAR,
+            covered_through_tax_year=2025,
         ),
     )
 
     charge = schedule_charge(
         residual,
         _authority(residual),
-        covered_from=_YEAR_START,
-        covered_until=_YEAR_END,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
         history=_NO_HISTORY,
     )
     capped = schedule_charge(
         nearly_amortized,
         _authority(nearly_amortized),
-        covered_from=_YEAR_START,
-        covered_until=_YEAR_END,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
         history=_NO_HISTORY,
     )
 
     # RIS art. 3.2: (8,000 - 800) x 10% = 720; 7,200 - 7,100 leaves 100 to amortize.
     assert charge.amount == Decimal("720.00")
     assert capped.amount == Decimal("100.00")
-    assert {isleap(year) for year in filing_year_envelope().years} == {False, True}
-    for year in filing_year_envelope().years:
-        assert calendar_days_in_tax_year(year) == (366 if isleap(year) else 365), year
+    assert calendar_days_in_tax_year(2024) == 366
+    assert calendar_days_in_tax_year(2025) == 365
 
 
 def test_contiguous_period_charges_sum_exactly_to_the_annual_figure() -> None:
     revision = lifecycle_revision(basis=_ordinary_basis(business_use_share=Decimal("1")))
     authority = _authority(revision, annual_rate=Decimal("0.12"))
-    quarter_ends = (
-        _YEAR_START,
-        date(_TAX_YEAR, 4, 1),
-        _MID_YEAR,
-        date(_TAX_YEAR, 10, 1),
-        _YEAR_END,
-    )
+    quarter_ends = (date(2025, 1, 1), date(2025, 4, 1), date(2025, 7, 1), date(2025, 10, 1), date(2026, 1, 1))
 
     charges = [
         schedule_charge(revision, authority, covered_from=start, covered_until=end, history=_NO_HISTORY).amount
         for start, end in pairwise(quarter_ends)
     ]
 
-    # 1,000 x 12% accrues day by day; each charge is the cumulative accrual rounded at the quarter
-    # end less the one before, so the four charges sum exactly to the annual 120.00.
-    accrued_at_ends = [_accrued(Decimal("1000"), Decimal("0.12"), (end - _YEAR_START).days) for end in quarter_ends[1:]]
-    assert charges == [later - earlier for earlier, later in pairwise([Decimal("0"), *accrued_at_ends])]
-    assert sum(charges) == Decimal("120.00")
+    # 1,000 x 12% accrues 29.589, 59.507, 89.753 and 120 at the quarter ends;
+    # rounding each quarter alone would give 30.25 in Q3 and a total of 120.01.
+    assert charges == [Decimal("29.59"), Decimal("29.92"), Decimal("30.24"), Decimal("30.25")]
 
 
 def test_a_mid_year_start_splits_its_charge_without_a_rounding_gap() -> None:
-    revision = lifecycle_revision(basis=_ordinary_basis(business_use_share=Decimal("1")), in_service_date=_MID_YEAR)
+    revision = lifecycle_revision(
+        basis=_ordinary_basis(business_use_share=Decimal("1")), in_service_date=date(2025, 7, 1)
+    )
     authority = _authority(revision, annual_rate=Decimal("0.12"))
 
     def charged(start: date, end: date) -> Decimal:
         return schedule_charge(revision, authority, covered_from=start, covered_until=end, history=_NO_HISTORY).amount
 
-    # The charge for the days in service is accrued once and each period carries the cumulative
-    # rounding at its end, so the two quarters add up to the half-year figure.
-    third_quarter_end = date(_TAX_YEAR, 10, 1)
-    accrued_at_third_quarter_end = _accrued(Decimal("1000"), Decimal("0.12"), (third_quarter_end - _MID_YEAR).days)
-    in_service_year = _accrued(Decimal("1000"), Decimal("0.12"), _SERVICE_DAYS_FROM_MID_YEAR)
-    assert charged(_YEAR_START, _YEAR_END) == in_service_year
-    assert charged(_MID_YEAR, third_quarter_end) == accrued_at_third_quarter_end
-    assert charged(third_quarter_end, _YEAR_END) == in_service_year - accrued_at_third_quarter_end
+    # 184 of 365 days gives 60.49; the first 92 days accrue 30.247.
+    assert charged(date(2025, 1, 1), date(2026, 1, 1)) == Decimal("60.49")
+    assert charged(date(2025, 7, 1), date(2025, 10, 1)) == Decimal("30.25")
+    assert charged(date(2025, 10, 1), date(2026, 1, 1)) == Decimal("30.24")
 
 
 def test_an_authority_resolved_for_another_election_is_refused() -> None:
@@ -370,8 +344,8 @@ def test_an_authority_resolved_for_another_election_is_refused() -> None:
         schedule_charge(
             revision,
             _authority(other),
-            covered_from=_YEAR_START,
-            covered_until=_YEAR_END,
+            covered_from=date(2025, 1, 1),
+            covered_until=date(2026, 1, 1),
             history=_NO_HISTORY,
         )
 
@@ -417,8 +391,8 @@ def test_amortizable_basis_and_the_annual_charge_carry_the_non_deductible_iva() 
     charge = schedule_charge(
         revision,
         _authority(revision),
-        covered_from=_YEAR_START,
-        covered_until=_YEAR_END,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
         history=_NO_HISTORY,
     )
 
@@ -433,38 +407,37 @@ def test_an_unexercised_financial_lease_is_refused_with_its_statutory_route() ->
 
 
 def test_later_afectacion_amortizes_from_in_service_date_on_the_full_acquisition_value() -> None:
-    # The element was bought and used privately before the mid-year in-service date; no private year
-    # is deemed amortized.
+    # The element was bought and used privately before 2025-07-01; no private year is deemed amortized.
     revision = lifecycle_revision(
-        in_service_date=_MID_YEAR,
+        in_service_date=date(2025, 7, 1),
         basis=_ordinary_basis(business_use_share=Decimal("1")),
     )
 
     first_year = schedule_charge(
         revision,
         _authority(revision),
-        covered_from=_YEAR_START,
-        covered_until=_YEAR_END,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
         history=_NO_HISTORY,
     )
     next_year = schedule_charge(
         revision,
-        _authority(revision, tax_year=_TAX_YEAR + 1),
-        covered_from=_YEAR_END,
-        covered_until=date(_TAX_YEAR + 2, 1, 1),
+        _authority(revision, tax_year=2026),
+        covered_from=date(2026, 1, 1),
+        covered_until=date(2027, 1, 1),
         history=AssetScheduleHistory(accumulated_before_tax_year=first_year.amount),
     )
 
-    # 1,000 x 10% x the days in service / the days of the year from 1 July; the next year is the full
-    # 100.00 with only that charge deducted from the base, so nothing was taken for the private years.
-    assert first_year.amount == _accrued(Decimal("1000"), Decimal("0.10"), _SERVICE_DAYS_FROM_MID_YEAR)
+    # 1,000 x 10% x 184/365 = 50.41 from 1 July; the next year is the full 100.00 with only that
+    # charge deducted from the base, so nothing was taken for the private years.
+    assert first_year.amount == Decimal("50.41")
     assert next_year.amount == Decimal("100.00")
     assert revision.opening_history.accumulated_amount == Decimal("0")
     with pytest.raises(ActividadAssetUnsupportedError, match="covered_interval_without_service_days"):
         schedule_charge(
             revision,
-            _authority(revision, tax_year=_TAX_YEAR - 1),
-            covered_from=date(_TAX_YEAR - 1, 1, 1),
-            covered_until=_YEAR_START,
+            _authority(revision, tax_year=2024),
+            covered_from=date(2024, 1, 1),
+            covered_until=date(2025, 1, 1),
             history=_NO_HISTORY,
         )

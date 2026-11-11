@@ -39,7 +39,7 @@ def changed[T: BaseModel](model: T, **changes: object) -> T:
 
 @pytest.fixture
 def record() -> EnrollmentRecord:
-    now = datetime(1980, 9, 26, tzinfo=UTC)
+    now = datetime(2026, 9, 26, tzinfo=UTC)
     return EnrollmentRecord(
         request_id=uuid4(),
         binding=ProfileAccessBinding(

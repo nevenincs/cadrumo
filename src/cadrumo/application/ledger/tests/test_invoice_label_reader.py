@@ -11,13 +11,11 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Callable, Iterator
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.config import Settings
 from ....core.document_shape import DocumentShape
@@ -55,17 +53,15 @@ from ..invoice_label_reader import (
 from ..structured_invoice_ports import StructuredInvoiceRecord
 from .evidence_textlayer_test_support import refusing_text_layer_ports, text_layer_ports_for_pages
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FILER = "12345678Z"
 
-_SINGLE_RATE = f"""FACTURA
+_SINGLE_RATE = """FACTURA
 Proveedor: Hardware Profesional Sur SL
 NIF: B00015099
 Numero de factura: A-0003
-Fecha de expedicion: {date(_YEAR, 3, 27).isoformat()}
+Fecha de expedicion: 2026-03-27
 Destinatario: Javier Ortega Llorens NIF: 12345678Z
 Concepto: Ordenador portatil profesional
 Base imponible: 1200.00 EUR
@@ -73,38 +69,38 @@ Tipo IVA: 21%
 Cuota IVA: 252.00 EUR
 Total factura: 1452.00 EUR"""
 
-_TWO_RATE_TABLE = f"""FACTURA
+_TWO_RATE_TABLE = """FACTURA
 Emisor: Distribuciones Levante SL
 CIF: B00015065
 Cliente: Javier Ortega Llorens
 NIF: 12345678Z
-Número de factura: {_YEAR}/0117
-Fecha de factura: 12/04/{_YEAR}
+Número de factura: 2026/0117
+Fecha de factura: 12/04/2026
 Base imponible % IVA Cuota IVA Total
 1.000,00 21% 210,00 1.210,00
 250,00 10% 25,00 275,00
 Total factura: 1.485,00 €"""
 
-_RECARGO = f"""FACTURA
+_RECARGO = """FACTURA
 Proveedor: Mayorista Textil del Turia SA
 CIF: A00010058
 Destinatario: Javier Ortega Llorens
 NIF: 12345678Z
 Nº factura: MT-26-0045
-Fecha: 03/02/{_YEAR}
+Fecha: 03/02/2026
 Base imponible: 500,00 €
 IVA 21 %: 105,00 €
 Recargo de equivalencia 5,2 %: 26,00 €
 Total factura: 631,00 €"""
 
-_RETENTION = f"""EMISOR
+_RETENTION = """EMISOR
 Laura Pérez Consultoría
 NIF: 00000000T
 CLIENTE
 Beta Logistica Mediterranea SL
 CIF: B00015073
-Factura nº F-{_YEAR}-001
-Fecha de expedición: 03-02-{_YEAR}
+Factura nº F-2026-001
+Fecha de expedición: 03-02-2026
 Base imponible 1.500,00
 IVA (21%) 315,00
 Retención IRPF (15%) -225,00
@@ -112,44 +108,44 @@ Total factura 1.815,00 EUR
 Total a pagar 1.590,00 EUR
 Retención IRPF 15% (art. 95 RIRPF)."""
 
-_CATALAN = f"""FACTURA
+_CATALAN = """FACTURA
 Proveïdor: Hotel Mirador Castelló SL
 NIF: B00015107
 Client: Javier Ortega Llorens
 NIF: 12345678Z
 Número de factura: HM-0931
-Data d'expedició: 22 de maig de {_YEAR}
+Data d'expedició: 22 de maig de 2026
 Base imposable: 90,00 €
 Quota IVA 10 %: 9,00 €
 Total factura: 99,00 €"""
 
-_ENGLISH_REVERSE_CHARGE = f"""INVOICE
+_ENGLISH_REVERSE_CHARGE = """INVOICE
 Supplier: Nordwerk Software GmbH
 VAT ID: DE123456789
 Bill to: Hardware Profesional Sur SL
 VAT ID: ESB00015099
-Invoice No.: INV-{_YEAR}-117
-Invoice date: March 3, {_YEAR}
+Invoice No.: INV-2026-117
+Invoice date: March 3, 2026
 Net amount: 1250.00 EUR
 VAT 0%: 0.00 EUR (reverse charge, Art. 196 Directive 2006/112/EC)
 Total: 1250.00 EUR"""
 
-_SIMPLIFIED = f"""Estación de Servicio Albufera SL
+_SIMPLIFIED = """Estación de Servicio Albufera SL
 NIF: B00015081
 FACTURA SIMPLIFICADA
-Nº: T-0042-{_YEAR}
-Fecha: 14.02.{_YEAR}
+Nº: T-0042-2026
+Fecha: 14.02.2026
 Base imponible 60,00
 IVA 21% 12,60
 Total (IVA incluido) 72,60 €"""
 
-_RECTIFICATIVA = f"""FACTURA RECTIFICATIVA
+_RECTIFICATIVA = """FACTURA RECTIFICATIVA
 Emisor: Lucia Fernandez Ortega
 NIF: 00001001N
 Cliente: Grupo Consultor Meridiano SL
 NIF: B00010132
-Numero de factura: R-{_YEAR}/003
-Fecha de factura: 14/04/{_YEAR}
+Numero de factura: R-2026/003
+Fecha de factura: 14/04/2026
 Base imponible: -400,00 EUR
 IVA (21%): -84,00 EUR
 TOTAL FACTURA: -484,00 EUR
@@ -199,7 +195,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
         _FILER,
         {
             "invoice_number": "A-0003",
-            "invoice_date": date(_YEAR, 3, 27).isoformat(),
+            "invoice_date": "2026-03-27",
             "supplier_name": "Hardware Profesional Sur SL",
             "supplier_tax_id": "B00015099",
             "customer_name": "Javier Ortega Llorens",
@@ -215,8 +211,8 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
         _TWO_RATE_TABLE,
         _FILER,
         {
-            "invoice_number": f"{_YEAR}/0117",
-            "invoice_date": date(_YEAR, 4, 12).isoformat(),
+            "invoice_number": "2026/0117",
+            "invoice_date": "2026-04-12",
             "supplier_tax_id": "B00015065",
             "customer_tax_id": "12345678Z",
             "taxable_base": Decimal("1250.00"),
@@ -231,7 +227,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
         _FILER,
         {
             "invoice_number": "MT-26-0045",
-            "invoice_date": date(_YEAR, 2, 3).isoformat(),
+            "invoice_date": "2026-02-03",
             "taxable_base": Decimal("500.00"),
             "iva_rate": Decimal("21"),
             "iva_amount": Decimal("105.00"),
@@ -243,7 +239,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
         _RETENTION,
         "00000000T",
         {
-            "invoice_number": f"F-{_YEAR}-001",
+            "invoice_number": "F-2026-001",
             "supplier_name": "Laura Pérez Consultoría",
             "customer_name": "Beta Logistica Mediterranea SL",
             "retencion_rate": Decimal("15"),
@@ -257,7 +253,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
         {
             "supplier_name": "Hotel Mirador Castelló SL",
             "invoice_number": "HM-0931",
-            "invoice_date": date(_YEAR, 5, 22).isoformat(),
+            "invoice_date": "2026-05-22",
             "taxable_base": Decimal("90.00"),
             "iva_rate": Decimal("10"),
             "iva_amount": Decimal("9.00"),
@@ -270,8 +266,8 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
         {
             "supplier_tax_id": "DE123456789",
             "customer_tax_id": "B00015099",
-            "invoice_number": f"INV-{_YEAR}-117",
-            "invoice_date": date(_YEAR, 3, 3).isoformat(),
+            "invoice_number": "INV-2026-117",
+            "invoice_date": "2026-03-03",
             "taxable_base": Decimal("1250.00"),
             "iva_rate": None,
             "iva_amount": Decimal("0.00"),

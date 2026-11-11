@@ -24,19 +24,17 @@ from pydantic import ValidationError
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ..carry_forward import IvaCompensationPeriodState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _VALID_NIF = "12345678Z"
-_YEAR = filing_year_envelope().horizon
-_PRESENTED_AT = datetime(_YEAR, 4, 20, tzinfo=UTC)
+_PRESENTED_AT = datetime(2025, 4, 20, tzinfo=UTC)
 _VALID_DIGEST = "a3f1" * 16
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
-    revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
-    modelo_year=_YEAR,
+    revision_id="2025",
+    modelo_year=2025,
     period="1T",
 )
 
@@ -49,15 +47,15 @@ def _period_state(digest: str | None) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
         provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         taxpayer_nif=_VALID_NIF,
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        expediente_id=f"{_YEAR}30300000001Z",
+        expediente_id="202530300000001Z",
         status="presented",
         presented_at=_PRESENTED_AT,
         generated_amount=Decimal("100.00"),
         available_end_amount=Decimal("100.00"),
-        source_observation_key=f"303:{_YEAR}:1T",
+        source_observation_key="303:2025:1T",
         source_artefact_sha256=digest,
     )
 
@@ -89,14 +87,14 @@ def test_period_state_requires_the_canonical_registry_coordinate() -> None:
             {
                 "provenance": IvaCompensationStateProvenance.AEAT_CAPTURE,
                 "taxpayer_nif": _VALID_NIF,
-                "filing_year": _YEAR,
-                "period": Period.from_year_and_code(_YEAR, "1T"),
-                "expediente_id": f"{_YEAR}30300000001Z",
+                "filing_year": 2025,
+                "period": Period.from_year_and_code(2025, "1T"),
+                "expediente_id": "202530300000001Z",
                 "status": "presented",
                 "presented_at": _PRESENTED_AT,
                 "generated_amount": Decimal("100.00"),
                 "available_end_amount": Decimal("100.00"),
-                "source_observation_key": f"303:{_YEAR}:1T",
+                "source_observation_key": "303:2025:1T",
                 "source_artefact_sha256": _VALID_DIGEST,
             }
         )
