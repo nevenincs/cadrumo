@@ -134,6 +134,15 @@ test("every row state is said by the key of its own state", () => {
   }
 });
 
+test("a ready local AI whose server is dormant says it starts when a document is read", () => {
+  expect(rowSentence(KEYS, row({ server: "dormant" }))).toBe(
+    "desktop.setup.ready_dormant",
+  );
+  expect(rowSentence(KEYS, row({ server: null }))).toBe(
+    "desktop.setup.state.ready",
+  );
+});
+
 test("a stale or blocked row says its reason, and a failed row says its failure", () => {
   for (const reason of STALE_REASONS) {
     expect(

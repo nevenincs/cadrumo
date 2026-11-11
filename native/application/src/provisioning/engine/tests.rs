@@ -1352,13 +1352,31 @@ fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_every_ro
 
     let verified = world.verify(&[ItemId::LocalAi]);
     assert_eq!(row(&verified, ItemId::LocalAi).state, ItemState::Ready);
+    assert!(!row(&verified, ItemId::LocalAi).dormant, "its server runs");
     world.stop_local_ai();
+    // With no server running and no failed start, the server is dormant: the local AI is
+    // ready and starts its server when a document is read. Neither check starts it.
     let stopped = world.verify(&[ItemId::LocalAi]);
+    let dormant = row(&stopped, ItemId::LocalAi);
+    assert_eq!(dormant.state, ItemState::Ready);
+    assert!(dormant.dormant);
     assert_eq!(
-        row(&stopped, ItemId::LocalAi).state,
-        ItemState::Failed(FailureCategory::ProgramNotRunning),
-        "without the manager's server the full check cannot pass"
+        serde_json::to_value(dormant).unwrap()["server"],
+        "dormant",
+        "the dormant server is served as a state of its own"
     );
+    // A demanded start that failed leaves no dormant server: it reads as that failure.
+    fs::write(
+        world.programs().join(START_FAILURE_RECORD),
+        br#"{"schema":1,"reason":"server_launch_failed"}"#,
+    )
+    .unwrap();
+    let failed = world.verify(&[ItemId::LocalAi]);
+    assert_eq!(
+        row(&failed, ItemId::LocalAi).state,
+        ItemState::Failed(FailureCategory::ProgramNotRunning)
+    );
+    assert!(!row(&failed, ItemId::LocalAi).dormant);
 
     // A model the person keeps beside the selected ones stays with its layers.
     kept.store(&world.models(), KEPT);
@@ -1642,15 +1660,16 @@ fn with_llama_cpp_selected_the_local_ai_plans_no_program_and_checks_each_role_on
         "the full check generates on the router again"
     );
 
-    // Without the manager's router neither check can pass.
+    assert!(!row(&verified, ItemId::LocalAi).dormant, "its router runs");
+
+    // Without the manager's router and with no failed start, the router is dormant:
+    // both checks read the local AI ready, with its server starting when a document is
+    // read, and neither starts it.
     world.stop_router();
     for report in [world.status(), world.verify(&[ItemId::LocalAi])] {
-        assert_eq!(
-            row(&report, ItemId::LocalAi).state,
-            ItemState::Failed(FailureCategory::ProgramNotRunning),
-            "{:?}",
-            report.mode
-        );
+        let dormant = row(&report, ItemId::LocalAi);
+        assert_eq!(dormant.state, ItemState::Ready, "{:?}", report.mode);
+        assert!(dormant.dormant, "{:?}", report.mode);
     }
     assert!(world.ollama_requests().is_empty());
     assert_eq!(world.archive_requests(), 0);

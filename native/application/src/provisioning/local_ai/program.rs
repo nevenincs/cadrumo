@@ -859,8 +859,9 @@ impl Program {
     }
 
     /// The full check: every installed file against its receipt, then the running server
-    /// answering at its recorded address with the pinned version. Nothing is started:
-    /// with no server running the program reads `program_not_running`.
+    /// answering at its recorded address with the pinned version. Nothing is started: with
+    /// no server running the server is dormant and the program present, unless the latest
+    /// demanded start failed.
     pub fn observe_full(&self) -> Observation {
         let quick = self.observe_quick();
         if quick != Observation::Present {
@@ -873,9 +874,7 @@ impl Program {
         }
         match self.running_server() {
             Some(_) => Observation::Present,
-            None => Observation::Failed(StartFailureKind::category_after(
-                self.latest_start_failure(),
-            )),
+            None => StartFailureKind::observation_without_server(self.latest_start_failure()),
         }
     }
 

@@ -1400,8 +1400,8 @@ fn a_model_with_no_llamacpp_context_reads_not_in_this_build_before_anything_is_f
         Observation::Absent
     );
 
-    // A stored model with a recorded context but none stated still goes on to the router,
-    // which is not recorded here.
+    // A stored model with a recorded context but none stated still goes on to the router.
+    // None is recorded here: the server is dormant, and its next start presents the model.
     let name = ModelName::parse(TEXT).unwrap();
     Stored::new(5).write(&root, TEXT);
     record_context(&root, &name, NonZeroU32::new(2048).unwrap()).unwrap();
@@ -1410,7 +1410,7 @@ fn a_model_with_no_llamacpp_context_reads_not_in_this_build_before_anything_is_f
     assert!(models.presentable(model));
     assert_eq!(
         models.observe_presented(model, &hardware, &router),
-        Observation::Failed(FailureCategory::ProgramNotRunning)
+        Observation::Present
     );
 }
 

@@ -960,6 +960,21 @@ impl Engine {
     /// The selected local engine's program and the selected models: the Ollama program
     /// when this build pins it for this platform, or the llama-server when the package
     /// carries it. The other engine's program is never built.
+    /// Whether the selected engine's server is dormant: no server of it runs and no
+    /// demanded start of it failed, so it starts when a document is read. Files and the
+    /// recorded address only; nothing is started.
+    fn local_ai_dormant(&self) -> bool {
+        match self.local_ai_parts() {
+            Ok((EngineProgram::Ollama(program), _)) => {
+                program.running_server().is_none() && program.latest_start_failure().is_none()
+            }
+            Ok((EngineProgram::LlamaCpp(router), _)) => {
+                router.running_server().is_none() && router.latest_start_failure().is_none()
+            }
+            Err(_) => false,
+        }
+    }
+
     fn local_ai_parts(&self) -> Result<(EngineProgram, Models), NoProgram> {
         let program = EngineProgram::select(
             self.local_engine,
@@ -1129,6 +1144,9 @@ impl Engine {
                 None,
             ),
         };
+        if item == ItemId::LocalAi && row.state == ItemState::Ready {
+            row.dormant = self.local_ai_dormant();
+        }
         // An unknown item is checked again, not set up, so it states no download.
         if !matches!(row.state, ItemState::Ready | ItemState::Unknown) {
             // An entry that totals only the parts whose size is known would state too little,
@@ -1278,7 +1296,8 @@ impl Engine {
     /// token for each selected model on that server. With llama.cpp: the manager's router
     /// answering ready as the packaged build, then for each selected model the router's
     /// list, a load, one generated token and the unload. Without a running server the
-    /// program reads `program_not_running` and each model only as its quick check says.
+    /// server is dormant: the program reads present unless its latest demanded start
+    /// failed, and each model only as its quick check says.
     fn full_local_ai(&mut self) -> Option<Reading> {
         let hardware = self.hardware();
         let (program, models) = self.local_ai_parts().ok()?;
@@ -1319,9 +1338,12 @@ impl Engine {
                 let program_observation = if running {
                     present
                 } else {
-                    Observation::Failed(packaged(StartFailureKind::category_after(
+                    match StartFailureKind::observation_without_server(
                         router.latest_start_failure(),
-                    )))
+                    ) {
+                        Observation::Failed(category) => Observation::Failed(packaged(category)),
+                        dormant => dormant,
+                    }
                 };
                 (
                     program_observation,

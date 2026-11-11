@@ -1599,6 +1599,7 @@ fn row(row: &StatusRow) -> wire::Row {
         recovery_action_id: row.recovery_action_id().map(str::to_owned),
         version: row.version.clone(),
         size_bytes: row.size_estimate_bytes,
+        server: row.dormant.then_some(wire::Server::Dormant),
         removals: row
             .removals
             .iter()

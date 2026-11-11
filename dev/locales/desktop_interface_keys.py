@@ -1170,6 +1170,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.setup.progress_label",
         "desktop.setup.rail_busy",
         "desktop.setup.rail_incomplete",
+        "desktop.setup.ready_dormant",
         "desktop.setup.refused_browser_not_removed",
         "desktop.setup.refused_busy",
         "desktop.setup.refused_local_ai_not_removed",

@@ -229,6 +229,9 @@ pub struct StatusRow {
     pub recovery: Option<RecoveryAction>,
     /// The removals the row offers, in the order they are listed.
     pub removals: Vec<RemovalOffer>,
+    /// The local AI is ready and its server dormant: no server runs, and it starts when a
+    /// document is read. Never set for another item or state.
+    pub dormant: bool,
 }
 
 /// What a removal a row offers deletes from this computer.
@@ -273,6 +276,9 @@ impl Serialize for StatusRow {
             map.serialize_entry("recovery_action_id", &self.recovery_action_id())?;
         }
         map.serialize_entry("removals", &self.removals)?;
+        if self.dormant {
+            map.serialize_entry("server", "dormant")?;
+        }
         map.end()
     }
 }
@@ -319,6 +325,7 @@ pub fn derive_row(
         size_estimate_bytes: None,
         recovery: recovery_for(state),
         removals: removals_for(declaration.id, state),
+        dormant: false,
     }
 }
 

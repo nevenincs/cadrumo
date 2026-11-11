@@ -243,6 +243,15 @@ impl StartFailureKind {
         latest_start.map_or(FailureCategory::ProgramNotRunning, Self::category)
     }
 
+    /// What a set-up program reads while no server of it runs: the server is dormant
+    /// until a document is read, so the program is present, until a demanded start of it
+    /// fails; then it reads as that start's failure.
+    pub fn observation_without_server(latest_start: Option<Self>) -> Observation {
+        latest_start.map_or(Observation::Present, |kind| {
+            Observation::Failed(kind.category())
+        })
+    }
+
     /// The category a program that could not start for this kind of failure reads as:
     /// a program the operating system refuses is damaged, whichever engine it serves,
     /// and every other failure is a program that is not running.

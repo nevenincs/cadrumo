@@ -57,6 +57,14 @@ pub enum Refusal {
     LocalAiNotRemoved,
 }
 
+/// What the local AI's server does while its row is ready.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Server {
+    /// No server runs; it starts when a document is read.
+    Dormant,
+}
+
 /// What a removal deletes from this computer.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -372,6 +380,8 @@ pub struct Row {
     /// The removals the row offers, in the order they are listed; the window offers
     /// no other.
     pub removals: Vec<Removal>,
+    /// What the local AI's server does while it is ready; on no other row or state.
+    pub server: Option<Server>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -595,6 +605,8 @@ impl Row {
             && (self.stale_reason.is_none() || self.state == State::Stale)
             && (self.blocked_reason.is_none() || self.state == State::Blocked)
             && (self.failure.is_none() || self.state == State::Failed)
+            && (self.server.is_none()
+                || (self.state == State::Ready && self.kind == ItemKind::LocalAi))
             && self
                 .removals
                 .iter()
@@ -901,7 +913,7 @@ mod tests {
             "item": "browser", "kind": "browser", "mode": "quick", "state": "absent",
             "stale_reason": null, "blocked_reason": null, "failure": null, "recovery": "set_up",
             "recovery_action_id": "operator.provision.browser",
-            "version": null, "size_bytes": 180000000, "removals": [],
+            "version": null, "size_bytes": 180000000, "removals": [], "server": null,
         })
     }
 
@@ -964,8 +976,17 @@ mod tests {
 
     #[test]
     fn a_value_outside_a_closed_set_or_a_bound_is_a_host_failure() {
-        let cases: [Case; 21] = [
+        let cases: [Case; 23] = [
             ("unknown state", |s| s["rows"][0]["state"] = json!("broken")),
+            ("a server on another item", |s| {
+                s["rows"][0]["state"] = json!("ready");
+                s["rows"][0]["recovery"] = Value::Null;
+                s["rows"][0]["recovery_action_id"] = Value::Null;
+                s["rows"][0]["server"] = json!("dormant")
+            }),
+            ("unknown server", |s| {
+                s["rows"][0]["server"] = json!("asleep")
+            }),
             ("another item's removal", |s| {
                 s["rows"][0]["removals"] = json!(["local_ai_program"])
             }),

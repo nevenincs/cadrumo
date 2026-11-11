@@ -4916,6 +4916,7 @@ desktop:
     progress_label: 'Haladás: {name}'
     rail_busy: Az összetevők beállítása folyamatban
     rail_incomplete: A beállítás nem fejeződött be
+    ready_dormant: Kész. Akkor indul el, amikor egy dokumentumot kell beolvasni.
     refused_browser_not_removed: A Cadrumo nem tudta eltávolítani a böngészőt. Ellenőrizd
       újra, majd próbáld meg még egyszer.
     refused_busy: Máshol már fut egy beállítás. Várd meg, amíg befejeződik.
