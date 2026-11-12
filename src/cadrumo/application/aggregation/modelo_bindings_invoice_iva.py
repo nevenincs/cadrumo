@@ -270,7 +270,8 @@ def _declares_reverse_charge(invoice: Invoice, *, devengo_date: date, operation:
     """Whether the invoice declares a category whose cuota the recipient self-assesses."""
     category = _declared_invoice_category(invoice, devengo_date=devengo_date, operation=operation)
     return category is not None and is_inversion_sujeto_pasivo_flow(
-        derive_flow_for_classification(category=category, invoice_direction=invoice.kind)
+        derive_flow_for_classification(category=category, invoice_direction=invoice.kind, effective_date=devengo_date),
+        effective_date=devengo_date,
     )
 
 
@@ -341,8 +342,10 @@ def _declared_category_line_observation(
     )
     if classification.rate_kind is None:
         return None
-    flow_direction = derive_flow_for_classification(category=category, invoice_direction=invoice.kind)
-    if is_deducible_flow(flow_direction) and deduction_authority is None:
+    flow_direction = derive_flow_for_classification(
+        category=category, invoice_direction=invoice.kind, effective_date=devengo_date
+    )
+    if is_deducible_flow(flow_direction, effective_date=devengo_date) and deduction_authority is None:
         # An input-side fact needs the linked ledger's deduction authority; the
         # screen withholds the line rather than invent one.
         return None
@@ -466,11 +469,14 @@ def reverse_charge_cuota_not_derivable(invoice: Invoice) -> bool:
         return False
     if invoice.iva_category is None:
         return False
+    devengo_date = invoice.operation_date or invoice.issued_at
     if not is_inversion_sujeto_pasivo_flow(
         derive_flow_for_classification(
             category=invoice.iva_category,
             invoice_direction=invoice.kind,
+            effective_date=devengo_date,
         ),
+        effective_date=devengo_date,
     ):
         return False
     # A rate-bearing line supplies its own evidence. Whether a slot carries a

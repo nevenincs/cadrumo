@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from .....application.aggregation.iva_ledger import aggregate_iva_ledger_observations_from_repositories
 from .....application.aggregation.prorrata_volume import project_prorrata_declared_volume_rollup
 from .....application.modelo.calculation_notes import BLOCKING_REASONS, note_attention
@@ -25,6 +27,8 @@ from ..invoices import InvoiceCatalogueRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 from .test_iva_ledger_prorrata_apportionment import fully_taxable_purchase_row, fully_taxable_sale_row
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 _BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"
@@ -44,14 +48,16 @@ def _sale(
     data.pop("transaction_id")
     raw = original.raw.model_dump()
     raw.update(booked_date=date(year, 10, 10), value_date=date(year, 10, 10))
-    data.update(raw=raw, iva_category=require_iva_category(category))
+    data.update(raw=raw, iva_category=require_iva_category(category, effective_date=_ON_DATE))
     if category == "domestic_exempt":
         raw["amount"] = Decimal("50")
         data.update(
             taxable_base=Decimal("50"),
             iva_rate=Decimal(0),
             iva_amount=Decimal(0),
-            exemption_article=require_iva_exemption_article(article) if (article is not None and article) else None,
+            exemption_article=require_iva_exemption_article(article, effective_date=date(year, 10, 10))
+            if (article is not None and article)
+            else None,
         )
     if excluded:
         data["art_104_tres_exclusion"] = Art104TresExclusion("non_habitual_real_estate_or_financial")

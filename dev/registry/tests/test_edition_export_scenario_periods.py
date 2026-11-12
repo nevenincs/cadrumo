@@ -22,6 +22,7 @@ from cadrumo.application.filing.producer_snapshot_m200 import Modelo200ProfileFa
 from cadrumo.application.filing.producer_snapshot_m296 import (
     Modelo296ProfileFacts,
 )
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -68,15 +69,38 @@ def _scenario_editions() -> tuple[tuple[str, str, Period], ...]:
     floor_edition = {modelo_id: revision_covering(modelo_id, envelope.floor).id for modelo_id in ("123", "309", "604")}
     closed_edition = revision_covering("296", envelope.horizon - 1).id
     open_edition = {modelo_id: open_ended_revision(modelo_id).id for modelo_id in ("200", "222", "308")}
-    return (
-        ("123", floor_edition["123"], M123_SCENARIO_PERIODS[floor_edition["123"]]),
-        ("200", open_edition["200"], M200_SCENARIO_PERIODS[open_edition["200"]]),
-        ("222", open_edition["222"], M222_SCENARIO_PERIODS[open_edition["222"]]),
-        ("296", closed_edition, M296_SCENARIO_PERIODS[closed_edition]),
-        ("308", open_edition["308"], M308_SCENARIO_PERIODS[open_edition["308"]]),
-        ("309", floor_edition["309"], M309_SCENARIO_PERIODS[floor_edition["309"]]),
-        ("604", floor_edition["604"], M604_SCENARIO_PERIODS[floor_edition["604"]]),
+    rendered = (
+        ("123", floor_edition["123"], M123_SCENARIO_PERIODS),
+        ("200", open_edition["200"], M200_SCENARIO_PERIODS),
+        ("222", open_edition["222"], M222_SCENARIO_PERIODS),
+        ("296", closed_edition, M296_SCENARIO_PERIODS),
+        ("308", open_edition["308"], M308_SCENARIO_PERIODS),
+        ("309", floor_edition["309"], M309_SCENARIO_PERIODS),
+        ("604", floor_edition["604"], M604_SCENARIO_PERIODS),
     )
+    # The exporter admits only a filing-grade snapshot, so an edition below filing grade has no table entry
+    # and no scenario; the test below pins that rule to each open-ended edition.
+    return tuple(
+        (modelo_id, revision_id, periods[revision_id])
+        for modelo_id, revision_id, periods in rendered
+        if revision_id in periods
+    )
+
+
+def _corporate_scenario_modelos() -> tuple[str, ...]:
+    """The corporate modelos whose open-ended edition has an export scenario."""
+    periods = {"200": M200_SCENARIO_PERIODS, "222": M222_SCENARIO_PERIODS}
+    return tuple(modelo_id for modelo_id, table in periods.items() if open_ended_revision(modelo_id).id in table)
+
+
+@pytest.mark.parametrize("modelo_id", ("200", "222", "308"))
+def test_an_open_ended_edition_has_a_scenario_exactly_when_it_is_filing_grade(modelo_id: str) -> None:
+    tables = {"200": M200_SCENARIO_PERIODS, "222": M222_SCENARIO_PERIODS, "308": M308_SCENARIO_PERIODS}
+    modelo, _ = committed_modelo(modelo_id)
+    revision_id = open_ended_revision(modelo_id).id
+    revision = modelo.revisions[revision_id]
+    renders = bool(revision.export_layouts) and revision.effective_authority_grade is RegistryAuthorityGrade.FILING
+    assert (revision_id in tables[modelo_id]) is renders
 
 
 def test_enrollment_scenarios_select_their_supported_edition() -> None:
@@ -112,7 +136,7 @@ def test_modelo296_scenario_supplies_every_required_detail_family() -> None:
     assert len(profile.anexo_certificado_rows) == 1
 
 
-@pytest.mark.parametrize("modelo_id", ("200", "222"))
+@pytest.mark.parametrize("modelo_id", _corporate_scenario_modelos())
 def test_corporate_scenario_defers_software_identity_until_candidate_fact_scope(modelo_id: str) -> None:
     scenario = edition_export_scenarios(modelo_id)[open_ended_revision(modelo_id).id]
     assert scenario.product_software_identity_factory is not None

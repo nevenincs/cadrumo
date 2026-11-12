@@ -14,7 +14,9 @@ from ...core.decimal.formatting import format_decimal
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ..buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
-from ..iva.schema import default_iva_cash_accounting_treatment
+from ..calculations.registry.facts.resolution import reading_dated_facts_below_support
+from ..iva.schema import IvaCashAccountingTreatment, default_iva_cash_accounting_treatment
+from .dates import transaction_operation_date
 from .model_validation import figures_without_business, refusable_figures_of
 
 if TYPE_CHECKING:
@@ -39,7 +41,7 @@ def withhold_figures_without_business(transaction: Transaction) -> Transaction:
         return transaction
     absent: dict[str, object] = {name: None for name in held}
     if "cash_accounting_treatment" in held:
-        absent["cash_accounting_treatment"] = default_iva_cash_accounting_treatment()
+        absent["cash_accounting_treatment"] = _ordinary_treatment_on_row_date(transaction)
         absent["cash_accounting_payment_evidence"] = ()
     read = transaction.model_copy(update=absent)
     _remember_withheld_figures(read, held)
@@ -64,10 +66,15 @@ def figures_held_without_business(transaction: Transaction) -> Mapping[str, obje
 
 
 def _keeps_cash_accounting_timing(transaction: Transaction) -> bool:
-    return (
-        bool(transaction.cash_accounting_payment_evidence)
-        or transaction.cash_accounting_treatment != default_iva_cash_accounting_treatment()
-    )
+    return bool(
+        transaction.cash_accounting_payment_evidence
+    ) or transaction.cash_accounting_treatment != _ordinary_treatment_on_row_date(transaction)
+
+
+def _ordinary_treatment_on_row_date(transaction: Transaction) -> IvaCashAccountingTreatment:
+    """Return the ordinary treatment in force on the row's date, as its own validation reads it."""
+    with reading_dated_facts_below_support():
+        return default_iva_cash_accounting_treatment(transaction_operation_date(transaction))
 
 
 _WITHHELD_FIGURES: dict[int, Mapping[str, object]] = {}

@@ -30,6 +30,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
@@ -39,6 +40,8 @@ from ...iva.schema import IvaTerritorialScope
 from ..enums import TransactionDirection
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -90,8 +93,10 @@ def test_a_third_country_establishment_is_recordable_at_all() -> None:
 
         assert transaction.counterparty_country == "US"
         assert territorial_scope_for_country(
-            transaction.counterparty_country, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("third_country", operation=_authority_operation_for_test)
+            transaction.counterparty_country, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "third_country", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
 
 
 def test_the_member_state_is_derived_and_never_stored_twice() -> None:
@@ -161,7 +166,9 @@ def test_the_four_ways_a_row_can_fail_to_name_a_third_country_stay_distinct(
 
         assert transaction.counterparty_country == country
         assert (
-            territorial_scope_for_country(transaction.counterparty_country, operation=_authority_operation_for_test)
+            territorial_scope_for_country(
+                transaction.counterparty_country, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
             == scope
         )
         assert (
@@ -196,5 +203,7 @@ def test_the_stored_country_survives_a_strict_json_round_trip() -> None:
         assert restored == original
         assert restored.counterparty_country == "US"
         assert territorial_scope_for_country(
-            restored.counterparty_country, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("third_country", operation=_authority_operation_for_test)
+            restored.counterparty_country, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "third_country", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )

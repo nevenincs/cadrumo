@@ -234,6 +234,16 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.m390_prorrata_apartado_gate.Modelo390ProrrataApartadoUnrenderedError",
+        ErrorCode(
+            code="REFUSED_MODELO_390_PRORRATA_APARTADO_UNRENDERED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_390_prorrata_apartado_unrendered",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.m193_settled_row_gate.Modelo193SettledRowAmountAuthorityUnresolvedError",
         ErrorCode(
             code="REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED",

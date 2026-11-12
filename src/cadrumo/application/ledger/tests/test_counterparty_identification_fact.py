@@ -20,9 +20,11 @@ it as an answer would let a note correction silently withdraw the registration.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.classification import resolve_iva_classification_catalogue
@@ -35,6 +37,8 @@ from ..counterparty_establishment import (
 )
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .counterparty_establishment_support import InMemoryCounterpartyEstablishmentRepository
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -119,7 +123,7 @@ def test_no_territory_ever_produces_an_identification(*, operation: PinnedAuthor
     A cross-reading would most plausibly be written for one territory -- the EU
     member case -- so checking that case alone could pass while another leaked.
     """
-    for scope in resolve_iva_classification_catalogue(None, operation=operation).territorial_scopes:
+    for scope in resolve_iva_classification_catalogue(_ON_DATE, operation=operation).territorial_scopes:
         # A confirmed territory cannot be replaced in place, so each territory
         # is confirmed against its own store.
         repository = InMemoryCounterpartyEstablishmentRepository()

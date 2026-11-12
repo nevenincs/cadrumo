@@ -281,7 +281,7 @@ def _operation_dated_since_older_anchor(
             for transaction in catalogue.values()
             if transaction.transaction_id in anchored
             and transaction.operation_date is not None
-            and is_iva_cash_accounting_none(transaction.cash_accounting_treatment)
+            and is_iva_cash_accounting_none(transaction.cash_accounting_treatment, transaction.operation_date)
         )
     )
 

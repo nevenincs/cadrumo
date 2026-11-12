@@ -63,6 +63,7 @@ from .profile_operation_contracts import (
     ProfileRepeatableRowUpdateOperationRequest,
 )
 from .profile_record_repository import ProfileRecordRepository
+from .rental_records import RentalLedgerReferenceReader
 from .section_rows import (
     ProfileRepeatableRowChangeOutcome,
     add_profile_repeatable_section_row,
@@ -453,6 +454,10 @@ class ProfileRepeatableRowUpdateOperationExecutor:
 class ProfileRepeatableRowRemoveOperationExecutor:
     """Remove one exact row through the canonical schema/tombstone writer."""
 
+    def __init__(self, rental_ledger_references: RentalLedgerReferenceReader) -> None:
+        """Retain the read of the ledger references that keep a property or lease from being removed."""
+        self._rental_ledger_references = rental_ledger_references
+
     async def execute(
         self,
         request: OperationRequest[ProfileRepeatableRowRemoveOperationRequest],
@@ -474,6 +479,7 @@ class ProfileRepeatableRowRemoveOperationExecutor:
                     expected_content_digest=payload.expected_content_digest,
                     schema=context.authority_operation.profile_schema(),
                     profile_decode_context=context.authority_operation.profile_decode_context(),
+                    rental_ledger_references=self._rental_ledger_references,
                 ),
                 task_name="profile-repeatable-row-remove",
             )

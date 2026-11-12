@@ -83,21 +83,24 @@ class _PublishedIvaTerritorialScope:
     @property
     def choices(self) -> tuple[str, ...]:
         """Report the published territorial tokens when a schema asks for the choice set."""
+        from ...core.time.clock import today_madrid
         from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ...domain.iva.classification import resolve_iva_classification_catalogue
 
         with bundled_indexed_authority().operation() as operation:
-            catalogue = resolve_iva_classification_catalogue(operation=operation)
+            # The choice set offers the vocabulary in force now, for a new entry.
+            catalogue = resolve_iva_classification_catalogue(today_madrid(), operation=operation)
             return tuple(sorted(str(scope) for scope in catalogue.territorial_scopes))
 
     def __call__(self, value: object) -> str:
         """Return the projected token, listing the accepted set on a refusal."""
+        from ...core.time.clock import today_madrid
         from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ...domain.iva.classification import require_iva_territorial_scope
 
         CliChoice.of(self.choices)(value)
         with bundled_indexed_authority().operation() as operation:
-            return require_iva_territorial_scope(value, operation=operation)
+            return require_iva_territorial_scope(value, effective_date=today_madrid(), operation=operation)
 
 
 class _PublishedEuMemberState:

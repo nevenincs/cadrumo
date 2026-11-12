@@ -1696,6 +1696,10 @@ errors:
       (field 114) must be the holder of the account you chose.
     refused_modelo_360_solicitud_undeclared: No Modelo 360 solicitud is declared for
       {filing_year}.
+    refused_modelo_390_prorrata_apartado_unrendered: 'The Modelo 390 stays refused:
+      your prorrata register has rows for this year, but the form edition in use does
+      not yet include the prorrata section (apartado 12), so it cannot be verified,
+      recorded as filed or exported without leaving that section blank.'
     refused_modelo_aggregation_input_conflict: A value you entered contradicts what
       your records give; correct it before calculating.
     refused_modelo_amendment_complementaria_liability_decrease: A complementaria cannot
@@ -2007,5 +2011,11 @@ errors:
       unless dry-run mode is used.
     own_account_unknown: Own account {own_account_id} is not one of your registered
       own bank accounts.
+    rental_lease_unknown: The lease {ref} is not one of the leases in your profile.
+      List them with “{door}”.
+    rental_link_category: A row linked to a lease or a property must carry the income
+      category {category}; set it with “{door}” and --irpf-category.
+    rental_property_unknown: The property {ref} is not one of the properties in your
+      profile. List them with “{door}”.
     unknown_ledger_provider: 'Unknown ledger provider {provider!r}. Recognised providers:
       {providers}.'

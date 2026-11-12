@@ -101,6 +101,10 @@ from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
 )
+from .m390_prorrata_apartado_gate import (
+    Modelo390ProrrataApartadoStage,
+    require_modelo_390_prorrata_apartado_rendered,
+)
 from .preconditions import build_modelo_work_file_unverified_revision_failure
 from .prior_domiciliation import resolveprior_domiciliation_election
 from .required_binding_gate import (
@@ -226,6 +230,13 @@ def _load_filing_context(
         stage=Modelo123CountAuthorityStage.FILE,
     )
     require_modelo_193_settled_row_amount_authority(work_unit, target, stage=Modelo193SettledRowStage.FILE)
+    require_modelo_390_prorrata_apartado_rendered(
+        work_unit,
+        registry_revision_id=target.registry_snapshot_ref.revision_id,
+        prorrata_register_repository=ports.prorrata_register_repository,
+        operation=operation,
+        stage=Modelo390ProrrataApartadoStage.FILE,
+    )
     if profile is None:
         from .profile_readiness_gate import load_modelo_work_profile
 

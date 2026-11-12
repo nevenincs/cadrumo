@@ -9,12 +9,14 @@ moved onto its collections with no authority behind the move.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.iva_cash_accounting_vocabulary import resolve_iva_cash_accounting_catalogue
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..schema import (
     IvaCashAccountingTreatment,
     is_iva_cash_accounting_none,
@@ -24,6 +26,7 @@ from ..schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _RETIRED = IvaCashAccountingTreatment("retired_regime")
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 
 @pytest.mark.parametrize("predicate", [is_iva_cash_accounting_none, is_iva_cash_accounting_supplier_regime])
@@ -32,20 +35,22 @@ def test_an_undeclared_treatment_is_refused_rather_than_read_as_criterio_de_caja
     operation: PinnedAuthorityOperation,
 ) -> None:
     with pytest.raises(RegistryValidationError) as refusal:
-        predicate(_RETIRED, authority=operation)
+        predicate(_RETIRED, _ON_DATE, authority=operation)
 
     assert "retired_regime" in str(refusal.value)
 
 
 def test_every_declared_treatment_still_answers_both_predicates(operation: PinnedAuthorityOperation) -> None:
     """Accepted tokens keep their answers: exactly one is ordinary, exactly one is the supplier's."""
-    catalogue = resolve_iva_cash_accounting_catalogue(authority=operation)
+    catalogue = resolve_iva_cash_accounting_catalogue(effective_date=_ON_DATE, authority=operation)
 
-    ordinary = {token for token in catalogue.all_treatments if is_iva_cash_accounting_none(token, authority=operation)}
+    ordinary = {
+        token for token in catalogue.all_treatments if is_iva_cash_accounting_none(token, _ON_DATE, authority=operation)
+    }
     supplier = {
         token
         for token in catalogue.all_treatments
-        if is_iva_cash_accounting_supplier_regime(token, authority=operation)
+        if is_iva_cash_accounting_supplier_regime(token, _ON_DATE, authority=operation)
     }
 
     assert ordinary == {catalogue.none_token}

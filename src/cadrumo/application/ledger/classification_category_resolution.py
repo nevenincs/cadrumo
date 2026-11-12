@@ -41,6 +41,7 @@ def _counterparty_residency_field(direction: InvoiceKind) -> str:
 def declared_category_from_document_record(
     printed_code: IvaCategory | str | None,
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> DeclaredFact[IvaCategory] | None:
     """Read the IVA treatment a document's own machine-readable record declares.
@@ -72,6 +73,7 @@ def declared_category_from_document_record(
 
     Args:
         printed_code: The tax-category token the document's record carried.
+        effective_date: The document's date, whose category vocabulary validates the token.
         operation: Caller-owned pinned authority operation used to validate and
             project the category token.
 
@@ -83,7 +85,7 @@ def declared_category_from_document_record(
     if not stated:
         return None
     try:
-        category = require_iva_category(stated, authority=operation)
+        category = require_iva_category(stated, effective_date=effective_date, authority=operation)
     except RegistryValidationError:
         return None
     return DeclaredFact(value=category, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
@@ -126,7 +128,9 @@ def _table_verdict(assembly: ClassificationAssembly, *, operation: PinnedAuthori
     one at every later reader.
     """
     result = classify_from_assembled_criteria(assembly, operation=operation)
-    if result is None or result.category == require_iva_category("unknown", authority=operation):
+    if result is None or result.category == require_iva_category(
+        "unknown", effective_date=result.effective_date, authority=operation
+    ):
         return None
     return result.category
 

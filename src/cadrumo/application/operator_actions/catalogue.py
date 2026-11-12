@@ -455,6 +455,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.prorrata.list",
+            target_command_key="ledger.prorrata.list",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.inventory.movement.claim",
             target_command_key="ledger.inventory.movement.claim",
             argument_specifications=(
