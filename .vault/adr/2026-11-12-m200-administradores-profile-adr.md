@@ -15,7 +15,7 @@ related:
 
 # `m200-administradores-profile` adr: `Modelo 200 page 002 rows as profile facts` | (**status:** `accepted`)
 
-Accepted 2026-11-12 13:15 by PRIME on the operator's delegated authority, with conditions (g) to (j) below; (h) as corrected at 13:15 from ACCEPTANCE's citations of the 2024 sociedades manual.
+Accepted 2026-11-12 13:15 by PRIME on the operator's delegated authority, with conditions (g) to (j) below; (h) as corrected at 13:15 from ACCEPTANCE's citations of the 2024 sociedades manual. The operator approved it, with those conditions binding, on 2026-11-12 13:27 (relayed by PRIME).
 
 ## Problem Statement
 
