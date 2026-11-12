@@ -1373,6 +1373,78 @@ errors:
       it was being read; capture it again.
     producer_capture_not_current: A producer projection changed while it was being
       read; capture it again.
+    profile_access_administration_denied: Your current access does not allow managing
+      access settings, so the request was refused.
+    profile_access_authentication_required: You are not signed in. Sign in and try
+      again.
+    profile_access_authority_unavailable: The published rules this operation needs
+      are not available right now. Try again later.
+    profile_access_automation_suspended: Automated access to this profile is suspended.
+      Approve it again in person before you retry.
+    profile_access_backend_unavailable: The service that handles this request is not
+      available right now. Try again in a moment.
+    profile_access_client_mismatch: This request came from a different client than
+      the one that was admitted, so it was refused.
+    profile_access_clock_invalid: The computer clock is not reliable enough to check
+      this access, so it was refused. Correct the system time and try again.
+    profile_access_connection_mismatch: This request came over a different connection
+      than the one that was admitted, so it was refused.
+    profile_access_custody_changed: The profile's protected storage changed since
+      you signed in. Sign in again.
+    profile_access_custody_recovering: The profile's worker was lost, so your session
+      is suspended while it recovers. Sign in again to resume.
+    profile_access_custody_unavailable: The profile's protected storage is not available
+      right now. Try again in a moment.
+    profile_access_disclosure_denied: Your current access does not allow this data
+      to be shown, so the request was refused.
+    profile_access_fresh_password_required: This operation needs your password again.
+      Sign in again with your password.
+    profile_access_frontend_denied: This operation is not allowed from this interface,
+      so it was refused.
+    profile_access_grant_expired: The access grant behind this request has expired.
+      Grant access again in person and try again.
+    profile_access_grant_inactive: The access grant behind this request is not active.
+      Grant access again in person and try again.
+    profile_access_human_authority_required: This operation must be carried out by
+      a person, not by automation. Do it yourself and try again.
+    profile_access_key_expired: The access key behind this request has expired. Issue
+      a new key in person and try again.
+    profile_access_key_inactive: The access key behind this request is not active.
+      Issue a new key in person and try again.
+    profile_access_operation_denied: This operation is not permitted with your current
+      access, so it was refused.
+    profile_access_operation_unavailable: This operation is not available right now.
+      Try again later.
+    profile_access_os_locked: The computer is locked. Unlock it and try again.
+    profile_access_os_session_unavailable: The computer's user session is not available,
+      so access cannot be checked. Sign in to the computer and try again.
+    profile_access_parent_invalid: The access this request was delegated from is no
+      longer valid, so it was refused.
+    profile_access_period_denied: Your current access does not cover this period,
+      so the request was refused.
+    profile_access_person_act_required: 'This act is yours alone: signing in, sessions,
+      keys, secrets and work outside the profile cannot be delegated. Do it in person.'
+    profile_access_privilege_expansion: This request asks for more access than was
+      granted, so it was refused.
+    profile_access_profile_locked: The profile is locked. Sign in again to unlock
+      it.
+    profile_access_profile_mismatch: This request does not belong to the profile you
+      are signed in to, so it was refused.
+    profile_access_provider_required: This operation needs a provider that is not
+      set up. Set one up and try again.
+    profile_access_response_authority_required: Answering this operation's question
+      needs authority this request does not carry, so it was refused. Answer from
+      the window that started the operation.
+    profile_access_runtime_changed: The background service restarted since you signed
+      in. Sign in again.
+    profile_access_session_expired: Your session has expired. Sign in again.
+    profile_access_session_inactive: Your session is no longer active. Sign in again.
+    profile_access_storage_unavailable: The profile storage is not available right
+      now. Try again in a moment.
+    profile_access_subject_busy: An earlier operation on the same item has not finished.
+      Wait for it to finish and try again.
+    profile_access_transaction_authority_required: Confirming this change needs authority
+      this request does not carry, so it was refused. Confirm it in person.
     profile_capsule_archive: The profile archive could not be written or read
     profile_capsule_source: The given source is not a readable profile capsule
     profile_import_collision: The imported profile identifier collides with an existing

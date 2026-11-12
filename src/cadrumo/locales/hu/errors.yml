@@ -1404,6 +1404,82 @@ errors:
       rögzítsd újra.
     producer_capture_not_current: Egy termelői vetület megváltozott olvasás közben;
       rögzítsd újra.
+    profile_access_administration_denied: A jelenlegi hozzáféréseddel a hozzáférési
+      beállítások nem kezelhetők, ezért a kérést elutasítottuk.
+    profile_access_authentication_required: Nem vagy bejelentkezve. Jelentkezz be,
+      majd próbáld újra.
+    profile_access_authority_unavailable: A művelethez szükséges közzétett szabályok
+      jelenleg nem érhetők el. Próbáld újra később.
+    profile_access_automation_suspended: Az automatikus hozzáférés ehhez a profilhoz
+      fel van függesztve. Engedélyezd újra személyesen, mielőtt újra próbálkoznál.
+    profile_access_backend_unavailable: A kérést kiszolgáló szolgáltatás jelenleg
+      nem érhető el. Próbáld újra egy kis idő múlva.
+    profile_access_client_mismatch: Ez a kérés más klienstől érkezett, mint amelyet
+      engedélyeztünk, ezért elutasítottuk.
+    profile_access_clock_invalid: A számítógép órája nem elég megbízható a hozzáférés
+      ellenőrzéséhez, ezért elutasítottuk. Javítsd ki a rendszeridőt, majd próbáld
+      újra.
+    profile_access_connection_mismatch: Ez a kérés más kapcsolaton érkezett, mint
+      amelyet engedélyeztünk, ezért elutasítottuk.
+    profile_access_custody_changed: A profil védett tárolása megváltozott, mióta bejelentkeztél.
+      Jelentkezz be újra.
+    profile_access_custody_recovering: A profil munkafolyamata elveszett, ezért a
+      munkameneted a helyreállításig fel van függesztve. Jelentkezz be újra a folytatáshoz.
+    profile_access_custody_unavailable: A profil védett tárolása jelenleg nem érhető
+      el. Próbáld újra egy kis idő múlva.
+    profile_access_disclosure_denied: A jelenlegi hozzáféréseddel ezek az adatok nem
+      jeleníthetők meg, ezért a kérést elutasítottuk.
+    profile_access_fresh_password_required: Ehhez a művelethez újra szükség van a
+      jelszavadra. Jelentkezz be újra a jelszavaddal.
+    profile_access_frontend_denied: Ez a művelet ebből a felületből nem engedélyezett,
+      ezért elutasítottuk.
+    profile_access_grant_expired: Ennek a kérésnek a hozzáférési engedélye lejárt.
+      Add meg újra személyesen a hozzáférést, majd próbáld újra.
+    profile_access_grant_inactive: Ennek a kérésnek a hozzáférési engedélye nem aktív.
+      Add meg újra személyesen a hozzáférést, majd próbáld újra.
+    profile_access_human_authority_required: Ezt a műveletet embernek kell végrehajtania,
+      nem automatizálásnak. Végezd el te, majd próbáld újra.
+    profile_access_key_expired: Ennek a kérésnek a hozzáférési kulcsa lejárt. Állíts
+      ki személyesen új kulcsot, majd próbáld újra.
+    profile_access_key_inactive: Ennek a kérésnek a hozzáférési kulcsa nem aktív.
+      Állíts ki személyesen új kulcsot, majd próbáld újra.
+    profile_access_operation_denied: Ez a művelet a jelenlegi hozzáféréseddel nem
+      engedélyezett, ezért elutasítottuk.
+    profile_access_operation_unavailable: Ez a művelet jelenleg nem érhető el. Próbáld
+      újra később.
+    profile_access_os_locked: A számítógép zárolva van. Told fel a zárolást, majd
+      próbáld újra.
+    profile_access_os_session_unavailable: A számítógép felhasználói munkamenete nem
+      érhető el, ezért a hozzáférés nem ellenőrizhető. Jelentkezz be a számítógépre,
+      majd próbáld újra.
+    profile_access_parent_invalid: A hozzáférés, amelytől ezt a kérést átruházták,
+      már nem érvényes, ezért elutasítottuk.
+    profile_access_period_denied: A jelenlegi hozzáférésed nem terjed ki erre az időszakra,
+      ezért a kérést elutasítottuk.
+    profile_access_person_act_required: 'Ez kizárólag a te dolgod: a bejelentkezés,
+      a munkamenetek, a kulcsok, a titkok és a profilon kívüli munka nem ruházható
+      át. Végezd el személyesen.'
+    profile_access_privilege_expansion: Ez a kérés több hozzáférést kér, mint amennyit
+      megadtak, ezért elutasítottuk.
+    profile_access_profile_locked: A profil zárolva van. Jelentkezz be újra a feloldásához.
+    profile_access_profile_mismatch: Ez a kérés nem ahhoz a profilhoz tartozik, amelybe
+      bejelentkeztél, ezért elutasítottuk.
+    profile_access_provider_required: Ehhez a művelethez olyan szolgáltató kell, amely
+      nincs beállítva. Állíts be egyet, majd próbáld újra.
+    profile_access_response_authority_required: A művelet kérdésének megválaszolásához
+      olyan jogosultság kell, amellyel ez a kérés nem rendelkezik, ezért elutasítottuk.
+      Válaszolj abból az ablakból, amely elindította a műveletet.
+    profile_access_runtime_changed: A háttérszolgáltatás újraindult, mióta bejelentkeztél.
+      Jelentkezz be újra.
+    profile_access_session_expired: A munkameneted lejárt. Jelentkezz be újra.
+    profile_access_session_inactive: A munkameneted már nem aktív. Jelentkezz be újra.
+    profile_access_storage_unavailable: A profil tárolója jelenleg nem érhető el.
+      Próbáld újra egy kis idő múlva.
+    profile_access_subject_busy: Ugyanezen az elemen egy korábbi művelet még nem fejeződött
+      be. Várd meg a végét, majd próbáld újra.
+    profile_access_transaction_authority_required: A változtatás jóváhagyásához olyan
+      jogosultság kell, amellyel ez a kérés nem rendelkezik, ezért elutasítottuk.
+      Személyesen hagyd jóvá.
     profile_capsule_archive: A profil archívumát nem sikerült írni vagy olvasni
     profile_capsule_source: A megadott forrás nem olvasható profilkapszula
     profile_import_collision: Az importált profil azonosítója ütközik egy meglévővel.
