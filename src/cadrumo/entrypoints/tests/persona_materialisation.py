@@ -27,6 +27,8 @@ import asyncio
 import dataclasses
 import hashlib
 import json
+import logging
+import re
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -36,7 +38,7 @@ from enum import StrEnum
 from functools import cache, partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Final, cast
+from typing import Final, cast, override
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -214,6 +216,7 @@ from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.aggregation import RetencionClave, RetencionScheme
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
+from ...core.logging import flush_logging
 from ...core.operations import (
     TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
     OperationTerminalCondition,
@@ -587,7 +590,8 @@ def settle_operation(
             raise PersonaMaterialisationError(f"{definition_id} could not be observed")
         return observed.projection
 
-    terminal = asyncio.run(settle())
+    with _failure_frames() as failures:
+        terminal = asyncio.run(settle())
     result = _public_result(world, terminal)
     if terminal.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
         # A refusal names its registered code through its refusal reference; only a failure has an error code.
@@ -602,9 +606,52 @@ def settle_operation(
             detail = _result_words(result.model_dump(mode="json", exclude={"profile_id"}))
             detail = result.model_dump_json(exclude={"profile_id"}) if detail is None else detail
         if detail is None:
-            detail = "no detail"
+            detail = failures.frames.get(str(terminal.operation_id), "no detail")
         raise PersonaMaterialisationError(f"{definition_id} settled {terminal.terminal_condition} ({code}): {detail}")
     return result
+
+
+_EXECUTOR_LOGGER: Final[str] = "cadrumo.application.operations.supervisor_execution"
+"""The logger the supervisor names a failed operation's exception type and code frames on."""
+_FAILURE_RECORD: Final[re.Pattern[str]] = re.compile(
+    r"^operation failed definition=\S+ operation=(?P<operation>\S+) diagnostic_ref=\S+ "
+    r"exception_type=(?P<type>\S+) raising_frame=(?P<raising>\S+) application_frame=(?P<application>\S+)"
+)
+
+
+class _FailureFrames(logging.Handler):
+    """Collect, per operation id, the exception type and code frames the supervisor logs for a failure.
+
+    A failed operation serves no sentence and keeps its exception message out of every record by design, so
+    these code coordinates are what makes a failure without a refusal code diagnosable from the table. The
+    application delivers records to handlers formatted, on its dispatch thread, so the handler reads the
+    formatted message and the caller flushes the dispatch before reading the frames.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(logging.ERROR)
+        self.frames: dict[str, str] = {}
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        found = _FAILURE_RECORD.match(record.getMessage())
+        if found is None:
+            return
+        self.frames[found["operation"]] = (
+            f"{found['type']} raised at {found['raising']} (application frame {found['application']})"
+        )
+
+
+@contextmanager
+def _failure_frames() -> Generator[_FailureFrames]:
+    handler = _FailureFrames()
+    logger = logging.getLogger(_EXECUTOR_LOGGER)
+    logger.addHandler(handler)
+    try:
+        yield handler
+        flush_logging()
+    finally:
+        logger.removeHandler(handler)
 
 
 def _result_words(value: object) -> str | None:
