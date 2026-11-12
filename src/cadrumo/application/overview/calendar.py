@@ -378,6 +378,22 @@ def local_work_unit_entries(
     )
 
 
+def _unit_earns_own_row(
+    unit: WorkUnit,
+    key: tuple[str, int, str],
+    *,
+    withheld_addresses: frozenset[tuple[str, int, str]],
+    calendar_range: OverviewCalendarRange,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether ``unit``, which no registry row annotates, is shown as a calendar row of its own."""
+    # A declaration the operator opened is not evidence that the obligation is owed: where the
+    # obligation's own facts withheld its row, only a local filing earns the unit a row of its own.
+    if key in withheld_addresses and not _work_unit_has_filing_pointers(unit):
+        return False
+    return _work_unit_intersects_range(unit, calendar_range, operation=operation)
+
+
 def _merge_work_units_into_entries(
     entries: tuple[OverviewCalendarEntry, ...],
     *,
@@ -403,14 +419,8 @@ def _merge_work_units_into_entries(
             merged[existing_index] = _annotate_entry_with_work_unit(merged[existing_index], unit)
             annotated_registry_keys.add(key)
             continue
-        # A declaration the operator opened is not evidence that the obligation is owed: where the
-        # obligation's own facts withheld its row, only a local filing earns the unit a row of its own.
-        if key in withheld_addresses and not _work_unit_has_filing_pointers(unit):
-            continue
-        if not _work_unit_intersects_range(
-            unit,
-            calendar_range,
-            operation=operation,
+        if not _unit_earns_own_row(
+            unit, key, withheld_addresses=withheld_addresses, calendar_range=calendar_range, operation=operation
         ):
             continue
         merged.append(
