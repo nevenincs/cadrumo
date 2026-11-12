@@ -32,6 +32,7 @@ _PRORRATA_FACT: Final[str] = "0116-renta-iva-deduction-ratio-policy.toml"
 _CAPITAL_FACT: Final[str] = "0130-liva-bienes-inversion-vocabulary.toml"
 _INVOICE_CLASS_FACT: Final[str] = "0141-invoice-legal-classification-catalogue.toml"
 _PREMISES_FACT: Final[str] = "0155-modelo-347-premises-form-codes.toml"
+_GASTO_INMOBILIARIO_FACT: Final[str] = "0185-renta-capital-inmobiliario-gasto-concept-vocabulary.toml"
 
 
 def _entries(fact_file: str) -> list[dict[str, str]]:
@@ -77,6 +78,7 @@ ENTRY_OPTION_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         f"{ENTRY_OPTION_LABEL_PREFIX}deduction_fact_kind.": _ordered(_DEDUCTION_FACT, "kind.order", "kind.owner_only"),
         f"{ENTRY_OPTION_LABEL_PREFIX}m210_payer_mode.": _ordered(_M210_FACT, "m210.payer_mode_order"),
         f"{ENTRY_OPTION_LABEL_PREFIX}m210_income_concept.": _ordered(_M210_FACT, "m210.tipo_renta.order"),
+        f"{ENTRY_OPTION_LABEL_PREFIX}gasto_capital_inmobiliario.": _ordered(_GASTO_INMOBILIARIO_FACT, "concept_order"),
         f"{ENTRY_OPTION_LABEL_PREFIX}withholding_certificate_figure.": tuple(
             dict.fromkeys(
                 figure.value for income_class in RetencionSoportadaClase for figure in certificate_figures(income_class)

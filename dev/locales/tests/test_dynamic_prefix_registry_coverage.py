@@ -529,6 +529,9 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # using the exact request language. ContextVar settings are restored before
         # the result leaves the worker; no CLI callback owns these read scopes.
         ("application/user_profile/view_reader.py", "read_profile_view_page"),
+        # The grouped record read words its rows and relations inside one synchronous
+        # with-block and returns plain values; the language is restored before it returns.
+        ("application/user_profile/record_groups.py", "read_profile_record_groups"),
         ("application/modelo/query_read_operation.py", "_read_requires"),
         ("application/modelo/query_read_operation.py", "read_modelo_readiness"),
         ("application/modelo/wizard_attempt_operation.py", "follow_up"),
@@ -570,6 +573,9 @@ _CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
 _PROJECTION_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
         ("application/user_profile/view_reader.py", "read_profile_view_page"),
+        # The grouped record read words its rows and relations inside one synchronous
+        # with-block and returns plain values; the language is restored before it returns.
+        ("application/user_profile/record_groups.py", "read_profile_record_groups"),
         ("application/modelo/query_read_operation.py", "_read_requires"),
         ("application/modelo/query_read_operation.py", "read_modelo_readiness"),
         ("application/modelo/wizard_attempt_operation.py", "follow_up"),

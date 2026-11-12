@@ -50,11 +50,11 @@ def _demanded_fields(bindings: Iterable[BindingDefinition], declared: tuple[XmlD
 
 
 def _refused(
-    layout: ExportLayoutDefinition, entry_field: str, message_key: str, detail: str, **context: object
+    layout: ExportLayoutDefinition, entry_field: str, detail: str, *, message_key: str, **context: object
 ) -> FilingExportDesignIntegrityError:
     return FilingExportDesignIntegrityError(
         f"export layout {layout.id!r} cannot admit input-dictionary field {entry_field!r}: {detail}",
-        translated_message=f"errors.integrity.{message_key}",
+        translated_message=message_key,
         context={"layout": layout.id, "field": entry_field, **context},
     )
 
@@ -77,8 +77,8 @@ def _require_admissible(
         raise _refused(
             layout,
             entry.field_id,
-            "filing_export_input_dictionary_outside_xsd",
             "the XSD declares no such element",
+            message_key="errors.integrity.filing_export_input_dictionary_outside_xsd",
             path=entry.path,
         )
     record = nearest_repeating_element_path(entry.path, repeating)
@@ -86,8 +86,8 @@ def _require_admissible(
         raise _refused(
             layout,
             entry.field_id,
-            "filing_export_input_dictionary_not_repeated",
             "no repeated element encloses it",
+            message_key="errors.integrity.filing_export_input_dictionary_not_repeated",
             path=entry.path,
         )
     clash = next((item for item in declared if item.path == entry.path), None) or next(
@@ -97,8 +97,8 @@ def _require_admissible(
         raise _refused(
             layout,
             entry.field_id,
-            "filing_export_input_dictionary_path_conflict",
             f"the declaration dictionary already defines {clash.path} as {clash.field_id}",
+            message_key="errors.integrity.filing_export_input_dictionary_path_conflict",
             path=entry.path,
             declared_field=clash.field_id,
         )
@@ -147,8 +147,8 @@ def admitted_input_dictionary_entries(
             raise _refused(
                 layout,
                 field,
-                "filing_export_input_dictionary_field_undeclared",
                 "neither dictionary declares it",
+                message_key="errors.integrity.filing_export_input_dictionary_field_undeclared",
             )
         _require_admissible(layout, entry, declared=declared, repeating=repeating, element_order=element_order)
         admitted.append(entry)

@@ -43,7 +43,6 @@ from pydantic import BaseModel, model_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.config import override_settings
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -78,7 +77,6 @@ from ...domain.usage_ratios.model import eligible_usage_ratio_categories
 from ..export.tabular import ExportSerializationFormat
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
-from ..operations.error_detail import served_words_language
 from ..operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
@@ -333,16 +331,14 @@ def _rental_row_options(
     """Offer each stored row of a rental section by the reference a ledger row stores, worded by its summary."""
     if profile_facts is None:
         return ()
-    with override_settings(cadrumo_output_language=language.value):
-        served = served_words_language()
-        return tuple(
-            LedgerEntryOptionProjection(
-                value=canonical_rental_ref(row_key),
-                label_words=record_row_summary_words(section_key, row_key, row),
-                label_words_language=served,
-            )
-            for row_key, row in sorted(rows_from_facts(section_key, profile_facts).items())
+    return tuple(
+        LedgerEntryOptionProjection(
+            value=canonical_rental_ref(row_key),
+            label_words=record_row_summary_words(section_key, row_key, row, locale=language.value),
+            label_words_language=language,
         )
+        for row_key, row in sorted(rows_from_facts(section_key, profile_facts).items())
+    )
 
 
 def _rental_concept_options(
