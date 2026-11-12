@@ -57,13 +57,19 @@ from .cross_period_models import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
+    Modelo202InstalmentNotOwedProvenance,
     NoPriorObligationProvenance,
     NoPriorObligationProvenanceKind,
     OperatorAttestedValue,
     period_strictly_before_activity_start,
 )
 from .m111_no_retenciones import is_m111_no_retenciones_period
-from .modelo_202_base_source import modelo_202_instalment_has_no_prior_return
+from .modelo_202_base_source import is_modelo_202, modelo_202_instalment_has_no_prior_return
+from .modelo_202_instalment_resolution import (
+    Modelo202InstalmentResolution,
+    Modelo202InstalmentResolutionKind,
+    Modelo202InstalmentResolver,
+)
 from .observations_repository import (
     CalculationObservationRepositoryProtocol,
 )
@@ -140,6 +146,7 @@ class _CleanStateRequirementScope(NamedTuple):
     first_year_fractional: tuple[CrossPeriodDependencyRequirement, ...]
     zero_value_previous_filing: tuple[CrossPeriodDependencyRequirement, ...]
     m111_no_retenciones: tuple[CrossPeriodDependencyRequirement, ...]
+    modelo_202_not_owed: tuple[CrossPeriodDependencyEvidence, ...]
 
 
 def partition_cross_period_requirements_by_activity_start(
@@ -519,6 +526,16 @@ def _zero_value_previous_filing_requirements(
     )
 
 
+def _filing_record_held(requirement: CrossPeriodDependencyRequirement, filing_catalogue: ModeloRecordCatalogue) -> bool:
+    """Whether a filing record exists for the requirement's modelo, filing year and period."""
+    return any(
+        str(record.modelo) == requirement.source_modelo
+        and record.filing_year == requirement.filing_year
+        and record.period == requirement.period
+        for record in filing_catalogue.records.values()
+    )
+
+
 def upstream_source_absent(
     requirement: CrossPeriodDependencyRequirement,
     *,
@@ -535,12 +552,7 @@ def upstream_source_absent(
     layers = observation_repository.load_observation_layers(requirement.source_modelo, requirement.period)
     if layers.official is not None or layers.pending_local is not None:
         return False
-    if any(
-        str(record.modelo) == requirement.source_modelo
-        and record.filing_year == requirement.filing_year
-        and record.period == requirement.period
-        for record in filing_catalogue.records.values()
-    ):
+    if _filing_record_held(requirement, filing_catalogue):
         return False
     return not any(
         str(unit.modelo) == requirement.source_modelo
@@ -762,6 +774,58 @@ def _m111_no_retenciones_requirements(
     )
 
 
+def _modelo_202_not_owed_evidence(
+    requirement: CrossPeriodDependencyRequirement,
+    resolution: Modelo202InstalmentResolution,
+) -> CrossPeriodDependencyEvidence | None:
+    """Return the clean row of an instalment its own verdict says was not owed, or ``None``."""
+    if resolution.kind is not Modelo202InstalmentResolutionKind.NOT_OWED or resolution.grounds is None:
+        return None
+    base = resolution.base
+    return CrossPeriodDependencyEvidence(
+        requirement=requirement,
+        modelo_202_instalment_not_owed=Modelo202InstalmentNotOwedProvenance(
+            grounds=resolution.grounds,
+            base_value=None if base is None else base.value,
+            base_basis=None if base is None else base.basis,
+            base_source_modelo=None if base is None else base.source_modelo,
+            base_source_period=None if base is None else base.source_period,
+        ),
+    )
+
+
+def _modelo_202_not_owed_dependencies(
+    requirements: Iterable[CrossPeriodDependencyRequirement],
+    *,
+    resolver: Modelo202InstalmentResolver | None,
+    filing_catalogue: ModeloRecordCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> tuple[CrossPeriodDependencyEvidence, ...]:
+    """Scope out the Modelo 202 instalments that were rightly never filed.
+
+    An instalment whose own verdict says nothing was owed contributes a proven
+    0.00 (Orden HFP/227/2017 art. 1.3; LIS art. 40). Any instalment held by a
+    filing record or a presented filing follows that filing instead, and an
+    instalment whose verdict is unknown, incomplete or owed stays in scope and
+    keeps blocking as an absent source.
+    """
+    if resolver is None:
+        return ()
+    resolutions: dict[Period, Modelo202InstalmentResolution] = {}
+    rows: list[CrossPeriodDependencyEvidence] = []
+    for requirement in requirements:
+        if not is_modelo_202(requirement.source_modelo, operation=operation) or _filing_record_held(
+            requirement, filing_catalogue
+        ):
+            continue
+        if requirement.period not in resolutions:
+            resolutions[requirement.period] = resolver(requirement.period)
+        row = _modelo_202_not_owed_evidence(requirement, resolutions[requirement.period])
+        if row is not None:
+            rows.append(row)
+    return tuple(rows)
+
+
 def _clean_state_requirement_scope(
     snapshot: RegistrySnapshot,
     *,
@@ -773,8 +837,10 @@ def _clean_state_requirement_scope(
     zero_value_previous_filing_binding_ids: frozenset[str] | None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None,
     operator_value_attestations: Mapping[str, OperatorAttestedValue] | None,
+    modelo_202_instalment_resolver: Modelo202InstalmentResolver | None,
+    filing_catalogue: ModeloRecordCatalogue,
 ) -> _CleanStateRequirementScope:
-    """Derive and disposition registry requirements before loading observations."""
+    """Derive and disposition registry requirements before evaluating their sources."""
     all_requirements = cross_period_dependency_requirements(snapshot, support=operation.supported_filing_years())
     non_filer_modelos = cross_period_clean_state_non_filer_modelos(
         snapshot,
@@ -790,15 +856,17 @@ def _clean_state_requirement_scope(
         for requirement in partition.in_scope
         if _stated_values_for(requirement, operator_value_attestations)
     }
+    first_year_fractional = _first_year_fractional_requirements(
+        partition.in_scope,
+        modelo_202_modality=modelo_202_modality,
+        activity_start_date=activity_start_date,
+        operation=operation,
+    )
+    first_year_keys = {requirement.key for requirement in first_year_fractional}
     return _CleanStateRequirementScope(
         not_applicable=_not_applicable_dependencies(all_requirements, non_filer_modelos),
         partition=partition,
-        first_year_fractional=_first_year_fractional_requirements(
-            partition.in_scope,
-            modelo_202_modality=modelo_202_modality,
-            activity_start_date=activity_start_date,
-            operation=operation,
-        ),
+        first_year_fractional=first_year_fractional,
         zero_value_previous_filing=tuple(
             requirement
             for requirement in _zero_value_previous_filing_requirements(
@@ -810,6 +878,12 @@ def _clean_state_requirement_scope(
         m111_no_retenciones=_m111_no_retenciones_requirements(
             partition.in_scope,
             m111_no_retenciones_periods,
+            operation=operation,
+        ),
+        modelo_202_not_owed=_modelo_202_not_owed_dependencies(
+            (requirement for requirement in partition.in_scope if requirement.key not in first_year_keys),
+            resolver=modelo_202_instalment_resolver,
+            filing_catalogue=filing_catalogue,
             operation=operation,
         ),
     )
@@ -839,6 +913,7 @@ def _evaluate_in_scope_dependencies(
             *scope.first_year_fractional,
             *scope.zero_value_previous_filing,
             *scope.m111_no_retenciones,
+            *(evidence.requirement for evidence in scope.modelo_202_not_owed),
         )
     }
     dependencies: list[CrossPeriodDependencyEvidence] = []
@@ -933,6 +1008,7 @@ def _clean_state_dependencies(
         *scope.not_applicable,
         *_first_year_fractional_dependencies(scope.first_year_fractional, activity_start_date),
         *_scoped_advisory_dependencies(scope),
+        *scope.modelo_202_not_owed,
     )
 
 
@@ -959,6 +1035,7 @@ def evaluate_cross_period_clean_state(
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
     operator_value_attestations: Mapping[str, OperatorAttestedValue] | None = None,
     work_catalogue: WorkUnitCatalogue | None = None,
+    modelo_202_instalment_resolver: Modelo202InstalmentResolver | None = None,
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a clean-state verdict.
 
@@ -1024,6 +1101,15 @@ def evaluate_cross_period_clean_state(
     follows it as before; a previous-filing source whose value differs from the
     recorded figure, or any held source of a relation, is a conflict that
     blocks. A plain override or a blank binding never satisfies it.
+
+    ``modelo_202_instalment_resolver`` resolves a Modelo 202 instalment the
+    target reads. An instalment no filing record holds and whose resolution is
+    not owed, because its own verdict says no ingreso resulted (Orden
+    HFP/227/2017 art. 1.3 below the LIS art. 40.3 threshold), yields a clean
+    row of kind ``modelo_202_instalment_not_owed``: it was rightly never filed
+    and contributes 0.00. A filed instalment, and one whose verdict is unknown,
+    incomplete or owed, is evaluated as before. ``None`` resolves nothing, so
+    every unfiled instalment keeps blocking.
     """
     repositories = _load_clean_state_repositories(
         operation=operation,
@@ -1046,6 +1132,8 @@ def evaluate_cross_period_clean_state(
         zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
         operator_value_attestations=operator_value_attestations,
+        modelo_202_instalment_resolver=modelo_202_instalment_resolver,
+        filing_catalogue=repositories.filing_catalogue,
     )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,

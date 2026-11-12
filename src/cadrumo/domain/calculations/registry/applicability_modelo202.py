@@ -344,22 +344,53 @@ def modelo_202_instalment_applicability(
     ``basis`` names the record that supplied the art. 40.2 base, and its served
     sentence follows the reason so the operator sees where the figure came from.
     """
+    grounds = modelo_202_instalment_grounds(outcome, basis=basis, effective_date=effective_date, authority=authority)
+    return ModeloApplicability(
+        modelo=entity_applicability.modelo,
+        verdict=outcome.verdict,
+        reason=grounds.reason,
+        legal_refs=grounds.legal_refs,
+        provenance=entity_applicability.provenance,
+    )
+
+
+class Modelo202InstalmentGrounds(BaseModel):
+    """The catalogue's served reason and legal references for one instalment outcome."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: Modelo202InstalmentOutcome
+    reason: _OperatorReason
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+
+
+def modelo_202_instalment_grounds(
+    outcome: Modelo202InstalmentOutcome,
+    *,
+    basis: Modelo202BaseBasis | None,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> Modelo202InstalmentGrounds:
+    """Return the served reason and legal references the catalogue gives ``outcome``.
+
+    ``basis`` names the record that supplied the art. 40.2 base; its served
+    sentence follows the reason so the reader sees where the figure came from.
+    """
     authority = require_governed_fact_authority(authority, subject="Modelo 202 applicability")
     declarations = _modelo_202_applicability_declarations(effective_date=effective_date, authority=authority)
     reason = declarations[f"reason.{outcome.value}"]
     if basis is not None:
         reason = f"{reason} {declarations[f'basis.{basis.value}']}"
-    return ModeloApplicability(
-        modelo=entity_applicability.modelo,
-        verdict=outcome.verdict,
+    return Modelo202InstalmentGrounds(
+        outcome=outcome,
         reason=reason,
         legal_refs=_modelo_202_legal_refs(declarations, outcome.value),
-        provenance=entity_applicability.provenance,
     )
 
 
 __all__ = [
     "Modelo202BaseBasis",
+    "Modelo202InstalmentGrounds",
     "Modelo202InstalmentOutcome",
     "Modelo202Modality",
     "Modelo202ModalityVerdict",
@@ -367,6 +398,7 @@ __all__ = [
     "modelo_202_filing_obligation",
     "modelo_202_incn_threshold_decimal",
     "modelo_202_instalment_applicability",
+    "modelo_202_instalment_grounds",
     "modelo_202_modality_from_inputs",
     "resolve_modelo_202_art_40_3_incn_threshold",
 ]

@@ -45,7 +45,11 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..calculations.cross_period_clean_state import evaluate_cross_period_clean_state
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..calculations.cross_period_clean_state import (
+    cross_period_dependency_requirements,
+    evaluate_cross_period_clean_state,
+)
 from ..calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
@@ -54,8 +58,16 @@ from ..calculations.cross_period_models import (
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
     OperatorAttestedValue,
+    operator_value_attestations,
 )
 from ..calculations.m111_no_retenciones import m111_no_retenciones_periods_from_profile_values
+from ..calculations.modelo_202_base_source import is_modelo_202
+from ..calculations.modelo_202_instalment_resolution import Modelo202InstalmentResolver
+from ..overview.modelo202_instalment_evidence import (
+    Modelo202InstalmentStores,
+    art_40_3_election_reader_for_bucket,
+    bind_modelo_202_instalment_resolver,
+)
 from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloCrossPeriodCleanStateError
 from .precondition_action_bindings import AlternativeActionArguments
@@ -129,6 +141,7 @@ def cross_period_clean_state_verdict_for_work_unit(
     operator_value_attestations: Mapping[str, OperatorAttestedValue] | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     """Evaluate the registry-declared cross-period dependencies of one work unit.
 
@@ -138,6 +151,12 @@ def cross_period_clean_state_verdict_for_work_unit(
     ``not_applicable_source_modelos`` but does supply ``workflow_profile``, the
     revision's economic-activity-conditional sources the profile positively
     excludes (Modelo 130 or 131, RIRPF art. 110) are scoped out.
+
+    Where the revision reads Modelo 202 instalments, each is resolved through
+    the instalment's own verdict, so an unfiled instalment that verdict says was
+    not owed counts as nothing paid. ``transaction_repository`` lets an elected
+    instalment's calculation be shown current; without it no elected instalment
+    is decided and every unfiled one keeps blocking.
 
     Core types:
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
@@ -166,6 +185,7 @@ def cross_period_clean_state_verdict_for_work_unit(
                 operator_value_attestations=operator_value_attestations,
                 work_unit_repository=work_unit_repository,
                 operation=indexed_operation,
+                transaction_repository=transaction_repository,
             )
     try:
         snapshot = operation.snapshot(
@@ -216,6 +236,62 @@ def cross_period_clean_state_verdict_for_work_unit(
             and work_unit_repository is not None
             else None
         ),
+        modelo_202_instalment_resolver=_modelo_202_instalment_resolver(
+            snapshot,
+            bucket_id=work_unit.bucket_id,
+            stores=_Modelo202ResolverStores(
+                observations=observation_repository,
+                calculations=calculation_repository,
+                work_units=work_unit_repository,
+                transactions=transaction_repository,
+            ),
+            activity_start_date=activity_start_date,
+            modality=modelo_202_modality,
+            operation=operation,
+        ),
+    )
+
+
+class _Modelo202ResolverStores(NamedTuple):
+    observations: CalculationObservationRepositoryProtocol
+    calculations: CalculationRevisionCatalogueRepositoryProtocol
+    work_units: WorkUnitCatalogueRepositoryProtocol | None
+    transactions: TransactionCatalogueRepositoryProtocol | None
+
+
+def _modelo_202_instalment_resolver(
+    snapshot: RegistrySnapshot,
+    *,
+    bucket_id: str,
+    stores: _Modelo202ResolverStores,
+    activity_start_date: date | None,
+    modality: Modelo202Modality | None,
+    operation: PinnedAuthorityOperation,
+) -> Modelo202InstalmentResolver | None:
+    """Bind the instalment resolution where the revision reads a Modelo 202 instalment.
+
+    Without a work-unit store no base stated on an instalment's own work unit
+    can be read, so only a presented Modelo 200 decides a base.
+    """
+    if not any(
+        is_modelo_202(requirement.source_modelo, operation=operation)
+        for requirement in cross_period_dependency_requirements(snapshot, support=operation.supported_filing_years())
+    ):
+        return None
+    work_units = stores.work_units
+    transactions = stores.transactions
+    return bind_modelo_202_instalment_resolver(
+        Modelo202InstalmentStores(
+            bucket_id=bucket_id,
+            observations=stores.observations,
+            work_units=WorkUnitCatalogue if work_units is None else work_units.load,
+            calculations=stores.calculations,
+            transactions=None if transactions is None else transactions.load,
+            activity_start_date=activity_start_date,
+            election_for=art_40_3_election_reader_for_bucket(bucket_id, operation=operation),
+        ),
+        modality=modality,
+        operation=operation,
     )
 
 
@@ -276,30 +352,6 @@ def zero_value_previous_filing_binding_ids(target: CalculationRevision | None) -
         if value == 0:
             resolved.add(binding_id)
     return frozenset(resolved)
-
-
-def operator_value_attestations(target: CalculationRevision | None) -> dict[str, OperatorAttestedValue]:
-    """Return the figures the operator stated for earlier filings the product cannot hold.
-
-    Only the target's operator layer is read: a value attestation is the
-    operator's own statement, so a value a source tier merged into the
-    revision's replay map can never stand for one. A revision with no layer, or
-    a layer that attests nothing, yields none.
-
-    Core types:
-    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
-    """
-    layer = None if target is None else target.operator_layer
-    if layer is None:
-        return {}
-    return {
-        binding_id: OperatorAttestedValue(
-            binding_id=binding_id,
-            value=layer.binding_overrides[binding_id],
-            sources=attestation.sources,
-        )
-        for binding_id, attestation in layer.value_attestations.items()
-    }
 
 
 #: Evidence-missing blockers a genuine first filer hits on a pre-activity
@@ -1106,7 +1158,6 @@ __all__ = [
     "cross_period_door_operator_arguments",
     "cross_period_door_reader",
     "cross_period_expected_member_sets_from_profile",
-    "operator_value_attestations",
     "registry_modality_finding",
     "require_cross_period_clean_state",
     "zero_value_previous_filing_binding_ids",

@@ -24,11 +24,20 @@ from ...domain.calculations.registry.applicability_modelo202 import (
     Modelo202Modality,
     derive_modelo_202_modality,
     modelo_202_instalment_applicability,
+    modelo_202_instalment_grounds,
 )
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict, ModeloApplicability
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.result_casillas import canonical_result_amount, result_disposition_casilla_ids
 from ...domain.deadlines.models import TaxpayerProfile
-from ..calculations.modelo_202_base_source import is_modelo_202
+from ..calculations.modelo_202_base_source import is_modelo_202, modelo_202_form
+from ..calculations.modelo_202_instalment_resolution import (
+    Modelo202InstalmentBase,
+    Modelo202InstalmentResolution,
+    Modelo202InstalmentResolutionKind,
+    Modelo202InstalmentUnresolvedReason,
+)
+from ..calculations.observations_repository import ObservationEnvelopePayload
 from ..operator_actions.models import DeclaredNextAction
 from .next_actions import declare_next_action
 
@@ -267,7 +276,7 @@ def modelo_202_instalment_verdict(
         return Modelo202InstalmentVerdict(applicability)
     facts = facts_reader(instalment)
     outcome = decide_modelo_202_instalment(facts)
-    basis = facts.base.basis if facts.base is not None and outcome in _BASE_DECIDED else None
+    basis = _decided_basis(facts, outcome)
     decided = modelo_202_instalment_applicability(
         applicability,
         outcome,
@@ -283,6 +292,101 @@ def modelo_202_instalment_verdict(
     )
 
 
+def _decided_basis(facts: Modelo202InstalmentFacts, outcome: Modelo202InstalmentOutcome) -> Modelo202BaseBasis | None:
+    """Name the record that supplied the base, where the base decided the outcome."""
+    return facts.base.basis if facts.base is not None and outcome in _BASE_DECIDED else None
+
+
+def _filed_amount(filing: ObservationEnvelopePayload, *, operation: PinnedAuthorityOperation) -> Decimal | None:
+    """Return the filed instalment's canonical result, or ``None`` where the form declares none."""
+    modelo = modelo_202_form(operation=operation)
+    result_ids = result_disposition_casilla_ids(modelo)
+    if result_ids is None:
+        return None
+    observed = filing.observation.casilla_values
+    return canonical_result_amount(
+        modelo, {casilla_id: observed[casilla_id] for casilla_id in result_ids if casilla_id in observed}
+    )
+
+
+def resolve_modelo_202_instalment(
+    facts: Modelo202InstalmentFacts,
+    *,
+    filing: ObservationEnvelopePayload | None,
+    modality: Modelo202Modality | None,
+    operation: PinnedAuthorityOperation,
+) -> Modelo202InstalmentResolution:
+    """Resolve what one instalment contributes to the settlement of its ejercicio.
+
+    ``filing`` is the presented filing of the instalment, if one is held: its
+    local filing or captured AEAT evidence, never a draft or an operator entry.
+    A held filing is folded as filed whatever the verdict says. Without one the
+    instalment counts as nothing paid only when its own verdict, decided by
+    :func:`decide_modelo_202_instalment` below the art. 40.3 threshold, says no
+    Modelo 202 was owed (Orden HFP/227/2017 art. 1.3: below that threshold the
+    declaration is presented only where an ingreso results). Above the threshold
+    every instalment is owed, and a modality that could not be derived or a
+    verdict still incomplete leaves the instalment unresolved, never zero.
+    """
+    instalment = facts.instalment
+    if filing is not None:
+        return Modelo202InstalmentResolution(
+            instalment=instalment,
+            kind=Modelo202InstalmentResolutionKind.FILED,
+            amount=_filed_amount(filing, operation=operation),
+            filing=filing,
+        )
+    if modality is Modelo202Modality.ART_40_3_MANDATORY:
+        return Modelo202InstalmentResolution(
+            instalment=instalment,
+            kind=Modelo202InstalmentResolutionKind.UNRESOLVED,
+            unresolved_reason=Modelo202InstalmentUnresolvedReason.OWED_UNFILED,
+        )
+    if modality is not Modelo202Modality.ART_40_2_OPTIONAL:
+        return Modelo202InstalmentResolution(
+            instalment=instalment,
+            kind=Modelo202InstalmentResolutionKind.UNRESOLVED,
+            unresolved_reason=Modelo202InstalmentUnresolvedReason.VERDICT_UNDECIDED,
+        )
+    outcome = decide_modelo_202_instalment(facts)
+    basis = _decided_basis(facts, outcome)
+    grounds = modelo_202_instalment_grounds(
+        outcome,
+        basis=basis,
+        effective_date=date(instalment.filing_year, 12, 31),
+        authority=operation,
+    )
+    base = (
+        None
+        if basis is None or facts.base is None or facts.base_source is None
+        else Modelo202InstalmentBase(
+            value=facts.base.value,
+            basis=basis,
+            source_modelo=facts.base_source.modelo,
+            source_period=facts.base_source.period,
+        )
+    )
+    if outcome.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
+        return Modelo202InstalmentResolution(
+            instalment=instalment,
+            kind=Modelo202InstalmentResolutionKind.NOT_OWED,
+            amount=Decimal("0.00"),
+            grounds=grounds,
+            base=base,
+        )
+    return Modelo202InstalmentResolution(
+        instalment=instalment,
+        kind=Modelo202InstalmentResolutionKind.UNRESOLVED,
+        grounds=grounds,
+        base=base,
+        unresolved_reason=(
+            Modelo202InstalmentUnresolvedReason.OWED_UNFILED
+            if outcome.verdict is ApplicabilityVerdict.APPLICABLE
+            else Modelo202InstalmentUnresolvedReason.VERDICT_UNDECIDED
+        ),
+    )
+
+
 __all__ = [
     "Modelo202BaseReading",
     "Modelo202BaseSource",
@@ -293,4 +397,5 @@ __all__ = [
     "decide_modelo_202_instalment",
     "modelo_202_instalment_doors",
     "modelo_202_instalment_verdict",
+    "resolve_modelo_202_instalment",
 ]

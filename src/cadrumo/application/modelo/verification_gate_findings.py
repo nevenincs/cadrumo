@@ -73,6 +73,7 @@ from ..calculations.cross_period_models import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodExpectedMemberSet,
+    operator_value_attestations,
 )
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from .imputation_filings import imputation_filings_from_repositories
@@ -89,7 +90,6 @@ from .verification_cross_period import (
     cross_period_door_operator_arguments,
     cross_period_door_reader,
     cross_period_expected_member_sets_from_profile,
-    operator_value_attestations,
     registry_modality_finding,
     zero_value_previous_filing_binding_ids,
 )
@@ -779,6 +779,7 @@ def collect_verification_gate_findings(
         operator_value_attestations=operator_value_attestations(target),
         work_unit_repository=work_unit_repository,
         operation=operation,
+        transaction_repository=transaction_repository,
     )
 
     _append_cross_period_findings(

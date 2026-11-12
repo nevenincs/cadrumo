@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
+from decimal import Decimal
 from enum import StrEnum
 from typing import Protocol, Self
 
@@ -17,6 +18,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
+from ...domain.calculations.registry.applicability_modelo202 import Modelo202BaseBasis, Modelo202InstalmentGrounds
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -24,7 +26,7 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.calculation_revision_operator_layer import AttestedSource
 from ...domain.modelos.filing_kind_evidence import ObservedFilingKind
 from ...domain.modelos.filing_record import ExternalEvidenceKind
@@ -233,6 +235,26 @@ class NoPriorObligationProvenance(BaseModel):
         return self.provenance_kind is NoPriorObligationProvenanceKind.OPERATOR_DECLARED
 
 
+class Modelo202InstalmentNotOwedProvenance(BaseModel):
+    """Why an unfiled Modelo 202 instalment counts as nothing paid: its own verdict.
+
+    Below the LIS art. 40.3 threshold the Modelo 202 is presented only in an
+    instalment where an ingreso results (Orden HFP/227/2017 art. 1.3), so an
+    instalment whose verdict says nothing was owed was rightly never filed and
+    contributes 0.00. The grounds carry the catalogue's served reason and legal
+    references for that verdict, and the base fields name the art. 40.2 base
+    and the return it was read from where the base decided it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    grounds: Modelo202InstalmentGrounds
+    base_value: Decimal | None = None
+    base_basis: Modelo202BaseBasis | None = None
+    base_source_modelo: str | None = None
+    base_source_period: Period | None = None
+
+
 def _period_strictly_before_activity_start(period: Period, activity_start_date: date) -> bool:
     """Return whether ``period`` falls STRICTLY before the activity-start date.
 
@@ -404,6 +426,30 @@ class OperatorAttestedValue(BaseModel):
         )
 
 
+def operator_value_attestations(target: CalculationRevision | None) -> dict[str, OperatorAttestedValue]:
+    """Return the figures the operator stated for earlier filings the product cannot hold.
+
+    Only the target's operator layer is read: a value attestation is the
+    operator's own statement, so a value a source tier merged into the
+    revision's replay map can never stand for one. A revision with no layer, or
+    a layer that attests nothing, yields none.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
+    layer = None if target is None else target.operator_layer
+    if layer is None:
+        return {}
+    return {
+        binding_id: OperatorAttestedValue(
+            binding_id=binding_id,
+            value=layer.binding_overrides[binding_id],
+            sources=attestation.sources,
+        )
+        for binding_id, attestation in layer.value_attestations.items()
+    }
+
+
 class CrossPeriodDependencyEvidence(BaseModel):
     """Observed filing-state evidence for one dependency requirement.
 
@@ -483,6 +529,15 @@ class CrossPeriodDependencyEvidence(BaseModel):
     Set only on a blocked dependency whose every origin binding is a scalar carry
     the application holds no source of, so the statement is admitted for it.
     Derived from the repositories at evaluation, never stored.
+    """
+
+    modelo_202_instalment_not_owed: Modelo202InstalmentNotOwedProvenance | None = None
+    """Clean evidence: an unfiled Modelo 202 instalment whose own verdict says none was owed.
+
+    No filing of the instalment is held, and its verdict (Orden HFP/227/2017
+    art. 1.3 below the LIS art. 40.3 threshold) says no ingreso resulted, so it
+    contributes a proven 0.00 rather than an absent source. An instalment whose
+    verdict is unknown, incomplete or owed never carries this.
     """
 
     m111_no_retenciones_no_obligation_advisory: bool = False
