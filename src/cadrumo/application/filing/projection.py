@@ -34,6 +34,7 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
 from ...domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal
 from .m303_exonerado_390 import project_m303_exonerado_390_value_arrival
 from .producer_snapshot import FilingProducerSnapshot, M303FilingFacts
 
@@ -131,7 +132,10 @@ def _validate_m303_projection_request(
         or registry_snapshot.modelo.id != form_for_role("iva.periodic")
         or facts is None
     ):
-        raise FilingExportValidationError("M303 filing projection requires one complete Modelo 303 snapshot")
+        raise FilingExportValidationError(
+            "M303 filing projection requires one complete Modelo 303 snapshot",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PROJECTION_FACTS_UNSUPPLIED),
+        )
     if (
         facts.period.filing_year != registry_snapshot.filing_year
         or facts.period.registry_token != registry_snapshot.period
@@ -358,7 +362,10 @@ def _compose_single_occurrence_contexts(
 def _require_m303_projection_facts(producer_snapshot: FilingProducerSnapshot) -> M303FilingFacts:
     facts = producer_snapshot.m303_filing_facts
     if facts is None:
-        raise FilingExportValidationError("M303 projection record requires complete filing facts")
+        raise FilingExportValidationError(
+            "M303 projection record requires complete filing facts",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PROJECTION_FACTS_UNSUPPLIED),
+        )
     return facts
 
 
@@ -538,7 +545,10 @@ def require_regimen_snapshot_matches_registry(
     """
     facts = producer_snapshot.m303_filing_facts
     if facts is None:
-        raise FilingExportValidationError("M303 projection requires complete filing facts")
+        raise FilingExportValidationError(
+            "M303 projection requires complete filing facts",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PROJECTION_FACTS_UNSUPPLIED),
+        )
     evidence = facts.regimen_simplificado.regimen_snapshot
     record_design = registry_snapshot.sources.get(evidence.record_design.id)
     if record_design is None or record_design != evidence.record_design:

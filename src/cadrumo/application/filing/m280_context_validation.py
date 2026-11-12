@@ -14,6 +14,7 @@ from ...domain.calculations.registry.export_value_policy import (
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 
 _M280_SIGN_ID = "modelo-280-t2-rendimientos-negativos-imputables-sign"
 _M280_KEY_ID = "modelo-280-t2-extincion-plan"
@@ -182,10 +183,16 @@ def _require_m280_wire(
     key: ExportFieldDefinition,
 ) -> None:
     if len(wire) != max(_span(field)[1] - 1 for field in record.fields):
-        raise FilingExportValidationError("modelo 280 negative imputation record is incomplete")
+        raise FilingExportValidationError(
+            "modelo 280 negative imputation record is incomplete",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.RECORD_INCOMPLETE),
+        )
     magnitude = _field_wire(wire, integer) + _field_wire(wire, fraction)
     if not _m280_wire_matches(_field_wire(wire, key), _field_wire(wire, sign), magnitude):
-        raise FilingExportValidationError("modelo 280 negative imputation requires key 2 and N or other-key zero fill")
+        raise FilingExportValidationError(
+            "modelo 280 negative imputation requires key 2 and N or other-key zero fill",
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
+        )
 
 
 def m280_key_wire(record: ExportRecordDefinition, buffer: Sequence[str]) -> str:
