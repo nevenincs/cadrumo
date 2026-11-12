@@ -234,13 +234,13 @@ year = "horizon-1"
 family = "renta_negative_general_bases_pending"
 nothing_pending = true
 
-# No interest, dividends or other capital mobiliario in this year or the four before it, so no negative balance of it is pending (casillas 1272, 1274, 1277 and 1280).
+# No interest, dividends or other capital mobiliario in this year or the four before it, so no negative balance of it is pending.
 [[prior_carries]]
 year = "horizon-1"
 family = "renta_negative_savings_capital_income_pending"
 nothing_pending = true
 
-# No sale of shares, funds or other asset in this year or the four before it, so no negative savings balance of gains and losses is pending (casillas 1259, 1261, 1264 and 1267).
+# No sale of shares, funds or other asset in this year or the four before it, so no negative savings balance of gains and losses is pending.
 [[prior_carries]]
 year = "horizon-1"
 family = "renta_negative_savings_gains_losses_pending"
