@@ -69,12 +69,12 @@ class RetencionSoportadaAbsenceProjection(_AbsenceFields):
         )
 
 
-_STATE_KEYS: Final[dict[RetencionSoportadaAbsenceState, str]] = {
+_STATE_LOCALE_KEYS: Final[dict[RetencionSoportadaAbsenceState, str]] = {
     RetencionSoportadaAbsenceState.ACTIVE: "aggregation.retencion_soportada.absence_state.active",
     RetencionSoportadaAbsenceState.WITHDRAWN: "aggregation.retencion_soportada.absence_state.withdrawn",
 }
 """A literal table so the locale audit sees each state's word reach the translator."""
-if set(_STATE_KEYS) != set(RetencionSoportadaAbsenceState):
+if set(_STATE_LOCALE_KEYS) != set(RetencionSoportadaAbsenceState):
     raise RuntimeError("every absence attestation state needs its word")
 
 
@@ -98,7 +98,7 @@ class RetencionSoportadaAbsenceRowProjection(_AbsenceFields):
             withdrawn_at=attestation.withdrawn_at,
             revision_id=revision_id,
             income_class_label=retencion_soportada_clase_label(attestation.income_class),
-            state_label=tr(_STATE_KEYS[attestation.state]),
+            state_label=tr(_STATE_LOCALE_KEYS[attestation.state]),
         )
 
 

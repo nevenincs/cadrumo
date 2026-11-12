@@ -22,16 +22,16 @@ __all__ = [
     "payer_display_name",
 ]
 
-_ORIGIN_KEYS: Final[dict[RetencionSoportadaOrigen, str]] = {
+_ORIGIN_LOCALE_KEYS: Final[dict[RetencionSoportadaOrigen, str]] = {
     RetencionSoportadaOrigen.PAYER_CERTIFICATE: "aggregation.retencion_soportada.origen.payer_certificate",
     RetencionSoportadaOrigen.OPERATOR_DECLARATION: "aggregation.retencion_soportada.origen.operator_declaration",
 }
-if set(_ORIGIN_KEYS) != set(RetencionSoportadaOrigen):
+if set(_ORIGIN_LOCALE_KEYS) != set(RetencionSoportadaOrigen):
     raise RuntimeError("every suffered-withholding origin needs its word")
 
-_UNNAMED_PAYER_KEY: Final = "aggregation.retencion_soportada.payer_unnamed"
+_UNNAMED_PAYER_LOCALE_KEY: Final = "aggregation.retencion_soportada.payer_unnamed"
 
-_AMOUNT_COLUMN_KEYS: Final[tuple[tuple[RetencionSoportadaCantidad, str], ...]] = (
+_AMOUNT_COLUMN_LOCALE_KEYS: Final[tuple[tuple[RetencionSoportadaCantidad, str], ...]] = (
     (
         RetencionSoportadaCantidad.IMPORTE_INTEGRO_DINERARIO,
         "application.ledger.entry_options.withholding_certificate_figure.importe_integro_dinerario",
@@ -73,16 +73,17 @@ class RetencionSoportadaAmountColumnProjection(BaseModel):
 
 def origin_label(origin: RetencionSoportadaOrigen) -> str:
     """Name who states a record's figures."""
-    return tr(_ORIGIN_KEYS[origin])
+    return tr(_ORIGIN_LOCALE_KEYS[origin])
 
 
 def payer_display_name(payer_legal_name: str | None) -> str:
     """Name a payer by its legal name, or say that the record states none."""
-    return payer_legal_name if payer_legal_name is not None else tr(_UNNAMED_PAYER_KEY)
+    return payer_legal_name if payer_legal_name is not None else tr(_UNNAMED_PAYER_LOCALE_KEY)
 
 
 def amount_columns() -> tuple[RetencionSoportadaAmountColumnProjection, ...]:
     """Name every amount a listed row carries, in row order."""
     return tuple(
-        RetencionSoportadaAmountColumnProjection(field=field, label=tr(key)) for field, key in _AMOUNT_COLUMN_KEYS
+        RetencionSoportadaAmountColumnProjection(field=field, label=tr(key))
+        for field, key in _AMOUNT_COLUMN_LOCALE_KEYS
     )
