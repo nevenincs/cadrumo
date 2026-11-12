@@ -785,6 +785,34 @@ errors:
       amb el seu contingut; pot estar malmès o manipulat.
     canonical_unsupported_manifest_version: El manifest del corpus fa servir una versió
       no compatible.
+    filing_approval_basis_version_stale: L'aprovació de la declaració usa la versió
+      de base %{version}, però la versió de base vigent és %{current_version}. Torna
+      a aprovar la declaració.
+    filing_binding_row_source_kind_differs: Un valor de fila de la declaració indica
+      un origen de fila diferent de la font del seu camp. La declaració desada està
+      malmesa; construeix-la de nou.
+    filing_binding_row_source_needs_row: Un valor de fila de la declaració indica
+      d'on vénen les seves files, però no quina fila és. La declaració desada està
+      malmesa; construeix-la de nou.
+    filing_draft_binding_claimed_twice: La declaració dona més d'un valor a la mateixa
+      fila de camp (%{bindings}). Deixa un sol valor per fila de camp.
+    filing_draft_casilla_claimed_twice: La declaració dona més d'un valor a la mateixa
+      casella (%{casillas}). Deixa un sol valor per casella.
+    filing_draft_modelo_differs: La declaració és del Modelo %{modelo}, però la seva
+      instantània del registre és del Modelo %{snapshot_modelo}. Construeix la declaració
+      de nou.
+    filing_draft_period_token_differs: La declaració és del període %{period}, però
+      la seva instantània del registre és del període %{snapshot_period}. Construeix
+      la declaració de nou.
+    filing_draft_period_year_differs: La declaració és de l'exercici %{filing_year},
+      però la seva instantània del registre és del %{snapshot_year}. Construeix la
+      declaració de nou.
+    filing_draft_schema_marker_differs: La declaració registra la versió de definició
+      %{schema_version}, però la seva instantània del registre indica %{expected_schema_version}.
+      Construeix la declaració de nou.
+    filing_draft_taxpayer_diverges: La declaració anomena dos contribuents diferents,
+      un per al perfil i un altre per al subjecte de la presentació. Una declaració
+      pertany a un sol contribuent; construeix-la de nou des del perfil correcte.
     filing_export_boolean_in_text_slot: El camp d'exportació %{field} no pot escriure
       un fet de productor booleà en un espai de text de %{length} bytes. L'aplicació
       ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
@@ -1074,6 +1102,12 @@ errors:
     filing_export_xsd_version_absent: L'origen XSD del diccionari XML %{source} no
       declara cap valor de versionxsd. L'aplicació ho deriva del seu propi disseny
       d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_value_kind_contradicts_trace: 'La declaració té a la casella %{casilla_id}
+      un rastre de càlcul que contradiu el seu tipus (%{kind}): només una casella
+      calculada en porta. La declaració desada està malmesa; construeix-la de nou.'
+    filing_value_kind_contradicts_value: 'La declaració té a la casella %{casilla_id}
+      un valor que contradiu el seu tipus (%{kind}): només una casella buida no té
+      valor. La declaració desada està malmesa; construeix-la de nou.'
     integrity_active_profile_pointer: El punter de perfil actiu no és vàlid; repara
       el perfil seleccionat abans de continuar.
     integrity_apoderado_configuration_identity: La configuració d'apoderat emmagatzemada

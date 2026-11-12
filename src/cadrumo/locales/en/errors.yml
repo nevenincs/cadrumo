@@ -715,6 +715,32 @@ errors:
       its contents; it may be corrupted or tampered with.
     canonical_unsupported_manifest_version: The corpus manifest uses an unsupported
       version.
+    filing_approval_basis_version_stale: The approval of the declaration uses basis
+      version %{version}, but the current basis version is %{current_version}. Approve
+      the declaration again.
+    filing_binding_row_source_kind_differs: A row value of the declaration names a
+      row origin that differs from the source of its field. The saved declaration
+      is damaged; build it again.
+    filing_binding_row_source_needs_row: A row value of the declaration names where
+      its rows come from but not which row it is. The saved declaration is damaged;
+      build it again.
+    filing_draft_binding_claimed_twice: The declaration gives a value to the same
+      field row more than once (%{bindings}). Keep one value per field row.
+    filing_draft_casilla_claimed_twice: The declaration gives a value to the same
+      box more than once (%{casillas}). Keep one value per box.
+    filing_draft_modelo_differs: The declaration is for Modelo %{modelo}, but its
+      registry snapshot is for Modelo %{snapshot_modelo}. Build the declaration again.
+    filing_draft_period_token_differs: The declaration is for period %{period}, but
+      its registry snapshot is for period %{snapshot_period}. Build the declaration
+      again.
+    filing_draft_period_year_differs: The declaration is for filing year %{filing_year},
+      but its registry snapshot is for %{snapshot_year}. Build the declaration again.
+    filing_draft_schema_marker_differs: The declaration records the definition version
+      %{schema_version}, but its registry snapshot gives %{expected_schema_version}.
+      Build the declaration again.
+    filing_draft_taxpayer_diverges: The declaration names two different taxpayers,
+      one for the profile and one for the filing subject. A declaration belongs to
+      one taxpayer; build it again from the right profile.
     filing_export_boolean_in_text_slot: The export field %{field} cannot write a boolean
       producer fact into a %{length}-byte text slot. The application derives this
       from its own export design, so no change to your data repairs it.
@@ -974,6 +1000,12 @@ errors:
     filing_export_xsd_version_absent: The XML dictionary XSD source %{source} declares
       no versionxsd values. The application derives this from its own export design,
       so no change to your data repairs it.
+    filing_value_kind_contradicts_trace: 'The declaration holds a calculation trace
+      for box %{casilla_id} that contradicts its kind (%{kind}): only a calculated
+      box carries one. The saved declaration is damaged; build it again.'
+    filing_value_kind_contradicts_value: 'The declaration holds a value for box %{casilla_id}
+      that contradicts its kind (%{kind}): only an empty box has no value. The saved
+      declaration is damaged; build it again.'
     integrity_active_profile_pointer: The active-profile pointer is invalid; repair
       the selected profile before continuing.
     integrity_apoderado_configuration_identity: The stored apoderado configuration

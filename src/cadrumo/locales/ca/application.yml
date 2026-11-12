@@ -527,18 +527,53 @@ application:
           un valor que les files de %{element_path} no sumen. Corregeix la casella
           o les files perquè cada fila indiqui les seves pròpies xifres, i torna a
           exportar.'
+        counterparty_rows_unattributable: 'No s''ha escrit res: el registre %{record_id}
+          té %{row_count} files de contrapart, i les caselles de valor únic %{casillas}
+          no es poden atribuir a una d''elles. Indica aquestes xifres a les files
+          i torna a exportar.'
+        devengo_year_not_earlier: 'No s''ha escrit res: l''exercici de meritació del
+          Modelo %{modelo} ha de ser anterior al de la declaració. Corregeix-lo i
+          torna a exportar.'
+        dictionary_values_not_admitted: 'No s''ha escrit res: una exportació amb prefix
+          de sobre no pot rebre a més valors per a un fitxer de declaració XML.'
         layout_not_renderable: Aquest model no pot produir un fitxer local d'exportació
           de la declaració.
         m111_colegio_concertado_undeclared: 'No s''ha escrit res: el model 111 necessita
           saber si ets un col·legi concertat i el teu perfil no ho indica. Indica-ho
           al teu perfil i torna a exportar.'
+        m190_amount_outside_keys: 'No s''ha escrit res: l''import de la casella %{casilla}
+          del Modelo 190 no correspon a la clau i subclau d''aquest perceptor. Treu
+          l''import o corregeix la clau i torna a exportar.'
+        m190_clave_scope_unsupplied: 'No s''ha escrit res: l''exportació del Modelo
+          190 no coneix les claus a les quals s''aplica cada import, així que no pot
+          comprovar el registre del perceptor.'
+        m190_reintegro_magnitude_zero: 'No s''ha escrit res: un reintegrament negatiu
+          al Modelo 190 necessita un import diferent de zero. Indica l''import o treu
+          el signe negatiu, i torna a exportar.'
+        m190_reintegro_year_or_withholding: 'No s''ha escrit res: un reintegrament
+          al Modelo 190 necessita un exercici de meritació anterior al de la declaració
+          i cap retenció associada. Corregeix-los i torna a exportar.'
+        m193_pending_mark_invalid: 'No s''ha escrit res: la marca de pendent del Modelo
+          193 ha d''estar en blanc o ser X. Corregeix-la i torna a exportar.'
+        m193_pending_requires_key: 'No s''ha escrit res: al Modelo 193 la marca de
+          pendent i l''exercici de meritació només s''apliquen a les claus A, B i
+          D. Corregeix la clau o treu-los, i torna a exportar.'
+        m193_pending_row_has_devengo: 'No s''ha escrit res: una fila pendent del Modelo
+          193 no pot tenir a més exercici de meritació. Treu-ne un dels dos i torna
+          a exportar.'
         m202_producer_facts_unsupported: 'No s''ha escrit res: el model 202 necessita
           dades que aquesta exportació encara no pot prendre del teu perfil (%{missing_fact_ids}).
           Exporta''l quan s''admetin.'
+        m280_negative_imputation_key_invalid: 'No s''ha escrit res: una imputació
+          negativa del Modelo 280 necessita la clau 2 amb el signe negatiu N, o farciment
+          amb zeros sota qualsevol altra clau. Corregeix el registre i torna a exportar.'
         m303_definitive_prorrata_missing: 'No s''ha escrit res: la regularització
           de béns d''inversió del model 303 necessita el percentatge definitiu de
           prorrata i el teu registre de prorrata no el té per a l''any. Liquida''l
           al registre i torna a exportar.'
+        m303_filing_facts_unsupplied: 'No s''ha escrit res: l''exportació del Modelo
+          303 necessita un conjunt complet de fets de presentació per a aquesta declaració,
+          i no n''hi ha cap de disponible.'
         m303_sector_apportionment_missing: 'No s''ha escrit res: el teu registre de
           prorrata té sectors diferenciats, però el teu llibre no dona cap prorrateig
           per a aquests en aquest període. Revisa el sector de l''IVA suportat al
@@ -549,14 +584,31 @@ application:
           a exportar.'
         post_write_verification_refused: La comprovació posterior a l'escriptura ha
           rebutjat el fitxer de declaració exportat.
+        prior_domiciliation_election_differs: 'No s''ha escrit res: l''elecció de
+          domiciliació prèvia indicada per a l''exportació difereix de la registrada
+          en els fets de presentació del Modelo 303.'
+        prior_domiciliation_election_required: 'No s''ha escrit res: l''exportació
+          del Modelo %{modelo} necessita la teva elecció sobre la domiciliació prèvia,
+          que no està indicada. Indica-la i torna a exportar.'
         producer_fact_required: 'No s''ha escrit res: l''exportació necessita %{fact},
           que no està indicat. Indica''l i torna a exportar.'
+        product_identity_not_admitted: 'No s''ha escrit res: aquesta exportació no
+          té lloc per a la identitat del producte o del programari, així que no se''n
+          pot indicar cap.'
+        product_identity_required: 'No s''ha escrit res: l''exportació necessita la
+          identitat del producte i del programari, i no se n''ha facilitat cap.'
         receipt_artefact_unreadable: El rebut d'exportació anomena un fitxer que no
           es pot llegir.
         receipt_byte_size_mismatch: La mida del fitxer exportat no coincideix amb
           el rebut d'exportació.
         receipt_digest_mismatch: El resum del fitxer exportat no coincideix amb el
           rebut d'exportació.
+        record_binding_row_omits_fields: 'No s''ha escrit res: la fila %{row} omet
+          els camps obligatoris %{fields}. Indica''ls i torna a exportar.'
+        record_incomplete: 'No s''ha escrit res: un registre del Modelo %{modelo}
+          no té la longitud que fixa el disseny oficial, així que no es pot escriure.'
+        record_requires_positive_casilla: 'No s''ha escrit res: el registre %{record_id}
+          exigeix que la casella %{casilla} sigui més gran que zero, i no ho és.'
         rendered_payload_empty: El disseny d'exportació ha produït un contingut de
           declaració buit.
         shared_casilla_cells_unadjudicated: 'No s''ha generat el fitxer de la declaració:
@@ -565,6 +617,29 @@ application:
           el mateix. Escriure''l portaria aquestes xifres a conceptes que no els corresponen.'
         verify_draft_snapshot_stale: La comprovació requereix un esborrany construït
           amb les definicions del model en ús.
+        xml_amount_unreadable: 'No s''ha escrit res: un import d''una fila %{data_type}
+          no s''ha pogut llegir. Escriu-lo amb punt com a separador decimal, amb %{scale}
+          decimals com a màxim i sense separador de milers, per exemple 1234.56. Un
+          import com 1.000 es rebutja perquè es llegeix tant com un com mil.'
+        xml_boxes_without_single_row: 'No s''ha escrit res: els valors de %{paths}
+          no es poden col·locar, perquè %{element_path} no apareix exactament una
+          vegada per rebre''ls.'
+        xml_comunidad_ambiguous: 'No s''ha escrit res: les deduccions autonòmiques
+          estan emplenades per a més d''una comunitat (%{comunidades}), i una declaració
+          només en pot portar una. Deixa''n una i torna a exportar.'
+        xml_date_form_refused: 'No s''ha escrit res: una data d''una fila %{data_type}
+          no té la forma que accepta l''AEAT, que és d/m/aaaa amb l''any de quatre
+          xifres, per exemple 2/1/1980. Corregeix-la i torna a exportar.'
+        xml_holder_code_invalid: 'No s''ha escrit res: el titular d''una fila %{data_type}
+          ha de ser un de %{allowed}. Corregeix-ho i torna a exportar.'
+        xml_payload_root_differs: El fitxer de declaració comença per l'element %{found},
+          però el format de diccionari espera %{expected}.
+        xml_payload_unreadable: El fitxer de declaració no s'ha pogut llegir com a
+          XML, així que no s'ha comprovat.
+        xml_row_date_invalid: 'No s''ha escrit res: la data desada per a %{binding}
+          no és una data vàlida. Corregeix-la i torna a exportar.'
+        xml_rows_exceed_schema: 'No s''ha escrit res: %{rows} files no caben a %{element_path},
+          que l''esquema oficial admet %{limit} vegades. Treu files i torna a exportar.'
         xml_schema_unreadable: No s'ha pogut aplicar l'esquema oficial d'aquest exercici
           per comprovar els valors de la declaració.
         xml_value_above_maximum: La casella %{box} té un import superior a %{limit},
@@ -575,8 +650,14 @@ application:
           que l'esquema oficial no admet.
         xml_value_not_a_number: La casella %{box} ha de contenir un nombre segons
           l'esquema oficial.
+        xml_value_not_convertible: 'No s''ha escrit res: un valor no s''ha pogut convertir
+          a la forma que exigeix el fitxer de declaració (conversió %{converter}).
+          Corregeix el valor i torna a exportar.'
         xml_value_not_listed: La casella %{box} conté un valor fora de les opcions
           que enumera l'esquema oficial.
+        xml_value_not_stated_by_rows: 'No s''ha escrit res: el camp %{path} conté
+          un valor que les files de %{element_path} no sumen. Corregeix el camp o
+          les files perquè cada fila indiqui les seves pròpies xifres, i torna a exportar.'
         xml_value_required_missing: L'esquema oficial exigeix la casella %{box} i
           no té valor. Indica-la abans d'exportar; no s'ha escrit res.
         xml_value_too_long: La casella %{box} té %{observed} caràcters; l'esquema

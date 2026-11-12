@@ -490,18 +490,51 @@ application:
         box_not_stated_by_rows: 'Nothing was written: box %{casilla_id} holds a value
           the rows of %{element_path} do not add up to. Correct the box or the rows
           so that each row states its own figures, and export again.'
+        counterparty_rows_unattributable: 'Nothing was written: record %{record_id}
+          has %{row_count} counterparty rows, and the single-valued boxes %{casillas}
+          cannot be attributed to one of them. Enter those figures on the rows and
+          export again.'
+        devengo_year_not_earlier: 'Nothing was written: the accrual year in Modelo
+          %{modelo} must be earlier than the declaration year. Correct it and export
+          again.'
+        dictionary_values_not_admitted: 'Nothing was written: an export with an envelope
+          prefix cannot also take values for an XML declaration file.'
         layout_not_renderable: This modelo cannot produce a local declaration export
           file.
         m111_colegio_concertado_undeclared: 'Nothing was written: Modelo 111 needs
           to know whether you are a colegio concertado, and your profile does not
           say. State it in your profile and export again.'
+        m190_amount_outside_keys: 'Nothing was written: the amount in box %{casilla}
+          of Modelo 190 does not apply to the key and subkey of this recipient. Clear
+          the amount or correct the key and export again.'
+        m190_clave_scope_unsupplied: 'Nothing was written: the export of Modelo 190
+          does not know which keys each amount applies to, so it cannot check the
+          recipient''s record.'
+        m190_reintegro_magnitude_zero: 'Nothing was written: a negative reintegro
+          in Modelo 190 needs an amount other than zero. Enter the amount or remove
+          the negative sign, and export again.'
+        m190_reintegro_year_or_withholding: 'Nothing was written: a reintegro in Modelo
+          190 needs an accrual year earlier than the declaration year and no withholding
+          attached to it. Correct them and export again.'
+        m193_pending_mark_invalid: 'Nothing was written: the pending mark in Modelo
+          193 must be blank or X. Correct it and export again.'
+        m193_pending_requires_key: 'Nothing was written: in Modelo 193 the pending
+          mark and the accrual year apply only to keys A, B and D. Correct the key
+          or clear them, and export again.'
+        m193_pending_row_has_devengo: 'Nothing was written: a pending row in Modelo
+          193 cannot also have an accrual year. Clear one of them and export again.'
         m202_producer_facts_unsupported: 'Nothing was written: Modelo 202 needs facts
           this export cannot take from your profile yet (%{missing_fact_ids}). Export
           it once they are supported.'
+        m280_negative_imputation_key_invalid: 'Nothing was written: a negative imputation
+          in Modelo 280 needs key 2 with the negative sign N, or zero fill under any
+          other key. Correct the record and export again.'
         m303_definitive_prorrata_missing: 'Nothing was written: the Modelo 303 regularisation
           of capital goods needs the definitive prorrata percentage, and your prorrata
           register does not hold it for the year. Settle it in your register and export
           again.'
+        m303_filing_facts_unsupplied: 'Nothing was written: the Modelo 303 export
+          needs one complete set of filing facts for this return, and none is available.'
         m303_sector_apportionment_missing: 'Nothing was written: your prorrata register
           has differentiated sectors, but your ledger yields no apportionment for
           them in this period. Check the sector of the input VAT in your ledger and
@@ -511,14 +544,30 @@ application:
           them with `aeat app modelo m360 declare` and export again.'
         post_write_verification_refused: The check after writing rejected the exported
           declaration file.
+        prior_domiciliation_election_differs: 'Nothing was written: the prior-domiciliation
+          election given for the export differs from the one recorded in the Modelo
+          303 filing facts.'
+        prior_domiciliation_election_required: 'Nothing was written: the export of
+          Modelo %{modelo} needs your election on prior domiciliation, and it is not
+          stated. State it and export again.'
         producer_fact_required: 'Nothing was written: the export needs %{fact}, which
           is not stated. State it and export again.'
+        product_identity_not_admitted: 'Nothing was written: this export has no slot
+          for a product or software identity, so none can be given for it.'
+        product_identity_required: 'Nothing was written: the export needs the product
+          and software identity, and none was supplied.'
         receipt_artefact_unreadable: The export receipt names a file that cannot be
           read.
         receipt_byte_size_mismatch: The exported file's size does not match the export
           receipt.
         receipt_digest_mismatch: The exported file's digest does not match the export
           receipt.
+        record_binding_row_omits_fields: 'Nothing was written: row %{row} omits the
+          required fields %{fields}. Enter them and export again.'
+        record_incomplete: 'Nothing was written: a record of Modelo %{modelo} does
+          not have the length the official layout sets, so it cannot be written.'
+        record_requires_positive_casilla: 'Nothing was written: record %{record_id}
+          requires box %{casilla} to be greater than zero, and it is not.'
         rendered_payload_empty: The export layout produced an empty declaration payload.
         shared_casilla_cells_unadjudicated: 'The declaration file was not generated:
           boxes %{casilla_ids} hold a value the official design would write into several
@@ -526,6 +575,31 @@ application:
           it would put these figures in concepts they do not belong to.'
         verify_draft_snapshot_stale: The check requires a draft built from the modelo
           definitions currently in use.
+        xml_amount_unreadable: 'Nothing was written: an amount in a %{data_type} row
+          could not be read. Write it with a dot as the decimal separator, at most
+          %{scale} decimal digit(s) and no thousands separator, for example 1234.56.
+          An amount such as 1.000 is refused because it reads as both one and one
+          thousand.'
+        xml_boxes_without_single_row: 'Nothing was written: the values for %{paths}
+          cannot be placed, because %{element_path} does not occur exactly once to
+          take them.'
+        xml_comunidad_ambiguous: 'Nothing was written: the deductions are filled in
+          for more than one autonomous community (%{comunidades}), and a declaration
+          may carry only one. Keep one and export again.'
+        xml_date_form_refused: 'Nothing was written: a date in a %{data_type} row
+          is not in the form AEAT accepts, which is d/m/yyyy with a four-digit year,
+          for example 2/1/1980. Correct it and export again.'
+        xml_holder_code_invalid: 'Nothing was written: the holder in a %{data_type}
+          row must be one of %{allowed}. Correct it and export again.'
+        xml_payload_root_differs: The declaration file starts with the element %{found},
+          but the dictionary format expects %{expected}.
+        xml_payload_unreadable: The declaration file could not be read as XML, so
+          it was not checked.
+        xml_row_date_invalid: 'Nothing was written: the date held for %{binding} is
+          not a valid date. Correct it and export again.'
+        xml_rows_exceed_schema: 'Nothing was written: %{rows} rows do not fit %{element_path},
+          which the official schema admits %{limit} times. Remove rows and export
+          again.'
         xml_schema_unreadable: The official schema for this year could not be applied
           to check the declaration's values.
         xml_value_above_maximum: Box %{box} holds an amount above %{limit}, the most
@@ -535,8 +609,14 @@ application:
         xml_value_illegal_characters: Box %{box} holds text in a form the official
           schema does not admit.
         xml_value_not_a_number: Box %{box} must hold a number under the official schema.
+        xml_value_not_convertible: 'Nothing was written: a value could not be converted
+          into the form the declaration file requires (conversion %{converter}). Correct
+          the value and export again.'
         xml_value_not_listed: Box %{box} holds a value outside the options the official
           schema lists.
+        xml_value_not_stated_by_rows: 'Nothing was written: the field %{path} holds
+          a value the rows of %{element_path} do not add up to. Correct the field
+          or the rows so that each row states its own figures, and export again.'
         xml_value_required_missing: Box %{box} is required by the official schema
           and has no value. Enter it before exporting; nothing was written.
         xml_value_too_long: Box %{box} holds %{observed} characters; the official

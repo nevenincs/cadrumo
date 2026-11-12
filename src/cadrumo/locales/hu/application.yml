@@ -522,18 +522,52 @@ application:
           nem egyezik a(z) %{element_path} sorainak összegével. Javítsd a mezőt vagy
           a sorokat úgy, hogy minden sor a saját összegeit adja meg, és exportálj
           újra.'
+        counterparty_rows_unattributable: 'Semmi sem íródott ki: a(z) %{record_id}
+          rekord %{row_count} ellenfélsort tartalmaz, és az egyértékű %{casillas}
+          rovatok nem rendelhetők egyikhez sem. Add meg ezeket az összegeket a sorokban,
+          és exportálj újra.'
+        devengo_year_not_earlier: 'Semmi sem íródott ki: a Modelo %{modelo} bevallásban
+          az esedékességi évnek korábbinak kell lennie a bevallás événél. Javítsd,
+          és exportálj újra.'
+        dictionary_values_not_admitted: 'Semmi sem íródott ki: a borítékelőtaggal
+          rendelkező export nem fogadhat emellett XML-bevallásfájlhoz tartozó értékeket.'
         layout_not_renderable: Ez a nyomtatvány nem tud helyi bevallás-exportfájlt
           előállítani.
         m111_colegio_concertado_undeclared: 'Semmi sem lett kiírva: a 111-es modellhez
           tudni kell, hogy colegio concertado vagy-e, de a profilod ezt nem mondja
           meg. Add meg a profilodban, és exportálj újra.'
+        m190_amount_outside_keys: 'Semmi sem íródott ki: a 190-es modell %{casilla}
+          rovatának összege nem tartozik ennek a címzettnek a kulcsához és alkulcsához.
+          Töröld az összeget vagy javítsd a kulcsot, és exportálj újra.'
+        m190_clave_scope_unsupplied: 'Semmi sem íródott ki: a 190-es modell exportja
+          nem ismeri, mely kulcsokra vonatkoznak az egyes összegek, ezért nem tudja
+          ellenőrizni a címzett rekordját.'
+        m190_reintegro_magnitude_zero: 'Semmi sem íródott ki: a 190-es modell negatív
+          visszatérítéséhez nullától eltérő összeg kell. Add meg az összeget vagy
+          töröld a negatív előjelet, és exportálj újra.'
+        m190_reintegro_year_or_withholding: 'Semmi sem íródott ki: a 190-es modell
+          visszatérítéséhez a bevallási évnél korábbi esedékességi év kell, és nem
+          tartozhat hozzá levonás. Javítsd ezeket, és exportálj újra.'
+        m193_pending_mark_invalid: 'Semmi sem íródott ki: a 193-as modell függő jelölésének
+          üresnek vagy X-nek kell lennie. Javítsd, és exportálj újra.'
+        m193_pending_requires_key: 'Semmi sem íródott ki: a 193-as modellben a függő
+          jelölés és az esedékességi év csak az A, B és D kulcsra vonatkozik. Javítsd
+          a kulcsot vagy töröld őket, és exportálj újra.'
+        m193_pending_row_has_devengo: 'Semmi sem íródott ki: a 193-as modell függő
+          sorához nem tartozhat esedékességi év is. Töröld az egyiket, és exportálj
+          újra.'
         m202_producer_facts_unsupported: 'Semmi sem lett kiírva: a 202-es modellhez
           olyan adatok kellenek, amelyeket ez az export még nem tud a profilodból
           venni (%{missing_fact_ids}). Exportáld, ha már támogatottak.'
+        m280_negative_imputation_key_invalid: 'Semmi sem íródott ki: a 280-as modell
+          negatív imputációjához a 2-es kulcs és az N negatív előjel kell, vagy bármely
+          más kulcs alatt nulla kitöltés. Javítsd a rekordot, és exportálj újra.'
         m303_definitive_prorrata_missing: 'Semmi sem lett kiírva: a 303-as modell
           beruházási javak helyesbítéséhez a végleges pro rata százalék kell, de a
           nyilvántartásodban nincs meg erre az évre. Rendezd a nyilvántartásban, és
           exportálj újra.'
+        m303_filing_facts_unsupplied: 'Semmi sem íródott ki: a 303-as modell exportjához
+          a bevallás teljes benyújtási adatkészlete kell, de egy sem érhető el.'
         m303_sector_apportionment_missing: 'Semmi sem lett kiírva: a pro rata nyilvántartásodban
           megkülönböztetett ágazatok vannak, de a főkönyved ebben az időszakban nem
           ad rájuk arányosítást. Ellenőrizd a bemenő áfa ágazatát a főkönyvben és
@@ -544,13 +578,32 @@ application:
           és exportálj újra.'
         post_write_verification_refused: Az írás utáni ellenőrzés elutasította az
           exportált bevallásfájlt.
+        prior_domiciliation_election_differs: 'Semmi sem íródott ki: az exporthoz
+          megadott előzetes beszedési megbízási döntés (domiciliación previa) eltér
+          a 303-as modell benyújtási adataiban rögzítettől.'
+        prior_domiciliation_election_required: 'Semmi sem íródott ki: a Modelo %{modelo}
+          bevallás exportjához szükség van az előzetes beszedési megbízásra (domiciliación
+          previa) vonatkozó döntésedre, de az nincs megadva. Add meg, és exportálj
+          újra.'
         producer_fact_required: 'Semmi sem íródott ki: az exportáláshoz szükség van
           erre: %{fact}, de az nincs megadva. Add meg, és exportálj újra.'
+        product_identity_not_admitted: 'Semmi sem íródott ki: ennek az exportnak nincs
+          helye a termék vagy a szoftver azonosítójának, ezért nem adható meg ilyen.'
+        product_identity_required: 'Semmi sem íródott ki: az exporthoz szükség van
+          a termék és a szoftver azonosítójára, de egyik sincs megadva.'
         receipt_artefact_unreadable: Az exportnyugta olyan fájlt nevez meg, amely
           nem olvasható.
         receipt_byte_size_mismatch: Az exportált fájl mérete nem egyezik az exportnyugtával.
         receipt_digest_mismatch: Az exportált fájl ellenőrzőösszege nem egyezik az
           exportnyugtával.
+        record_binding_row_omits_fields: 'Semmi sem íródott ki: a(z) %{row}. sorból
+          hiányoznak a kötelező mezők: %{fields}. Add meg őket, és exportálj újra.'
+        record_incomplete: 'Semmi sem íródott ki: a Modelo %{modelo} bevallás egyik
+          rekordja nem a hivatalos kialakítás által előírt hosszúságú, ezért nem írható
+          ki.'
+        record_requires_positive_casilla: 'Semmi sem íródott ki: a(z) %{record_id}
+          rekord megköveteli, hogy a(z) %{casilla} rovat nullánál nagyobb legyen,
+          de nem az.'
         rendered_payload_empty: Az exportelrendezés üres bevallástartalmat állított
           elő.
         shared_casilla_cells_unadjudicated: 'A bevallás fájlja nem készült el: a(z)
@@ -560,6 +613,30 @@ application:
           vinné.'
         verify_draft_snapshot_stale: Az ellenőrzéshez a jelenleg használt nyomtatványdefiníciókból
           készült piszkozat szükséges.
+        xml_amount_unreadable: 'Semmi sem íródott ki: egy %{data_type} sor összege
+          nem olvasható. Írd pontot használva tizedesjelként, legfeljebb %{scale}
+          tizedesjeggyel és ezreselválasztó nélkül, például 1234.56. Az olyan összeget,
+          mint az 1.000, elutasítjuk, mert egyaránt olvasható egynek és ezernek.'
+        xml_boxes_without_single_row: 'Semmi sem íródott ki: a(z) %{paths} értékei
+          nem helyezhetők el, mert a(z) %{element_path} nem pontosan egyszer fordul
+          elő, hogy fogadhassa őket.'
+        xml_comunidad_ambiguous: 'Semmi sem íródott ki: a tartományi levonások több
+          autonóm közösségre (%{comunidades}) vannak kitöltve, a bevallás pedig csak
+          egyet tartalmazhat. Hagyj meg egyet, és exportálj újra.'
+        xml_date_form_refused: 'Semmi sem íródott ki: egy %{data_type} sor dátuma
+          nem abban a formában van, amelyet az AEAT elfogad (n/h/éééé, négyjegyű évvel,
+          például 2/1/1980). Javítsd, és exportálj újra.'
+        xml_holder_code_invalid: 'Semmi sem íródott ki: egy %{data_type} sor tulajdonosa
+          a következők egyike lehet: %{allowed}. Javítsd, és exportálj újra.'
+        xml_payload_root_differs: A bevallásfájl a(z) %{found} elemmel kezdődik, de
+          a szótárformátum a(z) %{expected} elemet várja.
+        xml_payload_unreadable: A bevallásfájl nem olvasható XML-ként, ezért nem lett
+          ellenőrizve.
+        xml_row_date_invalid: 'Semmi sem íródott ki: a(z) %{binding} mellett tárolt
+          dátum nem érvényes. Javítsd, és exportálj újra.'
+        xml_rows_exceed_schema: 'Semmi sem íródott ki: %{rows} sor nem fér el a(z)
+          %{element_path} elemben, amelyet a hivatalos séma legfeljebb %{limit} alkalommal
+          enged meg. Törölj sorokat, és exportálj újra.'
         xml_schema_unreadable: Az adott év hivatalos sémáját nem sikerült alkalmazni
           a bevallás értékeinek ellenőrzéséhez.
         xml_value_above_maximum: A(z) %{box} rovat összege meghaladja a(z) %{limit}
@@ -570,8 +647,15 @@ application:
           amelyet a hivatalos séma nem enged meg.
         xml_value_not_a_number: A(z) %{box} rovatnak a hivatalos séma szerint számot
           kell tartalmaznia.
+        xml_value_not_convertible: 'Semmi sem íródott ki: egy érték nem alakítható
+          át a bevallásfájl által megkövetelt formára (átalakítás: %{converter}).
+          Javítsd az értéket, és exportálj újra.'
         xml_value_not_listed: A(z) %{box} rovat értéke nem szerepel a hivatalos sémában
           felsorolt lehetőségek között.
+        xml_value_not_stated_by_rows: 'Semmi sem íródott ki: a(z) %{path} mező olyan
+          értéket tartalmaz, amelyet a(z) %{element_path} sorai nem adnak ki összegként.
+          Javítsd a mezőt vagy a sorokat úgy, hogy minden sor a saját összegeit mutassa,
+          és exportálj újra.'
         xml_value_required_missing: A hivatalos séma megköveteli a(z) %{box} rovatot,
           de nincs értéke. Add meg exportálás előtt; nem íródott ki semmi.
         xml_value_too_long: A(z) %{box} rovat %{observed} karaktert tartalmaz; a hivatalos

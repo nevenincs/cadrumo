@@ -528,18 +528,54 @@ application:
         box_not_stated_by_rows: 'No se ha escrito nada: la casilla %{casilla_id} tiene
           un valor que las filas de %{element_path} no suman. Corrige la casilla o
           las filas para que cada fila indique sus propias cifras, y vuelve a exportar.'
+        counterparty_rows_unattributable: 'No se ha escrito nada: el registro %{record_id}
+          tiene %{row_count} filas de contraparte, y las casillas de valor único %{casillas}
+          no se pueden atribuir a una de ellas. Indica esas cifras en las filas y
+          vuelve a exportar.'
+        devengo_year_not_earlier: 'No se ha escrito nada: el ejercicio de devengo
+          del Modelo %{modelo} debe ser anterior al de la declaración. Corrígelo y
+          vuelve a exportar.'
+        dictionary_values_not_admitted: 'No se ha escrito nada: una exportación con
+          prefijo de sobre no puede recibir además valores para un fichero de declaración
+          XML.'
         layout_not_renderable: Este modelo no puede producir un fichero local de exportación
           de la declaración.
         m111_colegio_concertado_undeclared: 'No se ha escrito nada: el modelo 111
           necesita saber si eres un colegio concertado y tu perfil no lo indica. Indícalo
           en tu perfil y vuelve a exportar.'
+        m190_amount_outside_keys: 'No se ha escrito nada: el importe de la casilla
+          %{casilla} del Modelo 190 no corresponde a la clave y subclave de este perceptor.
+          Quita el importe o corrige la clave y vuelve a exportar.'
+        m190_clave_scope_unsupplied: 'No se ha escrito nada: la exportación del Modelo
+          190 no conoce las claves a las que se aplica cada importe, así que no puede
+          comprobar el registro del perceptor.'
+        m190_reintegro_magnitude_zero: 'No se ha escrito nada: un reintegro negativo
+          en el Modelo 190 necesita un importe distinto de cero. Indica el importe
+          o quita el signo negativo, y vuelve a exportar.'
+        m190_reintegro_year_or_withholding: 'No se ha escrito nada: un reintegro en
+          el Modelo 190 necesita un ejercicio de devengo anterior al de la declaración
+          y ninguna retención asociada. Corrígelos y vuelve a exportar.'
+        m193_pending_mark_invalid: 'No se ha escrito nada: la marca de pendiente del
+          Modelo 193 debe estar en blanco o ser X. Corrígela y vuelve a exportar.'
+        m193_pending_requires_key: 'No se ha escrito nada: en el Modelo 193 la marca
+          de pendiente y el ejercicio de devengo solo se aplican a las claves A, B
+          y D. Corrige la clave o quítalos, y vuelve a exportar.'
+        m193_pending_row_has_devengo: 'No se ha escrito nada: una fila pendiente del
+          Modelo 193 no puede tener además ejercicio de devengo. Quita uno de los
+          dos y vuelve a exportar.'
         m202_producer_facts_unsupported: 'No se ha escrito nada: el modelo 202 necesita
           datos que esta exportación todavía no puede tomar de tu perfil (%{missing_fact_ids}).
           Expórtalo cuando se admitan.'
+        m280_negative_imputation_key_invalid: 'No se ha escrito nada: una imputación
+          negativa del Modelo 280 necesita la clave 2 con el signo negativo N, o relleno
+          con ceros bajo cualquier otra clave. Corrige el registro y vuelve a exportar.'
         m303_definitive_prorrata_missing: 'No se ha escrito nada: la regularización
           de bienes de inversión del modelo 303 necesita el porcentaje definitivo
           de prorrata y tu registro de prorrata no lo tiene para el año. Liquídalo
           en tu registro y vuelve a exportar.'
+        m303_filing_facts_unsupplied: 'No se ha escrito nada: la exportación del Modelo
+          303 necesita un conjunto completo de hechos de presentación para esta declaración,
+          y no hay ninguno disponible.'
         m303_sector_apportionment_missing: 'No se ha escrito nada: tu registro de
           prorrata tiene sectores diferenciados, pero tu libro no da ningún prorrateo
           para ellos en este periodo. Revisa el sector del IVA soportado en tu libro
@@ -550,14 +586,31 @@ application:
           a exportar.'
         post_write_verification_refused: La comprobación posterior a la escritura
           rechazó el fichero de declaración exportado.
+        prior_domiciliation_election_differs: 'No se ha escrito nada: la elección
+          de domiciliación previa indicada para la exportación difiere de la registrada
+          en los hechos de presentación del Modelo 303.'
+        prior_domiciliation_election_required: 'No se ha escrito nada: la exportación
+          del Modelo %{modelo} necesita tu elección sobre la domiciliación previa,
+          que no está indicada. Indícala y vuelve a exportar.'
         producer_fact_required: 'No se ha escrito nada: la exportación necesita %{fact},
           que no está indicado. Indícalo y vuelve a exportar.'
+        product_identity_not_admitted: 'No se ha escrito nada: esta exportación no
+          tiene un lugar para la identidad del producto o del programa, así que no
+          se puede indicar ninguna.'
+        product_identity_required: 'No se ha escrito nada: la exportación necesita
+          la identidad del producto y del programa, y no se ha facilitado ninguna.'
         receipt_artefact_unreadable: El recibo de exportación nombra un fichero que
           no se puede leer.
         receipt_byte_size_mismatch: El tamaño del fichero exportado no coincide con
           el recibo de exportación.
         receipt_digest_mismatch: El resumen del fichero exportado no coincide con
           el recibo de exportación.
+        record_binding_row_omits_fields: 'No se ha escrito nada: la fila %{row} omite
+          los campos obligatorios %{fields}. Indícalos y vuelve a exportar.'
+        record_incomplete: 'No se ha escrito nada: un registro del Modelo %{modelo}
+          no tiene la longitud que fija el diseño oficial, así que no se puede escribir.'
+        record_requires_positive_casilla: 'No se ha escrito nada: el registro %{record_id}
+          exige que la casilla %{casilla} sea mayor que cero, y no lo es.'
         rendered_payload_empty: El diseño de exportación produjo un contenido de declaración
           vacío.
         shared_casilla_cells_unadjudicated: 'No se ha generado el fichero de la declaración:
@@ -566,6 +619,30 @@ application:
           lo mismo. Escribirlo llevaría esas cifras a conceptos que no les corresponden.'
         verify_draft_snapshot_stale: La comprobación requiere un borrador construido
           con las definiciones del modelo en uso.
+        xml_amount_unreadable: 'No se ha escrito nada: un importe de una fila %{data_type}
+          no se ha podido leer. Escríbelo con punto como separador decimal, con %{scale}
+          decimales como máximo y sin separador de millares, por ejemplo 1234.56.
+          Un importe como 1.000 se rechaza porque se lee tanto como uno como mil.'
+        xml_boxes_without_single_row: 'No se ha escrito nada: los valores de %{paths}
+          no se pueden colocar, porque %{element_path} no aparece exactamente una
+          vez para recibirlos.'
+        xml_comunidad_ambiguous: 'No se ha escrito nada: las deducciones autonómicas
+          están rellenadas para más de una comunidad (%{comunidades}), y una declaración
+          solo puede llevar una. Deja una y vuelve a exportar.'
+        xml_date_form_refused: 'No se ha escrito nada: una fecha de una fila %{data_type}
+          no tiene la forma que acepta la AEAT, que es d/m/aaaa con el año de cuatro
+          cifras, por ejemplo 2/1/1980. Corrígela y vuelve a exportar.'
+        xml_holder_code_invalid: 'No se ha escrito nada: el titular de una fila %{data_type}
+          debe ser uno de %{allowed}. Corrígelo y vuelve a exportar.'
+        xml_payload_root_differs: El fichero de declaración empieza por el elemento
+          %{found}, pero el formato de diccionario espera %{expected}.
+        xml_payload_unreadable: El fichero de declaración no se ha podido leer como
+          XML, así que no se ha comprobado.
+        xml_row_date_invalid: 'No se ha escrito nada: la fecha guardada para %{binding}
+          no es una fecha válida. Corrígela y vuelve a exportar.'
+        xml_rows_exceed_schema: 'No se ha escrito nada: %{rows} filas no caben en
+          %{element_path}, que el esquema oficial admite %{limit} veces. Quita filas
+          y vuelve a exportar.'
         xml_schema_unreadable: No se ha podido aplicar el esquema oficial de este
           ejercicio para comprobar los valores de la declaración.
         xml_value_above_maximum: La casilla %{box} tiene un importe superior a %{limit},
@@ -576,8 +653,14 @@ application:
           forma que el esquema oficial no admite.
         xml_value_not_a_number: La casilla %{box} debe contener un número según el
           esquema oficial.
+        xml_value_not_convertible: 'No se ha escrito nada: un valor no se ha podido
+          convertir a la forma que exige el fichero de declaración (conversión %{converter}).
+          Corrige el valor y vuelve a exportar.'
         xml_value_not_listed: La casilla %{box} contiene un valor fuera de las opciones
           que enumera el esquema oficial.
+        xml_value_not_stated_by_rows: 'No se ha escrito nada: el campo %{path} contiene
+          un valor que las filas de %{element_path} no suman. Corrige el campo o las
+          filas para que cada fila indique sus propias cifras, y vuelve a exportar.'
         xml_value_required_missing: El esquema oficial exige la casilla %{box} y no
           tiene valor. Indícala antes de exportar; no se ha escrito nada.
         xml_value_too_long: La casilla %{box} tiene %{observed} caracteres; el esquema

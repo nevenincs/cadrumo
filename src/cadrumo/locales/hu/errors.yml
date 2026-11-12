@@ -725,6 +725,32 @@ errors:
       a tartalmával; a manifeszt sérült vagy manipulált lehet.
     canonical_unsupported_manifest_version: A korpusz manifesztje nem támogatott verziót
       használ.
+    filing_approval_basis_version_stale: A bevallás jóváhagyása a(z) %{version} alapverziót
+      használja, a jelenlegi alapverzió viszont a(z) %{current_version}. Hagyd jóvá
+      újra a bevallást.
+    filing_binding_row_source_kind_differs: A bevallás egy sorértéke a mezője forrásától
+      eltérő sorszármazást nevez meg. A mentett bevallás sérült; építsd fel újra.
+    filing_binding_row_source_needs_row: A bevallás egy sorértéke megnevezi, honnan
+      származnak a sorai, de azt nem, hogy melyik sor. A mentett bevallás sérült;
+      építsd fel újra.
+    filing_draft_binding_claimed_twice: A bevallás ugyanahhoz a mezősorhoz több értéket
+      is megad (%{bindings}). Mezősoronként egy értéket hagyj meg.
+    filing_draft_casilla_claimed_twice: A bevallás ugyanahhoz a rovathoz több értéket
+      is megad (%{casillas}). Rovatonként egy értéket hagyj meg.
+    filing_draft_modelo_differs: A bevallás a(z) %{modelo} Modelóra szól, de a nyilvántartási
+      pillanatképe a(z) %{snapshot_modelo} Modelóra. Építsd fel újra a bevallást.
+    filing_draft_period_token_differs: A bevallás a(z) %{period} időszakra szól, de
+      a nyilvántartási pillanatképe a(z) %{snapshot_period} időszakra. Építsd fel
+      újra a bevallást.
+    filing_draft_period_year_differs: A bevallás a(z) %{filing_year}. évre szól, de
+      a nyilvántartási pillanatképe a(z) %{snapshot_year}. évre. Építsd fel újra a
+      bevallást.
+    filing_draft_schema_marker_differs: A bevallás a(z) %{schema_version} definícióverziót
+      rögzíti, de a nyilvántartási pillanatképe a(z) %{expected_schema_version} verziót
+      adja. Építsd fel újra a bevallást.
+    filing_draft_taxpayer_diverges: A bevallás két különböző adózót nevez meg, egyet
+      a profilhoz és egyet a benyújtás alanyához. Egy bevallás egyetlen adózóhoz tartozik;
+      építsd fel újra a megfelelő profilból.
     filing_export_boolean_in_text_slot: A(z) %{field} exportmező nem írhat logikai
       előállítói tényt egy %{length} bájtos szövegmezőbe. Az alkalmazás ezt a saját
       exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
@@ -998,6 +1024,12 @@ errors:
     filing_export_xsd_version_absent: A(z) %{source} XML-szótár XSD-forrása nem ad
       meg versionxsd értéket. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
+    filing_value_kind_contradicts_trace: 'A bevallás %{casilla_id} rovatának számítási
+      nyoma ellentmond a típusának (%{kind}): csak a számított rovat hordoz ilyet.
+      A mentett bevallás sérült; építsd fel újra.'
+    filing_value_kind_contradicts_value: 'A bevallás %{casilla_id} rovatának értéke
+      ellentmond a típusának (%{kind}): csak az üres rovatnak nincs értéke. A mentett
+      bevallás sérült; építsd fel újra.'
     integrity_active_profile_pointer: Az aktívprofil-mutató érvénytelen; javítsd a
       kiválasztott profilt a folytatás előtt.
     integrity_apoderado_configuration_identity: A tárolt meghatalmazotti beállítás

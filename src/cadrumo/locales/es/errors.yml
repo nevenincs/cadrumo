@@ -769,6 +769,33 @@ errors:
       con su contenido; puede estar dañado o manipulado.
     canonical_unsupported_manifest_version: El manifiesto del corpus usa una versión
       no compatible.
+    filing_approval_basis_version_stale: La aprobación de la declaración usa la versión
+      de base %{version}, pero la versión de base vigente es %{current_version}. Vuelve
+      a aprobar la declaración.
+    filing_binding_row_source_kind_differs: Un valor de fila de la declaración indica
+      un origen de fila distinto de la fuente de su campo. La declaración guardada
+      está dañada; constrúyela de nuevo.
+    filing_binding_row_source_needs_row: Un valor de fila de la declaración indica
+      de dónde vienen sus filas, pero no qué fila es. La declaración guardada está
+      dañada; constrúyela de nuevo.
+    filing_draft_binding_claimed_twice: La declaración da más de un valor a la misma
+      fila de campo (%{bindings}). Deja un solo valor por fila de campo.
+    filing_draft_casilla_claimed_twice: La declaración da más de un valor a la misma
+      casilla (%{casillas}). Deja un solo valor por casilla.
+    filing_draft_modelo_differs: La declaración es del Modelo %{modelo}, pero su instantánea
+      del registro es del Modelo %{snapshot_modelo}. Construye la declaración de nuevo.
+    filing_draft_period_token_differs: La declaración es del periodo %{period}, pero
+      su instantánea del registro es del periodo %{snapshot_period}. Construye la
+      declaración de nuevo.
+    filing_draft_period_year_differs: La declaración es del ejercicio %{filing_year},
+      pero su instantánea del registro es del %{snapshot_year}. Construye la declaración
+      de nuevo.
+    filing_draft_schema_marker_differs: La declaración registra la versión de definición
+      %{schema_version}, pero su instantánea del registro indica %{expected_schema_version}.
+      Construye la declaración de nuevo.
+    filing_draft_taxpayer_diverges: La declaración nombra a dos contribuyentes distintos,
+      uno para el perfil y otro para el sujeto de la presentación. Una declaración
+      pertenece a un solo contribuyente; constrúyela de nuevo desde el perfil correcto.
     filing_export_boolean_in_text_slot: El campo de exportación %{field} no puede
       escribir un hecho de productor booleano en un espacio de texto de %{length}
       bytes. La aplicación lo deriva de su propio diseño de exportación, así que ningún
@@ -1058,6 +1085,12 @@ errors:
     filing_export_xsd_version_absent: El origen XSD del diccionario XML %{source}
       no declara valores de versionxsd. La aplicación lo deriva de su propio diseño
       de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_value_kind_contradicts_trace: 'La declaración tiene en la casilla %{casilla_id}
+      un rastro de cálculo que contradice su tipo (%{kind}): solo una casilla calculada
+      lo lleva. La declaración guardada está dañada; constrúyela de nuevo.'
+    filing_value_kind_contradicts_value: 'La declaración tiene en la casilla %{casilla_id}
+      un valor que contradice su tipo (%{kind}): solo una casilla vacía no tiene valor.
+      La declaración guardada está dañada; constrúyela de nuevo.'
     integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
       el perfil seleccionado antes de continuar.
     integrity_apoderado_configuration_identity: La configuración de apoderado almacenada
