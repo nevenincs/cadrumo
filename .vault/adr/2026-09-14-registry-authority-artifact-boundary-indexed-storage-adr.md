@@ -14,9 +14,9 @@ related:
   - '[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr]]'
 supersedes:
   - '2026-09-10-registry-authority-artifact-boundary-adr'
-modified: '2026-10-24'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:252851af107321d1e7429f9c03c3ab908af961c14b3d44a5507fc56d14c85790'
+body_hash: 'sha256:8fd32b22838f9d3410d2cae5e7e0477b4b53c767ae820f14338392170e726255'
 ---
 # `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
 
@@ -146,6 +146,12 @@ Amended 2026-10-22 under the operator's instruction to fix the root causes of a 
 
 Accepted 2026-10-24 by the operator together with `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr`, which owns the decision. This amendment records only its effect on storage and admission.
 
-Publication also proves the registry snapshot cross-checks for the generation's declared selector set. It records the passing cells, the validator closure digest and the fact-date window in the database. Admission of the physical digest admits those records. Runtime snapshot construction relies on them only inside their recorded contract and otherwise validates in full. This is reliance on a publication proof, not a claim that runtime revalidated the corpus.
+Publication also proves the registry snapshot cross-checks for the generation's declared selector set. It records the passing cells, the validator closure digest and the fact-date window in the database (amended 2026-11-12: no window). Admission of the physical digest admits those records. Runtime snapshot construction relies on them only inside their recorded contract and otherwise validates in full. This is reliance on a publication proof, not a claim that runtime revalidated the corpus.
 
 The proof tables change the published schema, so the store format advances to `cadrumo-authority-sqlite-v5`. Unlike the v2, v3 and v4 advances, runtime keeps admitting the preceding `cadrumo-authority-sqlite-v4` format. A v4 database carries no proofs, so it is served with full snapshot validation until republication, and no record or digest is inferred for it. Formats older than v4 remain refused. Publication writes only v5. The descriptor format is unchanged.
+
+## Amendment 2026-11-12: dateless proofs and store format v6
+
+Accepted 2026-11-12 by the coordinator, from the proposal `2026-11-12-registry-authority-artifact-boundary-indexed-storage-v6-amendment-adr`, together with the dateless-proof amendment of `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr`, which owns the decision. This amendment records only its effect on storage and admission, and replaces the format statements of the 2026-10-24 amendment above.
+
+No snapshot cross-check reads the run date, so publication records no fact-date window: the proof contract table holds the validator digest only. The layout change advances the store format to `cadrumo-authority-sqlite-v6`. Runtime admits v6 and the preceding `cadrumo-authority-sqlite-v5`; a v5 database is read without its proofs, so every request takes full snapshot validation until republication. v4 and older formats are refused with the registered format error, whose words name republication. Publication writes only v6. The descriptor format and the logical generation digest are unchanged; the physical digest changes because the proof tables change.

@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e75c802bc62e0d4566c4c0864950f134b87260626809030b9f0263037684cce'
+body_hash: 'sha256:73948399eeef961bc366a5afb1467057c38474cf66d49545d62c76eaf01a45c3'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]"
   - "[[2026-11-12-registry-authority-artifact-boundary-snapshot-proof-dateless-amendment-adr]]"
@@ -13,7 +13,9 @@ related:
   - '[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-reference]]'
 ---
 
-# `registry-authority-artifact-boundary` adr: `authority database format v6 admitting v5 without proofs (amendment proposal)` | (**status:** `proposed`)
+# `registry-authority-artifact-boundary` adr: `authority database format v6 admitting v5 without proofs (amendment proposal)` | (**status:** `deprecated`)
+
+Retired 2026-11-12: accepted by the coordinator on 2026-11-12 and applied into `2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr`, which now carries the decision. This record is kept as the proposal's provenance and holds no authority of its own.
 
 This record proposes an amendment to the accepted `2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr`, whose 2026-10-24 amendment set the store format to `cadrumo-authority-sqlite-v5` and admitted v4 without proofs. The accepted body stays unchanged until this amendment is accepted; on acceptance, that amendment's format sentence is replaced as stated under Implementation and this proposal is retired.
 
