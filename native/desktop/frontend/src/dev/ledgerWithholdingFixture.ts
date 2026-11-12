@@ -6,6 +6,7 @@
 // the payer's reference. Everything it answers is synthetic.
 
 import served from "@fixtures/desktop-withholding-refusal-words/ledgerWithholdingRefusalWords.json" with { type: "json" };
+import servedEntryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import {
   WITHHOLDING_INCOME_CLASSES,
   WITHHOLDING_ORIGINS,
@@ -49,13 +50,16 @@ declare global {
 const WRITE_CODE = "REFUSED_RETENCION_SOPORTADA_WRITE";
 const ABSENCE_CODE = "REFUSED_RETENCION_SOPORTADA_ABSENCE";
 const REVISION_CODE = "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT";
-const AMOUNTS = [
-  "importe_integro_dinerario",
-  "valoracion_especie",
-  "retencion",
-  "ingreso_a_cuenta",
-  "ingreso_a_cuenta_repercutido",
-] as const;
+/** The figures a certificate states for each class, as `ledger.entry-options`
+ * serves them, in the order served. */
+const FIGURES_OF = (incomeClass: string): string[] =>
+  (
+    servedEntryOptions.families.find(
+      (found) => found.family === "withholding_certificate_figure",
+    )?.options ?? []
+  )
+    .filter((option) => "group" in option && option.group === incomeClass)
+    .map((option) => option.value);
 const DECIMAL = /^(0|[1-9]\d*)(\.\d+)?$/;
 /** The sentences the backend serves with every refusal of the record and of
  * the absence operations, by reason and language, read from its own wording. */
@@ -76,7 +80,7 @@ type Stored = {
   income_class: string;
   payer_ref: string;
   payer_legal_name: string | null;
-  figures: Record<(typeof AMOUNTS)[number], string>;
+  figures: Record<string, string>;
   origin: string;
   evidence_fingerprint: string | null;
   revision: number;
@@ -126,6 +130,8 @@ export function withholdingOperations(tools: Tools) {
         retencion: "4500.00",
         ingreso_a_cuenta: "0",
         ingreso_a_cuenta_repercutido: "0",
+        reducciones_aplicables: "0",
+        gastos_deducibles: "0",
       },
       origin: WITHHOLDING_ORIGINS[0],
       evidence_fingerprint: hex64("certificate:employer"),
@@ -156,12 +162,15 @@ export function withholdingOperations(tools: Tools) {
   let revisions = 3;
 
   const revisionOf = (revision: number) => `rev-${revision}`;
+  /** A payment figure every stored certificate states. */
+  const paid = (found: Stored, name: string): string =>
+    found.figures[name] ?? invalid();
   const rowOf = (found: Stored): JsonObject => {
     const label = (LABELLED as Record<string, string | undefined>)[
       found.income_class
     ];
     const pago = (
-      Number(found.figures.retencion) + Number(found.figures.ingreso_a_cuenta)
+      Number(paid(found, "retencion")) + Number(paid(found, "ingreso_a_cuenta"))
     ).toFixed(2);
     return {
       ejercicio: found.ejercicio,
@@ -170,13 +179,13 @@ export function withholdingOperations(tools: Tools) {
       payer_ref: found.payer_ref,
       payer_legal_name: found.payer_legal_name,
       importe_integro_dinerario: decimal(
-        found.figures.importe_integro_dinerario,
+        paid(found, "importe_integro_dinerario"),
       ),
-      valoracion_especie: decimal(found.figures.valoracion_especie),
-      retencion: decimal(found.figures.retencion),
-      ingreso_a_cuenta: decimal(found.figures.ingreso_a_cuenta),
+      valoracion_especie: decimal(paid(found, "valoracion_especie")),
+      retencion: decimal(paid(found, "retencion")),
+      ingreso_a_cuenta: decimal(paid(found, "ingreso_a_cuenta")),
       ingreso_a_cuenta_repercutido: decimal(
-        found.figures.ingreso_a_cuenta_repercutido,
+        paid(found, "ingreso_a_cuenta_repercutido"),
       ),
       pago_a_cuenta: decimal(pago),
       origin: found.origin,
@@ -334,7 +343,9 @@ export function withholdingOperations(tools: Tools) {
         "income_class",
         "payer_tax_id",
         "payer_legal_name",
-        ...AMOUNTS,
+        ...new Set(
+          WITHHOLDING_INCOME_CLASSES.flatMap((name) => FIGURES_OF(name)),
+        ),
         "origin",
         "evidence_fingerprint",
         "source_path",
@@ -348,9 +359,32 @@ export function withholdingOperations(tools: Tools) {
       const taxId = text(request.payer_tax_id);
       if (taxId === null || taxId.length > 32) return invalid();
       const origin = choice(request.origin, WITHHOLDING_ORIGINS);
-      const figures = Object.fromEntries(
-        AMOUNTS.map((name) => [name, figure(request[name])]),
-      ) as Stored["figures"];
+      // A certificate states exactly the figures served for its class: one
+      // sent that the class does not state is invalid, one it states and
+      // that is left out is refused, a class-specific one in the served words.
+      const stated = FIGURES_OF(incomeClass);
+      const sentFigures = Object.keys(request).filter((name) =>
+        WITHHOLDING_INCOME_CLASSES.some((other) =>
+          FIGURES_OF(other).includes(name),
+        ),
+      );
+      if (sentFigures.some((name) => !stated.includes(name))) return invalid();
+      const left = stated.filter((name) => request[name] === undefined);
+      if (left.length > 0) {
+        const sharedByAll = (name: string) =>
+          WITHHOLDING_INCOME_CLASSES.every((other) =>
+            FIGURES_OF(other).includes(name),
+          );
+        if (left.some(sharedByAll)) return invalid();
+        return certificateRefusal(
+          WRITE_CODE,
+          "trabajo_certificate_figure_missing",
+          ejercicio,
+        );
+      }
+      const figures: Stored["figures"] = Object.fromEntries(
+        stated.map((name) => [name, figure(request[name])]),
+      );
       const given = text(request.evidence_fingerprint);
       if (given !== null && !/^[0-9a-f]{64}$/.test(given)) return invalid();
       const picked = text(request.source_path);
@@ -382,8 +416,8 @@ export function withholdingOperations(tools: Tools) {
           ejercicio,
         );
       if (
-        Number(figures.ingreso_a_cuenta_repercutido) >
-        Number(figures.ingreso_a_cuenta)
+        Number(figures["ingreso_a_cuenta_repercutido"]) >
+        Number(figures["ingreso_a_cuenta"])
       )
         return certificateRefusal(
           WRITE_CODE,

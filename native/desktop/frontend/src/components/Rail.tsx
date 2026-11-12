@@ -98,9 +98,15 @@ function RailButton({ item }: { item: RailItem }) {
             <Badge
               variant="count"
               aria-hidden="true"
-              className="absolute -top-0.5 -right-0.5"
+              // Past the limit the mark is "99+", which the accessible name
+              // (it carries the exact count) cannot contain; drawn as
+              // generated content it is not text the name must match.
+              data-capped={
+                item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : undefined
+              }
+              className="absolute -top-0.5 -right-0.5 data-capped:after:content-[attr(data-capped)]"
             >
-              {item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : item.badge}
+              {item.badge > BADGE_LIMIT ? null : item.badge}
             </Badge>
           ) : item.pin === "busy" ? (
             // Turning in the corner where a count would be, on the rail's

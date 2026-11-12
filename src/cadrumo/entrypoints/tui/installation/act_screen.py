@@ -36,6 +36,7 @@ from ..components.language import repaint_tables
 from ..components.status import PinnedStatusBar
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
+from ..refusal.panel import RefusalSlot
 from ..secret.credentials import CREDENTIAL_PANEL_CSS
 from .acts import ActField, ActFieldKind, ActInputError, OfferedAct, offered_act, supplied_member
 from .door import (
@@ -132,6 +133,7 @@ class InstallationActScreen(AccountChromeScreen):
             table.fill_column = None
             yield table
             yield Static(id="installation-act-result", markup=False)
+            yield RefusalSlot(id="installation-act-refusal")
 
     @staticmethod
     def _compose_field(field: ActField, label: str, hint: str) -> ComposeResult:
@@ -390,7 +392,9 @@ class InstallationActScreen(AccountChromeScreen):
         with worded_in(self._locale):
             question = ConfirmScreen(
                 title=lambda: tr("tui.installation.confirm.title", act=act_label(self._offered.act)),
-                message=lambda: "\n".join((*preview.lines, "", tr("tui.installation.confirm.question"))),
+                message=lambda: "\n".join(
+                    (*_refusal_sentence(preview), *preview.lines, "", tr("tui.installation.confirm.question"))
+                ),
                 confirm_label=lambda: tr("tui.installation.confirm.accept"),
                 cancel_label=lambda: tr("tui.installation.confirm.cancel"),
             )
@@ -427,6 +431,7 @@ class InstallationActScreen(AccountChromeScreen):
         else:
             status.show_error(presentation.status)
         self.query_one("#installation-act-result", Static).update("\n".join(presentation.lines))
+        self.query_one("#installation-act-refusal", RefusalSlot).show(presentation.refusal)
         self._outcome_read_by = presentation.outcome_read_by
         offer = self.query_one("#installation-act-outcome", Button)
         offer.display = presentation.outcome_read_by is not None
@@ -446,6 +451,13 @@ class InstallationActScreen(AccountChromeScreen):
         """Leave only while no act is in flight, so its answer is never lost unseen."""
         if not self._busy:
             self.dismiss(None)
+
+
+def _refusal_sentence(presentation: ActPresentation) -> tuple[str, ...]:
+    """The served refusal sentence a confirmation repeats, when the previewed act was refused."""
+    refusal = presentation.refusal
+    sentence = None if refusal is None else refusal.sentence
+    return () if sentence is None else (sentence,)
 
 
 __all__ = ["InstallationActScreen"]

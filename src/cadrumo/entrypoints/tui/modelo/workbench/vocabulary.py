@@ -9,7 +9,9 @@ A value that comes from somewhere else also says which kind of place: the
 filer's records, a register they keep, their profile, an earlier declaration,
 the AEAT tax data or the form itself. The origin keeps its glyph; only a value
 carried from an earlier declaration takes a mark of its own, so it never reads
-like one fetched from the filer's records.
+like one fetched from the filer's records. A box the filer stated holds no
+amount takes a mark of its own too, so a zero stated never reads as a zero
+typed; the words beside it are the ones the form serves for the statement.
 
 Every mark any workbench surface draws is declared here once, with the
 catalogue key of what it means: the origins and attention marks of a row, the
@@ -151,6 +153,8 @@ CHECK_MARK: Final[WorkbenchMark] = WorkbenchMark("◆", translation_key="workspa
 INFO_MARK: Final[WorkbenchMark] = WorkbenchMark("i", translation_key="workspace.modelo.level.info")
 #: A value carried from an earlier declaration, in place of the imported glyph.
 EARLIER_FILING_MARK: Final[WorkbenchMark] = WorkbenchMark("«", translation_key="workspace.modelo.legend.name.earlier")
+#: A box the filer stated holds no amount, by a statement the form served, in place of the entered glyph.
+STATED_MARK: Final[WorkbenchMark] = WorkbenchMark("§", translation_key="tui.modelo.statements.mark.name")
 #: A step or section with nothing left to do.
 DONE_MARK: Final[WorkbenchMark] = WorkbenchMark("✓", translation_key="workspace.modelo.legend.name.done")
 #: Where the filer is: the selected box, the page or the step they are on.
@@ -168,6 +172,7 @@ WORKBENCH_MARKS: Final[tuple[WorkbenchMark, ...]] = (
     CHECK_MARK,
     INFO_MARK,
     EARLIER_FILING_MARK,
+    STATED_MARK,
     DONE_MARK,
     HERE_MARK,
     COLLAPSED_MARK,
@@ -363,8 +368,11 @@ def origin_glyph(field: ModeloFormField) -> str:
     """The mark a field's origin shows; a value carried from an earlier declaration or set by the form is marked apart.
 
     A value the form sets draws the form's mark wherever it is shown, so a
-    row and the sources view never draw it two ways.
+    row and the sources view never draw it two ways. A box the filer stated
+    holds no amount draws the stated mark, never the mark of a value typed.
     """
+    if field.stated_absent is not None:
+        return STATED_MARK.glyph
     if set_by_form(field):
         return FORM_SET_MARK.glyph
     source = field.source
@@ -460,6 +468,7 @@ __all__ = [
     "ORIGIN_MARKS",
     "ORIGIN_ROLES",
     "STALE_MARK",
+    "STATED_MARK",
     "WORKBENCH_MARKS",
     "Attention",
     "AttentionCounts",

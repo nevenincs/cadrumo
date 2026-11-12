@@ -37,6 +37,10 @@ from .navigation import (
     TuiLeaveGuardV1,
     TuiNavigationTargetV1,
 )
+from .refusal.intent import RefusalRouterV1
+from .refusal.panel import RefusalPanel
+from .refusal.routing import host_refusal_router
+from .refusal.served import ServedRefusalV1
 
 if TYPE_CHECKING:
     from .app import CadrumoTuiApp
@@ -153,6 +157,15 @@ class RootNavigationMixin:
             return
         self._active_target = target
         self._replace_destination(screen, return_to_home=True)
+
+    async def refusal_router(self: CadrumoTuiApp, refusal: ServedRefusalV1, /) -> RefusalRouterV1:
+        """Route a refusal's ways out to the destinations this session admits."""
+        return await host_refusal_router(self, refusal)
+
+    def on_refusal_panel_action_chosen(self: CadrumoTuiApp, message: RefusalPanel.ActionChosen) -> None:
+        """Open the destination a chosen way out of a refusal leads to, with the arguments it was served."""
+        message.stop()
+        self.navigate_to(message.intent.navigation_target())
 
     def _home_row_target(self: CadrumoTuiApp, row: HomeTarget) -> TuiNavigationTargetV1 | None:
         """Translate one Home row into the admitted destination it belongs to."""

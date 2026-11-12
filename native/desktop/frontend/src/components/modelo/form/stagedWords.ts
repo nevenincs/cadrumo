@@ -4,8 +4,9 @@ import type { StagedEdit } from "./session";
 /** A staged edit as the box, the details and the review say it: a typed
  * value as the application read it, in the format of the value it replaces,
  * or as typed where the application said nothing; a confirmed value as the
- * form showed it; a yes or no as those words; and a value taken out in the
- * words for where the box goes back to. */
+ * form showed it; a yes or no as those words; a value taken out in the
+ * words for where the box goes back to; a statement in the words the form
+ * served for it, and its withdrawal as one. */
 export function stagedText(t: Translate, edit: StagedEdit): string {
   switch (edit.intent.kind) {
     case "set_typed_value":
@@ -26,7 +27,11 @@ export function stagedText(t: Translate, edit: StagedEdit): string {
           : "workspace.modelo.staged.restore",
       );
     case "remove_override":
-      return t("workspace.modelo.staged.restore");
+      return t(
+        edit.intent.withdraws === undefined
+          ? "workspace.modelo.staged.restore"
+          : "desktop.modelo.statements.withdrawn",
+      );
     case "attest_no_amount":
       return edit.intent.words;
   }

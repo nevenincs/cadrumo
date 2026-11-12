@@ -10,6 +10,15 @@
 
 import type { LedgerEntryOptionsResult } from "./ledgerSetup";
 
+/** One figure a payer's withholding certificate states, as the ledger serves
+ * it: `field` is the record's own field name, `group` the income class whose
+ * certificate states it, `labelKey` the key of its words. */
+export type CertificateFigure = {
+  field: string;
+  group: string;
+  labelKey: string | null;
+};
+
 /** Whether the lists are being read, were read, or could not be. */
 export type VocabularyState = "loading" | "unavailable" | "ready";
 
@@ -41,6 +50,9 @@ export type ServedVocabulary = {
   /** The serialisations an export writes, in the order the ledger serves
    * them. */
   exportFormats: readonly string[];
+  /** The figures each income class's withholding certificate states, in the
+   * certificate's order, class by class. */
+  certificateFigures: readonly CertificateFigure[];
   /** The currency a new movement is offered when no own account names one;
    * null until it is served. */
   defaultCurrency: string | null;
@@ -68,6 +80,7 @@ export const NO_VOCABULARY: ServedVocabulary = {
   capitalDisposals: NONE,
   importFormats: NONE,
   exportFormats: NONE,
+  certificateFigures: [],
   defaultCurrency: null,
 };
 
@@ -114,8 +127,47 @@ export function servedVocabulary(
     capitalDisposals: values("capital_good_disposal"),
     importFormats: values("import_format"),
     exportFormats: values("export_format"),
+    certificateFigures: (
+      result.families.find(
+        (served) => served.family === "withholding_certificate_figure",
+      )?.options ?? []
+    ).flatMap((option) =>
+      option.group
+        ? [
+            {
+              field: option.value,
+              group: option.group,
+              labelKey: option.label_key,
+            },
+          ]
+        : [],
+    ),
     defaultCurrency: result.default_currency || null,
   };
+}
+
+/** The figures the certificate of one income class states: exactly the
+ * served options filed under that class. */
+export const certificateFiguresOf = (
+  vocabulary: ServedVocabulary,
+  incomeClass: string,
+): readonly CertificateFigure[] =>
+  vocabulary.certificateFigures.filter(
+    (figure) => figure.group === incomeClass,
+  );
+
+/** Whether every served income class states `field`: a payment figure every
+ * certificate carries, as against one only some classes state. */
+export function statedByEveryClass(
+  vocabulary: ServedVocabulary,
+  field: string,
+): boolean {
+  const classes = new Set(vocabulary.certificateFigures.map((f) => f.group));
+  return [...classes].every((group) =>
+    vocabulary.certificateFigures.some(
+      (figure) => figure.group === group && figure.field === field,
+    ),
+  );
 }
 
 /** The family a spending category is filed under, or null for an id not
