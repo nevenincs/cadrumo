@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-12'
 body_schema: body-v2
-body_hash: 'sha256:02eb8c75fa8440ef929ae8cf8815955c921e071cb9ccda5b9d212b9645b1ec9a'
+body_hash: 'sha256:54cdee2a81c26f8d49e6f2fd277b5937aee0aef50e0df158d6a8b90fb56d13ce'
 ---
 
 <!-- RETIRED: S44 -->
@@ -70,6 +70,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S56` - Source the prorrata persona's Modelo 100 rows, after CALC-RENTA's current causes; until then they show unchecked with the declared reason (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, dev/fixtures/personas`.
 - [ ] `P01.S57` - Register Modelo 390 apartado 12 (prorratas, boxes 114 to 118), which no edition holds so a prorrata filer's 390 exports without its definitive percentage: first a blocking finding until it renders, then the boxes registered at the earliest edition and sourced from the ProrrataRegister; the S54 persona's 390 row stays unchecked on it until then (lane CALC-IVA); `src/cadrumo/_data/registry/aeat/modelos/390, src/cadrumo/application/prorrata_register, src/cadrumo/application/modelo`.
 - [ ] `P01.S59` - Make no registry lookup substitute the run date: a dated tax-fact read takes its date from the caller and refuses or stays unresolved without one, a dateless vocabulary read admits the envelope union and offers the newest edition's choices from the temporal resolver, and today_madrid() stays only for calendar, deadline, overview and session questions, with a guard test failing on any call from domain/calculations/registry and the catalogue modules (PRIME ORDER 12:52, RULINGS.md); owner CALC-PAGOS for the core API, the four clock-reading catalogues and the guard test, then caller units by family (CALC-RENTA Renta catalogues, LIFECYCLE ccaa/wizard/patch_edit, CALC-PAGOS e-invoice and ledger, CALC-IVA IVA and Modelo 200/303/390); closes when the guard test passes on feature/tui and the persona table shows +0 -0; `src/cadrumo/domain/calculations/registry, src/cadrumo/core/string_mapping.py, catalogue modules entity_type, eu_member_state_catalogue, irpf_regimes, renta_codes_catalogue`.
+- [ ] `P01.S60` - Add a profile drift gate: verification and export detect a saved calculation whose captured profile fingerprint differs from the current profile, giving STALE_CALCULATION with a recalculate door at verify, refusing export, and giving a PRESENTADO revision a superseded-facts finding with an amend door (PRIME ORDER 16:34, RULINGS.md); found by CALC-RENTA; owner LIFECYCLE; closes when the gate's tests pass on feature/tui and the persona table shows +0 -0; `src/cadrumo/application/modelo/verification_actions.py, src/cadrumo/application/modelo/export.py, src/cadrumo/application/modelo/revision_persistence.py`.
 
 ### Phase `P02` - Deferred backend scope
 
