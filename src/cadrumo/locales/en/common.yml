@@ -4257,12 +4257,6 @@ desktop:
       action:
         attest: State no withholding
         record: Record certificate
-      amount:
-        importe_integro_dinerario: Gross cash amount
-        ingreso_a_cuenta: Payment on account
-        ingreso_a_cuenta_repercutido: Payment on account passed on
-        retencion: Withholding
-        valoracion_especie: Value in kind
       attested_on: Stated on {date}
       changes: Changes to the {ejercicio} certificates
       column:
@@ -7045,8 +7039,6 @@ tui:
         active: Active
         id: Identifier
         label: Name
-    result:
-      remedy: 'Suggested next step: {action}'
     status:
       completed: Done.
       effect_unknown: The connection ended before an answer arrived ({code}). It may
@@ -8973,8 +8965,6 @@ tui:
       unavailable: The registered operations could not be read.
     stopped:
       code: Code
-      remedy: What would let it proceed
-      remedy_command: 'Remedy command: {command}'
     title: Operations
   reference:
     action:

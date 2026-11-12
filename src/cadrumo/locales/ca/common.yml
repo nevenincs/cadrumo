@@ -4330,12 +4330,6 @@ desktop:
       action:
         attest: Indica sense retencions
         record: Anota un certificat
-      amount:
-        importe_integro_dinerario: Import íntegre dinerari
-        ingreso_a_cuenta: Ingrés a compte
-        ingreso_a_cuenta_repercutido: Ingrés a compte repercutit
-        retencion: Retenció
-        valoracion_especie: Valoració en espècie
       attested_on: Indicat el {date}
       changes: Canvis als certificats de {ejercicio}
       column:
@@ -7195,8 +7189,6 @@ tui:
         active: Actiu
         id: Identificador
         label: Nom
-    result:
-      remedy: 'Pas següent suggerit: {action}'
     status:
       completed: Fet.
       effect_unknown: La connexió va acabar abans que arribés una resposta ({code}).
@@ -9157,8 +9149,6 @@ tui:
       unavailable: No s'han pogut llegir les operacions registrades.
     stopped:
       code: Codi
-      remedy: Què permetria continuar
-      remedy_command: 'Ordre que ho resol: {command}'
     title: Operacions
   reference:
     action:

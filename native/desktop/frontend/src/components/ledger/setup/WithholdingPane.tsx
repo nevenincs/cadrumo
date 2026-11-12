@@ -13,7 +13,6 @@ import {
   type WithholdingIncomeClass,
   type WithholdingOrigin,
 } from "../../../shell/ledgerContract";
-import { parseDecimal, TAX_AMOUNT_RULE } from "../../../shell/ledgerGrammar";
 import type {
   WithholdingAbsence,
   WithholdingMutationResult,
@@ -22,6 +21,7 @@ import type {
 import { formatAmount } from "../../../shared/numbers";
 import { formatInstantDay } from "../../../shared/dateFormats";
 import { useStrings } from "../../../shell/strings";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { PeriodSelector } from "../PeriodSelector";
 import { WriteHold, type Landing, type LandingCheck } from "../WritePause";
 import { CertificateFilePicker } from "./CertificateFilePicker";
@@ -29,6 +29,12 @@ import { EditorField } from "./EditorField";
 import { setupCall, type SetupCall } from "./setupModel";
 import type { SetupProps } from "./setupProps";
 import { grammarText } from "./setupWords";
+import {
+  figuresSendable,
+  figuresTyped,
+  readFigures,
+  requestFigures,
+} from "./withholdingFigures";
 import {
   CallLine,
   ChoiceField,
@@ -47,33 +53,15 @@ import {
 const ACTIONS = ["record", "attest"] as const;
 type Action = (typeof ACTIONS)[number];
 
-/** The five figures of a certificate, in the order its form asks for them:
- * the registered request's own field names. */
-const AMOUNTS = [
-  "importe_integro_dinerario",
-  "valoracion_especie",
-  "retencion",
-  "ingreso_a_cuenta",
-  "ingreso_a_cuenta_repercutido",
-] as const;
-type Amount = (typeof AMOUNTS)[number];
-type Amounts = Record<Amount, string>;
-const NO_AMOUNTS: Amounts = {
-  importe_integro_dinerario: "0",
-  valoracion_especie: "0",
-  retencion: "0",
-  ingreso_a_cuenta: "0",
-  ingreso_a_cuenta_repercutido: "0",
-};
-
 /** The characters of a fingerprint or reference the table shows. */
 const SHOWN_HEX = 12;
 
 /**
  * The withholding payers took from the person's income, by ejercicio: each
  * payer's certificate figures grouped by income class, and the person's
- * statement that a class has none. Every figure is typed in and sent; the
- * backend checks, stores and counts them. A payer's tax identifier is sent
+ * statement that a class has none. The figures a certificate states, and
+ * their words, are those the ledger serves for the chosen class; every one is
+ * typed in and sent, and the backend checks, stores and counts them. A payer's tax identifier is sent
  * once, with the record, and is never read back: a row names its payer by the
  * backend's reference and legal name.
  */
@@ -85,6 +73,7 @@ export function WithholdingPane({
   fallbackYear,
 }: SetupProps) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const [ejercicio, setEjercicio] = useState(fallbackYear);
   const { read, reload } = useSetupRead(
     port,
@@ -107,7 +96,8 @@ export function WithholdingPane({
   const [incomeClass, setIncomeClass] = useState("");
   const [taxId, setTaxId] = useState("");
   const [legalName, setLegalName] = useState("");
-  const [amounts, setAmounts] = useState<Amounts>(NO_AMOUNTS);
+  /** What the person typed in each served figure's box, by field name. */
+  const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [origin, setOrigin] = useState("");
   const [fingerprint, setFingerprint] = useState("");
   /** The certificate file the person picked: sent as the host's token, so
@@ -121,7 +111,7 @@ export function WithholdingPane({
     action !== null &&
       ([taxId, legalName, fingerprint, note].some(Boolean) ||
         file !== null ||
-        AMOUNTS.some((name) => amounts[name] !== NO_AMOUNTS[name])),
+        figuresTyped(vocabulary, amounts)),
   );
 
   // The stored documents a certificate can rest on, read only while the
@@ -185,19 +175,14 @@ export function WithholdingPane({
           ? t("desktop.ledger.withholding.document_none")
           : null;
 
-  const parsed = AMOUNTS.map((name) => ({
-    name,
-    parsed: parseDecimal(amounts[name], TAX_AMOUNT_RULE),
-  }));
-  const parsedOf = (name: Amount) =>
-    parsed.find((found) => found.name === name)!.parsed;
+  const figures = readFigures(vocabulary, incomeClass, amounts);
   const clean = () => {
     if (file) void port.forgetFiles([file.token]).catch(() => undefined);
     setFile(null);
     setIncomeClass("");
     setTaxId("");
     setLegalName("");
-    setAmounts(NO_AMOUNTS);
+    setAmounts({});
     setOrigin("");
     setFingerprint("");
     setNote("");
@@ -211,9 +196,7 @@ export function WithholdingPane({
   const ready =
     incomeClass !== "" &&
     (action === "record"
-      ? taxId.trim() !== "" &&
-        origin !== "" &&
-        parsed.every((found) => found.parsed.kind === "value")
+      ? taxId.trim() !== "" && origin !== "" && figuresSendable(figures)
       : action === "attest"
         ? note.trim() !== "" && absences?.kind === "done"
         : false);
@@ -239,10 +222,6 @@ export function WithholdingPane({
     if (!cls) return;
     if (action === "record") {
       const before = classRows(cls).length;
-      const figure = (name: Amount) => {
-        const found = parsedOf(name);
-        return { decimal: found.kind === "value" ? found.value : "" };
-      };
       const landing: LandingCheck = readLanding(
         port,
         "ledger.retencion_soportada.list",
@@ -263,13 +242,7 @@ export function WithholdingPane({
               income_class: cls,
               payer_tax_id: taxId.trim(),
               payer_legal_name: legalName.trim() || null,
-              importe_integro_dinerario: figure("importe_integro_dinerario"),
-              valoracion_especie: figure("valoracion_especie"),
-              retencion: figure("retencion"),
-              ingreso_a_cuenta: figure("ingreso_a_cuenta"),
-              ingreso_a_cuenta_repercutido: figure(
-                "ingreso_a_cuenta_repercutido",
-              ),
+              ...requestFigures(figures),
               origin: WITHHOLDING_ORIGINS.find((value) => value === origin)!,
               evidence_fingerprint: fingerprint || null,
               source_path: file ? file.token : null,
@@ -733,33 +706,39 @@ export function WithholdingPane({
                     />
                   )}
                 </EditorField>
-                {AMOUNTS.map((name) => {
-                  const found = parsedOf(name);
-                  return (
-                    <EditorField
-                      key={name}
-                      label={t(`desktop.ledger.withholding.amount.${name}`)}
-                      error={
-                        found.kind === "refused"
-                          ? grammarText(t, found.refusal)
-                          : null
-                      }
-                    >
-                      {(control) => (
-                        <MoneyEditor
-                          id={control.id}
-                          value={amounts[name]}
-                          onChange={(next) =>
-                            setAmounts((held) => ({ ...held, [name]: next }))
-                          }
-                          invalid={control.invalid}
-                          describedBy={control.describedBy}
-                          required
-                        />
-                      )}
-                    </EditorField>
-                  );
-                })}
+                {incomeClass !== "" && figures.length === 0 && (
+                  <p className="ledger-withholding-figures-unserved text-sm text-muted-foreground">
+                    {vocabulary.state === "loading"
+                      ? t("desktop.ledger.form.reading")
+                      : t("desktop.ledger.form.failed")}
+                  </p>
+                )}
+                {figures.map(({ figure, text, parsed }) => (
+                  <EditorField
+                    key={`${incomeClass}:${figure.field}`}
+                    label={figure.labelKey ? t(figure.labelKey) : figure.field}
+                    error={
+                      parsed.kind === "refused"
+                        ? grammarText(t, parsed.refusal)
+                        : null
+                    }
+                  >
+                    {(control) => (
+                      <MoneyEditor
+                        id={control.id}
+                        value={text}
+                        onChange={(next) =>
+                          setAmounts((held) => ({
+                            ...held,
+                            [figure.field]: next,
+                          }))
+                        }
+                        invalid={control.invalid}
+                        describedBy={control.describedBy}
+                      />
+                    )}
+                  </EditorField>
+                ))}
                 <ChoiceField
                   label={t("desktop.ledger.withholding.origin_label")}
                   value={origin}

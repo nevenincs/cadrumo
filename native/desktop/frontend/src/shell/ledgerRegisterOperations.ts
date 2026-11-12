@@ -4,7 +4,7 @@
 // which the host fills. A refused mutation comes back as the refusal's
 // detail, in the same shape.
 
-import type { FileToken, PublicDecimal } from "./ledger";
+import type { FileToken, JsonValue, PublicDecimal } from "./ledger";
 import type {
   WithholdingIncomeClass,
   WithholdingOrigin,
@@ -275,6 +275,7 @@ export type WithholdingRefusalReason =
   | "certificate_not_in_custody"
   | "certificate_file_unreadable"
   | "certificate_fingerprint_mismatch"
+  | "trabajo_certificate_figure_missing"
   | "taxpayer_tax_id_unknown"
   | "not_found"
   | "validation";
@@ -312,15 +313,14 @@ export type WithholdingRecordRequest = {
   income_class: WithholdingIncomeClass;
   payer_tax_id: string;
   payer_legal_name?: string | null;
-  importe_integro_dinerario: PublicDecimal;
-  valoracion_especie: PublicDecimal;
-  retencion: PublicDecimal;
-  ingreso_a_cuenta: PublicDecimal;
-  ingreso_a_cuenta_repercutido: PublicDecimal;
   origin: WithholdingOrigin;
   evidence_fingerprint?: string | null;
   source_path?: FileToken | null;
   expected_revision_id?: string | null;
+  /** The certificate's figures, each under the field name the ledger serves
+   * in its `withholding_certificate_figure` options for the class: the
+   * request holds none of them by name. */
+  [figure: string]: JsonValue | undefined;
 };
 
 export type WithholdingRemoveRequest = {
