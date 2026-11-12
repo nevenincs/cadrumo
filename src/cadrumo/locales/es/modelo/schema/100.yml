@@ -732,6 +732,118 @@ modelo:
             label: Importe pendiente de imputación
           irpf-anexo-c-gan-per-cuartas-tipo-ayuda:
             label: Tipo de ayuda pública
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso1-maxima:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del ejercicio anterior: compensación máxima con su propio saldo positivo
+              (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso2-maxima:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del ejercicio anterior: compensación máxima con el 25 % del otro saldo
+              positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-resto-paso1:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del ejercicio anterior: importe pendiente tras compensarlo con su propio
+              saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso1-maxima:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del segundo ejercicio anterior: compensación máxima con su propio saldo
+              positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso2-maxima:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del segundo ejercicio anterior: compensación máxima con el 25 % del
+              otro saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-resto-paso1:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del segundo ejercicio anterior: importe pendiente tras compensarlo con
+              su propio saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso1-maxima:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del tercer ejercicio anterior: compensación máxima con su propio saldo
+              positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso2-maxima:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del tercer ejercicio anterior: compensación máxima con el 25 % del otro
+              saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-resto-paso1:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del tercer ejercicio anterior: importe pendiente tras compensarlo con
+              su propio saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso1-maxima:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del cuarto ejercicio anterior: compensación máxima con su propio saldo
+              positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso2-maxima:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del cuarto ejercicio anterior: compensación máxima con el 25 % del otro
+              saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-resto-paso1:
+            label: 'Saldo negativo de ganancias y pérdidas patrimoniales del ahorro
+              del cuarto ejercicio anterior: importe pendiente tras compensarlo con
+              su propio saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso1-capacidad:
+            label: 'Saldos negativos pendientes de ganancias y pérdidas patrimoniales
+              del ahorro: margen de compensación con su propio saldo positivo (art.
+              49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso2-capacidad:
+            label: 'Saldos negativos pendientes de ganancias y pérdidas patrimoniales
+              del ahorro: margen de compensación con el 25 % del otro saldo positivo
+              (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso1-maxima:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del ejercicio anterior: compensación máxima con su propio saldo positivo
+              (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso2-maxima:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del ejercicio anterior: compensación máxima con el 25 % del otro saldo
+              positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-resto-paso1:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del ejercicio anterior: importe pendiente tras compensarlo con su propio
+              saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso1-maxima:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del segundo ejercicio anterior: compensación máxima con su propio saldo
+              positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso2-maxima:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del segundo ejercicio anterior: compensación máxima con el 25 % del
+              otro saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-resto-paso1:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del segundo ejercicio anterior: importe pendiente tras compensarlo con
+              su propio saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso1-maxima:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del tercer ejercicio anterior: compensación máxima con su propio saldo
+              positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso2-maxima:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del tercer ejercicio anterior: compensación máxima con el 25 % del otro
+              saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-resto-paso1:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del tercer ejercicio anterior: importe pendiente tras compensarlo con
+              su propio saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso1-maxima:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del cuarto ejercicio anterior: compensación máxima con su propio saldo
+              positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso2-maxima:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del cuarto ejercicio anterior: compensación máxima con el 25 % del otro
+              saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-resto-paso1:
+            label: 'Saldo negativo de rendimientos del capital mobiliario del ahorro
+              del cuarto ejercicio anterior: importe pendiente tras compensarlo con
+              su propio saldo positivo (art. 49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso1-capacidad:
+            label: 'Saldos negativos pendientes de rendimientos del capital mobiliario
+              del ahorro: margen de compensación con su propio saldo positivo (art.
+              49 LIRPF) [interno]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso2-capacidad:
+            label: 'Saldos negativos pendientes de rendimientos del capital mobiliario
+              del ahorro: margen de compensación con el 25 % del otro saldo positivo
+              (art. 49 LIRPF) [interno]'
           irpf-anualidades-alimentos-hijo-1-importe:
             label: 'Hijo/Hija 1 (*): Importe de las anualidades por alimentos satisfechas'
           irpf-anualidades-alimentos-hijo-1-nif:

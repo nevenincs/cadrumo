@@ -721,6 +721,118 @@ modelo:
             label: Hozzárendelésre váró összeg
           irpf-anexo-c-gan-per-cuartas-tipo-ayuda:
             label: Állami támogatás típusa
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso1-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              az előző évből: a saját pozitív egyenleggel szembeni maximális kompenzáció
+              (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso2-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              az előző évből: a másik pozitív egyenleg 25%-ával szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-resto-paso1:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              az előző évből: a saját pozitív egyenleggel való kompenzáció után fennmaradó
+              összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso1-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a második megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso2-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a második megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-resto-paso1:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a második megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso1-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a harmadik megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso2-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a harmadik megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-resto-paso1:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a harmadik megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso1-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a negyedik megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso2-maxima:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a negyedik megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-resto-paso1:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség negatív egyenlege
+              a negyedik megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso1-capacidad:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség függő negatív egyenlegei:
+              a saját pozitív egyenleggel szembeni kompenzációs keret (az LIRPF 49.
+              cikke) [belső]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso2-capacidad:
+            label: 'A megtakarítási árfolyamnyereség és -veszteség függő negatív egyenlegei:
+              a másik pozitív egyenleg 25%-ával szembeni kompenzációs keret (az LIRPF
+              49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso1-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              az előző évből: a saját pozitív egyenleggel szembeni maximális kompenzáció
+              (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso2-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              az előző évből: a másik pozitív egyenleg 25%-ával szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-resto-paso1:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              az előző évből: a saját pozitív egyenleggel való kompenzáció után fennmaradó
+              összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso1-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a második megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso2-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a második megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-resto-paso1:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a második megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso1-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a harmadik megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso2-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a harmadik megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-resto-paso1:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a harmadik megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso1-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a negyedik megelőző évből: a saját pozitív egyenleggel szembeni maximális
+              kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso2-maxima:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a negyedik megelőző évből: a másik pozitív egyenleg 25%-ával szembeni
+              maximális kompenzáció (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-resto-paso1:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem negatív egyenlege
+              a negyedik megelőző évből: a saját pozitív egyenleggel való kompenzáció
+              után fennmaradó összeg (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso1-capacidad:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem függő negatív
+              egyenlegei: a saját pozitív egyenleggel szembeni kompenzációs keret
+              (az LIRPF 49. cikke) [belső]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso2-capacidad:
+            label: 'A megtakarítási ingó tőkéből származó jövedelem függő negatív
+              egyenlegei: a másik pozitív egyenleg 25%-ával szembeni kompenzációs
+              keret (az LIRPF 49. cikke) [belső]'
           irpf-anualidades-alimentos-hijo-1-importe:
             label: '1. Gyermek (*): megfizetett tartásdíj összege'
           irpf-anualidades-alimentos-hijo-1-nif:

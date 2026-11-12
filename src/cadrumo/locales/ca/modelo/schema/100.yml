@@ -729,6 +729,118 @@ modelo:
             label: Import pendent d'imputació
           irpf-anexo-c-gan-per-cuartas-tipo-ayuda:
             label: Tipus d'ajut pública
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso1-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi de
+              l''exercici anterior: compensació màxima amb el seu propi saldo positiu
+              (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso2-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi de
+              l''exercici anterior: compensació màxima amb el 25 % de l''altre saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-resto-paso1:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi de
+              l''exercici anterior: import pendent després de compensar-lo amb el
+              seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso1-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              segon exercici anterior: compensació màxima amb el seu propi saldo positiu
+              (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso2-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              segon exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-resto-paso1:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              segon exercici anterior: import pendent després de compensar-lo amb
+              el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso1-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              tercer exercici anterior: compensació màxima amb el seu propi saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso2-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              tercer exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-resto-paso1:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              tercer exercici anterior: import pendent després de compensar-lo amb
+              el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso1-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              quart exercici anterior: compensació màxima amb el seu propi saldo positiu
+              (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso2-maxima:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              quart exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-resto-paso1:
+            label: 'Saldo negatiu de guanys i pèrdues patrimonials de l''estalvi del
+              quart exercici anterior: import pendent després de compensar-lo amb
+              el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso1-capacidad:
+            label: 'Saldos negatius pendents de guanys i pèrdues patrimonials de l''estalvi:
+              marge de compensació amb el seu propi saldo positiu (art. 49 LIRPF)
+              [intern]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso2-capacidad:
+            label: 'Saldos negatius pendents de guanys i pèrdues patrimonials de l''estalvi:
+              marge de compensació amb el 25 % de l''altre saldo positiu (art. 49
+              LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso1-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              de l''exercici anterior: compensació màxima amb el seu propi saldo positiu
+              (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso2-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              de l''exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-resto-paso1:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              de l''exercici anterior: import pendent després de compensar-lo amb
+              el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso1-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del segon exercici anterior: compensació màxima amb el seu propi saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso2-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del segon exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-resto-paso1:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del segon exercici anterior: import pendent després de compensar-lo
+              amb el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso1-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del tercer exercici anterior: compensació màxima amb el seu propi saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso2-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del tercer exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-resto-paso1:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del tercer exercici anterior: import pendent després de compensar-lo
+              amb el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso1-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del quart exercici anterior: compensació màxima amb el seu propi saldo
+              positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso2-maxima:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del quart exercici anterior: compensació màxima amb el 25 % de l''altre
+              saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-resto-paso1:
+            label: 'Saldo negatiu de rendiments del capital mobiliari de l''estalvi
+              del quart exercici anterior: import pendent després de compensar-lo
+              amb el seu propi saldo positiu (art. 49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso1-capacidad:
+            label: 'Saldos negatius pendents de rendiments del capital mobiliari de
+              l''estalvi: marge de compensació amb el seu propi saldo positiu (art.
+              49 LIRPF) [intern]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso2-capacidad:
+            label: 'Saldos negatius pendents de rendiments del capital mobiliari de
+              l''estalvi: marge de compensació amb el 25 % de l''altre saldo positiu
+              (art. 49 LIRPF) [intern]'
           irpf-anualidades-alimentos-hijo-1-importe:
             label: 'Fill/Filla 1 (*): Import de les anualitats per aliments satisfetes'
           irpf-anualidades-alimentos-hijo-1-nif:

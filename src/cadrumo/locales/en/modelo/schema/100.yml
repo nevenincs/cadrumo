@@ -721,6 +721,116 @@ modelo:
             label: Amount pending imputation
           irpf-anexo-c-gan-per-cuartas-tipo-ayuda:
             label: Type of public aid
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso1-maxima:
+            label: 'Negative savings balance of capital gains and losses from the
+              previous year: maximum offset against its own positive balance (art.
+              49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-paso2-maxima:
+            label: 'Negative savings balance of capital gains and losses from the
+              previous year: maximum offset against 25% of the other positive balance
+              (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em1-resto-paso1:
+            label: 'Negative savings balance of capital gains and losses from the
+              previous year: amount left after offsetting against its own positive
+              balance (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso1-maxima:
+            label: 'Negative savings balance of capital gains and losses from two
+              years earlier: maximum offset against its own positive balance (art.
+              49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-paso2-maxima:
+            label: 'Negative savings balance of capital gains and losses from two
+              years earlier: maximum offset against 25% of the other positive balance
+              (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em2-resto-paso1:
+            label: 'Negative savings balance of capital gains and losses from two
+              years earlier: amount left after offsetting against its own positive
+              balance (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso1-maxima:
+            label: 'Negative savings balance of capital gains and losses from three
+              years earlier: maximum offset against its own positive balance (art.
+              49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-paso2-maxima:
+            label: 'Negative savings balance of capital gains and losses from three
+              years earlier: maximum offset against 25% of the other positive balance
+              (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em3-resto-paso1:
+            label: 'Negative savings balance of capital gains and losses from three
+              years earlier: amount left after offsetting against its own positive
+              balance (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso1-maxima:
+            label: 'Negative savings balance of capital gains and losses from four
+              years earlier: maximum offset against its own positive balance (art.
+              49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-paso2-maxima:
+            label: 'Negative savings balance of capital gains and losses from four
+              years earlier: maximum offset against 25% of the other positive balance
+              (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-em4-resto-paso1:
+            label: 'Negative savings balance of capital gains and losses from four
+              years earlier: amount left after offsetting against its own positive
+              balance (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso1-capacidad:
+            label: 'Pending negative savings balances of capital gains and losses:
+              room to offset against its own positive balance (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-gyp-ahorro-paso2-capacidad:
+            label: 'Pending negative savings balances of capital gains and losses:
+              room to offset against 25% of the other positive balance (art. 49 LIRPF)
+              [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso1-maxima:
+            label: 'Negative savings balance of movable-capital income from the previous
+              year: maximum offset against its own positive balance (art. 49 LIRPF)
+              [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-paso2-maxima:
+            label: 'Negative savings balance of movable-capital income from the previous
+              year: maximum offset against 25% of the other positive balance (art.
+              49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em1-resto-paso1:
+            label: 'Negative savings balance of movable-capital income from the previous
+              year: amount left after offsetting against its own positive balance
+              (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso1-maxima:
+            label: 'Negative savings balance of movable-capital income from two years
+              earlier: maximum offset against its own positive balance (art. 49 LIRPF)
+              [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-paso2-maxima:
+            label: 'Negative savings balance of movable-capital income from two years
+              earlier: maximum offset against 25% of the other positive balance (art.
+              49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em2-resto-paso1:
+            label: 'Negative savings balance of movable-capital income from two years
+              earlier: amount left after offsetting against its own positive balance
+              (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso1-maxima:
+            label: 'Negative savings balance of movable-capital income from three
+              years earlier: maximum offset against its own positive balance (art.
+              49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-paso2-maxima:
+            label: 'Negative savings balance of movable-capital income from three
+              years earlier: maximum offset against 25% of the other positive balance
+              (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em3-resto-paso1:
+            label: 'Negative savings balance of movable-capital income from three
+              years earlier: amount left after offsetting against its own positive
+              balance (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso1-maxima:
+            label: 'Negative savings balance of movable-capital income from four years
+              earlier: maximum offset against its own positive balance (art. 49 LIRPF)
+              [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-paso2-maxima:
+            label: 'Negative savings balance of movable-capital income from four years
+              earlier: maximum offset against 25% of the other positive balance (art.
+              49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-em4-resto-paso1:
+            label: 'Negative savings balance of movable-capital income from four years
+              earlier: amount left after offsetting against its own positive balance
+              (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso1-capacidad:
+            label: 'Pending negative savings balances of movable-capital income: room
+              to offset against its own positive balance (art. 49 LIRPF) [internal]'
+          irpf-anexo-c-saldo-neg-rcm-ahorro-paso2-capacidad:
+            label: 'Pending negative savings balances of movable-capital income: room
+              to offset against 25% of the other positive balance (art. 49 LIRPF)
+              [internal]'
           irpf-anualidades-alimentos-hijo-1-importe:
             label: 'Child 1 (*): Amount of child-support annuities paid'
           irpf-anualidades-alimentos-hijo-1-nif:
