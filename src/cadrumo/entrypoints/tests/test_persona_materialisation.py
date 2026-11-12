@@ -55,7 +55,7 @@ from ...domain.contribuyente.inventory.records import MovementKind
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecordStatus
 from ...domain.user_profile.values import ProfileSetupState
-from ...tests.personas import persona_ids
+from ...tests.personas import InventoryBook, Persona, YearEnvelope, persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
 from .persona_materialisation import (
     PERSONA_ACTOR,
@@ -198,8 +198,8 @@ def test_a_persona_replays_through_production_operations(
         for certificate in persona.withholding_certificates
     }
     assert set(materialised.evidence) == {document.id for document in persona.documents}
-    # Each book opens at its stated stock, records one purchase for each ledger row it names, under that row's
-    # ref, and holds the closing recorded on its movements.
+    # Each book opens at its stated stock, holds exactly the movements its stated purchases and closing imply,
+    # and holds the closing recorded on its movements.
     assert {
         activity: (
             None
@@ -207,18 +207,47 @@ def test_a_persona_replays_through_production_operations(
             else (
                 Decimal(ledger.opening_stock.decimal),
                 sorted(
-                    movement.movement_id
+                    (movement.kind, movement.movement_id, Decimal(movement.quantity.decimal))
                     for movement in ledger.period_movements
-                    if movement.kind is MovementKind.PURCHASE
                 ),
                 ledger.closing_authority_fingerprints is not None,
             )
         )
         for activity, ledger in books.items()
-    } == {book.activity: (book.opening_stock, sorted(book.purchases), True) for book in persona.inventory}
+    } == {
+        book.activity: (book.opening_stock, sorted(_expected_movements(persona, book, world.envelope)), True)
+        for book in persona.inventory
+    }
     assert {item.block for item in materialised.not_loaded} == _NOT_LOADED[persona_id]
     # Every run registers the persona at the same identity, so what is read of it names the same profile.
     assert world.profile_id == persona_profile_id(persona_id)
+
+
+def _expected_movements(
+    persona: Persona, book: InventoryBook, envelope: YearEnvelope
+) -> list[tuple[MovementKind, str, Decimal]]:
+    """The movements a book's stated purchases and closing imply, at one unit per euro of acquisition cost.
+
+    A purchase under recargo de equivalencia bears its IVA and recargo as cost,
+    since that regime deducts neither (LIVA art. 154.Dos); any other purchase
+    costs its base. The opening stock is one lot, and the stock sold is what
+    leaves the opening lot and the purchases at the stated closing.
+    """
+    rows = {row.ref: row for row in persona.ledger}
+    purchases: list[tuple[MovementKind, str, Decimal]] = []
+    for ref in book.purchases:
+        row = rows[ref]
+        assert row.taxable_base is not None
+        assert row.iva_amount is not None
+        recargo = row.recargo_amount or Decimal(0)
+        cost = row.taxable_base + (row.iva_amount + recargo if recargo else Decimal(0))
+        purchases.append((MovementKind.PURCHASE, ref, cost))
+    if not purchases:
+        return []
+    opening_lot = Decimal(1) if book.opening_stock else Decimal(0)
+    sold = opening_lot + sum((cost for _, _, cost in purchases), Decimal(0)) - book.closing_stock
+    year = book.year.resolve(envelope)
+    return purchases + ([(MovementKind.COGS, f"{book.activity}-{year}-vendido", sold)] if sold else [])
 
 
 def _profile_values(world: PersonaWorld) -> dict[str, str]:
