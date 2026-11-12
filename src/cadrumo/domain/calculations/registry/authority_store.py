@@ -8,7 +8,6 @@ import sqlite3
 from collections.abc import Callable, Generator, Hashable
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 from queue import LifoQueue
 from secrets import token_hex
@@ -43,9 +42,9 @@ _OLDEST_SQLITE_VERSION = (3, 37, 0)
 
 _MAX_CONNECTION_CHECKOUTS: Final = 4
 
-AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v5"
-#: The preceding format: identical components, no snapshot proof tables.
-_PROOFLESS_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v4"
+AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v6"
+#: The preceding format: identical components, its proofs bound to a run-date window, so read without proofs.
+_PROOFLESS_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v5"
 _ADMITTED_DATABASE_FORMATS: Final = frozenset({_PROOFLESS_DATABASE_FORMAT, AUTHORITY_DATABASE_FORMAT})
 AUTHORITY_DESCRIPTOR_FORMAT: Final = "cadrumo-authority-descriptor-v1"
 #: The one file in an authority directory that selects its current database.
@@ -367,7 +366,7 @@ class SQLiteAuthorityReader:
         return queries
 
     def snapshot_proof_contract(self) -> SnapshotProofContract | None:
-        """Return the validator and date window this database's snapshot proofs hold under.
+        """Return the validator this database's snapshot proofs hold under.
 
         ``None`` means the database carries no proofs: it is the preceding
         format, or a newer database whose proof tables are still empty while
@@ -404,7 +403,7 @@ class SQLiteAuthorityReader:
     def _read_proof_contract(self) -> SnapshotProofContract | None:
         with self._checkout() as connection:
             row = connection.execute(
-                "SELECT validator_digest, window_from, window_to FROM snapshot_proof_contract WHERE singleton = 1"
+                "SELECT validator_digest FROM snapshot_proof_contract WHERE singleton = 1"
             ).fetchone()
             source_rows = connection.execute(
                 "SELECT module, sha256 FROM snapshot_proof_validator_sources ORDER BY module"
@@ -412,7 +411,7 @@ class SQLiteAuthorityReader:
         self.verify_database_identity()
         if row is None:
             return None
-        digest, window_from, window_to = row
+        (digest,) = row
         if not isinstance(digest, str) or _SHA256_HEX.fullmatch(digest) is None:
             raise AuthorityStoreCorruptionError("authority snapshot proof contract has an invalid validator digest")
         sources: list[ValidatorSource] = []
@@ -423,8 +422,6 @@ class SQLiteAuthorityReader:
         return SnapshotProofContract(
             validator_sources=tuple(sources),
             validator_digest=digest,
-            window_from=_proof_window_bound(window_from),
-            window_to=_proof_window_bound(window_to),
         )
 
     @property
@@ -515,8 +512,9 @@ class SQLiteAuthorityReader:
         re-prove what the digest guarantees. An older format is refused rather
         than read under a layout it does not have.
 
-        The preceding format differs only by lacking the snapshot proof
-        tables, so it is admitted as a database without proofs. The current
+        The preceding format has the same components but proofs bound to a
+        run-date window this reader no longer evaluates, so it is admitted as a
+        database without proofs. The current
         format must carry all three proof tables; proof rows without a
         contract would be proofs nothing vouches for, so they are refused.
         """
@@ -642,17 +640,3 @@ def _require_proof_tables(connection: sqlite3.Connection) -> None:
     ).fetchone()
     if has_rows:
         raise AuthorityStoreCorruptionError("authority database records snapshot proofs without a proof contract")
-
-
-def _proof_window_bound(value: object) -> date | None:
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        raise AuthorityStoreCorruptionError("authority snapshot proof window bound is not ISO date text")
-    try:
-        parsed = date.fromisoformat(value)
-    except ValueError as exc:
-        raise AuthorityStoreCorruptionError("authority snapshot proof window bound is not an ISO date") from exc
-    if parsed.isoformat() != value:
-        raise AuthorityStoreCorruptionError("authority snapshot proof window bound is not canonical ISO date text")
-    return parsed

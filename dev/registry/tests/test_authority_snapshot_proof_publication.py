@@ -16,7 +16,7 @@ import shutil
 import sqlite3
 from collections.abc import Iterator, Sequence
 from contextlib import closing
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -53,7 +53,7 @@ from .authority_generation_support import synthetic_authority_artifact
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DESCRIPTOR_NAME = "authority.current.json"
-_PROOFLESS_FORMAT = "cadrumo-authority-sqlite-v4"
+_PROOFLESS_FORMAT = "cadrumo-authority-sqlite-v5"
 _Cell = tuple[str, int, str, RegistryAuthorityGrade]
 _Statements = tuple[tuple[str, tuple[object, ...]], ...]
 
@@ -168,7 +168,6 @@ def test_publication_records_the_passing_cells_under_the_running_validator(tmp_p
     assert contract is not None
     assert contract.validator_sources == closure
     assert contract.validator_digest == validator_digest(closure)
-    assert contract.admits_date(today_madrid())
     assert cells
     assert {grade for *_, grade in cells} == _ladder_up_to(declared)
 
@@ -276,7 +275,9 @@ def test_the_validator_sources_are_read_only_when_a_recorded_cell_would_skip_the
     assert proven == full
 
 
-def test_a_date_outside_the_fact_window_runs_every_cross_check(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_proof_holds_on_a_run_date_after_the_facts_are_restated(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     restated_on = date(today_madrid().year + 5, 1, 1)
     descriptor_path = _publish(tmp_path / "published", facts_restated_on=restated_on)
     cell = _proven_cells(descriptor_path)[0]
@@ -289,15 +290,14 @@ def test_a_date_outside_the_fact_window_runs_every_cross_check(tmp_path: Path, m
     counts = count_cross_checks(monkeypatch)
 
     with frozen_clock(datetime(restated_on.year, restated_on.month, restated_on.day, 12, tzinfo=UTC)):
-        outside = _build(descriptor_path, cell)
+        later = _build(descriptor_path, cell)
 
     assert contract is not None
-    assert contract.window_to == restated_on - timedelta(days=1)
-    assert outside == proven
-    assert all(count == 1 for count in counts), counts
+    assert later == proven
+    assert counts == [0] * len(counts)
 
 
-def test_a_database_of_the_preceding_format_runs_every_cross_check(
+def test_a_database_of_the_preceding_format_with_a_date_window_runs_every_cross_check(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     descriptor_path = _publish(tmp_path / "published")
@@ -308,7 +308,9 @@ def test_a_database_of_the_preceding_format_runs_every_cross_check(
         tmp_path / "preceding-format",
         (
             ("UPDATE authority_manifest SET format = ?", (_PROOFLESS_FORMAT,)),
-            *((f"DROP TABLE {table}", ()) for table in SNAPSHOT_PROOF_TABLES),
+            ("ALTER TABLE snapshot_proof_contract ADD COLUMN window_from TEXT", ()),
+            ("ALTER TABLE snapshot_proof_contract ADD COLUMN window_to TEXT", ()),
+            ("UPDATE snapshot_proof_contract SET window_from = ?", (date(today_madrid().year, 1, 1).isoformat(),)),
         ),
     )
     counts = count_cross_checks(monkeypatch)
