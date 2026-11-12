@@ -198,7 +198,7 @@ grounding = "verified"
 modelo = "200"
 period = "0A"
 year = "horizon-1"
-roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_compensacion_bin_aplicada" = "16300.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2275.00", "is_cuota_liquida" = "2275.00", "is_liquidacion_iv_cuota_diferencial" = "2275.00" }
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2275.00", "is_cuota_liquida" = "2275.00", "is_liquidacion_iv_cuota_diferencial" = "2275.00" }
 derivation = """
 Base imponible previa 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
 (no amortización, no retribución de administradores, no periodificación, as that source states). The company compensates its whole pending
@@ -222,7 +222,7 @@ modelo = "200"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-27-2014:art-29-2023"
-roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_compensacion_bin_aplicada" = "16300.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2093.00", "is_cuota_liquida" = "2093.00", "is_liquidacion_iv_cuota_diferencial" = "2093.00" }
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2093.00", "is_cuota_liquida" = "2093.00", "is_liquidacion_iv_cuota_diferencial" = "2093.00" }
 derivation = """
 Base imponible previa 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
 (no amortización, no retribución de administradores, no periodificación, as that source states). The company compensates its whole pending
@@ -247,7 +247,7 @@ modelo = "200"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-27-2014:dt-44"
-roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_compensacion_bin_aplicada" = "16300.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "1911.00", "is_cuota_liquida" = "1911.00", "is_liquidacion_iv_cuota_diferencial" = "1911.00" }
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "1911.00", "is_cuota_liquida" = "1911.00", "is_liquidacion_iv_cuota_diferencial" = "1911.00" }
 derivation = """
 Base imponible previa 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
 (no amortización, no retribución de administradores, no periodificación, as that source states). The company compensates its whole pending
