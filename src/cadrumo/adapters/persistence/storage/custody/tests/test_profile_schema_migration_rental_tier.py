@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import ProfileCreat
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.schema_migration import (
+    MIGRATED_PROFILE_SCHEMA_VERSION,
     RETIRED_RENTAL_TIER_PATH,
     ProfileSchemaMigration,
     migrate_profile_facts,
@@ -83,7 +84,11 @@ def test_every_stored_window_of_the_tier_is_cleared_and_nothing_else(
     assert migrated.facts == _KEPT
     assert cleared == (RETIRED_RENTAL_TIER_PATH,)
     assert migrations == (
-        ProfileSchemaMigration(from_version=_PRIOR_VERSION, to_version=9, cleared_paths=(RETIRED_RENTAL_TIER_PATH,)),
+        ProfileSchemaMigration(
+            from_version=_PRIOR_VERSION,
+            to_version=MIGRATED_PROFILE_SCHEMA_VERSION,
+            cleared_paths=(RETIRED_RENTAL_TIER_PATH,),
+        ),
     )
     assert len(events) == 1
     assert events[0].payload["schema_migration_cleared_paths"] == RETIRED_RENTAL_TIER_PATH
