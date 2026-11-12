@@ -5,12 +5,14 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:a220f0db25ff8eb0b19d193dddd97bfff5ccc42a325e5977e33fb5184f6a7e7e'
+body_hash: 'sha256:25839a705f36a3600364dcf62140592cde4c501d1ec915b1bc3b7fd63ab2de9e'
 related:
   - "[[2026-11-11-informativa-party-name-adr]]"
   - "[[2026-11-11-informativa-party-name-research]]"
 ---
-# `informativa-party-name` adr: `M193 pending-record name amendment` | (**status:** `proposed`)
+# `informativa-party-name` adr: `M193 pending-record name amendment` | (**status:** `deprecated`)
+
+Retired 2026-11-12: the coordinator accepted this amendment on 2026-11-12, and it is applied in place in `2026-11-11-informativa-party-name-adr` under Migration. This record stays as provenance.
 
 ## Problem Statement
 
