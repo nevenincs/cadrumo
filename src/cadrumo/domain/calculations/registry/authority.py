@@ -631,6 +631,14 @@ class PinnedAuthorityOperation:
             if isinstance(query, ModeloRevisionComponentQuery)
         )
 
+    def export_layout_ids(self) -> tuple[tuple[str, str, str], ...]:
+        """Return deterministic modelo/revision/layout identities of every export layout without hydrating them."""
+        return tuple(
+            (query.modelo_id, query.revision_id, query.layout_id)
+            for query in self.reader.component_queries()
+            if isinstance(query, ExportLayoutComponentQuery)
+        )
+
     def revision_for_context(
         self,
         modelo_id: str | Modelo,

@@ -132,6 +132,9 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "cli.ledger.classify.m210_asset_or_right_id_help",
             ),
             option_from_application_contract(IVA_CATEGORY_INPUT, "cli.ledger.classify.iva_category_help"),
+            optional_text_option(
+                "exemption_article", ("--exemption-article",), "cli.ledger.classify.exemption_article_help"
+            ),
             option_from_application_contract(DEDUCTION_FACT_KIND_INPUT, "cli.ledger.classify.deduction_fact_kind_help"),
             optional_text_option(
                 "investment_asset_id",

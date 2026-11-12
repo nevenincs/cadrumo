@@ -493,6 +493,8 @@ def _resolve_mesh_families(
     The IVA ledger is resolved by the caller, because the annual settlement
     liquidation re-resolves it once the definitive prorrata percentage is known.
     """
+    from ..aggregation.prorrata_register_activity import ProrrataRegisterActivitySourceResolver
+
     return (
         *_resolve_ledger_income_families(
             resolve_declared,
@@ -500,6 +502,9 @@ def _resolve_mesh_families(
             memoized_transaction_repository,
             prorrata_register_repository,
             renta_catalogue_read_ports,
+        ),
+        resolve_declared(
+            ProrrataRegisterActivitySourceResolver(prorrata_register_repository=prorrata_register_repository)
         ),
         *_resolve_observation_families(
             resolve_declared,

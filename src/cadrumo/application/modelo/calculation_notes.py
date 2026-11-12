@@ -54,6 +54,7 @@ from ...core.operator_action_enums import (
     ActionConditionality,
     ActionEvidenceProvenance,
 )
+from ...domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
 from ...domain.modelos.calculation_revision_sources import (
     DISAGREEMENT_REASONS,
     CalculationNoteFact,
@@ -364,11 +365,52 @@ operation, so the note names the invoice and never the clave.
 """
 
 
+_PARTY_NOTE_ACTIONS: Final[Mapping[str, tuple[str, tuple[str, ...]]]] = MappingProxyType(
+    {
+        "declared_party_name_unresolved": (
+            DECLARED_PARTY_NAME_DOOR_ACTION_ID,
+            ("tax_identifier", "country_code", "kind"),
+        ),
+    }
+)
+"""The catalogue action that states the fact a note says its party lacks, by reason.
+
+The note names its party only in words, so the door binds none of the action's
+arguments, as the export's refusal for the same slot binds none: the filer
+states which party and what kind it is.
+"""
+
+
+def _party_note_verdict(reason: str, action_id: str, operator_arguments: tuple[str, ...]) -> PreconditionVerdict:
+    condition_id = f"modelo.work.calculate.{reason}.stated"
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"modelo.work.calculate.{reason}",
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                values={"reason": reason},
+            ),
+        ),
+        action=ActionReference(action_id=action_id),
+        argument_bindings=tuple(
+            ActionArgumentBinding(argument_name=name, status=ActionArgumentStatus.MISSING)
+            for name in operator_arguments
+        ),
+        missing_argument_names=operator_arguments,
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+    )
+
+
 def note_record_verdict(diagnostic: CalculationSourceDiagnostic) -> PreconditionVerdict | None:
-    """The door to the record a note names, where its reason has one and its fact names exactly one row."""
+    """The door a note opens: to the record it names, or to the statement its party lacks, where it has one."""
     inventory_door = inventory_purchase_claim_verdict(diagnostic.fact)
     if inventory_door is not None:
         return inventory_door
+    party_door = _PARTY_NOTE_ACTIONS.get(diagnostic.reason)
+    if party_door is not None:
+        return _party_note_verdict(diagnostic.reason, *party_door)
     declared = _RECORD_NOTE_ACTIONS.get(diagnostic.reason)
     fact = diagnostic.fact
     if declared is None or fact is None or len(fact.row_refs) != 1:

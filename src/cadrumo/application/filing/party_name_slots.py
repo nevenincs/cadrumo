@@ -18,6 +18,7 @@ from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.export import export_fields_overlap
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.party_name_export_slots import is_party_name_slot
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
@@ -58,7 +59,7 @@ def require_declared_party_names(
         FilingExportDeclaredPartyNameTooWideError: The carried name is wider than the slot.
     """
     for field in record.fields:
-        if not _is_party_name_slot(field) or _slot_taken_by_another_field(record, field, row):
+        if not is_party_name_slot(field) or _slot_taken_by_another_field(record, field, row):
             continue
         length = field.length
         if length is None:
@@ -84,11 +85,6 @@ def require_declared_party_names(
             tax_identifier=tax_identifier,
             country_code=country_code,
         )
-
-
-def _is_party_name_slot(field: ExportFieldDefinition) -> bool:
-    """Whether the field is a binding-filled party-name slot."""
-    return field.party_name is not None and field.kind == CasillaFieldKind.BINDING and field.binding is not None
 
 
 def _is_stated(value: object) -> bool:

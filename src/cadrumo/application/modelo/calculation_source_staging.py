@@ -461,6 +461,7 @@ def _calculate_staged_registry_values(
         resolved_bindings=effective_binding_values,
         casilla_inputs=casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
+        resolved_text_bindings=enum_binding_values,
     )
     engine_result = calculate_registry_snapshot(
         registry_snapshot,

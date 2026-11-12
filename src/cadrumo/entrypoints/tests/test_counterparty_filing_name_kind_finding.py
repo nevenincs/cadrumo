@@ -16,6 +16,7 @@ finding reports a disagreement and neither blocks nor rewrites the statement.
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -30,6 +31,9 @@ from ...application.ledger.counterparty_operation import (
     LedgerCounterpartyResult,
     filing_name_kind_findings,
 )
+from ...core.config import override_settings
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.filing.declared_party_name import DeclaredPartyKind
@@ -173,7 +177,27 @@ def test_the_finding_carries_kinds_only() -> None:
         )
     dumped = " ".join(str(value) for finding in findings for value in finding.model_dump().values())
     assert _DNI not in dumped
-    assert set(findings[0].model_dump()) == {"code", "declared_kind", "observed_form"}
+    assert set(findings[0].model_dump()) == {"code", "declared_kind", "observed_form", "words", "words_language"}
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_the_finding_serves_its_sentence_in_the_workers_language(language: OutputLanguage) -> None:
+    with (
+        override_settings(cadrumo_output_language=language.value),
+        bundled_indexed_authority().operation() as operation,
+    ):
+        (finding,) = filing_name_kind_findings(
+            tax_identifier=_DNI, country_code="ES", declared_kind="entity", operation=operation
+        )
+        entity = tr("application.ledger.counterparty.party_kinds.entity", locale=language.value)
+        natural = tr("application.ledger.counterparty.party_kinds.natural_person", locale=language.value)
+
+    assert finding.words_language is language
+    assert finding.words is not None
+    assert entity in finding.words
+    assert natural in finding.words
+    assert not re.search(r"\bapplication\.|\{|\}|%\(", finding.words)
+    assert _DNI not in finding.words
 
 
 def test_the_cli_renders_the_finding_in_served_words_without_the_party() -> None:
