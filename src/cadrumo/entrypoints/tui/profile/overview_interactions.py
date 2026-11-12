@@ -22,8 +22,10 @@ from ..components.widgets import (
     SourceActionCard,
 )
 from .edit_screens import FieldEditScreen, RepeatableRowAddScreen, RepeatableRowRemoveScreen, field_help_text
+from .household import HouseholdScreen
 from .overview_contracts import (
     CONTINUE_BUTTON_ID,
+    HOUSEHOLD_BUTTON_ID,
     PLANTILLA_MEDIA_BUTTON_ID,
     REQUIRED_ONLY_ID,
     SEARCH_ID,
@@ -181,6 +183,21 @@ class ProfileOverviewInteractionMixin:
         if remove_door is None:
             return
         self._run_row_write(f"{PLANTILLA_MEDIA_PATH}:{request.year}", lambda: remove_door(request.year))
+
+    def _open_household(self: ProfileManagerScreen) -> None:
+        """Open the household on the host's doors; the profile is read again after a change."""
+        port = self._household
+        if port is None:
+            return
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        self.app.push_screen(HouseholdScreen(port), self._household_closed)
+
+    async def _household_closed(self: ProfileManagerScreen, touched: bool | None) -> None:
+        """Read the profile again when a household change landed or may have landed."""
+        if touched is True:
+            await self.reload_profile()
 
     def on_data_table_row_highlighted(self: ProfileManagerScreen, event: Message) -> None:
         """Explain the field under the cursor of the table the operator is in.
@@ -351,7 +368,7 @@ async def _handle_setup_button(screen: ProfileManagerScreen, button_id: str) -> 
 
 
 def _handle_section_button(screen: ProfileManagerScreen, button_id: str) -> bool:
-    """Route repeatable-row and plantilla-media controls."""
+    """Route repeatable-row, plantilla-media and household controls."""
     if button_id.startswith("manager-add-row-"):
         screen._open_add_row(button_id.removeprefix("manager-add-row-"))
         return True
@@ -360,6 +377,9 @@ def _handle_section_button(screen: ProfileManagerScreen, button_id: str) -> bool
         return True
     if button_id == PLANTILLA_MEDIA_BUTTON_ID:
         screen._open_plantilla_media()
+        return True
+    if button_id == HOUSEHOLD_BUTTON_ID:
+        screen._open_household()
         return True
     return False
 

@@ -4684,9 +4684,8 @@ desktop:
     entry_required: '* required in each entry'
     field_help: About this field
     household:
-      add: Add person
       blocked_hidden: Some values of this group are hidden, so its people cannot be
-        changed here.
+        edited here. You can still add or remove a person.
       cap_reached: This group is full, so no more people can be added.
       declare_none: I have none
       edit_person: Edit person {number}
@@ -4699,10 +4698,8 @@ desktop:
         clear: Withdraw the answer
         unknown_help: Nothing is stated yet, which is not the same as no.
       reading: Reading your household…
-      remove: Remove person
       remove_help: Remove this person from your household? The count is updated with
         it.
-      remove_person: Remove person {number}
       retry: Try again
       saved: Household saved.
       state:

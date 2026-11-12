@@ -20,13 +20,16 @@ import type {
 import { useStrings } from "../../shell/strings";
 import type { ProfileChange, UserProfilePort } from "../../shell/userProfile";
 import {
+  addition,
   answerEdit,
   atCap,
   blockedWrite,
   declaredNone,
   factWords,
   orderedRows,
+  removal,
   replacement,
+  rowChangeOf,
   statedChoice,
 } from "./householdModel";
 import {
@@ -38,11 +41,13 @@ import {
 // serves it: what is known about each group of people, the people recorded,
 // the words for "N stated, M recorded", and the limit the declaration's design
 // sets. Nothing here knows what a descendant or an ascendant is owed. A group
-// nobody has answered is unknown, never empty; a hidden value stays hidden;
-// every edit is the product's whole-set replacement against the revision the
-// household was read at. A question the product asks of the household is drawn
-// apart from the groups: its answer is stated, or not stated, and not stated is
-// never drawn as a "no".
+// nobody has answered is unknown, never empty; a hidden value stays hidden.
+// Adding or removing one person goes through the group's served control, in
+// its words, and resends nobody else; editing a person is the product's
+// whole-set replacement. Every change names the revision the household was
+// read at. A question the product asks of the household is drawn apart from
+// the groups: its answer is stated, or not stated, and not stated is never
+// drawn as a "no".
 
 /** How each stated state of a group is marked. A state is a stated token of
  * the product, and each keeps a mark and words of its own. */
@@ -123,6 +128,10 @@ type Open = {
   action: PersonAction;
 };
 
+/** A dialog open on the household read it was opened from: a person removed
+ * is named by the index that read served, at that read's revision. */
+type Opened = Open & { read: ProfileHousehold };
+
 type Notice = { kind: "saved" } | { kind: "failed"; failure: Failure } | null;
 
 export type HouseholdProps = {
@@ -144,6 +153,7 @@ function Person({
   row,
   number,
   disabled,
+  editable,
   onEdit,
   onRemove,
 }: {
@@ -151,6 +161,8 @@ function Person({
   row: HouseholdRow;
   number: number;
   disabled: boolean;
+  /** Whether the person's facts can be stated again from here. */
+  editable: boolean;
   onEdit(): void;
   onRemove(): void;
 }) {
@@ -194,21 +206,25 @@ function Person({
         <IconButton
           size="xs"
           variant="ghost"
-          disabled={disabled}
+          disabled={disabled || !editable}
           label={t("desktop.profile.household.edit_person", { number })}
           onClick={onEdit}
         >
           <Icon name="edit" size="xs" />
         </IconButton>
-        <IconButton
-          size="xs"
-          variant="ghost"
-          disabled={disabled}
-          label={t("desktop.profile.household.remove_person", { number })}
-          onClick={onRemove}
-        >
-          <Icon name="trash" size="xs" />
-        </IconButton>
+        {group.remove_row_action &&
+          rowChangeOf(group.remove_row_action) !== null && (
+            <IconButton
+              size="xs"
+              variant="ghost"
+              disabled={disabled}
+              label={group.remove_row_action.action_words}
+              data-household-remove={row.row_index}
+              onClick={onRemove}
+            >
+              <Icon name="trash" size="xs" />
+            </IconButton>
+          )}
       </span>
     </li>
   );
@@ -232,6 +248,10 @@ function Group({
   const blocked = blockedWrite(group);
   const full = atCap(group);
   const locked = disabled || blocked !== null;
+  const add =
+    group.add_row_action && rowChangeOf(group.add_row_action) !== null
+      ? group.add_row_action
+      : null;
   return (
     <section
       aria-labelledby={heading}
@@ -273,22 +293,25 @@ function Group({
                 {t("desktop.profile.household.declare_none")}
               </Button>
             )}
-          <Button
-            size="xs"
-            variant="outline"
-            disabled={locked || full}
-            onClick={() =>
-              onOpen({
-                group,
-                row: null,
-                number: people.length + 1,
-                action: "add",
-              })
-            }
-          >
-            <Icon name="userAdd" size="xs" />
-            {t("desktop.profile.household.add")}
-          </Button>
+          {add && (
+            <Button
+              size="xs"
+              variant="outline"
+              disabled={disabled}
+              data-household-add=""
+              onClick={() =>
+                onOpen({
+                  group,
+                  row: null,
+                  number: people.length + 1,
+                  action: "add",
+                })
+              }
+            >
+              <Icon name="userAdd" size="xs" />
+              {add.action_words}
+            </Button>
+          )}
         </span>
       </div>
       {group.state === "incomplete" && group.incomplete_words && (
@@ -317,7 +340,8 @@ function Group({
               group={group}
               row={row}
               number={index + 1}
-              disabled={locked}
+              disabled={disabled}
+              editable={blocked === null}
               onEdit={() =>
                 onOpen({ group, row, number: index + 1, action: "edit" })
               }
@@ -429,7 +453,7 @@ export function Household({
   const t = useStrings();
   const heading = useId();
   const [read, setRead] = useState<Read>({ phase: "reading" });
-  const [open, setOpen] = useState<Open | null>(null);
+  const [open, setOpen] = useState<Opened | null>(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
   const [unsettled, setUnsettled] = useState(false);
@@ -596,7 +620,7 @@ export function Household({
               key={group.group_key}
               group={group}
               disabled={closed}
-              onOpen={setOpen}
+              onOpen={(opened) => setOpen({ ...opened, read: household })}
               onNone={() => void write(household, declaredNone(group))}
             />
           ))}
@@ -624,19 +648,31 @@ export function Household({
               setNotice(null);
             }}
             onSave={(person: HouseholdPersonEdit | null) => {
-              // The group may have moved while the dialog was open: the
-              // person is named by the place the dialog was opened at.
+              // A person is removed by the index the dialog's read served,
+              // at that read's revision: if the household moved since, the
+              // product refuses it as a conflict rather than removing whoever
+              // holds that index now.
+              if (open.action === "remove")
+                return void write(
+                  open.read,
+                  open.row ? removal(open.group, open.row) : null,
+                );
+              // The group may have moved while the dialog was open.
               const current =
                 household.groups.find(
                   (entry) => entry.group_key === open.group.group_key,
                 ) ?? open.group;
-              const place = open.row
-                ? orderedRows(current).findIndex(
-                    (entry) => entry.row_index === open.row?.row_index,
-                  )
-                : null;
-              // The person is no longer recorded: nothing is sent for them.
-              if (place === -1) return setOpen(null);
+              if (open.action === "add")
+                return void write(
+                  household,
+                  person ? addition(current, person) : null,
+                );
+              // An edit names the person by the place the dialog was opened
+              // at; a person no longer recorded gets nothing sent.
+              const place = orderedRows(current).findIndex(
+                (entry) => entry.row_index === open.row?.row_index,
+              );
+              if (place === -1 || !person) return setOpen(null);
               void write(household, replacement(current, place, person));
             }}
           />

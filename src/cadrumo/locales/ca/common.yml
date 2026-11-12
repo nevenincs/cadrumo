@@ -4766,9 +4766,8 @@ desktop:
     entry_required: '* obligatori a cada registre'
     field_help: Sobre aquest camp
     household:
-      add: Afegeix una persona
       blocked_hidden: Alguns valors d'aquest grup estan amagats, així que aquí no
-        se'n poden canviar les persones.
+        se'n poden editar les persones. Encara pots afegir o treure una persona.
       cap_reached: Aquest grup és ple, així que no es poden afegir més persones.
       declare_none: Indica que no n'hi ha cap
       edit_person: Edita la persona {number}
@@ -4781,10 +4780,8 @@ desktop:
         clear: Retirar la resposta
         unknown_help: Encara no has indicat res, i això no és el mateix que «no».
       reading: Llegint la teva família…
-      remove: Treu la persona
       remove_help: Vols treure aquesta persona de la teva família? El recompte s'actualitza
         amb ella.
-      remove_person: Treu la persona {number}
       retry: Torna-ho a provar
       saved: Família desada.
       state:

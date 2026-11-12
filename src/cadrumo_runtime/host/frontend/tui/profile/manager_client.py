@@ -65,6 +65,7 @@ from cadrumo_client.transport.profile_mutations import (
 from ..aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
 from .aeat_auth_client import AeatAuthClient
 from .auth_configuration_client import configure_profile_authentication
+from .household_client import HouseholdClient
 from .overview_client import read_profile_overview
 
 type _MutationRunner = Callable[[FrontendClient, ProfileMutationRequest], ProfileMutationCompletion]
@@ -494,6 +495,7 @@ class ProfileManagerClientComposition:
             launch_source=self._launch_source,
             aeat_auth_setup=self.auth_setup(),
             refresh_overview_language=self._refresh_overview_language,
+            household=self.household(),
         )
         self.screen = screen
         return screen
@@ -501,6 +503,15 @@ class ProfileManagerClientComposition:
     def _refresh_overview_language(self) -> ProfileOverview:
         self.output_language = OutputLanguage(output_language())
         return self._overview()
+
+    def household(self) -> HouseholdClient:
+        """The household doors of this exact profile session, read in the host's current locale."""
+        return HouseholdClient(
+            self.client,
+            language=lambda: OutputLanguage(output_language()),
+            pin=self._pin,
+            mutation_runner=self._mutation_runner,
+        )
 
     def auth_setup(self) -> AeatAuthClient:
         """Expose the same exact-profile authentication editor beside both sync surfaces."""

@@ -4742,9 +4742,8 @@ desktop:
     entry_required: '* minden bejegyzésben kötelező'
     field_help: A mezőről
     household:
-      add: Személy hozzáadása
       blocked_hidden: Ennek a csoportnak néhány értéke rejtett, ezért a személyei
-        itt nem módosíthatók.
+        itt nem szerkeszthetők. Személyt továbbra is hozzáadhatsz vagy eltávolíthatsz.
       cap_reached: Ez a csoport megtelt, ezért nem adhatsz hozzá több személyt.
       declare_none: Nincs egy sem
       edit_person: '{number}. személy szerkesztése'
@@ -4757,10 +4756,8 @@ desktop:
         clear: Válasz visszavonása
         unknown_help: Még nem adtál meg semmit, és ez nem ugyanaz, mint a „nem”.
       reading: A családod beolvasása…
-      remove: Személy eltávolítása
       remove_help: Eltávolítod ezt a személyt a családodból? A létszám vele együtt
         frissül.
-      remove_person: '{number}. személy eltávolítása'
       retry: Próbáld újra
       saved: A család mentve.
       state:
