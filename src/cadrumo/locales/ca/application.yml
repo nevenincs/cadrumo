@@ -3919,6 +3919,15 @@ application:
           No la buidis per continuar: presenta aquesta declaració amb una altra eina
           o espera que se''n revisin les cel·les.'
       inspection_heading: Totes les caselles, per número de casella
+      prior_value_attestation:
+        refusal:
+          source_held: La declaració anterior està desada aquí, de manera que aquest
+            concepte en pren l'import i no en pots indicar un altre en el seu lloc.
+            Obre-la entre les teves declaracions.
+        withdrawal:
+          action: Retira els imports que vas indicar per a aquestes declaracions anteriors
+          effect: Es retira l'import que vas indicar; el concepte queda sense valor
+            fins que el tornis a indicar o s'afegeixi la declaració anterior.
       served_action:
         credit_source_disagreement: Compara l'import amb el certificat de cada pagador,
           corregeix la font que estigui malament i torna a calcular. Si has comprovat

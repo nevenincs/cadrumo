@@ -3873,6 +3873,15 @@ application:
           Ne ürítsd ki a továbblépéshez: ezt a bevallást más eszközzel add be, vagy
           várd meg, amíg a cellákat felülvizsgálják.'
       inspection_heading: Minden rovat, rovatszám szerint
+      prior_value_attestation:
+        refusal:
+          source_held: A korábbi bevallás itt van tárolva, ezért ez a tétel abból
+            veszi az összegét, és nem adhatsz meg helyette másikat. Nyisd meg a bevallásaid
+            között.
+        withdrawal:
+          action: Vond vissza az ezekre a korábbi bevallásokra megadott összegeidet
+          effect: A megadott összeged visszavonásra kerül; a tétel értéke üres marad,
+            amíg újra meg nem adod, vagy a korábbi bevallás be nem kerül.
       served_action:
         credit_source_disagreement: Vesd össze az összeget az egyes kifizetők igazolásával,
           javítsd a hibás forrást, és számold újra. Ha ellenőrizted, hogy a felhasznált

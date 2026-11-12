@@ -1586,6 +1586,8 @@
         "cadrumo.application.modelo.work_form_next_step",
         "cadrumo.application.modelo.work_form_notes",
         "cadrumo.application.modelo.work_form_outline",
+        "cadrumo.application.modelo.work_form_prior_value_attestation",
+        "cadrumo.application.modelo.work_form_prior_value_models",
         "cadrumo.application.modelo.work_form_projection_records",
         "cadrumo.application.modelo.work_form_rates",
         "cadrumo.application.modelo.work_form_rebase",

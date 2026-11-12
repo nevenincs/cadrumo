@@ -3728,6 +3728,15 @@ application:
           it to get past this: file this declaration with another tool, or wait until
           its cells have been reviewed.'
       inspection_heading: All boxes, in box-number order
+      prior_value_attestation:
+        refusal:
+          source_held: The earlier return is stored here, so this carry takes its
+            figure from it and you cannot state one in its place. Open that return
+            among your declarations.
+        withdrawal:
+          action: Withdraw the figures you stated for these earlier returns
+          effect: Your stated figure is withdrawn; the carry holds no value until
+            you state it again or the earlier return is added.
       served_action:
         credit_source_disagreement: Compare the amount with each payer's certificate,
           correct the source that is wrong, and recalculate. If you have checked that

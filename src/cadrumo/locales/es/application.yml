@@ -3928,6 +3928,15 @@ application:
           la vacíes para continuar: presenta esta declaración con otra herramienta
           o espera a que se revisen sus celdas.'
       inspection_heading: Todas las casillas, por número de casilla
+      prior_value_attestation:
+        refusal:
+          source_held: La declaración anterior está guardada aquí, así que este concepto
+            toma su importe de ella y no puedes indicar otro en su lugar. Ábrela entre
+            tus declaraciones.
+        withdrawal:
+          action: Retira los importes que indicaste para estas declaraciones anteriores
+          effect: Se retira el importe que indicaste; el concepto queda sin valor
+            hasta que vuelvas a indicarlo o se añada la declaración anterior.
       served_action:
         credit_source_disagreement: Compara el importe con el certificado de cada
           pagador, corrige la fuente que esté mal y vuelve a calcular. Si has comprobado
