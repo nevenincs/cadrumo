@@ -235,11 +235,36 @@ class ModeloExportUnrepresentableCharacterError(ModeloPreconditionErrorMixin, Mo
     process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"field_value"})
 
 
+class ModeloExportCasillaValueRefusedError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Refused: the value of one box the filer states cannot be written as the official design places it.
+
+    Nothing is written. The served words say why, and the door states that
+    box's value again on the declaration's work unit.
+    """
+
+
+class ModeloExportSettlementRefusedError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Refused: the export cannot state how the return is paid or refunded.
+
+    Nothing is written. The served words say which settlement it cannot state:
+    a result that is not calculated is put right by calculating the declaration,
+    a settlement the export does not compose is the operator's decision.
+    """
+
+
 class ModeloExportFieldUnrenderableError(ModeloPreconditionErrorMixin, ModeloExportError):
     """Integrity: the official record design and a value disagree, so a field cannot be written.
 
     Nothing is written. The fault is in the export design the application
     carries, not in the filer's data, so no filer action repairs it.
+    """
+
+
+class ModeloExportDesignIntegrityError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Integrity: the application's own export design or renderer contradicts itself.
+
+    Nothing is written. The fault is in the design the application carries, not
+    in the filer's data, so no filer action repairs it.
     """
 
 

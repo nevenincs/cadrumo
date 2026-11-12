@@ -94,6 +94,7 @@ from ...contribuyente.renta_codes import FiscalResidency
 from ...deadlines.models import (
     TaxpayerProfile,
 )
+from .applicability_modelo202 import modelo_202_filing_obligation
 from .applicability_models import (
     NO_LEDGER_PAYER_FACTS,
     ApplicabilityEvidenceDisagreement,
@@ -112,7 +113,7 @@ from .applicability_payer_facts import (
 )
 from .applicability_routes import TaxRoute, tax_route_for_entity_type
 from .errors import RegistryValidationError
-from .form_codes import resolve_form_codes
+from .form_codes import form_for_role, resolve_form_codes
 from .governed_fact_scope import cache_governed_projection, governed_facts_in_scope
 from .ids import LegalRefId
 from .irpf_income_categories import (
@@ -252,6 +253,9 @@ _IMPATRIADO_M151_NOT_APPLICABLE_REASON_LOCALE_KEY = "filing.applicability.impatr
 
 _ROUTES_FACT: Final = "modelo-applicability-routes"
 """The fact naming the forms the art. 93 regime reroutes while its window is open."""
+
+_IS_INSTALMENT_ROLE: Final = "sociedades.instalment"
+"""The role-routing key naming the Impuesto sobre Sociedades pago fraccionado form."""
 
 
 def resolve_applicability_rule_from_authority(
@@ -583,7 +587,12 @@ def derive_modelo_applicability(
     rule = _modelo_applicability_rule(modelo, authority=authority, operation=operation)
     if rule is None:
         return incomplete_applicability(modelo, unruled=True)
-    return rule.evaluate(profile, ledger_payer_facts=ledger_payer_facts, operation=operation)
+    applicability = rule.evaluate(profile, ledger_payer_facts=ledger_payer_facts, operation=operation)
+    # The IS instalment's filing obligation turns on the INCN modality and on
+    # whether the period yields an ingreso, not on the entity type alone.
+    if modelo == form_for_role(_IS_INSTALMENT_ROLE, authority=operation):
+        return modelo_202_filing_obligation(profile, applicability, effective_date=reference_date, authority=operation)
+    return applicability
 
 
 def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:

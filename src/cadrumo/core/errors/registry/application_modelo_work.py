@@ -254,6 +254,26 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.export_contracts.ModeloExportCasillaValueRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_CASILLA_VALUE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_export_casilla_value",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.export_contracts.ModeloExportSettlementRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_SETTLEMENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_export_settlement",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.export_contracts.ModeloExportUnrepresentableCharacterError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_UNREPRESENTABLE_CHARACTER",
@@ -269,6 +289,16 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTEGRITY_MODELO_EXPORT_FIELD_UNRENDERABLE",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_modelo_export_field_unrenderable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.export_contracts.ModeloExportDesignIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_MODELO_EXPORT_DESIGN",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_modelo_export_design",
             retryable=False,
             runbook_id=None,
         ),

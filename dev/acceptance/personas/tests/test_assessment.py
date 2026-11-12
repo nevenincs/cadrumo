@@ -46,7 +46,7 @@ def test_unverified_and_concept_only_values_are_not_asserted() -> None:
     stated = [value for _year, value in asserted_values(fontanero, envelope())]
     assert stated
     assert all(value.grounding != "unverified" for value in stated)
-    assert all(value.casillas or value.not_sourced or value.refusal for value in stated)
+    assert all(value.casillas or value.roles or value.not_sourced or value.refusal for value in stated)
     unverified = replace(value_with_casillas(), grounding="unverified")
     concepts_only = replace(value_with_casillas(), casillas=(), concepts=(("cuota", "1.00"),))
     widened = replace(fontanero, expectations=replace(fontanero.expectations, values=(unverified, concepts_only)))

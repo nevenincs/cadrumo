@@ -71,6 +71,7 @@ from .overview_evidence_composition import (
     local_live_calendar_events,
     local_modelo_record_calendar_events,
     local_modelo_work_units,
+    overview_explain_deadline_windows_unavailable_notice,
     overview_no_aeat_history_notice,
 )
 
@@ -426,7 +427,7 @@ class _OverviewReadPorts:
         taxpayer: TaxpayerProfile,
         evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewExplainRead:
-        from ..application.overview.explain import build_overview_explain
+        from ..application.overview.explain import build_overview_explain, deadline_windows_unavailable
         from ..domain.calculations.registry.applicability_models import ApplicabilityVerdict
         from .payer_fact_migration_notices import pending_payer_fact_notices
 
@@ -447,6 +448,13 @@ class _OverviewReadPorts:
             if report.verdict is ApplicabilityVerdict.INCOMPLETE
             else ()
         )
+        if deadline_windows_unavailable(report.year, operation=operation):
+            notices = (
+                *notices,
+                OverviewNoticeSnapshot.from_notice(
+                    overview_explain_deadline_windows_unavailable_notice(modelo=report.modelo, year=report.year)
+                ),
+            )
         return OverviewExplainRead(explanation=OverviewExplainSnapshot.from_explain(report), notices=notices)
 
     def _prepare(self, request: OverviewReadRequest, *, operation: PinnedAuthorityOperation) -> OverviewPrepareRead:

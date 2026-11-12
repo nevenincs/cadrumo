@@ -3299,8 +3299,15 @@ cli:
         models: omesa.'
       registry_unavailable: Les definicions dels models no estan disponibles.
       secure_objects_empty: L'emmagatzematge d'objectes segurs està buit.
+      secure_objects_probe_failed: No s'ha pogut comprovar la integritat dels objectes
+        segurs en %{failed} espai(s) de noms. Això no vol dir que estiguin buits ni
+        sans.
+      secure_objects_probe_failed_detail: 'sense comprovar: %{namespaces}'
       secure_objects_readable: '%{readable} espai(s) de noms d''objectes segurs llegibles:
         %{namespaces}.'
+      secure_objects_unavailable: No s'ha pogut comprovar la integritat dels objectes
+        segurs perquè no s'ha pogut llegir l'emmagatzematge xifrat. Això no vol dir
+        que estigui buit ni sa.
       secure_objects_unreadable: '%{unreadable} fila(es) il·legible(s), %{readable}
         fila(es) llegible(s)'
       state_backend_readable: L'emmagatzematge d'estat del flux de treball és llegible.
@@ -4306,8 +4313,15 @@ cli:
       bienes_extranjero_unset: Al teu perfil encara no consta si els teus béns i drets
         situats a l’estranger superen el llindar de declaració.
       censo_enrolment_unverified: No s'ha verificat l'alta al cens
+      deadline_windows_unavailable: El registre no té terminis per a una part d'aquest
+        interval, així que no se sap res de les obligacions que hi cauen. Revisa l'estat
+        del resum; una llista buida aquí no vol dir que no venci res.
       estimacion_objetiva_unset: Al teu perfil encara no consta quin règim d’estimació
         de l’IRPF s’aplica a la teva activitat.
+      explain_deadline_windows_unavailable: El registre no té terminis per al model
+        %{modelo} i l'any %{year}, així que no es pot indicar ni el calendari ni si
+        vas tard. Que aquí falti l'avís de presentació fora de termini no vol dir
+        que estiguis dins del termini.
       gran_empresa_unset: Al teu perfil encara no consta si el teu volum d’operacions
         de l’any natural anterior va superar el llindar de gran empresa, cosa que
         decideix si presentes amb periodicitat mensual o trimestral.

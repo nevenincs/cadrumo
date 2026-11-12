@@ -6240,6 +6240,7 @@ review:
         háttértárból.
       invoices_load_failed: A számlakatalógus betöltése a biztonságos háttértárból
         sikertelen.
+      profile_load_failed: A profil betöltése a biztonságos háttértárból sikertelen.
       transactions_load_failed: A tranzakciókatalógus betöltése a biztonságos háttértárból
         sikertelen.
   filing:

@@ -28,10 +28,10 @@ from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedM
 from ..calculations.registry.form_codes import form_for_role, resolve_form_codes
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
+from ..calculations.registry.retencion_clave_catalogue import resolve_retencion_clave
 from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
-from ..calculations.registry.withholding_bindings import resolve_retencion_clave
 
 PERCEPTOR_CLAVE_SCOPE_FACT_ID: Final = "m190-perceptor-casilla-clave-scope"
 #: The role of the form whose perceptor records the scope fact governs. The snapshot

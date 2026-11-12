@@ -161,6 +161,15 @@ legal_refs = [
 ]
 source_refs = ["aeat-dr-193-2024"]
 
+[revisions.2024.export_layouts.records.fields.party_name]
+separator = " "
+natural_person = [
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+]
+entity = ["razon_social"]
+
 [[revisions.2024.export_layouts.records.fields]]
 id = "modelo-193-perc-mediador"
 offset = 76
@@ -1142,7 +1151,7 @@ numero_orden = "perc.numero-orden"
 pago = "perc.pago"
 penalizaciones = "perc.penalizaciones"
 pendiente_flag = "perc.pendiente"
-perceptor_legal_name = "perc.nombre"
+party_filing_name = "perc.nombre"
 perceptor_mediador_flag = "perc.mediador"
 perceptor_tax_id = "perc.nif"
 percibido_dinerario = "perc.percepciones"

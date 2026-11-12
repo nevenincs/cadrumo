@@ -196,7 +196,7 @@ def test_core_personas_route_to_expected_modelo_verdicts() -> None:
         ("sl-m100", _sociedad_limitada, "100", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m130", _sociedad_limitada, "130", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m200", _sociedad_limitada, "200", ApplicabilityVerdict.APPLICABLE, True, None),
-        ("sl-m202", _sociedad_limitada, "202", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("sl-m202", _sociedad_limitada, "202", ApplicabilityVerdict.INCOMPLETE, False, "cifra de negocios"),
         ("sl-m303", _sociedad_limitada, "303", ApplicabilityVerdict.APPLICABLE, True, None),
     )
 

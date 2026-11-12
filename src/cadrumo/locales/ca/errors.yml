@@ -663,6 +663,90 @@ errors:
     validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
       {got_type}.
   integrity:
+    calculation_revision_amendment_metadata_unpaired: Registra una rectificació sense
+      el seu motiu, o un motiu sense la seva rectificació. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_closed_rows_disagree: Les seves files de registre tancades
+      no concorden amb els seus valors de vinculació desats. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_closed_rows_foreign: Les seves files de registre tancades
+      pertanyen a una altra unitat de treball o a una altra instantània del registre.
+      L'aplicació va escriure aquest registre ella mateixa, així que es va alterar
+      o es va malmetre, i cap canvi a les teves dades el repara.
+    calculation_revision_handoff_outputs_disagree: 'Els valors del seu traspàs al
+      resum anual difereixen de les caselles del model 390 que conté: %{casilla_ids}.
+      L''aplicació va escriure aquest registre ella mateixa, així que es va alterar
+      o es va malmetre, i cap canvi a les teves dades el repara.'
+    calculation_revision_handoff_outputs_missing: 'El seu traspàs al resum anual anomena
+      caselles del model 390 que el càlcul no conté: %{casilla_ids}. L''aplicació
+      va escriure aquest registre ella mateixa, així que es va alterar o es va malmetre,
+      i cap canvi a les teves dades el repara.'
+    calculation_revision_handoff_target_mismatch: El seu traspàs al resum anual del
+      model 303 apunta a un càlcul diferent del que el conté. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_identity_mismatch: El seu identificador desat %{calculation_revision_id}
+      no és el derivat de les seves entrades (%{derived_id}). L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_lifecycle_order: Es va actualitzar per última vegada (%{updated_at})
+      abans de crear-se (%{created_at}). L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    calculation_revision_observations_missing: Conté valors de caselles però cap de
+      les observacions de què procedeixen. L'aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.
+    calculation_revision_observations_projection_mismatch: Els seus valors de caselles
+      difereixen del que donen les seves observacions. L'aplicació va escriure aquest
+      registre ella mateixa, així que es va alterar o es va malmetre, i cap canvi
+      a les teves dades el repara.
+    calculation_revision_operator_layer_cleared_overlap: 'Fixa i alhora esborra les
+      mateixes caselles: %{casilla_ids}. L''aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.'
+    calculation_revision_rectificativa_context_missing: És una rectificativa però
+      no es va comprovar contra la presentació que corregeix. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_row_identity_without_value: Una identitat d'origen de fila
+      desada no té cap valor de fila al darrere. L'aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.
+    calculation_revision_row_index_mismatch: La posició d'una casella de fila difereix
+      de la de la seva fila d'origen %{row_index} de %{binding_id}. L'aplicació va
+      escriure aquest registre ella mateixa, així que es va alterar o es va malmetre,
+      i cap canvi a les teves dades el repara.
+    calculation_revision_row_source_identity_absent: La fila %{row_index} de %{binding_id}
+      no té identitat d'origen desada. L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    calculation_revision_row_source_identity_mismatch: La identitat d'origen desada
+      per a la fila %{row_index} de %{binding_id} difereix de la que registra la seva
+      casella. L'aplicació va escriure aquest registre ella mateixa, així que es va
+      alterar o es va malmetre, i cap canvi a les teves dades el repara.
+    calculation_revision_row_source_shared: La fila %{row_index} de %{binding_id}
+      alimenta més d'una casella de fila. L'aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.
+    calculation_revision_row_source_value_not_decimal: El valor desat de la fila %{row_index}
+      de %{binding_id} no és un nombre. L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    calculation_revision_row_value_mismatch: El valor d'una casella de fila difereix
+      de la seva fila d'origen %{row_index} de %{binding_id}. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_row_values_provenance_mismatch: Els valors de les seves caselles
+      de fila i la seva procedència cobreixen files diferents. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_secure_row_fields_missing: La seva còpia desada no té els
+      camps de files que tota còpia així ha de portar. L'aplicació va escriure aquest
+      registre ella mateixa, així que es va alterar o es va malmetre, i cap canvi
+      a les teves dades el repara.
     canonical_actividad_asset_history_persistence: No s'ha pogut tornar a obrir amb
       seguretat l'historial xifrat d'actius.
     canonical_aeat_sync_workspace_projection: Les autoritats de l'AEAT ja carregades
@@ -701,6 +785,295 @@ errors:
       amb el seu contingut; pot estar malmès o manipulat.
     canonical_unsupported_manifest_version: El manifest del corpus fa servir una versió
       no compatible.
+    filing_export_boolean_in_text_slot: El camp d'exportació %{field} no pot escriure
+      un fet de productor booleà en un espai de text de %{length} bytes. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_draft_schema_mismatch: S'ha lliurat a l'exportació un esborrany
+      construït amb definicions del model diferents de les que fa servir per escriure'l.
+      L'aplicació construeix i aprova aquest esborrany per si mateixa, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_draft_unapproved: S'ha lliurat a l'exportació un esborrany que no
+      està aprovat. L'aplicació construeix i aprova aquest esborrany per si mateixa,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_closer_extent: El tancament del sobre de la presentació
+      no es genera amb l'extensió declarada de %{extent} bytes. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_envelope_declarant_tax_id_absent: S'ha demanat al sobre de presentació
+      escriure el NIF del declarant sense el subjecte de la presentació. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_envelope_election_unresolved: El sobre de la presentació s'anava
+      a escriure sense una elecció de domiciliació prèvia resolta. L'aplicació ho
+      deriva del seu propi disseny d'exportació, així que cap canvi a les teves dades
+      ho corregeix.
+    filing_export_envelope_language_casilla_absent: S'ha demanat al sobre de presentació
+      escriure l'idioma de la declaració sense el valor de la seva casella declarada.
+      L'aplicació ho deriva del seu propi disseny d'exportació, així que cap canvi
+      a les teves dades ho corregeix.
+    filing_export_envelope_layout_absent: Falta la declaració del disseny del sobre
+      de la presentació. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_period_not_representable: El període %{period} no té representació
+      de %{extent} caràcters al sobre. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_period_outside_range: El període del sobre del declarant
+      és fora de l'interval que enumera el disseny. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_prefix_extent: El prefix del sobre no es genera amb la
+      seva extensió declarada de %{extent} bytes. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_prefix_role_authority: El paper %{role} del prefix del
+      sobre de la presentació no té cap autoritat de valor declarada. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_envelope_prefix_role_not_ascii: El paper %{role} del prefix del
+      sobre de la presentació no és ASCII. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_envelope_prefix_role_width: El paper %{role} del prefix del sobre
+      de la presentació ocupa %{actual} bytes i se n'esperen %{expected}. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_envelope_quarter_token_undeclared: El disseny del sobre no declara
+      el trimestre simple que necessita un trimestre de l'esquema. L'aplicació ho
+      deriva del seu propi disseny d'exportació, així que cap canvi a les teves dades
+      ho corregeix.
+    filing_export_envelope_records_unemitted: 'Les famílies de registres obligatòries
+      del sobre de la presentació no tenen cap aparició emesa: %{records}. L''aplicació
+      ho deriva del seu propi disseny d''exportació, així que cap canvi a les teves
+      dades ho corregeix.'
+    filing_export_field_binding_undeclared: El camp d'exportació %{field} no declara
+      enllaç. L'aplicació ho deriva del seu propi disseny d'exportació, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_field_casilla_undeclared: El camp d'exportació %{field} no declara
+      casella. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_field_computed_key_undeclared: El camp d'exportació %{field} no
+      declara clau calculada. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_field_contradicts_period: El camp d'exportació %{field} contradiu
+      el període que es presenta. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_field_draft_attribute_undeclared: El camp d'exportació %{field}
+      no declara atribut de l'esborrany. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_field_kind_unsupported: El tipus de camp d'exportació %{kind} no
+      està admès. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_field_length_undeclared: El camp d'exportació %{field} no declara
+      longitud. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_field_offset_undeclared: El camp d'exportació %{field} no declara
+      posició. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_field_overlap: El camp d'exportació %{field} se solapa amb un altre
+      camp. L'aplicació ho deriva del seu propi disseny d'exportació, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_field_producer_key_undeclared: El camp d'exportació %{field} no
+      declara clau de productor. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_field_projection_context_absent: El camp d'exportació %{field} necessita
+      un context de generació de la instantània per adreçar la seva projecció. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_field_projection_ref_undeclared: El camp d'exportació %{field} no
+      declara referència de projecció. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_layout_not_owned_by_snapshot: El disseny d'exportació no pertany
+      a la instantània del registre seleccionada. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_layout_projection_address_duplicate: El disseny d'exportació admet
+      l'adreça de projecció duplicada %{address}. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_layout_unclassified: El disseny d'exportació del model %{modelo}
+      no es pot generar i l'aplicació no té cap motiu que ho expliqui. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_m190_component_declaration: La declaració del component signat del
+      model 190 està incompleta o ha canviat. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_m190_component_wire: Un component signat del model 190 té bytes
+      de registre no vàlids. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_m190_context_differs: El context de condicions signat del model
+      190 difereix de la font revisada. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_m190_source_digest: Els components signats del model 190 no tenen
+      el resum exacte de la seva font revisada. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_m193_declaration_changed: La declaració de pendent i meritació del
+      perceptor del model 193 està incompleta o ha canviat. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_m280_declaration_changed: Els components d'imputació negativa del
+      model 280 difereixen de la font revisada. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_m280_sign_differs: El signe de la imputació negativa del model 280
+      difereix de la font revisada. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_m280_zero_sign_differs: El signe zero explícit del model 280 difereix
+      de la seva projecció revisada. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_m303_evidence_design_unowned: El disseny del registre d'evidència
+      de la presentació del model 303 no pertany a la instantània seleccionada. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_m303_evidence_orden_mismatch: L'Ordre anual de l'evidència de la
+      presentació del model 303 no coincideix amb la instantània seleccionada. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_m303_projection_layout_unowned: El disseny de la projecció de la
+      presentació del model 303 no pertany a la instantània seleccionada. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_m303_projection_snapshot_period: La instantània de la projecció
+      de la presentació del model 303 no coincideix amb el període presentat. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_modelo100_comunidad_prefix_missing: Falta el prefix del bloc de
+      comunitat triat pel registre. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_modelo100_comunidad_total_missing: Falta la casella de total de
+      comunitat triada pel registre. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_modelo100_declarations_not_mapping: Les declaracions XML del model
+      100 seleccionades no són un fet de tipus mapa. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_modelo100_declarations_unpinned: Les declaracions d'exportació XML
+      del model 100 necessiten una operació fixada a una generació de l'autoritat.
+      L'aplicació ho deriva del seu propi disseny d'exportació, així que cap canvi
+      a les teves dades ho corregeix.
+    filing_export_modelo100_declarations_unresolved: No es van resoldre les declaracions
+      XML del model 100. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_modelo100_sign_declarations_incomplete: Les declaracions de signe
+      XML triades pel registre estan incompletes. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_payload_consumer_unavailable: El consumidor del contingut de l'exportació
+      no està disponible. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_payload_destination_count: A l'exportació se li va donar un nombre
+      de destinacions del contingut diferent d'un. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_producer_fact_not_boolean: El camp d'exportació %{field} necessita
+      un fet de productor booleà tipat i n'ha rebut un d'altre tipus. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_producer_snapshot_modelo_mismatch: La instantània de productors
+      de la presentació pertany a un altre model diferent de l'esborrany que s'exporta.
+      L'aplicació ho deriva del seu propi disseny d'exportació, així que cap canvi
+      a les teves dades ho corregeix.
+    filing_export_producer_unowned: La clau de productor %{key} no té cap propietari
+      declarat. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_projection_address_duplicate: 'Les adreces de projecció d''exportació
+      estan duplicades: %{addresses}. L''aplicació ho deriva del seu propi disseny
+      d''exportació, així que cap canvi a les teves dades ho corregeix.'
+    filing_export_projection_address_unpreflighted: L'adreça de projecció d'exportació
+      %{address} no té cap valor comprovat prèviament. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_projection_duplicate_values: El registre de projecció %{record}
+      ha emès valors de projecció tipats duplicats. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_projection_family_unsupported: El registre de projecció %{record}
+      barreja famílies de referència de projecció o en fa servir una de no admesa.
+      L'aplicació ho deriva del seu propi disseny d'exportació, així que cap canvi
+      a les teves dades ho corregeix.
+    filing_export_projection_occurrence_absent: El registre de projecció obligatori
+      %{record} no té cap aparició aplicable emesa. L'aplicació ho deriva del seu
+      propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_projection_occurrence_ambiguous: Les famílies del registre de projecció
+      %{record} no es resolen en una única aparició determinista. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_projection_plan_not_bijection: 'El pla de projecció de la presentació
+      no es correspon un a un amb el disseny: falten %{missing}, sobren %{extraneous}.
+      L''aplicació ho deriva del seu propi disseny d''exportació, així que cap canvi
+      a les teves dades ho corregeix.'
+    filing_export_projection_references_unemitted: El registre de projecció %{record}
+      no ha emès totes les referències de projecció tipades redactades. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_projection_repeat_mismatch: El registre de projecció %{record} fa
+      servir la repetició %{repeat} per a una família que no es repeteix. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_projector_field_untyped: Un projector ha retornat un camp sense
+      una referència de projecció tipada real. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_regimen_rows_not_repeated: El registre de projecció del règim simplificat
+      ha de repetir les seves files de projecció. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_result_casilla_ids_malformed: Un resultat de verificació de l'exportació
+      enumera un identificador de casella en blanc o amb espais. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_result_digest_malformed: Un resultat d'exportació porta un resum
+      de fitxer que no és un valor SHA-256 hexadecimal en minúscules. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_sepa_marker_selection_unsupported: La marca SEPA ha rebut una selecció
+      de compte per a la qual no té regla. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_shared_resolver_not_exhaustive: El resolutor compartit de productors
+      de la presentació no cobreix totes les claus que li pertanyen. L'aplicació ho
+      deriva del seu propi disseny d'exportació, així que cap canvi a les teves dades
+      ho corregeix.
+    filing_export_verification_modelo100_declarations_unresolved: No es van resoldre
+      les declaracions de verificació XML del model 100. L'aplicació ho deriva del
+      seu propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_verification_signed_entry_unresolved: El camp XML %{field_id} no
+      té cap entrada signada amb què verificar-lo. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_verification_value_unrenderable: No s'ha pogut generar el valor
+      de verificació esperat del camp d'exportació %{field_id}. L'aplicació ho deriva
+      del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
+      corregeix.
+    filing_export_xml_attribute_not_terminal: Un atribut del diccionari XML no acaba
+      la seva ruta. L'aplicació ho deriva del seu propi disseny d'exportació, així
+      que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_aux_idioma_omitted: El disseny d'exportació XML omet l'element
+      obligatori Aux/Idioma. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_boolean_in_non_boolean_row: Una fila de tipus %{data_type} ha
+      rebut un valor booleà, i només les files que l'AEAT declara booleanes el poden
+      tenir. L'aplicació ho deriva del seu propi disseny d'exportació, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_xml_converter_non_string: El convertidor XML triat pel registre
+      (%{converter}) ha retornat un valor que no és text. L'aplicació ho deriva del
+      seu propi disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_converter_unavailable: El convertidor XML triat pel registre
+      (%{converter}) no està disponible. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_entry_path_empty: Una entrada del diccionari XML té una ruta
+      buida. L'aplicació ho deriva del seu propi disseny d'exportació, així que cap
+      canvi a les teves dades ho corregeix.
+    filing_export_xml_row_column_occurrence: La columna de fila %{binding} necessita
+      una fila repetida del diccionari per a %{column} i n'ha trobat %{found}. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
+    filing_export_xml_row_column_undeclared: L'enllaç %{binding} porta files però
+      no declara cap columna de fila. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_serialiser_not_bytes: El serialitzador XML ha retornat %{type}
+      i no bytes. L'aplicació ho deriva del seu propi disseny d'exportació, així que
+      cap canvi a les teves dades ho corregeix.
+    filing_export_xml_version_token_unresolved: L'exportació XML no va resoldre el
+      seu element obligatori Aux/VERSION. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xsd_root_absent: L'origen XSD del diccionari XML %{source} no declara
+      l'element arrel %{root}. L'aplicació ho deriva del seu propi disseny d'exportació,
+      així que cap canvi a les teves dades ho corregeix.
+    filing_export_xsd_source_unresolved: El disseny d'exportació de diccionari XML
+      %{layout} no té cap origen XSD resolt. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xsd_unparseable: No s'ha pogut analitzar l'origen XSD del diccionari
+      XML %{source}. L'aplicació ho deriva del seu propi disseny d'exportació, així
+      que cap canvi a les teves dades ho corregeix.
+    filing_export_xsd_version_absent: L'origen XSD del diccionari XML %{source} no
+      declara cap valor de versionxsd. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
     integrity_active_profile_pointer: El punter de perfil actiu no és vàlid; repara
       el perfil seleccionat abans de continuar.
     integrity_apoderado_configuration_identity: La configuració d'apoderat emmagatzemada
@@ -712,6 +1085,10 @@ errors:
       mal configurat.
     integrity_corpus_anchor_resolution: Una àncora del corpus inclòs no es resol exactament
       en una unitat extreta.
+    integrity_filing_export: Una comprovació de l'exportació ha trobat un error en
+      el propi disseny d'exportació de l'aplicació.
+    integrity_filing_export_design: Ha fallat una comprovació del disseny d'exportació
+      dins de l'aplicació.
     integrity_filing_validation: La validació de la declaració ha detectat un problema
       que impedeix continuar.
     integrity_financial_attachments_attachment_validation: El justificant adjunt no
@@ -720,6 +1097,8 @@ errors:
       ni CIF espanyol vàlid.
     integrity_justificante_verification: La verificació del justificant amb l'AEAT
       no s'ha pogut completar.
+    integrity_modelo_export_design: No s'ha pogut escriure l'exportació perquè el
+      propi disseny d'exportació de l'aplicació es contradiu.
     integrity_modelo_export_field_unrenderable: 'No s''ha escrit res: el camp %{field_id}
       (casella %{casilla_id}) no es pot escriure a partir del seu valor, perquè el
       disseny de registre oficial que porta l''aplicació i aquest valor no concorden.
@@ -730,6 +1109,10 @@ errors:
       de registre oficial que porta l''aplicació i aquest valor no concorden. El defecte
       és al disseny d''exportació, no a les teves dades, així que canviar les teves
       dades no ho arregla.'
+    integrity_modelos_calculation_revision: El càlcul desat es contradiu a si mateix,
+      així que no se'n pot aplicar res. L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
     integrity_modelos_operator_layer: Els valors de l'operador desats per a aquest
       càlcul es contradiuen. L'aplicació els va escriure ella mateixa, així que el
       registre s'ha alterat o malmès i no se'n pot aplicar res.
@@ -1232,6 +1615,9 @@ errors:
       és compatible.
     refused_filing_calculate: El càlcul o resum de la declaració no ha superat les
       seves invariants.
+    refused_filing_export_casilla_value: 'No s''ha escrit res: una casella que indiques
+      té un valor que l''exportació no pot escriure tal com el situa el disseny oficial.
+      Torna a indicar aquesta casella i torna a exportar.'
     refused_filing_export_declared_party_name: 'No s''ha escrit res: el camp %{export_field_id}
       anomena una part sense un nom de declaració que el disseny de registre de l''AEAT
       admeti allà. Indica el nom de declaració de la part i torna a exportar.'
@@ -1248,6 +1634,8 @@ errors:
       de declaració d''una part té %{composed_length} caràcters i el camp %{export_field_id}
       en té %{field_length}. El disseny de registre no permet abreujar-lo, així que
       indica una versió del nom de %{field_length} caràcters i torna a exportar.'
+    refused_filing_export_profile_fact_missing: 'No s''ha escrit res: l''exportació
+      necessita una dada teva que el teu perfil no indica. Indica-la i torna a exportar.'
     refused_financial_aggregation_category_coverage: Una transacció no té cobertura
       de categoria o de perfil. Classifica la transacció abans d'agregar.
     refused_financial_aggregation_missing_classification: Encara hi ha transaccions
@@ -1427,6 +1815,9 @@ errors:
       ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) perquè la finestra de presentació
       no en fixa cap; el {export_on} només pots pagar el resultat d'una altra manera.
     refused_modelo_edit_parse: No s'ha pogut llegir aquesta dada.
+    refused_modelo_export_casilla_value: 'No s''ha escrit res: una casella que indiques
+      té un valor que l''exportació no pot escriure tal com el situa el disseny oficial.
+      Torna a indicar aquesta casella i torna a exportar.'
     refused_modelo_export_declared_party_name: 'No s''ha escrit res: el camp %{export_field_id},
       de %{field_length} posicions, anomena una part sense un nom de declaració que
       el disseny de registre de l''AEAT admeti. Indica o corregeix el nom de declaració
@@ -1442,6 +1833,8 @@ errors:
     refused_modelo_export_required_record_absent: El disseny oficial exigeix almenys
       un registre %{export_record_id}, però aquesta declaració no en té cap, així
       que no hi ha res a escriure en aquest format i no s'ha escrit res.
+    refused_modelo_export_settlement: 'No s''ha escrit res: l''exportació no pot indicar
+      com es paga o es retorna la declaració.'
     refused_modelo_export_unrepresentable_character: 'No s''ha escrit res: el camp
       %{field_id} conté el caràcter «%{character}» (%{code_point}), que el disseny
       de registre de l''AEAT no permet escriure. Treure''l o substituir-lo declararia

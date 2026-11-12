@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:0084e9cc9657447c4c0d8e4c97885884746329961d7d1aed495cf56b270b4b3a'
+body_hash: 'sha256:8bb4ac68c0fa813898cfb73e044bbc38dd80267fd32db70e40a99035ece282da'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -77,6 +77,11 @@ related:
 - `S11` `M` `dev/fixtures/personas`
 - `S11` `verify:` `persona table at feature/tui 90910e5cc5 (train t14), minorista 100 2023-2025 export` -> `pass`
 - `S11` `by:` `ACCEPTANCE`
+- `S04` `verify:` `persona table at feature/tui 674c6ff701 (train t23), Modelo 130 69/69 compared and green, floor year 2022 by the S31 attestation` -> `pass`
+- `S05` `verify:` `persona table at feature/tui 674c6ff701 (train t23), every Modelo 130 row compared and green 69/69` -> `pass`
+- `S06` `M` `dev/acceptance/persona_table/counterparties.py`
+- `S06` `verify:` `persona table at feature/tui 674c6ff701 (train t23), 111 16/16 115 16/16 180 4/4 190 4/4 compared and green` -> `pass`
+- `S13` `verify:` `persona table at feature/tui 674c6ff701 (train t23), 390 20/20 349 16/16 347 16/16 compared and green` -> `pass`
 
 ## Notes
 

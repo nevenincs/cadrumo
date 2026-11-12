@@ -3078,7 +3078,13 @@ cli:
       registry_integrity_skipped: 'Integrity check of the modelo definitions: skipped.'
       registry_unavailable: The modelo definitions are unavailable.
       secure_objects_empty: Secure object store is empty.
+      secure_objects_probe_failed: Secure-object integrity could not be checked in
+        %{failed} namespace(s). This does not mean they are empty or healthy.
+      secure_objects_probe_failed_detail: 'not checked: %{namespaces}'
       secure_objects_readable: '%{readable} readable secure-object namespace(s): %{namespaces}.'
+      secure_objects_unavailable: Secure-object integrity could not be checked because
+        the encrypted store could not be read. This does not mean the store is empty
+        or healthy.
       secure_objects_unreadable: '%{unreadable} unreadable row(s), %{readable} readable
         row(s)'
       state_backend_readable: Workflow state store is readable.
@@ -4039,8 +4045,14 @@ cli:
       bienes_extranjero_unset: Your profile does not yet record whether your assets
         and rights abroad exceed the reporting threshold.
       censo_enrolment_unverified: Census enrolment has not been verified
+      deadline_windows_unavailable: The registry has no deadline windows for part
+        of this range, so nothing is known about the obligations that fall in it.
+        Check the overview status; an empty list here does not mean nothing is due.
       estimacion_objetiva_unset: Your profile does not yet record which income-tax
         assessment regime applies to your activity.
+      explain_deadline_windows_unavailable: The registry has no deadline windows for
+        modelo %{modelo} and year %{year}, so no lateness or schedule can be stated.
+        A missing late-filing warning here does not mean the filing is on time.
       gran_empresa_unset: Your profile does not yet record whether your turnover in
         the previous calendar year exceeded the large-company threshold, which decides
         whether you file monthly or quarterly.

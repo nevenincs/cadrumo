@@ -21,6 +21,24 @@ INSTALLED_CLI_SCENARIO_VERSION = "retenciones-installed-periodic-cli-v1"
 INSTALLED_ANNUAL_CLI_SCENARIO_VERSION = "retenciones-installed-annual-cli-v1"
 CENT = Decimal("0.01")
 
+# Two distinct synthetic entity CIFs: a filing name is declared per tax id, so one id cannot carry two names.
+PROFESSIONAL_NIF: Final = "B12345674"
+LANDLORD_NIF: Final = "B87654323"
+# The razón social the journey declares for each perceptor before the annual exports.
+PROFESSIONAL_RAZON_SOCIAL: Final = "Synthetic Professional"
+LANDLORD_RAZON_SOCIAL: Final = "Synthetic Urban Landlord"
+
+
+def filed_entity_name(razon_social: str) -> str:
+    """The text a 180/190 perceptor record files for a declared entity.
+
+    The design composes an entity as its razón social alone, and the perceptor
+    records state ``alphanumeric_text = "upper_unaccented"``: the codec upper-cases
+    the text and removes accents from vowels. The synthetic names are ASCII.
+    """
+    return razon_social.upper()
+
+
 # Every (modelo, period) coordinate the withholding scenario files or reads.
 _SCENARIO_COORDINATES: Final = (
     ("111", "2T"),
@@ -290,8 +308,8 @@ def build_installed_periodic_cli_slices(
         period="2T",
         invoice_number=f"RET-PROF-{year}-001",
         invoice_date=date(year, 3, 31),
-        counterparty_name="Synthetic Professional",
-        counterparty_nif="B12345674",
+        counterparty_name=PROFESSIONAL_RAZON_SOCIAL,
+        counterparty_nif=PROFESSIONAL_NIF,
         income_kind="professional",
         scheme="actividades_profesionales",
         invoice_base=Decimal("500.00"),
@@ -338,8 +356,8 @@ def build_installed_periodic_cli_slices(
         period="2T",
         invoice_number=f"RET-RENT-{year}-001",
         invoice_date=date(year, 6, 1),
-        counterparty_name="Synthetic Urban Landlord",
-        counterparty_nif="B12345674",
+        counterparty_name=LANDLORD_RAZON_SOCIAL,
+        counterparty_nif=LANDLORD_NIF,
         income_kind="urban_rent",
         scheme="arrendamiento_urbano",
         invoice_base=Decimal("3000.00"),
@@ -563,8 +581,8 @@ def _scenario_professional_second(year: int) -> InstalledPeriodicCliSlice:
         period="2T",
         invoice_number=f"RET-PROF-{year}-002",
         invoice_date=date(year, 5, 20),
-        counterparty_name="Synthetic Professional",
-        counterparty_nif="B12345674",
+        counterparty_name=PROFESSIONAL_RAZON_SOCIAL,
+        counterparty_nif=PROFESSIONAL_NIF,
         income_kind="professional",
         scheme="actividades_profesionales",
         invoice_base=Decimal("100.00"),
@@ -607,8 +625,8 @@ def _scenario_rent_a_q1(year: int, property_a: Modelo180PropertyInput) -> Instal
         period="1T",
         invoice_number=f"RET-RENT-{year}-101",
         invoice_date=date(year, 3, 1),
-        counterparty_name="Synthetic Urban Landlord",
-        counterparty_nif="B12345674",
+        counterparty_name=LANDLORD_RAZON_SOCIAL,
+        counterparty_nif=LANDLORD_NIF,
         income_kind="urban_rent",
         scheme="arrendamiento_urbano",
         invoice_base=Decimal("1000.00"),
@@ -647,8 +665,8 @@ def _scenario_rent_a_q2(year: int, property_a: Modelo180PropertyInput) -> Instal
         period="2T",
         invoice_number=f"RET-RENT-{year}-102",
         invoice_date=date(year, 6, 1),
-        counterparty_name="Synthetic Urban Landlord",
-        counterparty_nif="B12345674",
+        counterparty_name=LANDLORD_RAZON_SOCIAL,
+        counterparty_nif=LANDLORD_NIF,
         income_kind="urban_rent",
         scheme="arrendamiento_urbano",
         invoice_base=Decimal("2000.00"),
@@ -687,8 +705,8 @@ def _scenario_rent_b_q2(year: int, property_b: Modelo180PropertyInput) -> Instal
         period="2T",
         invoice_number=f"RET-RENT-{year}-103",
         invoice_date=date(year, 6, 10),
-        counterparty_name="Synthetic Urban Landlord",
-        counterparty_nif="B12345674",
+        counterparty_name=LANDLORD_RAZON_SOCIAL,
+        counterparty_nif=LANDLORD_NIF,
         income_kind="urban_rent",
         scheme="arrendamiento_urbano",
         invoice_base=Decimal("2000.00"),
@@ -787,8 +805,8 @@ def _scenario_modelo_180(
         expected_type2_rows=(
             AnnualExportRecordExpectation(
                 values=(
-                    ("modelo-180-perc-nif", "B12345674"),
-                    ("modelo-180-perc-nombre", "Synthetic Urban Landlord"),
+                    ("modelo-180-perc-nif", LANDLORD_NIF),
+                    ("modelo-180-perc-nombre", filed_entity_name(LANDLORD_RAZON_SOCIAL)),
                     ("modelo-180-perc-provincia", "28"),
                     ("modelo-180-perc-modalidad", "1"),
                     ("modelo-180-perc-base", "3000"),
@@ -801,8 +819,8 @@ def _scenario_modelo_180(
             ),
             AnnualExportRecordExpectation(
                 values=(
-                    ("modelo-180-perc-nif", "B12345674"),
-                    ("modelo-180-perc-nombre", "Synthetic Urban Landlord"),
+                    ("modelo-180-perc-nif", LANDLORD_NIF),
+                    ("modelo-180-perc-nombre", filed_entity_name(LANDLORD_RAZON_SOCIAL)),
                     ("modelo-180-perc-provincia", "28"),
                     ("modelo-180-perc-modalidad", "1"),
                     ("modelo-180-perc-base", str(int(rent_b_q2.invoice_base))),
@@ -886,8 +904,8 @@ def _scenario_modelo_190(
         expected_type2_rows=(
             AnnualExportRecordExpectation(
                 values=(
-                    ("modelo-190-perc-nif", "B12345674"),
-                    ("modelo-190-perc-nombre", "Synthetic Professional"),
+                    ("modelo-190-perc-nif", PROFESSIONAL_NIF),
+                    ("modelo-190-perc-nombre", filed_entity_name(PROFESSIONAL_RAZON_SOCIAL)),
                     ("modelo-190-perc-codigo-provincia", "28"),
                     ("modelo-190-perc-ceuta-melilla", "0"),
                     ("modelo-190-perc-clave", "G"),
@@ -898,8 +916,8 @@ def _scenario_modelo_190(
             ),
             AnnualExportRecordExpectation(
                 values=(
-                    ("modelo-190-perc-nif", "B12345674"),
-                    ("modelo-190-perc-nombre", "Synthetic Professional"),
+                    ("modelo-190-perc-nif", PROFESSIONAL_NIF),
+                    ("modelo-190-perc-nombre", filed_entity_name(PROFESSIONAL_RAZON_SOCIAL)),
                     ("modelo-190-perc-codigo-provincia", "28"),
                     ("modelo-190-perc-ceuta-melilla", "0"),
                     ("modelo-190-perc-clave", "G"),

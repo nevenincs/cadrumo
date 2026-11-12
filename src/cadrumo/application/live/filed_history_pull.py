@@ -146,16 +146,12 @@ async def _capture_discovered_filed_history(
     on_session_write: SessionWriteReporter | None = None,
     events: FiledHistoryEventSink | None = None,
 ) -> BulkFiledDataCaptureReport:
-    """Capture the discovered grid with its original modelo order and year span."""
-    modelos = tuple(dict.fromkeys(modelo for modelo, _year in walk_pairs))
-    years = tuple(year for _modelo, year in walk_pairs)
+    """Capture exactly the nominated pairs, in discovery's walk order."""
     return await capture_filed_data_bulk(
         filed_data_port=filed_data_port,
-        year_from=min(years),
-        year_to=max(years),
         output_root=output_root,
         ports=ports,
-        modelos=modelos,
+        pairs=walk_pairs,
         limit=limit,
         dry_run=dry_run,
         sync_run_repository=sync_run_repository,
@@ -420,7 +416,8 @@ def _onboarding_stage_failures(
     notifications: _FiledHistoryNotificationsStage,
 ) -> tuple[str, ...]:
     nominated_coordinates = set(discovery.walk_pairs)
-    # Keep rectangular capture refusals that have no discovered pair to carry them.
+    # Capture is exact, so every failure should map to a nominated pair that
+    # carries it; surface any that does not instead of dropping it.
     capture_stage_failures = tuple(
         f"filed_capture: modelo {failure.modelo} ejercicio {failure.year}: {failure.error_type}"
         for failure in capture.failures

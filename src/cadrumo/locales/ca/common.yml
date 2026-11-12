@@ -6267,6 +6267,8 @@ review:
       drafts_load_failed: No s'han pogut carregar els esborranys de presentació des
         del backend segur.
       invoices_load_failed: No s'han pogut carregar les factures de l'adaptador.
+      profile_load_failed: No s'ha pogut carregar el perfil des de l'emmagatzematge
+        segur.
       transactions_load_failed: No s'han pogut carregar les transaccions de l'adaptador.
   filing:
     draft_placeholder_summary: Esborrany pendent

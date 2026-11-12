@@ -419,11 +419,19 @@ def _particle_missing(particle: Element[str], present: frozenset[str]) -> Iterat
 
 
 def _walked_members(particle: Element[str], present: frozenset[str]) -> tuple[Element[str], ...]:
-    """Return the members a group requires: all of a sequence, only the begun (else first) of a choice."""
+    """Return the members a group requires: all of a sequence, only the begun branch of a choice.
+
+    A choice with no begun branch is satisfied when any branch requires nothing, so
+    it then requires nothing; otherwise it is reported through its first branch.
+    """
     members = tuple(item for item in particle if _local_name(item) in {"element", *_CONTENT_GROUP_TAGS})
     if _local_name(particle) == "choice":
         touched = tuple(item for item in members if _particle_touched(item, present))
-        return touched[:1] or members[:1]
+        if touched:
+            return touched[:1]
+        if any(next(_particle_missing(item, present), None) is None for item in members):
+            return ()
+        return members[:1]
     return members
 
 

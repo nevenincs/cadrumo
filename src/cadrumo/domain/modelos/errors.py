@@ -12,7 +12,7 @@ from __future__ import annotations
 from logging import Logger
 from typing import ClassVar, NoReturn
 
-from ...core.errors.hierarchy import CadrumoError, CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 
 
 class ModeloError(CadrumoError):
@@ -39,6 +39,16 @@ class ModeloOperatorLayerIntegrityError(ModeloValidationError):
 
     The layer is written by Cadrumo itself, so a record that breaks them was
     altered or damaged after it was stored; the operator has no entry that
+    repairs it.
+    """
+
+
+class CalculationRevisionIntegrityError(ModeloValidationError):
+    """Raised when a saved calculation revision contradicts itself.
+
+    Every check behind it compares fields the application computed and stored
+    together, never a value the operator typed, so a revision that fails one
+    was altered, damaged or assembled wrongly; the operator has no entry that
     repairs it.
     """
 
@@ -81,15 +91,15 @@ class ModeloExportRequiredRecordAbsentError(ModeloExportError):
     """
 
 
-class ModeloExportDeclaredPartyNameError(ModeloExportError):
+class ModeloExportDeclaredPartyNameError(TerminalPreconditionErrorMixin[object], ModeloExportError):
     """Refused: a party-name slot has no declared filing name the record design can take.
 
     The design fills the slot from the party's own name parts and allows no
     shortening, so the party's filing name is stated, or restated with a
     rendering for the slot's width, through the action the context names. The
-    context never carries the name. The party's tax identifier and country,
-    which the door binds as its arguments, travel only as process-local keys:
-    no kept record, journal or log holds them.
+    context never carries the name. The party's tax identifier and country
+    travel only as process-local keys: no kept record, journal or log holds
+    them, so the door's verdict leaves both arguments for the operator to state.
     """
 
     process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"tax_identifier", "country_code"})
@@ -143,6 +153,7 @@ def raise_catalogue_integrity_error(
 
 
 __all__ = [
+    "CalculationRevisionIntegrityError",
     "Modelo036LifecycleError",
     "Modelo036PriorAltaRequiredError",
     "Modelo036TerminalStateError",

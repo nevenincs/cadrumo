@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#export-parity'
 date: '2026-11-01'
-modified: '2026-11-04'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc4b2bb805475e4260cf9ea0168ffb1b7d85ebd7f3cefedaf3a8cc6d45cb8f69'
+body_hash: 'sha256:df08b259fed24c9d99957656e88183263ff58cdb546d0552d1310ede3bbfcf67'
 related:
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
   - "[[2026-11-01-export-parity-suffered-withholding-schemas-reference]]"
@@ -66,7 +66,7 @@ We will add the suffered-withholding evidence family, a registry-declared credit
 
 - `BindingSourceKind.RETENCION_SOPORTADA = "retencion_soportada"` is added to `src/cadrumo/core/aggregation.py`. It is distinct from `WITHHOLDING` and `RETENCIONES_AGGREGATION`, is not a ledger kind, and is not a member of the counterpart subset.
 - The provider model `RetencionSoportadaProvider` is `{ kind = "retencion_soportada", income_class, quantity }`, defined in its own module, `src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py` (placement is a hypothesis). The module also holds its validator and the class-to-role table.
-  - `quantity` is one of `pago_a_cuenta` (retención plus ingreso a cuenta, the credit), `retencion`, `ingreso_a_cuenta`, `ingreso_a_cuenta_repercutido` or `importe_integro`.
+  - `quantity` is one of `pago_a_cuenta` (retención plus ingreso a cuenta, the credit), `retencion`, `ingreso_a_cuenta`, `ingreso_a_cuenta_repercutido` or `importe_integro`, and, under `2026-11-11-export-parity-work-income-sourcing-adr`, `importe_integro_dinerario`, `valoracion_especie`, `reducciones_aplicables` or `gastos_deducibles`.
   - Credit casillas bind `pago_a_cuenta` only. The other quantities exist for income casillas and cross-checks.
 - Registration is one `_filing_grade` row in `binding_provider_registration.py`. It permits the DECIMAL channel and the SUM operation. Terminal origins are `PAYER_CERTIFICATE` and `OPERATOR_INPUT`; plan Step P02.S15 adds `PAYER_CERTIFICATE`. Output is `scalar`, resolver id `retencion_soportada`, stage `mesh`.
 - The credit set of a revision is derived, never listed: it is the operand casillas of the formula targeting the casilla whose semantic role is `irpf_total_pagos_cuenta` (0609 today, `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/casillas/0001-declarations.toml:4214-4218`), the same derivation the payer-side gate uses (`dev/registry/tests/test_modelo_100_credit_casillas_exclude_payer_side_sources.py:56-60`).
@@ -74,7 +74,7 @@ We will add the suffered-withholding evidence family, a registry-declared credit
   - a class whose admitted semantic roles do not include the target casilla's role;
   - a binding on a `computed` casilla;
   - `pago_a_cuenta` on a casilla outside the derived credit set, or on a role no class admits as a credit role;
-  - any other quantity on a target whose role no class admits as an income or cross-check role; income roles are added only by a later decision.
+  - any other quantity on a target whose role no class admits as an income or cross-check role; the income roles are the (class, quantity) table of `2026-11-11-export-parity-work-income-sourcing-adr`, section 3.
 - The resolver `RetencionSoportadaSourceResolver` lives in `src/cadrumo/application/aggregation/retencion_soportada_source.py` (placement is a hypothesis). It is enrolled once in the `mesh` stage of `src/cadrumo/application/modelo/calculation_route.py:113-136` and once in `CalculationWithholdingRows` (`src/cadrumo/application/aggregation/service.py:356-377`), so that the report names it when it is absent.
 
 ### 2. Closed income-class vocabulary and class-to-role table
@@ -114,6 +114,7 @@ A record is never dropped silently, under two rules that section 5 shares:
 - `payer_ref`, the keyed digest of the canonical payer token defined in section 4. The write port computes it, so the application resolver can use it as `source_ref` without holding the key.
 - `income_class`.
 - `importe_integro_dinerario`, `valoracion_especie`, `retencion`, `ingreso_a_cuenta` and `ingreso_a_cuenta_repercutido`. These are non-negative money values with at most two decimals. A third decimal is refused, not rounded. `ingreso_a_cuenta_repercutido` may not exceed `ingreso_a_cuenta`.
+- `reducciones_aplicables` and `gastos_deducibles` (payload v2): required for class `trabajo` and absent for every other class, as fixed in `2026-11-11-export-parity-work-income-sourcing-adr`.
 - `origin`, one of `payer_certificate` and `operator_declaration`.
 - `evidence_fingerprint`, the sha256 of the certificate bytes held in attachment custody. It is required for `payer_certificate` and optional for `operator_declaration`.
 - `replaces_evidence_fingerprint`, optional.
@@ -139,7 +140,7 @@ The write port refuses three kinds of record:
 
 - key `retencion_soportada_records` and namespace `cadrumo.renta.retencion_soportada.records`;
 - owner `cadrumo.application.aggregation`;
-- sensitivity `FINANCIAL`, `schema_version` 1;
+- sensitivity `FINANCIAL`, `schema_version` 2 (a v1 payload parses with the v2 fields absent);
 - scope `PROFILE_LOCAL` and custody `STRUCTURED_CUSTODY`, with the default ciphertext mirror policy;
 - key grammar `{ejercicio}:{income_class}:{payer_ref}` for a payer record, and `absence:{ejercicio}:{income_class}` for an absence attestation.
 
@@ -157,7 +158,7 @@ The row-identity AAD (`encrypted_columns.py:51`) binds namespace, key digest and
   - a class positively declared absent resolves to proven zero without an attestation;
   - the attestation is an operator assertion with its own provenance (`OPERATOR_INPUT`, mandatory note). It is never filing evidence of a payer's statement and never counted as a payer certificate.
 - **Missing.** The family is read, the class is applicable under the rule above, and no record and no attestation exist for (ejercicio, class). The bound casilla resolves to nothing, and the existing `unresolved_binding` issue blocks it. A missing value never becomes zero.
-- **Proven zero.** Either records exist whose quantity sums to zero (a certificate stating no retención), or an `absence` attestation exists for (ejercicio, class) with a mandatory operator note, created by the operation of plan Step P03.S29. That gives a filing-grade 0.00 with an `OPERATOR_INPUT` terminal origin. Hypothesis: an attestation contradicted by a ledger income row of the same class is reported as a finding, following `WithholdingDetailAbsence`.
+- **Proven zero.** Either records exist whose quantity sums to zero (a certificate stating no retención), or an `absence` attestation exists for (ejercicio, class) with a mandatory operator note, created by the operation of plan Step P03.S29. That gives a filing-grade 0.00 with an `OPERATOR_INPUT` terminal origin. Hypothesis: an attestation contradicted by a ledger income row of the same class is reported as a finding, following `WithholdingDetailAbsence`. An absence attestation proves a zero credit only; it never zeroes an income binding (`2026-11-11-export-parity-work-income-sourcing-adr`, section 5).
 - **Degraded.** A storage failure is `storage_degradation_resolution` and is never empty.
 
 ### 6. Folding the manual 0596 binding and the borrador key contract
