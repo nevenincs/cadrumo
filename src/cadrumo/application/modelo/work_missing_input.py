@@ -211,6 +211,32 @@ def _carry_box(snapshot: RegistrySnapshot, boxes: PrintedBoxes, binding_id: Bind
     return boxes.number(casilla_id)
 
 
+def _open_carry_boxes(
+    snapshot: RegistrySnapshot, boxes: PrintedBoxes, open_carry_ids: Collection[BindingId]
+) -> tuple[str, ...]:
+    """The printed box numbers the open carries feed, shortest first and then by number."""
+    found = {box for binding_id in open_carry_ids if (box := _carry_box(snapshot, boxes, binding_id)) is not None}
+    return tuple(sorted(found, key=lambda box: (len(box), box)))
+
+
+def _door_arguments(family: AbsenceAttestationFamily, work_unit: WorkUnit) -> dict[str, object]:
+    """The action arguments of the statement's door: a row-grain family names its row later, so none here."""
+    return {} if family.row_grain else {"work_unit_id": work_unit.work_unit_id}
+
+
+def _refusal_context(
+    family: AbsenceAttestationFamily, work_unit: WorkUnit, box_numbers: tuple[str, ...]
+) -> dict[str, object]:
+    context: dict[str, object] = {
+        "modelo": str(work_unit.modelo),
+        "filing_year": work_unit.filing_year,
+        "boxes": ", ".join(box_numbers),
+    }
+    if family.row_grain:
+        context["command"] = _ROW_CARRY_DOORS[family].value
+    return context
+
+
 def prior_carry_absence_unstated(
     missing: ModeloWorkMissingInputError,
     *,
@@ -240,12 +266,7 @@ def prior_carry_absence_unstated(
             if binding.absence_attestation is family and binding_id in unresolved
         )
     )
-    box_numbers = tuple(
-        sorted(
-            {box for binding_id in open_carry_ids if (box := _carry_box(snapshot, boxes, binding_id)) is not None},
-            key=lambda box: (len(box), box),
-        )
-    )
+    box_numbers = _open_carry_boxes(snapshot, boxes, open_carry_ids)
     scenario_id = f"{_PRIOR_CARRY_SCENARIO_PREFIX}.{family.value}_unstated"
     failure = build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
@@ -261,15 +282,9 @@ def prior_carry_absence_unstated(
             "boxes": ",".join(box_numbers),
         },
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        action_argument_values={} if family.row_grain else {"work_unit_id": work_unit.work_unit_id},
+        action_argument_values=_door_arguments(family, work_unit),
     )
-    context: dict[str, object] = {
-        "modelo": str(work_unit.modelo),
-        "filing_year": work_unit.filing_year,
-        "boxes": ", ".join(box_numbers),
-    }
-    if family.row_grain:
-        context["command"] = _ROW_CARRY_DOORS[family].value
+    context = _refusal_context(family, work_unit, box_numbers)
     return ModeloPriorCarryAbsenceUnstatedError(
         missing,
         binding_id=missing.binding_id,

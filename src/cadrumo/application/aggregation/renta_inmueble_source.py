@@ -27,24 +27,16 @@ by its property's row key, which the profile never reuses.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass, field
-from datetime import date, timedelta
+from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Final
 
-from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.money.rounding import round_to_cents
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.calculations.registry.gasto_capital_inmobiliario import GastoCapitalInmobiliarioCatalogue
 from ...domain.contribuyente.arrendamiento_record import ArrendamientoRecord
-from ...domain.contribuyente.inmueble_facts import (
-    ARRENDAMIENTO_SECTION,
-    INMUEBLE_SECTION,
-    arrendamiento_from_row,
-    inmueble_from_row,
-    rows_from_facts,
-)
 from ...domain.contribuyente.inmueble_record import (
     AdquisicionTitulo,
     ImportesMovimientos,
@@ -55,12 +47,12 @@ from ...domain.contribuyente.inmueble_record import (
     TitularRole,
 )
 from ...domain.renta.retencion_soportada import RetencionSoportadaRecord
-from ...domain.transactions.dates import transaction_filing_date
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
-from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
+from .currency_predicates import effective_eur_amount, effective_eur_taxable_base
 from .renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFinding, RentaInmuebleFindingKind
+from .renta_inmueble_links import Links, Records, link_rows, read_records, row_due_date
 from .renta_inmueble_net import RentaInmuebleNet, RentaInmuebleNetInputs, RentaInmuebleTerms, renta_inmueble_net
+from .renta_inmueble_period import Ejercicio, Occupancy, held_interval, occupancy, within_lease
 
 _HUNDRED: Final = Decimal(100)
 _ZERO: Final = Decimal(0)
@@ -113,19 +105,6 @@ class RentaInmuebleRowField(StrEnum):
 
 
 type RentaInmuebleColumnValue = str | Decimal | int | bool
-
-
-@dataclass(frozen=True, slots=True)
-class _Ejercicio:
-    first: date
-    last: date
-
-    @property
-    def days(self) -> int:
-        return (self.last - self.first).days + 1
-
-    def covers(self, day: date) -> bool:
-        return self.first <= day <= self.last
 
 
 @dataclass(frozen=True, slots=True)
@@ -304,183 +283,6 @@ class RentaInmuebleOccurrences:
         return any(finding.kind is RentaInmuebleFindingKind.REFUSAL for finding in self.findings)
 
 
-@dataclass(slots=True)
-class _Records:
-    inmuebles: dict[int, InmuebleRecord] = field(default_factory=dict)
-    leases: dict[int, ArrendamientoRecord] = field(default_factory=dict)
-    findings: list[RentaInmuebleFinding] = field(default_factory=list)
-
-
-def _read_section[RecordT](
-    section: str,
-    path_values: Mapping[str, object],
-    read: Callable[[int, dict[str, str]], RecordT],
-    records: _Records,
-) -> dict[int, RecordT]:
-    try:
-        rows = rows_from_facts(section, path_values)
-    except ProfileAnswerTypeError:
-        records.findings.append(RentaInmuebleFinding(RentaInmuebleCause.RECORD_UNREADABLE, section))
-        return {}
-    read_rows: dict[int, RecordT] = {}
-    for clave, row in sorted(rows.items()):
-        try:
-            read_rows[clave] = read(clave, row)
-        except ProfileAnswerTypeError:
-            records.findings.append(RentaInmuebleFinding(RentaInmuebleCause.RECORD_UNREADABLE, f"{section}:{clave}"))
-    return read_rows
-
-
-def _read_records(path_values: Mapping[str, object]) -> _Records:
-    records = _Records()
-    records.inmuebles = _read_section(INMUEBLE_SECTION, path_values, inmueble_from_row, records)
-    records.leases = _read_section(ARRENDAMIENTO_SECTION, path_values, arrendamiento_from_row, records)
-    for lease in records.leases.values():
-        if lease.inmueble not in records.inmuebles:
-            records.findings.append(
-                RentaInmuebleFinding(RentaInmuebleCause.LEASE_NAMES_NO_PROPERTY, f"arrendamiento:{lease.clave}")
-            )
-    return records
-
-
-def row_due_date(row: Transaction) -> date:
-    """Return the date a linked row is imputed to: accrual, else operation, else booking."""
-    return row.accrual_date or row.operation_date or transaction_filing_date(row)
-
-
-def _counts(row: Transaction) -> bool:
-    return (
-        row.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and row.business_classification is not BusinessClassification.REVIEWED_EXCLUDED
-        and (row.arrendamiento_ref is not None or row.inmueble_ref is not None)
-    )
-
-
-def _row_key(reference: str) -> int | None:
-    text = reference.strip()
-    return int(text) if text.isdecimal() else None
-
-
-@dataclass(slots=True)
-class _Links:
-    income: dict[int, list[Transaction]] = field(default_factory=dict)
-    """Rent rows by lease row key."""
-    expenses: dict[int, list[Transaction]] = field(default_factory=dict)
-    """Expense rows by property row key."""
-    prior_improvements: dict[int, list[Transaction]] = field(default_factory=dict)
-    """Rows of a capitalised concept dated before the ejercicio, by property row key."""
-    findings: list[RentaInmuebleFinding] = field(default_factory=list)
-
-    def refuse(self, cause: RentaInmuebleCause, row: Transaction) -> None:
-        self.findings.append(RentaInmuebleFinding(cause, f"transaction:{row.transaction_id}"))
-
-
-def _link_income(row: Transaction, reference: str, records: _Records, links: _Links) -> None:
-    if row.direction is not TransactionDirection.INCOMING:
-        links.refuse(RentaInmuebleCause.EXPENSE_ROW_ON_LEASE, row)
-        return
-    key = _row_key(reference)
-    if key is None or key not in records.leases:
-        links.refuse(RentaInmuebleCause.ROW_NAMES_NO_LEASE, row)
-        return
-    links.income.setdefault(key, []).append(row)
-
-
-def _link_expense(
-    row: Transaction, reference: str, records: _Records, links: _Links, concepts: GastoCapitalInmobiliarioCatalogue
-) -> None:
-    if row.direction is not TransactionDirection.OUTGOING:
-        links.refuse(RentaInmuebleCause.INCOME_ROW_ON_PROPERTY, row)
-        return
-    key = _row_key(reference)
-    if key is None or key not in records.inmuebles:
-        links.refuse(RentaInmuebleCause.ROW_NAMES_NO_PROPERTY, row)
-        return
-    if row.gasto_capital_inmobiliario is None:
-        links.refuse(RentaInmuebleCause.EXPENSE_ROW_WITHOUT_CONCEPT, row)
-        return
-    if row.gasto_capital_inmobiliario not in concepts.all_tokens:
-        links.refuse(RentaInmuebleCause.CONCEPT_UNDECLARED, row)
-        return
-    links.expenses.setdefault(key, []).append(row)
-
-
-def _link_prior_improvement(
-    row: Transaction, records: _Records, links: _Links, concepts: GastoCapitalInmobiliarioCatalogue
-) -> None:
-    """Keep an earlier ejercicio's improvement, which joins the amortisation base; other earlier rows are past."""
-    key = None if row.inmueble_ref is None else _row_key(row.inmueble_ref)
-    token = row.gasto_capital_inmobiliario
-    if key is None or key not in records.inmuebles or token is None or token not in concepts.all_tokens:
-        return
-    if row.direction is TransactionDirection.OUTGOING and concepts.concept_for(token).capitalised:
-        links.prior_improvements.setdefault(key, []).append(row)
-
-
-def _link_rows(
-    transactions: Iterable[Transaction],
-    records: _Records,
-    ejercicio: _Ejercicio,
-    concepts: GastoCapitalInmobiliarioCatalogue,
-) -> _Links:
-    links = _Links()
-    for row in sorted(transactions, key=lambda item: item.transaction_id):
-        if not _counts(row):
-            continue
-        if row_due_date(row) < ejercicio.first:
-            _link_prior_improvement(row, records, links, concepts)
-            continue
-        if not ejercicio.covers(row_due_date(row)):
-            continue
-        if is_non_eur_without_conversion(row):
-            links.refuse(RentaInmuebleCause.CURRENCY_UNCONVERTED, row)
-        elif row.arrendamiento_ref is not None:
-            _link_income(row, row.arrendamiento_ref, records, links)
-        elif row.inmueble_ref is not None:
-            _link_expense(row, row.inmueble_ref, records, links, concepts)
-    return links
-
-
-def _held_interval(record: InmuebleRecord, ejercicio: _Ejercicio) -> tuple[date, date] | None:
-    if record.fecha_adquisicion is None:
-        return None
-    start = max(ejercicio.first, record.fecha_adquisicion)
-    end = ejercicio.last if record.fecha_transmision is None else min(ejercicio.last, record.fecha_transmision)
-    return (start, end) if start <= end else None
-
-
-def _lease_days(lease: ArrendamientoRecord, held: tuple[date, date]) -> set[date]:
-    start = max(held[0], lease.fecha_inicio)
-    end = held[1] if lease.fecha_fin is None else min(held[1], lease.fecha_fin)
-    return {start + timedelta(days=offset) for offset in range((end - start).days + 1)} if start <= end else set()
-
-
-@dataclass(frozen=True, slots=True)
-class _Occupancy:
-    leases: tuple[ArrendamientoRecord, ...]
-    days_held: int
-    days_let: int
-    concurrent: bool
-    lease_days: Mapping[int, int]
-    """The days each active lease covers, by its row key."""
-
-
-def _occupancy(leases: Iterable[ArrendamientoRecord], held: tuple[date, date]) -> _Occupancy:
-    spans = sorted(
-        ((lease, _lease_days(lease, held)) for lease in leases),
-        key=lambda item: (item[0].fecha_inicio, item[0].clave),
-    )
-    active = tuple((lease, days) for lease, days in spans if days)
-    let_days = {day for _lease, days in active for day in days}
-    return _Occupancy(
-        leases=tuple(lease for lease, _days in active),
-        days_held=(held[1] - held[0]).days + 1,
-        days_let=len(let_days),
-        concurrent=sum(len(days) for _lease, days in active) > len(let_days),
-        lease_days={lease.clave: len(days) for lease, days in active},
-    )
-
-
 def _share(record: InmuebleRecord) -> Decimal:
     titularidad = record.titularidad
     percentage = None if titularidad is None else titularidad.porcentaje_propiedad
@@ -494,7 +296,7 @@ def _row_amount(row: Transaction) -> Decimal:
     return effective_eur_amount(row) if base is None else base
 
 
-def _property_findings(record: InmuebleRecord, occupancy: _Occupancy | None) -> list[RentaInmuebleCause]:
+def _property_findings(record: InmuebleRecord, occupancy: Occupancy | None) -> list[RentaInmuebleCause]:
     causes: list[RentaInmuebleCause] = []
     titularidad = record.titularidad
     if titularidad is None:
@@ -514,7 +316,7 @@ def _property_findings(record: InmuebleRecord, occupancy: _Occupancy | None) -> 
     return causes
 
 
-def _occupancy_findings(occupancy: _Occupancy, ejercicio: _Ejercicio) -> list[RentaInmuebleCause]:
+def _occupancy_findings(occupancy: Occupancy, ejercicio: Ejercicio) -> list[RentaInmuebleCause]:
     causes: list[RentaInmuebleCause] = []
     if occupancy.days_held < ejercicio.days:
         causes.append(RentaInmuebleCause.HELD_PART_OF_EJERCICIO)
@@ -546,18 +348,14 @@ def _income_outside_lease(lease: ArrendamientoRecord, rows: Iterable[Transaction
     return [
         RentaInmuebleFinding(RentaInmuebleCause.INCOME_OUTSIDE_LEASE, f"transaction:{row.transaction_id}")
         for row in rows
-        if not _within_lease(lease, row_due_date(row))
+        if not within_lease(lease, row_due_date(row))
     ]
-
-
-def _within_lease(lease: ArrendamientoRecord, day: date) -> bool:
-    return lease.fecha_inicio <= day and (lease.fecha_fin is None or day <= lease.fecha_fin)
 
 
 @dataclass(frozen=True, slots=True)
 class _OccurrenceInputs:
     record: InmuebleRecord
-    occupancy: _Occupancy | None
+    occupancy: Occupancy | None
     leases: tuple[ArrendamientoRecord, ...]
     """Every lease of the property, active in the ejercicio or not."""
     income: Mapping[int, list[Transaction]]
@@ -569,7 +367,7 @@ class _OccurrenceInputs:
     """The property's rows of a capitalised concept dated before the ejercicio."""
 
 
-def _occurrence_findings(inputs: _OccurrenceInputs, ejercicio: _Ejercicio) -> list[RentaInmuebleFinding]:
+def _occurrence_findings(inputs: _OccurrenceInputs, ejercicio: Ejercicio) -> list[RentaInmuebleFinding]:
     record = inputs.record
     subject = f"inmueble:{record.clave}"
     causes = _property_findings(record, inputs.occupancy)
@@ -607,7 +405,7 @@ def _total(rows: Iterable[Transaction]) -> Decimal:
 
 
 def _figures(
-    inputs: _OccurrenceInputs, ejercicio: _Ejercicio
+    inputs: _OccurrenceInputs, ejercicio: Ejercicio
 ) -> tuple[Decimal | None, dict[str, Decimal], tuple[str, ...]]:
     """Return the taxpayer's part of the rent and of each prorated expense, and the rows read."""
     occupancy = inputs.occupancy
@@ -627,17 +425,17 @@ def _figures(
 
 def _occurrence_inputs(
     record: InmuebleRecord,
-    records: _Records,
-    links: _Links,
-    ejercicio: _Ejercicio,
+    records: Records,
+    links: Links,
+    ejercicio: Ejercicio,
     concepts: GastoCapitalInmobiliarioCatalogue,
 ) -> _OccurrenceInputs:
     leases = tuple(lease for _clave, lease in sorted(records.leases.items()) if lease.inmueble == record.clave)
-    held = _held_interval(record, ejercicio)
+    held = held_interval(record, ejercicio)
     expenses, improvements = _split_expenses(links.expenses.get(record.clave, []), concepts)
     return _OccurrenceInputs(
         record=record,
-        occupancy=None if held is None else _occupancy(leases, held),
+        occupancy=None if held is None else occupancy(leases, held),
         leases=leases,
         income={lease.clave: links.income.get(lease.clave, []) for lease in leases},
         expenses=expenses,
@@ -646,13 +444,13 @@ def _occurrence_inputs(
     )
 
 
-def _is_held(record: InmuebleRecord, ejercicio: _Ejercicio) -> bool:
+def _is_held(record: InmuebleRecord, ejercicio: Ejercicio) -> bool:
     """Report whether the property may have been held on a day of the ejercicio.
 
     A property with no acquisition date is kept, so its refusal is reported
     rather than the property being left off the return.
     """
-    return record.fecha_adquisicion is None or _held_interval(record, ejercicio) is not None
+    return record.fecha_adquisicion is None or held_interval(record, ejercicio) is not None
 
 
 def _lease_figures(inputs: _OccurrenceInputs) -> dict[int, Decimal]:
@@ -668,7 +466,7 @@ def _lease_figures(inputs: _OccurrenceInputs) -> dict[int, Decimal]:
 
 def _net(
     inputs: _OccurrenceInputs,
-    ejercicio: _Ejercicio,
+    ejercicio: Ejercicio,
     figures: tuple[Decimal | None, dict[str, Decimal]],
     withholding: tuple[RetencionSoportadaRecord, ...],
     rules: tuple[RentaInmuebleTerms, GastoCapitalInmobiliarioCatalogue],
@@ -702,7 +500,7 @@ def _net(
     )
 
 
-def _pendiente(record: InmuebleRecord, ejercicio: _Ejercicio, stated: Mapping[str, Decimal]) -> Decimal | None:
+def _pendiente(record: InmuebleRecord, ejercicio: Ejercicio, stated: Mapping[str, Decimal]) -> Decimal | None:
     """Return what earlier ejercicios left pending on the property, or ``None`` while it is unknown.
 
     The filer's statement for the property decides it. Without one, a property
@@ -726,12 +524,12 @@ def _tenant_key(identifier: str) -> str:
 
 
 def _place_withholding(
-    records: Iterable[RetencionSoportadaRecord], occupied: Mapping[int, _Occupancy | None]
+    records: Iterable[RetencionSoportadaRecord], occupied: Mapping[int, Occupancy | None]
 ) -> tuple[dict[int, tuple[RetencionSoportadaRecord, ...]], list[RentaInmuebleFinding]]:
     """Place each urban-rent withholding on the let property whose lease names its payer as a tenant."""
     tenants: dict[str, set[int]] = {}
-    for clave, occupancy in occupied.items():
-        for lease in () if occupancy is None else occupancy.leases:
+    for clave, occupied_as in occupied.items():
+        for lease in () if occupied_as is None else occupied_as.leases:
             for tenant in lease.inquilinos:
                 tenants.setdefault(_tenant_key(tenant.nif), set()).add(clave)
     placed: dict[int, list[RetencionSoportadaRecord]] = {}
@@ -781,9 +579,9 @@ def renta_inmueble_occurrences(
     Returns:
         The occurrences and every finding, those of a property and those no property owns.
     """
-    period = _Ejercicio(first=date(ejercicio, 1, 1), last=date(ejercicio, 12, 31))
-    records = _read_records(path_values)
-    links = _link_rows(transactions, records, period, concepts)
+    period = Ejercicio(first=date(ejercicio, 1, 1), last=date(ejercicio, 12, 31))
+    records = read_records(path_values)
+    links = link_rows(transactions, records, period, concepts)
     findings: list[RentaInmuebleFinding] = [*records.findings, *links.findings]
     held = {
         clave: _occurrence_inputs(record, records, links, period, concepts)

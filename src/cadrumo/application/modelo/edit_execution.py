@@ -424,56 +424,75 @@ def _apply_binding_intents(
     its row; any other binding takes no row.
     """
     for intent in submission.binding_intents:
-        binding_id = intent.address.binding_id
-        row_stated = _row_stated(revision, binding_id)
-        if row_stated != (intent.address.row_identity is not None):
-            return _domain_refusal(
-                ModeloEditRefusalCode.DISALLOWED_INTENT,
-                address=intent.address,
-                facts=("row_statement_scope",),
-                condition="name a row exactly when the binding's carry is stated row by row",
-            )
-        if row_stated:
-            refusal = _state_row_carry(
-                state,
-                intent,
-                rows=_calculated_rows(head, revision, binding_id),
-                grammar=modelo_edit_address_grammar(submission.baseline, intent.address),
-                tax_id_format=tax_id_format,
-            )
-            if refusal is not None:
-                return refusal
-            continue
-        # Whatever the intent, an earlier statement on the binding gives way to it.
-        state.attested_binding_ids.discard(binding_id)
-        state.value_attestations.pop(binding_id, None)
-        if intent.kind is ModeloEditBindingIntentKind.REMOVE_OVERRIDE:
-            state.binding_overrides.pop(binding_id, None)
-            continue
-        if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT:
-            state.binding_overrides[binding_id] = ATTESTED_ZERO
-            state.attested_binding_ids.add(binding_id)
-            continue
-        grammar = modelo_edit_address_grammar(submission.baseline, intent.address)
-        if intent.kind is ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE:
-            refusal = _attest_prior_value(
-                state,
-                intent,
-                sources=attestable_sources.get(binding_id),
-                grammar=grammar,
-                tax_id_format=tax_id_format,
-            )
-            if refusal is not None:
-                return refusal
-            continue
-        if grammar is None:
-            return _parse_refusal(
-                ModeloEditParseRefusalV1(address=intent.address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
-            )
-        value = channel_value(intent.value, address=intent.address, grammar=grammar, tax_id_format=tax_id_format)
-        if isinstance(value, ModeloEditParseRefusalV1):
-            return _parse_refusal(value)
-        state.binding_overrides[binding_id] = value
+        refusal = _apply_binding_intent(
+            state,
+            intent,
+            submission,
+            tax_id_format=tax_id_format,
+            attestable_sources=attestable_sources,
+            revision=revision,
+            head=head,
+        )
+        if refusal is not None:
+            return refusal
+    return None
+
+
+def _apply_binding_intent(
+    state: _OperatorState,
+    intent: ModeloBindingEditIntentV1,
+    submission: ModeloEditSubmissionV1,
+    *,
+    tax_id_format: SpanishTaxIdFormat | None,
+    attestable_sources: Mapping[BindingId, tuple[CrossPeriodDependencyRequirement, ...]],
+    revision: ModeloRevision,
+    head: CalculationRevision | None,
+) -> ModeloEditExecutionNoEffectV1 | None:
+    """Apply one binding intent to the operator state, or refuse it."""
+    binding_id = intent.address.binding_id
+    row_stated = _row_stated(revision, binding_id)
+    if row_stated != (intent.address.row_identity is not None):
+        return _domain_refusal(
+            ModeloEditRefusalCode.DISALLOWED_INTENT,
+            address=intent.address,
+            facts=("row_statement_scope",),
+            condition="name a row exactly when the binding's carry is stated row by row",
+        )
+    if row_stated:
+        return _state_row_carry(
+            state,
+            intent,
+            rows=_calculated_rows(head, revision, binding_id),
+            grammar=modelo_edit_address_grammar(submission.baseline, intent.address),
+            tax_id_format=tax_id_format,
+        )
+    # Whatever the intent, an earlier statement on the binding gives way to it.
+    state.attested_binding_ids.discard(binding_id)
+    state.value_attestations.pop(binding_id, None)
+    if intent.kind is ModeloEditBindingIntentKind.REMOVE_OVERRIDE:
+        state.binding_overrides.pop(binding_id, None)
+        return None
+    if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT:
+        state.binding_overrides[binding_id] = ATTESTED_ZERO
+        state.attested_binding_ids.add(binding_id)
+        return None
+    grammar = modelo_edit_address_grammar(submission.baseline, intent.address)
+    if intent.kind is ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE:
+        return _attest_prior_value(
+            state,
+            intent,
+            sources=attestable_sources.get(binding_id),
+            grammar=grammar,
+            tax_id_format=tax_id_format,
+        )
+    if grammar is None:
+        return _parse_refusal(
+            ModeloEditParseRefusalV1(address=intent.address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
+        )
+    value = channel_value(intent.value, address=intent.address, grammar=grammar, tax_id_format=tax_id_format)
+    if isinstance(value, ModeloEditParseRefusalV1):
+        return _parse_refusal(value)
+    state.binding_overrides[binding_id] = value
     return None
 
 

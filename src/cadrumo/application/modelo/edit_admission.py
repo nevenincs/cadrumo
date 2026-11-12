@@ -66,7 +66,7 @@ from .edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from .edit_services import calculation_head_digest, work_unit_record_digest
-from .edit_value_grammar import binding_value_grammar, casilla_value_grammar
+from .edit_value_grammar import ModeloEditValueGrammarV1, binding_value_grammar, casilla_value_grammar
 from .row_filled_bindings import row_filled_binding_ids
 
 if TYPE_CHECKING:
@@ -190,6 +190,31 @@ def _scalar_entry(
     )
 
 
+def _source_refusal(binding: BindingDefinition) -> ModeloEditNonWritableReason | None:
+    """Return why the binding's family or source takes no operator override, or ``None`` when the source admits one."""
+    family = binding.absence_attestation
+    if family is not None and family.row_grain:
+        return ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE
+    if binding.source in BUCKET_AGGREGATION_LOCK_SOURCES:
+        return ModeloEditNonWritableReason.SOURCE_LOCKED
+    if binding.source is not BindingSourceKind.MANUAL_INPUT and binding.source not in CALLER_OVERRIDABLE_CARRY_SOURCES:
+        return ModeloEditNonWritableReason.OVERRIDE_POLICY_UNDECIDED
+    return None
+
+
+def _placement_refusal(
+    binding: BindingDefinition, *, grammar: ModeloEditValueGrammarV1, period: str, row_filled: frozenset[str]
+) -> ModeloEditNonWritableReason | None:
+    """Return why an override the source admits still cannot be shown or read, or ``None`` when it can."""
+    if not grammar.writable:
+        return ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
+    if binding.id in row_filled:
+        return ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE
+    if not binding_applies_to_period(binding.applicability, period):
+        return ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION
+    return None
+
+
 def permitted_binding_entry(
     binding: BindingDefinition,
     *,
@@ -227,32 +252,12 @@ def permitted_binding_entry(
     ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     source = binding.source
-    family = binding.absence_attestation
-    if family is not None and family.row_grain:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE
-        )
-    if source in BUCKET_AGGREGATION_LOCK_SOURCES:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.SOURCE_LOCKED
-        )
-    if source is not BindingSourceKind.MANUAL_INPUT and source not in CALLER_OVERRIDABLE_CARRY_SOURCES:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.OVERRIDE_POLICY_UNDECIDED
-        )
-    grammar = binding_value_grammar(binding, revision=revision)
-    if not grammar.writable:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
-        )
-    if binding.id in row_filled:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE
-        )
-    if not binding_applies_to_period(binding.applicability, period):
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION
-        )
+    refusal = _source_refusal(binding)
+    if refusal is None:
+        grammar = binding_value_grammar(binding, revision=revision)
+        refusal = _placement_refusal(binding, grammar=grammar, period=period, row_filled=row_filled)
+    if refusal is not None:
+        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(binding_id=binding.id, reason=refusal)
     # Only a carry the registry declares a statement of absence for can be
     # stated to hold nothing; on any other binding the statement would assert a figure.
     attestable = binding.absence_attestation is not None

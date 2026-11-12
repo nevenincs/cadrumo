@@ -55,6 +55,7 @@ from .transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -215,10 +216,17 @@ def resolve_bucket_source_mesh(
         investment_asset_profile_id=iva_investment_asset_profile_id,
         operation=ports.operation,
     )
+    return _with_closing_diagnostics(snapshot, source_resolution, operation=ports.operation)
+
+
+def _with_closing_diagnostics(
+    snapshot: RegistrySnapshot, source_resolution: CalculationSourceResolution, *, operation: PinnedAuthorityOperation
+) -> CalculationSourceResolution:
+    """Add the diagnostics of unhandled bindings, terminal origins, expected gaps and advisory values."""
     source_resolution = add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
     source_resolution = add_terminal_origin_diagnostics(snapshot.revision, source_resolution)
     source_resolution = add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
-    return add_advisory_binding_value_diagnostics(snapshot, source_resolution, operation=ports.operation)
+    return add_advisory_binding_value_diagnostics(snapshot, source_resolution, operation=operation)
 
 
 def _work_profile_and_read_ports(
