@@ -24,6 +24,7 @@ from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
     prorrata_source_casilla_id,
 )
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
+from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegisterError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -83,6 +84,7 @@ def resolve_bucket_source_mesh(
     filing_period_date: date | None = None,
     profile: ModeloWorkProfile | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    row_attestations: tuple[RowCarryAttestation, ...] = (),
 ) -> CalculationSourceResolution:
     """Resolve enrolled sources against one pinned operation and profile.
 
@@ -122,6 +124,7 @@ def resolve_bucket_source_mesh(
         revision=snapshot.revision,
         caller_binding_values=dict(binding_values or {}),
         caller_enum_binding_values=dict(enum_binding_values or {}),
+        caller_row_attestations=row_attestations,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         profile=profile,
@@ -523,7 +526,7 @@ def _resolve_ledger_income_families(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     renta_catalogue_read_ports: InvoiceCatalogueReadPorts,
 ) -> tuple[CalculationSourceResolution, ...]:
-    """Resolve the Renta expense and income ledger families, then Impatriado and IRNR income."""
+    """Resolve the Renta expense and income ledger families, Impatriado and IRNR income, then let properties."""
     from ..aggregation.impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
     from ..aggregation.modelo_bindings import (
         LedgerIrnrIncomeAggregationSourceResolver,
@@ -533,6 +536,7 @@ def _resolve_ledger_income_families(
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     )
+    from ..aggregation.renta_inmueble_resolver import RentaInmuebleSourceResolver
     from ..aggregation.source_resolution_operations import source_context_operation
 
     def imputation_filings(context: CalculationSourceContext) -> ImputationFilingHistory:
@@ -582,6 +586,12 @@ def _resolve_ledger_income_families(
         resolve_declared(
             LedgerIrnrIncomeAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
+            )
+        ),
+        resolve_declared(
+            RentaInmuebleSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+                retencion_soportada_ports=ports.retencion_soportada_ports,
             )
         ),
     )

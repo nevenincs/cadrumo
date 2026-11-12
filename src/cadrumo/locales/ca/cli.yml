@@ -1854,6 +1854,9 @@ cli:
           (consulta `aeat app modelo casillas`).
         entry_casilla_unknown: '%{casilla} no és un identificador de casella.'
         entry_confirm: Encara no s'ha registrat res. Executa `%{command}` per registrar-ho.
+        entry_row_help: Fila a la qual es refereix la declaració, per la identitat
+          de fila d'origen que mostra el càlcul (per exemple inmueble:1). Només per
+          a dades que es declaren per fila.
         entry_value_help: El valor, escrit com en la teva llengua de sortida (per
           exemple 1.234,56 en català o 1,234.56 en anglès).
         entry_yes_help: Confirma el canvi i registra'l a la declaració

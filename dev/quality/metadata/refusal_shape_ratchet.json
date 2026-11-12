@@ -27,6 +27,7 @@
   "src/cadrumo/domain/modelos/calculation_revision.py::assert_revision_snapshot_evidence_coverage::FAIL_MODELO_LEDGER_FILING_COVERAGE::0",
   "src/cadrumo/domain/modelos/calculation_revision_aggregate.py::validate_calculation_revision_aggregate::ERROR_MODELOS_VALIDATION::1",
   "src/cadrumo/domain/modelos/calculation_revision_aggregate.py::validate_calculation_revision_aggregate::ERROR_MODELOS_VALIDATION::2",
+  "src/cadrumo/domain/modelos/calculation_revision_operator_layer.py::CalculationOperatorLayer._require_channel_unique_canonical_values::ERROR_MODELOS_VALIDATION::0",
   "src/cadrumo/domain/modelos/codes.py::ModeloCode.__new__::ERROR_MODELOS_VALIDATION::0",
   "src/cadrumo/domain/modelos/codes.py::coerce_modelo_code::ERROR_MODELOS_VALIDATION::0",
   "src/cadrumo/domain/modelos/row_models.py::_refuse_m349_country_prefix_context::REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT::0",

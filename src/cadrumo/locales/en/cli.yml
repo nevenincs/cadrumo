@@ -1742,6 +1742,8 @@ cli:
           `aeat app modelo casillas`).
         entry_casilla_unknown: '%{casilla} is not a box identifier.'
         entry_confirm: Nothing was recorded yet. Run `%{command}` to record it.
+        entry_row_help: The row the statement is for, by the source row identity the
+          calculation shows (for example inmueble:1). Only for inputs stated per row.
         entry_value_help: The value, written as in your output language (for example
           1.234,56 in Spanish or 1,234.56 in English).
         entry_yes_help: Confirm the change and record it on the declaration

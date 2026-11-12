@@ -1872,6 +1872,9 @@ cli:
         entry_casilla_unknown: '%{casilla} no es un identificador de casilla.'
         entry_confirm: Todavía no se ha registrado nada. Ejecuta `%{command}` para
           registrarlo.
+        entry_row_help: Fila a la que se refiere la declaración, por la identidad
+          de fila de origen que muestra el cálculo (por ejemplo inmueble:1). Solo
+          para datos que se declaran por fila.
         entry_value_help: El valor, escrito como en tu idioma de salida (por ejemplo
           1.234,56 en español o 1,234.56 en inglés).
         entry_yes_help: Confirma el cambio y regístralo en la declaración

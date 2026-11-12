@@ -196,6 +196,7 @@ flows:
           prorrata_regularizacion: Regularización de prorrata
           purchase_invoice_evidence: Evidencia de factura de compra
           relation_prefill: Declaración relacionada
+          renta_inmueble: Inmueble arrendado
           retencion_soportada: Retenciones soportadas
           retenciones_aggregation: Totales de retenciones
           withholding: Registro de retención

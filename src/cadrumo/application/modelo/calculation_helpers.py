@@ -657,6 +657,7 @@ def _amendment_operator_layer(
         binding_overrides=layer.binding_overrides if layer is not None else {},
         attested_binding_ids=layer.attested_binding_ids if layer is not None else (),
         value_attestations=layer.value_attestations if layer is not None else {},
+        row_attestations=layer.row_attestations if layer is not None else (),
     )
 
 

@@ -44,7 +44,7 @@ from .binding_temporal import (
     BindingAuthorship,
 )
 from .binding_terminal_origin import TerminalOriginExpectation
-from .binding_value_contract import BindingValueChannel, BindingValueContract
+from .binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from .credit_reconciliation import CreditReconciliationEntry
 from .errors import RegistryValidationError
 from .field_absence import absent_when_none
@@ -302,16 +302,23 @@ class BindingDefinition(RegistryModel):
 
         Only an earlier-filing carry, or a figure the filer types, is unknown rather than zero while
         nothing supplies it; on any other binding the statement would assert a figure. Both read a decimal.
+        A row family's carry is a money column of a repeating group instead, stated row by row.
         """
-        if self.absence_attestation is None:
+        family = self.absence_attestation
+        if family is None:
             return self
-        if self.source not in _ABSENCE_ATTESTATION_SOURCES or self.value.channel is not BindingValueChannel.DECIMAL:
+        if family.row_grain:
+            fits = self.value.channel is BindingValueChannel.ROW_SET and self.value.data_type is BindingDataType.MONEY
+            shape = "a money column of a repeating group"
+        else:
+            fits = self.source in _ABSENCE_ATTESTATION_SOURCES and self.value.channel is BindingValueChannel.DECIMAL
+            shape = "a decimal binding read from an earlier filing or typed by the filer"
+        if not fits:
             raise RegistryValidationError(
-                f"binding {self.id!r}: absence_attestation needs a decimal binding read from an earlier filing "
-                "or typed by the filer",
+                f"binding {self.id!r}: absence_attestation {family.value!r} needs {shape}",
                 context={
                     "id": self.id,
-                    "absence_attestation": self.absence_attestation.value,
+                    "absence_attestation": family.value,
                     "source": self.source.value,
                     "channel": self.value.channel.value,
                 },

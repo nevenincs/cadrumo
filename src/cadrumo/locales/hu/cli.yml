@@ -1843,6 +1843,9 @@ cli:
           (lásd: `aeat app modelo casillas`).'
         entry_casilla_unknown: '%{casilla} nem mezőazonosító.'
         entry_confirm: 'Még semmit sem rögzítettél. Futtasd: `%{command}`, hogy rögzítsd.'
+        entry_row_help: A sor, amelyre a nyilatkozat vonatkozik, a számítás által
+          mutatott forrássor-azonosítóval (például inmueble:1). Csak soronként megadott
+          adatoknál.
         entry_value_help: Az érték, a kimeneti nyelvednek megfelelően írva (például
           1 234,56 magyarul vagy 1,234.56 angolul).
         entry_yes_help: A módosítás megerősítése és rögzítése a bevallásban

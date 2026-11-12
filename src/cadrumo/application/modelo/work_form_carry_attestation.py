@@ -61,8 +61,11 @@ _EFFECT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProx
     }
 )
 
+# A family stated row by row is answered per row through the edit address, never by this form-wide action.
+_FORM_FAMILIES: Final = frozenset(family for family in AbsenceAttestationFamily if not family.row_grain)
+
 for _family_words in (_ACTION_LOCALE_KEYS, _STATEMENT_LOCALE_KEYS, _EFFECT_LOCALE_KEYS):
-    if frozenset(_family_words) != frozenset(AbsenceAttestationFamily):
+    if frozenset(_family_words) != _FORM_FAMILIES:
         raise InternalInvariantError(
             "every statement family the registry can declare needs its words",
             precondition_verdict=internal_invariant_verdict("work_form_wording.statement_family_worded"),
@@ -93,7 +96,7 @@ def _open_carries_by_family(
         if not _attestable_open(entry, held, entered):
             continue
         binding = context.bindings.get(entry.binding_id)
-        if binding is not None and binding.absence_attestation is not None:
+        if binding is not None and binding.absence_attestation in _FORM_FAMILIES:
             open_by_family.setdefault(binding.absence_attestation, []).append(entry.binding_id)
     if revision is None or not trabajo_recorded(revision):
         # No payer record of work income, so the employer's contributions are not in question.

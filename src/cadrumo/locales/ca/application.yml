@@ -2119,6 +2119,84 @@ application:
         de {price}, i els moviments que anomenen declaren una base de {base}.'
       register_row_missing: '{elements}: aquests elements indiquen {count} moviments
         que ja no existeixen.'
+      renta_inmueble_accessory_property: 'Immoble {record}: és un immoble accessori
+        arrendat amb el principal, cosa que el càlcul no ofereix.'
+      renta_inmueble_acquisition_cost_unstated: 'Immoble {record}: no indica el seu
+        import ni les despeses d''adquisició, així que l''amortització de la construcció
+        no es calcula.'
+      renta_inmueble_acquisition_date_unstated: 'Immoble {record}: no indica quan
+        es va adquirir, així que no se saben els dies que el vas tenir.'
+      renta_inmueble_boxes_not_offered: 'Immoble {record}: l''amortització del mobiliari,
+        la reducció de l''art. 23.3 i les amortitzacions especials no s''ofereixen;
+        introdueix-les a mà quan escaiguin.'
+      renta_inmueble_cadastral_values_unstated: 'Immoble {record}: no indica ni el
+        valor del sòl ni els valors cadastrals de l''exercici, així que el sòl no
+        es pot excloure de la base d''amortització.'
+      renta_inmueble_concept_undeclared: Un moviment indica un concepte de despesa
+        que la llista d'aquest exercici no inclou.
+      renta_inmueble_concurrent_leases: 'Immoble {record}: dos dels seus arrendaments
+        coincideixen en algun dia.'
+      renta_inmueble_cumulative_amortisation_unstated: 'Immoble {record}: la seva
+        amortització pot arribar al valor d''adquisició, i no s''indica l''amortització
+        acumulada a l''inici de l''exercici.'
+      renta_inmueble_currency_unconverted: Un moviment vinculat és en moneda estrangera
+        i no té valor en euros.
+      renta_inmueble_days_not_let: 'Immoble {record}: el vas tenir dies en què no
+        estava arrendat, i la renda imputada d''aquests dies no es calcula.'
+      renta_inmueble_expense_row_on_lease: Un moviment de sortida està vinculat a
+        un arrendament; vincula la despesa al seu immoble.
+      renta_inmueble_expense_row_without_concept: Un moviment vinculat a un immoble
+        no indica el seu concepte de despesa.
+      renta_inmueble_held_part_of_ejercicio: 'Immoble {record}: es va adquirir o transmetre
+        durant l''exercici, i el prorrateig de les seves despeses no s''ofereix.'
+      renta_inmueble_improvement_in_ejercicio: 'Immoble {record}: una millora té data
+        dins de l''exercici, i els seus dies d''amortització no es calculen.'
+      renta_inmueble_income_outside_lease: Un cobrament de lloguer té una data fora
+        del període de l'arrendament al qual està vinculat.
+      renta_inmueble_income_row_on_property: Un moviment d'entrada està vinculat a
+        un immoble; vincula el lloguer al seu arrendament.
+      renta_inmueble_lease_names_no_property: 'Arrendament {record}: esmenta un immoble
+        que el teu perfil no té.'
+      renta_inmueble_lease_without_income: 'Arrendament {record}: és vigent en l''exercici
+        i no té cap cobrament de lloguer vinculat.'
+      renta_inmueble_naturaleza_unstated: 'Immoble {record}: no indica si és urbà
+        o rústic.'
+      renta_inmueble_pending_expenses_unstated: 'Immoble {record}: no s''indiquen
+        les despeses d''interessos i reparació d''exercicis anteriors pendents de
+        deduir, i cap declaració anterior desada aquí no les recull.'
+      renta_inmueble_property_abroad_let: 'Immoble {record}: és a l''estranger i arrendat,
+        i el seu tractament com a renda estrangera no s''ofereix.'
+      renta_inmueble_record_unreadable: No es pot llegir un registre d'immoble o d'arrendament
+        del teu perfil, així que no es calcula cap immoble arrendat.
+      renta_inmueble_reduction_fact_unstated: 'Immoble {record}: un arrendament no
+        indica si és d''habitatge, si l''habitatge és en zona tensionada o si manté
+        l''art. 17.6 LAU, així que la reducció de l''art. 23.2 no es calcula.'
+      renta_inmueble_reduction_tenants_mixed: 'Immoble {record}: només alguns arrendataris
+        d''un arrendament compleixen per edat la reducció de l''art. 23.2, que no
+        es calcula.'
+      renta_inmueble_regime_not_pleno_dominio: 'Immoble {record}: el tens en un dret
+        diferent del ple domini, que el càlcul no ofereix.'
+      renta_inmueble_relative_fact_unstated: 'Arrendament {record}: no indica si l''arrendatari
+        és parent segons l''art. 24 LIRPF.'
+      renta_inmueble_relative_tenant: 'Arrendament {record}: l''arrendatari és parent
+        segons l''art. 24 LIRPF, i el rendiment mínim no es calcula.'
+      renta_inmueble_row_names_no_lease: Un moviment del llibre està vinculat a un
+        arrendament que el teu perfil no té.
+      renta_inmueble_row_names_no_property: Un moviment del llibre està vinculat a
+        un immoble que el teu perfil no té.
+      renta_inmueble_several_leases: 'Immoble {record}: té més d''un arrendament en
+        l''exercici, i la declaració encara no pot recollir cada contracte.'
+      renta_inmueble_tenants_beyond_numbered: 'Arrendament {record}: indica més arrendataris
+        dels que caben a les caselles numerades.'
+      renta_inmueble_titular_not_declarant: 'Immoble {record}: pertany a un membre
+        de la teva unitat familiar diferent de tu.'
+      renta_inmueble_titularidad_unstated: 'Immoble {record}: no indica qui n''és
+        el titular ni en quin dret.'
+      renta_inmueble_withholding_payer_no_tenant: Una retenció sobre lloguer urbà
+        esmenta un pagador que no és arrendatari de cap arrendament de l'exercici.
+      renta_inmueble_withholding_payer_several_properties: Una retenció sobre lloguer
+        urbà esmenta un pagador que arrenda més d'un dels teus immobles, així que
+        no se sap a quin correspon.
       residence_period_unknown: No hi ha residència fiscal registrada per al {date},
         de manera que els teus elements es compten com si s'apliquessin els Models
         100 i 130.
@@ -2853,6 +2931,12 @@ application:
         ja té un valor o la teva declaració, o la declaració no n''arrossega cap.
         No s''ha canviat res.'
       prior_carries_unstated:
+        renta_capital_inmobiliario_gastos_pendientes: 'No es pot calcular el Modelo
+          %{modelo} de %{filing_year}: no consta si queden interessos i despeses de
+          reparació i conservació d''exercicis anteriors pendents de deduir en un
+          immoble arrendat (casella %{boxes}). Desa la declaració de l''any anterior
+          o indica-ho a la fila d''aquest immoble amb %{command}, indicant la fila.
+          No s''ha desat res.'
         renta_negative_general_bases_pending: 'No es pot calcular el Modelo %{modelo}
           de %{filing_year}: no consta si queden bases liquidables generals negatives
           d''exercicis anteriors pendents de compensar (caselles %{boxes}). Desa la
@@ -3187,6 +3271,15 @@ application:
         es pot comprovar per presentar-lo ni exportar com a fitxer per a l'AEAT.
       registry_snapshot_unresolved: No s'han pogut carregar les regles del model %{modelo}
         de %{filing_year}, període %{period}. Torna-ho a provar o actualitza l'aplicació.
+      renta_inmueble_rows_drift: 'Els immobles arrendats d''aquest càlcul del model
+        %{modelo} han canviat des que es va calcular: s''han modificat els seus registres
+        d''immoble, arrendament, moviments vinculats o retencions (%{rows_recorded}
+        immobles registrats, %{rows_current} ara, %{rows_changed} canviats). Torna
+        a calcular abans de fer-lo servir.'
+      renta_inmueble_rows_unavailable: Cadrumo no ha pogut llegir els registres d'immobles,
+        arrendaments, moviments o retencions dels immobles arrendats d'aquest càlcul
+        del model %{modelo}, així que no pot saber si han canviat. Torna-ho a provar
+        quan es puguin llegir i després torna a calcular.
       required_maximum_unresolved: La casella [%{box}] encara no es pot comprovar,
         perquè no se sap la quantia màxima que la llei exigeix aplicar en aquest exercici.
         Hi falten algunes de les xifres de què depèn aquesta quantia.

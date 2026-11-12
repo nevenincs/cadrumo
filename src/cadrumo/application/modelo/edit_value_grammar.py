@@ -239,7 +239,8 @@ def binding_value_grammar(binding: BindingDefinition, *, revision: ModeloRevisio
     routes it: a binding the revision's formulas read as an enum key takes its
     token verbatim, a decimal, integer or boolean binding takes a decimal
     (boolean encoded 0 / 1), and a date-consumed, row-set, or free-text binding
-    has no override channel.
+    has no override channel. A row-set column whose registry family the filer
+    states row by row takes that statement: a nonnegative amount.
 
     See Also:
         :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
@@ -247,6 +248,16 @@ def binding_value_grammar(binding: BindingDefinition, *, revision: ModeloRevisio
     """
     value = binding.value
     data_type = value.data_type
+    family_stated = binding.absence_attestation
+    if family_stated is not None and family_stated.row_grain:
+        return ModeloEditValueGrammarV1(
+            data_type=data_type.value,
+            family=ModeloEditValueFamily.DECIMAL,
+            channel=ModeloEditValueChannel.DECIMAL,
+            max_fraction_digits=MONEY_FRACTION_DIGITS,
+            sign=CasillaSignConstraint.NON_NEGATIVE,
+            money_operand_bound=True,
+        )
     if binding.id in revision_date_binding_ids(revision) or value.channel in {
         BindingValueChannel.DATE,
         BindingValueChannel.ROW_SET,
