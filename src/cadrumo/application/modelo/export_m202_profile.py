@@ -330,7 +330,8 @@ def _derived_rate_fields(
     """The rate slots, derived from the governed rates of the período the stated régimen selects."""
     rates = governed_rates(periodo_start=periodo.start, operation=operation)
     # LIS art. 29.1 reads the "período impositivo inmediato anterior"; a first período has none to qualify it.
-    microempresa = inputs.prior_incn is not None and inputs.prior_incn < rates.microempresa_threshold()
+    threshold = rates.microempresa_threshold()
+    microempresa = inputs.prior_incn is not None and threshold is not None and inputs.prior_incn < threshold
     applied = tipo_gravamen_rates(marks=inputs.marks, microempresa=microempresa, rates=rates)
     several = several_rates_beyond_own_keys(rates=applied, marks=inputs.marks, microempresa=microempresa)
     fields: dict[str, object] = {}

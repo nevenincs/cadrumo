@@ -20,9 +20,14 @@ LIS art. 29 gives precedence:
 - A cooperativa fiscalmente protegida applies its protected rate to its
   cooperative results and the lane above to the rest, so it consigns both.
 
-Régimes whose rates the registry does not publish (SOCIMI, tonnage regime), an
-ejercicio whose Modelo 200 edition publishes no rates, and a cooperativa on a
-multi-tranche scale (the design lists no such combination) refuse terminally.
+A lane the ejercicio's edition does not publish did not exist in that law: before
+Ley 31/2022 there was no microempresa scale and an art. 101 entity applied the
+general rate, so the 2022 edition publishes neither lane. Such a lane is absent
+for that edition, never projected from a later one, and the entity falls to the
+lane that remains. Régimes whose rates the registry does not publish (SOCIMI,
+tonnage regime), an ejercicio whose Modelo 200 edition publishes none of the
+rates every edition carries, and a cooperativa on a multi-tranche scale (the
+design lists no such combination) refuse terminally.
 """
 
 from __future__ import annotations
@@ -56,9 +61,6 @@ _REQUIRED_PARAMETERS: Final = (
     NEW_ENTITY,
     COOPERATIVE_PROTECTED,
     NON_PROFIT,
-    ERD_ART_101,
-    MICROEMPRESA_SCALE,
-    MICROEMPRESA_THRESHOLD,
 )
 
 _HUNDRED: Final = Decimal(100)
@@ -91,9 +93,15 @@ class GovernedRates:
     on: date
     parameters: Mapping[str, ParameterDefinition]
 
-    def microempresa_threshold(self) -> Decimal:
-        """The INCN below which an entity is a microempresa (LIS art. 29.1)."""
+    def microempresa_threshold(self) -> Decimal | None:
+        """The INCN below which an entity is a microempresa (LIS art. 29.1); None when the edition has no lane."""
+        if MICROEMPRESA_THRESHOLD not in self.parameters or MICROEMPRESA_SCALE not in self.parameters:
+            return None
         return _nearest_value(self.parameters[MICROEMPRESA_THRESHOLD], self.on).value
+
+    def publishes(self, parameter_id: str) -> bool:
+        """Whether the edition publishes the lane at all."""
+        return parameter_id in self.parameters
 
     def rate(self, parameter_id: str) -> Decimal:
         """One scalar rate, in percent."""
@@ -173,7 +181,7 @@ def consigned_rates(rates: Sequence[Decimal]) -> str:
 def _base_lane(*, marks: RegimenMarks, microempresa: bool, rates: GovernedRates) -> tuple[Decimal, ...]:
     if microempresa:
         return rates.microempresa_scale()
-    if marks.erd_tipo_especifico:
+    if marks.erd_tipo_especifico and rates.publishes(ERD_ART_101):
         return (rates.rate(ERD_ART_101),)
     return (rates.rate(GENERAL),)
 

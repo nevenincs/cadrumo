@@ -61,6 +61,7 @@ from ..action_errors import ModeloProfileReadinessError
 from ..export_accounts import _producer_facts_refusal
 from ..export_contracts import ModeloExportCommand
 from ..export_m202_profile import modelo_202_producer_profile
+from ..export_m202_tipo_gravamen import GovernedRates, RegimenMarks, tipo_gravamen_rates
 from ..export_periodo_impositivo import PeriodoImpositivo, periodo_impositivo_from_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -84,7 +85,10 @@ _COOPERATIVE = "is.modelo-200.tipo-gravamen-cooperative-protected"
 _NON_PROFIT = "is.modelo-200.tipo-gravamen-non-profit-special-regime"
 _ERD = "is.modelo-200.tipo-gravamen-erd-art101"
 _MICRO_SCALE = "is.modelo-200.tipo-gravamen-pyme"
-_RATE_PARAMETERS = (_GENERAL, _NEW_ENTITY, _COOPERATIVE, _NON_PROFIT, _ERD, _MICRO_SCALE)
+_MICRO_THRESHOLD = "is.modelo-200.incn-umbral-microempresa"
+_CORE_RATE_PARAMETERS = (_GENERAL, _NEW_ENTITY, _COOPERATIVE, _NON_PROFIT)
+_LANE_PARAMETERS = (_ERD, _MICRO_SCALE, _MICRO_THRESHOLD)
+_RATE_PARAMETERS = (*_CORE_RATE_PARAMETERS, *_LANE_PARAMETERS)
 
 #: A sociedad under a venture-capital régimen and none of the other datos adicionales.
 _STATED: Mapping[str, str] = {
@@ -148,6 +152,11 @@ def _published_rates(operation: PinnedAuthorityOperation, year: int) -> Mapping[
 def _years_with_rates(operation: PinnedAuthorityOperation) -> tuple[int, ...]:
     """The supported years whose Modelo 200 edition publishes every rate the lanes read."""
     return tuple(year for year in _YEARS if set(_RATE_PARAMETERS) <= _published_rates(operation, year).keys())
+
+
+def _years_with_core_rates(operation: PinnedAuthorityOperation) -> tuple[int, ...]:
+    """The supported years whose Modelo 200 edition publishes the rates every edition carries."""
+    return tuple(year for year in _YEARS if set(_CORE_RATE_PARAMETERS) <= _published_rates(operation, year).keys())
 
 
 def _rate(operation: PinnedAuthorityOperation, year: int, parameter_id: str) -> str:
@@ -424,12 +433,59 @@ def test_a_regimen_whose_rates_are_not_published_refuses_terminally_never_a_gues
 def test_a_year_whose_modelo_200_edition_publishes_no_rates_refuses_terminally(
     operation: PinnedAuthorityOperation,
     page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
-    rate_years: tuple[int, ...],
 ) -> None:
-    for year in (year for year in _YEARS if year not in rate_years):
+    core_years = _years_with_core_rates(operation)
+    for year in (year for year in _YEARS if year not in core_years):
         with pytest.raises(FilingProducerSnapshotError) as refused:
             _resolve(page_01_fields[year], year, _STATED, operation=operation)
         _assert_terminal_rate_refusal(refused.value)
+
+
+def test_a_lane_the_edition_does_not_publish_is_absent_and_the_entity_applies_the_general_rate(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+) -> None:
+    # Before Ley 31/2022 there was no microempresa scale and an art. 101 entity paid the general
+    # rate; an edition without those lanes must never borrow a later edition's 23 % or threshold.
+    lane_less = [
+        year
+        for year in _years_with_core_rates(operation)
+        if not set(_LANE_PARAMETERS) <= _published_rates(operation, year).keys()
+    ]
+    for year in lane_less:
+        published = _published_rates(operation, year).keys()
+        general = _rate(operation, year, _GENERAL)
+        if _MICRO_SCALE not in published or _MICRO_THRESHOLD not in published:
+            micro = _render(operation, page_01_fields[year], year, _STATED, turnover=_MICRO_TURNOVER)
+            assert _tipo(micro) == general, year
+            if _K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL in micro:
+                assert micro[_K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL][1] == " "
+        if _ERD not in published:
+            erd = _render(operation, page_01_fields[year], year, {**_STATED, _ERD_PATH: "true"}, turnover=_ERD_TURNOVER)
+            assert _tipo(erd) == general, year
+            assert erd[_K.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION][1] == "X"
+
+
+def test_rates_without_the_microempresa_and_erd_lanes_give_no_threshold_and_the_general_rate(
+    operation: PinnedAuthorityOperation,
+    rate_years: tuple[int, ...],
+) -> None:
+    # The pre-2023 law as an edition publishes it: the rates every edition carries and no lane parameters.
+    for year in rate_years:
+        core = {key: value for key, value in _published_rates(operation, year).items() if key not in _LANE_PARAMETERS}
+        rates = GovernedRates(on=date(year, 1, 1), parameters=core)
+        erd = RegimenMarks(
+            ley_49_2002=False,
+            socimi=False,
+            navieras_tonelaje=False,
+            new_entity_first_two_profit_periods=False,
+            erd_tipo_especifico=True,
+            cooperativa_protegida=False,
+        )
+
+        assert rates.microempresa_threshold() is None, year
+        (applied,) = tipo_gravamen_rates(marks=erd, microempresa=False, rates=rates)
+        assert f"{int(applied):02d}" == _rate(operation, year, _GENERAL), year
 
 
 def test_a_first_periodo_has_no_preceding_turnover_so_it_is_no_microempresa(
