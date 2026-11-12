@@ -16,6 +16,7 @@ flows from the substrate, not from a hand-maintained list.
 from __future__ import annotations
 
 import re
+from datetime import date
 
 from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ...core.identity.nif_iva import normalise_nif_iva
@@ -38,9 +39,9 @@ _SPAIN_COUNTRY_CODE = "ES"
 _ISO_2_RE = re.compile(rf"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
 
-def _eu_member_state_codes() -> frozenset[str]:
-    """Return the 27 strict EU members, excluding the fact-declared ``XI`` prefix."""
-    catalogue = resolve_eu_member_state_catalogue()
+def _eu_member_state_codes(effective_date: date) -> frozenset[str]:
+    """Return the 27 strict EU members on ``effective_date``, excluding the fact-declared ``XI`` prefix."""
+    catalogue = resolve_eu_member_state_catalogue(effective_date=effective_date)
     northern_ireland = catalogue.require("XI")
     return frozenset(str(member).upper() for member in catalogue.all_states if member != northern_ireland)
 
@@ -71,8 +72,8 @@ def validate_country_code(value: str) -> str:
     return normalized
 
 
-def is_eu_member_state_code(value: str) -> bool:
-    """Return ``True`` when ``value`` matches one of the 27 EU Member State codes.
+def is_eu_member_state_code(value: str, *, effective_date: date) -> bool:
+    """Return ``True`` when ``value`` matches one of the 27 EU Member State codes on ``effective_date``.
 
     The membership check is anchored to
     :class:`cadrumo.domain.iva.schema.EUMemberState`; if fact 0131 changes
@@ -81,15 +82,17 @@ def is_eu_member_state_code(value: str) -> bool:
 
     Args:
         value: Raw country code to check.
+        effective_date: The date of the supply the membership decides, which selects
+            the catalogue edition; the run date is never substituted.
 
     Returns:
-        ``True`` when ``value`` normalises to one of the 27 EU codes.
+        ``True`` when ``value`` normalises to one of the 27 EU codes on that date.
     """
     try:
         normalized = validate_country_code(value)
     except InvoiceValidationError:
         return False
-    return normalized in _eu_member_state_codes()
+    return normalized in _eu_member_state_codes(effective_date)
 
 
 def validate_iva_number(value: str, country: str) -> str:
