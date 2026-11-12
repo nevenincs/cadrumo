@@ -52,10 +52,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _EXPECTED_PAIRS = frozenset(
     {
         ("180", "115"),
-        ("190", "111"),
         ("193", "123"),
-        # IRNR's annual/periodic pair, the same shape 190/111 carries for IRPF:
-        # the registry titles them "IRNR resumen anual de retenciones e ingresos
+        # IRNR's annual/periodic pair: the registry titles them "IRNR resumen anual de retenciones e ingresos
         # a cuenta" and "IRNR retenciones e ingresos a cuenta", so the summary
         # reconciles against the periodic declarations it sums.
         ("296", "216"),

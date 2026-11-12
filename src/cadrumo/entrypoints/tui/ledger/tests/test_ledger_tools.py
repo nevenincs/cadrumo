@@ -18,7 +18,7 @@ from ..controller import LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
 from ..routes import resolve_ledger_screen
-from ..tools import LedgerToolV1
+from ..tools import LedgerToolV1, tool_action_ids, tool_for_action
 from ..workspace_injection import LedgerWorkspaceInjection
 from ..workspace_presentation import ledger_workspace_page
 from ..workspace_screen import LedgerWorkspaceScreen
@@ -85,6 +85,30 @@ def test_a_tool_without_a_label_key_is_refused() -> None:
 def test_two_tools_sharing_a_key_are_refused_at_construction() -> None:
     with pytest.raises(ValueError, match="unique"):
         _controller(tool(LedgerWorkspaceArea.OVERVIEW, "same"), tool(LedgerWorkspaceArea.ENTRIES, "same"))
+
+
+def _performing(name: str, *action_ids: str) -> LedgerToolV1:
+    return LedgerToolV1(
+        key=f"ledger.tool.test.{name}",
+        label_key="tui.ledger.area.review",
+        area=LedgerWorkspaceArea.ENTRIES,
+        build=_open,
+        action_ids=action_ids,
+    )
+
+
+def test_two_tools_performing_one_action_are_refused_at_construction() -> None:
+    with pytest.raises(ValueError, match="one tool"):
+        _controller(_performing("first", "operator.test.act"), _performing("second", "operator.test.act"))
+
+
+def test_the_tool_for_an_action_is_the_one_that_performs_it() -> None:
+    tools = (_performing("plain"), _performing("acting", "operator.test.act", "operator.test.other"))
+
+    assert tool_for_action(tools, "operator.test.other") is tools[1]
+    assert tool_for_action(tools, "operator.test.absent") is None
+    assert tool_for_action(tools, None) is None
+    assert tool_action_ids(tools) == ("operator.test.act", "operator.test.other")
 
 
 @pytest.mark.asyncio

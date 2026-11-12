@@ -337,13 +337,13 @@ def test_m190_rows_group_active_payments_by_recipient_clave_and_subclave() -> No
         BindingAggregationOp.COUNT_DISTINCT,
     )
     base = _scalar_binding(
-        "modelo-190-111-trabajo-dinerario-importe-anual",
+        "percibido-sum",
         "percibido_sum",
         BindingDataType.MONEY,
         BindingAggregationOp.SUM,
     )
     retention = _scalar_binding(
-        "modelo-190-111-retenciones-anual",
+        "retencion-sum",
         "retencion_sum",
         BindingDataType.MONEY,
         BindingAggregationOp.SUM,

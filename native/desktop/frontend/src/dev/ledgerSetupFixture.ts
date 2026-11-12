@@ -289,6 +289,55 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
   // ---- Counterparties ------------------------------------------------------
 
   const filingNames = new Map<string, JsonObject>();
+  /** The party-name export fields a view serves, synthetic: two editions and
+   * two widths. The backend reads them from the pinned layouts. */
+  const FILING_NAME_SLOTS = [
+    { edition: "Synthetic edition A", width: 40 },
+    { edition: "Synthetic edition B", width: 40 },
+    { edition: "Synthetic edition B", width: 20 },
+  ];
+  /** Each served slot with how the stated name files there: the parts
+   * joined by one space, whole when it fits, else a rendering stated for the
+   * width. */
+  const filingNameSlots = (name: JsonObject | null): JsonValue =>
+    FILING_NAME_SLOTS.map((slot, at) => {
+      const parts = name
+        ? [
+            name.primer_apellido,
+            name.segundo_apellido,
+            name.nombre,
+            name.razon_social,
+          ].filter((part): part is string => typeof part === "string")
+        : [];
+      const single =
+        name?.party_kind === "natural_person" &&
+        name.no_second_surname === true;
+      const composed = parts.join(" ");
+      const renderings = (name?.renderings ?? []) as { width: number }[];
+      const rendered = renderings.some((one) => one.width === slot.width);
+      const refusal =
+        name === null
+          ? "missing"
+          : single
+            ? "single_surname"
+            : composed.length > slot.width && !rendered
+              ? "too_wide"
+              : null;
+      return {
+        modelo: "synthetic",
+        revision_id: `synthetic-${at}`,
+        edition_words: slot.edition,
+        edition_words_language: "en",
+        layout_id: "synthetic",
+        export_record_id: "synthetic",
+        export_field_id: `synthetic-${at}`,
+        width: slot.width,
+        fits: refusal === null,
+        refusal,
+        composed_length: name === null || single ? null : composed.length,
+        uses_rendering: refusal === null && composed.length > slot.width,
+      };
+    });
   function counterparty(request: JsonObject): JsonObject {
     fromKeys(request, [
       "action",
@@ -428,11 +477,14 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       };
       counterparties.set(tax, facts);
       changed = true;
-    } else if (action === "withdraw" && facts) {
+    } else if (action === "withdraw" && (facts || filingNames.has(tax))) {
+      // A withdrawal removes the whole record: every answer stated for it.
       counterparties.delete(tax);
+      filingNames.delete(tax);
       facts = null;
       changed = true;
     }
+    const heldName = action === "withdraw" ? null : filingName;
     const evidenced = text(request.evidenced_scope);
     return {
       profile_id: profileId,
@@ -476,16 +528,31 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       provincia_choices: action === "withdraw" ? [] : PROVINCIA_CHOICES,
       filing_name:
         action === "view" || action === "filing_name"
-          ? (filingName as JsonValue)
+          ? (heldName as JsonValue)
           : null,
+      // The backend serves the finding's sentence; the fixture serves none.
       findings:
-        filingName && filingName.party_kind !== observedForm
+        heldName &&
+        (action === "view" || action === "filing_name") &&
+        heldName.party_kind !== observedForm
           ? [
               {
                 code: "counterparty_filing_name_kind_contradicts_identifier_form",
-                declared_kind: filingName.party_kind as JsonValue,
+                declared_kind: heldName.party_kind as JsonValue,
                 observed_form: observedForm,
+                words: null,
+                words_language: null,
               },
+            ]
+          : [],
+      filing_name_slots: action === "view" ? filingNameSlots(heldName) : [],
+      filing_name_part_limits:
+        action === "view"
+          ? [
+              { part: "primer_apellido", max_length: 36 },
+              { part: "segundo_apellido", max_length: 36 },
+              { part: "nombre", max_length: 36 },
+              { part: "razon_social", max_length: 40 },
             ]
           : [],
     };

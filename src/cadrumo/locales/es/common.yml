@@ -2177,6 +2177,8 @@ desktop:
       country: País
       established: Establecida
       filing_name:
+        asked: Un cálculo pide el nombre de presentación de una contraparte. Escribe
+          su NIF y búscala para indicar el nombre.
         kind:
           entity: Entidad
           natural_person: Persona física
@@ -2185,16 +2187,26 @@ desktop:
         kind_label: Tipo
         no_second_surname: Sin segundo apellido
         nombre: Nombre
+        part_limit: Con {count} caracteres como máximo se presenta completo.
         primer_apellido: Primer apellido
         razon_social: Razón social
         rendering_add: Añadir una versión
         rendering_for: Para {width} caracteres
+        rendering_for_slot: Añadir una versión para {width} caracteres
         rendering_remove: Quitar esta versión
         renderings: Versiones más cortas
         renderings_hint: El ancho es el número de caracteres del campo en el que debe
           caber el nombre.
         save: Guardar nombre de presentación
         segundo_apellido: Segundo apellido
+        slot:
+          fits: Se presenta completo
+          missing: No has indicado ningún nombre
+          single_surname: 'No se presenta: solo hay un apellido indicado'
+          too_wide: 'Demasiado largo: indica una versión para este ancho'
+          uses_rendering: Se presenta con tu versión para este ancho
+          width: '{width} caracteres'
+        slots: Dónde se presenta el nombre
         stated_by: Indicado por
         text: Texto
         title: Nombre de presentación
@@ -2226,9 +2238,9 @@ desktop:
       vat_state: Identificada a efectos del IVA en
       view: Consultar
       withdraw: Retirar…
-      withdraw_confirm: Retirar la confirmación
-      withdraw_what: Retira tu confirmación. Otras fuentes pueden seguir aportando
-        estos valores.
+      withdraw_everything: 'Retira todo lo que indicaste para esta contraparte: tu
+        confirmación, su provincia y su nombre de presentación.'
+      withdraw_everything_confirm: Retirar todo lo indicado
     density:
       comfortable: Filas holgadas
     describe:
@@ -4772,9 +4784,8 @@ desktop:
     entry_required: '* obligatorio en cada registro'
     field_help: Sobre este campo
     household:
-      add: Añadir persona
       blocked_hidden: Algunos valores de este grupo están ocultos, así que aquí no
-        se pueden cambiar sus personas.
+        se pueden editar sus personas. Aún puedes añadir o quitar una persona.
       cap_reached: Este grupo está lleno, así que no se pueden añadir más personas.
       declare_none: Indicar que no hay ninguna
       edit_person: Editar persona {number}
@@ -4787,10 +4798,8 @@ desktop:
         clear: Retirar la respuesta
         unknown_help: Todavía no has indicado nada, y eso no es lo mismo que «no».
       reading: Leyendo tu familia…
-      remove: Quitar persona
       remove_help: ¿Quitar a esta persona de tu familia? El recuento se actualiza
         con ella.
-      remove_person: Quitar persona {number}
       retry: Reintentar
       saved: Familia guardada.
       state:
@@ -7447,12 +7456,16 @@ tui:
           muestra %{evidenced}. %{detail}'
         country: Código de país (2 letras, opcional)
         evidenced: Ámbito que muestra un documento, para la consulta (opcional)
+        filing_asked: Un cálculo pide el nombre de presentación de una contraparte.
+          Escribe su identificador fiscal y búscala para indicar el nombre.
         filing_done: Se indicó el nombre de presentación de %{identifier}.
         filing_heading: Nombre de presentación
         filing_kind_entity: Entidad
         filing_kind_natural_person: Persona física
         filing_no_second: Sin segundo apellido
         filing_nombre: Nombre
+        filing_part_limit: '%{part}: con %{count} caracteres como máximo se presenta
+          completo.'
         filing_primer: Primer apellido
         filing_razon: Razón social
         filing_rendering: 'Para %{width} caracteres: %{text}'
@@ -7462,6 +7475,13 @@ tui:
           con punto y coma.
         filing_review: Revisar nombre de presentación
         filing_segundo: Segundo apellido
+        filing_slot: '%{width} caracteres: %{state} (%{editions})'
+        filing_slot_fits: se presenta completo
+        filing_slot_missing: no hay nombre indicado
+        filing_slot_single_surname: no se presenta, solo hay un apellido indicado
+        filing_slot_too_wide: demasiado largo, indica una versión para este ancho
+        filing_slot_uses_rendering: se presenta con tu versión para este ancho
+        filing_slots_heading: 'Dónde se presenta el nombre:'
         filing_stage: Indicar el nombre de presentación de %{identifier} como %{kind}.
         filing_stated: 'Nombre de presentación de %{identifier}: %{kind} · %{name}'
         filing_stated_by: Indicado por %{name} el %{date}.
@@ -7472,7 +7492,8 @@ tui:
         identifier_required: Escribe primero el identificador fiscal de la contraparte.
         note: Nota (opcional)
         nothing_known: No se sabe nada de %{identifier}.
-        nothing_to_withdraw: No había ninguna confirmación de %{identifier} que retirar.
+        nothing_stated_to_withdraw: No había nada indicado para %{identifier} que
+          retirar.
         prompt: Consulta lo que se sabe del establecimiento de una contraparte, confirma
           tú mismo ese establecimiento o retira tu confirmación.
         review_confirm: Revisar la confirmación
@@ -7480,7 +7501,8 @@ tui:
         scope: '%{identifier}: ámbito territorial %{scope} (fuente: %{source})'
         stage_confirm: 'Confirmar %{identifier}: ámbito territorial %{scope} · estado
           miembro %{state}.'
-        stage_withdraw: Retirar tu confirmación de %{identifier}.
+        stage_withdraw_everything: 'Retirar todo lo que indicaste para %{identifier}:
+          tu confirmación, su provincia y su nombre de presentación.'
         state: 'Estado miembro %{state} (fuente: %{source})'
         territorial: Ámbito territorial (código)
         title: Contrapartes
@@ -7488,7 +7510,7 @@ tui:
           · estado miembro %{state}.'
         view: Consultar
         who_heading: Qué contraparte
-        withdrawn: Se ha retirado tu confirmación de %{identifier}.
+        withdrawn_everything: Se ha retirado todo lo que indicaste para %{identifier}.
       destructive_accept: Sí, adelante
       destructive_title: Confirma este cambio
       diagnostics:

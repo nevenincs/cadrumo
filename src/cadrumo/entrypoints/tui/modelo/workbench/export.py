@@ -2,12 +2,15 @@
 
 The dialog offers the artefacts the declaration's read says this installation
 can publish, so the filer never picks an export the installation would refuse.
-Where the read says the export asks them, it asks the three declaration-shaping
-elections -- refund, payment and prior direct debit -- each pre-set to its
-neutral default and never blank; otherwise it submits those defaults without
-asking. Beside the elections it offers the own bank account
-AEAT debits and the one it pays a refund into, each prefilled from the Ledger
-designation for this modelo and shown masked. Nothing is exported here: the
+Where the read says the export asks them, it asks the settlement questions the
+read served -- refund, payment, prior direct debit and instalments -- in the
+words the read served: an answerable question with its choices, pre-set to the
+default it served, with the conditions and amounts it states, an advisory
+amount marked and told why; a question that applies but cannot be answered
+says why, and one the result makes meaningless is not asked. A question not
+asked is submitted at its neutral default. Beside them it offers the own bank
+account AEAT debits and the one it pays a refund into, each prefilled from the
+Ledger designation for this modelo and shown masked. Nothing is exported here: the
 dialog returns the typed request and the workbench runs it through the
 supervised operation.
 """
@@ -32,14 +35,15 @@ from .....application.ledger.own_account_operation import (
 )
 from .....application.modelo.work_form_export_offer import (
     EXPORT_ARTEFACT_LOCALE_KEYS,
-    PAYMENT_ELECTION_LOCALE_KEYS,
-    PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
-    REFUND_ELECTION_LOCALE_KEYS,
+    ModeloFormElection,
+    ModeloFormElectionQuestion,
+    ModeloFormElectionState,
 )
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.payment_election import PaymentElection
+from .....core.payment_instalment_election import PaymentInstalmentElection
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
 from .....core.refund_election import RefundElection
 from .....domain.transactions.own_accounts import OwnAccountRole
@@ -55,6 +59,21 @@ DESIGNATED_ACCOUNT: Final = "-"
 _ACCOUNT_CONTROLS: Final[Mapping[OwnAccountRole, str]] = MappingProxyType(
     {OwnAccountRole.CHARGE: "export-charge-account", OwnAccountRole.REFUND: "export-refund-account"}
 )
+_ELECTION_CONTROLS: Final[Mapping[ModeloFormElection, str]] = MappingProxyType(
+    {
+        ModeloFormElection.REFUND: "export-refund-election",
+        ModeloFormElection.PAYMENT: "export-payment-election",
+        ModeloFormElection.PRIOR_DOMICILIATION: "export-prior-domiciliation-election",
+        ModeloFormElection.INSTALMENT: "export-instalment-election",
+    }
+)
+"""The control each answerable settlement question is drawn as."""
+_ACCOUNT_ELECTIONS: Final[Mapping[ModeloFormElection, OwnAccountRole]] = MappingProxyType(
+    {ModeloFormElection.CHARGE_ACCOUNT: OwnAccountRole.CHARGE, ModeloFormElection.REFUND_ACCOUNT: OwnAccountRole.REFUND}
+)
+"""The elections the own-account controls answer, drawn from the Ledger designations rather than from choices."""
+SETTLEMENT_TITLE_LOCALE_KEY: Final = "desktop.modelo.settlement.title"
+ADVISORY_LOCALE_KEY: Final = "desktop.modelo.settlement.advisory"
 
 
 def designated_account_id(result: LedgerOwnAccountResult, role: OwnAccountRole, modelo: str) -> str | None:
@@ -93,6 +112,25 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
         WorkbenchExportScreen #export-notice {
             color: $warning;
             height: auto;
+        }
+        WorkbenchExportScreen #export-settlement-title {
+            text-style: bold;
+            margin-top: $cadrumo-stack;
+        }
+        WorkbenchExportScreen .export-question {
+            margin-top: $cadrumo-tight;
+        }
+        WorkbenchExportScreen .export-help,
+        WorkbenchExportScreen .export-figure-why {
+            color: $text-muted;
+            height: auto;
+        }
+        WorkbenchExportScreen .export-figure {
+            height: auto;
+        }
+        WorkbenchExportScreen .export-state {
+            height: auto;
+            color: $warning;
         }
         WorkbenchExportScreen #export-actions {
             height: auto;
@@ -150,37 +188,67 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
                     "application.modelo.lifecycle.export",
                 )
 
+    def _asked(self) -> tuple[ModeloFormElectionQuestion, ...]:
+        """The served questions the dialog asks or explains: those the result does not make meaningless."""
+        return tuple(
+            question
+            for question in self._offer.elections
+            if question.state is not ModeloFormElectionState.NOT_APPLICABLE
+        )
+
+    def _unasked_roles(self) -> frozenset[OwnAccountRole]:
+        """The account roles whose served question is not answerable: unavailable, or meaningless for the result."""
+        return frozenset(
+            _ACCOUNT_ELECTIONS[question.election]
+            for question in self._offer.elections
+            if question.election in _ACCOUNT_ELECTIONS and question.state is not ModeloFormElectionState.AVAILABLE
+        )
+
     def _compose_elections(self) -> ComposeResult:
-        for control_id, label_key, keys, default in (
-            (
-                "export-refund-election",
-                "tui.modelo.export.refund_election.label",
-                REFUND_ELECTION_LOCALE_KEYS,
-                RefundElection.COMPENSAR.value,
-            ),
-            (
-                "export-payment-election",
-                "tui.modelo.export.payment_election.label",
-                PAYMENT_ELECTION_LOCALE_KEYS,
-                PaymentElection.INGRESO.value,
-            ),
-            (
-                "export-prior-domiciliation-election",
-                "tui.modelo.export.prior_domiciliation_election.label",
-                PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
-                PriorDomiciliationElection.KEEP.value,
-            ),
-        ):
-            yield localized(Static(tr(label_key), markup=False), label_key)
+        asked = self._asked()
+        if not asked:
+            return
+        yield localized(
+            Static(tr(SETTLEMENT_TITLE_LOCALE_KEY), id="export-settlement-title", markup=False),
+            SETTLEMENT_TITLE_LOCALE_KEY,
+        )
+        for question in asked:
+            if question.state is ModeloFormElectionState.AVAILABLE and question.election in _ACCOUNT_ELECTIONS:
+                continue
+            yield Static(question.words, classes="export-question", markup=False)
+            if question.state is ModeloFormElectionState.UNAVAILABLE:
+                yield Static(
+                    question.state_words or "",
+                    id=f"export-state-{question.election.value}",
+                    classes="export-state",
+                    markup=False,
+                )
+                continue
             yield Select[str](
-                tuple((tr(key), member.value) for member, key in keys.items()),
-                value=default,
-                allow_blank=False,
-                id=control_id,
+                tuple((choice.words, choice.value) for choice in question.choices),
+                value=Select.NULL if question.default is None else question.default,
+                allow_blank=question.default is None,
+                id=_ELECTION_CONTROLS[question.election],
             )
+            if question.help is not None:
+                yield Static(question.help, classes="export-help", markup=False)
+            for figure in question.figures:
+                line = figure.words
+                if figure.advisory:
+                    line = f"{line} [{tr(ADVISORY_LOCALE_KEY)}]"
+                yield Static(
+                    line,
+                    id=f"export-figure-{question.election.value}-{figure.instalment.value}",
+                    classes="export-figure",
+                    markup=False,
+                )
+                if figure.advisory_words is not None:
+                    yield Static(figure.advisory_words, classes="export-figure-why", markup=False)
 
     def _compose_accounts(self) -> ComposeResult:
         for role, control_id in _ACCOUNT_CONTROLS.items():
+            if role in self._unasked_roles():
+                continue
             yield localized(
                 Static(tr(f"tui.modelo.export.account.{role.value}_label"), markup=False),
                 f"tui.modelo.export.account.{role.value}_label",
@@ -201,6 +269,8 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
             return
         open_accounts = tuple(item for item in result.accounts if item.closed_on is None)
         for role, control_id in _ACCOUNT_CONTROLS.items():
+            if role in self._unasked_roles():
+                continue
             designated = designated_account_id(result, role, self._offer.modelo)
             options = [(tr("tui.modelo.export.account.designated"), DESIGNATED_ACCOUNT)]
             options.extend((self._account_label(item, designated), item.own_account_id) for item in open_accounts)
@@ -218,6 +288,8 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
 
     def _account(self, role: OwnAccountRole) -> str | None:
         if not self._offer.asks_elections or self._offer.own_accounts is None:
+            return None
+        if role in self._unasked_roles():
             return None
         value = self._election(_ACCOUNT_CONTROLS[role])
         return None if value == DESIGNATED_ACCOUNT else value
@@ -248,25 +320,30 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
                 tr("application.modelo.lifecycle.refusal.export_destination_required")
             )
             return None
-        asks = self._offer.asks_elections
+        refund = self._answered(ModeloFormElection.REFUND)
+        payment = self._answered(ModeloFormElection.PAYMENT)
+        prior = self._answered(ModeloFormElection.PRIOR_DOMICILIATION)
+        instalment = self._answered(ModeloFormElection.INSTALMENT)
         return WorkbenchExportRequest(
             output_path=path,
             artefact=ModeloExportArtefact(self._election("export-artefact")),
-            refund_election=RefundElection(self._election("export-refund-election"))
-            if asks
-            else RefundElection.COMPENSAR,
-            payment_election=PaymentElection(self._election("export-payment-election"))
-            if asks
-            else PaymentElection.INGRESO,
-            prior_domiciliation_election=PriorDomiciliationElection(
-                self._election("export-prior-domiciliation-election")
-            )
-            if asks
-            else PriorDomiciliationElection.KEEP,
+            refund_election=RefundElection.COMPENSAR if refund is None else RefundElection(refund),
+            payment_election=PaymentElection.INGRESO if payment is None else PaymentElection(payment),
+            prior_domiciliation_election=(
+                PriorDomiciliationElection.KEEP if prior is None else PriorDomiciliationElection(prior)
+            ),
             replace_existing=self.query_one("#export-replace", Checkbox).value,
             charge_account_id=self._account(OwnAccountRole.CHARGE),
             refund_account_id=self._account(OwnAccountRole.REFUND),
+            instalment_election=(
+                PaymentInstalmentElection.SINGLE if instalment is None else PaymentInstalmentElection(instalment)
+            ),
         )
+
+    def _answered(self, election: ModeloFormElection) -> str | None:
+        """The answer chosen for one served question, or ``None`` when it was not asked and keeps its default."""
+        nodes = self.query(f"#{_ELECTION_CONTROLS[election]}")
+        return self._election(_ELECTION_CONTROLS[election]) if nodes else None
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Export, or leave without exporting."""

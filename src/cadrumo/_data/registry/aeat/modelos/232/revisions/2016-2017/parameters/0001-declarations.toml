@@ -1,0 +1,60 @@
+# Orden HFP/816/2017 art. 2 states who must file Modelo 232. Its final provision
+# two applies it to tax periods beginning on or after 1 January 2016, so the
+# thresholds are declared once here and every later edition inherits them.
+# Art. 2.5 obliges a filer with operations or securities in a tax haven
+# "independientemente de su importe", so that ground has no threshold.
+
+# Art. 2.1.a: operations with the same related person or entity whose combined
+# consideration in the tax period exceeds 250.000 euros at market value.
+[[revisions."2016-2017".parameters]]
+id = "modelo-232-same-related-party-threshold-eur"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["orden-hfp-816-2017:art-2", "rd-634-2015:art-13"]
+source_refs = ["aeat-modelo-232-human-form-instructions"]
+
+[[revisions."2016-2017".parameters.source_citations]]
+source_ref = "aeat-modelo-232-human-form-instructions"
+required_text = ["> 250.000 € de operaciones por entidad vinculada"]
+
+[[revisions."2016-2017".parameters.values]]
+value = "250000.00"
+date_axis = "filing_period"
+valid_from = 2016-01-01
+
+# Art. 2.1.b: specific operations whose combined amount of each type in the tax
+# period exceeds 100.000 euros.
+[[revisions."2016-2017".parameters]]
+id = "modelo-232-specific-operations-threshold-eur"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["orden-hfp-816-2017:art-2", "rd-634-2015:art-13"]
+source_refs = ["aeat-modelo-232-human-form-instructions"]
+
+[[revisions."2016-2017".parameters.source_citations]]
+source_ref = "aeat-modelo-232-human-form-instructions"
+required_text = ["> 100.000 € en operaciones específicas del mismo tipo"]
+
+[[revisions."2016-2017".parameters.values]]
+value = "100000.00"
+date_axis = "filing_period"
+valid_from = 2016-01-01
+
+# Art. 2.3: whatever the amount per related person, operations of the same type
+# and valuation method whose combined amount exceeds 50% of the entity's
+# turnover.
+[[revisions."2016-2017".parameters]]
+id = "modelo-232-same-type-turnover-share"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["orden-hfp-816-2017:art-2", "rd-634-2015:art-13"]
+source_refs = ["aeat-modelo-232-human-form-instructions"]
+
+[[revisions."2016-2017".parameters.source_citations]]
+source_ref = "aeat-modelo-232-human-form-instructions"
+required_text = ["> 50 % de la cifra de"]
+
+[[revisions."2016-2017".parameters.values]]
+value = "0.50"
+date_axis = "filing_period"
+valid_from = 2016-01-01

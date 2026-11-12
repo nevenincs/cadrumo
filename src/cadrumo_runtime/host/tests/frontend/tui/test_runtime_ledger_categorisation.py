@@ -155,10 +155,12 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
 from cadrumo.domain.transactions.classification_rule import LedgerClassificationRule
 from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.categorisation_doors import LedgerCategorisationDoorsV1
+from cadrumo.entrypoints.tui.ledger.tools import tool_action_ids
 from cadrumo.entrypoints.tui.operations.outcome import (
     OperationOutcomeUnknownError,
     SessionExpiredOutcomeUnknownError,
@@ -654,6 +656,17 @@ def test_each_door_refuses_a_result_for_another_profile(monkeypatch: pytest.Monk
         _call(_doors(client), case)
 
 
+def test_the_counterparty_door_refuses_a_result_for_another_country(monkeypatch: pytest.MonkeyPatch) -> None:
+    case = next(case for case in _CASES if case.door == "counterparty")
+    client = _Client()
+    receipt = _observation(case)
+    elsewhere = case.result(_PROFILE_ID).model_copy(update={"country_code": "PT"})
+    _install(monkeypatch, client, _Controller(receipt, elsewhere))
+
+    with raises_unsupported_result(receipt.projection.effect, receipt.projection.definition_contract):
+        _call(_doors(client), case)
+
+
 @pytest.mark.parametrize("case", _CASES, ids=lambda case: case.door)
 def test_each_door_refuses_a_receipt_with_the_wrong_effect(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
     client = _Client()
@@ -749,6 +762,8 @@ def test_the_composer_builds_every_tool_on_one_pinned_session(monkeypatch: pytes
         "ledger.tool.categorisation.ratios",
         "ledger.tool.categorisation.diagnostics",
     )
+    # The counterparty tool performs the party-name way out, so the Ledger admits it.
+    assert tool_action_ids(tools) == (DECLARED_PARTY_NAME_DOOR_ACTION_ID,)
     assert reads == [_SESSION_ID]
 
 

@@ -3,7 +3,6 @@
 The AEAT filing cycle has well-defined chains where a periodic modelo
 (filed monthly or quarterly) feeds an annual-receiver modelo:
 
-- 111 (worker/professional withholdings) → 190 (annual summary)
 - 115 (rental withholdings)               → 180 (annual summary)
 - 123 (movable-capital withholdings)      → 193 (annual summary)
 - 303 (IVA periodic settlement)           → 390 (annual summary)
@@ -12,7 +11,9 @@ The AEAT filing cycle has well-defined chains where a periodic modelo
 
 Each chain is declared on the receiver side either as a ``cross_model_output``
 relation or as a ``previous_filing`` binding pointing at the feeder's
-``source_modelo``. These tests enforce that expectation so a future change
+``source_modelo``. Modelo 190 is deliberately absent: its design totals the
+declaration's own type-2 records, so it declares no chain from Modelo 111.
+These tests enforce that expectation so a future change
 cannot silently drop the chain. When a chain is missing, the test fails
 with a message that names both the feeder and the summary modelo so the
 gap is diagnosable from the failure alone.
@@ -35,7 +36,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # outputs roll up into an annual receiver. The receiver declares the
 # relation; this list is the contract that the relation is present.
 _CANONICAL_FEEDER_SUMMARY_CHAINS: tuple[tuple[str, str], ...] = (
-    ("111", "190"),
     ("115", "180"),
     ("123", "193"),
     ("303", "390"),
@@ -141,7 +141,7 @@ def test_declared_canonical_chains_use_pago_or_summary_dependency_role() -> None
 
 _ACCEPTED_CHAIN_DEPENDENCY_ROLES = frozenset(
     {
-        # Annual-summary chains (e.g., 111->190, 115->180): periodic returns
+        # Annual-summary chains (e.g., 115->180, 123->193): periodic returns
         # roll up into an informative annual summary.
         "periodic_to_annual_summary",
         # IRPF/IS pago-fraccionado chains (e.g., 130->100, 202->200): the

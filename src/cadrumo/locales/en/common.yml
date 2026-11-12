@@ -2127,6 +2127,8 @@ desktop:
       country: Country
       established: Established
       filing_name:
+        asked: A calculation asks for a counterparty's filing name. Enter its tax
+          ID and look it up to state the name.
         kind:
           entity: Entity
           natural_person: Natural person
@@ -2135,16 +2137,26 @@ desktop:
         kind_label: Kind
         no_second_surname: No second surname
         nombre: Given name
+        part_limit: Up to {count} characters is filed whole.
         primer_apellido: First surname
         razon_social: Company name
         rendering_add: Add a rendering
         rendering_for: For {width} characters
+        rendering_for_slot: Add a rendering for {width} characters
         rendering_remove: Remove this rendering
         renderings: Shorter renderings
         renderings_hint: The width is the number of characters of the field the name
           has to fit.
         save: Save filing name
         segundo_apellido: Second surname
+        slot:
+          fits: Filed whole
+          missing: No name stated
+          single_surname: 'Not filed: only one surname is stated'
+          too_wide: 'Too long: state a rendering for this width'
+          uses_rendering: Filed with your rendering for this width
+          width: '{width} characters'
+        slots: Where the name is filed
         stated_by: Stated by
         text: Text
         title: Filing name
@@ -2175,9 +2187,9 @@ desktop:
       vat_state: VAT-identified in
       view: Look up
       withdraw: Withdraw…
-      withdraw_confirm: Withdraw the confirmation
-      withdraw_what: Withdraws your confirmation. Other sources may still supply these
-        values.
+      withdraw_everything: 'Withdraws everything you stated for this counterparty:
+        your confirmation, its province and its filing name.'
+      withdraw_everything_confirm: Withdraw everything stated
     density:
       comfortable: Comfortable rows
     describe:
@@ -4684,9 +4696,8 @@ desktop:
     entry_required: '* required in each entry'
     field_help: About this field
     household:
-      add: Add person
       blocked_hidden: Some values of this group are hidden, so its people cannot be
-        changed here.
+        edited here. You can still add or remove a person.
       cap_reached: This group is full, so no more people can be added.
       declare_none: I have none
       edit_person: Edit person {number}
@@ -4699,10 +4710,8 @@ desktop:
         clear: Withdraw the answer
         unknown_help: Nothing is stated yet, which is not the same as no.
       reading: Reading your household…
-      remove: Remove person
       remove_help: Remove this person from your household? The count is updated with
         it.
-      remove_person: Remove person {number}
       retry: Try again
       saved: Household saved.
       state:
@@ -7279,12 +7288,15 @@ tui:
           shows %{evidenced}. %{detail}'
         country: Country code (2 letters, optional)
         evidenced: Scope a document shows, for the lookup (optional)
+        filing_asked: A calculation asks for a counterparty's filing name. Enter its
+          tax identifier and look it up to state the name.
         filing_done: The filing name of %{identifier} was stated.
         filing_heading: Filing name
         filing_kind_entity: Entity
         filing_kind_natural_person: Natural person
         filing_no_second: No second surname
         filing_nombre: Given name
+        filing_part_limit: '%{part}: up to %{count} characters is filed whole.'
         filing_primer: First surname
         filing_razon: Company name
         filing_rendering: 'For %{width} characters: %{text}'
@@ -7294,6 +7306,13 @@ tui:
           a semicolon.
         filing_review: Review filing name
         filing_segundo: Second surname
+        filing_slot: '%{width} characters: %{state} (%{editions})'
+        filing_slot_fits: filed whole
+        filing_slot_missing: no name stated
+        filing_slot_single_surname: not filed, only one surname is stated
+        filing_slot_too_wide: too long, state a rendering for this width
+        filing_slot_uses_rendering: filed with your rendering for this width
+        filing_slots_heading: 'Where the name is filed:'
         filing_stage: State the filing name of %{identifier} as %{kind}.
         filing_stated: 'Filing name of %{identifier}: %{kind} · %{name}'
         filing_stated_by: Stated by %{name} on %{date}.
@@ -7304,7 +7323,7 @@ tui:
         identifier_required: Type the counterparty's tax identifier first.
         note: Note (optional)
         nothing_known: Nothing is known about %{identifier}.
-        nothing_to_withdraw: There was no confirmation of %{identifier} to withdraw.
+        nothing_stated_to_withdraw: Nothing was stated for %{identifier} to withdraw.
         prompt: Look up what is known about a counterparty's establishment, confirm
           it yourself, or withdraw your confirmation.
         review_confirm: Review confirmation
@@ -7312,7 +7331,8 @@ tui:
         scope: '%{identifier}: territorial scope %{scope} (source: %{source})'
         stage_confirm: 'Confirm %{identifier}: territorial scope %{scope} · member
           state %{state}.'
-        stage_withdraw: Withdraw your confirmation of %{identifier}.
+        stage_withdraw_everything: 'Withdraw everything you stated for %{identifier}:
+          your confirmation, its province and its filing name.'
         state: 'Member state %{state} (source: %{source})'
         territorial: Territorial scope (code)
         title: Counterparties
@@ -7320,7 +7340,7 @@ tui:
           %{scope} · member state %{state}.'
         view: Look up
         who_heading: Which counterparty
-        withdrawn: Your confirmation of %{identifier} was withdrawn.
+        withdrawn_everything: Everything you stated for %{identifier} was withdrawn.
       destructive_accept: Yes, go ahead
       destructive_title: Confirm this change
       diagnostics:

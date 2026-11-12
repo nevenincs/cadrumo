@@ -29,10 +29,13 @@ from ..components.widgets import (
     SourceActionDescriptor,
 )
 from .aeat_auth_setup import readiness_text
+from .household import HOUSEHOLD_TITLE_LOCALE_KEY
 from .overview_contracts import (
     ABSENT_GLYPH,
     COMPLETE_SETUP_KEY,
     FIELD_COLUMN_WIDTH,
+    HOUSEHOLD_BUTTON_ID,
+    HOUSEHOLD_SECTION,
     LANGUAGE_ACTION,
     LANGUAGE_KEY,
     PLANTILLA_MEDIA_BUTTON_ID,
@@ -462,6 +465,10 @@ async def _mount_profile_section_actions(
             await panel.mount(
                 Button(tr("flows.manager.rows.remove"), id=f"manager-remove-row-{section.key}", compact=True)
             )
+    if section.key == HOUSEHOLD_SECTION and screen._household is not None:
+        # The people of the household are added and removed one at a time
+        # through the destination the household read serves.
+        await panel.mount(Button(tr(HOUSEHOLD_TITLE_LOCALE_KEY), id=HOUSEHOLD_BUTTON_ID, compact=True))
     if section.key == PLANTILLA_MEDIA_SECTION and screen._plantilla_media_offered:
         # Average-workforce years are indexed records, not repeatable section rows.
         await panel.mount(

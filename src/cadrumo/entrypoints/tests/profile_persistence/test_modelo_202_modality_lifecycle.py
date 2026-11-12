@@ -80,6 +80,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.env_scope import ready_clave_settings
@@ -325,6 +326,7 @@ def _calculate_m202(
 def _seed_legacy_zero_m202_revision(
     *,
     work_unit: WorkUnit,
+    work_unit_repository: WorkUnitCatalogueRepository,
     calculation_repository: CalculationRevisionCatalogueRepository,
     state: CalculationRevisionState,
 ) -> CalculationRevision:
@@ -335,6 +337,13 @@ def _seed_legacy_zero_m202_revision(
         casilla_values=_ZERO_M202_CASILLA_VALUES,
         filing_instance_evidence=None,
         source_provenance=(),
+    )
+    # The seeded revision stands in for a calculation, which makes it the work unit's current one.
+    work_unit_repository.save(
+        upsert_work_unit(
+            work_unit_repository.load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": calculation_revision_id}),
+        )
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -414,6 +423,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         work_unit = _create_first_payment_work_unit(work_repo, operation)
         draft = _seed_legacy_zero_m202_revision(
             work_unit=work_unit,
+            work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             state=CalculationRevisionState.BORRADOR,
         )
@@ -453,6 +463,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
 
         verified = _seed_legacy_zero_m202_revision(
             work_unit=work_unit,
+            work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
         )

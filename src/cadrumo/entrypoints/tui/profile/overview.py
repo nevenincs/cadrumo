@@ -52,6 +52,7 @@ from ..components.widgets import (
     DisclosureGroup,
 )
 from .aeat_auth_setup import AeatAuthSetupPort, AeatAuthSetupScreen, readiness_text
+from .household import HouseholdPort
 from .overview_contracts import (
     COMPLETE_SETUP_ACTION,
     COMPLETE_SETUP_KEY,
@@ -203,6 +204,7 @@ class ProfileManagerScreen(
         set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
         remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
         refresh_overview_language: Callable[[], ProfileOverview] | None = None,
+        household: HouseholdPort | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
@@ -260,6 +262,10 @@ class ProfileManagerScreen(
         Calls carry the overview baseline captured when the dialog opened;
         completion never substitutes whichever profile happens to be visible.
         """
+        self._household = household
+        """The household's doors, bound by composition to one profile, or ``None``.
+
+        A host that supplies none offers no household destination."""
         self._list_plantilla_media = list_plantilla_media
         self._set_plantilla_media = set_plantilla_media
         self._remove_plantilla_media = remove_plantilla_media

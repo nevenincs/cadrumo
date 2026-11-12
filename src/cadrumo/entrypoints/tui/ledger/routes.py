@@ -40,7 +40,7 @@ from .overview import LedgerOverviewScreen
 from .own_accounts import LedgerOwnAccountDoorV1
 from .reconciliation import LedgerReconciliationScreen
 from .review import LedgerReviewDoorV1, LedgerReviewScreen
-from .tools import LedgerToolV1
+from .tools import LedgerToolV1, tool_for_action
 from .workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshDoorV1
 from .workspace_presentation import ledger_workspace_page
 from .workspace_screen import LedgerWorkspaceScreen
@@ -240,6 +240,13 @@ def ledger_screen_factory(
         # on the entries where that transaction is selected.
         selects_transaction = context.focus is not None and context.focus.semantic_key == LEDGER_TRANSACTION_FOCUS
         landing = LedgerWorkspaceArea.ENTRIES if selects_transaction else LedgerWorkspaceArea.OVERVIEW
+        # A way out a tool performs opens that tool, with Back to its area.
+        tool = tool_for_action(controller.tools, context.action_candidate_id)
+        if tool is not None and controller.refusal_for(tool.area) is None:
+            screen = tool.build(controller)
+            screen.back_area = tool.area
+            screen.opened_for_way_out = True
+            return screen
         area = area_by_action.get(context.action_candidate_id or "", landing)
         if controller.refusal_for(area) is not None:
             # The overview shows no entry, so a selection is dropped there and

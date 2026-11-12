@@ -2,34 +2,6 @@ modelo:
   schema:
     '190':
       binding:
-        modelo-190-111-actividades-dinerario-importe-anual:
-          label: Rendimientos de actividades económicas dinerarios · total anual del
-            Modelo 111, casilla 08
-        modelo-190-111-actividades-especie-importe-anual:
-          label: Rendimientos de actividades económicas en especie · total anual del
-            Modelo 111, casilla 11
-        modelo-190-111-derechos-imagen-importe-anual:
-          label: Contraprestaciones por cesión de derechos de imagen · total anual
-            del Modelo 111, casilla 26
-        modelo-190-111-ganancias-dinerario-importe-anual:
-          label: Ganancias patrimoniales forestales dinerarias · total anual del Modelo
-            111, casilla 20
-        modelo-190-111-ganancias-especie-importe-anual:
-          label: Ganancias patrimoniales forestales en especie · total anual del Modelo
-            111, casilla 23
-        modelo-190-111-premios-dinerario-importe-anual:
-          label: Premios dinerarios · total anual del Modelo 111, casilla 14
-        modelo-190-111-premios-especie-importe-anual:
-          label: Premios en especie · total anual del Modelo 111, casilla 17
-        modelo-190-111-retenciones-anual:
-          label: Retenciones e ingresos a cuenta · total anual del Modelo 111, casilla
-            28
-        modelo-190-111-trabajo-dinerario-importe-anual:
-          label: Rendimientos del trabajo dinerarios · total anual del Modelo 111,
-            casilla 02
-        modelo-190-111-trabajo-especie-importe-anual:
-          label: Rendimientos del trabajo en especie · total anual del Modelo 111,
-            casilla 05
         modelo-190-perceptor-rows-incapacidad-dineraria-total:
           label: Total de percepciones dinerarias por incapacidad laboral
         modelo-190-perceptor-rows-incapacidad-especie-total:

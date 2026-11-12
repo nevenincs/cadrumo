@@ -12,6 +12,11 @@ from datetime import UTC, datetime
 from hashlib import sha256
 
 from .....application.ledger.counterparty_establishment import declared_filing_name_from_parts
+from .....application.ledger.counterparty_filing_name_slots import (
+    CounterpartyFilingNamePartLimit,
+    CounterpartyFilingNameSlot,
+    FilingNameSlotRefusal,
+)
 from .....application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
     CounterpartyFilingNameFinding,
@@ -45,6 +50,7 @@ from .....application.ledger.ratios_contracts import (
     LedgerRatiosValidationFinding,
 )
 from .....application.operations.public_scalar import PublicDecimal
+from .....core.external_constants import OutputLanguage
 from .....core.operations import OperationEffect
 from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
@@ -54,6 +60,52 @@ SYNTHETIC_ASSERTED_ON = _ASSERTED_AT.date().isoformat()
 SYNTHETIC_TAX_ID = "B00010082"
 _NATURAL_PERSON_FIRST_CHARACTERS = "0123456789KLMXYZ"
 SYNTHETIC_RATIO_CATEGORIES = ("suministros_vivienda", "vehiculo")
+SYNTHETIC_EDITION_WORDS = ("Synthetic edition A", "Synthetic edition B")
+"""The edition words the synthetic slots are served with."""
+SYNTHETIC_SLOT_WIDTHS = (40, 20)
+"""The widths of the synthetic party-name slots a view serves."""
+SYNTHETIC_PART_LIMITS = (
+    CounterpartyFilingNamePartLimit(part="primer_apellido", max_length=36),
+    CounterpartyFilingNamePartLimit(part="razon_social", max_length=40),
+)
+
+
+def _synthetic_slots(name: CounterpartyFilingNameProjection | None) -> tuple[CounterpartyFilingNameSlot, ...]:
+    """Synthetic slots in the served shape: unfilled with no name, else filled whole or by a stated rendering."""
+    slots: list[CounterpartyFilingNameSlot] = []
+    for index, (edition, width) in enumerate(
+        ((SYNTHETIC_EDITION_WORDS[0], SYNTHETIC_SLOT_WIDTHS[0]), (SYNTHETIC_EDITION_WORDS[1], SYNTHETIC_SLOT_WIDTHS[1]))
+    ):
+        composed = (
+            None
+            if name is None
+            else " ".join(
+                part
+                for part in (name.primer_apellido, name.segundo_apellido, name.nombre, name.razon_social)
+                if part is not None
+            )
+        )
+        rendered = name is not None and any(item.width == width for item in name.renderings)
+        refusal: FilingNameSlotRefusal | None = (
+            "missing" if composed is None else "too_wide" if len(composed) > width and not rendered else None
+        )
+        slots.append(
+            CounterpartyFilingNameSlot(
+                modelo="synthetic",
+                revision_id=f"synthetic-{index}",
+                edition_words=edition,
+                edition_words_language=OutputLanguage.EN,
+                layout_id="synthetic",
+                export_record_id="synthetic",
+                export_field_id=f"synthetic-{index}",
+                width=width,
+                fits=refusal is None,
+                refusal=refusal,
+                composed_length=None if composed is None else len(composed),
+                uses_rendering=refusal is None and composed is not None and len(composed) > width,
+            )
+        )
+    return tuple(slots)
 
 
 def ratio_label(category: str, language: str) -> str:
@@ -149,9 +201,14 @@ class MemoryCounterparties:
                 ),
                 filing_name=name,
                 findings=self._findings(request.tax_identifier, name),
+                filing_name_slots=_synthetic_slots(name),
+                filing_name_part_limits=SYNTHETIC_PART_LIMITS,
             )
         if request.action == "withdraw":
-            withdrawn = self.facts.pop(request.tax_identifier, None) is not None
+            # The record is withdrawn whole: the confirmation and the filing name with it.
+            had_fact = self.facts.pop(request.tax_identifier, None) is not None
+            had_name = self.filing_names.pop(request.tax_identifier, None) is not None
+            withdrawn = had_fact or had_name
             return LedgerCounterpartyResult(
                 profile_id=request.profile_id,
                 action=request.action,

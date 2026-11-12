@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from .....application.modelo.calculation_notes import note_record_verdict
+from .....application.operator_actions.projection import PreconditionVerdictSnapshot
+from .....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
 from ...navigation import TuiActionCandidateV1
 from ...operations.destination import OPERATION_FOCUS_KEY, OPERATIONS_DESTINATION
 from ..routing import route_refusal_way
@@ -104,3 +107,24 @@ def test_alternatives_route_independently_in_served_order() -> None:
         "modelo.work.attest_prior_value",
         "ledger.review",
     ]
+
+
+def test_the_party_name_note_opens_the_ledger_tool_that_admits_it_with_every_argument_left_to_the_operator() -> None:
+    verdict = note_record_verdict("declared_party_name_unresolved", None)
+    assert verdict is not None
+    (way,) = refusal_ways(ServedRefusalV1(verdict=PreconditionVerdictSnapshot.from_verdict(verdict)))
+    admitted = destinations(
+        action_candidates=(
+            TuiActionCandidateV1(
+                action_candidate_id=DECLARED_PARTY_NAME_DOOR_ACTION_ID, destination="workbench.ledger"
+            ),
+        )
+    )
+
+    intent = route_refusal_way(way, destinations=admitted, operations=operations())
+
+    assert intent is not None
+    assert intent.kind == "form"
+    assert intent.target.destination == "workbench.ledger"
+    assert intent.target.action_candidate_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    assert sorted(intent.missing_argument_names) == ["country_code", "kind", "tax_identifier"]

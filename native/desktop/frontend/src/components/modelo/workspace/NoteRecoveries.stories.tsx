@@ -77,8 +77,26 @@ const FOREIGN_DOOR = note(
   verdict(OTHER_DOOR, "ledger.counterparty.filing-name", []),
 );
 const NO_DOOR = note("synthetic_plain_note", null);
+const PARTY_WORDS = "Synthetic: state the party's filing name";
+const missing = (argument_name: string) => ({
+  argument_name,
+  status: "missing" as const,
+  value: null,
+  source: null,
+  source_key: null,
+  source_evidence_id: null,
+});
+const PARTY_DOOR = note("synthetic_party_name_note", {
+  ...verdict(PARTY_WORDS, "ledger.counterparty", [
+    missing("tax_identifier"),
+    missing("country_code"),
+    missing("kind"),
+  ]),
+  missing_argument_names: ["tax_identifier", "country_code", "kind"],
+});
 
 const opened = fn();
+const counterparty = fn();
 
 const meta: Meta = {
   title: "Modelo/Note ways out",
@@ -117,6 +135,43 @@ export const InvoiceDoor: Story = {
     await expect(other.getAttribute("aria-disabled")).toBe("true");
     await userEvent.click(other);
     await expect(opened).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const CounterpartyDoor: Story = {
+  name: "Check · a party-name note opens the counterparty's statements",
+  render: () => (
+    <NoteRecoveries
+      notes={[PARTY_DOOR]}
+      onOpenInvoice={null}
+      onOpenCounterparty={counterparty}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    counterparty.mockClear();
+    const door = within(canvasElement).getByRole("button", {
+      name: PARTY_WORDS,
+    });
+    await expect(door.getAttribute("aria-disabled")).toBeNull();
+    await expect(door.dataset.targetOperation).toBe("ledger.counterparty");
+    await userEvent.click(door);
+    // The way out bound no argument, so the journey opens empty.
+    await expect(counterparty).toHaveBeenCalledWith({
+      tax_identifier: null,
+      country_code: null,
+      kind: null,
+    });
+  },
+};
+
+export const CounterpartyDoorUnhosted: Story = {
+  name: "Check · without a Libro the party-name door is disabled",
+  render: () => <NoteRecoveries notes={[PARTY_DOOR]} onOpenInvoice={null} />,
+  play: async ({ canvasElement }) => {
+    const door = within(canvasElement).getByRole("button", {
+      name: PARTY_WORDS,
+    });
+    await expect(door.getAttribute("aria-disabled")).toBe("true");
   },
 };
 

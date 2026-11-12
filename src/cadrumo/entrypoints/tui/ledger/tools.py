@@ -34,6 +34,8 @@ class LedgerToolV1:
     """The area that lists the tool and that Back returns to."""
     build: Callable[[LedgerWorkspaceController], LedgerWorkspaceScreen]
     """Build the tool's screen over the workspace as it stands when chosen."""
+    action_ids: tuple[str, ...] = ()
+    """The operator actions whose served way out the tool performs, so the Ledger opens on it for them."""
 
     def __post_init__(self) -> None:
         """Refuse a key outside the tool namespace or an empty label key."""
@@ -44,10 +46,25 @@ class LedgerToolV1:
 
 
 def require_unique_tool_keys(tools: tuple[LedgerToolV1, ...]) -> None:
-    """Refuse two tools that share a key, which would make a selection ambiguous."""
+    """Refuse two tools that share a key or an action, which would make a selection or a way out ambiguous."""
     keys = [tool.key for tool in tools]
     if len(set(keys)) != len(keys):
         raise ValueError("Ledger tool keys must be unique within one workspace")
+    actions = [action_id for tool in tools for action_id in tool.action_ids]
+    if len(set(actions)) != len(actions):
+        raise ValueError("a Ledger action must be performed by one tool within one workspace")
 
 
-__all__ = ["LedgerToolV1", "require_unique_tool_keys"]
+def tool_for_action(tools: tuple[LedgerToolV1, ...], action_id: str | None) -> LedgerToolV1 | None:
+    """Return the tool that performs ``action_id``, or ``None`` when none does."""
+    if action_id is None:
+        return None
+    return next((tool for tool in tools if action_id in tool.action_ids), None)
+
+
+def tool_action_ids(tools: tuple[LedgerToolV1, ...]) -> tuple[str, ...]:
+    """Every operator action the tools perform, in the order the tools are given."""
+    return tuple(action_id for tool in tools for action_id in tool.action_ids)
+
+
+__all__ = ["LedgerToolV1", "require_unique_tool_keys", "tool_action_ids", "tool_for_action"]
