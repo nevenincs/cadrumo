@@ -6299,9 +6299,12 @@ sheets:
       accrual_year: Ejercicio de devengo
       acquisition_date: Fecha de adquisición
       acquisition_value: Valor de adquisición
+      adquisicion_lucrativa: Adquisición lucrativa
+      adquisicion_onerosa: Adquisición onerosa
       amount: Importe
       amount_donated: Importe donado
       anualidades_alimentos: Anualidades por alimentos
+      arrendado: Arrendamiento
       ascendants_75_plus_total: Ascendientes ≥ 75 años (total)
       ascendants_75_plus_whole: Ascendientes ≥ 75 años (enteros)
       ascendants_disabled_33_65_total: Ascendientes con discapacidad 33-65% (total)
@@ -6382,8 +6385,11 @@ sheets:
       descendants_rest_whole: Descendientes restantes (enteros)
       descendants_under_3_total: Descendientes < 3 años (total)
       descendants_under_3_whole: Descendientes < 3 años (enteros)
+      dias_arrendado: Días arrendado
+      dias_arrendado_amortizacion: Días arrendado para la amortización
       dias_arrendamiento: Días de arrendamiento del inmueble
       dias_miembro: Número de días como miembro
+      direccion: Dirección
       disability_clave: Discapacidad
       domicilio_fiscal: Domicilio fiscal del miembro
       donor_legal_name: Nombre o razón social del donante
@@ -6391,8 +6397,11 @@ sheets:
       door: Puerta
       element_type: Tipo de elemento patrimonial
       emerging_stock_excess_clave: Excesos de entrega de acciones de empresas emergentes
+      fecha_adquisicion: Fecha de adquisición del inmueble
+      fecha_contrato: Fecha del contrato
       fecha_devengo: Fecha de devengo
       fecha_inicio_prestamo: Fecha de inicio del préstamo
+      fecha_transmision: Fecha de transmisión del inmueble
       fecha_vencimiento_prestamo: Fecha de vencimiento del préstamo
       financial_asset_acquisition_value: Valor de adquisición del activo financiero
       financial_asset_disposal_value: Valor de transmisión del activo financiero
@@ -6408,6 +6417,17 @@ sheets:
       gain: Ganancia patrimonial
       gain_difference: Ganancia por la transmisión
       garantias: Garantías
+      gasto_comunidad: Gastos de comunidad
+      gasto_defensa_juridica: Gastos de defensa jurídica
+      gasto_formalizacion_contrato: Gastos de formalización del contrato
+      gasto_interes_financiacion: Intereses y demás gastos de financiación
+      gasto_otros: Otros gastos fiscalmente deducibles
+      gasto_primas_seguro: Primas de contratos de seguro
+      gasto_reparacion_conservacion: Gastos de reparación y conservación
+      gasto_saldos_dudoso_cobro: Saldos de dudoso cobro
+      gasto_servicios_terceros: Servicios personales de terceros
+      gasto_suministros: Servicios y suministros
+      gasto_tributos: Tributos, recargos y tasas
       gastos_deducibles: Gastos deducibles
       geographic_mobility_clave: Movilidad geográfica
       house_number: Número de casa
@@ -6427,6 +6447,13 @@ sheets:
       incapacity_kind_value: Valoración en especie derivada de incapacidad laboral
       ingreso_a_cuenta: Ingreso a cuenta
       ingreso_a_cuenta_repercutido: Ingresos a cuenta repercutidos
+      ingresos_integros: Ingresos íntegros computables
+      inquilino_1_nif: NIF del arrendatario 1
+      inquilino_1_nif_extranjero: NIF del arrendatario 1 de otro país
+      inquilino_2_nif: NIF del arrendatario 2
+      inquilino_2_nif_extranjero: NIF del arrendatario 2 de otro país
+      inquilino_3_nif: NIF del arrendatario 3
+      inquilino_3_nif_extranjero: NIF del arrendatario 3 de otro país
       is_recurrent: Donativo recurrente
       isin_code: Código ISIN
       locality: Localidad
@@ -6473,6 +6500,7 @@ sheets:
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepciones dinerarias
       percibido_especie: Percepciones en especie
+      porcentaje_propiedad: Propiedad (%)
       porcentaje_retencion: '% Retención'
       porcentaje_titularidad_inmueble: Porcentaje de titularidad del inmueble
       portal: Portal
@@ -6498,8 +6526,10 @@ sheets:
       retencion_amount: Importe de la retención
       retencion_practicada: Retención practicada
       reverse_charge_mark: Inversión del sujeto pasivo
+      rustica: Rústica
       second_child_compute: Cómputo del 2.º hijo
       share_percentage: Porcentaje de participación
+      situacion: Situación (clave)
       situacion_inmueble: Situación del inmueble
       situation: Situación del inmueble
       spouse_or_unit_titular_tax_id: NIF del cónyuge o del titular de la unidad de
@@ -6520,6 +6550,7 @@ sheets:
       transmission_date: Fecha de transmisión
       transmission_value: Valor de transmisión
       unit_convivencia_titular_clave: Titular de la unidad de convivencia
+      urbana: Urbana
       valuation_amount: Valoración
       valuation_event: Evento de valoración
       valuation_event_date: Fecha del evento de valoración

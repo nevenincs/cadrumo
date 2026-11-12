@@ -6265,9 +6265,12 @@ sheets:
       accrual_year: Keletkezés éve
       acquisition_date: Szerzés dátuma
       acquisition_value: Beszerzési érték
+      adquisicion_lucrativa: Ingyenes szerzés
+      adquisicion_onerosa: Visszterhes szerzés
       amount: Összeg
       amount_donated: Adományozott összeg
       anualidades_alimentos: Tartásdíj-járadék
+      arrendado: Bérbe adva
       ascendants_75_plus_total: Felmenők 75+ (összes)
       ascendants_75_plus_whole: Felmenők 75+ (egészben)
       ascendants_disabled_33_65_total: Fogyatékos felmenők 33-65% (összes)
@@ -6348,8 +6351,11 @@ sheets:
       descendants_rest_whole: Többi leszármazott (egészben)
       descendants_under_3_total: Leszármazottak 3 alatt (összes)
       descendants_under_3_whole: Leszármazottak 3 alatt (egészben)
+      dias_arrendado: Bérbeadás napjai
+      dias_arrendado_amortizacion: Bérbeadás napjai az értékcsökkenéshez
       dias_arrendamiento: Az ingatlan bérbeadási napjainak száma
       dias_miembro: Tagsági napok száma
+      direccion: Cím
       disability_clave: Fogyatékosság
       domicilio_fiscal: A tag adóügyi lakóhelye
       donor_legal_name: Adományozó neve
@@ -6357,8 +6363,11 @@ sheets:
       door: Ajtó
       element_type: Eszköz típusa
       emerging_stock_excess_clave: Startup részvényjuttatási többlet
+      fecha_adquisicion: Az ingatlan szerzésének dátuma
+      fecha_contrato: Szerződés dátuma
       fecha_devengo: Keletkezés dátuma
       fecha_inicio_prestamo: Kölcsön kezdő dátuma
+      fecha_transmision: Az ingatlan átruházásának dátuma
       fecha_vencimiento_prestamo: Kölcsön lejárati dátuma
       financial_asset_acquisition_value: Pénzügyi eszköz beszerzési értéke
       financial_asset_disposal_value: Pénzügyi eszköz elidegenítési értéke
@@ -6374,6 +6383,17 @@ sheets:
       gain: Nyereség
       gain_difference: Az átruházás nyeresége
       garantias: Garancia
+      gasto_comunidad: Társasházi közös költség
+      gasto_defensa_juridica: Jogi képviselet költségei
+      gasto_formalizacion_contrato: Szerződéskötési költségek
+      gasto_interes_financiacion: Kamatok és egyéb finanszírozási költségek
+      gasto_otros: Egyéb levonható költségek
+      gasto_primas_seguro: Biztosítási díjak
+      gasto_reparacion_conservacion: Javítási és karbantartási költségek
+      gasto_saldos_dudoso_cobro: Kétes kintlévőségek
+      gasto_servicios_terceros: Harmadik felek személyes szolgáltatásai
+      gasto_suministros: Szolgáltatások és közművek
+      gasto_tributos: Adók, pótlékok és illetékek
       gastos_deducibles: Levonható költségek
       geographic_mobility_clave: Földrajzi mobilitás
       house_number: Házszám
@@ -6391,6 +6411,13 @@ sheets:
       incapacity_kind_value: Munkaképtelenségi természetbeni érték
       ingreso_a_cuenta: Természetbeni adójóváírás
       ingreso_a_cuenta_repercutido: Áthárított előleg
+      ingresos_integros: Számítható bruttó bevétel
+      inquilino_1_nif: 1. bérlő adóazonosítója
+      inquilino_1_nif_extranjero: 1. bérlő külföldi adóazonosítója
+      inquilino_2_nif: 2. bérlő adóazonosítója
+      inquilino_2_nif_extranjero: 2. bérlő külföldi adóazonosítója
+      inquilino_3_nif: 3. bérlő adóazonosítója
+      inquilino_3_nif_extranjero: 3. bérlő külföldi adóazonosítója
       is_recurrent: Ismétlődő adomány
       isin_code: ISIN kód
       locality: Település
@@ -6437,6 +6464,7 @@ sheets:
       perceptor_tax_id: Kedvezményezett adóazonosítója
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
+      porcentaje_propiedad: Tulajdoni hányad (%)
       porcentaje_retencion: Visszatartás %
       porcentaje_titularidad_inmueble: Ingatlantulajdoni hányad százaléka
       portal: Bejárat
@@ -6462,8 +6490,10 @@ sheets:
       retencion_amount: Visszatartott összeg
       retencion_practicada: Alkalmazott visszatartás
       reverse_charge_mark: Fordított adózás
+      rustica: Külterületi
       second_child_compute: 2. gyermek beszámítása
       share_percentage: Részesedési arány
+      situacion: Elhelyezkedés (kulcs)
       situacion_inmueble: Az ingatlan elhelyezkedési státusza
       situation: Ingatlan fekvése
       spouse_or_unit_titular_tax_id: Házastárs vagy együttélési egység vezetőjének
@@ -6483,6 +6513,7 @@ sheets:
       transmission_date: Átruházás dátuma
       transmission_value: Átruházási érték
       unit_convivencia_titular_clave: Együttélési egység vezetője
+      urbana: Belterületi
       valuation_amount: Értékelés
       valuation_event: Értékelési esemény
       valuation_event_date: Értékelési esemény dátuma

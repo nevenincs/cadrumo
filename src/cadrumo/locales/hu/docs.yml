@@ -36,6 +36,8 @@ docs:
       prorrata_regularizacion: az arányosítás korrekciójából
       purchase_invoice_evidence: a beérkezett számlák bizonylataiból
       relation_prefill: egy kapcsolódó nyomtatvány eredményéből
+      renta_inmueble: a bérbe adott ingatlanjaidból, azok bérleti szerződéseiből és
+        a hozzájuk kapcsolt főkönyvi tételekből
       retencion_soportada: a kifizetőid igazolásain szereplő levonásokból
       retenciones_aggregation: a nyilvántartott retenciones tételekből
       withholding: a levont forrásadókból

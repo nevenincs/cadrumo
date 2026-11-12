@@ -6162,9 +6162,12 @@ sheets:
       accrual_year: Accrual year
       acquisition_date: Acquisition date
       acquisition_value: Acquisition value
+      adquisicion_lucrativa: Acquired without consideration
+      adquisicion_onerosa: Acquired for consideration
       amount: Amount
       amount_donated: Amount donated
       anualidades_alimentos: Food annuities
+      arrendado: Let
       ascendants_75_plus_total: Ascendants 75+ (total)
       ascendants_75_plus_whole: Ascendants 75+ (whole)
       ascendants_disabled_33_65_total: Disabled ascendants 33-65% (total)
@@ -6243,8 +6246,11 @@ sheets:
       descendants_rest_whole: Remaining descendants (whole)
       descendants_under_3_total: Descendants under 3 (total)
       descendants_under_3_whole: Descendants under 3 (whole)
+      dias_arrendado: Days let
+      dias_arrendado_amortizacion: Days let for depreciation
       dias_arrendamiento: Days the property was leased
       dias_miembro: Number of days as member
+      direccion: Address
       disability_clave: Disability
       domicilio_fiscal: Member's tax domicile
       donor_legal_name: Donor legal name
@@ -6252,8 +6258,11 @@ sheets:
       door: Door
       element_type: Asset type
       emerging_stock_excess_clave: Emerging-company stock excess
+      fecha_adquisicion: Property acquisition date
+      fecha_contrato: Lease date
       fecha_devengo: Accrual date
       fecha_inicio_prestamo: Loan start date
+      fecha_transmision: Property transfer date
       fecha_vencimiento_prestamo: Loan maturity date
       financial_asset_acquisition_value: Financial asset acquisition value
       financial_asset_disposal_value: Financial asset disposal value
@@ -6269,6 +6278,17 @@ sheets:
       gain: Capital gain
       gain_difference: Gain on the transfer
       garantias: Guarantees
+      gasto_comunidad: Community charges
+      gasto_defensa_juridica: Legal defence costs
+      gasto_formalizacion_contrato: Lease formalisation costs
+      gasto_interes_financiacion: Interest and financing costs
+      gasto_otros: Other deductible expenses
+      gasto_primas_seguro: Insurance premiums
+      gasto_reparacion_conservacion: Repair and upkeep costs
+      gasto_saldos_dudoso_cobro: Doubtful debts
+      gasto_servicios_terceros: Third-party personal services
+      gasto_suministros: Services and utilities
+      gasto_tributos: Taxes, surcharges and fees
       gastos_deducibles: Deductible expenses
       geographic_mobility_clave: Geographic mobility
       house_number: House number
@@ -6286,6 +6306,13 @@ sheets:
       incapacity_kind_value: In-kind value from work incapacity
       ingreso_a_cuenta: In-kind tax credit
       ingreso_a_cuenta_repercutido: Payments on account passed on
+      ingresos_integros: Gross computable income
+      inquilino_1_nif: Tenant 1 tax ID
+      inquilino_1_nif_extranjero: Tenant 1 tax ID is foreign
+      inquilino_2_nif: Tenant 2 tax ID
+      inquilino_2_nif_extranjero: Tenant 2 tax ID is foreign
+      inquilino_3_nif: Tenant 3 tax ID
+      inquilino_3_nif_extranjero: Tenant 3 tax ID is foreign
       is_recurrent: Recurrent donation
       isin_code: ISIN code
       locality: Locality
@@ -6332,6 +6359,7 @@ sheets:
       perceptor_tax_id: Recipient tax id
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
+      porcentaje_propiedad: Ownership (%)
       porcentaje_retencion: Withholding %
       porcentaje_titularidad_inmueble: Property ownership percentage
       portal: Entrance
@@ -6357,8 +6385,10 @@ sheets:
       retencion_amount: Withholding amount
       retencion_practicada: Withholding applied
       reverse_charge_mark: Reverse charge
+      rustica: Rural
       second_child_compute: 2nd child computation
       share_percentage: Share percentage
+      situacion: Location key
       situacion_inmueble: Property location status
       situation: Property situation
       spouse_or_unit_titular_tax_id: Spouse or coexistence-unit holder NIF
@@ -6377,6 +6407,7 @@ sheets:
       transmission_date: Disposal date
       transmission_value: Disposal value
       unit_convivencia_titular_clave: Coexistence unit holder
+      urbana: Urban
       valuation_amount: Valuation
       valuation_event: Valuation event
       valuation_event_date: Valuation event date

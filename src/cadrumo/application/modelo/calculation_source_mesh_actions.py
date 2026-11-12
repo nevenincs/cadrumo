@@ -523,7 +523,7 @@ def _resolve_ledger_income_families(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     renta_catalogue_read_ports: InvoiceCatalogueReadPorts,
 ) -> tuple[CalculationSourceResolution, ...]:
-    """Resolve the Renta expense and income ledger families, then Impatriado and IRNR income."""
+    """Resolve the Renta expense and income ledger families, Impatriado and IRNR income, then let properties."""
     from ..aggregation.impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
     from ..aggregation.modelo_bindings import (
         LedgerIrnrIncomeAggregationSourceResolver,
@@ -533,6 +533,7 @@ def _resolve_ledger_income_families(
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     )
+    from ..aggregation.renta_inmueble_resolver import RentaInmuebleSourceResolver
     from ..aggregation.source_resolution_operations import source_context_operation
 
     def imputation_filings(context: CalculationSourceContext) -> ImputationFilingHistory:
@@ -584,6 +585,7 @@ def _resolve_ledger_income_families(
                 transaction_repository=memoized_transaction_repository,
             )
         ),
+        resolve_declared(RentaInmuebleSourceResolver(transaction_repository=memoized_transaction_repository)),
     )
 
 
