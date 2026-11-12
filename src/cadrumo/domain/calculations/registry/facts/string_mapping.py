@@ -96,16 +96,32 @@ class StringMappingFact:
                 or an edition is not a string-to-string mapping.
         """
         merged: dict[str, str] = {}
+        for entries in self.resolve_support_envelope_edition_entries(authority):
+            merged.update(entries)
+        return MappingProxyType(merged)
+
+    def resolve_support_envelope_edition_entries(self, authority: GovernedFactSource) -> tuple[Mapping[str, str], ...]:
+        """Return each edition inside the support envelope as its own entries, oldest first.
+
+        A catalogue whose entry holds a token list merges the editions token by
+        token, which a whole-value merge cannot do: a later edition's list
+        would hide a token only an earlier edition declares.
+
+        Raises:
+            RegistryValidationError: When no edition lies inside the envelope
+                or an edition is not a string-to-string mapping.
+        """
         editions = resolve_support_envelope_editions(authority, self._query_on)
         if not editions:
             raise RegistryValidationError(
                 f"{self.policy.subject} authors no edition inside the supported filing years",
             )
+        projected: list[Mapping[str, str]] = []
         for resolved in editions:
             if not isinstance(resolved, ResolvedMappingFact):
                 raise RegistryValidationError(f"{self.policy.subject} must resolve as a mapping fact")
-            merged.update(string_mapping_entries(resolved, policy=self.policy))
-        return MappingProxyType(merged)
+            projected.append(string_mapping_entries(resolved, policy=self.policy))
+        return tuple(projected)
 
     def resolve_scoped_entries(
         self,
