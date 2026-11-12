@@ -285,6 +285,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         profile_bound_write=True,
     ),
     ActionTarget(
+        "modelo.work.attest_work_income",
+        ("app", "modelo", "work", "attest-work-income"),
+        "WorkAttestWorkIncomeResult",
+        required_inputs=("work_unit_id",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "modelo.work.attest_prior_value",
         ("app", "modelo", "work", "attest-prior-value"),
         "WorkManualEntryResult",

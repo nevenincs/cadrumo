@@ -682,6 +682,9 @@ cli:
         evidence_sha256_help: Egy már a tárhelyeden lévő igazolás SHA-256 ujjlenyomata,
           vagy ellenőrzés a --certificate-file fájllal szemben. A payer_certificate
           esetén a kettő közül az egyik kötelező.
+        gastos_deducibles_help: A kifizető által a 19.2. cikk a), b) és c) pontja
+          szerint feltüntetett levonható költségek. `trabajo` esetén kötelező; írj
+          0-t, ha az igazolás nem tüntet fel semmit.
         group_help: Rögzítsd a kifizetőid igazolásai szerinti levonásokat.
         importe_integro_help: A kifizető által fizetett pénzbeli jövedelem a levonás
           előtt.
@@ -705,6 +708,9 @@ cli:
           cseréjéhez. Első rekordnál hagyd el.
         record_help: Rögzítsd vagy cseréld le egy kifizető igazolásának adatait egy
           adóévre és jövedelemosztályra.
+        reducciones_aplicables_help: A kifizető által a 18.2. és 18.3. cikk szerint
+          alkalmazott csökkentések, ahogy az igazolás feltünteti. `trabajo` esetén
+          kötelező; írj 0-t, ha az igazolás nem tüntet fel semmit.
         remove_expected_revision_help: A lista által a törlendő rekordhoz mutatott
           revízió.
         remove_help: Törölj egy kifizetői rekordot a lista által mutatott revízió
@@ -1717,6 +1723,17 @@ cli:
           és a módosítás ellenőrzését; a --yes kapcsolóval az adott bevallásra általad
           kijelentett összegként rögzíti, a beírt számtól külön. Elutasítja, ha a
           korábbi bevallás tárolva van, mert ekkor a bevallás azt követi.
+        attest_work_income_confirm: 'Még semmit sem jelentettél ki. Futtasd: `aeat
+          app modelo work attest-work-income %{work_unit_id} --yes` a kijelentéshez.'
+        attest_work_income_help: Kijelented, hogy a munkaviszonyi jövedelem azon rovataiban,
+          amelyeket egyetlen kifizetői igazolás sem tölt ki (a nyugdíjtervekhez és
+          szociális előrelátási egyesületekhez, a függőségi biztosításhoz nyújtott
+          munkáltatói hozzájárulások, a védett vagyonba tett befizetések és a te döntésedre
+          teljesített befizetések), nincs összeg, minden olyan rovatra, amelyre a
+          kifizetői rekordra épülő bevallás űrlapja felkínálja a kijelentést. Megmutatja
+          a kijelentést és a változás ellenőrzését; --yes megadásával minden rovatot
+          általad megadott 0-ként rögzít, a beírt számtól elkülönítve.
+        attest_work_income_yes_help: A kijelentés megerősítése és rögzítése a bevallásban
         autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja
           (LISIVA 9.1.c cikk + 79.4 cikk): bérbeadásra áttért saját fejlesztésű ingatlanok
           építési vagy felújítási költsége. Az asszisztens automatikusan alkalmazza

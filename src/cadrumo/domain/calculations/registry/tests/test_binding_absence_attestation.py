@@ -58,8 +58,8 @@ def test_the_pending_negative_bases_declare_the_statement_and_validate(year: int
         binding = bindings[binding_id]
         assert binding.absence_attestation is _FAMILY
         assert BindingDefinition.model_validate(binding.model_dump()).absence_attestation is _FAMILY
-    # Only those carries declare it: every other binding of the revision takes no statement.
-    assert {binding.id for binding in bindings.values() if binding.absence_attestation is not None} == set(_DECLARED)
+    # Only those carries declare this family: other families (the work-income statement) are separate.
+    assert {binding.id for binding in bindings.values() if binding.absence_attestation is _FAMILY} == set(_DECLARED)
 
 
 @pytest.mark.parametrize("year", _renta_years())

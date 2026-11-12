@@ -39,18 +39,27 @@ period = "0A"
 year = "horizon-1"
 governed_by = "madrid-dl-1-2010:art-2-2022"
 casillas = { "0596" = "5412.00" }
-not_sourced = { "0003" = "36000.00", "0013" = "2332.80", "0017" = "33667.20", "0019" = "2000.00", "0025" = "31667.20" }
-roles = { "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
+roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "36000.00", "irpf_rendimiento_trabajo_gasto_ss_mutualidad" = "2332.80", "irpf_rendimiento_trabajo_rendimiento_neto_previo" = "33667.20", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "31667.20", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00", "irpf_rendimiento_trabajo_rendimiento_neto_reducido" = "31667.20" }
 derivation = """
-From the employer's certificate, as the taxpayer declares it (withholding_certificates): íntegro 36000.00, Seguridad Social 2332.80 (6.48 %), retención 5412.00.
-The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
-Rendimiento neto previo = 36000.00 - 2332.80 = 33667.20; otros gastos art. 19.2.f 2000.00; neto = 31667.20.
-The art. 20 reduction is zero because the net exceeds the top of its band.
-Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): rendimiento_neto_previo_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_previo (LIRPF art. 19); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20); rendimiento_neto_reducido_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_reducido (LIRPF arts. 18-20).
+From the employer's certificate for the ejercicio, as the taxpayer declares it (persona.toml withholding_certificates, ejercicio horizon-1):
+importe_integro 36000.00, cotizaciones_seguridad_social 2332.80 (6.48 %), gastos_deducibles 2332.80, reducciones_aplicables 0.00,
+retencion 5412.00. The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
+Íntegro dinerario (LIRPF art. 17) 36000.00; no irregular income, so no art. 18 reduction.
+Seguridad Social (LIRPF art. 19.2.a) 2332.80; rendimiento neto previo = 36000.00 - 2332.80 = 33667.20.
+Otros gastos (LIRPF art. 19.2.f) 2000.00, which does not exceed the neto previo; rendimiento neto = 31667.20.
+The art. 20 reduction is zero because the neto previo 33667.20 exceeds the top of its band in every supported edition, so neto reducido = 31667.20:
+ejercicio 2022, no reduction above 16825.00 (Manual práctico de Renta 2022, parte 1: "13.115 euros o menos 5.565 euros", "Entre 13.115,1 y 16.825 euros");
+ejercicio 2023, none above 19747.50 (Manual práctico de Renta 2023, parte 1: "14.047,5 euros o menos 6.498 euros", "Entre 14.047,5 y 19.747,5 euros");
+ejercicio 2024 onwards, none above 19747.50 (Manual práctico de Renta 2024, parte 1: "14.852 euros o menos
+7.302 euros", "Entre 17.673,52 y 19.747,5 euros"; LIRPF art. 20 as worded by Real Decreto-ley 4/2024 art. 3.1). These are the dated parameter
+renta-trabajo-reduccion-art-20 of each Modelo 100 edition, whose citations quote the same lines.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary;
+Manual práctico de Renta): importe_integro_dinerario 0003 (art. 17); gasto_ss_mutualidad 0013 (art. 19.2.a); rendimiento_neto_previo 0017
+(art. 19); gasto_otros 0019 (art. 19.2.f); rendimiento_neto 0022 (art. 19); reduccion_gastos_generales 0023 (art. 20);
+rendimiento_neto_reducido 0025 (arts. 18-20).
 """
-legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20", "madrid-dl-1-2010:art-2-2022"]
+legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "madrid-dl-1-2010:art-2-2022"]
 grounding = "verified"
-reason = "The application sources neither figure from the employer's certificate: the recorded withholding feeds casilla 0596, but no binding reads the certificate's íntegro into 0003 (LIRPF art. 17), and nothing records the employee's Seguridad Social contributions or binds them to 0013 (LIRPF art. 19.2.a). An application gap pending a decision on how the certificate's income and contribution quantities are recorded. The suffered-withholding binding family admits no income casilla for any class (RETENCION_SOPORTADA_NON_CREDIT_ROLES is empty in src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py), and casilla 0003 carries no binding in any Modelo 100 edition, although the record stores the certificate's importe_integro_dinerario. Casillas 0017, 0019 and 0025 follow from 0003 and 0013 through the registry formulas, so they cannot carry the law's figures either. The art. 20 reduction (role irpf_rendimiento_trabajo_reduccion_gastos_generales) stays compared: the law gives 0.00 here, and with no work income the calculation also gives 0.00."
 
 [[values]]
 modelo = "100"
@@ -117,18 +126,27 @@ period = "0A"
 year = "horizon-1"
 governed_by = "madrid-dl-1-2010:art-2-2023"
 casillas = { "0596" = "5412.00" }
-not_sourced = { "0003" = "36000.00", "0013" = "2332.80", "0017" = "33667.20", "0019" = "2000.00", "0025" = "31667.20" }
-roles = { "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
+roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "36000.00", "irpf_rendimiento_trabajo_gasto_ss_mutualidad" = "2332.80", "irpf_rendimiento_trabajo_rendimiento_neto_previo" = "33667.20", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "31667.20", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00", "irpf_rendimiento_trabajo_rendimiento_neto_reducido" = "31667.20" }
 derivation = """
-From the employer's certificate, as the taxpayer declares it (withholding_certificates): íntegro 36000.00, Seguridad Social 2332.80 (6.48 %), retención 5412.00.
-The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
-Rendimiento neto previo = 36000.00 - 2332.80 = 33667.20; otros gastos art. 19.2.f 2000.00; neto = 31667.20.
-The art. 20 reduction is zero because the net exceeds the top of its band.
-Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): rendimiento_neto_previo_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_previo (LIRPF art. 19); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20); rendimiento_neto_reducido_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_reducido (LIRPF arts. 18-20).
+From the employer's certificate for the ejercicio, as the taxpayer declares it (persona.toml withholding_certificates, ejercicio horizon-1):
+importe_integro 36000.00, cotizaciones_seguridad_social 2332.80 (6.48 %), gastos_deducibles 2332.80, reducciones_aplicables 0.00,
+retencion 5412.00. The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
+Íntegro dinerario (LIRPF art. 17) 36000.00; no irregular income, so no art. 18 reduction.
+Seguridad Social (LIRPF art. 19.2.a) 2332.80; rendimiento neto previo = 36000.00 - 2332.80 = 33667.20.
+Otros gastos (LIRPF art. 19.2.f) 2000.00, which does not exceed the neto previo; rendimiento neto = 31667.20.
+The art. 20 reduction is zero because the neto previo 33667.20 exceeds the top of its band in every supported edition, so neto reducido = 31667.20:
+ejercicio 2022, no reduction above 16825.00 (Manual práctico de Renta 2022, parte 1: "13.115 euros o menos 5.565 euros", "Entre 13.115,1 y 16.825 euros");
+ejercicio 2023, none above 19747.50 (Manual práctico de Renta 2023, parte 1: "14.047,5 euros o menos 6.498 euros", "Entre 14.047,5 y 19.747,5 euros");
+ejercicio 2024 onwards, none above 19747.50 (Manual práctico de Renta 2024, parte 1: "14.852 euros o menos
+7.302 euros", "Entre 17.673,52 y 19.747,5 euros"; LIRPF art. 20 as worded by Real Decreto-ley 4/2024 art. 3.1). These are the dated parameter
+renta-trabajo-reduccion-art-20 of each Modelo 100 edition, whose citations quote the same lines.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary;
+Manual práctico de Renta): importe_integro_dinerario 0003 (art. 17); gasto_ss_mutualidad 0013 (art. 19.2.a); rendimiento_neto_previo 0017
+(art. 19); gasto_otros 0019 (art. 19.2.f); rendimiento_neto 0022 (art. 19); reduccion_gastos_generales 0023 (art. 20);
+rendimiento_neto_reducido 0025 (arts. 18-20).
 """
-legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20", "madrid-dl-1-2010:art-2-2023"]
+legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "madrid-dl-1-2010:art-2-2023"]
 grounding = "verified"
-reason = "The application sources neither figure from the employer's certificate: the recorded withholding feeds casilla 0596, but no binding reads the certificate's íntegro into 0003 (LIRPF art. 17), and nothing records the employee's Seguridad Social contributions or binds them to 0013 (LIRPF art. 19.2.a). An application gap pending a decision on how the certificate's income and contribution quantities are recorded. The suffered-withholding binding family admits no income casilla for any class (RETENCION_SOPORTADA_NON_CREDIT_ROLES is empty in src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py), and casilla 0003 carries no binding in any Modelo 100 edition, although the record stores the certificate's importe_integro_dinerario. Casillas 0017, 0019 and 0025 follow from 0003 and 0013 through the registry formulas, so they cannot carry the law's figures either. The art. 20 reduction (role irpf_rendimiento_trabajo_reduccion_gastos_generales) stays compared: the law gives 0.00 here, and with no work income the calculation also gives 0.00."
 
 [[values]]
 modelo = "100"
@@ -219,6 +237,34 @@ modelo = "100"
 period = "0A"
 year = "horizon-2"
 governed_by = "madrid-dl-1-2010:art-2-2022"
+casillas = { "0596" = "5412.00" }
+roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "36000.00", "irpf_rendimiento_trabajo_gasto_ss_mutualidad" = "2332.80", "irpf_rendimiento_trabajo_rendimiento_neto_previo" = "33667.20", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "31667.20", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00", "irpf_rendimiento_trabajo_rendimiento_neto_reducido" = "31667.20" }
+derivation = """
+From the employer's certificate for the ejercicio, as the taxpayer declares it (persona.toml withholding_certificates, ejercicio horizon-2):
+importe_integro 36000.00, cotizaciones_seguridad_social 2332.80 (6.48 %), gastos_deducibles 2332.80, reducciones_aplicables 0.00,
+retencion 5412.00. The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
+Íntegro dinerario (LIRPF art. 17) 36000.00; no irregular income, so no art. 18 reduction.
+Seguridad Social (LIRPF art. 19.2.a) 2332.80; rendimiento neto previo = 36000.00 - 2332.80 = 33667.20.
+Otros gastos (LIRPF art. 19.2.f) 2000.00, which does not exceed the neto previo; rendimiento neto = 31667.20.
+The art. 20 reduction is zero because the neto previo 33667.20 exceeds the top of its band in every supported edition, so neto reducido = 31667.20:
+ejercicio 2022, no reduction above 16825.00 (Manual práctico de Renta 2022, parte 1: "13.115 euros o menos 5.565 euros", "Entre 13.115,1 y 16.825 euros");
+ejercicio 2023, none above 19747.50 (Manual práctico de Renta 2023, parte 1: "14.047,5 euros o menos 6.498 euros", "Entre 14.047,5 y 19.747,5 euros");
+ejercicio 2024 onwards, none above 19747.50 (Manual práctico de Renta 2024, parte 1: "14.852 euros o menos
+7.302 euros", "Entre 17.673,52 y 19.747,5 euros"; LIRPF art. 20 as worded by Real Decreto-ley 4/2024 art. 3.1). These are the dated parameter
+renta-trabajo-reduccion-art-20 of each Modelo 100 edition, whose citations quote the same lines.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary;
+Manual práctico de Renta): importe_integro_dinerario 0003 (art. 17); gasto_ss_mutualidad 0013 (art. 19.2.a); rendimiento_neto_previo 0017
+(art. 19); gasto_otros 0019 (art. 19.2.f); rendimiento_neto 0022 (art. 19); reduccion_gastos_generales 0023 (art. 20);
+rendimiento_neto_reducido 0025 (arts. 18-20).
+"""
+legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "madrid-dl-1-2010:art-2-2022"]
+grounding = "verified"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-2"
+governed_by = "madrid-dl-1-2010:art-2-2022"
 casillas = { "0613" = "750.00" }
 roles = { "irpf_deduccion_maternidad" = "1000.00" }
 derivation = """
@@ -238,6 +284,34 @@ Roles are Modelo 100 registry semantic_roles (LIRPF art. 81): irpf_deduccion_mat
 casilla 0613, asserted as a casilla.
 """
 legal_ref = ["ley-35-2006:art-81", "madrid-dl-1-2010:art-2-2022"]
+grounding = "verified"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-2"
+governed_by = "madrid-dl-1-2010:art-2-2023"
+casillas = { "0596" = "5412.00" }
+roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "36000.00", "irpf_rendimiento_trabajo_gasto_ss_mutualidad" = "2332.80", "irpf_rendimiento_trabajo_rendimiento_neto_previo" = "33667.20", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "31667.20", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00", "irpf_rendimiento_trabajo_rendimiento_neto_reducido" = "31667.20" }
+derivation = """
+From the employer's certificate for the ejercicio, as the taxpayer declares it (persona.toml withholding_certificates, ejercicio horizon-2):
+importe_integro 36000.00, cotizaciones_seguridad_social 2332.80 (6.48 %), gastos_deducibles 2332.80, reducciones_aplicables 0.00,
+retencion 5412.00. The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
+Íntegro dinerario (LIRPF art. 17) 36000.00; no irregular income, so no art. 18 reduction.
+Seguridad Social (LIRPF art. 19.2.a) 2332.80; rendimiento neto previo = 36000.00 - 2332.80 = 33667.20.
+Otros gastos (LIRPF art. 19.2.f) 2000.00, which does not exceed the neto previo; rendimiento neto = 31667.20.
+The art. 20 reduction is zero because the neto previo 33667.20 exceeds the top of its band in every supported edition, so neto reducido = 31667.20:
+ejercicio 2022, no reduction above 16825.00 (Manual práctico de Renta 2022, parte 1: "13.115 euros o menos 5.565 euros", "Entre 13.115,1 y 16.825 euros");
+ejercicio 2023, none above 19747.50 (Manual práctico de Renta 2023, parte 1: "14.047,5 euros o menos 6.498 euros", "Entre 14.047,5 y 19.747,5 euros");
+ejercicio 2024 onwards, none above 19747.50 (Manual práctico de Renta 2024, parte 1: "14.852 euros o menos
+7.302 euros", "Entre 17.673,52 y 19.747,5 euros"; LIRPF art. 20 as worded by Real Decreto-ley 4/2024 art. 3.1). These are the dated parameter
+renta-trabajo-reduccion-art-20 of each Modelo 100 edition, whose citations quote the same lines.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary;
+Manual práctico de Renta): importe_integro_dinerario 0003 (art. 17); gasto_ss_mutualidad 0013 (art. 19.2.a); rendimiento_neto_previo 0017
+(art. 19); gasto_otros 0019 (art. 19.2.f); rendimiento_neto 0022 (art. 19); reduccion_gastos_generales 0023 (art. 20);
+rendimiento_neto_reducido 0025 (arts. 18-20).
+"""
+legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "madrid-dl-1-2010:art-2-2023"]
 grounding = "verified"
 
 [[values]]
@@ -268,11 +342,51 @@ grounding = "verified"
 
 # The Madrid scale and mínimos and the Madrid deductions this return takes are identical in the 2023, 2024
 # and 2025 editions (Ley 13/2023, with effect 1 January 2023), and the state side is the same in every year
-# from the floor. The 2022 return differs: Ley 8/2022 set a lower Madrid scale and mínimos (2022 manual part1,
-# lines 37591 to 37598, first bracket up to 12960.45 at 8.50) and the 2022 manual's Madrid deductions carry no
-# art. 7 bis (see the cuidado de ascendientes value above), giving -2525.66. It is not stated here: the Ley 8/2022 scale and mínimos it needs
-# are not yet cited, so each result is limited to the Ley 13/2023 redaction and a year that redaction does
-# not govern states no result.
+# from the floor. The 2022 return differs: Ley 8/2022 set a lower Madrid scale and mínimos and the 2022 manual's
+# Madrid deductions carry no art. 7 bis, so the Ley 8/2022 redaction states its own result for horizon-1.
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+governed_by = "madrid-dl-1-2010:art-2-2022"
+roles = { "resultado-ingresar-o-devolver-irpf" = "-2525.66" }
+parameters = { madrid_minimo_contribuyente = "5777.55", madrid_minimo_descendiente_primero = "2498.40", madrid_minimo_descendiente_segundo = "2810.70", madrid_minimo_descendiente_menor_tres = "2914.80", madrid_minimo_ascendiente = "1197.15", madrid_minimo_ascendiente_mayor_75 = "1457.40", madrid_limite_base_nacimiento_individual = "30000.00" }
+derivation = """
+Ejercicio 2022, the year the Ley 8/2022 redaction governs. All line numbers are in
+src/cadrumo/_data/corpus/manuals/renta/2022/part1/source.pdf.extracted.md (Manual práctico de Renta 2022, parte 1).
+Base liquidable general = 31667.20 (the work-income value above; the art. 20 reduction is zero above 16825.00 in 2022).
+Cuota íntegra estatal (LIRPF art. 63.1.1º, "Gravamen estatal" lines 37322 and 37323, scale lines 37334 to 37336):
+1182.75 at 12450.00, 2112.75 at 20200.00, then 15.00 %: 2112.75 + (31667.20 - 20200.00) x 15 % = 3832.83.
+State mínimo (LIRPF arts. 57 to 61): contribuyente 5550.00 (line 35571); descendientes 2400.00 + 2700.00 (lines 35763
+and 35764) + 2800.00 for the second under three (line 35779) = 7900.00, halved with her husband = 3950.00; ascendiente
+1150.00 + 1400.00 over 75 (lines 35891 and 35893) = 2550.00; total 12050.00, inside the first bracket up to 12450.00 at
+9.50 % (line 37334): 12050.00 x 9.50 % = 1144.75. Cuota íntegra estatal 3832.83 - 1144.75 = 2688.08.
+Madrid mínimo (DL 1/2010 arts. 2 to 2 quater as worded by the artículo único of Ley 8/2022, effects 1 January 2022,
+lines 36231 to 36240): contribuyente 5777.55 (line 36245); descendientes 2498.40 + 2810.70 (lines 36249 and 36250)
++ 2914.80 for the second under three (lines 36253 and 36254) = 8223.90, halved = 4111.95; ascendiente 1197.15 + 1457.40
+over 75 (lines 36256 and 36257) = 2654.55; total 5777.55 + 4111.95 + 2654.55 = 12544.05.
+Cuota íntegra autonómica (LIRPF art. 74; Madrid scale, DL 1/2010 art. 1 as worded by Ley 8/2022 artículo único. Dos,
+normativa line 37588, scale lines 37594 to 37598, note lines 37599 and 37600): 1687.22 at 18433.20, then 12.80 %:
+1687.22 + (31667.20 - 18433.20) x 12.80 % = 3381.17, less the mínimo 12544.05, inside the first bracket up to 12960.45 at
+8.50 % (line 37594): 12544.05 x 8.50 % = 1066.24. Cuota íntegra autonómica 3381.17 - 1066.24 = 2314.93.
+Madrid deductions (art. 77; the 2022 list, lines 55399 to 56006) give nothing: por nacimiento (arts. 4 and 18.1) runs
+in the birth year and the two following (line 55418) but is barred above a base of 30000.00 in individual filing (line
+55438); por acogimiento no remunerado de mayores de 65 años (art. 7) excludes a relative up to the fourth degree (line
+55556) and is barred above 25620.00 (line 55565); por cuidado de hijos menores de 3 años (art. 11 bis) needs the
+taxpayer to employ a household worker (line 55820), which the persona does not state; para familias con dos o más
+descendientes (art. 14) is barred above 24000.00 (line 55866); por gastos educativos (art. 11) is not taken: its base
+excludes fees paid as public or administration-authorised prices (line 55761) and its limit counts the family's bases
+(line 55774), and the persona states neither fact. There is no art. 7 bis in the 2022 list (the cuidado de ascendientes
+value above). The persona states no rent, financing, donation, investment or new self-employment for the other articles.
+Cuota líquida = 2688.08 + 2314.93 = 5003.01. Cuota diferencial (art. 79) = 5003.01 - 5412.00 = -408.99.
+Deducción por maternidad (art. 81, the 2022 values above, within the 2332.80 of cotizaciones that limit them in 2022)
+1200.00 + 916.67 = 2116.67 reduces it: -2525.66, a devolver. No advance payment of the maternity deduction, spouse
+compensation or refund waiver is stated, so casilla 0700 equals 0670.
+Role: continuidad_id resultado-ingresar-o-devolver-irpf, casilla 0700 (LIRPF art. 97).
+"""
+legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-63", "ley-35-2006:art-74", "ley-35-2006:art-77", "ley-35-2006:art-79", "ley-35-2006:art-81", "ley-35-2006:art-97", "madrid-dl-1-2010:art-2", "madrid-dl-1-2010:art-18", "madrid-dl-1-2010:art-2-2022"]
+grounding = "verified"
+
 [[values]]
 modelo = "100"
 period = "0A"

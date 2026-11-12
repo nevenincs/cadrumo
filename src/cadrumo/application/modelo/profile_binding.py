@@ -79,6 +79,7 @@ from .autonomic_deduccion_dispatch import inject_autonomic_deduccion_facts
 from .printed_boxes import first_printed_dependent, printed_boxes
 from .profile_binding_refusal_doors import binding_contract_defect_verdict, profile_fact_value_refused_verdict
 from .profile_derived_facts import (
+    INCOME_FAMILY_EXCLUDED_BINDING_PREFIX,
     ProfileBindingResolutionError,
     declared_profile_selectors,
     family_fact_context,
@@ -92,6 +93,7 @@ from .profile_derived_facts import (
     inject_derived_state_attribution_facts,
     inject_ordinary_work_maritime_facts,
     profile_declares_economic_activity,
+    profile_excludes_income_family,
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
 from .profile_minimo_ascendientes import inject_derived_minimo_ascendientes_facts
@@ -914,6 +916,10 @@ def resolve_profile_binding_value(
         return None
     if binding.id.endswith(_ECONOMIC_ACTIVITY_PREDICATE_BINDING_SUFFIX):
         return profile_declares_economic_activity(fact_index)
+    if binding.id.startswith(INCOME_FAMILY_EXCLUDED_BINDING_PREFIX):
+        return profile_excludes_income_family(
+            fact_index, binding.id.removeprefix(INCOME_FAMILY_EXCLUDED_BINDING_PREFIX)
+        )
     # ``profile_binding_selectors`` returns the binding's DEPENDENCY set -- every
     # fact it references -- and that includes ``required_when_profile_key``. The
     # gate fact states WHETHER the binding applies, never WHAT it holds, so it

@@ -35,11 +35,16 @@ def _amount(raw: str, *, label: str) -> PublicDecimal:
     return PublicDecimal(decimal=str(parse_decimal_amount(raw, label=label, signed=False)))
 
 
+def _stated(figure: str | None) -> str:
+    return "" if figure is None else figure
+
+
 def _row_line(row: RetencionSoportadaRowPayload) -> str:
     return (
         f"{row.income_class}\t{row.payer_ref}\t{row.payer_name or ''}\t{row.origin}\t"
         f"retencion={row.retencion}\tingreso_a_cuenta={row.ingreso_a_cuenta}\t"
         f"repercutido={row.ingreso_a_cuenta_repercutido}\tpago_a_cuenta={row.pago_a_cuenta}\t"
+        f"reducciones={_stated(row.reducciones_aplicables)}\tgastos={_stated(row.gastos_deducibles)}\t"
         f"revision={row.revision_id}"
     )
 
@@ -55,6 +60,8 @@ def retencion_soportada_record(
     ingreso_a_cuenta_repercutido: str = "0",
     importe_integro_dinerario: str = "0",
     valoracion_especie: str = "0",
+    reducciones_aplicables: str | None = None,
+    gastos_deducibles: str | None = None,
     payer_name: str | None = None,
     certificate_file: Path | None = None,
     evidence_sha256: str | None = None,
@@ -80,6 +87,14 @@ def retencion_soportada_record(
             source_path=None if certificate_file is None else str(certificate_file),
             source_directory=None if certificate_file is None else str(Path.cwd()),
             expected_revision_id=expected_revision,
+            reducciones_aplicables=(
+                None
+                if reducciones_aplicables is None
+                else _amount(reducciones_aplicables, label="--reducciones-aplicables")
+            ),
+            gastos_deducibles=(
+                None if gastos_deducibles is None else _amount(gastos_deducibles, label="--gastos-deducibles")
+            ),
             **amounts,
         )
     except ValidationError:

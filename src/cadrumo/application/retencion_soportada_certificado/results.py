@@ -6,6 +6,7 @@ No schema here carries a payer tax identifier: a record is named by its keyed
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
@@ -26,6 +27,10 @@ from .contracts import (
 )
 
 
+def _optional_amount(amount: Decimal | None) -> PublicDecimal | None:
+    return None if amount is None else PublicDecimal(decimal=str(amount))
+
+
 class RetencionSoportadaRowProjection(BaseModel):
     """One stored payer record as the operator sees it, without the payer's tax identifier."""
 
@@ -41,6 +46,8 @@ class RetencionSoportadaRowProjection(BaseModel):
     retencion: PublicDecimal
     ingreso_a_cuenta: PublicDecimal
     ingreso_a_cuenta_repercutido: PublicDecimal
+    reducciones_aplicables: PublicDecimal | None
+    gastos_deducibles: PublicDecimal | None
     pago_a_cuenta: PublicDecimal
     origin: RetencionSoportadaOrigen
     evidence_fingerprint: Hex64Str | None
@@ -60,6 +67,8 @@ class RetencionSoportadaRowProjection(BaseModel):
             retencion=PublicDecimal(decimal=str(record.retencion)),
             ingreso_a_cuenta=PublicDecimal(decimal=str(record.ingreso_a_cuenta)),
             ingreso_a_cuenta_repercutido=PublicDecimal(decimal=str(record.ingreso_a_cuenta_repercutido)),
+            reducciones_aplicables=_optional_amount(record.reducciones_aplicables),
+            gastos_deducibles=_optional_amount(record.gastos_deducibles),
             pago_a_cuenta=PublicDecimal(decimal=str(record.pago_a_cuenta)),
             origin=record.origin,
             evidence_fingerprint=record.evidence_fingerprint,

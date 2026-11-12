@@ -7,7 +7,7 @@ revision_id = "2025"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "797722dda9ef80bc5530a86ca9a9edd66852a1224ade7f4b2efe39eb2cccd8b2"
+source_state_digest = "5a6b22ea8dae9920b615e7daa914439c1df572a941cc94149b61831f930ada85"
 design_sources = [
     { source_ref = "aeat-dr-100-2025-dictionary", sha256 = "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b" },
     { source_ref = "aeat-dr-100-2025-input-dictionary", sha256 = "ef63737b6d52e22a4c1c4b7934975488b93b0f37f9a8bc10f6c365219b6ecade" },
@@ -2266,6 +2266,7 @@ placements = [
     { casilla_id = "base-liq-neg-general-em4-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "prestacion-inss-maternidad-paternidad-exenta", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "rentas-distintas-del-trabajo", kind = "working_figure" },
     { casilla_id = "trabajo-mar-renta-exenta", kind = "working_figure" },
 ]
 

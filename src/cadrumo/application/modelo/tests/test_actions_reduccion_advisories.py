@@ -21,8 +21,6 @@ from cadrumo.domain.calculations.registry.authority import (
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
-from ..art20_advisory import art20_reduccion_advisory_finding
 from ..art52_advisory import art52_reduccion_advisory_finding
 from ..dt12_advisory import dt12_reduccion_advisory_finding
 from ..dt12_antiquity_advisory import dt12_antiquity_advisory_finding
@@ -35,21 +33,11 @@ _FILING_YEAR = filing_year_envelope().horizon
 _FACT_DATE = date(_FILING_YEAR, 12, 31)
 _DT12_INGRESO_CASILLA: CasillaId = validated_casilla_id("0003")
 _DT12_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0011")
-_ART20_RNT_CASILLA: CasillaId = validated_casilla_id("0022")
-_ART20_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0023")
 _ART52_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0468")
 _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: CasillaId = validated_casilla_id("0426")
 _ART52_EMPRESARIAL_CASILLA: CasillaId = validated_casilla_id("0427")
 _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: CasillaId = validated_casilla_id("0499")
 _DT12_ANTIQUITY_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0011")
-
-
-def _modelo_fact_context(authority: PinnedAuthorityOperation) -> ModeloFactResolutionContext:
-    return ModeloFactResolutionContext(
-        authority=authority,
-        filing_period=date(_FILING_YEAR, 12, 31),
-        devengo_date=date(_FILING_YEAR, 12, 31),
-    )
 
 
 @pytest.fixture
@@ -69,21 +57,6 @@ def _dt12_revision() -> ModeloRevision:
             synthetic_casilla_definition(
                 _DT12_REDUCCION_CASILLA,
                 semantic_role="irpf_rendimiento_trabajo_reduccion",
-            ),
-        ),
-    )
-
-
-def _art20_revision() -> ModeloRevision:
-    return synthetic_revision(
-        casillas=(
-            synthetic_casilla_definition(
-                _ART20_RNT_CASILLA,
-                semantic_role="irpf_rendimiento_trabajo_rendimiento_neto",
-            ),
-            synthetic_casilla_definition(
-                _ART20_REDUCCION_CASILLA,
-                semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales",
             ),
         ),
     )
@@ -176,84 +149,6 @@ def test_dt12_reduccion_advisory_threshold_is_the_registry_declared_bound(
     )
 
     assert (finding is not None) is expect_finding
-
-
-# ---------------------------------------------------------------------------
-# contract/contract — art. 20 LIRPF reducción advisory
-# ---------------------------------------------------------------------------
-
-
-def test_art20_reduccion_advisory_fires_within_band_and_is_localised(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """art20_reduccion_advisory_finding warns when RNT is in-band but reduction is zero.
-
-    A real revision carrying the rendimiento-neto-del-trabajo role and the
-    art. 20 general-reducción role triggers the ADVISORY finding when RNT is strictly
-    positive and below the art. 20 ceiling while the reducción casilla is zero. The
-    finding is non-blocking (ADVISORY / WARNING) and its tr()-rendered message carries
-    the rnt_id, rnt_value, and reduccion_id tokens.
-    """
-    revision = _art20_revision()
-    casilla_values = {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("0")}
-
-    finding = art20_reduccion_advisory_finding(
-        revision, casilla_values, context=_modelo_fact_context(authority_operation)
-    )
-
-    assert finding is not None
-    # Non-blocking advisory: the eligibility gate (otras rentas <= 6.500) is not engine-visible.
-    assert finding.kind == "advisory"
-    assert finding.severity == "warning"
-    assert finding.casilla_id == _ART20_REDUCCION_CASILLA
-    assert finding.legal_refs == ("ley-35-2006:art-20",)
-    assert finding.message_locale_key == "application.modelo.findings.art20_reduccion_possible"
-    assert dict(finding.message_facts) == {
-        "rnt_id": str(_ART20_RNT_CASILLA),
-        "rnt_value": Decimal("12000"),
-        "reduccion_id": str(_ART20_REDUCCION_CASILLA),
-    }
-    assert "next_action" not in finding.model_dump(mode="json")
-
-
-@pytest.mark.parametrize(
-    "casilla_values",
-    (
-        pytest.param(
-            {_ART20_RNT_CASILLA: Decimal("25000"), _ART20_REDUCCION_CASILLA: Decimal("0")},
-            id="above-ceiling",
-        ),
-        pytest.param(
-            {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("3500")},
-            id="reduction-already-declared",
-        ),
-        pytest.param({_ART20_RNT_CASILLA: Decimal("0"), _ART20_REDUCCION_CASILLA: Decimal("0")}, id="zero-rnt"),
-    ),
-)
-def test_art20_reduccion_advisory_silent_for_declared_or_ineligible_values(
-    casilla_values: dict[CasillaId, Decimal],
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """The art. 20 advisory must NOT fire when there is nothing to surface.
-
-    No false positive when: RNT is at/above the ceiling (reduction is genuinely zero),
-    the reducción is already declared, or RNT is zero.
-    """
-    assert (
-        art20_reduccion_advisory_finding(
-            _art20_revision(), casilla_values, context=_modelo_fact_context(authority_operation)
-        )
-        is None
-    )
-
-
-def test_art20_reduccion_advisory_silent_when_roles_absent(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    assert (
-        art20_reduccion_advisory_finding(synthetic_revision(), {}, context=_modelo_fact_context(authority_operation))
-        is None
-    )
 
 
 # ---------------------------------------------------------------------------

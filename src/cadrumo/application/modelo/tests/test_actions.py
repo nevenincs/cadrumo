@@ -612,6 +612,9 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     )
     candidate_binding_values: dict[BindingId, Decimal] = {
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
