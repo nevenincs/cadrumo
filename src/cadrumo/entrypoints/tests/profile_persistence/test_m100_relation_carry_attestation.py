@@ -33,6 +33,7 @@ from ....application.modelo.edit_models import (
 )
 from ....application.modelo.edit_services import validate_binding_intent
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_PENDING_SAVINGS_BALANCES
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
@@ -61,8 +62,10 @@ _BINDING_131 = "renta-modelo-131-pagos-fraccionados"
 _QUARTERS = ("1T", "2T", "3T", "4T")
 _ATTESTED_KEY = "application.modelo.findings.cross_period_dependency_operator_attested"
 _CONFLICT_KEY = "application.modelo.findings.cross_period_dependency_attestation_conflict"
-#: The negative general bases pending from earlier ejercicios, which a Modelo 100 refuses to calculate without a statement.
+#: The negative general bases and savings balances pending from earlier ejercicios, which a Modelo 100 refuses
+#: to calculate without a statement.
 _PENDING_CARRIES = (
+    *M100_NO_PENDING_SAVINGS_BALANCES,
     "renta-base-liquidable-negativa-general-anterior",
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",

@@ -23,13 +23,20 @@ from .published_authority import published_snapshot, published_supported_filing_
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_FAMILY = AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
-_DECLARED = (
-    "renta-base-liquidable-negativa-general-anterior",
-    "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
-    "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
-    "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
-)
+_GENERAL = AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
+_CAPITAL = AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING
+_GAINS = AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING
+_DECLARED: dict[str, AbsenceAttestationFamily] = {
+    "renta-base-liquidable-negativa-general-anterior": _GENERAL,
+    "renta-base-liquidable-negativa-general-em2-pendiente-inicio": _GENERAL,
+    "renta-base-liquidable-negativa-general-em3-pendiente-inicio": _GENERAL,
+    "renta-base-liquidable-negativa-general-em4-pendiente-inicio": _GENERAL,
+    **{
+        f"renta-saldo-negativo-rcm-ahorro-{origin}-pendiente-inicio": _CAPITAL
+        for origin in ("em1", "em2", "em3", "em4")
+    },
+    **{f"renta-saldo-negativo-gyp-ahorro-{origin}-pendiente-inicio": _GAINS for origin in ("em1", "em2", "em3", "em4")},
+}
 
 
 def _renta_years() -> tuple[int, ...]:
@@ -52,14 +59,19 @@ def _renta_bindings(year: int) -> dict[str, BindingDefinition]:
 
 
 @pytest.mark.parametrize("year", _renta_years())
-def test_the_pending_negative_bases_declare_the_statement_and_validate(year: int) -> None:
+def test_the_pending_negative_bases_and_balances_declare_their_statement_and_validate(year: int) -> None:
     bindings = _renta_bindings(year)
-    for binding_id in _DECLARED:
+    for binding_id, family in _DECLARED.items():
         binding = bindings[binding_id]
-        assert binding.absence_attestation is _FAMILY
-        assert BindingDefinition.model_validate(binding.model_dump()).absence_attestation is _FAMILY
+        assert binding.absence_attestation is family
+        assert BindingDefinition.model_validate(binding.model_dump()).absence_attestation is family
     # Only those carries declare it: every other binding of the revision takes no statement.
-    assert {binding.id for binding in bindings.values() if binding.absence_attestation is not None} == set(_DECLARED)
+    declared = {
+        binding.id: binding.absence_attestation
+        for binding in bindings.values()
+        if binding.absence_attestation is not None
+    }
+    assert declared == _DECLARED
 
 
 @pytest.mark.parametrize("year", _renta_years())
@@ -71,13 +83,13 @@ def test_a_statement_on_a_binding_not_read_from_an_earlier_filing_is_refused(yea
         and binding.value.channel is BindingValueChannel.DECIMAL
     )
     with pytest.raises((RegistryValidationError, ValidationError)) as refused:
-        BindingDefinition.model_validate({**elsewhere.model_dump(), "absence_attestation": _FAMILY.value})
+        BindingDefinition.model_validate({**elsewhere.model_dump(), "absence_attestation": _GENERAL.value})
     assert "absence_attestation" in str(refused.value)
 
 
 @pytest.mark.parametrize("year", _renta_years())
 def test_a_statement_on_an_earlier_filing_read_that_is_not_an_amount_is_refused(year: int) -> None:
-    carry = _renta_bindings(year)[_DECLARED[0]].model_dump()
+    carry = _renta_bindings(year)["renta-base-liquidable-negativa-general-anterior"].model_dump()
     counted = {**carry, "value": {"data_type": "integer", "channel": BindingValueChannel.INTEGER.value}}
     # The same earlier-filing read as a count is a valid binding, until it declares the statement.
     assert BindingDefinition.model_validate({**counted, "absence_attestation": None}).absence_attestation is None

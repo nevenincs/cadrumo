@@ -67,6 +67,7 @@ from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_PENDING_SAVINGS_BALANCES
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import (
@@ -260,6 +261,8 @@ def _calculate(
     stated_stocks: Mapping[BindingId, Decimal],
 ) -> CalculationRevision:
     binding_values, relation_values = _operator_zeros(filing_year)
+    # The negative savings balances (art. 49.2), which these gates do not read, hold nothing pending.
+    binding_values.update(M100_NO_PENDING_SAVINGS_BALANCES)
     binding_values.update(stated_stocks)
     casilla_inputs = {_WORK_INCOME: work_income}
     casilla_inputs.update({_ROW_BY_NAME[name].applied: amount for name, amount in applied.items()})

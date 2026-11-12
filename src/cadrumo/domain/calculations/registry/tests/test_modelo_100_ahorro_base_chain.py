@@ -81,6 +81,14 @@ _BINDINGS: dict[str, Decimal] = {
     # casilla 1388 (LIRPF Art. 48) resolves to zero with no prior filing.
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
     "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
@@ -281,6 +289,14 @@ def _run_reviewed_edition(
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
@@ -347,7 +363,9 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
 # the negative one, and the negative one is compensated against 0424 within the
 # 25 per cent cap (0436) before it reaches 0460.
 
-_GASTOS_DEDUCIBLES_CASILLA: CasillaId = validated_casilla_id("0037", surface="test_modelo_100_ahorro_base_chain.casilla")
+_GASTOS_DEDUCIBLES_CASILLA: CasillaId = validated_casilla_id(
+    "0037", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
 _SALDO_POSITIVO_CAPITAL_MOBILIARIO_CASILLA: CasillaId = validated_casilla_id(
     "0429", surface="test_modelo_100_ahorro_base_chain.casilla"
 )
