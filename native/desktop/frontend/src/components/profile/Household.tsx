@@ -564,8 +564,11 @@ export function Household({
   };
 
   const refresh = async () => {
+    // Only a read that succeeds ends the unknown outcome: it clears the lock
+    // and its notice together. A read that fails keeps both.
+    if (!(await load())) return;
+    setUnsettled(false);
     setNotice(null);
-    if (await load()) setUnsettled(false);
   };
 
   const body = (() => {

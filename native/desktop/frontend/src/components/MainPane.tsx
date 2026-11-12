@@ -258,6 +258,20 @@ export function MainPane({
                   )
               : undefined
           }
+          // The counterparty a calculation note asks a statement for; the
+          // Libro opens Rules › Counterparties on what the way out bound.
+          onOpenCounterparty={
+            host.ledger
+              ? (ask) =>
+                  guarded(() =>
+                    openView("ledger/rules", {}, null, {
+                      opened: () => {
+                        ledgerMemory.current.counterpartyAsk = ask;
+                      },
+                    }),
+                  )
+              : undefined
+          }
           onBack={() => guarded(() => openWorkUnit(null))}
           onOpenSurface={(surface) => {
             if (surface === "declarations") guarded(() => openWorkUnit(null));

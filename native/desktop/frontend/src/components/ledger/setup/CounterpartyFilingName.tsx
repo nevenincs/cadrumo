@@ -7,11 +7,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { facts } from "@/shell/compose";
-import { servedRefusalWords } from "../../../shell/ledger";
+import {
+  servedRefusalWords,
+  type LedgerErrorDetail,
+} from "../../../shell/ledger";
 import type {
   CounterpartyFilingName as StatedFilingName,
+  CounterpartyFilingNamePart,
+  CounterpartyFilingNameSlot,
+  CounterpartyFilingNameSlotRefusal,
   LedgerCounterpartyResult,
 } from "../../../shell/ledgerClassificationSetup";
+import {
+  COUNTERPARTY_KINDS,
+  type CounterpartyKind,
+} from "../../../shell/counterpartyAsk";
+import type { OutputLanguage } from "../../../shell/ledger";
+import { servedRefusal } from "../../../shell/refusal";
+import { RefusalNotice } from "../../RefusalNotice";
 import { formatTime } from "../../../shared/dateFormats";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
@@ -19,8 +32,6 @@ import { EditorField } from "./EditorField";
 import { CallLine, ChoiceField, FormGrid, useSetupWrite } from "./SetupParts";
 import type { SetupProps } from "./setupProps";
 import { setupCall } from "./setupModel";
-
-const KINDS = ["natural_person", "entity"] as const;
 
 type RenderingDraft = { key: number; width: string; text: string };
 type Draft = {
@@ -34,8 +45,11 @@ type Draft = {
 };
 
 let nextKey = 0;
-const draftOf = (stated: StatedFilingName | null | undefined): Draft => ({
-  kind: stated?.party_kind ?? "",
+const draftOf = (
+  stated: StatedFilingName | null | undefined,
+  initialKind: CounterpartyKind | null,
+): Draft => ({
+  kind: stated?.party_kind ?? initialKind ?? "",
   primer: stated?.primer_apellido ?? "",
   segundo: stated?.segundo_apellido ?? "",
   noSecond: stated?.no_second_surname ?? false,
@@ -48,6 +62,48 @@ const draftOf = (stated: StatedFilingName | null | undefined): Draft => ({
   })),
 });
 
+/** How the export files one slot: whole, by the stated rendering for its
+ * width, or not, for the served reason. */
+type SlotState = "fits" | "uses_rendering" | CounterpartyFilingNameSlotRefusal;
+
+/** Slots of one width that the export files the same way, with the
+ * editions they belong to, in served order. */
+type SlotGroup = {
+  width: number;
+  state: SlotState;
+  editions: { words: string; language: OutputLanguage }[];
+};
+
+const SLOT_STATE_LOCALE_KEYS: Record<SlotState, string> = {
+  fits: "desktop.ledger.counterparty.filing_name.slot.fits",
+  uses_rendering: "desktop.ledger.counterparty.filing_name.slot.uses_rendering",
+  missing: "desktop.ledger.counterparty.filing_name.slot.missing",
+  single_surname: "desktop.ledger.counterparty.filing_name.slot.single_surname",
+  too_wide: "desktop.ledger.counterparty.filing_name.slot.too_wide",
+};
+
+const slotState = (slot: CounterpartyFilingNameSlot): SlotState =>
+  slot.refusal ?? (slot.uses_rendering ? "uses_rendering" : "fits");
+
+/** The served slots, one row per width and outcome, each edition once. */
+export function slotGroups(
+  slots: readonly CounterpartyFilingNameSlot[],
+): SlotGroup[] {
+  const groups = new Map<string, SlotGroup>();
+  for (const slot of slots) {
+    const state = slotState(slot);
+    const key = `${slot.width}:${state}`;
+    const group = groups.get(key) ?? { width: slot.width, state, editions: [] };
+    if (!group.editions.some((held) => held.words === slot.edition_words))
+      group.editions.push({
+        words: slot.edition_words,
+        language: slot.edition_words_language,
+      });
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
+
 const savedWidth = (width: string): number | null => {
   const read = Number(width);
   return width.trim() !== "" && Number.isInteger(read) && read > 0
@@ -56,23 +112,29 @@ const savedWidth = (width: string): number | null => {
 };
 
 /**
- * The name a counterparty is filed under in Modelo 347, 349, 180, 190 and 193,
- * stated once for it: a natural person's two surnames and given name, or an
- * entity's razón social, and shorter renderings for fields too narrow for it.
- * The widths of those fields are not served, so the person enters them. What
- * the name is checked against is the backend's; nothing is decided here.
+ * The name a counterparty is filed under in the informative returns that list
+ * it, stated once for it: a natural person's surnames and given name, or an
+ * entity's company name, and shorter renderings for fields too narrow for it.
+ * The view serves every export field the name is filed into, with its width
+ * and whether the stated name fills it, and the longest each part can be to
+ * fit whole; a field the name is too wide for offers a rendering of its
+ * width. What the name is checked against is the backend's; nothing is
+ * decided here.
  */
 export function CounterpartyFilingName({
   port,
   result,
   country,
   actor,
+  initialKind = null,
   onSaved,
 }: Pick<SetupProps, "port"> & {
   result: LedgerCounterpartyResult;
   country: string;
   /** Who states it, as typed for the counterparty's other answers. */
   actor: string;
+  /** The kind a way out already bound, for a name not yet stated. */
+  initialKind?: CounterpartyKind | null;
   onSaved(): Promise<void> | void;
 }) {
   const t = useStrings();
@@ -81,7 +143,34 @@ export function CounterpartyFilingName({
     t("desktop.ledger.counterparty.filing_name.title"),
   );
   const stated = result.filing_name ?? null;
-  const [draft, setDraft] = useState<Draft>(() => draftOf(stated));
+  const [draft, setDraft] = useState<Draft>(() => draftOf(stated, initialKind));
+  const groups = slotGroups(result.filing_name_slots ?? []);
+  // A served width the stated name is too wide for, and no rendering is
+  // drafted for yet, is offered as a rendering of that width.
+  const tooWide = [
+    ...new Set(
+      groups
+        .filter((group) => group.state === "too_wide")
+        .map((group) => group.width),
+    ),
+  ].filter(
+    (width) =>
+      !draft.renderings.some(
+        (rendering) => savedWidth(rendering.width) === width,
+      ),
+  );
+  const limits = new Map(
+    (result.filing_name_part_limits ?? []).map((limit) => [
+      limit.part,
+      limit.max_length,
+    ]),
+  );
+  const limitHint = (part: CounterpartyFilingNamePart) => {
+    const count = limits.get(part);
+    return count === undefined
+      ? undefined
+      : t("desktop.ledger.counterparty.filing_name.part_limit", { count });
+  };
   const patch = (next: Partial<Draft>) =>
     setDraft((held) => ({ ...held, ...next }));
   const natural = draft.kind === "natural_person";
@@ -104,6 +193,16 @@ export function CounterpartyFilingName({
   // A view re-reads the stored name, so an uncertain write is told by it.
   const untold = async (): Promise<Landing> => "untold";
   const refused = write.last?.kind === "refused" ? write.last : null;
+  // A refusal is shown as served: its words, then its ways out in order.
+  const refusalDetail = refused
+    ? (refused.detail as LedgerErrorDetail | null)
+    : null;
+  const served =
+    refused &&
+    (servedRefusalWords(refusalDetail) !== null ||
+      refusalDetail?.precondition_verdict_json)
+      ? servedRefusal(servedRefusalWords(refusalDetail), refusalDetail)
+      : null;
 
   const save = async () => {
     if (!canSave) return;
@@ -141,8 +240,9 @@ export function CounterpartyFilingName({
     value: string,
     onChange: (value: string) => void,
     required = true,
+    hint?: string,
   ) => (
-    <EditorField label={label}>
+    <EditorField label={label} hint={hint}>
       {(control) => (
         <TextEditor
           id={control.id}
@@ -250,19 +350,68 @@ export function CounterpartyFilingName({
           icon={<Icon name="alert" />}
           className="ledger-counterparty-filing-name-finding"
         >
-          {t("desktop.ledger.counterparty.filing_name.kind_contradicts", {
-            declared: kindWords(finding.declared_kind),
-            observed: kindWords(finding.observed_form),
-          })}
+          {finding.words ? (
+            <span lang={finding.words_language ?? undefined}>
+              {finding.words}
+            </span>
+          ) : (
+            t("desktop.ledger.counterparty.filing_name.kind_contradicts", {
+              declared: kindWords(finding.declared_kind),
+              observed: kindWords(finding.observed_form),
+            })
+          )}
         </Alert>
       ))}
+      {groups.length > 0 && (
+        <section
+          className="flex flex-col gap-1"
+          aria-label={t("desktop.ledger.counterparty.filing_name.slots")}
+        >
+          <h5 className="text-sm font-medium">
+            {t("desktop.ledger.counterparty.filing_name.slots")}
+          </h5>
+          <ul className="ledger-counterparty-filing-name-slots flex flex-col gap-1 text-sm">
+            {groups.map((group) => (
+              <li
+                key={`${group.width}:${group.state}`}
+                data-slot-state={group.state}
+                data-slot-width={group.width}
+                className="flex flex-wrap items-baseline gap-x-2"
+              >
+                <span className="font-medium tabular-nums">
+                  {t("desktop.ledger.counterparty.filing_name.slot.width", {
+                    width: group.width,
+                  })}
+                </span>
+                <span
+                  className={
+                    group.state === "fits" || group.state === "uses_rendering"
+                      ? "text-muted-foreground"
+                      : "text-warning-foreground"
+                  }
+                >
+                  {t(SLOT_STATE_LOCALE_KEYS[group.state])}
+                </span>
+                <span className="text-muted-foreground">
+                  {group.editions.map((edition, at) => (
+                    <span key={edition.words} lang={edition.language}>
+                      {at > 0 ? "; " : ""}
+                      {edition.words}
+                    </span>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <FormGrid>
         <ChoiceField
           label={t("desktop.ledger.counterparty.filing_name.kind_label")}
           value={draft.kind}
           onValue={(kind) => patch({ kind })}
           placeholder={t("desktop.ledger.form.choose")}
-          options={KINDS.map((kind) => ({
+          options={COUNTERPARTY_KINDS.map((kind) => ({
             value: kind,
             label: kindWords(kind),
           }))}
@@ -272,6 +421,8 @@ export function CounterpartyFilingName({
             t("desktop.ledger.counterparty.filing_name.razon_social"),
             draft.razon,
             (razon) => patch({ razon }),
+            true,
+            limitHint("razon_social"),
           )}
         {natural && (
           <>
@@ -279,17 +430,22 @@ export function CounterpartyFilingName({
               t("desktop.ledger.counterparty.filing_name.primer_apellido"),
               draft.primer,
               (primer) => patch({ primer }),
+              true,
+              limitHint("primer_apellido"),
             )}
             {part(
               t("desktop.ledger.counterparty.filing_name.segundo_apellido"),
               draft.segundo,
               (segundo) => patch({ segundo }),
               !draft.noSecond,
+              limitHint("segundo_apellido"),
             )}
             {part(
               t("desktop.ledger.counterparty.filing_name.nombre"),
               draft.nombre,
               (nombre) => patch({ nombre }),
+              true,
+              limitHint("nombre"),
             )}
             <label className="flex items-center gap-2 text-sm">
               <Checkbox
@@ -363,7 +519,31 @@ export function CounterpartyFilingName({
               </IconButton>
             </div>
           ))}
-          <div>
+          <div className="flex flex-wrap gap-2">
+            {tooWide.map((width) => (
+              <Button
+                key={width}
+                size="sm"
+                variant="outline"
+                className="ledger-counterparty-rendering-for-slot"
+                data-slot-width={width}
+                onClick={() =>
+                  patch({
+                    renderings: [
+                      ...draft.renderings,
+                      { key: nextKey++, width: String(width), text: "" },
+                    ],
+                  })
+                }
+              >
+                {t(
+                  "desktop.ledger.counterparty.filing_name.rendering_for_slot",
+                  {
+                    width,
+                  },
+                )}
+              </Button>
+            ))}
             <Button
               size="sm"
               variant="outline"
@@ -395,11 +575,11 @@ export function CounterpartyFilingName({
           </Button>
         </WriteHold>
       </div>
-      <CallLine
-        call={write.last}
-        refusal={() => (refused ? servedRefusalWords(refused.detail) : null)}
-        onReread={() => void onSaved()}
-      />
+      {served ? (
+        <RefusalNotice refusal={served} />
+      ) : (
+        <CallLine call={write.last} onReread={() => void onSaved()} />
+      )}
     </section>
   );
 }

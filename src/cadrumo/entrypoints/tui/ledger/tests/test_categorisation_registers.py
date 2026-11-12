@@ -73,7 +73,7 @@ async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirma
 
             await press(pilot, screen, "categorisation-counterparty-view")
             assert door.requests[-1].action == "view"
-            assert text(screen, "#categorisation-outcome") == "\n".join(
+            assert text(screen, "#categorisation-outcome").split("\n")[:4] == list(
                 (
                     tr(
                         "tui.ledger.categorisation.counterparty.scope",
@@ -83,6 +83,7 @@ async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirma
                     ),
                     tr("tui.ledger.categorisation.counterparty.state", state="-", source="operator_confirmed"),
                     tr("tui.ledger.categorisation.counterparty.filing_unstated", identifier=SYNTHETIC_TAX_ID),
+                    tr("tui.ledger.categorisation.counterparty.filing_slots_heading"),
                 )
             )
 
@@ -98,7 +99,7 @@ async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirma
             await settle(pilot)
             assert SYNTHETIC_TAX_ID not in profile.counterparties.facts
             assert text(screen, "#categorisation-outcome") == tr(
-                "tui.ledger.categorisation.counterparty.withdrawn", identifier=SYNTHETIC_TAX_ID
+                "tui.ledger.categorisation.counterparty.withdrawn_everything", identifier=SYNTHETIC_TAX_ID
             )
 
 

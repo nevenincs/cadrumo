@@ -14,6 +14,7 @@ import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import { categoryLabel, classificationLabel } from "../movements/movementWords";
 import { formatTime } from "../../../shared/dateFormats";
+import type { CounterpartyAsk } from "../../../shell/counterpartyAsk";
 import { CounterpartiesPane } from "./CounterpartiesPane";
 import { DiagnosticsPane } from "./DiagnosticsPane";
 import { RatiosPane } from "./RatiosPane";
@@ -61,6 +62,8 @@ export function RulesSection(
     /** The sub-area it opens on, such as Business-use ratios from a Mixed
      * step that found none configured. */
     initialArea?: RulesArea;
+    /** What a way out asked of the counterparties, opening them on it. */
+    counterpartyAsk?: CounterpartyAsk | null;
   },
 ) {
   const t = useStrings();
@@ -79,7 +82,9 @@ export function RulesSection(
       >
         {area === "rules" && <RulesPane {...props} />}
         {area === "ratios" && <RatiosPane {...props} />}
-        {area === "counterparties" && <CounterpartiesPane {...props} />}
+        {area === "counterparties" && (
+          <CounterpartiesPane {...props} ask={props.counterpartyAsk ?? null} />
+        )}
         {area === "diagnostics" && <DiagnosticsPane {...props} />}
       </SetupTabs>
     </div>

@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Final
 
 from ....application.ledger.workspace import LedgerWorkspaceArea
+from ....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
 from .categorisation_allocate import LedgerAllocateScreen
 from .categorisation_bulk import LedgerBulkClassifyScreen
 from .categorisation_counterparties import LedgerCounterpartiesScreen
@@ -73,6 +74,7 @@ def categorisation_tools(doors: LedgerCategorisationDoorsV1) -> tuple[LedgerTool
             label_key="tui.ledger.categorisation.tool.counterparties",
             area=entry_list,
             build=lambda controller: LedgerCounterpartiesScreen(controller, door=doors.counterparty),
+            action_ids=(DECLARED_PARTY_NAME_DOOR_ACTION_ID,),
         ),
         LedgerToolV1(
             key="ledger.tool.categorisation.split",

@@ -3,6 +3,7 @@ import { PaneHeader, type PaneControl } from "../../PaneHeader";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import type { OpenableSurface } from "../details/Details";
 import type { BorradorPort } from "../../../shell/borrador";
+import type { CounterpartyAsk } from "../../../shell/counterpartyAsk";
 import type { LedgerProfileStep } from "../../../shell/ledger";
 import type { ProfileCompanionKit } from "../workspace/ProfileCompanions";
 import { WorkspaceScreen } from "../workspace/WorkspaceScreen";
@@ -26,6 +27,7 @@ export function DeclarationsPane({
   onProfileStep,
   onOpenMovement,
   onOpenInvoice,
+  onOpenCounterparty,
   onBack,
   onOpenSurface,
   canOpenSurface,
@@ -63,6 +65,8 @@ export function DeclarationsPane({
   /** Opens one ledger movement in the Libro, where the window has one. */
   onOpenMovement?: (transactionId: string) => void;
   onOpenInvoice?: (invoiceId: string) => void;
+  /** Opens the counterparty journey a calculation note's way out asks for. */
+  onOpenCounterparty?: (ask: CounterpartyAsk) => void;
   /** Hands the shell the guard that asks before staged edits are dropped. */
   guardLeave(guard: LeaveGuard | null): void;
   /** What the list keeps of itself while a declaration is open, for one
@@ -126,6 +130,7 @@ export function DeclarationsPane({
           onOpenWork={onOpenWork}
           onOpenMovement={onOpenMovement}
           onOpenInvoice={onOpenInvoice}
+          onOpenCounterparty={onOpenCounterparty}
           onOpenSurface={onOpenSurface}
           canOpenSurface={canOpenSurface}
           openLink={openLink}

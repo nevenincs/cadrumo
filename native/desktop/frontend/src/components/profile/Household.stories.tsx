@@ -90,6 +90,9 @@ function servedQuestion(scenario: HouseholdScenario, locale: string) {
 const language = (globals: Record<string, unknown>) =>
   String(globals.locale ?? "en");
 
+/** Whether the story's reads fail, to show a read that cannot be made. */
+let readsFail = false;
+
 function Element({
   scenario,
   locale,
@@ -103,14 +106,22 @@ function Element({
 }) {
   const fixture = useRef<HouseholdFixture | null>(null);
   if (fixture.current === null) {
+    readsFail = false;
     fixture.current = householdFixture(scenario, locale);
     if (refuse) fixture.current.refuseNext(refuse);
     if (lose) fixture.current.loseNextAnswer();
   }
+  const served = fixture.current.reads;
+  const reads: typeof served = {
+    household: (...asked) => {
+      if (readsFail) return Promise.reject({ code: "unavailable" });
+      return served.household(...asked);
+    },
+  };
   return (
     <div className="max-w-3xl">
       <Household
-        reads={fixture.current.reads}
+        reads={reads}
         change={fixture.current.change}
         language={locale}
       />
@@ -533,6 +544,87 @@ export const UnknownOutcome: Story = {
       "[data-household-remove]",
     ))
       expect(remove).toBeDisabled();
+  },
+};
+
+/** Removes the first ascendant of the "rows" scenario with an answer that is
+ * lost, and waits for the unknown outcome to be told. */
+async function loseARemoval(
+  canvasElement: HTMLElement,
+  locale: string,
+  refreshName: string,
+) {
+  const shown = await groups(canvasElement);
+  await userEvent.click(
+    within(shown[1]!.element).getAllByRole("button", {
+      name: removeWords("rows", locale, 1),
+    })[0]!,
+  );
+  const dialog = within(await within(document.body).findByRole("dialog"));
+  await userEvent.click(
+    dialog.getByRole("button", { name: removeWords("rows", locale, 1) }),
+  );
+  await waitFor(() =>
+    expect(
+      within(canvasElement).getByRole("button", { name: refreshName }),
+    ).toBeEnabled(),
+  );
+}
+
+export const UnknownOutcomeRead: Story = {
+  name: "Unknown outcome read again: a successful read clears the notice and opens the controls",
+  render: (_, { globals }) => (
+    <Element scenario="rows" locale={language(globals)} lose />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const t = translator(locale);
+    const refresh = t("desktop.profile.refresh");
+    await loseARemoval(canvasElement, locale, refresh);
+    expect(
+      canvasElement.querySelector("[data-household-failure]")!.textContent,
+    ).toBe(t("desktop.profile.unknown"));
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: refresh }),
+    );
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector("[data-household-failure]"),
+      ).toBeNull(),
+    );
+    expect(
+      within(canvasElement).queryByRole("button", { name: refresh }),
+    ).toBeNull();
+    for (const add of canvasElement.querySelectorAll("[data-household-add]"))
+      expect(add).toBeEnabled();
+  },
+};
+
+export const UnknownOutcomeReadFails: Story = {
+  name: "Unknown outcome, read fails: the notice and the closed controls stay",
+  render: (_, { globals }) => (
+    <Element scenario="rows" locale={language(globals)} lose />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const t = translator(locale);
+    const refresh = t("desktop.profile.refresh");
+    await loseARemoval(canvasElement, locale, refresh);
+    readsFail = true;
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: refresh }),
+    );
+    // Give the failed read time to settle, then see nothing was cleared.
+    await new Promise((done) => setTimeout(done, 200));
+    expect(
+      canvasElement.querySelector("[data-household-failure]")!.textContent,
+    ).toBe(t("desktop.profile.unknown"));
+    expect(
+      within(canvasElement).getByRole("button", { name: refresh }),
+    ).toBeEnabled();
+    for (const add of canvasElement.querySelectorAll("[data-household-add]"))
+      expect(add).toBeDisabled();
+    readsFail = false;
   },
 };
 

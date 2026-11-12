@@ -110,10 +110,23 @@ export function useLedgerPage({
   const section = view.section;
   // The Rules section's area to open on, where another section asked for
   // one; it is forgotten once the page leaves Rules.
-  const [rulesArea, setRulesArea] = useState<RulesArea>();
+  // A counterparty asked for elsewhere opens Rules on Counterparties; the
+  // ask is taken once, as the page opens.
+  const [counterpartyAsk, setCounterpartyAsk] = useState(
+    () => memory.current.counterpartyAsk ?? null,
+  );
+  const [rulesArea, setRulesArea] = useState<RulesArea | undefined>(() =>
+    memory.current.counterpartyAsk ? "counterparties" : undefined,
+  );
+  useEffect(() => {
+    memory.current.counterpartyAsk = undefined;
+  }, [memory]);
   const setSection = (next: LedgerSection) => {
     setPeriodOpen(false);
-    if (next !== "rules") setRulesArea(undefined);
+    if (next !== "rules") {
+      setRulesArea(undefined);
+      setCounterpartyAsk(null);
+    }
     if (next !== "registers") memory.current.registersArea = undefined;
     onViewChange((current) => ({ ...current, section: next }));
   };
@@ -539,6 +552,7 @@ export function useLedgerPage({
     section,
     setSection,
     rulesArea,
+    counterpartyAsk,
     openRatios,
     readable,
     linkedMovement,

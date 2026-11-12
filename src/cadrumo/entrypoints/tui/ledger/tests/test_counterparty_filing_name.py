@@ -6,7 +6,7 @@ from typing import cast
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Checkbox, Input, Select
+from textual.widgets import Button, Checkbox, Input, Select, Static
 
 from .....application.ledger.counterparty_operation import (
     CounterpartyFilingNameRendering,
@@ -14,16 +14,29 @@ from .....application.ledger.counterparty_operation import (
     LedgerCounterpartyResult,
     served_kind_finding_words,
 )
+from .....application.ledger.workspace import LedgerWorkspaceArea
+from .....application.operator_actions.projection import ActionArgumentSnapshot
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from .....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from .....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
+from ...components.dialogs import ConfirmScreen
+from ...navigation import TuiScreenContextV1
 from ...refusal.panel import RefusalSlot
 from ...tests.settling import settle
 from ..categorisation_counterparties import LedgerCounterpartiesScreen
+from ..categorisation_tools import categorisation_tools
+from ..routes import ledger_screen_factory
 from .categorisation_fixtures import MemoryDoor
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
 from .categorisation_pilot import press, review_and_confirm, text, type_into
-from .categorisation_register_fixtures import SYNTHETIC_ASSERTED_ON, SYNTHETIC_TAX_ID
-from .workspace_fixtures import WorkspaceHostApp
+from .categorisation_register_fixtures import (
+    SYNTHETIC_ASSERTED_ON,
+    SYNTHETIC_EDITION_WORDS,
+    SYNTHETIC_SLOT_WIDTHS,
+    SYNTHETIC_TAX_ID,
+)
+from .workspace_fixtures import WorkspaceHostApp, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -163,3 +176,164 @@ async def test_a_malformed_rendering_is_refused_before_anything_is_staged() -> N
             assert text(screen, "#ledger-refusal") == tr(
                 "tui.ledger.categorisation.counterparty.filing_renderings_malformed"
             )
+
+
+def _slot_line(width: int, state: str, edition: str) -> str:
+    return tr(
+        "tui.ledger.categorisation.counterparty.filing_slot",
+        width=width,
+        state=tr(f"tui.ledger.categorisation.counterparty.filing_slot_{state}"),
+        editions=edition,
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_view_shows_every_served_slot_by_width_and_the_part_limits() -> None:
+    profile = MemoryCategorisationProfile()
+    screen, _ = _screen(profile)
+    wide, narrow = SYNTHETIC_SLOT_WIDTHS
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 70)) as pilot:
+            await settle(pilot)
+            type_into(screen, "#categorisation-counterparty-identifier", SYNTHETIC_TAX_ID)
+            await press(pilot, screen, "categorisation-counterparty-view")
+            unstated = text(screen, "#categorisation-outcome")
+            assert tr("tui.ledger.categorisation.counterparty.filing_slots_heading") in unstated
+            assert _slot_line(wide, "missing", SYNTHETIC_EDITION_WORDS[0]) in unstated
+            assert _slot_line(narrow, "missing", SYNTHETIC_EDITION_WORDS[1]) in unstated
+            assert (
+                tr(
+                    "tui.ledger.categorisation.counterparty.filing_part_limit",
+                    part=tr("tui.ledger.categorisation.counterparty.filing_razon"),
+                    count=40,
+                )
+                in unstated
+            )
+
+            # A company name wider than the narrow slot files whole in the wide one only.
+            type_into(screen, "#categorisation-counterparty-asserted", "Operator")
+            await _choose_kind(pilot, screen, "entity")
+            type_into(screen, "#categorisation-filing-razon", "Delta Synthetic Sociedad Limitada")
+            await review_and_confirm(pilot, screen, "categorisation-counterparty-filing")
+            await press(pilot, screen, "categorisation-counterparty-view")
+            stated = text(screen, "#categorisation-outcome")
+            assert _slot_line(wide, "fits", SYNTHETIC_EDITION_WORDS[0]) in stated
+            assert _slot_line(narrow, "too_wide", SYNTHETIC_EDITION_WORDS[1]) in stated
+
+
+@pytest.mark.asyncio
+async def test_a_withdrawal_names_everything_it_removes_and_takes_the_filing_name_with_it() -> None:
+    profile = MemoryCategorisationProfile()
+    screen, door = _screen(profile)
+    app = WorkspaceHostApp(screen)
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(120, 70)) as pilot:
+            await settle(pilot)
+            type_into(screen, "#categorisation-counterparty-identifier", SYNTHETIC_TAX_ID)
+            type_into(screen, "#categorisation-counterparty-asserted", "Operator")
+            await _choose_kind(pilot, screen, "entity")
+            type_into(screen, "#categorisation-filing-razon", "Delta SL")
+            await review_and_confirm(pilot, screen, "categorisation-counterparty-filing")
+            assert SYNTHETIC_TAX_ID in profile.counterparties.filing_names
+
+            await press(pilot, screen, "categorisation-counterparty-withdraw")
+            assert text(screen, "#categorisation-staged") == tr(
+                "tui.ledger.categorisation.counterparty.stage_withdraw_everything", identifier=SYNTHETIC_TAX_ID
+            )
+            await press(pilot, screen, "categorisation-confirm")
+            dialog = app.screen
+            assert isinstance(dialog, ConfirmScreen)
+            dialog.query_one("#btn-confirm-accept", Button).press()
+            await settle(pilot)
+
+            assert door.requests[-1].action == "withdraw"
+            assert profile.counterparties.filing_names == {}
+            assert text(screen, "#categorisation-outcome") == tr(
+                "tui.ledger.categorisation.counterparty.withdrawn_everything", identifier=SYNTHETIC_TAX_ID
+            )
+
+
+def _binding(name: str, value: str | None) -> ActionArgumentSnapshot:
+    if value is None:
+        return ActionArgumentSnapshot(argument_name=name, status=ActionArgumentStatus.MISSING)
+    return ActionArgumentSnapshot(
+        argument_name=name,
+        status=ActionArgumentStatus.RESOLVED,
+        value=value,
+        source=ActionArgumentSource.VERDICT_CONTEXT,
+        source_key=name,
+    )
+
+
+def _opened_from_way_out(
+    profile: MemoryCategorisationProfile, prefill: tuple[ActionArgumentSnapshot, ...]
+) -> tuple[LedgerCounterpartiesScreen, MemoryCounterpartyDoor]:
+    """Open the Ledger as the root opens it for the party-name way out."""
+    doors = profile.doors()
+    factory = ledger_screen_factory(
+        ledger_projection(),
+        review_action=ledger_review_action(),
+        tools=categorisation_tools(doors.bundle()),
+    )
+    screen = factory(
+        TuiScreenContextV1(
+            destination="workbench.ledger",
+            action_candidate_id=DECLARED_PARTY_NAME_DOOR_ACTION_ID,
+            request_prefill=prefill,
+        )
+    )
+    assert isinstance(screen, LedgerCounterpartiesScreen)
+    return screen, doors.counterparty
+
+
+@pytest.mark.asyncio
+async def test_the_party_name_way_out_opens_the_counterparty_tool_on_what_it_bound() -> None:
+    profile = MemoryCategorisationProfile()
+    screen, door = _opened_from_way_out(
+        profile,
+        (
+            _binding("tax_identifier", SYNTHETIC_TAX_ID),
+            _binding("country_code", None),
+            _binding("kind", "entity"),
+        ),
+    )
+    assert screen.back_area is LedgerWorkspaceArea.ENTRIES
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 70)) as pilot:
+            await settle(pilot)
+            assert str(screen.query_one("#categorisation-counterparty-asked", Static).render()) == tr(
+                "tui.ledger.categorisation.counterparty.filing_asked"
+            )
+            assert screen.query_one("#categorisation-counterparty-identifier", Input).value == SYNTHETIC_TAX_ID
+            assert screen.query_one("#categorisation-counterparty-country", Input).value == ""
+            assert cast("Select[str]", screen.query_one(_KIND, Select)).value == "entity"
+            # The named counterparty is looked up at once, and only looked up.
+            assert [request.action for request in door.requests] == ["view"]
+            assert tr("tui.ledger.categorisation.counterparty.filing_unstated", identifier=SYNTHETIC_TAX_ID) in text(
+                screen, "#categorisation-outcome"
+            )
+
+
+@pytest.mark.asyncio
+async def test_a_way_out_that_binds_nothing_opens_the_tool_empty_and_reads_nothing() -> None:
+    profile = MemoryCategorisationProfile()
+    screen, door = _opened_from_way_out(
+        profile, (_binding("tax_identifier", None), _binding("country_code", None), _binding("kind", None))
+    )
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 70)) as pilot:
+            await settle(pilot)
+            assert screen.query_one("#categorisation-counterparty-identifier", Input).value == ""
+            assert screen.query("#categorisation-counterparty-asked")
+            assert door.requests == []
+
+
+@pytest.mark.asyncio
+async def test_the_tool_opened_from_its_area_shows_no_way_out() -> None:
+    profile = MemoryCategorisationProfile()
+    screen, door = _screen(profile)
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 70)) as pilot:
+            await settle(pilot)
+            assert not screen.query("#categorisation-counterparty-asked")
+            assert door.requests == []

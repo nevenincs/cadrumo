@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 import pytest
+from textual.pilot import Pilot
 from textual.widgets import Button, Input, OptionList, Static
 
 from cadrumo_client.transport.profile_mutations import ProfileMutationRunError
@@ -84,11 +85,14 @@ class _Port:
     current: HouseholdView
     after: HouseholdView | None = None
     error: BaseException | None = None
+    read_error: BaseException | None = None
     changes: list[HouseholdRowChange] = field(default_factory=list)
     reads: int = 0
 
     def read(self) -> HouseholdView:
         self.reads += 1
+        if self.read_error is not None:
+            raise self.read_error
         return self.current
 
     def change(self, change: HouseholdRowChange, /) -> HouseholdView:
@@ -323,24 +327,31 @@ async def test_a_refused_removal_shows_the_served_refusal_and_keeps_the_househol
         assert all(not button.disabled for button in screen.query(".household-control").results(Button))
 
 
-@pytest.mark.asyncio
-async def test_an_unknown_outcome_stays_unknown_and_closes_changes_until_read_again() -> None:
-    view = _view(_TWO_ASCENDANTS)
+async def _remove_with_unknown_outcome(pilot: Pilot[bool | None], screen: HouseholdScreen, port: _Port) -> str:
+    view = port.current
     ascendants = _group(view, _ASCENDANTS)
+    group_index = view.groups.index(ascendants)
+    screen.query_one(f"#household-remove-{group_index}-{ascendants.rows[0].row_index}", Button).press()
+    await settle_until(pilot, lambda: isinstance(pilot.app.screen, HouseholdRemoveScreen), "the confirmation")
+    pilot.app.screen.query_one("#household-remove-confirm", Button).press()
+    status = screen.query_one("#household-status", Static)
+    unknown = tr("flows.manager.household.unknown_outcome")
+    await settle_until(pilot, lambda: str(status.render()) == unknown, "the unknown outcome", workers=False)
+    controls = list(screen.query(".household-control").results(Button))
+    assert controls and all(button.disabled for button in controls)
+    assert not screen.query(RefusalSlot).first().query("#refusal-words")
+    return unknown
+
+
+@pytest.mark.asyncio
+async def test_an_unknown_outcome_closes_changes_until_read_again_and_a_successful_read_clears_it() -> None:
+    view = _view(_TWO_ASCENDANTS)
     port = _Port(view, error=_run_error(OperationEffect.UNKNOWN, OperationTerminalCondition.FAILED))
     screen = HouseholdScreen(port)
     async with ScreenHostApp(screen).run_test(size=(140, 50)) as pilot:
         await settle_until(pilot, lambda: screen.view is not None, "the household read")
-        group_index = view.groups.index(ascendants)
-        screen.query_one(f"#household-remove-{group_index}-{ascendants.rows[0].row_index}", Button).press()
-        await settle_until(pilot, lambda: isinstance(pilot.app.screen, HouseholdRemoveScreen), "the confirmation")
-        pilot.app.screen.query_one("#household-remove-confirm", Button).press()
+        unknown = await _remove_with_unknown_outcome(pilot, screen, port)
         status = screen.query_one("#household-status", Static)
-        unknown = tr("flows.manager.household.unknown_outcome")
-        await settle_until(pilot, lambda: str(status.render()) == unknown, "the unknown outcome", workers=False)
-        controls = list(screen.query(".household-control").results(Button))
-        assert controls and all(button.disabled for button in controls)
-        assert not screen.query(RefusalSlot).first().query("#refusal-words")
         reads = port.reads
         screen.query_one("#household-read", Button).press()
         await settle_until(pilot, lambda: port.reads > reads, "the household read again")
@@ -349,8 +360,28 @@ async def test_an_unknown_outcome_stays_unknown_and_closes_changes_until_read_ag
             lambda: all(not button.disabled for button in screen.query(".household-control").results(Button)),
             "changes open again",
         )
-        # Reading again shows what is stored; it never claims the change landed or not.
+        # The household now shows what is stored, so the notice and the lock end together.
+        assert str(status.render()) != unknown
+        assert not status.has_class("household-unknown")
+
+
+@pytest.mark.asyncio
+async def test_a_failed_read_after_an_unknown_outcome_keeps_the_notice_and_the_lock() -> None:
+    view = _view(_TWO_ASCENDANTS)
+    port = _Port(view, error=_run_error(OperationEffect.UNKNOWN, OperationTerminalCondition.FAILED))
+    screen = HouseholdScreen(port)
+    async with ScreenHostApp(screen).run_test(size=(140, 50)) as pilot:
+        await settle_until(pilot, lambda: screen.view is not None, "the household read")
+        unknown = await _remove_with_unknown_outcome(pilot, screen, port)
+        status = screen.query_one("#household-status", Static)
+        port.read_error = RuntimeError("the runtime is unavailable")
+        reads = port.reads
+        screen.query_one("#household-read", Button).press()
+        await settle_until(pilot, lambda: port.reads > reads, "the failed read")
+        await settle_until(pilot, lambda: not screen.query_one("#household-read", Button).disabled, "the read settled")
         assert str(status.render()) == unknown
+        assert status.has_class("household-unknown")
+        assert all(button.disabled for button in screen.query(".household-control").results(Button))
 
 
 @pytest.mark.asyncio

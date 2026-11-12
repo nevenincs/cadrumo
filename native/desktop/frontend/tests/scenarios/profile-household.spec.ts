@@ -373,6 +373,11 @@ test.describe("the household in the profile page", () => {
         name: addWords("rows", 1),
       }),
     ).toBeEnabled();
+    // The read that opened the controls also ended the unknown notice.
+    await expect(household.locator("[data-household-failure]")).toHaveCount(0);
+    await expect(
+      household.getByRole("button", { name: label("desktop.profile.refresh") }),
+    ).toHaveCount(0);
   });
 
   for (const language of LANGUAGES) {
