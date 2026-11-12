@@ -88,6 +88,7 @@ from .edit_carry_withdrawal import (
     withdraw_current_calculation,
 )
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
+from .edit_downstream_refusal import downstream_refusal
 from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloDetailRowEditIntentV1,
@@ -96,6 +97,7 @@ from .edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditDetailRowIntentKind,
     ModeloEditDomainRefusalV1,
+    ModeloEditDownstreamRefusalV1,
     ModeloEditExecutionNoEffectV1,
     ModeloEditExecutionResultV1,
     ModeloEditExecutionUpdatedV1,
@@ -168,6 +170,7 @@ def _domain_refusal(
     address: ModeloEditAddressV1 | None = None,
     facts: tuple[str, ...] = (),
     evidence: tuple[str, ...] = (),
+    downstream: ModeloEditDownstreamRefusalV1 | None = None,
 ) -> ModeloEditExecutionNoEffectV1:
     return ModeloEditExecutionNoEffectV1(
         refusal=ModeloEditDomainRefusalV1(
@@ -177,6 +180,7 @@ def _domain_refusal(
             evidence=evidence,
             responsible_owner=RESPONSIBLE_OWNER,
             reconsideration_condition=condition,
+            downstream=downstream,
         )
     )
 
@@ -744,10 +748,13 @@ def pre_effect_refusal(
             facts=("source_fed_casilla", code),
             condition="restore the source value instead of clearing a casilla a source feeds",
         )
+    # The edit's values were admitted and a later stage refused: the edit
+    # settles under that stage's own refusal, never as a refused value.
     return _domain_refusal(
         ModeloEditRefusalCode.VALIDATION_FAILED,
         facts=(code,),
         condition="resolve the calculation precondition the edit could not satisfy, then resubmit",
+        downstream=downstream_refusal(error) if isinstance(error, CadrumoError) else None,
     )
 
 

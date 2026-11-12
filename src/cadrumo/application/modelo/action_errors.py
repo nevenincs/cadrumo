@@ -41,6 +41,7 @@ from ..operations.next_step import OperationNextStepErrorMixin, OperationNextSte
 from ..operator_actions.models import PreconditionVerdict
 from ..workflow.abort import WorkflowAbortReason
 from ..workflow.run_models import WorkflowResult
+from .edit_downstream_refusal import downstream_refusal_error
 from .edit_models import (
     ModeloEditCarryWithdrawalBlock,
     ModeloEditCompatibilityRefusalV1,
@@ -927,7 +928,11 @@ def _prior_carry_edit_refusal(family: str) -> RecordedRegisteredError:
 
 
 def _domain_refusal_error(refusal: ModeloEditDomainRefusalV1) -> CadrumoError:
-    """The registered refusal of a domain refusal: its carry cause when it names one, else the value family."""
+    """The registered refusal of a domain refusal.
+
+    A named cause first; then the refusal a stage after value admission
+    raised, settled as itself; else the value family.
+    """
     for fact in refusal.facts:
         withdrawal = _CARRY_WITHDRAWAL_ERRORS.get(fact)
         if withdrawal is not None:
@@ -936,6 +941,8 @@ def _domain_refusal_error(refusal: ModeloEditDomainRefusalV1) -> CadrumoError:
         family = next((fact for fact in refusal.facts if fact in _PRIOR_CARRY_FAMILIES), None)
         if family is not None:
             return _prior_carry_edit_refusal(family)
+    if refusal.downstream is not None:
+        return downstream_refusal_error(refusal.downstream)
     return ModeloEditRefusedError()
 
 
@@ -953,6 +960,9 @@ def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> CadrumoError:
     withdrawn carry statement that cannot leave the declaration uncalculated,
     and an edit that leaves an earlier-ejercicio carry unstated, which settles
     under that refusal's public code with the door to state the carries.
+    Any other refusal a stage after value admission raised settles under its
+    own registered code, value-free words and value-free door; the value
+    family is left for a refused value.
     """
     match refusal:
         case ModeloEditStaleBaselineRefusalV1():
