@@ -316,7 +316,7 @@
   "src/cadrumo/application/modelo/calculation_route.py::require_calculation_route_resolver::INTERNAL_INVARIANT::0",
   "src/cadrumo/application/modelo/calculation_route.py::require_calculation_route_resolver::INTERNAL_INVARIANT::1",
   "src/cadrumo/application/modelo/calculation_summary_presentation.py::_Chrome._template::REFUSED_CALCULATION_SUMMARY_CHROME_UNAVAILABLE::0",
-  "src/cadrumo/application/modelo/carry_attestation_submission.py::prior_carry_attestation_submission::REFUSED_MODELO_PRIOR_CARRY_NOTHING_OPEN::0",
+  "src/cadrumo/application/modelo/absence_statement_submission.py::absence_statement_submission::REFUSED_MODELO_PRIOR_CARRY_NOTHING_OPEN::0",
   "src/cadrumo/application/modelo/casilla_help.py::_phrase::INTERNAL_MODELO_HELP_CATALOGUE_GAP::0",
   "src/cadrumo/application/modelo/credit_resolution.py::credit_resolution_for_finding::REFUSED_CREDIT_RESOLUTION::0",
   "src/cadrumo/application/modelo/credit_resolution.py::find_finding::REFUSED_CREDIT_RESOLUTION::0",
