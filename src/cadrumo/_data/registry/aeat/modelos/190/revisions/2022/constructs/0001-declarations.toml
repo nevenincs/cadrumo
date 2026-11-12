@@ -12,6 +12,7 @@ legal_refs = ["ley-35-2006:art-101", "ley-35-2006:art-18", "ley-35-2006:art-19",
 source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
 casilla_ids = ["decl.percepciones-total", "decl.retenciones-total", "decl.total-percepciones"]
 formulas = ["modelo-190-percepciones-total", "modelo-190-retenciones-total"]
+extraction_profiles = ["modelo-190-declaracion-pdf"]
 bindings = [
     "modelo-190-perceptor-row-nif",
     "modelo-190-perceptor-row-nif-representante",
@@ -90,6 +91,7 @@ application_links = [
     "modelo-190-approval",
     "modelo-190-reconciliation",
     "modelo-190-workflow",
+    "modelo-190-extractor",
 ]
 deadline_windows = ["modelo-190-2022-0a"]
 filing_schedules = ["modelo-190-anual"]
