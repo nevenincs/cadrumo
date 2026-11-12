@@ -16,7 +16,6 @@ casilla-member|202|01|binding|present=2025-y-siguientes|absent=2023-2024
 casilla-member|222|23|formula|present=2024|absent=2025-y-siguientes
 casilla-member|296|02|binding|present=2024-2025|absent=2023
 casilla-member|296|03|binding|present=2024-2025|absent=2023
-casilla-member|303|18|binding|present=2023|absent=2025
 edition-only|036|application_links|modelo-036-workflow|2025-02-03-y-siguientes|uncited appearing boundary
 edition-only|036|bindings|modelo-036-profile-censo-status|2025-02-03-y-siguientes|uncited appearing boundary
 edition-only|100|application_links|modelo-100-portal|2025|uncited appearing boundary
