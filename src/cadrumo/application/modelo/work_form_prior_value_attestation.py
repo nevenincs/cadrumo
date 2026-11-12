@@ -34,9 +34,9 @@ from .work_form_prior_value_models import (
 )
 from .work_form_source_groups import earlier_filing_text
 
-_WITHDRAWAL_ACTION: Final = "application.modelo.work_form.prior_value_attestation.withdrawal.action"
-_WITHDRAWAL_EFFECT: Final = "application.modelo.work_form.prior_value_attestation.withdrawal.effect"
-_SOURCE_HELD_WORDS: Final = "application.modelo.work_form.prior_value_attestation.refusal.source_held"
+_WITHDRAWAL_ACTION_LOCALE_KEY: Final = "application.modelo.work_form.prior_value_attestation.withdrawal.action"
+_WITHDRAWAL_EFFECT_LOCALE_KEY: Final = "application.modelo.work_form.prior_value_attestation.withdrawal.effect"
+_SOURCE_HELD_LOCALE_KEY: Final = "application.modelo.work_form.prior_value_attestation.refusal.source_held"
 
 
 def _earlier_filings(requirements: Sequence[CrossPeriodDependencyRequirement]) -> tuple[ModeloFormEarlierFiling, ...]:
@@ -89,8 +89,8 @@ def _withdrawals(
         family_id: ModeloFormPriorValueWithdrawal(
             family_id=family_id,
             binding_ids=tuple(sorted(binding_ids)),
-            action_words=tr(_WITHDRAWAL_ACTION, locale=locale),
-            effect_words=tr(_WITHDRAWAL_EFFECT, locale=locale),
+            action_words=tr(_WITHDRAWAL_ACTION_LOCALE_KEY, locale=locale),
+            effect_words=tr(_WITHDRAWAL_EFFECT_LOCALE_KEY, locale=locale),
         )
         for family_id, binding_ids in by_family.items()
     }
@@ -120,7 +120,7 @@ def _attestation(
         stated=stated,
         admitted=admitted,
         refusal_reason=None if admitted else ModeloFormPriorValueRefusal.SOURCE_HELD,
-        refusal_words=None if admitted else tr(_SOURCE_HELD_WORDS, locale=locale),
+        refusal_words=None if admitted else tr(_SOURCE_HELD_LOCALE_KEY, locale=locale),
         refusal=None if admitted else _source_held_refusal(context),
         withdrawal=withdrawal,
     )
