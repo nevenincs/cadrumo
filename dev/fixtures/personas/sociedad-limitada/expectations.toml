@@ -56,24 +56,6 @@ legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-40-3", "orden-hfp-227-2017:a
 grounding = "cited"
 
 [[obligations]]
-modelo = "202"
-periods = ["1P"]
-year = "horizon-1"
-applicable = true
-reason = "The art. 40.2 base of the April instalment is the cuota of the horizon-3 Modelo 200, 300.00 (first positive base at the nueva creación 15 %); 18 % gives an ingreso of 54.00, so the 202 is filed."
-legal_ref = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
-grounding = "verified"
-
-[[obligations]]
-modelo = "202"
-periods = ["2P", "3P"]
-year = "horizon-1"
-applicable = false
-reason = "The art. 40.2 base of the October and December instalments is the cuota of the horizon-2 Modelo 200, 0.00 (its whole base compensated); no ingreso results, the art. 40.3 modality was never elected and the INCN of 28500.00 does not exceed 6 000 000, so Orden HFP/227/2017 art. 1.3 does not oblige filing."
-legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-40-3", "orden-hfp-227-2017:art-1"]
-grounding = "verified"
-
-[[obligations]]
 modelo = "232"
 periods = ["0A"]
 year = "horizon-1"
@@ -198,50 +180,6 @@ grounding = "verified"
 
 
 [[values]]
-modelo = "202"
-period = "1P"
-year = "horizon-1"
-casillas = { "01" = "300.00", "03" = "54.00" }
-derivation = """
-Modalidad art. 40.2 LIS: art. 40.3 was never elected (persona.toml [fields]) and an INCN of 28500.00 does not impose it.
-Casilla 01: the cuota íntegra, less deducciones, bonificaciones, retenciones e ingresos a cuenta, of the last period whose
-filing deadline had passed on 1 April of horizon-1 (LIS art. 40.2; manual Sociedades 2024 source.pdf.extracted.md:32604-32611):
-the horizon-3 Modelo 200, due 25 July of horizon-2. Its casilla 00599 is 300.00: base imponible 2000.00, the first positive
-base of a nueva creación, at 15 % (LIS art. 29.1 último párrafo; manual 2024 :14053-14056, :14758-14769), nothing to deduct
-(persona.toml history and [[attested_prior_values]]). No general or reduced rate of any supported year is below 15 %, so the figure holds in every replay year.
-Casilla 03 = 18 % x 300.00 = 54.00 (LIS art. 40.2 párr. 3; manual 2024 :32669-32672), as in the manual's worked example
-(manual 2024 :32680-32698; 2025 :33322-33345): "Base del pago fraccionado: (12.000 - 2.000) = 10.000 euros. 18% de 10.000
-euros = 1.800 euros". Casillas 01 and 03 are those of every supported 202 edition (the oldest authored design, inherited by the later editions).
-"""
-legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-29"]
-grounding = "verified"
-
-[[values]]
-modelo = "202"
-period = "2P"
-year = "horizon-1"
-casillas = { "01" = "0.00", "03" = "0.00" }
-derivation = """
-Casilla 01: the cuota of the last Modelo 200 whose deadline had passed on 1 October of horizon-1, that of horizon-2 (due 25 July
-of horizon-1), 0.00 with its whole base compensated. Casilla 03 = 18 % x 0.00 = 0.00. No ingreso, so the 202 is not filed
-(Orden HFP/227/2017 art. 1.3; manual 2024 :32526-32531); the persona table checks that the overview suppresses it.
-"""
-legal_ref = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
-grounding = "verified"
-
-[[values]]
-modelo = "202"
-period = "3P"
-year = "horizon-1"
-casillas = { "01" = "0.00", "03" = "0.00" }
-derivation = """
-Casilla 01: the cuota of the horizon-2 Modelo 200, still the last whose deadline had passed on 1 December of horizon-1: 0.00.
-Casilla 03 = 0.00; not filed (Orden HFP/227/2017 art. 1.3; manual 2024 :32526-32531).
-"""
-legal_ref = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
-grounding = "verified"
-
-[[values]]
 modelo = "200"
 period = "0A"
 year = "horizon-1"
@@ -302,7 +240,7 @@ reason = "The cuenta de pérdidas y ganancias lines need closing entries (amorti
 modelo = "200"
 period = "0A"
 year = "horizon-1"
-roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "54.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2275.00", "is_cuota_liquida" = "2275.00", "is_liquidacion_iv_cuota_diferencial" = "2221.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2275.00", "is_cuota_liquida" = "2275.00", "is_liquidacion_iv_cuota_diferencial" = "2275.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
 derivation = """
 Cuota íntegra, LIS art. 29.1 as worded before Ley 31/2022 (periodos before 2023): tipo general 25 %, there being no reduced rate for an
 INCN below 1 millón de euros (Ley 31/2022 art. 39 introduced it from 2023); 9100.00 x 25 % = 2275.00. This plain value holds in a year
@@ -315,15 +253,11 @@ capitalización (01032, LIS art. 25) or de nivelación (LIS art. 105) is applied
 00552 = 00550 - 01032 - 00547 = 25400.00 - 0 - 16300.00 = 9100.00 (manual Sociedades 2024 source.pdf.extracted.md:14021; 2025 :14097),
 and the base after the reserva de nivelación 01330 = 00552 = 9100.00 (manual 2024 :14609), on which 00562 = 01330 x 00558 / 100
 (manual 2024 :14654; 2025 :14952).
-Pagos fraccionados (art. 40.2; art. 40.3 never elected): 00601 = 18 % x 300.00 = 54.00, the April instalment on the
-cuota (00599) of the horizon-3 Modelo 200, the company's first positive base at the nueva creación 15 % (LIS art. 29.1);
-00603 = 00605 = 18 % x 0.00 = 0.00, the October and December instalments on the cuota of the horizon-2 Modelo 200, which
-compensated its whole base (persona.toml history; the Modelo 202 horizon-1 values above). Horizon-1 is the third period with
-a positive base, so the general rate below applies.
-No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
+Pagos fraccionados 00601/00603/00605 are 0.00: under art. 40.2 each is 18 % of a prior cuota of 0.00, and art. 40.3 was never elected
+(persona.toml [[attested_prior_values]]). No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
 ingresos a cuenta (01766, 01784) and the State levies 100 % (00625), so 00599 = (00625 / 100) x (00592 - 01766 - 01784) = 00592
 (manual 2024 :20345; 2025 :20653). 00611 is "Cuota diferencial (Estado)" in both designs, the State share before retenciones are
-netted elsewhere: 00611 = 00599 - (00601 + 00603 + 00605) = 2275.00 - 54.00 = 2221.00 (manual 2024 :20582; 2025 :20895).
+netted elsewhere: 00611 = 00599 - (00601 + 00603 + 00605) = cuota íntegra (manual 2024 :20582; 2025 :20895).
 Tributación conjunta: the domicilio fiscal is in Valladolid and the incn of the prior twelve months is 28500.00; the foral administrations
 levy an entity domiciled in their territory with a prior-year volume of operations up to 12 million euros and share by volume only above
 it (Ley 12/2002 art. 15, Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625 of record DP200026, element 17,
@@ -346,7 +280,7 @@ modelo = "200"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-27-2014:art-29-2023"
-roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "54.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2093.00", "is_cuota_liquida" = "2093.00", "is_liquidacion_iv_cuota_diferencial" = "2039.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2093.00", "is_cuota_liquida" = "2093.00", "is_liquidacion_iv_cuota_diferencial" = "2093.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
 derivation = """
 Cuota íntegra, LIS art. 29.1 as Ley 31/2022 art. 39 worded it for periodos 2023 and 2024: 23 % for an entity whose INCN of the
 prior periodo is below 1 millón de euros and that is not an entidad patrimonial (28500.00 here, a web-development activity; manual
@@ -361,15 +295,11 @@ capitalización (01032, LIS art. 25) or de nivelación (LIS art. 105) is applied
 00552 = 00550 - 01032 - 00547 = 25400.00 - 0 - 16300.00 = 9100.00 (manual Sociedades 2024 source.pdf.extracted.md:14021; 2025 :14097),
 and the base after the reserva de nivelación 01330 = 00552 = 9100.00 (manual 2024 :14609), on which 00562 = 01330 x 00558 / 100
 (manual 2024 :14654; 2025 :14952).
-Pagos fraccionados (art. 40.2; art. 40.3 never elected): 00601 = 18 % x 300.00 = 54.00, the April instalment on the
-cuota (00599) of the horizon-3 Modelo 200, the company's first positive base at the nueva creación 15 % (LIS art. 29.1);
-00603 = 00605 = 18 % x 0.00 = 0.00, the October and December instalments on the cuota of the horizon-2 Modelo 200, which
-compensated its whole base (persona.toml history; the Modelo 202 horizon-1 values above). Horizon-1 is the third period with
-a positive base, so the general rate below applies.
-No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
+Pagos fraccionados 00601/00603/00605 are 0.00: under art. 40.2 each is 18 % of a prior cuota of 0.00, and art. 40.3 was never elected
+(persona.toml [[attested_prior_values]]). No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
 ingresos a cuenta (01766, 01784) and the State levies 100 % (00625), so 00599 = (00625 / 100) x (00592 - 01766 - 01784) = 00592
 (manual 2024 :20345; 2025 :20653). 00611 is "Cuota diferencial (Estado)" in both designs, the State share before retenciones are
-netted elsewhere: 00611 = 00599 - (00601 + 00603 + 00605) = 2093.00 - 54.00 = 2039.00 (manual 2024 :20582; 2025 :20895).
+netted elsewhere: 00611 = 00599 - (00601 + 00603 + 00605) = cuota íntegra (manual 2024 :20582; 2025 :20895).
 Tributación conjunta: the domicilio fiscal is in Valladolid and the incn of the prior twelve months is 28500.00; the foral administrations
 levy an entity domiciled in their territory with a prior-year volume of operations up to 12 million euros and share by volume only above
 it (Ley 12/2002 art. 15, Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625 of record DP200026, element 17,
@@ -392,7 +322,7 @@ modelo = "200"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-27-2014:dt-44"
-roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "54.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "1911.00", "is_cuota_liquida" = "1911.00", "is_liquidacion_iv_cuota_diferencial" = "1857.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "1911.00", "is_cuota_liquida" = "1911.00", "is_liquidacion_iv_cuota_diferencial" = "1911.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
 derivation = """
 Cuota íntegra, LIS DT 44.1.a (Ley 7/2024; corpus normatives/html/ley-27-2014-dt-44.html.extracted.md:3-6), periodos starting within
 2025: an entity whose INCN of the prior periodo is below 1 millón de euros pays 21 % on the base between 0 and 50000.00 and 22 % on the
@@ -411,15 +341,11 @@ capitalización (01032, LIS art. 25) or de nivelación (LIS art. 105) is applied
 00552 = 00550 - 01032 - 00547 = 25400.00 - 0 - 16300.00 = 9100.00 (manual Sociedades 2024 source.pdf.extracted.md:14021; 2025 :14097),
 and the base after the reserva de nivelación 01330 = 00552 = 9100.00 (manual 2024 :14609), on which 00562 = 01330 x 00558 / 100
 (manual 2024 :14654; 2025 :14952).
-Pagos fraccionados (art. 40.2; art. 40.3 never elected): 00601 = 18 % x 300.00 = 54.00, the April instalment on the
-cuota (00599) of the horizon-3 Modelo 200, the company's first positive base at the nueva creación 15 % (LIS art. 29.1);
-00603 = 00605 = 18 % x 0.00 = 0.00, the October and December instalments on the cuota of the horizon-2 Modelo 200, which
-compensated its whole base (persona.toml history; the Modelo 202 horizon-1 values above). Horizon-1 is the third period with
-a positive base, so the general rate below applies.
-No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
+Pagos fraccionados 00601/00603/00605 are 0.00: under art. 40.2 each is 18 % of a prior cuota of 0.00, and art. 40.3 was never elected
+(persona.toml [[attested_prior_values]]). No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
 ingresos a cuenta (01766, 01784) and the State levies 100 % (00625), so 00599 = (00625 / 100) x (00592 - 01766 - 01784) = 00592
 (manual 2024 :20345; 2025 :20653). 00611 is "Cuota diferencial (Estado)" in both designs, the State share before retenciones are
-netted elsewhere: 00611 = 00599 - (00601 + 00603 + 00605) = 1911.00 - 54.00 = 1857.00 (manual 2024 :20582; 2025 :20895).
+netted elsewhere: 00611 = 00599 - (00601 + 00603 + 00605) = cuota íntegra (manual 2024 :20582; 2025 :20895).
 Tributación conjunta: the domicilio fiscal is in Valladolid and the incn of the prior twelve months is 28500.00; the foral administrations
 levy an entity domiciled in their territory with a prior-year volume of operations up to 12 million euros and share by volume only above
 it (Ley 12/2002 art. 15, Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625 of record DP200026, element 17,
