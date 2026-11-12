@@ -2154,6 +2154,8 @@ desktop:
       country: Ország
       established: Székhely
       filing_name:
+        asked: Egy számítás egy partner bevallási nevét kéri. Írd be az adószámát,
+          és keresd meg, hogy megadhasd a nevet.
         kind:
           entity: Jogi személy
           natural_person: Természetes személy
@@ -2162,16 +2164,26 @@ desktop:
         kind_label: Típus
         no_second_surname: Nincs második vezetéknév
         nombre: Keresztnév
+        part_limit: Legfeljebb {count} karakterrel teljes egészében bekerül.
         primer_apellido: Első vezetéknév
         razon_social: Cégnév
         rendering_add: Változat hozzáadása
         rendering_for: '{width} karakterhez'
+        rendering_for_slot: Változat hozzáadása {width} karakterhez
         rendering_remove: Változat törlése
         renderings: Rövidebb változatok
         renderings_hint: A szélesség annak a mezőnek a karakterszáma, amelybe a névnek
           bele kell férnie.
         save: Bevallási név mentése
         segundo_apellido: Második vezetéknév
+        slot:
+          fits: Teljes egészében bekerül
+          missing: Nincs megadott név
+          single_surname: 'Nem kerül be: csak egy vezetéknév van megadva'
+          too_wide: 'Túl hosszú: adj meg egy változatot erre a szélességre'
+          uses_rendering: Az erre a szélességre megadott változatod kerül be
+          width: '{width} karakter'
+        slots: Hová kerül a név
         stated_by: Megadta
         text: Szöveg
         title: Bevallási név
@@ -2203,9 +2215,9 @@ desktop:
       vat_state: ÁFA-azonosítás helye
       view: Lekérdezés
       withdraw: Visszavonás…
-      withdraw_confirm: Megerősítés visszavonása
-      withdraw_what: Visszavonja a megerősítésedet. Más források továbbra is megadhatják
-        ezeket az értékeket.
+      withdraw_everything: 'Visszavonja mindazt, amit ehhez a partnerhez megadtál:
+        a megerősítésedet, a tartományát és a bevallási nevét.'
+      withdraw_everything_confirm: Minden megadott adat visszavonása
     density:
       comfortable: Tágas sorok
     describe:
@@ -7402,12 +7414,16 @@ tui:
           szerint %{evidenced}. %{detail}'
         country: Országkód (2 betű, nem kötelező)
         evidenced: Bizonylaton szereplő hatály a lekérdezéshez (nem kötelező)
+        filing_asked: Egy számítás egy partner bevallási nevét kéri. Írd be az adóazonosítóját,
+          és keresd meg, hogy megadhasd a nevet.
         filing_done: '%{identifier} bevallási neve megadva.'
         filing_heading: Bevallási név
         filing_kind_entity: Jogi személy
         filing_kind_natural_person: Természetes személy
         filing_no_second: Nincs második vezetéknév
         filing_nombre: Keresztnév
+        filing_part_limit: '%{part}: legfeljebb %{count} karakterrel teljes egészében
+          bekerül.'
         filing_primer: Első vezetéknév
         filing_razon: Cégnév
         filing_rendering: '%{width} karakterhez: %{text}'
@@ -7418,6 +7434,14 @@ tui:
           el.
         filing_review: Bevallási név ellenőrzése
         filing_segundo: Második vezetéknév
+        filing_slot: '%{width} karakter: %{state} (%{editions})'
+        filing_slot_fits: teljes egészében bekerül
+        filing_slot_missing: nincs megadott név
+        filing_slot_single_surname: nem kerül be, csak egy vezetéknév van megadva
+        filing_slot_too_wide: túl hosszú, adj meg egy változatot erre a szélességre
+        filing_slot_uses_rendering: az erre a szélességre megadott változatod kerül
+          be
+        filing_slots_heading: 'Hová kerül a név:'
         filing_stage: '%{identifier} bevallási nevének megadása mint %{kind}.'
         filing_stated: '%{identifier} bevallási neve: %{kind} · %{name}'
         filing_stated_by: 'Megadta: %{name}, ekkor: %{date}.'
@@ -7428,7 +7452,8 @@ tui:
         identifier_required: Előbb add meg a partner adóazonosítóját.
         note: Megjegyzés (nem kötelező)
         nothing_known: 'Semmit sem tudunk erről: %{identifier}.'
-        nothing_to_withdraw: '%{identifier} esetében nem volt visszavonható megerősítés.'
+        nothing_stated_to_withdraw: '%{identifier} partnerhez nem volt megadva semmi,
+          amit vissza lehetne vonni.'
         prompt: Nézd meg, mit tudunk egy partner telephelyéről, erősítsd meg magad,
           vagy vond vissza a megerősítésedet.
         review_confirm: Megerősítés áttekintése
@@ -7436,7 +7461,8 @@ tui:
         scope: '%{identifier}: területi hatály %{scope} (forrás: %{source})'
         stage_confirm: '%{identifier} megerősítése: területi hatály %{scope} · tagállam
           %{state}.'
-        stage_withdraw: '%{identifier} megerősítésének visszavonása.'
+        stage_withdraw_everything: 'Mindazt visszavonod, amit %{identifier} partnerhez
+          megadtál: a megerősítésedet, a tartományát és a bevallási nevét.'
         state: 'Tagállam %{state} (forrás: %{source})'
         territorial: Területi hatály (kód)
         title: Partnerek
@@ -7444,7 +7470,7 @@ tui:
           · tagállam %{state}.'
         view: Lekérdezés
         who_heading: Melyik partner
-        withdrawn: '%{identifier} megerősítése visszavonva.'
+        withdrawn_everything: Mindaz, amit %{identifier} partnerhez megadtál, visszavonva.
       destructive_accept: Igen, mehet
       destructive_title: Erősítsd meg ezt a módosítást
       diagnostics:

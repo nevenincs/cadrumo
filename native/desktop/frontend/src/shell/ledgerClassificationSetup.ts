@@ -207,12 +207,48 @@ export type CounterpartyFilingName = {
   asserted_at: string;
 };
 
-/** The declared kind disagrees with the form of the identifier; it carries
- * the two kinds and no words. */
+/** The declared kind disagrees with the form of the identifier: the two
+ * kinds, and the sentence the backend served for them in `words_language`. */
 export type CounterpartyFilingNameFinding = {
   code: "counterparty_filing_name_kind_contradicts_identifier_form";
   declared_kind: "natural_person" | "entity";
   observed_form: "natural_person" | "entity";
+  words?: string | null;
+  words_language?: OutputLanguage | null;
+};
+
+/** Why an export would refuse a party-name slot: no name stated, a natural
+ * person stated with one surname, or a full name wider than the slot with no
+ * rendering stated for its width. */
+export type CounterpartyFilingNameSlotRefusal =
+  "missing" | "single_surname" | "too_wide";
+
+/** One export field the pinned authority files a party name into, and
+ * whether the stated name fills it, as the export's own composition judges.
+ * `edition_words` name the slot's edition in `edition_words_language`. */
+export type CounterpartyFilingNameSlot = {
+  modelo: string;
+  revision_id: string;
+  edition_words: string;
+  edition_words_language: OutputLanguage;
+  layout_id: string;
+  export_record_id: string;
+  export_field_id: string;
+  width: number;
+  fits: boolean;
+  refusal: CounterpartyFilingNameSlotRefusal | null;
+  composed_length: number | null;
+  uses_rendering: boolean;
+};
+
+/** A stated name part. */
+export type CounterpartyFilingNamePart =
+  "primer_apellido" | "segundo_apellido" | "nombre" | "razon_social";
+
+/** The longest a part can be for the full name to fit some slot whole. */
+export type CounterpartyFilingNamePartLimit = {
+  part: CounterpartyFilingNamePart;
+  max_length: number;
 };
 
 /** One province or autonomous city, by its INE code and the name INE prints. */
@@ -256,6 +292,12 @@ export type LedgerCounterpartyResult = {
   /** The name stated for the counterparty, served by a view and a filing-name statement. */
   filing_name?: CounterpartyFilingName | null;
   findings?: CounterpartyFilingNameFinding[];
+  /** Every party-name export slot of the pinned authority with the stated
+   * name's fit; served by a view. */
+  filing_name_slots?: CounterpartyFilingNameSlot[];
+  /** The longest each part can be for the full name to fit a slot whole;
+   * served by a view. */
+  filing_name_part_limits?: CounterpartyFilingNamePartLimit[];
 };
 
 // ---- Model diagnostics ---------------------------------------------------
