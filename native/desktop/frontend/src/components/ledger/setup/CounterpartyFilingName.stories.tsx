@@ -180,10 +180,18 @@ const ENTITY: StatedFilingName = {
   asserted_at: STATED_AT,
 };
 
+/** Each served slot as the window shows it: the edition words, then the
+ * served fields as tokens and numbers. */
 const slotRows = (root: HTMLElement) =>
-  [...root.querySelectorAll<HTMLElement>("[data-slot-state]")].map(
-    (row) => `${row.dataset.slotWidth}:${row.dataset.slotState}`,
+  [
+    ...root.querySelectorAll<HTMLElement>(
+      ".ledger-counterparty-filing-name-slots li",
+    ),
+  ].map((row) =>
+    [...row.children].map((part) => part.textContent ?? "").join(" "),
   );
+
+const MISSING = "fits=false refusal=missing uses_rendering=false";
 
 /** Types an entity's company name into the form and saves it. */
 async function stateEntity(root: HTMLElement, name: string) {
@@ -202,8 +210,17 @@ async function stateEntity(root: HTMLElement, name: string) {
 export const NoneStated: Story = {
   name: "None stated",
   play: async ({ canvasElement }) => {
-    // Every served width, once per outcome, and none of them filed.
-    await expect(slotRows(canvasElement)).toEqual(["40:missing", "20:missing"]);
+    // Every served slot as served: none filed, the refusal token verbatim.
+    await expect(slotRows(canvasElement)).toEqual([
+      `Synthetic edition A width=40 ${MISSING}`,
+      `Synthetic edition B width=40 ${MISSING}`,
+      `Synthetic edition B width=20 ${MISSING}`,
+    ]);
+    await expect(
+      canvasElement.querySelector(
+        ".ledger-counterparty-filing-name-part-limits",
+      )?.textContent,
+    ).toBe("primer_apellido=36nombre=36razon_social=40");
     await expect(
       within(canvasElement).getByText(/Synthetic edition A/),
     ).toBeVisible();
@@ -244,7 +261,10 @@ export const NaturalPersonStated: Story = {
     await expect(
       canvasElement.querySelector(".ledger-counterparty-filing-name-stated"),
     ).not.toBeNull();
-    await expect(slotRows(canvasElement)).toEqual(["40:fits", "20:fits"]);
+    await expect(slotRows(canvasElement)).toEqual([
+      "Synthetic edition A width=40 fits=true refusal=null uses_rendering=false",
+      "Synthetic edition B width=20 fits=true refusal=null uses_rendering=false",
+    ]);
   },
 };
 
@@ -272,26 +292,19 @@ export const EntityWithRenderings: Story = {
     ],
   },
   play: async ({ canvasElement }) => {
+    // Each state is the served token or boolean, never worded here.
     await expect(slotRows(canvasElement)).toEqual([
-      "40:fits",
-      "15:uses_rendering",
-      "12:too_wide",
+      "Synthetic edition A width=40 fits=true refusal=null uses_rendering=false",
+      "Synthetic edition B width=15 fits=true refusal=null uses_rendering=true",
+      "Synthetic edition B width=12 fits=false refusal=too_wide uses_rendering=false",
     ]);
-    // The width the name is too wide for is offered as a rendering of it.
-    const offer = canvasElement.querySelector<HTMLElement>(
-      ".ledger-counterparty-rendering-for-slot",
-    )!;
-    await expect(offer.dataset.slotWidth).toBe("12");
-    await userEvent.click(offer);
-    const widths = [
-      ...canvasElement.querySelectorAll<HTMLInputElement>(
-        ".ledger-counterparty-rendering input",
-      ),
-    ].map((input) => input.value);
-    await expect(widths).toContain("12");
     await expect(
       canvasElement.querySelector(".ledger-counterparty-rendering-for-slot"),
     ).toBeNull();
+    // The party kind is shown as served.
+    await expect(
+      within(canvasElement).getByText("entity", { selector: "dd" }),
+    ).toBeVisible();
   },
 };
 
@@ -342,7 +355,9 @@ export const KindContradictsIdentifier: Story = {
   play: async ({ canvasElement }) => {
     // The finding reads as served, and the slot as the export refuses it.
     await expect(within(canvasElement).getByText(FINDING_WORDS)).toBeVisible();
-    await expect(slotRows(canvasElement)).toEqual(["40:single_surname"]);
+    await expect(slotRows(canvasElement)).toEqual([
+      "Synthetic edition A width=40 fits=false refusal=single_surname uses_rendering=false",
+    ]);
   },
 };
 
@@ -451,5 +466,12 @@ export const OpenedFromWayOutBound: StoryObj<{ ask: CounterpartyAsk }> = {
     );
     await expect(kinds).toContain("entity");
     await expect(slotRows(canvasElement).length).toBeGreaterThan(0);
+    // Nothing offers to withdraw what is stated for the counterparty.
+    await expect(
+      canvasElement.querySelector(".ledger-counterparty-withdraw"),
+    ).toBeNull();
+    await expect(
+      within(canvasElement).queryByRole("button", { name: /withdraw/i }),
+    ).toBeNull();
   },
 };

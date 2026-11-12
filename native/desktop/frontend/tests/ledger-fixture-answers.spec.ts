@@ -147,7 +147,17 @@ const ASKS: [LedgerDefinitionId, JsonObject][] = [
     },
   ],
   ["ledger.counterparty", { action: "view", tax_identifier: TAX }],
-  ["ledger.counterparty", { action: "withdraw", tax_identifier: TAX }],
+  [
+    "ledger.counterparty",
+    {
+      action: "filing_name",
+      tax_identifier: TAX,
+      party_kind: "entity",
+      razon_social: "Synthetic SL",
+      asserted_by: "Test",
+    },
+  ],
+  ["ledger.counterparty", { action: "view", tax_identifier: TAX }],
   ["ledger.list", { output_language: "en" }],
   ["ledger.list", { output_language: "hu", limit: 5 }],
   ["ledger.rule.list", {}],

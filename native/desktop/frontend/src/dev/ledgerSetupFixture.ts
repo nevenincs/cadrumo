@@ -358,11 +358,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       "renderings",
     ]);
     const action = required(request.action);
-    if (
-      !["view", "confirm", "withdraw", "provincia", "filing_name"].includes(
-        action,
-      )
-    )
+    if (!["view", "confirm", "provincia", "filing_name"].includes(action))
       invalid();
     const carriesName = [
       "party_kind",
@@ -477,14 +473,8 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       };
       counterparties.set(tax, facts);
       changed = true;
-    } else if (action === "withdraw" && (facts || filingNames.has(tax))) {
-      // A withdrawal removes the whole record: every answer stated for it.
-      counterparties.delete(tax);
-      filingNames.delete(tax);
-      facts = null;
-      changed = true;
     }
-    const heldName = action === "withdraw" ? null : filingName;
+    const heldName = filingName;
     const evidenced = text(request.evidenced_scope);
     return {
       profile_id: profileId,
@@ -519,13 +509,13 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
             }
           : null,
       recorded: action === "confirm" || action === "provincia" ? true : null,
-      withdrawn: action === "withdraw" ? changed : null,
+      withdrawn: null,
       changed,
       conflict_context: null,
       provincia_code:
         (facts?.provincia_code as string | null | undefined) ?? null,
       // Served on a view, a confirmation and a provincia statement.
-      provincia_choices: action === "withdraw" ? [] : PROVINCIA_CHOICES,
+      provincia_choices: PROVINCIA_CHOICES,
       filing_name:
         action === "view" || action === "filing_name"
           ? (heldName as JsonValue)

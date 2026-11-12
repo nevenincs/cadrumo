@@ -44,14 +44,12 @@ type Draft = {
   state: string;
   note: string;
   actor: string;
-  withdrawing: boolean;
 };
 const EMPTY_DRAFT: Draft = {
   scope: "",
   state: "",
   note: "",
   actor: "",
-  withdrawing: false,
 };
 const identityOf = (taxId: string, country: string) =>
   JSON.stringify([taxId.trim(), country || null]);
@@ -59,9 +57,8 @@ const identityOf = (taxId: string, country: string) =>
 /**
  * What the ledger answers for one counterparty, by its tax id: where it is
  * established and which State identifies it for VAT, and where each answer
- * comes from, and the name it is filed under. The person confirms the facts,
- * states the name or withdraws everything stated for it; each is its own
- * write. Opened from a way out (`ask`), it starts on the counterparty and kind
+ * comes from, and the name it is filed under. The person confirms the facts or
+ * states the name; each is its own write. Opened from a way out (`ask`), it starts on the counterparty and kind
  * the way out bound, and reads it at once where it names the counterparty.
  */
 export function CounterpartiesPane({
@@ -82,7 +79,7 @@ export function CounterpartiesPane({
   const identity = identityOf(taxId, country);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const draft = drafts[identity] ?? EMPTY_DRAFT;
-  const { scope, state, note, actor, withdrawing } = draft;
+  const { scope, state, note, actor } = draft;
   const [conflict, setConflict] = useState<{
     identity: string;
     context: [string, string][];
@@ -101,7 +98,6 @@ export function CounterpartiesPane({
   const setScope = (scope: string) => setDraft({ scope });
   const setState = (state: string) => setDraft({ state });
   const setNote = (note: string) => setDraft({ note });
-  const setWithdrawing = (withdrawing: boolean) => setDraft({ withdrawing });
   const generation = useRef(0);
   const answerId = useId();
   useLayoutEffect(
@@ -240,35 +236,7 @@ export function CounterpartiesPane({
       await view();
     }
   };
-  const withdraw = async () => {
-    if (!result || write.busy) return;
-    const mine = generation.current;
-    setWriteIdentity(identity);
-    setAttribution(null);
-    const done = await write.run(
-      () =>
-        setupCall(
-          port,
-          "ledger.counterparty",
-          {
-            action: "withdraw",
-            tax_identifier: result.tax_identifier,
-            country_code: country || null,
-          },
-          true,
-        ),
-      unknownLanding,
-    );
-    setWithdrawing(false);
-    if (done.kind === "done" && mine === generation.current) await view();
-  };
   const answer = result?.resolution;
-  const confirmed =
-    (result?.facts !== null && result?.facts !== undefined) ||
-    answer?.territorial_source === "operator_assertion" ||
-    answer?.identification_source === "operator_assertion" ||
-    (result?.filing_name !== null && result?.filing_name !== undefined) ||
-    (result?.provincia_code !== null && result?.provincia_code !== undefined);
   const targetWords =
     result &&
     facts(t, [
@@ -478,51 +446,7 @@ export function CounterpartiesPane({
                 {t("desktop.ledger.counterparty.confirm")}
               </Button>
             </WriteHold>
-            {confirmed && (
-              <Button
-                size="sm"
-                variant="outline"
-                aria-expanded={withdrawing}
-                aria-describedby={answerId}
-                onClick={() => setWithdrawing(!withdrawing)}
-              >
-                {t("desktop.ledger.counterparty.withdraw")}
-              </Button>
-            )}
           </div>
-          {withdrawing && (
-            <Alert tone="warning" icon={<Icon name="alert" />}>
-              <span>
-                {facts(t, [
-                  targetWords,
-                  t("desktop.ledger.counterparty.withdraw_everything"),
-                ])}
-              </span>
-              <span className="flex gap-2">
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  onClick={() => setWithdrawing(false)}
-                >
-                  {t("desktop.ledger.form.cancel")}
-                </Button>
-                <WriteHold>
-                  <Button
-                    size="xs"
-                    variant="destructive"
-                    className="ledger-counterparty-withdraw"
-                    aria-describedby={answerId}
-                    disabled={write.busy}
-                    onClick={() => void withdraw()}
-                  >
-                    {t(
-                      "desktop.ledger.counterparty.withdraw_everything_confirm",
-                    )}
-                  </Button>
-                </WriteHold>
-              </span>
-            </Alert>
-          )}
           <CallLine
             call={writeIdentity === identity ? write.last : null}
             onReread={() => void view(result.tax_identifier)}

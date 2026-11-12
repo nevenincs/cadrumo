@@ -13,16 +13,12 @@ import {
 } from "../../../shell/ledger";
 import type {
   CounterpartyFilingName as StatedFilingName,
-  CounterpartyFilingNamePart,
-  CounterpartyFilingNameSlot,
-  CounterpartyFilingNameSlotRefusal,
   LedgerCounterpartyResult,
 } from "../../../shell/ledgerClassificationSetup";
 import {
   COUNTERPARTY_KINDS,
   type CounterpartyKind,
 } from "../../../shell/counterpartyAsk";
-import type { OutputLanguage } from "../../../shell/ledger";
 import { servedRefusal } from "../../../shell/refusal";
 import { RefusalNotice } from "../../RefusalNotice";
 import { formatTime } from "../../../shared/dateFormats";
@@ -62,48 +58,6 @@ const draftOf = (
   })),
 });
 
-/** How the export files one slot: whole, by the stated rendering for its
- * width, or not, for the served reason. */
-type SlotState = "fits" | "uses_rendering" | CounterpartyFilingNameSlotRefusal;
-
-/** Slots of one width that the export files the same way, with the
- * editions they belong to, in served order. */
-type SlotGroup = {
-  width: number;
-  state: SlotState;
-  editions: { words: string; language: OutputLanguage }[];
-};
-
-const SLOT_STATE_LOCALE_KEYS: Record<SlotState, string> = {
-  fits: "desktop.ledger.counterparty.filing_name.slot.fits",
-  uses_rendering: "desktop.ledger.counterparty.filing_name.slot.uses_rendering",
-  missing: "desktop.ledger.counterparty.filing_name.slot.missing",
-  single_surname: "desktop.ledger.counterparty.filing_name.slot.single_surname",
-  too_wide: "desktop.ledger.counterparty.filing_name.slot.too_wide",
-};
-
-const slotState = (slot: CounterpartyFilingNameSlot): SlotState =>
-  slot.refusal ?? (slot.uses_rendering ? "uses_rendering" : "fits");
-
-/** The served slots, one row per width and outcome, each edition once. */
-export function slotGroups(
-  slots: readonly CounterpartyFilingNameSlot[],
-): SlotGroup[] {
-  const groups = new Map<string, SlotGroup>();
-  for (const slot of slots) {
-    const state = slotState(slot);
-    const key = `${slot.width}:${state}`;
-    const group = groups.get(key) ?? { width: slot.width, state, editions: [] };
-    if (!group.editions.some((held) => held.words === slot.edition_words))
-      group.editions.push({
-        words: slot.edition_words,
-        language: slot.edition_words_language,
-      });
-    groups.set(key, group);
-  }
-  return [...groups.values()];
-}
-
 const savedWidth = (width: string): number | null => {
   const read = Number(width);
   return width.trim() !== "" && Number.isInteger(read) && read > 0
@@ -117,9 +71,8 @@ const savedWidth = (width: string): number | null => {
  * entity's company name, and shorter renderings for fields too narrow for it.
  * The view serves every export field the name is filed into, with its width
  * and whether the stated name fills it, and the longest each part can be to
- * fit whole; a field the name is too wide for offers a rendering of its
- * width. What the name is checked against is the backend's; nothing is
- * decided here.
+ * fit whole. They are shown as served, tokens and numbers unworded. What
+ * the name is checked against is the backend's; nothing is decided here.
  */
 export function CounterpartyFilingName({
   port,
@@ -144,33 +97,7 @@ export function CounterpartyFilingName({
   );
   const stated = result.filing_name ?? null;
   const [draft, setDraft] = useState<Draft>(() => draftOf(stated, initialKind));
-  const groups = slotGroups(result.filing_name_slots ?? []);
-  // A served width the stated name is too wide for, and no rendering is
-  // drafted for yet, is offered as a rendering of that width.
-  const tooWide = [
-    ...new Set(
-      groups
-        .filter((group) => group.state === "too_wide")
-        .map((group) => group.width),
-    ),
-  ].filter(
-    (width) =>
-      !draft.renderings.some(
-        (rendering) => savedWidth(rendering.width) === width,
-      ),
-  );
-  const limits = new Map(
-    (result.filing_name_part_limits ?? []).map((limit) => [
-      limit.part,
-      limit.max_length,
-    ]),
-  );
-  const limitHint = (part: CounterpartyFilingNamePart) => {
-    const count = limits.get(part);
-    return count === undefined
-      ? undefined
-      : t("desktop.ledger.counterparty.filing_name.part_limit", { count });
-  };
+  const slots = result.filing_name_slots ?? [];
   const patch = (next: Partial<Draft>) =>
     setDraft((held) => ({ ...held, ...next }));
   const natural = draft.kind === "natural_person";
@@ -240,9 +167,8 @@ export function CounterpartyFilingName({
     value: string,
     onChange: (value: string) => void,
     required = true,
-    hint?: string,
   ) => (
-    <EditorField label={label} hint={hint}>
+    <EditorField label={label}>
       {(control) => (
         <TextEditor
           id={control.id}
@@ -255,10 +181,8 @@ export function CounterpartyFilingName({
       )}
     </EditorField>
   );
-  const kindWords = (kind: string) =>
-    kind === "entity"
-      ? t("desktop.ledger.counterparty.filing_name.kind.entity")
-      : t("desktop.ledger.counterparty.filing_name.kind.natural_person");
+  // The party kinds are shown as the backend names them; it serves no words for them.
+  const kindWords = (kind: string) => kind;
   const setRendering = (at: number, change: Partial<RenderingDraft>) =>
     patch({
       renderings: draft.renderings.map((held, i) =>
@@ -355,14 +279,11 @@ export function CounterpartyFilingName({
               {finding.words}
             </span>
           ) : (
-            t("desktop.ledger.counterparty.filing_name.kind_contradicts", {
-              declared: kindWords(finding.declared_kind),
-              observed: kindWords(finding.observed_form),
-            })
+            `${finding.code}: declared_kind=${finding.declared_kind} observed_form=${finding.observed_form}`
           )}
         </Alert>
       ))}
-      {groups.length > 0 && (
+      {slots.length > 0 && (
         <section
           className="flex flex-col gap-1"
           aria-label={t("desktop.ledger.counterparty.filing_name.slots")}
@@ -371,35 +292,25 @@ export function CounterpartyFilingName({
             {t("desktop.ledger.counterparty.filing_name.slots")}
           </h5>
           <ul className="ledger-counterparty-filing-name-slots flex flex-col gap-1 text-sm">
-            {groups.map((group) => (
+            {slots.map((slot) => (
               <li
-                key={`${group.width}:${group.state}`}
-                data-slot-state={group.state}
-                data-slot-width={group.width}
+                key={slot.export_field_id}
                 className="flex flex-wrap items-baseline gap-x-2"
               >
-                <span className="font-medium tabular-nums">
-                  {t("desktop.ledger.counterparty.filing_name.slot.width", {
-                    width: group.width,
-                  })}
+                <span lang={slot.edition_words_language}>
+                  {slot.edition_words}
                 </span>
-                <span
-                  className={
-                    group.state === "fits" || group.state === "uses_rendering"
-                      ? "text-muted-foreground"
-                      : "text-warning-foreground"
-                  }
-                >
-                  {t(SLOT_STATE_LOCALE_KEYS[group.state])}
-                </span>
-                <span className="text-muted-foreground">
-                  {group.editions.map((edition, at) => (
-                    <span key={edition.words} lang={edition.language}>
-                      {at > 0 ? "; " : ""}
-                      {edition.words}
-                    </span>
-                  ))}
-                </span>
+                <span className="tabular-nums">width={slot.width}</span>
+                <span>fits={String(slot.fits)}</span>
+                <span>refusal={String(slot.refusal)}</span>
+                <span>uses_rendering={String(slot.uses_rendering)}</span>
+              </li>
+            ))}
+          </ul>
+          <ul className="ledger-counterparty-filing-name-part-limits flex flex-wrap gap-x-2 text-sm tabular-nums">
+            {(result.filing_name_part_limits ?? []).map((limit) => (
+              <li key={limit.part}>
+                {limit.part}={limit.max_length}
               </li>
             ))}
           </ul>
@@ -422,7 +333,6 @@ export function CounterpartyFilingName({
             draft.razon,
             (razon) => patch({ razon }),
             true,
-            limitHint("razon_social"),
           )}
         {natural && (
           <>
@@ -431,21 +341,18 @@ export function CounterpartyFilingName({
               draft.primer,
               (primer) => patch({ primer }),
               true,
-              limitHint("primer_apellido"),
             )}
             {part(
               t("desktop.ledger.counterparty.filing_name.segundo_apellido"),
               draft.segundo,
               (segundo) => patch({ segundo }),
               !draft.noSecond,
-              limitHint("segundo_apellido"),
             )}
             {part(
               t("desktop.ledger.counterparty.filing_name.nombre"),
               draft.nombre,
               (nombre) => patch({ nombre }),
               true,
-              limitHint("nombre"),
             )}
             <label className="flex items-center gap-2 text-sm">
               <Checkbox
@@ -520,30 +427,6 @@ export function CounterpartyFilingName({
             </div>
           ))}
           <div className="flex flex-wrap gap-2">
-            {tooWide.map((width) => (
-              <Button
-                key={width}
-                size="sm"
-                variant="outline"
-                className="ledger-counterparty-rendering-for-slot"
-                data-slot-width={width}
-                onClick={() =>
-                  patch({
-                    renderings: [
-                      ...draft.renderings,
-                      { key: nextKey++, width: String(width), text: "" },
-                    ],
-                  })
-                }
-              >
-                {t(
-                  "desktop.ledger.counterparty.filing_name.rendering_for_slot",
-                  {
-                    width,
-                  },
-                )}
-              </Button>
-            ))}
             <Button
               size="sm"
               variant="outline"
