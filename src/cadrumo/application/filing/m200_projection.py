@@ -20,6 +20,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
+from types import MappingProxyType
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_projection_ref import FilingProjectionRef
@@ -35,7 +36,7 @@ from .producer_snapshot import FilingProducerSnapshot
 from .producer_snapshot_m200 import Modelo200ProfileFacts
 from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 
-__all__ = ["build_m200_filing_projection_plan"]
+__all__ = ["build_m200_filing_projection_plan", "m200_projection_families", "m200_projection_slot_limits"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,6 +77,27 @@ def _registry_m200_projection_catalogue(
     if not family_by_kind:
         raise ValueError("M200 projection mapping contains no row-family declarations")
     return _M200ProjectionCatalogue(family_by_kind=family_by_kind)
+
+
+def m200_projection_families(effective_date: date, *, authority: GovernedFactSource) -> Mapping[str, str]:
+    """Return the typed row family each Modelo 200 projection kind fills, as the registry declares it."""
+    catalogue = _registry_m200_projection_catalogue(effective_date, authority=authority)
+    return MappingProxyType(dict(catalogue.family_by_kind))
+
+
+def m200_projection_slot_limits(layout: ExportLayoutDefinition) -> Mapping[str, int]:
+    """Return how many rows the slots of each projection kind hold in ``layout``.
+
+    The design numbers a family's places by slot; the highest slot any field of a kind
+    addresses is the most rows of that kind the layout can carry.
+    """
+    limits: dict[str, int] = {}
+    for record in layout.records:
+        for ref in _m200_projection_refs(record):
+            address = _m200_address(ref)
+            if address is not None:
+                limits[ref.projection_kind] = max(limits.get(ref.projection_kind, 0), address[0])
+    return MappingProxyType(limits)
 
 
 def _add_m200_family_declaration(

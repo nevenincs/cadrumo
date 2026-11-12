@@ -58,6 +58,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.m303_casilla_roles import m303_importe_rectificacion_casilla
 from ...domain.calculations.registry.payment_instalment_split import first_instalment_share, two_instalments_declared
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.domiciliation_cutoff import (
     DerivedPaymentCutoff,
     UnavailablePaymentCutoff,
@@ -81,6 +82,7 @@ from ...domain.transactions.own_accounts import (
     OwnAccountRole,
     OwnBankAccount,
 )
+from ...domain.user_profile.values import UserProfileRecord
 from ..aggregation.iva_ledger import (
     aggregate_iva_ledger_observations_from_repositories,
 )
@@ -106,7 +108,6 @@ from ..filing.producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
-from ..filing.producer_snapshot_m200 import Modelo200ProfileFacts
 from ..filing.producer_snapshot_m360 import Modelo360RepresentanteAccountChoice, Modelo360SolicitudEntry
 from ..filing.runtime import RegistrySchemaAccessor
 from ..operator_actions.models import PreconditionVerdict
@@ -139,8 +140,10 @@ from .export_preparation import (
 )
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .lifecycle_view_refusal_doors import profile_facts_verdict, unit_filing_evidence_verdict
+from .m200_page_002_profile import modelo_200_profile_facts
 from .m303_regimen_simplificado_scope import m303_profile_readiness_failure
 from .profile_export_binding import (
+    load_export_profile_record,
     resolve_declaration_contact,
     resolve_export_identity,
 )
@@ -532,6 +535,7 @@ def build_export_producer_snapshot(
     m360_solicitud: Modelo360SolicitudEntry | None,
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
+    export_layout: ExportLayoutDefinition | None,
 ) -> FilingProducerSnapshot:
     """Build the sole typed producer boundary or refuse before any write.
 
@@ -568,6 +572,7 @@ def build_export_producer_snapshot(
             export_ports=export_ports,
             operation=operation,
             m360_solicitud=m360_solicitud,
+            export_layout=export_layout,
         )
         if m360_solicitud is not None:
             account_page_refund_account = refund_account is not None
@@ -805,8 +810,13 @@ def resolve_export_model_profile(
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
     m360_solicitud: Modelo360SolicitudEntry | None,
+    export_layout: ExportLayoutDefinition | None,
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
-    """Return the model profile facts this modelo's export reads, and the Modelo 303 filing facts for a 303."""
+    """Return the model profile facts this modelo's export reads, and the Modelo 303 filing facts for a 303.
+
+    ``export_layout`` is the layout the export renders; the annual Impuesto sobre
+    Sociedades reads from it how many page 002 rows of each family fit.
+    """
     if m360_solicitud is not None:
         return m360_solicitud.facts, None
     if modelo == form_for_role("iva.periodic"):
@@ -824,7 +834,18 @@ def resolve_export_model_profile(
             operation=operation,
         )
     if modelo == form_for_role("sociedades.annual"):
-        return Modelo200ProfileFacts(), None
+        if export_layout is None:
+            raise export_design_fault_refusal(
+                cause="m200_export_layout_absent",
+                calculation_revision_id=revision.calculation_revision_id,
+            )
+        record = load_export_profile_record(bucket_id=work_unit.bucket_id, operation=operation, profile_record=None)
+        return modelo_200_profile_facts(
+            work_unit=work_unit,
+            operation=operation,
+            export_layout=export_layout,
+            profile_record=record if isinstance(record, UserProfileRecord) else None,
+        ), None
     if modelo == form_for_role("sociedades.instalment"):
         return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
     if modelo == form_for_role("withholding.work_periodic"):
