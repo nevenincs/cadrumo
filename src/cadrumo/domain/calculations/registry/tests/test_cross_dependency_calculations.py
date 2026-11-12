@@ -131,10 +131,6 @@ _M190_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
     surface="_M190_RETENCIONES_TOTAL_CASILLA",
 )
 _M190_PERCEPCIONES_BINDING = "modelo-190-percepciones-anual"
-_RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS: frozenset[CasillaId] = frozenset(
-    validated_casilla_id(value, surface="_RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS")
-    for value in ("01", "04", "07", "10", "13", "16", "19", "22", "25")
-)
 _SPANISH_AMOUNT_PATTERN = r"-?\d{1,3}(?:\.\d{3})*(?:,\d{2})?|-?\d+(?:,\d{2})?"
 _ANNUAL_SUMMARY_FIXTURE_PATTERNS: dict[str, dict[CasillaId, str]] = {
     "180": {
@@ -160,53 +156,44 @@ _ANNUAL_SUMMARY_FIXTURE_PATTERNS: dict[str, dict[CasillaId, str]] = {
         ),
     },
 }
-#: Quarterly probe amounts for the M111 -> M190 fold.
+#: Probe amounts for three Modelo 190 type-2 records.
 #:
 #: PROBES, NOT AN ORACLE. These are chosen by this test and assert no tax fact.
-#: They are DISTINCT and non-round on purpose: a fold tested with four equal
-#: amounts cannot be told apart from a max, a first-element pick, or a
-#: hardcoded constant, which is why the previous fixture-placeholder version of
-#: this test survived having every amount replaced by an arbitrary number.
-#: Their sums (12345.60 and 1740.73) are the expected annual totals, and no
-#: individual probe equals a sum, so a partial fold is visible too.
-_M190_PERCEPCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
+#: They are DISTINCT and non-round on purpose: a sum over records tested with
+#: equal amounts cannot be told apart from a max, a first-record pick, or a
+#: hardcoded constant, and no single probe equals the sum, so a partial sum is
+#: visible too.
+_M190_PERCEPCION_PROBES: tuple[Decimal, Decimal, Decimal] = (
     Decimal("1234.56"),
     Decimal("2345.67"),
     Decimal("3456.78"),
-    Decimal("5308.59"),
 )
-_M190_RETENCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
+_M190_RETENCION_PROBES: tuple[Decimal, Decimal, Decimal] = (
     Decimal("185.18"),
     Decimal("351.85"),
     Decimal("518.52"),
-    Decimal("685.18"),
 )
 #: A second clave for the same perceptor, so the count_distinct aggregation is
 #: exercised against more than one (perceptor, clave) pair. "A" is trabajo
 #: (empleados) against the fixture perceptor's "G" actividades profesionales.
 _M190_SECOND_CLAVE = "A"
-# The first exercise of the newest Modelo 190 edition, whose totals route through the
-# Modelo 111 relation prefills: they rest on that edition's instrucciones, while the
-# closed editions before it total their own type-2 records as their design states.
-_M190_RELATION_YEAR = newest_authored_edition("190")
+#: The per-position row sums the record design names for the two money totals:
+#: positions 82-94, 109-121, 256-268 and 283-295 for the percepciones, and
+#: 95-107, 122-134, 269-281 and 296-308 for the retenciones e ingresos a cuenta.
+_M190_PERCEPCIONES_ROW_SUMS = (
+    "modelo-190-perceptor-rows-percepcion-dineraria-total",
+    "modelo-190-perceptor-rows-percepcion-especie-total",
+    "modelo-190-perceptor-rows-incapacidad-dineraria-total",
+    "modelo-190-perceptor-rows-incapacidad-especie-total",
+)
+_M190_RETENCIONES_ROW_SUMS = (
+    "modelo-190-perceptor-rows-retencion-practicada-total",
+    "modelo-190-perceptor-rows-ingreso-a-cuenta-total",
+    "modelo-190-perceptor-rows-incapacidad-retencion-total",
+    "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total",
+)
 # The newest Modelo 100 edition the registry authors, which is filing grade.
 _M100_YEAR = newest_authored_edition("100")
-_M190_REL_111_ACTIVIDADES_DINERARIO = "modelo-190-111-actividades-dinerario-importe-anual"
-_M190_REL_111_RETENCIONES = "modelo-190-111-retenciones-anual"
-_M190_EXPECTED_RELATION_IDS = frozenset(
-    {
-        "modelo-190-111-trabajo-dinerario-importe-anual",
-        "modelo-190-111-trabajo-especie-importe-anual",
-        _M190_REL_111_ACTIVIDADES_DINERARIO,
-        "modelo-190-111-actividades-especie-importe-anual",
-        "modelo-190-111-premios-dinerario-importe-anual",
-        "modelo-190-111-premios-especie-importe-anual",
-        "modelo-190-111-ganancias-dinerario-importe-anual",
-        "modelo-190-111-ganancias-especie-importe-anual",
-        "modelo-190-111-derechos-imagen-importe-anual",
-        _M190_REL_111_RETENCIONES,
-    }
-)
 
 
 def _casilla_decimal_sequences(values: Mapping[object, tuple[Decimal, ...]]) -> dict[CasillaId, tuple[Decimal, ...]]:
@@ -333,33 +320,19 @@ def _m190_fixture_detail_observation() -> tuple[str, str, Decimal, Decimal]:
     )
 
 
-def _m190_fixture_relation_source_value(
-    requirement: RegistryFoldRequirement,
-    period_index: int,
-    *,
-    percepciones_quarterly: tuple[Decimal, Decimal, Decimal, Decimal],
-    retenciones_quarterly: tuple[Decimal, Decimal, Decimal, Decimal],
-) -> Decimal:
-    relation_id = requirement.target_bindings[0]
-    if relation_id == _M190_REL_111_ACTIVIDADES_DINERARIO:
-        return percepciones_quarterly[period_index]
-    if relation_id == _M190_REL_111_RETENCIONES:
-        return retenciones_quarterly[period_index]
-    return Decimal("0")
-
-
 def _withholding_observation(
     source_id: str,
     nif: str,
     clave: str,
     *,
+    exercise: int,
     percibido_dinerario: Decimal,
     retencion_practicada: Decimal,
 ) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
-        transaction_date=date(_M190_RELATION_YEAR, 6, 1),
+        transaction_date=date(exercise, 6, 1),
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=percibido_dinerario,
         retencion_practicada=retencion_practicada,
@@ -590,103 +563,53 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
         assert result.values[_DECL_RETENCIONES_TOTAL_CASILLA] == fixture_values[_DECL_RETENCIONES_TOTAL_CASILLA]
 
 
-def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
+@pytest.mark.parametrize("exercise", filing_year_envelope().years)
+def test_modelo_190_declarante_totals_sum_the_declarations_own_perceptor_records(
+    exercise: int,
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    """M111 quarterly percepciones/retenciones fold into the M190 annual summary.
+    """Every supported exercise totals the Modelo 190 resumen over its own type-2 records.
 
-    WHAT IS ASSERTED, AND ON WHAT AUTHORITY. Two different claims, with two
-    different grounds:
+    WHAT IS ASSERTED, AND ON WHAT AUTHORITY. Each record design from the 2020
+    edition onward, and the 2025 instrucciones for casillas 01 to 03, define the
+    three declarante totals over the type-2 perceptor records of the same
+    declaration: the number of records, the sum of the percepciones integras and
+    valoraciones, and the sum of the retenciones and ingresos a cuenta. No
+    official text defines them from Modelo 111, so no exercise takes a Modelo
+    111 relation, and every exercise reaches the totals through the same
+    per-position row sums.
 
-    * The M190 annual totals equal the sum of the four M111 quarters. This is a
-      CONSISTENCY INVARIANT entailed by RIRPF art. 108: §1 obliges the retenedor
-      to declare, each quarter, "las cantidades retenidas y de los ingresos a
-      cuenta que correspondan por el trimestre natural inmediato anterior", and
-      §2 obliges an annual declaration of "las retenciones e ingresos a cuenta
-      efectuados". Both cover the same quantity and the four natural quarters
-      partition the year, so a truthful pair must reconcile. It is NOT a
-      computation M190 performs -- the M190 diseño defines its totals as sums
-      over its own type-2 perceptor records -- and no stated reconciliation
-      REQUIREMENT was located in the bundled corpus (a bounded negative over the
-      material held, not a claim about what AEAT requires).
-    * Everything else here is engine wiring: the ten M111->M190 relations
-      resolve, the retired per-quarter perceptor source casillas stay retired,
-      the withholding binding aggregates detail records, and the totals reach
-      their targets through the declared operand refs.
-
-    PROBE VALUES, NOT AN ORACLE. The quarterly amounts below are chosen by this
-    test, and are deliberately DISTINCT and non-round. No tax fact is asserted
-    by them and no filing is claimed: they exist to discriminate a genuine sum
-    from a max, a first-element pick, a last-write-wins, or a hardcoded
-    constant. Identical amounts cannot tell those apart, which is exactly why
-    the earlier version of this test -- which folded the fixture's uniform
-    ``1000.00`` redaction placeholder -- passed with every amount replaced by
-    an arbitrary number.
-
-    The M190 fixture is a ``parser_anchor``, so its printed amounts are
-    placeholders and are NOT used as expected values here. It is still read,
-    for the two things a parse anchor legitimately supplies: the perceptor
-    identity row and the clave G/01 classification.
+    PROBE VALUES, NOT AN ORACLE. The record amounts are chosen by this test and
+    are DISTINCT and non-round so a genuine sum is told apart from a max, a
+    first-record pick or a hardcoded constant. The M190 fixture is a
+    ``parser_anchor`` whose printed amounts are redaction placeholders, so it
+    supplies only the perceptor identity row and the clave G/01 classification.
     """
     detail_nif, detail_clave, _placeholder_percepcion, _placeholder_retencion = _m190_fixture_detail_observation()
     assert detail_clave == "G"
 
-    snapshot = registry_snapshot("190", _M190_RELATION_YEAR, "0A")
-    requirements = relation_source_requirements(snapshot.revision, filing_year=_M190_RELATION_YEAR, period="0A")
-    observations = observations_from_requirements(
-        requirements,
-        lambda requirement, period_index: _m190_fixture_relation_source_value(
-            requirement,
-            period_index,
-            percepciones_quarterly=_M190_PERCEPCIONES_PROBE_QUARTERS,
-            retenciones_quarterly=_M190_RETENCIONES_PROBE_QUARTERS,
-        ),
-    )
-
-    relation_values = resolve_relation_values_from_observations(
-        snapshot.revision,
-        observations,
-        filing_year=_M190_RELATION_YEAR,
-        period="0A",
-    )
-    observed_source_casillas = {requirement.source_casilla_ids[0] for requirement in requirements}
-    assert not (observed_source_casillas & _RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS)
-    expected_percepciones_annual = sum(_M190_PERCEPCIONES_PROBE_QUARTERS, Decimal("0"))
-    expected_retenciones_annual = sum(_M190_RETENCIONES_PROBE_QUARTERS, Decimal("0"))
-    expected_relation_values = dict.fromkeys(_M190_EXPECTED_RELATION_IDS, Decimal("0"))
-    expected_relation_values[_M190_REL_111_ACTIVIDADES_DINERARIO] = expected_percepciones_annual
-    expected_relation_values[_M190_REL_111_RETENCIONES] = expected_retenciones_annual
-    assert relation_values == expected_relation_values
+    snapshot = registry_snapshot("190", exercise, "0A")
+    assert not relation_prefill_bindings_for_period(snapshot.revision)
+    assert not snapshot.revision.dependency_classifications
     # Three records for ONE perceptor: the clave G percepcion appears twice (as
     # it would for a professional invoicing in two different quarters) and a
     # clave A percepcion once. The binding declares
     # `aggregation = { op = "count_distinct" }` over distinct
     # (perceptor, clave, subclave) type-2 records, so the annual "numero total
-    # de percepciones" must be 2, not 3. A plain record count returns 3 here,
-    # which is precisely the per-quarter double-count the dedicated withholding
-    # binding replaced.
-    withholding_observations = (
+    # de percepciones" must be 2, not 3.
+    claves = (detail_clave, detail_clave, _M190_SECOND_CLAVE)
+    withholding_observations = tuple(
         _withholding_observation(
-            f"m190-{_M190_RELATION_YEAR}-0A-detail-1",
+            f"m190-{exercise}-0A-detail-{index}",
             detail_nif,
-            detail_clave,
-            percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[0],
-            retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[0],
-        ),
-        _withholding_observation(
-            f"m190-{_M190_RELATION_YEAR}-0A-detail-2",
-            detail_nif,
-            detail_clave,
-            percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[1],
-            retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[1],
-        ),
-        _withholding_observation(
-            f"m190-{_M190_RELATION_YEAR}-0A-detail-3",
-            detail_nif,
-            _M190_SECOND_CLAVE,
-            percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[2],
-            retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[2],
-        ),
+            clave,
+            exercise=exercise,
+            percibido_dinerario=percepcion,
+            retencion_practicada=retencion,
+        )
+        for index, (clave, percepcion, retencion) in enumerate(
+            zip(claves, _M190_PERCEPCION_PROBES, _M190_RETENCION_PROBES, strict=True), start=1
+        )
     )
     binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
     assert binding_values[_M190_PERCEPCIONES_BINDING] == Decimal("2"), (
@@ -697,18 +620,17 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": registry_filing_date(_M190_RELATION_YEAR, "0A")},
+        date_context={"filing_period": registry_filing_date(exercise, "0A")},
         binding_values=binding_values,
-        relation_values=relation_values,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert _M190_TOTAL_PERCEPCIONES_CASILLA not in entries
     assert result.values[_M190_TOTAL_PERCEPCIONES_CASILLA] == Decimal("2")
-    assert result.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == expected_percepciones_annual
-    assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == expected_retenciones_annual
-    assert len(entries[_M190_PERCEPCIONES_TOTAL_CASILLA].operand_refs) == 9
-    assert entries[_M190_RETENCIONES_TOTAL_CASILLA].operand_refs == ("modelo-190-111-retenciones-anual",)
+    assert result.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == Decimal("7037.01")
+    assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == Decimal("1055.55")
+    assert entries[_M190_PERCEPCIONES_TOTAL_CASILLA].operand_refs == _M190_PERCEPCIONES_ROW_SUMS
+    assert entries[_M190_RETENCIONES_TOTAL_CASILLA].operand_refs == _M190_RETENCIONES_ROW_SUMS
 
 
 def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual_observations(

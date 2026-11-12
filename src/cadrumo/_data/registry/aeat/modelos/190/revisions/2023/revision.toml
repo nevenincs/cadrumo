@@ -28,13 +28,10 @@ casilla_source_refs = ["aeat-dr-190-2023"]
 # that design for geometry and on aeat-modelo-190-procedure for the filing
 # route. Both sources are in force across the whole exercise.
 #
-# It does NOT claim the 2025-grounded calculation surface. The modelo 111
-# relation prefills the 2025 edition routes its totals through are grounded in
-# the corpus only by aeat-modelo-190-instructions-2025 and
-# boe-modelo-190-2025-form, which open on 2025-01-01 and cannot be cited by a
-# 2023 revision. This edition instead totals its own type-2 records, which is
-# what the record design's own Contenido text states for positions 145-160 and
-# 161-175, so the whole calculation closes inside this exercise's authority.
+# The declarante totals are inherited from the 2022 edition: the record
+# design's own Contenido text for positions 136-144, 145-160 and 161-175 defines
+# them over this declaration's type-2 records, word for word as the 2020 design
+# does, so the whole calculation closes inside this exercise's authority.
 review_status = "agent_reviewed"
 reviewed_by = "agent: authored from the bundled hash-pinned aeat-dr-190-2023 record design. Casilla positions were verified row by row against the design's own position table and against the 2024 revision, and the additive delta separating the epochs was confirmed in the design text. The export layout was derived from the same design, record by record, and its perceptor extent was checked against the design's own blancos boundary at 388. No human operator has countersigned it."
 reviewed_at = 2026-09-25
@@ -65,7 +62,7 @@ source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
 
 [revisions."2023".family_dispositions.dependency_classifications]
 reason = """
-A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: its three totals are the sums the record design itself states over this declaration's own type-2 perceptor records, so the whole calculation closes inside the edition. The 2025 edition classifies a modelo 111 dependency because it routes the same totals through annual relation prefills grounded on the 2025 instrucciones, and those open after this exercise ends. Empty because no cross-modelo edge exists here, not because one is unbuilt."""
+A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: its three totals are the sums the record design itself states over this declaration's own type-2 perceptor records, so the whole calculation closes inside the edition. Every design from aeat-dr-190-2020 onward, and the 2025 instrucciones for casillas 01 to 03, define the totals the same way and none defines them from modelo 111, so no edition takes a cross-modelo edge. Empty because no cross-modelo edge exists, not because one is unbuilt."""
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
 

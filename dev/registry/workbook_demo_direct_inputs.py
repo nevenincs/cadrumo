@@ -115,12 +115,8 @@ def _inputs_190(snapshot: RegistrySnapshot, case: DemoCase) -> InputResult:
     _, income_bindings = scenario_leaves(snapshot, "decl.percepciones-total")
     _, withholding_bindings = scenario_leaves(snapshot, "decl.retenciones-total")
     bindings = dict.fromkeys(income_bindings | withholding_bindings, Decimal("0"))
-    if "modelo-190-111-trabajo-dinerario-importe-anual" in income_bindings:
-        bindings["modelo-190-111-trabajo-dinerario-importe-anual"] = Decimal("42000")
-        bindings["modelo-190-111-retenciones-anual"] = Decimal("4200")
-    else:
-        bindings["modelo-190-perceptor-rows-percepcion-dineraria-total"] = Decimal("42000")
-        bindings["modelo-190-perceptor-rows-retencion-practicada-total"] = Decimal("4200")
+    bindings["modelo-190-perceptor-rows-percepcion-dineraria-total"] = Decimal("42000")
+    bindings["modelo-190-perceptor-rows-retencion-practicada-total"] = Decimal("4200")
     return OperatorInputs(values=(OperatorInput(casilla_id="decl.total-percepciones", value=Decimal("2")),)), bindings
 
 
