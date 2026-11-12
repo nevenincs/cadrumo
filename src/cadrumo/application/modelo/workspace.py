@@ -21,6 +21,7 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
+from .stored_data_integrity import StoredDataIntegrityMixin
 from .work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloVisibleFilingTarget,
@@ -76,11 +77,13 @@ from .workspace_producers import (
 WORKSPACE_RESPONSIBLE_OWNER = "modelo.workspace"
 
 
-class ModeloWorkspaceAbsentRegistryProjectionError(CadrumoError):
+class ModeloWorkspaceAbsentRegistryProjectionError(StoredDataIntegrityMixin, CadrumoError):
     """Raised when a registry capture returns without its promised projection."""
 
+    integrity_record = "workspace_registry_projection"
 
-class ModeloWorkspaceAbsentReadinessProjectionError(CadrumoError):
+
+class ModeloWorkspaceAbsentReadinessProjectionError(StoredDataIntegrityMixin, CadrumoError):
     """Raised when a readiness capture returns without its promised report.
 
     The READINESS port is asked for exactly one request and contracts to
@@ -89,6 +92,8 @@ class ModeloWorkspaceAbsentReadinessProjectionError(CadrumoError):
     verdict: there is no honest way to render "the producer did not answer" as
     a readiness the operator can act on.
     """
+
+    integrity_record = "workspace_readiness_projection"
 
 
 class ModeloWorkspaceUnresolvedWorkError(CadrumoError):

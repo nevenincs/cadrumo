@@ -88,12 +88,12 @@ from ..filing.draft_review import approve_draft
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..filing.export import export_layout_renderability_reason
 from ..filing.producer_snapshot import (
-    FilingProducerSnapshotError,
     M303FilingFacts,
     TaxpayerIdentityFacts,
 )
 from ..filing.runtime import RegistrySchemaAccessor, filing_profile_from_taxpayer
 from .action_errors import (
+    M303FilingEvidenceError,
     ModeloPriorDomiciliationElectionRefusedError,
     ModeloRevisionNotSealedError,
     export_period_unmappable_error,
@@ -104,7 +104,9 @@ from .export_contracts import (
     ModeloExportUnsupportedError,
     ModeloIvaWalletDecisionProvenance,
 )
+from .export_field_refusal import export_operator_decision_refusal, export_taxpayer_name_missing_refusal
 from .export_sink import LocalFileExportSink
+from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_profile,
 )
@@ -265,10 +267,7 @@ def compose_export_dictionary_values(
         ),
     )
     if taxpayer_identity.full_name is None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={"cause": "XML dictionary export requires exact taxpayer full_name"},
-        )
+        raise export_taxpayer_name_missing_refusal()
     values["DPNIF_D"] = draft.profile_tax_id
     values["DP_APENOM_D"] = taxpayer_identity.full_name
     return values
@@ -433,8 +432,10 @@ def resolve_m303_export_arrivals(
     if prorrata_register.is_sectorized:
         apportionment = iva_aggregation.prorrata_apportionment
         if apportionment is None or not apportionment.sector_apportionments:
-            raise FilingProducerSnapshotError(
-                "modelo 303 differentiated sectors require canonical sector apportionment",
+            raise export_operator_decision_refusal(
+                translated_message="application.filing.export.errors.m303_sector_apportionment_missing",
+                reason="m303_sector_apportionment_missing",
+                context={"filing_year": period.filing_year, "period": period.registry_token},
             )
         contributions = resolve_iva_differentiated_deduction_contributions(
             snapshot.revision, iva_aggregation.observations, apportionment=apportionment, operation=operation
@@ -461,8 +462,10 @@ def resolve_m303_export_arrivals(
         parameters=bienes_parameters,
     )
     if regularisation_result.pending_percentage_count:
-        raise FilingProducerSnapshotError(
-            "modelo 303 Bienes de inversión regularisation requires definitive prorrata evidence",
+        raise export_operator_decision_refusal(
+            translated_message="application.filing.export.errors.m303_definitive_prorrata_missing",
+            reason="m303_definitive_prorrata_missing",
+            context={"filing_year": period.filing_year, "period": period.registry_token},
         )
     # The bundle travels out beside the result it produced, so the facts the
     # oracle later checks cannot be handed a bundle other than the one the
@@ -481,6 +484,9 @@ def require_m303_regimen_simplificado_scope_matches_profile(
     """
     expected_scope = m303_regimen_simplificado_scope_for_profile(workflow_profile)
     if filing_facts.regimen_simplificado.scope_decision != expected_scope:
-        raise FilingProducerSnapshotError(
-            "modelo 303 simplified-regime filing evidence disagrees with the canonical IVA profile composition",
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "regimen_scope_profile_divergence",
+                {"scope_decision_matches_censo_profile": False},
+            ),
         )

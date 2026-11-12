@@ -103,7 +103,12 @@ reason = "Bases liquidables generales negativas pendientes en la declaración de
 # taxpayer has had no year with a negative base. Where the profile holds no
 # earlier return, as for the return of the support floor, the Modelo 100 cannot
 # read the four pending carries (casillas 1380, 1382, 1385 and 1388) and never
-# takes them as zero, so the taxpayer states that none is pending.
+# takes them as zero, so the taxpayer states that none is pending, once for each
+# Modelo 100 year whose earlier return the profile does not hold.
+[[prior_carries]]
+year = "horizon-2"
+nothing_pending = true
+
 [[prior_carries]]
 year = "horizon-1"
 nothing_pending = true

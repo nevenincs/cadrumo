@@ -400,7 +400,9 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
 
     flagged: list[tuple[str, str]] = []
     for category in categories:
-        if category in non_declarable or category in registry_category_projection("cuota_less_m303"):
+        if category in non_declarable or category in registry_category_projection(
+            "cuota_less_m303", effective_date=date(_YEAR, 6, 15)
+        ):
             continue
         invoice_direction = InvoiceKind.RECEIVED if category in received_categories else InvoiceKind.ISSUED
         # Cuota-less-by-law is a (category, SIDE) fact, while
@@ -415,9 +417,9 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
         # Flip to the side that bears the cuota rather than dropping the category:
         # skipping it would leave the reverse-charge tail probed on NEITHER side,
         # which is the coverage this module exists to assert.
-        if category_cuota_is_zero_by_law(category, invoice_direction):
+        if category_cuota_is_zero_by_law(category, invoice_direction, effective_date=date(_YEAR, 6, 15)):
             invoice_direction = InvoiceKind.RECEIVED if invoice_direction is InvoiceKind.ISSUED else InvoiceKind.ISSUED
-            if category_cuota_is_zero_by_law(category, invoice_direction):
+            if category_cuota_is_zero_by_law(category, invoice_direction, effective_date=date(_YEAR, 6, 15)):
                 continue
         flow = derive_flow_for_classification(category=category, invoice_direction=invoice_direction)
         probe_tier = rate_for_category.get(category, IvaRateKind("general"))

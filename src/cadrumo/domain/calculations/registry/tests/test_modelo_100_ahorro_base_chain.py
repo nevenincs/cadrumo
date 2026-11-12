@@ -347,7 +347,9 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
 # the negative one, and the negative one is compensated against 0424 within the
 # 25 per cent cap (0436) before it reaches 0460.
 
-_GASTOS_DEDUCIBLES_CASILLA: CasillaId = validated_casilla_id("0037", surface="test_modelo_100_ahorro_base_chain.casilla")
+_GASTOS_DEDUCIBLES_CASILLA: CasillaId = validated_casilla_id(
+    "0037", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
 _SALDO_POSITIVO_CAPITAL_MOBILIARIO_CASILLA: CasillaId = validated_casilla_id(
     "0429", surface="test_modelo_100_ahorro_base_chain.casilla"
 )

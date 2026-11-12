@@ -718,12 +718,24 @@ errors:
     filing_export_boolean_in_text_slot: The export field %{field} cannot write a boolean
       producer fact into a %{length}-byte text slot. The application derives this
       from its own export design, so no change to your data repairs it.
+    filing_export_draft_schema_mismatch: The export was handed a draft built from
+      other Modelo definitions than the ones it renders with. The application builds
+      and approves this draft itself, so no change to your data repairs it.
+    filing_export_draft_unapproved: The export was handed a draft that is not approved.
+      The application builds and approves this draft itself, so no change to your
+      data repairs it.
     filing_export_envelope_closer_extent: The filing-envelope closer does not render
       to the declared %{extent}-byte extent. The application derives this from its
       own export design, so no change to your data repairs it.
+    filing_export_envelope_declarant_tax_id_absent: The filing envelope was asked
+      to write the declarant's tax ID without the filing subject. The application
+      derives this from its own export design, so no change to your data repairs it.
     filing_export_envelope_election_unresolved: The filing envelope was about to be
       written without a resolved prior domiciliation election. The application derives
       this from its own export design, so no change to your data repairs it.
+    filing_export_envelope_language_casilla_absent: The filing envelope was asked
+      to write the declaration language without its declared box value. The application
+      derives this from its own export design, so no change to your data repairs it.
     filing_export_envelope_layout_absent: The filing-envelope layout declaration is
       absent. The application derives this from its own export design, so no change
       to your data repairs it.
@@ -905,6 +917,9 @@ errors:
     filing_export_result_digest_malformed: An export result carries a file digest
       that is not a lowercase hexadecimal SHA-256 value. The application derives this
       from its own export design, so no change to your data repairs it.
+    filing_export_sepa_marker_selection_unsupported: The SEPA marker met an account
+      selection it has no rule for. The application derives this from its own export
+      design, so no change to your data repairs it.
     filing_export_shared_resolver_not_exhaustive: The shared filing producer resolver
       does not cover every key it owns. The application derives this from its own
       export design, so no change to your data repairs it.
@@ -1055,6 +1070,10 @@ errors:
       both as having no amount and as having a stated amount. The application wrote
       that record itself, so it was altered or damaged and the calculation cannot
       use it.
+    operator_layer_income_family_entry_digest_malformed: The stored record of the
+      figures entered by hand for income family %{family} does not hold a well-formed
+      digest of its ledger rows. The application wrote that record itself, so it was
+      altered or damaged and the calculation cannot use it.
     operator_layer_value_attestation_not_canonical: The stored value statement for
       binding %{binding_id} does not hold a canonical decimal amount. The application
       wrote that record itself, so it was altered or damaged and the calculation cannot
@@ -1452,6 +1471,9 @@ errors:
       export.
     refused_export_format: The requested export serialization format is not supported.
     refused_filing_calculate: The filing calculation or summary failed its invariants.
+    refused_filing_export_casilla_value: 'Nothing was written: a box you state holds
+      a value the export cannot write as the official design places it. State that
+      box again and export again.'
     refused_filing_export_declared_party_name: 'Nothing was written: field %{export_field_id}
       names a party with no filing name the AEAT record design can take there. State
       the party''s filing name and export again.'
@@ -1468,6 +1490,8 @@ errors:
       filing name is %{composed_length} characters and field %{export_field_id} has
       %{field_length}. The record design allows no shortening, so state a rendering
       of the name for %{field_length} characters and export again.'
+    refused_filing_export_profile_fact_missing: 'Nothing was written: the export needs
+      a detail about you that your profile does not state. State it and export again.'
     refused_financial_aggregation_category_coverage: A transaction lacks category
       or profile coverage. Classify the transaction before aggregating.
     refused_financial_aggregation_missing_classification: Some in-period transactions
@@ -1637,6 +1661,9 @@ errors:
       {payment_cutoff_legal_refs}) because the filing window sets none; on {export_on}
       the result can only be paid another way.
     refused_modelo_edit_parse: This entry could not be read.
+    refused_modelo_export_casilla_value: 'Nothing was written: a box you state holds
+      a value the export cannot write as the official design places it. State that
+      box again and export again.'
     refused_modelo_export_declared_party_name: 'Nothing was written: field %{export_field_id},
       %{field_length} positions long, names a party with no filing name the AEAT record
       design can take. State or restate the party''s filing name and export again.'
@@ -1651,6 +1678,8 @@ errors:
     refused_modelo_export_required_record_absent: The official design requires at
       least one %{export_record_id} record, but this return has none, so there is
       nothing to write in this format and nothing was written.
+    refused_modelo_export_settlement: 'Nothing was written: the export cannot state
+      how the return is paid or refunded.'
     refused_modelo_export_unrepresentable_character: 'Nothing was written: field %{field_id}
       holds the character «%{character}» (%{code_point}), which the AEAT record design
       cannot write. Dropping or replacing it would declare something else. Correct

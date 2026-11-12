@@ -17,10 +17,11 @@ from pydantic import AfterValidator, BaseModel, StringConstraints, ValidationErr
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
 from ...core.field_origin import FieldOrigin
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.payment_election import PaymentElection
 from ...core.period import Period, StandardPeriodCode
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
@@ -61,6 +62,8 @@ from ..aggregation.m303_arrivals import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
 )
+from ..operator_actions.preconditions import profile_required_facts_missing_verdict
+from .errors import FilingPreconditionCondition, filing_no_recovery_verdict
 from .producer_snapshot_m200 import Modelo200ProfileFacts
 from .producer_snapshot_m210 import Modelo210ProfileFacts
 from .producer_snapshot_m296 import Modelo296ProfileFacts
@@ -100,8 +103,36 @@ _M303_OFFICIAL_FILING_PERIODS: Final[frozenset[StandardPeriodCode]] = frozenset(
 )
 
 
-class FilingProducerSnapshotError(CadrumoError):
-    """Raised when filing facts cannot form a complete producer snapshot."""
+class FilingProducerSnapshotError(TerminalPreconditionErrorMixin[object], CadrumoError):
+    """Raised when filing facts cannot form a complete producer snapshot.
+
+    The refusal always carries the verdict that says whose fault it is: the
+    profile edit or the operator decision that supplies a missing fact, or the
+    terminal outcome of a guard only a caller or design fault reaches.
+    """
+
+
+#: Served words of a snapshot guard that no filer action reaches.
+_SNAPSHOT_DESIGN_FAULT_MESSAGE: Final = "errors.integrity.canonical_filing_producer_snapshot"
+
+
+def _snapshot_design_fault(message: str, *, reason: str) -> FilingProducerSnapshotError:
+    """Refuse a snapshot guard only a caller or design fault reaches, as a terminal refusal.
+
+    The export refuses a missing account, a missing solicitud and the other
+    facts a filer supplies before it builds the snapshot, so a guard here that
+    still fires means the export assembled inconsistent inputs.
+    """
+    return FilingProducerSnapshotError(
+        message,
+        translated_message=_SNAPSHOT_DESIGN_FAULT_MESSAGE,
+        context={"reason": reason},
+        precondition_verdict=filing_no_recovery_verdict(
+            FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+            facts={"error_type": "FilingProducerSnapshotError", "reason": reason},
+            outcome=NoRecoveryOutcome.TERMINAL,
+        ),
+    )
 
 
 def assert_m303_regularisation_result_matches_bienes_register(
@@ -737,11 +768,22 @@ def _validate_modelo_222_snapshot(snapshot: FilingProducerSnapshot) -> None:
         raise ValueError("modelo 222 requires Modelo222ProfileFacts")
 
 
+_COLEGIO_CONCERTADO_PATH: Final = "withholding.colegio_concertado"
+
+
 def _validate_modelo_111_snapshot(snapshot: FilingProducerSnapshot) -> None:
     if not isinstance(snapshot.model_profile, Modelo111ProfileFacts):
         raise ValueError("modelo 111 requires Modelo111ProfileFacts")
     if snapshot.model_profile.colegio_concertado is None:
-        raise ValueError("Modelo 111 colegio_concertado must be explicitly declared")
+        raise FilingProducerSnapshotError(
+            "Modelo 111 colegio_concertado must be explicitly declared",
+            translated_message="application.filing.export.errors.m111_colegio_concertado_undeclared",
+            context={"reason": "m111_colegio_concertado_undeclared", "profile_path": _COLEGIO_CONCERTADO_PATH},
+            precondition_verdict=profile_required_facts_missing_verdict(
+                modelo=str(snapshot.modelo),
+                field_paths=(_COLEGIO_CONCERTADO_PATH,),
+            ),
+        )
 
 
 def _validate_modelo_202_snapshot(snapshot: FilingProducerSnapshot) -> None:
@@ -750,7 +792,13 @@ def _validate_modelo_202_snapshot(snapshot: FilingProducerSnapshot) -> None:
     missing_ids = tuple(item.value for item in snapshot.model_profile.unsupported_producer_ids)
     raise FilingProducerSnapshotError(
         f"Modelo 202 producer snapshot is incomplete: {', '.join(missing_ids)}",
+        translated_message="application.filing.export.errors.m202_producer_facts_unsupported",
         context={"missing_fact_ids": missing_ids, "reason": "m202_producer_facts_unsupported"},
+        precondition_verdict=filing_no_recovery_verdict(
+            FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+            facts={"error_type": "FilingProducerSnapshotError", "reason": "m202_producer_facts_unsupported"},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 
@@ -884,7 +932,9 @@ def build_filing_producer_snapshot(
             declaration_contact=declaration_contact or DeclarationContactFacts(),
         )
     except ValueError as exc:
-        raise _registered_snapshot_refusal(exc) or FilingProducerSnapshotError(str(exc)) from exc
+        raise _registered_snapshot_refusal(exc) or _snapshot_design_fault(
+            str(exc), reason="snapshot_inconsistent"
+        ) from exc
 
 
 def _select_filing_account(
@@ -896,17 +946,19 @@ def _select_filing_account(
 ) -> SelectedFilingAccount | None:
     if elections.result_disposition is ResultDisposition.DOMICILIACION:
         if charge_account is None:
-            raise FilingProducerSnapshotError("domiciliacion requires a charge account")
+            raise _snapshot_design_fault("domiciliacion requires a charge account", reason="charge_account_absent")
         return ChargeAccountSelection(role="charge", account=charge_account)
     if elections.result_disposition is not None and result_disposition_is_refund(elections.result_disposition):
         if refund_account is None or refund_account.iban is None:
-            raise FilingProducerSnapshotError("refund disposition requires a refund account")
+            raise _snapshot_design_fault("refund disposition requires a refund account", reason="refund_account_absent")
         return RefundAccountSelection(role="refund", account=refund_account)
     if account_page_refund_account:
         # Modelo 303 Nota 3 and modelo 360: the account page carries the refund
         # account even though the disposition itself is not a refund.
         if refund_account is None or refund_account.iban is None:
-            raise FilingProducerSnapshotError("the account page requires a refund account")
+            raise _snapshot_design_fault(
+                "the account page requires a refund account", reason="account_page_refund_account_absent"
+            )
         return RefundAccountSelection(role="refund", account=refund_account)
     return None
 

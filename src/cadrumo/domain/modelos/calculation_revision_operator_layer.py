@@ -193,8 +193,10 @@ class CalculationOperatorLayer(BaseModel):
     def _require_entry_digests_well_formed(self) -> None:
         for family, digest in self.income_family_entry_digests.items():
             if not family.strip() or _ENTRY_DIGEST.fullmatch(digest) is None:
-                raise ModeloValidationError(
+                raise ModeloOperatorLayerIntegrityError(
                     f"operator layer income-family entry digest for {family!r} must be a lowercase SHA-256 digest",
+                    translated_message="errors.integrity.operator_layer_income_family_entry_digest_malformed",
+                    context={"family": family},
                 )
 
     @model_validator(mode="after")

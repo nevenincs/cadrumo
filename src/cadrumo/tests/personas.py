@@ -654,6 +654,7 @@ type BelowFloorBlock = Literal[
     "local_observations",
     "aeat_filings",
     "attested_prior_values",
+    "prior_carries",
     "expectations.obligations",
     "expectations.deadlines",
     "expectations.values",
@@ -2003,7 +2004,7 @@ def _record_periods(record: _DatedRecord) -> tuple[str, ...]:
 
 
 def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Persona:
-    """``persona`` without its return-history records and expectations below the envelope floor, listing them."""
+    """``persona`` without its return-history records, prior-carry statements and expectations below the floor, listed."""
     dropped: list[BelowFloorRecord] = []
 
     def kept[Record: _DatedRecord](block: BelowFloorBlock, records: tuple[Record, ...]) -> tuple[Record, ...]:
@@ -2019,9 +2020,16 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
                 inside.append(record)
         return tuple(inside)
 
+    carries: list[PriorCarries] = []
+    for statement in persona.prior_carries:
+        if statement.year.precedes_floor(envelope):
+            dropped.append(BelowFloorRecord(block="prior_carries", modelo="100", year=statement.year, periods=("0A",)))
+        else:
+            carries.append(statement)
     expectations = persona.expectations
     return dataclasses.replace(
         persona,
+        prior_carries=tuple(carries),
         filed_returns=kept("filed_returns", persona.filed_returns),
         calculated_returns=kept("calculated_returns", persona.calculated_returns),
         local_observations=kept("local_observations", persona.local_observations),

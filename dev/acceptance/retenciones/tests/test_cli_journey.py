@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, cast
 
@@ -13,10 +14,19 @@ from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 from ..cli_annual import is_full_annual_campaign, select_annual_slices
 from ..cli_annual_source import attest_annual_no_activity_periods, materialize_annual_source_period
 from ..cli_contracts import RetencionesInstalledCliError
+from ..cli_invoice_capture import declare_perceptor_filing_names
 from ..cli_journey import failure_evidence
 from ..cli_periodic import is_full_campaign, select_slices
 from ..cli_profile import create_withholding_profile
-from ..scenario import SUPPORTED_YEAR, build_installed_annual_cli_slices, build_installed_periodic_cli_slices
+from ..scenario import (
+    LANDLORD_NIF,
+    LANDLORD_RAZON_SOCIAL,
+    PROFESSIONAL_NIF,
+    PROFESSIONAL_RAZON_SOCIAL,
+    SUPPORTED_YEAR,
+    build_installed_annual_cli_slices,
+    build_installed_periodic_cli_slices,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -121,6 +131,49 @@ def test_synthetic_withholding_profile_explicitly_attests_not_a_colegio_concerta
 
     assert cli.created_year == SUPPORTED_YEAR
     assert "--no-colegio-concertado" in cli.calls[0]
+
+
+def test_each_perceptor_filing_name_is_declared_once_under_its_own_tax_id() -> None:
+    """A filing name is keyed by tax id, so two perceptors must not share one."""
+    cli = _ProfileCli()
+    captures = tuple(
+        capture for slice_ in build_installed_annual_cli_slices(SUPPORTED_YEAR) for capture in slice_.captures
+    )
+
+    declare_perceptor_filing_names(cast(InstalledCli, cli), captures)
+
+    assert PROFESSIONAL_NIF != LANDLORD_NIF
+    assert sorted(cli.calls) == sorted(
+        [
+            (
+                "app",
+                "ledger",
+                "counterparty",
+                "filing-name",
+                nif,
+                "--kind",
+                "entity",
+                "--razon-social",
+                name,
+            )
+            for nif, name in (
+                (PROFESSIONAL_NIF, PROFESSIONAL_RAZON_SOCIAL),
+                (LANDLORD_NIF, LANDLORD_RAZON_SOCIAL),
+            )
+        ]
+    )
+
+
+def test_perceptor_filing_names_refuse_two_names_for_one_tax_id() -> None:
+    cli = _ProfileCli()
+    first, second = build_installed_periodic_cli_slices(SUPPORTED_YEAR)
+    clashing = replace(second, counterparty_nif=first.counterparty_nif)
+
+    with pytest.raises(RetencionesInstalledCliError) as raised:
+        declare_perceptor_filing_names(cast(InstalledCli, cli), (first, clashing))
+
+    assert raised.value.diagnostic_code == "perceptor_name_conflict"
+    assert cli.calls == []
 
 
 def test_m190_no_activity_uses_the_public_profile_attestation_not_zero_filings() -> None:

@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ..core.i18n.render import tr
@@ -273,8 +274,9 @@ def build_config_repair_report(
     )
     checks.extend(secure_state_checks)
 
-    secure_objects = _probe_secure_objects_integrity(ports)
-    checks.append(_secure_objects_integrity_check(secure_objects))
+    secure_objects_probe = _probe_secure_objects(ports)
+    secure_objects = secure_objects_probe.report
+    checks.append(_secure_objects_integrity_check(secure_objects_probe))
     checks.extend(setup_checks)
 
     return ConfigRepairReport(
@@ -359,13 +361,27 @@ def _finding_tag(finding: DiagnosticFinding) -> str:
     return ""
 
 
-def _probe_secure_objects_integrity(ports: DiagnosticsPorts) -> SecureObjectIntegrityReport:
+@dataclass(frozen=True, slots=True)
+class _SecureObjectsProbe:
+    """One integrity probe outcome: counts plus what the probe could not look at.
+
+    ``reachable`` is false when the store could not be listed at all;
+    ``failed_namespaces`` names namespaces whose probe raised. Neither is an
+    unreadable object, so neither enters ``report`` counts.
+    """
+
+    report: SecureObjectIntegrityReport
+    reachable: bool = True
+    failed_namespaces: tuple[str, ...] = ()
+
+
+def _probe_secure_objects(ports: DiagnosticsPorts) -> _SecureObjectsProbe:
     """Iterate every populated secure-objects namespace and aggregate counts.
 
-    Returns an empty report when the table is empty or the engine cannot
-    be reached. Non-empty results expose per-namespace counts so the
-    operator can locate which application surface holds rows from a
-    rotated master-key generation.
+    An unreachable store and a namespace whose probe raised are reported as
+    probe failures, never as an empty store or as unreadable rows. Non-empty
+    results expose per-namespace counts so the operator can locate which
+    application surface holds rows from a rotated master-key generation.
     The per-namespace rows come from the injected secure-object diagnostic
     repository capability.
     """
@@ -376,13 +392,13 @@ def _probe_secure_objects_integrity(ports: DiagnosticsPorts) -> SecureObjectInte
         namespaces = repo.list_namespaces()
     except Exception as exc:  # pragma: no cover - engine resolution depends on local backend.
         _log.debug(
-            "secure objects engine unreachable for repair probe: %s: %s",
+            "secure objects engine unreachable for repair probe: %s",
             type(exc).__name__,
-            exc,
             exc_info=True,
         )
-        return SecureObjectIntegrityReport()
+        return _SecureObjectsProbe(report=SecureObjectIntegrityReport(), reachable=False)
     integrity_items: list[DiagnosticSecureObjectNamespace] = []
+    failed: list[str] = []
     for ns in namespaces:
         try:
             integrity_items.append(repo.probe_namespace_integrity(ns))
@@ -390,30 +406,64 @@ def _probe_secure_objects_integrity(ports: DiagnosticsPorts) -> SecureObjectInte
         # storage probes raise heterogeneous backend errors; continue per namespace.
         except Exception:
             _log.debug("secure objects integrity probe failed for namespace=%s", ns, exc_info=True)
-            integrity_items.append(
-                DiagnosticSecureObjectNamespace(
-                    namespace=ns,
-                    readable=0,
-                    unreadable=1,
-                ),
-            )
+            failed.append(ns)
     integrity = tuple(integrity_items)
-    readable_total = sum(item.readable for item in integrity)
-    unreadable_total = sum(item.unreadable for item in integrity)
-    return SecureObjectIntegrityReport(
-        namespaces=integrity,
-        readable_total=readable_total,
-        unreadable_total=unreadable_total,
+    return _SecureObjectsProbe(
+        report=SecureObjectIntegrityReport(
+            namespaces=integrity,
+            readable_total=sum(item.readable for item in integrity),
+            unreadable_total=sum(item.unreadable for item in integrity),
+        ),
+        failed_namespaces=tuple(failed),
     )
 
 
-def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> DiagnosticCheck:
+def _probe_secure_objects_integrity(ports: DiagnosticsPorts) -> SecureObjectIntegrityReport:
+    """Return only the counted integrity report of :func:`_probe_secure_objects`."""
+    return _probe_secure_objects(ports).report
+
+
+def _secure_objects_not_checked_check(*, summary: str, detail: str | None) -> DiagnosticCheck:
+    """Render the warn row for an integrity probe that could not look."""
+    return DiagnosticCheck(
+        name="secure_objects.integrity",
+        status=DiagnosticStatus.WARN,
+        summary=summary,
+        detail=detail,
+        precondition_verdict=diagnostic_action_verdict(
+            condition_id="diagnostics.secure_objects.integrity.checked",
+            evidence_id="diagnostics.secure_objects.integrity.probe_observation",
+            values={"checked": False},
+            action_id="operator.diagnostics.repair",
+        ),
+    )
+
+
+def _secure_objects_integrity_check(probe: _SecureObjectsProbe) -> DiagnosticCheck:
     """Render the ``secure_objects.integrity`` repair row.
 
     A non-zero unreadable total becomes a warn :class:`DiagnosticCheck` whose
-    typed verdict resolves to the guarded quarantine path.
+    typed verdict resolves to the guarded quarantine path; namespaces whose
+    probe failed are listed in its detail. With no unreadable rows, an
+    unreachable store or a failed probe becomes a warn row that points back at
+    repair, so "could not look" never reads as healthy or empty.
     """
+    report = probe.report
+    failed = ", ".join(probe.failed_namespaces)
+    if not probe.reachable:
+        return _secure_objects_not_checked_check(
+            summary=tr("cli.diagnostics.summary.secure_objects_unavailable"),
+            detail=None,
+        )
     if report.unreadable_total == 0:
+        if probe.failed_namespaces:
+            return _secure_objects_not_checked_check(
+                summary=tr(
+                    "cli.diagnostics.summary.secure_objects_probe_failed",
+                    failed=len(probe.failed_namespaces),
+                ),
+                detail=failed,
+            )
         if report.readable_total == 0:
             return DiagnosticCheck(
                 name="secure_objects.integrity",
@@ -434,6 +484,8 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
         for item in report.namespaces
         if item.unreadable > 0
     )
+    if probe.failed_namespaces:
+        affected = f"{affected}; {tr('cli.diagnostics.summary.secure_objects_probe_failed_detail', namespaces=failed)}"
     return DiagnosticCheck(
         name="secure_objects.integrity",
         status=DiagnosticStatus.WARN,

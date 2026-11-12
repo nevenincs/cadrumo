@@ -76,6 +76,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
 from ...domain.modelos.errors import (
+    ModeloError,
     ModeloExportDeclaredPartyNameError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
@@ -98,13 +99,11 @@ from ..filing.export_verification import (
     FilingExportPayloadConsumer,
     assert_export_artifact_matches_receipt,
 )
-from ..filing.export_xml_value_limits import is_xml_value_refusal
 from ..filing.producer_snapshot import (
     AmendmentEvidence,
     FilingProducerSnapshot,
 )
 from ..filing.runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
-from ..filing.shared_owner_refusal import is_shared_owner_refusal
 from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitNotFoundError,
@@ -165,11 +164,9 @@ from .m303_regimen_simplificado_scope import (
 from .modelo_bucket_events import emit_modelo_bucket_event
 from .preconditions import (
     build_modelo_precondition_failure,
+    build_modelo_precondition_failure_for_scenario,
 )
 from .prior_domiciliation import resolveprior_domiciliation_election
-from .profile_export_binding import (
-    taxpayer_identity_profile_facts,
-)
 from .required_binding_gate import (
     require_persisted_revision_required_bindings_resolved,
 )
@@ -630,7 +627,7 @@ def _consume_export_payload(
         raise export_write_failure(command, exc) from exc
 
 
-def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError:
+def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloError:
     """Keep a refused box's own message; the generic one would read as a disk problem."""
     if isinstance(exc, FilingExportValueOverflowError):
         return _export_value_overflow_refusal(command, exc)
@@ -645,11 +642,9 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
     field_refusal = export_field_level_refusal(command, exc)
     if field_refusal is not None:
         return field_refusal
-    if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
-        return ModeloExportError(translated_message=exc.translated_message, context=refusal_context)
     return ModeloExportError(
         translated_message="application.modelo.errors.export_draft_write_failed",
-        context=_export_write_failure_context(command, exc),
+        context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
     )
 
 
@@ -666,7 +661,19 @@ def _declared_party_name_refusal(
         context["tax_identifier"] = exc.tax_identifier
     if exc.country_code is not None:
         context["country_code"] = exc.country_code
-    return ModeloExportDeclaredPartyNameError(context=context)
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id="modelo.export.declared_party_name.unstated",
+        evidence_id="modelo.export.declared_party_name",
+        evidence_values={
+            "calculation_revision_id": command.calculation_revision_id,
+            "reason": exc.reason,
+            "named": False,
+        },
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        missing_action_arguments=("tax_identifier", "country_code", "kind"),
+    )
+    return ModeloExportDeclaredPartyNameError(context=context, precondition_verdict=failure.verdict)
 
 
 def _export_value_overflow_refusal(
@@ -696,27 +703,6 @@ def _export_value_overflow_refusal(
             context={**context, "field_value": exc.rendered},
         )
     return ModeloExportValueOverflowError(context=context)
-
-
-def _export_write_failure_context(command: ModeloExportCommand, exc: FilingExportError) -> dict[str, object]:
-    """Name what the operator must supply when the refusal is a missing identity fact.
-
-    The layout refuses a blank required field by its producer key, which is a
-    registry spelling the operator never sees; the profile fact it is read from
-    is what they declare. Any other export failure keeps its own cause.
-    """
-    missing_producer_key = (exc.context or {}).get("missing_producer_key")
-    profile_facts = (
-        taxpayer_identity_profile_facts(missing_producer_key) if isinstance(missing_producer_key, str) else ()
-    )
-    if not profile_facts:
-        return {"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)}
-    named = " or ".join(profile_facts)
-    return {
-        "calculation_revision_id": command.calculation_revision_id,
-        "cause": f"the export requires the profile fact {named}, which is not set",
-        "missing_profile_facts": list(profile_facts),
-    }
 
 
 def _emit_export_event(

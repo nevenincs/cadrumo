@@ -18,6 +18,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.iva_cuota_disagreement import CuotaDisagreement, cuota_disagreement
@@ -84,6 +85,7 @@ def unrecordable_deduction_documents(
         authority = deduction_evidence_authority_for_row(
             kind=transaction.deduction_fact_kind,
             category=transaction.iva_category,
+            effective_date=transaction_operation_date(transaction),
         )
         scenario = None if authority is None else UNRECORDABLE_DEDUCTION_SCENARIOS.get(authority.value)
         if authority is None or scenario is None:

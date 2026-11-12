@@ -73,6 +73,39 @@ class FilingExportDesignIntegrityError(FilingExportIntegrityError, FilingExportV
     """
 
 
+class FilingExportProfileFactMissingError(TerminalPreconditionErrorMixin[object], FilingExportValidationError):
+    """Raised when the export needs a fact about the filer that the profile does not state.
+
+    The fact is the filer's to state, so the refusal carries the door that
+    names the action putting it right. Nothing is written until it is stated.
+    """
+
+
+class FilingExportCasillaValueRefusedError(TerminalPreconditionErrorMixin[object], FilingExportValidationError):
+    """Raised when the value of one box the filer states cannot be written as the design places it.
+
+    ``casilla_id`` is the box whose value puts it right; the served words say
+    why. Nothing is written until that box is stated again.
+    """
+
+    def __init__(
+        self,
+        *,
+        casilla_id: str,
+        translated_message: str,
+        context: dict[str, object],
+        precondition_verdict: object | None = None,
+    ) -> None:
+        """Construct the refusal for the box ``casilla_id``."""
+        self.casilla_id: str = casilla_id
+        super().__init__(
+            f"box {casilla_id!r} holds a value the export cannot write",
+            context={**context, "casilla_id": casilla_id},
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
+
+
 class FilingExportValueOverflowError(FilingExportValidationError):
     """Raised when a value is wider than its slot in the official record design.
 

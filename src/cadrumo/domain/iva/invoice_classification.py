@@ -45,7 +45,6 @@ from pydantic import BaseModel, model_validator
 from ...core.decimal.constants import ZERO
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import today_madrid
 from .classification import domestic_categories_by_rate_kind
 from .deduction_facts import IvaDeductionClassificationProvenance
 from .flow import (
@@ -135,7 +134,7 @@ def classify_invoice_line_for_iva(
     *,
     iva_rate: IvaRate,
     invoice_kind: InvoiceKind,
-    on_date: date | None = None,
+    on_date: date,
 ) -> IvaInvoiceClassification:
     """Build a classification record for the standard domestic-IVA case.
 
@@ -170,8 +169,8 @@ def classify_invoice_line_for_iva(
             rationale.
         invoice_kind: Whether the invoice was issued (sale) or
             received (purchase).
-        on_date: Date selecting the registry rate-tier table; today when
-            omitted, matching the rate-slot tier projection.
+        on_date: Date selecting the registry rate-tier table: the operation's
+            devengo date.
 
     Returns:
         A frozen :class:`IvaInvoiceClassification` with the derived
@@ -193,7 +192,7 @@ def classify_invoice_line_for_iva(
 
     # One canonical rate-kind to domestic-category table, composed with the
     # public rate-kind accessor.
-    category = domestic_categories_by_rate_kind(_scoped_rate_categories(on_date or today_madrid()))[rate_kind]
+    category = domestic_categories_by_rate_kind(_scoped_rate_categories(on_date))[rate_kind]
     flow_direction = flow_direction_for_invoice_kind(invoice_kind)
     return IvaInvoiceClassification(
         category=category,

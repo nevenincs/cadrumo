@@ -18,6 +18,7 @@ from ....domain.calculations.registry.iva_deduction_catalogue import is_iva_dedu
 from ....domain.iva.deduction_facts import validate_iva_deduction_fact
 from ....domain.iva.flow import derive_flow_for_classification
 from ....domain.iva.schema import InvoiceKind
+from ....domain.transactions.dates import transaction_operation_date
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.errors import LedgerStorageError
 from ....domain.transactions.models import (
@@ -91,6 +92,7 @@ def validate_migrated_deduction_fact(transaction: Transaction) -> None:
         iva_amount=fact.iva_amount,
         investment_asset_id=transaction.investment_asset_id,
         rectifies_ledger_id=transaction.rectifies_ledger_id,
+        effective_date=transaction_operation_date(transaction),
     )
 
 

@@ -68,7 +68,6 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol, ObservationSourceKind
-from .action_errors import ExternalModeloImportError
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .external_import_actions import (
     ExternalFilingTarget,
@@ -79,6 +78,8 @@ from .external_import_actions import (
     require_bound_justificante_artifact,
     resolve_external_filing_work_unit,
 )
+from .filing_import_refusal_profiles import FilingImportRefusalCause
+from .filing_import_refusals import external_import_refusal
 from .filing_revision_persistence import supersede_prior_current_filing
 from .modelo_bucket_events import build_modelo_bucket_event
 from .reconcile_casilla import detect_casilla_divergences
@@ -179,11 +180,13 @@ class AeatRegisterEntry:
     def __post_init__(self) -> None:
         """Refuse an entry whose coordinate, content or receipt do not agree."""
         if self.period.filing_year != self.filing_year:
-            raise ExternalModeloImportError(
+            raise external_import_refusal(
+                FilingImportRefusalCause.SOURCE_CONSISTENCY,
                 translated_message="application.modelo.errors.external_import_source_period_mismatch",
             )
         if self.casilla_values is not None and not self.casilla_values:
-            raise ExternalModeloImportError(
+            raise external_import_refusal(
+                FilingImportRefusalCause.SOURCE_CONSISTENCY,
                 translated_message="application.modelo.errors.external_filing_no_casilla_values",
             )
         receipt = self.justificante
@@ -196,7 +199,8 @@ class AeatRegisterEntry:
             period=self.period,
             tax_id=self.tax_id,
         ):
-            raise ExternalModeloImportError(
+            raise external_import_refusal(
+                FilingImportRefusalCause.JUSTIFICANTE_TARGET,
                 translated_message="application.modelo.errors.external_import_justificante_mismatch",
                 context={
                     "evidence_reference_id": receipt.csv,
@@ -204,6 +208,7 @@ class AeatRegisterEntry:
                     "filing_year": str(self.filing_year),
                     "period": self.period.registry_token,
                 },
+                action_arguments={"evidence_kind": self.evidence_kind.value, "evidence_reference_id": receipt.csv},
             )
 
 
@@ -285,13 +290,15 @@ class _Context:
 def _require_entry_target(entry: AeatRegisterEntry, ports: FilingReconciliationPorts) -> None:
     repository = ports.work_lifecycle.work_unit_repository
     if repository.bucket_id is not None and repository.bucket_id != entry.bucket_id:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.FILING_CHAIN,
             translated_message="application.modelo.errors.external_import_target_mismatch",
         )
     if entry.target_work_unit_id is not None:
         target = repository.load().get(entry.target_work_unit_id)
         if target is None:
-            raise ExternalModeloImportError(
+            raise external_import_refusal(
+                FilingImportRefusalCause.FILING_CHAIN,
                 translated_message="application.modelo.errors.external_import_target_mismatch",
             )
         _require_matching_work_unit(entry, target)
@@ -361,7 +368,8 @@ def _recheck_recorded(context: _Context, recorded: ModeloRecord) -> FilingReconc
         old is not None and new is not None and old != new
         for old, new in ((prior.csv, incoming.csv), (prior.expediente_id, incoming.expediente_id))
     ):
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.REGISTER_REFERENCE,
             translated_message="application.modelo.errors.external_import_target_mismatch",
         )
     comparison = _compare_with_pending(context, pending=recorded, historical=True)
@@ -436,7 +444,8 @@ def _evidence_reference_id(entry: AeatRegisterEntry) -> str:
     else:
         reference = register.csv or (entry.justificante.csv if entry.justificante is not None else None)
     if reference is None:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.JUSTIFICANTE_ARTIFACT,
             translated_message="application.modelo.errors.external_import_justificante_missing",
             context={
                 "evidence_reference_id": register.expediente_id or "",
@@ -505,12 +514,14 @@ def _compare_with_pending(context: _Context, *, pending: ModeloRecord, historica
     )
     work_unit = _chain_work_unit(context, pending, historical=historical)
     if revision is None:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.FILING_CHAIN,
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": pending.calculation_revision_id},
         )
     if revision.work_unit_id != work_unit.work_unit_id:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.FILING_CHAIN,
             translated_message="application.modelo.errors.external_import_target_mismatch",
         )
     require_calculation_revision_coordinates_current(revision, operation=context.operation)
@@ -572,7 +583,8 @@ def _chain_work_unit(context: _Context, record: ModeloRecord, *, historical: boo
     if historical:
         work_unit = repository.load().get(record.work_unit_id)
         if work_unit is None:
-            raise ExternalModeloImportError(
+            raise external_import_refusal(
+                FilingImportRefusalCause.FILING_CHAIN,
                 translated_message="application.modelo.errors.external_import_target_mismatch",
             )
         _require_matching_work_unit(context.entry, work_unit)
@@ -595,7 +607,8 @@ def _require_matching_work_unit(entry: AeatRegisterEntry, work_unit: WorkUnit) -
         entry.filing_year,
         entry.period,
     ):
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.FILING_CHAIN,
             translated_message="application.modelo.errors.external_import_target_mismatch",
         )
 
@@ -745,7 +758,8 @@ def _record_aeat_content(
     entry = context.entry
     casilla_values = entry.casilla_values
     if casilla_values is None:
-        raise ExternalModeloImportError(
+        raise external_import_refusal(
+            FilingImportRefusalCause.SOURCE_CONSISTENCY,
             translated_message="application.modelo.errors.external_filing_no_casilla_values",
         )
     if entry.modelo == form_for_role("iva.periodic") and entry.filing_instance_evidence is None:

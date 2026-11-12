@@ -96,6 +96,7 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
 )
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -110,6 +111,8 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..renta_income_ledger import aggregate_renta_m100_income_ledger
 from .renta_income_aggregation_support import m130_activity_category_matcher, m130_employment_category_matcher
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -162,7 +165,7 @@ _GASTO_INPUTS: dict[CasillaId, Decimal] = {
     validated_casilla_id("0217", surface="0217"): Decimal("2300.00"),
 }
 
-# Eight of those gasto boxes are casillas the registry declares
+# Nine of those gasto boxes are casillas the registry declares
 # ``input_kind = "bound"``, to the ledger-expense aggregation. Supplying them
 # hand-types values the engine is meant to produce, which is a deliberate
 # scoping choice here and not an oversight: this module exists to drive the
@@ -179,6 +182,7 @@ _GASTO_LEG_REASON = (
 _HAND_TYPED_BOUND_CASILLAS: dict[CasillaId, str] = {
     casilla_id: _GASTO_LEG_REASON
     for casilla_id in (
+        validated_casilla_id("0181", surface="0181"),
         validated_casilla_id("0186", surface="0186"),
         validated_casilla_id("0193", surface="0193"),
         validated_casilla_id("0194", surface="0194"),
@@ -189,6 +193,10 @@ _HAND_TYPED_BOUND_CASILLAS: dict[CasillaId, str] = {
         validated_casilla_id("0217", surface="0217"),
     )
 }
+_HAND_TYPED_BOUND_CASILLAS[validated_casilla_id("0177", surface="0177")] = (
+    "variacion de existencias supplied from the manual's own printed figure; this scenario "
+    "drives the INCOME leg through its ledger binding and makes no claim about the inventory aggregation"
+)
 
 # The two ingresos the manual states outside the invoiced lines. They are not
 # bank movements, so the ledger chain never produces them; they enter the
@@ -395,8 +403,10 @@ def test_the_manual_states_the_activity_is_iva_exempt() -> None:
     operation has no cuota" from "nobody recorded one", and the whole exempt
     case rests on that distinction.
     """
-    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
+    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED, effective_date=_ON_DATE)
+    assert not category_cuota_is_zero_by_law(
+        IvaCategory("domestic_general"), InvoiceKind.ISSUED, effective_date=_ON_DATE
+    )
 
 
 def test_the_two_printed_income_lines_fold_into_the_bound_casilla() -> None:

@@ -210,11 +210,19 @@ class InMemoryObservationRepository(ObservationRepositoryStubs):
 class InMemoryProfileRepository:
     """Stable profile projection used by approval-basis calculations."""
 
-    def __init__(self, values: Mapping[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        values: Mapping[str, str] | None = None,
+        *,
+        error: Exception | None = None,
+    ) -> None:
         self._values = values if values is not None else {"identity.tax_id": "00000000T"}
+        self._error = error
 
     def load_path_values(self, *, bucket_id: str) -> Mapping[str, str] | None:
         del bucket_id
+        if self._error is not None:
+            raise self._error
         return self._values
 
 
@@ -226,6 +234,8 @@ def draft_review_ports(
     transaction_error: Exception | None = None,
     invoice_error: Exception | None = None,
     draft_error: Exception | None = None,
+    profile_values: Mapping[str, str] | None = None,
+    profile_error: Exception | None = None,
 ) -> DraftReviewPorts:
     """Build the complete required application port bundle for a test."""
     return DraftReviewPorts(
@@ -238,6 +248,6 @@ def draft_review_ports(
             error=invoice_error,
         ),
         observation_repository=InMemoryObservationRepository(),
-        profile_repository=InMemoryProfileRepository(),
+        profile_repository=InMemoryProfileRepository(profile_values, error=profile_error),
         draft_repository=InMemoryDraftRepository(drafts, error=draft_error),
     )
