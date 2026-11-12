@@ -15,6 +15,7 @@ import {
   type RefObject,
 } from "react";
 import { flushSync } from "react-dom";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -68,6 +69,10 @@ export type CalendarMemory = {
   /** Whether the chosen obligation was in view when the reader last moved. */
   chosenSeen?: boolean;
 };
+
+/** The wire token a served warning starts with when a covered year has no
+ * deadline windows; the year follows it. */
+const UNKNOWN_WINDOWS_CODE = "deadline.windows_unavailable";
 
 const markKey = (mark: HTMLElement) =>
   mark.dataset.month ?? mark.dataset.entry ?? "today";
@@ -670,6 +675,18 @@ export function FilingCalendarView({
     );
   } else {
     const { warnings, coverage, generated_at } = state.calendar;
+    // A year the registry has no deadline windows for comes back as a warning
+    // with this code, not as rows: the range is unknown there, which an empty
+    // list must not be read as "nothing due".
+    const unknown = warnings.filter((warning) =>
+      warning.code.startsWith(UNKNOWN_WINDOWS_CODE),
+    );
+    const profileWarnings = warnings.filter(
+      (warning) => !warning.code.startsWith(UNKNOWN_WINDOWS_CODE),
+    );
+    const unknownWords = [
+      ...new Set(unknown.map((warning) => warning.message)),
+    ];
     const asOf = generated_at ? formatTime(locale, generated_at) : "—";
     // How the range stands, in the product's own four readings: counted,
     // never combined into a verdict.
@@ -932,10 +949,21 @@ export function FilingCalendarView({
               </div>
             )}
           </div>
+          {unknownWords.length > 0 && (
+            <Alert
+              tone="warning"
+              icon={<Icon name="alert" />}
+              className="mx-4 mt-3 w-auto"
+            >
+              {unknownWords.map((words) => (
+                <p key={words}>{words}</p>
+              ))}
+            </Alert>
+          )}
           <ProfileCompletionNotice
             key={profile?.profile_id ?? "unknown"}
             profile={profile}
-            warnings={warnings}
+            warnings={profileWarnings}
             onNavigate={onNavigate}
             className="mx-4 mt-3 w-auto"
           />
@@ -943,11 +971,15 @@ export function FilingCalendarView({
             <EmptyState
               role="status"
               icon="calendar"
-              description={t(
-                coverage.advised.length > 0
-                  ? "desktop.calendar.coverage.no_dates"
-                  : "desktop.calendar.empty",
-              )}
+              description={
+                unknownWords.length > 0
+                  ? unknownWords.join(" ")
+                  : t(
+                      coverage.advised.length > 0
+                        ? "desktop.calendar.coverage.no_dates"
+                        : "desktop.calendar.empty",
+                    )
+              }
             />
           ) : wide || view === "months" ? (
             <CalendarMonths

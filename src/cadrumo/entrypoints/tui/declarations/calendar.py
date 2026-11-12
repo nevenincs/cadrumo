@@ -17,6 +17,7 @@ from ....application.modelo.declarations_calendar import (
 from ....application.modelo.declarations_list import source_words
 from ....application.operator_actions.models import DeclaredNextAction
 from ....application.overview.calendar import holiday_coverage_statement, shift_reason_statement
+from ....application.overview.coverage import CoverageAdviceReason
 from ....application.overview.home import HomeAvailability
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
@@ -58,7 +59,8 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             height: auto;
             padding: $cadrumo-space-0 $cadrumo-space-1;
         }
-        #declarations-calendar-notice { color: $warning; text-style: bold; }
+        #declarations-calendar-notice, #declarations-calendar-coverage { color: $warning; text-style: bold; }
+        #declarations-calendar-coverage { width: 100%; height: auto; padding: $cadrumo-space-0 $cadrumo-space-1; }
         """
     )
 
@@ -109,6 +111,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             yield ContentDataTable[str](id="declarations-calendar-agenda", cursor_type="row", zebra_stripes=True)
             yield Static(id="declarations-calendar-detail", markup=False)
             yield Static(id="declarations-calendar-notice", markup=False)
+            yield Static(id="declarations-calendar-coverage", markup=False)
 
     def on_mount(self) -> None:
         """Build the table and place focus at the start of the three-control chain."""
@@ -164,6 +167,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         rows = self.controller.visible_entries(self._scope, query)
         self._populate_table(table, rows)
         notice = self.query_one("#declarations-calendar-notice", Static)
+        self.query_one("#declarations-calendar-coverage", Static).update(self._coverage_copy())
         if rows:
             self._restore_visible_selection(table, rows, notice)
         else:
@@ -219,6 +223,21 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         self.query_one("#declarations-calendar-detail", Static).update("")
         notice.update(self._empty_copy(query))
 
+    def _coverage_copy(self) -> str:
+        """Say which obligations are not known to be absent, one line per reason.
+
+        Obligations the registry could not positively scope are unknown, so a
+        quiet agenda is never read as one with nothing due.
+        """
+        by_reason: dict[CoverageAdviceReason, list[str]] = {reason: [] for reason in CoverageAdviceReason}
+        for item in self.controller.projection.coverage.advised:
+            by_reason[item.reason].append(item.modelo)
+        return "\n".join(
+            tr(f"workspace.declarations.calendar.coverage.{reason.value}", modelos=", ".join(modelos))
+            for reason, modelos in by_reason.items()
+            if modelos
+        )
+
     def _empty_copy(self, query: str) -> str:
         schedule = self.controller.source(DeclarationsCalendarSource.SCHEDULE)
         if schedule.availability is HomeAvailability.STALE:
@@ -231,6 +250,8 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             )
         if query or self.controller.projection.entries:
             return tr("workspace.declarations.calendar.empty.search")
+        if self.controller.projection.coverage.advised:
+            return tr("workspace.declarations.calendar.coverage.no_dates")
         return tr("workspace.declarations.calendar.empty.known")
 
     def _selected_row(self, table: DataTable[str]) -> DeclarationsCalendarEntryRefV1 | None:
