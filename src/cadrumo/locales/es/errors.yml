@@ -1194,6 +1194,10 @@ errors:
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
+    ledger_filing_evidence_diverges_from_snapshot: 'La evidencia del libro de la revisión
+      de cálculo %{calculation_revision_id} no cubre las mismas transacciones que
+      su huella: faltan %{missing_count} y sobran %{extra_count}. La revisión guardada
+      está dañada; calcula de nuevo.'
     operator_layer_attestation_kinds_conflict: El registro guardado declara el enlace
       %{binding_id} a la vez sin importe y con un importe declarado. La aplicación
       escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
@@ -1523,6 +1527,23 @@ errors:
       pertenece a otra revisión.
     modelo_workspace_manifest_capture_not_current: El manifiesto de campos cambió
       durante la lectura; vuelve a capturarlo.
+    pension_reduccion_contingencia_year_not_four_digits: El año de la contingencia
+      debe escribirse con cuatro cifras; has indicado %{value}.
+    pension_reduccion_early_contributions_exceed_total: Las aportaciones al plan de
+      pensiones hechas hasta el 31 de diciembre de 2006 (%{value}) superan las aportaciones
+      totales (%{aportaciones_totales}), aunque son una parte del total. Corrige uno
+      de los dos importes.
+    pension_reduccion_early_contributions_negative: Las aportaciones al plan de pensiones
+      hechas hasta el 31 de diciembre de 2006 no pueden ser negativas; has indicado
+      %{value}. Indica el importe como cero o más.
+    pension_reduccion_rescate_negative: El importe rescatado del plan de pensiones
+      no puede ser negativo; has indicado %{value}. Indica el importe como cero o
+      más.
+    pension_reduccion_rescate_year_not_four_digits: El año del rescate debe escribirse
+      con cuatro cifras; has indicado %{value}.
+    pension_reduccion_total_contributions_not_positive: Las aportaciones totales al
+      plan de pensiones deben ser mayores que cero; has indicado %{value}. Indica
+      el total de todas las aportaciones.
     producer_capture_not_current: Una proyección de productor cambió mientras se leía;
       vuelve a capturarla.
     profile_access_administration_denied: Tu acceso actual no permite gestionar los
@@ -2120,6 +2141,12 @@ errors:
       lo leíste; vuelve a leerlo antes de guardar.
     retencion_soportada_write_refused: No se guardó el registro de retención de este
       pagador.
+    sal_reserva_beneficio_negative: El beneficio neto que se usa para la reserva especial
+      no puede ser negativo; has indicado %{value}. Indícalo como cero o más.
+    sal_reserva_capital_social_not_positive: El capital social debe ser mayor que
+      cero; has indicado %{value}. Indica el capital social de la sociedad.
+    sal_reserva_dotada_negative: La reserva ya dotada no puede ser negativa; has indicado
+      %{value}. Indícala como cero o más.
     submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
       describirse ({cause_type}).
     submission_preflight_auth_not_ready: El proveedor de autenticación {kind} no está

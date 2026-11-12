@@ -113,6 +113,7 @@ def art52_reduccion_advisory_finding(
     except AmbiguousSemanticRoleCasillaError as exc:
         raise ModeloError(
             str(exc),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
             context=exc.ambiguity.context(),
             precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
         ) from exc
@@ -149,6 +150,8 @@ def art52_reduccion_advisory_finding(
     if not isinstance(sublimit, Decimal):
         raise ModeloError(
             "Art. 52 individual sublimit fact must resolve to a Decimal",
+            translated_message="application.modelo.errors.advisory_limit_not_numeric",
+            context={"fact": _ART52_INDIVIDUAL_SUBLIMIT_FACT_ID},
             precondition_verdict=registry_defect_verdict("art52_sublimit_fact"),
         )
     if _individual_art52_sublimit_exceeded(

@@ -15,6 +15,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.errors.error_codes import resolve_error_message
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculation_revision import (
     CalculationRevision,
@@ -157,3 +158,18 @@ def test_non_ledger_revision_passes_trivially() -> None:
         source_provenance=(),
     )
     assert_revision_snapshot_evidence_coverage(revision)  # does not raise
+
+
+def test_the_coverage_refusal_is_catalogue_words_naming_the_revision_and_the_counts() -> None:
+    revision = _revision(snapshot_ids=(_TX_A, _TX_B), evidence_ids=(_TX_A,))
+
+    with pytest.raises(LedgerFilingCoverageError) as raised:
+        assert_revision_snapshot_evidence_coverage(revision)
+
+    key = "errors.integrity.ledger_filing_evidence_diverges_from_snapshot"
+    assert raised.value.translated_message == key
+    for locale in ("en", "es", "ca", "hu"):
+        words = resolve_error_message(raised.value, locale=locale)
+        assert words != key
+        assert "%{" not in words
+        assert revision.calculation_revision_id in words

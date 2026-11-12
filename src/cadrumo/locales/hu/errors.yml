@@ -1126,6 +1126,10 @@ errors:
     integrity_storage_secure_object_unreadable: Egy tárolt biztonságos objektum nem
       fejthető vissza az aktuális főkulccsal.
     integrity_storage_validation: Egy tárolási paraméter nem ment át az érvényesítésen.
+    ledger_filing_evidence_diverges_from_snapshot: 'A(z) %{calculation_revision_id}
+      számítási változat főkönyvi bizonylata nem ugyanazokat a tranzakciókat fedi
+      le, mint az ujjlenyomata: %{missing_count} hiányzik, %{extra_count} felesleges.
+      A mentett változat sérült; számolj újra.'
     operator_layer_attestation_kinds_conflict: A mentett rekord a(z) %{binding_id}
       kötést egyszerre állítja összeg nélkülinek és megadott összegűnek. Az alkalmazás
       maga írta ezt a rekordot, ezért megváltozott vagy megsérült, és a számítás nem
@@ -1434,6 +1438,21 @@ errors:
       tartozik.
     modelo_workspace_manifest_capture_not_current: A mezőjegyzék olvasás közben megváltozott;
       rögzítsd újra.
+    pension_reduccion_contingencia_year_not_four_digits: A biztosítási esemény (contingencia)
+      évét négy számjeggyel kell írni; te %{value} értéket adtál meg.
+    pension_reduccion_early_contributions_exceed_total: A nyugdíjtervbe 2006. december
+      31-ig teljesített befizetések (%{value}) meghaladják az összes befizetést (%{aportaciones_totales}),
+      pedig az összeg részei. Javítsd a két összeg egyikét.
+    pension_reduccion_early_contributions_negative: A nyugdíjtervbe 2006. december
+      31-ig teljesített befizetések nem lehetnek negatívak; te %{value} értéket adtál
+      meg. Nulla vagy annál nagyobb összeget adj meg.
+    pension_reduccion_rescate_negative: A nyugdíjtervből kivett összeg nem lehet negatív;
+      te %{value} értéket adtál meg. Nulla vagy annál nagyobb összeget adj meg.
+    pension_reduccion_rescate_year_not_four_digits: A kivétel évét négy számjeggyel
+      kell írni; te %{value} értéket adtál meg.
+    pension_reduccion_total_contributions_not_positive: A nyugdíjterv összes befizetésének
+      nullánál nagyobbnak kell lennie; te %{value} értéket adtál meg. Add meg az összes
+      befizetés összegét.
     producer_capture_not_current: Egy termelői vetület megváltozott olvasás közben;
       rögzítsd újra.
     profile_access_administration_denied: A jelenlegi hozzáféréseddel a hozzáférési
@@ -2010,6 +2029,13 @@ errors:
       elolvastad; olvasd be újra mentés előtt.
     retencion_soportada_write_refused: Ennek a kifizetőnek a levonási rekordja nem
       lett mentve.
+    sal_reserva_beneficio_negative: A különleges tartalékhoz használt nettó nyereség
+      nem lehet negatív; te %{value} értéket adtál meg. Nulla vagy annál nagyobb összeget
+      adj meg.
+    sal_reserva_capital_social_not_positive: A jegyzett tőkének nullánál nagyobbnak
+      kell lennie; te %{value} értéket adtál meg. Add meg a társaság jegyzett tőkéjét.
+    sal_reserva_dotada_negative: A már képzett tartalék nem lehet negatív; te %{value}
+      értéket adtál meg. Nulla vagy annál nagyobb összeget adj meg.
     submission_preflight_auth_describe_failed: A hitelesítési szolgáltató nem tudta
       leírni magát ({cause_type}).
     submission_preflight_auth_not_ready: A(z) {kind} hitelesítési szolgáltató nem

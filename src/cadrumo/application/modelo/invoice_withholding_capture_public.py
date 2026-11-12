@@ -170,7 +170,11 @@ class PublicAnnualRecipientDetail(BaseModel):
     @pydantic_validation_boundary
     def _orden_is_within_the_declared_ceiling(cls, value: int | None) -> int | None:
         if value is not None and exceeds_form_bound(value, "withholding.numero_orden_max"):
-            raise CoreValidationError("the order number is above the ceiling the form declares")
+            raise CoreValidationError(
+                "the order number is above the ceiling the form declares",
+                translated_message="application.modelo.errors.withholding_order_number_above_form_ceiling",
+                context={"order_number": str(value)},
+            )
         return value
 
     @field_validator("codigo_emisor")

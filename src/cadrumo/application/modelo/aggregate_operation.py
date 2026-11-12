@@ -288,7 +288,10 @@ class ModeloAggregateExecutor:
             provider = provider_for_modelo(command.modelo, operation=operation)
             preflight_result = aggregate_per_modelo(command, operation=operation)
         if preflight_result.provider is not provider:
-            raise AggregationConfigError("aggregate preflight provider changed")
+            raise AggregationConfigError(
+                "aggregate preflight provider changed",
+                translated_message="application.modelo.errors.aggregate_preflight_provider_changed",
+            )
         if payload.ledger_payment is None:
             return _PreparedModeloAggregate(
                 ports=ports,

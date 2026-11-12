@@ -1098,6 +1098,10 @@ errors:
     integrity_storage_secure_object_unreadable: A stored secure object could not be
       decrypted under the current master key.
     integrity_storage_validation: A storage parameter failed validation.
+    ledger_filing_evidence_diverges_from_snapshot: 'The ledger evidence of calculation
+      revision %{calculation_revision_id} does not cover the same transactions as
+      its fingerprint: %{missing_count} missing and %{extra_count} extra. The saved
+      revision is damaged; calculate again.'
     operator_layer_attestation_kinds_conflict: The stored record states binding %{binding_id}
       both as having no amount and as having a stated amount. The application wrote
       that record itself, so it was altered or damaged and the calculation cannot
@@ -1403,6 +1407,22 @@ errors:
       to a different revision.
     modelo_workspace_manifest_capture_not_current: The field manifest changed while
       it was being read; capture it again.
+    pension_reduccion_contingencia_year_not_four_digits: The year of the contingency
+      must be written with four digits; you gave %{value}.
+    pension_reduccion_early_contributions_exceed_total: The contributions to the pension
+      plan made up to 31 December 2006 (%{value}) are more than the total contributions
+      (%{aportaciones_totales}), although they are a part of the total. Correct one
+      of the two amounts.
+    pension_reduccion_early_contributions_negative: The contributions to the pension
+      plan made up to 31 December 2006 cannot be negative; you gave %{value}. Enter
+      the amount as zero or more.
+    pension_reduccion_rescate_negative: The amount rescued from the pension plan cannot
+      be negative; you gave %{value}. Enter the amount as zero or more.
+    pension_reduccion_rescate_year_not_four_digits: The year of the rescue must be
+      written with four digits; you gave %{value}.
+    pension_reduccion_total_contributions_not_positive: The total contributions to
+      the pension plan must be greater than zero; you gave %{value}. Enter the total
+      of all contributions.
     producer_capture_not_current: A producer projection changed while it was being
       read; capture it again.
     profile_access_administration_denied: Your current access does not allow managing
@@ -1962,6 +1982,12 @@ errors:
       read it; read it again before saving.
     retencion_soportada_write_refused: The withholding record from this payer was
       not saved.
+    sal_reserva_beneficio_negative: The net profit used for the special reserve cannot
+      be negative; you gave %{value}. Enter it as zero or more.
+    sal_reserva_capital_social_not_positive: The share capital must be greater than
+      zero; you gave %{value}. Enter the share capital of the company.
+    sal_reserva_dotada_negative: The reserve already set aside cannot be negative;
+      you gave %{value}. Enter it as zero or more.
     submission_preflight_auth_describe_failed: Auth provider failed to describe itself
       ({cause_type}).
     submission_preflight_auth_not_ready: Auth provider {kind} is not ready (configured={configured}

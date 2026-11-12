@@ -63,6 +63,7 @@ def art20_reduccion_advisory_finding(
     except AmbiguousSemanticRoleCasillaError as exc:
         raise ModeloError(
             str(exc),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
             context=exc.ambiguity.context(),
             precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
         ) from exc
@@ -77,6 +78,8 @@ def art20_reduccion_advisory_finding(
     if not isinstance(ceiling, Decimal):
         raise ModeloError(
             "Art. 20 RNT ceiling fact must resolve to a Decimal",
+            translated_message="application.modelo.errors.advisory_limit_not_numeric",
+            context={"fact": _ART20_RNT_CEILING_FACT_ID},
             precondition_verdict=registry_defect_verdict("art20_ceiling_fact"),
         )
     if not (Decimal(0) < rnt_value < ceiling and reduccion_value == Decimal(0)):

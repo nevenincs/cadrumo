@@ -61,6 +61,7 @@ def verify_review_package_signature_file(
     except ValueError as exc:
         raise ReviewPackageSigningError(
             str(exc),
+            translated_message="application.modelo.errors.review_package_signature_file_unreadable",
             context={"detail": str(exc)},
             precondition_verdict=operator_choice_verdict("signature_file_unreadable"),
         ) from exc
@@ -85,6 +86,7 @@ def verify_review_package_receipt_file(
     except ValueError as exc:
         raise ReviewPackageCounterSigningError(
             str(exc),
+            translated_message="application.modelo.errors.review_package_receipt_file_unreadable",
             context={"detail": str(exc)},
             precondition_verdict=operator_choice_verdict("receipt_file_unreadable"),
         ) from exc
