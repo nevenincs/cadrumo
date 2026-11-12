@@ -10,6 +10,7 @@ Core types:
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Annotated, Final, Literal, Self
 
 from pydantic import AfterValidator, BaseModel, StringConstraints, ValidationError, model_validator
@@ -643,6 +644,11 @@ class FilingProducerSnapshot(BaseModel):
     selected_account: SelectedFilingAccount | None
     m303_filing_facts: M303FilingFacts | None
     m390_filing_facts: M390FilingFacts | None = None
+    #: The first day of the período impositivo in progress, resolved from the
+    #: entity's stated facts, for a period with no calendar span of its own (a
+    #: pago fraccionado). ``None`` for a period with a span, whose own start is
+    #: the draft's.
+    periodo_impositivo_start: date | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -868,6 +874,7 @@ def build_filing_producer_snapshot(
     m303_filing_facts: M303FilingFacts | None,
     declaration_contact: DeclarationContactFacts | None = None,
     account_page_refund_account: bool = False,
+    periodo_impositivo_start: date | None = None,
 ) -> FilingProducerSnapshot:
     """Build a snapshot retaining only the account selected by disposition.
 
@@ -897,6 +904,7 @@ def build_filing_producer_snapshot(
             m303_filing_facts=m303_filing_facts,
             m390_filing_facts=None,
             declaration_contact=declaration_contact or DeclarationContactFacts(),
+            periodo_impositivo_start=periodo_impositivo_start,
         )
     except ValueError as exc:
         raise _registered_snapshot_refusal(exc) or _snapshot_design_fault(

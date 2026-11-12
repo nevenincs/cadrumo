@@ -368,7 +368,7 @@ def _field_value(
         case CasillaFieldKind.PROJECTION:
             return projection_field_value(field, render_context, projection_values)
         case CasillaFieldKind.DRAFT:
-            return _draft_value(field, draft)
+            return _draft_value(field, draft, producer_snapshot)
         case CasillaFieldKind.COMPUTED:
             return _computed_slot_value(field, draft, producer_snapshot, render_context)
         case _:
@@ -536,25 +536,43 @@ def _envelope_closing_tag(
     snapshot: FilingProducerSnapshot,
     context: FilingRecordRenderContext | None = None,
 ) -> str:
-    del snapshot, context
+    del context
     year = str(draft.period.filing_year)
-    period_code = _draft_period_code(draft)
+    period_code = _draft_period_code(draft, snapshot)
     return f"</T{draft.modelo}0{year}{period_code}0000>"
 
 
-def _draft_filing_year(draft: ModeloDraft) -> str:
+def _draft_filing_year(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
+    del snapshot
     return str(draft.period.filing_year)
 
 
-def _draft_period_code(draft: ModeloDraft) -> str:
+def _draft_period_code(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
+    del snapshot
     return draft.period.registry_token
 
 
-def _draft_period_start_date(draft: ModeloDraft) -> str:
-    return draft.period.start_date.strftime("%d%m%Y")
+def _draft_period_start_date(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
+    """The first day of the period filed for, or of the período impositivo a pago fraccionado is on account of.
+
+    A pago fraccionado has no calendar span: its start is the período
+    impositivo in progress, which the export resolves from the entity's stated
+    facts before rendering. An instalment that reaches here without it is an
+    export assembly fault, never a date to pad or guess.
+    """
+    if draft.period.has_date_span():
+        return draft.period.start_date.strftime("%d%m%Y")
+    if snapshot.periodo_impositivo_start is None:
+        raise FilingExportDesignIntegrityError(
+            "a period without a calendar span renders its start only from the resolved período impositivo",
+            translated_message="errors.integrity.filing_export_period_start_unresolved",
+            context={"period": draft.period.registry_token},
+        )
+    return snapshot.periodo_impositivo_start.strftime("%d%m%Y")
 
 
-def _draft_period_end_date(draft: ModeloDraft) -> str:
+def _draft_period_end_date(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
+    del snapshot
     return draft.period.end_date.strftime("%d%m%Y")
 
 
@@ -638,7 +656,7 @@ COMPUTED_VALUE_PRODUCERS: Mapping[
     ExportComputedKey.M303_NO_ACTIVITY_MARKER: m303_no_activity_marker,
 }
 
-DRAFT_VALUE_PRODUCERS: Mapping[ExportDraftAttribute, Callable[[ModeloDraft], str]] = {
+DRAFT_VALUE_PRODUCERS: Mapping[ExportDraftAttribute, Callable[[ModeloDraft, FilingProducerSnapshot], str]] = {
     ExportDraftAttribute.FILING_YEAR: _draft_filing_year,
     ExportDraftAttribute.PERIOD_CODE: _draft_period_code,
     ExportDraftAttribute.PERIOD_START_DATE: _draft_period_start_date,
@@ -661,14 +679,14 @@ def _computed_field_value(
     return COMPUTED_VALUE_PRODUCERS[field.computed_key](draft, producer_snapshot, render_context)
 
 
-def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
+def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
     if field.draft_attribute is None:
         raise FilingExportDesignIntegrityError(
             f"export field {field.id!r} must declare draft_attribute",
             translated_message="errors.integrity.filing_export_field_draft_attribute_undeclared",
             context={"field": field.id},
         )
-    return DRAFT_VALUE_PRODUCERS[field.draft_attribute](draft)
+    return DRAFT_VALUE_PRODUCERS[field.draft_attribute](draft, snapshot)
 
 
 def format_field(field: ExportFieldDefinition, value: object, *, record: ExportRecordDefinition | None = None) -> str:

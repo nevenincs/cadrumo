@@ -134,6 +134,7 @@ from .export_contracts import (
 )
 from .export_field_refusal import export_design_fault_refusal, export_operator_decision_refusal
 from .export_m202_profile import modelo_202_producer_profile
+from .export_periodo_impositivo import resolve_periodo_impositivo_start
 from .export_ports import M303ArrivalPorts, ModeloExportPorts
 from .export_preparation import (
     require_m303_regimen_simplificado_scope_matches_profile,
@@ -544,12 +545,15 @@ def build_export_producer_snapshot(
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
     cited_producer_keys: frozenset[FilingProducerKey],
+    cites_period_start: bool,
 ) -> FilingProducerSnapshot:
     """Build the sole typed producer boundary or refuse before any write.
 
     Takes ``revision`` as a :class:`CalculationRevision` and ``workflow_profile`` as a :class:`TaxpayerProfile`.
     ``cited_producer_keys`` are the producer keys the selected edition's layout
     cites, so a modelo asks only for the facts that edition has a position for.
+    ``cites_period_start`` says the layout writes the period's start date, which
+    a period without a calendar span takes from the período impositivo in progress.
     """
     presenter, taxpayer_identity = _require_export_identity(
         command,
@@ -584,6 +588,16 @@ def build_export_producer_snapshot(
             m360_solicitud=m360_solicitud,
             cited_producer_keys=cited_producer_keys,
         )
+        periodo_start = (
+            resolve_periodo_impositivo_start(
+                modelo=str(modelo),
+                bucket_id=work_unit.bucket_id,
+                period=work_unit.period,
+                operation=operation,
+            )
+            if cites_period_start
+            else None
+        )
         if m360_solicitud is not None:
             account_page_refund_account = refund_account is not None
         else:
@@ -612,6 +626,7 @@ def build_export_producer_snapshot(
                 bucket_id=work_unit.bucket_id,
                 operation=operation,
             ),
+            periodo_impositivo_start=periodo_start,
         )
     except FilingProducerSnapshotError as exc:
         raise _producer_facts_refusal(command, exc) from exc

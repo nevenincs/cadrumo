@@ -508,6 +508,43 @@ model_selectors = ["taxpayer.pago_fraccionado_art_40_3_elected"]
 legal_refs = ["ley-27-2014:art-40-3"]
 
 [[sections.fields]]
+key = "fecha_constitucion"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Fecha de constitución de la entidad, como la consigna la declaración censal (Modelo 036, personas jurídicas o entidades, fecha de constitución [B9]). El primer período impositivo de la entidad empieza en ella, por lo que la fecha de inicio del período impositivo que consigna el devengo de la página 01 del Modelo 202 nunca es anterior. Sin valor la exportación del Modelo 202 se rechaza y pide indicarla."
+model_selectors = ["taxpayer.fecha_constitucion"]
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
+
+[[sections.fields]]
+key = "cierre_ejercicio_dia"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Día de la fecha de cierre del ejercicio económico de la entidad, como lo consigna la declaración censal (Modelo 036, apartado del Impuesto sobre Sociedades, casilla [640]). El período impositivo es el ejercicio económico (art. 27.1 LIS); el pago fraccionado es a cuenta del período en curso el día anterior a su período de ingreso (art. 40 LIS), cuyo inicio consigna el devengo del Modelo 202. 31 con mes 12 es el año natural. Sin valor la exportación del Modelo 202 se rechaza."
+minimum = "1"
+maximum = "31"
+model_selectors = ["taxpayer.cierre_ejercicio_dia"]
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
+
+[[sections.fields]]
+key = "cierre_ejercicio_mes"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Mes de la fecha de cierre del ejercicio económico de la entidad, como lo consigna la declaración censal (Modelo 036, apartado del Impuesto sobre Sociedades, casilla [640]). Con cierre_ejercicio_dia fija el período impositivo en curso que consigna el devengo del Modelo 202; 12 con el día 31 es el año natural. Sin valor la exportación del Modelo 202 se rechaza."
+minimum = "1"
+maximum = "12"
+model_selectors = ["taxpayer.cierre_ejercicio_mes"]
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
+
+[[sections.fields]]
 key = "principal_cnae"
 type = "string"
 required = false
