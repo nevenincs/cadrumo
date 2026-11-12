@@ -11,6 +11,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.overview import build_profile_overview
+from cadrumo.application.user_profile.password_kdf_notice import profile_kdf_floor_notice
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.user_profile.section_rows import add_profile_repeatable_section_row
@@ -26,6 +27,7 @@ from cadrumo.application.user_profile.view_reader import read_profile_view_page
 from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.json_contract import Notice
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.renta_codes_catalogue import ue_eea_country_codes
 from cadrumo.domain.iva.establishment import catalogued_country_codes
@@ -130,6 +132,7 @@ def test_real_encrypted_overview_pages_round_trip_every_field(tmp_path: Path) ->
                 expected_content_digest=baseline.content_digest,
                 schema=authority.profile_schema(),
                 profile_decode_context=authority.profile_decode_context(),
+                authority=authority,
             )
             collection = _collection(profile_id, authority)
             assert len(collection.pages) > 1
@@ -144,6 +147,18 @@ def test_real_encrypted_overview_pages_round_trip_every_field(tmp_path: Path) ->
                         ProfileFieldCodeList.EU_EEA_COUNTRIES: tuple(sorted(ue_eea_country_codes(authority=authority))),
                     },
                 )
+                floor = profile_kdf_floor_notice(profile_id)
+            # The isolated storage declines KDF measurement, so the envelope sits at the fixed fallback and the
+            # reader appends the custody notice after the overview's own notices.
+            assert floor is not None
+            expected = expected.model_copy(
+                update={
+                    "notices": (
+                        *expected.notices,
+                        Notice(severity=floor.severity, code=floor.code, message=floor.message),
+                    )
+                }
+            )
             actual = profile_overview_from_client_view(collection, profile_label="Public inventory label")
             assert actual == expected
             assert actual.record_revision == added.record.record_revision

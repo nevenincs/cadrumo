@@ -8190,6 +8190,9 @@ modelo:
                 [1554])
             rentas-distintas-del-trabajo:
               label: Other income that is not work income (art. 20 limit) [internal]
+            trabajo-mar-renta-exenta:
+              label: Exempt employment income of maritime workers (art. 7.p) LIRPF
+                or Law 19/1994) [internal]
           construct:
             renta-dependent-modelos:
               field:
@@ -17699,9 +17702,6 @@ modelo:
               label: Autonomous Community of the return
             ZRUE2:
               label: Spouse's country of residence, EU or EEA
-            trabajo-mar-renta-exenta:
-              label: Exempt employment income of maritime workers (art. 7.p) LIRPF
-                or Law 19/1994) [internal]
           construct:
             renta-dependent-modelos:
               field:

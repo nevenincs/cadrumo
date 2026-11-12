@@ -636,7 +636,7 @@ fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0150" }
-fields = { input_kind = "computed", formula = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2-redaccion-2021", legal_refs = ["ley-35-2006:art-23-2021"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { input_kind = "computed", formula = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2", legal_refs = ["ley-35-2006:art-23-2021"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0151" }
@@ -7584,7 +7584,7 @@ sequence_additions = {formulas = ["renta-inmuebles-ganancia-reducida-no-exenta",
 [[revisions."2022".family_overrides]]
 family = "verification_expectations"
 selector = {revision = "2021", id = "modelo-100-reconcile-when-present"}
-sequence_additions = { reconcile_when_present_casilla_ids = ["1807", "1809", "1811", "1812", "1813", "1814", "1826", "1830", "1831", "1833", "1836", "1840", "1844", "1845", "1846", "0089", "0461", "0468", "0511", "0587", "0595", "0598", "0610", "0512", "0245", "0246", "0247", "1490", "1493", "1496", "1499", "1502", "1505", "1508", "1511", "1514", "1517", "1520", "1523", "1526", "1529", "1532", "1535", "1537", "1539", "1548", "1549", "1551", "1554", "1555", "0670"], source_refs = ["aeat-renta-2022-manual-parte1"] }
+sequence_additions = { reconcile_when_present_casilla_ids = ["1807", "1809", "1811", "1812", "1813", "1814", "1826", "1830", "1831", "1833", "1836", "1840", "1844", "1845", "1846", "0089", "0461", "0468", "0511", "0587", "0595", "0598", "0610", "0512", "0245", "0246", "0247", "1490", "1493", "1496", "1499", "1502", "1505", "1508", "1511", "1514", "1517", "1520", "1523", "1526", "1529", "1532", "1535", "1537", "1539", "1548", "1549", "1551", "1554", "1555", "0670", "trabajo-mar-renta-exenta"], source_refs = ["aeat-renta-2022-manual-parte1"] }
 sequence_removals = { source_refs = [0] }
 sequence_order = { source_refs = [1, 0] }
 [[revisions."2022".family_positions]]

@@ -547,8 +547,6 @@ class BindingTypedEnumKind(StrEnum):
     - ``CENSO_EVENT_KIND`` (``"censo_event_kind"``) — Modelo 036 censo status.
     - ``CCAA`` (``"CCAA"``) — Modelo 100 autonomic-community tax residence.
     - ``LEGAL_ENTITY_FORM`` (``"LegalEntityForm"``) — Modelo 200 legal form.
-    - ``RENTAL_REDUCTION_ART_23_2_TIER`` (``"RentalReductionArt232Tier"``) —
-      Modelo 100 reducción por arrendamiento de vivienda tier (LIRPF Art. 23.2).
 
     BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the
     annotation token that was previously a bare ``str`` in
@@ -573,7 +571,6 @@ class BindingTypedEnumKind(StrEnum):
     CENSO_EVENT_KIND = "censo_event_kind"
     CCAA = "CCAA"
     LEGAL_ENTITY_FORM = "LegalEntityForm"
-    RENTAL_REDUCTION_ART_23_2_TIER = "RentalReductionArt232Tier"
 
 
 class LedgerIncomeGrounding(StrEnum):

@@ -64,7 +64,6 @@ def test_candidate_contact_text_uses_existing_string_channel_without_a_formula(
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset(),
             enum_bindings=frozenset(),
-            operation=operation,
         )
         assert resolved.enum_values == {
             "modelo-720.type_1.telefono-contacto": "900000000",

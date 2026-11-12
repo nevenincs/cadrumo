@@ -1,0 +1,63 @@
+[fact]
+fact_id = "renta-capital-inmobiliario-gasto-concept-vocabulary"
+family = "mapping"
+
+# The expense concepts a ledger row may declare against a let property, each with
+# the Modelo 100 casilla of the Inmueble group it feeds. An improvement is
+# capitalised into the acquisition value and recovered through amortisation, so
+# it feeds 0129 and is never expensed.
+[[fact.variants]]
+variant_id = "renta-capital-inmobiliario-gasto-concept-vocabulary:2022-01-01"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+  "Intereses y demás gastos de financiación",
+  "Gastos de conservación y reparación",
+  "las cuotas de la comunidad de propietarios",
+  "Gastos de formalización del contrato y defensa jurídica",
+  "los de defensa de carácter jurídico relativo a los",
+  "Cantidades devengadas por terceros como consecuencia de servicios",
+  "Servicios o suministros",
+  "Primas de contratos de seguro",
+  "Tributos, recargos y tasas",
+  "Saldos de dudoso cobro",
+  "Otros gastos necesarios fiscalmente deducibles",
+  "las cantidades destinadas a la ampliación o mejora de los",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "concept_order", value = "interes_financiacion,reparacion_conservacion,comunidad,formalizacion_contrato,defensa_juridica,servicios_terceros,suministros,primas_seguro,tributos,saldos_dudoso_cobro,otros,mejora" },
+  { key = "concept.interes_financiacion.casilla", value = "0105" },
+  { key = "concept.interes_financiacion.treatment", value = "expense" },
+  { key = "concept.reparacion_conservacion.casilla", value = "0106" },
+  { key = "concept.reparacion_conservacion.treatment", value = "expense" },
+  { key = "concept.comunidad.casilla", value = "0109" },
+  { key = "concept.comunidad.treatment", value = "expense" },
+  { key = "concept.formalizacion_contrato.casilla", value = "0110" },
+  { key = "concept.formalizacion_contrato.treatment", value = "expense" },
+  { key = "concept.defensa_juridica.casilla", value = "0111" },
+  { key = "concept.defensa_juridica.treatment", value = "expense" },
+  { key = "concept.servicios_terceros.casilla", value = "0112" },
+  { key = "concept.servicios_terceros.treatment", value = "expense" },
+  { key = "concept.suministros.casilla", value = "0113" },
+  { key = "concept.suministros.treatment", value = "expense" },
+  { key = "concept.primas_seguro.casilla", value = "0114" },
+  { key = "concept.primas_seguro.treatment", value = "expense" },
+  { key = "concept.tributos.casilla", value = "0115" },
+  { key = "concept.tributos.treatment", value = "expense" },
+  { key = "concept.saldos_dudoso_cobro.casilla", value = "0116" },
+  { key = "concept.saldos_dudoso_cobro.treatment", value = "expense" },
+  { key = "concept.otros.casilla", value = "0148" },
+  { key = "concept.otros.treatment", value = "expense" },
+  { key = "concept.mejora.casilla", value = "0129" },
+  { key = "concept.mejora.treatment", value = "capitalised" },
+]

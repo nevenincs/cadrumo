@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "567cd1a512e39e892cba71185727f0f4671d4b320132aff7f0989ca64bdbca96"
+source_state_digest = "4586d9a94b28505696915f50e1402f2648f28683a897d12d60b27e67728eb446"
 design_sources = [
     { source_ref = "aeat-dr-100-2022-dictionary", sha256 = "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc" },
     { source_ref = "aeat-dr-100-2022-input-dictionary", sha256 = "78dec12e9028fe009d65f56188fedf74f7b5187378a67fe2b35ae0e1a4e54a36" },
@@ -1903,6 +1903,7 @@ placements = [
     { casilla_id = "base-liq-neg-general-em4-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "rentas-distintas-del-trabajo", kind = "working_figure" },
+    { casilla_id = "trabajo-mar-renta-exenta", kind = "working_figure" },
 ]
 
 [[revisions.2022.form_layouts.pages]]

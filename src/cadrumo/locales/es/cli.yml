@@ -2691,6 +2691,19 @@ cli:
           export_target_exists: Ya existe un archivo en la ruta de destino y no se
             sobrescribe una copia de seguridad. Elige otro --output o mueve primero
             el archivo existente; no se ha leído ningún perfil.
+      arrendamiento:
+        add_help: Añade un arrendamiento con datos --value HECHO=VALOR; el inmueble
+          que nombra debe existir.
+        clear_help: Borra un dato por su nombre; repite la opción para varios.
+        edit_help: Cambia datos de un arrendamiento y borra los que indiques; los
+          demás se mantienen.
+        end_fecha_help: Último día del arrendamiento (AAAA-MM-DD).
+        end_help: Indica el último día de un arrendamiento.
+        help: Registra los arrendamientos de tus inmuebles.
+        list_help: Lista los arrendamientos guardados con su clave de fila.
+        remove_help: Elimina un arrendamiento.
+        row_help: Clave de fila del arrendamiento, la que muestra «list».
+        value_help: Un dato HECHO=VALOR; repite la opción para varios datos.
       ascendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,APELLIDOS_NOMBRE=<apellidos
           y nombre>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<número de descendientes
@@ -2921,6 +2934,18 @@ cli:
           las filas con el comando remove.
         rows_or_none_required: Indica al menos una fila %{flag}, o %{none} para declarar
           que no hay ninguna.
+      inmueble:
+        add_help: Añade un inmueble con datos --value HECHO=VALOR; se guarda solo
+          si los datos son coherentes.
+        clear_help: Borra un dato por su nombre; repite la opción para varios.
+        edit_help: Cambia datos de un inmueble y borra los que indiques; los demás
+          se mantienen.
+        help: Registra los inmuebles que arriendas.
+        list_help: Lista los inmuebles guardados con su clave de fila.
+        remove_help: Elimina un inmueble; se rechaza mientras un arrendamiento lo
+          nombre.
+        row_help: Clave de fila del inmueble, la que muestra «list».
+        value_help: Un dato HECHO=VALOR; repite la opción para varios datos.
       list:
         incoherent_observation_advisory: 'No se pudo obtener un listado fiable de
           perfiles (estado: {outcome}). Vuelve a ejecutar el comando; si persiste,
@@ -2951,6 +2976,10 @@ cli:
           sin responder y se ha borrado. Las obligaciones que dependen de él quedan
           sin determinar hasta que respondas con la opción {flag} del comando de edición
           del perfil.'
+        rental_tier_cleared: 'Tu perfil guardaba el tramo de reducción del art. 23.2
+          para el alquiler. Ese dato ya no existe: el tramo se deduce de los datos
+          de cada contrato. Registra tus arrendamientos con «aeat config profile arrendamiento
+          add» para volver a calcular la reducción.'
       plantilla_media:
         average_workforce_help: Plantilla media total del año, en equivalentes a jornada
           completa y con dos decimales como máximo.
