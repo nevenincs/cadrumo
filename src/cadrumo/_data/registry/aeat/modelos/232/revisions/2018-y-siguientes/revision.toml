@@ -34,7 +34,6 @@ scoped_families = ["workbook_parity_refs", "verification_expectations", "complet
 
 
 
-family_disposition_removals = ["parameters"]
 
 [revisions."2018-y-siguientes".family_dispositions.credit_reconciliation]
 reason = """
