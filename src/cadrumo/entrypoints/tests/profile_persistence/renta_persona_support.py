@@ -285,6 +285,12 @@ def record_certificate(
             retencion=PublicDecimal(decimal=retencion),
             ingreso_a_cuenta=PublicDecimal(decimal=ingreso_a_cuenta),
             ingreso_a_cuenta_repercutido=PublicDecimal(decimal=repercutido),
+            reducciones_aplicables=PublicDecimal(decimal="0.00")
+            if income_class is RetencionSoportadaClase.TRABAJO
+            else None,
+            gastos_deducibles=PublicDecimal(decimal="0.00")
+            if income_class is RetencionSoportadaClase.TRABAJO
+            else None,
             origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
             source_path=name,
             source_directory=str(directory),

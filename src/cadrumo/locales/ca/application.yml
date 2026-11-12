@@ -2129,6 +2129,13 @@ application:
         ha cap registre de pagador ni declaració d''absència, i el teu perfil no declara
         absent aquesta renda. Registra el certificat de cada pagador o declara que
         cap pagador no va practicar retenció.'
+      retencion_soportada_income_record_required: 'Classe de renda {income_class}:
+        has declarat que cap pagador va practicar retenció, cosa que no diu res de
+        l''import dels ingressos. Retira la declaració i registra després el certificat
+        de cada pagador com a declaració de l''operador.'
+      retencion_soportada_record_figure_missing: 'Classe de renda {income_class}:
+        un registre de pagador desat no indica les reduccions ni les despeses deduïbles
+        del certificat. Substitueix el registre per les xifres del certificat.'
       row_unregistered: El moviment del {row_date} per {row_amount} registra un element
         que no és al teu registre.
       row_unregistered_undated: Un moviment registra un element que no consta al teu
@@ -2916,6 +2923,10 @@ application:
         vàlid amb el selector de revisió explícita.
       source_owned_binding_override: Has introduït un valor en una casella que s'obté
         dels teus registres; treu-lo o corregeix el registre del qual prové.
+      trabajo_income_nothing_open: 'El Model %{modelo} de %{filing_year} no té cap
+        casella de rendiments del treball pendent de declarar com a inexistent: cadascuna
+        ja té una xifra o la teva declaració, o la declaració no té rendiments del
+        treball d''un registre de pagador. No s''ha canviat res.'
       verification_report_not_found: No s'ha trobat cap informe de comprovació amb
         id=%{verification_report_id}.
       work_create_not_applicable: 'El model %{modelo} no et correspon segons el teu
@@ -2992,10 +3003,6 @@ application:
       application_not_required_maximum: 'La casella [%{box}] té %{casilla_value},
         però ha de ser %{computed_value}: la llei exigeix aplicar la quantia més gran
         que permet aquest exercici, ni més ni menys.'
-      art20_reduccion_possible: La casella [%{rnt_id}] recull %{rnt_value} EUR de
-        rendiment net del treball, dins del límit de l'art. 20 LIRPF, així que la
-        casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
-        Comprova si et correspon.
       art52_reduccion_individual_sublimit_possible: La casella [%{reduccion_id}] recull
         %{reduccion_value} EUR de reducció per previsió social, per sobre del sublímit
         individual de %{sublimit} EUR de l'art. 52 LIRPF, i no has declarat aportacions
@@ -3203,6 +3210,37 @@ application:
         del certificat de retencions i ingressos a compte del teu pagador. El model
         111 que la declara el va presentar el teu pagador, no tu, així que aquest
         valor no es pot emplenar automàticament.
+      trabajo_deduction_not_computed: 'Els teus rendiments del treball no inclouen
+        les deduccions que només tu pots acreditar: quotes sindicals (0014), quotes
+        de col·legis professionals (0015), despeses de defensa jurídica (0016) i increment
+        per mobilitat geogràfica (0020). Si alguna et correspon, la declaració exagera
+        la teva quota. Indica-la en aquestes caselles.'
+      trabajo_disability_unstated: El teu perfil indica una discapacitat, així que
+        la casella [%{casilla_id}] (increment de les despeses del treball d'un treballador
+        actiu amb discapacitat) et pot correspondre. Indica l'import, o 0 si no ets
+        treballador actiu.
+      trabajo_expense_above_limit:
+        colegio_profesional: La casella [%{casilla_id}] (quotes de col·legis professionals)
+          indica %{stated} EUR, per sobre del límit legal de %{limit} EUR. Redueix-la
+          al límit o menys.
+        defensa_juridica: La casella [%{casilla_id}] (despeses de defensa jurídica)
+          indica %{stated} EUR, per sobre del límit legal de %{limit} EUR. Redueix-la
+          al límit o menys.
+      trabajo_income_unstated:
+        decision_trabajador: La casella [%{casilla_id}] (aportacions de l'empresa
+          per decisió teva) és un ingrés del treball que cap certificat del pagador
+          indica. Indica l'import que vas rebre o declara que no n'hi ha cap.
+        dependencia: La casella [%{casilla_id}] (contribucions empresarials a assegurances
+          de dependència) és un ingrés del treball que cap certificat del pagador
+          indica. Indica l'import que vas rebre o declara que no n'hi ha cap.
+        patrimonio_protegido: La casella [%{casilla_id}] (aportacions al patrimoni
+          protegit d'una persona amb discapacitat) és un ingrés del treball que cap
+          certificat del pagador indica. Indica l'import que vas rebre o declara que
+          no n'hi ha cap.
+        prevision: La casella [%{casilla_id}] (contribucions empresarials a plans
+          de pensions i mutualitats de previsió social) és un ingrés del treball que
+          cap certificat del pagador indica. Indica l'import que vas rebre o declara
+          que no n'hi ha cap.
       transaction_evidence_missing_deductible: Una despesa deduïble no té cap factura
         ni justificant adjunt. Adjunta'l a l'apunt dels teus registres.
       transaction_evidence_missing_output: Una factura emesa amb IVA repercutit no
@@ -3341,6 +3379,10 @@ application:
         dels teus registres, així que queda sense resoldre en lloc de comptar com
         a zero. Registra l'evidència que falta i torna a projectar.
       casilla_reason:
+        income_family_contradicts_profile: Aquesta casella compara les teves altres
+          rendes amb el límit, però les categories de renda que has indicat exclouen
+          un tipus de renda del qual tens imports. Corregeix les categories o retira
+          els imports i torna a projectar. Mai es mostra com a zero.
         m210_baseline_tipo_deferred: Aquesta casella necessita el tipus de gravamen
           general d'aquesta classe de renda, que encara no està fonamentat per a l'exercici,
           així que no té valor.
@@ -3485,6 +3527,19 @@ application:
             35/2006). Cada import es registra com un 0 que has declarat, diferent
             d'una xifra escrita; si després una declaració anterior mostra un import,
             la declaració assenyala la diferència.
+        renta_trabajo_income_not_stated:
+          action: No tinc contribucions de l'empresa ni aportacions al patrimoni protegit
+            per declarar
+          effect: 'Registrat com un 0 que has declarat: cap d''aquestes contribucions.'
+          origin: Has declarat que no n'hi ha cap
+          statement: 'Declara que no tens res en quatre caselles dels teus rendiments
+            del treball: contribucions empresarials a plans de pensions i mutualitats
+            de previsió social (0008), contribucions empresarials a assegurances de
+            dependència (0009), aportacions al patrimoni protegit d''una persona amb
+            discapacitat (0010) i aportacions de l''empresa per decisió teva (0024).
+            Cada casella queda registrada com un 0 que has declarat, diferent d''una
+            xifra que has escrit. Cap certificat del pagador indica aquests imports,
+            així que només tu els pots declarar.'
       credits_heading:
         mixed: Retencions
         practised: Retencions que has practicat

@@ -182,6 +182,20 @@ LEDGER_RETENCION_SOPORTADA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 help_key="cli.app.ledger.retencion_soportada.valoracion_especie_help",
             ),
             _option(
+                name="reducciones_aplicables",
+                declaration="--reducciones-aplicables",
+                value=TEXT_VALUE,
+                default=_OPTIONAL,
+                help_key="cli.app.ledger.retencion_soportada.reducciones_aplicables_help",
+            ),
+            _option(
+                name="gastos_deducibles",
+                declaration="--gastos-deducibles",
+                value=TEXT_VALUE,
+                default=_OPTIONAL,
+                help_key="cli.app.ledger.retencion_soportada.gastos_deducibles_help",
+            ),
+            _option(
                 name="payer_name",
                 declaration="--payer-name",
                 value=TEXT_VALUE,
