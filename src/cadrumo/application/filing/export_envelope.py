@@ -385,6 +385,7 @@ def _envelope_prefix_identity_value(
         if product_software_identity is None:
             raise FilingExportValidationError(
                 "program identifier requires explicit software identity",
+                translated_message="application.filing.export.errors.product_identity_required",
                 precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCT_IDENTITY_UNSUPPLIED),
             )
         return product_software_identity.program_identifier
@@ -392,6 +393,7 @@ def _envelope_prefix_identity_value(
         if product_software_identity is None:
             raise FilingExportValidationError(
                 "developer tax ID requires explicit software identity",
+                translated_message="application.filing.export.errors.product_identity_required",
                 precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCT_IDENTITY_UNSUPPLIED),
             )
         return product_software_identity.developer_tax_id

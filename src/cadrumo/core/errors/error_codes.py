@@ -85,6 +85,7 @@ ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = (
     "remedy",
     "revision",
     "row",
+    "schema_version",
     "section",
     "state",
     "status",

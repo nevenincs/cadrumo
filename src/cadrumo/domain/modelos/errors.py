@@ -51,6 +51,7 @@ class ModeloValidatedRecord(StrEnum):
     PARTICIPATION_INDEX = "participation_index"
     SOURCE_DISAGREEMENT = "source_disagreement"
     REGISTRY_DECLARATION = "registry_declaration"
+    MODELO_CODE = "modelo_code"
 
 
 class ModeloValidationError(ModeloError):

@@ -92,7 +92,7 @@ from .reconciliation_records import (
     modelo_reconciliation_persistence,
 )
 from .reconciliation_refusal_doors import reconciliation_evidence_decision_verdict
-from .work_addressing import ModeloWorkUnitNotFoundError
+from .work_address_errors import ModeloWorkUnitNotFoundError
 from .work_selection import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,

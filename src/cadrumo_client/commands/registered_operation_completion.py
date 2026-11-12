@@ -22,15 +22,13 @@ from cadrumo_client.commands.registered_operation_contracts import (
     RegisteredOperationCompletion,
     RegisteredOperationProgress,
 )
-from cadrumo_client.commands.registered_operation_deadlines import MIN_SETTLED_OPERATION_READ_SECONDS
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.commands.registered_operation_exchange import require_registered_frontend_identity
-from cadrumo_client.commands.registered_operation_projections import (
-    registered_result_projection,
-    settled_registered_error_detail,
-)
+from cadrumo_client.commands.registered_operation_projections import registered_result_projection
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MIN_SETTLED_OPERATION_READ_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.operation_settlement import settled_registered_error_detail
 
 
 def require_registered_settlement(

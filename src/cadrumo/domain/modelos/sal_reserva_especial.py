@@ -41,16 +41,19 @@ def compute_sal_reserva_especial_dotacion(
     if capital_social <= Decimal(0):
         raise PensionReduccionError(
             f"capital_social must be positive; got {capital_social}",
+            translated_message="errors.refused.sal_reserva_capital_social_not_positive",
             context={"field": "capital_social", "value": str(capital_social)},
         )
     if beneficio_neto < Decimal(0):
         raise PensionReduccionError(
             f"beneficio_neto must be non-negative; got {beneficio_neto}",
+            translated_message="errors.refused.sal_reserva_beneficio_negative",
             context={"field": "beneficio_neto", "value": str(beneficio_neto)},
         )
     if reserva_dotada < Decimal(0):
         raise PensionReduccionError(
             f"reserva_dotada must be non-negative; got {reserva_dotada}",
+            translated_message="errors.refused.sal_reserva_dotada_negative",
             context={"field": "reserva_dotada", "value": str(reserva_dotada)},
         )
 

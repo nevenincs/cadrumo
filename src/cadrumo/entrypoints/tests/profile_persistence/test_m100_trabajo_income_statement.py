@@ -113,6 +113,7 @@ def _findings(
     ).revision
     head: CalculationRevision = work.require_head()
     return trabajo_income_findings(
+        str(unit.modelo),
         revision,
         head,
         profile_values=profile_values or {},

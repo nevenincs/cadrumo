@@ -63,6 +63,7 @@ class SemanticRoleCasillaAmbiguity:
             "modelo": self.modelo_id,
             "revision": self.revision_id,
             "casilla_ids": self.casilla_ids,
+            "casilla_list": ", ".join(str(casilla_id) for casilla_id in self.casilla_ids),
         }
 
 
@@ -87,7 +88,12 @@ class AmbiguousSemanticRoleCasillaError(ModeloError):
             f"to multiple casillas {ambiguity.casilla_ids!r}; a semantic-role "
             "casilla reference must resolve to exactly one canonical casilla.id"
         )
-        super().__init__(message, context=ambiguity.context(), precondition_verdict=precondition_verdict)
+        super().__init__(
+            message,
+            context=ambiguity.context(),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
+            precondition_verdict=precondition_verdict,
+        )
 
 
 def casilla_id_for_unique_semantic_role(snapshot: RegistrySnapshot, semantic_role: str) -> CasillaId | None:

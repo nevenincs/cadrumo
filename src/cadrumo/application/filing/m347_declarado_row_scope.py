@@ -45,7 +45,13 @@ def require_m347_declarado_casillas_have_one_row(
         raise FilingExportValidationError(
             f"export record {record.id!r} has {len(rows)} counterparty rows but single-valued casillas "
             f"{', '.join(populated)} cannot be attributed to one of them",
-            context={"record_id": record.id, "row_count": len(rows), "casilla_ids": tuple(populated)},
+            translated_message="application.filing.export.errors.counterparty_rows_unattributable",
+            context={
+                "record_id": record.id,
+                "row_count": len(rows),
+                "casilla_ids": tuple(populated),
+                "casillas": ", ".join(populated),
+            },
             precondition_verdict=export_input_decision(ExportRefusalReason.COUNTERPARTY_ROWS_UNATTRIBUTABLE),
         )
 

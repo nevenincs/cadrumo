@@ -16,6 +16,7 @@ from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..domain.filing.errors import FilingExportIntegrityError, FilingValidationError
+from ..domain.modelos.calculation_revision import LedgerFilingCoverageError
 from ..domain.modelos.errors import (
     CalculationRevisionIntegrityError,
     ModeloOperatorLayerIntegrityError,
@@ -91,13 +92,22 @@ def _operator_decision_verdict(current: BaseException) -> PreconditionVerdict | 
     takes them again, so the refusal asks for the filer's decision and names no
     command.
     """
-    from ..domain.modelos.row_models import Modelo210AgrupacionRentaRowsError
+    from ..domain.modelos.row_models import (
+        Modelo184ShareSumError,
+        Modelo210AgrupacionRentaRowsError,
+        Modelo349CountryPrefixContextError,
+    )
 
     records: dict[type[Exception], tuple[CliExceptionPrecondition, str]] = {
         PensionReduccionError: (CliExceptionPrecondition.PENSION_REDUCCION_INPUTS_VALID, "pension_reduccion_inputs"),
         Modelo210AgrupacionRentaRowsError: (
             CliExceptionPrecondition.M210_AGRUPACION_ROWS_VALID,
             "m210_agrupacion_rows",
+        ),
+        Modelo184ShareSumError: (CliExceptionPrecondition.M184_SHARE_SUM_VALID, "m184_member_shares"),
+        Modelo349CountryPrefixContextError: (
+            CliExceptionPrecondition.M349_COUNTRY_PREFIX_CONTEXT_VALID,
+            "m349_country_prefix",
         ),
     }
     for refused_class, (precondition, record) in records.items():
@@ -267,6 +277,8 @@ class CliExceptionPrecondition(StrEnum):
     EXTERNAL_CONSTANTS_SECTION_VALID = "cli.external_constants.section_valid"
     PENSION_REDUCCION_INPUTS_VALID = "cli.modelo.pension_reduccion_inputs.valid"
     M210_AGRUPACION_ROWS_VALID = "cli.modelo.m210_agrupacion_rows.valid"
+    M184_SHARE_SUM_VALID = "cli.modelo.m184_share_sum.valid"
+    M349_COUNTRY_PREFIX_CONTEXT_VALID = "cli.modelo.m349_country_prefix_context.valid"
 
 
 #: Integrity errors no filer action repairs, with the condition and record their terminal verdict names.
@@ -275,6 +287,7 @@ _TERMINAL_INTEGRITY_RECORDS: Final[dict[type[Exception], tuple[CliExceptionPreco
     CalculationRevisionIntegrityError: (CliExceptionPrecondition.STORED_DATA_VALID, "calculation_revision"),
     FilingExportIntegrityError: (CliExceptionPrecondition.EXPORT_DESIGN_CONSISTENT, "filing_export_design"),
     FilingValidationError: (CliExceptionPrecondition.STORED_DATA_VALID, "filing_draft"),
+    LedgerFilingCoverageError: (CliExceptionPrecondition.STORED_DATA_VALID, "ledger_filing_evidence"),
 }
 
 

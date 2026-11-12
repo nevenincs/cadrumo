@@ -170,6 +170,8 @@ def _modelo_100_resident_comunidad(filed: list[str]) -> str | None:
         raise FilingExportValidationError(
             "draft populates autonomic deductions for more than one comunidad "
             f"({', '.join(filed)}); a declaration may carry only one",
+            translated_message="application.filing.export.errors.xml_comunidad_ambiguous",
+            context={"comunidades": ", ".join(filed)},
             precondition_verdict=export_input_decision(ExportRefusalReason.COMUNIDAD_AMBIGUOUS),
         )
     return filed[0] if filed else None
