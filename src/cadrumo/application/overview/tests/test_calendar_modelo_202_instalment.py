@@ -10,7 +10,7 @@ it on, and that a base that was never held is not read as zero.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -28,6 +28,8 @@ from ....domain.calculations.registry.tests.authored_editions import filing_year
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...operator_actions.models import DeclaredNextAction
 from ..applicability_evidence import FilingYearApplicabilityEvidence
 from ..calendar import build_overview_calendar
@@ -46,8 +48,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO_202 = "202"
 _MODELO_200 = "200"
 _INSTALMENTS = ("1P", "2P", "3P")
+_APRIL = _INSTALMENTS[0]
 _WORK_UNIT_ID = "a" * 64
 _ELECTION_SELECTOR = "taxpayer.pago_fraccionado_art_40_3_elected"
+_BUCKET_ID = "modelo-202-instalment-calendar"
 
 
 def _year() -> int:
@@ -108,10 +112,36 @@ def _legal_entity(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
     )
 
 
+def _instalment_work_unit(token: str) -> WorkUnit:
+    """The instalment's own declaration, opened before anything was calculated or filed."""
+    period = _instalment(token)
+    revision_id = "modelo-202-instalment-calendar"
+    created_at = datetime(_year(), 1, 2, tzinfo=UTC)
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo=_MODELO_202,
+            filing_year=_year(),
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode(_MODELO_202),
+        filing_year=_year(),
+        period=period,
+        revision_id=revision_id,
+        name=f"{_MODELO_202}-{_year()}-{token}",
+        created_at=created_at,
+        updated_at=created_at,
+    )
+
+
 def _calendar(
     profile: TaxpayerProfile,
     facts_by_token: Mapping[str, Modelo202InstalmentFacts],
     operation: PinnedAuthorityOperation,
+    *,
+    work_units: tuple[WorkUnit, ...] = (),
 ) -> OverviewCalendar:
     evidence = FilingYearApplicabilityEvidence(
         profile_for_year=lambda _year: profile,
@@ -125,6 +155,7 @@ def _calendar(
         operation=operation,
         today=date(year, 1, 1),
         show_suppressed=True,
+        work_units=work_units,
         applicability_evidence=evidence,
     )
 
@@ -327,3 +358,70 @@ def test_the_calendar_leaves_the_threshold_verdict_alone(authority_operation: Pi
     )
     surfaced = {entry.period.registry_token for entry in calendar.entries if entry.modelo == _MODELO_202}
     assert surfaced == set(_INSTALMENTS)
+
+
+def _attested(value: str) -> Modelo202BaseReading:
+    return Modelo202BaseReading(value=Decimal(value), basis=Modelo202BaseBasis.OPERATOR_ATTESTED)
+
+
+def test_an_opened_declaration_does_not_revive_an_instalment_its_base_excuses(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A 1P declaration holding a stated base of 0.00 is excused by LIS art. 40.2, not shown as due.
+
+    The operator states the base on the instalment's own declaration, so that
+    declaration always exists when the statement decides the instalment; its
+    existence is not evidence that an ingreso results.
+    """
+    profile = _legal_entity(authority_operation)
+    facts = {token: _facts(token, base=_attested("0.00") if token == _APRIL else None) for token in _INSTALMENTS}
+    unit = _instalment_work_unit(_APRIL)
+    with_unit = _calendar(profile, facts, authority_operation, work_units=(unit,))
+    without_unit = _calendar(profile, facts, authority_operation)
+    assert [entry for entry in with_unit.entries if entry.modelo == _MODELO_202] == []
+    suppressed = {
+        entry.period.registry_token: entry for entry in with_unit.suppressed_entries if entry.modelo == _MODELO_202
+    }
+    assert suppressed[_APRIL].verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    alone = next(
+        entry
+        for entry in without_unit.suppressed_entries
+        if entry.modelo == _MODELO_202 and entry.period.registry_token == _APRIL
+    )
+    assert suppressed[_APRIL].reason == alone.reason
+    assert suppressed[_APRIL].actions == ()
+
+
+def test_an_opened_declaration_annotates_an_instalment_its_stated_base_makes_owed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    facts = {token: _facts(token, base=_attested("840.00") if token == _APRIL else None) for token in _INSTALMENTS}
+    unit = _instalment_work_unit(_APRIL)
+    calendar = _calendar(_legal_entity(authority_operation), facts, authority_operation, work_units=(unit,))
+    rows = [entry for entry in calendar.entries if entry.modelo == _MODELO_202]
+    assert [entry.period.registry_token for entry in rows] == [_APRIL]
+    assert rows[0].local_work_unit_id == unit.work_unit_id
+    assert _APRIL not in {
+        entry.period.registry_token for entry in calendar.suppressed_entries if entry.modelo == _MODELO_202
+    }
+
+
+def test_an_opened_declaration_without_a_stated_base_stays_undecided(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Opening the declaration states nothing, so the instalment keeps its doors rather than a due row."""
+    unit = _instalment_work_unit(_APRIL)
+    facts = {
+        token: _facts(token, base=None, work_unit_id=unit.work_unit_id if token == _APRIL else None)
+        for token in _INSTALMENTS
+    }
+    calendar = _calendar(_legal_entity(authority_operation), facts, authority_operation, work_units=(unit,))
+    assert [entry for entry in calendar.entries if entry.modelo == _MODELO_202] == []
+    first = next(
+        entry
+        for entry in calendar.suppressed_entries
+        if entry.modelo == _MODELO_202 and entry.period.registry_token == _APRIL
+    )
+    assert first.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert first.actions[-1].action.action_id == "operator.modelo.work.verify"
+    assert _arguments(first.actions[-1]) == {"work_unit_id": unit.work_unit_id}

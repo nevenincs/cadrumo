@@ -118,11 +118,14 @@ class Modelo202InstalmentVerdict:
         doors: The primary door first, then its alternatives in order.
         election_unstated: Whether the verdict waits on the art. 40.3 election,
             a profile fact the calendar names as a gating key.
+        decided_by_facts: Whether the instalment's own facts decided the
+            verdict, rather than the profile alone.
     """
 
     applicability: ModeloApplicability
     doors: tuple[DeclaredNextAction, ...] = ()
     election_unstated: bool = False
+    decided_by_facts: bool = False
 
 
 def decide_modelo_202_instalment(facts: Modelo202InstalmentFacts) -> Modelo202InstalmentOutcome:
@@ -276,6 +279,7 @@ def modelo_202_instalment_verdict(
         applicability=decided,
         doors=modelo_202_instalment_doors(outcome, facts, modelo=str(applicability.modelo)),
         election_unstated=outcome is Modelo202InstalmentOutcome.ELECTION_UNSTATED,
+        decided_by_facts=True,
     )
 
 
