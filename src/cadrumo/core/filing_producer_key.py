@@ -213,10 +213,10 @@ class FilingProducerKey(StrEnum):
     M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES = "m202.tipo_gravamen_impuesto_sociedades"
     M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO = "m202.importe_neto_cifra_negocios_tramo"
     M202_MARCA_INSTRUMENTAL = "m202.marca_instrumental"
-    #: The slot AEAT prints for "Liquidación de modalidad A ó B", which selects
-    #: which of the form's two liquidation blocks the filer completed. It is a
-    #: discriminant, not a declared amount, and a negative filing depends on it.
-    M202_DISCRIMINANTE_DECLARACION_NEGATIVA = "m202.discriminante_declaracion_negativa"
+    #: The slot AEAT prints for "Liquidación de modalidad A ó B": "A" the LIS
+    #: art. 40.2 modality, "B" the art. 40.3 one. It names which of the form's
+    #: two liquidation blocks calculates the instalment, not a declared amount.
+    M202_MODALIDAD_LIQUIDACION = "m202.modalidad_liquidacion"
     M202_NORMATIVA_TERRITORIO_FORAL = "m202.normativa_territorio_foral"
     M202_COMUNICACION_DATOS_ADICIONALES = "m202.comunicacion_datos_adicionales"
     M202_NUMERO_REFERENCIA_SOCIEDADES = "m202.numero_referencia_sociedades"

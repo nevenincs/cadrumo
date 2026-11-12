@@ -7,7 +7,7 @@ revision_id = "2025-y-siguientes"
 seed_source = "authored"
 review = { state = "generated", notes = "Part 1, pages 1–2, authored against BOE-A-2025-5407 annex I, printed pages 36464–36465. All 61 registry casillas retained. Ten additional-data regime/turnover/rate fields address exact existing producer bindings; unavailable producer values remain unknown. Foral selectors, aggregate special-circumstances mark, turnover-band selectors, modality election, negative declaration, payment method/amount marker and Part 2 detailed disclosures still require complete typed presentation. Not full official-form acceptance. Tax-period start date is not a supported form-context coordinate and remains unrepresented; no January 1 date inferred." }
 generator_version = 1
-source_state_digest = "cba92d23aeebdacdb83a62cbc7ada1a8e1e16a8b392a7019898c133a39ecb35a"
+source_state_digest = "41fef5745aad70de12b12df68775155cb6526e2388006c404a3f3da098d09f28"
 design_sources = [
     { source_ref = "aeat-dr-202-2025", sha256 = "66480bbe725aef9e1a8f1e06bb7703cd7b0070726107a794fee12c1a450ab9bc" },
     { source_ref = "boe-2025-5407-modelo-202-form-pdf", sha256 = "f14e0b40478d5c0a6ec66d05d74bbbe7191de5978b4ef24cf35366721b48e517" },

@@ -59,6 +59,7 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ..filing.producer_snapshot import FilingProducerSnapshotError, Modelo202ProducerProfile
 from ..operator_actions.preconditions import profile_required_facts_missing_verdict
 from ..user_profile.completeness import pinned_registry_scope
+from .export_m202_liquidacion import liquidacion_slots
 from .export_m202_tipo_gravamen import (
     RegimenMarks,
     consigned_rates,
@@ -150,6 +151,11 @@ class _Reader:
         if path not in self.missing:
             self.missing.append(path)
 
+    def need(self, paths: Collection[str]) -> None:
+        """Name facts another resolver found unstated, after those already named."""
+        for path in paths:
+            self._absent(path)
+
     def classified_code(self, *, code_path: str, classification_path: str, required: str, name: str) -> str | None:
         """A code stated in the required classification; one stated in another is refused as unstated.
 
@@ -215,6 +221,8 @@ def modelo_202_producer_profile(
     cited_producer_keys: Collection[FilingProducerKey],
     effective_date: date,
     periodo: PeriodoImpositivo,
+    filing_year: int,
+    art_40_3_elected: bool | None,
     operation: PinnedAuthorityOperation,
 ) -> Modelo202ProducerProfile:
     """Return the Modelo 202 producer view, or refuse naming every profile fact the layout needs and lacks.
@@ -228,6 +236,10 @@ def modelo_202_producer_profile(
         periodo: The período impositivo the instalment is on account of; its
             start dates the governed rates and its predecessor the turnover
             that selects the microempresa scale.
+        filing_year: The instalment's filing year, whose art. 40.3 threshold
+            decides the modality.
+        art_40_3_elected: The declaración censal art. 40.3 election in force at
+            the start of the período, ``None`` when never stated.
         operation: The pinned authority the governed rates are read from.
 
     Raises:
@@ -258,6 +270,15 @@ def modelo_202_producer_profile(
         if cited & _INCN_PRODUCER_KEYS
         else None
     )
+    liquidacion = liquidacion_slots(
+        profile_values=profile_values,
+        cited=cited,
+        filing_year=filing_year,
+        art_40_3_elected=art_40_3_elected,
+        effective_date=effective_date,
+        operation=operation,
+    )
+    reader.need(liquidacion.missing)
     if reader.missing:
         raise _profile_facts_missing(tuple(reader.missing), reader.qualifiers)
     derived = (
@@ -273,6 +294,7 @@ def modelo_202_producer_profile(
             **_turnover_marks(incn, cited, effective_date),
             **marks,
             **derived,
+            **liquidacion.fields,
         },
     )
 

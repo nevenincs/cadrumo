@@ -24,6 +24,7 @@ import pytest
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.external_constants import OutputLanguage
+from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
@@ -287,6 +288,9 @@ _PAGE_01_FACTS: Mapping[str, str] = {
     "taxpayer_type.erd_tipo_gravamen_especifico": "false",
     "taxpayer_type.cooperativa_fiscalmente_protegida": "false",
     "taxpayer_type.marca_instrumental": "false",
+    "taxpayer_type.entity_type": "legal_entity",
+    "taxpayer_type.incn_prior_12_months": "500000",
+    "tax_residence.jurisdiction_scope": "common_regime",
 }
 #: The 1P instalment's own inputs: an art. 40.2 instalment with a zero base.
 _INSTALMENT_INPUTS: Mapping[str, Decimal] = {
@@ -340,6 +344,8 @@ def test_a_sociedad_stating_every_page_01_fact_exports_its_1p_instalment(
             cited_producer_keys=cited,
             effective_date=calculation_filing_date(period, authority=operation),
             periodo=periodo,
+            filing_year=year,
+            art_40_3_elected=False,
             operation=operation,
         )
 
@@ -377,3 +383,20 @@ def test_a_sociedad_stating_every_page_01_fact_exports_its_1p_instalment(
     assert field.offset is not None
     text = payload.decode("iso-8859-1")
     assert text[field.offset - 1 : field.offset - 1 + 8] == _ddmmaaaa(date(year, 1, 1))
+    # Below the art. 40.3 threshold without the election: the art. 40.2 modality "A" (Nota 11),
+    # and the common normativa's blank (Nota 9).
+    slots = {
+        key: field
+        for record in layout.records
+        for field in record.fields
+        if (key := field.producer_key)
+        in {FilingProducerKey.M202_MODALIDAD_LIQUIDACION, FilingProducerKey.M202_NORMATIVA_TERRITORIO_FORAL}
+    }
+    assert len(slots) == 2, slots
+    for key, expected in (
+        (FilingProducerKey.M202_MODALIDAD_LIQUIDACION, "A"),
+        (FilingProducerKey.M202_NORMATIVA_TERRITORIO_FORAL, " "),
+    ):
+        offset = slots[key].offset
+        assert offset is not None
+        assert text[offset - 1] == expected, (year, key)

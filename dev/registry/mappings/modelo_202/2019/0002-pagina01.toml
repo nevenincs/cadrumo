@@ -592,7 +592,7 @@ record_identity = "dr M202 (1)"
 [[entries]]
 export_field_id = "m202-2019.pagina01.f046"
 kind = "header"
-producer_key = "m202.discriminante_declaracion_negativa"
+producer_key = "m202.modalidad_liquidacion"
 legal_refs = ["orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2019"]
 [entries.anchor]

@@ -111,6 +111,7 @@ from ..filing.producer_snapshot_m200 import Modelo200ProfileFacts
 from ..filing.producer_snapshot_m360 import Modelo360RepresentanteAccountChoice, Modelo360SolicitudEntry
 from ..filing.runtime import RegistrySchemaAccessor
 from ..operator_actions.models import PreconditionVerdict
+from ..overview.modelo202_instalment_evidence import art_40_3_election_reader_for_bucket
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..user_profile.completeness import pinned_registry_scope
 from ..user_profile.modelo_scoped_conditions import (
@@ -880,6 +881,10 @@ def resolve_export_model_profile(
             cited_producer_keys=cited_producer_keys,
             effective_date=filing_date,
             periodo=periodo,
+            filing_year=work_unit.filing_year,
+            art_40_3_elected=art_40_3_election_reader_for_bucket(work_unit.bucket_id, operation=operation)(
+                work_unit.period
+            ),
             operation=operation,
         ), None
     if modelo == form_for_role("withholding.work_periodic"):

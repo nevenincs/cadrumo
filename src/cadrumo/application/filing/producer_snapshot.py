@@ -356,6 +356,10 @@ _SiNoMark = Annotated[str, StringConstraints(pattern=r"^[12]$")]
 _M202CooperativaOMultiplesTipos = Annotated[str, StringConstraints(pattern=r"^[012]$")]
 #: Modelo 202 page 01 turnover band (2025 design position 147, 2019 and 2023 position 132): "0" to "3".
 _M202ImporteNetoTramo = Annotated[str, StringConstraints(pattern=r"^[0-3]$")]
+#: Modelo 202 "Liquidación de modalidad A ó B" (2025 design Nota 11, 2023 design Nota 4).
+_M202ModalidadLiquidacion = Annotated[str, StringConstraints(pattern=r"^[AB]$")]
+#: Modelo 202 foral territory (2025 design Nota 9, 2019 and 2023 designs Nota 2); the blank is no value.
+_M202NormativaForal = Annotated[str, StringConstraints(pattern=r"^[1-4]$")]
 _XOrBlankMark = Annotated[str, StringConstraints(pattern=r"^X$")]
 
 
@@ -444,8 +448,12 @@ class Modelo202ProducerProfile(BaseModel):
     tipo_gravamen_impuesto_sociedades: str | None = None
     importe_neto_cifra_negocios_tramo: _M202ImporteNetoTramo | None = None
     marca_instrumental: bool | None = None
-    discriminante_declaracion_negativa: str | None = None
-    normativa_territorio_foral: str | None = None
+    #: "A" the LIS art. 40.2 modality, "B" the art. 40.3 one (2025 design Nota 11).
+    modalidad_liquidacion: _M202ModalidadLiquidacion | None = None
+    #: "1" Navarra, "2" Guipúzcoa, "3" Vizcaya, "4" Álava (2025 design Nota 9); ``None``
+    #: writes the design's blank, which is the answer for a contribuyente under the
+    #: common normativa.
+    normativa_territorio_foral: _M202NormativaForal | None = None
     comunicacion_datos_adicionales: str | None = None
     numero_referencia_sociedades: str | None = None
 

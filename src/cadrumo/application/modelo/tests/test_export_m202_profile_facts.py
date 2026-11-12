@@ -100,6 +100,8 @@ _STATED: Mapping[str, str] = {
     _ERD_PATH: "false",
     _COOPERATIVA_PATH: "false",
     "taxpayer_type.marca_instrumental": "false",
+    "taxpayer_type.entity_type": "legal_entity",
+    "tax_residence.jurisdiction_scope": "common_regime",
 }
 _TURNOVER = Decimal("15000000")
 _MICRO_TURNOVER = Decimal("500000")
@@ -225,14 +227,21 @@ def _resolve(
     turnover: Decimal | None = _TURNOVER,
     periodo: PeriodoImpositivo | None = None,
 ) -> dict[FilingProducerKey, object]:
-    # The CNAE is stated in the classification the year requires unless a test states another.
-    stated = {_CLASSIFICATION_PATH: _required_classification(operation, year), **values}
+    # The CNAE is stated in the classification the year requires unless a test states another,
+    # and the twelve-month turnover the workflow profile carries is the one the profile states.
+    stated = {
+        _CLASSIFICATION_PATH: _required_classification(operation, year),
+        **({} if turnover is None else {_INCN_PATH: str(turnover)}),
+        **values,
+    }
     model_profile = modelo_202_producer_profile(
         workflow_profile=_sociedad(turnover),
         profile_values=stated,
         cited_producer_keys=_cited(records),
         effective_date=_filing_date(year),
         periodo=periodo or _periodo(year),
+        filing_year=year,
+        art_40_3_elected=False,
         operation=operation,
     )
     snapshot = build_filing_producer_snapshot(
