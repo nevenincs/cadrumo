@@ -44,6 +44,7 @@ from cadrumo.application.modelo.work_selection import (
     resolve_modelo_work_bucket,
     select_modelo_work_resolution,
 )
+from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -745,7 +746,7 @@ def test_exportable_revision_refuses_draft_current_no_current_and_ambiguous_veri
     with pytest.raises(ModeloCalculationRevisionSelectorNotFoundError) as absent:
         select_exportable_revision(work_unit, calculation_repository=cr_repo, operation=operation)
     absent_verdict = absent.value.terminal_precondition_verdict
-    assert absent_verdict is not None
+    assert isinstance(absent_verdict, PreconditionVerdict)
     absent_action = absent_verdict.action
     assert absent_action is not None
     assert absent_action.action_id == "operator.modelo.work.calculate"
