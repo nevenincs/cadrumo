@@ -158,5 +158,5 @@ def require_row_totals_stated(
         raise casilla_value_refusal(
             casilla,
             translated_message="application.filing.export.errors.box_not_stated_by_rows",
-            context={"element_path": ", ".join(elements)},
+            context={"element_path": ", ".join(elements), "value": format(box, "f")},
         )

@@ -52,6 +52,7 @@ from ...domain.renta.capital_mobiliario_occurrences import (
     ComputedOccurrence,
     PayerComputed,
     PayerEvidence,
+    PayerOutcome,
     PayerRecordEvidence,
     PayerRefusal,
     PayerRefusalKind,
@@ -243,6 +244,19 @@ def _compute(join: CapitalMobiliarioJoin, read: _PayerEvidenceRead, rate: Decima
     outcomes = compute_capital_mobiliario_occurrences(
         computable, _evidence(read, {item.payer_key for item in computable}), rate
     )
+    computed = _sort_outcomes(join, computable, outcomes, findings)
+    findings.extend(_payers_without_rows_findings(join, read))
+    used = frozenset(item.payer_key for item in computed)
+    return _Computation(tuple(computed), tuple(findings), used)
+
+
+def _sort_outcomes(
+    join: CapitalMobiliarioJoin,
+    computable: tuple[CapitalMobiliarioOccurrence, ...],
+    outcomes: Sequence[PayerOutcome],
+    findings: list[_Finding],
+) -> list[ComputedOccurrence]:
+    """Return each computed payer's occurrences, appending a finding for each refused payer."""
     computed: list[ComputedOccurrence] = []
     for outcome in outcomes:
         if isinstance(outcome, PayerComputed):
@@ -251,9 +265,7 @@ def _compute(join: CapitalMobiliarioJoin, read: _PayerEvidenceRead, rate: Decima
         affected = _records_of(item for item in computable if item.payer_key == outcome.payer_key)
         payer = join.payer_names.get(outcome.payer_key, outcome.position_refs[0])
         findings.append(_refusal_finding(outcome, payer, affected))
-    findings.extend(_payers_without_rows_findings(join, read))
-    used = frozenset(item.payer_key for item in computed)
-    return _Computation(tuple(computed), tuple(findings), used)
+    return computed
 
 
 def _row_columns(revision: ModeloRevision) -> frozenset[BindingId]:
