@@ -14,6 +14,8 @@ import pytest
 
 from ....core.errors.error_codes import resolve_error_message
 from ....core.operator_action_enums import NoRecoveryOutcome
+from ....core.secure_object_write import SecureObjectWrite
+from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
@@ -104,7 +106,7 @@ def test_a_record_not_yet_delivered_cannot_be_completed_and_says_which_state_it_
     )
     ports = M145CommunicationRecordsPorts(
         record_repository=_RecordFixedRepository(record),
-        bucket_event_repository=_Untouched(),
+        bucket_event_repository=_UntouchedEventHistory(),
     )
     with (
         bundled_indexed_authority().operation() as operation,
@@ -119,16 +121,47 @@ def test_a_record_not_yet_delivered_cannot_be_completed_and_says_which_state_it_
     assert all("created" in text for text in served.values())
 
 
-class _Untouched:
+class _UntouchedEventHistory:
     """An event history the refused request never reaches."""
 
-    def __getattr__(self, name: str) -> object:
-        raise AssertionError(name)
+    def exists(self) -> bool:
+        raise AssertionError("exists")
+
+    def load(self) -> BucketEventHistoryCatalogue:
+        raise AssertionError("load")
+
+    def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
+        raise AssertionError(catalogue)
+
+    def to_secure_object_write(
+        self, catalogue: BucketEventHistoryCatalogue, *, expected_revision_id: str | None = None
+    ) -> SecureObjectWrite:
+        raise AssertionError(catalogue, expected_revision_id)
+
+
+class _UntouchedRecordRepository:
+    """A record repository the refused request never reaches."""
+
+    def exists(self, communication_record_id: str) -> bool:
+        raise AssertionError(communication_record_id)
+
+    def load(self, communication_record_id: str) -> M145CommunicationRecord:
+        raise AssertionError(communication_record_id)
+
+    def resolve(self, communication_record_id: str) -> M145CommunicationRecord:
+        raise AssertionError(communication_record_id)
+
+    def save_with_secure_object_writes(
+        self, record: M145CommunicationRecord, extra_writes: tuple[SecureObjectWrite, ...]
+    ) -> None:
+        raise AssertionError(record.communication_record_id, extra_writes)
 
 
 def test_an_undeclared_communication_casilla_is_worded_with_its_count() -> None:
     command = M145CommunicationCreateCommand(communication_year=_YEAR, field_values={"not.a.declared.casilla": "x"})
-    ports = M145CommunicationRecordsPorts(record_repository=_Untouched(), bucket_event_repository=_Untouched())
+    ports = M145CommunicationRecordsPorts(
+        record_repository=_UntouchedRecordRepository(), bucket_event_repository=_UntouchedEventHistory()
+    )
     with (
         bundled_indexed_authority().operation() as operation,
         pytest.raises(M145CommunicationRecordValidationError) as raised,
