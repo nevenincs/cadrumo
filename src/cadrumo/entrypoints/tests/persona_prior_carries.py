@@ -76,6 +76,32 @@ def _statements(persona: Persona, world: PersonaWorld, year: int) -> dict[Absenc
     }
 
 
+def _refuse_foreign_boxes(
+    world: PersonaWorld, year: int, statements: Mapping[AbsenceAttestationFamily, PriorCarries]
+) -> None:
+    """Refuse a stated box that no binding of its statement's family feeds in the year's registry revision.
+
+    Checked before the form is read, so a mistyped box is refused whatever the
+    form holds open and never leaves the real carry to be stated as nothing pending.
+    """
+    revision = world.operation.snapshot(
+        _MODELO, filing_year=year, period=_PERIOD, grade=RegistryAuthorityGrade.CALCULATION
+    ).revision
+    fed = casillas_by_binding(revision)
+    for family, statement in statements.items():
+        family_boxes = {
+            str(box)
+            for binding in revision.bindings
+            if binding.absence_attestation == family
+            for box in fed.get(binding.id, ())
+        }
+        foreign = sorted({box for box, _ in statement.pending} - family_boxes)
+        if foreign:
+            raise PersonaMaterialisationError(
+                f"prior_carries {family.value} of {year}: boxes {foreign} are not carries of that family"
+            )
+
+
 def _box_amounts(
     world: PersonaWorld, year: int, open_carries: tuple[BindingId, ...], statement: PriorCarries
 ) -> Mapping[BindingId, Decimal]:
@@ -152,6 +178,7 @@ def attest_prior_carries(persona: Persona, world: PersonaWorld, work_unit_id: st
     statements = _statements(persona, world, year)
     if not statements:
         return ()
+    _refuse_foreign_boxes(world, year, statements)
     form_read = run_operation(
         world,
         MODELO_WORK_FORM_OPERATION_DEFINITION_ID,

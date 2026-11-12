@@ -188,3 +188,17 @@ def test_an_unknown_family_token_is_refused_before_anything_is_staged(renta_worl
 
     with pytest.raises(PersonaMaterialisationError, match="is not one of"):
         attest_prior_carries(persona, world, work_unit_id, year)
+
+
+def test_a_stated_box_that_is_no_carry_of_the_family_is_refused_before_the_form_is_read(
+    renta_world: MaterialisedPersona,
+) -> None:
+    world = renta_world.world
+    year = world.envelope.floor + 3
+    # 0460 is the savings base, fed by no carry: a mistyped box must not leave the
+    # real carries to be stated as nothing pending.
+    persona = _stating(renta_world.persona, "floor+3", (("0460", Decimal("300.00")),))
+    work_unit_id = _created(world, year)
+
+    with pytest.raises(PersonaMaterialisationError, match="are not carries of that family"):
+        attest_prior_carries(persona, world, work_unit_id, year)
