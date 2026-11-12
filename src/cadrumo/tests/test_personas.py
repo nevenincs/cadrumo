@@ -1020,3 +1020,13 @@ def test_a_lowered_horizon_leaves_out_an_attested_prior_value_of_a_return_below_
     assert ("attested_prior_values", "130", "floor-1", ("1T",)) in [
         (item.block, item.modelo, str(item.year), item.periods) for item in persona.below_floor
     ]
+
+
+def test_a_work_income_statement_for_an_ejercicio_without_a_work_income_certificate_is_refused() -> None:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["withholding_certificates"] = [
+        item for item in document["withholding_certificates"] if item["income_class"] != "trabajo"
+    ]
+    assert document["work_income_none_statements"]
+    with pytest.raises(PersonaCatalogueError, match="no work-income certificate for that ejercicio"):
+        _parse(document)

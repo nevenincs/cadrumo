@@ -684,15 +684,15 @@ def _with_attested_prior_values(
             calculated=calculated,
             settle=settle,
         )
+        stated = state_work_income_none(
+            world.work_income_none_statements,
+            envelope=world.envelope,
+            profile_id=world.profile_id,
+            calculated=calculated,
+            settle=settle,
+        )
     except PriorValueAttestationError as error:
         raise PersonaMaterialisationError(str(error)) from error
-    stated = state_work_income_none(
-        world.work_income_none_statements,
-        envelope=world.envelope,
-        profile_id=world.profile_id,
-        calculated=calculated,
-        settle=settle,
-    )
     if not (attested or stated):
         return calculated
     recalculated = settle_operation(world, definition_id, payload, subject=subject)

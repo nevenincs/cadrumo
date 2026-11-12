@@ -2002,6 +2002,7 @@ def parse_persona(
             raise _fail(f"{persona_id}/documents.toml", f"{document.id}: its row does not name it in ledger.csv")
     _check_returns(persona)
     _check_inventory(persona)
+    _check_work_income_none_statements(persona)
     if omit_below_floor:
         persona = _without_records_below_floor(persona, envelope)
     _check_years(persona, envelope)
@@ -2029,6 +2030,8 @@ def _record_periods(record: _DatedRecord) -> tuple[str, ...]:
     return (record.period,)
 
 
+_WORK_INCOME_CLASS: Final = "trabajo"
+"""The suffered-withholding class whose certificate carries work income."""
 _CERTIFICATE_RETURN_MODELO: Final = "100"
 """The return a suffered-withholding certificate feeds, named when the certificate is left out."""
 _CERTIFICATE_RETURN_PERIOD: Final = "0A"
@@ -2094,6 +2097,26 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
         ),
         below_floor=tuple(dropped),
     )
+
+
+def _check_work_income_none_statements(persona: Persona) -> None:
+    """Refuse a statement of no other work income for an ejercicio with no work-income certificate.
+
+    The statement answers the boxes a work-income return leaves to the filer; for an
+    ejercicio whose return rests on no work-income record the form never offers it, so
+    stating it there is a mistake the replay would otherwise pass over in silence.
+    """
+    certified = {
+        str(certificate.ejercicio)
+        for certificate in persona.withholding_certificates
+        if certificate.income_class == _WORK_INCOME_CLASS
+    }
+    for statement in persona.work_income_none_statements:
+        if str(statement.ejercicio) not in certified:
+            raise _fail(
+                persona.id,
+                f"work_income_none_statements {statement.ejercicio}: no work-income certificate for that ejercicio",
+            )
 
 
 def _check_returns(persona: Persona) -> None:
