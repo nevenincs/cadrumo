@@ -1013,6 +1013,10 @@ def declared_withholding(persona: Persona) -> list[WithholdingCertificate]:
     return [item for item in persona.withholding_certificates if item.origin == "operator_declaration"]
 
 
+def _stated_figure(figure: Decimal | None) -> PublicDecimal | None:
+    return None if figure is None else PublicDecimal(decimal=str(figure))
+
+
 def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
     zero = PublicDecimal(decimal="0.00")
     for certificate in declared_withholding(persona):
@@ -1031,10 +1035,8 @@ def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
                 retencion=PublicDecimal(decimal=str(certificate.retencion)),
                 ingreso_a_cuenta=zero,
                 ingreso_a_cuenta_repercutido=zero,
-                # The persona schema states neither figure yet; a work-income record must state both, so the
-                # replay states none.
-                reducciones_aplicables=zero if certificate.income_class == RetencionSoportadaClase.TRABAJO else None,
-                gastos_deducibles=zero if certificate.income_class == RetencionSoportadaClase.TRABAJO else None,
+                reducciones_aplicables=_stated_figure(certificate.reducciones_aplicables),
+                gastos_deducibles=_stated_figure(certificate.gastos_deducibles),
                 origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION,
             ),
             RetencionSoportadaMutationProjection,

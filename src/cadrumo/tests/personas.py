@@ -346,6 +346,8 @@ class WithholdingCertificate:
     importe_integro: Decimal
     retencion: Decimal
     cotizaciones_seguridad_social: Decimal | None
+    reducciones_aplicables: Decimal | None = None
+    gastos_deducibles: Decimal | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1174,9 +1176,11 @@ def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertifi
         table,
         where,
         required=frozenset({"payer", "ejercicio", "income_class", "origin", "importe_integro", "retencion"}),
-        optional=frozenset({"cotizaciones_seguridad_social"}),
+        optional=frozenset({"cotizaciones_seguridad_social", "reducciones_aplicables", "gastos_deducibles"}),
     )
     cotizaciones = table.get("cotizaciones_seguridad_social")
+    reducciones = table.get("reducciones_aplicables")
+    gastos = table.get("gastos_deducibles")
     return WithholdingCertificate(
         payer=roles(table["payer"], where),
         ejercicio=YearToken.parse(table["ejercicio"], where=f"{where}.ejercicio"),
@@ -1185,6 +1189,8 @@ def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertifi
         importe_integro=_amount(table["importe_integro"], f"{where}.importe_integro"),
         retencion=_amount(table["retencion"], f"{where}.retencion"),
         cotizaciones_seguridad_social=None if cotizaciones is None else _amount(cotizaciones, where),
+        reducciones_aplicables=None if reducciones is None else _amount(reducciones, f"{where}.reducciones_aplicables"),
+        gastos_deducibles=None if gastos is None else _amount(gastos, f"{where}.gastos_deducibles"),
     )
 
 
