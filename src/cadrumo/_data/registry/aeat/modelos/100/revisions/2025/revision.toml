@@ -7104,24 +7104,6 @@ sequence_removals = {source_refs = [1]}
 
 [[revisions."2025".family_overrides]]
 family = "formulas"
-selector = {revision = "2024", id = "renta-capital-inmobiliario-rendimiento-neto"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimientos del capital inmobiliario", "gastos deducibles"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
-selector = {revision = "2024", id = "renta-capital-inmobiliario-rendimiento-neto-reducido"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimiento minimo computable"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
-selector = {revision = "2024", id = "renta-capital-inmobiliario-suma-rendimientos-reducidos"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimientos del capital inmobiliario"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
 selector = {revision = "2024", id = "renta-capital-mobiliario-ahorro-rendimiento-neto"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["gastos fiscalmente deducibles", "rendimientos del capital mobiliario"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
@@ -7679,7 +7661,7 @@ sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
 family = "constructs"
 selector = {revision = "2024", id = "renta-mini-model-capital-inmobiliario"}
 sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
-sequence_removals = {formulas = [2, 3, 4, 5, 6, 7], legal_refs = [2, 3], source_refs = [0, 1, 2]}
+sequence_removals = {formulas = [2, 3, 4], legal_refs = [2, 3], source_refs = [0, 1, 2]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"

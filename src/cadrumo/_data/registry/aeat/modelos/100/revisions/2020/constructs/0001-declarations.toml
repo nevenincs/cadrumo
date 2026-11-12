@@ -183,9 +183,6 @@ source_refs = [
 formulas = [
     "renta-atribucion-capital-inmobiliario-rendimiento-neto-computable",
     "renta-atribucion-capital-inmobiliario-suma",
-    "renta-capital-inmobiliario-rendimiento-neto",
-    "renta-capital-inmobiliario-rendimiento-neto-reducido",
-    "renta-capital-inmobiliario-suma-rendimientos-reducidos",
     "renta-inmobiliario-suma-rentas-imputadas",
 ]
 [[revisions."2020".constructs]]

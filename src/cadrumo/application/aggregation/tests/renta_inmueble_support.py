@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from pathlib import Path
+
+from pydantic import BaseModel
 
 from ....domain.contribuyente.arrendamiento_record import ArrendamientoRecord, Inquilino, InquilinoEdad
 from ....domain.contribuyente.inmueble_facts import (
@@ -50,6 +53,11 @@ def inmueble(clave: int = 0, *, ejercicio: int, **fields: object) -> InmuebleRec
     }
     payload.update(fields)
     return InmuebleRecord.model_validate(payload)
+
+
+def with_fields[RecordT: BaseModel](record: RecordT, fields: Mapping[str, object]) -> RecordT:
+    """Return ``record`` validated again with ``fields`` layered over it."""
+    return type(record).model_validate({**record.model_dump(), **fields})
 
 
 def co_owned(clave: int = 0, *, ejercicio: int, scope: ImportesMovimientos) -> InmuebleRecord:
@@ -132,20 +140,36 @@ def ledger_row(
     return Transaction.model_validate(payload)
 
 
-def rent(provider_id: str, *, lease_clave: int = 0, amount: Decimal, booked: date, **fields: object) -> Transaction:
+def rent(
+    provider_id: str,
+    *,
+    lease_clave: int = 0,
+    amount: Decimal,
+    booked: date,
+    currency: str = "EUR",
+    **fields: object,
+) -> Transaction:
     """Return a rent receipt linked to the lease whose row key is ``lease_clave``."""
     return ledger_row(
         provider_id,
         amount=amount,
         direction=TransactionDirection.INCOMING,
         booked=booked,
+        currency=currency,
         arrendamiento_ref=str(lease_clave),
         **fields,
     )
 
 
 def expense(
-    provider_id: str, *, concept: str, inmueble_clave: int = 0, amount: Decimal, booked: date, **fields: object
+    provider_id: str,
+    *,
+    concept: str,
+    inmueble_clave: int = 0,
+    amount: Decimal,
+    booked: date,
+    currency: str = "EUR",
+    **fields: object,
 ) -> Transaction:
     """Return a payment for the property whose row key is ``inmueble_clave``, of expense ``concept``."""
     return ledger_row(
@@ -153,6 +177,7 @@ def expense(
         amount=amount,
         direction=TransactionDirection.OUTGOING,
         booked=booked,
+        currency=currency,
         inmueble_ref=str(inmueble_clave),
         gasto_capital_inmobiliario=concept,
         **fields,

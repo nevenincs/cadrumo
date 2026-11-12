@@ -7633,12 +7633,6 @@ sequence_removals = {legal_refs = [0]}
 
 [[revisions."2023".family_overrides]]
 family = "formulas"
-selector = {revision = "2022", id = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["rendimiento neto positivo", "se reducirá en un 60 por 100"]}], source_refs = ["aeat-renta-2023-manual-parte1"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2023".family_overrides]]
-family = "formulas"
 selector = {revision = "2022", id = "renta-cuota-escala-autonomica-sobre-base-liquidable-general"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["escala autonómica", "base liquidable general"]}], source_refs = ["aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}

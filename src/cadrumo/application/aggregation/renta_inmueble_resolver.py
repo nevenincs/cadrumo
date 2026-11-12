@@ -6,37 +6,56 @@ in the ejercicio. A refusal anywhere withholds every row: the block is numbered,
 and leaving one property out would move the others to rows that are not theirs.
 A blocking finding keeps the rows and withholds checking, export and filing; a
 limitation is shown and withholds nothing.
+
+A results box the rows account for is the total of one column over every let
+property; it is unresolved while any let property's value of that column is.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
 from typing import ClassVar, Final
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.formula_runtime_ops import read_parameter
 from ...domain.calculations.registry.gasto_capital_inmobiliario import (
     GastoCapitalInmobiliarioCatalogue,
     resolve_gasto_capital_inmobiliario_catalogue,
 )
-from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.renta_inmueble_bindings import RentaInmuebleProvider, renta_inmueble_columns
+from ...domain.calculations.registry.ids import BindingId, RevisionId
+from ...domain.calculations.registry.renta_inmueble_bindings import (
+    RentaInmuebleProvider,
+    renta_inmueble_columns,
+    renta_inmueble_totals,
+)
+from ...domain.calculations.registry.rental_reduction import (
+    resolve_rental_reduction_art232_rates,
+    resolve_rental_reduction_art232_rules,
+)
 from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..user_profile.projections import record_to_path_values
 from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
 from .renta_inmueble_findings import RentaInmuebleFinding, RentaInmuebleFindingKind
+from .renta_inmueble_net import RentaInmuebleTerms
 from .renta_inmueble_source import (
     GASTO_COLUMN_PREFIX,
+    SUMMABLE_COLUMNS,
     RentaInmuebleColumnValue,
     RentaInmuebleOccurrence,
     RentaInmuebleOccurrences,
     RentaInmuebleRowField,
     renta_inmueble_occurrences,
 )
+from .retencion_soportada_repository import RetencionSoportadaPersistenceError, RetencionSoportadaPorts
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import (
     CalculationSourceContext,
@@ -48,6 +67,8 @@ from .source_resolution_operations import source_context_operation, storage_degr
 
 _SOURCE: Final = BindingSourceKind.RENTA_INMUEBLE
 _TRANSACTION_CONTRIBUTOR: Final = "transaction"
+_AMORTISATION_RATE: Final = "renta-rental-amortizacion-rate"
+_NO_AMOUNT: Final = Decimal("0.00")
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +145,20 @@ def _typed_columns(
     )
 
 
+def _unreadable_totals(totals: Iterable[tuple[BindingDefinition, RentaInmuebleProvider]]) -> tuple[str, ...]:
+    """Say why a declared total cannot be summed: it names no column of the net chain's amounts."""
+    reasons: list[str] = []
+    for binding, provider in totals:
+        try:
+            field = RentaInmuebleRowField(provider.row_field)
+        except ValueError:
+            reasons.append(f"no source reads the column total {binding.id}")
+            continue
+        if field not in SUMMABLE_COLUMNS:
+            reasons.append(f"the column total {binding.id} names a column that is not an amount")
+    return tuple(reasons)
+
+
 def _unrouted_expenses(
     built: RentaInmuebleOccurrences, columns: tuple[_Column, ...]
 ) -> tuple[CalculationSourceDiagnostic, ...]:
@@ -150,6 +185,10 @@ def _fingerprint(occurrence: RentaInmuebleOccurrence) -> str:
             "ingresos": None if occurrence.ingresos is None else str(occurrence.ingresos),
             "gastos": {concept: str(amount) for concept, amount in sorted(occurrence.gastos.items())},
             "transactions": list(occurrence.transaction_ids),
+            "retenciones": sorted(
+                (record.payer_ref, str(record.pago_a_cuenta), record.captured_at.isoformat())
+                for record in occurrence.withholding
+            ),
         }
     )
 
@@ -171,6 +210,44 @@ def _rows(
                 values[(column.binding.id, occurrence.index)] = value
                 identities[(column.binding.id, occurrence.index)] = identity
     return values, identities
+
+
+def _totals(
+    built: RentaInmuebleOccurrences, totals: Iterable[tuple[BindingDefinition, RentaInmuebleProvider]]
+) -> tuple[dict[BindingId, Decimal], tuple[BindingId, ...]]:
+    """Sum each total's column over the let properties; leave a total unresolved while one value is unknown."""
+    values: dict[BindingId, Decimal] = {}
+    unresolved: list[BindingId] = []
+    let = tuple(occurrence for occurrence in built.occurrences if occurrence.net is not None)
+    for binding, provider in totals:
+        column = RentaInmuebleRowField(provider.row_field)
+        amounts = [occurrence.column(column) for occurrence in let]
+        if all(isinstance(amount, Decimal) for amount in amounts):
+            values[binding.id] = sum((amount for amount in amounts if isinstance(amount, Decimal)), _NO_AMOUNT)
+        else:
+            unresolved.append(binding.id)
+    return values, tuple(unresolved)
+
+
+def resolve_renta_inmueble_terms(
+    *, modelo: str, revision_id: RevisionId, devengo: date, operation: PinnedAuthorityOperation
+) -> RentaInmuebleTerms:
+    """Resolve the dated registry data the net chain reads at the ejercicio's devengo."""
+    return RentaInmuebleTerms(
+        amortizacion_rate=read_parameter(
+            modelo,
+            revision_id,
+            _AMORTISATION_RATE,
+            date_context={DateAxis.FILING_PERIOD.value: devengo},
+            operation=operation,
+        ),
+        reduction_rules=resolve_rental_reduction_art232_rules(
+            revision_id=revision_id, devengo=devengo, operation=operation
+        ),
+        reduction_rates=resolve_rental_reduction_art232_rates(
+            revision_id=revision_id, devengo=devengo, operation=operation
+        ),
+    )
 
 
 def _provenance(built: RentaInmuebleOccurrences) -> tuple[CalculationSourceProvenance, ...]:
@@ -215,9 +292,15 @@ class RentaInmuebleSourceResolver:
     resolver_id: ClassVar[str] = "renta_inmueble"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_SOURCE,)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol) -> None:
-        """Bind the ledger the rent and expense rows are read from."""
+    def __init__(
+        self,
+        *,
+        transaction_repository: TransactionCatalogueRepositoryProtocol,
+        retencion_soportada_ports: RetencionSoportadaPorts,
+    ) -> None:
+        """Bind the ledger the rent and expense rows are read from, and the suffered-withholding store."""
         self._transaction_repository = transaction_repository
+        self._retencion_soportada_ports = retencion_soportada_ports
 
     def _withheld(
         self, binding_ids: tuple[BindingId, ...], reasons: Iterable[CalculationSourceDiagnostic | str]
@@ -241,14 +324,16 @@ class RentaInmuebleSourceResolver:
             otherwise one row per occurrence with its findings and provenance.
         """
         declared = renta_inmueble_columns(context.revision)
-        if not declared:
+        totals = renta_inmueble_totals(context.revision)
+        if not declared and not totals:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
-        binding_ids = tuple(sorted(binding.id for binding, _provider in declared))
+        binding_ids = tuple(sorted(binding.id for binding, _provider in (*declared, *totals)))
         if context.profile is None:
             return self._withheld(binding_ids, ("the profile was not loaded",))
         try:
             transactions = self._transaction_repository.load()
-        except STORAGE_DEGRADATION_ERRORS as exc:
+            withholding = self._retencion_soportada_ports.repository.load_records(context.filing_year)
+        except (RetencionSoportadaPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -259,7 +344,14 @@ class RentaInmuebleSourceResolver:
             concepts = resolve_gasto_capital_inmobiliario_catalogue(
                 effective_date=context.period.end_date, authority=operation
             )
+            terms = resolve_renta_inmueble_terms(
+                modelo=context.modelo,
+                revision_id=context.revision.id,
+                devengo=context.period.end_date,
+                operation=operation,
+            )
         columns, unreadable = _typed_columns(declared, concepts)
+        unreadable = (*unreadable, *_unreadable_totals(totals))
         if unreadable:
             return self._withheld(binding_ids, unreadable)
         built = renta_inmueble_occurrences(
@@ -267,13 +359,16 @@ class RentaInmuebleSourceResolver:
             transactions=transactions.values(),
             ejercicio=context.filing_year,
             concepts=concepts,
+            terms=terms,
+            withholding=withholding,
         )
-        return self._resolution(built, columns, binding_ids)
+        return self._resolution(built, columns, totals, binding_ids)
 
     def _resolution(
         self,
         built: RentaInmuebleOccurrences,
         columns: tuple[_Column, ...],
+        totals: tuple[tuple[BindingDefinition, RentaInmuebleProvider], ...],
         binding_ids: tuple[BindingId, ...],
     ) -> CalculationSourceResolution:
         diagnostics = (
@@ -283,9 +378,12 @@ class RentaInmuebleSourceResolver:
         if built.refused or any(diagnostic.reason == "unrouted_observation" for diagnostic in diagnostics):
             return self._withheld(binding_ids, diagnostics)
         values, identities = _rows(built, columns)
+        total_values, unresolved = _totals(built, totals)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
+            binding_values=total_values,
+            unresolved_binding_ids=unresolved,
             row_binding_values=values,
             row_source_identities=identities,
             diagnostics=diagnostics,
@@ -293,4 +391,4 @@ class RentaInmuebleSourceResolver:
         )
 
 
-__all__ = ["RentaInmuebleSourceResolver"]
+__all__ = ["RentaInmuebleSourceResolver", "resolve_renta_inmueble_terms"]

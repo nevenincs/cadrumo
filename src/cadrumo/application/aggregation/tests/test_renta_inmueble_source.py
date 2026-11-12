@@ -13,12 +13,14 @@ from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.gasto_capital_inmobiliario import (
     GastoCapitalInmobiliarioCatalogue,
     resolve_gasto_capital_inmobiliario_catalogue,
 )
 from ....domain.calculations.registry.tests.authored_editions import (
     newest_authored_edition,
+    revision_selected_for,
     supported_exercises_with_projection,
 )
 from ....domain.contribuyente.arrendamiento_record import Inquilino, InquilinoEdad
@@ -31,6 +33,8 @@ from ....domain.contribuyente.inmueble_record import (
 )
 from ....domain.transactions.enums import TransactionDirection
 from ..renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFindingKind
+from ..renta_inmueble_net import RentaInmuebleTerms
+from ..renta_inmueble_resolver import resolve_renta_inmueble_terms
 from ..renta_inmueble_source import (
     RentaInmuebleOccurrence,
     RentaInmuebleOccurrences,
@@ -47,6 +51,7 @@ from .renta_inmueble_support import (
     monthly_rent,
     profile_facts,
     rent,
+    with_fields,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -72,12 +77,23 @@ def _concepts(year: int) -> GastoCapitalInmobiliarioCatalogue:
     return resolve_gasto_capital_inmobiliario_catalogue(effective_date=date(year, 12, 31))
 
 
+def _terms(year: int) -> RentaInmuebleTerms:
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_renta_inmueble_terms(
+            modelo="100",
+            revision_id=revision_selected_for("100", year, "0A").id,
+            devengo=date(year, 12, 31),
+            operation=operation,
+        )
+
+
 def _build(year: int, inmuebles, leases, rows) -> RentaInmuebleOccurrences:
     return renta_inmueble_occurrences(
         path_values=profile_facts(tuple(inmuebles), tuple(leases)),
         transactions=tuple(rows),
         ejercicio=year,
         concepts=_concepts(year),
+        terms=_terms(year),
     )
 
 
@@ -126,7 +142,16 @@ def test_one_property_let_all_year_states_its_rent_expenses_and_days() -> None:
     assert occurrence.column(RentaInmuebleRowField.RUSTICA) is None
     assert occurrence.column(RentaInmuebleRowField.PORCENTAJE_PROPIEDAD) == Decimal(100)
     assert occurrence.column(RentaInmuebleRowField.FECHA_TRANSMISION) is None
-    assert _causes(built) == {RentaInmuebleCause.NET_CHAIN_PENDING, RentaInmuebleCause.BOXES_NOT_OFFERED}
+    # The fixture states no acquisition cost, nothing about what earlier years left pending, and
+    # not whether its contract signed after May 2023 lies in a stressed-market zone; each withholds
+    # the net chain.
+    assert _causes(built) == {
+        RentaInmuebleCause.BOXES_NOT_OFFERED,
+        RentaInmuebleCause.ACQUISITION_COST_UNSTATED,
+        RentaInmuebleCause.PENDING_EXPENSES_UNSTATED,
+        RentaInmuebleCause.REDUCTION_FACT_UNSTATED,
+    }
+    assert occurrence.column(RentaInmuebleRowField.RENDIMIENTO_NETO) is None
 
 
 def test_a_part_year_lease_counts_its_days_and_prorates_the_expenses_by_them() -> None:
@@ -225,14 +250,19 @@ def test_properties_are_ordered_by_row_key_and_one_not_held_is_absent() -> None:
     assert [occurrence.index for occurrence in built.occurrences] == [1, 2]
 
 
+def _fields(value: object) -> dict[str, object]:
+    assert isinstance(value, dict)
+    return {str(key): item for key, item in value.items()}
+
+
 def _refusal(year: int, **changes: object) -> set[RentaInmuebleCause]:
     property_fields = changes.pop("inmueble_fields", {})
     lease_fields = changes.pop("lease_fields", {})
     rows = changes.pop("rows", monthly_rent(year, amount=_RENT))
     built = _build(
         year,
-        [inmueble(ejercicio=year, **property_fields)],
-        [lease(start=date(year - 1, 9, 1), **lease_fields)],
+        [with_fields(inmueble(ejercicio=year), _fields(property_fields))],
+        [with_fields(lease(start=date(year - 1, 9, 1)), _fields(lease_fields))],
         rows,
     )
     assert built.refused
@@ -310,7 +340,11 @@ def test_an_unreadable_property_row_refuses_without_echoing_its_value() -> None:
     facts = profile_facts((inmueble(ejercicio=year),), (lease(start=date(year - 1, 9, 1)),))
     facts["renta_inmueble.0.fecha_adquisicion"] = "not-a-date"
     built = renta_inmueble_occurrences(
-        path_values=facts, transactions=monthly_rent(year, amount=_RENT), ejercicio=year, concepts=_concepts(year)
+        path_values=facts,
+        transactions=monthly_rent(year, amount=_RENT),
+        ejercicio=year,
+        concepts=_concepts(year),
+        terms=_terms(year),
     )
 
     assert built.refused
@@ -406,7 +440,8 @@ def test_a_property_held_but_not_let_states_no_rent_and_no_days() -> None:
     assert occurrence.ingresos is None
     assert occurrence.column(RentaInmuebleRowField.DIAS_ARRENDADO) is None
     assert occurrence.column(RentaInmuebleRowField.ARRENDADO) is None
-    assert RentaInmuebleCause.NET_CHAIN_PENDING not in _causes(built)
+    assert occurrence.net is None
+    assert RentaInmuebleCause.PENDING_EXPENSES_UNSTATED not in _causes(built)
 
 
 def test_every_supported_year_counts_its_own_days() -> None:

@@ -71,7 +71,14 @@ class RentaInmuebleCause(StrEnum):
     IMPROVEMENT_IN_EJERCICIO = "improvement_in_ejercicio"
     HELD_PART_OF_EJERCICIO = "held_part_of_ejercicio"
     DAYS_NOT_LET = "days_not_let"
-    NET_CHAIN_PENDING = "net_chain_pending"
+    ACQUISITION_COST_UNSTATED = "acquisition_cost_unstated"
+    CADASTRAL_VALUES_UNSTATED = "cadastral_values_unstated"
+    CUMULATIVE_AMORTISATION_UNSTATED = "cumulative_amortisation_unstated"
+    PENDING_EXPENSES_UNSTATED = "pending_expenses_unstated"
+    REDUCTION_FACT_UNSTATED = "reduction_fact_unstated"
+    REDUCTION_TENANTS_MIXED = "reduction_tenants_mixed"
+    WITHHOLDING_PAYER_NO_TENANT = "withholding_payer_no_tenant"
+    WITHHOLDING_PAYER_SEVERAL_PROPERTIES = "withholding_payer_several_properties"
     BOXES_NOT_OFFERED = "boxes_not_offered"
 
 
@@ -210,11 +217,51 @@ _CAUSE_TERMS: Final[dict[RentaInmuebleCause, tuple[RentaInmuebleFindingKind, Ren
         RentaInmuebleDoor.ARRENDAMIENTO_ADD,
         "the property was held on days it was not let, and the imputed income of those days is not computed",
     ),
-    RentaInmuebleCause.NET_CHAIN_PENDING: (
+    RentaInmuebleCause.ACQUISITION_COST_UNSTATED: (
+        _BLOCKING,
+        RentaInmuebleDoor.INMUEBLE_EDIT,
+        "the let property does not state its acquisition amount and acquisition expenses, "
+        "so its building amortisation is not computed",
+    ),
+    RentaInmuebleCause.CADASTRAL_VALUES_UNSTATED: (
+        _BLOCKING,
+        RentaInmuebleDoor.INMUEBLE_EDIT,
+        "the let property states neither its land value nor the ejercicio's cadastral values, "
+        "so the land cannot be excluded from its amortisation base",
+    ),
+    RentaInmuebleCause.CUMULATIVE_AMORTISATION_UNSTATED: (
+        _BLOCKING,
+        RentaInmuebleDoor.INMUEBLE_EDIT,
+        "the amortisation of the let property may reach its acquisition value, and the cumulative "
+        "amortisation at the first day of the ejercicio is not stated",
+    ),
+    RentaInmuebleCause.PENDING_EXPENSES_UNSTATED: (
         _BLOCKING,
         None,
-        "the building amortisation, the interest-and-repair limit and its carry, the withholding, "
-        "the net yield and its reduction are not computed for the property yet",
+        "the interest and repair expenses of earlier ejercicios still pending on the let property are "
+        "not stated, and no earlier return the application holds states them",
+    ),
+    RentaInmuebleCause.REDUCTION_FACT_UNSTATED: (
+        _BLOCKING,
+        RentaInmuebleDoor.ARRENDAMIENTO_EDIT,
+        "a lease does not state whether it is for a dwelling, whether the dwelling is in a tensioned "
+        "zone or whether it keeps art. 17.6 LAU, so the art. 23.2 reduction is not computed",
+    ),
+    RentaInmuebleCause.REDUCTION_TENANTS_MIXED: (
+        _BLOCKING,
+        RentaInmuebleDoor.ARRENDAMIENTO_EDIT,
+        "only some tenants of a lease qualify for the art. 23.2 reduction by age, which is not computed",
+    ),
+    RentaInmuebleCause.WITHHOLDING_PAYER_NO_TENANT: (
+        _BLOCKING,
+        RentaInmuebleDoor.ARRENDAMIENTO_EDIT,
+        "a withholding on urban rent names a payer who is not a tenant of any lease of the ejercicio",
+    ),
+    RentaInmuebleCause.WITHHOLDING_PAYER_SEVERAL_PROPERTIES: (
+        _BLOCKING,
+        RentaInmuebleDoor.ARRENDAMIENTO_EDIT,
+        "a withholding on urban rent names a payer who is a tenant of more than one property, "
+        "so the property it belongs to is unknown",
     ),
     RentaInmuebleCause.BOXES_NOT_OFFERED: (
         _LIMITATION,

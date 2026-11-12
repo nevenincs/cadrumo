@@ -203,8 +203,8 @@ def _record_renta_inmueble_row_consumers(
 ) -> None:
     """Index the property columns the ``renta_inmueble`` resolver carries into calculation.
 
-    Every column of the family is a row column, so each binding earns the row
-    consumer the resolver's indexed values and source identities satisfy.
+    Each row column earns the row consumer the resolver's indexed values and
+    source identities satisfy; a column total keeps its own consumers.
     """
     from .binding_selector_utils import provider_member
     from .renta_inmueble_bindings import RentaInmuebleProvider
@@ -212,6 +212,8 @@ def _record_renta_inmueble_row_consumers(
     for binding in revision.bindings:
         if binding.source is BindingSourceKind.RENTA_INMUEBLE:
             provider = provider_member(binding, RentaInmuebleProvider)
+            if provider.fact != "row_field":
+                continue
             record(
                 binding.id, BindingConsumerKind.APPLICATION_ROW_VALUE, f"renta_inmueble_row_values.{provider.row_field}"
             )

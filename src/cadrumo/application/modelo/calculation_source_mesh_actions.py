@@ -585,7 +585,12 @@ def _resolve_ledger_income_families(
                 transaction_repository=memoized_transaction_repository,
             )
         ),
-        resolve_declared(RentaInmuebleSourceResolver(transaction_repository=memoized_transaction_repository)),
+        resolve_declared(
+            RentaInmuebleSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+                retencion_soportada_ports=ports.retencion_soportada_ports,
+            )
+        ),
     )
 
 

@@ -587,10 +587,11 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         validate_renta_inmueble_binding,
         # A property's identification comes from its profile row and its rent and
         # expenses from the ledger rows linked to it, so both terminal classes occur.
-        channels=_ROW_CHANNELS,
-        ops=_ROW_OPS,
+        # The results boxes the rows account for are the totals of their columns.
+        channels=_MONEY_CHANNELS | _ROW_CHANNELS,
+        ops=LEDGER_AGGREGATION_OPS | _ROW_OPS,
         origins=frozenset({TerminalOriginClass.PROFILE_FIELD, TerminalOriginClass.LEDGER_AGGREGATE}),
-        output="rows",
+        output="scalar_and_rows",
         resolver_id="renta_inmueble",
         stage="mesh",
     ),

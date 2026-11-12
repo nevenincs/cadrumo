@@ -6,6 +6,9 @@ family names the box its column fills and the column it reads; the revision's
 own declarations say which box receives which column, so no box number lives in
 code and each edition answers for itself.
 
+A total binding sums one column over every occurrence, for a box of the
+results that the rows account for; it names the column's own box.
+
 The columns themselves -- what one property states -- belong to the source that
 builds the occurrences. This module checks the shape of a declaration and lists
 the columns a revision declares; the source refuses a column name it does not
@@ -42,14 +45,15 @@ def _row_field_token(value: str) -> str:
 
 
 class RentaInmuebleProvider(BaseModel):
-    """Validated form of a ``renta_inmueble`` binding selector: one column of a property's row."""
+    """Validated form of a ``renta_inmueble`` binding selector: one column of a property's row, or its total."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal[BindingSourceKind.RENTA_INMUEBLE] = BindingSourceKind.RENTA_INMUEBLE
     modelo: Annotated[str, AfterValidator(form_role_validator("renta.annual"))]
     period: Literal["0A"] = "0A"
-    fact: Literal["row_field"] = "row_field"
+    fact: Literal["row_field", "total"] = "row_field"
+    """``row_field`` places the column on every row; ``total`` sums it over every row."""
     record: Literal["inmueble"] = "inmueble"
     grouping: Literal["per_inmueble"] = "per_inmueble"
     row_field: Annotated[str, AfterValidator(_row_field_token)] = Field(min_length=1, max_length=64)
@@ -61,9 +65,10 @@ class RentaInmuebleProvider(BaseModel):
 
 
 def _validate_definition(binding: BindingDefinition) -> None:
-    ledger_binding_selector(binding, BindingSourceKind.RENTA_INMUEBLE, RentaInmuebleProvider)
-    if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
-        raise RegistryValidationError(f"binding {binding.id!r} requires aggregation op 'rows'")
+    selector = ledger_binding_selector(binding, BindingSourceKind.RENTA_INMUEBLE, RentaInmuebleProvider)
+    expected = BindingAggregationOp.SUM if selector.fact == "total" else BindingAggregationOp.ROWS
+    if binding_aggregation_op(binding) is not expected:
+        raise RegistryValidationError(f"binding {binding.id!r} requires aggregation op {expected.value!r}")
 
 
 def validate_renta_inmueble_binding(binding: BindingDefinition) -> list[str]:
@@ -75,8 +80,7 @@ def validate_renta_inmueble_binding(binding: BindingDefinition) -> list[str]:
     return ledger_binding_build_diagnostics(binding, RentaInmuebleProvider, _validate_definition)
 
 
-def renta_inmueble_columns(revision: ModeloRevision) -> tuple[tuple[BindingDefinition, RentaInmuebleProvider], ...]:
-    """Return every ``renta_inmueble`` column this :class:`ModeloRevision` declares, in declaration order."""
+def _declared(revision: ModeloRevision) -> tuple[tuple[BindingDefinition, RentaInmuebleProvider], ...]:
     return tuple(
         (binding, provider_member(binding, RentaInmuebleProvider))
         for binding in revision.bindings
@@ -84,8 +88,19 @@ def renta_inmueble_columns(revision: ModeloRevision) -> tuple[tuple[BindingDefin
     )
 
 
+def renta_inmueble_columns(revision: ModeloRevision) -> tuple[tuple[BindingDefinition, RentaInmuebleProvider], ...]:
+    """Return every ``renta_inmueble`` row column this :class:`ModeloRevision` declares, in declaration order."""
+    return tuple(item for item in _declared(revision) if item[1].fact == "row_field")
+
+
+def renta_inmueble_totals(revision: ModeloRevision) -> tuple[tuple[BindingDefinition, RentaInmuebleProvider], ...]:
+    """Return every ``renta_inmueble`` column total this :class:`ModeloRevision` declares, in declaration order."""
+    return tuple(item for item in _declared(revision) if item[1].fact == "total")
+
+
 __all__ = [
     "RentaInmuebleProvider",
     "renta_inmueble_columns",
+    "renta_inmueble_totals",
     "validate_renta_inmueble_binding",
 ]

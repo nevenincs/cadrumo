@@ -14,6 +14,11 @@ of the ejercicio. The taxpayer's ownership share is applied last, only where
 the rows hold whole-property amounts, and each figure is rounded once to the
 cent.
 
+A let property's net yield, its art. 23.2 reduction and the withholding its
+tenants suffered on it come from the chain in ``renta_inmueble_net``; a
+withholding on urban rent is placed on the property whose lease names its payer
+as a tenant.
+
 A join that cannot be made or a fact that is not stated is a typed finding with
 the command that settles it; it is never read as zero. An occurrence is ordered
 by its property's row key, which the profile never reuses.
@@ -30,6 +35,7 @@ from typing import Final
 
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.money.rounding import round_to_cents
+from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.calculations.registry.gasto_capital_inmobiliario import GastoCapitalInmobiliarioCatalogue
 from ...domain.contribuyente.arrendamiento_record import ArrendamientoRecord
 from ...domain.contribuyente.inmueble_facts import (
@@ -48,13 +54,16 @@ from ...domain.contribuyente.inmueble_record import (
     TitularidadRegimen,
     TitularRole,
 )
+from ...domain.renta.retencion_soportada import RetencionSoportadaRecord
 from ...domain.transactions.dates import transaction_filing_date
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from .renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFinding, RentaInmuebleFindingKind
+from .renta_inmueble_net import RentaInmuebleNet, RentaInmuebleNetInputs, RentaInmuebleTerms, renta_inmueble_net
 
 _HUNDRED: Final = Decimal(100)
+_ZERO: Final = Decimal(0)
 
 
 class RentaInmuebleRowField(StrEnum):
@@ -81,6 +90,23 @@ class RentaInmuebleRowField(StrEnum):
     ADQUISICION_LUCRATIVA = "adquisicion_lucrativa"
     FECHA_ADQUISICION = "fecha_adquisicion"
     FECHA_TRANSMISION = "fecha_transmision"
+    VALOR_CATASTRAL = "valor_catastral"
+    VALOR_CATASTRAL_CONSTRUCCION = "valor_catastral_construccion"
+    PORCENTAJE_CONSTRUCCION = "porcentaje_construccion"
+    IMPORTE_ADQUISICION = "importe_adquisicion"
+    GASTOS_ADQUISICION = "gastos_adquisicion"
+    MEJORAS_ANTERIORES = "mejoras_anteriores"
+    MEJORAS_EJERCICIO = "mejoras_ejercicio"
+    BASE_AMORTIZACION = "base_amortizacion"
+    AMORTIZACION = "amortizacion"
+    GASTOS_PENDIENTES_APLICADOS = "gastos_pendientes_aplicados"
+    INTERESES_REPARACION_APLICADOS = "intereses_reparacion_aplicados"
+    INTERESES_REPARACION_PENDIENTES = "intereses_reparacion_pendientes"
+    RENDIMIENTO_NETO = "rendimiento_neto"
+    REDUCCION_APLICABLE = "reduccion_aplicable"
+    REDUCCION = "reduccion"
+    RETENCIONES = "retenciones"
+    RENDIMIENTO_NETO_REDUCIDO = "rendimiento_neto_reducido"
 
 
 type RentaInmuebleColumnValue = str | Decimal | int | bool
@@ -116,6 +142,10 @@ class RentaInmuebleOccurrence:
     """The taxpayer's part of each prorated expense, keyed by its concept token."""
     transaction_ids: tuple[str, ...]
     findings: tuple[RentaInmuebleFinding, ...]
+    net: RentaInmuebleNet | None = None
+    """The chain from the gross income to the reduced net yield, or ``None`` when the property was not let."""
+    withholding: tuple[RetencionSoportadaRecord, ...] = ()
+    """The suffered-withholding records placed on this property."""
 
     @property
     def source_identity(self) -> str:
@@ -132,6 +162,8 @@ class RentaInmuebleOccurrence:
             return self._lease_column(row_field)
         if row_field in _AMOUNT_COLUMNS:
             return self._amount_column(row_field)
+        if row_field in _NET_COLUMNS:
+            return None if self.net is None else _NET_COLUMNS[row_field](self.net)
         return self._identification_column(row_field)
 
     def _identification_column(self, row_field: RentaInmuebleRowField) -> RentaInmuebleColumnValue | None:
@@ -206,6 +238,40 @@ _AMOUNT_COLUMNS: Final = frozenset(
         RentaInmuebleRowField.DIAS_ARRENDADO_AMORTIZACION,
     }
 )
+_NET_COLUMNS: Final[dict[RentaInmuebleRowField, Callable[[RentaInmuebleNet], RentaInmuebleColumnValue | None]]] = {
+    RentaInmuebleRowField.VALOR_CATASTRAL: lambda net: net.valor_catastral,
+    RentaInmuebleRowField.VALOR_CATASTRAL_CONSTRUCCION: lambda net: net.valor_catastral_construccion,
+    RentaInmuebleRowField.PORCENTAJE_CONSTRUCCION: lambda net: net.porcentaje_construccion,
+    RentaInmuebleRowField.IMPORTE_ADQUISICION: lambda net: net.importe_adquisicion,
+    RentaInmuebleRowField.GASTOS_ADQUISICION: lambda net: net.gastos_adquisicion,
+    RentaInmuebleRowField.MEJORAS_ANTERIORES: lambda net: net.mejoras_anteriores,
+    RentaInmuebleRowField.MEJORAS_EJERCICIO: lambda net: net.mejoras_ejercicio,
+    RentaInmuebleRowField.BASE_AMORTIZACION: lambda net: net.base_amortizacion,
+    RentaInmuebleRowField.AMORTIZACION: lambda net: net.amortizacion,
+    RentaInmuebleRowField.GASTOS_PENDIENTES_APLICADOS: lambda net: net.gastos_pendientes_aplicados,
+    RentaInmuebleRowField.INTERESES_REPARACION_APLICADOS: lambda net: net.intereses_reparacion_aplicados,
+    RentaInmuebleRowField.INTERESES_REPARACION_PENDIENTES: lambda net: net.intereses_reparacion_pendientes,
+    RentaInmuebleRowField.RENDIMIENTO_NETO: lambda net: net.rendimiento_neto,
+    RentaInmuebleRowField.REDUCCION_APLICABLE: lambda net: net.reduccion_aplicable,
+    RentaInmuebleRowField.REDUCCION: lambda net: net.reduccion,
+    RentaInmuebleRowField.RETENCIONES: lambda net: net.retenciones,
+    RentaInmuebleRowField.RENDIMIENTO_NETO_REDUCIDO: lambda net: net.rendimiento_neto_reducido,
+}
+"""Each column the net chain states, read from the occurrence's chain."""
+SUMMABLE_COLUMNS: Final = frozenset(
+    {
+        RentaInmuebleRowField.INGRESOS_INTEGROS,
+        RentaInmuebleRowField.AMORTIZACION,
+        RentaInmuebleRowField.GASTOS_PENDIENTES_APLICADOS,
+        RentaInmuebleRowField.INTERESES_REPARACION_APLICADOS,
+        RentaInmuebleRowField.INTERESES_REPARACION_PENDIENTES,
+        RentaInmuebleRowField.RENDIMIENTO_NETO,
+        RentaInmuebleRowField.REDUCCION,
+        RentaInmuebleRowField.RETENCIONES,
+        RentaInmuebleRowField.RENDIMIENTO_NETO_REDUCIDO,
+    }
+)
+"""The amount columns a results box may total over the let properties."""
 GASTO_COLUMN_PREFIX: Final = "gasto_"
 """The prefix of an expense column, followed by the concept token whose rows it states."""
 
@@ -296,6 +362,8 @@ class _Links:
     """Rent rows by lease row key."""
     expenses: dict[int, list[Transaction]] = field(default_factory=dict)
     """Expense rows by property row key."""
+    prior_improvements: dict[int, list[Transaction]] = field(default_factory=dict)
+    """Rows of a capitalised concept dated before the ejercicio, by property row key."""
     findings: list[RentaInmuebleFinding] = field(default_factory=list)
 
     def refuse(self, cause: RentaInmuebleCause, row: Transaction) -> None:
@@ -332,6 +400,18 @@ def _link_expense(
     links.expenses.setdefault(key, []).append(row)
 
 
+def _link_prior_improvement(
+    row: Transaction, records: _Records, links: _Links, concepts: GastoCapitalInmobiliarioCatalogue
+) -> None:
+    """Keep an earlier ejercicio's improvement, which joins the amortisation base; other earlier rows are past."""
+    key = None if row.inmueble_ref is None else _row_key(row.inmueble_ref)
+    token = row.gasto_capital_inmobiliario
+    if key is None or key not in records.inmuebles or token is None or token not in concepts.all_tokens:
+        return
+    if row.direction is TransactionDirection.OUTGOING and concepts.concept_for(token).capitalised:
+        links.prior_improvements.setdefault(key, []).append(row)
+
+
 def _link_rows(
     transactions: Iterable[Transaction],
     records: _Records,
@@ -340,7 +420,12 @@ def _link_rows(
 ) -> _Links:
     links = _Links()
     for row in sorted(transactions, key=lambda item: item.transaction_id):
-        if not _counts(row) or not ejercicio.covers(row_due_date(row)):
+        if not _counts(row):
+            continue
+        if row_due_date(row) < ejercicio.first:
+            _link_prior_improvement(row, records, links, concepts)
+            continue
+        if not ejercicio.covers(row_due_date(row)):
             continue
         if is_non_eur_without_conversion(row):
             links.refuse(RentaInmuebleCause.CURRENCY_UNCONVERTED, row)
@@ -371,6 +456,8 @@ class _Occupancy:
     days_held: int
     days_let: int
     concurrent: bool
+    lease_days: Mapping[int, int]
+    """The days each active lease covers, by its row key."""
 
 
 def _occupancy(leases: Iterable[ArrendamientoRecord], held: tuple[date, date]) -> _Occupancy:
@@ -385,6 +472,7 @@ def _occupancy(leases: Iterable[ArrendamientoRecord], held: tuple[date, date]) -
         days_held=(held[1] - held[0]).days + 1,
         days_let=len(let_days),
         concurrent=sum(len(days) for _lease, days in active) > len(let_days),
+        lease_days={lease.clave: len(days) for lease, days in active},
     )
 
 
@@ -432,7 +520,7 @@ def _occupancy_findings(occupancy: _Occupancy, ejercicio: _Ejercicio) -> list[Re
     if len(occupancy.leases) > 1:
         causes.append(RentaInmuebleCause.SEVERAL_LEASES)
     if occupancy.leases:
-        causes.extend((RentaInmuebleCause.NET_CHAIN_PENDING, RentaInmuebleCause.BOXES_NOT_OFFERED))
+        causes.append(RentaInmuebleCause.BOXES_NOT_OFFERED)
     return causes
 
 
@@ -472,6 +560,8 @@ class _OccurrenceInputs:
     """The property's deductible expense rows, by concept token."""
     improvements: tuple[Transaction, ...]
     """The property's rows of a capitalised concept dated in the ejercicio."""
+    prior_improvements: tuple[Transaction, ...]
+    """The property's rows of a capitalised concept dated before the ejercicio."""
 
 
 def _occurrence_findings(inputs: _OccurrenceInputs, ejercicio: _Ejercicio) -> list[RentaInmuebleFinding]:
@@ -525,7 +615,8 @@ def _figures(
         concept: round_to_cents(_total(rows) * fraction * share) for concept, rows in sorted(inputs.expenses.items())
     }
     expense_rows = [row for rows in inputs.expenses.values() for row in rows]
-    read = sorted(row.transaction_id for row in (*income_rows, *expense_rows))
+    capitalised = (*inputs.improvements, *inputs.prior_improvements)
+    read = sorted(row.transaction_id for row in (*income_rows, *expense_rows, *capitalised))
     return round_to_cents(_total(income_rows) * share), gastos, tuple(read)
 
 
@@ -546,6 +637,7 @@ def _occurrence_inputs(
         income={lease.clave: links.income.get(lease.clave, []) for lease in leases},
         expenses=expenses,
         improvements=improvements,
+        prior_improvements=tuple(links.prior_improvements.get(record.clave, [])),
     )
 
 
@@ -558,20 +650,109 @@ def _is_held(record: InmuebleRecord, ejercicio: _Ejercicio) -> bool:
     return record.fecha_adquisicion is None or _held_interval(record, ejercicio) is not None
 
 
+def _lease_figures(inputs: _OccurrenceInputs) -> dict[int, Decimal]:
+    """Return the taxpayer's part of each active lease's rent."""
+    if inputs.occupancy is None:
+        return {}
+    share = _share(inputs.record)
+    return {
+        lease.clave: round_to_cents(_total(inputs.income.get(lease.clave, [])) * share)
+        for lease in inputs.occupancy.leases
+    }
+
+
+def _net(
+    inputs: _OccurrenceInputs,
+    ejercicio: _Ejercicio,
+    figures: tuple[Decimal | None, dict[str, Decimal]],
+    withholding: tuple[RetencionSoportadaRecord, ...],
+    rules: tuple[RentaInmuebleTerms, GastoCapitalInmobiliarioCatalogue],
+) -> RentaInmuebleNet | None:
+    occupancy, (ingresos, gastos) = inputs.occupancy, figures
+    if occupancy is None or not occupancy.leases or ingresos is None:
+        return None
+    share = _share(inputs.record)
+    terms, concepts = rules
+    return renta_inmueble_net(
+        RentaInmuebleNetInputs(
+            record=inputs.record,
+            leases=occupancy.leases,
+            ejercicio_first=ejercicio.first,
+            ejercicio_last=ejercicio.last,
+            days_let=occupancy.days_let,
+            lease_days=occupancy.lease_days,
+            ingresos=ingresos,
+            lease_ingresos=_lease_figures(inputs),
+            gastos=gastos,
+            improvements_before=_total(inputs.prior_improvements) * share,
+            improvements_in=_total(inputs.improvements) * share,
+            withholding=withholding,
+            pendiente=_ZERO if _acquired_within(inputs.record, ejercicio) else None,
+        ),
+        terms=terms,
+        concepts=concepts,
+    )
+
+
+def _acquired_within(record: InmuebleRecord, ejercicio: _Ejercicio) -> bool:
+    """Report whether the property was acquired inside the ejercicio, so no earlier year left it anything pending.
+
+    Otherwise what earlier ejercicios left pending is unknown: no earlier return
+    or attestation is read here, so the net chain stops short of the net yield.
+    """
+    return record.fecha_adquisicion is not None and record.fecha_adquisicion >= ejercicio.first
+
+
+def _tenant_key(identifier: str) -> str:
+    return identifier.strip().upper()
+
+
+def _place_withholding(
+    records: Iterable[RetencionSoportadaRecord], occupied: Mapping[int, _Occupancy | None]
+) -> tuple[dict[int, tuple[RetencionSoportadaRecord, ...]], list[RentaInmuebleFinding]]:
+    """Place each urban-rent withholding on the let property whose lease names its payer as a tenant."""
+    tenants: dict[str, set[int]] = {}
+    for clave, occupancy in occupied.items():
+        for lease in () if occupancy is None else occupancy.leases:
+            for tenant in lease.inquilinos:
+                tenants.setdefault(_tenant_key(tenant.nif), set()).add(clave)
+    placed: dict[int, list[RetencionSoportadaRecord]] = {}
+    findings: list[RentaInmuebleFinding] = []
+    for record in records:
+        if record.income_class is not RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO:
+            continue
+        properties = tenants.get(_tenant_key(record.payer_tax_id), set())
+        if len(properties) == 1:
+            placed.setdefault(next(iter(properties)), []).append(record)
+            continue
+        cause = (
+            RentaInmuebleCause.WITHHOLDING_PAYER_NO_TENANT
+            if not properties
+            else RentaInmuebleCause.WITHHOLDING_PAYER_SEVERAL_PROPERTIES
+        )
+        findings.append(RentaInmuebleFinding(cause, f"retencion:{record.payer_ref}"))
+    return {clave: tuple(items) for clave, items in placed.items()}, findings
+
+
 def renta_inmueble_occurrences(
     *,
     path_values: Mapping[str, object],
     transactions: Iterable[Transaction],
     ejercicio: int,
     concepts: GastoCapitalInmobiliarioCatalogue,
+    terms: RentaInmuebleTerms,
+    withholding: Iterable[RetencionSoportadaRecord] = (),
 ) -> RentaInmuebleOccurrences:
     """Build one occurrence per property held on at least one day of ``ejercicio``, in row-key order.
 
     Args:
         path_values: The profile's stated facts by path.
-        transactions: Every ledger row of the profile; rows dated outside the ejercicio are ignored.
+        transactions: Every ledger row of the profile; rows dated outside the ejercicio are ignored,
+            except an earlier improvement, which joins the amortisation base.
         ejercicio: The calendar year the return declares.
         concepts: The rental-expense concept vocabulary in force for the ejercicio.
+        terms: The dated registry data of the net chain.
+        withholding: The ejercicio's suffered-withholding records, of every income class.
 
     Returns:
         The occurrences and every finding, those of a property and those no property owns.
@@ -580,24 +761,33 @@ def renta_inmueble_occurrences(
     records = _read_records(path_values)
     links = _link_rows(transactions, records, period, concepts)
     findings: list[RentaInmuebleFinding] = [*records.findings, *links.findings]
+    held = {
+        clave: _occurrence_inputs(record, records, links, period, concepts)
+        for clave, record in sorted(records.inmuebles.items())
+        if _is_held(record, period)
+    }
+    placed, unplaced = _place_withholding(withholding, {clave: inputs.occupancy for clave, inputs in held.items()})
+    findings.extend(unplaced)
     occurrences: list[RentaInmuebleOccurrence] = []
-    for _clave, record in sorted(records.inmuebles.items()):
-        if not _is_held(record, period):
-            continue
-        inputs = _occurrence_inputs(record, records, links, period, concepts)
-        own = tuple(_occurrence_findings(inputs, period))
+    for clave, inputs in held.items():
+        own = _occurrence_findings(inputs, period)
         ingresos, gastos, read = _figures(inputs, period)
+        net = _net(inputs, period, (ingresos, gastos), placed.get(clave, ()), (terms, concepts))
+        if net is not None:
+            own.extend(RentaInmuebleFinding(cause, f"inmueble:{clave}") for cause in net.causes)
         occurrences.append(
             RentaInmuebleOccurrence(
                 index=len(occurrences) + 1,
-                inmueble=record,
+                inmueble=inputs.record,
                 leases=() if inputs.occupancy is None else inputs.occupancy.leases,
                 ejercicio_last=period.last,
                 dias_arrendado=0 if inputs.occupancy is None else inputs.occupancy.days_let,
                 ingresos=ingresos,
                 gastos=gastos,
                 transaction_ids=read,
-                findings=own,
+                findings=tuple(own),
+                net=net,
+                withholding=placed.get(clave, ()),
             )
         )
         findings.extend(own)
@@ -607,6 +797,7 @@ def renta_inmueble_occurrences(
 __all__ = [
     "GASTO_COLUMN_PREFIX",
     "NUMBERED_TENANTS",
+    "SUMMABLE_COLUMNS",
     "RentaInmuebleColumnValue",
     "RentaInmuebleOccurrence",
     "RentaInmuebleOccurrences",

@@ -94,7 +94,6 @@ from .profile_derived_facts import (
     snapshot_authored_year,
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
-from .profile_rental_reduction import inject_derived_rental_reduction_facts
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
@@ -348,8 +347,6 @@ class _ProfileFacts:
     fingerprint: str | None
     decided_derived_paths: frozenset[str] = frozenset()
     """Derived paths an injector decided, including those it decided to leave absent."""
-    diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
-    """Diagnostics an injector raised while deciding its paths."""
 
 
 def _is_calculation_only_profile_binding(binding: BindingDefinition) -> bool:
@@ -488,19 +485,10 @@ def _load_profile_facts(
             effective_date=date(snapshot.filing_year, 1, 1),
             operation=operation,
         )
-    rental_reduction = inject_derived_rental_reduction_facts(
-        fact_index,
-        snapshot,
-        declared_selectors,
-        bucket_id=bucket_id,
-        resolver_id=_PROFILE_RESOLVER_ID,
-        operation=operation,
-    )
     return _ProfileFacts(
         fact_index=fact_index,
         fingerprint=profile_record_fingerprint,
-        decided_derived_paths=decided_derived_paths | frozenset(rental_reduction.decided_paths),
-        diagnostics=rental_reduction.diagnostics,
+        decided_derived_paths=decided_derived_paths,
     )
 
 
@@ -668,7 +656,6 @@ def resolve_profile_sourced_bindings(
         unresolved_binding_ids=tuple(binding.id for binding in unanswered_text_bindings),
         diagnostics=(
             *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
-            *facts.diagnostics,
             *derived_binding_diagnostics(
                 selection.bindings,
                 facts.fact_index,

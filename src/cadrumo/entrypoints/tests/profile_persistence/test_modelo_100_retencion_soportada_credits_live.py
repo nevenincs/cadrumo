@@ -56,6 +56,13 @@ from ....adapters.persistence.storage.secure_object_namespaces import LIVE_BORRA
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
+from ....application.aggregation.tests.renta_inmueble_support import (
+    TENANT_NIF,
+    inmueble,
+    lease,
+    profile_facts,
+    rent,
+)
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from ....application.live.borrador_100 import (
     Borrador100Snapshot,
@@ -86,6 +93,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.contribuyente.arrendamiento_record import Inquilino, InquilinoEdad
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -580,9 +588,9 @@ def test_activity_withholding_agreeing_with_the_borrador_and_without_payer_recor
 
 
 _ARRENDAMIENTO_CASILLA: CasillaId = validated_casilla_id("0598", surface="_ARRENDAMIENTO_CASILLA")
-_INMUEBLE_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("0153", surface="_INMUEBLE_RETENCIONES_CASILLA")
 _RENTAL_ACTIVITY_BINDING: BindingId = "renta-retencion-soportada-arrendamiento-actividad"
 # The tenant of a non-activity urban rental certifies 190,00 withheld.
+_TENANT_PAYER = "B22222222"
 _TENANT_RETENCION = Decimal("190.00")
 
 
@@ -591,38 +599,66 @@ def _seed_tenant(operation: PinnedAuthorityOperation) -> None:
         operation=operation,
         taxpayer_tax_id=_TAX_ID,
         ejercicio=_YEAR,
-        payer_tax_id="B22222222",
+        payer_tax_id=_TENANT_PAYER,
         income_class=RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO,
         retencion=_TENANT_RETENCION,
         importe_integro_dinerario=Decimal("1000.00"),
     )
 
 
+def _let_property(tenant_nif: str) -> tuple[UserProfileFact, ...]:
+    """A dwelling held all year and let since the year before to one tenant, as profile facts."""
+    let = lease(
+        start=date(_YEAR - 1, 9, 1),
+        inquilinos=(Inquilino(nif=tenant_nif, franja_edad=InquilinoEdad.OTRA, extranjero=False),),
+    )
+    facts = profile_facts((inmueble(ejercicio=_YEAR),), (let,))
+    return tuple(UserProfileFact(path=path, value=value) for path, value in facts.items())
+
+
 @pytest.mark.parametrize(
-    ("property_withholding", "disagrees"),
-    [(_TENANT_RETENCION, False), (Decimal("200.00"), True)],
-    ids=["agreeing", "disagreeing"],
+    ("tenant_nif", "placed"),
+    [(_TENANT_PAYER, _TENANT_RETENCION), (TENANT_NIF, Decimal("0.00"))],
+    ids=["the-certifying-payer-is-the-tenant", "the-certifying-payer-is-no-tenant"],
 )
 def test_the_property_withholding_in_0598_is_compared_with_the_tenants_certificates(
     secure_objects: SecureObjectRepository,
     *,
     operation: PinnedAuthorityOperation,
-    property_withholding: Decimal,
-    disagrees: bool,
+    tenant_nif: str,
+    placed: Decimal,
 ) -> None:
-    _seed_profile(income_categories="trabajo,actividad_economica,capital_inmobiliario")
+    """A certificate reaches 0153 through the lease that names its payer; one no lease names stays a disagreement."""
+    _seed_profile(
+        income_categories="trabajo,actividad_economica,capital_inmobiliario",
+        extra_facts=_let_property(tenant_nif),
+    )
     _seed_filed_history(secure_objects)
     _seed_work_payers(operation)
     _seed_tenant(operation)
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions(
+            tuple(
+                rent(
+                    f"rent-{month}",
+                    amount=Decimal("100.00"),
+                    booked=date(_YEAR, month, 1),
+                    business_classification=BusinessClassification.PERSONAL,
+                    lifecycle_state=TransactionLifecycleState.ACTIVE,
+                    classified_at=_T0,
+                    classified_by="manual",
+                )
+                for month in range(1, 13)
+            )
+        )
+    )
 
-    revision = _calculate(
-        secure_objects, operation=operation, casilla_inputs={_INMUEBLE_RETENCIONES_CASILLA: property_withholding}
-    ).revision
+    revision = _calculate(secure_objects, operation=operation).revision
 
     # The rental is not an activity (group 844), so its activity part is a proven zero.
-    assert Decimal(revision.casilla_values[_ARRENDAMIENTO_CASILLA]) == property_withholding
+    assert Decimal(revision.casilla_values[_ARRENDAMIENTO_CASILLA]) == placed
     disagreements = _credit_issues(revision, "credit_source_disagreement", _ARRENDAMIENTO_CASILLA)
-    if not disagrees:
+    if placed == _TENANT_RETENCION:
         assert not disagreements
         return
     (issue,) = disagreements
@@ -630,28 +666,12 @@ def test_the_property_withholding_in_0598_is_compared_with_the_tenants_certifica
     assert issue.disagreement is not None
     stated = {entry.role: (entry.source_ref, entry.value) for entry in issue.disagreement.sources}
     assert stated == {
-        SourceDisagreementRole.VALUE_SOURCE: ("casilla:0153", DisagreementDecimalValue.of(property_withholding)),
+        SourceDisagreementRole.VALUE_SOURCE: ("casilla:0153", DisagreementDecimalValue.of(placed)),
         SourceDisagreementRole.CROSS_CHECK: (
             "income_class:arrendamiento_inmueble_urbano",
             DisagreementDecimalValue.of(_TENANT_RETENCION),
         ),
     }
-
-
-def test_property_withholding_without_tenant_certificates_is_noted_as_not_cross_checked(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
-) -> None:
-    _seed_profile(income_categories="trabajo,actividad_economica,capital_inmobiliario")
-    _seed_filed_history(secure_objects)
-    _seed_work_payers(operation)
-
-    revision = _calculate(
-        secure_objects, operation=operation, casilla_inputs={_INMUEBLE_RETENCIONES_CASILLA: _TENANT_RETENCION}
-    ).revision
-
-    (absent,) = _credit_issues(revision, "credit_cross_check_absent", _ARRENDAMIENTO_CASILLA)
-    assert absent not in blocking_calculation_issues(revision)
-    assert not _credit_issues(revision, "credit_source_disagreement", _ARRENDAMIENTO_CASILLA)
 
 
 def test_a_declared_rental_activity_without_its_certificates_leaves_0598_unresolved(
