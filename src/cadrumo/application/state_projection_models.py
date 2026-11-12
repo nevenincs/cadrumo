@@ -259,6 +259,9 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.WITHHOLDING: "cli.app.modelo.bindings.readiness.retencion",
         BindingSourceKind.RETENCION_SOPORTADA: "cli.app.modelo.bindings.readiness.retencion_soportada",
         BindingSourceKind.CAPITAL_MOBILIARIO_POSITION: "cli.app.modelo.bindings.readiness.datos_libro",
+        BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION: (
+            "cli.app.modelo.bindings.readiness.aportacion_prevision_social"
+        ),
         BindingSourceKind.FOREIGN_ASSET: "cli.app.modelo.bindings.readiness.activo_extranjero",
         BindingSourceKind.ATRIBUCION_MEMBER: "cli.app.modelo.bindings.readiness.miembro_atribucion",
         BindingSourceKind.GASTO193_CONTRIBUTOR: "cli.app.modelo.bindings.readiness.gasto193_contribuyente",
@@ -305,6 +308,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.WITHHOLDING: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         BindingSourceKind.RETENCION_SOPORTADA: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         BindingSourceKind.CAPITAL_MOBILIARIO_POSITION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.FOREIGN_ASSET: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         BindingSourceKind.ATRIBUCION_MEMBER: OperatorActionAxis.SET_PROFILE_FACT,
         BindingSourceKind.GASTO193_CONTRIBUTOR: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,

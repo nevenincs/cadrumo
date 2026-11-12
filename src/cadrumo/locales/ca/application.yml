@@ -2248,6 +2248,16 @@ application:
         operació intracomunitària recull.
       possibly_durable_expense: El moviment del {row_date} per {row_amount} es dedueix
         com a despesa corrent i la seva descripció sembla la d'un element durador.
+      prevision_social_contribution_not_certified: No hi ha cap certificat d'aportacions
+        a sistemes de previsió social registrat per a aquest exercici, així que les
+        caselles d'aportacions no es calculen.
+      prevision_social_contribution_not_placed: 'Casella {box}: {count} registres
+        d''aportacions a sistemes de previsió social d''aquest exercici no arriben
+        a cap casella, i no has introduït cap casella d''aportacions.'
+      prevision_social_placement_inherited: 'Casella {box}: {amount} d''aportacions
+        a sistemes de previsió social només se situen segons els textos oficials d''un
+        exercici anterior, així que la comprovació, l''exportació i el registre esperen
+        que els textos d''aquest exercici ho confirmin.'
       prior_filing_unrecorded: Per calcular la casella {box}, registra el teu Modelo
         {modelo} de {year}.
       profile_fact_unrecorded: 'Per calcular la casella {box}, registra al teu perfil:

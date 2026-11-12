@@ -333,6 +333,12 @@ class BindingSourceKind(StrEnum):
     # not a ledger aggregation kind: the rows are read only through their position
     # link, and the activity aggregations exclude every linked row.
     CAPITAL_MOBILIARIO_POSITION = "capital_mobiliario_position"
+    # Contributions to social-welfare systems, from the taxpayer's contribution
+    # certificate records: each record's Modelo 345 clave and subclave reaches the
+    # Modelo 100 box the edition's placement rows give it. The boxes hold what the
+    # filer may also type, so the filer's own entry stays admissible beside the
+    # figure and a differing one is reported, never applied in silence.
+    PREVISION_SOCIAL_CONTRIBUTION = "prevision_social_contribution"
     # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
     # 104-105): the source that would materialise Modelo 303 casilla 44 / the
     # Modelo 390 annual regularización field from the provisional percentage

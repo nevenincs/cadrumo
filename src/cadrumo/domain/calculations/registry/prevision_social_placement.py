@@ -28,6 +28,8 @@ rest of the revision -- the casilla belongs to the edition, one row per key -- a
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable
+from datetime import date
 from typing import TYPE_CHECKING, Annotated, Final, Self
 
 from pydantic import BeforeValidator, Field, model_validator
@@ -42,6 +44,7 @@ from ....core.prevision_social import (
 )
 from .errors import RegistryValidationError
 from .schema_base import RegistryModel, SourceCitation, coerce_enum_member
+from .schema_references import source_window_applies_across
 
 if TYPE_CHECKING:
     from .schema import ModeloRevision
@@ -51,8 +54,12 @@ __all__ = [
     "PrevisionSocialPlacement",
     "PrevisionSocialPlacementKey",
     "placement_id",
+    "placement_texts_cover",
     "prevision_social_placement_revision_failures",
 ]
+
+type SourceWindow = Callable[[str], tuple[date | None, date | None]]
+"""Read one catalogued source's ``(applies_from, applies_to)`` window by its id."""
 
 DECLARABLE_REFUSALS: Final = frozenset(
     {PrevisionSocialPlacementRefusal.UNPLACED_CLAVE, PrevisionSocialPlacementRefusal.INDIRECT_MATCH}
@@ -175,3 +182,26 @@ def prevision_social_placement_revision_failures(revision: ModeloRevision) -> tu
                 "both same-plan answers and no unsplit row"
             )
     return tuple(failures)
+
+
+def placement_texts_cover(
+    row: PrevisionSocialPlacement,
+    *,
+    span_from: date,
+    span_to: date,
+    source_window: SourceWindow,
+) -> bool:
+    """Return whether every text ``row`` quotes applies to the ejercicio from ``span_from`` to ``span_to``.
+
+    A row declared for an earlier edition and inherited by a later one quotes the
+    earlier edition's texts. It still places the clave, but no text of the later
+    ejercicio says so, so a figure it places stops short of filing grade there.
+    """
+    cited = (row.design_citation, *(() if row.casilla_citation is None else (row.casilla_citation,)))
+    for citation in cited:
+        applies_from, applies_to = source_window(str(citation.source_ref))
+        if not source_window_applies_across(
+            applies_from=applies_from, applies_to=applies_to, span_from=span_from, span_to=span_to
+        ):
+            return False
+    return True

@@ -1,7 +1,8 @@
 """Registry-build validation of a revision's pension-contribution placements.
 
 Each row is checked against the rest of its revision (the placed casilla is one
-of the edition's casillas, one row per key) and against the bundled corpus: both
+of the edition's casillas, one row per key, and it is bound to exactly one binding
+of the contribution family) and against the bundled corpus: both
 quoted texts must be official layout evidence the catalogue declares, and each
 quotation must appear in its source.
 """
@@ -10,6 +11,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from cadrumo.domain.calculations.registry.prevision_social_contribution_bindings import (
+    prevision_social_contribution_revision_failures,
+)
 from cadrumo.domain.calculations.registry.prevision_social_placement import (
     prevision_social_placement_revision_failures,
 )
@@ -47,7 +51,13 @@ def validate_prevision_social_placement_section(
     evidence: EvidenceValidator,
 ) -> list[str]:
     """Return every placement refusal for one modelo revision."""
-    failures = [f"{prefix}: {failure}" for failure in prevision_social_placement_revision_failures(revision)]
+    failures = [
+        f"{prefix}: {failure}"
+        for failure in (
+            *prevision_social_placement_revision_failures(revision),
+            *prevision_social_contribution_revision_failures(revision),
+        )
+    ]
     for row in revision.prevision_social_placements:
         owner = f"prevision social placement {row.id}"
         failures.extend(

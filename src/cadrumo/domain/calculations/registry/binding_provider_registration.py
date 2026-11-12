@@ -109,6 +109,10 @@ from .m303_regimen_simplificado_annual_summary_bindings import (
     validate_m303_regimen_simplificado_annual_summary_binding,
 )
 from .manual_input_selector import ManualInputProvider, validate_manual_input_binding
+from .prevision_social_contribution_bindings import (
+    PrevisionSocialContributionProvider,
+    validate_prevision_social_contribution_binding,
+)
 from .profile_bindings import ProfileProvider, validate_profile_binding
 from .prorrata_register_activity_bindings import (
     ProrrataRegisterActivityProvider,
@@ -676,6 +680,20 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         ),
         output="scalar_and_rows",
         resolver_id="capital_mobiliario_position",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION,
+        PrevisionSocialContributionProvider,
+        validate_prevision_social_contribution_binding,
+        # Contributions to social-welfare systems, one record per certificate
+        # line: the issuer's certificate, placed in its box by the edition's
+        # placement rows. A box no record reaches is left to the filer.
+        channels=_MONEY_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}),
+        origins=frozenset({TerminalOriginClass.PAYER_CERTIFICATE}),
+        output="scalar",
+        resolver_id="prevision_social_contribution",
         stage="mesh",
     ),
     _filing_grade(

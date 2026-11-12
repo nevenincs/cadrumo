@@ -228,6 +228,35 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation
+  prevision_social_contribution:
+    errors:
+      certificate_not_in_custody: The certificate document this record cites is not
+        stored in your profile, so the record was not stored. Add the document first.
+      ejercicio_unsupported: This year is outside the years Cadrumo calculates, so
+        the pension contribution record was not stored.
+      identity_mismatch: The record's issuer, plan, key or year do not match the record
+        you asked to change, so nothing was stored.
+      stale_revision: The pension contribution record changed since you read it. Read
+        it again and repeat the change.
+    served:
+      beneficiary_out_of_scope: Contributions to your spouse's system or to the system
+        of a person with a disability are not calculated in this version. Enter the
+        box yourself as an operator value.
+      design_not_bundled: Cadrumo holds no Modelo 345 record design for this year,
+        so it places no pension contribution. Enter the contribution boxes yourself
+        as operator values.
+      indirect_match: A box of the reduction for pension contributions fits this Modelo
+        345 clave only by analogy, and no official text names it, so Cadrumo does
+        not file it there. Enter the box yourself as an operator value.
+      not_certified: No pension contribution certificate is recorded for this year,
+        so Cadrumo leaves the contribution boxes blank. Record each certificate, or
+        enter the boxes yourself as operator values.
+      same_plan_split_unstated: The box for this contribution depends on whether your
+        employer also contributed to the same plan, and the record does not say. State
+        it on the record, or enter the box yourself as an operator value.
+      unplaced_clave: No official text places this Modelo 345 clave and subclave in
+        a box of the reduction for pension contributions, so Cadrumo does not place
+        it. Enter the box yourself as an operator value.
   renta_ledger:
     errors:
       annual_period_required: An annual period is required for Renta totals from your

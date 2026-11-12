@@ -456,6 +456,8 @@ errors:
       sikerült menteni.
     canonical_persistence_degradation: A tárolási képesség nem tudta biztosítani a
       kért műveletet.
+    canonical_prevision_social_contribution_persistence: A nyugdíj-hozzájárulási rekordjaidat
+      nem sikerült beolvasni vagy menteni.
     canonical_retencion_observation_persistence: A forrásadó-levonási megfigyeléseket
       nem sikerült menteni.
     canonical_retencion_soportada_persistence: A kifizetőidtől származó levonási rekordokat
@@ -1479,6 +1481,10 @@ errors:
     pension_reduccion_total_contributions_not_positive: A nyugdíjterv összes befizetésének
       nullánál nagyobbnak kell lennie; te %{value} értéket adtál meg. Add meg az összes
       befizetés összegét.
+    prevision_social_contribution_revision_conflict: A hozzájárulási rekord megváltozott,
+      amióta elolvastad; olvasd be újra mentés előtt.
+    prevision_social_contribution_write_refused: A nyugdíj-hozzájárulási rekord nem
+      lett mentve.
     producer_capture_not_current: Egy termelői vetület megváltozott olvasás közben;
       rögzítsd újra.
     profile_access_administration_denied: A jelenlegi hozzáféréseddel a hozzáférési

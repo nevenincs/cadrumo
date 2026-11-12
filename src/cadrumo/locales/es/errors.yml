@@ -487,6 +487,8 @@ errors:
       de percepciones.
     canonical_persistence_degradation: La capacidad de persistencia no pudo proporcionar
       la operación solicitada.
+    canonical_prevision_social_contribution_persistence: No se pudieron leer ni guardar
+      tus registros de aportaciones a sistemas de previsión social.
     canonical_retencion_observation_persistence: No se pudieron guardar las observaciones
       de retenciones.
     canonical_retencion_soportada_persistence: No se pudieron leer ni guardar los
@@ -1570,6 +1572,10 @@ errors:
     pension_reduccion_total_contributions_not_positive: Las aportaciones totales al
       plan de pensiones deben ser mayores que cero; has indicado %{value}. Indica
       el total de todas las aportaciones.
+    prevision_social_contribution_revision_conflict: El registro de aportaciones cambió
+      desde que lo leíste; vuelve a leerlo antes de guardar.
+    prevision_social_contribution_write_refused: No se guardó el registro de aportaciones
+      a sistemas de previsión social.
     producer_capture_not_current: Una proyección de productor cambió mientras se leía;
       vuelve a capturarla.
     profile_access_administration_denied: Tu acceso actual no permite gestionar los

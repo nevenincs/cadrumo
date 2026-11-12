@@ -451,6 +451,8 @@ errors:
       be persisted.
     canonical_persistence_degradation: The persistence capability could not provide
       the requested operation.
+    canonical_prevision_social_contribution_persistence: Your pension contribution
+      records could not be read or saved.
     canonical_retencion_observation_persistence: Retention observations could not
       be persisted.
     canonical_retencion_soportada_persistence: The withholding records from your payers
@@ -1448,6 +1450,10 @@ errors:
     pension_reduccion_total_contributions_not_positive: The total contributions to
       the pension plan must be greater than zero; you gave %{value}. Enter the total
       of all contributions.
+    prevision_social_contribution_revision_conflict: The pension contribution record
+      changed since you read it; read it again before saving.
+    prevision_social_contribution_write_refused: The pension contribution record was
+      not saved.
     producer_capture_not_current: A producer projection changed while it was being
       read; capture it again.
     profile_access_administration_denied: Your current access does not allow managing

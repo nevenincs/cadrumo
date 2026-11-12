@@ -188,6 +188,7 @@ flows:
           manual_input: Manual input
           payable_invoice: Supplier invoice
           previous_filing: Previous filing
+          prevision_social_contribution: Pension contributions
           profile: Profile
           prorrata_register_activity: Prorrata register activities
           prorrata_regularizacion: Pro-rata adjustment

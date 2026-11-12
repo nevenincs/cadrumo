@@ -55,6 +55,7 @@ from .ledger_renta_gastos_pago_fraccionado_bindings import LedgerRentaGastosPago
 from .ledger_renta_income_bindings import LedgerRentaIncomeProvider
 from .m303_regimen_simplificado_annual_summary_bindings import M303RegimenSimplificadoAnnualSummaryProvider
 from .manual_input_selector import ManualInputProvider
+from .prevision_social_contribution_bindings import PrevisionSocialContributionProvider
 from .profile_bindings import ProfileProvider
 from .prorrata_register_activity_bindings import ProrrataRegisterActivityProvider
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
@@ -85,6 +86,7 @@ BindingProvider = Annotated[
     | LedgerRentaGastosEstimacionDirectaProvider
     | ActivityAssetDisposalProvider
     | CapitalMobiliarioPositionProvider
+    | PrevisionSocialContributionProvider
     | LedgerRentaGastosPagoFraccionadoProvider
     | LedgerImpatriadoIncomeProvider
     | LedgerIrnrIncomeProvider

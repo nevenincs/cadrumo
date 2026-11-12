@@ -35,6 +35,8 @@ docs:
       manual_input: desde un valor que aportas tú
       payable_invoice: desde las facturas recibidas
       previous_filing: desde tu declaración anterior
+      prevision_social_contribution: desde las aportaciones que informan tus certificados
+        de aportaciones a sistemas de previsión social
       profile: desde tu perfil de contribuyente
       prorrata_register_activity: desde las actividades de tu registro de prorrata
       prorrata_regularizacion: desde la regularización de prorrata

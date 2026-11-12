@@ -246,6 +246,40 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Modelo no soportado para la agregación por modelo
+  prevision_social_contribution:
+    errors:
+      certificate_not_in_custody: El documento del certificado que cita este registro
+        no está guardado en tu perfil, así que el registro no se ha guardado. Añade
+        primero el documento.
+      ejercicio_unsupported: Este ejercicio está fuera de los que Cadrumo calcula,
+        así que el registro de aportaciones no se ha guardado.
+      identity_mismatch: El emisor, el plan, la clave o el ejercicio del registro
+        no coinciden con el registro que quieres cambiar, así que no se ha guardado
+        nada.
+      stale_revision: El registro de aportaciones ha cambiado desde que lo leíste.
+        Vuelve a leerlo y repite el cambio.
+    served:
+      beneficiary_out_of_scope: Las aportaciones al sistema de previsión social de
+        tu cónyuge o al de una persona con discapacidad no se calculan en esta versión.
+        Introduce tú la casilla como valor del operador.
+      design_not_bundled: Cadrumo no tiene el diseño de registro del modelo 345 de
+        este ejercicio, así que no sitúa ninguna aportación a sistemas de previsión
+        social. Introduce tú las casillas de aportaciones como valores del operador.
+      indirect_match: Una casilla de la reducción por aportaciones a sistemas de previsión
+        social encaja con esta clave del modelo 345 solo por analogía y ningún texto
+        oficial la nombra, así que Cadrumo no la consigna ahí. Introduce tú la casilla
+        como valor del operador.
+      not_certified: No hay ningún certificado de aportaciones a sistemas de previsión
+        social registrado para este ejercicio, así que Cadrumo deja en blanco las
+        casillas de aportaciones. Registra cada certificado o introduce tú las casillas
+        como valores del operador.
+      same_plan_split_unstated: La casilla de esta aportación depende de si tu empleador
+        también hizo contribuciones al mismo plan, y el registro no lo indica. Indícalo
+        en el registro o introduce tú la casilla como valor del operador.
+      unplaced_clave: Ningún texto oficial sitúa esta clave y subclave del modelo
+        345 en una casilla de la reducción por aportaciones a sistemas de previsión
+        social, así que Cadrumo no la sitúa. Introduce tú la casilla como valor del
+        operador.
   renta_ledger:
     errors:
       annual_period_required: Se requiere un periodo anual para los totales de Renta

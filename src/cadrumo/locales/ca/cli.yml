@@ -1048,6 +1048,8 @@ cli:
           actividades_prorrata: activitats del registre de prorrata
           activo_extranjero: actiu estranger
           afiliado_cotizacion: afiliat de la relació de cotitzacions
+          aportacion_prevision_social: certificat d'aportacions a sistemes de previsió
+            social
           borrador_aeat: esborrany de l’AEAT
           compensacion_iva_anual: compensació anual de l'IVA
           constante_diseno: Constant del disseny de registre

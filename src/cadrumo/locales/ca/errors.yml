@@ -489,6 +489,8 @@ errors:
       de percepcions.
     canonical_persistence_degradation: La capacitat de persistència no ha pogut proporcionar
       l'operació sol·licitada.
+    canonical_prevision_social_contribution_persistence: No s'han pogut llegir ni
+      desar els teus registres d'aportacions a sistemes de previsió social.
     canonical_retencion_observation_persistence: No s'han pogut desar les observacions
       de retencions.
     canonical_retencion_soportada_persistence: No s'han pogut llegir ni desar els
@@ -1589,6 +1591,10 @@ errors:
     pension_reduccion_total_contributions_not_positive: Les aportacions totals al
       pla de pensions han de ser superiors a zero; has indicat %{value}. Indica el
       total de totes les aportacions.
+    prevision_social_contribution_revision_conflict: El registre d'aportacions ha
+      canviat des que el vas llegir; torna a llegir-lo abans de desar.
+    prevision_social_contribution_write_refused: No s'ha desat el registre d'aportacions
+      a sistemes de previsió social.
     producer_capture_not_current: Una projecció de productor ha canviat mentre es
       llegia; torna a capturar-la.
     profile_access_administration_denied: El teu accés actual no permet gestionar

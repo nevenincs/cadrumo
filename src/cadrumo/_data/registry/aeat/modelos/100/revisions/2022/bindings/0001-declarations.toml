@@ -1672,3 +1672,81 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["la empresa que deriven de una decisión del trabajador"]
+
+# Contributions to social-welfare systems from the taxpayer's contribution
+# certificate records: each record's Modelo 345 clave and subclave reaches one
+# of these boxes through the edition's prevision_social_placements rows, and the
+# box sums the records placed in it. Declared at the first edition whose texts
+# place claves; later editions inherit them.
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-aportaciones-trabajador-0465"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Aportaciones del trabajador, salvo las consignadas en las casillas [0438] y [0426]"]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-aportaciones-trabajador-con-contribucion-empresarial-0426"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Aportaciones del trabajador al plan de pensiones de empleo, mutualidad de previsión"]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-contribuciones-empresariales-0427"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Contribuciones empresariales a sistemas de previsión social, excepto las realizadas a"]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-aportaciones-empresa-decision-trabajador-0438"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Aportaciones efectuadas por la empresa que deriven de una decisión del trabajador."]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-aportaciones-empresarios-individuales-0499"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Aportaciones de empresarios individuales o profesionales a planes de pensiones de"]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-contribuciones-seguros-colectivos-dependencia-0466"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Contribuciones a seguros colectivos de dependencia. Casilla [0466]"]

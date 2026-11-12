@@ -243,6 +243,38 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Model no admès per a l'agregació per model
+  prevision_social_contribution:
+    errors:
+      certificate_not_in_custody: El document del certificat que cita aquest registre
+        no està desat al teu perfil, així que el registre no s'ha desat. Afegeix primer
+        el document.
+      ejercicio_unsupported: Aquest exercici és fora dels que Cadrumo calcula, així
+        que el registre d'aportacions no s'ha desat.
+      identity_mismatch: L'emissor, el pla, la clau o l'exercici del registre no coincideixen
+        amb el registre que vols canviar, així que no s'ha desat res.
+      stale_revision: El registre d'aportacions ha canviat des que el vas llegir.
+        Torna a llegir-lo i repeteix el canvi.
+    served:
+      beneficiary_out_of_scope: Les aportacions al sistema de previsió social del
+        teu cònjuge o al d'una persona amb discapacitat no es calculen en aquesta
+        versió. Introdueix tu la casella com a valor de l'operador.
+      design_not_bundled: Cadrumo no té el disseny de registre del model 345 d'aquest
+        exercici, així que no situa cap aportació a sistemes de previsió social. Introdueix
+        tu les caselles d'aportacions com a valors de l'operador.
+      indirect_match: Una casella de la reducció per aportacions a sistemes de previsió
+        social encaixa amb aquesta clau del model 345 només per analogia i cap text
+        oficial no l'anomena, així que Cadrumo no la consigna allà. Introdueix tu
+        la casella com a valor de l'operador.
+      not_certified: No hi ha cap certificat d'aportacions a sistemes de previsió
+        social registrat per a aquest exercici, així que Cadrumo deixa en blanc les
+        caselles d'aportacions. Registra cada certificat o introdueix tu les caselles
+        com a valors de l'operador.
+      same_plan_split_unstated: La casella d'aquesta aportació depèn de si el teu
+        ocupador també va fer contribucions al mateix pla, i el registre no ho indica.
+        Indica-ho al registre o introdueix tu la casella com a valor de l'operador.
+      unplaced_clave: Cap text oficial situa aquesta clau i subclau del model 345
+        en una casella de la reducció per aportacions a sistemes de previsió social,
+        així que Cadrumo no la situa. Introdueix tu la casella com a valor de l'operador.
   renta_ledger:
     errors:
       annual_period_required: Es requereix un període anual per als totals de Renda

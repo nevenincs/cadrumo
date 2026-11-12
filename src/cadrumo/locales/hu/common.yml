@@ -236,6 +236,39 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.
+  prevision_social_contribution:
+    errors:
+      certificate_not_in_custody: Az igazolás dokumentuma, amelyre ez a rekord hivatkozik,
+        nincs a profilodban tárolva, ezért a rekord nem lett mentve. Előbb add hozzá
+        a dokumentumot.
+      ejercicio_unsupported: Ez az év kívül esik azokon, amelyeket a Cadrumo kiszámít,
+        ezért a hozzájárulási rekord nem lett mentve.
+      identity_mismatch: A rekord kibocsátója, terve, kulcsa vagy éve nem egyezik
+        azzal a rekorddal, amelyet módosítani szeretnél, ezért semmi sem lett mentve.
+      stale_revision: A hozzájárulási rekord megváltozott, mióta elolvastad. Olvasd
+        el újra, és ismételd meg a módosítást.
+    served:
+      beneficiary_out_of_scope: A házastársad vagy egy fogyatékossággal élő személy
+        társadalombiztosítási rendszerébe fizetett hozzájárulásokat ez a verzió nem
+        számítja ki. Add meg te a mezőt kezelői értékként.
+      design_not_bundled: A Cadrumo nem rendelkezik az erre az évre vonatkozó 345-ös
+        modell rekordtervével, ezért egyetlen nyugdíj-hozzájárulást sem helyez el.
+        Add meg te a hozzájárulási mezőket kezelői értékként.
+      indirect_match: A társadalombiztosítási rendszerekbe fizetett hozzájárulások
+        csökkentésének egyik mezője csak analógia alapján illik ehhez a 345-ös modell
+        szerinti kulcshoz, és egyetlen hivatalos szöveg sem nevezi meg, ezért a Cadrumo
+        nem oda rögzíti. Add meg te a mezőt kezelői értékként.
+      not_certified: Erre az évre nincs rögzített nyugdíj-hozzájárulási igazolás,
+        ezért a Cadrumo üresen hagyja a hozzájárulási mezőket. Rögzítsd az egyes igazolásokat,
+        vagy add meg te a mezőket kezelői értékként.
+      same_plan_split_unstated: Ennek a hozzájárulásnak a mezője attól függ, hogy
+        a munkáltatód is fizetett-e hozzájárulást ugyanabba a tervbe, és a rekord
+        ezt nem tartalmazza. Add meg a rekordban, vagy add meg te a mezőt kezelői
+        értékként.
+      unplaced_clave: Egyetlen hivatalos szöveg sem helyezi ezt a 345-ös modell szerinti
+        kulcsot és alkulcsot a társadalombiztosítási rendszerekbe fizetett hozzájárulások
+        csökkentésének egyik mezőjébe sem, ezért a Cadrumo nem helyezi el. Add meg
+        te a mezőt kezelői értékként.
   renta_ledger:
     errors:
       annual_period_required: A Renta összesítéséhez a nyilvántartásaidból éves időszak

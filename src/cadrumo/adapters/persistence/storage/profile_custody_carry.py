@@ -66,6 +66,7 @@ from ..profile.iva_remote_state import IvaRemoteStateAcquisitionManifestReposito
 from ..profile.justificante import JustificanteRepository
 from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository
 from ..profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+from ..profile.prevision_social_contribution_records import PrevisionSocialContributionRecordRepositoryAdapter
 from ..profile.retencion_observations import RetencionObservationRepositoryAdapter
 from ..profile.retencion_soportada_records import (
     RetencionSoportadaAbsenceRepositoryAdapter,
@@ -266,6 +267,15 @@ def _natural_key_resolvers(
         return record_resolver(record, row_bucket_id)
 
     resolvers["cadrumo.renta.retencion_soportada.records"] = _retencion_soportada_row
+
+    def _prevision_social_contribution_repo() -> PrevisionSocialContributionRecordRepositoryAdapter:
+        return PrevisionSocialContributionRecordRepositoryAdapter(
+            objects=secure_object_repository_for_bucket(bucket_id)
+        )
+
+    resolvers["cadrumo.renta.prevision_social_contribution.records"] = _bound_resolver(
+        _prevision_social_contribution_repo
+    )
 
     def _filing_history_repo() -> ModeloHistoryRepository:
         return ModeloHistoryRepository(

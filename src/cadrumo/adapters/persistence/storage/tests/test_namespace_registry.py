@@ -93,6 +93,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "retencion_observations",
     "withholding_observations",
     "retencion_soportada_records",
+    "prevision_social_contribution_records",
     "withholding_workflow",
     "iva_wallet_reconciliation_decisions",
     "iva_wallet_reconciliation_decision_events",

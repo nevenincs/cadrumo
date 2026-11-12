@@ -2213,6 +2213,13 @@ application:
         milyen Közösségen belüli ügyletet rögzít.
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
         költségként kerül levonásra, a leírása pedig tartós eszközre utal.
+      prevision_social_contribution_not_certified: Erre az évre nincs rögzített nyugdíj-hozzájárulási
+        igazolás, ezért a hozzájárulási mezők nincsenek kiszámítva.
+      prevision_social_contribution_not_placed: '{box}. mező: az év {count} nyugdíj-hozzájárulási
+        rekordja egyik mezőbe sem kerül, és te sem adtál meg hozzájárulási mezőt.'
+      prevision_social_placement_inherited: '{box}. mező: {amount} nyugdíj-hozzájárulást
+        csak egy korábbi év hivatalos szövegei helyeznek el, ezért az ellenőrzés,
+        az exportálás és a rögzítés megvárja, amíg az idei szövegek ezt megerősítik.'
       prior_filing_unrecorded: A(z) {box} mező kiszámításához rögzítsd a(z) {year}.
         évi Modelo {modelo} bevallásodat.
       profile_fact_unrecorded: 'A(z) {box} mező kiszámításához rögzítsd a profilodban:

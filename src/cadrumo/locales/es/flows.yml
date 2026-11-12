@@ -193,6 +193,7 @@ flows:
           manual_input: Entrada manual
           payable_invoice: Factura recibida
           previous_filing: Declaración anterior
+          prevision_social_contribution: Aportaciones a previsión social
           profile: Perfil
           prorrata_register_activity: Actividades del registro de prorrata
           prorrata_regularizacion: Regularización de prorrata

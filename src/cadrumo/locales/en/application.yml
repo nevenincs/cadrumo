@@ -2136,6 +2136,14 @@ application:
         intra-community operation it records.
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
+      prevision_social_contribution_not_certified: No pension contribution certificate
+        is recorded for this year, so the contribution boxes are not worked out.
+      prevision_social_contribution_not_placed: 'Box {box}: {count} pension contribution
+        records of this year reach no box, and you have entered no contribution box
+        yourself.'
+      prevision_social_placement_inherited: 'Box {box}: {amount} in pension contributions
+        is placed only by the official texts of an earlier year, so checking, exporting
+        and recording wait until this year''s texts confirm it.'
       prior_filing_unrecorded: To calculate box {box}, record your Modelo {modelo}
         for {year}.
       profile_fact_unrecorded: 'To calculate box {box}, record in your profile: {field}.'

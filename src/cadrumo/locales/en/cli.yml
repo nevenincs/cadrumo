@@ -981,6 +981,7 @@ cli:
           actividades_prorrata: prorrata register activities
           activo_extranjero: foreign asset
           afiliado_cotizacion: contributions-relationship affiliate
+          aportacion_prevision_social: pension contribution certificate
           borrador_aeat: AEAT draft
           compensacion_iva_anual: annual IVA compensation
           constante_diseno: Record design constant

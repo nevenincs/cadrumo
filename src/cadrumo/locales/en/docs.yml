@@ -35,6 +35,8 @@ docs:
       manual_input: from a value you supply
       payable_invoice: from the invoices you received
       previous_filing: from your previous filing
+      prevision_social_contribution: from the contributions your pension contribution
+        certificates report
       profile: from your taxpayer profile
       prorrata_register_activity: from the activities in your prorrata register
       prorrata_regularizacion: from your prorrata regularisation

@@ -1641,12 +1641,12 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0426" }
-fields = { semantic_role = "irpf_red_prevision_social_aportaciones_trabajador_con_contribucion_empresarial", legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { input_kind = "bound", binding = "renta-prevision-social-aportaciones-trabajador-con-contribucion-empresarial-0426", semantic_role = "irpf_red_prevision_social_aportaciones_trabajador_con_contribucion_empresarial", legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 removed_fields = ["semantic_role_cardinality", "semantic_role_cardinality_reason"]
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0427" }
-fields = { legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { input_kind = "bound", binding = "renta-prevision-social-contribuciones-empresariales-0427", legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0428" }
@@ -1795,11 +1795,11 @@ fields = { legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"], sourc
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0465" }
-fields = { legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { input_kind = "bound", binding = "renta-prevision-social-aportaciones-trabajador-0465", legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0466" }
-fields = { legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { input_kind = "bound", binding = "renta-prevision-social-contribuciones-seguros-colectivos-dependencia-0466", legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0467" }

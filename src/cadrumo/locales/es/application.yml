@@ -2253,6 +2253,16 @@ application:
         operación intracomunitaria recoge.
       possibly_durable_expense: El movimiento del {row_date} por {row_amount} se deduce
         como gasto corriente y su descripción parece la de un elemento duradero.
+      prevision_social_contribution_not_certified: No hay ningún certificado de aportaciones
+        a sistemas de previsión social registrado para este ejercicio, así que las
+        casillas de aportaciones no se calculan.
+      prevision_social_contribution_not_placed: 'Casilla {box}: {count} registros
+        de aportaciones a sistemas de previsión social de este ejercicio no llegan
+        a ninguna casilla, y no has introducido ninguna casilla de aportaciones.'
+      prevision_social_placement_inherited: 'Casilla {box}: {amount} de aportaciones
+        a sistemas de previsión social solo se sitúan según los textos oficiales de
+        un ejercicio anterior, así que la comprobación, la exportación y el registro
+        esperan a que los textos de este ejercicio lo confirmen.'
       prior_filing_unrecorded: Para calcular la casilla {box}, registra tu Modelo
         {modelo} de {year}.
       profile_fact_unrecorded: 'Para calcular la casilla {box}, registra en tu perfil:

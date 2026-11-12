@@ -34,6 +34,8 @@ docs:
       manual_input: az általad megadott értékből
       payable_invoice: a beérkezett számláiból
       previous_filing: a korábbi bevallásából
+      prevision_social_contribution: a nyugdíj-hozzájárulási igazolásaidon szereplő
+        hozzájárulásokból
       profile: az adózói profiljából
       prorrata_register_activity: az arányosítási nyilvántartásod tevékenységeiből
       prorrata_regularizacion: az arányosítás korrekciójából

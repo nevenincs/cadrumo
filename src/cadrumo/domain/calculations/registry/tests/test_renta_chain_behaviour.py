@@ -41,6 +41,15 @@ _TYPED_WORK_INCOME_0003 = (
     "typed here to exercise the base and reductions downstream; the record binding is covered by its own "
     "resolver tests"
 )
+_TYPED_CONTRIBUTION = (
+    "the scenario carries no pension contribution certificate record, so the contribution box the record "
+    "binding fills is typed here to exercise the art. 52 limits downstream; the record binding is covered by "
+    "its own resolver tests"
+)
+_CONTRIBUTION_BOXES = frozenset(
+    validated_casilla_id(box, surface="test_renta_chain_behaviour casilla id")
+    for box in ("0465", "0426", "0427", "0438", "0499", "0466")
+)
 _C0426 = validated_casilla_id("0426", surface="test_renta_chain_behaviour casilla id")
 _C0427 = validated_casilla_id("0427", surface="test_renta_chain_behaviour casilla id")
 _C0432 = validated_casilla_id("0432", surface="test_renta_chain_behaviour casilla id")
@@ -201,7 +210,10 @@ def _scenario_2025(
         filing_year=_EXERCISE,
         period="0A",
         inputs=inputs,
-        hand_typed_bound_casillas={_C0003: _TYPED_WORK_INCOME_0003},
+        hand_typed_bound_casillas={
+            _C0003: _TYPED_WORK_INCOME_0003,
+            **{box: _TYPED_CONTRIBUTION for box in overrides if box in _CONTRIBUTION_BOXES},
+        },
         binding_values={
             "renta-profile-has-economic-activity": Decimal("0"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),

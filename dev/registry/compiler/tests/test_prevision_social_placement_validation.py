@@ -12,7 +12,11 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.prevision_social_contribution_bindings import (
+    prevision_social_contribution_binding_by_casilla,
+)
 from cadrumo.domain.calculations.registry.prevision_social_placement import PrevisionSocialPlacement
 from cadrumo.domain.calculations.registry.schema_base import SourceCitation
 
@@ -78,6 +82,38 @@ def test_a_casilla_outside_the_edition_is_refused(_worker_compiled_authority: Va
         f"modelo: prevision social placement 'a-01' places casilla '9999', which revision {revision.id!r} "
         "does not declare"
     ]
+
+
+def test_a_box_bound_to_no_family_binding_is_refused(_worker_compiled_authority: ValidatedRegistryAuthority) -> None:
+    revision = _placing_revisions(_worker_compiled_authority)[0]
+    bound = {str(casilla_id) for casilla_id in prevision_social_contribution_binding_by_casilla(revision)}
+    unbound = next(str(casilla.id) for casilla in revision.casillas if str(casilla.id) not in bound)
+    stray = _row(revision, "a-01").model_copy(update={"casilla_id": unbound})
+
+    failures = _failures(_worker_compiled_authority, _replacing(revision, stray))
+
+    assert failures == [
+        f"modelo: casilla {unbound!r} is placed by a pension contribution row but bound to no single family binding"
+    ]
+
+
+def test_a_placing_revision_without_the_family_is_refused(
+    _worker_compiled_authority: ValidatedRegistryAuthority,
+) -> None:
+    revision = _placing_revisions(_worker_compiled_authority)[0]
+    unbound = revision.model_copy(
+        update={
+            "bindings": tuple(
+                binding
+                for binding in revision.bindings
+                if binding.source is not BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION
+            )
+        }
+    )
+
+    failures = _failures(_worker_compiled_authority, unbound)
+
+    assert failures == [f"modelo: revision {revision.id!r} places pension contributions but declares no family binding"]
 
 
 def test_a_key_declared_twice_is_refused(_worker_compiled_authority: ValidatedRegistryAuthority) -> None:

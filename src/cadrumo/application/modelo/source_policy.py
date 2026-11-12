@@ -116,6 +116,7 @@ _FAMILY_AND_SURFACE: Final[Mapping[BindingSourceKind, tuple[SourceFamily, Source
         BindingSourceKind.WITHHOLDING: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.RETENCION_SOPORTADA: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.CAPITAL_MOBILIARIO_POSITION: (SourceFamily.RECORDS, SourceSurface.LEDGER),
+        BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.WITHHOLDING296: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.INVENTORY: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),

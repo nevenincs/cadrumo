@@ -110,6 +110,7 @@ def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
         frozenset(
             {
                 BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
+                BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION,
                 BindingSourceKind.PREVIOUS_FILING,
                 BindingSourceKind.RELATION_PREFILL,
                 BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
