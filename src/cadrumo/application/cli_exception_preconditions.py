@@ -19,6 +19,7 @@ from ..domain.filing.errors import FilingExportIntegrityError, FilingValidationE
 from ..domain.modelos.errors import (
     CalculationRevisionIntegrityError,
     ModeloOperatorLayerIntegrityError,
+    ModeloValidationError,
     PensionReduccionError,
 )
 from .operator_actions.models import PreconditionVerdict
@@ -48,6 +49,9 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
     decision_verdict = _operator_decision_verdict(current)
     if decision_verdict is not None:
         return decision_verdict
+    record_verdict = _modelo_record_verdict(current)
+    if record_verdict is not None:
+        return record_verdict
     for integrity_class, (precondition, record) in _TERMINAL_INTEGRITY_RECORDS.items():
         if isinstance(current, integrity_class):
             return cli_exception_no_recovery_verdict(
@@ -91,6 +95,25 @@ def _operator_decision_verdict(current: BaseException) -> PreconditionVerdict | 
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             )
     return None
+
+
+def _modelo_record_verdict(current: BaseException) -> PreconditionVerdict | None:
+    """Return the terminal verdict a Modelo validation states for a record Cadrumo built or stored.
+
+    A refusal raised from a cause that already carries its own verdict defers
+    to it: the cause names the condition that actually failed, and a second,
+    different verdict would make the outcome ambiguous.
+    """
+    if not isinstance(current, ModeloValidationError) or current.terminal_record is None:
+        return None
+    cause = current.__cause__
+    if cause is not None and nested_terminal_precondition_verdict(cause) is not None:
+        return None
+    return cli_exception_no_recovery_verdict(
+        CliExceptionPrecondition.STORED_DATA_VALID,
+        facts={"record": current.terminal_record.value, "valid": False},
+        outcome=NoRecoveryOutcome.TERMINAL,
+    )
 
 
 def _calculation_registry_verdict(current: CadrumoError) -> PreconditionVerdict | None:

@@ -21,6 +21,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.period import Period
 from ..calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
@@ -43,7 +44,7 @@ from .calculation_revision_m303_evidence import (
     M303RegimenSimplificadoActivityCalculationResult,
     M303RegimenSimplificadoCalculationResult,
 )
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 
 
 def _selected_m303_revision_declares_fact(
@@ -55,7 +56,11 @@ def _selected_m303_revision_declares_fact(
     """Read a simplified-regime fact declaration from the selected M303 revision."""
     selected = operation or governed_facts_in_scope()
     if not isinstance(selected, PinnedAuthorityOperation):
-        raise ModeloValidationError("M303 revision selection requires a generation-pinned authority operation")
+        raise ModeloValidationError(
+            "M303 revision selection requires a generation-pinned authority operation",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
+        )
     snapshot = selected.snapshot(
         "303",
         filing_year=filing_year,
@@ -103,7 +108,11 @@ def _resolve_m303_m390_handoff_declarations(
         binding.provider.kind is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
         for binding in target_report.bindings
     ):
-        raise ModeloValidationError("selected Modelo 390 revision has no M303 annual-summary handoff bindings")
+        raise ModeloValidationError(
+            "selected Modelo 390 revision has no M303 annual-summary handoff bindings",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
+        )
     return source_report, target_report, target_report.bindings
 
 
@@ -260,7 +269,11 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
     def _freeze_values(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
         values = dict(value)
         if not values:
-            raise ModeloValidationError("cross-model handoff must carry at least one selected value")
+            raise ModeloValidationError(
+                "cross-model handoff must carry at least one selected value",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return MappingProxyType(values)
 
     @field_serializer("values")
@@ -272,15 +285,23 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
     @pydantic_validation_boundary
     def _validate_immutable_coordinate_and_digest(self) -> M303RegimenSimplificadoAnnualSummaryHandoff:
         if self.source_bucket_id != self.target_bucket_id:
-            raise ModeloValidationError("M303 simplified annual-summary handoff source and target bucket must agree")
+            raise ModeloValidationError(
+                "M303 simplified annual-summary handoff source and target bucket must agree",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         if self.source_filing_year != self.target_filing_year:
             raise ModeloValidationError(
-                "M303 simplified annual-summary handoff source and target filing year must agree"
+                "M303 simplified annual-summary handoff source and target filing year must agree",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         expected_digest = _m303_regimen_simplificado_annual_summary_handoff_digest(self)
         if self.digest != expected_digest:
             raise ModeloValidationError(
                 "M303 simplified annual-summary handoff digest does not match its immutable unsigned payload",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         return self
 
@@ -342,16 +363,30 @@ class M303RegimenSimplificadoFilingEvidence(BaseModel):
     def _rows_match_scope_and_snapshot(self) -> M303RegimenSimplificadoFilingEvidence:
         if self.scope_decision != self.regimen_snapshot.scope_decision:
             raise ModeloValidationError(
-                "M303 simplified-regime evidence scope disagrees with its annual Orden snapshot"
+                "M303 simplified-regime evidence scope disagrees with its annual Orden snapshot",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         if self.rows.ejercicio != self.regimen_snapshot.orden.ejercicio:
-            raise ModeloValidationError("M303 simplified-regime evidence year disagrees with its annual Orden snapshot")
+            raise ModeloValidationError(
+                "M303 simplified-regime evidence year disagrees with its annual Orden snapshot",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         _validate_m303_regimen_simplificado_result_coordinate(self)
         if self.scope_decision.is_not_claimed:
             if self.rows.activities:
-                raise ModeloValidationError("general M303 scope must not carry simplified-regime activity evidence")
+                raise ModeloValidationError(
+                    "general M303 scope must not carry simplified-regime activity evidence",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
+                )
         elif not self.rows.activities:
-            raise ModeloValidationError("simplified or mixed M303 scope requires activity evidence")
+            raise ModeloValidationError(
+                "simplified or mixed M303 scope requires activity evidence",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
 
@@ -385,16 +420,28 @@ def _validate_m303_result_snapshot_coordinate(evidence: M303RegimenSimplificadoF
         record_design.sha256,
         record_design.record_design_epoch,
     ):
-        raise ModeloValidationError("M303 simplified calculation result disagrees with its annual Orden coordinate")
+        raise ModeloValidationError(
+            "M303 simplified calculation result disagrees with its annual Orden coordinate",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
 
 
 def _validate_m303_result_activity_order(evidence: M303RegimenSimplificadoFilingEvidence) -> None:
     result = evidence.calculation_result
     row_activities = tuple(evidence.rows.activities)
     if tuple(item.activity_id for item in result.activities) != tuple(item.activity_id for item in row_activities):
-        raise ModeloValidationError("M303 simplified calculation result must retain every filing activity in row order")
+        raise ModeloValidationError(
+            "M303 simplified calculation result must retain every filing activity in row order",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if tuple(item.orden_id for item in result.activities) != tuple(item.orden_id for item in row_activities):
-        raise ModeloValidationError("M303 simplified calculation result Orden identities disagree with filing rows")
+        raise ModeloValidationError(
+            "M303 simplified calculation result Orden identities disagree with filing rows",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
 
 
 def _validate_m303_result_activity_evidence(evidence: M303RegimenSimplificadoFilingEvidence) -> None:
@@ -408,20 +455,34 @@ def _validate_m303_result_activity_row(
     row: RegimenSimplificadoActivity,
 ) -> None:
     if not isinstance(row, ActividadNoAgricolaSimplificado):
-        raise ModeloValidationError("M303 simplified calculation result cannot resolve agricultural activity rows")
+        raise ModeloValidationError(
+            "M303 simplified calculation result cannot resolve agricultural activity rows",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     expected_evidence = _m303_regimen_simplificado_activity_evidence_references(row)
     if activity_result.evidence_references != expected_evidence:
         raise ModeloValidationError(
             "M303 simplified calculation result evidence references disagree with filing rows",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
     if tuple(item.module_identity for item in activity_result.module_results) != tuple(
         item.module_identity for item in row.modulos
     ):
-        raise ModeloValidationError("M303 simplified calculation result modules disagree with filing rows")
+        raise ModeloValidationError(
+            "M303 simplified calculation result modules disagree with filing rows",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if tuple(item.evidence_reference for item in activity_result.module_results) != tuple(
         item.evidence_reference for item in row.modulos
     ):
-        raise ModeloValidationError("M303 simplified calculation result module evidence disagrees with filing rows")
+        raise ModeloValidationError(
+            "M303 simplified calculation result module evidence disagrees with filing rows",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
 
 
 def _m303_regimen_simplificado_activity_evidence_references(
@@ -456,12 +517,24 @@ class M303FilingInstanceEvidence(BaseModel):
     @pydantic_validation_boundary
     def _all_evidence_uses_the_filing_year(self) -> M303FilingInstanceEvidence:
         if self.exonerado_390 is None and is_last_filing_period_of_year(self.period):
-            raise ModeloValidationError("M303 last-period filing evidence requires the Modelo 390 exemption evidence")
+            raise ModeloValidationError(
+                "M303 last-period filing evidence requires the Modelo 390 exemption evidence",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         if self.regimen_simplificado.rows.ejercicio != self.period.filing_year:
-            raise ModeloValidationError("M303 filing evidence must use the work-period filing year")
+            raise ModeloValidationError(
+                "M303 filing evidence must use the work-period filing year",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         result = self.regimen_simplificado.calculation_result
         if result.period != self.period:
-            raise ModeloValidationError("M303 simplified calculation result must use the filing period")
+            raise ModeloValidationError(
+                "M303 simplified calculation result must use the filing period",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         eligibility = self.regimen_simplificado.dana_eligibility
         requires_dana_eligibility = (
             is_last_filing_period_of_year(self.period)
@@ -471,6 +544,8 @@ class M303FilingInstanceEvidence(BaseModel):
         if requires_dana_eligibility != (eligibility is not None):
             raise ModeloValidationError(
                 "M303 DANA eligibility evidence is valid only for the 2024 annual simplified result",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         return self
 
