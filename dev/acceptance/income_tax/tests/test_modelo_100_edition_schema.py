@@ -88,6 +88,7 @@ def _row(provider: RegistrySchemaAccessor, field_id: str) -> XmlDictionaryEntry:
         provider.get_snapshot("100").revision.export_layouts[0],
         sources=provider.sources,
         source_payloads=provider.source_payloads,
+        casillas=provider.get_snapshot("100").revision.casillas,
     )
     return next(entry for entry in entries if entry.field_id == field_id)
 
@@ -239,6 +240,7 @@ def _activity_row_columns(provider: RegistrySchemaAccessor) -> tuple[tuple[str, 
         provider.get_snapshot("100").revision.export_layouts[0],
         sources=provider.sources,
         source_payloads=provider.source_payloads,
+        casillas=provider.get_snapshot("100").revision.casillas,
     )
     columns: list[tuple[str, XmlDictionaryEntry]] = []
     for binding_id, binding in sorted(revision_bindings_by_id(provider.get_snapshot("100").revision).items()):

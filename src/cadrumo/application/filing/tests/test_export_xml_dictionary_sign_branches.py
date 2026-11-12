@@ -65,6 +65,7 @@ def _dictionary_entries() -> tuple[XmlDictionaryEntry, ...]:
                 str(source.id): (bundled_path() / source.corpus_path).read_bytes()
                 for source in catalogues.sources.values()
             },
+            casillas=revision.casillas,
         )
     )
 

@@ -3,7 +3,7 @@
 The draft is calculated by the real builder over the published 2025 revision,
 the settlement is composed from it as the export composes it, and the record
 is written by the real XML export, which refuses any value the official XSD
-does not admit. The settled box is RESINGDEV (0700), "Resultado a ingresar o a
+does not admit. The settled box is RESINGDEV, "Resultado a ingresar o a
 devolver (casilla [0670] o casilla [0695])": the result 0670, or the remainder
 0695 once the spouse compensation suspends part of an amount to pay (0693).
 Each expected amount is read from the calculated draft's own boxes, never from
@@ -49,7 +49,7 @@ _RESULT: CasillaId = validated_casilla_id("0670")
 _SUSPENDED = "0693"
 _WAIVED = "0694"
 _REMAINDER: CasillaId = validated_casilla_id("0695")
-_SETTLED: CasillaId = validated_casilla_id("0700")
+_SETTLED: CasillaId = validated_casilla_id("RESINGDEV")
 _WITHHELD = "renta-retencion-soportada-trabajo"
 _REFUND_IBAN = "ES9121000418450200051332"
 
@@ -88,7 +88,7 @@ def _compose(
     draft: ModeloDraft,
     instalment: PaymentInstalmentElection = PaymentInstalmentElection.SINGLE,
 ) -> dict[str, object]:
-    """Compose the settlement rows from the draft as the export does: disposition from 0670, amount from 0700."""
+    """Compose the settlement rows from the draft as the export does: disposition from 0670, amount from RESINGDEV."""
     values = _values(draft)
     disposition = derive_result_disposition("100", {_RESULT: _money(draft, _RESULT)}, period=_PERIOD)
     return settlement_dictionary_values(
@@ -174,7 +174,7 @@ def test_a_refund_is_paid_out_from_the_settled_box(operation: PinnedAuthorityOpe
 def test_an_unresolved_settled_box_refuses_the_settlement_and_never_reads_the_result(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A waived refund leaves 0700 without a value; the refund of 0670 is not composed in its place."""
+    """A waived refund leaves RESINGDEV without a value; the refund of 0670 is not composed in its place."""
     provider = _provider(operation)
     draft = _draft(provider, {_WITHHELD: Decimal("20000.00"), _WAIVED: Decimal("100.00")})
     assert _money(draft, _RESULT) < 0 and _values(draft).get(_SETTLED) is None

@@ -42,15 +42,17 @@ def _settled(amount: str) -> DeclaredSettlement:
 
 def _settlement_paths() -> dict[str, str]:
     """The newest authored dictionary's settlement rows, by field id, with the record path each is written at."""
-    layout = published_revision("100", str(revision_covering("100", newest_authored_edition("100")).id)).export_layouts[
-        0
-    ]
+    revision = published_revision("100", str(revision_covering("100", newest_authored_edition("100")).id))
+    layout = revision.export_layouts[0]
     assert layout.dictionary_source_ref is not None
     source = published_source_reference(str(layout.dictionary_source_ref))
     path = resolve_corpus_binary(*source.corpus_path.split("/"))
     assert path is not None
     entries = xml_dictionary_entries(
-        layout, sources={str(source.id): source}, source_payloads={str(source.id): path.read_bytes()}
+        layout,
+        sources={str(source.id): source},
+        source_payloads={str(source.id): path.read_bytes()},
+        casillas=revision.casillas,
     )
     return {entry.field_id: entry.path for entry in entries if "/DatosIngresoDevolucion/" in entry.path}
 

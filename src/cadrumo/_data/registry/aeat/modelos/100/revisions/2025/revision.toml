@@ -2215,7 +2215,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 selector = { revision = "2024", id = "0699" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:1031 y aeat-dr-100-2025-dictionary:1058: ADQA, ruta /DatosEconomicos/Resultados/AnexoARes/DeduccionViviendaHabitualRes/ADQA, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 [[revisions."2025".casilla_overrides]]
-selector = { revision = "2024", id = "0700" }
+selector = { revision = "2024", id = "RESINGDEV" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:2380 y aeat-dr-100-2025-dictionary:2524: RESINGDEV, ruta /DatosEconomicos/Resultados/IngresoDevolucionRes/RESINGDEV, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0701" }

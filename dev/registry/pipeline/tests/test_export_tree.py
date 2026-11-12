@@ -19,7 +19,11 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryError,
     RegistryValidationError,
 )
-from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration, RecordDiscriminator
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ProjectionEndpointDeclaration,
+    RecordDiscriminator,
+    XmlDictionaryRowTarget,
+)
 
 from ...author_family_identities import derive_projection_endpoint_id
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
@@ -206,6 +210,41 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
         == first.provenance_manifest
     )
     assert layout == first.layout
+
+
+def test_layout_metadata_writes_dictionary_row_targets_only_when_the_layout_declares_them(tmp_path) -> None:
+    """A layout without row targets keeps its published bytes; declared targets are written and read back."""
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
+    rendered = render_complete_export_tree(
+        revision_dir / "export",
+        revision_id=SHELL_REVISION,
+        joined=export_tree_joined(m130_inspection()),
+        semantic_map=export_tree_semantic_map(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
+    )
+    assert rendered.layout.dictionary_row_targets == ()
+    undeclared = dict(serialization.render_tree_files(revision_id=SHELL_REVISION, layout=rendered.layout))
+    undeclared_layout = rtoml.loads(undeclared["0000-export-layout.toml"].decode())["revisions"][str(SHELL_REVISION)][
+        "export_layouts"
+    ][0]
+    assert "dictionary_row_targets" not in undeclared_layout
+
+    target = XmlDictionaryRowTarget(
+        field_id="RESULTADO",
+        casilla_id="0019",
+        dictionary_source_ref="aeat-dr-130-dictionary",
+        dictionary_line=7,
+        xsd_source_ref="aeat-dr-130-xsd",
+        xsd_element="RESULTADO",
+    )
+    declared_layout = rendered.layout.model_copy(update={"dictionary_row_targets": (target,)})
+    declared = dict(serialization.render_tree_files(revision_id=SHELL_REVISION, layout=declared_layout))
+    written = rtoml.loads(declared["0000-export-layout.toml"].decode())["revisions"][str(SHELL_REVISION)][
+        "export_layouts"
+    ][0]["dictionary_row_targets"]
+    assert [XmlDictionaryRowTarget.model_validate(row) for row in written] == [target]
 
 
 def test_real_loader_accepts_only_generator_owned_export_provenance(tmp_path) -> None:

@@ -24,17 +24,6 @@ semantic_role = "irpf_discrepancia_criterio_administrativo"
 legal_refs = ["ley-35-2006:art-97"]
 additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
 [[revisions."2024".casillas]]
-id = "0700"
-continuidad_id = "resultado-ingresar-o-devolver-irpf"
-number = "0700"
-section = ["resultados", "ingreso_devolucion_res"]
-data_type = "decimal"
-semantic_role = "resultado_ingresar_o_devolver_irpf"
-input_kind = "computed"
-formula = "renta-resultado-ingresar-o-devolver"
-legal_refs = ["ley-35-2006:art-97"]
-additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
-[[revisions."2024".casillas]]
 id = "0701"
 continuidad_id = "irpf-resultado-rectificacion-devolucion"
 number = "0701"

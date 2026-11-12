@@ -72,7 +72,6 @@ from ...core.result_disposition import ResultDisposition, result_disposition_req
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.export import fixed_width_record_casilla_ids
-from ...domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from ...domain.calculations.registry.m303_casilla_roles import m303_importe_rectificacion_casilla
 from ...domain.calculations.registry.rate_box_partition import (
     RateBoxPartition,
@@ -88,6 +87,7 @@ from ...domain.calculations.registry.schema_surfaces import CalculationCompleten
 from ...domain.filing.protocols import CasillaCollection
 from ...domain.filing.schema import ModeloDraft
 from .errors import ModeloApplicationError as FilingExportError
+from .export_xml_dictionary_rows import xml_dictionary_layout_entries
 from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor
 
 #: ``record_type`` of the bank-account (DID) page in the DR303 export layout.
@@ -221,11 +221,7 @@ def boe_representable_casilla_ids(
     :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
     """
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
-        entries = xml_dictionary_entries(
-            layout,
-            sources=schema_provider.sources,
-            source_payloads=schema_provider.source_payloads,
-        )
+        entries = xml_dictionary_layout_entries(layout, schema_provider=schema_provider)
         return frozenset(entry.casilla_id for entry in entries if entry.casilla_id is not None)
     return fixed_width_record_casilla_ids(
         tuple(

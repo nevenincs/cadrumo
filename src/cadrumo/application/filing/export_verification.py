@@ -22,7 +22,7 @@ from ...core.time.clock import now
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.export_parse import parse_export_payload
-from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
+from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry
 from ...domain.calculations.registry.fixed_width_codec import render_empty_block_slot, render_fixed_width_export_field
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema_exports import (
@@ -43,6 +43,7 @@ from .export_xml_dictionary import (
     xml_dictionary_value_schema,
 )
 from .export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
+from .export_xml_dictionary_rows import xml_dictionary_layout_casillas, xml_dictionary_layout_entries
 from .export_xml_dictionary_values import format_xml_dictionary_value
 from .export_xml_value_limits import XmlValueSchema, canonical_xml_text
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
@@ -382,11 +383,7 @@ def _xml_exported_casilla_ids(
     schema_provider: RegistrySchemaAccessor,
 ) -> Iterable[CasillaId]:
     """Yield draft casillas represented by an XML dictionary layout."""
-    entries = xml_dictionary_entries(
-        layout,
-        sources=schema_provider.sources,
-        source_payloads=schema_provider.source_payloads,
-    )
+    entries = xml_dictionary_layout_entries(layout, schema_provider=schema_provider)
     draft_casillas = {value.casilla_id for value in draft.values}
     return (
         entry.casilla_id for entry in entries if entry.casilla_id is not None and entry.casilla_id in draft_casillas
@@ -497,11 +494,7 @@ def _mismatched_xml_dictionary_casilla_ids(
     dictionary.  Resolve that same signed projection used by both renderer and
     parser, then compare the filed token with the renderer's canonical token.
     """
-    declared_entries = xml_dictionary_entries(
-        layout,
-        sources=schema_provider.sources,
-        source_payloads=schema_provider.source_payloads,
-    )
+    declared_entries = xml_dictionary_layout_entries(layout, schema_provider=schema_provider)
     entries = {entry.field_id: entry for entry in declared_entries}
     repeated_rows = xml_dictionary_repeated_rows(
         layout, draft=draft, entries=declared_entries, schema_provider=schema_provider
@@ -518,6 +511,7 @@ def _mismatched_xml_dictionary_casilla_ids(
         payload,
         sources=schema_provider.sources,
         source_payloads=schema_provider.source_payloads,
+        casillas=xml_dictionary_layout_casillas(layout, schema_provider=schema_provider),
     )
     for parsed in parsed_payload.casillas:
         casilla_id = parsed.casilla_id

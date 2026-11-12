@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "d0f69b9f3aec32e157f49cd86606fd0aa66885a3eb4591eba75b7c379aea3204"
+source_state_digest = "c154107aa7be171c565c22f2f6e8aec791c222b9d5102386aeb53a6ccaaa5231"
 design_sources = [
     { source_ref = "aeat-dr-100-2023-dictionary", sha256 = "a9b8d0e24878b550870666870107b66af2df3eb7d341739e59accce6f1108024" },
     { source_ref = "aeat-dr-100-2023-input-dictionary", sha256 = "183692c1a5a4785d9a04508e2ab928b25e44742ced448e19359ea7afb22c37cd" },
@@ -1968,6 +1968,7 @@ placements = [
     { casilla_id = "PCTMINASDLG", kind = "on_form" },
     { casilla_id = "PH18", kind = "working_figure" },
     { casilla_id = "RESIDENTEUE", kind = "on_form" },
+    { casilla_id = "RESINGDEV", kind = "working_figure" },
     { casilla_id = "SEXO_C", kind = "on_form" },
     { casilla_id = "SEXO_D", kind = "on_form" },
     { casilla_id = "TIPOTRIBUTACION", kind = "on_form" },

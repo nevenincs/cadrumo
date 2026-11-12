@@ -26,6 +26,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, XmlDictionaryPathOverride
 from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_covering
 
@@ -38,9 +39,13 @@ _EXTRA_MISPLACED_ROW = "EXTRA=[/OtraDeclaracion/EXTRA]"
 _MODELO_100_EXERCISES = tuple(revision.valid_from.year for revision in authored_revisions("100"))
 
 
-def _modelo_100_layout(filing_year: int) -> ExportLayoutDefinition:
+def _modelo_100_revision(filing_year: int) -> ModeloRevision:
     modelos_by_id, _catalogues = loaded_registry()
-    return modelos_by_id["100"].revisions[str(revision_covering("100", filing_year).id)].export_layouts[0]
+    return modelos_by_id["100"].revisions[str(revision_covering("100", filing_year).id)]
+
+
+def _modelo_100_layout(filing_year: int) -> ExportLayoutDefinition:
+    return _modelo_100_revision(filing_year).export_layouts[0]
 
 
 def _modelo_100_entries(filing_year: int) -> tuple[XmlDictionaryEntry, ...]:
@@ -51,6 +56,7 @@ def _modelo_100_entries(filing_year: int) -> tuple[XmlDictionaryEntry, ...]:
         source_payloads={
             str(source.id): (source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
         },
+        casillas=_modelo_100_revision(filing_year).casillas,
     )
 
 
@@ -158,6 +164,7 @@ def test_an_override_naming_an_absent_field_is_refused() -> None:
                 str(source.id): (source_root() / source.corpus_path).read_bytes()
                 for source in catalogues.sources.values()
             },
+            casillas=_modelo_100_revision(_MODELO_100_EXERCISES[-1]).casillas,
         )
 
 

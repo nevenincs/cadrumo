@@ -16,6 +16,7 @@ legal_refs = [
     "rd-439-2007:art-109",
     "rd-439-2007:art-110",
     "ley-35-2006:art-81-redaccion-2018",
+    "ley-35-2006:art-97",
 ]
 source_refs = [
     "aeat-dr-100-2022-dictionary",
@@ -36,6 +37,7 @@ formulas = [
     "renta-deduccion-maternidad-0611-cotizaciones",
     "renta-incremento-guarderia-0613",
     "renta-resultado-declaracion",
+    "renta-resultado-ingresar-o-devolver",
 ]
 application_links = [
     "modelo-100-calculation",

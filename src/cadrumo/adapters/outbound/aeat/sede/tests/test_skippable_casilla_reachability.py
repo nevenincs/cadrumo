@@ -51,6 +51,7 @@ def _skippable_casilla_ids(modelo: str, year: int, period: str) -> set[str]:
                     str(source.id): (bundled_path() / source.corpus_path).read_bytes()
                     for source in snapshot.sources.values()
                 },
+                casillas=snapshot.revision.casillas,
             )
             skippable.update(
                 entry.casilla_id

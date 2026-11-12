@@ -35,6 +35,7 @@ def test_cp1252_dictionary_preserves_runtime_ids_and_decodes_0x96_as_punctuation
         layout,
         sources=catalogues.sources,
         source_payloads={str(source.id): raw},
+        casillas=revision.casillas,
     )
 
     assert len(entries) == 1796

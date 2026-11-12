@@ -704,6 +704,7 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
         source_payloads={
             str(source.id): (source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
         },
+        casillas=snapshot.revision.casillas,
     )
 
     assert {item.casilla_id: item.value for item in parsed.casillas} == {
@@ -752,6 +753,7 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
         source_payloads={
             str(source.id): (source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
         },
+        casillas=snapshot.revision.casillas,
     )
 
     assert {item.casilla_id: item.value for item in parsed.casillas} == {

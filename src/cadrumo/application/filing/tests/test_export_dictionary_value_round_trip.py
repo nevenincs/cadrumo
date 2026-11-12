@@ -38,7 +38,9 @@ def test_every_xml_dictionary_can_export_populated_values(boolean_value: bool) -
                 source_path = resolve_corpus_binary(*source.corpus_path.split("/"))
                 assert source_path is not None
                 payloads = {str(source.id): source_path.read_bytes()}
-                entries = xml_dictionary_entries(layout, sources=sources, source_payloads=payloads)
+                entries = xml_dictionary_entries(
+                    layout, sources=sources, source_payloads=payloads, casillas=revision.casillas
+                )
                 root = ElementTree.Element("Declaracion")
                 expected: dict[str, str] = {}
                 for entry in entries:
@@ -63,6 +65,7 @@ def test_every_xml_dictionary_can_export_populated_values(boolean_value: bool) -
                     ElementTree.tostring(root),
                     sources=sources,
                     source_payloads=payloads,
+                    casillas=revision.casillas,
                 )
                 assert {field.field_id: field.raw for field in parsed.fields} == expected
                 types = {entry.field_id: entry.data_type for entry in entries}
@@ -72,14 +75,15 @@ def test_every_xml_dictionary_can_export_populated_values(boolean_value: bool) -
 
 
 def test_xml_attribute_values_retain_repeated_occurrences_and_ignore_element_text() -> None:
-    layout = published_revision("100", "2024").export_layouts[0]
+    revision = published_revision("100", "2024")
+    layout = revision.export_layouts[0]
     assert layout.dictionary_source_ref is not None
     source = published_source_reference(str(layout.dictionary_source_ref))
     sources = {str(source.id): source}
     source_path = resolve_corpus_binary(*source.corpus_path.split("/"))
     assert source_path is not None
     payloads = {str(source.id): source_path.read_bytes()}
-    entries = xml_dictionary_entries(layout, sources=sources, source_payloads=payloads)
+    entries = xml_dictionary_entries(layout, sources=sources, source_payloads=payloads, casillas=revision.casillas)
     entry = next(entry for entry in entries if entry.field_id == "B11")
     assert entry.path.endswith("/B11/@valor")
     assert entry.data_type == "N102"
@@ -90,7 +94,9 @@ def test_xml_attribute_values_retain_repeated_occurrences_and_ignore_element_tex
         b"</RdtoCapitalMobiliarioAhorro></RdtoCapitalMobiliario>"
         b"</TomaDatosAmpliada></DatosEconomicos></Declaracion>"
     )
-    parsed = parse_export_payload(layout, payload, sources=sources, source_payloads=payloads)
+    parsed = parse_export_payload(
+        layout, payload, sources=sources, source_payloads=payloads, casillas=revision.casillas
+    )
     values = [field for field in parsed.fields if field.field_id == entry.field_id]
     assert [field.value for field in values] == [Decimal("0.12"), Decimal("34.56")]
     assert [field.casilla_id for field in values] == ["0027", "0027"]

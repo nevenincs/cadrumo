@@ -12,6 +12,7 @@ from ..schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
     validate_family_identity_uniqueness,
 )
+from ..validate_revision_identity import manifest_record_design_metadata_failures
 from .referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
@@ -50,14 +51,26 @@ def test_manifest_duplicate_record_metadata_keeps_sorted_refusal(segmento: str |
         _casilla("three", "20", segmento),
         _casilla("four", "10", segmento),
     )
-    with pytest.raises(ValidationError) as refused:
-        completeness_manifest(casillas)
+    manifest = completeness_manifest(casillas)
 
     expected = (
         "'10', '20'" if segmento is None else "'10' within segmento 'segment-a', '20' within segmento 'segment-a'"
     )
-    assert refused.value.errors()[0]["msg"] == (
-        f"Value error, calculation-completeness manifest declares duplicate casilla record-design metadata: {expected}"
+    assert manifest_record_design_metadata_failures("revision", manifest, declared_repeats=frozenset()) == (
+        f"revision: calculation-completeness manifest declares duplicate casilla record-design metadata: {expected}",
+    )
+
+
+def test_manifest_repeat_of_a_declared_number_is_not_a_duplicate_but_any_other_still_is() -> None:
+    manifest = completeness_manifest(
+        (_casilla("one", "10"), _casilla("two", "10"), _casilla("three", "20"), _casilla("four", "20"))
+    )
+
+    assert manifest_record_design_metadata_failures("revision", manifest, declared_repeats=frozenset({"10"})) == (
+        "revision: calculation-completeness manifest declares duplicate casilla record-design metadata: '20'",
+    )
+    assert (
+        manifest_record_design_metadata_failures("revision", manifest, declared_repeats=frozenset({"10", "20"})) == ()
     )
 
 

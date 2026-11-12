@@ -292,6 +292,7 @@ def _canales_representacion_casillas_oficiales(
                     layout,
                     sources=sources,
                     source_payloads=source_payloads,
+                    casillas=revision.casillas,
                 )
                 if entry.casilla_id is not None
             )

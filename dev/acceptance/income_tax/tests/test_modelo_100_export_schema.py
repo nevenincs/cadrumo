@@ -96,6 +96,7 @@ def _box(field_id: str) -> CasillaId:
         provider.get_snapshot("100").revision.export_layouts[0],
         sources=provider.sources,
         source_payloads=provider.source_payloads,
+        casillas=provider.get_snapshot("100").revision.casillas,
     )
     casilla = next(entry.casilla_id for entry in entries if entry.field_id == field_id)
     assert casilla is not None

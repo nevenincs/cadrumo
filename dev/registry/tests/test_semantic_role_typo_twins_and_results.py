@@ -683,7 +683,7 @@ class TestSignedCuotaResultadoRoles:
         assert {
             (modelo_id, casilla_id, role, data_type) for modelo_id, _rev, casilla_id, role, data_type in signed_roles
         } == {
-            ("100", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
+            ("100", "RESINGDEV", "resultado_ingresar_o_devolver_irpf", "decimal"),
             ("200", "DP200014B:00599", "is_resultado_ingresar_o_devolver", "money"),
         }
         for modelo in modelos.values():

@@ -1,4 +1,4 @@
-"""The form serves box 0700 of the 2025 Modelo 100 as a calculated result, never as an optional value left at zero."""
+"""The form serves RESINGDEV of the 2025 Modelo 100 as a calculated result, never as an optional value left at zero."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from .work_form_fixture import built_form, form_casilla, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_BOX = "0700"
+_BOX = "RESINGDEV"
 
 
 def _typed_boxes(operation: PinnedAuthorityOperation) -> set[str]:

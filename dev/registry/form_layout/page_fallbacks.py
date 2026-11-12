@@ -13,12 +13,27 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormRepeatingRowSource,
     FormSectionDefinition,
 )
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from .generation_constants import GENERAL_SECTION
 from .generation_models import Build
 from .heading_keys import form_heading_key, unique
 from .official_text import node_slug
 from .position_anchoring import casilla_box
+
+
+def _restates_another_casillas_box(build: Build, casilla: CasillaDefinition) -> bool:
+    """Say whether a casilla carries a number whose box another casilla holds as its id.
+
+    The dictionary prints one number on several rows, and the registry keeps a
+    casilla per concept; the form has the one box, owned by the casilla whose id
+    it is. The other carries the value in the export and has no box of its own.
+    """
+    return (
+        casilla.segmento is None
+        and casilla.id != casilla.number
+        and any(other.segmento is None and other.id == casilla.number for other in build.revision.casillas)
+    )
 
 
 def numbered_casillas(build: Build, primary: Mapping[str, int]) -> list[str]:
@@ -29,6 +44,7 @@ def numbered_casillas(build: Build, primary: Mapping[str, int]) -> list[str]:
         if casilla.id not in primary
         and casilla.id not in build.ambiguous
         and casilla_box(casilla.number, casilla.form_number) is not None
+        and not _restates_another_casillas_box(build, casilla)
     ]
     remaining.sort(key=lambda casilla: (int(str(casilla_box(casilla.number, casilla.form_number))), casilla.id))
     return [casilla.id for casilla in remaining]
