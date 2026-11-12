@@ -106,7 +106,7 @@ required_text = ["tipo de gravamen"]
 [[revisions."2024".bindings]]
 id = "modelo-200-profile-tributacion-estado-porcentaje"
 provider = { kind = "profile", profile_model = "taxpayer", field = "tributacion_estado_porcentaje" }
-value = { data_type = "money", channel = "decimal" }
+value = { data_type = "decimal", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
 
