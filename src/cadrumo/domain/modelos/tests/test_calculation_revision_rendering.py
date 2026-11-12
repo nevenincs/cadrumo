@@ -20,9 +20,14 @@ from pydantic_core import SchemaSerializer
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.field_absence import absent_when_none, later_absent_when_none
 from ...calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
 from ...calculations.registry.schema_formula import BracketKind, bracket_kind_is_default
-from ..calculation_revision_rendering import CalculationRenderingSnapshot, retain_registry_schema_fields
+from ..calculation_revision_rendering import (
+    CalculationRenderingSnapshot,
+    retain_registry_schema_fields,
+    write_absent_fields_as_null,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -230,3 +235,39 @@ def test_saved_rendering_snapshot_refuses_flat_predecessor_objects(modelo_id: st
 
         with pytest.raises(ValidationError, match="predecessor must be the revision id"):
             CalculationRenderingSnapshot.model_validate_json(json.dumps(payload))
+
+
+class _AbsentFields(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    earlier: str | None = Field(default=None, exclude_if=absent_when_none)
+    later: str | None = Field(default=None, exclude_if=later_absent_when_none)
+
+
+def _complete_dump(value: _AbsentFields, *, absent_as_null: bool) -> object:
+    adapter = TypeAdapter(_AbsentFields)
+    adapter.rebuild()
+    schema = deepcopy(adapter.core_schema)
+    retain_registry_schema_fields(schema)
+    if absent_as_null:
+        write_absent_fields_as_null(schema)
+    return SchemaSerializer(schema, _use_prebuilt=False).to_python(value, mode="json")
+
+
+@pytest.mark.parametrize(
+    ("absent_as_null", "expected"),
+    ((False, {}), (True, {"earlier": None})),
+)
+def test_a_field_added_after_null_dumps_stays_out_of_both_complete_forms_while_absent(
+    absent_as_null: bool, expected: dict[str, None]
+) -> None:
+    # Builds that wrote absent fields as null never had the later field, so the
+    # snapshots they saved carry no key for it in either form.
+    assert _complete_dump(_AbsentFields(), absent_as_null=absent_as_null) == expected
+
+
+@pytest.mark.parametrize("absent_as_null", (False, True))
+def test_a_later_field_that_holds_a_value_is_dumped_in_both_complete_forms(absent_as_null: bool) -> None:
+    dumped = _complete_dump(_AbsentFields(earlier="a", later="b"), absent_as_null=absent_as_null)
+
+    assert dumped == {"earlier": "a", "later": "b"}
