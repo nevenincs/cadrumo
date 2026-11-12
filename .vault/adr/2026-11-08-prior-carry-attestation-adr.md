@@ -117,6 +117,11 @@ without a second mechanism.
 - Amended 2026-11-08 on the coordinator's approval of the registry declaration,
   after the plan-close review found the scope inferred from the source kind.
 
+## Amendment 2026-11-11: absence of pending rental expenses
+
+Accepted 2026-11-11 by CADRUMO-PRIME under the operator's delegation, with the decision `2026-11-11-renta-rental-income-source-adr`. One more absence-attestation family is admitted: `renta_capital_inmobiliario_gastos_pendientes`, at row grain keyed by referencia catastral. A first year in the app can then state that a property carries no pending expenses from earlier years into 0103, instead of leaving the box unresolved for want of a return the app does not hold.
+
+
 ## Amendment 2026-11-12: the negative savings balances pending from earlier ejercicios
 
 Accepted 2026-11-12 00:51 by CADRUMO-PRIME with one condition, written in below (ruling: the 00:51 entry of PRIME's rulings log). Proposed in `2026-11-11-prior-carry-attestation-savings-carries-adr`, now retired.
