@@ -480,9 +480,9 @@ class CrossPeriodGroupMemberRoster(BaseModel):
         return self
 
 
-def is_ue_eee_country_code(country_code: str | None) -> bool:
-    """Return True when ``country_code`` is in the EU + EEA country set."""
-    return is_ue_eea_country_code(country_code)
+def is_ue_eee_country_code(country_code: str | None, *, effective_date: date) -> bool:
+    """Return True when ``country_code`` is in the EU + EEA country set on ``effective_date``."""
+    return is_ue_eea_country_code(country_code, effective_date=effective_date)
 
 
 def irnr_representante_fiscal_required(country_code: str | None, *, effective_date: date) -> bool:
@@ -796,17 +796,17 @@ class TaxpayerProfile(BaseModel):
         window_years = irpf_special_regime_impatriado_window_years()
         return self.special_regime_start_date.year <= today.year < self.special_regime_start_date.year + window_years
 
-    @property
-    def ue_eee_status(self) -> bool:
-        """True when ``country_of_fiscal_residence`` is in the EU + EEA (post-Brexit).
+    def ue_eee_status_on(self, effective_date: date) -> bool:
+        """True when ``country_of_fiscal_residence`` is in the EU + EEA on ``effective_date``.
 
-        ``GB`` is excluded from 2021-01-01 (Brexit transition end).
-        Returns ``False`` when ``country_of_fiscal_residence`` is ``None``
-        (i.e., for IRPF-resident profiles).
+        The registry's membership edition for that date decides (``GB`` leaves
+        from 2021-01-01, the end of the Brexit transition). Returns ``False``
+        when ``country_of_fiscal_residence`` is ``None`` (i.e., for
+        IRPF-resident profiles).
         """
         if self.country_of_fiscal_residence is None:
             return False
-        return is_ue_eee_country_code(self.country_of_fiscal_residence)
+        return is_ue_eee_country_code(self.country_of_fiscal_residence, effective_date=effective_date)
 
 
 def resolve_multiple_pagadores_reduced_limit(

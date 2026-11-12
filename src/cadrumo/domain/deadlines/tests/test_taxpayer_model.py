@@ -49,6 +49,7 @@ from ..models import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _YEAR = filing_year_envelope().horizon
+_ON = date(_YEAR, 12, 31)
 _ELECTION_DATE = date(filing_year_envelope().floor, 1, 15)
 """The day an impatriado election starts: any date inside the envelope serves the window arithmetic."""
 
@@ -389,7 +390,7 @@ class TestNonResidentAxis:
     """IRNR-001: fiscal_residency / country_of_fiscal_residence axis.
 
     TRLIRNR RDLeg 5/2004 Art. 2 defines non-residency; this class asserts
-    the validator, the ue_eee_status property, and the roundtrip contract.
+    the validator, the dated ue_eee_status_on reading, and the roundtrip contract.
     """
 
     def test_non_resident_without_country_is_rejected(self) -> None:
@@ -421,7 +422,7 @@ class TestNonResidentAxis:
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="FR",
         )
-        assert profile.ue_eee_status is True
+        assert profile.ue_eee_status_on(_ON) is True
 
     def test_ue_eee_status_false_for_gb_post_brexit(self) -> None:
         # GB left the EU/EEA on 2020-12-31; representante is required.
@@ -433,11 +434,11 @@ class TestNonResidentAxis:
             representante_fiscal_nif="12345678Z",
             representante_fiscal_nombre="Test Representative",
         )
-        assert profile.ue_eee_status is False
+        assert profile.ue_eee_status_on(_ON) is False
 
     def test_ue_eee_status_false_when_country_none(self) -> None:
         profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
-        assert profile.ue_eee_status is False
+        assert profile.ue_eee_status_on(_ON) is False
 
     def test_non_resident_roundtrip_preserves_fiscal_residency_and_country(self) -> None:
         original = TaxpayerProfile(
