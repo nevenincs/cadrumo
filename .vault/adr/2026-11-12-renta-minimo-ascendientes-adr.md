@@ -5,13 +5,14 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e57955cbd42771bdd08bdbd15deda5c4a0c2e12dfded7d6322245b136c3fc84'
+body_hash: 'sha256:7d11795bb44b25fd1c9d9a5e66b2d2d7f181bf4d6f85f822cf740462ab2d8ec4'
 related:
   - "[[2026-11-02-desktop-renta-renta-family-canonical-adr]]"
   - "[[2026-07-04-autonomic-deduccion-framework-adr]]"
+  - '[[2026-11-12-renta-minimo-ascendientes-reference]]'
 ---
 
-# `renta-minimo-ascendientes` adr: `Ascendant row facts for the minimo por ascendientes and the disability minimum` | (**status:** `proposed`)
+# `renta-minimo-ascendientes` adr: `Ascendant row facts for the minimo por ascendientes and the disability minimum` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -39,6 +40,12 @@ The minimo por ascendientes (LIRPF art. 59) and the disability minimum for an as
 - Amounts, thresholds (8.000, 1.800, 33 %, 65 %, ages) and key values come from the registry for the edition, never from code.
 - The export key is derived at calculation; it is never stored or typed by the operator.
 - Ascendant rows hold private data: served only through the profile-bound read, never logged.
+- Accepted by PRIME on 2026-11-12 at 15:30 under the operator's ADR delegation, approved by the operator at 13:27, with these binding conditions:
+  1. `convivientes` is a deciding three-state fact for the art. 61 norma 1ª prorrateo among taxpayers entitled to the same ascendant.
+  2. Cohabitation for at least half the tax period (art. 61 norma 5ª; up to the death date when the ascendant dies), with internment in a specialised centre counting as cohabitation (art. 59.1), is a deciding three-state leaf or a cited derivation; unstated, it blocks.
+  3. Judicial incapacity counts as a grade of 65 % or more for the art. 60 amounts (art. 60.3) and governs over a lower stated grade.
+  4. Age, the art. 59.2 over-75 increment and every circumstance are taken at devengo (art. 61 norma 3ª), or at the death date for an ascendant who died in the period (art. 61 norma 4ª).
+  5. The profile schema change takes the next version free at landing.
 
 ## Implementation
 
