@@ -21,6 +21,7 @@ import {
   useSetupDraft,
   useSetupWrite,
 } from "./SetupParts";
+import { CounterpartyFilingName } from "./CounterpartyFilingName";
 import { CounterpartyProvincia } from "./CounterpartyProvincia";
 import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
@@ -499,6 +500,14 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
           />
           <CounterpartyProvincia
             key={`${identity}:${result.provincia_code ?? ""}`}
+            port={port}
+            result={result}
+            country={country}
+            actor={actor}
+            onSaved={() => view(result.tax_identifier)}
+          />
+          <CounterpartyFilingName
+            key={`${identity}:${JSON.stringify(result.filing_name ?? null)}`}
             port={port}
             result={result}
             country={country}

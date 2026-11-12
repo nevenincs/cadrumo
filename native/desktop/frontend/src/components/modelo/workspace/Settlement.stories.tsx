@@ -1,3 +1,4 @@
+import { RENTA_UNIT } from "@/dev/rentaUnit";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
 import { expect, userEvent, waitFor } from "storybook/test";
@@ -19,7 +20,7 @@ import { byName } from "@/dev/globByName";
 // of a salaried filer read within the filing period. Every sentence and every
 // amount is the application's; none is written here.
 
-const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
+const UNIT = RENTA_UNIT;
 
 const offers = byName(
   import.meta.glob<PublicModeloFormExportOffer>(
