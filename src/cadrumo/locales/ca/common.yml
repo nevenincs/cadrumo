@@ -3521,6 +3521,7 @@ desktop:
       actividad_economica: Activitat econòmica
       arrendamiento_local: Arrendament de local
       arrendamiento_vivienda_afecto: Arrendament d'habitatge afecte
+      capital_inmobiliario: Lloguer d'immobles
       trabajo: Treball
     issue:
       next: Següent problema de preparació

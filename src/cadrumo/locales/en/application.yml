@@ -3804,14 +3804,20 @@ application:
         The stored session of the profile it replaces could not be removed. Close
         any program using the profile store and try again.
       registration_label_blank: The profile name cannot be empty.
+      rental_lease_has_ledger_rows: Lease %{row} is named by %{rows} ledger rows;
+        change or clear their link first with “%{door}”.
       rental_lease_property_missing: The lease names property %{inmueble}, which is
         not in your profile; add it first with “%{door}”.
+      rental_ledger_unreadable: The ledger of the profile could not be read, so the
+        removal was not made. Nothing was changed.
       rental_principal_missing: The principal property %{principal} is not another
         property in your profile; add it first with “%{door}”.
       rental_property_has_accessories: Property %{inmueble} is the principal of accessory
         properties (%{accessories}); change or clear their principal first with “%{door}”.
       rental_property_has_leases: Property %{inmueble} has leases (%{leases}); remove
         them first with “%{door}”.
+      rental_property_has_ledger_rows: Property %{row} is named by %{rows} ledger
+        rows; change or clear their link first with “%{door}”.
       rental_row_invalid: The fact “%{leaf}” is not valid or contradicts other facts
         of the record; nothing was stored. Correct it and repeat “%{door}”.
       rental_tenant_id_invalid: A tenant's tax ID is not valid; check its letters

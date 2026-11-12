@@ -18,8 +18,14 @@ import pytest
 from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.user_profile.login_session import authenticate_profile_for_invocation
+from ...application.user_profile.operations import build_user_profile_operation_definitions
+from ...application.user_profile.profile_operation_contracts import (
+    PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
+)
+from ...application.user_profile.profile_operation_execution import ProfileRepeatableRowRemoveOperationExecutor
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import register_profile_with_credentials
+from ...application.user_profile.rental_records import RentalLedgerReferences
 from ...application.user_profile.section_rows import (
     add_profile_repeatable_section_row,
     remove_profile_repeatable_section_row,
@@ -47,6 +53,12 @@ class _World:
     def __init__(self, profile_id: str, operation: PinnedAuthorityOperation) -> None:
         self.profile_id = profile_id
         self.operation = operation
+        self.leases_named_by_ledger: dict[str, int] = {}
+        self.properties_named_by_ledger: dict[str, int] = {}
+
+    def ledger_references(self, *, profile_id: str) -> RentalLedgerReferences:
+        assert profile_id == self.profile_id
+        return RentalLedgerReferences(leases=self.leases_named_by_ledger, properties=self.properties_named_by_ledger)
 
     def facts(self) -> dict[str, object]:
         record = ProfileRecordRepository.for_current_session(
@@ -86,6 +98,7 @@ class _World:
             row_key=str(row),
             schema=decode.schema,
             profile_decode_context=decode,
+            rental_ledger_references=self.ledger_references,
         )
 
     def stored(self, section: str, row: int) -> dict[str, str]:
@@ -295,3 +308,39 @@ def test_a_retired_leaf_is_refused_as_undeclared_for_both_sections(world: _World
     for section, key in ((INMUEBLE_SECTION, row), (ARRENDAMIENTO_SECTION, lease)):
         with pytest.raises(ProfileSchemaValidationError):
             world.edit(section, key, {"anejo_referencia_catastral": CATASTRAL})
+
+
+def test_a_property_a_ledger_row_names_is_not_removed(world: _World) -> None:
+    row = world.add(INMUEBLE_SECTION, _property())
+    world.properties_named_by_ledger = {str(row): 2}
+
+    refusal = _refusal(world, lambda: world.remove(INMUEBLE_SECTION, row))
+
+    assert "aeat app ledger classify" in str(refusal.context)
+    world.properties_named_by_ledger = {}
+    world.remove(INMUEBLE_SECTION, row)
+    assert row not in rows_from_facts(INMUEBLE_SECTION, world.facts())
+
+
+def test_a_lease_a_ledger_row_names_is_not_removed(world: _World) -> None:
+    property_row = world.add(INMUEBLE_SECTION, _property())
+    lease_row = world.add(ARRENDAMIENTO_SECTION, _lease(property_row))
+    world.leases_named_by_ledger = {str(lease_row): 1}
+
+    refusal = _refusal(world, lambda: world.remove(ARRENDAMIENTO_SECTION, lease_row))
+
+    assert "aeat app ledger classify" in str(refusal.context)
+    assert lease_row in rows_from_facts(ARRENDAMIENTO_SECTION, world.facts())
+
+
+@pytest.mark.parametrize("reader", [None, "given"])
+def test_the_remove_operation_is_composed_with_or_without_a_ledger_read(reader: str | None) -> None:
+    def read(*, profile_id: str) -> RentalLedgerReferences:
+        return RentalLedgerReferences(leases={}, properties={})
+
+    definitions = build_user_profile_operation_definitions(read if reader is not None else None)
+    definition = next(
+        item for item in definitions if item.definition_id == PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID
+    )
+
+    assert type(definition.executor_factory.create()) is ProfileRepeatableRowRemoveOperationExecutor

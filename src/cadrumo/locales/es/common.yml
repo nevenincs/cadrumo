@@ -3525,6 +3525,7 @@ desktop:
       actividad_economica: Actividad económica
       arrendamiento_local: Arrendamiento de local
       arrendamiento_vivienda_afecto: Arrendamiento de vivienda afecta
+      capital_inmobiliario: Alquiler de inmuebles
       trabajo: Trabajo
     issue:
       next: Siguiente problema de preparación
