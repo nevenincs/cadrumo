@@ -491,19 +491,8 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         for leaf in ("modelo.work.verify", "modelo.work.file")
     ),
     *(
-        _profile(
-            leaf,
-            f"{leaf}.work_address.resolved",
-            f"{leaf}.work_address.natural_target_absent",
-        )
-        for leaf in ("modelo.work.verify", "modelo.work.file")
-    ),
-    *(
-        _profile(
-            leaf,
-            f"{leaf}.work_address.resolved",
-            f"{leaf}.work_address.exact_work_unit_absent",
-        )
+        _profile(leaf, f"{leaf}.work_address.resolved", f"{leaf}.work_address.{scenario}")
+        for scenario in ("natural_target_absent", "exact_work_unit_absent")
         for leaf in ("modelo.work.verify", "modelo.work.file")
     ),
     _profile(
@@ -525,8 +514,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         )
         for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
-    # The prorrata register listing: the filer sees the rows the registry edition
-    # leaves out of the annual summary. Recovering needs the edition, not an action.
+    # The prorrata register listing shows the rows the edition leaves out of the summary.
     *(
         _profile(
             leaf,
