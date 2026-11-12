@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:a6f0e3c94188840a1f16191d0b1104f96b4c42b072828ab7a2676f12461b269d'
+body_hash: 'sha256:727a22517eef295f0af7c1a90ecf9da556a0940892d31e25b687f78027b0e0db'
 related:
   - "[[2026-11-02-operation-refusal-words-adr]]"
   - "[[2026-11-03-backend-served-surface-adr]]"
@@ -16,7 +16,7 @@ related:
   - '[[2026-11-12-frontend-refusal-ways-out-reference]]'
 ---
 
-# `frontend-refusal-ways-out` adr: `One refusal component per frontend: served words, primary action, ordered alternatives, no way out` | (**status:** `proposed`)
+# `frontend-refusal-ways-out` adr: `One refusal component per frontend: served words, primary action, ordered alternatives, no way out` | (**status:** `accepted`)
 
 ## Problem Statement
 
