@@ -368,13 +368,17 @@ def compose_prorrata_register_registered_operations(inputs: OperationComposition
 
 def compose_user_profile_operations(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose user profile operations."""
+    from ..application.ledger.rental_link_admission import rental_ledger_references
     from ..application.user_profile.operations import (
         build_user_profile_operation_definitions,
         build_user_profile_operation_registrations,
     )
+    from .ledger_action_composition import load_ledger_rows_for_rental_references
 
     del inputs
-    definitions = build_user_profile_operation_definitions()
+    definitions = build_user_profile_operation_definitions(
+        rental_ledger_references(load_ledger_rows_for_rental_references)
+    )
     return built(definitions, build_user_profile_operation_registrations(definitions))
 
 
