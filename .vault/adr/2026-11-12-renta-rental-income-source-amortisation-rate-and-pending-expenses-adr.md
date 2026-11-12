@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:689196f4ce82c2366422f426db15e1a09daa7c6c2b0dd63528a284b44048d756'
+body_hash: 'sha256:713b80dd81ff4056a62d1129960c77baeaf9abdd66507b2bd2ee74144c69c9e6'
 related:
   - "[[2026-11-11-renta-rental-income-source-adr]]"
   - "[[2026-11-08-prior-carry-attestation-adr]]"
@@ -14,9 +14,9 @@ related:
   - '[[2026-11-08-prior-carry-attestation-reference]]'
 ---
 
-# `renta-rental-income-source` adr: `applied amortisation rate and anexo C.1 pending-expense carries` | (**status:** `proposed`)
+# `renta-rental-income-source` adr: `applied amortisation rate and anexo C.1 pending-expense carries` | (**status:** `accepted`)
 
-Amends `2026-11-11-renta-rental-income-source-adr`. CADRUMO-PRIME accepted both rulings in substance at 21:22 on 2026-11-12 under the operator's delegation of ADR acceptance, pending this written text; the heading moves to `accepted` once PRIME approves the wording.
+Amends `2026-11-11-renta-rental-income-source-adr`. CADRUMO-PRIME accepted both rulings in substance at 21:22 on 2026-11-12 under the operator's delegation of ADR acceptance, and accepted this written text at 21:31 on 2026-11-12 with the three C.1 conditions recorded under Constraints (PRIME RULINGS 21:31).
 
 ## Problem Statement
 
@@ -45,6 +45,9 @@ Two points of the rental decision are unsettled in code. The net chain applies t
 - Projection never promotes grade. A rate below the ceiling for an ejercicio whose edition lacks the floor parameter is admitted at calculation grade only.
 - A carry is never inferred or zeroed by default; absent, attested-absent and stated stay distinct.
 - Supersedes, in `2026-11-11-renta-rental-income-source-adr`, the Considerations line "Amortisation rule. 3 per cent of the greater of…" as far as it fixes the rate at 3 per cent, the "3 per cent ceiling" judgement in its 2026-11-11 amendment, and its Consequences condition about the 1 to 3 per cent reading, which this record settles. The base, the land split, the cumulative cap and the worked-example oracle stand.
+- C.1 triggers only on a stored fact (PRIME 21:31, condition 1). The blocking finding is raised when the property record's rental start is earlier than the ejercicio filed, so the property was let in one of the four preceding ejercicios, and an origin year inside that window is neither read from a held return nor stated. A property first let in the ejercicio filed raises nothing. A property with no stated rental start blocks on that start as an unstated fact of the property record.
+- Persona fixtures land with the finding (PRIME 21:31, condition 2). Every persona that lets a property in earlier years (arrendador, 2022 to 2025) states the carry per origin year, absence or amount, in the same change that lands the finding. Expected values stay unchanged, and no green persona row may go red.
+- Per-origin-year columns come from the registry (PRIME 21:31, condition 3). The C.1 origin-year columns and their casillas are read per edition from the registry; no origin year is computed in Python from the ejercicio.
 
 ## Implementation
 
@@ -63,7 +66,7 @@ Anexo C.1:
 
 - Opening pending amount per origin year (1213, 1215, 1218, 1221) is read from the matching property occurrence of the previous Modelo 100 held in the profile, or stated through the attestation door of family `renta_capital_inmobiliario_gastos_pendientes` (absence or amount per origin year). Never inferred.
 - Applied this year and pending for future years (1214, 1216, 1217, 1219, 1220, 1222, 1223) are computed by the net chain: oldest origin year first, before the year's own amounts, within the art. 23.1.a cap; an origin year past its fourth following year carries nothing forward. 0103 and 0104 are the sums. 1211 and 1212 come from the property record.
-- When 0103 or 0104 is non-zero, or could be, and an origin year's opening amount is neither read nor stated, the occurrence raises a blocking structured finding that serves the attestation door.
+- When the property record shows the property was let before the ejercicio filed and an origin year inside the four-year window is neither read from a held return nor stated, the occurrence raises a blocking structured finding that serves the attestation door; a property first let in the ejercicio raises nothing, and an unstated rental start blocks on that start (Constraints, condition 1).
 - Hypotheses: field names, finding code, and whether the per-origin-year columns are one row-field family or several.
 
 Sequencing: (2) runs as a P01 Step that ACCEPTANCE adds to the CALC-RENTA plan after S50 and S45 land; (1) waits for P02 of that plan. No separate plan.
