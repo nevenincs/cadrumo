@@ -20,12 +20,14 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.config import override_settings
+from .....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.storage_materialization import ensure_storage_tree
+from .....core.time import clock as clock_module
 from .....core.time.clock import frozen_clock, today_madrid
 from ..authority import PinnedAuthorityOperation
 from ..authority_location import bundled_authority_descriptor_path
-from ..authority_store import AuthorityStoreCorruptionError, SQLiteAuthorityReader
+from ..authority_store import AuthorityStoreCorruptionError, AuthorityStoreFormatError, SQLiteAuthorityReader
 from ..errors import RegistryValidationError
 from ..schema import RegistrySnapshot
 from ..snapshot_proof import (
@@ -310,3 +312,72 @@ def test_a_database_that_already_records_proofs_cannot_be_swept(
 
     with pytest.raises(SnapshotProofPublicationError, match="records no proof contract yet"):
         prove_snapshot_selectors(PinnedAuthorityOperation(reader, reader.pin()))
+
+
+def test_a_proven_request_reads_no_clock_through_the_real_store(
+    proven_reader: tuple[SQLiteAuthorityReader, SnapshotProofContract],
+    monkeypatch: pytest.MonkeyPatch,
+    proven_cell: tuple[_Cell, SnapshotCrossCheckProof],
+) -> None:
+    reader, _ = proven_reader
+    cell, _ = proven_cell
+    clock_reads: list[str] = []
+    real_now = clock_module.now
+
+    def counted_now() -> datetime:
+        clock_reads.append("now")
+        return real_now()
+
+    monkeypatch.setattr(clock_module, "now", counted_now)
+    counts = count_cross_checks(monkeypatch)
+
+    _snapshot(PinnedAuthorityOperation(reader, reader.pin()), cell)
+
+    assert clock_reads == []
+    assert counts == [0] * len(counts)
+
+
+def test_a_database_of_the_preceding_format_is_read_without_its_proofs(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    closure: tuple[ValidatorSource, ...],
+    proven_cell: tuple[_Cell, SnapshotCrossCheckProof],
+) -> None:
+    cell, proof = proven_cell
+    statements = (
+        *_proof_rows(SnapshotProofContract(closure, validator_digest(closure)), (proof,)),
+        ("ALTER TABLE snapshot_proof_contract ADD COLUMN window_from TEXT", ()),
+        ("ALTER TABLE snapshot_proof_contract ADD COLUMN window_to TEXT", ()),
+        ("UPDATE authority_manifest SET format = ?", ("cadrumo-authority-sqlite-v5",)),
+    )
+    reader = SQLiteAuthorityReader(republished_authority(tmp_path / "v5", statements=statements), max_connections=1)
+    try:
+        assert reader.snapshot_proof_contract() is None
+        counts = count_cross_checks(monkeypatch)
+        _snapshot(PinnedAuthorityOperation(reader, reader.pin()), cell)
+    finally:
+        reader.close()
+
+    assert all(count == 1 for count in counts), counts
+
+
+@pytest.mark.parametrize(
+    ("locale", "republication_words"),
+    [
+        ("en", "republish the authority"),
+        ("es", "vuelve a publicar la autoridad"),
+        ("ca", "torna a publicar l'autoritat"),
+        ("hu", "tedd közzé újra a hatóságot"),
+    ],
+)
+def test_an_older_format_is_refused_with_words_naming_republication(
+    tmp_path: Path, locale: str, republication_words: str
+) -> None:
+    statements = (("UPDATE authority_manifest SET format = ?", ("cadrumo-authority-sqlite-v4",)),)
+    descriptor = republished_authority(tmp_path / "v4", statements=statements)
+
+    with pytest.raises(AuthorityStoreFormatError) as refused:
+        SQLiteAuthorityReader(descriptor, max_connections=1)
+
+    assert get_registered_error_code(refused.value).code == "INTEGRITY_AUTHORITY_STORE_FORMAT"
+    assert republication_words in " ".join(resolve_error_message(refused.value, locale=locale).split())
