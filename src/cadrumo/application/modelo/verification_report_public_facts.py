@@ -101,6 +101,7 @@ class ModeloVerificationFindingProjection(BaseModel):
         tuple[LegalRefId, ...], Field(min_length=1, max_length=MAX_MODELO_VERIFICATION_REPORT_FINDING_REFS)
     ]
     source_refs: Annotated[tuple[SourceRefId, ...], Field(max_length=MAX_MODELO_VERIFICATION_REPORT_FINDING_REFS)] = ()
+    disclosed_limitation: bool = Field(default=False, exclude_if=lambda value: not value)
 
     @model_validator(mode="after")
     def _unique_refs(self) -> Self:
@@ -134,6 +135,7 @@ class ModeloVerificationFindingProjection(BaseModel):
             ),
             legal_refs=finding.legal_refs,
             source_refs=finding.source_refs,
+            disclosed_limitation=finding.disclosed_limitation,
         )
 
     def to_finding(self) -> ModeloVerificationFinding:
@@ -148,6 +150,7 @@ class ModeloVerificationFindingProjection(BaseModel):
                 "message_facts": {fact.key: fact.typed_value() for fact in self.message_facts},
                 "legal_refs": self.legal_refs,
                 "source_refs": self.source_refs,
+                "disclosed_limitation": self.disclosed_limitation,
             }
         )
 

@@ -510,6 +510,7 @@ class PublicModeloVerificationFinding(BaseModel):
     message_facts: tuple[PublicFactEntryV1, ...]
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
+    disclosed_limitation: bool = Field(default=False, exclude_if=lambda value: not value)
 
     @model_validator(mode="after")
     def _distinct_message_facts(self) -> Self:

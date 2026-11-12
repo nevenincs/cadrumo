@@ -186,6 +186,19 @@ class ModeloVerificationFinding(BaseModel):
     message_facts: Mapping[str, _FindingFactValue] = Field(default_factory=dict)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = ()
+    disclosed_limitation: bool = Field(default=False, exclude_if=lambda value: not value)
+    """Whether the finding discloses a figure the calculation leaves out, not a check that ran.
+
+    The producer that knows the value is uncomputed sets it, and it never blocks: a limitation
+    is served so the filer can add what only they hold, which can only raise the tax. It is
+    left out of the serialized finding when false, so an ordinary check keeps its identity.
+    """
+
+    @model_validator(mode="after")
+    def _limitation_never_blocks(self) -> ModeloVerificationFinding:
+        if self.disclosed_limitation and self.severity is not ModeloVerificationFindingSeverity.WARNING:
+            raise ValueError("a disclosed limitation is a warning, never a blocking finding")
+        return self
 
     @field_validator("message_facts")
     @classmethod

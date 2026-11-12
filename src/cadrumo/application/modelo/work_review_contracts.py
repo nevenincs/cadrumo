@@ -168,6 +168,7 @@ class ModeloWorkReviewFindingSnapshot(BaseModel):
     message_facts: tuple[ModeloWorkReviewFact, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = ()
+    disclosed_limitation: bool = Field(default=False, exclude_if=lambda value: not value)
 
     @classmethod
     def from_finding(cls, finding: ModeloVerificationFinding) -> Self:
