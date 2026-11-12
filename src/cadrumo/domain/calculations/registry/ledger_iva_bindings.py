@@ -23,6 +23,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.prorrata_exclusions import Art104TresExclusion
 from ....core.type_guards import is_object_list_or_tuple
 from ....core.unit_proportion import UnitProportion
 from ...iva.components import registry_category_projection
@@ -47,6 +48,7 @@ from ...iva.schema import (
 )
 from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
+from .field_absence import later_absent_when_none
 from .ids import BindingId
 from .iva_cash_accounting_vocabulary import require_iva_cash_accounting_treatment
 from .iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
@@ -72,6 +74,7 @@ from .ledger_binding_validation import (
     require_ledger_aggregation_op,
     require_ledger_fact,
 )
+from .prorrata_exclusions import resolve_art104_tres_exclusion_catalogue
 from .prorrata_vocabulary import require_input_classification
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 from .schema_base import coerce_decimal_tuple, coerce_enum_tuple
@@ -249,6 +252,13 @@ class IvaLedgerObservation(BaseModel):
     deduction_provenance: IvaDeductionClassificationProvenance | None = None
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
     rectifies_ledger_id: str | None = Field(default=None, min_length=1, max_length=128)
+    art_104_tres_exclusion: Art104TresExclusion | None = None
+    """The operator's LIVA art. 104.Tres exclusion declared on the source ledger row, when any.
+
+    Carried so a binding whose box the law measures without such operations can
+    leave the row out by its declared token; every other binding still reads it.
+    ``None`` is a row with no declaration, never a row proven not to be excluded.
+    """
 
     @field_validator("input_classification", mode="before")
     @classmethod
@@ -391,6 +401,16 @@ class LedgerIvaProvider(BaseModel):
     binding. Only a deducible flow carries a deduction kind, so the axis is
     refused on any other flow rather than left to match nothing.
     """
+    excluded_art_104_tres_exclusions: tuple[Art104TresExclusion, ...] | None = Field(
+        default=None, min_length=1, exclude_if=later_absent_when_none
+    )
+    """Art. 104.Tres exclusion tokens whose rows this binding leaves out, when the box asks for that.
+
+    ``None`` -- the default -- reads every row the other axes admit, declared
+    exclusion or not. Set it where the governing text measures the box without
+    the operations art. 104.Tres names, so a row the operator declared under one
+    of these tokens does not enter the box. A row with no declaration is read.
+    """
     fact: LedgerIvaFactValue = LedgerIvaFact.IVA_AMOUNT_SUM
 
     @field_validator("categories", mode="after")
@@ -440,6 +460,17 @@ class LedgerIvaProvider(BaseModel):
     ) -> tuple[IvaExemptionArticle, ...] | None:
         if value is not None and len(set(value)) != len(value):
             raise RegistryValidationError("exemption_articles entries must be unique")
+        return value
+
+    @field_validator("excluded_art_104_tres_exclusions", mode="after")
+    @classmethod
+    @pydantic_validation_boundary
+    def _excluded_art_104_tres_exclusions_unique(
+        cls,
+        value: tuple[Art104TresExclusion, ...] | None,
+    ) -> tuple[Art104TresExclusion, ...] | None:
+        if value is not None and len(set(value)) != len(value):
+            raise RegistryValidationError("excluded_art_104_tres_exclusions entries must be unique")
         return value
 
     @field_validator("deduction_fact_kinds", mode="after")
@@ -512,6 +543,9 @@ def _selector_membership_checks(
         partial(require_iva_exemption_article, token, effective_date=effective_date, authority=authority)
         for token in selector.exemption_articles or ()
     )
+    if selector.excluded_art_104_tres_exclusions is not None:
+        exclusions = resolve_art104_tres_exclusion_catalogue(effective_date=effective_date, authority=authority)
+        checks.extend(partial(exclusions.require, token) for token in selector.excluded_art_104_tres_exclusions)
     return checks
 
 
@@ -639,6 +673,11 @@ class IvaSelectorAxesProtocol(Protocol):
         """Return the fact-0085 deduction kind, when the row bears a deduction."""
         ...
 
+    @property
+    def art_104_tres_exclusion(self) -> Art104TresExclusion | None:
+        """Return the art. 104.Tres exclusion declared on the source row, when any."""
+        ...
+
 
 class _IvaReachabilityProbeObservation(NamedTuple):
     """Minimal shape carrying only the axes the IVA matcher reads.
@@ -662,6 +701,9 @@ class _IvaReachabilityProbeObservation(NamedTuple):
     # Same reasoning for the deduction kind: a kind-specific binding is asked
     # whether a row of a kind it names can reach it.
     deduction_fact_kind: IvaDeductionFactKind | None = None
+    # A row with no declared exclusion reaches every binding, so the probe asks
+    # with none: a binding excluding declared rows is still reachable.
+    art_104_tres_exclusion: Art104TresExclusion | None = None
 
 
 def iva_reachability_probe(selector: LedgerIvaProvider) -> None:
@@ -756,6 +798,10 @@ def _iva_optional_selector_axes_match(
         return False
     if selector.deduction_fact_kinds is not None and observation.deduction_fact_kind not in set(
         selector.deduction_fact_kinds,
+    ):
+        return False
+    if selector.excluded_art_104_tres_exclusions is not None and observation.art_104_tres_exclusion in set(
+        selector.excluded_art_104_tres_exclusions
     ):
         return False
     return selector.exemption_articles is None or observation.exemption_article in set(selector.exemption_articles)

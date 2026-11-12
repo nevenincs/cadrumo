@@ -23,6 +23,7 @@ from pydantic import ValidationError
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.modelo import Modelo
+from .....core.prorrata_exclusions import Art104TresExclusion
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import (
     IvaCashAccountingTreatment,
@@ -146,6 +147,8 @@ class _MinimalIvaObservation:
         # No deduction kind, as for the production probe of a selector that
         # declares none: the matcher asks it only of kind-specific bindings.
         self.deduction_fact_kind = deduction_fact_kind
+        # Operated inside the Spanish territory, as every row these tests probe.
+        self.art_104_tres_exclusion: Art104TresExclusion | None = None
 
 
 def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None:

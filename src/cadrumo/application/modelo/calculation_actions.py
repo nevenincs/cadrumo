@@ -883,6 +883,7 @@ def _resolve_prepared_casilla_inputs(
         resolved_bindings=prepared.channels.bindings,
         casilla_inputs=prepared.casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
+        resolved_text_bindings=prepared.channels.enum_bindings,
         profile_text_casilla_inputs=resolve_profile_text_casilla_inputs(
             revision,
             profile_text_fact_index(

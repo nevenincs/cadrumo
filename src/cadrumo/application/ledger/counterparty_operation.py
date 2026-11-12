@@ -13,7 +13,9 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.country_code import CountryCodeAlpha2
+from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
+from ...core.i18n.render import tr
 from ...core.identity.documents import IdentityDocument, IdentityError, validate_identity
 from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -27,6 +29,7 @@ from ...domain.iva.classification import require_iva_territorial_scope
 from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH, served_words_language
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.fenced_result import publish_fenced_result
 from ..operations.models import OperationRequest
@@ -53,6 +56,11 @@ from .counterparty_establishment import (
 from .counterparty_establishment_ports import (
     CounterpartyEstablishmentRepositoryFactory,
     CounterpartyEstablishmentRepositoryProtocol,
+)
+from .counterparty_filing_name_slots import (
+    CounterpartyFilingNamePartLimit,
+    CounterpartyFilingNameSlot,
+    counterparty_filing_name_slots,
 )
 from .read_access import resolve_ledger_request_access
 
@@ -301,17 +309,47 @@ FILING_NAME_KIND_CONTRADICTS_FORM_FINDING = "counterparty_filing_name_kind_contr
 """Stable code of the finding raised when a declared kind and a Spanish NIF's form disagree."""
 
 
+_FINDING_LOCALE_KEY = "application.ledger.counterparty.findings.kind_contradicts_identifier_form"
+_PARTY_KIND_LOCALE_KEYS: dict[str, str] = {
+    DeclaredPartyKind.NATURAL_PERSON.value: "application.ledger.counterparty.party_kinds.natural_person",
+    DeclaredPartyKind.ENTITY.value: "application.ledger.counterparty.party_kinds.entity",
+}
+
+
 class CounterpartyFilingNameFinding(BaseModel):
     """A disagreement between the declared kind and the form of the identifier.
 
-    It carries the two kinds and nothing else: never the identifier or the name,
-    so it may travel through any channel the result does.
+    It carries the two kinds and the sentence a frontend shows for them, in the
+    language it is in, and nothing else: never the identifier or the name, so it
+    may travel through any channel the result does.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     code: Literal["counterparty_filing_name_kind_contradicts_identifier_form"]
     declared_kind: Literal["natural_person", "entity"]
     observed_form: Literal["natural_person", "entity"]
+    words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> CounterpartyFilingNameFinding:
+        if (self.words is None) != (self.words_language is None):
+            raise ValueError("served words name the language they are in")
+        return self
+
+
+def served_kind_finding_words(*, declared_kind: str, observed_form: str) -> tuple[str, OutputLanguage]:
+    """The finished sentence for a kind that contradicts the identifier's form, and the worker's language."""
+    language = served_words_language()
+    return (
+        tr(
+            _FINDING_LOCALE_KEY,
+            locale=language.value,
+            declared=tr(_PARTY_KIND_LOCALE_KEYS[declared_kind], locale=language.value),
+            observed=tr(_PARTY_KIND_LOCALE_KEYS[observed_form], locale=language.value),
+        ),
+        language,
+    )
 
 
 def _identifier_form(
@@ -346,11 +384,15 @@ def filing_name_kind_findings(
     observed = _identifier_form(tax_identifier, country_code=country_code, operation=operation)
     if observed is None or observed.value == declared_kind:
         return ()
+    declared = DeclaredPartyKind(declared_kind).value
+    words, language = served_kind_finding_words(declared_kind=declared, observed_form=observed.value)
     return (
         CounterpartyFilingNameFinding(
             code=FILING_NAME_KIND_CONTRADICTS_FORM_FINDING,
-            declared_kind=DeclaredPartyKind(declared_kind).value,
+            declared_kind=declared,
             observed_form=observed.value,
+            words=words,
+            words_language=language,
         ),
     )
 
@@ -407,7 +449,10 @@ class LedgerCounterpartyResult(BaseModel):
     view; ``provincia_choices`` are the provinces it can be stated as, served by
     a view and a provincia statement so a surface offers no list of its own.
     ``filing_name`` is the name stated for the counterparty, served by a view
-    and a filing-name statement.
+    and a filing-name statement. ``filing_name_slots`` are the export fields the
+    pinned authority's layouts file a party name into, each with its width and
+    whether the stated name fills it, and ``filing_name_part_limits`` the longest
+    each stated part can be for the full name to fit a slot; a view serves both.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -426,6 +471,8 @@ class LedgerCounterpartyResult(BaseModel):
     provincia_choices: tuple[CounterpartyProvinciaChoice, ...] = ()
     filing_name: CounterpartyFilingNameProjection | None = None
     findings: tuple[CounterpartyFilingNameFinding, ...] = ()
+    filing_name_slots: tuple[CounterpartyFilingNameSlot, ...] = ()
+    filing_name_part_limits: tuple[CounterpartyFilingNamePartLimit, ...] = ()
 
 
 class _TrackedCounterpartyRepository:
@@ -629,7 +676,13 @@ def _view_counterparty_action(
         ),
         repository=repository,
     )
-    stated_name = _stated_filing_name(payload, repository=repository)
+    stated = stated_counterparty_filing_name(
+        payload.tax_identifier, country_code=payload.country_code, repository=repository
+    )
+    stated_name = None if stated is None else CounterpartyFilingNameProjection.from_fact(stated)
+    slots, part_limits = counterparty_filing_name_slots(
+        context.authority_operation, None if stated is None else stated.declared_filing_name
+    )
     return LedgerCounterpartyResult(
         profile_id=payload.profile_id,
         action=payload.action,
@@ -652,17 +705,9 @@ def _view_counterparty_action(
                 operation=context.authority_operation,
             )
         ),
+        filing_name_slots=slots,
+        filing_name_part_limits=part_limits,
     )
-
-
-def _stated_filing_name(
-    payload: LedgerCounterpartyRequest, *, repository: _TrackedCounterpartyRepository
-) -> CounterpartyFilingNameProjection | None:
-    """Project the filing name stated for the viewed counterparty, when one is stated."""
-    stated = stated_counterparty_filing_name(
-        payload.tax_identifier, country_code=payload.country_code, repository=repository
-    )
-    return None if stated is None else CounterpartyFilingNameProjection.from_fact(stated)
 
 
 def _perform_counterparty_action(

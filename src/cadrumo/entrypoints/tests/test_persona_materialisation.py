@@ -51,11 +51,12 @@ from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_recargo_equivalencia_token
 from ...domain.contribuyente.inventory.records import MovementKind
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecordStatus
 from ...domain.user_profile.values import ProfileSetupState
-from ...tests.personas import persona_ids
+from ...tests.personas import InventoryBook, Persona, YearEnvelope, persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
 from .persona_materialisation import (
     PERSONA_ACTOR,
@@ -198,8 +199,8 @@ def test_a_persona_replays_through_production_operations(
         for certificate in persona.withholding_certificates
     }
     assert set(materialised.evidence) == {document.id for document in persona.documents}
-    # Each book opens at its stated stock, records one purchase for each ledger row it names, under that row's
-    # ref, and holds the closing recorded on its movements.
+    # Each book opens at its stated stock, holds exactly the movements its stated purchases and closing imply,
+    # and holds the closing recorded on its movements.
     assert {
         activity: (
             None
@@ -207,18 +208,55 @@ def test_a_persona_replays_through_production_operations(
             else (
                 Decimal(ledger.opening_stock.decimal),
                 sorted(
-                    movement.movement_id
+                    (movement.kind, movement.movement_id, Decimal(movement.quantity.decimal))
                     for movement in ledger.period_movements
-                    if movement.kind is MovementKind.PURCHASE
                 ),
                 ledger.closing_authority_fingerprints is not None,
             )
         )
         for activity, ledger in books.items()
-    } == {book.activity: (book.opening_stock, sorted(book.purchases), True) for book in persona.inventory}
+    } == {
+        book.activity: (book.opening_stock, sorted(_expected_movements(persona, book, world.envelope)), True)
+        for book in persona.inventory
+    }
     assert {item.block for item in materialised.not_loaded} == _NOT_LOADED[persona_id]
     # Every run registers the persona at the same identity, so what is read of it names the same profile.
     assert world.profile_id == persona_profile_id(persona_id)
+
+
+def _expected_movements(
+    persona: Persona, book: InventoryBook, envelope: YearEnvelope
+) -> list[tuple[MovementKind, str, Decimal]]:
+    """The movements a book's stated purchases and closing imply, each quantity derived from euros.
+
+    Every figure is a value in euros first. A purchase costs its base, plus the
+    IVA and recargo it bears when the persona states the recargo de
+    equivalencia regime, which deducts neither (LIVA art. 154.Dos). The stock
+    sold is ``opening + purchases - closing`` in euros. The quantities then
+    follow the valuation's layers: the opening stock is one layer of one unit
+    at its whole value (``valuation._opening_layers``) and each purchase is
+    booked at one unit per euro of its cost, so FIFO sells the opening layer
+    first, as one unit or the fraction of it the sold value covers, and then
+    one unit per euro of purchases.
+    """
+    year = book.year.resolve(envelope)
+    regime = next((answer.value for answer in persona.profile if answer.question_id == "iva-regime"), None)
+    bears_tax = regime == iva_regime_recargo_equivalencia_token(effective_date=date(year, 12, 31)).value
+    rows = {row.ref: row for row in persona.ledger}
+    movements: list[tuple[MovementKind, str, Decimal]] = []
+    for ref in book.purchases:
+        row = rows[ref]
+        assert row.taxable_base is not None
+        assert row.iva_amount is not None
+        borne = row.iva_amount + (row.recargo_amount or Decimal(0)) if bears_tax else Decimal(0)
+        movements.append((MovementKind.PURCHASE, ref, row.taxable_base + borne))
+    purchased = sum((cost for _, _, cost in movements), Decimal(0))
+    sold_value = book.opening_stock + purchased - book.closing_stock
+    if not sold_value:
+        return movements
+    opening_units = min(sold_value, book.opening_stock) / book.opening_stock if book.opening_stock else Decimal(0)
+    sold_units = opening_units + max(sold_value - book.opening_stock, Decimal(0))
+    return [*movements, (MovementKind.COGS, f"{book.activity}-{year}-vendido", sold_units)]
 
 
 def _profile_values(world: PersonaWorld) -> dict[str, str]:
