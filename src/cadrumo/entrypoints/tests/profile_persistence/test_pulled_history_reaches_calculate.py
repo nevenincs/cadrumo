@@ -66,6 +66,7 @@ from ....application.live.filed_observation_persistence import persist_filed_cal
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -244,6 +245,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
             "collectible_invoice",
             "payable_invoice",
             "retencion_soportada",
+            *BUCKET_AGGREGATION_LOCK_SOURCES,
         )
     }
 

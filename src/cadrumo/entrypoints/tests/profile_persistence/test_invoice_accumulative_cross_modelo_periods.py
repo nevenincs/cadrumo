@@ -100,6 +100,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from ....domain.iva.schema import InvoiceKind
 
@@ -550,6 +551,7 @@ def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> 
             "collectible_invoice",
             "payable_invoice",
             "retencion_soportada",
+            *BUCKET_AGGREGATION_LOCK_SOURCES,
         )
     }
     return values
