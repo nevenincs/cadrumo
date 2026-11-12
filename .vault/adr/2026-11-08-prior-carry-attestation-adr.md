@@ -5,7 +5,7 @@ tags:
 date: '2026-11-08'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ecead0ec9959806bf0bb43359c80a14b4b5b867975f61ec3ff91b5d9d9242a9'
+body_hash: 'sha256:b7d424daa4a9e9980aa29b089ad397292f7341622f09a57c0be8f5d69c61974d'
 related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-06-13-first-filer-attestation-adr]]"
@@ -121,7 +121,6 @@ without a second mechanism.
 
 Accepted 2026-11-11 by CADRUMO-PRIME under the operator's delegation, with the decision `2026-11-11-renta-rental-income-source-adr`. One more absence-attestation family is admitted: `renta_capital_inmobiliario_gastos_pendientes`, at row grain keyed by the property row identity, for absence and for stated amounts (amended 2026-11-11 23:25 on the rental decisions ruling, because situaciones 4 and 5 hold no referencia catastral and it is an editable fact). A first year in the app can then state that a property carries no pending expenses from earlier years into 0103, instead of leaving the box unresolved for want of a return the app does not hold.
 
-
 ## Amendment 2026-11-12: the negative savings balances pending from earlier ejercicios
 
 Accepted 2026-11-12 00:51 by CADRUMO-PRIME with one condition, written in below (ruling: the 00:51 entry of PRIME's rulings log). Proposed in `2026-11-11-prior-carry-attestation-savings-carries-adr`, now retired.
@@ -180,5 +179,7 @@ Conditions of acceptance.
 3. The 2021 employer-contribution split rows (1742 to 1763) are read in the 2021 official design before authoring. A third family is added only if that design carries them as a separate pending amount, and the citation is reported to CADRUMO-PRIME.
 4. Depends on S40 (a) and (b): nothing of this amendment lands before S40 (a) is on feature/tui.
 5. Added by CADRUMO-PRIME 2026-11-12 15:18 and 15:20 (rulings log). A third family, `renta_prevision_social_employer_excess_pending`, is declared on the 2021 edition only, for the employer-contribution excess block that only the 2021 design carries (rows 1741 to 1755 and 1756 to 1763), and removed in 2022 by delta. The 2022 opening row for each origin year is the 2021 personal closing plus the 2021 employer closing, at filing grade, on the 2022 manual's instruction that those excesses enter one block without distinguishing aportaciones from contribuciones (`2026-11-12-renta-prevision-social-contribution-source-research`). An excess carries only if the earlier return asked to reduce it in the following five ejercicios ("siempre que se hubiera solicitado", 2022 manual :34312): a value read from the earlier return's Anexo C rows carries that request, and the `attest_prior_value` statement words for these families state that the filer asked for the carry in that return.
+6. Corrected 2026-11-12 22:22 by CADRUMO-PRIME (rulings log, 22:22 entry), because "row grain keyed by the contributing member" contradicted "intent, operator layer, admission, form action, door and contradiction finding unchanged": the code keeps row-grain families out of the declaration-wide door, a row-grain family must be a row-set money column, and no previous-filing provider reads row sets. The families are scalar per return, like the savings carries: they join `PRIOR_CARRY_FAMILIES` and the `attest-prior-carries --family` choices, and each opening row reads the previous return's row of the next-newer slot (`filing_year_offset` -1). An individual return's statement covers the declarant. A joint return with any excess read or stated non-zero, or with any of these families unstated, stays unresolved and blocks with served words; a joint return with every family stated absent resolves. Per-member row sets (a row-set previous-filing provider, a row-grain carry door and repeated XML export) are a later item on the P02 list.
+7. Added 2026-11-12 22:22 by CADRUMO-PRIME with the same ruling, on the S40 (a) reduction this amendment builds on: excesses from earlier ejercicios apply first against the undivided 1.500 + 8.500 pool (RIRPF art. 51, "en primer lugar"), the year's own contributions reduce against what remains of it, and where the text leaves the interplay with the 1.500 sub-limit open the result is calculation grade only. Each rule period is proven on the manual's worked example through the real resolver.
 
 Consequences. A filer with or without an earlier return can complete the pension reduction, and nothing pending is never read from an unprinted box. The year's own excess feeds the next return. `PRIOR_CARRY_FAMILIES` and the carry door grow by two families, and the operation contract manifest is regenerated.
