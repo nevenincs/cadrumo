@@ -5,7 +5,7 @@ tags:
 date: '2026-11-08'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ae8cbaa01ba8ba90aab91a30d9d3490d35e7e52b67b66e7af482cb69e44303e'
+body_hash: 'sha256:8ecead0ec9959806bf0bb43359c80a14b4b5b867975f61ec3ff91b5d9d9242a9'
 related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-06-13-first-filer-attestation-adr]]"
@@ -179,5 +179,6 @@ Conditions of acceptance.
 2. Only amounts blocked by insufficient base or by the percentage limit carry; the excess over the absolute limit never carries. The order of application is the official text's for each year, cited per edition; where no text fixes an order and the order changes a figure, the result is calculation grade only.
 3. The 2021 employer-contribution split rows (1742 to 1763) are read in the 2021 official design before authoring. A third family is added only if that design carries them as a separate pending amount, and the citation is reported to CADRUMO-PRIME.
 4. Depends on S40 (a) and (b): nothing of this amendment lands before S40 (a) is on feature/tui.
+5. Added by CADRUMO-PRIME 2026-11-12 15:18 and 15:20 (rulings log). A third family, `renta_prevision_social_employer_excess_pending`, is declared on the 2021 edition only, for the employer-contribution excess block that only the 2021 design carries (rows 1741 to 1755 and 1756 to 1763), and removed in 2022 by delta. The 2022 opening row for each origin year is the 2021 personal closing plus the 2021 employer closing, at filing grade, on the 2022 manual's instruction that those excesses enter one block without distinguishing aportaciones from contribuciones (`2026-11-12-renta-prevision-social-contribution-source-research`). An excess carries only if the earlier return asked to reduce it in the following five ejercicios ("siempre que se hubiera solicitado", 2022 manual :34312): a value read from the earlier return's Anexo C rows carries that request, and the `attest_prior_value` statement words for these families state that the filer asked for the carry in that return.
 
 Consequences. A filer with or without an earlier return can complete the pension reduction, and nothing pending is never read from an unprinted box. The year's own excess feeds the next return. `PRIOR_CARRY_FAMILIES` and the carry door grow by two families, and the operation contract manifest is regenerated.
