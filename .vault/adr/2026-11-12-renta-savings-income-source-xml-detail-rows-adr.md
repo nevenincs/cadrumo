@@ -5,14 +5,14 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:72e0a7a1a2829508773677202d5e00871b2787dfa73b9e498a2ea58d7972845b'
+body_hash: 'sha256:92e70276297b655752a7348b6a16a6ecd1eeef0d17859301c984b517dd9e8f78'
 related:
   - "[[2026-11-11-renta-savings-income-source-adr]]"
   - "[[2026-11-12-renta-savings-income-source-reference]]"
 ---
-# `renta-savings-income-source` adr: `Place the savings detail rows in the Modelo 100 XML export from the hydrated official design` | (**status:** `proposed`)
+# `renta-savings-income-source` adr: `Place the savings detail rows in the Modelo 100 XML export from the hydrated official design` | (**status:** `accepted`)
 
-Proposed amendment to `2026-11-11-renta-savings-income-source-adr`, section "Rows". Until it is accepted, the accepted record stands, and the export ruling of CADRUMO-PRIME of 2026-11-12 10:55 governs: a typed export refusal for a return that holds savings positions or position-linked rows.
+Accepted 2026-11-12 10:59 by CADRUMO-PRIME as written at lane/calculators 82b6ed73aa, under the operator's delegation, with four conditions written into Constraints. It amends `2026-11-11-renta-savings-income-source-adr`, section "Rows". Until it lands, the export ruling of CADRUMO-PRIME of 2026-11-12 10:55 governs: a typed export refusal for a return that holds savings positions or position-linked rows.
 
 ## Problem Statement
 
@@ -41,6 +41,10 @@ The accepted record says each position gives one `RegistroB11` or `RegistroB13` 
 - The XSD is the authority for structure and bounds. An entry from the input dictionary that the edition's XSD does not admit is refused at layout validation, not at export.
 - More occurrences than the XSD admits are refused at export, through the existing bound (`src/cadrumo/application/filing/export_xml_dictionary.py:883-897`).
 - The occurrence values are the ones the savings source family computes (gross, withholding and expenses per occurrence). The exporter computes nothing.
+- Acceptance condition 1: a path that both dictionaries carry with different definitions is refused at layout validation. The declaration dictionary is never overridden.
+- Acceptance condition 2: more positions than the occurrence bound is a typed export refusal with served words. Rows are never merged or dropped to fit.
+- Acceptance condition 3: proof per admitted edition, enumerated from the registry envelope, and no regression in any existing Modelo 100 export.
+- Acceptance condition 4, order: the interim refusal (c) hands over first and alone; then the frontend record-group read and the unmasked profile-persistence reds; then this change.
 - The interim refusal (c) stays until this lands. It is removed in the same change that places the rows, and both hand over together if any persona ever holds savings positions.
 
 ## Implementation
