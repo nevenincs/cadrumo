@@ -21,7 +21,7 @@ from cadrumo_client.transport.modelo_metadata import (
 )
 
 from ...application.modelo.metadata_read_operation import ModeloWorkMetadataRequest
-from ...application.modelo.work_addressing import ModeloWorkAddressNotFoundError
+from ...application.modelo.work_address_errors import ModeloWorkAddressNotFoundError
 from ...application.modelo.work_change_contracts import (
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardPublicResultV2,

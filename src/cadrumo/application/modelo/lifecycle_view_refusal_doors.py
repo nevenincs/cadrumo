@@ -12,6 +12,7 @@ from ...core.operator_action_enums import ActionEvidenceProvenance
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import profile_required_facts_missing_verdict
 from .refusal_door_verdicts import (
+    DESCRIBE_ACTION_ID,
     FILING_RECORD_IMPORT_ACTION_ID,
     PROFILE_LIST_ACTION_ID,
     VERIFICATION_REPORT_LIST_ACTION_ID,
@@ -87,6 +88,17 @@ def work_create_verdict(reason: str, *, modelo: str, filing_year: int | None = N
     )
 
 
+def modelo_describe_verdict(reason: str, modelo: str) -> PreconditionVerdict:
+    """The description of the declaration, which states the periods and revisions it accepts."""
+    return action_door_verdict(
+        f"modelo.lifecycle.{reason}.valid",
+        DESCRIBE_ACTION_ID,
+        facts={"reason": reason, "modelo": modelo, "valid": False},
+        arguments={"modelo": modelo},
+        provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+    )
+
+
 def verification_reports_verdict(reason: str, calculation_revision_id: str) -> PreconditionVerdict:
     """The verification reports of a revision, from which the approving one is named."""
     return action_door_verdict(
@@ -125,6 +137,7 @@ def profile_facts_verdict(field_paths: tuple[str, ...], *, modelo: str | None = 
 
 __all__ = [
     "iva_wallet_seed_verdict",
+    "modelo_describe_verdict",
     "no_active_profile_verdict",
     "profile_facts_verdict",
     "unit_calculate_verdict",

@@ -3144,6 +3144,11 @@ application:
         uno de: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' no se reconoce. Indica --year
         %{year} por separado y usa un token de periodo como 0A, 1T o 01.
+      work_registry_revision_not_law_selected: La revisión del registro %{requested_revision}
+        que pides no es la revisión que la ley determina para esta declaración, que
+        es %{law_revision}. La asociación entre periodo y revisión la fija la ley,
+        así que no se puede sustituir. Crea de nuevo la unidad de trabajo sin --revision
+        para usar la revisión determinada por la ley.
       work_unit_already_discarded: La declaración ya está descartada.
       work_unit_create_discarded: Este objetivo de declaración fue descartado. Volver
         a crearlo devuelve la misma declaración descartada, por lo que no se puede

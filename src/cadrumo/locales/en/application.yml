@@ -2981,6 +2981,11 @@ application:
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' is not recognised. Pass
         --year %{year} separately and use a period token such as 0A, 1T, or 01.
+      work_registry_revision_not_law_selected: The registry revision %{requested_revision}
+        you asked for is not the law-determined revision for this filing target, which
+        is %{law_revision}. The period-to-revision binding is fixed by law, so it
+        cannot be overridden. Create the work unit again without --revision to use
+        the law-determined revision.
       work_unit_already_discarded: The declaration is already discarded.
       work_unit_create_discarded: This filing target was discarded. Creating it again
         resolves to the same discarded declaration, so the target cannot be resumed.

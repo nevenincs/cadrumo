@@ -13,16 +13,6 @@
   "src/cadrumo/application/modelo/reconciliation_import_operation.py::ModeloReconciliationImportExecutor.execute.prepare::ERROR_MODELO_WORK_ADDRESS_NOT_FOUND::0",
   "src/cadrumo/application/modelo/result_disposition_resolution.py::_reject_non_revision_casilla_values::INTEGRITY_CADRUMO_CORE_VALIDATION::0",
   "src/cadrumo/application/modelo/result_disposition_resolution.py::_reject_non_revision_casilla_values::INTEGRITY_CADRUMO_CORE_VALIDATION::1",
-  "src/cadrumo/application/modelo/work_addressing.py::ModeloRevisionPick.__post_init__::REFUSED_MODELO_REVISION_PICK::0",
-  "src/cadrumo/application/modelo/work_addressing.py::ModeloRevisionPick.__post_init__::REFUSED_MODELO_REVISION_PICK::1",
-  "src/cadrumo/application/modelo/work_addressing.py::_modelo_work_period_from_core::REFUSED_MODELO_WORK_PERIOD_TOKEN::0",
-  "src/cadrumo/application/modelo/work_addressing.py::_require_revision_state::REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_STATE::0",
-  "src/cadrumo/application/modelo/work_addressing.py::assert_work_target_revision::REFUSED_MODELO_WORK_REGISTRY_YEAR_MISMATCH::0",
-  "src/cadrumo/application/modelo/work_addressing.py::modelo_work_address_from_operator_target::ERROR_MODELO_WORK_ADDRESS_NOT_FOUND::0",
-  "src/cadrumo/application/modelo/work_addressing.py::resolve_modelo_work_address::ERROR_MODELO_WORK_ADDRESS_NOT_FOUND::0",
-  "src/cadrumo/application/modelo/work_selection.py::_resolve_operator_work_unit_selection::REFUSED_MODELO_WORK_SELECTOR_AMBIGUOUS::0",
-  "src/cadrumo/application/modelo/work_selection.py::_select_natural_modelo_work_resolution::REFUSED_MODELO_WORK_SELECTOR_AMBIGUOUS::0",
-  "src/cadrumo/application/modelo/work_selection.py::_select_natural_modelo_work_resolution::REFUSED_MODELO_WORK_SELECTOR_REVISION_CONFLICT::0",
   "src/cadrumo/domain/modelos/calculation_revision.py::assert_revision_snapshot_evidence_coverage::FAIL_MODELO_LEDGER_FILING_COVERAGE::0",
   "src/cadrumo/domain/modelos/calculation_revision_aggregate.py::validate_calculation_revision_aggregate::ERROR_MODELOS_VALIDATION::1",
   "src/cadrumo/domain/modelos/calculation_revision_aggregate.py::validate_calculation_revision_aggregate::ERROR_MODELOS_VALIDATION::2",
@@ -47,9 +37,6 @@
   "src/cadrumo/application/modelo/m145_communication_records.py::snapshot_for_scope::REFUSED_M145_COMMUNICATION_RECORD_VALIDATION::0",
   "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::0",
   "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::1",
-  "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::2",
-  "src/cadrumo/application/modelo/work_addressing.py::assert_work_target_revision::REFUSED_MODELO_WORK_REGISTRY_YEAR_MISMATCH::0",
-  "src/cadrumo/application/modelo/work_selection.py::_resolve_operator_work_unit_selection::REFUSED_MODELO_WORK_SELECTOR_AMBIGUOUS::0",
-  "src/cadrumo/application/modelo/work_selection.py::_select_natural_modelo_work_resolution::REFUSED_MODELO_WORK_SELECTOR_AMBIGUOUS::0"
+  "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::2"
  ]
 }

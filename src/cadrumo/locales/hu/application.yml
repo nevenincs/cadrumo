@@ -3093,6 +3093,11 @@ application:
       work_period_token_unrecognised: 'A --period ''%{token}'' nem felismerhető. Add
         meg külön: --year %{year}, és használj időszak-tokent, például 0A, 1T vagy
         01.'
+      work_registry_revision_not_law_selected: A kért %{requested_revision} nyilvántartási
+        változat nem az a változat, amelyet a jogszabály ehhez a bevalláshoz meghatároz,
+        az pedig a %{law_revision}. Az időszak és a változat összerendelését jogszabály
+        rögzíti, ezért nem írható felül. Hozd létre újra a munkaegységet a --revision
+        nélkül, hogy a jogszabály szerinti változat érvényesüljön.
       work_unit_already_discarded: A bevallás már el van vetve.
       work_unit_create_discarded: Ezt a bevallási célt elvetették. Az ismételt létrehozás
         ugyanazt az elvetett bevallást adja vissza, így nem folytatható.

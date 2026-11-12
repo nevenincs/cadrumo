@@ -35,12 +35,8 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .metadata_projection import ModeloWorkMetadataSnapshot
-from .work_addressing import (
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkPeriodTokenError,
-    ModeloWorkSelectorError,
-    resolve_modelo_work_unit_for_operator_target,
-)
+from .work_address_errors import ModeloWorkAddressNotFoundError, ModeloWorkPeriodTokenError, ModeloWorkSelectorError
+from .work_addressing import resolve_modelo_work_unit_for_operator_target
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 
 MODELO_WORK_METADATA_OPERATION_DEFINITION_ID = "modelo.work.metadata"

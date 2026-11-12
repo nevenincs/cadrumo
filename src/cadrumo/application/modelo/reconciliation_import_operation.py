@@ -66,7 +66,7 @@ from .reconciliation_parsing import (
 )
 from .reconciliation_records import ModeloReconciliationAdvisory, ModeloReconciliationDiff, ModeloReconciliationVerdict
 from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
-from .work_addressing import ModeloWorkAddressNotFoundError
+from .work_address_errors import ModeloWorkAddressNotFoundError
 from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 from .work_unit_repository import work_unit_catalogue_repository
 
