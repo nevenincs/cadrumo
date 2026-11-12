@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-10-24'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:6369528d0a6082ef6043120a8112733d300efce12a26c814452e232e1a414b7f'
+body_hash: 'sha256:35d069346655b3e51e9ad1623fff21f33fd63e48677fee500b11fa9dbb283d66'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-adr]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-artifact-contract-audit]]'
@@ -53,6 +53,8 @@ related:
   - '[[2026-09-19-registry-authority-artifact-boundary-fresh-worktree-bootstrap-audit]]'
   - '[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr]]'
   - '[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-reference]]'
+  - '[[2026-11-12-registry-authority-artifact-boundary-indexed-storage-v6-amendment-adr]]'
+  - '[[2026-11-12-registry-authority-artifact-boundary-snapshot-proof-dateless-amendment-adr]]'
 ---
 
 # `registry-authority-artifact-boundary` feature index
@@ -66,6 +68,8 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 - `2026-09-10-registry-authority-artifact-boundary-adr` - `registry-authority-artifact-boundary` adr: immutable runtime publication | (**status:** `superseded`)
 - `2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr` - `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
 - `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr` - `registry-authority-artifact-boundary` adr: `snapshot cross-checks proven at publication` | (**status:** `accepted`)
+- `2026-11-12-registry-authority-artifact-boundary-indexed-storage-v6-amendment-adr` - `registry-authority-artifact-boundary` adr: `authority database format v6 admitting v5 without proofs (amendment proposal)` | (**status:** `proposed`)
+- `2026-11-12-registry-authority-artifact-boundary-snapshot-proof-dateless-amendment-adr` - `registry-authority-artifact-boundary` adr: `snapshot proofs without a run-date window (amendment proposal)` | (**status:** `proposed`)
 
 ### audit
 
