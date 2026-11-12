@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...domain.calculations.row_source_identity import RowBindingKey
 from ...domain.filing.schema import ModeloBindingValue, ModeloDraft, compute_modelo_draft_id
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from .row_source_fingerprint import ModeloRowSourceFingerprint
 
 
@@ -30,7 +31,11 @@ def attach_revision_row_source_identities(
         revision_row_keys=revision_row_keys,
     )
     if attached != identity_keys:
-        raise ModeloValidationError("row source identity replay did not attach every persisted identity coordinate")
+        raise ModeloValidationError(
+            "row source identity replay did not attach every persisted identity coordinate",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return _rebuild_replayed_draft(draft=draft, binding_values=binding_values)
 
 
@@ -47,10 +52,18 @@ def _validate_replay_coordinates(
         (value.binding_id, value.row_index) for value in draft.binding_values if value.row_index is not None
     }
     if not revision_row_keys.issubset(draft_row_keys):
-        raise ModeloValidationError("row source identity replay is missing a revision row coordinate")
+        raise ModeloValidationError(
+            "row source identity replay is missing a revision row coordinate",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     identity_keys = set(revision.row_source_identities)
     if not identity_keys.issubset(revision_row_keys):
-        raise ModeloValidationError("row source identity replay contains an orphan revision coordinate")
+        raise ModeloValidationError(
+            "row source identity replay contains an orphan revision coordinate",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return revision_row_keys, identity_keys
 
 
@@ -71,13 +84,25 @@ def _replay_binding_value(
     if key is not None and key in revision_row_keys:
         revision_value = revision.row_binding_values[key[0]][str(key[1])]
         if _canonical_replay_value(value.value) != revision_value.strip():
-            raise ModeloValidationError("row source identity replay value does not match persisted revision row")
+            raise ModeloValidationError(
+                "row source identity replay value does not match persisted revision row",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
     if identity is None:
         return value, None
     if key is None:
-        raise ModeloValidationError("row source identity replay requires the casilla key it attaches to")
+        raise ModeloValidationError(
+            "row source identity replay requires the casilla key it attaches to",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if value.row_source_identity is not None and value.row_source_identity != identity:
-        raise ModeloValidationError("row source identity replay refuses a substituted attached identity")
+        raise ModeloValidationError(
+            "row source identity replay refuses a substituted attached identity",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     payload = value.model_dump()
     payload["row_source_identity"] = identity
     return ModeloBindingValue.model_validate(payload), key

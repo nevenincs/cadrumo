@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Literal, override
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -50,6 +50,7 @@ from .edit_models import (
     ModeloEditVersionRefusalV1,
 )
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .work_lifecycle_refusal_failures import mutation_stale_failure, revision_state_failure, work_unit_absent_failure
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
     "ley-58-2003:art-119",
@@ -65,7 +66,17 @@ branching rules or calculation inputs.
 
 
 class WorkUnitNotFoundError(ModeloError):
-    """Raised when a work-unit lookup or mutation targets a missing id."""
+    """Raised when a work-unit lookup or mutation targets a missing id.
+
+    The work list names each unit that exists, from which the operator can
+    address one.
+    """
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the door of an absent work unit."""
+        return work_unit_absent_failure().verdict
 
 
 if TYPE_CHECKING:
@@ -88,11 +99,13 @@ class ModeloPreconditionErrorMixin(_ModeloPreconditionErrorBase):
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
         precondition_failure: ModeloPreconditionFailure | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
         super().__init__(
             message,
             context=context,
             translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
         )
         self._precondition_failure = precondition_failure
 
@@ -102,10 +115,14 @@ class ModeloPreconditionErrorMixin(_ModeloPreconditionErrorBase):
         return self._precondition_failure
 
     @property
+    @override
     def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
         """Expose the one application-owned verdict to the generic CLI boundary."""
         failure = self.precondition_failure
-        return None if failure is None else failure.verdict
+        if failure is not None:
+            return failure.verdict
+        stated = super().terminal_precondition_verdict
+        return stated if isinstance(stated, PreconditionVerdict) else None
 
 
 class WorkUnitAlreadyDiscardedError(ModeloPreconditionErrorMixin, ModeloError):
@@ -113,7 +130,19 @@ class WorkUnitAlreadyDiscardedError(ModeloPreconditionErrorMixin, ModeloError):
 
 
 class WorkUnitMutationRefusedError(ModeloPreconditionErrorMixin, ModeloError):
-    """Raised when a lifecycle mutation targets a rejected work-unit state."""
+    """Raised when a lifecycle mutation targets a rejected work-unit state.
+
+    A raise site that knows a sharper door carries its own failure. Every other
+    refusal means the unit changed after the request was read, so its status
+    is the door, bound to the unit when the raise site states it in ``context``.
+    """
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the carried verdict, or the status door of a unit that changed."""
+        failure = self.precondition_failure
+        return (failure or mutation_stale_failure(self.context)).verdict
 
 
 class CalculationRevisionNotFoundError(ModeloPreconditionErrorMixin, ModeloError, CoreNotFoundError):
@@ -142,11 +171,30 @@ class CalculationRevisionNotFoundError(ModeloPreconditionErrorMixin, ModeloError
 
 
 class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):
-    """Raised when a state transition is requested from an incompatible source state."""
+    """Raised when a state transition is requested from an incompatible source state.
+
+    A raise site that knows a sharper door carries its own failure. Every other
+    refusal opens the unit's revisions, bound to the unit when the raise site
+    states it in ``context``.
+    """
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Expose the carried verdict, or the revisions door of a state the request does not admit."""
+        failure = self.precondition_failure
+        return (failure or revision_state_failure(self.context)).verdict
 
 
 class ModeloRevisionNotSealedError(OperationNextStepErrorMixin, CalculationRevisionStateError):
     """Refused: an artefact was asked of a calculation not yet verified, which checking the declaration settles."""
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Serve the step the raise site chose, not the revisions door."""
+        failure = self.precondition_failure
+        return None if failure is None else failure.verdict
 
 
 class ModeloOperationSubjectNotWorkUnitError(OperationNextStepErrorMixin, ModeloError):
@@ -182,7 +230,7 @@ class AmendmentEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
 
 def amendment_evidence_missing_precondition(
     *,
-    subject_leaf_key: Literal["modelo.work.amend", "modelo.work.amend_wizard"],
+    subject_leaf_key: Literal["modelo.work.amend", "modelo.work.amend_wizard", "modelo.export"],
     work_unit_id: str,
     filing_record_id: str,
 ) -> ModeloPreconditionFailure:
@@ -279,8 +327,43 @@ class AmendmentComplementariaLiabilityDecreaseError(ModeloError):
     """
 
 
-class StoredCalculationDriftError(ModeloError):
-    """Raised when a persisted calculation revision has drifted from its content-addressed id."""
+class StoredCalculationDriftError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when a persisted calculation revision has drifted from its content-addressed id.
+
+    The stored revision can no longer be trusted, and calculating the work unit
+    again writes a fresh revision from its sources, so that is its door. The
+    work unit is bound when the raise site states it in ``context``.
+    """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_failure: ModeloPreconditionFailure | None = None,
+    ) -> None:
+        """Carry the caller's verdict, or the recalculation door of the drifted work unit."""
+        work_unit_id = None if context is None else context.get("work_unit_id")
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_failure=precondition_failure
+            or _stored_drift_failure(work_unit_id if isinstance(work_unit_id, str) else None),
+        )
+
+
+def _stored_drift_failure(work_unit_id: str | None) -> ModeloPreconditionFailure:
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.calculate",
+        scenario_id="modelo.work.calculate.stored_revision.drifted",
+        evidence_id="modelo.work.calculate.stored_revision",
+        evidence_values={"intact": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values=None if work_unit_id is None else {"work_unit_id": work_unit_id},
+        missing_action_arguments=() if work_unit_id is not None else ("work_unit_id",),
+    )
 
 
 class StoredRowFieldScalarInputError(ModeloError):
@@ -309,11 +392,11 @@ class LedgerEvidenceRecaptureRefusedError(ModeloError):
     """
 
 
-class ExternalModeloImportError(ModeloError):
+class ExternalModeloImportError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when the external-filing import path cannot persist an imported baseline."""
 
 
-class ModeloLocalObservationError(ModeloError):
+class ModeloLocalObservationError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when an operator-supplied local observation cannot be persisted."""
 
 
@@ -341,8 +424,12 @@ class ModeloWorkflowGateError(ModeloError):
             Renders the primitive context without serialising the live result.
     """
 
-    def __init__(self, result: WorkflowResult) -> None:
-        """Initialize the error from the aborted workflow result, deriving its rendered context."""
+    def __init__(self, result: WorkflowResult, *, precondition_verdict: PreconditionVerdict | None = None) -> None:
+        """Initialize the error from the aborted workflow result, deriving its rendered context.
+
+        ``precondition_verdict`` is the verdict the run already persisted; the error serves
+        the run's own, so a raise site restating it changes nothing.
+        """
         self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
         # An empty obligation window has its own registered copy, which says
@@ -357,6 +444,7 @@ class ModeloWorkflowGateError(ModeloError):
                 "abort_code": reason,
                 "stage": result.final_stage.value,
             },
+            precondition_verdict=precondition_verdict,
         )
 
     @property
@@ -365,6 +453,7 @@ class ModeloWorkflowGateError(ModeloError):
         return self._result
 
     @property
+    @override
     def terminal_precondition_verdict(self) -> PreconditionVerdict:
         """Return the persisted terminal verdict without exposing the live run.
 
@@ -380,7 +469,11 @@ class ModeloWorkflowGateError(ModeloError):
 
 
 class AmendmentOverrideCasillaError(ModeloError):
-    """Raised when an amendment override targets an undeclared casilla id."""
+    """Raised when an amendment override targets an undeclared casilla id.
+
+    Each raise site carries the verdict of its cause: the declared-casilla
+    listing, the operator's decision for a row field, or a terminal authority.
+    """
 
 
 class AmendmentVerificationRefusedError(ModeloError):
@@ -560,8 +653,13 @@ class ModeloResultDispositionUncodifiedError(ModeloError):
     """
 
 
-class ModeloPriorDomiciliationElectionRefusedError(ModeloError):
-    """Raised when a prior-direct-debit election lacks legal, registry, or U-proof authority."""
+class ModeloPriorDomiciliationElectionRefusedError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when a prior-direct-debit election lacks legal, registry, or U-proof authority.
+
+    Each raise site carries the door of its cause: importing the baseline's
+    justificante, capturing its filed observation, the operator's decision, or
+    a terminal fault of the stored baseline or the registry layout.
+    """
 
 
 class ModeloRefundAccountMissingError(ModeloPreconditionErrorMixin, ModeloError):
@@ -694,26 +792,78 @@ class WorkUnitRevisionDivergenceError(ModeloError):
     """
 
 
-class ModeloEditRefusedError(ModeloError):
+class ModeloEditRefusedError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when an admitted modelo edit is refused at its commit point and nothing changed.
 
     Covers the domain refusals: a disallowed intent, a value that failed
     validation or parsing, or a conflict with the current declaration. The
     typed refusal stays with the caller that produced it; only the registered
-    code travels with the operation.
+    code travels with the operation, with the door of its refusal family. The
+    door leaves the work unit and the value to the operator, because the
+    refusal deliberately carries neither.
     """
+
+    edit_condition: ClassVar[str] = "value"
+    edit_scenario: ClassVar[str] = "refused"
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_failure: ModeloPreconditionFailure | None = None,
+    ) -> None:
+        """Carry the caller's verdict, or the declared door of this refusal family."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_failure=precondition_failure or _edit_refusal_failure(type(self)),
+        )
 
 
 class ModeloEditBaselineStaleError(ModeloEditRefusedError):
     """Raised when the declaration changed after the edit's baseline was captured."""
 
+    edit_condition: ClassVar[str] = "baseline"
+    edit_scenario: ClassVar[str] = "stale"
+
 
 class ModeloEditIntentUnsupportedError(ModeloEditRefusedError):
     """Raised when an admitted edit asks for a kind of change that cannot be applied yet."""
 
+    edit_condition: ClassVar[str] = "intent"
+    edit_scenario: ClassVar[str] = "unsupported"
+
 
 class ModeloEditContractIncompatibleError(ModeloEditRefusedError):
     """Raised when an edit was prepared under an edit contract this version does not accept."""
+
+    edit_condition: ClassVar[str] = "contract"
+    edit_scenario: ClassVar[str] = "incompatible"
+
+
+_EDIT_MISSING_ACTION_ARGUMENTS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {"value": ("work_unit_id", "casilla_id", "value"), "baseline": ("work_unit_id",)}
+)
+
+
+def _edit_refusal_failure(error_type: type[ModeloEditRefusedError]) -> ModeloPreconditionFailure:
+    condition = error_type.edit_condition
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.set_value",
+        scenario_id=f"modelo.work.edit.{condition}.{error_type.edit_scenario}",
+        evidence_id=f"modelo.work.edit.{condition}",
+        evidence_values={"admitted": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        missing_action_arguments=_EDIT_MISSING_ACTION_ARGUMENTS.get(condition, ()),
+    )
+
+
+def modelo_edit_value_refusal_verdict() -> PreconditionVerdict:
+    """Return the door of a refused edit value: state it again on the work unit."""
+    return _edit_refusal_failure(ModeloEditRefusedError).verdict
 
 
 def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> ModeloEditRefusedError:
@@ -782,6 +932,7 @@ __all__ = [
     "export_period_unmappable_error",
     "instalment_election_refusal",
     "modelo_edit_refusal_error",
+    "modelo_edit_value_refusal_verdict",
     "modelo_work_wizard_retry_exhausted_precondition",
     "own_account_missing_error",
 ]

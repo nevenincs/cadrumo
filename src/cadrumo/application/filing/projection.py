@@ -32,8 +32,9 @@ from ...domain.calculations.registry.m303_regimen_simplificado_projection import
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
 from ...domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal
 from .m303_exonerado_390 import project_m303_exonerado_390_value_arrival
 from .producer_snapshot import FilingProducerSnapshot, M303FilingFacts
 
@@ -131,14 +132,23 @@ def _validate_m303_projection_request(
         or registry_snapshot.modelo.id != form_for_role("iva.periodic")
         or facts is None
     ):
-        raise FilingExportValidationError("M303 filing projection requires one complete Modelo 303 snapshot")
+        raise FilingExportValidationError(
+            "M303 filing projection requires one complete Modelo 303 snapshot",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PROJECTION_FACTS_UNSUPPLIED),
+        )
     if (
         facts.period.filing_year != registry_snapshot.filing_year
         or facts.period.registry_token != registry_snapshot.period
     ):
-        raise FilingExportValidationError("M303 filing projection snapshot does not match the filing period")
+        raise FilingExportDesignIntegrityError(
+            "M303 filing projection snapshot does not match the filing period",
+            translated_message="errors.integrity.filing_export_m303_projection_snapshot_period",
+        )
     if not any(candidate is layout for candidate in registry_snapshot.revision.export_layouts):
-        raise FilingExportValidationError("M303 filing projection layout is not owned by the selected snapshot")
+        raise FilingExportDesignIntegrityError(
+            "M303 filing projection layout is not owned by the selected snapshot",
+            translated_message="errors.integrity.filing_export_m303_projection_layout_unowned",
+        )
     return facts
 
 
@@ -192,8 +202,10 @@ def _require_required_projection_occurrence(
     # A repeated family whose evidence-bearing scope decision excludes it has
     # zero occurrences by law, not by omission.
     if not contexts and record.required and not proven_not_applicable:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"required projection record {record.id!r} has no applicable emitted occurrence",
+            translated_message="errors.integrity.filing_export_projection_occurrence_absent",
+            context={"record": record.id},
         )
 
 
@@ -266,8 +278,10 @@ def project_filing_record(
             refs=refs,
             facts=facts,
         )
-    raise FilingExportValidationError(
+    raise FilingExportDesignIntegrityError(
         f"projection record {record.id!r} mixes or uses an unsupported projection-reference family",
+        translated_message="errors.integrity.filing_export_projection_family_unsupported",
+        context={"record": record.id},
     )
 
 
@@ -310,12 +324,18 @@ def _project_prorrata_and_differentiated_record(
         return (), ()
     values_by_reference = {value.projection_ref: value for value in (*prorrata_values, *differentiated_values)}
     if len(values_by_reference) != len(prorrata_values) + len(differentiated_values):
-        raise FilingExportValidationError(f"projection record {record.id!r} emitted duplicate typed projection values")
+        raise FilingExportDesignIntegrityError(
+            f"projection record {record.id!r} emitted duplicate typed projection values",
+            translated_message="errors.integrity.filing_export_projection_duplicate_values",
+            context={"record": record.id},
+        )
     try:
         return contexts, tuple(values_by_reference[reference] for reference in refs)
     except KeyError as exc:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"projection record {record.id!r} did not emit every authored typed projection reference",
+            translated_message="errors.integrity.filing_export_projection_references_unemitted",
+            context={"record": record.id},
         ) from exc
 
 
@@ -331,8 +351,10 @@ def _compose_single_occurrence_contexts(
         return ()
     by_address = {(context.record.id, context.occurrence): context for context in all_contexts}
     if len(by_address) != 1:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"projection record {record.id!r} families do not resolve to one deterministic occurrence",
+            translated_message="errors.integrity.filing_export_projection_occurrence_ambiguous",
+            context={"record": record.id},
         )
     return tuple(by_address.values())
 
@@ -340,7 +362,10 @@ def _compose_single_occurrence_contexts(
 def _require_m303_projection_facts(producer_snapshot: FilingProducerSnapshot) -> M303FilingFacts:
     facts = producer_snapshot.m303_filing_facts
     if facts is None:
-        raise FilingExportValidationError("M303 projection record requires complete filing facts")
+        raise FilingExportValidationError(
+            "M303 projection record requires complete filing facts",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PROJECTION_FACTS_UNSUPPLIED),
+        )
     return facts
 
 
@@ -391,7 +416,10 @@ def _project_regimen_record(
     facts: M303FilingFacts,
 ) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
     if record.repeat != "projection_rows":
-        raise FilingExportValidationError("regimen-simplificado projection record must repeat projection_rows")
+        raise FilingExportDesignIntegrityError(
+            "regimen-simplificado projection record must repeat projection_rows",
+            translated_message="errors.integrity.filing_export_regimen_rows_not_repeated",
+        )
     evidence = facts.regimen_simplificado
     regimen_refs = tuple(ref for ref in refs if isinstance(ref, _REGIMEN_REF_TYPES))
     validate_m303_regimen_simplificado_endpoint_epoch(regimen_refs, revision_id=registry_snapshot.revision.id)
@@ -469,7 +497,10 @@ def _single_occurrence_projection(
     for field in fields:
         projection_ref = getattr(field, "projection_ref", None)
         if not is_typed_filing_projection_ref(projection_ref):
-            raise FilingExportValidationError("projector returned a field without an actual typed projection_ref")
+            raise FilingExportDesignIntegrityError(
+                "projector returned a field without an actual typed projection_ref",
+                translated_message="errors.integrity.filing_export_projector_field_untyped",
+            )
         values.append(
             FilingProjectionValue(
                 projection_ref=projection_ref,
@@ -497,8 +528,10 @@ def _context(
 
 def _require_nonrepeated_projection_record(record: ExportRecordDefinition) -> None:
     if record.repeat is not None:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"projection record {record.id!r} uses repeat={str(record.repeat)!r} for a non-repeated family",
+            translated_message="errors.integrity.filing_export_projection_repeat_mismatch",
+            context={"record": record.id, "repeat": str(record.repeat)},
         )
 
 
@@ -512,17 +545,26 @@ def require_regimen_snapshot_matches_registry(
     """
     facts = producer_snapshot.m303_filing_facts
     if facts is None:
-        raise FilingExportValidationError("M303 projection requires complete filing facts")
+        raise FilingExportValidationError(
+            "M303 projection requires complete filing facts",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PROJECTION_FACTS_UNSUPPLIED),
+        )
     evidence = facts.regimen_simplificado.regimen_snapshot
     record_design = registry_snapshot.sources.get(evidence.record_design.id)
     if record_design is None or record_design != evidence.record_design:
-        raise FilingExportValidationError("M303 filing evidence record design is not owned by the selected snapshot")
+        raise FilingExportDesignIntegrityError(
+            "M303 filing evidence record design is not owned by the selected snapshot",
+            translated_message="errors.integrity.filing_export_m303_evidence_design_unowned",
+        )
     if (
         evidence.orden.ejercicio != registry_snapshot.filing_year
         or evidence.orden.registry_revision_id != registry_snapshot.revision.id
         or evidence.orden.source_ref not in registry_snapshot.sources
     ):
-        raise FilingExportValidationError("M303 filing evidence annual Orden does not match the selected snapshot")
+        raise FilingExportDesignIntegrityError(
+            "M303 filing evidence annual Orden does not match the selected snapshot",
+            translated_message="errors.integrity.filing_export_m303_evidence_orden_mismatch",
+        )
 
 
 __all__ = [

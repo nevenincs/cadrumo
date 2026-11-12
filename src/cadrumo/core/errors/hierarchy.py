@@ -318,8 +318,13 @@ class CorpusAnchorResolutionError(CoreError):
     """Corpus authoring cannot resolve one unique extracted authority unit."""
 
 
-class InternalInvariantError(CoreError):
-    """Raised when composed production state violates an internal invariant."""
+class InternalInvariantError(TerminalPreconditionErrorMixin[object], CoreError):
+    """Raised when composed production state violates an internal invariant.
+
+    An invariant is a fault of the program or of stored state, never of the
+    operator's input, so a raise site in the operator-facing application layers
+    states the terminal verdict of the invariant it names.
+    """
 
 
 class DecimalFormatError(CoreError):

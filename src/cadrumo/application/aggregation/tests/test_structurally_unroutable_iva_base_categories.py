@@ -23,6 +23,8 @@ projection. No mocks, stubs, skips or xfail.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
@@ -30,8 +32,11 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ....core.period import Period
 from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.components import registry_category_projection
 from ....domain.iva.schema import IvaCategory
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -78,7 +83,7 @@ def test_the_out_of_scope_declaration_is_not_a_re_export_of_cuota_less() -> None
     """
     unroutable = set(structurally_unroutable_iva_base_categories(_m303_revision()))
 
-    cuota_less = registry_category_projection("cuota_less_m303")
+    cuota_less = registry_category_projection("cuota_less_m303", effective_date=_ON_DATE)
     assert IvaCategory("domestic_zero") in cuota_less
     assert IvaCategory("regimen_simplificado") in cuota_less
     assert IvaCategory("domestic_zero") in unroutable

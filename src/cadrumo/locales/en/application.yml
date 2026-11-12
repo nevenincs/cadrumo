@@ -484,13 +484,35 @@ application:
       persistence: Filing history storage failed during %{operation} (%{adapter_error}).
     export:
       errors:
-        draft_not_approved: Export requires an approved draft.
-        draft_snapshot_stale: Export requires a draft built from the modelo definitions
-          currently in use.
+        block_anchor_unstated: 'Nothing was written: box %{field_casilla_id} has a
+          value, but box %{casilla_id}, which opens its block, has none. Enter box
+          %{casilla_id}, or clear box %{field_casilla_id}, and export again.'
+        box_not_stated_by_rows: 'Nothing was written: box %{casilla_id} holds a value
+          the rows of %{element_path} do not add up to. Correct the box or the rows
+          so that each row states its own figures, and export again.'
         layout_not_renderable: This modelo cannot produce a local declaration export
           file.
+        m111_colegio_concertado_undeclared: 'Nothing was written: Modelo 111 needs
+          to know whether you are a colegio concertado, and your profile does not
+          say. State it in your profile and export again.'
+        m202_producer_facts_unsupported: 'Nothing was written: Modelo 202 needs facts
+          this export cannot take from your profile yet (%{missing_fact_ids}). Export
+          it once they are supported.'
+        m303_definitive_prorrata_missing: 'Nothing was written: the Modelo 303 regularisation
+          of capital goods needs the definitive prorrata percentage, and your prorrata
+          register does not hold it for the year. Settle it in your register and export
+          again.'
+        m303_sector_apportionment_missing: 'Nothing was written: your prorrata register
+          has differentiated sectors, but your ledger yields no apportionment for
+          them in this period. Check the sector of the input VAT in your ledger and
+          in the register, and export again.'
+        m360_solicitud_undeclared: 'Nothing was written: Modelo 360 needs the solicitud
+          facts for period %{period} of %{filing_year}, and none are declared. Declare
+          them with `aeat app modelo m360 declare` and export again.'
         post_write_verification_refused: The check after writing rejected the exported
           declaration file.
+        producer_fact_required: 'Nothing was written: the export needs %{fact}, which
+          is not stated. State it and export again.'
         receipt_artefact_unreadable: The export receipt names a file that cannot be
           read.
         receipt_byte_size_mismatch: The exported file's size does not match the export
@@ -2515,6 +2537,14 @@ application:
         on record in this profile, so it cannot back the Modelo 303 for period %{period}
         of %{filing_year}. Nothing was calculated. Record a new attestation for this
         period and use the values it reports.
+      export_amended_filing_evidence_missing: 'Nothing was written: the filing this
+        declaration amends has no justificante on record that AEAT attested. Import
+        its evidence for the declaration''s work unit and export again.'
+      export_amended_filing_justificante_unresolved: 'Nothing was written: the justificante
+        recorded for the filing this declaration amends cannot back the amendment.
+        It is missing, appears more than once, or does not match the declaration''s
+        modelo, period and taxpayer. Which record is wrong is your decision: check
+        the recorded filing and its justificante.'
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision

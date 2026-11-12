@@ -18,6 +18,7 @@ from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.casilla_id import CasillaId
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -29,7 +30,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionState,
 )
 from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -199,7 +200,11 @@ def _require_revision_belongs_to_unit(
         coordinate.period,
         coordinate.revision_id,
     ) != (str(unit.modelo), unit.filing_year, unit.period.registry_token, unit.revision_id):
-        raise ModeloValidationError("reconciliation calculation does not belong to the selected work-unit coordinate")
+        raise ModeloValidationError(
+            "reconciliation calculation does not belong to the selected work-unit coordinate",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     require_calculation_revision_coordinates_current(revision, operation=operation)
 
 
@@ -225,7 +230,11 @@ def _sibling_work_unit(
         return None
     resolved_work_unit = resolution.work_unit
     if resolved_work_unit is None:
-        raise ModeloValidationError("a present work-unit selection must carry the work unit it selected")
+        raise ModeloValidationError(
+            "a present work-unit selection must carry the work unit it selected",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.WORK_UNIT,
+        )
     return resolved_work_unit
 
 

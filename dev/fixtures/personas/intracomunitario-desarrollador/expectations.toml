@@ -117,7 +117,7 @@ modelo = "303"
 period = "1T"
 year = "horizon-1"
 casillas = { "07" = "1800.00", "09" = "378.00", "10" = "240.00", "11" = "50.40", "27" = "428.40", "28" = "45.00", "29" = "9.45", "36" = "240.00", "37" = "50.40", "45" = "59.85", "59" = "7500.00", "64" = "368.55", "66" = "368.55", "71" = "368.55" }
-concepts = { resultado_regimen_general = "368.55" }
+roles = { "iva-resultado-regimen-general" = "368.55" }
 derivation = """
 07 = DEV-ES-1 1800.00; 09 = 21 % = 378.00.
 10 = DEV-NUBE-01..03 3 x 80.00 = 240.00 (intra-community service acquisition, taxpayer self-assesses); 11 = 21 % = 50.40.
@@ -125,6 +125,7 @@ derivation = """
 28 = DEV-TEL-1 45.00; 29 = 9.45. 36/37 = the self-assessed acquisition as deductible: 240.00 / 50.40. 45 = 9.45 + 50.40 = 59.85.
 Resultado = 428.40 - 59.85 = 368.55.
 59 = DEV-DE-1 7500.00: B2B service located in the customer's Member State, reported in 349 (casilla 59 rather than 120 is cited, not re-verified against the 303 instructions).
+role iva-resultado-regimen-general is the DR303 box [46] "Resultado régimen general (27 - 45)" printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition.
 """
 legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
@@ -134,8 +135,8 @@ modelo = "303"
 period = "2T"
 year = "horizon-1"
 casillas = { "07" = "2200.00", "09" = "462.00", "10" = "240.00", "11" = "50.40", "27" = "512.40", "28" = "45.00", "29" = "9.45", "36" = "240.00", "37" = "50.40", "45" = "59.85", "59" = "9900.00", "64" = "452.55", "66" = "452.55", "71" = "452.55" }
-concepts = { resultado_regimen_general = "452.55" }
-derivation = "07 = DEV-ES-2 2200.00; 10/11 = DEV-NUBE-04..06; 28/29 = DEV-TEL-2; 59 = DEV-FR-1 2400.00 + DEV-DE-2 7500.00. Resultado = 512.40 - 59.85 = 452.55."
+roles = { "iva-resultado-regimen-general" = "452.55" }
+derivation = "07 = DEV-ES-2 2200.00; 10/11 = DEV-NUBE-04..06; 28/29 = DEV-TEL-2; 59 = DEV-FR-1 2400.00 + DEV-DE-2 7500.00. Resultado = 512.40 - 59.85 = 452.55. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -144,8 +145,8 @@ modelo = "303"
 period = "3T"
 year = "horizon-1"
 casillas = { "07" = "1200.00", "09" = "252.00", "10" = "240.00", "11" = "50.40", "27" = "302.40", "28" = "45.00", "29" = "9.45", "36" = "240.00", "37" = "50.40", "45" = "59.85", "59" = "6000.00", "64" = "242.55", "66" = "242.55", "71" = "242.55" }
-concepts = { resultado_regimen_general = "242.55" }
-derivation = "07 = DEV-ES-3 1200.00; 10/11 = DEV-NUBE-07..09; 28/29 = DEV-TEL-3; 59 = DEV-DE-3 6000.00. Resultado = 302.40 - 59.85 = 242.55."
+roles = { "iva-resultado-regimen-general" = "242.55" }
+derivation = "07 = DEV-ES-3 1200.00; 10/11 = DEV-NUBE-07..09; 28/29 = DEV-TEL-3; 59 = DEV-DE-3 6000.00. Resultado = 302.40 - 59.85 = 242.55. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -154,8 +155,8 @@ modelo = "303"
 period = "4T"
 year = "horizon-1"
 casillas = { "07" = "1500.00", "09" = "315.00", "10" = "240.00", "11" = "50.40", "27" = "365.40", "28" = "495.00", "29" = "103.95", "36" = "240.00", "37" = "50.40", "45" = "154.35", "59" = "11100.00", "64" = "211.05", "66" = "211.05", "71" = "211.05" }
-concepts = { resultado_regimen_general = "211.05" }
-derivation = "07 = DEV-ES-4 1500.00; 10/11 = DEV-NUBE-10..12; 28 = DEV-TEL-4 45.00 + DEV-CUR-1 450.00 = 495.00, 29 = 9.45 + 94.50 = 103.95; 59 = DEV-FR-2 3100.00 + DEV-DE-4 8000.00. Resultado = 365.40 - 154.35 = 211.05."
+roles = { "iva-resultado-regimen-general" = "211.05" }
+derivation = "07 = DEV-ES-4 1500.00; 10/11 = DEV-NUBE-10..12; 28 = DEV-TEL-4 45.00 + DEV-CUR-1 450.00 = 495.00, 29 = 9.45 + 94.50 = 103.95; 59 = DEV-FR-2 3100.00 + DEV-DE-4 8000.00. Resultado = 365.40 - 154.35 = 211.05. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -405,11 +406,11 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0599" = "1005.00", "0604" = "5850.58" }
-roles = { "irpf_ed_total_ingresos_computables" = "41200.00", "irpf_ed_suma_gastos_previos" = "5118.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "1804.10", "irpf_ed_rdto_neto" = "34277.90", "irpf_minimo_contribuyente_estatal" = "5550.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "41200.00", "irpf_ed_suma_gastos_previos" = "5118.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "1804.10", "irpf_ed_rdto_neto_previo_reduccion" = "34277.90", "irpf_minimo_contribuyente_estatal" = "5550.00" }
 derivation = """
 Rendimiento neto = 41200.00 - 5118.00 - 1804.10 = 34277.90.
 0599 = 15 % of domestic bases 6700.00 = 1005.00. 0604 = 1275.27 + 1747.27 + 966.27 + 1861.77 = 5850.58.
-Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_actividad = irpf_ed_rdto_neto (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_previo_actividad = irpf_ed_rdto_neto_previo_reduccion (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
@@ -420,14 +421,14 @@ period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:da-56"
 casillas = { "0599" = "1005.00", "0604" = "5811.40" }
-roles = { "irpf_ed_total_ingresos_computables" = "41200.00", "irpf_ed_suma_gastos_previos" = "5118.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "2000.00", "irpf_ed_rdto_neto" = "34082.00", "irpf_minimo_contribuyente_estatal" = "5550.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "41200.00", "irpf_ed_suma_gastos_previos" = "5118.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "2000.00", "irpf_ed_rdto_neto_previo_reduccion" = "34082.00", "irpf_minimo_contribuyente_estatal" = "5550.00" }
 derivation = """
 The same year as the value above where LIRPF disposición adicional quincuagésima sexta (Ley 31/2022, art. 60.2)
 governs: provisión = 7 % of 36082.00 = 2525.74, capped at the 2000.00 annual limit, so the rendimiento neto is
 41200.00 - 5118.00 - 2000.00 = 34082.00. 0599 = 15 % of domestic bases 6700.00 = 1005.00.
 0604 sums the pagos fraccionados of the year's filed Modelo 130 returns under the same rate:
 1242.74 + 1703.54 + 942.13 + 1922.99 = 5811.40.
-Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_actividad = irpf_ed_rdto_neto (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_previo_actividad = irpf_ed_rdto_neto_previo_reduccion (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"

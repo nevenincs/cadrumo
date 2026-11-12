@@ -44,12 +44,13 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.period import Period
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_guards import is_object_list_or_tuple
 from ..filing_evidence import FilingEvidenceReference
 from .codes import ModeloCode, coerce_modelo_code
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 
 """Validated string identifying the operator who filed or triggered a filing event.
@@ -236,10 +237,16 @@ class IvaCreditSnapshot(BaseModel):
     def _require_balanced_credit(self) -> IvaCreditSnapshot:
         available = self.opening_amount + self.generated_amount
         if self.applied_amount > available:
-            raise ModeloValidationError("credit snapshot applied_amount exceeds opening plus generated credit")
+            raise ModeloValidationError(
+                "credit snapshot applied_amount exceeds opening plus generated credit",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.FILING_RECORD,
+            )
         if self.remaining_amount != available - self.applied_amount:
             raise ModeloValidationError(
-                "credit snapshot remaining_amount must equal opening plus generated minus applied"
+                "credit snapshot remaining_amount must equal opening plus generated minus applied",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.FILING_RECORD,
             )
         return self
 
@@ -301,7 +308,11 @@ class IvaSettlementSnapshot(BaseModel):
         if value is None:
             return ()
         if not is_object_list_or_tuple(value):
-            raise ModeloValidationError("payment_evidence must be an ordered sequence")
+            raise ModeloValidationError(
+                "payment_evidence must be an ordered sequence",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.FILING_RECORD,
+            )
         ordered: list[IvaSettlementPaymentEvidence] = []
         by_reference: dict[str, IvaSettlementPaymentEvidence] = {}
         for raw_entry in value:
@@ -316,7 +327,11 @@ class IvaSettlementSnapshot(BaseModel):
                 by_reference[reference] = entry
                 ordered.append(entry)
             elif existing != entry:
-                raise ModeloValidationError("payment evidence reference carries conflicting facts")
+                raise ModeloValidationError(
+                    "payment evidence reference carries conflicting facts",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.FILING_RECORD,
+                )
         return tuple(ordered)
 
     @model_validator(mode="after")
@@ -347,13 +362,21 @@ def _require_evidence_pair(
 ) -> None:
     """Require a secure evidence locator and its effective date together."""
     if (reference is None) != (effective_at is None):
-        raise ModeloValidationError(f"{label} requires both an evidence reference and an effective date")
+        raise ModeloValidationError(
+            f"{label} requires both an evidence reference and an effective date",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_payment_evidence_total(snapshot: IvaSettlementSnapshot) -> None:
     """Refuse payment evidence that exceeds the declared liability."""
     if snapshot.evidenced_payment_amount > snapshot.declared_liability:
-        raise ModeloValidationError("evidenced payment amount must not exceed declared liability")
+        raise ModeloValidationError(
+            "evidenced payment amount must not exceed declared liability",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_refund_state(snapshot: IvaSettlementSnapshot) -> None:
@@ -363,12 +386,20 @@ def _require_refund_state(snapshot: IvaSettlementSnapshot) -> None:
         _require_not_requested_refund(snapshot)
         return
     if snapshot.refund_requested_amount <= Decimal("0"):
-        raise ModeloValidationError(f"{snapshot.refund_state.value} refund requires a positive requested amount")
+        raise ModeloValidationError(
+            f"{snapshot.refund_state.value} refund requires a positive requested amount",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
     if snapshot.refund_state is IvaSettlementRefundState.REQUESTED:
         _require_requested_refund(snapshot)
         return
     if snapshot.refund_approved_amount <= Decimal("0") or snapshot.refund_approval_evidence_reference is None:
-        raise ModeloValidationError("approved refund requires positive approved amount and approval evidence")
+        raise ModeloValidationError(
+            "approved refund requires positive approved amount and approval evidence",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
     if snapshot.refund_state is IvaSettlementRefundState.APPROVED:
         _require_approved_refund(snapshot)
         return
@@ -380,7 +411,11 @@ def _require_refund_amount_order(snapshot: IvaSettlementSnapshot) -> None:
         snapshot.refund_approved_amount > snapshot.refund_requested_amount
         or snapshot.refund_paid_amount > snapshot.refund_approved_amount
     ):
-        raise ModeloValidationError("refund amounts must satisfy paid <= approved <= requested")
+        raise ModeloValidationError(
+            "refund amounts must satisfy paid <= approved <= requested",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_not_requested_refund(snapshot: IvaSettlementSnapshot) -> None:
@@ -391,7 +426,11 @@ def _require_not_requested_refund(snapshot: IvaSettlementSnapshot) -> None:
         or snapshot.refund_approval_evidence_reference is not None
         or snapshot.refund_payment_evidence_reference is not None
     ):
-        raise ModeloValidationError("not_requested refund must not carry amounts or evidence")
+        raise ModeloValidationError(
+            "not_requested refund must not carry amounts or evidence",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_requested_refund(snapshot: IvaSettlementSnapshot) -> None:
@@ -401,17 +440,29 @@ def _require_requested_refund(snapshot: IvaSettlementSnapshot) -> None:
         or snapshot.refund_approval_evidence_reference is not None
         or snapshot.refund_payment_evidence_reference is not None
     ):
-        raise ModeloValidationError("requested refund must not carry approval or payment evidence")
+        raise ModeloValidationError(
+            "requested refund must not carry approval or payment evidence",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_approved_refund(snapshot: IvaSettlementSnapshot) -> None:
     if snapshot.refund_paid_amount != Decimal("0") or snapshot.refund_payment_evidence_reference is not None:
-        raise ModeloValidationError("approved refund must not carry payment evidence")
+        raise ModeloValidationError(
+            "approved refund must not carry payment evidence",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_paid_refund(snapshot: IvaSettlementSnapshot) -> None:
     if snapshot.refund_paid_amount <= Decimal("0") or snapshot.refund_payment_evidence_reference is None:
-        raise ModeloValidationError("paid refund requires positive paid amount and payment evidence")
+        raise ModeloValidationError(
+            "paid refund requires positive paid amount and payment evidence",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 _DECLARATION_KIND_BY_TIPO_SOLICITUD_WORD: Mapping[str, FilingDeclarationKind] = {
@@ -462,7 +513,11 @@ class AeatRegisterRef(BaseModel):
     @pydantic_validation_boundary
     def _require_an_identifier(self) -> AeatRegisterRef:
         if self.expediente_id is None and self.csv is None:
-            raise ModeloValidationError("an AEAT register reference needs an expediente id or a CSV")
+            raise ModeloValidationError(
+                "an AEAT register reference needs an expediente id or a CSV",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.FILING_RECORD,
+            )
         return self
 
 
@@ -577,6 +632,8 @@ class ModeloRecord(BaseModel):
         if duplicates:
             raise ModeloValidationError(
                 f"source_transaction_ids must not repeat a transaction: {duplicates!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.FILING_RECORD,
             )
         return value
 
@@ -618,6 +675,8 @@ def _require_filing_record_identity(record: ModeloRecord) -> None:
     if record.period.filing_year != record.filing_year:
         raise ModeloValidationError(
             f"filing_year {record.filing_year!r} does not match period year {record.period.filing_year!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
         )
     derived = derive_filing_record_id(
         work_unit_id=record.work_unit_id,
@@ -628,6 +687,8 @@ def _require_filing_record_identity(record: ModeloRecord) -> None:
     if derived != record.filing_record_id:
         raise ModeloValidationError(
             f"filing_record_id {record.filing_record_id!r} does not match the derived id {derived!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
         )
 
 
@@ -642,15 +703,25 @@ def _require_external_evidence_state(record: ModeloRecord) -> None:
 
 def _require_aeat_origin_confirmation(record: ModeloRecord, *, confirmed: bool) -> None:
     if record.origin is FilingOrigin.AEAT and not confirmed:
-        raise ModeloValidationError("AEAT-origin filing record must be confirmed")
+        raise ModeloValidationError(
+            "AEAT-origin filing record must be confirmed",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_external_evidence_for_confirmation(record: ModeloRecord, *, confirmed: bool) -> None:
     if confirmed and record.external_evidence is None:
-        raise ModeloValidationError("confirmed filing record must carry external evidence")
+        raise ModeloValidationError(
+            "confirmed filing record must carry external evidence",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
     if record.external_evidence is not None and not confirmed:
         raise ModeloValidationError(
             f"{record.confirmation.value} filing record must not carry external evidence",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
         )
 
 
@@ -658,12 +729,18 @@ def _require_register_reference_for_confirmation(record: ModeloRecord, *, confir
     if record.aeat_register is not None and not confirmed:
         raise ModeloValidationError(
             f"{record.confirmation.value} filing record must not carry an AEAT register reference",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
         )
 
 
 def _require_retired_record_not_current(record: ModeloRecord) -> None:
     if record.is_retired and record.status is ModeloRecordStatus.VIGENTE:
-        raise ModeloValidationError(f"{record.confirmation.value} filing record cannot be in force")
+        raise ModeloValidationError(
+            f"{record.confirmation.value} filing record cannot be in force",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_filing_record_status(record: ModeloRecord) -> None:
@@ -682,20 +759,36 @@ def _require_settlement_modelo(record: ModeloRecord) -> None:
     from ..calculations.registry.form_codes import form_for_role
 
     if str(record.modelo) != form_for_role("iva.periodic"):
-        raise ModeloValidationError("an IVA settlement snapshot requires Modelo 303")
+        raise ModeloValidationError(
+            "an IVA settlement snapshot requires Modelo 303",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
     if settlement.calculation_revision_id != record.calculation_revision_id:
-        raise ModeloValidationError("IVA settlement calculation revision must match its filing record")
+        raise ModeloValidationError(
+            "IVA settlement calculation revision must match its filing record",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
     if (
         record.confirmation is not AeatConfirmationState.CONFIRMADA
         and settlement.refund_state is not IvaSettlementRefundState.NOT_REQUESTED
     ):
-        raise ModeloValidationError("pending filing records may carry only not_requested IVA refund intent")
+        raise ModeloValidationError(
+            "pending filing records may carry only not_requested IVA refund intent",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_current_filing_record(record: ModeloRecord) -> None:
     """Reject supersession metadata on the current filing record."""
     if record.superseded_at is not None or record.superseded_by_filing_record_id is not None:
-        raise ModeloValidationError("current filing record must not carry supersession metadata")
+        raise ModeloValidationError(
+            "current filing record must not carry supersession metadata",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
+        )
 
 
 def _require_superseded_filing_record(record: ModeloRecord) -> None:
@@ -703,10 +796,14 @@ def _require_superseded_filing_record(record: ModeloRecord) -> None:
     if record.superseded_at is None or record.superseded_by_filing_record_id is None:
         raise ModeloValidationError(
             "superseded filing record must carry superseded_at and superseded_by_filing_record_id",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
         )
     if record.superseded_at < record.filed_at:
         raise ModeloValidationError(
             f"superseded_at {record.superseded_at.isoformat()} precedes filed_at {record.filed_at.isoformat()}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.FILING_RECORD,
         )
 
 
@@ -732,6 +829,8 @@ class ModeloRecordCatalogue(BaseModel):
             if key != record.filing_record_id:
                 raise ModeloValidationError(
                     f"catalogue key {key!r} does not match filing_record_id {record.filing_record_id!r}",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.FILING_RECORD,
                 )
         # Exactly one CURRENT record per (bucket, modelo, year, period, member) tuple.
         currents: dict[tuple[str, str, int, Period, str | None], str] = {}
@@ -749,6 +848,8 @@ class ModeloRecordCatalogue(BaseModel):
                 raise ModeloValidationError(
                     f"more than one current filing record for {current_key!r}: "
                     f"{currents[current_key]!r} and {record.filing_record_id!r}",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.FILING_RECORD,
                 )
             currents[current_key] = record.filing_record_id
         return self
@@ -801,11 +902,15 @@ class ModeloRecordCatalogue(BaseModel):
             if target_id == record.filing_record_id:
                 raise ModeloValidationError(
                     f"filing record {record.filing_record_id!r} cannot amend itself",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.FILING_RECORD,
                 )
             target = self.records.get(target_id)
             if target is None:
                 raise ModeloValidationError(
                     f"filing record {record.filing_record_id!r} amends {target_id!r}, which is not in this catalogue",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.FILING_RECORD,
                 )
             coordinates = (record.bucket_id, record.modelo, record.filing_year, record.period, record.member_nif)
             target_coordinates = (
@@ -819,12 +924,16 @@ class ModeloRecordCatalogue(BaseModel):
                 raise ModeloValidationError(
                     f"filing record {record.filing_record_id!r} amends {target_id!r} across filing "
                     f"coordinates: {target_coordinates!r} is not {coordinates!r}",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.FILING_RECORD,
                 )
             if target.superseded_by_filing_record_id != record.filing_record_id:
                 raise ModeloValidationError(
                     f"one-sided amendment link: filing record {record.filing_record_id!r} amends "
                     f"{target_id!r}, but {target_id!r} names "
                     f"{target.superseded_by_filing_record_id!r} as its successor",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.FILING_RECORD,
                 )
         return self
 

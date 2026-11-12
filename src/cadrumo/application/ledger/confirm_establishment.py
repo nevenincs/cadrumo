@@ -79,6 +79,7 @@ from ...domain.iva.supply_nature import (
     SupplyNature,
     SupplyNatureDerivationOutcome,
     derive_supply_nature_from_citation,
+    registry_citation_catalogue,
     supply_nature_implied_by_category,
 )
 from .classification_assembly import (
@@ -226,15 +227,26 @@ def _resolved_supply_nature(
     supply_nature: SupplyNature | None,
     printed_citation: str | None,
     stated_category: DeclaredFact[IvaCategory] | None,
+    transaction_date: date | None,
 ) -> DeclaredFact[SupplyNature] | None:
-    """Resolve supply nature by operator, citation, then category authority."""
+    """Resolve supply nature by operator, citation, then category authority.
+
+    The citation catalogue is read on the transaction's date. With no date the
+    document and category routes establish nothing: the missing date is already
+    a recorded input of the classification, so the nature stays unresolved
+    rather than being read on the date the program runs.
+    """
     if supply_nature is not None:
         return DeclaredFact(value=supply_nature, source=ClassifierInputSource.OPERATOR_ASSERTION)
-    derivation = derive_supply_nature_from_citation(printed_citation=printed_citation)
+    if transaction_date is None:
+        return None
+    catalogue = registry_citation_catalogue(effective_date=transaction_date)
+    derivation = derive_supply_nature_from_citation(printed_citation=printed_citation, catalogue=catalogue)
     if derivation.outcome is SupplyNatureDerivationOutcome.DERIVED and derivation.nature is not None:
         return DeclaredFact(value=derivation.nature, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
     category_derivation = supply_nature_implied_by_category(
         None if stated_category is None else stated_category.value,
+        catalogue=catalogue,
     )
     if category_derivation.outcome is not SupplyNatureDerivationOutcome.DERIVED:
         return None
@@ -249,6 +261,7 @@ def declared_facts(
     counterparty: CounterpartyEstablishment,
     filer_scope: IvaTerritorialScope | None,
     stated_category: DeclaredFact[IvaCategory] | None,
+    transaction_date: date | None,
     supply_nature: SupplyNature | None = None,
     printed_citation: str | None = None,
 ) -> DeclaredFacts:
@@ -278,6 +291,7 @@ def declared_facts(
         supply_nature=supply_nature,
         printed_citation=printed_citation,
         stated_category=stated_category,
+        transaction_date=transaction_date,
     )
     if kind is InvoiceKind.RECEIVED:
         return DeclaredFacts(
@@ -408,7 +422,10 @@ def resolve_confirmed_establishment(
     except WizardStatusError:
         profile = None
 
-    declared = _confirmed_declared_facts(operation, draft, kind, counterparty, filer_scope, supply_nature)
+    transaction_date = invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date)
+    declared = _confirmed_declared_facts(
+        operation, draft, kind, counterparty, filer_scope, supply_nature, transaction_date
+    )
     assembly = assemble_classification_criteria(
         operation=operation,
         # The operator's override layers over the printed date, parsed through
@@ -416,7 +433,7 @@ def resolve_confirmed_establishment(
         # with no override is an ordinary outcome of reading a page, so it
         # arrives as ``None`` and the assembly reports it as a missing input
         # beside the others rather than aborting the confirm.
-        transaction_date=invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date),
+        transaction_date=transaction_date,
         direction=kind,
         inputs=collect_classifier_inputs(draft, profile=profile),
         declared=declared,
@@ -475,9 +492,11 @@ def _confirmed_declared_facts(
     counterparty: CounterpartyEstablishment,
     filer_scope: IvaTerritorialScope | None,
     supply_nature: SupplyNature | None,
+    transaction_date: date | None,
 ) -> DeclaredFacts:
     return declared_facts(
         kind=kind,
+        transaction_date=transaction_date,
         counterparty=counterparty,
         filer_scope=filer_scope,
         # Read through the classification authority, never minted beside the

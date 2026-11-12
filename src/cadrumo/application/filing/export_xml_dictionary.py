@@ -50,8 +50,14 @@ from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.contribuyente.renta_codes import modelo100_ccaa_codigo, modelo100_ecivil_export_code
-from ...domain.filing.errors import FilingExportError, FilingExportValidationError
+from ...domain.filing.errors import (
+    FilingExportDesignIntegrityError,
+    FilingExportIntegrityError,
+    FilingExportValidationError,
+)
 from ...domain.filing.schema import ModeloBindingValue, ModeloDraft
+from .errors import casilla_value_refusal
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 from .export_xml_dictionary_modelo100 import (
     modelo_100_sign_branch_value,
     modelo_100_unfiled_comunidad_paths,
@@ -110,7 +116,10 @@ def _modelo100_render_exclusions(
     unfiled_paths = frozenset[str]()
     if draft.modelo == form_for_role("renta.annual"):
         if declarations is None:
-            raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
+            raise FilingExportDesignIntegrityError(
+                "Modelo 100 XML declarations were not resolved",
+                translated_message="errors.integrity.filing_export_modelo100_declarations_unresolved",
+            )
         unfiled_paths = modelo_100_unfiled_comunidad_paths(
             entries,
             casilla_values,
@@ -189,7 +198,11 @@ def _finish_xml_dictionary_root(
 def _serialize_xml_dictionary(root: ElementTree.Element[str]) -> bytes:
     rendered = ElementTree.tostring(root, encoding=UTF_8_ENCODING, xml_declaration=True)
     if not isinstance(rendered, bytes):
-        raise FilingExportError(f"the XML dictionary serialiser returned {type(rendered).__name__}, not bytes")
+        raise FilingExportIntegrityError(
+            f"the XML dictionary serialiser returned {type(rendered).__name__}, not bytes",
+            translated_message="errors.integrity.filing_export_xml_serialiser_not_bytes",
+            context={"type": type(rendered).__name__},
+        )
     return rendered
 
 
@@ -422,10 +435,14 @@ def read_xml_dictionary_root_identity(payload: bytes) -> Mapping[str, str]:
     try:
         root = DefusedElementTree.fromstring(payload)
     except DefusedElementTree.ParseError as exc:
-        raise FilingExportValidationError("XML dictionary payload could not be parsed") from exc
+        raise FilingExportValidationError(
+            "XML dictionary payload could not be parsed",
+            precondition_verdict=export_input_decision(ExportRefusalReason.PAYLOAD_NOT_READABLE),
+        ) from exc
     if root.tag != XML_DICTIONARY_ROOT_TAG:
         raise FilingExportValidationError(
             f"XML dictionary payload root is {root.tag!r}, expected {XML_DICTIONARY_ROOT_TAG!r}",
+            precondition_verdict=export_input_decision(ExportRefusalReason.PAYLOAD_NOT_READABLE),
         )
     return dict(root.attrib)
 
@@ -448,7 +465,10 @@ def append_declaration_aux(
     ``minOccurs="1"`` and are preflighted before rendering.
     """
     if layout.aux_idioma is None:
-        raise FilingExportValidationError("XML dictionary layout omits mandatory Aux/Idioma")
+        raise FilingExportDesignIntegrityError(
+            "XML dictionary layout omits mandatory Aux/Idioma",
+            translated_message="errors.integrity.filing_export_xml_aux_idioma_omitted",
+        )
     aux = ElementTree.SubElement(root, _AUX_TAG)
     ElementTree.SubElement(aux, "Idioma").text = layout.aux_idioma.value
     ElementTree.SubElement(aux, "VERSION").text = aux_version
@@ -556,7 +576,10 @@ def _modelo100_sign_routed_value(
     if draft.modelo != form_for_role("renta.annual"):
         return raw
     if declarations is None:
-        raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
+        raise FilingExportDesignIntegrityError(
+            "Modelo 100 XML declarations were not resolved",
+            translated_message="errors.integrity.filing_export_modelo100_declarations_unresolved",
+        )
     return modelo_100_sign_branch_value(entry, raw, declarations=declarations)
 
 
@@ -570,16 +593,25 @@ def _apply_xml_dictionary_value_converter(
         return rendered
     converter = _XML_VALUE_CONVERTERS.get(converter_name)
     if converter is None:
-        raise FilingExportValidationError(f"registry-selected XML converter {converter_name!r} is not available")
+        raise FilingExportDesignIntegrityError(
+            f"registry-selected XML converter {converter_name!r} is not available",
+            translated_message="errors.integrity.filing_export_xml_converter_unavailable",
+            context={"converter": converter_name},
+        )
     try:
         converted = converter(rendered)
         if not isinstance(converted, str):
-            raise FilingExportValidationError(
-                f"registry-selected XML converter {converter_name!r} returned a non-string value"
+            raise FilingExportDesignIntegrityError(
+                f"registry-selected XML converter {converter_name!r} returned a non-string value",
+                translated_message="errors.integrity.filing_export_xml_converter_non_string",
+                context={"converter": converter_name},
             )
         return converted
     except ValueError as exc:
-        raise FilingExportValidationError(str(exc)) from exc
+        raise FilingExportValidationError(
+            str(exc),
+            precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_NOT_CONVERTIBLE),
+        ) from exc
 
 
 def _xml_dictionary_rendered_value(
@@ -684,7 +716,8 @@ class XmlDictionaryRepeatedRows:
             return self
         if not all(self.takes_box(path) for path in tokens):
             raise FilingExportValidationError(
-                f"boxes {sorted(tokens)} have no single occurrence of {self.element_path} to take them"
+                f"boxes {sorted(tokens)} have no single occurrence of {self.element_path} to take them",
+                precondition_verdict=export_design_terminal(ExportRefusalReason.BOX_HAS_NO_SINGLE_OCCURRENCE),
             )
         return XmlDictionaryRepeatedRows(
             element_path=self.element_path,
@@ -715,7 +748,11 @@ def _row_column_entry(
     bindings do, so it is placed by that field and must sit at that path.
     """
     if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
-        raise FilingExportValidationError(f"binding {binding.id!r} carries rows but declares no row column")
+        raise FilingExportDesignIntegrityError(
+            f"binding {binding.id!r} carries rows but declares no row column",
+            translated_message="errors.integrity.filing_export_xml_row_column_undeclared",
+            context={"binding": binding.id},
+        )
     provider = binding.provider
     if isinstance(provider, ProfileProvider) and provider.rows is not None and provider.dictionary_field is not None:
         column = provider.dictionary_field
@@ -727,7 +764,11 @@ def _row_column_entry(
     else:
         target = selector_as_dict(binding).get("target_casilla_id")
         if target is None:
-            raise FilingExportValidationError(f"binding {binding.id!r} carries rows but declares no row column")
+            raise FilingExportDesignIntegrityError(
+                f"binding {binding.id!r} carries rows but declares no row column",
+                translated_message="errors.integrity.filing_export_xml_row_column_undeclared",
+                context={"binding": binding.id},
+            )
         column = str(target)
 
         def fills(entry: XmlDictionaryEntry) -> bool:
@@ -739,8 +780,10 @@ def _row_column_entry(
         if fills(entry) and (element := _nearest_repeating_path(entry.path, repeating)) is not None
     )
     if len(placed) != 1:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"row column {binding.id!r} needs one repeating dictionary row for {column}, found {len(placed)}",
+            translated_message="errors.integrity.filing_export_xml_row_column_occurrence",
+            context={"binding": binding.id, "column": column, "found": len(placed)},
         )
     return placed[0]
 
@@ -821,7 +864,10 @@ def _render_bound_row_value(binding: BindingDefinition, entry: XmlDictionaryEntr
         try:
             value = date.fromisoformat(value)
         except ValueError as error:
-            raise FilingExportValidationError(f"date row binding {binding.id!r} carries an invalid date") from error
+            raise FilingExportValidationError(
+                f"date row binding {binding.id!r} carries an invalid date",
+                precondition_verdict=export_input_decision(ExportRefusalReason.ROW_VALUE_INVALID),
+            ) from error
     return format_xml_dictionary_value(entry.data_type, value)
 
 
@@ -836,6 +882,7 @@ def _bounded_repeated_rows(
     if limit is not None and len(rows) > limit:
         raise FilingExportValidationError(
             f"{len(rows)} rows do not fit {element}, which the official schema admits {limit} times",
+            precondition_verdict=export_input_decision(ExportRefusalReason.ROWS_EXCEED_SCHEMA),
         )
     return XmlDictionaryRepeatedRows(
         element_path=element,
@@ -865,10 +912,17 @@ def _require_value_stated_by_rows(
         accounted = stated == Decimal(rendered)
     else:
         accounted = rendered in tokens
+    if not accounted and entry.casilla_id is not None:
+        raise casilla_value_refusal(
+            entry.casilla_id,
+            translated_message="application.filing.export.errors.box_not_stated_by_rows",
+            context={"element_path": rows.element_path},
+        )
     if not accounted:
         raise FilingExportValidationError(
             f"box {entry.casilla_id} holds {rendered}, which the rows of {rows.element_path} do not add up to. "
             "Correct the box or the rows so that each sale states its own figures.",
+            precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_NOT_STATED_BY_ROWS),
         )
 
 
@@ -1016,7 +1070,10 @@ def set_xml_dictionary_path(
     """
     parts = _xml_dictionary_path_parts(absolute_path)
     if not parts:
-        raise FilingExportValidationError("XML dictionary entry path must not be empty")
+        raise FilingExportDesignIntegrityError(
+            "XML dictionary entry path must not be empty",
+            translated_message="errors.integrity.filing_export_xml_entry_path_empty",
+        )
     current = root
     current_path = ""
     for index, part in enumerate(parts):
@@ -1051,7 +1108,10 @@ def _set_xml_dictionary_attribute(
     if not part.startswith("@"):
         return False
     if index != final_index:
-        raise FilingExportValidationError("XML dictionary attribute must terminate its path")
+        raise FilingExportDesignIntegrityError(
+            "XML dictionary attribute must terminate its path",
+            translated_message="errors.integrity.filing_export_xml_attribute_not_terminal",
+        )
     current.set(part[1:], value)
     return True
 

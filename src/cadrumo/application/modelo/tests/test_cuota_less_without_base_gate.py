@@ -28,6 +28,8 @@ from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..verification_gate_findings import cuota_less_without_base_findings
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _YEAR = filing_year_envelope().horizon
@@ -184,7 +186,9 @@ def test_every_cuota_less_category_is_covered_rather_than_a_sampled_few() -> Non
     """
     unrefused = [
         category.value
-        for category in sorted(registry_category_projection("cuota_less_m303"), key=lambda member: member.value)
+        for category in sorted(
+            registry_category_projection("cuota_less_m303", effective_date=_ON_DATE), key=lambda member: member.value
+        )
         if not _findings({"tx-1": _transaction("tx-1", iva_category=category, taxable_base=None)})
     ]
 

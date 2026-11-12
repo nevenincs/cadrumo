@@ -418,7 +418,10 @@ def _invoice_evidence_provenance(
     """
     if command.deduction_fact_kind is None or command.purchase_invoice_evidence_id is None:
         return None
-    authority = supplier_invoice_deduction_authority(command.deduction_fact_kind)
+    authority = supplier_invoice_deduction_authority(
+        command.deduction_fact_kind,
+        effective_date=command.operation_date or command.value_date or command.booked_date,
+    )
     if authority is None:
         return None
     evidence_id = command.purchase_invoice_evidence_id

@@ -79,11 +79,13 @@ from .credit_resolution_repository import (
     CreditResolutionRefusedError,
     CreditResolutionRepository,
     CreditResolutionRevisionConflictError,
+    credit_resolution_refusal,
     revoke_credit_resolution,
     revoke_refusal_reason,
     store_credit_resolution,
 )
 from .credit_resolution_words import served_credit_resolution_refusal_words
+from .declaration_refusal_profiles import DeclarationRefusalCause
 from .verification_repository_ports import VerificationRepositoryBundleFactory
 
 __all__ = [
@@ -268,17 +270,21 @@ class CreditResolutionExecutor:
         self, declaration: _Declaration, payload: CreditResolutionAcceptRequest
     ) -> Callable[[str], CreditResolutionRowProjection]:
         if declaration.work_unit.current_calculation_revision_id != declaration.revision.calculation_revision_id:
-            raise CreditResolutionRefusedError("calculation_not_current")
+            raise credit_resolution_refusal(
+                "calculation_not_current",
+                DeclarationRefusalCause.CREDIT_CALCULATION,
+                work_unit_id=declaration.work_unit.work_unit_id,
+            )
         issue = find_finding(declaration.revision, payload.finding_id)
         repository = declaration.resolutions
         fact = issue.disagreement
         if fact is None:
-            raise CreditResolutionRefusedError("unknown_finding")
+            raise credit_resolution_refusal("unknown_finding", DeclarationRefusalCause.CREDIT_FINDING_READABLE)
         stored, expected_revision_id = repository.load_revisioned(
             (fact.modelo, fact.filing_year, fact.period, fact.finding_key)
         )
         if stored is not None and stored.active:
-            raise CreditResolutionRefusedError("already_resolved")
+            raise credit_resolution_refusal("already_resolved", DeclarationRefusalCause.CREDIT_ALREADY_RESOLVED)
 
         def write(actor: str) -> CreditResolutionRowProjection:
             record = credit_resolution_for_finding(issue, reason=payload.reason, at=now(), by_session=actor)

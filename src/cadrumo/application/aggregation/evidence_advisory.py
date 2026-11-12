@@ -49,6 +49,7 @@ too.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date
 from decimal import Decimal
 
 from ...core.aggregation import BindingSourceKind
@@ -64,6 +65,7 @@ from ...domain.iva.flow import (
 )
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.enums import (
     BUSINESS_BEARING_STATES,
     BusinessClassification,
@@ -144,6 +146,7 @@ def iva_evidence_flow(
     business_classification: BusinessClassification,
     direction: TransactionDirection,
     iva_category: IvaCategory | None,
+    effective_date: date,
 ) -> IvaFlowDirection | None:
     """Return the IVA settlement flow a ledger row answers for, or ``None``.
 
@@ -161,7 +164,7 @@ def iva_evidence_flow(
         return None
     if iva_category is None:
         return flow_direction_for_invoice_kind(invoice_kind)
-    if iva_category in registry_category_projection("evidence_exempt"):
+    if iva_category in registry_category_projection("evidence_exempt", effective_date=effective_date):
         return None
     return derive_flow_for_classification(category=iva_category, invoice_direction=invoice_kind)
 
@@ -242,6 +245,7 @@ def _transaction_missing_evidence_flow(
         business_classification=transaction.business_classification,
         direction=transaction.direction,
         iva_category=transaction.iva_category,
+        effective_date=transaction_operation_date(transaction),
     )
     if flow is None:
         return None

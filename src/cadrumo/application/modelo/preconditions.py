@@ -24,6 +24,9 @@ from ..operator_actions.models import (
     PreconditionVerdict,
 )
 from ..operator_surface.models import ManifestActionProfile
+from .edit_refusal_profiles import EDIT_REFUSAL_PROFILES
+from .filing_import_refusal_profiles import FILING_IMPORT_REFUSAL_PROFILES
+from .iva_wallet_refusal_profiles import IVA_WALLET_REFUSAL_PROFILES
 from .precondition_action_bindings import (
     AlternativeActionArguments,
     action_argument_bindings,
@@ -77,110 +80,6 @@ def _profile(
         action=ActionReference(action_id=action_id) if action_id is not None else None,
         no_recovery_outcome=(None if action_id is not None else no_recovery_outcome),
         alternative_actions=tuple(ActionReference(action_id=item) for item in alternative_action_ids),
-    )
-
-
-_IVA_WALLET_BLOCKED_DECISION_SCENARIOS = (
-    "filed_history_requires_override",
-    "local_calculation_redeme_unstated",
-    "local_calculation_refund_undecided",
-    "local_evidence_unreadable",
-    "local_recurrence_requires_override",
-    "no_usable_authority",
-    "stale_wallet_local_recurrence_requires_override",
-    "stale_wallet_no_local_recurrence",
-    "wallet_local_recurrence_divergence",
-)
-
-_IVA_WALLET_CALCULATE_SCENARIOS = (
-    "backend_casilla_conflict",
-    *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
-    "caller_binding_conflict",
-    "caller_casilla_conflict",
-    "first_period_zero_ungrounded",
-    "not_seeded",
-    "registry_snapshot_unavailable",
-    "selected_amount_missing",
-    "supplied_decision_mismatch",
-    "target_mismatch",
-    "taxpayer_identity_missing",
-    "taxpayer_mismatch",
-    "unsupported_decision_type",
-)
-
-_IVA_WALLET_REVISION_SCENARIOS = (
-    "amount_mismatch",
-    *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
-    "first_period_zero_ungrounded",
-    "local_calculation_only",
-    "not_seeded",
-    "registry_snapshot_unavailable",
-    "revision_amount_missing",
-    "selected_amount_missing",
-    "target_mismatch",
-)
-
-
-IVA_WALLET_OPENING_BALANCE_SCENARIOS: Final[frozenset[str]] = frozenset(
-    {
-        "first_period_zero_ungrounded",
-        "local_evidence_unreadable",
-        "no_usable_authority",
-        "not_seeded",
-    },
-)
-"""The wallet refusals the period's opening balance is the way out of.
-
-Each says the period's carry has no usable recorded authority, which is exactly
-what declaring the opening balance supplies. A stale wallet, a divergence, or a
-correction names a different wallet entry, so it keeps no action here rather
-than naming a command that would not settle it. The wallet gate's served step
-and these profiles' action read this one set.
-"""
-
-IVA_WALLET_OPENING_BALANCE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.seed"
-"""The catalogue action that declares the opening balance of a period's carry."""
-
-IVA_WALLET_OVERRIDE_SCENARIOS: Final[frozenset[str]] = frozenset(
-    {
-        "filed_history_requires_override",
-        "local_recurrence_requires_override",
-        "stale_wallet_local_recurrence_requires_override",
-    },
-)
-"""The wallet refusals an explicit taxpayer override of the period's carry is the way out of.
-
-Each says the carry rests on the taxpayer's own records alone, with no current
-AEAT wallet behind it, so it is carried only once the taxpayer states the amount
-and the evidence for it. The amount those records give is known, so the action
-names it; the reason and the evidence are the taxpayer's to supply.
-"""
-
-IVA_WALLET_OVERRIDE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.override"
-"""The catalogue action that records an explicit taxpayer override of a period's carry."""
-
-
-def _iva_wallet_action_id(scenario_code: str) -> str | None:
-    """Name the catalogue action that settles one wallet refusal, or None when none does."""
-    if scenario_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
-        return IVA_WALLET_OPENING_BALANCE_ACTION_ID
-    if scenario_code in IVA_WALLET_OVERRIDE_SCENARIOS:
-        return IVA_WALLET_OVERRIDE_ACTION_ID
-    return None
-
-
-def _iva_wallet_profiles(
-    subject_leaf_key: str,
-    scenario_codes: tuple[str, ...],
-) -> tuple[ManifestActionProfile, ...]:
-    return tuple(
-        _profile(
-            subject_leaf_key,
-            f"{subject_leaf_key}.iva_wallet.ready",
-            f"{subject_leaf_key}.iva_wallet.{scenario_code}",
-            action_id=_iva_wallet_action_id(scenario_code),
-        )
-        for scenario_code in scenario_codes
     )
 
 
@@ -328,6 +227,50 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.field.unrenderable",
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
+    # The application's own export design or renderer contradicts itself; no
+    # filer action repairs it.
+    _profile(
+        "modelo.export",
+        "modelo.export.design.consistent",
+        "modelo.export.design.inconsistent",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    # A party-name slot the filer's declared filing names leave without content
+    # is put right by stating that party's filing name.
+    _profile(
+        "modelo.export",
+        "modelo.export.declared_party_name.stated",
+        "modelo.export.declared_party_name.unstated",
+        action_id="operator.ledger.counterparty.filing_name",
+    ),
+    # A box the filer states holds a value the design cannot place; stating
+    # that box again on the work unit puts it right.
+    _profile(
+        "modelo.export",
+        "modelo.export.casilla_value.writable",
+        "modelo.export.casilla_value.refused",
+        action_id="operator.modelo.work.set_value",
+    ),
+    *EDIT_REFUSAL_PROFILES,
+    *FILING_IMPORT_REFUSAL_PROFILES,
+    # The refusals below are real but no catalogued action repairs them: the
+    # registry has not adjudicated cells the stated boxes share, the schema
+    # refuses a field that is no box of the declaration, the return suspends or
+    # waives part of its result where no remainder is computed, and the
+    # persisted justificante of an amended filing does not back it. A result
+    # box that holds no value is put right by calculating the declaration.
+    *(
+        _profile(
+            "modelo.export", f"modelo.export.{subject}.{sound}", f"modelo.export.{subject}.{refused}", action_id=act
+        )
+        for subject, sound, refused, act in (
+            ("shared_cells", "adjudicated", "unadjudicated", None),
+            ("schema_field", "valid", "refused", None),
+            ("settlement", "stated", "unsupported", None),
+            ("settlement", "stated", "result_unknown", "operator.modelo.work.calculate"),
+            ("amended_filing_justificante", "backs_filing", "unresolved", None),
+        )
+    ),
     _profile(
         "modelo.export",
         "modelo.export.period.maps_to_filing_period",
@@ -341,7 +284,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             f"{leaf}.external_evidence.missing",
             action_id="operator.modelo.filing_record.import",
         )
-        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard")
+        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard", "modelo.export")
     ),
     _profile(
         "modelo.work.wizard",
@@ -539,6 +482,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate",
         "modelo.work.calculate.prior_carries.stated",
         "modelo.work.calculate.prior_carries.renta_capital_inmobiliario_gastos_pendientes_unstated",
+    ),
+    # A stored revision that no longer matches its content address is replaced
+    # by calculating the work unit again from its sources.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.stored_revision.intact",
+        "modelo.work.calculate.stored_revision.drifted",
+        action_id="operator.modelo.work.calculate",
     ),
     # An input no source supplied is stated on the calculation itself; the
     # binding listing names it and the work unit's form takes the value.
@@ -986,10 +937,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.activity_start_date.present",
         "modelo.work.verify.activity_start_date.missing_for_first_filer_adjudication",
     ),
-    *_iva_wallet_profiles("modelo.work.calculate", _IVA_WALLET_CALCULATE_SCENARIOS),
-    *_iva_wallet_profiles("modelo.work.verify", _IVA_WALLET_REVISION_SCENARIOS),
-    *_iva_wallet_profiles("modelo.work.file", _IVA_WALLET_REVISION_SCENARIOS),
-    *_iva_wallet_profiles("modelo.export", _IVA_WALLET_REVISION_SCENARIOS),
+    *IVA_WALLET_REFUSAL_PROFILES,
     # A calculation the note gate withholds an action from. A stale screen is
     # put right by calculating again; a blocking note is read on the
     # declaration's status; a filing recorded before screens existed has no
@@ -1200,10 +1148,6 @@ def build_modelo_work_file_unverified_revision_failure(
 
 __all__ = [
     "ATTEST_PRIOR_VALUE_ACTION_ID",
-    "IVA_WALLET_OPENING_BALANCE_ACTION_ID",
-    "IVA_WALLET_OPENING_BALANCE_SCENARIOS",
-    "IVA_WALLET_OVERRIDE_ACTION_ID",
-    "IVA_WALLET_OVERRIDE_SCENARIOS",
     "MODELO_PRECONDITION_PROFILES",
     "MODELO_PRECONDITION_PROFILE_REGISTRY",
     "ModeloPreconditionFailure",

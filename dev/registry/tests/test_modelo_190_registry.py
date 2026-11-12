@@ -18,13 +18,13 @@ from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
 )
+from cadrumo.domain.calculations.registry.retencion_clave_catalogue import resolve_retencion_clave
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_editions
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.calculations.registry.tests.relation_fixture import resolve_relation_values_from_observations
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
-    resolve_retencion_clave,
     resolve_withholding_binding_values,
 )
 from cadrumo.domain.deadlines.errors import DeadlineValidationError

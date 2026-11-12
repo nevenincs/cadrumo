@@ -53,6 +53,12 @@ from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecor
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..filing.export_producer_m303 import M303ProfileLexicals, m303_profile_lexicals
 from ..filing.identity_contact_producer import identity_contact_producer_values
+from ..filing.producer_profile_facts import (
+    IDENTITY_LEGAL_NAME_PATH,
+    IDENTITY_NAME_PATH,
+    IDENTITY_SURNAMES_PATH,
+    IDENTITY_TAX_ID_PATH,
+)
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
@@ -68,47 +74,23 @@ from .profile_derived_facts import (
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
 
-#: Stored profile fact paths the export identity is read from. Named here
-#: rather than inline so the three that must agree stay visibly together.
-_IDENTITY_TAX_ID_KEY = "identity.tax_id"
-_IDENTITY_NAME_KEY = "identity.name"
-_IDENTITY_SURNAMES_KEY = "identity.surnames"
-_IDENTITY_LEGAL_NAME_KEY = "identity.legal_name"
+#: Stored profile fact paths the export reads besides the identity ones, which
+#: live beside the producer-fact door that names them.
 _ENTITY_TYPE_KEY = "taxpayer_type.entity_type"
 _CONTACT_PERSON_PHONE_KEY = "contact.contact_person_phone"
 _CONTACT_PERSON_NAME_KEY = "contact.contact_person_name"
 
 #: The stored profile fact to correct when a bounded producer field overruns.
 _IDENTITY_TEXT_PROFILE_FACTS: Mapping[str, str] = {
-    "legal_name": _IDENTITY_LEGAL_NAME_KEY,
-    "given_name": _IDENTITY_NAME_KEY,
-    "surnames": _IDENTITY_SURNAMES_KEY,
-    "full_name": _IDENTITY_SURNAMES_KEY,
+    "legal_name": IDENTITY_LEGAL_NAME_PATH,
+    "given_name": IDENTITY_NAME_PATH,
+    "surnames": IDENTITY_SURNAMES_PATH,
+    "full_name": IDENTITY_SURNAMES_PATH,
 }
 _CONTACT_TEXT_PROFILE_FACTS: Mapping[str, str] = {
     "phone": _CONTACT_PERSON_PHONE_KEY,
     "full_name": _CONTACT_PERSON_NAME_KEY,
 }
-
-#: The stored profile facts each taxpayer-identity producer fact is shaped from
-#: by ``_taxpayer_identity_facts``. An export refusing a blank required identity
-#: field names these, because the operator declares a profile fact and never
-#: sees the producer key the layout reads.
-_TAXPAYER_IDENTITY_PROFILE_FACTS: Mapping[FilingProducerKey, tuple[str, ...]] = {
-    FilingProducerKey.TAXPAYER_TAX_ID: (_IDENTITY_TAX_ID_KEY,),
-    FilingProducerKey.TAXPAYER_LEGAL_NAME: (_IDENTITY_LEGAL_NAME_KEY,),
-    FilingProducerKey.TAXPAYER_GIVEN_NAME: (_IDENTITY_NAME_KEY,),
-    FilingProducerKey.TAXPAYER_SURNAMES: (_IDENTITY_SURNAMES_KEY,),
-    FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME: (_IDENTITY_SURNAMES_KEY, _IDENTITY_LEGAL_NAME_KEY),
-}
-
-
-def taxpayer_identity_profile_facts(producer_key: str) -> tuple[str, ...]:
-    """Return the profile facts a taxpayer-identity producer value is read from, or ``()``."""
-    try:
-        return _TAXPAYER_IDENTITY_PROFILE_FACTS.get(FilingProducerKey(producer_key), ())
-    except ValueError:
-        return ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -580,7 +562,7 @@ def resolve_profile_identity_producer_values(
     resolved_schema = operation.profile_schema() if schema is None else schema
     facts = profile_fact_index(record, resolved_schema)
     return identity_contact_producer_values(
-        taxpayer_tax_id=str(facts.get(_IDENTITY_TAX_ID_KEY) or "").strip() or None,
+        taxpayer_tax_id=str(facts.get(IDENTITY_TAX_ID_PATH) or "").strip() or None,
         identity=_taxpayer_identity_from_profile_facts(facts, schema=resolved_schema),
         contact=_declaration_contact_from_profile_facts(facts, schema=resolved_schema),
     )
@@ -630,7 +612,7 @@ def identity_from_profile_facts(
     schema: ProfileSchemaDefinition,
 ) -> tuple[PresenterIdentity, TaxpayerIdentityFacts] | None:
     """Build the explicit presenter/taxpayer pair from indexed profile facts."""
-    tax_id = str(facts.get(_IDENTITY_TAX_ID_KEY) or "").strip()
+    tax_id = str(facts.get(IDENTITY_TAX_ID_PATH) or "").strip()
     if not tax_id:
         return None
 
@@ -645,9 +627,9 @@ def _taxpayer_identity_from_profile_facts(
 ) -> TaxpayerIdentityFacts:
     """Shape each declared name component using the export identity rules."""
     return _taxpayer_identity_facts(
-        name=str(facts.get(_IDENTITY_NAME_KEY) or "").strip(),
-        surnames=str(facts.get(_IDENTITY_SURNAMES_KEY) or "").strip(),
-        legal_name=str(facts.get(_IDENTITY_LEGAL_NAME_KEY) or "").strip(),
+        name=str(facts.get(IDENTITY_NAME_PATH) or "").strip(),
+        surnames=str(facts.get(IDENTITY_SURNAMES_PATH) or "").strip(),
+        legal_name=str(facts.get(IDENTITY_LEGAL_NAME_PATH) or "").strip(),
         entity_type=str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold(),
         schema=schema,
     )

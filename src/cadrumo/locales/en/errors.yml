@@ -609,6 +609,75 @@ errors:
       Z, and a CIF with A-H, J, N, P-S, U, V or W.'
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
+    calculation_revision_amendment_metadata_unpaired: It records an amendment without
+      its reason, or a reason without its amendment. The application wrote this record
+      itself, so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_closed_rows_disagree: Its closed record rows disagree with
+      its saved binding values. The application wrote this record itself, so it was
+      altered or damaged, and no change to your data repairs it.
+    calculation_revision_closed_rows_foreign: Its closed record rows belong to another
+      work unit or registry snapshot. The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_handoff_outputs_disagree: 'Its annual-summary handoff values
+      differ from the Modelo 390 casillas it holds: %{casilla_ids}. The application
+      wrote this record itself, so it was altered or damaged, and no change to your
+      data repairs it.'
+    calculation_revision_handoff_outputs_missing: 'Its annual-summary handoff names
+      Modelo 390 casillas the calculation does not hold: %{casilla_ids}. The application
+      wrote this record itself, so it was altered or damaged, and no change to your
+      data repairs it.'
+    calculation_revision_handoff_target_mismatch: Its annual-summary handoff for Modelo
+      303 points at a different calculation than the one that holds it. The application
+      wrote this record itself, so it was altered or damaged, and no change to your
+      data repairs it.
+    calculation_revision_identity_mismatch: Its stored identifier %{calculation_revision_id}
+      is not the one derived from its inputs (%{derived_id}). The application wrote
+      this record itself, so it was altered or damaged, and no change to your data
+      repairs it.
+    calculation_revision_lifecycle_order: It was last updated (%{updated_at}) before
+      it was created (%{created_at}). The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_observations_missing: It holds casilla values but none of
+      the observations they come from. The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_observations_projection_mismatch: Its casilla values differ
+      from what its observations give. The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_operator_layer_cleared_overlap: 'It sets and also clears
+      the same casillas: %{casilla_ids}. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.'
+    calculation_revision_rectificativa_context_missing: It is a rectificativa but
+      was not checked against the filing it corrects. The application wrote this record
+      itself, so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_identity_without_value: A stored row source identity
+      has no row value behind it. The application wrote this record itself, so it
+      was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_index_mismatch: A row casilla's position differs from
+      the position of its source row %{row_index} of %{binding_id}. The application
+      wrote this record itself, so it was altered or damaged, and no change to your
+      data repairs it.
+    calculation_revision_row_source_identity_absent: Row %{row_index} of %{binding_id}
+      has no stored source identity. The application wrote this record itself, so
+      it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_source_identity_mismatch: The source identity stored
+      for row %{row_index} of %{binding_id} differs from the one its casilla records.
+      The application wrote this record itself, so it was altered or damaged, and
+      no change to your data repairs it.
+    calculation_revision_row_source_shared: Row %{row_index} of %{binding_id} feeds
+      more than one row casilla. The application wrote this record itself, so it was
+      altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_source_value_not_decimal: The stored value of row %{row_index}
+      of %{binding_id} is not a number. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_value_mismatch: A row casilla's value differs from its
+      source row %{row_index} of %{binding_id}. The application wrote this record
+      itself, so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_row_values_provenance_mismatch: Its row casilla values and
+      their provenance cover different rows. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.
+    calculation_revision_secure_row_fields_missing: Its saved copy lacks the stored
+      row fields every such copy must carry. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.
     canonical_actividad_asset_history_persistence: The encrypted activity-asset history
       could not be reopened safely.
     canonical_aeat_sync_workspace_projection: The loaded AEAT authorities cannot form
@@ -646,6 +715,265 @@ errors:
       its contents; it may be corrupted or tampered with.
     canonical_unsupported_manifest_version: The corpus manifest uses an unsupported
       version.
+    filing_export_boolean_in_text_slot: The export field %{field} cannot write a boolean
+      producer fact into a %{length}-byte text slot. The application derives this
+      from its own export design, so no change to your data repairs it.
+    filing_export_draft_schema_mismatch: The export was handed a draft built from
+      other Modelo definitions than the ones it renders with. The application builds
+      and approves this draft itself, so no change to your data repairs it.
+    filing_export_draft_unapproved: The export was handed a draft that is not approved.
+      The application builds and approves this draft itself, so no change to your
+      data repairs it.
+    filing_export_envelope_closer_extent: The filing-envelope closer does not render
+      to the declared %{extent}-byte extent. The application derives this from its
+      own export design, so no change to your data repairs it.
+    filing_export_envelope_declarant_tax_id_absent: The filing envelope was asked
+      to write the declarant's tax ID without the filing subject. The application
+      derives this from its own export design, so no change to your data repairs it.
+    filing_export_envelope_election_unresolved: The filing envelope was about to be
+      written without a resolved prior domiciliation election. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_envelope_language_casilla_absent: The filing envelope was asked
+      to write the declaration language without its declared box value. The application
+      derives this from its own export design, so no change to your data repairs it.
+    filing_export_envelope_layout_absent: The filing-envelope layout declaration is
+      absent. The application derives this from its own export design, so no change
+      to your data repairs it.
+    filing_export_envelope_period_not_representable: The filing period %{period} has
+      no %{extent}-character envelope representation. The application derives this
+      from its own export design, so no change to your data repairs it.
+    filing_export_envelope_period_outside_range: The declarant envelope period is
+      outside the range the design lists. The application derives this from its own
+      export design, so no change to your data repairs it.
+    filing_export_envelope_prefix_extent: The envelope prefix does not render to its
+      declared %{extent}-byte extent. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_envelope_prefix_role_authority: The filing-envelope prefix role
+      %{role} has no declared value authority. The application derives this from its
+      own export design, so no change to your data repairs it.
+    filing_export_envelope_prefix_role_not_ascii: The filing-envelope prefix role
+      %{role} is not ASCII. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_envelope_prefix_role_width: The filing-envelope prefix role %{role}
+      renders to %{actual} bytes where %{expected} are expected. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_envelope_quarter_token_undeclared: The envelope design does not
+      declare the bare quarter that a scheme quarter needs. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_envelope_records_unemitted: 'Required filing-envelope record families
+      have no emitted occurrence: %{records}. The application derives this from its
+      own export design, so no change to your data repairs it.'
+    filing_export_field_binding_undeclared: The export field %{field} declares no
+      binding. The application derives this from its own export design, so no change
+      to your data repairs it.
+    filing_export_field_casilla_undeclared: The export field %{field} declares no
+      casilla. The application derives this from its own export design, so no change
+      to your data repairs it.
+    filing_export_field_computed_key_undeclared: The export field %{field} declares
+      no computed key. The application derives this from its own export design, so
+      no change to your data repairs it.
+    filing_export_field_contradicts_period: The export field %{field} contradicts
+      the period being filed. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_field_draft_attribute_undeclared: The export field %{field} declares
+      no draft attribute. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_field_kind_unsupported: The export field kind %{kind} is not supported.
+      The application derives this from its own export design, so no change to your
+      data repairs it.
+    filing_export_field_length_undeclared: The export field %{field} declares no length.
+      The application derives this from its own export design, so no change to your
+      data repairs it.
+    filing_export_field_offset_undeclared: The export field %{field} declares no offset.
+      The application derives this from its own export design, so no change to your
+      data repairs it.
+    filing_export_field_overlap: The export field %{field} overlaps another field.
+      The application derives this from its own export design, so no change to your
+      data repairs it.
+    filing_export_field_producer_key_undeclared: The export field %{field} declares
+      no producer key. The application derives this from its own export design, so
+      no change to your data repairs it.
+    filing_export_field_projection_context_absent: The export field %{field} needs
+      a snapshot-owned render context to address its projection. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_field_projection_ref_undeclared: The export field %{field} declares
+      no projection reference. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_layout_not_owned_by_snapshot: The export layout is not owned by
+      the selected registry snapshot. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_layout_projection_address_duplicate: The export layout admits the
+      duplicate projection address %{address}. The application derives this from its
+      own export design, so no change to your data repairs it.
+    filing_export_layout_unclassified: The export layout of Modelo %{modelo} cannot
+      be rendered and the application has no reason that says why. The application
+      derives this from its own export design, so no change to your data repairs it.
+    filing_export_m190_component_declaration: The declaration of the signed Modelo
+      190 component is incomplete or changed. The application derives this from its
+      own export design, so no change to your data repairs it.
+    filing_export_m190_component_wire: A signed Modelo 190 component has invalid wire
+      bytes. The application derives this from its own export design, so no change
+      to your data repairs it.
+    filing_export_m190_context_differs: The signed Modelo 190 condition context differs
+      from the reviewed source. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_m190_source_digest: The signed Modelo 190 components lack their
+      exact reviewed source digest. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_m193_declaration_changed: The Modelo 193 perceptor pending and devengo
+      declaration is incomplete or changed. The application derives this from its
+      own export design, so no change to your data repairs it.
+    filing_export_m280_declaration_changed: The Modelo 280 negative imputation components
+      differ from the reviewed source. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_m280_sign_differs: The Modelo 280 negative imputation sign differs
+      from the reviewed source. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_m280_zero_sign_differs: The Modelo 280 explicit zero sign differs
+      from its reviewed projection. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_m303_evidence_design_unowned: The Modelo 303 filing evidence record
+      design is not owned by the selected snapshot. The application derives this from
+      its own export design, so no change to your data repairs it.
+    filing_export_m303_evidence_orden_mismatch: The annual Orden of the Modelo 303
+      filing evidence does not match the selected snapshot. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_m303_projection_layout_unowned: The Modelo 303 filing projection
+      layout is not owned by the selected snapshot. The application derives this from
+      its own export design, so no change to your data repairs it.
+    filing_export_m303_projection_snapshot_period: The Modelo 303 filing projection
+      snapshot does not match the filing period. The application derives this from
+      its own export design, so no change to your data repairs it.
+    filing_export_modelo100_comunidad_prefix_missing: The registry-selected comunidad
+      block prefix is missing. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_modelo100_comunidad_total_missing: The registry-selected comunidad
+      total casilla is missing. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_modelo100_declarations_not_mapping: The selected Modelo 100 XML
+      declarations are not a mapping fact. The application derives this from its own
+      export design, so no change to your data repairs it.
+    filing_export_modelo100_declarations_unpinned: The Modelo 100 XML export declarations
+      need an operation pinned to one authority generation. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_modelo100_declarations_unresolved: The Modelo 100 XML declarations
+      were not resolved. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_modelo100_sign_declarations_incomplete: The registry-selected XML
+      sign declarations are incomplete. The application derives this from its own
+      export design, so no change to your data repairs it.
+    filing_export_payload_consumer_unavailable: The export payload consumer is unavailable.
+      The application derives this from its own export design, so no change to your
+      data repairs it.
+    filing_export_payload_destination_count: The export was given a number of payload
+      destinations other than one. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_producer_fact_not_boolean: The export field %{field} needs a typed
+      boolean producer fact and received another type. The application derives this
+      from its own export design, so no change to your data repairs it.
+    filing_export_producer_snapshot_modelo_mismatch: The filing producer snapshot
+      belongs to a different Modelo than the draft being exported. The application
+      derives this from its own export design, so no change to your data repairs it.
+    filing_export_producer_unowned: The filing producer key %{key} has no declared
+      owner. The application derives this from its own export design, so no change
+      to your data repairs it.
+    filing_export_projection_address_duplicate: 'The export projection addresses are
+      duplicated: %{addresses}. The application derives this from its own export design,
+      so no change to your data repairs it.'
+    filing_export_projection_address_unpreflighted: The export projection address
+      %{address} has no preflighted value. The application derives this from its own
+      export design, so no change to your data repairs it.
+    filing_export_projection_duplicate_values: The projection record %{record} emitted
+      duplicate typed projection values. The application derives this from its own
+      export design, so no change to your data repairs it.
+    filing_export_projection_family_unsupported: The projection record %{record} mixes
+      projection-reference families or uses an unsupported one. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_projection_occurrence_absent: The required projection record %{record}
+      has no applicable emitted occurrence. The application derives this from its
+      own export design, so no change to your data repairs it.
+    filing_export_projection_occurrence_ambiguous: The families of the projection
+      record %{record} do not resolve to one deterministic occurrence. The application
+      derives this from its own export design, so no change to your data repairs it.
+    filing_export_projection_plan_not_bijection: 'The filing projection plan does
+      not match the layout one to one: missing %{missing}, extra %{extraneous}. The
+      application derives this from its own export design, so no change to your data
+      repairs it.'
+    filing_export_projection_references_unemitted: The projection record %{record}
+      did not emit every authored typed projection reference. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_projection_repeat_mismatch: The projection record %{record} uses
+      repeat %{repeat} for a family that does not repeat. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_projector_field_untyped: A projector returned a field without an
+      actual typed projection reference. The application derives this from its own
+      export design, so no change to your data repairs it.
+    filing_export_regimen_rows_not_repeated: The regimen-simplificado projection record
+      must repeat its projection rows. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_result_casilla_ids_malformed: An export verification result lists
+      a casilla identifier that is blank or padded. The application derives this from
+      its own export design, so no change to your data repairs it.
+    filing_export_result_digest_malformed: An export result carries a file digest
+      that is not a lowercase hexadecimal SHA-256 value. The application derives this
+      from its own export design, so no change to your data repairs it.
+    filing_export_sepa_marker_selection_unsupported: The SEPA marker met an account
+      selection it has no rule for. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_shared_resolver_not_exhaustive: The shared filing producer resolver
+      does not cover every key it owns. The application derives this from its own
+      export design, so no change to your data repairs it.
+    filing_export_verification_modelo100_declarations_unresolved: The Modelo 100 XML
+      verification declarations were not resolved. The application derives this from
+      its own export design, so no change to your data repairs it.
+    filing_export_verification_signed_entry_unresolved: The XML field %{field_id}
+      has no signed entry to verify against. The application derives this from its
+      own export design, so no change to your data repairs it.
+    filing_export_verification_value_unrenderable: The expected verification value
+      of the export field %{field_id} could not be rendered. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_xml_attribute_not_terminal: An XML dictionary attribute does not
+      terminate its path. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_xml_aux_idioma_omitted: The XML export layout omits the mandatory
+      Aux/Idioma element. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_xml_boolean_in_non_boolean_row: A %{data_type} row received a boolean,
+      and only the rows AEAT declares boolean may hold one. The application derives
+      this from its own export design, so no change to your data repairs it.
+    filing_export_xml_converter_non_string: The registry-selected XML converter %{converter}
+      returned a value that is not text. The application derives this from its own
+      export design, so no change to your data repairs it.
+    filing_export_xml_converter_unavailable: The registry-selected XML converter %{converter}
+      is not available. The application derives this from its own export design, so
+      no change to your data repairs it.
+    filing_export_xml_entry_path_empty: An XML dictionary entry has an empty path.
+      The application derives this from its own export design, so no change to your
+      data repairs it.
+    filing_export_xml_row_column_occurrence: The row column %{binding} needs one repeating
+      dictionary row for %{column} and found %{found}. The application derives this
+      from its own export design, so no change to your data repairs it.
+    filing_export_xml_row_column_undeclared: The binding %{binding} carries rows but
+      declares no row column. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_xml_serialiser_not_bytes: The XML serialiser returned %{type}, not
+      bytes. The application derives this from its own export design, so no change
+      to your data repairs it.
+    filing_export_xml_version_token_unresolved: The XML export did not resolve its
+      mandatory Aux/VERSION token. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_xsd_root_absent: The XML dictionary XSD source %{source} declares
+      no %{root} root element. The application derives this from its own export design,
+      so no change to your data repairs it.
+    filing_export_xsd_source_unresolved: The XML dictionary export layout %{layout}
+      has no resolved XSD source. The application derives this from its own export
+      design, so no change to your data repairs it.
+    filing_export_xsd_unparseable: The XML dictionary XSD source %{source} could not
+      be parsed. The application derives this from its own export design, so no change
+      to your data repairs it.
+    filing_export_xsd_version_absent: The XML dictionary XSD source %{source} declares
+      no versionxsd values. The application derives this from its own export design,
+      so no change to your data repairs it.
     integrity_active_profile_pointer: The active-profile pointer is invalid; repair
       the selected profile before continuing.
     integrity_apoderado_configuration_identity: The stored apoderado configuration
@@ -655,6 +983,9 @@ errors:
     integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
     integrity_corpus_anchor_resolution: A bundled corpus anchor does not resolve to
       exactly one extracted unit.
+    integrity_filing_export: An export check found a fault in the application's own
+      export design.
+    integrity_filing_export_design: An export design check failed inside the application.
     integrity_filing_validation: Filing validation surfaced a blocking finding.
     integrity_financial_attachments_attachment_validation: The attachment failed validation.
       Check the file and attach it again.
@@ -662,6 +993,8 @@ errors:
       NIF, NIE or CIF.
     integrity_justificante_verification: The receipt verification with the AEAT could
       not be completed.
+    integrity_modelo_export_design: The export could not be written because the application's
+      own export design contradicts itself.
     integrity_modelo_export_field_unrenderable: 'Nothing was written: field %{field_id}
       (casilla %{casilla_id}) cannot be written from its value, because the official
       record design the application carries and that value disagree. The defect is
@@ -670,6 +1003,9 @@ errors:
       %{field_id} cannot be written from its value, because the official record design
       the application carries and that value disagree. The defect is in the export
       design, not in your data, so changing your data will not fix it.'
+    integrity_modelos_calculation_revision: The saved calculation contradicts itself,
+      so nothing can be applied from it. The application wrote this record itself,
+      so it was altered or damaged, and no change to your data repairs it.
     integrity_modelos_operator_layer: The stored operator values for this calculation
       contradict each other. The application wrote them itself, so the record was
       altered or damaged and nothing can be applied from it.
@@ -1037,6 +1373,78 @@ errors:
       it was being read; capture it again.
     producer_capture_not_current: A producer projection changed while it was being
       read; capture it again.
+    profile_access_administration_denied: Your current access does not allow managing
+      access settings, so the request was refused.
+    profile_access_authentication_required: You are not signed in. Sign in and try
+      again.
+    profile_access_authority_unavailable: The published rules this operation needs
+      are not available right now. Try again later.
+    profile_access_automation_suspended: Automated access to this profile is suspended.
+      Approve it again in person before you retry.
+    profile_access_backend_unavailable: The service that handles this request is not
+      available right now. Try again in a moment.
+    profile_access_client_mismatch: This request came from a different client than
+      the one that was admitted, so it was refused.
+    profile_access_clock_invalid: The computer clock is not reliable enough to check
+      this access, so it was refused. Correct the system time and try again.
+    profile_access_connection_mismatch: This request came over a different connection
+      than the one that was admitted, so it was refused.
+    profile_access_custody_changed: The profile's protected storage changed since
+      you signed in. Sign in again.
+    profile_access_custody_recovering: The profile's worker was lost, so your session
+      is suspended while it recovers. Sign in again to resume.
+    profile_access_custody_unavailable: The profile's protected storage is not available
+      right now. Try again in a moment.
+    profile_access_disclosure_denied: Your current access does not allow this data
+      to be shown, so the request was refused.
+    profile_access_fresh_password_required: This operation needs your password again.
+      Sign in again with your password.
+    profile_access_frontend_denied: This operation is not allowed from this interface,
+      so it was refused.
+    profile_access_grant_expired: The access grant behind this request has expired.
+      Grant access again in person and try again.
+    profile_access_grant_inactive: The access grant behind this request is not active.
+      Grant access again in person and try again.
+    profile_access_human_authority_required: This operation must be carried out by
+      a person, not by automation. Do it yourself and try again.
+    profile_access_key_expired: The access key behind this request has expired. Issue
+      a new key in person and try again.
+    profile_access_key_inactive: The access key behind this request is not active.
+      Issue a new key in person and try again.
+    profile_access_operation_denied: This operation is not permitted with your current
+      access, so it was refused.
+    profile_access_operation_unavailable: This operation is not available right now.
+      Try again later.
+    profile_access_os_locked: The computer is locked. Unlock it and try again.
+    profile_access_os_session_unavailable: The computer's user session is not available,
+      so access cannot be checked. Sign in to the computer and try again.
+    profile_access_parent_invalid: The access this request was delegated from is no
+      longer valid, so it was refused.
+    profile_access_period_denied: Your current access does not cover this period,
+      so the request was refused.
+    profile_access_person_act_required: 'This act is yours alone: signing in, sessions,
+      keys, secrets and work outside the profile cannot be delegated. Do it in person.'
+    profile_access_privilege_expansion: This request asks for more access than was
+      granted, so it was refused.
+    profile_access_profile_locked: The profile is locked. Sign in again to unlock
+      it.
+    profile_access_profile_mismatch: This request does not belong to the profile you
+      are signed in to, so it was refused.
+    profile_access_provider_required: This operation needs a provider that is not
+      set up. Set one up and try again.
+    profile_access_response_authority_required: Answering this operation's question
+      needs authority this request does not carry, so it was refused. Answer from
+      the window that started the operation.
+    profile_access_runtime_changed: The background service restarted since you signed
+      in. Sign in again.
+    profile_access_session_expired: Your session has expired. Sign in again.
+    profile_access_session_inactive: Your session is no longer active. Sign in again.
+    profile_access_storage_unavailable: The profile storage is not available right
+      now. Try again in a moment.
+    profile_access_subject_busy: An earlier operation on the same item has not finished.
+      Wait for it to finish and try again.
+    profile_access_transaction_authority_required: Confirming this change needs authority
+      this request does not carry, so it was refused. Confirm it in person.
     profile_capsule_archive: The profile archive could not be written or read
     profile_capsule_source: The given source is not a readable profile capsule
     profile_import_collision: The imported profile identifier collides with an existing
@@ -1131,6 +1539,9 @@ errors:
       export.
     refused_export_format: The requested export serialization format is not supported.
     refused_filing_calculate: The filing calculation or summary failed its invariants.
+    refused_filing_export_casilla_value: 'Nothing was written: a box you state holds
+      a value the export cannot write as the official design places it. State that
+      box again and export again.'
     refused_filing_export_declared_party_name: 'Nothing was written: field %{export_field_id}
       names a party with no filing name the AEAT record design can take there. State
       the party''s filing name and export again.'
@@ -1147,6 +1558,8 @@ errors:
       filing name is %{composed_length} characters and field %{export_field_id} has
       %{field_length}. The record design allows no shortening, so state a rendering
       of the name for %{field_length} characters and export again.'
+    refused_filing_export_profile_fact_missing: 'Nothing was written: the export needs
+      a detail about you that your profile does not state. State it and export again.'
     refused_financial_aggregation_category_coverage: A transaction lacks category
       or profile coverage. Classify the transaction before aggregating.
     refused_financial_aggregation_missing_classification: Some in-period transactions
@@ -1316,6 +1729,9 @@ errors:
       {payment_cutoff_legal_refs}) because the filing window sets none; on {export_on}
       the result can only be paid another way.
     refused_modelo_edit_parse: This entry could not be read.
+    refused_modelo_export_casilla_value: 'Nothing was written: a box you state holds
+      a value the export cannot write as the official design places it. State that
+      box again and export again.'
     refused_modelo_export_declared_party_name: 'Nothing was written: field %{export_field_id},
       %{field_length} positions long, names a party with no filing name the AEAT record
       design can take. State or restate the party''s filing name and export again.'
@@ -1330,6 +1746,8 @@ errors:
     refused_modelo_export_required_record_absent: The official design requires at
       least one %{export_record_id} record, but this return has none, so there is
       nothing to write in this format and nothing was written.
+    refused_modelo_export_settlement: 'Nothing was written: the export cannot state
+      how the return is paid or refunded.'
     refused_modelo_export_unrepresentable_character: 'Nothing was written: field %{field_id}
       holds the character «%{character}» (%{code_point}), which the AEAT record design
       cannot write. Dropping or replacing it would declare something else. Correct
@@ -1456,6 +1874,9 @@ errors:
       are still within the legal retention period (Ley 58/2003, LGT art. 66 and 70).
       The earliest safe erase date is %{earliest_safe_erase_date}. Wait until then,
       or re-run with --override-retention and --reason to override.'
+    refused_review_drafts_unattributed: Your profile has no tax ID, so none of the
+      %{draft_count} stored drafts can be shown as yours. Add your tax ID to your
+      profile and review again.
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
       the syntax of the filter provided.'
     refused_runtime_custody_recovering: Access to this profile is being restored.

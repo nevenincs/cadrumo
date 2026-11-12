@@ -6,7 +6,9 @@ modelo the identity and the concepts the design maps. Any other stated content
 (a concept of a value with no counterparty, a counterparty value of a modelo
 without a design, a counterparty concept the design does not map, a role that
 names no single casilla of the edition) is named here so the row cannot be
-green on a value nothing checked.
+green on a value nothing checked. A ``not_sourced`` casilla is named too: the
+journey checks that the application still lacks the law's figure, so the
+return is known to be wrong and its row cannot be green either.
 """
 
 from __future__ import annotations
@@ -27,9 +29,10 @@ type ReturnKey = tuple[str, int | None, str]
 
 def value_unchecked(value: ExpectedValue, year: int) -> set[str]:
     """The items one in-force value of ``year`` states that the table does not compare."""
-    if value.refusal is not None or not (value.casillas or value.concepts or value.roles):
+    if value.refusal is not None or not (value.casillas or value.concepts or value.roles or value.not_sourced):
         return set()
-    return _concepts_unchecked(value) | unresolved_roles(value, year)
+    not_sourced = {f"not-sourced:{casilla}" for casilla, _ in value.not_sourced}
+    return _concepts_unchecked(value) | unresolved_roles(value, year) | not_sourced
 
 
 def _concepts_unchecked(value: ExpectedValue) -> set[str]:

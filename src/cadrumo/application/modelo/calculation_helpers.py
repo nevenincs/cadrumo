@@ -62,7 +62,9 @@ from .action_errors import (
     CasillaProvenanceMissingError,
     WorkUnitRevisionDivergenceError,
 )
+from .calculation_input_refusal_doors import casilla_provenance_missing_verdict, work_unit_revision_divergence_verdict
 from .registry_helpers import absent_authority_file
+from .registry_input_refusals import RegistryInputCondition, registry_input_verdict
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
 
@@ -133,6 +135,7 @@ def assert_snapshot_matches_work_unit_revision(
             "work_unit_revision": work_unit.revision_id,
             "law_revision": snapshot.revision.id,
         },
+        precondition_verdict=work_unit_revision_divergence_verdict(work_unit),
     )
 
 
@@ -190,6 +193,10 @@ def resolve_registry_snapshot_for_work_unit(
                     "filing_year": work_unit.filing_year,
                     "period": work_unit.period.registry_token,
                 },
+                precondition_verdict=registry_input_verdict(
+                    RegistryInputCondition.AUTHORITY_AVAILABLE,
+                    facts={"modelo": str(work_unit.modelo), "available": False},
+                ),
             ) from exc
         assert_snapshot_matches_work_unit_revision(work_unit, snapshot)
         return snapshot
@@ -204,6 +211,9 @@ def resolve_registry_snapshot_for_work_unit(
         raise CalculationRegistryUnavailableError(
             translated_message="application.modelo.errors.calculation_registry_root_missing",
             context={"missing_path": absent_authority_file(exc)},
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.AUTHORITY_AVAILABLE, facts={"available": False}
+            ),
         ) from exc
 
 
@@ -236,6 +246,7 @@ def build_typed_observations(
         raise CasillaProvenanceMissingError(
             translated_message="errors.error.error_modelo_casilla_provenance_missing",
             context={"casilla_id": unknown[0], "origin": "engine_result"},
+            precondition_verdict=casilla_provenance_missing_verdict("engine_result"),
         )
     return engine_result.observations
 
@@ -302,6 +313,7 @@ def casilla_observation_for(
         raise CasillaProvenanceMissingError(
             translated_message="errors.error.error_modelo_casilla_provenance_missing",
             context={"casilla_id": casilla_id, "origin": "engine_result"},
+            precondition_verdict=casilla_provenance_missing_verdict("engine_result"),
         )
     return CasillaObservation(
         casilla_id=casilla_id,
@@ -708,6 +720,7 @@ def amendment_observations(
             raise CasillaProvenanceMissingError(
                 translated_message="errors.error.error_modelo_casilla_provenance_missing",
                 context={"casilla_id": casilla_id, "origin": "amendment_corrected_values"},
+                precondition_verdict=casilla_provenance_missing_verdict("amendment_corrected_values"),
             )
         observations.append(
             CasillaObservation(

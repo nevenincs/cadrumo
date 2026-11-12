@@ -15,7 +15,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
@@ -50,13 +50,17 @@ class OperationFinancialOperandRefusalCode(StrEnum):
     OWNER_LOST = "owner_lost"
 
 
-class OperationFinancialOperandRefusedError(CadrumoError):
+class OperationFinancialOperandRefusedError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """A custody refusal carrying a closed code and no financial input."""
 
-    def __init__(self, reason: OperationFinancialOperandRefusalCode) -> None:
+    def __init__(
+        self, reason: OperationFinancialOperandRefusalCode, *, precondition_verdict: object | None = None
+    ) -> None:
         """Retain only the safe refusal code."""
         self.reason = reason
-        super().__init__(f"financial operand handoff refused: {reason.value}")
+        super().__init__(
+            f"financial operand handoff refused: {reason.value}", precondition_verdict=precondition_verdict
+        )
 
 
 class OperationTransientFinancialOperandRequirementV1(BaseModel):

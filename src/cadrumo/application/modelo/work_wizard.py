@@ -34,6 +34,7 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..flows.copy import register_copy_source
 from ..flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .binding_readiness import profile_resolvable_binding_ids
 from .registry_discovery import registry_bindings_for_scope, registry_casillas_for_registry_scope
 from .work_missing_input import ModeloWorkMissingInputError
@@ -282,7 +283,10 @@ class ModeloWorkWizardRun:
         current_steps = self.steps if steps is None else steps
         table = _ACTIVE_COPY_RUNS.get(self._run_token)
         if table is None:
-            raise InternalInvariantError("Modelo work wizard run is closed")
+            raise InternalInvariantError(
+                "Modelo work wizard run is closed",
+                precondition_verdict=internal_invariant_verdict("work_wizard.run_open"),
+            )
         pages: list[FlowPage] = []
         for step in current_steps:
             prompt_ref = _copy_ref_id(self._run_token, step, "prompt")

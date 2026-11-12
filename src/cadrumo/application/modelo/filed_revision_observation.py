@@ -73,7 +73,8 @@ from ..calculations.observations_repository import (
     ResultDispositionProjection,
     observation_key,
 )
-from .action_errors import ModeloLocalObservationError
+from .filing_import_refusal_profiles import FilingImportRefusalCause
+from .filing_import_refusals import local_observation_refusal
 
 
 def _history_repository_in_observation_context(
@@ -102,7 +103,8 @@ def _history_repository_in_observation_context(
     override_url = getattr(getattr(override_context, "engine", None), "url", None)
     context_url = getattr(getattr(context, "engine", None), "url", None)
     if override_url is None or context_url is None or override_url != context_url:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.OBSERVATION_STORAGE,
             translated_message="application.modelo.errors.filed_observation_split_storage_context",
             context={
                 "history_backend": str(override_url),
@@ -133,7 +135,8 @@ def require_filing_result_disposition(
     under-declared, and they would drift.
     """
     if work_unit.modelo == form_for_role("iva.periodic") and result_disposition is None:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.RESULT_DISPOSITION,
             translated_message="errors.error.error_modelos",
             context={"modelo": work_unit.modelo, "period": work_unit.period.registry_token},
         )

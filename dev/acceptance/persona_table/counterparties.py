@@ -20,7 +20,10 @@ from cadrumo.domain.calculations.registry.export_parse_models import ParsedExpor
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.tests.personas import ExpectedValue, Identity, IdentityCatalogue
 
-_AMOUNTS = frozenset({"importe_anual", "base"})
+_AMOUNTS = frozenset(
+    {"importe_anual", "base", "base_retenciones", "retenciones", "porcentaje_retencion", "importe_integro"}
+)
+"""Concepts compared as numbers, so a stated amount and the written one agree whatever their scale."""
 _DECLARED = "declared"
 
 

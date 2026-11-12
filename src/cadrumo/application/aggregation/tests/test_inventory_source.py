@@ -55,10 +55,6 @@ from ....domain.contribuyente.inventory.closing_foundations import (
     PriorClosingContinuityEvidence,
     fingerprint_prior_authoritative_closing,
 )
-from ....domain.contribuyente.inventory.closing_value_facts import (
-    InventoryClosingValueFacts,
-    build_closing_authority_record,
-)
 from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
@@ -77,6 +73,7 @@ from ....domain.filing_evidence import FilingEvidenceReference
 from ..inventory import VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
 from ..source_mesh import CalculationSourceContext
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
+from .inventory_source_support import closed_no_stock_ledger, fresh_inventory_ledger
 
 _ESTIMATION_REGIME = "irpf.estimation_regime"
 
@@ -606,20 +603,9 @@ def test_inventory_failure_is_atomic_value_free_and_loads_once(kind: str) -> Non
         assert canary not in rendered
 
 
-def _fresh_ledger(year: int) -> InventoryLedger:
-    """A book as ``inventory create`` writes it: no opening stock, no movement, no closing value yet."""
-    return InventoryLedger(
-        actividad_id="service-activity",
-        year=year,
-        valuation_method=ValuationMethod.FIFO,
-        opening_stock=Decimal("0.00"),
-        closing_authority_record=None,
-    )
-
-
 def test_a_book_with_no_recorded_closing_value_is_not_ready_rather_than_tampered() -> None:
     year = newest_authored_edition("100")
-    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(_fresh_ledger(year),)))
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(fresh_inventory_ledger(year),)))
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
 
@@ -632,37 +618,8 @@ def test_a_book_with_no_recorded_closing_value_is_not_ready_rather_than_tampered
     assert diagnostic.remedy is not None
 
 
-def _closed_no_stock_ledger(year: int) -> InventoryLedger:
-    """A book opened with no stock and closed on its movements, on the taxpayer's statement that none was held."""
-    fresh = _fresh_ledger(year)
-    statement = _ref("no-stock-statement")
-    record = build_closing_authority_record(
-        InventoryClosingValueFacts(
-            decision_id="no-stock",
-            actividad_id=fresh.actividad_id,
-            year=year,
-            authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
-            reason="The activity held no existencias at any time in the year.",
-            decision_evidence=(
-                InventoryClosingDecisionEvidence(
-                    reference=statement,
-                    role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
-                    content_digest="d" * 64,
-                ),
-            ),
-            prior_evidence=(PriorClosingContinuityEvidence(reference=statement, content_digest="d" * 64),),
-        ),
-        document=InventoryLedgerDocument(ledgers=(fresh,)),
-        ledger=fresh,
-        actor="operator",
-        source_command="ledger.inventory.closing-value.record",
-        now=datetime(year + 1, 1, 10, tzinfo=UTC),
-    )
-    return fresh.model_copy(update={"closing_authority_record": record})
-
-
 def test_a_book_with_no_stock_closed_on_its_movements_projects_proven_zero_variation_and_purchases() -> None:
-    closed = _closed_no_stock_ledger(newest_authored_edition("100"))
+    closed = closed_no_stock_ledger(newest_authored_edition("100"))
     repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(closed,)))
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
@@ -705,7 +662,7 @@ def test_every_year_with_the_rows_keeps_stated_none_zero_unanswered_refused_and_
 
         stated_none = InventorySourceResolver(
             inventory_repository=_InventoryLedgerRepositoryScenario(
-                InventoryLedgerDocument(ledgers=(_closed_no_stock_ledger(year),))
+                InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(year),))
             )
         ).resolve(context)
         unanswered = InventorySourceResolver(inventory_repository=_InventoryLedgerRepositoryScenario()).resolve(context)

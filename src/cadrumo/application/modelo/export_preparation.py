@@ -88,23 +88,27 @@ from ..filing.draft_review import approve_draft
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..filing.export import export_layout_renderability_reason
 from ..filing.producer_snapshot import (
-    FilingProducerSnapshotError,
     M303FilingFacts,
     TaxpayerIdentityFacts,
 )
 from ..filing.runtime import RegistrySchemaAccessor, filing_profile_from_taxpayer
 from .action_errors import (
-    ModeloPriorDomiciliationElectionRefusedError,
+    M303FilingEvidenceError,
     ModeloRevisionNotSealedError,
     export_period_unmappable_error,
 )
+from .declaration_refusal_failures import prior_domiciliation_refusal
+from .declaration_refusal_profiles import DeclarationRefusalCause
 from .export_contracts import (
     ModeloExportCommand,
     ModeloExportEvidenceMissingError,
     ModeloExportUnsupportedError,
     ModeloIvaWalletDecisionProvenance,
 )
+from .export_field_refusal import export_operator_decision_refusal, export_taxpayer_name_missing_refusal
 from .export_sink import LocalFileExportSink
+from .lifecycle_view_refusal_doors import unit_calculate_verdict
+from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_profile,
 )
@@ -112,6 +116,7 @@ from .profile_export_binding import (
     resolve_profile_export_values,
 )
 from .projection_next_steps import verify_work_step
+from .refusal_door_verdicts import operator_choice_verdict, stored_defect_verdict
 from .revision_replay_inputs import revision_filing_replay_inputs
 from .row_source_identity_replay import attach_revision_row_source_identities
 
@@ -207,6 +212,7 @@ def raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> No
         raise ModeloExportEvidenceMissingError(
             translated_message="application.modelo.errors.export_ledger_evidence_missing",
             context={"calculation_revision_id": revision.calculation_revision_id},
+            precondition_verdict=unit_calculate_verdict("export_ledger_evidence", revision.work_unit_id),
         )
     if not revision.source_transaction_ids:
         return
@@ -217,6 +223,7 @@ def raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> No
     raise ModeloExportEvidenceMissingError(
         translated_message="application.modelo.errors.export_ledger_evidence_missing",
         context={"calculation_revision_id": revision.calculation_revision_id},
+        precondition_verdict=unit_calculate_verdict("export_ledger_evidence", revision.work_unit_id),
     )
 
 
@@ -265,10 +272,7 @@ def compose_export_dictionary_values(
         ),
     )
     if taxpayer_identity.full_name is None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={"cause": "XML dictionary export requires exact taxpayer full_name"},
-        )
+        raise export_taxpayer_name_missing_refusal()
     values["DPNIF_D"] = draft.profile_tax_id
     values["DP_APENOM_D"] = taxpayer_identity.full_name
     return values
@@ -301,6 +305,7 @@ def raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider: 
     raise ModeloExportUnsupportedError(
         translated_message="application.modelo.errors.export_unsupported",
         context=context,
+        precondition_verdict=operator_choice_verdict("export_layout_unsupported"),
     )
 
 
@@ -322,7 +327,8 @@ def requireprior_domiciliation_marker_layout(
         for field in record.fields
     ):
         return
-    raise ModeloPriorDomiciliationElectionRefusedError(
+    raise prior_domiciliation_refusal(
+        DeclarationRefusalCause.ELECTION_MARKER_LAYOUT,
         translated_message="errors.refused.refused_modeloprior_domiciliation_election",
         context={
             "modelo": str(work_unit.modelo),
@@ -407,6 +413,7 @@ def approve_export_draft(
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_approval_failed",
             context={"calculation_revision_id": revision.calculation_revision_id},
+            precondition_verdict=stored_defect_verdict("export_draft_approval"),
         ) from exc
     return period, approved
 
@@ -433,8 +440,10 @@ def resolve_m303_export_arrivals(
     if prorrata_register.is_sectorized:
         apportionment = iva_aggregation.prorrata_apportionment
         if apportionment is None or not apportionment.sector_apportionments:
-            raise FilingProducerSnapshotError(
-                "modelo 303 differentiated sectors require canonical sector apportionment",
+            raise export_operator_decision_refusal(
+                translated_message="application.filing.export.errors.m303_sector_apportionment_missing",
+                reason="m303_sector_apportionment_missing",
+                context={"filing_year": period.filing_year, "period": period.registry_token},
             )
         contributions = resolve_iva_differentiated_deduction_contributions(
             snapshot.revision, iva_aggregation.observations, apportionment=apportionment, operation=operation
@@ -461,8 +470,10 @@ def resolve_m303_export_arrivals(
         parameters=bienes_parameters,
     )
     if regularisation_result.pending_percentage_count:
-        raise FilingProducerSnapshotError(
-            "modelo 303 Bienes de inversión regularisation requires definitive prorrata evidence",
+        raise export_operator_decision_refusal(
+            translated_message="application.filing.export.errors.m303_definitive_prorrata_missing",
+            reason="m303_definitive_prorrata_missing",
+            context={"filing_year": period.filing_year, "period": period.registry_token},
         )
     # The bundle travels out beside the result it produced, so the facts the
     # oracle later checks cannot be handed a bundle other than the one the
@@ -481,6 +492,9 @@ def require_m303_regimen_simplificado_scope_matches_profile(
     """
     expected_scope = m303_regimen_simplificado_scope_for_profile(workflow_profile)
     if filing_facts.regimen_simplificado.scope_decision != expected_scope:
-        raise FilingProducerSnapshotError(
-            "modelo 303 simplified-regime filing evidence disagrees with the canonical IVA profile composition",
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "regimen_scope_profile_divergence",
+                {"scope_decision_matches_censo_profile": False},
+            ),
         )

@@ -49,7 +49,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.corpus_manifest.errors import CorpusBundleError, CorpusManifestTamperError
 from ...core.corpus_manifest.manifest import build_corpus_bundle, verify_corpus_bundle
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
@@ -62,6 +62,13 @@ from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATE
 from ...domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from .lifecycle_view_refusal_doors import unit_revisions_verdict
+from .refusal_door_verdicts import (
+    caller_defect_verdict,
+    registry_defect_verdict,
+    safety_stop_verdict,
+    stored_defect_verdict,
+)
 from .review_package_text import ReviewPackageNote
 
 if TYPE_CHECKING:
@@ -99,7 +106,7 @@ narrowing this one, so nothing previously accepted is now refused.
 """
 
 
-class ReviewPackageError(CadrumoError):
+class ReviewPackageError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error for review-package build/verify failures."""
 
 
@@ -259,6 +266,7 @@ def build_review_package(
                 "work_unit_id": work_unit.work_unit_id,
                 "revision_work_unit_id": revision.work_unit_id,
             },
+            precondition_verdict=caller_defect_verdict("review_package_unit_revision_pair"),
         )
     if revision.registry_snapshot_ref != RegistrySnapshotRef(
         modelo=work_unit.modelo,
@@ -269,6 +277,7 @@ def build_review_package(
         raise ReviewPackageError(
             translated_message="application.modelo.errors.review_package_generic",
             context={"work_unit_id": work_unit.work_unit_id, "detail": "registry snapshot coordinate mismatch"},
+            precondition_verdict=stored_defect_verdict("review_package_snapshot_coordinate"),
         )
     carry_outcome = revision_carry_outcome(revision.registry_snapshot_ref, operation=operation)
     if carry_outcome.refused:
@@ -278,6 +287,7 @@ def build_review_package(
                 "work_unit_id": work_unit.work_unit_id,
                 "detail": carry_outcome.detail or "registry revision cannot be re-confirmed",
             },
+            precondition_verdict=registry_defect_verdict("review_package_revision_reconfirmed"),
         )
     if revision.state not in CURRENT_SEALED_REVISION_STATES:
         raise ReviewPackageRevisionStateError(
@@ -287,6 +297,7 @@ def build_review_package(
                 "state": revision.state.value,
                 "eligible_states": ", ".join(sorted(s.value for s in CURRENT_SEALED_REVISION_STATES)),
             },
+            precondition_verdict=unit_revisions_verdict("review_package_revision_state", work_unit.work_unit_id),
         )
 
     built_at = generated_at or now()
@@ -370,6 +381,7 @@ def verify_review_package(
         raise ReviewPackageIntegrityError(
             translated_message="application.modelo.errors.review_package_integrity",
             context={"package_path": str(package_path), "detail": str(exc)},
+            precondition_verdict=safety_stop_verdict("review_package_integrity"),
         ) from exc
 
     manifest = _recover_package_manifest(
@@ -385,6 +397,7 @@ def verify_review_package(
                 "package_path": str(package_path),
                 "detail": carry_outcome.detail or "registry revision cannot be re-confirmed",
             },
+            precondition_verdict=registry_defect_verdict("review_package_revision_reconfirmed"),
         )
 
     return ReviewPackageVerification(
@@ -419,6 +432,7 @@ def _recover_package_manifest(
                 "package_path": str(package_path),
                 "detail": f"embedded descriptor {_PACKAGE_INFO_MEMBER!r} is missing or checksum-mismatched",
             },
+            precondition_verdict=safety_stop_verdict("review_package_integrity"),
         )
     try:
         with zipfile.ZipFile(package_path, mode="r") as archive:
@@ -432,6 +446,7 @@ def _recover_package_manifest(
         raise ReviewPackageIntegrityError(
             translated_message="application.modelo.errors.review_package_integrity",
             context={"package_path": str(package_path), "detail": str(exc)},
+            precondition_verdict=safety_stop_verdict("review_package_integrity"),
         ) from exc
 
 
@@ -461,6 +476,7 @@ def assert_review_package_verifies(
                 "unexpected": ", ".join(verification.unexpected),
                 "mismatched": ", ".join(verification.mismatched),
             },
+            precondition_verdict=safety_stop_verdict("review_package_integrity"),
         )
     return verification.manifest
 

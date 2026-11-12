@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ...core.filing_producer_key import FilingProducerKey
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError
 
 _MODELO_PRODUCER_NAMESPACE_OWNERS = {
     "amendment_evidence": "modelo_specific_amendment",
@@ -38,7 +38,11 @@ def filing_producer_ownership(
         namespace = key.value.partition(".")[0]
         owner = _MODELO_PRODUCER_NAMESPACE_OWNERS.get(namespace)
         if owner is None:
-            raise FilingExportValidationError(f"filing producer key {key.value!r} has no declared owner")
+            raise FilingExportDesignIntegrityError(
+                f"filing producer key {key.value!r} has no declared owner",
+                translated_message="errors.integrity.filing_export_producer_unowned",
+                context={"key": key.value},
+            )
         owners[key] = owner
     return owners
 

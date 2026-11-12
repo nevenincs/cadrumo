@@ -29,6 +29,7 @@ from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal_strict
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import (
     EntitySetFactQuery,
@@ -41,7 +42,7 @@ from ...domain.calculations.registry.facts.resolution import (
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -226,6 +227,8 @@ def _resolve_objective_estimation_model_scope(
                 "filing_year": filing_year,
                 "fact_resolved": False,
             },
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         ) from exc
     if not isinstance(resolved, ResolvedEntitySetFact):
         raise ModeloValidationError(
@@ -235,6 +238,8 @@ def _resolve_objective_estimation_model_scope(
                 "filing_year": filing_year,
                 "fact_entity_set": False,
             },
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     if not resolved.legal_refs:
         raise ModeloValidationError(
@@ -244,6 +249,8 @@ def _resolve_objective_estimation_model_scope(
                 "filing_year": filing_year,
                 "fact_legal_refs": False,
             },
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     return resolved
 
@@ -278,6 +285,8 @@ def _resolve_objective_estimation_profile_fact_map(
                 "filing_year": filing_year,
                 "fact_resolved": False,
             },
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         ) from exc
     if not isinstance(resolved, ResolvedMappingFact):
         raise ModeloValidationError(
@@ -287,6 +296,8 @@ def _resolve_objective_estimation_profile_fact_map(
                 "filing_year": filing_year,
                 "fact_mapping": False,
             },
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     if not resolved.legal_refs:
         raise ModeloValidationError(
@@ -296,6 +307,8 @@ def _resolve_objective_estimation_profile_fact_map(
                 "filing_year": filing_year,
                 "fact_legal_refs": False,
             },
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     return resolved
 
@@ -308,6 +321,8 @@ def _profile_field_fact_pairs(resolved: ResolvedMappingFact) -> tuple[tuple[str,
             raise ModeloValidationError(
                 translated_message="errors.error.error_modelos_validation",
                 context={"fact_id": resolved.fact_id, "fact_mapping_entries": False},
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.REGISTRY_DECLARATION,
             )
         if entry.key.endswith(".label"):
             continue
@@ -316,6 +331,8 @@ def _profile_field_fact_pairs(resolved: ResolvedMappingFact) -> tuple[tuple[str,
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
             context={"fact_id": resolved.fact_id, "fact_mapping_entries": False},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     return tuple(pairs)
 
@@ -348,16 +365,22 @@ def _resolve_objective_estimation_threshold(
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
             context={"fact_id": fact_id, "filing_year": filing_year, "fact_resolved": False},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         ) from exc
     if not isinstance(resolved, ResolvedScalarFact):
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
             context={"fact_id": fact_id, "filing_year": filing_year, "fact_scalar": False},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     if not resolved.legal_refs:
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
             context={"fact_id": fact_id, "filing_year": filing_year, "fact_legal_refs": False},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     return resolved
 
@@ -368,6 +391,8 @@ def _as_integer(value: object, surface: str) -> int:
     raise ModeloValidationError(
         translated_message="errors.error.error_modelos_validation",
         context={"surface": surface, "integer_valid": False},
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        record=ModeloValidatedRecord.REGISTRY_DECLARATION,
     )
 
 
@@ -386,6 +411,8 @@ def _as_decimal(value: object, surface: str) -> Decimal:
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
             context={"surface": surface, "decimal_valid": False},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         ) from exc
 
 

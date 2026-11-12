@@ -25,14 +25,29 @@ with the scopes would be silently wrong on exactly one direction.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from ....core.classifier_input_source import ClassifierInputSource
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import InvoiceKind, IvaCategory, IvaTerritorialScope
-from ....domain.iva.supply_nature import SupplyNature, supply_nature_implied_by_category
+from ....domain.iva.supply_nature import (
+    CitationCatalogue,
+    SupplyNature,
+    registry_citation_catalogue,
+    supply_nature_implied_by_category,
+)
 from ..classification_assembly import DeclaredFact
 from ..confirm_establishment import declared_facts
 from ..establishment_ladder import CounterpartyEstablishment
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
+
+def _citation_catalogue() -> CitationCatalogue:
+    return registry_citation_catalogue(effective_date=_ON_DATE)
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -55,6 +70,7 @@ def test_the_assertion_reaches_the_classifier_on_either_direction(
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         supply_nature=nature,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None, f"the assertion did not reach the criteria on {kind}"
@@ -76,6 +92,7 @@ def test_the_assertion_is_stamped_operator_and_not_an_evidence_provenance(kind: 
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         supply_nature=SupplyNature.SERVICES,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None
@@ -99,6 +116,7 @@ def test_no_assertion_leaves_the_axis_unstated_rather_than_defaulted(kind: Invoi
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is None, "an unanswered axis must stay unanswered, never default"
@@ -133,6 +151,7 @@ def test_a_printed_citation_now_settles_the_nature() -> None:
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=_GOODS_CITATION,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None, "the printed citation did not reach the criteria"
@@ -152,6 +171,7 @@ def test_a_citation_derived_nature_is_backed_by_the_page_not_by_a_person() -> No
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=_GOODS_CITATION,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None
@@ -167,6 +187,7 @@ def test_the_citation_is_direction_independent_like_the_assertion(kind: InvoiceK
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=_GOODS_CITATION,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None, f"the citation did not reach the criteria on {kind}"
@@ -187,6 +208,7 @@ def test_the_operators_own_answer_beats_the_printed_citation() -> None:
         stated_category=None,
         supply_nature=SupplyNature.SERVICES,
         printed_citation=_GOODS_CITATION,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None
@@ -213,6 +235,7 @@ def test_a_document_establishing_nothing_still_leaves_the_axis_open(printed: str
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=printed,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is None
@@ -231,6 +254,7 @@ def test_reading_the_citation_is_what_settles_it() -> None:
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
+        transaction_date=_ON_DATE,
     )
     with_citation = declared_facts(
         kind=InvoiceKind.ISSUED,
@@ -238,6 +262,7 @@ def test_reading_the_citation_is_what_settles_it() -> None:
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=_GOODS_CITATION,
+        transaction_date=_ON_DATE,
     )
 
     assert without_citation.supply_nature is None
@@ -271,6 +296,7 @@ def test_a_declared_category_settles_the_nature_with_nothing_printed() -> None:
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(IvaCategory("intra_community_supply")),
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None, "the declared category did not settle the nature"
@@ -299,6 +325,7 @@ def test_a_category_whose_law_reaches_both_limbs_stays_open(category: IvaCategor
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(category),
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is None
@@ -310,8 +337,18 @@ def test_the_traps_are_excluded_by_the_tables_rather_than_by_a_special_case() ->
     If a row for art. 22 is ever added to the citation table, this fails here
     rather than silently starting to assert a nature on service exports.
     """
-    assert supply_nature_implied_by_category(IvaCategory("export_assimilated_zero_rated")).nature is None
-    assert supply_nature_implied_by_category(IvaCategory("domestic_reverse_charge")).nature is None
+    assert (
+        supply_nature_implied_by_category(
+            IvaCategory("export_assimilated_zero_rated"), catalogue=_citation_catalogue()
+        ).nature
+        is None
+    )
+    assert (
+        supply_nature_implied_by_category(
+            IvaCategory("domestic_reverse_charge"), catalogue=_citation_catalogue()
+        ).nature
+        is None
+    )
 
 
 def test_a_printed_citation_outranks_the_category_it_disagrees_with() -> None:
@@ -327,6 +364,7 @@ def test_a_printed_citation_outranks_the_category_it_disagrees_with() -> None:
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(IvaCategory("intra_community_supply")),
         printed_citation="Exencion art. 163 octiesdecies LIVA",
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None
@@ -341,6 +379,7 @@ def test_the_operator_still_outranks_both_derivations() -> None:
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(IvaCategory("intra_community_supply")),
         supply_nature=SupplyNature.SERVICES,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None
@@ -360,12 +399,14 @@ def test_the_category_join_is_what_settles_it() -> None:
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
+        transaction_date=_ON_DATE,
     )
     with_category = declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(IvaCategory("intra_community_supply")),
+        transaction_date=_ON_DATE,
     )
 
     assert without_category.supply_nature is None
@@ -416,6 +457,7 @@ def test_a_proposal_does_not_reach_the_classifier_on_its_own() -> None:
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=proposed.regime_legend,
+        transaction_date=_ON_DATE,
     )
 
     assert proposed.proposed_supply_nature is SupplyNature.SERVICES
@@ -435,8 +477,32 @@ def test_the_operators_answer_is_what_the_classifier_consumes() -> None:
         filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         supply_nature=SupplyNature.SERVICES,
+        transaction_date=_ON_DATE,
     )
 
     assert declared.supply_nature is not None
     assert declared.supply_nature.value is SupplyNature.SERVICES
     assert declared.supply_nature.source is ClassifierInputSource.OPERATOR_ASSERTION
+
+
+def test_an_undated_document_derives_no_nature_from_its_citation() -> None:
+    """The citation catalogue is read on the transaction's date; with none, nothing is derived."""
+    undated = declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
+        stated_category=None,
+        printed_citation=_GOODS_CITATION,
+        transaction_date=None,
+    )
+    dated = declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
+        stated_category=None,
+        printed_citation=_GOODS_CITATION,
+        transaction_date=_ON_DATE,
+    )
+
+    assert undated.supply_nature is None
+    assert dated.supply_nature is not None

@@ -74,6 +74,7 @@ from ..workflow.errors import WorkflowInputMismatchError
 from ..workflow.protocols import RegistryModeloDraftProtocol
 from ..workflow.run_models import WorkflowPurpose, WorkflowResult, WorkflowStage
 from .action_errors import ModeloWorkflowGateError
+from .refusal_door_verdicts import caller_defect_verdict
 from .revision_replay_inputs import revision_filing_replay_inputs
 from .row_source_identity_replay import attach_revision_row_source_identities
 from .verification_repository_ports import WorkflowRunRepositoryProtocol
@@ -169,6 +170,7 @@ class RevisionInputsProvider:
         if modelo != self._modelo or period != self._period:
             raise WorkflowInputMismatchError(
                 translated_message="application.modelo.errors.workflow_input_mismatch",
+                precondition_verdict=caller_defect_verdict("workflow_input_coordinates"),
                 context={
                     "expected_modelo": self._modelo,
                     "expected_period": str(self._period),
@@ -469,7 +471,7 @@ def run_revision_workflow_gate(
     )
     run_repository.save(result, runs_dir=runs_dir)
     if result.final_stage is WorkflowStage.ABORTED:
-        raise ModeloWorkflowGateError(result)
+        raise ModeloWorkflowGateError(result, precondition_verdict=result.steps[-1].precondition_verdict)
     return result
 
 

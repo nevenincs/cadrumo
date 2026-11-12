@@ -630,12 +630,14 @@ def _resolve_observation_families(
                     profile_path_values_reader=profile_read_ports.path_values,
                 ),
                 invoice_catalogue=ports.invoice_catalogue_read_ports,
+                filing_names=ports.invoice_source_ports.counterparty_filing_names,
             ),
         ),
         resolve_declared(
             WithholdingSourceResolver(
                 ports=ports.percepciones_observation_ports,
                 retencion_ports=ports.retencion_observation_ports,
+                filing_names=ports.invoice_source_ports.counterparty_filing_names,
             )
         ),
         resolve_declared(RetencionSoportadaSourceResolver(ports=ports.retencion_soportada_ports)),

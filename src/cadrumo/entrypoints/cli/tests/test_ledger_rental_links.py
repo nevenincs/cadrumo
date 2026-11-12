@@ -263,8 +263,8 @@ def test_the_csv_table_links_rows_and_refuses_a_row_naming_an_unknown_lease(worl
     table = tmp_path / "rows.csv"
     table.write_text(
         "transaction_id,classification,irpf_category,arrendamiento_ref\n"
-        f"{good},BUSINESS,{RENTAL_LINK_IRPF_CATEGORY},1\n"
-        f"{bad},BUSINESS,{RENTAL_LINK_IRPF_CATEGORY},9\n",
+        f"{good},BUSINESS,{RENTAL_LINK_IRPF_CATEGORY},{world.arrendamiento}\n"
+        f"{bad},BUSINESS,{RENTAL_LINK_IRPF_CATEGORY},{world.missing}\n",
         encoding="utf-8",
     )
 
@@ -280,17 +280,17 @@ def test_a_lease_a_ledger_row_names_cannot_be_removed_until_the_link_is_cleared(
     transaction_id = _add_row("INCOMING", "rent-9")
     assert _classify(transaction_id, *_rental("--arrendamiento", str(world.arrendamiento))).exit_code == 0
 
-    refused = _profile("arrendamiento", "remove", str(world.arrendamiento), "--yes")
+    refused = _profile("arrendamiento", "remove", str(world.arrendamiento))
     assert refused.exit_code != 0
-    assert "aeat app ledger classify" in _words(refused.output)
+    assert "REFUSED_USER_PROFILE_VALIDATION" in refused.output
 
     assert _classify(transaction_id, *_rental("--arrendamiento", "")).exit_code == 0
-    removed = _profile("arrendamiento", "remove", str(world.arrendamiento), "--yes")
+    removed = _profile("arrendamiento", "remove", str(world.arrendamiento))
     assert removed.exit_code == 0, removed.output
 
 
 def test_a_property_a_ledger_row_names_cannot_be_removed(world: _Rows) -> None:
-    assert _profile("arrendamiento", "remove", str(world.arrendamiento), "--yes").exit_code == 0
+    assert _profile("arrendamiento", "remove", str(world.arrendamiento)).exit_code == 0
     transaction_id = _add_row("OUTGOING", "fee-5")
     assert (
         _classify(
@@ -299,7 +299,7 @@ def test_a_property_a_ledger_row_names_cannot_be_removed(world: _Rows) -> None:
         == 0
     )
 
-    refused = _profile("inmueble", "remove", str(world.inmueble), "--yes")
+    refused = _profile("inmueble", "remove", str(world.inmueble))
 
     assert refused.exit_code != 0
-    assert "aeat app ledger classify" in _words(refused.output)
+    assert "REFUSED_USER_PROFILE_VALIDATION" in refused.output

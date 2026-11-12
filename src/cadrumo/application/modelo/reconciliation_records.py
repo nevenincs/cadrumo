@@ -41,6 +41,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.filing_text import ModeloActorLabel
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 
 if TYPE_CHECKING:
@@ -287,7 +288,10 @@ def modelo_reconciliation_persistence() -> ModeloReconciliationPersistencePort:
     try:
         factory = _BOUND_MODELO_RECONCILIATION_PERSISTENCE_FACTORY.get()
     except LookupError as error:
-        raise InternalInvariantError("modelo reconciliation persistence has not been composed") from error
+        raise InternalInvariantError(
+            "modelo reconciliation persistence has not been composed",
+            precondition_verdict=internal_invariant_verdict("reconciliation_persistence.composed"),
+        ) from error
     return factory()
 
 

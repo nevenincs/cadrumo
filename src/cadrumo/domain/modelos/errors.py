@@ -9,14 +9,21 @@ subclasses.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from enum import StrEnum
 from logging import Logger
-from typing import ClassVar, NoReturn
+from typing import ClassVar, Literal, NoReturn, overload
 
-from ...core.errors.hierarchy import CadrumoError, CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
+from ...core.operator_action_enums import NoRecoveryOutcome
 
 
-class ModeloError(CadrumoError):
-    """Base error for the modelos subpackage."""
+class ModeloError(TerminalPreconditionErrorMixin[object], CadrumoError):
+    """Base error for the modelos subpackage.
+
+    A raise site states the door of its refusal with ``precondition_verdict``; a site
+    that states none carries no door of its own.
+    """
 
 
 class PensionReduccionError(CoreValidationError):
@@ -30,8 +37,76 @@ class PensionReduccionError(CoreValidationError):
     """
 
 
+class ModeloValidatedRecord(StrEnum):
+    """The record whose own invariant a terminal :class:`ModeloValidationError` found broken.
+
+    The values are locale-neutral facts the application's terminal verdict names.
+    """
+
+    FILING_RECORD = "filing_record"
+    CALCULATION_REVISION = "calculation_revision"
+    WORK_UNIT = "work_unit"
+    VERIFICATION_REPORT = "verification_report"
+    CREDIT_RESOLUTION = "credit_resolution"
+    PARTICIPATION_INDEX = "participation_index"
+    SOURCE_DISAGREEMENT = "source_disagreement"
+    REGISTRY_DECLARATION = "registry_declaration"
+
+
 class ModeloValidationError(ModeloError):
-    """Raised when a modelo code violates shape invariants."""
+    """Raised when a modelo record or value violates its invariants.
+
+    A site whose check guards a record Cadrumo built or stored, and never a
+    value the operator stated, says so with ``no_recovery_outcome`` and the
+    ``record`` it checked: the operator has no entry that repairs it, so the
+    application reads that pair as a terminal verdict. A site that states
+    neither carries no door of its own.
+    """
+
+    @overload
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: object | None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        no_recovery_outcome: Literal[NoRecoveryOutcome.TERMINAL],
+        record: ModeloValidatedRecord,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        no_recovery_outcome: Literal[NoRecoveryOutcome.TERMINAL] | None = None,
+        record: ModeloValidatedRecord | None = None,
+        precondition_verdict: object | None = None,
+    ) -> None:
+        """Keep the record a terminal site checked, without importing application policy."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
+        self._terminal_record = record if no_recovery_outcome is NoRecoveryOutcome.TERMINAL else None
+
+    @property
+    def terminal_record(self) -> ModeloValidatedRecord | None:
+        """Return the record whose invariant failed when the site stated a terminal outcome."""
+        return self._terminal_record
 
 
 class ModeloOperatorLayerIntegrityError(ModeloValidationError):
@@ -39,6 +114,16 @@ class ModeloOperatorLayerIntegrityError(ModeloValidationError):
 
     The layer is written by Cadrumo itself, so a record that breaks them was
     altered or damaged after it was stored; the operator has no entry that
+    repairs it.
+    """
+
+
+class CalculationRevisionIntegrityError(ModeloValidationError):
+    """Raised when a saved calculation revision contradicts itself.
+
+    Every check behind it compares fields the application computed and stored
+    together, never a value the operator typed, so a revision that fails one
+    was altered, damaged or assembled wrongly; the operator has no entry that
     repairs it.
     """
 
@@ -87,9 +172,9 @@ class ModeloExportDeclaredPartyNameError(ModeloExportError):
     The design fills the slot from the party's own name parts and allows no
     shortening, so the party's filing name is stated, or restated with a
     rendering for the slot's width, through the action the context names. The
-    context never carries the name. The party's tax identifier and country,
-    which the door binds as its arguments, travel only as process-local keys:
-    no kept record, journal or log holds them.
+    context never carries the name. The party's tax identifier and country
+    travel only as process-local keys: no kept record, journal or log holds
+    them, so the door's verdict leaves both arguments for the operator to state.
     """
 
     process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"tax_identifier", "country_code"})
@@ -143,6 +228,7 @@ def raise_catalogue_integrity_error(
 
 
 __all__ = [
+    "CalculationRevisionIntegrityError",
     "Modelo036LifecycleError",
     "Modelo036PriorAltaRequiredError",
     "Modelo036TerminalStateError",
@@ -154,6 +240,7 @@ __all__ = [
     "ModeloExportRequiredRecordAbsentError",
     "ModeloExportValueOverflowError",
     "ModeloOperatorLayerIntegrityError",
+    "ModeloValidatedRecord",
     "ModeloValidationError",
     "raise_catalogue_integrity_error",
 ]

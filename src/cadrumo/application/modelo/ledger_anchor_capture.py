@@ -21,7 +21,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...domain.modelos.errors import ModeloValidationError
+from ...core.operator_action_enums import NoRecoveryOutcome
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.ledger_filing_snapshot import ManualFactBasisEntry
 from ..aggregation.ledger_filing_snapshot import compute_ledger_filing_evidence
 
@@ -62,6 +63,8 @@ def normalised_observation_refs(
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
             context={"field_name": field_name, "observation_present": False},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
     return refs
 

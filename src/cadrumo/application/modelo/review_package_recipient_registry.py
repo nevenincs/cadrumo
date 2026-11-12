@@ -43,18 +43,19 @@ from datetime import datetime
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.hex import HEX_PATTERN_64
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
+from .refusal_door_verdicts import operator_choice_verdict
 from .review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
 
 #: Raw X25519 public key size in bytes (RFC 7748).
 _X25519_PUBLIC_KEY_BYTES = 32
 
 
-class RecipientFingerprintRegistryError(CadrumoError):
+class RecipientFingerprintRegistryError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error for recipient-fingerprint registry failures."""
 
 
@@ -154,6 +155,7 @@ def public_key_hex_from_raw_bytes(raw_public_key: bytes) -> str:
             f"X25519 public key must be {_X25519_PUBLIC_KEY_BYTES} bytes, got {len(raw_public_key)}",
             translated_message="application.modelo.errors.recipient_registry_invalid_public_key",
             context={"length": str(len(raw_public_key))},
+            precondition_verdict=operator_choice_verdict("recipient_public_key_malformed"),
         )
     # Round-trips through the cryptography library to reject a malformed point.
     X25519PublicKey.from_public_bytes(raw_public_key)
@@ -179,6 +181,7 @@ def get_recipient_fingerprint(
             return existing
     raise RecipientNotRegisteredError(
         f"no recipient registered under id {recipient_id!r}",
+        precondition_verdict=operator_choice_verdict("recipient_not_registered"),
         context={"recipient_id": recipient_id},
         translated_message="application.modelo.errors.recipient_registry_not_found",
     )
@@ -197,6 +200,7 @@ def add_recipient_fingerprint(
     if any(existing.recipient_id == recipient_id for existing in current.records):
         raise RecipientAlreadyRegisteredError(
             f"recipient {recipient_id!r} is already registered",
+            precondition_verdict=operator_choice_verdict("recipient_already_registered"),
             context={"recipient_id": recipient_id},
             translated_message="application.modelo.errors.recipient_registry_already_exists",
         )
@@ -222,6 +226,7 @@ def remove_recipient_fingerprint(
     if len(remaining) == len(current.records):
         raise RecipientNotRegisteredError(
             f"no recipient registered under id {recipient_id!r}",
+            precondition_verdict=operator_choice_verdict("recipient_not_registered"),
             context={"recipient_id": recipient_id},
             translated_message="application.modelo.errors.recipient_registry_not_found",
         )

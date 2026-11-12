@@ -24,11 +24,12 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final, Literal, Protocol
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.filing_year import FilingYear
 from ...core.time.utc import UtcInstant
 from ...domain.modelos.credit_resolution import CreditResolutionIdentity, CreditResolutionRecord
 from ..aggregation.observation_key_component import validate_observation_key_component
+from .declaration_refusal_profiles import DeclarationRefusalCause
 
 __all__ = [
     "CREDIT_RESOLUTION_KEY_PREFIX",
@@ -41,6 +42,7 @@ __all__ = [
     "CreditResolutionRevisionConflictError",
     "CreditResolutionRevokeRefusalReason",
     "credit_resolution_key",
+    "credit_resolution_refusal",
     "revoke_credit_resolution",
     "revoke_refusal_reason",
     "store_credit_resolution",
@@ -99,17 +101,39 @@ CREDIT_RESOLUTION_MESSAGE_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyTy
 """The worded message of each refusal reason, the stale revision of a guarded write included."""
 
 
-class CreditResolutionRefusedError(CadrumoError):
+class CreditResolutionRefusedError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """A resolution or revocation the write path refuses to store."""
 
-    def __init__(self, reason: CreditResolutionRefusalReason) -> None:
+    def __init__(self, reason: CreditResolutionRefusalReason, *, precondition_verdict: object | None = None) -> None:
         """Name the refusal and nothing of the figure or the operator's reason."""
         self.reason: CreditResolutionRefusalReason = reason
         super().__init__(
             f"credit resolution refused: {reason}",
             context={"reason": reason},
             translated_message=CREDIT_RESOLUTION_MESSAGE_LOCALE_KEYS[reason],
+            precondition_verdict=precondition_verdict,
         )
+
+
+def credit_resolution_refusal(
+    reason: CreditResolutionRefusalReason,
+    cause: DeclarationRefusalCause,
+    *,
+    work_unit_id: str | None = None,
+) -> CreditResolutionRefusedError:
+    """Return the refusal for ``reason`` with the door of ``cause``.
+
+    ``work_unit_id`` binds the status door of a calculation that moved on; the
+    other causes name no action.
+    """
+    from .declaration_refusal_failures import declaration_refusal_failure
+
+    return CreditResolutionRefusedError(
+        reason,
+        precondition_verdict=declaration_refusal_failure(
+            cause, action_arguments=None if work_unit_id is None else {"work_unit_id": work_unit_id}
+        ).verdict,
+    )
 
 
 class CreditResolutionReader(Protocol):
@@ -164,12 +188,12 @@ def store_credit_resolution(
         CreditResolutionPersistenceError: Storage failed.
     """
     if not record.active:
-        raise CreditResolutionRefusedError("not_resolved")
+        raise credit_resolution_refusal("not_resolved", DeclarationRefusalCause.CREDIT_RECORD_ACTIVE)
     stored, current_revision_id = repository.load_revisioned(record.identity)
     if current_revision_id != expected_revision_id:
         raise CreditResolutionRevisionConflictError
     if stored is not None and stored.active:
-        raise CreditResolutionRefusedError("already_resolved")
+        raise credit_resolution_refusal("already_resolved", DeclarationRefusalCause.CREDIT_ALREADY_RESOLVED)
     return repository.save_revisioned(record, expected_revision_id=expected_revision_id)
 
 
@@ -202,6 +226,6 @@ def revoke_credit_resolution(
         raise CreditResolutionRevisionConflictError
     reason = revoke_refusal_reason(stored)
     if reason is not None or stored is None:
-        raise CreditResolutionRefusedError(reason or "not_resolved")
+        raise credit_resolution_refusal(reason or "not_resolved", DeclarationRefusalCause.CREDIT_NOT_RESOLVED)
     revoked = stored.revoked(at, by_session=by_session)
     return revoked, repository.save_revisioned(revoked, expected_revision_id=expected_revision_id)

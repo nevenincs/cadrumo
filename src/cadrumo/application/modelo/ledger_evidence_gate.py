@@ -6,6 +6,7 @@ verification, export, or local filing lets deductible input IVA proceed.
 
 from __future__ import annotations
 
+from datetime import date
 from enum import Enum, StrEnum, auto
 from typing import Final
 
@@ -69,6 +70,14 @@ def _enum_or_unparseable[EnumT: StrEnum](enum_type: type[EnumT], value: str) -> 
     """
     try:
         return enum_type(value)
+    except ValueError:
+        return _UNPARSEABLE
+
+
+def _date_or_unparseable(row: LedgerEvidenceRow) -> date | _SchemaDrift:
+    """Parse the date the law selects the row's IVA vocabulary on: devengo, else the ledger filing date."""
+    try:
+        return date.fromisoformat(row.operation_date or row.value_date or row.booked_date)
     except ValueError:
         return _UNPARSEABLE
 
@@ -198,11 +207,15 @@ def ledger_evidence_row_missing_deductible_iva_evidence(
     direction = _enum_or_unparseable(TransactionDirection, row.direction)
     if direction is _UNPARSEABLE:
         return True
+    effective_date = _date_or_unparseable(row)
+    if effective_date is _UNPARSEABLE:
+        return True
     flow = iva_evidence_flow(
         lifecycle_state=lifecycle_state,
         business_classification=business_classification,
         direction=direction,
         iva_category=_enum_or_none(IvaCategory, row.iva_category),
+        effective_date=effective_date,
     )
     return deductible_iva_evidence_gap(
         flow=flow,

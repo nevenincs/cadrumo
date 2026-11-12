@@ -439,7 +439,10 @@ def _assert_family_row_selectors(
     for binding_id, (object_path, leaf, count_path) in FAMILY_ROW_BINDINGS.items():
         selector = selector_as_dict(bindings_by_id[binding_id])
         assert selector.get("profile_model") is None, binding_id
-        assert selector["rows"] == {"object_path": object_path, "leaf": leaf, "count_path": count_path}, binding_id
+        rows = cast(Mapping[str, object], selector["rows"])
+        located = {key: value for key, value in rows.items() if key != "required"}
+        assert located == {"object_path": object_path, "leaf": leaf, "count_path": count_path}, binding_id
+        assert isinstance(rows.get("required", False), bool), binding_id
         assert selector["repeating"] is True, binding_id
         assert selector["dictionary_field"] in casillas_by_id, binding_id
 

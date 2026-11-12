@@ -18,6 +18,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
+from .registry_input_refusals import registry_integrity_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -67,7 +68,10 @@ def projection_declaration_from(resolved: ResolvedMappingFact) -> ProjectionDecl
         try:
             return entries[key]
         except KeyError as exc:
-            raise RegistryValidationError(f"projection mapping is missing {key!r}") from exc
+            raise RegistryValidationError(
+                f"projection mapping is missing {key!r}",
+                precondition_verdict=registry_integrity_verdict("projection_declaration"),
+            ) from exc
 
     def box(key: str) -> CasillaId:
         return validated_casilla_id(declared(key), surface=f"projection mapping {key}")
