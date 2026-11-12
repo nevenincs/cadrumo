@@ -398,6 +398,7 @@ class PublicModeloFormIssue(BaseModel):
     attention: ModeloFormAttention
     action_locale_key: str
     open_invoice_id: str | None = None
+    door_action_id: str | None = None
 
 
 class PublicModeloWorkForm(BaseModel):

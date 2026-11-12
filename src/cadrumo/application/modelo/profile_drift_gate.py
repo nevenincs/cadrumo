@@ -12,9 +12,10 @@ revision is calculated again. Verify compares a draft; export compares a
 verified revision, because a grant seals the revision and verify then returns
 its report unchanged, while a profile edit is not held at the write the way a
 sealed invoice is. A filed revision is not refused here: its bytes are what was
-filed, and :func:`profile_read_drift` lets a surface tell the filer an amendment
-is due. This never recomputes casillas; a check that quietly recalculated would
-mint values the operator never saw.
+filed. Verify returns a filed revision's sealed report unchanged, so the form
+that shows the filed declaration serves :func:`filed_profile_superseded_findings`
+instead, a warning whose door is the amendment. This never recomputes casillas;
+a check that quietly recalculated would mint values the operator never saw.
 
 A revision calculated before reads were recorded is UNKNOWN, not stale: it is
 disclosed as a warning and nothing is refused for it.
@@ -56,6 +57,7 @@ PROFILE_DRIFT_LEGAL_REFS: tuple[str, ...] = (
 
 PROFILE_DRIFT_KEY = "application.modelo.findings.profile_read_drift"
 PROFILE_READS_UNKNOWN_KEY = "application.modelo.findings.profile_read_fingerprint_absent"
+PROFILE_SUPERSEDED_FILED_KEY = "application.modelo.findings.profile_read_superseded_filed"
 
 _VERIFY_CONDITION = "modelo.work.verify.profile_reads.current"
 _VERIFY_EVIDENCE = "modelo.work.verify.profile_reads"
@@ -177,6 +179,35 @@ def _failure(target: CalculationRevision, work_unit: WorkUnit, drift: ProfileRea
     )
 
 
+def filed_profile_superseded_findings(
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ModeloVerificationFinding, ...]:
+    """Tell the filer a declaration recorded as filed rests on profile facts since edited.
+
+    The filed bytes stay what was filed, so nothing is blocked: the finding is a
+    warning, and correcting a filed declaration is an amendment (LGT art. 120.3),
+    which the form serves as the finding's door. A filing whose reads were not
+    recorded, or that a later filing superseded, says nothing.
+    """
+    if target.state is not CalculationRevisionState.PRESENTADO:
+        return ()
+    drift = profile_read_drift(target, work_unit, profile_record=None, operation=operation)
+    if drift.status is not ProfileReadDriftStatus.CHANGED:
+        return ()
+    return (
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            message_locale_key=PROFILE_SUPERSEDED_FILED_KEY,
+            message_facts=_message_facts(work_unit, drift),
+            legal_refs=PROFILE_DRIFT_LEGAL_REFS,
+        ),
+    )
+
+
 def profile_drift_findings(
     *,
     target: CalculationRevision,
@@ -224,8 +255,10 @@ __all__ = [
     "PROFILE_DRIFT_KEY",
     "PROFILE_DRIFT_LEGAL_REFS",
     "PROFILE_READS_UNKNOWN_KEY",
+    "PROFILE_SUPERSEDED_FILED_KEY",
     "ProfileReadDrift",
     "ProfileReadDriftStatus",
+    "filed_profile_superseded_findings",
     "profile_drift_findings",
     "profile_read_drift",
     "require_profile_reads_current_for_export",
