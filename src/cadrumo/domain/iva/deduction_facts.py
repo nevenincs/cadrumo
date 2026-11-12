@@ -77,9 +77,12 @@ def _declared_values(declarations: Mapping[str, str], key: str) -> frozenset[str
     return frozenset(value.strip() for value in _required_declaration(declarations, key).split(",") if value.strip())
 
 
-def _declared_flow_values(declarations: Mapping[str, str], key: str) -> frozenset[str]:
+def _declared_flow_values(declarations: Mapping[str, str], key: str, *, effective_date: date) -> frozenset[str]:
     """Resolve 0085 flow relations against the canonical 0083 vocabulary."""
-    return frozenset(require_iva_flow_direction(value).value for value in _declared_values(declarations, key))
+    return frozenset(
+        require_iva_flow_direction(value, effective_date=effective_date).value
+        for value in _declared_values(declarations, key)
+    )
 
 
 def required_deduction_evidence_authority(
@@ -176,6 +179,7 @@ def _validate_rectification(
     iva_amount: Decimal,
     rectifies_ledger_id: str | None,
     declarations: Mapping[str, str],
+    effective_date: date,
 ) -> None:
     if rectifies_ledger_id is None:
         raise IvaValidationError("rectification requires rectifies_ledger_id")
@@ -183,6 +187,7 @@ def _validate_rectification(
         raise IvaValidationError("rectification base_amount and iva_amount must both be signed non-zero evidence")
     required_flow = require_iva_flow_direction(
         _required_declaration(declarations, f"rectification_flow.{category.value}"),
+        effective_date=effective_date,
     )
     if flow_direction.value != required_flow.value:
         raise IvaValidationError("rectification category and input IVA flow are not a closed legal pair")
@@ -219,13 +224,15 @@ def _source_families_admitting(
     category: IvaCategory,
     flow_direction: IvaFlowDirection,
     declarations: Mapping[str, str],
+    *,
+    effective_date: date,
 ) -> tuple[str, ...]:
     """Return every fact-0085 family whose category and flow this row satisfies."""
     return tuple(
         family
         for family in _DEDUCTION_SOURCE_FAMILIES
         if category.value in _declared_values(declarations, f"category.{family}")
-        and flow_direction.value in _declared_flow_values(declarations, f"flow.{family}")
+        and flow_direction.value in _declared_flow_values(declarations, f"flow.{family}", effective_date=effective_date)
     )
 
 
@@ -252,7 +259,7 @@ def admits_iva_deduction_classification(
     so no kind satisfied the requirement and every kind failed admissibility.
     """
     declarations = _registry_iva_deduction_declarations(effective_date)
-    return bool(_source_families_admitting(category, flow_direction, declarations))
+    return bool(_source_families_admitting(category, flow_direction, declarations, effective_date=effective_date))
 
 
 def deduction_evidence_authority_for_row(
@@ -288,6 +295,7 @@ def _validate_non_rectification_category(
     rate_kind: IvaRateKind,
     flow_direction: IvaFlowDirection,
     declarations: Mapping[str, str],
+    effective_date: date,
 ) -> None:
     family = _source_family_for_kind(kind, declarations)
     if family is None:
@@ -298,7 +306,7 @@ def _validate_non_rectification_category(
     required_rate = declarations.get(f"rate.{family}")
     if required_rate is not None and rate_kind.value != required_rate:
         raise IvaValidationError("registry-selected compensation rate is not admissible")
-    if family not in _source_families_admitting(category, flow_direction, declarations):
+    if family not in _source_families_admitting(category, flow_direction, declarations, effective_date=effective_date):
         raise IvaValidationError("registry-selected deduction category and flow are not an admissible pair")
 
 
@@ -334,6 +342,7 @@ def validate_iva_deduction_fact(
             iva_amount=iva_amount,
             rectifies_ledger_id=rectifies_ledger_id,
             declarations=declarations,
+            effective_date=effective_date,
         )
         return
     _validate_non_rectification_identity(
@@ -348,6 +357,7 @@ def validate_iva_deduction_fact(
         rate_kind=rate_kind,
         flow_direction=flow_direction,
         declarations=declarations,
+        effective_date=effective_date,
     )
 
 

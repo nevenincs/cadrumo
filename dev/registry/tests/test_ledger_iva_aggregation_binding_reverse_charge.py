@@ -40,6 +40,8 @@ from .ledger_iva_aggregation_support import (
     revision_with_bindings,
 )
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _YEAR = filing_year_envelope().horizon
@@ -421,7 +423,9 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
             invoice_direction = InvoiceKind.RECEIVED if invoice_direction is InvoiceKind.ISSUED else InvoiceKind.ISSUED
             if category_cuota_is_zero_by_law(category, invoice_direction, effective_date=date(_YEAR, 6, 15)):
                 continue
-        flow = derive_flow_for_classification(category=category, invoice_direction=invoice_direction)
+        flow = derive_flow_for_classification(
+            category=category, invoice_direction=invoice_direction, effective_date=_ON_DATE
+        )
         probe_tier = rate_for_category.get(category, IvaRateKind("general"))
         observation = ledger_iva_aggregation_observation(
             ledger_id=f"probe-{category.value}",

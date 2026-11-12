@@ -101,6 +101,15 @@ def _coerce_cash_accounting_treatment_codes(value: object) -> object:
     return value
 
 
+def _flow_direction_registry_declared(value: object) -> IvaFlowDirection:
+    """Refuse a binding flow token absent from the facts being validated.
+
+    A selector carries no governing date of its own, so the vocabulary is read
+    on the validating clock date.
+    """
+    return require_registry_declared_iva_flow_direction(value, effective_date=today_madrid())
+
+
 def _project_deduction_fact_kinds(value: object) -> object:
     """Project authored deduction-kind tokens through fact 0085, element-wise."""
     if not is_object_list_or_tuple(value):
@@ -256,7 +265,9 @@ class IvaLedgerObservation(BaseModel):
         # a recargo de equivalencia acquisition raise none to classify. Keyed on
         # the flow alone, this required authority that the same fact then refused,
         # leaving those rows representable in no form at all.
-        if not is_deducible_flow(self.flow_direction) or not admits_iva_deduction_classification(
+        if not is_deducible_flow(
+            self.flow_direction, effective_date=self.transaction_date
+        ) or not admits_iva_deduction_classification(
             category=self.category,
             flow_direction=self.flow_direction,
             effective_date=self.transaction_date,
@@ -299,7 +310,7 @@ class LedgerIvaProvider(BaseModel):
     )
     flow_direction: Annotated[
         IvaFlowDirection,
-        BeforeValidator(pydantic_validation_boundary(require_registry_declared_iva_flow_direction)),
+        BeforeValidator(pydantic_validation_boundary(_flow_direction_registry_declared)),
     ]
     observation_roles: Annotated[
         tuple[IvaLedgerObservationRole, ...],
@@ -415,7 +426,7 @@ class LedgerIvaProvider(BaseModel):
     ) -> tuple[IvaExemptionArticle, ...] | None:
         if value is not None:
             for token in value:
-                require_iva_exemption_article(token)
+                require_iva_exemption_article(token, effective_date=today_madrid())
         if value is not None and len(set(value)) != len(value):
             raise RegistryValidationError("exemption_articles entries must be unique")
         return value
@@ -436,7 +447,9 @@ class LedgerIvaProvider(BaseModel):
         if len(set(value)) != len(value):
             raise RegistryValidationError("deduction_fact_kinds entries must be unique")
         flow_direction = info.data.get("flow_direction")
-        if isinstance(flow_direction, IvaFlowDirection) and not is_deducible_flow(flow_direction):
+        if isinstance(flow_direction, IvaFlowDirection) and not is_deducible_flow(
+            flow_direction, effective_date=today_madrid()
+        ):
             raise RegistryValidationError(
                 f"deduction_fact_kinds selector requires a deducible flow_direction; got {flow_direction.value!r}",
             )
@@ -833,19 +846,20 @@ def declarable_ledger_iva_observations(
     the taxpayer makes keeps its devengado routing and its screens.
     """
     rows = tuple(observations)
-    received = received_flow_direction()
-    outside_by_date: dict[date, frozenset[IvaCategory]] = {}
+    outside_by_date: dict[date, frozenset[IvaCategory] | None] = {}
     for observation in rows:
-        if observation.flow_direction == received and observation.transaction_date not in outside_by_date:
-            outside_by_date[observation.transaction_date] = registry_category_projection(
-                "received_outside_iva_scope",
-                effective_date=observation.transaction_date,
+        on_date = observation.transaction_date
+        if on_date not in outside_by_date:
+            outside_by_date[on_date] = (
+                registry_category_projection("received_outside_iva_scope", effective_date=on_date)
+                if observation.flow_direction == received_flow_direction(effective_date=on_date)
+                else None
             )
     return tuple(
         observation
         for observation in rows
-        if observation.flow_direction != received
-        or observation.category not in outside_by_date[observation.transaction_date]
+        if observation.flow_direction != received_flow_direction(effective_date=observation.transaction_date)
+        or observation.category not in (outside_by_date[observation.transaction_date] or frozenset())
     )
 
 

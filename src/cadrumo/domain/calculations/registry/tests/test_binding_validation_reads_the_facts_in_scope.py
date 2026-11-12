@@ -45,6 +45,8 @@ from ..schema_references import TemporalSupportEnvelope
 from ..snapshot_globals import SupportedFilingYearsCatalogue
 from .authored_editions import filing_year_envelope
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LEGAL_ID = "ley-37-1992:art-90"
@@ -248,7 +250,7 @@ class _RecordingFacts:
 def test_a_flow_direction_is_validated_against_the_scoped_facts_it_checked() -> None:
     scoped = _RecordingFacts(_scoped_facts())
     with validating_governed_facts(scoped):
-        flow = require_registry_declared_iva_flow_direction("operacion_con_inversion")
+        flow = require_registry_declared_iva_flow_direction("operacion_con_inversion", effective_date=_ON_DATE)
 
     assert flow.value == "operacion_con_inversion"
     assert scoped.fact_ids == ["iva-invoice-classification-catalogue"]
@@ -257,7 +259,7 @@ def test_a_flow_direction_is_validated_against_the_scoped_facts_it_checked() -> 
 def test_flow_validation_outside_a_scope_refuses_instead_of_reading_the_published_authority() -> None:
     assert governed_facts_in_scope() is None
     with pytest.raises(RegistryValidationError, match="published authority artifact"):
-        require_registry_declared_iva_flow_direction("repercutido")
+        require_registry_declared_iva_flow_direction("repercutido", effective_date=_ON_DATE)
 
 
 def test_an_explicit_flow_authority_is_used_instead_of_the_scope() -> None:
