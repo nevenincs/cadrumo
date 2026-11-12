@@ -7874,167 +7874,163 @@ position = 646
 
 [[revisions."2024".casilla_positions]]
 id = "0701"
-position = 666
+position = 665
 
 [[revisions."2024".casilla_positions]]
 id = "0848"
-position = 801
+position = 800
 
 [[revisions."2024".casilla_positions]]
 id = "0885"
-position = 836
+position = 835
 
 [[revisions."2024".casilla_positions]]
 id = "0888"
-position = 839
+position = 838
 
 [[revisions."2024".casilla_positions]]
 id = "0997"
-position = 941
+position = 940
 
 [[revisions."2024".casilla_positions]]
 id = "1020"
-position = 963
+position = 962
 
 [[revisions."2024".casilla_positions]]
 id = "1082"
-position = 1023
+position = 1022
 
 [[revisions."2024".casilla_positions]]
 id = "1209"
-position = 1149
+position = 1148
 
 [[revisions."2024".casilla_positions]]
 id = "1628"
-position = 1568
+position = 1567
 
 [[revisions."2024".casilla_positions]]
 id = "1643"
-position = 1583
+position = 1582
 
 [[revisions."2024".casilla_positions]]
 id = "1683"
-position = 1623
+position = 1622
 
 [[revisions."2024".casilla_positions]]
 id = "1704"
-position = 1644
+position = 1643
 
 [[revisions."2024".casilla_positions]]
 id = "1763"
-position = 1703
+position = 1702
 
 [[revisions."2024".casilla_positions]]
 id = "1788"
-position = 1728
+position = 1727
 
 [[revisions."2024".casilla_positions]]
 id = "1907"
-position = 1846
+position = 1845
 
 [[revisions."2024".casilla_positions]]
 id = "ANOASDLG"
-position = 2100
+position = 2095
 
 [[revisions."2024".casilla_positions]]
 id = "APENOMDLG"
-position = 2100
+position = 2095
 
 [[revisions."2024".casilla_positions]]
 id = "APENOMDLG_ASC"
-position = 2100
+position = 2095
 
 [[revisions."2024".casilla_positions]]
-id = "2144"
-position = 2101
+id = "A"
+position = 2096
+
+[[revisions."2024".casilla_positions]]
+id = "C"
+position = 2098
 
 [[revisions."2024".casilla_positions]]
 id = "CONVASDLG"
-position = 2102
-
-[[revisions."2024".casilla_positions]]
-id = "2145"
-position = 2102
+position = 2098
 
 [[revisions."2024".casilla_positions]]
 id = "DECFAL"
-position = 2102
+position = 2099
 
 [[revisions."2024".casilla_positions]]
 id = "DNIASDLG"
-position = 2102
+position = 2099
 
 [[revisions."2024".casilla_positions]]
 id = "DPFNAC_C"
-position = 2102
+position = 2099
 
 [[revisions."2024".casilla_positions]]
 id = "DPFNAC_D"
-position = 2102
+position = 2099
 
 [[revisions."2024".casilla_positions]]
 id = "DPGMIN_C"
-position = 2102
+position = 2099
 
 [[revisions."2024".casilla_positions]]
 id = "DPGMIN_D"
-position = 2102
+position = 2099
 
 [[revisions."2024".casilla_positions]]
 id = "DPNIF_C"
-position = 2102
+position = 2099
 
 [[revisions."2024".casilla_positions]]
 id = "DPNIF_D"
-position = 2102
+position = 2099
+
+[[revisions."2024".casilla_positions]]
+id = "D"
+position = 2100
 
 [[revisions."2024".casilla_positions]]
 id = "DP_APENOM_C"
-position = 2103
+position = 2100
+
+[[revisions."2024".casilla_positions]]
+id = "E"
+position = 2101
 
 [[revisions."2024".casilla_positions]]
 id = "DP_APENOM_D"
-position = 2104
-
-[[revisions."2024".casilla_positions]]
-id = "2146"
-position = 2104
+position = 2101
 
 [[revisions."2024".casilla_positions]]
 id = "ECIVIL"
-position = 2104
-
-[[revisions."2024".casilla_positions]]
-id = "2147"
-position = 2104
+position = 2102
 
 [[revisions."2024".casilla_positions]]
 id = "FALLASDLG"
-position = 2104
+position = 2103
 
 [[revisions."2024".casilla_positions]]
 id = "HIJOSUE"
-position = 2104
+position = 2103
 
 [[revisions."2024".casilla_positions]]
 id = "FALLDLG"
-position = 2104
+position = 2103
 
 [[revisions."2024".casilla_positions]]
 id = "J"
-position = 2105
+position = 2104
 
 [[revisions."2024".casilla_positions]]
 id = "M"
-position = 2106
+position = 2105
 
 [[revisions."2024".casilla_positions]]
 id = "FNACDLG"
-position = 2106
-
-[[revisions."2024".casilla_positions]]
-id = "2148"
-position = 2106
+position = 2105
 
 [[revisions."2024".casilla_positions]]
 id = "MINUSDLG"
@@ -8079,6 +8075,7 @@ position = 2106
 [[revisions."2024".casilla_positions]]
 id = "ZRUE2"
 position = 2106
+
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "renta-base-liquidable-general-sometida-a-gravamen"}
@@ -8279,6 +8276,11 @@ sequence_order = {legal_refs = [4, 5, 6, 0, 1, 2, 3]}
 
 [[revisions."2024".family_overrides]]
 family = "constructs"
+selector = {revision = "2023", id = "renta-mini-model-minimo-ascendientes-y-deducciones-autonomicas"}
+sequence_additions = {source_refs = ["aeat-dr-100-2024-dictionary"]}
+
+[[revisions."2024".family_overrides]]
+family = "constructs"
 selector = {revision = "2023", id = "renta-dependent-modelos"}
 sequence_additions = {legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
 sequence_removals = {formulas = [1], source_refs = [2, 3, 4, 5, 6]}
@@ -8310,7 +8312,7 @@ sequence_order = {legal_refs = [0, 1, 2, 21, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 family = "constructs"
 selector = {revision = "2023", id = "renta-mini-model-trabajo"}
 sequence_additions = {legal_refs = ["ley-35-2006:art-7-h"], source_refs = ["aeat-dr-100-2024-dictionary"]}
-sequence_order = {legal_refs = [5, 0, 1, 2, 3, 4]}
+sequence_order = {legal_refs = [7, 0, 1, 2, 3, 4, 5, 6]}
 
 [[revisions."2024".family_overrides]]
 family = "application_links"

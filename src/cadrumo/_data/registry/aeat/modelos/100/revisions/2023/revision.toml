@@ -7882,6 +7882,11 @@ sequence_removals = {source_refs = [1, 2]}
 
 [[revisions."2023".family_overrides]]
 family = "constructs"
+selector = {revision = "2022", id = "renta-mini-model-minimo-ascendientes-y-deducciones-autonomicas"}
+sequence_additions = {source_refs = ["aeat-dr-100-2023-dictionary"]}
+
+[[revisions."2023".family_overrides]]
+family = "constructs"
 selector = {revision = "2022", id = "renta-dependent-modelos"}
 sequence_additions = {source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
 sequence_removals = {source_refs = [2, 3, 4, 5, 6]}

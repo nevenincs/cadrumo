@@ -17,6 +17,7 @@ elements) but catch:
 from __future__ import annotations
 
 import ast
+import re
 from functools import cache
 
 import pytest
@@ -168,6 +169,7 @@ def test_no_orphan_parameters_in_any_revision() -> None:
         referenced: set[str] = set()
         for formula in revision.formulas:
             referenced.update(expression_parameter_refs(formula.expression))
+            referenced |= _enrolment_axis_parameter_ids(formula)
         referenced |= cross_module_refs
         referenced |= ACTIVITY_ASSET_PARAMETER_IDS
         referenced |= projected_parameter_ids("100")
@@ -176,6 +178,21 @@ def test_no_orphan_parameters_in_any_revision() -> None:
         for orphan in sorted(orphans):
             offences.append(f"{revision_id}: orphan parameter {orphan!r}")
     assert not offences, "orphan parameters detected:\n  " + "\n  ".join(offences)
+
+
+def _enrolment_axis_parameter_ids(formula: object) -> set[str]:
+    """Return the parameters an autonomic deducción enrolment names on its eligibility axis.
+
+    The dispatch resolves them from the enrolment rather than from the formula
+    expression, so the expression walk does not see them.
+    """
+    enrolment = getattr(formula, "autonomic_deduccion", None)
+    eligibility = getattr(enrolment, "eligibility", None)
+    return {
+        str(parameter_id)
+        for field in ("minimum_age", "minimum_discapacidad_grado")
+        if (parameter_id := getattr(eligibility, field, None)) is not None
+    }
 
 
 #: Parameters that are declared in the registry with authoritative tax
@@ -318,6 +335,17 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # ``test_minimo_descendientes_eligibility.py``.
         "renta-minimo-descendientes-rentas-anuales-limite",
         "renta-minimo-descendientes-declaracion-propia-rentas-limite",
+        # The ascendant counterparts. ``profile_minimo_ascendientes`` (under
+        # ``src/cadrumo/application/``, outside this gate's AST scan) names each
+        # id in its state and autonomic parameter maps and resolves it from
+        # ``snapshot.revision.parameters``: the autonomic 65 and 75 amounts, the
+        # death amount and the two eligibility thresholds (art. 59 and art. 61
+        # norma 2.a LIRPF).
+        "renta-minimo-ascendientes-mayor-65-autonomico",
+        "renta-minimo-ascendientes-mayor-75-autonomico",
+        "renta-minimo-ascendientes-fallecimiento",
+        "renta-minimo-ascendientes-rentas-anuales-limite",
+        "renta-minimo-ascendientes-declaracion-propia-rentas-limite",
     },
 )
 
@@ -413,7 +441,24 @@ def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
             continue
         for param_arg in _iter_read_parameter_arg_nodes(tree, modelo_id=modelo_id):
             refs.update(_expand_parameter_id_node(param_arg))
+    refs.update(_fact_named_parameter_ids())
     return frozenset(refs)
+
+
+_FACT_PARAMETER_ENTRY = re.compile(r'key = "[^"]*parameter_id", value = "([^"]+)"')
+
+
+def _fact_named_parameter_ids() -> frozenset[str]:
+    """Return the parameter ids a governed fact entry names for a reader to resolve.
+
+    The rental reduction reads each tier's rate through the parameter id its
+    catalogue fact states, so no Python literal or formula names it.
+    """
+    facts_root = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "facts"
+    ids: set[str] = set()
+    for path in scan_directory(facts_root, pattern="*.toml", recursive=True):
+        ids.update(str(match) for match in _FACT_PARAMETER_ENTRY.findall(path.read_text(encoding="utf-8")))
+    return frozenset(ids)
 
 
 def _iter_read_parameter_arg_nodes(tree: ast.AST, *, modelo_id: str) -> tuple[ast.expr, ...]:
@@ -442,7 +487,12 @@ def _read_parameter_matches(node: ast.Call, *, modelo_id: str) -> bool:
         return False
     if func_name != "read_parameter" or len(node.args) < 3:
         return False
-    return _modelo_arg_code(node.args[0]) == modelo_id
+    first = node.args[0]
+    if isinstance(first, ast.Name):
+        # A caller that receives its modelo as a parameter reads for every modelo;
+        # the tax-literal sweep keeps modelo identifiers out of domain code.
+        return True
+    return _modelo_arg_code(first) == modelo_id
 
 
 def _modelo_arg_code(node: ast.expr) -> str | None:
