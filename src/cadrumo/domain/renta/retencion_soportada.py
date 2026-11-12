@@ -53,8 +53,18 @@ type RetencionSoportadaIdentity = tuple[int, RetencionSoportadaClase, str]
 """The ``(ejercicio, income class, payer_ref)`` a record is stored under, one row each."""
 
 
+def _stated(figure: Decimal | None, words: str) -> Decimal:
+    """The figure a record states, refused when the record leaves it out."""
+    if figure is None:
+        raise RentaValidationError(f"the record does not state {words}")
+    return figure
+
+
 class RetencionSoportadaRecord(BaseModel):
-    """One payer's figures for one income class and ejercicio (payload schema v1; the two work-income figures are additive and optional)."""
+    """One payer's figures for one income class and ejercicio.
+
+    Payload schema v1; the two work-income figures are additive and optional.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -187,10 +197,6 @@ class RetencionSoportadaRecord(BaseModel):
             case RetencionSoportadaCantidad.VALORACION_ESPECIE:
                 return self.valoracion_especie
             case RetencionSoportadaCantidad.REDUCCIONES_APLICABLES:
-                if self.reducciones_aplicables is None:
-                    raise RentaValidationError("the record does not state the reductions the payer applied")
-                return self.reducciones_aplicables
+                return _stated(self.reducciones_aplicables, "the reductions the payer applied")
             case RetencionSoportadaCantidad.GASTOS_DEDUCIBLES:
-                if self.gastos_deducibles is None:
-                    raise RentaValidationError("the record does not state the deductible expenses")
-                return self.gastos_deducibles
+                return _stated(self.gastos_deducibles, "the deductible expenses")

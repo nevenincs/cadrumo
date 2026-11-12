@@ -463,6 +463,10 @@ class ParameterDefinition(RegistryModel):
             raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
         for row in self.brackets:
             self._validate_bracket_row_kind(row)
+        self._validate_bracket_overlaps()
+
+    def _validate_bracket_overlaps(self) -> None:
+        """Verify no two brackets overlap, within one validity window or across overlapping windows."""
         sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
         for prev, current in pairwise(sorted_brackets):
             if _brackets_overlap_in_same_window(prev, current):

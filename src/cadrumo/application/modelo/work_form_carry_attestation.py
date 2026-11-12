@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from types import MappingProxyType
-from typing import Final
+from typing import Final, TypeIs
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
@@ -65,6 +65,18 @@ for _family_words in (_ACTION_LOCALE_KEYS, _STATEMENT_LOCALE_KEYS, _EFFECT_LOCAL
         raise InternalInvariantError("every statement family the registry can declare needs its words")
 
 
+def _attestable_open(
+    entry: ModeloEditPermittedSurfaceEntryV1, held: frozenset[BindingId], entered: frozenset[BindingId]
+) -> TypeIs[ModeloEditWritableBindingOverrideSurfaceEntryV1]:
+    """Whether the entry is a binding the filer may state absent and that holds no value yet."""
+    return (
+        isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
+        and entry.binding_id not in held
+        and entry.binding_id not in entered
+    )
+
+
 def _open_carries_by_family(
     context: WorkFormContext, entries: Iterable[ModeloEditPermittedSurfaceEntryV1]
 ) -> dict[AbsenceAttestationFamily, list[BindingId]]:
@@ -74,12 +86,7 @@ def _open_carries_by_family(
     entered = context.overridden or frozenset(())
     open_by_family: dict[AbsenceAttestationFamily, list[BindingId]] = {}
     for entry in entries:
-        if not (
-            isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
-            and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
-            and entry.binding_id not in held
-            and entry.binding_id not in entered
-        ):
+        if not _attestable_open(entry, held, entered):
             continue
         binding = context.bindings.get(entry.binding_id)
         if binding is not None and binding.absence_attestation is not None:
