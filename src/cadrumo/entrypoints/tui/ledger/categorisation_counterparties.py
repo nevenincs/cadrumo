@@ -2,11 +2,18 @@
 
 A lookup shows how the ladder settles the counterparty's territorial scope and
 identification state, and any contradiction it withholds, and the filing name
-stated for it with who stated it. A confirmation records the operator's own
-assertion of one or both of those facts; a withdrawal removes a recorded
-assertion and asks once more before it is sent. A filing-name statement sends
-the kind, the name parts and any width-scoped shorter renderings through the
-registered operation; the operation's own words say what it refuses or flags.
+stated for it with who stated it. It also shows every export field the pinned
+authority files a party name into, by width and edition, with whether the
+stated name fills it, and the longest each part can be to fit whole. A
+confirmation records the operator's own assertion of one or both of those
+facts; a withdrawal removes the whole record, every answer stated for the
+counterparty, and asks once more before it is sent. A filing-name statement
+sends the kind, the name parts and any width-scoped shorter renderings through
+the registered operation; the operation's own words say what it refuses or
+flags.
+
+Opened from a served way out, the tool starts on the counterparty, country and
+kind the way out bound, and looks the counterparty up at once when it is named.
 """
 
 from __future__ import annotations
@@ -17,13 +24,19 @@ from typing import Final, cast, override
 from textual.widget import Widget
 from textual.widgets import Checkbox, Input, Select, Static
 
+from ....application.ledger.counterparty_filing_name_slots import (
+    CounterpartyFilingNamePartLimit,
+    CounterpartyFilingNameSlot,
+)
 from ....application.ledger.counterparty_operation import (
     CounterpartyFilingNameProjection,
     CounterpartyResolutionProjection,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,
 )
+from ....application.operator_actions.projection import ActionArgumentSnapshot
 from ....core.i18n.render import tr
+from ....core.operator_action_enums import ActionArgumentStatus
 from ....domain.filing.declared_party_name import DeclaredPartyKind
 from .categorisation_common import (
     CategorisationScreen,
@@ -42,6 +55,19 @@ _KIND_LOCALE_KEYS: Final[dict[str, str]] = {
     DeclaredPartyKind.NATURAL_PERSON.value: "tui.ledger.categorisation.counterparty.filing_kind_natural_person",
     DeclaredPartyKind.ENTITY.value: "tui.ledger.categorisation.counterparty.filing_kind_entity",
 }
+_SLOT_STATE_LOCALE_KEYS: Final[dict[str, str]] = {
+    "fits": "tui.ledger.categorisation.counterparty.filing_slot_fits",
+    "uses_rendering": "tui.ledger.categorisation.counterparty.filing_slot_uses_rendering",
+    "missing": "tui.ledger.categorisation.counterparty.filing_slot_missing",
+    "single_surname": "tui.ledger.categorisation.counterparty.filing_slot_single_surname",
+    "too_wide": "tui.ledger.categorisation.counterparty.filing_slot_too_wide",
+}
+_PART_LOCALE_KEYS: Final[dict[str, str]] = {
+    "primer_apellido": "tui.ledger.categorisation.counterparty.filing_primer",
+    "segundo_apellido": "tui.ledger.categorisation.counterparty.filing_segundo",
+    "nombre": "tui.ledger.categorisation.counterparty.filing_nombre",
+    "razon_social": "tui.ledger.categorisation.counterparty.filing_razon",
+}
 _RENDERING_SEPARATOR: Final = ";"
 _RENDERING_ASSIGN: Final = "="
 _FILING_INPUTS: Final = (
@@ -51,6 +77,16 @@ _FILING_INPUTS: Final = (
     "#categorisation-filing-razon",
     "#categorisation-filing-renderings",
 )
+
+
+def _bound(prefill: tuple[ActionArgumentSnapshot, ...], name: str) -> str | None:
+    """The text a way out resolved for argument ``name``, or ``None`` when it left it to the operator."""
+    for binding in prefill:
+        if binding.argument_name == name and binding.status is ActionArgumentStatus.RESOLVED:
+            value = binding.value
+            if isinstance(value, str) and value.strip():
+                return value
+    return None
 
 
 def _kind_label(kind: str) -> str:
@@ -73,8 +109,43 @@ def _name_parts_text(name: CounterpartyFilingNameProjection) -> str:
     return " · ".join(parts)
 
 
+def _slot_state(slot: CounterpartyFilingNameSlot) -> str:
+    if slot.refusal is not None:
+        return slot.refusal
+    return "uses_rendering" if slot.uses_rendering else "fits"
+
+
+def _slot_lines(slots: tuple[CounterpartyFilingNameSlot, ...]) -> list[str]:
+    """One line per served width and outcome, naming each served edition once, in served order."""
+    groups: dict[tuple[int, str], list[str]] = {}
+    for slot in slots:
+        editions = groups.setdefault((slot.width, _slot_state(slot)), [])
+        if slot.edition_words not in editions:
+            editions.append(slot.edition_words)
+    return [
+        tr(
+            "tui.ledger.categorisation.counterparty.filing_slot",
+            width=width,
+            state=tr(_SLOT_STATE_LOCALE_KEYS[state]),
+            editions="; ".join(editions),
+        )
+        for (width, state), editions in groups.items()
+    ]
+
+
+def _part_limit_lines(limits: tuple[CounterpartyFilingNamePartLimit, ...]) -> list[str]:
+    return [
+        tr(
+            "tui.ledger.categorisation.counterparty.filing_part_limit",
+            part=tr(_PART_LOCALE_KEYS[limit.part]),
+            count=limit.max_length,
+        )
+        for limit in limits
+    ]
+
+
 def _filing_name_text(result: LedgerCounterpartyResult) -> str:
-    """The stated filing name, who stated it, its renderings and the operation's own findings."""
+    """The stated filing name, who stated it, its renderings, the served slots and limits and the findings."""
     name = result.filing_name
     if name is None:
         lines = [tr("tui.ledger.categorisation.counterparty.filing_unstated", identifier=result.tax_identifier)]
@@ -97,6 +168,10 @@ def _filing_name_text(result: LedgerCounterpartyResult) -> str:
             ),
         ]
     lines.extend(finding.words for finding in result.findings if finding.words is not None)
+    if result.filing_name_slots:
+        lines.append(tr("tui.ledger.categorisation.counterparty.filing_slots_heading"))
+        lines.extend(_slot_lines(result.filing_name_slots))
+    lines.extend(_part_limit_lines(result.filing_name_part_limits))
     return "\n".join(lines)
 
 
@@ -155,9 +230,9 @@ def counterparty_outcome_text(result: LedgerCounterpartyResult) -> str:
         return "\n".join((done, _filing_name_text(result)))
     if result.action == "withdraw":
         return tr(
-            "tui.ledger.categorisation.counterparty.withdrawn"
+            "tui.ledger.categorisation.counterparty.withdrawn_everything"
             if result.withdrawn is True
-            else "tui.ledger.categorisation.counterparty.nothing_to_withdraw",
+            else "tui.ledger.categorisation.counterparty.nothing_stated_to_withdraw",
             identifier=result.tax_identifier,
         )
     if result.conflict_context is not None:
@@ -182,8 +257,15 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
         super().__init__(controller, id="ledger-categorisation-counterparties-screen")
         self.door = door
 
+    @property
+    def _prefill(self) -> tuple[ActionArgumentSnapshot, ...]:
+        """The arguments the way out this tool was opened from served; none when no way out opened it."""
+        return self.controller.context.request_prefill if self.opened_for_way_out else ()
+
     @override
     def compose_body(self) -> Iterator[Widget]:
+        if self.opened_for_way_out:
+            yield line("tui.ledger.categorisation.counterparty.filing_asked", id="categorisation-counterparty-asked")
         yield heading("tui.ledger.categorisation.counterparty.who_heading")
         yield field("tui.ledger.categorisation.counterparty.identifier", id="categorisation-counterparty-identifier")
         yield field(
@@ -224,6 +306,24 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
         yield action_row(
             action("tui.ledger.categorisation.counterparty.filing_review", id="categorisation-counterparty-filing")
         )
+
+    @override
+    def mount_body(self) -> None:
+        """Start on what a way out bound, and look the counterparty up at once when it named one."""
+        prefill = self._prefill
+        identifier = _bound(prefill, "tax_identifier")
+        country = _bound(prefill, "country_code")
+        kind = _bound(prefill, "kind")
+        if identifier is not None:
+            self.query_one("#categorisation-counterparty-identifier", Input).value = identifier
+        if country is not None:
+            self.query_one("#categorisation-counterparty-country", Input).value = country
+        if kind in _KIND_LOCALE_KEYS:
+            self.query_one("#categorisation-filing-kind", Select).value = kind
+        if identifier is not None:
+            self.on_tool_button("categorisation-counterparty-view")
+        else:
+            self.query_one("#categorisation-counterparty-identifier", Input).focus()
 
     @override
     async def refresh_language(self) -> None:
@@ -341,7 +441,7 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
         request = LedgerCounterpartyRequest.model_validate({**self._identity(), "action": "withdraw"})
         return StagedChangeV1(
             summary=lambda: tr(
-                "tui.ledger.categorisation.counterparty.stage_withdraw", identifier=request.tax_identifier
+                "tui.ledger.categorisation.counterparty.stage_withdraw_everything", identifier=request.tax_identifier
             ),
             write=self._writer(request),
             destructive=True,

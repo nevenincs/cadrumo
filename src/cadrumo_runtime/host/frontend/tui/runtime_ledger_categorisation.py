@@ -264,11 +264,12 @@ def counterparty_matches(
     condition: OperationTerminalCondition,
     terminal: OperationPublicProjectionV1,
 ) -> bool:
-    """The requested action on the requested counterparty; a lookup never changes anything."""
+    """The requested action on the requested counterparty and country; a lookup never changes anything."""
     return (
         result.profile_id == request.profile_id
         and result.action == request.action
         and result.tax_identifier == request.tax_identifier
+        and result.country_code == request.country_code
         and not (request.action == "view" and result.changed)
         and _succeeded(condition, terminal, _effect_of(result.changed))
     )
