@@ -125,6 +125,7 @@ export function checkingStatements(
                   responsible_owner: "modelo.edit",
                   reconsideration_condition: "",
                   recovery_action: null,
+                  downstream: null,
                 },
               },
         parsed: [],
