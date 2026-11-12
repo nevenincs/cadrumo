@@ -1,0 +1,42 @@
+[fact]
+fact_id = "capital-mobiliario-concept-vocabulary"
+family = "mapping"
+
+# Which Modelo 100 detail record a capital-mobiliario ledger row feeds, by the
+# concept token the operator classifies it with. The casilla target is named by
+# the registry semantic role, so the record's casilla number stays owned by the
+# casilla declarations. `requires_position_kind` is empty when any position may
+# carry the concept.
+[[fact.variants]]
+variant_id = "capital-mobiliario-concept-vocabulary:detail-records"
+date_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2025-input-dictionary"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2022-input-dictionary"
+required_text = ["RegistroB11/IMP1DB11", "RegistroB13/IMP1DB13", "RegistroB13/IMP3DB13"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-input-dictionary"
+required_text = ["RegistroB11/IMP1DB11", "RegistroB13/IMP1DB13", "RegistroB13/IMP3DB13"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "catalogue.ids", value = "intereses,dividendos,gasto_administracion_deposito" },
+  { key = "concept.intereses.detail_record", value = "RegistroB11" },
+  { key = "concept.intereses.amount_element", value = "IMP1DB11" },
+  { key = "concept.intereses.casilla_semantic_role", value = "irpf_rendimiento_capital_mobiliario_ahorro_intereses_cuentas" },
+  { key = "concept.intereses.requires_position_kind", value = "" },
+  { key = "concept.dividendos.detail_record", value = "RegistroB13" },
+  { key = "concept.dividendos.amount_element", value = "IMP1DB13" },
+  { key = "concept.dividendos.casilla_semantic_role", value = "irpf_rendimiento_capital_mobiliario_ahorro_dividendos" },
+  { key = "concept.dividendos.requires_position_kind", value = "" },
+  { key = "concept.gasto_administracion_deposito.detail_record", value = "RegistroB13" },
+  { key = "concept.gasto_administracion_deposito.amount_element", value = "IMP3DB13" },
+  { key = "concept.gasto_administracion_deposito.casilla_semantic_role", value = "irpf_rendimiento_capital_mobiliario_ahorro_gastos_deducibles" },
+  { key = "concept.gasto_administracion_deposito.requires_position_kind", value = "valores_negociables" },
+]
