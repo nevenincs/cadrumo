@@ -30,6 +30,7 @@ from ...domain.calculations.registry.schema_references import TemporalProjection
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.iva.refund_eligibility import RefundEligibility
 from ...domain.modelos.calculation_revision_sources import CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT, CalculationNoteFact
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from .work_form_findings import ModeloFormAttention
 
@@ -132,7 +133,10 @@ _REACHABLE_GRADE_LOCALE_KEYS: Final[dict[RegistryAuthorityGrade, str]] = {
 }
 """A literal table so the locale audit sees each rung's word reach the translator."""
 if set(_REACHABLE_GRADE_LOCALE_KEYS) != set(RegistryAuthorityGrade):
-    raise InternalInvariantError("every authority grade needs its word")
+    raise InternalInvariantError(
+        "every authority grade needs its word",
+        precondition_verdict=internal_invariant_verdict("work_form.authority_grade_words_complete"),
+    )
 
 
 def year_projection(
