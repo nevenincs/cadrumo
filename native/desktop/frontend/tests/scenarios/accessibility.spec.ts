@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { label } from "../support/strings";
 import { PROFILE_SURNAMES } from "../support/profileFixture";
+import { list, rulesIncomplete } from "../support/scenarioModelo";
 
 // An automated accessibility audit of each major surface, in both schemes.
 // It finds what a rule engine can find: names, roles, relationships and
@@ -617,9 +618,13 @@ const SURFACES: {
     scenario: "ledger",
     reach: async (target: Page) => {
       await openDeclarations(target);
-      await newDeclaration(target, "390");
+      await newDeclaration(target, rulesIncomplete.modelo);
       const dialog = target.getByRole("dialog");
-      await dialog.getByRole("radio", { checked: false }).last().click();
+      const existing = list().creation_targets.find(
+        (entry) => entry.modelo === rulesIncomplete.modelo && entry.existing,
+      );
+      if (!existing) throw new Error("no declaration with incomplete rules");
+      await dialog.getByRole("radio", { name: existing.period_words }).click();
       await dialog
         .getByRole("button", {
           name: label("workspace.declarations.list.new.open_it"),

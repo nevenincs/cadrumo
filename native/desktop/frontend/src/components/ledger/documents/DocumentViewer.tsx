@@ -10,10 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Spinner } from "@/components/ui/spinner";
-import type { EvidencePageResult } from "../../../shell/ledgerDocumentOperations";
+import type {
+  EvidencePageResult,
+  EvidenceStructuredFact,
+  EvidenceStructuredInvoice,
+} from "../../../shell/ledgerDocumentOperations";
 import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerReadFailure } from "../../../shell/ledgerWindow";
-import { useStrings, type Translate } from "../../../shell/strings";
+import { formatDecimal } from "../../../shared/numbers";
+import {
+  SOURCE_LOCALE,
+  useStrings,
+  type Translate,
+} from "../../../shell/strings";
 import { referenceFields, type DocumentReference } from "./documentsModel";
 import { useLedgerRead } from "./useLedgerRead";
 
@@ -57,6 +66,86 @@ function refusalText(t: Translate, failure: LedgerReadFailure): string | null {
   return reason !== null && (REFUSALS as readonly string[]).includes(reason)
     ? t(`desktop.ledger.documents.viewer.refused.${reason}`)
     : null;
+}
+
+/** A fact's value as the record states it: its text as it stands, or its
+ * figure in the locale's marks. */
+function factValue(t: Translate, fact: EvidenceStructuredFact): string {
+  return fact.text ?? formatDecimal(t.locale ?? SOURCE_LOCALE, fact.number);
+}
+
+/** The columns of the lines table: each served label once, in the order the
+ * lines first state it. */
+function lineColumns(invoice: EvidenceStructuredInvoice): string[] {
+  const columns: string[] = [];
+  for (const line of invoice.lines)
+    for (const fact of line.facts)
+      if (!columns.includes(fact.label_key)) columns.push(fact.label_key);
+  return columns;
+}
+
+/** A structured e-invoice as the facts its record states. Every word is a
+ * key the backend serves, and nothing is read from the document here. */
+function StructuredInvoice({
+  t,
+  invoice,
+}: {
+  t: Translate;
+  invoice: EvidenceStructuredInvoice;
+}) {
+  const columns = lineColumns(invoice);
+  return (
+    <div className="ledger-document-structured flex flex-col gap-3 p-3">
+      <h3 className="ledger-document-structured-title text-sm font-semibold">
+        {t(invoice.title_key)}
+      </h3>
+      <dl className="ledger-document-structured-facts grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        {invoice.facts.map((fact) => (
+          <div key={fact.label_key} className="contents">
+            <dt className="text-muted-foreground">{t(fact.label_key)}</dt>
+            <dd className="min-w-0 break-words tabular-nums">
+              {factValue(t, fact)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {invoice.lines.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="ledger-document-structured-lines w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                {columns.map((column) => (
+                  <th
+                    key={column}
+                    scope="col"
+                    className="px-2 py-1 font-normal"
+                  >
+                    {t(column)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {invoice.lines.map((line, at) => (
+                <tr key={at} className="border-b last:border-b-0">
+                  {columns.map((column) => {
+                    const fact = line.facts.find(
+                      (found) => found.label_key === column,
+                    );
+                    return (
+                      <td key={column} className="px-2 py-1 tabular-nums">
+                        {fact ? factValue(t, fact) : ""}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function DocumentViewer({
@@ -108,6 +197,7 @@ export function DocumentViewer({
   const shown =
     read.value ?? (kept !== null && kept.page === page ? kept : null);
   const count = shown?.page_count ?? kept?.page_count ?? null;
+  const structured = (shown ?? kept)?.structured_invoice ?? null;
   const reading = read.phase === "reading";
   const refusal = read.phase === "failed" ? refusalText(t, read.failure) : null;
 
@@ -117,7 +207,7 @@ export function DocumentViewer({
       className="ledger-document flex min-h-0 flex-1 flex-col gap-2"
     >
       <div className="flex flex-wrap items-center gap-1">
-        {count !== null && count > 1 && (
+        {structured === null && count !== null && count > 1 && (
           <>
             <IconButton
               className="ledger-document-previous"
@@ -141,35 +231,41 @@ export function DocumentViewer({
           </>
         )}
         <span className="flex-1" />
-        <IconButton
-          className="ledger-document-zoom-out"
-          label={t("desktop.ledger.documents.viewer.zoom_out")}
-          disabled={zoom <= 0}
-          onClick={() => setZoom((at) => Math.max(0, at - 1))}
-        >
-          <Icon name="zoomOut" size="sm" />
-        </IconButton>
-        <span className="ledger-document-zoom text-sm text-muted-foreground tabular-nums">
-          {t("desktop.ledger.documents.viewer.zoom", {
-            percent: Math.round(scale * 100),
-          })}
-        </span>
-        <IconButton
-          className="ledger-document-zoom-in"
-          label={t("desktop.ledger.documents.viewer.zoom_in")}
-          disabled={zoom >= ZOOMS.length - 1}
-          onClick={() => setZoom((at) => Math.min(ZOOMS.length - 1, at + 1))}
-        >
-          <Icon name="zoomIn" size="sm" />
-        </IconButton>
-        <IconButton
-          className="ledger-document-fit"
-          label={t("desktop.ledger.documents.viewer.fit")}
-          disabled={zoom === 0}
-          onClick={() => setZoom(0)}
-        >
-          <Icon name="maximize" size="sm" />
-        </IconButton>
+        {structured === null && (
+          <>
+            <IconButton
+              className="ledger-document-zoom-out"
+              label={t("desktop.ledger.documents.viewer.zoom_out")}
+              disabled={zoom <= 0}
+              onClick={() => setZoom((at) => Math.max(0, at - 1))}
+            >
+              <Icon name="zoomOut" size="sm" />
+            </IconButton>
+            <span className="ledger-document-zoom text-sm text-muted-foreground tabular-nums">
+              {t("desktop.ledger.documents.viewer.zoom", {
+                percent: Math.round(scale * 100),
+              })}
+            </span>
+            <IconButton
+              className="ledger-document-zoom-in"
+              label={t("desktop.ledger.documents.viewer.zoom_in")}
+              disabled={zoom >= ZOOMS.length - 1}
+              onClick={() =>
+                setZoom((at) => Math.min(ZOOMS.length - 1, at + 1))
+              }
+            >
+              <Icon name="zoomIn" size="sm" />
+            </IconButton>
+            <IconButton
+              className="ledger-document-fit"
+              label={t("desktop.ledger.documents.viewer.fit")}
+              disabled={zoom === 0}
+              onClick={() => setZoom(0)}
+            >
+              <Icon name="maximize" size="sm" />
+            </IconButton>
+          </>
+        )}
       </div>
       <div
         ref={frame}
@@ -178,7 +274,10 @@ export function DocumentViewer({
         className="ledger-document-frame relative min-h-0 flex-1 overflow-auto rounded-md border bg-muted"
         aria-busy={reading || undefined}
       >
-        {shown && (
+        {shown?.structured_invoice && (
+          <StructuredInvoice t={t} invoice={shown.structured_invoice} />
+        )}
+        {shown && shown.media_type !== "application/xml" && (
           <img
             className="ledger-document-image block max-w-none"
             style={{ width: `${scale * 100}%` }}
