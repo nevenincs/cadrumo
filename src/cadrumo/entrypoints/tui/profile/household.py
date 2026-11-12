@@ -509,12 +509,10 @@ class HouseholdScreen(ModalScreen[bool | None]):
     async def _settle_read(self, job: Worker[HouseholdView]) -> None:
         if job.state is WorkerState.SUCCESS and job.result is not None:
             self._view = job.result
-            if self._unsettled:
-                # The household now shows what storage holds; the change itself
-                # is still not known to have landed or not.
-                self._unsettled = False
-            else:
-                self._status("")
+            # The household now shows what storage holds, so the unknown
+            # notice and the lock end with this read; a failed read keeps both.
+            self._unsettled = False
+            self._status("")
             await self._draw()
             return
         if not self._unsettled:
