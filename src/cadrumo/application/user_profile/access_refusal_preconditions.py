@@ -47,12 +47,62 @@ _SIGN_IN_REASONS: Final[frozenset[AccessDenialCode]] = frozenset(
 )
 
 
-def access_refusal_verdict(reason: AccessDenialCode) -> PreconditionVerdict:
-    """Return the sign-in door for a repairable session refusal, otherwise a terminal verdict.
+# Reasons the runtime refuses to protect an identity or authority boundary: the
+# request names another profile, connection, client or parent, or asks for more
+# than was granted. Offering any action here could widen access.
+_SAFETY_REASONS: Final[frozenset[AccessDenialCode]] = frozenset(
+    {
+        AccessDenialCode.PROFILE_MISMATCH,
+        AccessDenialCode.CONNECTION_MISMATCH,
+        AccessDenialCode.CLIENT_MISMATCH,
+        AccessDenialCode.PARENT_INVALID,
+        AccessDenialCode.PRIVILEGE_EXPANSION,
+        AccessDenialCode.CLOCK_INVALID,
+        AccessDenialCode.FRONTEND_DENIED,
+        AccessDenialCode.OPERATION_DENIED,
+        AccessDenialCode.DISCLOSURE_DENIED,
+        AccessDenialCode.PERIOD_DENIED,
+        AccessDenialCode.ADMINISTRATION_DENIED,
+    }
+)
 
-    Every other reason, including a profile, connection or client mismatch,
-    names an identity or authority the request may not have; no action is
-    offered because none could widen access safely.
+# Reasons the person resolves outside any catalogued action: waiting for the
+# holder of a busy subject, unlocking the operating-system session, renewing a
+# grant or key, approving automation, or acting in person.
+_DECISION_REASONS: Final[frozenset[AccessDenialCode]] = frozenset(
+    {
+        AccessDenialCode.SUBJECT_BUSY,
+        AccessDenialCode.OS_LOCKED,
+        AccessDenialCode.OS_SESSION_UNAVAILABLE,
+        AccessDenialCode.AUTOMATION_SUSPENDED,
+        AccessDenialCode.GRANT_INACTIVE,
+        AccessDenialCode.GRANT_EXPIRED,
+        AccessDenialCode.KEY_INACTIVE,
+        AccessDenialCode.KEY_EXPIRED,
+        AccessDenialCode.PROVIDER_REQUIRED,
+        AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+        AccessDenialCode.TRANSACTION_AUTHORITY_REQUIRED,
+        AccessDenialCode.HUMAN_AUTHORITY_REQUIRED,
+        AccessDenialCode.PERSON_ACT_REQUIRED,
+    }
+)
+
+
+def _no_action_outcome(reason: AccessDenialCode) -> NoRecoveryOutcome:
+    """Safety for a guarded boundary, the person's decision for what they resolve, else terminal."""
+    if reason in _SAFETY_REASONS:
+        return NoRecoveryOutcome.SAFETY
+    if reason in _DECISION_REASONS:
+        return NoRecoveryOutcome.OPERATOR_DECISION
+    return NoRecoveryOutcome.TERMINAL
+
+
+def access_refusal_verdict(reason: AccessDenialCode) -> PreconditionVerdict:
+    """Return the sign-in door for a repairable session refusal, otherwise a no-action verdict.
+
+    No other reason offers an action, because none could widen access safely;
+    its outcome says whether the refusal guards a boundary, waits on the person,
+    or reports an unavailable store or backend.
     """
     facts = {"access_denial": reason.value, "admitted": False}
     if reason in _SIGN_IN_REASONS:
@@ -76,7 +126,7 @@ def access_refusal_verdict(reason: AccessDenialCode) -> PreconditionVerdict:
         evidence_id=_EVIDENCE_ID,
         facts=facts,
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=NoRecoveryOutcome.TERMINAL,
+        outcome=_no_action_outcome(reason),
     )
 
 
