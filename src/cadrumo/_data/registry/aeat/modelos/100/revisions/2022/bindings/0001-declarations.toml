@@ -1119,6 +1119,116 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["pendientes de compensar al inicio del ejercicio", "remanente pendiente de aplicación en ejercicios futuros"]
+# Ley 35/2006 art. 49.1 - the negative savings balances of Anexo C.3. Each row the
+# prior year's return carried as "Pendiente de aplicación en ejercicios futuros"
+# opens this year one row older as "Pendiente de aplicación al principio del
+# periodo", and the balance the prior year generated (1270, 1283) opens the
+# previous-year row. The design keeps the same rows and order in every edition;
+# the fourth-year row has no remainder because the four-year window ends.
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1263", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_gains_losses_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1266", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_gains_losses_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1269", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_gains_losses_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1270", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_gains_losses_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1276", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_capital_income_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1279", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_capital_income_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1282", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_capital_income_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1283", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_capital_income_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
 [[revisions."2022".bindings]]
 id = "renta-profile-incremento-guarderia"
 provider = { kind = "profile", profile_key = "renta_family.incremento_guarderia_cotizaciones" }
