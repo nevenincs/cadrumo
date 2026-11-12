@@ -141,3 +141,20 @@ Implementation.
 - Registry correction landing in the same unit, approved with this amendment but not part of it: the registry's 0460 carried a +0041 term the official BIAHOH expression lacks (2025 dictionary line 784), and 0429/0430 had no source; they are derived from 0041 under art. 49.1.a and 0460 follows the design, fixed at the earliest edition where it is wrong.
 
 Consequences. A saver can complete the savings base with or without an earlier return, and every statement of absence stays distinct from a typed zero. Revisions stored before the amendment keep their identity; an earlier return calculated before the carry-forward rows were computed lacks them, so the next year refuses with the unobserved-filing message until it is recalculated or the figure is stated. The general-base gains carries (Anexo C 1246-1257, art. 48) remain outside this record.
+
+## Amendment 2026-11-12 (b): one statement covers every open family
+
+Accepted 2026-11-12 03:31 by CADRUMO-PRIME (ruling: the 03:31 entry of PRIME's rulings log), with conditions written in below, and amended by PRIME on ACCEPTANCE's objection the same night: no `--all-families`. It replaces two clauses of the Surfaces bullet of the amendment above: "states every open carry only when exactly one family is open" stays, but the door no longer states one family while another is open, and the refusal no longer names each open family with its own door.
+
+Problem. A statement commits only through the edit apply, and the apply's one effect is a fresh calculation (`src/cadrumo/application/modelo/edit_execution.py:662-719`). While any carry of another family is unstated, that calculation refuses with the unstated-carry refusal (`src/cadrumo/application/modelo/calculation_actions.py:961-974`, `src/cadrumo/domain/calculations/registry/formula_initial_values.py:560`), so nothing persists. A filer with no earlier return has every family open at once, because all of them read the same previous return; a door for one family therefore always fails in the main case. The edit preflight never recalculates, so it reads green while the apply refuses. The CLI door and the window share this path.
+
+Decision. One statement covers every open carry family.
+- `attest-prior-carries` takes `--family <token>` repeatedly, each a closed choice from the registry's carry families. With no option it states every open carry only when exactly one family is open. There is no option that states every family at once: each family is a separate fact, and a blanket option would let a filer state absence for a family never looked at, an inferred carry.
+- A statement that leaves an open family out is refused before staging. The refusal names every missing family and serves a door that includes them: the same command naming every open family with `--family`. No door is served that cannot succeed.
+- The window stages every chosen family in one review.
+- The edit preflight raises a blocking finding when the staged intents leave an attestable carry open, so the preflight agrees with the apply.
+- Conditions of acceptance: every statement and every served door names each open family, each as nothing pending or with its amounts; one statement may state absence for one family and an amount for another; nothing is zeroed by default.
+
+Rejected. Recording a statement while other carries stay unstated would need a revision with unresolved required carries, against the engine contract and the refusal this record rests on. Keeping per-family doors would leave a door that works only for the last open family.
+
+Evidence owed. A filer with three open families commits in one statement; a partial statement is refused before staging with the full door; a mixed statement (absence for one family, an amount for another) commits; the preflight blocks a partial statement.
