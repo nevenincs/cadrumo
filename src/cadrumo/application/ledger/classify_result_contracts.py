@@ -50,13 +50,19 @@ def _carries_rental_link(result: LedgerClassifyOperationResult) -> bool:
     )
 
 
-def _validation_result_is_closed(result: LedgerClassifyOperationResult) -> None:
-    if (
-        result.transaction is not None
-        or result.deduction_fact_kind is not None
+def _carries_iva_classification(result: LedgerClassifyOperationResult) -> bool:
+    return (
+        result.deduction_fact_kind is not None
         or result.investment_asset_id is not None
         or result.iva_vehicle_use is not None
         or result.exemption_article is not None
+    )
+
+
+def _validation_result_is_closed(result: LedgerClassifyOperationResult) -> None:
+    if (
+        result.transaction is not None
+        or _carries_iva_classification(result)
         or _carries_rental_link(result)
         or result.review_status is not None
         or result.bucket_event_ids
