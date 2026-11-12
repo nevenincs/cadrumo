@@ -1733,6 +1733,17 @@ cli:
           registra la xifra com a declarada per tu per a aquella declaració, diferent
           d'una xifra escrita. Es rebutja si la declaració anterior està desada, perquè
           llavors se segueix aquella declaració.
+        attest_work_income_confirm: Encara no s'ha declarat res. Executa `aeat app
+          modelo work attest-work-income %{work_unit_id} --yes` per declarar-ho.
+        attest_work_income_help: Indica que les caselles de rendiments del treball
+          que cap certificat del pagador omple (contribucions empresarials a plans
+          de pensions i mutualitats de previsió social, a assegurances de dependència,
+          aportacions al patrimoni protegit i aportacions per decisió teva) són buides,
+          per a cada casella per a la qual el formulari d'una declaració basada en
+          un registre de pagador ofereix la declaració. Mostra la declaració i la
+          comprovació del canvi; amb --yes registra cada casella com un 0 que has
+          declarat, diferent d'una xifra que has escrit.
+        attest_work_income_yes_help: Confirma la declaració i registra-la a l'autoliquidació
         autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor
           immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació
           d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament

@@ -1751,6 +1751,17 @@ cli:
           con --yes registra la cifra como declarada por ti para esa declaración,
           distinta de una cifra escrita. Se rechaza si la declaración anterior está
           guardada, porque entonces se sigue esa declaración.
+        attest_work_income_confirm: Todavía no se ha declarado nada. Ejecuta `aeat
+          app modelo work attest-work-income %{work_unit_id} --yes` para declararlo.
+        attest_work_income_help: Indica que las casillas de rendimientos del trabajo
+          que ningún certificado del pagador rellena (contribuciones empresariales
+          a planes de pensiones y mutualidades de previsión social, a seguros de dependencia,
+          aportaciones al patrimonio protegido y aportaciones por decisión tuya) están
+          vacías, para cada casilla para la que el formulario de una declaración basada
+          en un registro de pagador ofrece la declaración. Muestra la declaración
+          y la comprobación del cambio; con --yes registra cada casilla como un 0
+          que declaraste, distinto de una cifra que escribiste.
+        attest_work_income_yes_help: Confirma la declaración y regístrala en la autoliquidación
         autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor
           inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación
           de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica

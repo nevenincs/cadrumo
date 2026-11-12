@@ -311,6 +311,7 @@ PROFILE_CONNECTION_KEYS = frozenset(
         "app_modelo_verification_report_view",
         "app_modelo_work_attest_m303_exonerado_390",
         "app_modelo_work_attest_prior_carries",
+        "app_modelo_work_attest_work_income",
         "app_modelo_work_set_value",
         "app_modelo_work_override",
         "app_modelo_work_attest_no_amount",
