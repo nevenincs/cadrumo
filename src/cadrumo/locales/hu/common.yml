@@ -6325,9 +6325,13 @@ sheets:
       accrual_year: Keletkezés éve
       acquisition_date: Szerzés dátuma
       acquisition_value: Beszerzési érték
+      adquisicion_lucrativa: Ingyenes szerzés
+      adquisicion_onerosa: Visszterhes szerzés
+      amortizacion: Értékcsökkenés
       amount: Összeg
       amount_donated: Adományozott összeg
       anualidades_alimentos: Tartásdíj-járadék
+      arrendado: Bérbe adva
       ascendants_75_plus_total: Felmenők 75+ (összes)
       ascendants_75_plus_whole: Felmenők 75+ (egészben)
       ascendants_disabled_33_65_total: Fogyatékos felmenők 33-65% (összes)
@@ -6343,6 +6347,7 @@ sheets:
       asset_class_code: Eszközosztály kód
       asset_identifier: Eszközazonosító
       asset_ref: Eszköz belső hivatkozása
+      base_amortizacion: Értékcsökkenési alap
       base_imponible: Adóalap
       base_imponible_assigned: Hozzárendelt adóalap
       base_retenciones: Visszatartás alapja
@@ -6408,8 +6413,11 @@ sheets:
       descendants_rest_whole: Többi leszármazott (egészben)
       descendants_under_3_total: Leszármazottak 3 alatt (összes)
       descendants_under_3_whole: Leszármazottak 3 alatt (egészben)
+      dias_arrendado: Bérbeadás napjai
+      dias_arrendado_amortizacion: Bérbeadás napjai az értékcsökkenéshez
       dias_arrendamiento: Az ingatlan bérbeadási napjainak száma
       dias_miembro: Tagsági napok száma
+      direccion: Cím
       disability_clave: Fogyatékosság
       domicilio_fiscal: A tag adóügyi lakóhelye
       donor_legal_name: Adományozó neve
@@ -6417,8 +6425,11 @@ sheets:
       door: Ajtó
       element_type: Eszköz típusa
       emerging_stock_excess_clave: Startup részvényjuttatási többlet
+      fecha_adquisicion: Az ingatlan szerzésének dátuma
+      fecha_contrato: Szerződés dátuma
       fecha_devengo: Keletkezés dátuma
       fecha_inicio_prestamo: Kölcsön kezdő dátuma
+      fecha_transmision: Az ingatlan átruházásának dátuma
       fecha_vencimiento_prestamo: Kölcsön lejárati dátuma
       financial_asset_acquisition_value: Pénzügyi eszköz beszerzési értéke
       financial_asset_disposal_value: Pénzügyi eszköz elidegenítési értéke
@@ -6434,10 +6445,27 @@ sheets:
       gain: Nyereség
       gain_difference: Az átruházás nyeresége
       garantias: Garancia
+      gasto_comunidad: Társasházi közös költség
+      gasto_defensa_juridica: Jogi képviselet költségei
+      gasto_formalizacion_contrato: Szerződéskötési költségek
+      gasto_interes_financiacion: Kamatok és egyéb finanszírozási költségek
+      gasto_otros: Egyéb levonható költségek
+      gasto_primas_seguro: Biztosítási díjak
+      gasto_reparacion_conservacion: Javítási és karbantartási költségek
+      gasto_saldos_dudoso_cobro: Kétes kintlévőségek
+      gasto_servicios_terceros: Harmadik felek személyes szolgáltatásai
+      gasto_suministros: Szolgáltatások és közművek
+      gasto_tributos: Adók, pótlékok és illetékek
+      gastos_adquisicion: Szerzési költségek és adók
       gastos_deducibles: Levonható költségek
+      gastos_pendientes_anteriores: A négy előző adóévből levonásra váró kamatok és
+        javítási kiadások
+      gastos_pendientes_aplicados: Korábbi adóévekből levonásra váró, ebben az adóévben
+        levont összeg
       geographic_mobility_clave: Földrajzi mobilitás
       house_number: Házszám
       housing_loan_communication_clave: Lakáshitel-bevallás
+      importe_adquisicion: Szerzési összeg
       importe_gastos: Költség összege
       importe_q1: 1. negyedévi összeg
       importe_q2: 2. negyedévi összeg
@@ -6451,11 +6479,25 @@ sheets:
       incapacity_kind_value: Munkaképtelenségi természetbeni érték
       ingreso_a_cuenta: Természetbeni adójóváírás
       ingreso_a_cuenta_repercutido: Áthárított előleg
+      ingresos_integros: Számítható bruttó bevétel
+      inquilino_1_nif: 1. bérlő adóazonosítója
+      inquilino_1_nif_extranjero: 1. bérlő külföldi adóazonosítója
+      inquilino_2_nif: 2. bérlő adóazonosítója
+      inquilino_2_nif_extranjero: 2. bérlő külföldi adóazonosítója
+      inquilino_3_nif: 3. bérlő adóazonosítója
+      inquilino_3_nif_extranjero: 3. bérlő külföldi adóazonosítója
+      intereses_reparacion_aplicados: Az adóév levont kamatai és javítási kiadásai
+      intereses_reparacion_pendientes: Az adóév levonásra váró kamatai és javítási
+        kiadásai
+      intereses_reparacion_pendientes_futuros: A következő négy adóévre levonásra
+        váró kamatok és javítási kiadások
       is_recurrent: Ismétlődő adomány
       isin_code: ISIN kód
       locality: Település
       loss: Veszteség
       loss_difference: Az átruházás vesztesége
+      mejoras_anteriores: Korábbi adóévekben végzett felújítások
+      mejoras_ejercicio: Az adóévben végzett felújítások
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
@@ -6497,6 +6539,8 @@ sheets:
       perceptor_tax_id: Kedvezményezett adóazonosítója
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
+      porcentaje_construccion: A kataszteri érték építményre jutó százaléka
+      porcentaje_propiedad: Tulajdoni hányad (%)
       porcentaje_retencion: Visszatartás %
       porcentaje_titularidad_inmueble: Ingatlantulajdoni hányad százaléka
       portal: Bejárat
@@ -6509,21 +6553,27 @@ sheets:
       rectified_period: Helyesbített időszak
       rectified_year: Helyesbített év
       reduccion: A jövedelemre alkalmazandó csökkentés
+      reduccion_aplicable: Csökkentés alkalmazható
       reducciones: Csökkentések
       reducciones_aplicables: Alkalmazott csökkentések
       referencia_catastral: Ingatlan-nyilvántartási hivatkozás
       refund_amount: Visszatérítési összeg
+      rendimiento_neto: Nettó jövedelem
       rendimiento_neto_minorado_agricola_eo: Csökkentett nettó mezőgazdasági jövedelem
         (objektív becslés)
       rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
+      rendimiento_neto_reducido: Csökkentett nettó jövedelem
       representative_nif: Képviselő NIF-je
       representative_tax_id: Törvényes képviselő adóazonosítója
       residence_country_code: Lakóhely országkódja
       retencion_amount: Visszatartott összeg
       retencion_practicada: Alkalmazott visszatartás
+      retenciones: Levont adóelőleg
       reverse_charge_mark: Fordított adózás
+      rustica: Külterületi
       second_child_compute: 2. gyermek beszámítása
       share_percentage: Részesedési arány
+      situacion: Elhelyezkedés (kulcs)
       situacion_inmueble: Az ingatlan elhelyezkedési státusza
       situation: Ingatlan fekvése
       spouse_or_unit_titular_tax_id: Házastárs vagy együttélési egység vezetőjének
@@ -6543,6 +6593,9 @@ sheets:
       transmission_date: Átruházás dátuma
       transmission_value: Átruházási érték
       unit_convivencia_titular_clave: Együttélési egység vezetője
+      urbana: Belterületi
+      valor_catastral: Kataszteri érték
+      valor_catastral_construccion: Az építmény kataszteri értéke
       valuation_amount: Értékelés
       valuation_event: Értékelési esemény
       valuation_event_date: Értékelési esemény dátuma
@@ -8878,6 +8931,32 @@ tui:
       selection_dropped: A hivatkozás által kijelölt tétel nem jelenik meg.
       title: A Nyilvántartás nem érhető el
   modelo:
+    amendment:
+      done: 'A helyesbítés elkészült, és itt rögzítve lett. Semmi sem ment el az AEAT-hez:
+        exportáld a fájlját, és nyújtsd be te magad.'
+      incomplete: Töltsd ki mindazt, amit a helyesbítés kér, és javíts legalább egy
+        értéket.
+      key: Helyesbítés
+      kind_label: A helyesbítés fajtája
+      motive_label: A helyesbítés oka
+      unknown: Lehet, hogy ez a helyesbítés már rögzítve lett. Mielőtt újat készítesz
+        elő, ellenőrizd a műveletét.
+      values_label: Helyesbített értékek
+    disagreements:
+      accept: Elfogadom
+      key: Eltérések megválaszolása
+      none: A bevallás nem jelez eltérést a források között.
+      outcome_unknown: A válasz lehet, hogy elmentődött. Olvasd be újra a bevallást,
+        mielőtt bármi mást megválaszolnál.
+      read_failed: A válaszaidat nem sikerült beolvasni.
+      reading: A válaszaid beolvasása...
+      reason_label: Az elfogadás indoka
+      refused: A választ elutasították.
+      revoke: Visszavonom
+      sending: A válaszod küldése...
+      title: Eltérések a források között
+      unavailable: Még nincs mit megválaszolni. Előbb számold ki a bevallást.
+      your_reason: 'Az indokod: {reason}'
     editor:
       confirm_hint: Nyomd meg a ⏎ billentyűt a(z) {value} megerősítéséhez, vagy írd
         be a helyes értéket.
@@ -9066,6 +9145,9 @@ tui:
       stage: Megtartás átnézésre
       title: Tehető nyilatkozatok
       withdraw: Nyilatkozat visszavonása
+    taxation:
+      key: Közös vagy egyéni
+      reading: Mindkét módszer kiszámítása…
   operations:
     action:
       close: Bezárás

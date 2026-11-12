@@ -21,6 +21,7 @@ from ..authority import PinnedAuthorityOperation
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..renta_inmueble_bindings import renta_inmueble_totals
 from ..schema import RegistrySnapshot
 from .authored_editions import filing_year_envelope, supported_exercises_with_projection
 from .modelo_100_registry_support import neutral_binding_values
@@ -43,7 +44,8 @@ _ROLE_NETO = "irpf_rendimiento_trabajo_rendimiento_neto"
 _ROLE_REDUCCION = "irpf_rendimiento_trabajo_reduccion_gastos_generales"
 _ROLE_NETO_REDUCIDO = "irpf_rendimiento_trabajo_rendimiento_neto_reducido"
 _ROLE_OTRAS_RENTAS = "irpf_trabajo_rentas_distintas_del_trabajo"
-_ROLE_ALQUILER = "irpf_rendimiento_capital_inmobiliario_ingresos_integros"
+#: The let properties' net yield, which LIRPF art. 20 weighs net of expenses and before reductions.
+_ROLE_ALQUILER = "irpf_rendimiento_capital_inmobiliario_rendimiento_neto"
 
 #: The tramos each edition of the table prints: (upper bound of the flat tramo, flat amount, multiplier, ceiling).
 #: 5.565 and 6.498 print one sloped tramo; the 7.302 table prints two, written out in `_printed_reduction`.
@@ -158,12 +160,18 @@ def _calculate(
     decimals |= {"renta-profile-declaration-type": Decimal(1)}
     for family in _FAMILIES:
         booleans[_EXCLUDED_BINDING + family] = family in excluded
+    column_totals = {
+        str(provider.target_casilla_id): binding.id for binding, provider in renta_inmueble_totals(snapshot.revision)
+    }
     inputs: dict[str, Decimal] = {}
     for role, value in figures.items():
         casilla = next(item for item in snapshot.revision.casillas if item.semantic_role == role)
         if casilla.binding is not None:
             # A box the registry binds to its source is stated through that source, never typed on the return.
             decimals[casilla.binding] = value
+        elif str(casilla.id) in column_totals:
+            # A let property's column is held per row; the calculation reads its total over the rows.
+            decimals[column_totals[str(casilla.id)]] = value
         else:
             inputs[str(casilla.id)] = value
     return calculate_registry_snapshot(
@@ -208,8 +216,8 @@ def test_manual_worked_example_of_each_art_20_table(
 ) -> None:
     """Each edition's printed example: the reduction is applied to the base before the 19.2.f expenses.
 
-    The other income of the example is a dwelling rent of 5.500 euros, below the 6.500 limit, calculated
-    through the capital inmobiliario box the base itself reads; the other families are excluded by the profile.
+    The other income of the example is a dwelling rent of 5.500 euros net, below the 6.500 limit, stated as
+    the let properties' net yield before reductions; the other families are excluded by the profile.
     """
     example = _EXAMPLES[table]
     year = _exercise_for(table, registry_authority)

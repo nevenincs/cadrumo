@@ -44,15 +44,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import Final
 
 from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
-from ...domain.renta.errors import RentaValidationError
+from ...domain.renta.errors import RentaDateRequiredError, RentaValidationError
 from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     art_7p_eligible,
@@ -60,6 +60,7 @@ from ...domain.renta.maritime_exemption import (
     calculate_rebeca_exemption,
     check_retmar_mandatory_filing,
     guard_da41_inactive,
+    is_maritime_worker,
     rebeca_eligible,
 )
 
@@ -90,6 +91,18 @@ class MaritimeExemptionResult(BaseModel):
         provenance.
         """
         return {obs.casilla_id: obs.value for obs in self.observations if isinstance(obs.value, Decimal)}
+
+
+_DATE_DOOR: Final = "aeat app modelo work preview-maritime-exemption --filing-year"
+
+
+def _date_required(argument: str) -> RentaDateRequiredError:
+    """The refusal for a dated exemption fact with no date, naming the option that supplies the year."""
+    return RentaDateRequiredError(
+        f"{argument} is required to read a dated maritime exemption fact",
+        translated_message="errors.refused.refused_renta_date_required",
+        context={"door": _DATE_DOOR},
+    )
 
 
 def resolve_maritime_exemption(
@@ -134,8 +147,11 @@ def resolve_maritime_exemption(
         gross_navigation_income: Total gross navigation income in EUR.
             Required when REBECA is potentially eligible.
         authority: Validated governed-fact authority for both calculations.
-        filing_period: Filing-period coordinate for the Art. 7.p) cap.
-        devengo_date: Devengo-date coordinate for the REBECA fraction.
+        filing_period: Filing-period coordinate for the Art. 7.p) cap. Required
+            when Art. 7.p) applies; never defaulted to the run date.
+        devengo_date: Devengo date of the income, for the REBECA register list and
+            fraction. Required for a trabajador del mar profile; never defaulted
+            to the run date.
 
     Returns:
         :class:`MaritimeExemptionResult` with typed observations and flat view.
@@ -152,10 +168,6 @@ def resolve_maritime_exemption(
     # RETMAR completeness gate — callers catch and surface to operator.
     check_retmar_mandatory_filing(facts)
 
-    resolved_on = today_madrid()
-    filing_period = filing_period or resolved_on
-    devengo_date = devengo_date or resolved_on
-
     observations: list[CasillaObservation] = []
 
     if art_7p_eligible(facts):
@@ -167,6 +179,8 @@ def resolve_maritime_exemption(
                     "qualifying_days_supplied": qualifying_days is not None,
                 },
             )
+        if filing_period is None:
+            raise _date_required("filing_period")
         obs = calculate_art_7p_exemption(
             annual_salary=annual_salary,
             qualifying_days=qualifying_days,
@@ -176,7 +190,11 @@ def resolve_maritime_exemption(
         )
         observations.append(obs)
 
-    if rebeca_eligible(facts, authority=authority):
+    # Which registers open REBECA is a dated fact, so it is read at the
+    # income's devengo and never at the run date.
+    if devengo_date is None and is_maritime_worker(facts):
+        raise _date_required("devengo_date")
+    if devengo_date is not None and rebeca_eligible(facts, effective_date=devengo_date, authority=authority):
         if gross_navigation_income is None:
             raise RentaValidationError(
                 translated_message="application.calculations.maritime_exemption.errors.rebeca_input_required",

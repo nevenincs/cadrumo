@@ -53,6 +53,7 @@ from ..aggregation.ledger_filing_snapshot import (
 from ..aggregation.ledger_membership import (
     LedgerSourceMembership,
     consumed_inventory_rows,
+    consumed_renta_inmueble_rows,
     ledger_transaction_ref_identity,
     recorded_book_claimed_transaction_ids,
 )
@@ -89,6 +90,18 @@ ASSET_REGISTER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
 INVENTORY_REGISTER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
     "ley-35-2006:art-28",
     "ley-27-2014:art-17",
+)
+
+#: Grounding for the let-property drift refusal: the rental yield is the income
+#: of the ejercicio less the expenses the property bore and its amortisation
+#: (LIRPF arts. 22-23, RIRPF arts. 13-14), all read from the property, its leases,
+#: the ledger rows linked to them and the withholding suffered, so a declaración
+#: built on records that have since changed states a yield they no longer support.
+RENTA_INMUEBLE_DRIFT_LEGAL_REFS: tuple[str, ...] = (
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "rd-439-2007:art-13",
+    "rd-439-2007:art-14",
 )
 
 #: Grounding for the warning on a stored draft that counted an uncategorized mixed
@@ -418,6 +431,59 @@ def _book_claim_drift_finding(
     )
 
 
+def renta_inmueble_drift_finding(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    current: frozenset[tuple[str, str]] | None,
+    source_refs: tuple[str, ...] = (),
+) -> ModeloVerificationFinding | None:
+    """Refuse a draft whose let properties no longer resolve to the rows it recorded.
+
+    ``target`` is the stored :class:`CalculationRevision`; ``current`` holds each
+    let property's identity and fingerprint as the records now give them, or
+    ``None`` when they could not be read, which is refused too: an unread record
+    is not a record that did not move. A draft with no let property row and none
+    now has nothing to compare.
+    """
+    if target.state is not CalculationRevisionState.BORRADOR:
+        return None
+    recorded = consumed_renta_inmueble_rows(target)
+    facts: dict[str, str | int] = {
+        "modelo": str(work_unit.modelo),
+        "filing_year": work_unit.filing_year,
+        "period": work_unit.period.registry_token,
+    }
+    if current is None:
+        if not recorded:
+            return None
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.renta_inmueble_rows_unavailable",
+            message_facts=facts,
+            legal_refs=RENTA_INMUEBLE_DRIFT_LEGAL_REFS,
+            source_refs=source_refs,
+        )
+    if recorded == current:
+        return None
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.renta_inmueble_rows_drift",
+        message_facts={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "rows_recorded": len(recorded),
+            "rows_current": len(current),
+            "rows_changed": len({identity for identity, _fingerprint in recorded ^ current}),
+        },
+        legal_refs=RENTA_INMUEBLE_DRIFT_LEGAL_REFS,
+        source_refs=source_refs,
+    )
+
+
 def _asset_register_drift_finding(
     work_unit: WorkUnit,
     recorded: ActivityAssetConsumption,
@@ -534,7 +600,9 @@ __all__ = [
     "ASSET_REGISTER_DRIFT_LEGAL_REFS",
     "INVENTORY_REGISTER_DRIFT_LEGAL_REFS",
     "LEDGER_DRIFT_LEGAL_REFS",
+    "RENTA_INMUEBLE_DRIFT_LEGAL_REFS",
     "UNDETERMINED_MIXED_USE_LEGAL_REFS",
     "ledger_drift_findings",
+    "renta_inmueble_drift_finding",
     "undetermined_mixed_use_contributor_finding",
 ]

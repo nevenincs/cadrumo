@@ -6220,9 +6220,13 @@ sheets:
       accrual_year: Accrual year
       acquisition_date: Acquisition date
       acquisition_value: Acquisition value
+      adquisicion_lucrativa: Acquired without consideration
+      adquisicion_onerosa: Acquired for consideration
+      amortizacion: Depreciation
       amount: Amount
       amount_donated: Amount donated
       anualidades_alimentos: Food annuities
+      arrendado: Let
       ascendants_75_plus_total: Ascendants 75+ (total)
       ascendants_75_plus_whole: Ascendants 75+ (whole)
       ascendants_disabled_33_65_total: Disabled ascendants 33-65% (total)
@@ -6236,6 +6240,7 @@ sheets:
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
       asset_ref: Internal asset reference
+      base_amortizacion: Depreciation base
       base_imponible: Tax base
       base_imponible_assigned: Tax base assigned
       base_retenciones: Withholding base
@@ -6301,8 +6306,11 @@ sheets:
       descendants_rest_whole: Remaining descendants (whole)
       descendants_under_3_total: Descendants under 3 (total)
       descendants_under_3_whole: Descendants under 3 (whole)
+      dias_arrendado: Days let
+      dias_arrendado_amortizacion: Days let for depreciation
       dias_arrendamiento: Days the property was leased
       dias_miembro: Number of days as member
+      direccion: Address
       disability_clave: Disability
       domicilio_fiscal: Member's tax domicile
       donor_legal_name: Donor legal name
@@ -6310,8 +6318,11 @@ sheets:
       door: Door
       element_type: Asset type
       emerging_stock_excess_clave: Emerging-company stock excess
+      fecha_adquisicion: Property acquisition date
+      fecha_contrato: Lease date
       fecha_devengo: Accrual date
       fecha_inicio_prestamo: Loan start date
+      fecha_transmision: Property transfer date
       fecha_vencimiento_prestamo: Loan maturity date
       financial_asset_acquisition_value: Financial asset acquisition value
       financial_asset_disposal_value: Financial asset disposal value
@@ -6327,10 +6338,27 @@ sheets:
       gain: Capital gain
       gain_difference: Gain on the transfer
       garantias: Guarantees
+      gasto_comunidad: Community charges
+      gasto_defensa_juridica: Legal defence costs
+      gasto_formalizacion_contrato: Lease formalisation costs
+      gasto_interes_financiacion: Interest and financing costs
+      gasto_otros: Other deductible expenses
+      gasto_primas_seguro: Insurance premiums
+      gasto_reparacion_conservacion: Repair and upkeep costs
+      gasto_saldos_dudoso_cobro: Doubtful debts
+      gasto_servicios_terceros: Third-party personal services
+      gasto_suministros: Services and utilities
+      gasto_tributos: Taxes, surcharges and fees
+      gastos_adquisicion: Acquisition expenses and taxes
       gastos_deducibles: Deductible expenses
+      gastos_pendientes_anteriores: Interest and repair expenses pending from the
+        four previous years
+      gastos_pendientes_aplicados: Pending amount from previous years applied this
+        year
       geographic_mobility_clave: Geographic mobility
       house_number: House number
       housing_loan_communication_clave: Home loan communication
+      importe_adquisicion: Acquisition amount
       importe_gastos: Expense amount
       importe_q1: Amount Q1
       importe_q2: Amount Q2
@@ -6344,11 +6372,24 @@ sheets:
       incapacity_kind_value: In-kind value from work incapacity
       ingreso_a_cuenta: In-kind tax credit
       ingreso_a_cuenta_repercutido: Payments on account passed on
+      ingresos_integros: Gross computable income
+      inquilino_1_nif: Tenant 1 tax ID
+      inquilino_1_nif_extranjero: Tenant 1 tax ID is foreign
+      inquilino_2_nif: Tenant 2 tax ID
+      inquilino_2_nif_extranjero: Tenant 2 tax ID is foreign
+      inquilino_3_nif: Tenant 3 tax ID
+      inquilino_3_nif_extranjero: Tenant 3 tax ID is foreign
+      intereses_reparacion_aplicados: Interest and repair expenses of the year applied
+      intereses_reparacion_pendientes: Interest and repair expenses of the year pending
+      intereses_reparacion_pendientes_futuros: Interest and repair expenses pending
+        for the following four years
       is_recurrent: Recurrent donation
       isin_code: ISIN code
       locality: Locality
       loss: Capital loss
       loss_difference: Loss on the transfer
+      mejoras_anteriores: Improvements made in previous years
+      mejoras_ejercicio: Improvements made this year
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
@@ -6390,6 +6431,8 @@ sheets:
       perceptor_tax_id: Recipient tax id
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
+      porcentaje_construccion: Construction share of the cadastral value
+      porcentaje_propiedad: Ownership (%)
       porcentaje_retencion: Withholding %
       porcentaje_titularidad_inmueble: Property ownership percentage
       portal: Entrance
@@ -6402,21 +6445,27 @@ sheets:
       rectified_period: Rectified period
       rectified_year: Rectified year
       reduccion: Reduction applicable to the income
+      reduccion_aplicable: Reduction applies
       reducciones: Reductions
       reducciones_aplicables: Applicable reductions
       referencia_catastral: Cadastral reference
       refund_amount: Refund amount
+      rendimiento_neto: Net income
       rendimiento_neto_minorado_agricola_eo: Reduced agricultural net yield (estimación
         objetiva)
       rendimiento_neto_previo_eo: Prior net yield (estimación objetiva)
+      rendimiento_neto_reducido: Reduced net income
       representative_nif: Representative NIF
       representative_tax_id: Legal representative NIF
       residence_country_code: Residence country code
       retencion_amount: Withholding amount
       retencion_practicada: Withholding applied
+      retenciones: Withholdings
       reverse_charge_mark: Reverse charge
+      rustica: Rural
       second_child_compute: 2nd child computation
       share_percentage: Share percentage
+      situacion: Location key
       situacion_inmueble: Property location status
       situation: Property situation
       spouse_or_unit_titular_tax_id: Spouse or coexistence-unit holder NIF
@@ -6435,6 +6484,9 @@ sheets:
       transmission_date: Disposal date
       transmission_value: Disposal value
       unit_convivencia_titular_clave: Coexistence unit holder
+      urbana: Urban
+      valor_catastral: Cadastral value
+      valor_catastral_construccion: Cadastral value of the construction
       valuation_amount: Valuation
       valuation_event: Valuation event
       valuation_event_date: Valuation event date
@@ -8738,6 +8790,32 @@ tui:
       selection_dropped: The entry this link selects is not shown.
       title: Records unavailable
   modelo:
+    amendment:
+      done: 'Correction prepared and recorded here. Nothing was sent to the AEAT:
+        export its file and file it yourself.'
+      incomplete: Fill in everything the correction asks for, and correct at least
+        one value.
+      key: Correct
+      kind_label: Kind of correction
+      motive_label: Reason for the rectification
+      unknown: This correction may have been recorded. Check its operation before
+        you prepare another.
+      values_label: Corrected values
+    disagreements:
+      accept: Accept
+      key: Answer disagreements
+      none: The declaration states no source disagreement.
+      outcome_unknown: The answer may have been stored. Read the declaration again
+        before answering anything else.
+      read_failed: Your answers could not be read.
+      reading: Reading your answers...
+      reason_label: Your reason for accepting
+      refused: The answer was refused.
+      revoke: Take back
+      sending: Sending your answer...
+      title: Source disagreements
+      unavailable: There is nothing to answer yet. Calculate the declaration first.
+      your_reason: 'Your reason: {reason}'
     editor:
       confirm_hint: Press ⏎ to confirm {value}, or type the right value.
       keys: 'Keys: ⏎ {save_next} · Ctrl+⏎ {save}'
@@ -8918,6 +8996,9 @@ tui:
       stage: Stage for review
       title: Statements you can make
       withdraw: Withdraw the statement
+    taxation:
+      key: Joint or individual
+      reading: Working out both ways…
   operations:
     action:
       close: Close

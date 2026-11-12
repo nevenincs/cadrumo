@@ -192,6 +192,7 @@ flows:
           prorrata_regularizacion: Pro-rata adjustment
           purchase_invoice_evidence: Purchase-invoice evidence
           relation_prefill: Related filing
+          renta_inmueble: Let property
           retencion_soportada: Withholding suffered
           retenciones_aggregation: Withholding totals
           withholding: Withholding record

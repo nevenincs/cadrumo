@@ -81,9 +81,11 @@ def _scalar_address(casilla_id: str) -> ModeloEditScalarAddressV1:
         raise typer.BadParameter(tr("cli.app.modelo.work.entry_casilla_unknown", casilla=casilla_id)) from None
 
 
-def _binding_address(binding_id: str) -> ModeloEditBindingAddressV1:
+def _binding_address(binding_id: str, row_identity: str | None = None) -> ModeloEditBindingAddressV1:
     try:
-        return ModeloEditBindingAddressV1(binding_id=binding_id.strip())
+        return ModeloEditBindingAddressV1(
+            binding_id=binding_id.strip(), row_identity=None if row_identity is None else row_identity.strip()
+        )
     except ValidationError:
         raise typer.BadParameter(tr("cli.app.modelo.work.entry_binding_unknown", binding=binding_id)) from None
 
@@ -281,17 +283,22 @@ def work_override(
     )
 
 
+def _row_words(address: ModeloEditBindingAddressV1) -> str:
+    return "" if address.row_identity is None else f" --row {address.row_identity}"
+
+
 def work_attest_no_amount(
     ctx: typer.Context,
     work_unit_id: str,
     binding_id: str,
+    row_identity: str | None = None,
     confirmed: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """State that one carry from an earlier filing holds no amount."""
+    """State that one carry from an earlier filing holds no amount, on one row where ``--row`` names it."""
     client, language = _session(ctx, output_language)
     baseline, _ = _admitted_baseline(client, work_unit_id, language)
-    address = _binding_address(binding_id)
+    address = _binding_address(binding_id, row_identity)
     if not any(
         isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
         and entry.binding_id == address.binding_id
@@ -313,7 +320,10 @@ def work_attest_no_amount(
         command=_ATTEST_NO_AMOUNT_COMMAND,
         intent="attest_no_amount",
         address=address,
-        command_words=f"aeat app modelo work attest-no-amount {baseline.work_unit_id} {address.binding_id} --yes",
+        command_words=(
+            f"aeat app modelo work attest-no-amount {baseline.work_unit_id} {address.binding_id}"
+            f"{_row_words(address)} --yes"
+        ),
         value_text=None,
         confirmed=confirmed,
         language=language,
@@ -325,17 +335,18 @@ def work_attest_prior_value(
     work_unit_id: str,
     binding_id: str,
     value: str,
+    row_identity: str | None = None,
     confirmed: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """State the figure of a carry whose earlier return the profile does not hold.
+    """State the figure of a carry whose earlier return the profile does not hold, on one row where ``--row`` names it.
 
     The check refuses the statement where that return is held, because the
     declaration then follows the return rather than the statement.
     """
     client, language = _session(ctx, output_language)
     baseline, tax_id_format = _admitted_baseline(client, work_unit_id, language)
-    address = _binding_address(binding_id)
+    address = _binding_address(binding_id, row_identity)
     parsed, value_text = _typed_value(baseline, address, value, tax_id_format=tax_id_format, language=language)
     submission = ModeloEditSubmissionV1(
         baseline=baseline,
@@ -354,7 +365,8 @@ def work_attest_prior_value(
         intent="attest_prior_value",
         address=address,
         command_words=(
-            f"aeat app modelo work attest-prior-value {baseline.work_unit_id} {address.binding_id} <value> --yes"
+            f"aeat app modelo work attest-prior-value {baseline.work_unit_id} {address.binding_id} <value>"
+            f"{_row_words(address)} --yes"
         ),
         value_text=value_text,
         confirmed=confirmed,

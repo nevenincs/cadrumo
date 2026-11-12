@@ -7104,24 +7104,6 @@ sequence_removals = {source_refs = [1]}
 
 [[revisions."2025".family_overrides]]
 family = "formulas"
-selector = {revision = "2024", id = "renta-capital-inmobiliario-rendimiento-neto"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimientos del capital inmobiliario", "gastos deducibles"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
-selector = {revision = "2024", id = "renta-capital-inmobiliario-rendimiento-neto-reducido"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimiento minimo computable"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
-selector = {revision = "2024", id = "renta-capital-inmobiliario-suma-rendimientos-reducidos"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimientos del capital inmobiliario"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
 selector = {revision = "2024", id = "renta-capital-mobiliario-ahorro-rendimiento-neto"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["gastos fiscalmente deducibles", "rendimientos del capital mobiliario"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
@@ -7679,7 +7661,7 @@ sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
 family = "constructs"
 selector = {revision = "2024", id = "renta-mini-model-capital-inmobiliario"}
 sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
-sequence_removals = {formulas = [2, 3, 4, 5, 6, 7], legal_refs = [2, 3], source_refs = [0, 1, 2]}
+sequence_removals = {formulas = [2, 3, 4], legal_refs = [2, 3], source_refs = [0, 1, 2]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"
@@ -8511,8 +8493,8 @@ sequence_removals = {source_refs = [0, 1]}
 family = "verification_expectations"
 selector = {revision = "2024", id = "modelo-100-reconcile-when-present"}
 sequence_additions = { externally_grounded_casilla_ids = ["0610", "0670"], legal_refs = ["orden-hac-277-2026:art-3"], reconcile_when_present_casilla_ids = ["0159", "1039", "2211", "2232"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"] }
-sequence_removals = { externally_grounded_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28], reconcile_when_present_casilla_ids = [17, 82, 83, 89, 90, 101, 102, 120], source_refs = [0, 1] }
-sequence_order = { reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 192, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 193, 122, 123, 124, 125, 126, 127, 128, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 129, 187, 188, 189, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 194, 195, 166, 191, 190] }
+sequence_removals = { externally_grounded_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25], reconcile_when_present_casilla_ids = [79, 80, 86, 87, 98, 99, 117], source_refs = [0, 1] }
+sequence_order = { reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 189, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 190, 120, 121, 122, 123, 124, 125, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 126, 184, 185, 186, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 191, 192, 163, 188, 187] }
 
 [[revisions."2025".family_overrides]]
 family = "completeness_manifest"

@@ -50,6 +50,8 @@ FOOTER_PRIORITY: Final[tuple[str, ...]] = (
     "e",
     "b",
     "a",
+    "t",
+    "m",
 )
 """Footer keys, most needed first; the footer shows as many as fit and the expanded help names them all."""
 HELP_ONLY_KEYS: Final[tuple[str, ...]] = ("space",)
@@ -124,6 +126,9 @@ SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "o": "workspace.modelo.key.sort",
     "b": "workspace.modelo.bulk_confirm.title",
     "a": "tui.modelo.statements.key",
+    "t": "tui.modelo.taxation.key",
+    "D": "tui.modelo.disagreements.key",
+    "m": "tui.modelo.amendment.key",
     "space": "workspace.modelo.key.fold",
 }
 LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {

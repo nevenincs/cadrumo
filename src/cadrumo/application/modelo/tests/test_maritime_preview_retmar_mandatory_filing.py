@@ -28,6 +28,7 @@ from collections.abc import Iterator
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.renta.maritime_exemption import MaritimeWorkerFacts, ProfileCompletenessError
 from ...calculations.maritime_exemption_service import (
     resolve_maritime_exemption,
@@ -36,6 +37,8 @@ from ...calculations.maritime_exemption_service import (
 from ..maritime_preview import ModeloMaritimeExemptionPreview
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_DEVENGO = latest_period_end()
 
 
 @pytest.fixture(autouse=True)
@@ -80,6 +83,7 @@ def _preview_as_the_warning_path_builds_it() -> ModeloMaritimeExemptionPreview:
             annual_salary=None,
             qualifying_days=None,
             gross_navigation_income=None,
+            devengo_date=_DEVENGO,
         ),
         retmar_warning_error=excinfo.value,
     )
@@ -125,6 +129,7 @@ def test_the_preview_defers_to_the_service_determination() -> None:
                 annual_salary=None,
                 qualifying_days=None,
                 gross_navigation_income=None,
+                devengo_date=_DEVENGO,
             ),
         )
         assert preview.retmar_mandatory_filing == retmar_mandatory_filing(facts)

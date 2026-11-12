@@ -62,6 +62,7 @@ from ...domain.modelos.calculation_revision import (
     empty_row_source_identities,
 )
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
+from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.source_disagreement import SourceDisagreementFact
@@ -217,6 +218,8 @@ class CalculationSourceContext(BaseModel):
     # may share. Transient: a resolver reads it, nothing persists it from here.
     caller_binding_values: dict[BindingId, Decimal] = Field(default_factory=dict, exclude=True, repr=False)
     caller_enum_binding_values: dict[BindingId, str] = Field(default_factory=dict, exclude=True, repr=False)
+    caller_row_attestations: tuple[RowCarryAttestation, ...] = Field(default=(), exclude=True, repr=False)
+    """The operator's per-row statements of a carry no source holds, for the resolver owning those rows."""
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None

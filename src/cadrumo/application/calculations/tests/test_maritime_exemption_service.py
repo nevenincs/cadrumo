@@ -13,16 +13,19 @@ legal_refs and source_refs in the observation output).
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from ....core.errors.error_codes import get_registered_error_code
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ....domain.calculations.registry.queries import PinnedRegistryQueryService
 from ....domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
-from ....domain.renta.errors import RentaValidationError
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
+from ....domain.renta.errors import RentaDateRequiredError, RentaValidationError
 from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
@@ -43,6 +46,7 @@ def _pinned_authority() -> Iterator[None]:
         yield
 
 
+_DEVENGO = latest_period_end()
 _ART_7P_LEGAL_REFS = ("ley-35-2006:art-7",)
 _REBECA_LEGAL_REFS = ("ley-19-1994:art-75",)
 _ART_7P_SOURCE_REFS = ("boe-lirpf-statutory-facts",)
@@ -81,7 +85,44 @@ def test_rebeca_selector_uses_the_supplied_authority_and_propagates_its_refusal(
 
     facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
     with pytest.raises(RegistryValidationError, match="supplied generation"):
-        resolve_maritime_exemption(facts=facts, authority=ExpiredAuthority())
+        resolve_maritime_exemption(facts=facts, authority=ExpiredAuthority(), devengo_date=_DEVENGO)
+
+
+def test_rebeca_selector_reads_the_register_list_at_the_supplied_date_not_the_clock() -> None:
+    seen: list[date | None] = []
+
+    class RecordingAuthority:
+        def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+            seen.append(getattr(query, "effective_date", None))
+            raise RegistryValidationError("stop after recording the query")
+
+        def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+            raise AssertionError("a dated read must not consult the support envelope")
+
+    facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
+    with pytest.raises(RegistryValidationError, match="stop after recording"):
+        resolve_maritime_exemption(
+            facts=facts, authority=RecordingAuthority(), filing_period=_DEVENGO, devengo_date=_DEVENGO
+        )
+    assert seen == [_DEVENGO]
+
+
+def test_rebeca_profile_without_devengo_date_refuses_instead_of_using_the_run_date() -> None:
+    facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
+    with pytest.raises(RentaDateRequiredError) as refused:
+        resolve_maritime_exemption(facts=facts, gross_navigation_income=Decimal("30000"))
+    code = get_registered_error_code(refused.value)
+    assert code.code == "REFUSED_RENTA_DATE_REQUIRED"
+    assert code.message_key == "errors.refused.refused_renta_date_required"
+    assert refused.value.context == {"door": "aeat app modelo work preview-maritime-exemption --filing-year"}
+
+
+def test_art_7p_profile_without_a_filing_period_refuses_instead_of_using_the_run_date() -> None:
+    facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_flag="foreign", waters_type="international")
+    with pytest.raises(RentaDateRequiredError):
+        resolve_maritime_exemption(
+            facts=facts, annual_salary=Decimal("36500"), qualifying_days=100, devengo_date=_DEVENGO
+        )
 
 
 class TestResolveMaritimeExemptionArt7p:
@@ -96,6 +137,8 @@ class TestResolveMaritimeExemptionArt7p:
     def test_returns_typed_observation_for_eligible_profile(self) -> None:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -106,6 +149,8 @@ class TestResolveMaritimeExemptionArt7p:
         """Contract close gate: observations carry canonical legal ids."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -116,6 +161,8 @@ class TestResolveMaritimeExemptionArt7p:
         """Contract close gate: source_refs must be exact registry binding ids."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -125,6 +172,8 @@ class TestResolveMaritimeExemptionArt7p:
     def test_observation_targets_renta_exenta_casilla(self) -> None:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -134,6 +183,8 @@ class TestResolveMaritimeExemptionArt7p:
         """Art. 7.p) is a plain exemption, never the rate-setting exempt income of casilla 0525."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -143,6 +194,8 @@ class TestResolveMaritimeExemptionArt7p:
         """Registry-authoritative cap: 60,100 EUR per Ley 35/2006 Art. 7.p)."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("120000"),
             qualifying_days=365,
         )
@@ -151,6 +204,8 @@ class TestResolveMaritimeExemptionArt7p:
     def test_casilla_values_derived_view_matches_observations(self) -> None:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -160,6 +215,8 @@ class TestResolveMaritimeExemptionArt7p:
         with pytest.raises(RentaValidationError) as excinfo:
             resolve_maritime_exemption(
                 facts=self._FACTS,
+                devengo_date=_DEVENGO,
+                filing_period=_DEVENGO,
                 qualifying_days=100,
             )
 
@@ -170,6 +227,8 @@ class TestResolveMaritimeExemptionArt7p:
         with pytest.raises(RentaValidationError) as excinfo:
             resolve_maritime_exemption(
                 facts=self._FACTS,
+                devengo_date=_DEVENGO,
+                filing_period=_DEVENGO,
                 annual_salary=Decimal("36500"),
             )
 
@@ -188,6 +247,8 @@ class TestResolveMaritimeExemptionRebeca:
     def test_returns_typed_observation_for_eligible_profile(self) -> None:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         assert len(result.observations) == 1
@@ -196,6 +257,8 @@ class TestResolveMaritimeExemptionRebeca:
         """Contract close gate: legal_refs must be canonical registry ids."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         obs = result.observations[0]
@@ -204,6 +267,8 @@ class TestResolveMaritimeExemptionRebeca:
     def test_observation_carries_source_refs(self) -> None:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         assert result.observations[0].source_refs == _REBECA_SOURCE_REFS
@@ -212,6 +277,8 @@ class TestResolveMaritimeExemptionRebeca:
         """The REBECA exemption is plain, never the rate-setting exempt income of casilla 0525."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         assert _files_in_no_box(result.observations[0].casilla_id)
@@ -220,13 +287,15 @@ class TestResolveMaritimeExemptionRebeca:
         """Registry-authoritative fraction: 0.50 per Ley 19/1994 Arts. 73-75."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("40000"),
         )
         assert result.observations[0].value == Decimal("20000")
 
     def test_raises_when_navigation_income_missing_for_rebeca_eligible(self) -> None:
         with pytest.raises(RentaValidationError) as excinfo:
-            resolve_maritime_exemption(facts=self._FACTS)
+            resolve_maritime_exemption(facts=self._FACTS, devengo_date=_DEVENGO)
 
         assert str(excinfo.value) == "application.calculations.maritime_exemption.errors.rebeca_input_required"
         assert excinfo.value.context == {"gross_navigation_income_supplied": False}
@@ -279,6 +348,8 @@ class TestResolveMaritimeExemptionRetmarGate:
         )
         result = resolve_maritime_exemption(
             facts=facts,
+            devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         assert result.retmar_mandatory_filing is False

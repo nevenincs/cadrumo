@@ -635,6 +635,9 @@ def _catalogue_uses_home_office_usage_ratio(*, period: Period, transactions: Tra
 
 
 def _transaction_needs_expense_category(transaction: Transaction) -> bool:
+    # A rental expense is routed to its casilla by its property and expense concept, never by a category.
+    if transaction.inmueble_ref is not None and transaction.gasto_capital_inmobiliario is not None:
+        return False
     return takes_expense_category(
         transaction.direction, has_purchase_evidence=transaction.purchase_invoice_evidence_id is not None
     )

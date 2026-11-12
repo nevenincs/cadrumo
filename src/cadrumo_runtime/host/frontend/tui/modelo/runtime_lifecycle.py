@@ -16,6 +16,11 @@ from cadrumo.application.export.calculation_review_xlsx_operation import (
     CalculationReviewXlsxRequest,
     CalculationReviewXlsxResult,
 )
+from cadrumo.application.modelo.amendment_context_operation import (
+    MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID,
+    ModeloWorkAmendmentContextProjection,
+    ModeloWorkAmendmentContextRequest,
+)
 from cadrumo.application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from cadrumo.application.modelo.edit_admission import ModeloEditRenewalResultV1, ModeloEditRenewedV1
 from cadrumo.application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
@@ -36,6 +41,12 @@ from cadrumo.application.modelo.m303_attestation_operation import (
 from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
 )
+from cadrumo.application.modelo.metadata_read_operation import (
+    MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
+    ModeloWorkMetadataProjection,
+    ModeloWorkMetadataRequest,
+)
+from cadrumo.application.modelo.work_amend_correction import ModeloAmendmentCorrectionContextV1
 from cadrumo.application.modelo.workbench_operations import (
     MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
     MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
@@ -240,6 +251,52 @@ class _RuntimeModeloLifecycleBindings:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return result
 
+    async def amendment_context(self, language: OutputLanguage) -> ModeloAmendmentCorrectionContextV1:
+        """Read this declaration's current filing, then the correction it offers, both from this session's profile."""
+        self.require_session()
+        subject = profile_operation_subject(str(self.profile_id))
+        metadata = await read_operation(
+            self.client,
+            definition_id=MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
+            subject_ref=subject,
+            payload=ModeloWorkMetadataRequest(profile_id=self.profile_id, work_unit_id=self.work_unit_id),
+            result_type=ModeloWorkMetadataProjection,
+            session_id=self.session_id,
+        )
+        unit = metadata.unit
+        if (
+            metadata.profile_id != self.profile_id
+            or unit.bucket_id != str(self.profile_id)
+            or unit.work_unit_id != self.work_unit_id
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        filing_record_id = unit.current_filing_record_id
+        if filing_record_id is None:
+            raise ModeloLifecycleActionUnavailableError(translated_message="workspace.modelo.correction.unavailable")
+        self.require_session()
+        projection = await read_operation(
+            self.client,
+            definition_id=MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID,
+            subject_ref=subject,
+            payload=ModeloWorkAmendmentContextRequest(
+                profile_id=self.profile_id, filing_record_id=filing_record_id, output_language=language
+            ),
+            result_type=ModeloWorkAmendmentContextProjection,
+            session_id=self.session_id,
+        )
+        correction = projection.correction
+        if (
+            projection.profile_id != self.profile_id
+            or projection.unit.work_unit_id != self.work_unit_id
+            or projection.record.filing_record_id != filing_record_id
+            or correction is None
+            or correction.filed.filing_record_id != filing_record_id
+            or correction.language != language
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        self.require_session()
+        return correction
+
     def admit(self, observed_at: datetime) -> M303Exonerado390ApplicabilityAttestationAdmission:
         self.require_session()
         return asyncio.run(admit_attestation(self.client, self.declaration, observed_at, self.session_id))
@@ -339,6 +396,7 @@ def compose_runtime_modelo_lifecycle_door(
         read_export_result=bindings.read_export_result,
         profile_id=client.profile_id,
         read_review_result=bindings.read_review_result,
+        read_amendment_context=bindings.amendment_context,
     )
 
 

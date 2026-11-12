@@ -68,7 +68,13 @@ def _validate_replay_coordinates(
 
 
 def _canonical_replay_value(value: object) -> str:
-    """Render one draft row value in the same comparison form as persistence."""
+    """Render one draft row value in the same comparison form as persistence.
+
+    Persistence stores a flag as the Decimal 1 or 0; a ``bool`` is tested before ``Decimal`` because
+    ``str(True)`` is not that form.
+    """
+    if isinstance(value, bool):
+        return canonical_decimal_string(Decimal(1) if value else Decimal(0))
     return canonical_decimal_string(value) if isinstance(value, Decimal) else str(value).strip()
 
 

@@ -8,6 +8,7 @@
   "src/cadrumo/application/modelo/reconciliation.py::prepare_parsed_declaracion::REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED::0",
   "src/cadrumo/application/modelo/reconciliation_comparison.py::_casilla_divergence_diff::REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED::0",
   "src/cadrumo/application/modelo/reconciliation_export_labels.py::ReconciliationWorkbookLabels.__call__::INTERNAL_I18N_MISSING_TRANSLATION::0",
+  "src/cadrumo/domain/modelos/calculation_revision_operator_layer.py::CalculationOperatorLayer._require_channel_unique_canonical_values::ERROR_MODELOS_VALIDATION::0",
   "src/cadrumo/domain/modelos/verification_report.py::<module>::INTERNAL_INVARIANT::0"
  ],
  "free_text": [

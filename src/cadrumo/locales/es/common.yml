@@ -6358,9 +6358,13 @@ sheets:
       accrual_year: Ejercicio de devengo
       acquisition_date: Fecha de adquisición
       acquisition_value: Valor de adquisición
+      adquisicion_lucrativa: Adquisición lucrativa
+      adquisicion_onerosa: Adquisición onerosa
+      amortizacion: Amortización
       amount: Importe
       amount_donated: Importe donado
       anualidades_alimentos: Anualidades por alimentos
+      arrendado: Arrendamiento
       ascendants_75_plus_total: Ascendientes ≥ 75 años (total)
       ascendants_75_plus_whole: Ascendientes ≥ 75 años (enteros)
       ascendants_disabled_33_65_total: Ascendientes con discapacidad 33-65% (total)
@@ -6376,6 +6380,7 @@ sheets:
       asset_class_code: Clave del bien
       asset_identifier: Identificación del bien
       asset_ref: Referencia interna del bien
+      base_amortizacion: Base de amortización
       base_imponible: Base imponible
       base_imponible_assigned: Base imponible atribuida
       base_retenciones: Base de retenciones e ingresos a cuenta
@@ -6441,8 +6446,11 @@ sheets:
       descendants_rest_whole: Descendientes restantes (enteros)
       descendants_under_3_total: Descendientes < 3 años (total)
       descendants_under_3_whole: Descendientes < 3 años (enteros)
+      dias_arrendado: Días arrendado
+      dias_arrendado_amortizacion: Días arrendado para la amortización
       dias_arrendamiento: Días de arrendamiento del inmueble
       dias_miembro: Número de días como miembro
+      direccion: Dirección
       disability_clave: Discapacidad
       domicilio_fiscal: Domicilio fiscal del miembro
       donor_legal_name: Nombre o razón social del donante
@@ -6450,8 +6458,11 @@ sheets:
       door: Puerta
       element_type: Tipo de elemento patrimonial
       emerging_stock_excess_clave: Excesos de entrega de acciones de empresas emergentes
+      fecha_adquisicion: Fecha de adquisición del inmueble
+      fecha_contrato: Fecha del contrato
       fecha_devengo: Fecha de devengo
       fecha_inicio_prestamo: Fecha de inicio del préstamo
+      fecha_transmision: Fecha de transmisión del inmueble
       fecha_vencimiento_prestamo: Fecha de vencimiento del préstamo
       financial_asset_acquisition_value: Valor de adquisición del activo financiero
       financial_asset_disposal_value: Valor de transmisión del activo financiero
@@ -6467,10 +6478,27 @@ sheets:
       gain: Ganancia patrimonial
       gain_difference: Ganancia por la transmisión
       garantias: Garantías
+      gasto_comunidad: Gastos de comunidad
+      gasto_defensa_juridica: Gastos de defensa jurídica
+      gasto_formalizacion_contrato: Gastos de formalización del contrato
+      gasto_interes_financiacion: Intereses y demás gastos de financiación
+      gasto_otros: Otros gastos fiscalmente deducibles
+      gasto_primas_seguro: Primas de contratos de seguro
+      gasto_reparacion_conservacion: Gastos de reparación y conservación
+      gasto_saldos_dudoso_cobro: Saldos de dudoso cobro
+      gasto_servicios_terceros: Servicios personales de terceros
+      gasto_suministros: Servicios y suministros
+      gasto_tributos: Tributos, recargos y tasas
+      gastos_adquisicion: Gastos y tributos de adquisición
       gastos_deducibles: Gastos deducibles
+      gastos_pendientes_anteriores: Intereses y gastos de reparación y conservación
+        pendientes de los cuatro ejercicios anteriores
+      gastos_pendientes_aplicados: Importe pendiente de ejercicios anteriores aplicado
+        en este ejercicio
       geographic_mobility_clave: Movilidad geográfica
       house_number: Número de casa
       housing_loan_communication_clave: Comunicación de préstamos de vivienda habitual
+      importe_adquisicion: Importe de adquisición
       importe_gastos: Importe de gastos
       importe_q1: Importe 1T
       importe_q2: Importe 2T
@@ -6486,11 +6514,26 @@ sheets:
       incapacity_kind_value: Valoración en especie derivada de incapacidad laboral
       ingreso_a_cuenta: Ingreso a cuenta
       ingreso_a_cuenta_repercutido: Ingresos a cuenta repercutidos
+      ingresos_integros: Ingresos íntegros computables
+      inquilino_1_nif: NIF del arrendatario 1
+      inquilino_1_nif_extranjero: NIF del arrendatario 1 de otro país
+      inquilino_2_nif: NIF del arrendatario 2
+      inquilino_2_nif_extranjero: NIF del arrendatario 2 de otro país
+      inquilino_3_nif: NIF del arrendatario 3
+      inquilino_3_nif_extranjero: NIF del arrendatario 3 de otro país
+      intereses_reparacion_aplicados: Intereses y gastos de reparación y conservación
+        del ejercicio aplicados
+      intereses_reparacion_pendientes: Intereses y gastos de reparación y conservación
+        del ejercicio pendientes
+      intereses_reparacion_pendientes_futuros: Intereses y gastos de reparación y
+        conservación pendientes para los cuatro ejercicios siguientes
       is_recurrent: Donativo recurrente
       isin_code: Código ISIN
       locality: Localidad
       loss: Pérdida patrimonial
       loss_difference: Pérdida por la transmisión
+      mejoras_anteriores: Mejoras realizadas en ejercicios anteriores
+      mejoras_ejercicio: Mejoras realizadas en el ejercicio
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
       member_tax_id: NIF del miembro
@@ -6532,6 +6575,9 @@ sheets:
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepciones dinerarias
       percibido_especie: Percepciones en especie
+      porcentaje_construccion: Porcentaje del valor catastral correspondiente a la
+        construcción
+      porcentaje_propiedad: Propiedad (%)
       porcentaje_retencion: '% Retención'
       porcentaje_titularidad_inmueble: Porcentaje de titularidad del inmueble
       portal: Portal
@@ -6544,21 +6590,27 @@ sheets:
       rectified_period: Periodo rectificado
       rectified_year: Ejercicio rectificado
       reduccion: Reducción aplicable al rendimiento
+      reduccion_aplicable: Reducción aplicable
       reducciones: Reducciones
       reducciones_aplicables: Reducciones aplicables
       referencia_catastral: Referencia catastral
       refund_amount: Importe a devolver
+      rendimiento_neto: Rendimiento neto
       rendimiento_neto_minorado_agricola_eo: Rendimiento neto minorado agrícola (estimación
         objetiva)
       rendimiento_neto_previo_eo: Rendimiento neto previo (estimación objetiva)
+      rendimiento_neto_reducido: Rendimiento neto reducido
       representative_nif: NIF del representante
       representative_tax_id: NIF del representante legal
       residence_country_code: Código de país de residencia
       retencion_amount: Importe de la retención
       retencion_practicada: Retención practicada
+      retenciones: Retenciones
       reverse_charge_mark: Inversión del sujeto pasivo
+      rustica: Rústica
       second_child_compute: Cómputo del 2.º hijo
       share_percentage: Porcentaje de participación
+      situacion: Situación (clave)
       situacion_inmueble: Situación del inmueble
       situation: Situación del inmueble
       spouse_or_unit_titular_tax_id: NIF del cónyuge o del titular de la unidad de
@@ -6579,6 +6631,9 @@ sheets:
       transmission_date: Fecha de transmisión
       transmission_value: Valor de transmisión
       unit_convivencia_titular_clave: Titular de la unidad de convivencia
+      urbana: Urbana
+      valor_catastral: Valor catastral
+      valor_catastral_construccion: Valor catastral de la construcción
       valuation_amount: Valoración
       valuation_event: Evento de valoración
       valuation_event_date: Fecha del evento de valoración
@@ -8932,6 +8987,31 @@ tui:
       selection_dropped: No se muestra el apunte que selecciona este enlace.
       title: Registros no disponibles
   modelo:
+    amendment:
+      done: 'Corrección preparada y registrada aquí. No se ha enviado nada a la AEAT:
+        exporta su fichero y preséntalo tú.'
+      incomplete: Completa todo lo que pide la corrección y corrige al menos un valor.
+      key: Corregir
+      kind_label: Tipo de corrección
+      motive_label: Motivo de la rectificación
+      unknown: Puede que esta corrección se haya registrado. Comprueba su operación
+        antes de preparar otra.
+      values_label: Valores corregidos
+    disagreements:
+      accept: Aceptar
+      key: Responder discrepancias
+      none: La declaración no plantea ninguna discrepancia entre fuentes.
+      outcome_unknown: Puede que la respuesta se haya guardado. Vuelve a leer la declaración
+        antes de responder a nada más.
+      read_failed: No se han podido leer tus respuestas.
+      reading: Leyendo tus respuestas...
+      reason_label: Tu motivo para aceptar
+      refused: La respuesta se ha rechazado.
+      revoke: Retirar
+      sending: Enviando tu respuesta...
+      title: Discrepancias entre fuentes
+      unavailable: Todavía no hay nada que responder. Calcula antes la declaración.
+      your_reason: 'Tu motivo: {reason}'
     editor:
       confirm_hint: Pulsa ⏎ para confirmar {value} o escribe el valor correcto.
       keys: 'Teclas: ⏎ {save_next} · Ctrl+⏎ {save}'
@@ -9117,6 +9197,9 @@ tui:
       stage: Dejar para revisar
       title: Manifestaciones que puedes hacer
       withdraw: Retirar la manifestación
+    taxation:
+      key: Conjunta o individual
+      reading: Calculando las dos opciones…
   operations:
     action:
       close: Cerrar

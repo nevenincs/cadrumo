@@ -214,6 +214,10 @@ class WorkbenchFooterMixin:
         hidden: set[str] = set(CHANGE_KEYS) if self.recorded else set()
         if not self._served_statements():
             hidden.add("a")
+        if not self._offers_taxation_comparison():
+            hidden.add("t")
+        if not self._offers_amendment():
+            hidden.add("m")
         if self.query_one(CasillaList).highlighted is None:
             hidden.update(("enter", "s"))
         else:
