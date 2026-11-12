@@ -625,11 +625,19 @@ cli:
         seed_ejercicio_help: Az az adóév, amelynek ideiglenes százalékát átvezetjük
           vagy elszámoljuk.
         seed_help: Az adóév ideiglenes arányosítási százalékának átvezetése az előző
-          év végleges százalékából (LIVA 105.Uno cikk), a lepecsételt előző Modelo
-          303 elszámolási megfigyeléséből olvasva.
+          év végleges százalékából (LIVA 105.Uno cikk), a tárolt előző évi Modelo
+          390-ből, vagy ha mentesülsz alóla, az előző év utolsó időszakának Modelo
+          303-ából olvasva.
         seed_local_authority: Az ideiglenes százalék helyben, a tárolt {modelo} {period}
           {filing_year} elszámolási megfigyelésedből lett átvezetve (LIVA 105.Uno
           cikk). Ez nem az AEAT által erre az adóévre kiadott százalék.
+        seed_operator_stated: Az ideiglenes százalék a(z) {filing_year}. évi végleges
+          arányosítási százalék saját megadásod, a nem tárolt {filing_year}. évi Modelo
+          {modelo} helyett (LIVA 105.Uno cikk). Nem bevallásból kiolvasott szám.
+        seed_percentage_help: Az előző év végleges arányosítási százaléka (0-100),
+          ahogy te megadod. Csak akkor használja, ha sem az előző évi Modelo 390,
+          sem az előző év utolsó időszakának Modelo 303-a nincs tárolva; ha egy tárolt
+          bevallás más számot tartalmaz, elutasítja.
         seed_regulated_override_standing: A(z) {ejercicio} adóév már {provenance}
           eredetű ideiglenes arányosítási százalékot tartalmaz, amely megelőzi a 105.Uno
           cikk szerinti átvezetést. Semmi sem került rögzítésre; az átvezetés előtt

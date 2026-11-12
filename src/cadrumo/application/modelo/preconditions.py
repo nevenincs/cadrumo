@@ -889,6 +889,30 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.invoice_fingerprint.current",
         "modelo.work.verify.invoice_fingerprint.scope_narrower",
     ),
+    # The register's seed states the provisional prorrata from the prior definitive
+    # (LIVA art. 105.Uno); a missing, unseeded or contradicted figure is settled there.
+    *(
+        _profile(
+            "modelo.work.verify",
+            "modelo.work.verify.prorrata_seed.current",
+            f"modelo.work.verify.prorrata_seed.{scenario}",
+            action_id="operator.ledger.prorrata.seed",
+        )
+        for scenario in ("unsourced", "unseeded", "contradicted")
+    ),
+    # A draft calculated under another provisional prorrata is calculated again.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.prorrata_seed.current",
+        "modelo.work.verify.prorrata_seed.changed",
+    ),
+    # A filed return that deducted under a superseded provisional prorrata is corrected by amendment.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.prorrata_seed.current",
+        "modelo.work.verify.prorrata_seed.superseded",
+        action_id="operator.modelo.work.amend_wizard",
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.shared_casilla_cells.adjudicated",

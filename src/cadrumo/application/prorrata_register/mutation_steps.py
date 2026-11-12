@@ -349,7 +349,7 @@ def _perform_whole_seed(
         operation=context.authority_operation,
     )
     observation_repository = calculation_ports.observation_repository
-    if not callable(getattr(observation_repository, "load_prior_m303_settlement_snapshot", None)):
+    if not callable(getattr(observation_repository, "load_prior_definitiva_source_snapshot", None)):
         raise InternalInvariantError("whole-entity prorrata seed has no source-snapshot capability")
     commit = service.seed_whole_carried(
         payload.ejercicio,
@@ -357,6 +357,7 @@ def _perform_whole_seed(
         observation_repository=cast(  # nosemgrep: no-cast-in-domain-application
             ProrrataPriorSettlementSnapshotRepositoryProtocol, observation_repository
         ),
+        stated_percentage=None if payload.percentage is None else Decimal(payload.percentage.decimal),
     )
     return CommittedProrrataMutation(
         register=commit.register,

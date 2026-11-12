@@ -359,7 +359,17 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.ledger.prorrata.seed_help"),
         short_help_key=None,
         invocation=_LEAF_INVOCATION,
-        parameters=(_SEED_EJERCICIO_OPTION, _SECTOR_OPTION),
+        parameters=(
+            _SEED_EJERCICIO_OPTION,
+            _SECTOR_OPTION,
+            _option(
+                name="percentage",
+                declaration="--percentage",
+                value=TEXT_VALUE,
+                default=_OPTIONAL,
+                help_key="cli.app.ledger.prorrata.seed_percentage_help",
+            ),
+        ),
         policy=POLICY_4,
         handler=_handler("prorrata_seed"),
         result_schema=_result_schema("ProrrataSeedResult", "ledger.prorrata.seed"),

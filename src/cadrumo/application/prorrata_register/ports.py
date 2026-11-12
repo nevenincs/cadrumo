@@ -104,7 +104,7 @@ class ProrrataPriorSettlementSourceSnapshot:
 class ProrrataPriorSettlementSnapshotRepositoryProtocol(Protocol):
     """Load finite whole-entity 303 settlement sources with their row revisions."""
 
-    def load_prior_m303_settlement_snapshot(self, prior_year: int) -> ProrrataPriorSettlementSourceSnapshot:
+    def load_prior_definitiva_source_snapshot(self, prior_year: int) -> ProrrataPriorSettlementSourceSnapshot:
         """Read unmembered prior-year terminal quarter/month rows and revisions."""
         ...
 

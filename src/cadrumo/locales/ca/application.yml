@@ -3587,6 +3587,26 @@ application:
       printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les
         línies impreses que la componen (%{printed_sum}), així que el fitxer no quadraria
         i l'AEAT podria rebutjar-lo.
+      prorrata_seed_changed: La prorrata provisional del teu registre ha canviat després
+        de calcular el model %{modelo} %{filing_year}, %{period}. Torna a calcular-lo
+        abans de verificar-lo.
+      prorrata_seed_contradicted: El model %{source_modelo} del %{source_filing_year}
+        que tens declara una prorrata definitiva diferent del percentatge provisional
+        que el teu registre arrossega al %{filing_year}. Torna a arrossegar el %{filing_year}
+        des d'aquesta declaració.
+      prorrata_seed_operator_stated: La prorrata provisional del %{percentage} per
+        al %{filing_year} és la teva pròpia declaració del percentatge definitiu del
+        %{prior_filing_year}, perquè no hi ha desada cap declaració del %{prior_filing_year}
+        que el contingui.
+      prorrata_seed_unseeded: El %{filing_year} fas operacions exemptes sense dret
+        a deducció, de manera que s'aplica la prorrata (art. 102 LIVA), però el teu
+        registre de prorrata no té cap prorrata per al %{filing_year}, de manera que
+        no es pot calcular l'IVA deduïble. Arrossega al %{filing_year} el percentatge
+        definitiu de l'any anterior.
+      prorrata_seed_unsourced: El teu registre de prorrata aplica una prorrata el
+        %{filing_year} però no té percentatge provisional, de manera que no es pot
+        calcular l'IVA deduïble. Arrossega al %{filing_year} el percentatge definitiu
+        de l'any anterior.
       pulled_filing_casilla_mismatch: 'Casella [%{casilla_number}] del període %{period_code}
         de %{filing_year}: el càlcul dona %{computed_value}, però la declaració presentada
         a l''AEAT mostra %{filed_value}.'
@@ -4099,6 +4119,7 @@ application:
         ledger_link: Vincula la factura amb el seu pagament
         ledger_preflight: Comprova els llibres d'aquest període
         ledger_prorrata_list: Revisa el registre de la prorrata
+        ledger_prorrata_seed: Arrossega la prorrata provisional a l'exercici
         ledger_review: Revisa els llibres
         live_filed_pull: Descarrega la declaració presentada de l'AEAT
         live_filed_pull_all: Descarrega totes les declaracions presentades de l'AEAT
@@ -4113,6 +4134,7 @@ application:
         modelo_iva_wallet_seed: Indica el saldo inicial d'IVA a compensar
         modelo_verification_report_list: Revisa els informes de verificació
         modelo_work_amend: Corregeix la declaració presentada
+        modelo_work_amend_wizard: Corregeix pas a pas la declaració presentada
         modelo_work_attest_m303_exonerado_390: Confirma que estàs exonerat del model
           390
         modelo_work_attest_prior_carries: Indica els imports pendents d'exercicis

@@ -632,11 +632,20 @@ cli:
         seed_ejercicio_help: Ejercicio (año) cuyo porcentaje provisional se arrastra
           o se liquida.
         seed_help: Arrastra al ejercicio la prorrata provisional a partir del porcentaje
-          definitivo del año anterior (LIVA art. 105.Uno), leído de la observación
-          sellada de la liquidación del Modelo 303 anterior.
+          definitivo del año anterior (LIVA art. 105.Uno), leído del Modelo 390 anterior
+          guardado o, si estás exonerado de presentarlo, del Modelo 303 del último
+          periodo del año anterior.
         seed_local_authority: El porcentaje provisional se ha arrastrado localmente
           desde tu observación almacenada de la liquidación {modelo} {period} {filing_year}
           (LIVA art. 105.Uno). No es un porcentaje emitido por la AEAT para este ejercicio.
+        seed_operator_stated: El porcentaje provisional es tu propia declaración de
+          la prorrata definitiva de {filing_year}, en lugar del Modelo {modelo} de
+          {filing_year}, que no está guardado (LIVA art. 105.Uno). No es una cifra
+          leída de una declaración.
+        seed_percentage_help: El porcentaje definitivo de prorrata del año anterior
+          (0-100), tal como lo declaras. Solo se usa si no está guardado ni el Modelo
+          390 anterior ni el Modelo 303 del último periodo del año anterior; si una
+          declaración guardada indica otra cifra, se rechaza.
         seed_regulated_override_standing: El ejercicio {ejercicio} ya tiene una prorrata
           provisional {provenance}, que prevalece sobre el arrastre del art. 105.Uno.
           No se ha escrito nada; sustituye esa declaración de forma expresa antes

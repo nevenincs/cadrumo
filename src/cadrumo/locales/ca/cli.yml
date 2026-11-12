@@ -629,11 +629,20 @@ cli:
         seed_ejercicio_help: Exercici (any) el percentatge provisional del qual s'arrossega
           o es liquida.
         seed_help: Arrossega a l'exercici la prorrata provisional a partir del percentatge
-          definitiu de l'any anterior (LIVA art. 105.Uno), llegit de l'observació
-          segellada de la liquidació del Model 303 anterior.
+          definitiu de l'any anterior (LIVA art. 105.Uno), llegit del Model 390 anterior
+          desat o, si n'estàs exonerat, del Model 303 de l'últim període de l'any
+          anterior.
         seed_local_authority: El percentatge provisional s'ha arrossegat localment
           des de la teva observació desada de la liquidació {modelo} {period} {filing_year}
           (LIVA art. 105.Uno). No és un percentatge emès per l'AEAT per a aquest exercici.
+        seed_operator_stated: El percentatge provisional és la teva pròpia declaració
+          de la prorrata definitiva del {filing_year}, en lloc del Model {modelo}
+          del {filing_year}, que no està desat (LIVA art. 105.Uno). No és una xifra
+          llegida d'una declaració.
+        seed_percentage_help: El percentatge definitiu de prorrata de l'any anterior
+          (0-100), tal com el declares. Només s'utilitza si no està desat ni el Model
+          390 anterior ni el Model 303 de l'últim període de l'any anterior; si una
+          declaració desada indica una altra xifra, es rebutja.
         seed_regulated_override_standing: L'exercici {ejercicio} ja té una prorrata
           provisional {provenance}, que preval sobre l'arrossegament de l'art. 105.Uno
           LIVA. No s'ha escrit res; substitueix aquesta declaració de manera expressa

@@ -443,6 +443,28 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="ledger.prorrata.list",
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.prorrata.seed",
+            target_command_key="ledger.prorrata.seed",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="ejercicio",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="ejercicio",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.amend_wizard",
+            target_command_key="modelo.work.amend_wizard",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.inventory.movement.claim",
             target_command_key="ledger.inventory.movement.claim",
             argument_specifications=(
