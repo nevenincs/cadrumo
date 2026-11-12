@@ -43,6 +43,7 @@ from .preconditions import (
     ModeloPreconditionFailure,
     build_modelo_precondition_failure,
 )
+from .refusal_door_verdicts import caller_defect_verdict
 from .work_form_wording import modelo_number, period_words
 
 
@@ -87,6 +88,7 @@ class ModeloIvaWalletReconciliationBlockedError(OperationNextStepErrorMixin, Mod
         if failure is None:
             raise ModeloError(
                 "IVA-wallet reconciliation refusal was raised without its precondition verdict",
+                precondition_verdict=caller_defect_verdict("iva_wallet_refusal_verdict"),
             )
         return failure
 

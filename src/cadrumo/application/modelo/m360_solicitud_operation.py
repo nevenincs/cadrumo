@@ -25,7 +25,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.country_code import CountryCodeAlpha2
-from ...core.errors.hierarchy import InternalInvariantError, TerminalPreconditionErrorMixin
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_year import FilingYear
 from ...core.iban import mask_iban
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -66,7 +66,7 @@ Modelo360SolicitudAction = Literal["declare", "list", "remove"]
 _READ_ACTIONS: Final = frozenset({"list"})
 
 
-class Modelo360SolicitudRefusedError(TerminalPreconditionErrorMixin[object], ModeloError):
+class Modelo360SolicitudRefusedError(ModeloError):
     """Raised when a solicitud cannot be declared or removed as asked.
 
     Each refusal carries the door of its cause: every one is the operator's to

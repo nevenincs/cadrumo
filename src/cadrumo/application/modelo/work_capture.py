@@ -10,6 +10,8 @@ from threading import RLock
 from ...core.hashing import content_hash_hex
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from .lifecycle_view_refusal_doors import work_list_verdict
+from .refusal_door_verdicts import caller_defect_verdict
 from .work_addressing import ModeloWorkSelectorContradictionError, ModeloWorkSelectorError
 from .work_lifecycle_refusal_failures import selector_incoherent_failure
 from .work_selection import (
@@ -69,11 +71,13 @@ class ModeloWorkCurrentCoordinate:
             raise ModeloWorkCaptureError(
                 translated_message="errors.refused.modelo_work_capture_not_current",
                 context={"reason": "distinct_owner_scope"},
+                precondition_verdict=caller_defect_verdict("work_capture_owner_scope"),
             )
         if self.generation != captured.generation:
             raise ModeloWorkCaptureError(
                 translated_message="errors.refused.modelo_work_capture_not_current",
                 context={"reason": "capture_superseded"},
+                precondition_verdict=work_list_verdict("work_capture_superseded"),
             )
         return self
 
@@ -84,6 +88,7 @@ def _require_work_capture_process_domain(domain: str) -> None:
         raise ModeloWorkCaptureError(
             translated_message="errors.refused.modelo_work_capture_not_current",
             context={"reason": "forked_process"},
+            precondition_verdict=caller_defect_verdict("work_capture_forked_process"),
         )
     with _work_capture_lock:
         known = domain in _work_capture_domains
@@ -91,6 +96,7 @@ def _require_work_capture_process_domain(domain: str) -> None:
         raise ModeloWorkCaptureError(
             translated_message="errors.refused.modelo_work_capture_not_current",
             context={"reason": "foreign_process_incarnation"},
+            precondition_verdict=caller_defect_verdict("work_capture_foreign_incarnation"),
         )
 
 
@@ -165,6 +171,7 @@ def work_capture_observation(
     raise ModeloWorkCaptureError(
         translated_message="errors.refused.modelo_work_capture_not_current",
         context={"attempts": _WORK_CAPTURE_MAX_ATTEMPTS},
+        precondition_verdict=work_list_verdict("work_capture_unstable"),
     )
 
 

@@ -58,8 +58,10 @@ from .action_errors import (
     ExternalModeloImportError,
     StoredCalculationDriftError,
 )
+from .calculation_input_refusal_doors import amendment_casillas_listing_verdict
 from .filing_import_refusal_profiles import FilingImportRefusalCause
 from .filing_import_refusals import filing_import_failure
+from .refusal_door_verdicts import registry_defect_verdict
 from .registry_input_refusals import (
     RegistryInputCondition,
     casilla_value_arguments,
@@ -229,6 +231,7 @@ def reject_incomplete_amendment_casillas(
                 "period": period.registry_token,
                 "snapshot_present": False,
             },
+            precondition_verdict=registry_defect_verdict("amendment_snapshot"),
         )
     required, _ = required_optional
     missing = sorted(casilla_id for casilla_id in required if casilla_id not in casilla_values)
@@ -241,6 +244,7 @@ def reject_incomplete_amendment_casillas(
                 "period": period.registry_token,
                 "missing_casilla_ids": ", ".join(missing),
             },
+            precondition_verdict=amendment_casillas_listing_verdict(str(modelo), filing_year, period.registry_token),
         )
 
 

@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId, validated_casilla_id_map
-from ...core.errors.hierarchy import TerminalPreconditionErrorMixin, pydantic_validation_boundary
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex, sha256_hex
@@ -66,7 +66,6 @@ from ...domain.filing.errors import FilingExportError
 from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from ..filing.shared_owner_refusal import refuse_written_shared_owners
-from ..operator_actions.models import PreconditionVerdict
 from .m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
     build_m145_communication_service_contract,
@@ -105,9 +104,7 @@ class M145CommunicationRecordAmbiguousError(M145CommunicationServiceError):
     """Raised when a Modelo 145 communication record prefix matches multiple records."""
 
 
-class M145CommunicationRecordValidationError(
-    TerminalPreconditionErrorMixin[PreconditionVerdict], M145CommunicationServiceError
-):
+class M145CommunicationRecordValidationError(M145CommunicationServiceError):
     """Raised when a Modelo 145 communication operation is blocked by validation.
 
     Each raise site carries the door of its cause: the operator's decision for
@@ -116,9 +113,7 @@ class M145CommunicationRecordValidationError(
     """
 
 
-class M145CommunicationRecordExportError(
-    TerminalPreconditionErrorMixin[PreconditionVerdict], M145CommunicationServiceError
-):
+class M145CommunicationRecordExportError(M145CommunicationServiceError):
     """Raised when a Modelo 145 communication export cannot be rendered.
 
     A record the encoder cannot render is the operator's decision; an export

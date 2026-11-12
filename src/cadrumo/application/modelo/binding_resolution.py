@@ -53,7 +53,9 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.filing_record import FilingDeclarationKind
 from ..aggregation.source_mesh import CalculationSourceResolution
 from .borrador_binding import Modelo100BorradorSourceResolver
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
 from .calculation_route import require_calculation_route_resolver
+from .refusal_door_verdicts import caller_defect_verdict, registry_defect_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -261,6 +263,7 @@ def _reject_binding_channel_mismatch(
     if misrouted_to_decimal:
         raise ModeloError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=caller_defect_verdict("binding_channel_decimal"),
             context={
                 "misrouted_binding_ids": ", ".join(misrouted_to_decimal),
                 "expected_input_channel": "enum",
@@ -274,6 +277,7 @@ def _reject_binding_channel_mismatch(
     if misrouted_to_enum:
         raise ModeloError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=caller_defect_verdict("binding_channel_enum"),
             context={
                 "misrouted_binding_ids": ", ".join(misrouted_to_enum),
                 "expected_input_channel": "decimal",
@@ -308,6 +312,7 @@ def _reject_boolean_binding_channel_mismatch(
         return
     raise ModeloError(
         translated_message="errors.error.error_modelos",
+        precondition_verdict=caller_defect_verdict("binding_channel_boolean"),
         context={
             "misrouted_binding_ids": ", ".join(misrouted),
             "expected_input_channel": "boolean",
@@ -412,13 +417,18 @@ def _informational_semantic_role_casilla_id(revision: ModeloRevision, semantic_r
     try:
         casilla_id = casilla_id_for_unique_revision_semantic_role(revision, semantic_role)
     except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+        raise ModeloError(
+            str(exc),
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
     if casilla_id is None:
         return None
     casilla = casillas_by_id(revision).get(casilla_id)
     if casilla is None or casilla.input_kind != InputKind.INFORMATIONAL:
         raise ModeloError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=registry_defect_verdict("informational_semantic_role_casilla"),
             context={
                 "semantic_role": semantic_role,
                 "casilla_id": casilla_id,

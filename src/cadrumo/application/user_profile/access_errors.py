@@ -6,6 +6,7 @@ from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
 from ...core.errors.hierarchy import CadrumoError
 from ..operator_actions.models import PreconditionVerdict
 from .access_refusal_preconditions import access_refusal_verdict
+from .access_refusal_words import access_refusal_message_key
 
 
 class ProfileAccessRefusedError(CadrumoError):
@@ -33,7 +34,7 @@ class ProfileAccessRefusedError(CadrumoError):
         # Every error context copies public attributes; only a refusal that has a holder names one.
         self._holder_operation_id = holder_operation_id
         self._recovery_remaining_seconds = recovery_remaining_seconds
-        super().__init__(str(reason))
+        super().__init__(translated_message=access_refusal_message_key(reason))
 
     @property
     def holder_operation_id(self) -> str | None:

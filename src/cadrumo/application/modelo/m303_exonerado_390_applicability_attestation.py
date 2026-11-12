@@ -38,6 +38,7 @@ from .m303_exonerado_390_attestation_refusal import (
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_ordinary_evidence_coordinate import ordinary_m303_evidence_coordinate_supported
 from .profile_readiness_gate import load_modelo_work_profile
+from .refusal_door_verdicts import caller_defect_verdict, operator_choice_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -61,7 +62,10 @@ class M303Exonerado390ApplicabilityAttestationRequest(BaseModel):
     @model_validator(mode="after")
     def _has_one_filing_coordinate(self) -> M303Exonerado390ApplicabilityAttestationRequest:
         if self.period.filing_year != self.filing_year:
-            raise AttachmentValidationError("Modelo 390 applicability request period disagrees with filing year")
+            raise AttachmentValidationError(
+                "Modelo 390 applicability request period disagrees with filing year",
+                precondition_verdict=operator_choice_verdict("m390_attestation_period"),
+            )
         return self
 
 
@@ -76,7 +80,10 @@ class M303Exonerado390ApplicabilityAttestationAdmission(BaseModel):
     @model_validator(mode="after")
     def _attachment_id_matches_digest(self) -> M303Exonerado390ApplicabilityAttestationAdmission:
         if self.attachment_id != self.sha256:
-            raise AttachmentValidationError("Modelo 390 applicability attachment identity does not match its digest")
+            raise AttachmentValidationError(
+                "Modelo 390 applicability attachment identity does not match its digest",
+                precondition_verdict=caller_defect_verdict("m390_attestation_digest"),
+            )
         return self
 
     def filing_evidence_reference(self) -> FilingEvidenceReference:

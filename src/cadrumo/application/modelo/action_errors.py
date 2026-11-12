@@ -33,7 +33,6 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 
-from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.modelos.errors import ModeloError
@@ -74,6 +73,7 @@ class WorkUnitNotFoundError(ModeloError):
     """
 
     @property
+    @override
     def terminal_precondition_verdict(self) -> PreconditionVerdict:
         """Expose the door of an absent work unit."""
         return work_unit_absent_failure().verdict
@@ -99,11 +99,13 @@ class ModeloPreconditionErrorMixin(_ModeloPreconditionErrorBase):
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
         precondition_failure: ModeloPreconditionFailure | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
         super().__init__(
             message,
             context=context,
             translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
         )
         self._precondition_failure = precondition_failure
 
@@ -113,10 +115,14 @@ class ModeloPreconditionErrorMixin(_ModeloPreconditionErrorBase):
         return self._precondition_failure
 
     @property
+    @override
     def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
         """Expose the one application-owned verdict to the generic CLI boundary."""
         failure = self.precondition_failure
-        return None if failure is None else failure.verdict
+        if failure is not None:
+            return failure.verdict
+        stated = super().terminal_precondition_verdict
+        return stated if isinstance(stated, PreconditionVerdict) else None
 
 
 class WorkUnitAlreadyDiscardedError(ModeloPreconditionErrorMixin, ModeloError):
@@ -418,8 +424,12 @@ class ModeloWorkflowGateError(ModeloError):
             Renders the primitive context without serialising the live result.
     """
 
-    def __init__(self, result: WorkflowResult) -> None:
-        """Initialize the error from the aborted workflow result, deriving its rendered context."""
+    def __init__(self, result: WorkflowResult, *, precondition_verdict: PreconditionVerdict | None = None) -> None:
+        """Initialize the error from the aborted workflow result, deriving its rendered context.
+
+        ``precondition_verdict`` is the verdict the run already persisted; the error serves
+        the run's own, so a raise site restating it changes nothing.
+        """
         self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
         # An empty obligation window has its own registered copy, which says
@@ -434,6 +444,7 @@ class ModeloWorkflowGateError(ModeloError):
                 "abort_code": reason,
                 "stage": result.final_stage.value,
             },
+            precondition_verdict=precondition_verdict,
         )
 
     @property
@@ -442,6 +453,7 @@ class ModeloWorkflowGateError(ModeloError):
         return self._result
 
     @property
+    @override
     def terminal_precondition_verdict(self) -> PreconditionVerdict:
         """Return the persisted terminal verdict without exposing the live run.
 
@@ -456,7 +468,7 @@ class ModeloWorkflowGateError(ModeloError):
         return verdict
 
 
-class AmendmentOverrideCasillaError(TerminalPreconditionErrorMixin[object], ModeloError):
+class AmendmentOverrideCasillaError(ModeloError):
     """Raised when an amendment override targets an undeclared casilla id.
 
     Each raise site carries the verdict of its cause: the declared-casilla

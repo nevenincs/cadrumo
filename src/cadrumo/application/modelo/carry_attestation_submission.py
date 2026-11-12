@@ -15,6 +15,7 @@ from collections.abc import Iterable
 from typing import Final
 
 from ...domain.modelos.errors import ModeloError
+from ..operator_actions.models import PreconditionVerdict
 from .edit_contract import ModeloEditMutationFamily
 from .edit_models import (
     ModeloBindingEditIntentV1,
@@ -23,6 +24,7 @@ from .edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditSubmissionV1,
 )
+from .refusal_door_verdicts import operator_choice_verdict
 from .work_form_models import ModeloFormCarryAttestation
 
 _NOTHING_OPEN_MESSAGE_KEY: Final[str] = "application.modelo.errors.prior_carries_nothing_open"
@@ -35,11 +37,12 @@ class ModeloPriorCarryNothingOpenError(ModeloError):
     an earlier statement, or the declaration reads none. Nothing was staged.
     """
 
-    def __init__(self, *, modelo: str, filing_year: int) -> None:
+    def __init__(self, *, modelo: str, filing_year: int, precondition_verdict: PreconditionVerdict) -> None:
         """Name the declaration the filer asked about."""
         super().__init__(
             translated_message=_NOTHING_OPEN_MESSAGE_KEY,
             context={"modelo": modelo, "filing_year": filing_year},
+            precondition_verdict=precondition_verdict,
         )
 
 
@@ -53,7 +56,11 @@ def prior_carry_attestation_submission(
     """
     binding_ids = sorted({binding_id for attestation in attestations for binding_id in attestation.binding_ids})
     if not binding_ids:
-        raise ModeloPriorCarryNothingOpenError(modelo=str(baseline.modelo), filing_year=baseline.filing_year)
+        raise ModeloPriorCarryNothingOpenError(
+            modelo=str(baseline.modelo),
+            filing_year=baseline.filing_year,
+            precondition_verdict=operator_choice_verdict("prior_carry_nothing_open"),
+        )
     return ModeloEditSubmissionV1(
         baseline=baseline,
         mutation_family=ModeloEditMutationFamily.CALCULATE,

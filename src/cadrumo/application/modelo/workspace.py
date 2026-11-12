@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError, TerminalPreconditionErrorMixin
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.period import Period
@@ -22,6 +22,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..operator_actions.models import ActionReference
+from .refusal_door_verdicts import caller_defect_verdict
 from .stored_data_integrity import StoredDataIntegrityMixin
 from .work_addressing import (
     ModeloExactWorkUnitTarget,
@@ -97,7 +98,7 @@ class ModeloWorkspaceAbsentReadinessProjectionError(StoredDataIntegrityMixin, Ca
     integrity_record = "workspace_readiness_projection"
 
 
-class ModeloWorkspaceUnresolvedWorkError(CadrumoError):
+class ModeloWorkspaceUnresolvedWorkError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Raised when a workspace read reaches an unresolved work selection."""
 
 
@@ -696,6 +697,7 @@ def resolved_obligation(resolution: ModeloWorkResolution) -> tuple[ModeloCode, i
     if resolution.modelo is None or resolution.filing_year is None or resolution.period is None:
         raise ModeloWorkspaceUnresolvedWorkError(
             "work selection resolved without a complete modelo/ejercicio/period address",
+            precondition_verdict=caller_defect_verdict("workspace_unresolved_work"),
         )
     return resolution.modelo, resolution.filing_year, resolution.period
 

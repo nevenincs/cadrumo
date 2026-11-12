@@ -11,7 +11,6 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal
-from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -51,7 +50,7 @@ if TYPE_CHECKING:
 _LAST_MONTH = 12
 
 
-class ProfileBindingResolutionError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloError):
+class ProfileBindingResolutionError(ModeloError):
     """Raised when a profile-sourced binding cannot be resolved for a calculation.
 
     Each raise site carries the door of its cause: the profile questions for an

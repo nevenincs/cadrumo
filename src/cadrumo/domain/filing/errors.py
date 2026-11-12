@@ -12,7 +12,7 @@ from ...core.errors.hierarchy import CadrumoError, CoreValidationError, Terminal
 from ...core.text_fold import code_point_label
 
 
-class ModeloDraftError(CadrumoError):
+class ModeloDraftError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base class for every error raised inside :mod:`domain.filing`."""
 
 
@@ -44,7 +44,7 @@ class ModeloImportError(ModeloDraftError):
     """Raised when importing a filing from a justificante PDF fails."""
 
 
-class FilingExportError(TerminalPreconditionErrorMixin[object], ModeloDraftError):
+class FilingExportError(ModeloDraftError):
     """Raised when exporting a draft to an AEAT wire format fails.
 
     A refusal may carry the typed verdict that says whether the filer's data,

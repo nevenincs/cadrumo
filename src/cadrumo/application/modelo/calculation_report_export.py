@@ -79,7 +79,9 @@ from .export_contracts import ModeloExportNoActiveBucketError
 from .export_ports import ModeloExportPorts
 from .export_preparation import envelope_stamped_software_identity, require_exportable_revision_state
 from .export_sink import LocalFileExportReceipt, LocalFileExportSink
+from .lifecycle_view_refusal_doors import no_active_profile_verdict, profile_facts_verdict
 from .profile_export_binding import resolve_export_identity
+from .refusal_door_verdicts import operator_choice_verdict
 from .review_package_signing import ensure_review_package_signing_keypair
 from .work_review import build_modelo_work_review_casillas
 
@@ -239,12 +241,14 @@ def _taxpayer_identity(*, active_bucket_id: str, operation: PinnedAuthorityOpera
         raise ModeloCalculationReportTaxpayerUnknownError(
             translated_message="application.modelo.errors.calculation_report_taxpayer_unknown",
             context={"bucket_id": active_bucket_id},
+            precondition_verdict=profile_facts_verdict(("identity.tax_id", "identity.legal_name")),
         )
     presenter, taxpayer = identity
     if taxpayer.full_name is None:
         raise ModeloCalculationReportTaxpayerUnknownError(
             translated_message="application.modelo.errors.calculation_report_taxpayer_unknown",
             context={"bucket_id": active_bucket_id},
+            precondition_verdict=profile_facts_verdict(("identity.legal_name",)),
         )
     return presenter.tax_id, taxpayer.full_name
 
@@ -409,11 +413,13 @@ def export_modelo_calculation_report(
             raise ExportFormatError(
                 translated_message="errors.refused.refused_export_format",
                 context={"export_format": str(command.document_format)},
+                precondition_verdict=operator_choice_verdict("report_document_format"),
             )
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
             translated_message="application.modelo.errors.export_no_active_bucket",
+            precondition_verdict=no_active_profile_verdict("report_export_bucket"),
         )
     sink = LocalFileExportSink(path=command.output_path, replace_existing=command.replace_existing)
     sink.require_writable()

@@ -74,10 +74,12 @@ from .calculate_input_validation import (
     validated_binding_input_channel,
 )
 from .calculation_action_ports import CalculationActionPorts
+from .calculation_input_refusal_doors import calculate_binding_not_overridable_verdict
 from .calculation_revision_queries import list_calculation_revisions
 from .calculation_route import require_calculation_route_resolver
 from .calculation_source_guards import reject_caller_overrides_of_source_bindings
 from .calculation_source_staging import add_expected_missing_binding_diagnostics
+from .lifecycle_view_refusal_doors import profile_facts_verdict
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 from .profile_binding import resolve_profile_sourced_bindings
@@ -91,6 +93,7 @@ from .projection_unresolved import (
     unresolved_binding_rows,
     unresolved_casilla_rows,
 )
+from .refusal_door_verdicts import caller_defect_verdict, operator_choice_verdict
 from .registry_helpers import validate_casilla_input_ids
 from .registry_input_refusals import RegistryInputCondition, registry_input_verdict, registry_integrity_verdict
 from .work_form_wording import modelo_number, period_words
@@ -127,7 +130,7 @@ _REGION_BINDING_ID = "renta-profile-tax-residence-ccaa"
 """The value source that carries the filer's tax-residence region into the annual return."""
 
 
-class ModeloProjectionError(CadrumoError):
+class ModeloProjectionError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base class for application-level projection failures."""
 
     def __init__(
@@ -136,18 +139,18 @@ class ModeloProjectionError(CadrumoError):
         *,
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
+        precondition_verdict: object | None = None,
     ) -> None:
         """Initialize the error, falling back to the translated message or class name."""
         super().__init__(
             message or translated_message or self.__class__.__name__,
             context=dict(context or {}),
             translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
         )
 
 
-class ModeloProjectNoM130UnitsError(
-    OperationNextStepErrorMixin, TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError
-):
+class ModeloProjectNoM130UnitsError(OperationNextStepErrorMixin, ModeloProjectionError):
     """Raised when a year-end projection has no quarterly Modelo 130 work units.
 
     The verdict names creating the first quarter as the remedy, and the error
@@ -156,9 +159,7 @@ class ModeloProjectNoM130UnitsError(
     """
 
 
-class ModeloProjectNoM130RevisionsError(
-    OperationNextStepErrorMixin, TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError
-):
+class ModeloProjectNoM130RevisionsError(OperationNextStepErrorMixin, ModeloProjectionError):
     """Raised when Modelo 130 work units exist but have no calculation revisions.
 
     The verdict names calculating the earliest uncalculated quarter as the
@@ -166,7 +167,7 @@ class ModeloProjectNoM130RevisionsError(
     """
 
 
-class ModeloProjectRegionUnstatedError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError):
+class ModeloProjectRegionUnstatedError(ModeloProjectionError):
     """Raised when a projection names no region and the profile's tax residence states none.
 
     A region is never guessed: the filer's own tax residence decides which
@@ -175,7 +176,7 @@ class ModeloProjectRegionUnstatedError(TerminalPreconditionErrorMixin[Preconditi
     """
 
 
-class ModeloProjectRevisionNotMappedError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError):
+class ModeloProjectRevisionNotMappedError(ModeloProjectionError):
     """Raised when the registry's projection declaration does not name the annual return's revision.
 
     The declaration was authored against one revision of the annual return. A
@@ -289,6 +290,7 @@ def decimal_overrides(
             raise ModeloProjectInvalidDecimalOverrideError(
                 context={"key": key, "value": value},
                 translated_message=translated_message,
+                precondition_verdict=operator_choice_verdict("projection_decimal_override"),
             )
         values[key] = parsed
     return values
@@ -548,6 +550,7 @@ def _m130_annual_projection(
         raise ModeloProjectionError(
             translated_message="errors.error.modelo_projection",
             context={"modelo": declaration.source_modelo, "period_is_quarter": False},
+            precondition_verdict=caller_defect_verdict("projection_quarter_period"),
         )
     _require_quarters_give_their_boxes(
         quarters, declaration=declaration, latest=latest_period, ports=ports, operation=operation
@@ -622,6 +625,7 @@ def parse_projection_binding_overrides(
                 "... --taxpayer-birth-date YYYY-MM-DD`) and recalculate.",
                 context={"key": binding_id},
                 translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
+                precondition_verdict=calculate_binding_not_overridable_verdict(binding_id, reason="date_sourced"),
             )
         key, channel = validated_binding_input_channel(binding_id, revision, known_binding_ids, enum_channel_ids)
         if channel == "enum":
@@ -796,6 +800,7 @@ def _raise_if_absent_profile_facts_block_projection(
     raise ModeloProjectionError(
         translated_message="application.modelo.projection_words.profile_fact_missing",
         context={"profile_facts": ", ".join(fact_paths), "casilla_produced": False},
+        precondition_verdict=profile_facts_verdict(tuple(fact_paths), modelo="100"),
     )
 
 
@@ -898,6 +903,7 @@ def m100_projection_result(
         raise ModeloProjectResultUnresolvedError(
             translated_message="application.modelo.projection_words.result_unresolved",
             context={"boxes": ", ".join(unresolved)},
+            precondition_verdict=operator_choice_verdict("projection_result_unresolved"),
         )
     return ModeloProjectM100Projection(
         base_liquidable_general=values[declaration.base_liquidable_general],

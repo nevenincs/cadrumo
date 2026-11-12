@@ -32,6 +32,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..operator_actions.models import ActionReference
 from ..state_projection_models import ModeloReadinessRequest, ProjectionModeloReadiness
+from .refusal_door_verdicts import caller_defect_verdict
 from .stored_data_integrity import StoredDataIntegrityMixin
 from .work_selection import (
     ModeloWorkSelectionMode,
@@ -590,7 +591,8 @@ def _require_graded_snapshot_cursor(cursor: ModeloWorkspaceCursorV1 | None) -> N
     if cursor is not None and cursor.facet not in _GRADED_SNAPSHOT_PAGINATED_FACETS:
         raise ModeloWorkspaceStaleCursorError(
             "graded snapshot paginates the schema, materialization and provenance facets; "
-            f"cursor names {cursor.facet.value}"
+            f"cursor names {cursor.facet.value}",
+            precondition_verdict=caller_defect_verdict("workspace_graded_cursor_facet"),
         )
 
 

@@ -18,8 +18,12 @@ from ...core.errors.hierarchy import CadrumoError, CoreValidationError, Terminal
 from ...core.operator_action_enums import NoRecoveryOutcome
 
 
-class ModeloError(CadrumoError):
-    """Base error for the modelos subpackage."""
+class ModeloError(TerminalPreconditionErrorMixin[object], CadrumoError):
+    """Base error for the modelos subpackage.
+
+    A raise site states the door of its refusal with ``precondition_verdict``; a site
+    that states none carries no door of its own.
+    """
 
 
 class PensionReduccionError(CoreValidationError):
@@ -66,6 +70,7 @@ class ModeloValidationError(ModeloError):
         *,
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
+        precondition_verdict: object | None = None,
     ) -> None: ...
 
     @overload
@@ -87,9 +92,15 @@ class ModeloValidationError(ModeloError):
         translated_message: str | None = None,
         no_recovery_outcome: Literal[NoRecoveryOutcome.TERMINAL] | None = None,
         record: ModeloValidatedRecord | None = None,
+        precondition_verdict: object | None = None,
     ) -> None:
         """Keep the record a terminal site checked, without importing application policy."""
-        super().__init__(message, context=context, translated_message=translated_message)
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
         self._terminal_record = record if no_recovery_outcome is NoRecoveryOutcome.TERMINAL else None
 
     @property
@@ -155,7 +166,7 @@ class ModeloExportRequiredRecordAbsentError(ModeloExportError):
     """
 
 
-class ModeloExportDeclaredPartyNameError(TerminalPreconditionErrorMixin[object], ModeloExportError):
+class ModeloExportDeclaredPartyNameError(ModeloExportError):
     """Refused: a party-name slot has no declared filing name the record design can take.
 
     The design fills the slot from the party's own name parts and allows no

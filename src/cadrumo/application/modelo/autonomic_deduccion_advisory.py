@@ -63,6 +63,7 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import profile_fact_index
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
 from .profile_derived_facts import (
     is_indeterminate_unidad_familiar,
     is_madrid_autonomic_deduccion_filing_year,
@@ -155,7 +156,11 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     try:
         casilla_id = casilla_id_for_unique_semantic_role(snapshot, _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE)
     except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+        raise ModeloError(
+            str(exc),
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
     if casilla_id is None:
         return None
 

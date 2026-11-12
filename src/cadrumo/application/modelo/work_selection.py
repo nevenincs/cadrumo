@@ -23,6 +23,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode, coerce_modelo_code
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
+from .lifecycle_view_refusal_doors import no_active_profile_verdict, work_list_verdict
 
 _RevisionId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 _OperatorWorkUnitLookupId = Annotated[
@@ -223,6 +224,7 @@ def _resolve_exact_work_unit_selection(
         raise ModeloWorkUnitNotFoundError(
             translated_message="errors.error.modelo_work_selector_unit_not_found",
             context={"work_unit_id": request.work_unit_id},
+            precondition_verdict=work_list_verdict("work_unit_selector"),
         )
     work_unit = next(iter(matches))
     _assert_exact_coordinates(work_unit, request, bucket_id=bucket_id)
@@ -262,6 +264,7 @@ def _resolve_operator_work_unit_selection(
         raise ModeloWorkUnitNotFoundError(
             translated_message="errors.error.modelo_work_selector_unit_not_found",
             context={"work_unit_id": operator_id},
+            precondition_verdict=work_list_verdict("work_unit_selector"),
         )
     if len(matches) > 1:
         raise ModeloWorkVisibleTargetAmbiguousError(
@@ -346,6 +349,7 @@ def resolve_modelo_work_bucket(request: ModeloWorkSelectorRequest) -> str:
         raise ModeloWorkNoActiveBucketError(
             translated_message="errors.refused.modelo_work_selector_no_active_bucket",
             context={"active_bucket_present": False},
+            precondition_verdict=no_active_profile_verdict("work_selector_bucket"),
         )
     return active_bucket_id
 
