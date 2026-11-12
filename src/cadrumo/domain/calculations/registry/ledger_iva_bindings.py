@@ -49,9 +49,13 @@ from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .iva_cash_accounting_vocabulary import require_iva_cash_accounting_treatment
-from .iva_category_catalogue import resolve_iva_category_catalogue
+from .iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
 from .iva_deduction_catalogue import require_iva_deduction_fact_kind
-from .iva_flow_catalogue import require_iva_flow_direction, resolve_iva_flow_direction_catalogue
+from .iva_flow_catalogue import (
+    IvaFlowDirectionCatalogue,
+    require_iva_flow_direction,
+    resolve_iva_flow_direction_catalogue,
+)
 from .iva_legal_vocabulary import require_iva_exemption_article
 from .iva_rate_kind_catalogue import require_iva_rate_kind
 from .ledger_binding_resolution import (
@@ -476,6 +480,22 @@ def ledger_iva_selector_vocabulary_failures(
     """
     categories = resolve_iva_category_catalogue(effective_date=effective_date, authority=authority)
     flows = resolve_iva_flow_direction_catalogue(effective_date=effective_date, authority=authority)
+    checks = _selector_membership_checks(
+        selector, categories=categories, flows=flows, effective_date=effective_date, authority=authority
+    )
+    failures = tuple(refusal for refusal in map(_refusal, checks) if refusal is not None)
+    return failures or _selector_axis_rule_failures(selector, categories=categories, flows=flows)
+
+
+def _selector_membership_checks(
+    selector: LedgerIvaProvider,
+    *,
+    categories: IvaCategoryCatalogue,
+    flows: IvaFlowDirectionCatalogue,
+    effective_date: date,
+    authority: GovernedFactSource,
+) -> list[Callable[[], object]]:
+    """Return one deferred vocabulary lookup per token the selector names."""
     checks: list[Callable[[], object]] = [
         partial(categories.require, str(category)) for category in selector.categories
     ]
@@ -492,9 +512,17 @@ def ledger_iva_selector_vocabulary_failures(
         partial(require_iva_exemption_article, token, effective_date=effective_date, authority=authority)
         for token in selector.exemption_articles or ()
     )
-    failures = [refusal for refusal in map(_refusal, checks) if refusal is not None]
-    if failures:
-        return tuple(failures)
+    return checks
+
+
+def _selector_axis_rule_failures(
+    selector: LedgerIvaProvider,
+    *,
+    categories: IvaCategoryCatalogue,
+    flows: IvaFlowDirectionCatalogue,
+) -> tuple[str, ...]:
+    """Return the refusals of the two axis rules the dated vocabularies decide."""
+    failures: list[str] = []
     if selector.deduction_fact_kinds is not None and not flows.is_deducible(selector.flow_direction):
         failures.append(
             f"deduction_fact_kinds selector requires a deducible flow_direction; got {selector.flow_direction.value!r}",
