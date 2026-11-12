@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from ....core.time.clock import today_madrid
 from ...iva.schema import IvaArt69DosService, IvaExemptionArticle
 from .errors import RegistryValidationError
 from .facts.resolution import UNIQUE_REFERENCES_REQUIREMENT, required_mapping_entry, unique_mapping_tokens
@@ -88,11 +87,11 @@ class IvaArt69DosServiceCatalogue:
 
 def resolve_iva_exemption_article_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaExemptionArticleCatalogue:
     """Resolve the dated IVA exemption-article vocabulary from governed facts."""
-    entries = resolve_scoped_schema_entries(effective_date=effective_date or today_madrid(), authority=authority)
+    entries = resolve_scoped_schema_entries(effective_date=effective_date, authority=authority)
     definitions: list[IvaExemptionArticleDefinition] = []
     for raw_token in unique_mapping_tokens(
         entries, _EXEMPTION_ORDER_KEY, subject=SCHEMA_VOCABULARY_SUBJECT, requirement=UNIQUE_TOKENS_REQUIREMENT
@@ -118,11 +117,11 @@ def resolve_iva_exemption_article_catalogue(
 
 def resolve_iva_art69_dos_service_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaArt69DosServiceCatalogue:
     """Resolve the dated Art. 69.Dos service vocabulary from governed facts."""
-    entries = resolve_scoped_schema_entries(effective_date=effective_date or today_madrid(), authority=authority)
+    entries = resolve_scoped_schema_entries(effective_date=effective_date, authority=authority)
     definitions: list[IvaArt69DosServiceDefinition] = []
     for raw_token in unique_mapping_tokens(
         entries, _SERVICE_ORDER_KEY, subject=SCHEMA_VOCABULARY_SUBJECT, requirement=UNIQUE_TOKENS_REQUIREMENT
@@ -149,7 +148,7 @@ def resolve_iva_art69_dos_service_catalogue(
 def require_iva_exemption_article(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaExemptionArticle:
     """Validate one value against the dated IVA exemption-article vocabulary."""

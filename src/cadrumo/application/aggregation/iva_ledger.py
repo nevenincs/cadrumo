@@ -79,7 +79,7 @@ from ...domain.iva.schema import (
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister
 from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
-from ...domain.transactions.dates import transaction_filing_date
+from ...domain.transactions.dates import transaction_filing_date, transaction_operation_date
 from ...domain.transactions.enums import (
     BUSINESS_BEARING_STATES,
     BusinessClassification,
@@ -865,7 +865,9 @@ def _operation_after_movement(transaction: Transaction, *, operation: PinnedAuth
     return (
         operation_date is not None
         and operation_date > transaction_filing_date(transaction)
-        and is_iva_cash_accounting_none(transaction.cash_accounting_treatment, authority=operation)
+        and is_iva_cash_accounting_none(
+            transaction.cash_accounting_treatment, transaction_operation_date(transaction), authority=operation
+        )
     )
 
 

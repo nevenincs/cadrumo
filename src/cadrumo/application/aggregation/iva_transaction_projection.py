@@ -164,7 +164,7 @@ def iva_observation(
 ) -> IvaLedgerObservation:
     """Build an observation from the admitted transaction facts."""
     if cash_accounting_treatment is None:
-        cash_accounting_treatment = default_iva_cash_accounting_treatment(authority=operation)
+        cash_accounting_treatment = default_iva_cash_accounting_treatment(transaction_date, authority=operation)
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=transaction_date,

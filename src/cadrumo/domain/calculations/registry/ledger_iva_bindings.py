@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, Protocol
+from functools import partial
+from typing import TYPE_CHECKING, Annotated, Final, Literal, NamedTuple, Protocol
 
 from pydantic import (
     BaseModel,
@@ -21,7 +23,6 @@ from ....core.aggregation import BindingSourceKind
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.time.clock import today_madrid
 from ....core.type_guards import is_object_list_or_tuple
 from ....core.unit_proportion import UnitProportion
 from ...iva.components import registry_category_projection
@@ -47,18 +48,12 @@ from ...iva.schema import (
 from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .iva_cash_accounting_vocabulary import (
-    require_iva_cash_accounting_treatment,
-    require_registry_declared_iva_cash_accounting_treatment,
-)
+from .iva_cash_accounting_vocabulary import require_iva_cash_accounting_treatment
 from .iva_category_catalogue import resolve_iva_category_catalogue
 from .iva_deduction_catalogue import require_iva_deduction_fact_kind
-from .iva_flow_catalogue import require_iva_flow_direction, require_registry_declared_iva_flow_direction
+from .iva_flow_catalogue import require_iva_flow_direction, resolve_iva_flow_direction_catalogue
 from .iva_legal_vocabulary import require_iva_exemption_article
-from .iva_rate_kind_catalogue import (
-    require_iva_rate_kind,
-    require_registry_declared_iva_rate_kind,
-)
+from .iva_rate_kind_catalogue import require_iva_rate_kind
 from .ledger_binding_resolution import (
     UnroutedLedgerQuantity,
     resolve_ledger_family_binding_values,
@@ -69,6 +64,7 @@ from .ledger_binding_selector_support import LEDGER_IVA_FACTS, LedgerIvaFact, Le
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
     ledger_binding_selector,
+    ledger_selector_vocabulary_date,
     require_ledger_aggregation_op,
     require_ledger_fact,
 )
@@ -77,6 +73,7 @@ from .quantity_screen_enrolment import assert_quantity_readers_cover_independent
 from .schema_base import coerce_decimal_tuple, coerce_enum_tuple
 
 if TYPE_CHECKING:
+    from .governed_fact_scope import GovernedFactSource
     from .schema import BindingDefinition, ModeloRevision
 
 
@@ -101,13 +98,41 @@ def _coerce_cash_accounting_treatment_codes(value: object) -> object:
     return value
 
 
-def _flow_direction_registry_declared(value: object) -> IvaFlowDirection:
-    """Refuse a binding flow token absent from the facts being validated.
+_SELECTOR_TOKEN: Final = re.compile(r"[a-z][a-z0-9_]*")
+"""The closed form every authored IVA selector token takes."""
 
-    A selector carries no governing date of its own, so the vocabulary is read
-    on the validating clock date.
+
+def _project_selector_flow_direction(value: object) -> IvaFlowDirection:
+    """Project a selector's flow token by its form alone.
+
+    A selector carries no governing date of its own, so its membership in the
+    dated flow vocabulary is checked by :func:`ledger_iva_revision_vocabulary_failures`
+    on the date of the revision that declares it.
     """
-    return require_registry_declared_iva_flow_direction(value, effective_date=today_madrid())
+    if isinstance(value, IvaFlowDirection):
+        return value
+    if not isinstance(value, str) or _SELECTOR_TOKEN.fullmatch(value) is None:
+        raise RegistryValidationError("IVA flow direction must be a lowercase registry token")
+    return IvaFlowDirection.from_registry(value)
+
+
+def _observation_date(data: Mapping[str, object], subject: str) -> date:
+    """Return the validated ``transaction_date`` an observation's dated vocabulary is read on.
+
+    Raises:
+        RegistryValidationError: When the observation has no valid transaction date.
+    """
+    transaction_date = data.get("transaction_date")
+    if not isinstance(transaction_date, date):
+        raise RegistryValidationError(f"{subject} requires the observation's transaction_date")
+    return transaction_date
+
+
+def _default_observation_cash_accounting_treatment(data: Mapping[str, object]) -> IvaCashAccountingTreatment:
+    """Return the ordinary cash-accounting token in force on the observation's date."""
+    return default_iva_cash_accounting_treatment(
+        _observation_date(data, "the default cash-accounting treatment"),
+    )
 
 
 def _project_deduction_fact_kinds(value: object) -> object:
@@ -181,7 +206,9 @@ class IvaLedgerObservation(BaseModel):
     390 binding selectors filter prorrata-linked observations without
     a manual join against the parallel ``prorrata_references`` tuple.
     """
-    cash_accounting_treatment: IvaCashAccountingTreatment = Field(default_factory=default_iva_cash_accounting_treatment)
+    cash_accounting_treatment: IvaCashAccountingTreatment = Field(
+        default_factory=_default_observation_cash_accounting_treatment
+    )
     """Independent criterio-de-caja affiliation for this projection."""
     observation_role: IvaLedgerObservationRole
     """Whether this is a monetary settlement or an art. 75 information projection.
@@ -230,11 +257,11 @@ class IvaLedgerObservation(BaseModel):
     @field_validator("flow_direction", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _flow_direction_registry_declared(cls, value: object) -> object:
-        """Project raw flow tokens, such as a JSON round trip, through fact 0083."""
+    def _flow_direction_registry_declared(cls, value: object, info: ValidationInfo) -> object:
+        """Project raw flow tokens, such as a JSON round trip, through fact 0083 on the row's date."""
         if isinstance(value, IvaFlowDirection):
             return value
-        return require_iva_flow_direction(value, effective_date=today_madrid())
+        return require_iva_flow_direction(value, effective_date=_observation_date(info.data, "IVA flow direction"))
 
     @field_validator("deduction_fact_kind", mode="before")
     @classmethod
@@ -310,7 +337,7 @@ class LedgerIvaProvider(BaseModel):
     )
     flow_direction: Annotated[
         IvaFlowDirection,
-        BeforeValidator(pydantic_validation_boundary(_flow_direction_registry_declared)),
+        BeforeValidator(pydantic_validation_boundary(_project_selector_flow_direction)),
     ]
     observation_roles: Annotated[
         tuple[IvaLedgerObservationRole, ...],
@@ -365,25 +392,10 @@ class LedgerIvaProvider(BaseModel):
     @field_validator("categories", mode="after")
     @classmethod
     @pydantic_validation_boundary
-    def _categories_registry_declared(cls, value: tuple[IvaCategory, ...]) -> tuple[IvaCategory, ...]:
-        """Refuse category tokens absent from the candidate's governed catalogue."""
-        catalogue = resolve_iva_category_catalogue(effective_date=today_madrid())
-        return tuple(catalogue.require(str(category)) for category in value)
-
-    @field_validator("categories", mode="after")
-    @classmethod
-    @pydantic_validation_boundary
     def _categories_unique(cls, value: tuple[IvaCategory, ...]) -> tuple[IvaCategory, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("categories entries must be unique")
         return value
-
-    @field_validator("rate_kinds", mode="after")
-    @classmethod
-    @pydantic_validation_boundary
-    def _rate_kinds_registry_declared(cls, value: tuple[IvaRateKind, ...]) -> tuple[IvaRateKind, ...]:
-        """Refuse binding rate tiers absent from the IVA facts being validated."""
-        return tuple(require_registry_declared_iva_rate_kind(kind, effective_date=today_madrid()) for kind in value)
 
     @field_validator("rate_kinds", mode="after")
     @classmethod
@@ -400,8 +412,6 @@ class LedgerIvaProvider(BaseModel):
         cls,
         value: tuple[IvaCashAccountingTreatmentCode, ...],
     ) -> tuple[IvaCashAccountingTreatmentCode, ...]:
-        for token in value:
-            require_registry_declared_iva_cash_accounting_treatment(token, effective_date=today_madrid())
         if len(set(value)) != len(value):
             raise RegistryValidationError("cash_accounting_treatments entries must be unique")
         return value
@@ -424,9 +434,6 @@ class LedgerIvaProvider(BaseModel):
         cls,
         value: tuple[IvaExemptionArticle, ...] | None,
     ) -> tuple[IvaExemptionArticle, ...] | None:
-        if value is not None:
-            for token in value:
-                require_iva_exemption_article(token, effective_date=today_madrid())
         if value is not None and len(set(value)) != len(value):
             raise RegistryValidationError("exemption_articles entries must be unique")
         return value
@@ -434,39 +441,92 @@ class LedgerIvaProvider(BaseModel):
     @field_validator("deduction_fact_kinds", mode="after")
     @classmethod
     @pydantic_validation_boundary
-    def _deduction_fact_kinds_unique_on_a_deducible_flow(
+    def _deduction_fact_kinds_unique(
         cls,
         value: tuple[IvaDeductionFactKind, ...] | None,
-        info: ValidationInfo,
     ) -> tuple[IvaDeductionFactKind, ...] | None:
-        # A field validator rather than a model one: an after-model validator
-        # also runs when a built selector is carried into another model, where
-        # no governed-fact scope need be open to read the flow vocabulary.
-        if value is None:
-            return value
-        if len(set(value)) != len(value):
+        if value is not None and len(set(value)) != len(value):
             raise RegistryValidationError("deduction_fact_kinds entries must be unique")
-        flow_direction = info.data.get("flow_direction")
-        if isinstance(flow_direction, IvaFlowDirection) and not is_deducible_flow(
-            flow_direction, effective_date=today_madrid()
-        ):
-            raise RegistryValidationError(
-                f"deduction_fact_kinds selector requires a deducible flow_direction; got {flow_direction.value!r}",
-            )
         return value
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _exemption_article_filter_requires_domestic_exempt(self) -> LedgerIvaProvider:
-        if (
-            self.exemption_articles is not None
-            and resolve_iva_category_catalogue(effective_date=today_madrid()).require("domestic_exempt")
-            not in self.categories
-        ):
-            raise RegistryValidationError(
-                "exemption_articles selector requires DOMESTIC_EXEMPT in categories",
-            )
-        return self
+
+def _refusal(check: Callable[[], object]) -> str | None:
+    """Return the refusal ``check`` raises, or ``None`` when it admits its value."""
+    try:
+        check()
+    except RegistryValidationError as exc:
+        return str(exc)
+    return None
+
+
+def ledger_iva_selector_vocabulary_failures(
+    selector: LedgerIvaProvider,
+    *,
+    effective_date: date,
+    authority: GovernedFactSource,
+) -> tuple[str, ...]:
+    """Return the refusals one IVA selector earns against the vocabulary in force on ``effective_date``.
+
+    The selector model checks only the form of its tokens, because a selector
+    carries no date of its own. Membership in the dated IVA vocabularies, and the
+    two rules those vocabularies decide -- a deduction-kind axis needs a
+    deducible flow, an exemption-article axis needs the domestic exempt
+    category -- are judged here, on the date and against the facts the caller
+    names.
+    """
+    categories = resolve_iva_category_catalogue(effective_date=effective_date, authority=authority)
+    flows = resolve_iva_flow_direction_catalogue(effective_date=effective_date, authority=authority)
+    checks: list[Callable[[], object]] = [
+        partial(categories.require, str(category)) for category in selector.categories
+    ]
+    checks.extend(
+        partial(require_iva_rate_kind, kind, effective_date=effective_date, authority=authority)
+        for kind in selector.rate_kinds
+    )
+    checks.append(partial(flows.require, selector.flow_direction))
+    checks.extend(
+        partial(require_iva_cash_accounting_treatment, token, effective_date=effective_date, authority=authority)
+        for token in selector.cash_accounting_treatments
+    )
+    checks.extend(
+        partial(require_iva_exemption_article, token, effective_date=effective_date, authority=authority)
+        for token in selector.exemption_articles or ()
+    )
+    failures = [refusal for refusal in map(_refusal, checks) if refusal is not None]
+    if failures:
+        return tuple(failures)
+    if selector.deduction_fact_kinds is not None and not flows.is_deducible(selector.flow_direction):
+        failures.append(
+            f"deduction_fact_kinds selector requires a deducible flow_direction; got {selector.flow_direction.value!r}",
+        )
+    if selector.exemption_articles is not None and categories.require("domestic_exempt") not in selector.categories:
+        failures.append("exemption_articles selector requires DOMESTIC_EXEMPT in categories")
+    return tuple(failures)
+
+
+def ledger_iva_revision_vocabulary_failures(
+    revision: ModeloRevision,
+    *,
+    authority: GovernedFactSource,
+) -> list[str]:
+    """Return every IVA selector's dated-vocabulary refusal, read on the revision's start.
+
+    The date is :func:`ledger_selector_vocabulary_date`: the revision's own
+    ``valid_from``, raised to the support floor when the revision starts below it.
+    """
+    on_date = ledger_selector_vocabulary_date(revision, authority.supported_filing_years())
+    if on_date is None:
+        return []
+    return [
+        f"binding {binding.id!r} has malformed IVA selector: {failure}"
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
+        for failure in ledger_iva_selector_vocabulary_failures(
+            provider_member(binding, LedgerIvaProvider),
+            effective_date=on_date,
+            authority=authority,
+        )
+    ]
 
 
 def validate_ledger_iva_aggregation_binding_definition(

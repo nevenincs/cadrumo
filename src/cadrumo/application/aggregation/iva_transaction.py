@@ -178,9 +178,9 @@ def _period_admission_issue(
 ) -> IvaLedgerAggregationIssue | None:
     """Preserve the filing-window refusal before any source-ownership diagnosis."""
     transaction_id = transaction.transaction_id
-    if is_iva_cash_accounting_none(cash_treatment, authority=operation) and not resolved_period.contains(
-        operation_date
-    ):
+    if is_iva_cash_accounting_none(
+        cash_treatment, operation_date, authority=operation
+    ) and not resolved_period.contains(operation_date):
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
@@ -270,6 +270,7 @@ def _cash_accounting_evidence_issue(
             validate_cash_accounting_axis(
                 treatment=transaction.cash_accounting_treatment,
                 operation_date=transaction.operation_date,
+                effective_date=transaction_operation_date(transaction),
                 payment_evidence=transaction.cash_accounting_payment_evidence,
                 taxable_base=transaction.taxable_base,
                 iva_amount=transaction.iva_amount,
@@ -871,7 +872,7 @@ def _cash_accounting_category_issue(
     effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregationIssue | None:
-    if is_iva_cash_accounting_none(transaction.cash_accounting_treatment, authority=operation):
+    if is_iva_cash_accounting_none(transaction.cash_accounting_treatment, effective_date, authority=operation):
         return None
     excluded = registry_category_projection(
         "cash_accounting_excluded",
@@ -1053,7 +1054,7 @@ def _project_iva_transaction(
         base_amount=amounts.base_amount,
         iva_amount=amounts.iva_amount,
     )
-    if not is_iva_cash_accounting_none(context.cash_treatment, authority=operation):
+    if not is_iva_cash_accounting_none(context.cash_treatment, context.operation_date, authority=operation):
         observations = cash_accounting_observations(
             transaction,
             resolved_period=resolved_period,

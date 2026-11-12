@@ -253,7 +253,9 @@ def resolve_m303_supplier_regime_arrival(
         dict.fromkeys(
             observation.ledger_id
             for observation in observations
-            if is_iva_cash_accounting_supplier_regime(observation.cash_accounting_treatment)
+            if is_iva_cash_accounting_supplier_regime(
+                observation.cash_accounting_treatment, observation.transaction_date
+            )
         )
     )
     return M303SupplierRegimeArrival(

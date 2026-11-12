@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from ....core.time.clock import today_madrid
 from ...iva.schema import IvaCashAccountingTreatment
 from .errors import RegistryValidationError
 from .facts.resolution import (
@@ -74,13 +73,11 @@ class IvaCashAccountingTreatmentCatalogue:
 
 def resolve_iva_cash_accounting_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatmentCatalogue:
     """Resolve the dated IVA cash-accounting vocabulary from governed facts."""
-    projections = resolve_scoped_schema_projections(
-        effective_date=effective_date or today_madrid(), authority=authority
-    )
+    projections = resolve_scoped_schema_projections(effective_date=effective_date, authority=authority)
     if projections.cash_accounting:
         return projections.cash_accounting[0]
     entries = projections.entries
@@ -123,7 +120,7 @@ def resolve_iva_cash_accounting_catalogue(
 
 def default_iva_cash_accounting_treatment(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
     """Return the registry-declared default cash-accounting treatment."""
@@ -136,7 +133,7 @@ def default_iva_cash_accounting_treatment(
 def require_iva_cash_accounting_treatment(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
     """Validate one value against the dated cash-accounting vocabulary."""

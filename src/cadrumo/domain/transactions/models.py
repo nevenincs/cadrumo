@@ -40,6 +40,7 @@ from ..calculations.registry.eu_member_state_catalogue import (
     require_eu_member_state,
     resolve_eu_member_state_catalogue,
 )
+from ..calculations.registry.facts.resolution import reading_dated_facts_below_support
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
 from ..calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
@@ -59,6 +60,7 @@ from ..iva.schema import (
 from ..iva.vehicle_use import IvaVehicleUse
 from .cash_accounting_validation import validate_cash_accounting_axis
 from .classification_origin import ClassificationOrigin
+from .dates import transaction_operation_date
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .errors import TransactionValidationError
 from .gross_validation import validate_gross_reconstitution
@@ -305,6 +307,27 @@ def _project_registry_token_field(value: object, info: core_schema.ValidationInf
     if value is None:
         return None
     return _REGISTRY_TOKEN_PROJECTION_BY_FIELD[info.field_name or ""](value, info)
+
+
+def _default_cash_accounting_treatment(data: Mapping[str, object]) -> IvaCashAccountingTreatment:
+    """Return the ordinary cash-accounting token in force on the row's ledger date.
+
+    The default is chosen before ``operation_date`` is validated, so it reads the
+    raw movement's value or booked date: the date a row without a stated devengo
+    selects its registry values on. A row dated before the filing years is still
+    a readable record, so its vocabulary is read as a backward projection.
+
+    Raises:
+        TransactionValidationError: When the raw movement is not available to
+            date the default.
+    """
+    raw = data.get("raw")
+    if not isinstance(raw, RawTransaction):
+        raise TransactionValidationError(
+            "cash_accounting_treatment default requires the transaction's raw movement date",
+        )
+    with reading_dated_facts_below_support():
+        return default_iva_cash_accounting_treatment(raw.value_date or raw.booked_date)
 
 
 #: A UTC lifecycle instant. JSON text is parsed natively; the one check that
@@ -601,7 +624,7 @@ class Transaction(BaseModel):
     exemption_article: IvaExemptionArticle | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
-    cash_accounting_treatment: IvaCashAccountingTreatment = Field(default_factory=default_iva_cash_accounting_treatment)
+    cash_accounting_treatment: IvaCashAccountingTreatment = Field(default_factory=_default_cash_accounting_treatment)
     operation_date: date | None = None
     accrual_date: date | None = None
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = ()
@@ -909,16 +932,22 @@ class Transaction(BaseModel):
         onto the bank movement date. Only the settlement evidence below is
         criterio-de-caja-specific, because only that regime settles a cuota
         across several collections.
+
+        The treatment vocabulary is read on the row's own date. A row dated
+        before the filing years is still a readable record, so that read is a
+        backward projection; no filing reads through it.
         """
-        validate_cash_accounting_axis(
-            treatment=self.cash_accounting_treatment,
-            operation_date=self.operation_date,
-            payment_evidence=self.cash_accounting_payment_evidence,
-            taxable_base=self.taxable_base,
-            iva_amount=self.iva_amount,
-            recargo_amount=self.recargo_amount,
-            direction=self.direction,
-        )
+        with reading_dated_facts_below_support():
+            validate_cash_accounting_axis(
+                treatment=self.cash_accounting_treatment,
+                operation_date=self.operation_date,
+                effective_date=transaction_operation_date(self),
+                payment_evidence=self.cash_accounting_payment_evidence,
+                taxable_base=self.taxable_base,
+                iva_amount=self.iva_amount,
+                recargo_amount=self.recargo_amount,
+                direction=self.direction,
+            )
         return self
 
     def _enforce_fx_coupling(self) -> Self:
