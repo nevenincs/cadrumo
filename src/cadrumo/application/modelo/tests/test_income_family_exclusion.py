@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..profile_derived_facts import ProfileBindingResolutionError, profile_excludes_income_family
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ..profile_derived_facts import INCOME_FAMILY_EXCLUDED_BINDING_PREFIX, profile_excludes_income_family
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,6 +40,14 @@ def test_an_unstated_list_excludes_nothing() -> None:
     assert profile_excludes_income_family({}, "capital-mobiliario") is False
 
 
-def test_an_unknown_family_is_refused() -> None:
-    with pytest.raises(ProfileBindingResolutionError):
-        profile_excludes_income_family({_CATEGORIES: "trabajo"}, "actividad")
+def test_every_family_the_registry_names_is_read() -> None:
+    families = {
+        binding.id.removeprefix(INCOME_FAMILY_EXCLUDED_BINDING_PREFIX)
+        for modelo in bundled_registry_tree()[0]
+        for revision in modelo.revisions.values()
+        for binding in revision.bindings
+        if binding.id.startswith(INCOME_FAMILY_EXCLUDED_BINDING_PREFIX)
+    }
+    assert families, "no revision declares an income-family exclusion binding"
+    for family in sorted(families):
+        assert profile_excludes_income_family({}, family) is False

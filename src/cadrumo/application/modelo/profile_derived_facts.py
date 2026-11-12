@@ -182,11 +182,9 @@ def profile_excludes_income_family(fact_index: Mapping[str, UserProfileFactValue
 
     The same category rule as the suffered-withholding classes, which is where it lives: a stated,
     non-empty list lacking every category of the family excludes it, and an unstated list excludes
-    nothing.
+    nothing. Every family the bundled registry names is mapped; a test over every revision holds that.
     """
-    income_class = _EXCLUDABLE_INCOME_FAMILY_CLASSES.get(family)
-    if income_class is None:
-        raise ProfileBindingResolutionError(f"the registry names no excludable income family {family!r}")
+    income_class = _EXCLUDABLE_INCOME_FAMILY_CLASSES[family]
     raw_categories = fact_index.get("taxpayer_type.irpf_income_categories")
     declared = frozenset(token.strip() for token in str(raw_categories or "").split(",") if token.strip())
     return declared_categories_exclude_class(income_class, declared or None)
