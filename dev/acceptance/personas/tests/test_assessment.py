@@ -9,7 +9,7 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.tests.personas import ExpectedObligation, ExpectedValue, YearToken
+from cadrumo.tests.personas import ExpectedObligation, ExpectedValue, YearToken, per_period_modelos
 
 from ...persona_table.roles import edition_identities, resolve
 from ..assessment import (
@@ -22,6 +22,7 @@ from ..assessment import (
     assess_obligations,
     assess_value,
     calculated_periods,
+    calendar_verdict,
     calendar_view,
     expected_verdict,
     explanation,
@@ -225,6 +226,72 @@ def test_the_calendar_result_keys_rows_by_modelo_and_code_within_one_year() -> N
     assert set(view.entries) == {(stated.modelo, stated.period)}
     assert view.entries[stated.modelo, stated.period].closes_on == statutory
     assert view.advised == frozenset({("999", "applicable_window_missing")})
+
+
+def _split(item: ExpectedObligation) -> tuple[ExpectedObligation, ExpectedObligation]:
+    """``item`` split into its first period, not owed, and its other periods, undecided."""
+    first, *rest = item.periods
+    return replace(item, periods=(first,), applicable=False), replace(item, periods=tuple(rest), applicable="unknown")
+
+
+def test_a_modelo_whose_periods_expect_different_verdicts_is_asserted_per_period_from_the_calendar() -> None:
+    owed = obligation(True)
+    not_owed, undecided = _split(owed)
+    year = owed.year.resolve(envelope())
+    assert per_period_modelos((not_owed, undecided)) == frozenset({owed.modelo})
+    assert per_period_modelos((owed, obligation(False))) == frozenset()
+    suppressed = {(owed.modelo, not_owed.periods[0]): "not_applicable"} | {
+        (owed.modelo, period): "incomplete" for period in undecided.periods
+    }
+    # The explanation states one verdict for the whole modelo; it is not what decides a split modelo.
+    explanations = {owed.modelo: Explanation(verdict="incomplete", applicable=False)}
+    checks = assess_obligations(
+        year,
+        (not_owed, undecided),
+        (),
+        calendar=CalendarView(suppressed=suppressed),
+        explanations=explanations,
+        envelope=envelope(),
+    )
+    verdicts = [(check.period, check.expected, check.actual) for check in checks if check.check == "verdict"]
+    assert verdicts == [
+        (not_owed.periods[0], "not_applicable", "not_applicable"),
+        *((period, "incomplete", "incomplete") for period in undecided.periods),
+    ]
+    assert {check.status for check in checks} == {CheckStatus.PASSED}
+
+
+def test_a_period_the_calendar_shows_otherwise_fails_its_per_period_verdict() -> None:
+    owed = obligation(True)
+    not_owed, undecided = _split(owed)
+    first = not_owed.periods[0]
+    undecided_suppressed = {(owed.modelo, period): "incomplete" for period in undecided.periods}
+    for calendar, actual in (
+        (CalendarView(entries=_windows(not_owed), suppressed=undecided_suppressed), "applicable"),
+        (CalendarView(suppressed={(owed.modelo, first): "incomplete"} | undecided_suppressed), "incomplete"),
+        (CalendarView(suppressed=undecided_suppressed), "absent"),
+    ):
+        assert calendar_verdict(calendar, owed.modelo, first) == actual
+        checks = assess_obligations(
+            1, (not_owed, undecided), (), calendar=calendar, explanations={}, envelope=envelope()
+        )
+        failed = {(check.check, check.period) for check in checks if check.status is CheckStatus.FAIL}
+        assert ("verdict", first) in failed
+        assert not any(check == "verdict" and period != first for check, period in failed)
+
+
+def test_the_calendar_result_keys_suppressed_verdicts_by_modelo_and_code_within_one_year() -> None:
+    year = deadline().year.resolve(envelope())
+    result = {
+        "entries": [],
+        "suppressed_entries": [
+            {"modelo": "202", "period": f"{year} 1P", "verdict": "not_applicable", "reason": "r"},
+            {"modelo": "202", "period": f"{year} 2P", "verdict": "incomplete", "reason": "r"},
+            {"modelo": "202", "period": f"{year - 1} 1P", "verdict": "applicable", "reason": "r"},
+        ],
+    }
+    view = calendar_view(result, year)
+    assert view.suppressed == {("202", "1P"): "not_applicable", ("202", "2P"): "incomplete"}
 
 
 def test_the_explanation_result_yields_its_verdict_when_it_carries_one() -> None:

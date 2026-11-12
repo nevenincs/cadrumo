@@ -18,7 +18,7 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
-from cadrumo.domain.period import period_end_date
+from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.tests.personas import (
     ExpectedValue,
     Persona,
@@ -30,6 +30,7 @@ from cadrumo.tests.personas import (
 )
 
 from .counterparties import is_compared
+from .coverage import ABSENT, CalendarObservation, period_end, projection
 from .unchecked import persona_at, unchecked_by_key
 
 
@@ -52,6 +53,11 @@ class Stage(StrEnum):
     REFUSED = "refused"
     UNSUPPORTED = "unsupported"
     HISTORY_FILED = "history-filed"
+    NOT_OWED = "not-owed"
+    """Verify only, on a return stated not owed: the overview suppresses it as not applicable; nothing is verified,
+    exported or filed."""
+    OWED_SHOWN = "owed-shown"
+    """Verify only, on a return stated not owed: the overview does not suppress it as not applicable."""
     NOT_REACHED = "-"
     NOT_RUN = "not-run"
 
@@ -69,6 +75,7 @@ class Verdict(StrEnum):
     NOT_RUN = "not-run"
     FLOOR_SOURCE = "floor-source"
     UNCHECKED = "unchecked"
+    NOT_OWED = "not-owed"
 
 
 VERDICT_MEANING: dict[Verdict, str] = {
@@ -87,14 +94,18 @@ VERDICT_MEANING: dict[Verdict, str] = {
     "and a stage refused; the row proves nothing either way",
     Verdict.UNCHECKED: "every stage ended as a pass or an expected refusal, but the persona states values the table "
     "does not compare (listed per row); the row is not a pass",
+    Verdict.NOT_OWED: "an obligation states the return not applicable; the live calculation equals values grounded in "
+    "an official source and the overview calendar suppresses the return as not applicable, so nothing is verified, "
+    "exported or filed",
 }
 
-GREEN = frozenset({Verdict.PASSED})
+GREEN = frozenset({Verdict.PASSED, Verdict.NOT_OWED})
 """Verdicts a row is green at; a diff reports a row entering or leaving this set."""
 
 _STAGE_REFUSAL = re.compile(r"^(?:verify|export): \S+ \S+ (?P<code>[A-Z][A-Z0-9_]+)")
 """A verify or export reason as the runner writes it: the stage, the operation, how it settled, its code."""
 _UNSUPPORTED_MARKERS = ("UNSUPPORTED", "NOT_SUPPORTED")
+_LAST_QUARTER = "4T"
 _ANNUAL = "0A"
 
 
@@ -116,6 +127,9 @@ class PlannedRow:
     """Whether the return is of the floor year and the replay's floor dropped a history record of the year before."""
     unchecked: tuple[str, ...] = ()
     """The stated values of the return the table does not compare."""
+    owed: bool = True
+    """False when an obligation states the return not applicable and the persona states values for it: the table
+    calculates and compares it, then checks the overview suppresses it instead of verifying, exporting and filing."""
 
     @property
     def key(self) -> tuple[str, str, int, str]:
@@ -262,10 +276,18 @@ def classify(row: TableRow) -> Verdict:
         return _unless_unchecked(row, Verdict.NO_ORACLE)
     if row.grounding == "unverified" or not row.sources:
         return Verdict.UNVERIFIED
+    return _classify_by_stages(row)
+
+
+def _classify_by_stages(row: TableRow) -> Verdict:
+    """The verdict of a grounded row with values, from its calculate, verify and export stages."""
     if row.calculate is Stage.EXPECTED_REFUSAL:
         return _unless_unchecked(row, Verdict.EXPECTED_REFUSAL)
-    if (row.calculate, row.verify, row.export) == (Stage.PASSED, Stage.PASSED, Stage.PASSED):
+    stages = (row.calculate, row.verify, row.export)
+    if stages == (Stage.PASSED, Stage.PASSED, Stage.PASSED):
         return _unless_unchecked(row, Verdict.PASSED)
+    if stages == (Stage.PASSED, Stage.NOT_OWED, Stage.NOT_REACHED):
+        return _unless_unchecked(row, Verdict.NOT_OWED)
     return Verdict.FLOOR_SOURCE if _refused_for_dropped_source(row) else Verdict.FAIL
 
 
@@ -291,6 +313,21 @@ def stage_refusal_codes(*reasons: str) -> set[str]:
     return {match["code"] for reason in reasons if (match := _STAGE_REFUSAL.match(reason))}
 
 
+def not_owed_stage(observations: Iterable[CalendarObservation], key: tuple[str, int, str]) -> tuple[Stage, str]:
+    """The verify stage of a return stated not owed, read from the overview calendar's ``observations``.
+
+    ``key`` is ``(modelo, year, period)``. The return is confirmed not owed only when the calendar shows no window
+    for it and suppresses it as not applicable; a window, another verdict or no mention at all is a finding,
+    and the reason names what the calendar said.
+    """
+    observed = projection(observations).get(key)
+    verdict = observed.verdict if observed is not None else ABSENT
+    if verdict == ApplicabilityVerdict.NOT_APPLICABLE.value:
+        return Stage.NOT_OWED, ""
+    detail = f" ({observed.reason})" if observed is not None and observed.reason else ""
+    return Stage.OWED_SHOWN, f"overview: stated not owed, the calendar says {verdict}{detail}"
+
+
 def is_unsupported(code: str) -> bool:
     """Whether a refusal code says the application does not support the return."""
     return any(marker in code for marker in _UNSUPPORTED_MARKERS)
@@ -306,7 +343,9 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
 
     A return is owed when an obligation states it applicable, the persona's
     history files or calculates it, or a value is stated for it and no
-    obligation states it not applicable. Values stated per counterparty are an
+    obligation states it not applicable. A return an obligation states not
+    applicable that the persona states values for is a row with ``owed``
+    false. Values stated per counterparty are an
     oracle only for the informative returns whose type-2 record the table
     compares (``counterparties.DESIGNS``). ``persona`` is read under any envelope; its year
     tokens are resolved here against ``horizon``, and a return whose year falls
@@ -315,8 +354,13 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     shifted = dataclasses.replace(envelope, horizon=horizon)
     stated = _stated_values(persona, shifted)
     unchecked = unchecked_by_key(in_force(persona.expectations.values, shifted))
-    stated_only = set(stated) - _obligation_keys(persona, shifted, applicable=False)
-    keys = _obligation_keys(persona, shifted, applicable=True) | _history_keys(persona, shifted) | stated_only
+    not_applicable = _obligation_keys(persona, shifted, applicable=False)
+    owed = _obligation_keys(persona, shifted, applicable=True) | _history_keys(persona, shifted)
+    stated_only = set(stated) - not_applicable
+    # A return stated not applicable is a row only when values are stated for it: the table compares them and
+    # checks the overview agrees it is not owed. Concept-only values map to none and make no row.
+    not_owed = ({key for key, found in stated.items() if found} & not_applicable) - owed
+    keys = owed | stated_only | not_owed
     return [
         _planned(
             persona.id,
@@ -325,10 +369,17 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
             stated.get((modelo, year, period), []),
             unchecked=unchecked.get((modelo, year, period), ()),
             floor_source_dropped=year == shifted.floor and _history_dropped_before(persona, shifted, year - 1),
+            owed=(modelo, year, period) not in not_owed,
         )
         for modelo, year, period in sorted(keys, key=chain_order)
         if year is not None
     ]
+
+
+def owed_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list[PlannedRow]:
+    """The rows the replay of ``persona`` under ``horizon`` runs: the planned ones whose period ended by its day."""
+    today = persona.as_of.resolve(dataclasses.replace(envelope, horizon=horizon))
+    return ended(planned_rows(persona, horizon, envelope), today)
 
 
 def unchecked_items(persona: Persona, envelope: YearEnvelope, key: tuple[str, int | None, str]) -> tuple[str, ...]:
@@ -387,8 +438,8 @@ def _stated_values(persona: Persona, envelope: YearEnvelope) -> dict[tuple[str, 
 def _obligation_keys(persona: Persona, envelope: YearEnvelope, *, applicable: bool) -> set[tuple[str, int | None, str]]:
     """The returns an obligation states applicable (or not), with years resolved on ``envelope``.
 
-    A return stated not applicable does not exist, so a value stated for it is
-    a cross-check rather than a filing and makes no row.
+    A return stated not applicable is not filed; a value stated for it is a
+    cross-check the table compares on a not-owed row.
     """
     return {
         (item.modelo, _year(item.year, envelope), period)
@@ -422,6 +473,7 @@ def _planned(
     *,
     unchecked: tuple[str, ...] = (),
     floor_source_dropped: bool = False,
+    owed: bool = True,
 ) -> PlannedRow:
     modelo, year, period = key
     return PlannedRow(
@@ -435,6 +487,7 @@ def _planned(
         sources=tuple(dict.fromkeys(source for value in values for source in value.legal_ref)),
         floor_source_dropped=floor_source_dropped,
         unchecked=unchecked,
+        owed=owed,
     )
 
 
@@ -446,22 +499,29 @@ def ended(rows: Sequence[PlannedRow], today: date) -> list[PlannedRow]:
     of that replay. A return whose period has ended is owed even before its
     filing window opens; only its local filing waits for the window.
     """
-    return [row for row in rows if period_end_date(row.year, row.period) < today]
+    return [row for row in rows if period_end(row.year, row.period) < today]
 
 
-def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, str]:
-    """The order a replay runs returns in: by year, each quarter before the annual returns, then by modelo.
+def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, int, str]:
+    """The order a replay runs returns in: by year, quarters and instalments before annual returns, then by modelo.
 
     A quarter is filed locally before the next one calculates, and an annual
     summary (Modelo 180, 190, 390) or the annual Renta reads that year's filed
     quarters, so every quarter of a year runs before any annual return of it.
+    A Modelo 202 instalment reads the instalments paid before it and the year's
+    Modelo 200 folds them all, so the instalments run in the order their periods
+    end, before the annual returns.
     """
     modelo, year, period = key
     try:
         position = filed_period_order(period)
     except ValueError:
-        position = filed_period_order(_ANNUAL) + 1
-    return (year or 0, position, modelo)
+        position = filed_period_order(_LAST_QUARTER)
+    try:
+        ends = period_end(year, period).toordinal() if year is not None else 0
+    except ValueError:
+        ends = 0
+    return (year or 0, position, ends, modelo)
 
 
 def in_force(values: Sequence[ExpectedValue], envelope: YearEnvelope) -> tuple[tuple[int, ExpectedValue], ...]:
@@ -574,7 +634,9 @@ __all__ = [
     "in_force",
     "is_unsupported",
     "latest_rows",
+    "not_owed_stage",
     "not_run",
+    "owed_rows",
     "planned_rows",
     "read_rows",
     "replay_horizons",

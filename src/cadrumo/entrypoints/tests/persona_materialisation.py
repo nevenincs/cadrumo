@@ -27,6 +27,8 @@ import asyncio
 import dataclasses
 import hashlib
 import json
+import logging
+import re
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -36,7 +38,7 @@ from enum import StrEnum
 from functools import cache, partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Final, cast
+from typing import Final, cast, override
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -214,6 +216,7 @@ from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.aggregation import RetencionClave, RetencionScheme
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
+from ...core.logging import flush_logging
 from ...core.operations import (
     TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
     OperationTerminalCondition,
@@ -260,6 +263,7 @@ from ...tests.personas import (
     governed_provisions,
     persona_inputs_digest,
     read_persona,
+    values_in_force,
 )
 from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -267,7 +271,13 @@ from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
 from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
-from .persona_prior_values import PriorValueAttestationError, attest_prior_values
+from .persona_prior_values import (
+    PriorValueAttestationError,
+    attest_prior_values,
+    attest_return_prior_values,
+    check_prior_value_bindings,
+    entries_on,
+)
 from .persona_rental_replay import replay_rentals
 from .persona_work_income_statements import state_work_income_none
 from .persona_work_inputs import WorkInputError, check_work_inputs, enter_work_inputs
@@ -309,8 +319,10 @@ class ReplayScope(StrEnum):
     The local observations are recorded and every rent payment on leased
     premises is captured as withholding; then every filed return is created,
     calculated, verified and filed locally, and every calculated return is
-    created and calculated. Opt-in: a consumer that walks those periods itself
-    replays the full scope.
+    created and calculated. Then every return the persona attests a prior value
+    on that neither the history nor a stated value calculates is created and
+    attested, which calculates it. Opt-in: a consumer that walks those periods
+    itself replays the full scope.
     """
 
     def includes(self, other: ReplayScope) -> bool:
@@ -578,7 +590,8 @@ def settle_operation(
             raise PersonaMaterialisationError(f"{definition_id} could not be observed")
         return observed.projection
 
-    terminal = asyncio.run(settle())
+    with _failure_frames() as failures:
+        terminal = asyncio.run(settle())
     result = _public_result(world, terminal)
     if terminal.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
         # A refusal names its registered code through its refusal reference; only a failure has an error code.
@@ -593,9 +606,52 @@ def settle_operation(
             detail = _result_words(result.model_dump(mode="json", exclude={"profile_id"}))
             detail = result.model_dump_json(exclude={"profile_id"}) if detail is None else detail
         if detail is None:
-            detail = "no detail"
+            detail = failures.frames.get(str(terminal.operation_id), "no detail")
         raise PersonaMaterialisationError(f"{definition_id} settled {terminal.terminal_condition} ({code}): {detail}")
     return result
+
+
+_EXECUTOR_LOGGER: Final[str] = "cadrumo.application.operations.supervisor_execution"
+"""The logger the supervisor names a failed operation's exception type and code frames on."""
+_FAILURE_RECORD: Final[re.Pattern[str]] = re.compile(
+    r"^operation failed definition=\S+ operation=(?P<operation>\S+) diagnostic_ref=\S+ "
+    r"exception_type=(?P<type>\S+) raising_frame=(?P<raising>\S+) application_frame=(?P<application>\S+)"
+)
+
+
+class _FailureFrames(logging.Handler):
+    """Collect, per operation id, the exception type and code frames the supervisor logs for a failure.
+
+    A failed operation serves no sentence and keeps its exception message out of every record by design, so
+    these code coordinates are what makes a failure without a refusal code diagnosable from the table. The
+    application delivers records to handlers formatted, on its dispatch thread, so the handler reads the
+    formatted message and the caller flushes the dispatch before reading the frames.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(logging.ERROR)
+        self.frames: dict[str, str] = {}
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        found = _FAILURE_RECORD.match(record.getMessage())
+        if found is None:
+            return
+        self.frames[found["operation"]] = (
+            f"{found['type']} raised at {found['raising']} (application frame {found['application']})"
+        )
+
+
+@contextmanager
+def _failure_frames() -> Generator[_FailureFrames]:
+    handler = _FailureFrames()
+    logger = logging.getLogger(_EXECUTOR_LOGGER)
+    logger.addHandler(handler)
+    try:
+        yield handler
+        flush_logging()
+    finally:
+        logger.removeHandler(handler)
 
 
 def _result_words(value: object) -> str | None:
@@ -669,6 +725,51 @@ def run_operation[Projection: BaseModel](
         if not isinstance(result, projection):
             raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
     return result
+
+
+def attested_before_calculating(world: PersonaWorld, *, modelo: str, year: int, period: str) -> bool:
+    """Whether the return's attested prior figures are stated before its first calculation.
+
+    So they are for a return the persona attests figures on and enters no work input on: its calculation refuses
+    while a required source return is neither held nor stated. A return with work inputs keeps the order an operator
+    follows: its inputs are entered when it is first calculated, and its attestations follow that calculation.
+    """
+    if not entries_on(world.attested_prior_values, world.envelope, modelo=modelo, filing_year=year, period=period):
+        return False
+    return not any(
+        item.modelo == modelo and item.period == period and item.year.resolve(world.envelope) == year
+        for item in world.work_inputs
+    )
+
+
+def attest_before_first_calculation(
+    world: PersonaWorld, *, modelo: str, year: int, period: str, work_unit_id: str
+) -> None:
+    """State the return's attested prior figures on its work unit before its first calculation, where they are so stated."""
+    if not attested_before_calculating(world, modelo=modelo, year=year, period=period):
+        return
+
+    def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
+        return settle_operation(world, definition_id, payload, subject=subject)
+
+    where = f"{modelo} {year} {period}"
+    try:
+        attested = attest_return_prior_values(
+            world.attested_prior_values,
+            envelope=world.envelope,
+            profile_id=world.profile_id,
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            filing_year=year,
+            period=period,
+            settle=settle,
+        )
+    except PriorValueAttestationError as error:
+        raise PersonaMaterialisationError(f"{where}: {error}") from error
+    if attested.unoffered:
+        raise PersonaMaterialisationError(
+            f"{where}: the application does not offer the attestation of {', '.join(attested.unoffered)}"
+        )
 
 
 def _enter_work_inputs(world: PersonaWorld, work_unit_id: str) -> None:
@@ -778,8 +879,20 @@ def submitted_answer(persona: Persona, value: ProfileValue, envelope: YearEnvelo
     if isinstance(value, tuple):
         return ",".join(value)
     if isinstance(value, IdentityRef):
-        return persona.identity(value)
+        return identity_text(persona, value)
     return value.resolve(envelope).isoformat()
+
+
+def identity_text(persona: Persona, reference: IdentityRef) -> str:
+    """One identity field as an operation takes it; ``full_name`` is the official surnames-first name or razón social."""
+    if reference.field != "full_name":
+        return persona.identity(reference)
+    holder = persona.identities.role(reference.role)
+    if holder.legal_name is not None:
+        return holder.legal_name
+    if holder.surnames is None or holder.name is None:
+        raise PersonaMaterialisationError(f"identity {reference.role} carries no name to compose")
+    return compose_legal_full_name(surnames=holder.surnames, name=holder.name)
 
 
 def patch_answers(persona: Persona, envelope: YearEnvelope) -> tuple[tuple[str, str], ...]:
@@ -1006,6 +1119,22 @@ def _replay_profile(persona: Persona, world: PersonaWorld) -> None:
                 expected_content_digest=record.content_digest,
                 section_key="activities",
                 values=tuple(ProfileRepeatableRowValue(field_key=key, value=value) for key, value in activity.values),
+            ),
+        )
+    for row in persona.profile_rows:
+        record = load_profile_record(world)
+        settle_operation(
+            world,
+            PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
+            ProfileRepeatableRowMutationOperationRequest(
+                profile_id=world.profile_id,
+                expected_revision=record.record_revision,
+                expected_content_digest=record.content_digest,
+                section_key=row.section,
+                values=tuple(
+                    ProfileRepeatableRowValue(field_key=key, value=submitted_answer(persona, value, envelope))
+                    for key, value in row.values
+                ),
             ),
         )
 
@@ -1781,6 +1910,80 @@ def _replay_history(persona: Persona, world: PersonaWorld) -> tuple[dict[str, st
     return filings, calculations
 
 
+def attested_returns_to_replay(persona: Persona, envelope: YearEnvelope) -> tuple[tuple[str, int, str], ...]:
+    """Each ``(modelo, year, period)`` the persona attests a prior value on that nothing else calculates.
+
+    A return of the history is calculated by the history replay, and a return a
+    stated value names is calculated where that value is assessed; each attests
+    its prior values after that calculation. Any other attested return would
+    never be calculated, so its attestation is replayed on its own.
+    """
+    calculated = {(block.modelo, year, period) for year, period, block in history_periods(persona, envelope)}
+    calculated |= {
+        (value.modelo, year, value.period) for year, value in values_in_force(persona.expectations.values, envelope)
+    }
+    attested = {(item.modelo, item.year.resolve(envelope), item.period) for item in persona.attested_prior_values}
+    return tuple(sorted(attested - calculated, key=lambda item: (item[1], item[0], item[2])))
+
+
+def _replay_attested_returns(persona: Persona, world: PersonaWorld) -> dict[str, str]:
+    """Create and attest each return of :func:`attested_returns_to_replay`; returns key to calculated revision id.
+
+    The attestation is submitted before any calculation, as a calculating edit:
+    such a return may refuse its calculation until the figure is stated. The
+    values the persona enters on the return are entered first, as before any
+    first calculation. A stated figure the application does not offer to
+    attest refuses the replay; it is never skipped.
+    """
+    calculations: dict[str, str] = {}
+
+    def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
+        return settle_operation(world, definition_id, payload, subject=subject)
+
+    for modelo, year, period in attested_returns_to_replay(persona, world.envelope):
+        where = f"{persona.id} Modelo {modelo} {year} {period}"
+        created = settle_operation(
+            world,
+            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+            ModeloWorkCreateRequest(
+                profile_id=world.profile_id,
+                modelo=modelo,
+                period=PublicPeriod(filing_year=year, code=period),
+                actor=PERSONA_ACTOR,
+            ),
+        )
+        outcome = getattr(created, "outcome", None)
+        if not isinstance(outcome, ModeloWorkCreateSuccess):
+            raise PersonaMaterialisationError(f"{where}: work creation refused: {outcome}")
+        work_unit_id = outcome.unit.work_unit_id
+        try:
+            if world.work_inputs:
+                _enter_work_inputs(world, work_unit_id)
+            attested = attest_return_prior_values(
+                world.attested_prior_values,
+                envelope=world.envelope,
+                profile_id=world.profile_id,
+                work_unit_id=work_unit_id,
+                modelo=modelo,
+                filing_year=year,
+                period=period,
+                settle=settle,
+            )
+        except (PersonaMaterialisationError, PriorValueAttestationError) as error:
+            raise PersonaMaterialisationError(f"{where}: {error}") from error
+        if attested.unoffered:
+            raise PersonaMaterialisationError(
+                f"{where}: the application does not offer the attestation of {', '.join(attested.unoffered)}"
+            )
+        if attested.applied is None:
+            raise PersonaMaterialisationError(f"{where}: the attestation was not applied")
+        revision_id = attested.applied.calculation_revision_id
+        if revision_id is None:
+            raise PersonaMaterialisationError(f"{where}: the attesting edit published no calculation")
+        calculations[filing_key(modelo, year, period)] = revision_id
+    return calculations
+
+
 def _complete_setup(world: PersonaWorld) -> bool:
     """Declare the replayed profile's setup complete through the production operation; whether it now is.
 
@@ -1877,6 +2080,10 @@ def materialise_persona(
         check_work_inputs(persona, world.envelope, world.operation)
     except WorkInputError as error:
         raise PersonaMaterialisationError(str(error)) from error
+    try:
+        check_prior_value_bindings(persona.attested_prior_values, world.envelope, world.operation)
+    except PriorValueAttestationError as error:
+        raise PersonaMaterialisationError(f"{persona.id}: {error}") from error
     transactions: dict[str, str] = {}
     invoices: dict[str, str] = {}
     evidence: dict[str, str] = {}
@@ -1905,13 +2112,18 @@ def materialise_persona(
             _replay_inventory(persona, world, transactions)
         setup_complete = _complete_setup(world) if complete_setup else None
         if scope.includes(ReplayScope.RECORDS) and (
-            persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings
+            persona.filed_returns
+            or persona.calculated_returns
+            or persona.local_observations
+            or persona.aeat_filings
+            or (scope.includes(ReplayScope.HISTORY) and attested_returns_to_replay(persona, world.envelope))
         ):
             if setup_complete is not True:
                 raise PersonaMaterialisationError(f"{persona.id}: replaying its returns needs a completed setup")
             _replay_records(persona, world, transactions=transactions, invoices=invoices)
             if scope.includes(ReplayScope.HISTORY):
                 filings, calculations = _replay_history(persona, world)
+                calculations |= _replay_attested_returns(persona, world)
     return MaterialisedPersona(
         persona=persona,
         world=world,
@@ -2095,6 +2307,8 @@ __all__ = [
     "PersonaMaterialisationError",
     "PersonaWorld",
     "ReplayScope",
+    "attest_before_first_calculation",
+    "attested_before_calculating",
     "filing_key",
     "household_leaves",
     "load_profile_record",

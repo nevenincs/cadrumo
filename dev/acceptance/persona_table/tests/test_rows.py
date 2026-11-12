@@ -12,17 +12,27 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
-from cadrumo.tests.personas import Persona, PersonaCatalogueError, YearEnvelope, persona_ids, read_persona
+from cadrumo.tests.personas import (
+    ExpectedObligation,
+    Persona,
+    PersonaCatalogueError,
+    YearEnvelope,
+    persona_ids,
+    read_persona,
+)
 
+from ..coverage import APPLICABLE, CalendarObservation
 from ..rows import (
     GREEN,
     PlannedRow,
     Stage,
     TableRow,
     Verdict,
+    chain_order,
     ended,
     in_force,
     latest_rows,
+    not_owed_stage,
     planned_rows,
     read_rows,
     replay_horizons,
@@ -167,11 +177,13 @@ def test_every_return_of_a_persona_history_is_a_row_the_table_runs_live() -> Non
         assert history <= planned, persona_id
 
 
-def test_a_return_an_obligation_states_not_applicable_is_no_row_even_with_a_stated_cross_check() -> None:
+def test_a_return_an_obligation_states_not_applicable_is_only_a_not_owed_row_carrying_stated_values() -> None:
     envelope = _envelope()
     for persona_id in persona_ids():
         persona = _persona(persona_id)
-        planned = {(row.modelo, row.year, row.period) for row in planned_rows(persona, envelope.horizon, envelope)}
+        rows = planned_rows(persona, envelope.horizon, envelope)
+        planned = {(row.modelo, row.year, row.period) for row in rows if row.owed}
+        assert all(row.has_values for row in rows if not row.owed), persona_id
         filed = {
             (block.modelo, block.year.resolve(envelope), period)
             for block in (*persona.filed_returns, *persona.calculated_returns)
@@ -375,3 +387,131 @@ def test_the_planner_marks_floor_year_rows_whose_prior_year_history_the_floor_dr
     assert unmarked
     persona = read_persona("autonomo-fontanero", envelope=envelope)
     assert not any(row.floor_source_dropped for row in planned_rows(persona, envelope.horizon, envelope))
+
+
+_FONTANERO = "autonomo-fontanero"
+
+
+def _stated_not_owed(persona: Persona, envelope: YearEnvelope) -> tuple[Persona, tuple[str, int, str]]:
+    """``persona`` with its first stated return outside its history restated as not applicable, and that return."""
+    history = {
+        (block.modelo, block.year.resolve(envelope), period)
+        for block in (*persona.filed_returns, *persona.calculated_returns)
+        for period in block.periods
+    }
+    value = next(
+        value
+        for value in persona.expectations.values
+        if value.casillas and (value.modelo, value.year.resolve(envelope), value.period) not in history
+    )
+    key = (value.modelo, value.year.resolve(envelope), value.period)
+    kept = tuple(
+        item
+        for item in persona.expectations.obligations
+        if not (item.modelo == key[0] and item.year.resolve(envelope) == key[1] and key[2] in item.periods)
+    )
+    restated = ExpectedObligation(
+        modelo=value.modelo,
+        periods=(value.period,),
+        year=value.year,
+        applicable=False,
+        reason="stated not owed for the test",
+        legal_ref=value.legal_ref,
+        grounding="verified",
+    )
+    expectations = dataclasses.replace(persona.expectations, obligations=(*kept, restated))
+    return dataclasses.replace(persona, expectations=expectations), key
+
+
+def test_a_stated_return_an_obligation_states_not_applicable_is_a_not_owed_row() -> None:
+    envelope = _envelope()
+    persona, key = _stated_not_owed(_persona(_FONTANERO), envelope)
+    rows = {(row.modelo, row.year, row.period): row for row in planned_rows(persona, envelope.horizon, envelope)}
+    assert key in rows
+    assert rows[key].owed is False
+    assert rows[key].has_values
+    assert all(row.owed for found, row in rows.items() if found != key)
+    untouched = {
+        (row.modelo, row.year, row.period): row.owed
+        for row in planned_rows(_persona(_FONTANERO), envelope.horizon, envelope)
+    }
+    assert untouched[key] is True
+
+
+def test_a_not_applicable_return_without_stated_values_stays_no_row() -> None:
+    envelope = _envelope()
+    persona, key = _stated_not_owed(_persona(_FONTANERO), envelope)
+    modelo, _year, period = key
+    without = tuple(
+        value
+        for value in persona.expectations.values
+        if not (value.modelo == modelo and value.period == period and value.year.resolve(envelope) == key[1])
+    )
+    bare = dataclasses.replace(persona, expectations=dataclasses.replace(persona.expectations, values=without))
+    assert key not in {(row.modelo, row.year, row.period) for row in planned_rows(bare, envelope.horizon, envelope)}
+
+
+def _suppressed(key: tuple[str, int, str], verdict: str) -> CalendarObservation:
+    modelo, year, period = key
+    return CalendarObservation("persona", modelo, year, period, verdict, "no ingreso")
+
+
+def _not_owed_plan() -> PlannedRow:
+    return dataclasses.replace(_plan(), owed=False)
+
+
+def test_a_not_owed_row_the_calendar_suppresses_as_not_applicable_is_green() -> None:
+    plan = _not_owed_plan()
+    key = (plan.modelo, plan.year, plan.period)
+    stage, reason = not_owed_stage([_suppressed(key, "not_applicable")], key)
+    assert (stage, reason) == (Stage.NOT_OWED, "")
+    row = TableRow.from_plan(plan, Stage.PASSED, verify=stage, reason=reason)
+    assert row.verdict is Verdict.NOT_OWED
+    assert row.verdict in GREEN
+
+
+def test_a_not_owed_row_the_calendar_shows_a_window_for_fails() -> None:
+    plan = _not_owed_plan()
+    key = (plan.modelo, plan.year, plan.period)
+    window = _suppressed(key, APPLICABLE)
+    for observations in ([window], [_suppressed(key, "not_applicable"), window]):
+        stage, reason = not_owed_stage(observations, key)
+        assert stage is Stage.OWED_SHOWN
+        assert APPLICABLE in reason
+        assert TableRow.from_plan(plan, Stage.PASSED, verify=stage, reason=reason).verdict is Verdict.FAIL
+
+
+def test_a_not_owed_row_the_calendar_leaves_undecided_or_omits_fails() -> None:
+    plan = _not_owed_plan()
+    key = (plan.modelo, plan.year, plan.period)
+    other = (plan.modelo, plan.year + 1, plan.period)
+    for observations in ([_suppressed(key, "incomplete")], [_suppressed(other, "not_applicable")], []):
+        stage, _reason = not_owed_stage(observations, key)
+        assert stage is Stage.OWED_SHOWN
+        assert TableRow.from_plan(plan, Stage.PASSED, verify=stage).verdict is Verdict.FAIL
+
+
+def test_a_not_owed_row_whose_values_differ_fails_even_when_the_calendar_suppresses_it() -> None:
+    plan = _not_owed_plan()
+    assert TableRow.from_plan(plan, Stage.MISMATCH, verify=Stage.NOT_OWED).verdict is Verdict.FAIL
+    assert TableRow.from_plan(plan, Stage.UNRESOLVED, verify=Stage.NOT_OWED).verdict is Verdict.FAIL
+    unsourced = dataclasses.replace(plan, grounding="unverified")
+    assert TableRow.from_plan(unsourced, Stage.PASSED, verify=Stage.NOT_OWED).verdict is Verdict.UNVERIFIED
+
+
+def test_a_not_owed_row_survives_its_json_line(tmp_path: Path) -> None:
+    row = TableRow.from_plan(_not_owed_plan(), Stage.PASSED, verify=Stage.NOT_OWED)
+    write_rows(tmp_path / "rows.jsonl", [row])
+    assert list(read_rows([tmp_path / "rows.jsonl"])) == [row]
+    assert row.to_baseline_json(row.horizon).count('"not-owed"') == 2
+
+
+def test_the_replay_runs_a_years_instalments_in_payment_order_before_its_annual_returns() -> None:
+    """A Modelo 202 instalment reads the earlier ones and the Modelo 200 folds them all, so order follows their ends."""
+    year = _envelope().horizon - 1
+    keys = [("200", year, "0A"), ("202", year, "3P"), ("303", year, "4T"), ("202", year, "2P"), ("202", year, "1P")]
+    ordered = sorted(keys, key=chain_order)
+    instalments = [key[2] for key in ordered if key[0] == "202"]
+    assert instalments == ["1P", "2P", "3P"]
+    assert ordered[-1] == ("200", year, "0A")
+    assert sorted(keys, key=chain_order) == sorted(reversed(keys), key=chain_order)
