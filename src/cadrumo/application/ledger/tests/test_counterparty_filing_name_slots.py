@@ -11,6 +11,9 @@ from dataclasses import dataclass
 
 import pytest
 
+from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.modelo_localization import revision_locale_key
+
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.party_name_export_slots import party_name_export_slots
 from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
@@ -55,6 +58,9 @@ def test_every_slot_is_a_layout_field_with_its_width_and_no_name_fills_none(
         assert field.party_name is not None
         assert slot.width == field.length
         assert (slot.fits, slot.refusal, slot.composed_length) == (False, "missing", None)
+        assert slot.edition_words == tr(
+            revision_locale_key(slot.modelo, slot.revision_id), locale=slot.edition_words_language.value
+        )
     assert {limit.part for limit in limits} == {"primer_apellido", "segundo_apellido", "nombre", "razon_social"}
 
 

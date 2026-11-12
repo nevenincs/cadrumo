@@ -12,7 +12,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.modelo_localization import revision_locale_key
 from ...domain.calculations.registry.party_name_composition import PartyNameComponent
 from ...domain.calculations.registry.party_name_export_slots import (
     ExportLayoutSource,
@@ -21,6 +24,7 @@ from ...domain.calculations.registry.party_name_export_slots import (
 )
 from ...domain.filing.declared_party_name import DeclaredPartyFilingName
 from ...domain.filing.declared_party_name_filing import PartyNameSlot, party_name_slot_fit
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH, served_words_language
 
 _ID_MAX = 128
 """The longest registry identity a slot projection carries."""
@@ -37,12 +41,16 @@ class CounterpartyFilingNameSlot(BaseModel):
     With no name stated every slot refuses as ``missing``. ``composed_length`` is
     the length of the full name the slot's design composes, ``None`` when it
     composes none; ``uses_rendering`` says the slot files the rendering stated for
-    its width because the full name is wider.
+    its width because the full name is wider. ``edition_words`` name the slot's
+    edition as the registry words it, in ``edition_words_language``, so a surface
+    tells editions apart without reading a revision identity.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     modelo: str = Field(min_length=1, max_length=_ID_MAX)
     revision_id: str = Field(min_length=1, max_length=_ID_MAX)
+    edition_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    edition_words_language: OutputLanguage
     layout_id: str = Field(min_length=1, max_length=_ID_MAX)
     export_record_id: str = Field(min_length=1, max_length=_ID_MAX)
     export_field_id: str = Field(min_length=1, max_length=_ID_MAX)
@@ -80,7 +88,9 @@ def _refusal(reason: str | None) -> FilingNameSlotRefusal | None:
     raise ValueError(f"unknown party-name refusal {reason!r}")
 
 
-def _slot_projection(slot: PartyNameExportSlot, name: DeclaredPartyFilingName | None) -> CounterpartyFilingNameSlot:
+def _slot_projection(
+    slot: PartyNameExportSlot, name: DeclaredPartyFilingName | None, language: OutputLanguage
+) -> CounterpartyFilingNameSlot:
     fit = party_name_slot_fit(
         name,
         composition=slot.composition,
@@ -94,6 +104,8 @@ def _slot_projection(slot: PartyNameExportSlot, name: DeclaredPartyFilingName | 
     return CounterpartyFilingNameSlot(
         modelo=slot.modelo,
         revision_id=slot.revision_id,
+        edition_words=tr(revision_locale_key(slot.modelo, slot.revision_id), locale=language.value),
+        edition_words_language=language,
         layout_id=slot.layout_id,
         export_record_id=slot.export_record_id,
         export_field_id=slot.export_field_id,
@@ -137,7 +149,8 @@ def counterparty_filing_name_slots(
 ) -> tuple[tuple[CounterpartyFilingNameSlot, ...], tuple[CounterpartyFilingNamePartLimit, ...]]:
     """Every party-name slot of the pinned authority with the stated name's fit, and the per-part limits."""
     slots = party_name_export_slots(operation)
-    return tuple(_slot_projection(slot, name) for slot in slots), _part_limits(slots)
+    language = served_words_language()
+    return tuple(_slot_projection(slot, name, language) for slot in slots), _part_limits(slots)
 
 
 __all__ = [
