@@ -2744,6 +2744,9 @@ application:
       edit_prior_carries_unstated: Aquest canvi deixa sense indicar els imports pendents
         d'exercicis anteriors, de manera que la declaració no es pot calcular. No
         s'ha canviat res. Indica primer aquests imports.
+      edit_required_bindings_missing: 'Aquest canvi deixa la declaració sense dades
+        que necessita: %{bindings}. No s''ha canviat res. Indica-les i torna a aplicar
+        el canvi.'
       edit_revision_id_unresolved: El càlcul de l'edició no ha indicat quina revisió
         ha creat, així que no s'ha pogut conservar el rebut de l'edició. És una incoherència
         del programa i res del que has introduït l'ha causada. Llista les revisions
