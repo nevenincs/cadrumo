@@ -22,9 +22,11 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.flow import IvaSettlementSide
 
 from ....core.resources.bundled_data import bundled_path
@@ -43,6 +45,8 @@ from ..flow import (
 )
 from ..schema import InvoiceKind, IvaCategory
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
@@ -60,7 +64,7 @@ def test_iva_flow_direction_enum_has_four_closed_members() -> None:
     reverse-charge invoice was routed to the recipient's member and self-assessed
     as though the supplier owed the cuota it had deliberately not charged.
     """
-    catalogue = resolve_iva_flow_direction_catalogue()
+    catalogue = resolve_iva_flow_direction_catalogue(effective_date=_ON_DATE)
     assert set(catalogue.choices) == {
         IvaFlowDirection.from_registry("repercutido"),
         IvaFlowDirection.from_registry("soportado"),
@@ -170,7 +174,10 @@ def test_derive_flow_classifies_non_reverse_charge_categories(
     direction: InvoiceKind,
     expected: IvaFlowDirection,
 ) -> None:
-    assert derive_flow_for_classification(category=category, invoice_direction=direction) == expected
+    assert (
+        derive_flow_for_classification(category=category, invoice_direction=direction, effective_date=_ON_DATE)
+        == expected
+    )
 
 
 def test_received_domestic_reverse_charge_self_assesses() -> None:
@@ -178,6 +185,7 @@ def test_received_domestic_reverse_charge_self_assesses() -> None:
     assert derive_flow_for_classification(
         category=IvaCategory("domestic_reverse_charge"),
         invoice_direction=InvoiceKind.RECEIVED,
+        effective_date=_ON_DATE,
     ) == IvaFlowDirection.from_registry("inversion_sujeto_pasivo")
 
 
@@ -195,6 +203,7 @@ def test_issued_domestic_reverse_charge_is_the_suppliers_side_not_a_self_assessm
     assert derive_flow_for_classification(
         category=IvaCategory("domestic_reverse_charge"),
         invoice_direction=InvoiceKind.ISSUED,
+        effective_date=_ON_DATE,
     ) == IvaFlowDirection.from_registry("operacion_con_inversion")
 
 
@@ -206,9 +215,12 @@ def test_a_supplier_side_reverse_charge_operation_reaches_no_settlement_side() -
     the taxpayer would file. This test reds if a later change puts the supplier's
     side back on either side of the settlement.
     """
-    assert settlement_sides_for_flow(IvaFlowDirection.from_registry("operacion_con_inversion")) == frozenset()
-    assert not is_devengada_flow(IvaFlowDirection.from_registry("operacion_con_inversion"))
-    assert not is_deducible_flow(IvaFlowDirection.from_registry("operacion_con_inversion"))
+    assert (
+        settlement_sides_for_flow(IvaFlowDirection.from_registry("operacion_con_inversion"), effective_date=_ON_DATE)
+        == frozenset()
+    )
+    assert not is_devengada_flow(IvaFlowDirection.from_registry("operacion_con_inversion"), effective_date=_ON_DATE)
+    assert not is_deducible_flow(IvaFlowDirection.from_registry("operacion_con_inversion"), effective_date=_ON_DATE)
 
 
 @pytest.mark.parametrize(
@@ -225,6 +237,7 @@ def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido(dire
     assert derive_flow_for_classification(
         category=IvaCategory("intra_community_acquisition_reverse_charge"),
         invoice_direction=direction,
+        effective_date=_ON_DATE,
     ) == IvaFlowDirection.from_registry("inversion_sujeto_pasivo")
 
 
@@ -248,6 +261,7 @@ def test_derive_flow_classifies_intracomm_service_acquisition_rc_as_autorepercut
     assert derive_flow_for_classification(
         category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
         invoice_direction=direction,
+        effective_date=_ON_DATE,
     ) == IvaFlowDirection.from_registry("inversion_sujeto_pasivo")
 
 
@@ -265,15 +279,18 @@ def test_received_eu_service_reaches_the_devengada_side_not_only_the_deducible()
     flow = derive_flow_for_classification(
         category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
         invoice_direction=InvoiceKind.RECEIVED,
+        effective_date=_ON_DATE,
     )
-    assert settlement_sides_for_flow(flow) == frozenset(
+    assert settlement_sides_for_flow(flow, effective_date=_ON_DATE) == frozenset(
         {
             IvaSettlementSide.from_registry("devengada"),
             IvaSettlementSide.from_registry("deducible"),
         },
     )
-    assert is_devengada_flow(flow), "the self-assessed cuota must be declared, not only deducted"
-    assert is_deducible_flow(flow)
+    assert is_devengada_flow(flow, effective_date=_ON_DATE), (
+        "the self-assessed cuota must be declared, not only deducted"
+    )
+    assert is_deducible_flow(flow, effective_date=_ON_DATE)
 
 
 def test_intracomm_service_supply_is_not_a_reverse_charge_for_the_spanish_supplier() -> None:
@@ -288,6 +305,7 @@ def test_intracomm_service_supply_is_not_a_reverse_charge_for_the_spanish_suppli
     assert derive_flow_for_classification(
         category=IvaCategory("intra_community_service_supply"),
         invoice_direction=InvoiceKind.ISSUED,
+        effective_date=_ON_DATE,
     ) == IvaFlowDirection.from_registry("repercutido")
 
 
@@ -345,7 +363,7 @@ def test_iva_settlement_side_enum_has_two_closed_members() -> None:
     Treasury). The enum must be closed at exactly these two members."""
     from ..flow import IvaSettlementSide
 
-    catalogue = resolve_iva_flow_direction_catalogue()
+    catalogue = resolve_iva_flow_direction_catalogue(effective_date=_ON_DATE)
     assert set(catalogue.settlement_choices) == {
         IvaSettlementSide.from_registry("devengada"),
         IvaSettlementSide.from_registry("deducible"),
@@ -363,7 +381,7 @@ def test_repercutido_flow_contributes_to_devengada_only() -> None:
     nothing on the deducible side."""
     from ..flow import settlement_sides_for_flow
 
-    sides = settlement_sides_for_flow(IvaFlowDirection.from_registry("repercutido"))
+    sides = settlement_sides_for_flow(IvaFlowDirection.from_registry("repercutido"), effective_date=_ON_DATE)
     assert sides == frozenset({IvaSettlementSide.from_registry("devengada")})
 
 
@@ -372,7 +390,7 @@ def test_soportado_flow_contributes_to_deducible_only() -> None:
     bears IVA via direct repercusión and may deduct it."""
     from ..flow import settlement_sides_for_flow
 
-    sides = settlement_sides_for_flow(IvaFlowDirection.from_registry("soportado"))
+    sides = settlement_sides_for_flow(IvaFlowDirection.from_registry("soportado"), effective_date=_ON_DATE)
     assert sides == frozenset({IvaSettlementSide.from_registry("deducible")})
 
 
@@ -383,7 +401,9 @@ def test_autorepercutido_flow_contributes_to_both_sides() -> None:
     303 but both must be booked."""
     from ..flow import settlement_sides_for_flow
 
-    sides = settlement_sides_for_flow(IvaFlowDirection.from_registry("inversion_sujeto_pasivo"))
+    sides = settlement_sides_for_flow(
+        IvaFlowDirection.from_registry("inversion_sujeto_pasivo"), effective_date=_ON_DATE
+    )
     assert sides == frozenset(
         {
             IvaSettlementSide.from_registry("devengada"),
@@ -399,8 +419,8 @@ def test_devengada_flow_predicate_matches_settlement_semantics() -> None:
         IvaFlowDirection.from_registry("repercutido"),
         IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
     }
-    for flow in resolve_iva_flow_direction_catalogue().choices:
-        assert is_devengada_flow(flow) == (flow in expected)
+    for flow in resolve_iva_flow_direction_catalogue(effective_date=_ON_DATE).choices:
+        assert is_devengada_flow(flow, effective_date=_ON_DATE) == (flow in expected)
 
 
 def test_deducible_flow_predicate_matches_settlement_semantics() -> None:
@@ -410,8 +430,8 @@ def test_deducible_flow_predicate_matches_settlement_semantics() -> None:
         IvaFlowDirection.from_registry("soportado"),
         IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
     }
-    for flow in resolve_iva_flow_direction_catalogue().choices:
-        assert is_deducible_flow(flow) == (flow in expected)
+    for flow in resolve_iva_flow_direction_catalogue(effective_date=_ON_DATE).choices:
+        assert is_deducible_flow(flow, effective_date=_ON_DATE) == (flow in expected)
 
 
 def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
@@ -426,11 +446,11 @@ def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
     """
     from ..flow import settlement_sides_for_flow
 
-    catalogue = resolve_iva_flow_direction_catalogue()
+    catalogue = resolve_iva_flow_direction_catalogue(effective_date=_ON_DATE)
     assert len(catalogue.choices) > 0
     for flow in catalogue.choices:
-        settlement_sides_for_flow(flow)  # raises KeyError if the member is unmapped
-    sideless = {flow for flow in catalogue.choices if not settlement_sides_for_flow(flow)}
+        settlement_sides_for_flow(flow, effective_date=_ON_DATE)  # raises KeyError if the member is unmapped
+    sideless = {flow for flow in catalogue.choices if not settlement_sides_for_flow(flow, effective_date=_ON_DATE)}
     assert sideless == {catalogue.supplier_reverse_charge_token}, (
         "exactly one flow settles on neither side — the supplier's own reverse-charge "
         f"supply. A second one appearing here is unreviewed: {sorted(f.value for f in sideless)}"
@@ -460,6 +480,10 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
         binding_id = casilla_to_binding[casilla_id]
         binding = next(b for b in revision.bindings if b.id == binding_id)
         flow_value = selector_as_dict(binding)["flow_direction"]
-        binding_flows.add(resolve_iva_flow_direction_catalogue().require(flow_value))
+        binding_flows.add(resolve_iva_flow_direction_catalogue(effective_date=_ON_DATE).require(flow_value))
 
-    assert binding_flows == {flow for flow in resolve_iva_flow_direction_catalogue().choices if is_devengada_flow(flow)}
+    assert binding_flows == {
+        flow
+        for flow in resolve_iva_flow_direction_catalogue(effective_date=_ON_DATE).choices
+        if is_devengada_flow(flow, effective_date=_ON_DATE)
+    }

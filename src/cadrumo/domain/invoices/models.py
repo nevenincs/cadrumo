@@ -166,6 +166,7 @@ def _admits_written_record(info: ValidationInfo) -> bool:
 
 def _simplificada_mandatory_tax_id_categories(
     *,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> frozenset[IvaCategory]:
     """Resolve the dated simplified-invoice applicability catalogue."""
@@ -178,7 +179,7 @@ def _simplificada_mandatory_tax_id_categories(
         MappingFactQuery(
             fact_id=_SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
+            effective_date=effective_date,
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
@@ -190,7 +191,7 @@ def _simplificada_mandatory_tax_id_categories(
         raise RegistryValidationError("invoice applicability is missing mandatory_tax_id_categories") from exc
     try:
         return frozenset(
-            require_iva_category(token.strip(), authority=selected_authority)
+            require_iva_category(token.strip(), effective_date=effective_date, authority=selected_authority)
             for token in encoded.split(",")
             if token.strip()
         )
@@ -206,6 +207,7 @@ def invoice_class_findings(
     rectifies_invoice_number: str | None,
     category: IvaCategory | None,
     tax_id_missing: bool,
+    effective_date: date,
 ) -> tuple[InvoiceRuleFinding, ...]:
     """Answer the invoice-class axis under the authority in scope, as the invoice itself is refused."""
     return invoice_class_rule_findings(
@@ -214,9 +216,11 @@ def invoice_class_findings(
         issued=None if kind is None else kind is InvoiceKind.ISSUED,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
-        intra_community_supply=category == answer_once(require_iva_category, "intra_community_supply"),
+        intra_community_supply=category
+        == answer_once(require_iva_category, "intra_community_supply", effective_date=effective_date),
         tax_id_missing=tax_id_missing,
-        category_mandates_tax_id=category in answer_once(_simplificada_mandatory_tax_id_categories),
+        category_mandates_tax_id=category
+        in answer_once(_simplificada_mandatory_tax_id_categories, effective_date=effective_date),
         category_value=getattr(category, "value", ""),
     )
 
@@ -984,6 +988,7 @@ class Invoice(BaseModel):
                 rectifies_invoice_number=self.rectifies_invoice_number,
                 category=self.iva_category,
                 tax_id_missing=self.counterparty_tax_id is None,
+                effective_date=self.issued_at,
             )
         )
         return self
@@ -1033,7 +1038,9 @@ class Invoice(BaseModel):
         M349/export classification decides between; this guard only refuses the
         one identification the category can never legitimately name.
         """
-        intra_community_supply = answer_once(require_iva_category, "intra_community_supply")
+        intra_community_supply = answer_once(
+            require_iva_category, "intra_community_supply", effective_date=self.issued_at
+        )
         if self.iva_category == intra_community_supply and (
             self.counterparty_identification_state == answer_once(spanish_eu_member_state)
         ):
@@ -1084,7 +1091,9 @@ class Invoice(BaseModel):
         )
         advance_payment_role = answer_once(advance_payment_received_role)
         if self.operation_date_role == advance_payment_role:
-            if self.iva_category == answer_once(require_iva_category, "intra_community_supply"):
+            if self.iva_category == answer_once(
+                require_iva_category, "intra_community_supply", effective_date=self.issued_at
+            ):
                 raise InvoiceValidationError(
                     "a pago anticipado devengo does not apply to an entrega intracomunitaria exenta "
                     "(LIVA art. 75.Dos, párrafo segundo, excludes art. 25 entregas)",

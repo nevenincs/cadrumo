@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import date
 from pathlib import Path
 from typing import Literal
 
@@ -205,7 +206,10 @@ class _InvoiceIntakeRun:
         if not isinstance(self.payload, InvoiceWizardRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         category = _resolve_wizard_category(self.payload, operation)
-        category = category or iva_category_for_operation_type(self.payload.operation_type)
+        if category is None and self.payload.operation_type is not None:
+            category = iva_category_for_operation_type(
+                self.payload.operation_type, effective_date=_wizard_governing_date(self.payload)
+            )
         creation = ports.creation()
         outcome = create_invoice_via_wizard(
             bucket_id=str(self.payload.profile_id),
@@ -242,13 +246,22 @@ class _InvoiceIntakeRun:
         )
 
 
+def _wizard_governing_date(payload: InvoiceWizardRequest) -> date:
+    """Return the operation date, else the issue date, that selects the IVA category vocabulary."""
+    stated = payload.operation_date or payload.invoice_date
+    try:
+        return date.fromisoformat(stated.strip())
+    except ValueError as exc:
+        raise InvoiceValidationError("the invoice dates must be ISO calendar dates") from exc
+
+
 def _resolve_wizard_category(
     payload: InvoiceWizardRequest,
     operation: PinnedAuthorityOperation,
 ) -> IvaCategory | None:
     if payload.iva_category is None:
         return None
-    catalogue = resolve_iva_category_catalogue(authority=operation)
+    catalogue = resolve_iva_category_catalogue(effective_date=_wizard_governing_date(payload), authority=operation)
     category = next(
         (token for token in catalogue.all_categories if str(token) == payload.iva_category.strip()),
         None,

@@ -571,7 +571,7 @@ def iva_rate_slot_is_published(rate: IvaRate, on_date: date) -> bool:
     ).published_on_date
 
 
-def iva_rate_kind(rate: IvaRate, on_date: date | None = None) -> IvaRateKind | None:
+def iva_rate_kind(rate: IvaRate, on_date: date) -> IvaRateKind | None:
     """Return the substrate rate tier for an invoice line rate slot.
 
     The out-of-scope slot has no OSS/IOSS rate tier because it is outside the
@@ -580,12 +580,11 @@ def iva_rate_kind(rate: IvaRate, on_date: date | None = None) -> IvaRateKind | N
     corresponding :class:`IvaRateKind`; a slot whose declared substrate kind is
     the catalogue's non-rate token returns ``None``.
     """
-    coordinate = on_date or today_madrid()
-    declarations = _iva_rate_slot_registry_declarations(rate, coordinate)
-    non_rate = resolve_iva_rate_kind_catalogue(effective_date=coordinate).non_rate_token
+    declarations = _iva_rate_slot_registry_declarations(rate, on_date)
+    non_rate = resolve_iva_rate_kind_catalogue(effective_date=on_date).non_rate_token
     if declarations.get("substrate_kind") == non_rate:
         return None
-    return _iva_rate_slot_kind(declarations, coordinate)
+    return _iva_rate_slot_kind(declarations, on_date)
 
 
 def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:

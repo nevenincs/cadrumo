@@ -8,6 +8,7 @@ nothing.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from typing import Final
 from xml.etree.ElementTree import Element
@@ -262,12 +263,13 @@ def decimal(raw: str | None) -> Decimal | None:
     return coerce_decimal(raw)
 
 
-def category_for(code: str | None) -> str | None:
+def category_for(code: str | None, *, issued_on: date | None) -> str | None:
     """Map a stated UNTDID 5305 tax-category code onto an IvaCategory value.
 
-    Returns ``None`` when the document states no code, or states one that maps
-    to no special category. Never guesses.
+    Returns ``None`` when the document states no code, states no issue date to
+    read the category vocabulary on, or states a code that maps to no special
+    category. Never guesses.
     """
-    if not (code is not None and code):
+    if not (code is not None and code) or issued_on is None:
         return None
-    return resolve_iva_category_catalogue().category_for_untdid_code(code.strip().upper())
+    return resolve_iva_category_catalogue(effective_date=issued_on).category_for_untdid_code(code.strip().upper())

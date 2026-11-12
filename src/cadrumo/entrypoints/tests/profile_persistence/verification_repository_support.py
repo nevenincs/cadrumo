@@ -22,6 +22,7 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
@@ -71,6 +72,7 @@ def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
             bucket_id=bucket_id, transaction_repository=transaction_repository
         ),
         credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
+        prorrata_register=ProrrataRegisterRepository(bucket_id=bucket_id, objects=objects),
         attachment=AttachmentStore(objects=objects),
     )
 

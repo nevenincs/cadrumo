@@ -33,9 +33,12 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ..establishment import (
@@ -45,6 +48,8 @@ from ..establishment import (
     territorial_scope_for_country,
 )
 from ..schema import IvaTerritorialScope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -63,7 +68,10 @@ CATALOGUED_THIRD_COUNTRIES = ("US", "JP", "BR")
 def test_an_unassigned_code_establishes_no_scope(code: str) -> None:
     """The defect this file exists for, at the authority that produced it."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert territorial_scope_for_country(code, operation=_authority_operation_for_test) is None
+        assert (
+            territorial_scope_for_country(code, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+            is None
+        )
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
@@ -75,7 +83,12 @@ def test_an_unassigned_code_survives_neither_case_nor_padding(code: str) -> None
     produces.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert territorial_scope_for_country(f" {code.lower()} ", operation=_authority_operation_for_test) is None
+        assert (
+            territorial_scope_for_country(
+                f" {code.lower()} ", operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
+            is None
+        )
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
@@ -95,7 +108,7 @@ def test_a_genuine_third_country_still_resolves(code: str) -> None:
     """The opposite direction. Refusing a real export is its own defect."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            code, operation=_authority_operation_for_test
+            code, operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("third_country")
         assert country_code_for_stated_country_code(code, operation=_authority_operation_for_test) == code
 
@@ -104,7 +117,7 @@ def test_a_member_state_still_resolves() -> None:
     """The EU branch is not collateral damage of the narrowing."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            "DE", operation=_authority_operation_for_test
+            "DE", operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("eu_member")
 
 
@@ -119,14 +132,17 @@ def test_northern_ireland_survives_the_narrowing() -> None:
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            "XI", operation=_authority_operation_for_test
+            "XI", operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("eu_member")
 
 
 def test_spain_still_refuses_for_its_own_reason() -> None:
     """Spain returns nothing BY DESIGN, and must not be reclassified as unmatched."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
+        assert (
+            territorial_scope_for_country("ES", operation=_authority_operation_for_test, effective_date=_ON_DATE)
+            is None
+        )
         assert (
             stated_country_code_status("ES", operation=_authority_operation_for_test)
             is StatedCountryCodeStatus.CATALOGUED
@@ -163,7 +179,10 @@ def test_an_assigned_code_the_vocabulary_omits_is_a_catalogue_gap() -> None:
             stated_country_code_status(specimen, operation=_authority_operation_for_test)
             is StatedCountryCodeStatus.UNCATALOGUED
         )
-        assert territorial_scope_for_country(specimen, operation=_authority_operation_for_test) is None
+        assert (
+            territorial_scope_for_country(specimen, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+            is None
+        )
 
 
 @pytest.mark.parametrize("code", CATALOGUED_THIRD_COUNTRIES)
@@ -201,5 +220,5 @@ def test_no_unmatched_code_degrades_to_spain(code: str) -> None:
         )
         assert country_code_for_stated_country_code(code, operation=_authority_operation_for_test) != "ES"
         assert territorial_scope_for_country(
-            code, operation=_authority_operation_for_test
+            code, operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) != IvaTerritorialScope.from_registry("es_mainland")

@@ -11,9 +11,11 @@ from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilin
 
 from ..edition_singleton_audit import (
     DeclarationView,
+    EditionRemovals,
     EditionSingletonFinding,
     EditionView,
     LegalWindow,
+    removed_before_successor,
     render_edition_findings,
     singleton_findings,
     with_paths,
@@ -142,3 +144,51 @@ def test_findings_carry_the_authored_file_and_render(tmp_path: Path) -> None:
     lines = render_edition_findings([located])
     assert lines[0].endswith(": 1")
     assert any(authored.as_posix() in line and "edition=" + str(YEARS[1]) in line for line in lines)
+
+
+_FULL = ("full",)
+_FIRST_HALF = ("first-half",)
+_SECOND_HALF = ("second-half",)
+
+
+def _split_year_chain(*second_half_removals: tuple[str, str]) -> list[EditionRemovals]:
+    """A full-year edition, a split year printed on two half-year editions, then the next full year."""
+    return [
+        EditionRemovals("full-a", _FULL, ()),
+        EditionRemovals("half-1", _FIRST_HALF, ()),
+        EditionRemovals("half-2", _SECOND_HALF, second_half_removals),
+        EditionRemovals("full-b", _FULL, ()),
+    ]
+
+
+def _working_figure_findings(chain: list[EditionRemovals]) -> tuple[EditionSingletonFinding, ...]:
+    removed = removed_before_successor(chain, 0)
+    figure = _declaration(
+        "working-figure",
+        family="casillas",
+        states_new_on_form=True,
+        removed_by_next_edition="working-figure" in removed,
+    )
+    editions = [
+        EditionView("full-a", date(YEARS[0], 1, 1), date(YEARS[0], 12, 31), (figure,), _FULL),
+        EditionView("full-b", date(YEARS[1], 1, 1), None, (), _FULL),
+    ]
+    return singleton_findings("303", editions)
+
+
+def test_a_split_year_removal_naming_an_edition_on_the_carrier_chain_cites_the_exit() -> None:
+    assert _working_figure_findings(_split_year_chain(("half-1", "working-figure"))) == ()
+
+
+def test_a_split_year_removal_naming_an_edition_outside_the_chain_leaves_the_exit_uncited() -> None:
+    findings = _working_figure_findings(_split_year_chain(("full-b", "working-figure")))
+    assert [(item.declaration_id, item.reason) for item in findings] == [
+        ("working-figure", "uncited disappearing boundary")
+    ]
+
+
+def test_a_casilla_vanishing_with_no_removal_on_the_chain_leaves_the_exit_uncited() -> None:
+    findings = _working_figure_findings(_split_year_chain())
+    assert [(item.declaration_id, item.reason) for item in findings] == [
+        ("working-figure", "uncited disappearing boundary")
+    ]

@@ -66,7 +66,7 @@ def test_a_taxable_domestic_purchase_bears_a_deduction_to_classify(category: str
     """The positive path, including the 0 % tipo: sujeta y no exenta, so art. 92 reaches it."""
     assert admits_iva_deduction_classification(
         category=IvaCategory(category),
-        flow_direction=received_flow_direction(),
+        flow_direction=received_flow_direction(effective_date=_ON_DATE),
         effective_date=_ON_DATE,
     )
 
@@ -79,7 +79,7 @@ def test_a_purchase_that_raised_no_cuota_bears_none(category: str) -> None:
     """The rows that deadlocked: no cuota was repercutida, so nothing is deductible."""
     assert not admits_iva_deduction_classification(
         category=IvaCategory(category),
-        flow_direction=received_flow_direction(),
+        flow_direction=received_flow_direction(effective_date=_ON_DATE),
         effective_date=_ON_DATE,
     )
 
@@ -94,7 +94,7 @@ def test_the_reagp_compensation_keeps_its_deduction() -> None:
     """
     assert admits_iva_deduction_classification(
         category=IvaCategory("reagp_compensation"),
-        flow_direction=received_flow_direction(),
+        flow_direction=received_flow_direction(effective_date=_ON_DATE),
         effective_date=_ON_DATE,
     )
 
@@ -103,7 +103,7 @@ def test_an_output_row_bears_no_deduction() -> None:
     """A sale repercutes its cuota onward; the customer deducts it, not the filer."""
     assert not admits_iva_deduction_classification(
         category=IvaCategory("domestic_general"),
-        flow_direction=issued_flow_direction(),
+        flow_direction=issued_flow_direction(effective_date=_ON_DATE),
         effective_date=_ON_DATE,
     )
 
@@ -169,8 +169,8 @@ def test_the_predicate_and_the_validator_answer_the_same_registry() -> None:
     """
     kinds = _declared_kinds()
     assert kinds, "fact 0085 declares no operator-facing deduction kinds"
-    flows = resolve_iva_flow_direction_catalogue().choices
-    categories = resolve_iva_category_catalogue().all_categories
+    flows = resolve_iva_flow_direction_catalogue(effective_date=_ON_DATE).choices
+    categories = resolve_iva_category_catalogue(effective_date=_ON_DATE).all_categories
 
     disagreeing = [
         (category.value, flow.value)

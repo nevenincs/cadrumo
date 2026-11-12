@@ -89,7 +89,9 @@ def inadmissible_deduction_issue(
         # equivalencia acquisition cost -- there is nothing to complete and the
         # half-declaration is itself the error. Falling through, it reached the
         # operator as a payload-boundary defect from the observation's validator.
-        if is_deducible_flow(flow_direction) and admits_iva_deduction_classification(
+        if is_deducible_flow(
+            flow_direction, effective_date=transaction_operation_date(transaction)
+        ) and admits_iva_deduction_classification(
             category=category,
             flow_direction=flow_direction,
             effective_date=transaction_operation_date(transaction),
@@ -162,7 +164,7 @@ def iva_observation(
 ) -> IvaLedgerObservation:
     """Build an observation from the admitted transaction facts."""
     if cash_accounting_treatment is None:
-        cash_accounting_treatment = default_iva_cash_accounting_treatment(authority=operation)
+        cash_accounting_treatment = default_iva_cash_accounting_treatment(transaction_date, authority=operation)
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=transaction_date,
@@ -353,7 +355,7 @@ def resolve_iva_prorrata_attachment(
         return None, raw_reference, None
     if raw_reference is None:
         return None, None, None
-    if flow_direction != received_flow_direction():
+    if flow_direction != received_flow_direction(effective_date=transaction_operation_date(transaction)):
         return (
             None,
             IvaLedgerAggregationIssue(

@@ -1893,6 +1893,11 @@ errors:
       (campo 114) debe ser el titular de la cuenta que elegiste.
     refused_modelo_360_solicitud_undeclared: No hay ninguna solicitud del Modelo 360
       declarada para {filing_year}.
+    refused_modelo_390_prorrata_apartado_unrendered: 'El modelo 390 sigue rechazado:
+      tu registro de prorrata tiene filas para este ejercicio, pero la edición del
+      formulario en uso aún no incluye el apartado de prorratas (apartado 12), así
+      que no se puede verificar, registrar como presentado ni exportar sin dejar ese
+      apartado en blanco.'
     refused_modelo_aggregation_input_conflict: Un dato que has introducido contradice
       lo que dan tus registros; corrígelo antes de calcular.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementaria

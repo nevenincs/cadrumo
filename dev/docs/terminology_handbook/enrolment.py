@@ -137,10 +137,12 @@ def _walk_modelos() -> Iterator[EnrolmentCandidate]:
 
 
 def _walk_iva_categories() -> Iterator[EnrolmentCandidate]:
+    from cadrumo.core.time.clock import today_madrid
     from cadrumo.domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
     from dev.registry.compiler.authority import compiled_bundled_authority
 
-    catalogue = resolve_iva_category_catalogue(authority=compiled_bundled_authority())
+    # The handbook documents the vocabulary in force when it is generated.
+    catalogue = resolve_iva_category_catalogue(effective_date=today_madrid(), authority=compiled_bundled_authority())
     for category in sorted(catalogue.all_categories, key=lambda member: member.value):
         yield EnrolmentCandidate(
             concept_id=f"iva-{_kebab(category.value)}",

@@ -158,7 +158,16 @@ def m303_profile_lexicals(
         if period is not None
         else None
     )
-    territory_date = date(period.filing_year, 1, 1) if period is not None else None
+    if period is None:
+        # The territory and the regime composition are read on the filing's own date; with no
+        # period they stay unanswered rather than being read on another date.
+        return M303ProfileLexicals(
+            redeme_enrolled=yes_no(iva_profile.redeme_enrolled),
+            cash_accounting_regime_enrolled=yes_no(iva_profile.cash_accounting_regime_enrolled),
+            voluntary_sii_enrolled=yes_no(iva_profile.voluntary_sii_enrolled),
+            hydrocarbon_deposit_advance_payment_deduction_entitled=a30,
+        )
+    territory_date = date(period.filing_year, 1, 1)
     is_foral = m303_tax_territory_is_foral(
         iva_profile.tax_territory,
         effective_date=territory_date,
@@ -171,7 +180,7 @@ def m303_profile_lexicals(
         redeme_enrolled=yes_no(iva_profile.redeme_enrolled),
         exclusively_foral=exclusively_foral,
         regime_composition_code=(
-            m303_regime_composition_export_code(iva_profile.regime_composition)
+            m303_regime_composition_export_code(iva_profile.regime_composition, effective_date=territory_date)
             if iva_profile.regime_composition is not None
             else None
         ),

@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from uuid import UUID
 
 from pydantic import BaseModel
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
@@ -64,6 +67,8 @@ from ...domain.user_profile.values import UserProfileFact
 from ..adapter_composition_ports import build_attachment_store
 from ..evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,8 +246,12 @@ def prepare_evidence_followup_conformance_case(
         persisted_draft = stored.draft
         with validating_governed_facts(operation):
             legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
-            party_advisory = party_attribution_advisory(persisted_draft, legends=legends, operation=operation)
-            country_advisory = country_vocabulary_advisory(persisted_draft, operation=operation)
+            party_advisory = party_attribution_advisory(
+                persisted_draft, legends=legends, operation=operation, effective_date=_ON_DATE
+            )
+            country_advisory = country_vocabulary_advisory(
+                persisted_draft, operation=operation, effective_date=_ON_DATE
+            )
         projected_party_advisory = (
             None
             if party_advisory is None

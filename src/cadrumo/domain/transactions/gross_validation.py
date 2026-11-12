@@ -181,7 +181,9 @@ def gross_reconstitution_finding(
     if taxable_base is None or iva_amount is None:
         return GrossReconstitutionFinding.RECONSTITUTES
     expected = round_to_cents(abs(raw_amount))
-    if iva_category in registry_category_projection("self_assessed", authority=authority):
+    if iva_category is not None and iva_category in registry_category_projection(
+        "self_assessed", effective_date=effective_date, authority=authority
+    ):
         if round_to_cents(taxable_base) != expected:
             return GrossReconstitutionFinding.SELF_ASSESSED_BASE_MISMATCH
         return GrossReconstitutionFinding.RECONSTITUTES
