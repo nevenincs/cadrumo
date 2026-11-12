@@ -2,26 +2,34 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from typing import Self
 from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
+from cadrumo.application.operations.error_detail import OperationErrorDetailV1, operation_error_detail_schema
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle
+from cadrumo.core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 
 from ..contracts.contracts import RefusalCode, RefusalError
-from ..contracts.deadline_budget import remaining_budget
+from ..contracts.deadline_budget import MIN_SETTLED_OPERATION_READ_SECONDS, remaining_budget
 from ..contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,
@@ -184,6 +192,47 @@ def read_settled_result_bytes(
             raise RefusalError(RefusalCode.INVALID_FRAME) from None
         raise FrontendRefusedError(refusal.code.value)
     return encoded
+
+
+def settled_registered_error_detail(
+    client: FrontendClient,
+    *,
+    operation_id: OperationId,
+    terminal_revision: int,
+    contract: OperationPublicDefinitionContractV1,
+    condition: OperationTerminalCondition | None,
+    deadline: float,
+) -> OperationErrorDetailV1 | None:
+    """Read a refused or failed operation's recorded detail, or ``None`` when it has none.
+
+    The detail is presentation: an operation that recorded none, a session
+    that may not read it, or a malformed document leaves the caller with the
+    registered code the observation already carried.
+    """
+    if condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL:
+        return None
+    schema = operation_error_detail_schema()
+    try:
+        document = client.read_result_document(
+            OperationResultProjectionRequestV1(
+                operation_id=operation_id,
+                terminal_revision=terminal_revision,
+                definition_contract_digest=contract.definition_contract_digest,
+                result_schema=schema,
+            ),
+            timeout=max(deadline - time.monotonic(), MIN_SETTLED_OPERATION_READ_SECONDS),
+            deadline=deadline,
+        )
+        if document.get("outcome") == "refused":
+            return None
+        success = OperationResultProjectionSuccessV1[OperationErrorDetailV1].model_validate_json(
+            canonical_json_bytes(document)
+        )
+    except (RefusalError, FrontendRefusedError, ValidationError, ValueError):
+        return None
+    if success.result_schema != schema or success.definition_contract_digest != contract.definition_contract_digest:
+        return None
+    return success.projection
 
 
 def _require_observation_identity(

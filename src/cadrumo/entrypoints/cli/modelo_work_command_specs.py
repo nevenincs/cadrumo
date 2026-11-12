@@ -304,6 +304,18 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "WorkAttestPriorCarriesResult",
     ),
     _leaf(
+        "attest-work-income",
+        ".modelo_work_income_attestation_cli",
+        (
+            a("work_unit_id", required=True),
+            o("confirmed", "--yes", FLAG_VALUE, help_name="attest_work_income_yes", flag=True),
+            _LANG,
+        ),
+        _CALC_WRITE,
+        ".modelo_work_income_attestation_payloads",
+        "WorkAttestWorkIncomeResult",
+    ),
+    _leaf(
         "set-value",
         ".modelo_work_manual_entry_cli",
         (
@@ -337,6 +349,22 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         (
             a("work_unit_id", required=True),
             a("binding_id", help_name="entry_binding", required=True),
+            o("row_identity", "--row", help_name="entry_row"),
+            o("confirmed", "--yes", FLAG_VALUE, help_name="entry_yes", flag=True),
+            _LANG,
+        ),
+        _CALC_WRITE,
+        ".modelo_work_manual_entry_payloads",
+        "WorkManualEntryResult",
+    ),
+    _leaf(
+        "attest-prior-value",
+        ".modelo_work_manual_entry_cli",
+        (
+            a("work_unit_id", required=True),
+            a("binding_id", help_name="entry_binding", required=True),
+            a("value", help_name="entry_value", required=True),
+            o("row_identity", "--row", help_name="entry_row"),
             o("confirmed", "--yes", FLAG_VALUE, help_name="entry_yes", flag=True),
             _LANG,
         ),

@@ -217,6 +217,9 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             # profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             # declaration-type=1 → individual filing (per Orden HAC/277/2026 art. 3
@@ -248,6 +251,8 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+            # Art. 81.2 guarderia increment (casilla 0613); neutral zero for a scenario with no descendants.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine) for both estatal and

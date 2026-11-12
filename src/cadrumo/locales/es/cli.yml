@@ -86,14 +86,31 @@ cli:
           a esta parte. Indícalo para preguntar qué responderá la escalera para ese
           documento, que es la única forma de ver una discrepancia con lo que tú confirmaste
           antes de que una confirmación la rechace.
+        filing_name_help: Indica el nombre con el que se declara una contraparte en
+          las declaraciones informativas, en las partes que nombran los diseños de
+          registro. Se indica una sola vez, para todas las exportaciones posteriores.
         group_help: Confirma lo que se sabe de una contraparte, una sola vez, para
           todos los documentos posteriores.
         identification_state_help: 'Estado miembro que identifica a efectos de IVA
           a la contraparte. Es un dato distinto de --scope: el art. 25 exime por este,
           no por dónde esté establecida.'
+        no_second_surname_help: Indica que la persona física tiene un solo apellido.
+          Un segundo apellido que falta nunca se interpreta como ausencia.
+        nombre_help: El nombre completo de una persona física.
         note_help: En qué se basa la respuesta, con tus propias palabras. Se registra,
           nunca se consulta.
+        party_kind_help: Si la contraparte es persona física o entidad; decide qué
+          partes indicas.
+        primer_apellido_help: El primer apellido de una persona física, tal y como
+          lo conoces.
+        razon_social_help: La razón social o denominación completa de una entidad,
+          nunca un nombre comercial.
+        rendering_help: Una forma más corta que indicas para un campo más estrecho,
+          como ANCHO=TEXTO. Repítelo una vez por ancho; un nombre nunca se acorta
+          sin que lo indiques.
         scope_help: El territorio a efectos de IVA en el que está establecida la contraparte.
+        segundo_apellido_help: El segundo apellido de una persona física. Omítelo
+          solo junto con --no-second-surname.
         tax_identifier_help: El identificador fiscal de la contraparte tal y como
           aparece impreso en el documento.
         view_help: Muestra lo que la escalera de identificación de IVA respondería
@@ -672,6 +689,8 @@ cli:
         evidence_sha256_help: SHA-256 de un certificado que ya está en tu almacenamiento,
           o comprobación frente a --certificate-file. Un payer_certificate necesita
           una de las dos cosas.
+        gastos_deducibles_help: Gastos deducibles que indica el pagador según el artículo
+          19.2 a), b) y c). Obligatorio para `trabajo`; escribe 0 si no indica ninguno.
         group_help: Registra las retenciones que te certifican tus pagadores.
         importe_integro_help: Renta dineraria que pagó el pagador, antes de la retención.
         income_class_help: Clase de renta sobre la que el pagador retuvo, por ejemplo
@@ -693,6 +712,9 @@ cli:
           un registro guardado. Omítela en el primer registro.
         record_help: Registra o sustituye las cifras que declara el certificado de
           un pagador para un ejercicio y una clase de renta.
+        reducciones_aplicables_help: Reducciones que aplicó el pagador según los artículos
+          18.2 y 18.3, tal como las indica el certificado. Obligatoria para `trabajo`;
+          escribe 0 si no indica ninguna.
         remove_expected_revision_help: Revisión que mostró el listado para el registro
           que quieres eliminar.
         remove_help: Elimina un registro de pagador, protegido por la revisión que
@@ -1032,6 +1054,7 @@ cli:
         period_help: 'Código de periodo: 0A anual, 1T-4T trimestres, 01-12 meses;
           para modelos censales (036) usa alta, modificacion o baja.'
         readiness:
+          actividades_prorrata: actividades del registro de prorrata
           activo_extranjero: activo extranjero
           afiliado_cotizacion: afiliado de la relación de cotizaciones
           borrador_aeat: borrador de la AEAT
@@ -1723,6 +1746,23 @@ cli:
           que has declarado, distinto de una cifra escrita.
         attest_prior_carries_yes_help: Confirma la declaración y regístrala en la
           autoliquidación
+        attest_prior_value_help: Indica la cifra que una declaración toma de una declaración
+          anterior que la aplicación no guarda, como el Modelo 100 del año pasado
+          presentado en otro sitio. Muestra el valor y la comprobación del cambio;
+          con --yes registra la cifra como declarada por ti para esa declaración,
+          distinta de una cifra escrita. Se rechaza si la declaración anterior está
+          guardada, porque entonces se sigue esa declaración.
+        attest_work_income_confirm: Todavía no se ha declarado nada. Ejecuta `aeat
+          app modelo work attest-work-income %{work_unit_id} --yes` para declararlo.
+        attest_work_income_help: Indica que las casillas de rendimientos del trabajo
+          que ningún certificado del pagador rellena (contribuciones empresariales
+          a planes de pensiones y mutualidades de previsión social, a seguros de dependencia,
+          aportaciones al patrimonio protegido y aportaciones por decisión tuya) están
+          vacías, para cada casilla para la que el formulario de una declaración basada
+          en un registro de pagador ofrece la declaración. Muestra la declaración
+          y la comprobación del cambio; con --yes registra cada casilla como un 0
+          que declaraste, distinto de una cifra que escribiste.
+        attest_work_income_yes_help: Confirma la declaración y regístrala en la autoliquidación
         autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor
           inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación
           de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica
@@ -1833,6 +1873,9 @@ cli:
         entry_casilla_unknown: '%{casilla} no es un identificador de casilla.'
         entry_confirm: Todavía no se ha registrado nada. Ejecuta `%{command}` para
           registrarlo.
+        entry_row_help: Fila a la que se refiere la declaración, por la identidad
+          de fila de origen que muestra el cálculo (por ejemplo inmueble:1). Solo
+          para datos que se declaran por fila.
         entry_value_help: El valor, escrito como en tu idioma de salida (por ejemplo
           1.234,56 en español o 1,234.56 en inglés).
         entry_yes_help: Confirma el cambio y regístralo en la declaración
@@ -3302,8 +3345,15 @@ cli:
         de los modelos: omitida.'
       registry_unavailable: Las definiciones de los modelos no están disponibles.
       secure_objects_empty: El almacén de objetos seguros esta vacío.
+      secure_objects_probe_failed: No se pudo comprobar la integridad de los objetos
+        seguros en %{failed} espacio(s) de nombres. Esto no significa que estén vacíos
+        ni sanos.
+      secure_objects_probe_failed_detail: 'sin comprobar: %{namespaces}'
       secure_objects_readable: '%{readable} espacios de nombres de objetos seguros
         legibles: %{namespaces}.'
+      secure_objects_unavailable: No se pudo comprobar la integridad de los objetos
+        seguros porque no se pudo leer el almacén cifrado. Esto no significa que el
+        almacén esté vacío ni sano.
       secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable} fila(s)
         legible(s)'
       state_backend_readable: El almacén de estado del flujo de trabajo es accesible.
@@ -3464,6 +3514,7 @@ cli:
         cobrada o pagada neta
       irpf_purpose_employment_income: rendimientos del trabajo (no para facturas netas)
       irpf_purpose_rent_expense_withholding: retención de alquiler pagado neto
+      irpf_purpose_rental_property_income: ingresos y gastos de alquiler de un inmueble
       irpf_usage_example: 'Alquiler neto: --category-id {rent_category} --irpf-category
         {rent_category}. Servicio profesional neto: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -3487,6 +3538,10 @@ cli:
     classify:
       apply_help: Guarda la sugerencia del LLM con origen `llm:` en lugar de solo
         previsualizarla.
+      arrendamiento_help: Clave de fila del arrendamiento guardado al que pertenece
+        esta fila de ingreso; consulta los arrendamientos con «aeat config profile
+        arrendamiento list». Un texto en blanco quita el vínculo. Una fila vinculada
+        lleva la categoría de renta capital_inmobiliario.
       auto_split_help: Lee la factura adjunta y, cuando es multicomponente, la divide
         en hijos base/IVA por línea; si no, la clasifica en su sitio (requiere --read-evidence).
       auto_split_needs_evidence: '--auto-split requiere --read-evidence: la decisión
@@ -3516,14 +3571,25 @@ cli:
         la taxonomía no se infiere.
       derive_non_derivable: '{category} no tiene un tipo español simple que derivar:
         {note} Indica --taxable-base, --iva-rate e --iva-amount a mano para esta categoría.'
+      exemption_article_help: La exención del art. 20.Uno LIVA en la que encaja una
+        fila `domestic_exempt`, como token del vocabulario de artículos de exención
+        que el registro declara para la fecha de la fila. Decide si la fila cuenta
+        en el volumen de la prorrata como operación sin derecho a deducción.
       file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
       file_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].
       file_not_found: 'Archivo CSV no encontrado: %{path}'
+      gasto_inmobiliario_help: Clase de gasto del inmueble, una de las que declara
+        el registro; un valor desconocido se rechaza con las admitidas. Necesita un
+        inmueble vinculado (--inmueble). Un texto en blanco lo quita.
       help: Clasificar un movimiento de tus registros en el perfil activo
       id_help: Id del movimiento a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --file.
+      inmueble_help: Clave de fila del inmueble guardado al que pertenece esta fila
+        de gasto; consulta los inmuebles con «aeat config profile inmueble list».
+        No junto con --arrendamiento. Un texto en blanco quita el vínculo. Una fila
+        vinculada lleva la categoría de renta capital_inmobiliario.
       investment_asset_id_help: Identidad del registro de bienes de inversión contra
         la que se deduce esta adquisición, tal como consta en ese registro. Obligatoria
         con un tipo de deducción de inversión y rechazada en cualquier otro.
@@ -3616,8 +3682,14 @@ cli:
           respuesta: ''--scope'' para dónde está establecida la contraparte, ''--identification-state''
           para qué Estado miembro la identifica a efectos de IVA, o ambas. Son hechos
           independientes y cualquiera de ellos puede indicarse por separado.'
+        rendering_malformed: '''{rendering}'' no es una forma abreviada. Escríbela
+          como ANCHO=TEXTO, con el ancho del campo en caracteres y el texto que quieres
+          declarar en él.'
         unverifiable_identifier: '''{identifier}'' no es un identificador fiscal verificable,
           por lo que no hay ninguna contraparte sobre la que confirmar nada.'
+      lines:
+        filing_name_stated: '{identifier}: nombre de declaración indicado'
+        filing_name_unchanged: '{identifier}: el nombre de declaración ya estaba indicado'
       notices:
         already_confirmed: '''{identifier}'' ya había sido confirmada por ''{asserted_by}''
           como ''{answered}''; esta llamada no creó ninguna confirmación nueva y se
@@ -3626,11 +3698,21 @@ cli:
           en {confirmed}, pero el justificante que has aportado sitúa a la misma parte
           en {evidenced}. Cadrumo no fijará ningún territorio para esta contraparte
           hasta que se retire uno de los dos.'
+        filing_name_already_stated: '''{identifier}'' ya tiene este nombre de declaración,
+          indicado por ''{asserted_by}''; esta llamada no ha cambiado nada y se mantiene
+          la indicación original.'
+        filing_name_kind_contradicts_identifier_form: Has indicado el nombre de declaración
+          para {declared}, pero la forma de este identificador fiscal español es la
+          de {observed}. El nombre se guarda tal como lo indicaste y no se ha cambiado
+          nada; comprueba cuál de las dos cosas es correcta.
         not_confirmed: No hay ningún establecimiento confirmado para '{identifier}',
           por lo que este peldaño no resuelve nada y un documento cuyo papel no sea
           concluyente planteará la pregunta.
         nothing_to_withdraw: No había nada confirmado para '{identifier}', por lo
           que no se ha retirado nada y el almacén ya está en el estado solicitado.
+      party_kinds:
+        entity: una entidad
+        natural_person: una persona física
     detach:
       actor_help: Actor registrado en el evento de ciclo de vida.
       attachment_help: Id del adjunto que se separa; repetible.
@@ -3653,6 +3735,8 @@ cli:
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).
+      rental_concept_unknown: '--gasto-inmobiliario {value!r} no reconocido. Clases
+        admitidas: {accepted}.'
       unknown_category: --category-id {category!r} no reconocido. Indica un identificador
         de categoría sin prefijo, como {example!r}, no una clave compuesta ni con
         prefijo de familia. Consulta el catálogo de categorías de tus registros para
@@ -4304,8 +4388,16 @@ cli:
       bienes_extranjero_unset: En tu perfil aún no consta si tus bienes y derechos
         situados en el extranjero superan el umbral de declaración.
       censo_enrolment_unverified: No se ha verificado el alta en el censo
+      deadline_windows_unavailable: El registro no tiene plazos para una parte de
+        este intervalo, así que no se sabe nada de las obligaciones que caen en ella.
+        Revisa el estado del resumen; una lista vacía aquí no significa que no venza
+        nada.
       estimacion_objetiva_unset: En tu perfil aún no consta qué régimen de estimación
         del IRPF se aplica a tu actividad.
+      explain_deadline_windows_unavailable: El registro no tiene plazos para el modelo
+        %{modelo} y el año %{year}, así que no se puede indicar ni el calendario ni
+        si vas tarde. Que aquí falte el aviso de presentación fuera de plazo no significa
+        que estés en plazo.
       gran_empresa_unset: En tu perfil aún no consta si tu volumen de operaciones
         del año natural anterior superó el umbral de gran empresa, lo que decide si
         presentas con periodicidad mensual o trimestral.

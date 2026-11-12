@@ -11,13 +11,18 @@ import pytest
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
-from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceCatalogueReader, InvoiceSourceResolverPorts
+from cadrumo.application.invoices.source_resolver_ports import (
+    CounterpartyFilingNameReader,
+    InvoiceSourceCatalogueReader,
+    InvoiceSourceResolverPorts,
+)
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import IntracomOperationType, ThirdPartyDeclarationRole
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -48,9 +53,12 @@ def generation_pinned_authority() -> Iterator[None]:
         yield
 
 
-def source_resolver(reader: InvoiceSourceCatalogueReader) -> InvoiceCatalogueSourceResolver:
+def source_resolver(
+    reader: InvoiceSourceCatalogueReader,
+    filing_names: CounterpartyFilingNameReader | None = None,
+) -> InvoiceCatalogueSourceResolver:
     return InvoiceCatalogueSourceResolver(
-        ports=InvoiceSourceResolverPorts(catalogue_reader=reader),
+        ports=InvoiceSourceResolverPorts(catalogue_reader=reader, counterparty_filing_names=filing_names),
     )
 
 
@@ -69,6 +77,23 @@ def m349_resolution(reader: InvoiceSourceCatalogueReader):
     )
 
 
+class InMemoryFilingNames:
+    """Adapter-test-owned stated names: each counterparty declared under its printed name, as an entity."""
+
+    def __init__(self, invoices: Sequence[Invoice]) -> None:
+        self._names = {
+            invoice.counterparty_tax_id: DeclaredPartyFilingName(
+                kind=DeclaredPartyKind.ENTITY, razon_social=invoice.counterparty_name
+            )
+            for invoice in invoices
+            if invoice.counterparty_tax_id is not None
+        }
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
+        del country_code
+        return self._names.get(tax_identifier)
+
+
 class InMemoryCatalogueReader:
     """Adapter-test-owned reader fake for public resolver projections."""
 
@@ -85,7 +110,7 @@ def public_resolution(
     context: CalculationSourceContext,
 ):
     """Resolve local fixture data through the public application seam."""
-    return source_resolver(InMemoryCatalogueReader(invoices)).resolve(context)
+    return source_resolver(InMemoryCatalogueReader(invoices), InMemoryFilingNames(invoices)).resolve(context)
 
 
 def public_m349_claves(invoices: Sequence[Invoice]) -> tuple[str, ...]:

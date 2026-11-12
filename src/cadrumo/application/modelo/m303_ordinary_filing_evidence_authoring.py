@@ -14,6 +14,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.period import Period
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments.protocols import AttachmentStoreProtocol
@@ -30,6 +31,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from ..operator_actions.preconditions import no_action_precondition_verdict
 from .action_errors import M303FilingEvidenceError, ModeloProfileReadinessError
 from .m303_exonerado_390_applicability_attestation import (
     m303_exonerado_390_filing_evidence_reference,
@@ -46,10 +48,12 @@ from .m303_exonerado_390_attestation_refusal import (
 from .m303_filing_evidence import m303_filing_evidence_failure, validate_m303_filing_instance_evidence_for_revision
 from .m303_ordinary_evidence_coordinate import ordinary_m303_evidence_coordinate_supported
 from .m303_regimen_simplificado_scope import (
+    m303_profile_readiness_failure,
     m303_regimen_simplificado_scope_for_profile,
     taxpayer_profile_for_work,
 )
 from .profile_readiness_gate import load_modelo_work_profile
+from .work_lifecycle_refusal_failures import mutation_stale_failure
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -77,7 +81,17 @@ class OrdinaryM303FilingEvidenceRequest(BaseModel):
     @model_validator(mode="after")
     def _period_matches_filing_year(self) -> OrdinaryM303FilingEvidenceRequest:
         if self.period.filing_year != self.filing_year:
-            raise M303FilingEvidenceError("ordinary M303 evidence period disagrees with filing year")
+            raise M303FilingEvidenceError(
+                "ordinary M303 evidence period disagrees with filing year",
+                precondition_failure=m303_filing_evidence_failure(
+                    "period_mismatch",
+                    {
+                        "request_filing_year": int(self.filing_year),
+                        "request_period": self.period.registry_token,
+                        "periods_match": False,
+                    },
+                ),
+            )
         return self
 
 
@@ -99,7 +113,10 @@ def author_ordinary_m303_filing_instance_evidence(
     _require_period_scoped_attestation(request, operation=operation)
     registry_snapshot = operation.snapshot("303", filing_year=request.filing_year, period=request.period.registry_token)
     if registry_snapshot.revision.id != work_unit.revision_id:
-        raise M303FilingEvidenceError("ordinary M303 evidence authority revision is stale for this work unit")
+        raise M303FilingEvidenceError(
+            "ordinary M303 evidence authority revision is stale for this work unit",
+            precondition_failure=mutation_stale_failure({"work_unit_id": work_unit.work_unit_id}),
+        )
     profile = _require_current_profile(work_unit=work_unit, operation=operation, profile=profile)
     taxpayer = taxpayer_profile_for_work(profile)
     _require_period_in_the_profile_filing_schedule(
@@ -107,7 +124,12 @@ def author_ordinary_m303_filing_instance_evidence(
     )
     scope = m303_regimen_simplificado_scope_for_profile(taxpayer)
     if not scope.is_not_claimed:
-        raise M303FilingEvidenceError("simplified-regime profile requires its unsupported evidence branch")
+        raise M303FilingEvidenceError(
+            "simplified-regime profile requires its unsupported evidence branch",
+            precondition_failure=m303_filing_evidence_failure(
+                "regimen_scope_profile_divergence", {"scope_decision_matches_censo_profile": False}
+            ),
+        )
     exonerado_390 = _modelo_390_exemption_evidence(
         work_unit=work_unit, request=request, operation=operation, attachment_store=attachment_store, profile=profile
     )
@@ -150,7 +172,12 @@ def author_ordinary_m303_filing_instance_evidence(
         profile=profile,
     )
     if validated is None:
-        raise M303FilingEvidenceError("Modelo 303 evidence validation produced no evidence")
+        raise M303FilingEvidenceError(
+            "Modelo 303 evidence validation produced no evidence",
+            precondition_failure=m303_filing_evidence_failure(
+                "unsupported_modelo", {"modelo": str(work_unit.modelo), "evidence_present": False}
+            ),
+        )
     return validated
 
 
@@ -277,7 +304,10 @@ def _require_ordinary_work_coordinate(
     ):
         raise M303FilingEvidenceError(
             "ordinary evidence authoring supports only a quarterly or monthly Modelo 303 work unit whose "
-            "selected record design declares the ordinary evidence header fields"
+            "selected record design declares the ordinary evidence header fields",
+            precondition_failure=m303_filing_evidence_failure(
+                "unsupported_modelo", {"modelo": str(work_unit.modelo), "ordinary_coordinate_supported": False}
+            ),
         )
 
 
@@ -289,8 +319,22 @@ def _require_current_profile(
             bucket_id=work_unit.bucket_id,
             profile_decode_context=operation.profile_decode_context(),
         )
-    if profile is None or profile.record.profile_id != work_unit.bucket_id:
-        raise ModeloProfileReadinessError("ordinary M303 evidence requires an authenticated current profile")
+    if profile is None:
+        raise ModeloProfileReadinessError(
+            "ordinary M303 evidence requires an authenticated current profile",
+            precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
+        )
+    if profile.record.profile_id != work_unit.bucket_id:
+        # A profile of another bucket handed in by the caller is not the operator's to repair.
+        raise ModeloProfileReadinessError(
+            "ordinary M303 evidence requires the work unit's own profile",
+            profile_precondition_verdict=no_action_precondition_verdict(
+                condition_id="modelo.m303.ordinary_evidence.profile_matches_work_unit",
+                facts={"profile_matches_work_unit": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
+        )
     return profile
 
 

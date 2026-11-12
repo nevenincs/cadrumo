@@ -35,6 +35,7 @@ from ...core.i18n.render import lookup_translation
 from ...core.iban import mask_iban as mask_iban_text
 from ...core.models import STRICT_FROZEN_CONFIG
 from .edit_value_grammar import ModeloEditRatioUnit
+from .refusal_door_verdicts import registry_defect_verdict
 
 VALUE_TRUE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_true"
 VALUE_FALSE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_false"
@@ -139,7 +140,12 @@ def value_presentation_kind(data_type: str) -> ValuePresentationKind:
     try:
         return _PRESENTATION_BY_DATA_TYPE[data_type]
     except KeyError:
-        raise UnknownValuePresentationError(f"no presentation is declared for data type {data_type!r}") from None
+        raise UnknownValuePresentationError(
+            f"no presentation is declared for data type {data_type!r}",
+            translated_message="application.modelo.errors.value_presentation_data_type_undeclared",
+            context={"data_type": data_type},
+            precondition_verdict=registry_defect_verdict("value_presentation_data_type"),
+        ) from None
 
 
 def group_decimal_text(text: str, language: OutputLanguage, *, minus: str = "-") -> str | None:
@@ -185,7 +191,12 @@ def _catalogue_text(translation_key: str, language: OutputLanguage) -> str:
     """Return one catalogue string, refusing a gap rather than showing its key."""
     text = lookup_translation(translation_key, locale=language.value)
     if text is None:
-        raise ValuePresentationCatalogueError(f"{translation_key} has no {language.value} text")
+        raise ValuePresentationCatalogueError(
+            f"{translation_key} has no {language.value} text",
+            translated_message="application.modelo.errors.catalogue_text_missing_for_language",
+            context={"text_id": translation_key, "language": language.value},
+            precondition_verdict=registry_defect_verdict("value_presentation_text"),
+        )
     return text
 
 

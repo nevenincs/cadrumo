@@ -26,7 +26,7 @@ binding_record = "operador"
 [records.row_field_casilla_ids]
 country_code = "op.codigo-pais"
 party_tax_id = "op.nif-comunitario"
-party_legal_name = "op.apellidos-razon-social"
+party_filing_name = "op.apellidos-razon-social"
 clave = "op.clave-operacion"
 base_imponible = "op.base-imponible"
 
@@ -47,7 +47,7 @@ binding_record = "rectificacion"
 [records.row_field_casilla_ids]
 country_code = "op.codigo-pais"
 party_tax_id = "op.nif-comunitario"
-party_legal_name = "op.apellidos-razon-social"
+party_filing_name = "op.apellidos-razon-social"
 clave = "op.clave-operacion"
 rectified_year = "rect.ejercicio-rectificado"
 rectified_period = "rect.periodo-rectificado"
@@ -457,6 +457,22 @@ source_row = 290
 record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
 ordinal = "7"
 
+[entries.party_name]
+natural_person_statement = "Si es una persona física se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este orden."
+entity_statement = "Para personas jurídicas y entidades en régimen de atribución de rentas, se consignará la razón social completa, sin anagrama."
+referral_statement = "Se cumplimentará con el mismo criterio que el especificado para el declarante en el registro de tipo 1."
+
+[entries.party_name.composition]
+natural_person = ["primer_apellido", "segundo_apellido", "nombre"]
+separator = " "
+entity = ["razon_social"]
+
+[entries.party_name.stated_at]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 47
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "5"
+
 [[entries]]
 export_field_id = "modelo-349-op-clave"
 kind = "binding"
@@ -660,6 +676,22 @@ sheet = "Tipo 2 - Registro De Retificaciones"
 source_row = 513
 record_identity = "Tipo 2 - Registro De Retificaciones"
 ordinal = "7"
+
+[entries.party_name]
+natural_person_statement = "Si es una persona física se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este orden."
+entity_statement = "Para personas jurídicas y entidades en régimen de atribución de rentas, se consignará la razón social completa, sin anagrama."
+referral_statement = "Se cumplimentará con el mismo criterio que el especificado para el declarante en el registro de tipo 1."
+
+[entries.party_name.composition]
+natural_person = ["primer_apellido", "segundo_apellido", "nombre"]
+separator = " "
+entity = ["razon_social"]
+
+[entries.party_name.stated_at]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 47
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "5"
 
 [[entries]]
 export_field_id = "modelo-349-rect-clave"

@@ -22,7 +22,12 @@ from typing import ClassVar
 
 from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...domain.filing.errors import FilingExportError, ModeloBuilderError, ModeloImportError
+from ...domain.filing.errors import (
+    FilingExportCasillaValueRefusedError,
+    FilingExportError,
+    ModeloBuilderError,
+    ModeloImportError,
+)
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
 
@@ -54,7 +59,27 @@ def filing_no_recovery_verdict(
     )
 
 
-class _FilingTerminalErrorMixin(TerminalPreconditionErrorMixin[PreconditionVerdict]):
+def casilla_value_refusal(
+    casilla_id: str, *, translated_message: str, context: Mapping[str, object]
+) -> FilingExportCasillaValueRefusedError:
+    """Refuse an export because the box ``casilla_id`` the filer states holds a value it cannot write.
+
+    Filing owns no recovery command, so the verdict states the facts only; the
+    Modelo export boundary, which knows the declaration, names the action that
+    states that box again.
+    """
+    return FilingExportCasillaValueRefusedError(
+        casilla_id=casilla_id,
+        translated_message=translated_message,
+        context=dict(context),
+        precondition_verdict=filing_no_recovery_verdict(
+            FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+            facts={"error_type": "FilingExportCasillaValueRefusedError", "casilla_id": casilla_id},
+        ),
+    )
+
+
+class _FilingTerminalErrorMixin(TerminalPreconditionErrorMixin[object]):
     """Attach one declared filing outcome while retaining a domain error type."""
 
     precondition_condition: ClassVar[FilingPreconditionCondition]
@@ -101,5 +126,6 @@ class ModeloApplicationError(
 __all__ = [
     "FilingPreconditionCondition",
     "ModeloApplicationError",
+    "casilla_value_refusal",
     "filing_no_recovery_verdict",
 ]

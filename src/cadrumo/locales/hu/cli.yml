@@ -83,14 +83,30 @@ cli:
           felet helyezi. Add meg, hogy megkérdezd, mit válaszol a létra erre a dokumentumra;
           csak így láthatod az eltérést attól, amit korábban megerősítettél, mielőtt
           egy megerősítés elutasítaná.
+        filing_name_help: Add meg, milyen néven szerepel egy partner az adatszolgáltató
+          bevallásokban, a nyilvántartási minták által megnevezett részekben. Egyszer
+          adod meg, minden későbbi exporthoz.
         group_help: Erősítsd meg, mit tudunk az ügyfélről – egyszer, minden későbbi
           bizonylathoz.
         identification_state_help: 'Az a tagállam, amely a partnert ÁFA szempontjából
           azonosítja. Ez más adat, mint a --scope: a 25. cikk ez alapján mentesít,
           nem a letelepedés helye alapján.'
+        no_second_surname_help: Megadod, hogy a természetes személynek egy vezetékneve
+          van. A hiányzó második vezetéknevet a program sosem tekinti hiánynak.
+        nombre_help: Egy természetes személy teljes utóneve.
         note_help: Mire alapozza a választ, saját szavaival. Rögzítjük, de soha nem
           használjuk fel.
+        party_kind_help: A partner természetes személy vagy szervezet; ez dönti el,
+          mely részeket adod meg.
+        primer_apellido_help: Egy természetes személy első vezetékneve, ahogy ismered.
+        razon_social_help: Egy szervezet teljes cégneve (razón social vagy denominación),
+          sosem kereskedelmi név.
+        rendering_help: Egy rövidebb alak, amelyet egy keskenyebb mezőhöz adsz meg,
+          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak
+          úgy rövidül, ahogy megadod.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
+        segundo_apellido_help: Egy természetes személy második vezetékneve. Csak a
+          --no-second-surname kapcsolóval együtt hagyd el.
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         view_help: Megmutatja, mit válaszolna az áfa-azonosítási létra erre az üzleti
           partnerre az eddig megerősített adatok alapján.
@@ -666,6 +682,9 @@ cli:
         evidence_sha256_help: Egy már a tárhelyeden lévő igazolás SHA-256 ujjlenyomata,
           vagy ellenőrzés a --certificate-file fájllal szemben. A payer_certificate
           esetén a kettő közül az egyik kötelező.
+        gastos_deducibles_help: A kifizető által a 19.2. cikk a), b) és c) pontja
+          szerint feltüntetett levonható költségek. `trabajo` esetén kötelező; írj
+          0-t, ha az igazolás nem tüntet fel semmit.
         group_help: Rögzítsd a kifizetőid igazolásai szerinti levonásokat.
         importe_integro_help: A kifizető által fizetett pénzbeli jövedelem a levonás
           előtt.
@@ -689,6 +708,9 @@ cli:
           cseréjéhez. Első rekordnál hagyd el.
         record_help: Rögzítsd vagy cseréld le egy kifizető igazolásának adatait egy
           adóévre és jövedelemosztályra.
+        reducciones_aplicables_help: A kifizető által a 18.2. és 18.3. cikk szerint
+          alkalmazott csökkentések, ahogy az igazolás feltünteti. `trabajo` esetén
+          kötelező; írj 0-t, ha az igazolás nem tüntet fel semmit.
         remove_expected_revision_help: A lista által a törlendő rekordhoz mutatott
           revízió.
         remove_help: Törölj egy kifizetői rekordot a lista által mutatott revízió
@@ -1012,6 +1034,7 @@ cli:
         period_help: 'Időszakkód: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási
           nyomtatványokhoz (036) használd: alta, modificacion vagy baja.'
         readiness:
+          actividades_prorrata: arányosítási nyilvántartás tevékenységei
           activo_extranjero: külföldi eszköz
           afiliado_cotizacion: járulék-kimutatás biztosítottja
           borrador_aeat: AEAT-tervezet
@@ -1695,6 +1718,23 @@ cli:
           megadásával minden összeget általad kijelentett 0-ként rögzít, a beírt számtól
           elkülönítve.
         attest_prior_carries_yes_help: A kijelentés megerősítése és rögzítése a bevallásban
+        attest_prior_value_help: Kijelented azt az összeget, amelyet egy bevallás
+          egy olyan korábbi bevallásból vesz át, amelyet az alkalmazás nem tárol,
+          például a máshol benyújtott tavalyi Modelo 100-ból. Megmutatja az értéket
+          és a módosítás ellenőrzését; a --yes kapcsolóval az adott bevallásra általad
+          kijelentett összegként rögzíti, a beírt számtól külön. Elutasítja, ha a
+          korábbi bevallás tárolva van, mert ekkor a bevallás azt követi.
+        attest_work_income_confirm: 'Még semmit sem jelentettél ki. Futtasd: `aeat
+          app modelo work attest-work-income %{work_unit_id} --yes` a kijelentéshez.'
+        attest_work_income_help: Kijelented, hogy a munkaviszonyi jövedelem azon rovataiban,
+          amelyeket egyetlen kifizetői igazolás sem tölt ki (a nyugdíjtervekhez és
+          szociális előrelátási egyesületekhez, a függőségi biztosításhoz nyújtott
+          munkáltatói hozzájárulások, a védett vagyonba tett befizetések és a te döntésedre
+          teljesített befizetések), nincs összeg, minden olyan rovatra, amelyre a
+          kifizetői rekordra épülő bevallás űrlapja felkínálja a kijelentést. Megmutatja
+          a kijelentést és a változás ellenőrzését; --yes megadásával minden rovatot
+          általad megadott 0-ként rögzít, a beírt számtól elkülönítve.
+        attest_work_income_yes_help: A kijelentés megerősítése és rögzítése a bevallásban
         autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja
           (LISIVA 9.1.c cikk + 79.4 cikk): bérbeadásra áttért saját fejlesztésű ingatlanok
           építési vagy felújítási költsége. Az asszisztens automatikusan alkalmazza
@@ -1804,6 +1844,9 @@ cli:
           (lásd: `aeat app modelo casillas`).'
         entry_casilla_unknown: '%{casilla} nem mezőazonosító.'
         entry_confirm: 'Még semmit sem rögzítettél. Futtasd: `%{command}`, hogy rögzítsd.'
+        entry_row_help: A sor, amelyre a nyilatkozat vonatkozik, a számítás által
+          mutatott forrássor-azonosítóval (például inmueble:1). Csak soronként megadott
+          adatoknál.
         entry_value_help: Az érték, a kimeneti nyelvednek megfelelően írva (például
           1 234,56 magyarul vagy 1,234.56 angolul).
         entry_yes_help: A módosítás megerősítése és rögzítése a bevallásban
@@ -3250,8 +3293,14 @@ cli:
         kihagyva.'
       registry_unavailable: A nyomtatványdefiníciók nem érhetők el.
       secure_objects_empty: A biztonságos objektumtár üres.
+      secure_objects_probe_failed: Nem sikerült ellenőrizni a biztonságos objektumok
+        épségét %{failed} névtérben. Ez nem jelenti azt, hogy üresek vagy épek.
+      secure_objects_probe_failed_detail: 'nem ellenőrzött: %{namespaces}'
       secure_objects_readable: '%{readable} olvasható biztonságos objektum-névtér:
         %{namespaces}.'
+      secure_objects_unavailable: Nem sikerült ellenőrizni a biztonságos objektumok
+        épségét, mert a titkosított tárat nem lehetett beolvasni. Ez nem jelenti azt,
+        hogy a tár üres vagy ép.
       secure_objects_unreadable: '%{unreadable} olvashatatlan sor, %{readable} olvasható
         sor.'
       state_backend_readable: Az állapot-tár olvasható.
@@ -3408,6 +3457,8 @@ cli:
       irpf_purpose_employment_income: munkaviszonyból származó jövedelem (nem nettó
         számlákhoz)
       irpf_purpose_rent_expense_withholding: nettó bérleti díj visszatartása
+      irpf_purpose_rental_property_income: ingatlan bérbeadásából származó bevétel
+        és kiadás
       irpf_usage_example: 'Nettó bérleti díj: --category-id {rent_category} --irpf-category
         {rent_category}. Nettó szakmai szolgáltatás: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -3428,6 +3479,10 @@ cli:
       year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     classify:
       apply_help: Az LLM javaslatát `llm:` forrással menti, nem csak előnézetet készít.
+      arrendamiento_help: A tárolt bérleti szerződés sorkulcsa, amelyhez ez a bevételi
+        sor tartozik; a szerződéseket az «aeat config profile arrendamiento list»
+        paranccsal listázhatod. Üres szöveg törli a kapcsolatot. A kapcsolt sor a
+        capital_inmobiliario jövedelemkategóriát viseli.
       auto_split_help: Olvasd be a csatolt számlát, és ha többkomponensű, bontsd soronkénti
         alap/áfa-gyermekekre; egyébként osztályozd helyben (a --read-evidence kapcsoló
         szükséges).
@@ -3460,15 +3515,26 @@ cli:
       derive_non_derivable: 'A(z) {category} kategóriához nincs egyszerű spanyol kulcs,
         amelyet le lehetne vezetni: {note} Add meg kézzel a --taxable-base, --iva-rate
         és --iva-amount értékeket ehhez a kategóriához.'
+      exemption_article_help: A LIVA 20.Uno cikke szerinti mentesség, amely alá egy
+        `domestic_exempt` sor tartozik, a nyilvántartás által a sor dátumára meghatározott
+        mentességi cikk-szókészlet egyik tokenjeként. Ez dönti el, hogy a sor levonási
+        jog nélküli ügyletként számít-e a prorrata volumenébe.
       file_exclusive: --file nem kombinálható tranzakció-azonosítóval vagy --classification
         értékkel.
       file_help: 'Egy CSV-fájl útvonala, amelynek oszlopai: transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].'
       file_not_found: 'A CSV-fájl nem található: %{path}'
+      gasto_inmobiliario_help: Az ingatlankiadás fajtája, a nyilvántartás által deklaráltak
+        egyike; ismeretlen értéket az elfogadottak felsorolásával utasít el. Ingatlankapcsolat
+        (--inmueble) szükséges hozzá. Üres szöveg törli.
       help: Egyetlen tranzakció besorolása az aktív profil nyilvántartásában.
       id_help: A besorolandó tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --file nincs megadva.
+      inmueble_help: A tárolt ingatlan sorkulcsa, amelyhez ez a kiadási sor tartozik;
+        az ingatlanokat az «aeat config profile inmueble list» paranccsal listázhatod.
+        Nem használható a --arrendamiento kapcsolóval együtt. Üres szöveg törli a
+        kapcsolatot. A kapcsolt sor a capital_inmobiliario jövedelemkategóriát viseli.
       investment_asset_id_help: Annak a beruházási javak nyilvántartási bejegyzésnek
         az azonosítója, amellyel szemben ez a beszerzés levonásra kerül, a bejegyzésben
         szereplő alakban. Beruházási levonási típusnál kötelező, minden más típusnál
@@ -3558,8 +3624,14 @@ cli:
           kell: a ''--scope'' azt adja meg, hol letelepedett az ügyfél, az ''--identification-state''
           pedig azt, melyik tagállam adja áfa-azonosítóját; bármelyik önmagában is
           megadható.'
+        rendering_malformed: 'A(z) ''{rendering}'' nem rövidített alak. Írd SZÉLESSÉG=SZÖVEG
+          formában: a mező szélessége karakterben, és a szöveg, amelyet ott be akarsz
+          vallani.'
         unverifiable_identifier: A(z) '{identifier}' nem ellenőrizhető adóazonosító,
           ezért nincs olyan ügyfél, amelyről bármit meg lehetne erősíteni.
+      lines:
+        filing_name_stated: '{identifier}: bevallási név megadva'
+        filing_name_unchanged: '{identifier}: a bevallási név már meg volt adva'
       notices:
         already_confirmed: A(z) '{identifier}' azonosítót '{asserted_by}' már megerősítette
           mint '{answered}'; ez a hívás nem hozott létre új megerősítést, és az eredeti
@@ -3568,12 +3640,22 @@ cli:
           telepedett le: {confirmed}, de az általad megadott bizonylat ugyanezt a
           felet ide helyezi: {evidenced}. A Cadrumo nem állapít meg területet ehhez
           a partnerhez, amíg a kettő közül az egyiket vissza nem vonják.'
+        filing_name_already_stated: A(z) '{identifier}' már rendelkezik ezzel a bevallási
+          névvel, amelyet '{asserted_by}' adott meg; ez a hívás semmit sem változtatott,
+          az eredeti megadás érvényben marad.
+        filing_name_kind_contradicts_identifier_form: A bevallási nevet {declared}
+          számára adtad meg, de ennek a spanyol adóazonosítónak a formája {observed}
+          formája. A nevet úgy tároltuk, ahogy megadtad, és semmi sem változott; ellenőrizd,
+          melyik a helyes.
         not_confirmed: A(z) '{identifier}' esetében nincs megerősített letelepedés,
           ezért ez a fokozat semmit nem dönt el, és egy nem egyértelmű bizonylat felveti
           a kérdést.
         nothing_to_withdraw: A(z) '{identifier}' esetében semmi nem volt megerősítve,
           ezért semmi nem került visszavonásra, és a tároló már a kért állapotban
           van.
+      party_kinds:
+        entity: szervezet
+        natural_person: természetes személy
     detach:
       actor_help: Az életciklus-eseményen rögzített szereplő.
       attachment_help: A leválasztandó csatolmány azonosítója; ismételhető.
@@ -3596,6 +3678,8 @@ cli:
         Add meg az összeget előjel nélkül, és a folyást a --direction kapcsolóval
         állítsd be (OUTGOING kimenő, INCOMING bejövő, INTERNAL_TRANSFER saját számlák
         között).
+      rental_concept_unknown: 'Ismeretlen --gasto-inmobiliario {value!r}. Elfogadott
+        fajták: {accepted}.'
       unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű kategóriaazonosítót
         adj meg, például {example!r}, ne kategóriacsalád-előtaggal ellátott vagy összetett
         kulcsot. A felismert azonosítókért tekintsd meg a nyilvántartásod kategóriakatalógusát.'
@@ -4231,8 +4315,16 @@ cli:
       bienes_extranjero_unset: A profilodban még nem szerepel, hogy a külföldön lévő
         vagyonod és jogaid meghaladják-e a bejelentési értékhatárt.
       censo_enrolment_unverified: A nyilvántartásba vételt még nem ellenőrizték
+      deadline_windows_unavailable: A nyilvántartásban ennek a tartománynak egy részére
+        nincsenek határidők, ezért nem tudni semmit az ide eső kötelezettségekről.
+        Nézd meg az áttekintés állapotát; az itt látható üres lista nem jelenti azt,
+        hogy semmi sem esedékes.
       estimacion_objetiva_unset: A profilodban még nem szerepel, hogy tevékenységedre
         melyik személyi jövedelemadózási rendszer vonatkozik.
+      explain_deadline_windows_unavailable: A nyilvántartásban nincsenek határidők
+        a(z) %{modelo} modellhez és a(z) %{year}. évhez, ezért sem az ütemezés, sem
+        a késés nem állapítható meg. Ha itt nincs késedelmi figyelmeztetés, az nem
+        jelenti, hogy időben vagy.
       gran_empresa_unset: A profilodban még nem szerepel, hogy az előző naptári évi
         forgalmad meghaladta-e a nagyvállalati értékhatárt, ami eldönti, hogy havonta
         vagy negyedévente nyújtasz be bevallást.

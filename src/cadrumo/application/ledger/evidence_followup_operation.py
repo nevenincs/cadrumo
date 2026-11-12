@@ -315,8 +315,10 @@ def _review_view_advisories(
     with validating_governed_facts(operation):
         period = default_invoice_extraction_period()
         legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
-        party_advisory = party_attribution_advisory(draft, legends=legends, operation=operation)
-        country_advisory = country_vocabulary_advisory(draft, operation=operation)
+        party_advisory = party_attribution_advisory(
+            draft, legends=legends, effective_date=period.end_date, operation=operation
+        )
+        country_advisory = country_vocabulary_advisory(draft, effective_date=period.end_date, operation=operation)
     return party_advisory, country_advisory
 
 

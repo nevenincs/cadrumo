@@ -24,6 +24,16 @@ import type { ActionReference } from "./modeloEditWork";
 import type { ModeloLifecycleAdvisories } from "./modeloWork";
 
 /**
+ * A further declared recovery action, offered in order after the primary one.
+ */
+export type ModeloAlternativeActionSnapshot = {
+  action: ActionReference;
+  argument_bindings: ModeloArgumentSnapshot[];
+  missing_argument_names: string[];
+  conditionality: ActionConditionality;
+};
+
+/**
  * A declared recovery argument, not an executable command.
  */
 export type ModeloArgumentSnapshot = {
@@ -55,6 +65,9 @@ export type ModeloFindingPreconditionSnapshot = {
 
 /**
  * A complete application refusal identity and its canonical recovery facts.
+ *
+ * `alternative_actions` is left out of the serialized snapshot when empty, so
+ * a refusal without alternatives keeps the shape it was published with.
  */
 export type ModeloPreconditionSnapshot = {
   subject_leaf_key: string;
@@ -66,6 +79,7 @@ export type ModeloPreconditionSnapshot = {
   missing_argument_names: string[];
   conditionality: ActionConditionality;
   no_recovery_outcome: NoRecoveryOutcome | null;
+  alternative_actions: ModeloAlternativeActionSnapshot[];
 };
 
 /**

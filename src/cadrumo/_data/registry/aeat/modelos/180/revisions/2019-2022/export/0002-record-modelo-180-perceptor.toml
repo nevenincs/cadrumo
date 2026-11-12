@@ -6,6 +6,8 @@ id = "modelo-180-perceptor"
 record_type = "perceptor"
 order = 1
 encoding = "iso-8859-1"
+alphanumeric_text = "upper_unaccented"
+alphanumeric_text_source_ref = "aeat-dr-180-2014"
 line_ending = "none"
 required = false
 repeat = "binding_rows"
@@ -153,6 +155,15 @@ source_refs = [
     "aeat-dr-180-2014",
     "aeat-modelo-180-procedure",
 ]
+
+[revisions.2019-2022.export_layouts.records.fields.party_name]
+separator = " "
+natural_person = [
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+]
+entity = ["razon_social"]
 
 [[revisions.2019-2022.export_layouts.records.fields]]
 id = "modelo-180-perc-provincia"
@@ -864,7 +875,7 @@ municipality = "perc.inmueble-municipio"
 municipality_code = "perc.inmueble-codigo-municipio"
 number_qualifier = "perc.inmueble-calificador-numero"
 number_type = "perc.inmueble-tipo-numeracion"
-perceptor_name = "perc.nombre"
+party_filing_name = "perc.nombre"
 perceptor_nif = "perc.nif"
 portal = "perc.inmueble-portal"
 postal_code = "perc.inmueble-codigo-postal"

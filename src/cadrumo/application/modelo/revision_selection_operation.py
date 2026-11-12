@@ -50,6 +50,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_errors import VerificationOutcomeIncompleteError
+from .lifecycle_view_refusal_doors import unit_verify_verdict
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .selectors import (
     ModeloCalculationRevisionDefault,
@@ -60,11 +61,9 @@ from .selectors import (
     resolve_modelo_calculation_revision_pick,
 )
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
+from .work_address_errors import ModeloWorkAddressNotFoundError, ModeloWorkPeriodTokenError, ModeloWorkSelectorError
 from .work_addressing import (
     ModeloWorkAddress,
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkPeriodTokenError,
-    ModeloWorkSelectorError,
     calculation_revision_work_unit_target_error,
     resolve_modelo_work_unit_for_operator_target,
 )
@@ -345,6 +344,7 @@ def _capture(
             raise VerificationOutcomeIncompleteError(
                 translated_message="errors.error.error_modelo_verification_outcome_incomplete",
                 context={"calculation_revision_id": revision.calculation_revision_id},
+                precondition_verdict=unit_verify_verdict("verification_outcome", unit.work_unit_id),
             )
         granting = ()
     _require_selected_revision_grant_evidence(revision, unit, bundle, payload.profile_id, granting)

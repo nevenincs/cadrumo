@@ -49,6 +49,13 @@ import type { FormSession } from "../form/session";
 import { CalculationNotes } from "../workspace/CalculationNotes";
 import { Settlement } from "../workspace/Settlement";
 import { useModeloOperation } from "../WriteScope";
+import { RefusalNotice } from "../../RefusalNotice";
+import type { LedgerErrorDetail } from "../../../shell/ledger";
+import {
+  exportDisclosures,
+  servedExportRefusal,
+  type ExportDisclosure,
+} from "./exportDisclosures";
 import {
   ReconciliationResult,
   type ReconciliationReport,
@@ -77,16 +84,22 @@ type Notice =
       kind: "saved";
       write: Write;
       name: string;
-      unverified: boolean;
-      /** The result says no direct-debit cutoff was checked. */
-      cutoffUnverified: boolean;
+      /** What the result warns of beside the file. */
+      warnings: readonly ExportDisclosure[];
     }
   | { kind: "recorded" }
   /** It committed, and what it answered could not be read. */
   | { kind: "done" }
   | { kind: "comparison"; report: ReconciliationReport }
-  /** `words` is why, as the backend served it; null when it served none. */
-  | { kind: "refused"; write: Write; words: string | null }
+  /** `words` is why, as the backend served it; null when it served none.
+   * `detail` is the error detail it settled with, null when it carried
+   * none. */
+  | {
+      kind: "refused";
+      write: Write;
+      words: string | null;
+      detail: LedgerErrorDetail | null;
+    }
   | { kind: "not_sent"; write: Write };
 
 type Stage = {
@@ -221,6 +234,11 @@ export function FilingView({
   // What the last filing file's calculation noted, kept beside the file
   // while this view shows it, whatever is done after.
   const [notes, setNotes] = useState<readonly RecordedCalculationNote[]>([]);
+  // What the last filing file leaves out, as its result disclosed it, kept
+  // beside the file the same way.
+  const [limitations, setLimitations] = useState<readonly ExportDisclosure[]>(
+    [],
+  );
   const {
     holds,
     target,
@@ -265,7 +283,12 @@ export function FilingView({
       if (outcome.kind === "settled") setNotice(settled(outcome.result));
       else if (outcome.kind === "saved_unread") setNotice({ kind: "done" });
       else if (outcome.kind === "refused")
-        setNotice({ kind: "refused", write, words: outcome.words });
+        setNotice({
+          kind: "refused",
+          write,
+          words: outcome.words,
+          detail: outcome.detail,
+        });
       else if (outcome.kind === "not_sent")
         setNotice({ kind: "not_sent", write });
       else {
@@ -345,15 +368,18 @@ export function FilingView({
           envelope.work_unit_id,
         ),
       (result: ModeloResult<"modelo.export">) => {
-        if (write === "export")
+        const disclosed = exportDisclosures(result);
+        if (write === "export") {
           setNotes(result.fichero_boe?.calculation_notes ?? []);
+          setLimitations(
+            disclosed.filter((item) => item.level === "limitation"),
+          );
+        }
         return {
           kind: "saved",
           write,
           name: picked.name,
-          unverified: result.completeness === "unverified",
-          cutoffUnverified:
-            result.fichero_boe?.domiciliation_cutoff_unverified === true,
+          warnings: disclosed.filter((item) => item.level === "warning"),
         };
       },
       [picked.token],
@@ -381,8 +407,7 @@ export function FilingView({
         kind: "saved",
         write: "package",
         name: picked.name,
-        unverified: false,
-        cutoffUnverified: false,
+        warnings: [],
       }),
       [picked.token],
       picked.token,
@@ -574,6 +599,7 @@ export function FilingView({
           {t("workspace.modelo.next.apply", { count: session.stagedCount })}
         </Alert>
       )}
+      <ExportLimitations limitations={limitations} />
       <CalculationNotes notes={notes} />
 
       {sharedWords !== null && (
@@ -843,16 +869,15 @@ function FilingNotice({
             <span>
               {t("workspace.modelo.filing.saved", { name: notice.name })}
             </span>
-            {notice.unverified && (
-              <span className="text-warning">
-                {t("workspace.modelo.filing.completeness_unverified")}
+            {notice.warnings.map((warning) => (
+              <span
+                key={warning.key}
+                data-disclosure={warning.level}
+                className="text-warning"
+              >
+                {t(warning.key)}
               </span>
-            )}
-            {notice.cutoffUnverified && (
-              <span className="text-warning">
-                {t("tui.modelo.export.result.warning.cutoff_unverified")}
-              </span>
-            )}
+            ))}
           </span>
         </Alert>
       );
@@ -871,9 +896,16 @@ function FilingNotice({
     case "comparison":
       return <ReconciliationResult report={notice.report} />;
     case "refused":
-      return (
+      // The served refusal, through the window's one refusal notice; a
+      // refusal that served no words says only that nothing was done.
+      return notice.words !== null ? (
+        <RefusalNotice
+          refusal={servedExportRefusal(notice.words, notice.detail)}
+          onAction={() => undefined}
+        />
+      ) : (
         <Alert tone="warning" icon={<Icon name="alert" />}>
-          {notice.words ?? t("workspace.modelo.outcome.not_done")}
+          {t("workspace.modelo.outcome.not_done")}
         </Alert>
       );
     case "not_sent":
@@ -883,4 +915,35 @@ function FilingNotice({
         </Alert>
       );
   }
+}
+
+/**
+ * What the last filing file leaves out, each as the result disclosed it: an
+ * omission that can only raise the tax the file states. It is a disclosure,
+ * drawn apart from the warnings and in no warning colour, and kept beside the
+ * file while this view shows it.
+ */
+function ExportLimitations({
+  limitations,
+}: {
+  limitations: readonly ExportDisclosure[];
+}) {
+  const t = useStrings();
+  if (limitations.length === 0) return null;
+  return (
+    <Alert
+      tone="neutral"
+      icon={<Icon name="info" />}
+      data-disclosure="limitation"
+    >
+      <span className="font-medium">
+        {t("desktop.modelo.export.limitation.title")}
+      </span>
+      {limitations.map((limitation) => (
+        <span key={limitation.key} className="text-sm">
+          {t(limitation.key)}
+        </span>
+      ))}
+    </Alert>
+  );
 }

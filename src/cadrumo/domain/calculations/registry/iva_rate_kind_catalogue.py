@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
-from ....core.time.clock import today_madrid
 from ...iva.schema import IvaRateKind
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
@@ -131,11 +130,11 @@ def _scoped_catalogue(effective_date: date) -> IvaRateKindCatalogue:
 
 def resolve_iva_rate_kind_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaRateKindCatalogue:
     """Resolve the complete IVA rate-kind vocabulary through fact 0094."""
-    coordinate = effective_date or today_madrid()
+    coordinate = effective_date
     selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     with validating_governed_facts(selected):
         return _scoped_catalogue(coordinate)
@@ -144,7 +143,7 @@ def resolve_iva_rate_kind_catalogue(
 def require_iva_rate_kind(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaRateKind:
     """Return one rate-kind token only when fact 0094 declares it."""

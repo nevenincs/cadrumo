@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.iva.classification import (
@@ -86,6 +85,7 @@ def axis_forks_the_law(
     probe: Callable[[CustomerTaxStatus, TransactionKind], IvaCategory],
     *,
     slices: list[tuple[tuple[CustomerTaxStatus, ...], tuple[TransactionKind, ...]]],
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Whether ONE undetermined axis can change THIS operation's treatment.
@@ -131,7 +131,10 @@ def axis_forks_the_law(
             verdicts = {probe(status, kind) for status in statuses for kind in kinds}
         except Exception:  # reason: an unclassifiable probe is not evidence of indifference.
             return True
-        if len(verdicts) > 1 or require_iva_category("unknown", authority=operation) in verdicts:
+        if (
+            len(verdicts) > 1
+            or require_iva_category("unknown", effective_date=effective_date, authority=operation) in verdicts
+        ):
             return True
     return False
 
@@ -198,7 +201,7 @@ def domestic_rate_tier_is_reachable(
     supply_nature: SupplyNature | None,
     customer_tax_status: CustomerTaxStatus | None = None,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Whether any branch this operation can still reach demands a rate tier.
@@ -220,7 +223,7 @@ def domestic_rate_tier_is_reachable(
     """
     if issuer_scope is None or customer_scope is None:
         return False
-    coordinate = effective_date or today_madrid()
+    coordinate = effective_date
     kinds = (
         (transaction_kind_for_nature(supply_nature, effective_date=coordinate, operation=operation),)
         if supply_nature is not None

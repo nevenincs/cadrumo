@@ -30,6 +30,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.iva_category_resolution import IvaCategoryOutcome
@@ -42,6 +43,8 @@ from ..classification_assembly import DeclaredFact, DeclaredFacts, assemble_clas
 from ..classification_category_resolution import declared_category_from_document_record, resolve_ingestion_iva_category
 from ..classifier_inputs import collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,6 +82,7 @@ def _resolve(
     established: bool,
     stated: IvaCategory | None = None,
     rate_tier: IvaRateKind | None = None,
+    transaction_date: date | None = _WHEN,
 ):
     """Assemble and resolve through the real production path, with no doubles.
 
@@ -89,7 +93,7 @@ def _resolve(
     declared = _facts(established=established, stated=stated)
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = assemble_classification_criteria(
-            transaction_date=_WHEN,
+            transaction_date=transaction_date,
             direction=InvoiceKind.RECEIVED,
             inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
             declared=declared,
@@ -118,7 +122,9 @@ def test_a_declared_code_is_read_into_a_fact_carrying_its_attribution() -> None:
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         fact = declared_category_from_document_record(
-            IvaCategory("domestic_reverse_charge").value, operation=_authority_operation_for_test
+            IvaCategory("domestic_reverse_charge").value,
+            operation=_authority_operation_for_test,
+            effective_date=_ON_DATE,
         )
 
         assert fact is not None
@@ -137,7 +143,12 @@ def test_an_absent_blank_or_unrecognised_code_establishes_nothing(printed: str |
     fully supports.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert declared_category_from_document_record(printed, operation=_authority_operation_for_test) is None
+        assert (
+            declared_category_from_document_record(
+                printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
+            is None
+        )
 
 
 # --------------------------------------------------------------------------
@@ -748,3 +759,22 @@ def test_the_catalogue_gap_is_forgiven_whichever_spelling_the_record_states() ->
         "the same catalogue gap reached a different outcome under a different spelling, "
         "so the carve-out depends on the code system rather than on our data"
     )
+
+
+def test_an_undated_document_infers_nothing_from_the_charged_rate() -> None:
+    """The rate-to-category mapping is dated, so with no date it is not read on today's."""
+    dated = _resolve(established=False, rate_tier=IvaRateKind("general"))
+    assert dated.outcome is IvaCategoryOutcome.RATE_INFERRED
+
+    undated = _resolve(established=False, rate_tier=IvaRateKind("general"), transaction_date=None)
+    assert undated.outcome is IvaCategoryOutcome.UNRESOLVED
+
+
+def test_an_undated_declared_category_is_not_contradicted_by_a_tier_read_on_another_date() -> None:
+    """With no date the tier check has no coordinate, so the declared category stands unjudged."""
+    tier = IvaRateKind("general")
+    declared = IvaCategory("domestic_super_reduced")
+    undated = _resolve(established=False, stated=declared, rate_tier=tier, transaction_date=None)
+    assert undated.outcome is IvaCategoryOutcome.DECLARED
+    dated = _resolve(established=False, stated=declared, rate_tier=tier)
+    assert dated.outcome is IvaCategoryOutcome.CONTRADICTED

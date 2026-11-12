@@ -136,6 +136,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
     official_evidence_message: str = Field(min_length=1)
     domiciliation_cutoff_unverified: bool = False
     completeness_unverified: bool
+    trabajo_deductions_not_computed: bool = False
     software_identity_grade: AeatSoftwareIdentityGrade | None
     calculation_notes: tuple[RecordedCalculationNote, ...] = ()
 
@@ -173,6 +174,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             official_evidence_message=result.official_evidence_message,
             domiciliation_cutoff_unverified=result.domiciliation_cutoff_unverified,
             completeness_unverified=result.completeness_unverified,
+            trabajo_deductions_not_computed=result.trabajo_deductions_not_computed,
             software_identity_grade=result.software_identity_grade,
             calculation_notes=result.calculation_notes,
         )
@@ -208,6 +210,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             official_evidence_message=self.official_evidence_message,
             domiciliation_cutoff_unverified=self.domiciliation_cutoff_unverified,
             completeness_unverified=self.completeness_unverified,
+            trabajo_deductions_not_computed=self.trabajo_deductions_not_computed,
             software_identity_grade=self.software_identity_grade,
             calculation_notes=self.calculation_notes,
         )

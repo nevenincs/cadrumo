@@ -48,7 +48,7 @@ BIOGRAPHICAL_DATE_KEYS: frozenset[str] = frozenset(
 )
 """Date fields describing a life or contract event, which may lie before the envelope floor."""
 
-DECLARATIVE_BLOCKS: tuple[str, ...] = ("rental_properties", "officers")
+DECLARATIVE_BLOCKS: tuple[str, ...] = ("officers",)
 """Persona blocks no production operation records; a materialiser reports them as not loaded."""
 
 #: An application error or refusal code, the token a refused operation settles with.
@@ -57,10 +57,21 @@ _ERROR_CODE: Final = re.compile(r"(?:ERROR|REFUSED)(?:_[A-Z0-9]+)+")
 _CALENDAR_ADVICE: Final = ("applicable_window_missing", "applicability_undetermined")
 _YEAR_TOKEN = re.compile(r"(?P<anchor>horizon|floor)(?:(?P<sign>[+-])(?P<offset>[0-9]+))?")
 _REVERSE_CHARGE_SUFFIX = "_reverse_charge"
-_IDENTITY_FIELDS = ("value", "name", "surnames", "legal_name")
+_IDENTITY_FIELDS = (
+    "value",
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+    "razon_social",
+    "name",
+    "surnames",
+    "legal_name",
+)
 
 type IdentityKind = Literal["nif", "nie", "cif", "nif_iva"]
-type IdentityField = Literal["value", "name", "surnames", "legal_name"]
+type IdentityField = Literal[
+    "value", "primer_apellido", "segundo_apellido", "nombre", "razon_social", "name", "surnames", "legal_name"
+]
 type DocumentRelation = Literal["specimen", "source"]
 type DocumentGenerator = Literal["facturae"]
 
@@ -170,15 +181,43 @@ class Identity:
     persona: str
     kind: IdentityKind
     value: str
-    name: str | None = None
-    surnames: str | None = None
-    legal_name: str | None = None
+    primer_apellido: str | None = None
+    segundo_apellido: str | None = None
+    nombre: str | None = None
+    razon_social: str | None = None
+    no_second_surname: bool = False
+    """The holder is stated with a single surname; a blank ``segundo_apellido`` alone never says so."""
+    renderings: tuple[tuple[int, str], ...] = ()
+    """Shorter renderings the operator states, as (field width, text), for a field narrower than the name."""
     country: str | None = None
     primary: bool = False
     province: str | None = None
     """Two-digit Spanish province code (01-52) of the holder's domicile, where a filing names it."""
     ceuta_melilla_deduction: bool | None = None
     """Whether a payer's retención on this holder's rentas applied the LIRPF art. 68.4 Ceuta/Melilla deduction."""
+    birth_date: PersonaDate | None = None
+    """The holder's date of birth, where a fact derived from the holder's age at a date reads it."""
+
+    @property
+    def is_entity(self) -> bool:
+        """Whether the holder is stated by a razón social rather than by a person's name parts."""
+        return self.razon_social is not None
+
+    @property
+    def name(self) -> str | None:
+        """The given name of a natural person, as the profile and the e-invoice name it."""
+        return self.nombre
+
+    @property
+    def surnames(self) -> str | None:
+        """A natural person's surnames in order, joined by one space; ``None`` for an entity."""
+        parts = [part for part in (self.primer_apellido, self.segundo_apellido) if part is not None]
+        return " ".join(parts) if parts else None
+
+    @property
+    def legal_name(self) -> str | None:
+        """The razón social of an entity; ``None`` for a natural person."""
+        return self.razon_social
 
     def field(self, name: IdentityField) -> str:
         """Return one field of the identity, refusing a field it does not carry."""
@@ -309,11 +348,46 @@ class WithholdingCertificate:
     importe_integro: Decimal
     retencion: Decimal
     cotizaciones_seguridad_social: Decimal | None
+    reducciones_aplicables: Decimal | None = None
+    gastos_deducibles: Decimal | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class WorkIncomeNoneStatement:
+    """The taxpayer's statement that, for one ejercicio, no employer contribution, patrimonio protegido or other imputed work income exists."""
+
+    ejercicio: YearToken
+
+
+@dataclass(frozen=True, slots=True)
+class CadastralValue:
+    """The cadastral values of one IBI year the persona states for a property."""
+
+    year: YearToken
+    total: Decimal
+    construccion: Decimal
+
+
+@dataclass(frozen=True, slots=True)
+class RentalLedgerLink:
+    """The ledger rows whose reference starts with ``ref_prefix`` and the rental row they are linked to."""
+
+    ref_prefix: str
+    target: Literal["arrendamiento", "inmueble"]
+    gasto: str | None
+    """The registry property-expense concept of a link to the property; a link to the lease states none."""
 
 
 @dataclass(frozen=True, slots=True)
 class RentalProperty:
-    """Declarative facts of a let dwelling; no production operation records them."""
+    """A let dwelling: the property row and the lease row the replay records, and the expectation inputs.
+
+    ``monthly_rent``, ``days_let``, ``amortization_base``, ``amortization_rate``
+    and its note are expectation inputs; the record holds none of them, since
+    the rent comes from the ledger rows and the amortisation from the stored
+    acquisition and cadastral values. The art. 23.2 rate is derived from the
+    lease facts and is never stated.
+    """
 
     id: str
     use: str
@@ -324,7 +398,28 @@ class RentalProperty:
     amortization_base: Decimal
     amortization_rate: Decimal
     amortization_base_note: str | None
-    reduccion_art_23_2: str
+    situacion: str
+    referencia_catastral: str
+    naturaleza: str
+    titularidad_regimen: str
+    titular: str
+    porcentaje_propiedad: Decimal
+    importe_adquisicion: Decimal
+    valor_suelo: Decimal
+    adquisicion_titulo: str
+    fecha_adquisicion: PersonaDate
+    gastos_tributos_adquisicion: Decimal
+    valores_catastrales: tuple[CadastralValue, ...]
+    fecha_contrato: PersonaDate
+    fecha_inicio: PersonaDate
+    uso_vivienda: bool
+    zona_tensionada: bool
+    primer_arrendamiento_vivienda: bool
+    arrendatario_pariente_art24: bool
+    incumple_lau_17_6: bool
+    ledger_links: tuple[RentalLedgerLink, ...]
+    pendiente_intereses_reparacion: Decimal | None
+    """What earlier years left pending of the interest and repairs that exceeded the rents; ``None`` when unstated."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -398,6 +493,62 @@ class AeatFiling:
     csv: str
     justificante: str
     casillas: tuple[tuple[str, str], ...]
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class PriorValueSource:
+    """The earlier return an attested prior value stands in for."""
+
+    modelo: str
+    year: YearToken
+    period: str
+
+
+@dataclass(frozen=True, slots=True)
+class AttestedPriorValue:
+    """A figure the taxpayer states for a calculation's dependency on an earlier return the application does not hold.
+
+    The replay submits it through the registered edit operation as an operator
+    attestation, and only where the application holds nothing of ``source``:
+    where it holds a work unit, a filing record or an observation of it, that
+    source governs and the entry is not submitted. ``derivation`` and
+    ``legal_ref`` record where the figure comes from; the operation does not
+    receive them.
+    """
+
+    modelo: str
+    period: str
+    year: YearToken
+    binding: str
+    value: Decimal
+    source: PriorValueSource
+    derivation: str
+    legal_ref: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class WorkInput:
+    """Values the operator enters on one return because no record the application holds produces them.
+
+    ``roles`` names each value by a registry identity (a casilla's
+    ``continuidad_id`` or ``semantic_role``), which the materialiser resolves
+    in the edition the law selects for the return, so no page-qualified casilla
+    id of one edition is frozen here. The replay submits the resolved casillas
+    through the registered declaration edit, before the return is first
+    calculated, as an operator would type them; the application's own refusal
+    of a value stands. ``sources`` states, per role, where the figure comes
+    from, and ``reason`` why it is entered by hand; the edit operation receives
+    neither. Only a casilla the edition leaves to the operator may be given,
+    and a given value is never asserted back as an expected value of the same
+    return.
+    """
+
+    modelo: str
+    year: YearToken
+    period: str
+    roles: tuple[tuple[str, str], ...]
+    sources: tuple[tuple[str, str], ...]
     reason: str
 
 
@@ -565,6 +716,10 @@ class ExpectedValue:
     #: stated without it for the same modelo, period, year and counterparty in each year the
     #: provision governs, and states nothing in the other years.
     governed_by: str | None = None
+    #: Amounts keyed by a registry identity of a casilla (its ``continuidad_id`` or
+    #: ``semantic_role``) instead of a casilla id; the casilla is the one that identity
+    #: names in the edition the law selects for the return.
+    roles: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -581,9 +736,14 @@ type BelowFloorBlock = Literal[
     "calculated_returns",
     "local_observations",
     "aeat_filings",
+    "attested_prior_values",
+    "work_inputs",
+    "prior_carries",
     "expectations.obligations",
     "expectations.deadlines",
     "expectations.values",
+    "withholding_certificates",
+    "work_income_none_statements",
 ]
 
 _HISTORY_BLOCKS: Final[frozenset[BelowFloorBlock]] = frozenset(
@@ -660,6 +820,12 @@ class Persona:
     identities: IdentityCatalogue
     below_floor: tuple[BelowFloorRecord, ...] = ()
     """The dated records a read under a lowered horizon left out, their year lying below the envelope floor."""
+    attested_prior_values: tuple[AttestedPriorValue, ...] = ()
+    """The figures the taxpayer states for earlier returns the application does not hold."""
+    work_inputs: tuple[WorkInput, ...] = ()
+    """The casilla values the operator enters on a return because no record the application holds produces them."""
+    work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = ()
+    """The ejercicios whose Modelo 100 the taxpayer states holds no income of the work-income boxes no payer certificate fills."""
 
     def identity(self, reference: str | IdentityRef) -> str:
         """Return the value an identity role or a role field reference names."""
@@ -668,7 +834,7 @@ class Persona:
 
     def declared_blocks(self) -> tuple[str, ...]:
         """Return the declarative blocks this persona fills, which no production operation records."""
-        filled = {"rental_properties": self.rental_properties, "officers": self.officers}
+        filled = {"officers": self.officers}
         return tuple(name for name in DECLARATIVE_BLOCKS if filled[name])
 
 
@@ -749,6 +915,14 @@ def _string_map(table: _Table, key: str, where: str) -> tuple[tuple[str, str], .
     return tuple((name, cast(str, value)) for name, value in mapping.items())
 
 
+def _amount_map(table: _Table, key: str, where: str) -> tuple[tuple[str, str], ...]:
+    """A string map whose every value is a canonical decimal amount."""
+    mapping = _string_map(table, key, where)
+    for name, amount in mapping:
+        _amount(amount, f"{where}.{key}.{name}")
+    return mapping
+
+
 def _date(value: object, where: str, *, biographical: bool) -> PersonaDate:
     table = _table(value, where)
     _keys(table, where, required=frozenset({"year", "month", "day"}))
@@ -784,31 +958,112 @@ _KINDS: tuple[IdentityKind, ...] = ("nif", "nie", "cif", "nif_iva")
 _PROVINCE = re.compile(r"0[1-9]|[1-4][0-9]|5[0-2]")
 
 
+def _check_name_form(
+    where: str,
+    *,
+    kind: IdentityKind,
+    parts: tuple[str | None, str | None, str | None],
+    razon_social: str | None,
+    no_second_surname: bool,
+) -> None:
+    """Refuse an identity whose filing name is not exactly one of the two forms the designs take.
+
+    A natural person states ``primer_apellido``, ``segundo_apellido`` and ``nombre``; a blank second
+    surname never reads as absent, so a single surname says ``no_second_surname`` and leaves
+    ``segundo_apellido`` out. An entity states one ``razon_social`` and no person part.
+    """
+    primer, segundo, nombre = parts
+    if razon_social is not None:
+        if any(part is not None for part in parts) or no_second_surname:
+            raise _fail(where, "a razon_social identity states no person name part")
+        if kind in ("nif", "nie"):
+            raise _fail(where, f"a {kind} identifies a natural person and states primer_apellido and nombre")
+        return
+    if primer is None or nombre is None:
+        raise _fail(where, "an identity states a razon_social, or a natural person's primer_apellido and nombre")
+    if kind in ("cif",):
+        raise _fail(where, "a cif identifies an entity and states a razon_social")
+    if no_second_surname and segundo is not None:
+        raise _fail(where, "no_second_surname contradicts a stated segundo_apellido")
+    if segundo is None and not no_second_surname:
+        raise _fail(where, "a natural person states segundo_apellido, or says no_second_surname")
+
+
+def _renderings(table: _Table, where: str) -> tuple[tuple[int, str], ...]:
+    """The operator's shorter renderings, one per field width, each fitting its width."""
+    renderings: list[tuple[int, str]] = []
+    for index, entry in enumerate(_tables(table.get("renderings"), f"{where} renderings")):
+        here = f"{where} renderings[{index}]"
+        _keys(entry, here, required=frozenset({"width", "text"}))
+        width = entry["width"]
+        if not isinstance(width, int) or isinstance(width, bool) or width <= 0:
+            raise _fail(here, "a rendering states a positive field width")
+        text = _string(entry, "text", here)
+        if len(text) > width:
+            raise _fail(here, "a rendering fits the width it is stated for")
+        renderings.append((width, text))
+    if len({width for width, _text in renderings}) != len(renderings):
+        raise _fail(where, "one rendering per field width")
+    return tuple(renderings)
+
+
 def _identity(table: _Table, where: str) -> Identity:
     _keys(
         table,
         where,
         required=frozenset({"role", "persona", "kind", "value"}),
         optional=frozenset(
-            {"name", "surnames", "legal_name", "country", "primary", "province", "ceuta_melilla_deduction"}
+            {
+                "primer_apellido",
+                "segundo_apellido",
+                "nombre",
+                "razon_social",
+                "no_second_surname",
+                "renderings",
+                "country",
+                "primary",
+                "province",
+                "ceuta_melilla_deduction",
+                "birth_date",
+            }
         ),
     )
     province = _optional_string(table, "province", where)
     if province is not None and _PROVINCE.fullmatch(province) is None:
         raise _fail(where, f"province must be a two-digit Spanish province code 01-52, found {province!r}")
+    kind = _choice(_string(table, "kind", where), _KINDS, where)
+    primer = _optional_string(table, "primer_apellido", where)
+    segundo = _optional_string(table, "segundo_apellido", where)
+    nombre = _optional_string(table, "nombre", where)
+    razon_social = _optional_string(table, "razon_social", where)
+    no_second_surname = _bool(table, "no_second_surname", where) if "no_second_surname" in table else False
+    renderings = _renderings(table, where)
+    _check_name_form(
+        where,
+        kind=kind,
+        parts=(primer, segundo, nombre),
+        razon_social=razon_social,
+        no_second_surname=no_second_surname,
+    )
     return Identity(
         role=_string(table, "role", where),
         persona=_string(table, "persona", where),
-        kind=_choice(_string(table, "kind", where), _KINDS, where),
+        kind=kind,
         value=_string(table, "value", where),
-        name=_optional_string(table, "name", where),
-        surnames=_optional_string(table, "surnames", where),
-        legal_name=_optional_string(table, "legal_name", where),
+        primer_apellido=primer,
+        segundo_apellido=segundo,
+        nombre=nombre,
+        razon_social=razon_social,
+        no_second_surname=no_second_surname,
+        renderings=renderings,
         country=_optional_string(table, "country", where),
         primary=_bool(table, "primary", where) if "primary" in table else False,
         province=province,
         ceuta_melilla_deduction=(
             _bool(table, "ceuta_melilla_deduction", where) if "ceuta_melilla_deduction" in table else None
+        ),
+        birth_date=(
+            _date(table["birth_date"], f"{where}.birth_date", biographical=True) if "birth_date" in table else None
         ),
     )
 
@@ -863,12 +1118,15 @@ _PERSONA_TABLES = frozenset(
         "own_accounts",
         "prior_carries",
         "withholding_certificates",
+        "work_income_none_statements",
         "rental_properties",
         "officers",
         "filed_returns",
         "calculated_returns",
         "local_observations",
         "aeat_filings",
+        "attested_prior_values",
+        "work_inputs",
         "leased_premises",
         "inventory",
     }
@@ -1013,9 +1271,11 @@ def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertifi
         table,
         where,
         required=frozenset({"payer", "ejercicio", "income_class", "origin", "importe_integro", "retencion"}),
-        optional=frozenset({"cotizaciones_seguridad_social"}),
+        optional=frozenset({"cotizaciones_seguridad_social", "reducciones_aplicables", "gastos_deducibles"}),
     )
     cotizaciones = table.get("cotizaciones_seguridad_social")
+    reducciones = table.get("reducciones_aplicables")
+    gastos = table.get("gastos_deducibles")
     return WithholdingCertificate(
         payer=roles(table["payer"], where),
         ejercicio=YearToken.parse(table["ejercicio"], where=f"{where}.ejercicio"),
@@ -1024,7 +1284,48 @@ def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertifi
         importe_integro=_amount(table["importe_integro"], f"{where}.importe_integro"),
         retencion=_amount(table["retencion"], f"{where}.retencion"),
         cotizaciones_seguridad_social=None if cotizaciones is None else _amount(cotizaciones, where),
+        reducciones_aplicables=None if reducciones is None else _amount(reducciones, f"{where}.reducciones_aplicables"),
+        gastos_deducibles=None if gastos is None else _amount(gastos, f"{where}.gastos_deducibles"),
     )
+
+
+def _work_income_none(table: _Table, where: str) -> WorkIncomeNoneStatement:
+    _keys(table, where, required=frozenset({"ejercicio"}), optional=frozenset())
+    return WorkIncomeNoneStatement(ejercicio=YearToken.parse(table["ejercicio"], where=f"{where}.ejercicio"))
+
+
+def _cadastral_values(value: object, where: str) -> tuple[CadastralValue, ...]:
+    values: list[CadastralValue] = []
+    for index, table in enumerate(_tables(value, where)):
+        here = f"{where}[{index}]"
+        _keys(table, here, required=frozenset({"year", "total", "construccion"}))
+        values.append(
+            CadastralValue(
+                year=YearToken.parse(table["year"], where=f"{here}.year"),
+                total=_amount(table["total"], f"{here}.total"),
+                construccion=_amount(table["construccion"], f"{here}.construccion"),
+            )
+        )
+    return tuple(values)
+
+
+def _ledger_links(value: object, where: str) -> tuple[RentalLedgerLink, ...]:
+    links: list[RentalLedgerLink] = []
+    for index, table in enumerate(_tables(value, where)):
+        here = f"{where}[{index}]"
+        _keys(table, here, required=frozenset({"ref_prefix", "target"}), optional=frozenset({"gasto"}))
+        target = _choice(_string(table, "target", here), ("arrendamiento", "inmueble"), here)
+        gasto = _optional_string(table, "gasto", here)
+        if (gasto is not None) != (target == "inmueble"):
+            raise _fail(here, "a link to the property states its expense concept and a link to the lease none")
+        links.append(
+            RentalLedgerLink(
+                ref_prefix=_string(table, "ref_prefix", here),
+                target=target,
+                gasto=gasto,
+            )
+        )
+    return tuple(links)
 
 
 def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
@@ -1041,22 +1342,71 @@ def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
                 "days_let",
                 "amortization_base",
                 "amortization_rate",
-                "reduccion_art_23_2",
+                "situacion",
+                "referencia_catastral",
+                "naturaleza",
+                "titularidad_regimen",
+                "titular",
+                "porcentaje_propiedad",
+                "importe_adquisicion",
+                "valor_suelo",
+                "adquisicion_titulo",
+                "fecha_adquisicion",
+                "gastos_tributos_adquisicion",
+                "valores_catastrales",
+                "fecha_contrato",
+                "fecha_inicio",
+                "uso_vivienda",
+                "zona_tensionada",
+                "primer_arrendamiento_vivienda",
+                "arrendatario_pariente_art24",
+                "incumple_lau_17_6",
+                "ledger_links",
             }
         ),
-        optional=frozenset({"amortization_base_note"}),
+        optional=frozenset({"amortization_base_note", "pendiente_intereses_reparacion"}),
     )
+    contract_start = _date(table["contract_start"], f"{where}.contract_start", biographical=True)
+    fecha_contrato = _date(table["fecha_contrato"], f"{where}.fecha_contrato", biographical=True)
+    fecha_inicio = _date(table["fecha_inicio"], f"{where}.fecha_inicio", biographical=True)
+    if fecha_contrato != contract_start or fecha_inicio != contract_start:
+        raise _fail(where, "the lease is signed and starts on contract_start")
+    reference = _cadastral_reference(table["referencia_catastral"], f"{where}.referencia_catastral")
     return RentalProperty(
         id=_string(table, "id", where),
         use=_string(table, "use", where),
         tenant=roles(table["tenant"], where),
-        contract_start=_date(table["contract_start"], f"{where}.contract_start", biographical=True),
+        contract_start=contract_start,
         monthly_rent=_amount(table["monthly_rent"], where),
         days_let=_string(table, "days_let", where),
         amortization_base=_amount(table["amortization_base"], where),
         amortization_rate=_amount(table["amortization_rate"], where),
         amortization_base_note=_optional_string(table, "amortization_base_note", where),
-        reduccion_art_23_2=_string(table, "reduccion_art_23_2", where),
+        situacion=_string(table, "situacion", where),
+        referencia_catastral=reference,
+        naturaleza=_string(table, "naturaleza", where),
+        titularidad_regimen=_string(table, "titularidad_regimen", where),
+        titular=_string(table, "titular", where),
+        porcentaje_propiedad=_amount(table["porcentaje_propiedad"], where),
+        importe_adquisicion=_amount(table["importe_adquisicion"], where),
+        valor_suelo=_amount(table["valor_suelo"], where),
+        adquisicion_titulo=_string(table, "adquisicion_titulo", where),
+        fecha_adquisicion=_date(table["fecha_adquisicion"], f"{where}.fecha_adquisicion", biographical=True),
+        gastos_tributos_adquisicion=_amount(table["gastos_tributos_adquisicion"], where),
+        valores_catastrales=_cadastral_values(table["valores_catastrales"], f"{where}.valores_catastrales"),
+        fecha_contrato=fecha_contrato,
+        fecha_inicio=fecha_inicio,
+        uso_vivienda=_bool(table, "uso_vivienda", where),
+        zona_tensionada=_bool(table, "zona_tensionada", where),
+        primer_arrendamiento_vivienda=_bool(table, "primer_arrendamiento_vivienda", where),
+        arrendatario_pariente_art24=_bool(table, "arrendatario_pariente_art24", where),
+        incumple_lau_17_6=_bool(table, "incumple_lau_17_6", where),
+        ledger_links=_ledger_links(table["ledger_links"], f"{where}.ledger_links"),
+        pendiente_intereses_reparacion=(
+            _amount(table["pendiente_intereses_reparacion"], f"{where}.pendiente_intereses_reparacion")
+            if "pendiente_intereses_reparacion" in table
+            else None
+        ),
     )
 
 
@@ -1185,6 +1535,62 @@ def _aeat_filing(table: _Table, where: str) -> AeatFiling:
         csv=csv_code,
         justificante=number,
         casillas=tuple(values),
+        reason=_string(table, "reason", where),
+    )
+
+
+def _attested_prior_value(table: _Table, where: str) -> AttestedPriorValue:
+    _keys(
+        table,
+        where,
+        required=frozenset({"modelo", "period", "year", "binding", "value", "source", "derivation", "legal_ref"}),
+    )
+    source = _table(table["source"], f"{where}.source")
+    _keys(source, f"{where}.source", required=frozenset({"modelo", "year", "period"}))
+    legal_ref = _strings(table, "legal_ref", where)
+    if not legal_ref:
+        raise _fail(where, "legal_ref must name at least one provision")
+    return AttestedPriorValue(
+        modelo=_string(table, "modelo", where),
+        period=_choice(_string(table, "period", where), _FILED_PERIODS, where),
+        year=YearToken.parse(table["year"], where=f"{where}.year"),
+        binding=_string(table, "binding", where),
+        value=_amount(table["value"], f"{where}.value"),
+        source=PriorValueSource(
+            modelo=_string(source, "modelo", f"{where}.source"),
+            year=YearToken.parse(source["year"], where=f"{where}.source.year"),
+            period=_choice(_string(source, "period", f"{where}.source"), _FILED_PERIODS, f"{where}.source"),
+        ),
+        derivation=_string(table, "derivation", where),
+        legal_ref=legal_ref,
+    )
+
+
+def _work_input(table: _Table, where: str) -> WorkInput:
+    _keys(table, where, required=frozenset({"modelo", "year", "period", "roles", "sources", "reason"}))
+    roles = _table(table["roles"], f"{where}.roles")
+    if not roles:
+        raise _fail(where, "roles must name at least one role")
+    values: list[tuple[str, str]] = []
+    for role, value in sorted(roles.items()):
+        _amount(value, f"{where}.roles.{role}")
+        values.append((role, cast(str, value)))
+    sources = _table(table["sources"], f"{where}.sources")
+    missing = sorted(set(roles) - set(sources))
+    if missing:
+        raise _fail(where, f"sources must state where each role's value comes from; none for {missing}")
+    extra = sorted(set(sources) - set(roles))
+    if extra:
+        raise _fail(where, f"sources name roles the block does not give: {extra}")
+    for role, text in sources.items():
+        if not isinstance(text, str) or not text.strip():
+            raise _fail(where, f"sources.{role} must be a non-empty string")
+    return WorkInput(
+        modelo=_string(table, "modelo", where),
+        year=YearToken.parse(table["year"], where=f"{where}.year"),
+        period=_choice(_string(table, "period", where), _FILED_PERIODS, where),
+        roles=tuple(values),
+        sources=tuple((role, cast(str, sources[role])) for role, _ in values),
         reason=_string(table, "reason", where),
     )
 
@@ -1535,6 +1941,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                     "refusal_stage",
                     "not_sourced",
                     "governed_by",
+                    "roles",
                 }
             ),
         )
@@ -1581,6 +1988,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 refusal_stage=refusal_stage,
                 not_sourced=not_sourced,
                 governed_by=governed_by,
+                roles=_amount_map(table, "roles", here),
             )
         )
     return Expectations(obligations=tuple(obligations), deadlines=tuple(deadlines), values=tuple(values))
@@ -1733,6 +2141,10 @@ def parse_persona(
             _withholding(table, f"{where} withholding_certificates[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("withholding_certificates"), where))
         ),
+        work_income_none_statements=tuple(
+            _work_income_none(table, f"{where} work_income_none_statements[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("work_income_none_statements"), where))
+        ),
         rental_properties=tuple(
             _rental(table, f"{where} rental_properties[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("rental_properties"), where))
@@ -1756,6 +2168,14 @@ def parse_persona(
         aeat_filings=tuple(
             _aeat_filing(table, f"{where} aeat_filings[{index}]")
             for index, table in enumerate(_tables(persona_document.get("aeat_filings"), where))
+        ),
+        attested_prior_values=tuple(
+            _attested_prior_value(table, f"{where} attested_prior_values[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("attested_prior_values"), where))
+        ),
+        work_inputs=tuple(
+            _work_input(table, f"{where} work_inputs[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("work_inputs"), where))
         ),
         leased_premises=tuple(
             _leased_premises(table, f"{where} leased_premises[{index}]", roles)
@@ -1781,10 +2201,13 @@ def parse_persona(
             raise _fail(f"{persona_id}/documents.toml", f"{document.id}: its row does not name it in ledger.csv")
     _check_returns(persona)
     _check_inventory(persona)
+    _check_work_income_none_statements(persona)
     if omit_below_floor:
         persona = _without_records_below_floor(persona, envelope)
     _check_years(persona, envelope)
     _check_aeat_filings(persona, envelope)
+    _check_attested_prior_values(persona, envelope)
+    _check_work_inputs(persona, envelope)
     _check_prior_carries(persona, envelope)
     return persona
 
@@ -1794,6 +2217,8 @@ type _DatedRecord = (
     | CalculatedReturns
     | LocalObservation
     | AeatFiling
+    | AttestedPriorValue
+    | WorkInput
     | ExpectedObligation
     | ExpectedDeadline
     | ExpectedValue
@@ -1806,8 +2231,15 @@ def _record_periods(record: _DatedRecord) -> tuple[str, ...]:
     return (record.period,)
 
 
+_WORK_INCOME_CLASS: Final = "trabajo"
+"""The suffered-withholding class whose certificate carries work income."""
+_CERTIFICATE_RETURN_MODELO: Final = "100"
+"""The return a suffered-withholding certificate feeds, named when the certificate is left out."""
+_CERTIFICATE_RETURN_PERIOD: Final = "0A"
+
+
 def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Persona:
-    """``persona`` without its return-history records and expectations below the envelope floor, listing them."""
+    """``persona`` without its dated records, statements, certificates and expectations below the floor, listed."""
     dropped: list[BelowFloorRecord] = []
 
     def kept[Record: _DatedRecord](block: BelowFloorBlock, records: tuple[Record, ...]) -> tuple[Record, ...]:
@@ -1823,13 +2255,50 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
                 inside.append(record)
         return tuple(inside)
 
+    carries: list[PriorCarries] = []
+    for statement in persona.prior_carries:
+        if statement.year.precedes_floor(envelope):
+            dropped.append(BelowFloorRecord(block="prior_carries", modelo="100", year=statement.year, periods=("0A",)))
+        else:
+            carries.append(statement)
     expectations = persona.expectations
+    certificates: list[WithholdingCertificate] = []
+    for certificate in persona.withholding_certificates:
+        if certificate.ejercicio.precedes_floor(envelope):
+            dropped.append(
+                BelowFloorRecord(
+                    block="withholding_certificates",
+                    modelo=_CERTIFICATE_RETURN_MODELO,
+                    year=certificate.ejercicio,
+                    periods=(_CERTIFICATE_RETURN_PERIOD,),
+                )
+            )
+        else:
+            certificates.append(certificate)
+    statements: list[WorkIncomeNoneStatement] = []
+    for statement in persona.work_income_none_statements:
+        if statement.ejercicio.precedes_floor(envelope):
+            dropped.append(
+                BelowFloorRecord(
+                    block="work_income_none_statements",
+                    modelo=_CERTIFICATE_RETURN_MODELO,
+                    year=statement.ejercicio,
+                    periods=(_CERTIFICATE_RETURN_PERIOD,),
+                )
+            )
+        else:
+            statements.append(statement)
     return dataclasses.replace(
         persona,
+        prior_carries=tuple(carries),
+        withholding_certificates=tuple(certificates),
+        work_income_none_statements=tuple(statements),
         filed_returns=kept("filed_returns", persona.filed_returns),
         calculated_returns=kept("calculated_returns", persona.calculated_returns),
         local_observations=kept("local_observations", persona.local_observations),
         aeat_filings=kept("aeat_filings", persona.aeat_filings),
+        attested_prior_values=kept("attested_prior_values", persona.attested_prior_values),
+        work_inputs=kept("work_inputs", persona.work_inputs),
         expectations=Expectations(
             obligations=kept("expectations.obligations", expectations.obligations),
             deadlines=kept("expectations.deadlines", expectations.deadlines),
@@ -1837,6 +2306,26 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
         ),
         below_floor=tuple(dropped),
     )
+
+
+def _check_work_income_none_statements(persona: Persona) -> None:
+    """Refuse a statement of no other work income for an ejercicio with no work-income certificate.
+
+    The statement answers the boxes a work-income return leaves to the filer; for an
+    ejercicio whose return rests on no work-income record the form never offers it, so
+    stating it there is a mistake the replay would otherwise pass over in silence.
+    """
+    certified = {
+        str(certificate.ejercicio)
+        for certificate in persona.withholding_certificates
+        if certificate.income_class == _WORK_INCOME_CLASS
+    }
+    for statement in persona.work_income_none_statements:
+        if str(statement.ejercicio) not in certified:
+            raise _fail(
+                persona.id,
+                f"work_income_none_statements {statement.ejercicio}: no work-income certificate for that ejercicio",
+            )
 
 
 def _check_returns(persona: Persona) -> None:
@@ -1874,6 +2363,53 @@ def _check_aeat_filings(persona: Persona, envelope: YearEnvelope) -> None:
             )
 
 
+def _check_attested_prior_values(persona: Persona, envelope: YearEnvelope) -> None:
+    """Refuse an attested figure listed twice, or whose source does not precede the return it feeds."""
+    seen: set[tuple[str, str, str, str]] = set()
+    for item in persona.attested_prior_values:
+        key = (item.modelo, str(item.year), item.period, item.binding)
+        if key in seen:
+            raise _fail(persona.id, f"Modelo {item.modelo} {item.year} {item.period} attests {item.binding} twice")
+        seen.add(key)
+        try:
+            source_year = item.source.year.resolve(envelope, biographical=True)
+            year = item.year.resolve(envelope)
+        except ValueError as error:
+            raise _fail(persona.id, str(error)) from None
+        if source_year >= year:
+            raise _fail(
+                persona.id,
+                f"Modelo {item.modelo} {item.year} {item.period} attests a source that does not precede it",
+            )
+
+
+def _check_work_inputs(persona: Persona, envelope: YearEnvelope) -> None:
+    """Refuse two blocks for one return, and a given role an expectation of that return asserts back by name.
+
+    A role an expectation names under ``roles`` is checked here; whether a given
+    role and an expected casilla id are the same casilla resolves only through
+    the registry, so the materialiser checks that against the return's edition.
+    """
+    seen: set[tuple[str, int, str]] = set()
+    for item in persona.work_inputs:
+        year = item.year.resolve(envelope)
+        key = (item.modelo, year, item.period)
+        if key in seen:
+            raise _fail(persona.id, f"Modelo {item.modelo} {item.year} {item.period} has two work_inputs blocks")
+        seen.add(key)
+        given = {role for role, _ in item.roles}
+        for value in persona.expectations.values:
+            if (value.modelo, value.year.resolve(envelope), value.period) != key:
+                continue
+            asserted = given & {role for role, _ in value.roles}
+            if asserted:
+                raise _fail(
+                    persona.id,
+                    f"Modelo {item.modelo} {item.year} {item.period} gives {sorted(asserted)} as a work input "
+                    "and asserts it back as an expected value",
+                )
+
+
 def _check_prior_carries(persona: Persona, envelope: YearEnvelope) -> None:
     """Refuse two statements of the pending carries for one Modelo 100 year."""
     years = [statement.year.resolve(envelope) for statement in persona.prior_carries]
@@ -1894,6 +2430,8 @@ def _dates(persona: Persona) -> list[PersonaDate]:
     for member in (*persona.descendants, *persona.ascendants):
         found.extend(value for _key, value in member.leaves if isinstance(value, PersonaDate))
     found.extend(rental.contract_start for rental in persona.rental_properties)
+    found.extend(rental.fecha_adquisicion for rental in persona.rental_properties)
+    found.extend(identity.birth_date for identity in persona.identities.identities if identity.birth_date is not None)
     found.extend(filing.presented for filing in persona.aeat_filings)
     found.extend(deadline.statutory_end for deadline in persona.expectations.deadlines)
     return found
@@ -1905,16 +2443,20 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         persona.fiscal_year,
         *(election.year for election in persona.elections),
         *(certificate.ejercicio for certificate in persona.withholding_certificates),
+        *(statement.ejercicio for statement in persona.work_income_none_statements),
         *(statement.year for statement in persona.prior_carries),
         *(filed.year for filed in persona.filed_returns),
         *(calculated.year for calculated in persona.calculated_returns),
         *(observation.year for observation in persona.local_observations),
         *(filing.year for filing in persona.aeat_filings),
+        *(item.year for item in persona.attested_prior_values),
+        *(item.year for item in persona.work_inputs),
         *(book.year for book in persona.inventory),
         *(row.year for row in persona.ledger),
         *(item.year for item in persona.expectations.obligations),
         *(item.year for item in persona.expectations.deadlines),
         *(item.year for item in persona.expectations.values),
+        *(value.year for rental in persona.rental_properties for value in rental.valores_catastrales),
     ]
     try:
         for token in tokens:
@@ -1965,8 +2507,10 @@ __all__ = [
     "PRIOR_CARRY_BOXES",
     "ActivityRow",
     "AeatFiling",
+    "AttestedPriorValue",
     "BelowFloorBlock",
     "BelowFloorRecord",
+    "CadastralValue",
     "CalculatedReturns",
     "Election",
     "Expectations",
@@ -1992,11 +2536,14 @@ __all__ = [
     "PersonaDate",
     "PersonaDocument",
     "PriorCarries",
+    "PriorValueSource",
     "ProfileAnswer",
     "ProfileValue",
     "ProvisionPeriods",
+    "RentalLedgerLink",
     "RentalProperty",
     "WithholdingCertificate",
+    "WorkInput",
     "YearEnvelope",
     "YearToken",
     "cadastral_control_characters",

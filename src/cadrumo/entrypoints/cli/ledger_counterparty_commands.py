@@ -49,16 +49,24 @@ import typer
 
 from ...application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
+    CounterpartyFilingNameFinding,
+    CounterpartyFilingNameProjection,
     CounterpartyResolutionProjection,
     LedgerCounterpartyRequest,
 )
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...domain.iva.classification import require_iva_territorial_scope
 from ...domain.iva.schema import EUMemberState, IvaTerritorialScope
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
+from .ledger_counterparty_filing_name_commands import (
+    filing_name_finding_notices,
+    filing_name_finding_payloads,
+    filing_name_payload,
+)
 from .ledger_counterparty_results import (
     CounterpartyConfirmResult,
     CounterpartyEstablishmentPayload,
@@ -94,7 +102,11 @@ def _payload(ctx: typer.Context, fact: CounterpartyFactProjection) -> Counterpar
         counterparty_key=fact.counterparty_key,
         canonical_tax_identifier=fact.canonical_tax_identifier,
         territorial_scope=(
-            require_iva_territorial_scope(fact.territorial_scope, operation=authority_operation(ctx))
+            require_iva_territorial_scope(
+                fact.territorial_scope,
+                effective_date=fact.asserted_at.date(),
+                operation=authority_operation(ctx),
+            )
             if fact.territorial_scope is not None
             else None
         ),
@@ -266,6 +278,8 @@ def _counterparty_view_result(
     tax_identifier: str,
     evidenced_scope: IvaTerritorialScope | None,
     resolution: CounterpartyResolutionProjection,
+    filing_name: CounterpartyFilingNameProjection | None,
+    findings: tuple[CounterpartyFilingNameFinding, ...],
 ) -> CounterpartyViewResult:
     """Project the resolver's three-state answer onto the backend-owned payload."""
     operation = authority_operation(ctx)
@@ -273,7 +287,9 @@ def _counterparty_view_result(
         tax_identifier=tax_identifier,
         confirmed=resolution.territorial_scope is not None,
         territorial_scope=(
-            require_iva_territorial_scope(resolution.territorial_scope, operation=operation)
+            require_iva_territorial_scope(
+                resolution.territorial_scope, effective_date=today_madrid(), operation=operation
+            )
             if resolution.territorial_scope is not None
             else None
         ),
@@ -301,11 +317,15 @@ def _counterparty_view_result(
         # that field is what the rung will answer, and on a contradiction it
         # answers nothing.
         confirmed_scope=(
-            require_iva_territorial_scope(resolution.confirmed_scope, operation=operation)
+            require_iva_territorial_scope(
+                resolution.confirmed_scope, effective_date=today_madrid(), operation=operation
+            )
             if resolution.confirmed_scope is not None
             else None
         ),
         contradiction_detail=resolution.contradiction_detail,
+        filing_name=filing_name_payload(filing_name) if filing_name is not None else None,
+        filing_name_findings=filing_name_finding_payloads(findings),
     )
 
 
@@ -364,10 +384,18 @@ def counterparty_view(
     )
     resolution = cast("CounterpartyResolutionProjection", completed.projection.resolution)
     notices = _counterparty_view_notices(tax_identifier, resolution)
+    notices.extend(filing_name_finding_notices(completed.projection.findings))
     emit_envelope(
         ctx,
         command="ledger.counterparty.show",
-        result=_counterparty_view_result(ctx, tax_identifier, evidenced_scope, resolution),
+        result=_counterparty_view_result(
+            ctx,
+            tax_identifier,
+            evidenced_scope,
+            resolution,
+            completed.projection.filing_name,
+            completed.projection.findings,
+        ),
         lines=[_counterparty_view_line(tax_identifier, resolution)],
         notices=notices,
     )

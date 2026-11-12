@@ -94,6 +94,8 @@ class LayoutWalker:
             for item in layout.placements
         }
         self.seen: set[str] = set()
+        # Boxes met only as a repeating group's column: their own field may still follow on a later section.
+        self.columned: set[str] = set()
         self.positions: dict[str, set[tuple[str, str]]] = {}
         self.section_position: tuple[str, str] = ("", "")
 
@@ -108,10 +110,18 @@ class LayoutWalker:
         engine's own figure for the box is what the filed fichero carries.
         """
         if casilla_id in self.seen:
-            raise ModeloWorkFormLayoutError(f"the layout places casilla {casilla_id!r} more than once")
+            raise ModeloWorkFormLayoutError(
+                f"the layout places casilla {casilla_id!r} more than once",
+                translated_message="application.modelo.errors.work_form_layout_casilla_repeated",
+                context={"casilla_id": casilla_id},
+            )
         placement = self.placements.get(casilla_id)
         if placement is None or placement.kind is not FormPlacementKind.ON_FORM:
-            raise ModeloWorkFormLayoutError(f"casilla {casilla_id!r} sits on a page without an on-form placement")
+            raise ModeloWorkFormLayoutError(
+                f"casilla {casilla_id!r} sits on a page without an on-form placement",
+                translated_message="application.modelo.errors.work_form_layout_casilla_off_form",
+                context={"casilla_id": casilla_id},
+            )
         self.seen.add(casilla_id)
         self.positions.setdefault(casilla_id, set()).add(self.section_position)
         field = project_casilla_field(casilla_id, self.context, placement, self.aliases.get(casilla_id, ()))
@@ -255,6 +265,9 @@ class LayoutWalker:
         return project_binding_field(binding_id, self.context).value
 
     def _field_block(self, block: FormFieldBlock) -> ModeloFormBlock:
+        if block.casilla_id is not None and block.casilla_id in self.columned:
+            self.columned.discard(block.casilla_id)
+            self.seen.discard(block.casilla_id)
         if block.casilla_id is not None and block.casilla_id in self.seen:
             return self.alias(block)
         field = (
@@ -300,7 +313,11 @@ class LayoutWalker:
         declared = {(alias.page_id, alias.section_id) for alias in placement.aliases}
         visited = self.positions.setdefault(casilla_id, set())
         if self.section_position not in declared or self.section_position in visited:
-            raise ModeloWorkFormLayoutError(f"the layout places casilla {casilla_id!r} more than once")
+            raise ModeloWorkFormLayoutError(
+                f"the layout places casilla {casilla_id!r} more than once",
+                translated_message="application.modelo.errors.work_form_layout_casilla_repeated",
+                context={"casilla_id": casilla_id},
+            )
         visited.add(self.section_position)
         field = project_casilla_field(casilla_id, self.context, placement, self.aliases.get(casilla_id, ()))
         return ModeloFormContextFieldBlock(id=block.id, label=field.label, value=field.value)
@@ -361,6 +378,7 @@ class LayoutWalker:
                 placement = self.placements.get(casilla_id)
                 if placement is not None and placement.kind is FormPlacementKind.ON_FORM:
                     self.seen.add(casilla_id)
+                    self.columned.add(casilla_id)
 
     def _column_data_types(self, column_casillas: tuple[str | None, ...]) -> tuple[str, ...]:
         return tuple(

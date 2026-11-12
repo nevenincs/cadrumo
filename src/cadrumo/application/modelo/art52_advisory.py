@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_absence import AbsentCasillaReading
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.errors import ModeloError
@@ -19,6 +18,8 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
+from .refusal_door_verdicts import registry_defect_verdict
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 if TYPE_CHECKING:
@@ -81,8 +82,13 @@ def art52_reduccion_advisory_finding(
     *,
     operation: PinnedAuthorityOperation,
     modelo: str,
+    effective_date: date,
 ) -> ModeloVerificationFinding | None:
-    """Warn when individual previdencia-social reduction exceeds its sub-limit."""
+    """Warn when individual previdencia-social reduction exceeds its sub-limit.
+
+    ``effective_date`` is the filing coordinate the caller resolves every other
+    dated fact at, so the declaration follows the work's filing year.
+    """
     try:
         reduccion_id = casilla_id_for_unique_revision_semantic_role(
             revision,
@@ -105,7 +111,12 @@ def art52_reduccion_advisory_finding(
             modelo_id=modelo,
         )
     except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+        raise ModeloError(
+            str(exc),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
 
     if (
         reduccion_id is None
@@ -123,7 +134,6 @@ def art52_reduccion_advisory_finding(
     autonomos_empresarios_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(
         casilla_values, autonomos_empresarios_id
     )
-    effective_date = getattr(revision, "valid_to", None) or today_madrid()
     _registry_art52_declaration(
         revision,
         operation=operation,
@@ -138,7 +148,12 @@ def art52_reduccion_advisory_finding(
     resolved_sublimit = context.resolved_decimal(_ART52_INDIVIDUAL_SUBLIMIT_FACT_ID)
     sublimit = resolved_sublimit.payload.value
     if not isinstance(sublimit, Decimal):
-        raise ModeloError("Art. 52 individual sublimit fact must resolve to a Decimal")
+        raise ModeloError(
+            "Art. 52 individual sublimit fact must resolve to a Decimal",
+            translated_message="application.modelo.errors.advisory_limit_not_numeric",
+            context={"fact": _ART52_INDIVIDUAL_SUBLIMIT_FACT_ID},
+            precondition_verdict=registry_defect_verdict("art52_sublimit_fact"),
+        )
     if _individual_art52_sublimit_exceeded(
         reduccion_value, trabajador_con_contribucion_value, empresarial_value, autonomos_empresarios_value, sublimit
     ):

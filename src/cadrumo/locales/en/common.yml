@@ -286,6 +286,10 @@ aggregation:
         before saving.
       taxpayer_tax_id_unknown: Your profile declares no tax ID (NIF), so a payer that
         is yourself cannot be ruled out. Add your NIF to the profile first.
+      trabajo_certificate_figure_missing: A work-income certificate states the reductions
+        and the deductible expenses (--reducciones-aplicables, --gastos-deducibles).
+        Give both, with 0 where the certificate states none; no other income class
+        takes them.
       validation: 'The withholding record was not saved: check the payer ID, the amounts
         (at most two decimals) and the certificate fingerprint.'
     served:
@@ -314,6 +318,9 @@ aggregation:
         and retry.
       taxpayer_tax_id_unknown: Your profile has no tax ID (NIF) yet, so a payer that
         is yourself cannot be ruled out. Add your NIF to your profile first.
+      trabajo_certificate_figure_missing: A work-income certificate states the reductions
+        the payer applied and the deductible expenses. Enter both, with 0 where the
+        certificate states none.
       validation: The withholding record was not saved. Check the payer's tax ID,
         that the amounts have at most two decimals, and the certificate.
   retencion_soportada_absence:
@@ -2110,6 +2117,30 @@ desktop:
         confirmation. Your draft has been kept.
       country: Country
       established: Established
+      filing_name:
+        kind:
+          entity: Entity
+          natural_person: Natural person
+        kind_contradicts: The kind stated ({declared}) differs from the form of the
+          identifier ({observed}).
+        kind_label: Kind
+        no_second_surname: No second surname
+        nombre: Given name
+        primer_apellido: First surname
+        razon_social: Company name
+        rendering_add: Add a rendering
+        rendering_for: For {width} characters
+        rendering_remove: Remove this rendering
+        renderings: Shorter renderings
+        renderings_hint: The width is the number of characters of the field the name
+          has to fit.
+        save: Save filing name
+        segundo_apellido: Second surname
+        stated_by: Stated by
+        text: Text
+        title: Filing name
+        unstated: No filing name stated.
+        width: Width
       not_applied: The returned confirmation does not contain every value you entered.
         Your draft has been kept.
       note: Note
@@ -3459,6 +3490,7 @@ desktop:
       actividad_economica: Economic activity
       arrendamiento_local: Rent of business premises
       arrendamiento_vivienda_afecto: Rent of home used for business
+      capital_inmobiliario: Rental of property
       trabajo: Employment
     issue:
       next: Next readiness issue
@@ -4010,6 +4042,7 @@ desktop:
         closing: Set the closing value
         correct: Correct the opening stock or the method
         describe: Edit the details
+        movement_claim: State the ledger transaction of this purchase
         movement_correct: Correct this movement
         movement_reverse: Reverse this movement
         preview: Preview the valuation
@@ -4017,6 +4050,17 @@ desktop:
         restore: Restore the stock book
         retire: Retire the stock book
       books: Stock books for {year}
+      claim:
+        column: Ledger
+        note: Say which ledger transaction books this purchase, that none does, or
+          clear what was stated.
+        row: The ledger books this purchase
+        row_claimed: A ledger transaction books it
+        row_none: No ledger transaction books it
+        row_unstated: Not stated
+        row_unstated_hint: This clears an earlier statement.
+        state_claimed: Booked by {transaction}
+        transaction: Ledger transaction
       closing:
         authority: How the value is decided
         basis: Counted at
@@ -4103,6 +4147,7 @@ desktop:
         correct: Correct {name} · {year}
         describe: Details of {name} · {year}
         movement: Add a movement to {name} · {year}
+        movement_claim: Ledger transaction of a purchase of {name} · {year}
         movement_correct: Correct a movement of {name} · {year}
         restore: Restore {name} · {year}
         retire: Retire {name} · {year}
@@ -4160,6 +4205,7 @@ desktop:
         correct: Save the correction
         describe: Save the details
         movement: Add the movement
+        movement_claim: Save the statement
         movement_correct: Save the correction
         restore: Restore the stock book
         retire: Retire the stock book
@@ -4414,6 +4460,9 @@ desktop:
       confirm: Discard
       lead: It leaves your list of declarations. Its history is kept.
       reason: Why (optional)
+    export:
+      limitation:
+        title: What this file leaves out
     form:
       pages: Pages of the form
     keys:
@@ -4442,6 +4491,19 @@ desktop:
     side:
       label: Beside the form
       outline: Outline
+    statements:
+      hide: Hide
+      intro: Tick each statement that is true for you. Every one you tick is staged
+        for review with your other changes; clearing a tick takes that statement out.
+      mark: Stated by you
+      not_placed: A statement names a box this form does not show, so it was not staged.
+      show: Show
+      stage: Stage for review
+      title: Statements you can make
+      withdraw: Withdraw the statement
+      withdraw_kept: Box {box} of this statement cannot be taken out here, so nothing
+        was withdrawn.
+      withdrawn: Statement withdrawn
     view:
       compare: Compare
       credits: Withholdings
@@ -4755,6 +4817,8 @@ desktop:
     search: Search
     settings: Settings
     tui: Workspace
+  refusal:
+    action_unroutable: Not available here.
   session:
     enter_restarts: Enter restarts
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
@@ -6136,7 +6200,11 @@ review:
   adapters:
     errors:
       drafts_load_failed: Failed to load filing drafts from secure backend.
+      drafts_unattributed: Your profile has no tax ID, so none of the %{draft_count}
+        stored drafts can be shown as yours. Add your tax ID to your profile and review
+        again.
       invoices_load_failed: Failed to load invoices catalogue from secure backend.
+      profile_load_failed: Failed to load profile from secure backend.
       transactions_load_failed: Failed to load transactions catalogue from secure
         backend.
   filing:
@@ -6161,9 +6229,13 @@ sheets:
       accrual_year: Accrual year
       acquisition_date: Acquisition date
       acquisition_value: Acquisition value
+      adquisicion_lucrativa: Acquired without consideration
+      adquisicion_onerosa: Acquired for consideration
+      amortizacion: Depreciation
       amount: Amount
       amount_donated: Amount donated
       anualidades_alimentos: Food annuities
+      arrendado: Let
       ascendants_75_plus_total: Ascendants 75+ (total)
       ascendants_75_plus_whole: Ascendants 75+ (whole)
       ascendants_disabled_33_65_total: Disabled ascendants 33-65% (total)
@@ -6177,6 +6249,7 @@ sheets:
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
       asset_ref: Internal asset reference
+      base_amortizacion: Depreciation base
       base_imponible: Tax base
       base_imponible_assigned: Tax base assigned
       base_retenciones: Withholding base
@@ -6242,8 +6315,11 @@ sheets:
       descendants_rest_whole: Remaining descendants (whole)
       descendants_under_3_total: Descendants under 3 (total)
       descendants_under_3_whole: Descendants under 3 (whole)
+      dias_arrendado: Days let
+      dias_arrendado_amortizacion: Days let for depreciation
       dias_arrendamiento: Days the property was leased
       dias_miembro: Number of days as member
+      direccion: Address
       disability_clave: Disability
       domicilio_fiscal: Member's tax domicile
       donor_legal_name: Donor legal name
@@ -6251,8 +6327,11 @@ sheets:
       door: Door
       element_type: Asset type
       emerging_stock_excess_clave: Emerging-company stock excess
+      fecha_adquisicion: Property acquisition date
+      fecha_contrato: Lease date
       fecha_devengo: Accrual date
       fecha_inicio_prestamo: Loan start date
+      fecha_transmision: Property transfer date
       fecha_vencimiento_prestamo: Loan maturity date
       financial_asset_acquisition_value: Financial asset acquisition value
       financial_asset_disposal_value: Financial asset disposal value
@@ -6268,10 +6347,27 @@ sheets:
       gain: Capital gain
       gain_difference: Gain on the transfer
       garantias: Guarantees
+      gasto_comunidad: Community charges
+      gasto_defensa_juridica: Legal defence costs
+      gasto_formalizacion_contrato: Lease formalisation costs
+      gasto_interes_financiacion: Interest and financing costs
+      gasto_otros: Other deductible expenses
+      gasto_primas_seguro: Insurance premiums
+      gasto_reparacion_conservacion: Repair and upkeep costs
+      gasto_saldos_dudoso_cobro: Doubtful debts
+      gasto_servicios_terceros: Third-party personal services
+      gasto_suministros: Services and utilities
+      gasto_tributos: Taxes, surcharges and fees
+      gastos_adquisicion: Acquisition expenses and taxes
       gastos_deducibles: Deductible expenses
+      gastos_pendientes_anteriores: Interest and repair expenses pending from the
+        four previous years
+      gastos_pendientes_aplicados: Pending amount from previous years applied this
+        year
       geographic_mobility_clave: Geographic mobility
       house_number: House number
       housing_loan_communication_clave: Home loan communication
+      importe_adquisicion: Acquisition amount
       importe_gastos: Expense amount
       importe_q1: Amount Q1
       importe_q2: Amount Q2
@@ -6285,11 +6381,24 @@ sheets:
       incapacity_kind_value: In-kind value from work incapacity
       ingreso_a_cuenta: In-kind tax credit
       ingreso_a_cuenta_repercutido: Payments on account passed on
+      ingresos_integros: Gross computable income
+      inquilino_1_nif: Tenant 1 tax ID
+      inquilino_1_nif_extranjero: Tenant 1 tax ID is foreign
+      inquilino_2_nif: Tenant 2 tax ID
+      inquilino_2_nif_extranjero: Tenant 2 tax ID is foreign
+      inquilino_3_nif: Tenant 3 tax ID
+      inquilino_3_nif_extranjero: Tenant 3 tax ID is foreign
+      intereses_reparacion_aplicados: Interest and repair expenses of the year applied
+      intereses_reparacion_pendientes: Interest and repair expenses of the year pending
+      intereses_reparacion_pendientes_futuros: Interest and repair expenses pending
+        for the following four years
       is_recurrent: Recurrent donation
       isin_code: ISIN code
       locality: Locality
       loss: Capital loss
       loss_difference: Loss on the transfer
+      mejoras_anteriores: Improvements made in previous years
+      mejoras_ejercicio: Improvements made this year
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
@@ -6312,7 +6421,7 @@ sheets:
       operation_date: Operation date
       operation_kind_code: Operation kind
       pago: Payment
-      party_legal_name: Party legal name
+      party_filing_name: Party filing name
       party_tax_id: Party tax id
       penalizaciones: Penalties
       pendiente_flag: Pending
@@ -6331,6 +6440,8 @@ sheets:
       perceptor_tax_id: Recipient tax id
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
+      porcentaje_construccion: Construction share of the cadastral value
+      porcentaje_propiedad: Ownership (%)
       porcentaje_retencion: Withholding %
       porcentaje_titularidad_inmueble: Property ownership percentage
       portal: Entrance
@@ -6343,21 +6454,27 @@ sheets:
       rectified_period: Rectified period
       rectified_year: Rectified year
       reduccion: Reduction applicable to the income
+      reduccion_aplicable: Reduction applies
       reducciones: Reductions
       reducciones_aplicables: Applicable reductions
       referencia_catastral: Cadastral reference
       refund_amount: Refund amount
+      rendimiento_neto: Net income
       rendimiento_neto_minorado_agricola_eo: Reduced agricultural net yield (estimación
         objetiva)
       rendimiento_neto_previo_eo: Prior net yield (estimación objetiva)
+      rendimiento_neto_reducido: Reduced net income
       representative_nif: Representative NIF
       representative_tax_id: Legal representative NIF
       residence_country_code: Residence country code
       retencion_amount: Withholding amount
       retencion_practicada: Withholding applied
+      retenciones: Withholdings
       reverse_charge_mark: Reverse charge
+      rustica: Rural
       second_child_compute: 2nd child computation
       share_percentage: Share percentage
+      situacion: Location key
       situacion_inmueble: Property location status
       situation: Property situation
       spouse_or_unit_titular_tax_id: Spouse or coexistence-unit holder NIF
@@ -6376,6 +6493,9 @@ sheets:
       transmission_date: Disposal date
       transmission_value: Disposal value
       unit_convivencia_titular_clave: Coexistence unit holder
+      urbana: Urban
+      valor_catastral: Cadastral value
+      valor_catastral_construccion: Cadastral value of the construction
       valuation_amount: Valuation
       valuation_event: Valuation event
       valuation_event_date: Valuation event date
@@ -8507,10 +8627,12 @@ tui:
           action: Request
           actividad_id: Activity
           authority_record: Closing value full record file
+          claimed_transaction_id: Claimed ledger entry
           closing_value_facts: Closing value facts file
           evidence_file: Document file
           evidence_folder: Folder the document path starts from
           kind: Movement kind
+          ledger_row: Purchase's ledger entry
           movement_date: Movement date
           movement_id: Movement identifier
           opening_stock: Opening stock (optional)
@@ -8811,6 +8933,19 @@ tui:
     next_line: 'Next: {action} [{key}]'
     search:
       prompt: Search every page by box number or by words. Enter goes to the box.
+    statements:
+      intro: Tick each statement that is true for you. Every one you tick is staged
+        for review with your other changes; clearing a tick takes that statement out.
+      key: Statements
+      mark:
+        meaning: You stated this box holds no amount; it is not a value you typed.
+        name: Stated by you
+      none: This declaration offers no statement to make now.
+      not_placed: A statement names a box this screen does not show, so it was not
+        staged.
+      stage: Stage for review
+      title: Statements you can make
+      withdraw: Withdraw the statement
   operations:
     action:
       close: Close
@@ -8957,6 +9092,9 @@ tui:
       support_matrix: 'What Cadrumo can do with each modelo: calculate, export, read
         filed copies.'
     title: Reference
+  refusal:
+    action_needs_details: … asks for details it still needs before it can run.
+    action_unroutable: Not available here.
   restricted:
     actions: 'Allowed actions: {values}'
     all_periods: All periods
@@ -9161,6 +9299,38 @@ tui:
         reconciliation_resolved: Resolved
         revision_current: Current
         revision_superseded: Replaced
+  withholding:
+    absence:
+      state:
+        active: Active
+        withdrawn: Withdrawn
+    absences:
+      title: Statements of no withholding
+    action:
+      attest_absence: State there was no withholding
+      read: Read
+      record: Add or replace a record
+      remove: Remove selected record
+      withdraw_absence: Withdraw selected statement
+    column:
+      attested_on: Stated on
+      income: Income
+      note: Note
+      payer: Payer
+      state: State
+    ejercicio: Year
+    prompt: Enter a year and read it to see its payer records and statements of no
+      withholding.
+    records:
+      title: Payer records
+    status:
+      choose_active_absence: Select an active statement first.
+      choose_record: Select a payer record first.
+      ejercicio_invalid: Enter the year as four digits.
+      empty: Nothing is recorded for %{ejercicio}.
+      read_failed: The records could not be read.
+      read_first: Read a year first.
+      reading: Reading…
 workspace:
   declarations:
     availability:

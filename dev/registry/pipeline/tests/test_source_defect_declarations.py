@@ -455,7 +455,7 @@ class TestNoteGovernedAmountAdjudication:
             # The note states two things, and both are recorded: the run's
             # representation, and the value it mandates.
             assert declaration.mandated_values == ("0",)
-            assert "rellenas a 0" in declaration.note_statement
+            assert "rellenas a 0" in (declaration.note_statement or "")
 
     def test_an_adjudicated_pointer_renders_the_scale_its_run_states(self) -> None:
         derived = numeric_derivation(
@@ -510,10 +510,10 @@ class TestNoteGovernedAmountAdjudication:
 
     def test_a_mandated_value_the_export_schema_cannot_carry_is_refused(self) -> None:
         """Teeth on the declaration itself, in the three ways it can be wrong."""
-        with pytest.raises(ValidationError, match="zero-canonical unsigned unit values"):
+        with pytest.raises(ValidationError, match="zero-canonical unsigned wire digit runs"):
             self._declaration(mandated_values=("00",))
-        with pytest.raises(ValidationError, match="zero-canonical unsigned unit values"):
-            self._declaration(mandated_values=("0", "1234567890123456"))
+        with pytest.raises(ValidationError, match="zero-canonical unsigned wire digit runs"):
+            self._declaration(mandated_values=("0", "123456789012345678"))
         with pytest.raises(ValidationError, match="non-empty and unique"):
             self._declaration(mandated_values=())
 
@@ -641,6 +641,7 @@ class TestModelo200NoteGovernedAmounts:
         assert {item.sheet for item in declarations} == {"DP200019", "DP200020B", "DP200014B"}
         for declaration in declarations:
             assert declaration.source_sha256 == self._M200_2025_SHA
+            assert declaration.note_statement is not None
             assert declaration.note_statement.strip() == declaration.note_statement
             assert declaration.note_statement
             # Every run of this design fills the same seventeen-byte slot, by
@@ -662,9 +663,9 @@ class TestModelo200NoteGovernedAmounts:
         by_sheet = {item.sheet: item for item in note_governed_amounts_for("aeat-dr-200-2025")}
 
         assert by_sheet["DP200019"].note_cell == "A254"
-        assert "grupos mercantiles" in by_sheet["DP200019"].note_statement
+        assert "grupos mercantiles" in (by_sheet["DP200019"].note_statement or "")
         assert by_sheet["DP200020B"].note_cell == "A106"
-        assert "00000000009999999" in by_sheet["DP200020B"].note_statement
+        assert "00000000009999999" in (by_sheet["DP200020B"].note_statement or "")
 
     def test_the_pointer_run_renders_the_scale_its_design_states(self) -> None:
         derived = numeric_derivation(
@@ -723,9 +724,9 @@ class TestModelo200NoteGovernedAmounts:
             assert declaration.signed is True
             assert (declaration.integer_digits, declaration.decimal_digits) == (14, 2)
         assert by_pointer["Nota 1"].note_cell == "A102"
-        assert "solo pueden tener contenido" in by_pointer["Nota 1"].note_statement
+        assert "solo pueden tener contenido" in (by_pointer["Nota 1"].note_statement or "")
         assert by_pointer["Nota 2"].note_cell == "A106"
-        assert "01578" in by_pointer["Nota 2"].note_statement
+        assert "01578" in (by_pointer["Nota 2"].note_statement or "")
 
     def test_the_signed_width_check_counts_the_sign_position(self) -> None:
         """Sixteen digits and a marker fill seventeen bytes; sixteen bytes do not.

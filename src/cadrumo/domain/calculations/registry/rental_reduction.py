@@ -23,7 +23,7 @@ from .facts.string_mapping import (
 )
 from .formula_runtime_ops import read_parameter
 from .governed_fact_scope import GovernedFactSource
-from .ids import RevisionId
+from .ids import ModeloId, RevisionId
 from .schema_base import DateAxis
 
 if TYPE_CHECKING:
@@ -132,30 +132,64 @@ def _whole_years(value: Decimal) -> int:
     return int(value)
 
 
+def _regime_entries(devengo: date, operation: PinnedAuthorityOperation) -> dict[str, object]:
+    resolved = operation.resolve_governed_fact(
+        MappingFactQuery(fact_id=_REGIME_FACT_ID, date_axis=DateAxis.FILING_PERIOD, effective_date=devengo),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("rental reduction regime fact must resolve as a mapping fact")
+    return {str(entry.key): entry.value for entry in resolved.payload.entries}
+
+
+def resolve_rental_reduction_art232_rates(
+    *,
+    modelo_id: ModeloId,
+    revision_id: RevisionId,
+    devengo: date,
+    operation: PinnedAuthorityOperation,
+) -> dict[RentalReductionArt232Tier, Decimal]:
+    """Resolve the rate of every reduction a lease can take at a devengo date, keyed by its token.
+
+    The legacy rate is named by the regime fact; the tiers, by the tier
+    catalogue, which is read only for a devengo inside the tiered regime.
+    """
+    entries = _regime_entries(devengo, operation)
+    date_context = {DateAxis.FILING_PERIOD.value: devengo}
+
+    def rate(parameter_id: str) -> Decimal:
+        return read_parameter(modelo_id, revision_id, parameter_id, date_context=date_context, operation=operation)
+
+    rates = {
+        RentalReductionArt232Tier(_regime_text(entries, "legacy_tier")): rate(
+            _regime_text(entries, "legacy_tier.parameter_id")
+        )
+    }
+    if devengo >= _regime_date(entries, "regime_start"):
+        catalogue = resolve_rental_reduction_art232_tier_catalogue(effective_date=devengo, authority=operation)
+        rates.update({definition.token: rate(definition.parameter_id) for definition in catalogue.definitions})
+    return rates
+
+
 def resolve_rental_reduction_art232_rules(
     *,
+    modelo_id: ModeloId,
     revision_id: RevisionId,
     devengo: date,
     operation: PinnedAuthorityOperation,
 ) -> RentalReductionArt232Rules:
     """Resolve the dated regime fact and the two tier thresholds at a devengo date.
 
-    ``revision_id`` is the Modelo 100 edition whose parameters the calculation
-    pins; the regime fact is read on the filing-period axis at ``devengo``.
+    ``modelo_id`` and ``revision_id`` name the annual return edition whose parameters the
+    calculation pins; the regime fact is read on the filing-period axis at ``devengo``.
     """
-    resolved = operation.resolve_governed_fact(
-        MappingFactQuery(fact_id=_REGIME_FACT_ID, date_axis=DateAxis.FILING_PERIOD, effective_date=devengo),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("rental reduction regime fact must resolve as a mapping fact")
-    entries: dict[str, object] = {str(entry.key): entry.value for entry in resolved.payload.entries}
+    entries = _regime_entries(devengo, operation)
     date_context = {DateAxis.FILING_PERIOD.value: devengo}
     return RentalReductionArt232Rules(
         regime_start=_regime_date(entries, "regime_start"),
         contract_cut_off=_regime_date(entries, "contract_cut_off"),
         legacy_tier=RentalReductionArt232Tier(_regime_text(entries, "legacy_tier")),
         rebaja_threshold=read_parameter(
-            "100",
+            modelo_id,
             revision_id,
             "renta-rental-prior-rent-rebaja-threshold",
             date_context=date_context,
@@ -163,7 +197,11 @@ def resolve_rental_reduction_art232_rules(
         ),
         rehabilitation_lookback_years=_whole_years(
             read_parameter(
-                "100", revision_id, "renta-rental-rehab-lookback-years", date_context=date_context, operation=operation
+                modelo_id,
+                revision_id,
+                "renta-rental-rehab-lookback-years",
+                date_context=date_context,
+                operation=operation,
             )
         ),
     )
@@ -172,6 +210,7 @@ def resolve_rental_reduction_art232_rules(
 __all__ = [
     "RentalReductionArt232TierCatalogue",
     "RentalReductionArt232TierDefinition",
+    "resolve_rental_reduction_art232_rates",
     "resolve_rental_reduction_art232_rules",
     "resolve_rental_reduction_art232_tier_catalogue",
 ]

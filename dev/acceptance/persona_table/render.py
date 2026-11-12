@@ -32,16 +32,23 @@ def counts(rows: Iterable[TableRow]) -> Counter[str]:
     return counted
 
 
-def lane_counts(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> dict[str, tuple[int, int]]:
-    """Green and total rows per lane, the lane of a row being the one ``lanes`` maps its modelo to."""
+def lane_counts(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> dict[str, tuple[int, int, int]]:
+    """Green, total and unchecked rows per lane, the lane of a row being the one ``lanes`` maps its modelo to."""
     totals: dict[str, list[int]] = {}
     for row in rows:
-        lane = lanes.get(row.modelo, "other")
-        held = totals.setdefault(lane, [0, 0])
+        held = totals.setdefault(lanes.get(row.modelo, "other"), [0, 0, 0])
+        held[0] += row.verdict in GREEN
         held[1] += 1
-        if row.verdict in GREEN:
-            held[0] += 1
-    return {lane: (green, total) for lane, (green, total) in sorted(totals.items())}
+        held[2] += row.verdict is Verdict.UNCHECKED
+    return {lane: (green, total, unchecked) for lane, (green, total, unchecked) in sorted(totals.items())}
+
+
+def lane_line(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> str:
+    """The per-lane sentence: each lane's green and total rows, and its rows held back as unchecked."""
+    return "By lane (green/total, green = pass; unchecked rows in brackets): " + ", ".join(
+        f"{lane} {green}/{total} (unchecked {unchecked})"
+        for lane, (green, total, unchecked) in lane_counts(rows, lanes).items()
+    )
 
 
 def summary_line(rows: list[TableRow]) -> str:
@@ -54,25 +61,67 @@ def summary_line(rows: list[TableRow]) -> str:
     return ", ".join(parts)
 
 
+def row_label(row: TableRow) -> str:
+    """The row id ``persona|modelo|year|period``."""
+    return f"{row.persona}|{row.modelo}|{row.year}|{row.period}"
+
+
+def unchecked_causes(rows: Iterable[TableRow]) -> dict[str, int]:
+    """Unchecked rows per cause, the cause being an item's kind (``not-sourced``, ``concept``, ``role``, ...).
+
+    A row holding items of several kinds counts under each, so the counts may sum above the unchecked rows.
+    """
+    counted = Counter(
+        cause
+        for row in rows
+        if row.verdict is Verdict.UNCHECKED
+        for cause in {item.split(":", 1)[0] for item in row.unchecked}
+    )
+    return dict(sorted(counted.items()))
+
+
+def _unchecked_section(rows: Iterable[TableRow]) -> list[str]:
+    """The rows whose stated values the table could not all compare, each with what it could not check."""
+    held = [row for row in rows if row.verdict is Verdict.UNCHECKED]
+    if not held:
+        return []
+    causes = ", ".join(f"{cause} {count}" for cause, count in unchecked_causes(held).items())
+    lines = [
+        f"Unchecked ({len(held)}): stated values the table does not compare.",
+        "",
+        f"Unchecked rows by cause (a row with several causes counts under each): {causes}.",
+        "",
+    ]
+    lines += [f"- {row_label(row)}: {', '.join(row.unchecked)}" for row in held]
+    return [*lines, ""]
+
+
 def _cell(text: object) -> str:
     return str(text).replace("|", "\\|").replace("\n", " ")
 
 
-def render_table(rows: Iterable[TableRow], *, head: str, lanes: Mapping[str, str] | None = None) -> str:
-    """The full table for ``head`` as Markdown."""
+def render_table(
+    rows: Iterable[TableRow],
+    *,
+    head: str,
+    lanes: Mapping[str, str] | None = None,
+    provenance: Mapping[str, str] | None = None,
+) -> str:
+    """The full table for ``head`` as Markdown, naming the run's tree and authority when ``provenance`` is given."""
     ordered = sorted(rows, key=lambda row: row.key)
-    lines = [
-        f"# Persona table at {head}",
-        "",
+    lines = [f"# Persona table at {head}", ""]
+    if provenance:
+        lines += [
+            "Run provenance: " + ", ".join(f"{key} `{value}`" for key, value in sorted(provenance.items())) + ".",
+            "",
+        ]
+    lines += [
         f"Summary: {summary_line(ordered)}.",
         "",
     ]
     if lanes is not None:
-        lines += [
-            "By lane (green/total, green = pass): "
-            + ", ".join(f"{lane} {green}/{total}" for lane, (green, total) in lane_counts(ordered, lanes).items()),
-            "",
-        ]
+        lines += [lane_line(ordered, lanes), ""]
+    lines += _unchecked_section(ordered)
     lines += ["Verdicts:", ""]
     lines += [f"- `{verdict.value}`: {meaning}." for verdict, meaning in VERDICT_MEANING.items()]
     lines += [
@@ -107,4 +156,13 @@ def render_table(rows: Iterable[TableRow], *, head: str, lanes: Mapping[str, str
     return "\n".join(lines) + "\n"
 
 
-__all__ = ["counts", "lane_counts", "red_stage", "render_table", "summary_line"]
+__all__ = [
+    "counts",
+    "lane_counts",
+    "lane_line",
+    "red_stage",
+    "render_table",
+    "row_label",
+    "summary_line",
+    "unchecked_causes",
+]

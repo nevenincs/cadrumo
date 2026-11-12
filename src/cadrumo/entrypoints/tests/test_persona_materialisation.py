@@ -14,6 +14,11 @@ from ...application.inventory.registered_requests import (
     INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     InventoryInspectRequest,
 )
+from ...application.ledger.counterparty_operation import (
+    LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
+    LedgerCounterpartyRequest,
+    LedgerCounterpartyResult,
+)
 from ...application.modelo.filing_record_list_contracts import (
     ModeloFilingRecordListProjection,
     ModeloFilingRecordListRequest,
@@ -46,10 +51,16 @@ from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_recargo_equivalencia_token
+from ...domain.contribuyente.inmueble_facts import arrendamientos_from_facts, inmuebles_from_facts
+from ...domain.contribuyente.inmueble_record import AdquisicionTitulo
+from ...domain.contribuyente.inventory.records import MovementKind
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecordStatus
+from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.rental_link import RENTAL_LINK_IRPF_CATEGORY
 from ...domain.user_profile.values import ProfileSetupState
-from ...tests.personas import persona_ids
+from ...tests.personas import InventoryBook, Persona, YearEnvelope, persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
 from .persona_materialisation import (
     PERSONA_ACTOR,
@@ -59,6 +70,7 @@ from .persona_materialisation import (
     ReplayScope,
     filing_key,
     household_leaves,
+    informative_party_roles,
     load_profile_record,
     materialised_persona,
     patch_answers,
@@ -66,13 +78,14 @@ from .persona_materialisation import (
     run_operation,
     settle_operation,
 )
+from .persona_rental_replay import tenant_age_band
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: What no production operation can record of each persona, read off its files: the declarative blocks and
 #: the employee's Seguridad Social contributions on a withholding certificate.
 _NOT_LOADED: dict[str, set[str]] = {
-    "arrendador-jubilado": {"rental_properties"},
+    "arrendador-jubilado": set(),
     "asalariada-familia": {"withholding_certificates.cotizaciones_seguridad_social"},
     "autonomo-alta-reciente": set(),
     "autonomo-electricista": set(),
@@ -191,22 +204,134 @@ def test_a_persona_replays_through_production_operations(
         for certificate in persona.withholding_certificates
     }
     assert set(materialised.evidence) == {document.id for document in persona.documents}
-    # Each book opens at its stated stock, records no movement and holds the closing recorded on its movements.
+    # Each book opens at its stated stock, holds exactly the movements its stated purchases and closing imply,
+    # and holds the closing recorded on its movements.
     assert {
         activity: (
             None
             if ledger is None
             else (
                 Decimal(ledger.opening_stock.decimal),
-                ledger.period_movements,
+                sorted(
+                    (movement.kind, movement.movement_id, Decimal(movement.quantity.decimal))
+                    for movement in ledger.period_movements
+                ),
                 ledger.closing_authority_fingerprints is not None,
             )
         )
         for activity, ledger in books.items()
-    } == {book.activity: (book.opening_stock, (), True) for book in persona.inventory}
+    } == {
+        book.activity: (book.opening_stock, sorted(_expected_movements(persona, book, world.envelope)), True)
+        for book in persona.inventory
+    }
+    _assert_rentals_recorded(materialised, values, stored)
     assert {item.block for item in materialised.not_loaded} == _NOT_LOADED[persona_id]
     # Every run registers the persona at the same identity, so what is read of it names the same profile.
     assert world.profile_id == persona_profile_id(persona_id)
+
+
+def _assert_rentals_recorded(
+    materialised: MaterialisedPersona, values: dict[str, str], stored: TransactionCatalogue
+) -> None:
+    """Each let dwelling reads back as a property and a lease through the profile's record readers, and its rows link."""
+    persona, envelope = materialised.persona, materialised.world.envelope
+    properties = {record.clave: record for record in inmuebles_from_facts(values)}
+    leases = {record.clave: record for record in arrendamientos_from_facts(values)}
+    assert len(properties) == len(persona.rental_properties)
+    assert len(leases) == len(persona.rental_properties)
+    for rental in persona.rental_properties:
+        lease = next(item for item in leases.values() if item.fecha_contrato == rental.fecha_contrato.resolve(envelope))
+        dwelling = properties[lease.inmueble]
+        assert (
+            dwelling.referencia_catastral,
+            dwelling.importe_adquisicion,
+            dwelling.valor_suelo,
+            dwelling.adquisicion_titulo,
+            dwelling.fecha_adquisicion,
+            dwelling.gastos_tributos_adquisicion,
+        ) == (
+            rental.referencia_catastral,
+            rental.importe_adquisicion,
+            rental.valor_suelo,
+            AdquisicionTitulo(rental.adquisicion_titulo),
+            rental.fecha_adquisicion.resolve(envelope),
+            rental.gastos_tributos_adquisicion,
+        )
+        assert {(value.year, value.total, value.construccion) for value in dwelling.valores_catastrales} == {
+            (value.year.resolve(envelope), value.total, value.construccion) for value in rental.valores_catastrales
+        }
+        assert (lease.fecha_inicio, lease.uso_vivienda, lease.zona_tensionada, lease.primer_arrendamiento_vivienda) == (
+            rental.fecha_inicio.resolve(envelope),
+            rental.uso_vivienda,
+            rental.zona_tensionada,
+            rental.primer_arrendamiento_vivienda,
+        )
+        assert (lease.arrendatario_pariente_art24, lease.incumple_lau_17_6, lease.rehabilitacion_fecha) == (
+            rental.arrendatario_pariente_art24,
+            rental.incumple_lau_17_6,
+            None,
+        )
+        assert [(tenant.nif, tenant.franja_edad, tenant.extranjero) for tenant in lease.inquilinos] == [
+            (persona.identity(rental.tenant), tenant_age_band(persona, rental, envelope), False)
+        ]
+        linked = {
+            row.ref: (
+                stored.transactions[materialised.transactions[row.ref]].arrendamiento_ref,
+                stored.transactions[materialised.transactions[row.ref]].inmueble_ref,
+                str(stored.transactions[materialised.transactions[row.ref]].gasto_capital_inmobiliario),
+                stored.transactions[materialised.transactions[row.ref]].irpf_category,
+            )
+            for row in persona.ledger
+            if any(row.ref.startswith(link.ref_prefix) for link in rental.ledger_links)
+        }
+        expected = {
+            row.ref: (
+                str(lease.clave) if link.target == "arrendamiento" else None,
+                str(dwelling.clave) if link.target == "inmueble" else None,
+                str(link.gasto),
+                RENTAL_LINK_IRPF_CATEGORY,
+            )
+            for row in persona.ledger
+            for link in rental.ledger_links
+            if row.ref.startswith(link.ref_prefix)
+        }
+        assert linked == expected
+        assert {ref for ref in expected if ref.startswith("ARR-REN-")} and len(expected) == len(linked)
+
+
+def _expected_movements(
+    persona: Persona, book: InventoryBook, envelope: YearEnvelope
+) -> list[tuple[MovementKind, str, Decimal]]:
+    """The movements a book's stated purchases and closing imply, each quantity derived from euros.
+
+    Every figure is a value in euros first. A purchase costs its base, plus the
+    IVA and recargo it bears when the persona states the recargo de
+    equivalencia regime, which deducts neither (LIVA art. 154.Dos). The stock
+    sold is ``opening + purchases - closing`` in euros. The quantities then
+    follow the valuation's layers: the opening stock is one layer of one unit
+    at its whole value (``valuation._opening_layers``) and each purchase is
+    booked at one unit per euro of its cost, so FIFO sells the opening layer
+    first, as one unit or the fraction of it the sold value covers, and then
+    one unit per euro of purchases.
+    """
+    year = book.year.resolve(envelope)
+    regime = next((answer.value for answer in persona.profile if answer.question_id == "iva-regime"), None)
+    bears_tax = regime == iva_regime_recargo_equivalencia_token(effective_date=date(year, 12, 31)).value
+    rows = {row.ref: row for row in persona.ledger}
+    movements: list[tuple[MovementKind, str, Decimal]] = []
+    for ref in book.purchases:
+        row = rows[ref]
+        assert row.taxable_base is not None
+        assert row.iva_amount is not None
+        borne = row.iva_amount + (row.recargo_amount or Decimal(0)) if bears_tax else Decimal(0)
+        movements.append((MovementKind.PURCHASE, ref, row.taxable_base + borne))
+    purchased = sum((cost for _, _, cost in movements), Decimal(0))
+    sold_value = book.opening_stock + purchased - book.closing_stock
+    if not sold_value:
+        return movements
+    opening_units = min(sold_value, book.opening_stock) / book.opening_stock if book.opening_stock else Decimal(0)
+    sold_units = opening_units + max(sold_value - book.opening_stock, Decimal(0))
+    return [*movements, (MovementKind.COGS, f"{book.activity}-{year}-vendido", sold_units)]
 
 
 def _profile_values(world: PersonaWorld) -> dict[str, str]:
@@ -424,3 +549,51 @@ def test_a_stopped_operation_settles_with_the_words_the_application_serves_for_i
         f"{served}"
     )
     assert "no detail" not in str(raised.value)
+
+
+def test_a_replay_states_each_informative_party_filing_name_readable_through_the_counterparty_view(
+    tmp_path: Path,
+) -> None:
+    with materialised_persona("autonomo-fontanero", tmp_path, ReplayScope.FULL) as materialised:
+        persona, world = materialised.persona, materialised.world
+        roles = informative_party_roles(persona)
+        viewed = {
+            role: run_operation(
+                world,
+                LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
+                LedgerCounterpartyRequest(
+                    profile_id=world.profile_id,
+                    action="view",
+                    tax_identifier=persona.identities.role(role).value,
+                    country_code=persona.identities.role(role).country,
+                ),
+                LedgerCounterpartyResult,
+            ).filing_name
+            for role in roles
+        }
+
+    assert {"fontanero.comunidad", "fontanero.arrendador-taller", "fontanero.cliente-restaurante"} <= set(roles)
+    assert "fontanero.titular" not in roles
+    assert all(name is not None for name in viewed.values())
+    comunidad = viewed["fontanero.comunidad"]
+    assert comunidad is not None
+    assert comunidad.party_kind == "entity"
+    assert comunidad.razon_social == persona.identities.role("fontanero.comunidad").razon_social
+    assert len(comunidad.razon_social or "") == 41
+    assert [(rendering.width, rendering.text) for rendering in comunidad.renderings] == list(
+        persona.identities.role("fontanero.comunidad").renderings
+    )
+    assert all(len(rendering.text) <= rendering.width == 40 for rendering in comunidad.renderings)
+    assert comunidad.renderings
+    taller = persona.identities.role("fontanero.arrendador-taller")
+    stated = viewed["fontanero.arrendador-taller"]
+    assert stated is not None
+    assert stated.party_kind == "natural_person"
+    assert (stated.primer_apellido, stated.segundo_apellido, stated.nombre) == (
+        taller.primer_apellido,
+        taller.segundo_apellido,
+        taller.nombre,
+    )
+    assert stated.razon_social is None
+    assert stated.no_second_surname is False
+    assert stated.asserted_by == PERSONA_ACTOR

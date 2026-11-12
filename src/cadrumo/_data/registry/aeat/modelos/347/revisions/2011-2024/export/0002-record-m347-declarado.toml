@@ -6,6 +6,8 @@ id = "m347-declarado"
 record_type = "declarado"
 order = 1
 encoding = "iso-8859-1"
+alphanumeric_text = "upper_unaccented"
+alphanumeric_text_source_ref = "aeat-dr-347-2011"
 line_ending = "crlf"
 required = true
 repeat = "binding_rows"
@@ -143,6 +145,15 @@ legal_refs = [
     "ley-58-2003:art-93",
 ]
 source_refs = ["aeat-dr-347-2011"]
+
+[revisions.2011-2024.export_layouts.records.fields.party_name]
+separator = " "
+natural_person = [
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+]
+entity = ["razon_social"]
 
 [[revisions.2011-2024.export_layouts.records.fields]]
 id = "m347-2011.declarado.f008"
@@ -564,6 +575,6 @@ importe_q2 = "contraparte.importe-Q2"
 importe_q3 = "contraparte.importe-Q3"
 importe_q4 = "contraparte.importe-Q4"
 importe_total = "contraparte.importe-anual"
-party_legal_name = "contraparte.nombre"
+party_filing_name = "contraparte.nombre"
 provincia_code = "contraparte.provincia-codigo"
 residence_country_code = "contraparte.pais-codigo"

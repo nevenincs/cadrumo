@@ -79,9 +79,129 @@ def test_an_unknown_format_is_refused() -> None:
         parse_identity_catalogue({"format": 2, "convention": {}, "identities": []})
 
 
-def _one_identity(**fields: object) -> dict[str, object]:
-    identity = {"role": "a.titular", "persona": "a", "kind": "nif", "value": "00000006Y", **fields}
+_NATURAL_NAME = {"primer_apellido": "Vidal", "segundo_apellido": "Soler", "nombre": "Andrés"}
+
+
+def _identity_document(identity: dict[str, object]) -> dict[str, object]:
     return {"format": 1, "convention": {}, "identities": [identity]}
+
+
+def _one_identity(**fields: object) -> dict[str, object]:
+    """A natural person with a stated name, unless the fields state a razón social instead."""
+    name = {} if "razon_social" in fields else _NATURAL_NAME
+    return _identity_document(
+        {"role": "a.titular", "persona": "a", "kind": "nif", "value": "00000006Y", **name, **fields}
+    )
+
+
+def test_a_natural_person_states_apellidos_and_nombre_and_an_entity_its_razon_social() -> None:
+    person = parse_identity_catalogue(_one_identity()).role("a.titular")
+    assert (person.primer_apellido, person.segundo_apellido, person.nombre) == ("Vidal", "Soler", "Andrés")
+    assert person.is_entity is False
+    assert person.surnames == "Vidal Soler"
+    assert person.field("nombre") == "Andrés"
+    entity = parse_identity_catalogue(
+        _one_identity(kind="cif", value="B00000059", razon_social="Ediciones del Turia, S.L.")
+    ).role("a.titular")
+    assert entity.is_entity is True
+    assert entity.field("razon_social") == "Ediciones del Turia, S.L."
+    assert entity.surnames is None
+
+
+def test_a_single_surname_is_stated_and_never_read_from_a_blank() -> None:
+    document = _identity_document(
+        {
+            "role": "a.titular",
+            "persona": "a",
+            "kind": "nie",
+            "value": "X0000001R",
+            "primer_apellido": "Holm",
+            "nombre": "Mikkel",
+            "no_second_surname": True,
+        }
+    )
+    single = parse_identity_catalogue(document).role("a.titular")
+    assert single.no_second_surname is True
+    assert single.segundo_apellido is None
+    assert single.surnames == "Holm"
+
+
+@pytest.mark.parametrize(
+    ("fields", "message"),
+    [
+        ({"kind": "nif", "nombre": "Andrés"}, "states a razon_social, or a natural person's"),
+        (
+            {"kind": "nif", "primer_apellido": "Vidal", "nombre": "Andrés"},
+            "states segundo_apellido, or says no_second_surname",
+        ),
+        (
+            {
+                "kind": "nif",
+                "primer_apellido": "Vidal",
+                "segundo_apellido": "Soler",
+                "nombre": "Andrés",
+                "no_second_surname": True,
+            },
+            "contradicts a stated segundo_apellido",
+        ),
+        (
+            {"kind": "nif", "razon_social": "Ediciones del Turia, S.L."},
+            "identifies a natural person",
+        ),
+        (
+            {"kind": "cif", "primer_apellido": "Vidal", "segundo_apellido": "Soler", "nombre": "Andrés"},
+            "identifies an entity",
+        ),
+        (
+            {"kind": "cif", "razon_social": "Ediciones del Turia, S.L.", "nombre": "Andrés"},
+            "states no person name part",
+        ),
+        ({"kind": "cif"}, "states a razon_social, or a natural person's"),
+        (
+            {
+                "kind": "cif",
+                "razon_social": "Ediciones del Turia, S.L.",
+                "renderings": [{"width": 10, "text": "Ediciones del Turia"}],
+            },
+            "fits the width it is stated for",
+        ),
+        (
+            {"kind": "cif", "razon_social": "Ediciones del Turia, S.L.", "renderings": [{"width": 0, "text": "E"}]},
+            "positive field width",
+        ),
+        (
+            {
+                "kind": "cif",
+                "razon_social": "Ediciones del Turia, S.L.",
+                "renderings": [{"width": 20, "text": "Ediciones Turia"}, {"width": 20, "text": "Ed. Turia"}],
+            },
+            "one rendering per field width",
+        ),
+    ],
+)
+def test_a_malformed_identity_name_is_refused(fields: dict[str, object], message: str) -> None:
+    identity = {"role": "a.titular", "persona": "a", "value": "00000006Y", **fields}
+    with pytest.raises(PersonaCatalogueError, match=message):
+        parse_identity_catalogue(_identity_document(identity))
+
+
+def test_an_identity_states_the_operators_rendering_for_a_narrower_field() -> None:
+    identity: dict[str, object] = {
+        "role": "a.titular",
+        "persona": "a",
+        "value": "00000006Y",
+        "kind": "cif",
+        "razon_social": "Ediciones del Turia, S.L.",
+        "renderings": [{"width": 20, "text": "Ediciones del Turia"}],
+    }
+    stated = parse_identity_catalogue(_identity_document(identity)).role("a.titular")
+    assert stated.renderings == ((20, "Ediciones del Turia"),)
+
+
+@pytest.mark.parametrize("key", ["name", "surnames", "legal_name"])
+def test_the_replaced_identity_keys_are_refused(key: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match="unknown fields"):
+        parse_identity_catalogue(_one_identity(**{key: "Vidal"}))
 
 
 def test_an_identity_states_its_domicile_province_and_ceuta_melilla_determination() -> None:
@@ -143,11 +263,71 @@ def test_a_history_record_below_the_floor_is_refused_unless_a_lowered_horizon_om
     persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
 
     assert persona.local_observations == ()
-    assert [(item.block, item.modelo, str(item.year), item.periods) for item in persona.below_floor] == [
-        ("local_observations", observation["modelo"], observation["year"], (observation["period"],))
+    (history,) = [item for item in persona.below_floor if item.history]
+    assert (history.block, history.modelo, str(history.year), history.periods) == (
+        "local_observations",
+        observation["modelo"],
+        observation["year"],
+        (observation["period"],),
+    )
+    assert f"floor {_LOWERED.floor}" in history.reason(_LOWERED)
+    assert all(item.year.precedes_floor(_LOWERED) for item in persona.below_floor)
+
+
+def test_a_withholding_certificate_below_the_floor_is_left_out_under_a_lowered_horizon() -> None:
+    document = _document("persona.toml")
+    stated = [YearToken.parse(item["ejercicio"], where="test") for item in document["withholding_certificates"]]
+    below = [token for token in stated if token.precedes_floor(_LOWERED)]
+    assert below and len(below) < len(stated)
+
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert [str(item.ejercicio) for item in persona.withholding_certificates] == [
+        str(token) for token in stated if not token.precedes_floor(_LOWERED)
     ]
-    assert persona.below_floor[0].history
-    assert f"floor {_LOWERED.floor}" in persona.below_floor[0].reason(_LOWERED)
+    left_out = [item for item in persona.below_floor if item.block == "withholding_certificates"]
+    assert [str(item.year) for item in left_out] == [str(token) for token in below]
+    assert not any(item.history for item in left_out)
+
+
+def test_work_income_none_statements_are_read_with_their_ejercicio() -> None:
+    document = _document("persona.toml")
+    stated = [item["ejercicio"] for item in document["work_income_none_statements"]]
+    assert stated
+
+    persona = _parse(document)
+
+    assert [str(item.ejercicio) for item in persona.work_income_none_statements] == stated
+
+
+def test_a_work_income_none_statement_with_an_unknown_key_or_no_ejercicio_is_refused() -> None:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["work_income_none_statements"][0]["amount"] = "0.00"
+    with pytest.raises(PersonaCatalogueError, match="unknown fields"):
+        _parse(document)
+
+    document = copy.deepcopy(_document("persona.toml"))
+    del document["work_income_none_statements"][0]["ejercicio"]
+    with pytest.raises(PersonaCatalogueError, match="missing fields"):
+        _parse(document)
+
+
+def test_a_work_income_none_statement_below_the_floor_is_left_out_under_a_lowered_horizon() -> None:
+    document = _document("persona.toml")
+    stated = [YearToken.parse(item["ejercicio"], where="test") for item in document["work_income_none_statements"]]
+    below = [token for token in stated if token.precedes_floor(_LOWERED)]
+    assert below and len(below) < len(stated)
+
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert [str(item.ejercicio) for item in persona.work_income_none_statements] == [
+        str(token) for token in stated if not token.precedes_floor(_LOWERED)
+    ]
+    left_out = [item for item in persona.below_floor if item.block == "work_income_none_statements"]
+    assert [str(item.year) for item in left_out] == [str(token) for token in below]
+    assert not any(item.history for item in left_out)
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(document, envelope=_LOWERED)
 
 
 def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon() -> None:
@@ -172,13 +352,18 @@ def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon()
         (persona.expectations.deadlines, unchanged.expectations.deadlines),
     ):
         assert kept == tuple(item for item in every if str(item.year) != "horizon-2")
-    assert sorted(item.block for item in persona.below_floor) == [
+    assert persona.prior_carries == tuple(item for item in unchanged.prior_carries if str(item.year) != "horizon-2")
+    carries_dropped = {"prior_carries"} if len(persona.prior_carries) < len(unchanged.prior_carries) else set()
+    assert {item.block for item in persona.below_floor} == {
         "expectations.deadlines",
         "expectations.obligations",
         "expectations.values",
         "filed_returns",
         "local_observations",
-    ]
+        "withholding_certificates",
+        "work_income_none_statements",
+        *carries_dropped,
+    }
     assert sorted(item.block for item in persona.below_floor if item.history) == [
         "filed_returns",
         "local_observations",
@@ -387,6 +572,21 @@ def test_a_malformed_pending_carry_statement_is_refused(
         _parse(_with_prior_carries(*statements))
 
 
+def test_a_pending_carry_statement_below_the_floor_is_omitted_under_a_lowered_horizon() -> None:
+    document = _with_prior_carries(
+        {"year": "horizon-1", "nothing_pending": True}, {"year": "horizon-2", "nothing_pending": True}
+    )
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(document, envelope=_LOWERED)
+
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert [str(statement.year) for statement in persona.prior_carries] == ["horizon-1"]
+    assert ("prior_carries", "100", "horizon-2", ("0A",)) in [
+        (item.block, item.modelo, str(item.year), item.periods) for item in persona.below_floor
+    ]
+
+
 def test_a_pending_carry_statement_needs_a_persona_that_files_modelo_100() -> None:
     document = _with_prior_carries({"year": "horizon-1", "nothing_pending": True})
     document["persona"]["modelos"] = ["303"]
@@ -590,6 +790,17 @@ def test_a_not_sourced_casilla_states_the_law_figure_and_the_missing_source() ->
     assert expectations.values[0].not_sourced == (("0013", "2332.80"),)
 
 
+def test_a_role_states_an_amount_keyed_by_a_casillas_registry_identity() -> None:
+    expectations = _expectations_with(value={"roles": {"iva-resultado-regimen-general": "1377.60"}})
+    assert expectations.values[0].roles == (("iva-resultado-regimen-general", "1377.60"),)
+
+
+@pytest.mark.parametrize("amount", ["1377,60", "mil", "01.5", 1377])
+def test_a_role_amount_that_is_not_a_canonical_decimal_is_refused(amount: object) -> None:
+    with pytest.raises(PersonaCatalogueError, match="roles"):
+        _expectations_with(value={"roles": {"iva-resultado-regimen-general": amount}})
+
+
 @pytest.mark.parametrize(
     ("value", "message"),
     [
@@ -756,3 +967,176 @@ def test_a_ledger_row_states_its_accrual_date_apart_from_the_movement() -> None:
 def test_an_incomplete_or_impossible_accrual_date_is_refused(cells: str) -> None:
     with pytest.raises(PersonaCatalogueError, match="accrual"):
         _accruing_ledger(cells)
+
+
+_ATTESTED_PRIOR_VALUE: dict[str, Any] = {
+    "modelo": "130",
+    "period": "1T",
+    "year": "horizon-1",
+    "binding": "irpf.previous_year_economic_activity_net_income",
+    "value": "12846.30",
+    "source": {"modelo": "100", "year": "horizon-2", "period": "0A"},
+    "derivation": "Rendimiento neto declarado en la renta del ejercicio anterior",
+    "legal_ref": ["rd-439-2007:art-110"],
+}
+
+
+def _with_attested_prior_value(**changes: object) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["attested_prior_values"] = [{**_ATTESTED_PRIOR_VALUE, **changes}]
+    return document
+
+
+def test_an_attested_prior_value_is_admitted_with_its_source_and_derivation() -> None:
+    (item,) = _parse(_with_attested_prior_value()).attested_prior_values
+
+    assert (item.modelo, item.period, str(item.year), item.value) == ("130", "1T", "horizon-1", Decimal("12846.30"))
+    assert (item.source.modelo, str(item.source.year), item.source.period) == ("100", "horizon-2", "0A")
+    assert item.legal_ref == ("rd-439-2007:art-110",)
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"value": "12.846,30"}, "canonical decimal"),
+        ({"value": 12846.3}, "canonical decimal"),
+        ({"period": "5T"}, "is not one of"),
+        ({"year": str(_ENVELOPE.floor)}, "not a year token"),
+        ({"source": {"modelo": "100", "year": "horizon-2"}}, "missing fields"),
+        ({"source": {"modelo": "100", "year": "horizon-2", "period": "0A", "csv": "x"}}, "unknown fields"),
+        ({"source": {"modelo": "100", "year": "horizon-1", "period": "0A"}}, "does not precede"),
+        ({"derivation": ""}, "derivation must be a non-empty string"),
+        ({"legal_ref": []}, "at least one provision"),
+        ({"note": "extra"}, "unknown fields"),
+    ],
+)
+def test_a_malformed_attested_prior_value_is_refused(changes: dict[str, object], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_attested_prior_value(**changes))
+
+
+def test_an_attested_prior_value_listed_twice_is_refused() -> None:
+    document = _with_attested_prior_value()
+    document["attested_prior_values"].append(dict(_ATTESTED_PRIOR_VALUE))
+    with pytest.raises(PersonaCatalogueError, match=r"attests .* twice"):
+        _parse(document)
+
+
+def test_an_attested_prior_value_may_name_a_source_below_the_floor_but_not_one_above_the_horizon() -> None:
+    document = _with_attested_prior_value(source={"modelo": "100", "year": "floor-3", "period": "0A"})
+    assert _parse(document).attested_prior_values
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(_with_attested_prior_value(source={"modelo": "100", "year": "horizon+1", "period": "0A"}))
+
+
+def test_a_lowered_horizon_leaves_out_an_attested_prior_value_of_a_return_below_the_floor() -> None:
+    document = _with_attested_prior_value(year="floor-1", source={"modelo": "100", "year": "floor-2", "period": "0A"})
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(document, envelope=_LOWERED)
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert persona.attested_prior_values == ()
+    assert ("attested_prior_values", "130", "floor-1", ("1T",)) in [
+        (item.block, item.modelo, str(item.year), item.periods) for item in persona.below_floor
+    ]
+
+
+_WORK_INPUT: dict[str, Any] = {
+    "modelo": "100",
+    "year": "horizon-1",
+    "period": "0A",
+    "roles": {"irpf_cuota_sindical": "120.00"},
+    "sources": {"irpf_cuota_sindical": "Recibo anual de la cuota sindical"},
+    "reason": "Ningún registro de la aplicación da la cuota sindical",
+}
+
+
+def _with_work_input(**changes: object) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["work_inputs"] = [{**_WORK_INPUT, **changes}]
+    return document
+
+
+def test_a_work_input_is_admitted_with_one_source_per_role() -> None:
+    (item,) = _parse(_with_work_input()).work_inputs
+
+    assert (item.modelo, str(item.year), item.period, item.reason) == (
+        "100",
+        "horizon-1",
+        "0A",
+        "Ningún registro de la aplicación da la cuota sindical",
+    )
+    assert item.roles == (("irpf_cuota_sindical", "120.00"),)
+    assert item.sources == (("irpf_cuota_sindical", "Recibo anual de la cuota sindical"),)
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"roles": {}}, "at least one role"),
+        ({"roles": {"irpf_cuota_sindical": "120,00"}}, "canonical decimal"),
+        ({"sources": {}}, r"none for \['irpf_cuota_sindical'\]"),
+        ({"sources": {"irpf_cuota_sindical": "Recibo", "otro": "Otro"}}, r"does not give: \['otro'\]"),
+        ({"sources": {"irpf_cuota_sindical": " "}}, "sources.irpf_cuota_sindical must be a non-empty string"),
+        ({"reason": ""}, "reason must be a non-empty string"),
+        ({"period": "5T"}, "is not one of"),
+        ({"year": str(_ENVELOPE.floor)}, "not a year token"),
+        ({"note": "extra"}, "unknown fields"),
+    ],
+)
+def test_a_malformed_work_input_is_refused(changes: dict[str, object], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_work_input(**changes))
+
+
+def test_a_work_input_missing_its_sources_or_reason_is_refused() -> None:
+    for key in ("sources", "reason"):
+        document = _with_work_input()
+        del document["work_inputs"][0][key]
+        with pytest.raises(PersonaCatalogueError, match="missing fields"):
+            _parse(document)
+
+
+def test_two_work_inputs_of_one_return_are_refused() -> None:
+    document = _with_work_input()
+    document["work_inputs"].append({**_WORK_INPUT, "roles": {"otro": "1.00"}, "sources": {"otro": "Recibo"}})
+    with pytest.raises(PersonaCatalogueError, match="two work_inputs blocks"):
+        _parse(document)
+
+
+def test_a_work_input_asserted_back_as_an_expected_role_of_its_return_is_refused() -> None:
+    # The persona's Modelo 100 horizon-1 expectations state this role.
+    role = "irpf_deduccion_maternidad"
+    document = _with_work_input(roles={role: "1.00"}, sources={role: "Recibo"})
+    with pytest.raises(PersonaCatalogueError, match="asserts it back"):
+        _parse(document)
+
+
+def test_a_work_input_may_give_a_role_another_return_asserts() -> None:
+    # The role is asserted for Modelo 100 horizon-1 and horizon-2; given on a horizon-3 return it asserts nothing back.
+    role = "irpf_deduccion_maternidad"
+    document = _with_work_input(year="horizon-3", roles={role: "1.00"}, sources={role: "Recibo"})
+    (item,) = _parse(document).work_inputs
+    assert str(item.year) == "horizon-3"
+
+
+def test_a_lowered_horizon_leaves_out_a_work_input_of_a_return_below_the_floor() -> None:
+    document = _with_work_input(year="floor-1")
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(document, envelope=_LOWERED)
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert persona.work_inputs == ()
+    assert ("work_inputs", "100", "floor-1", ("0A",)) in [
+        (item.block, item.modelo, str(item.year), item.periods) for item in persona.below_floor
+    ]
+
+
+def test_a_work_income_statement_for_an_ejercicio_without_a_work_income_certificate_is_refused() -> None:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["withholding_certificates"] = [
+        item for item in document["withholding_certificates"] if item["income_class"] != "trabajo"
+    ]
+    assert document["work_income_none_statements"]
+    with pytest.raises(PersonaCatalogueError, match="no work-income certificate for that ejercicio"):
+        _parse(document)

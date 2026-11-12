@@ -32,7 +32,11 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
 )
-from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_operator_layer import (
+    CalculationOperatorLayer,
+    RowCarryAttestation,
+    ValueAttestation,
+)
 from ...domain.modelos.calculation_revision_sources import (
     CalculationSourceIssue,
 )
@@ -528,6 +532,7 @@ def resolve_bucket_aggregation_source_resolution(
     enum_binding_values: Mapping[BindingId, str] | None,
     filing_period_date: date | None,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    row_attestations: tuple[RowCarryAttestation, ...] = (),
 ) -> CalculationSourceResolution:
     """Resolve the mesh, then enforce its final exclusive ownership set."""
     source_resolution = resolve_bucket_source_mesh(
@@ -546,6 +551,7 @@ def resolve_bucket_aggregation_source_resolution(
         filing_period_date=filing_period_date,
         profile=preparation.profile,
         transaction_repository=transaction_repository,
+        row_attestations=row_attestations,
     )
     reject_caller_overrides_of_source_bindings(
         revision=preparation.snapshot.revision,
@@ -692,6 +698,8 @@ def _caller_operator_layer(
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     enum_binding_values: Mapping[BindingId, str] | None,
     attested_binding_ids: tuple[BindingId, ...],
+    value_attestations: Mapping[BindingId, ValueAttestation],
+    row_attestations: tuple[RowCarryAttestation, ...],
 ) -> CalculationOperatorLayer:
     """Project the validated caller tier of one run onto the persisted operator layer.
 
@@ -710,6 +718,8 @@ def _caller_operator_layer(
             **dict(enum_binding_values or {}),
         },
         attested_binding_ids=attested_binding_ids,
+        value_attestations=dict(value_attestations),
+        row_attestations=row_attestations,
     )
 
 
@@ -771,6 +781,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
     record_operator_layer: bool = False,
     attested_binding_ids: tuple[BindingId, ...] = (),
+    value_attestations: Mapping[BindingId, ValueAttestation] | None = None,
+    row_attestations: tuple[RowCarryAttestation, ...] = (),
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -806,6 +818,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         foreign_asset_row_observations=foreign_asset_row_observations,
         detail_rows=detail_rows,
         profile=profile,
+        row_attestations=row_attestations,
     )
     preparation = run.preparation
     printed = snapshot_printed_boxes(ports.operation, preparation.snapshot)
@@ -824,6 +837,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 text_casilla_inputs=text_casilla_inputs,
                 enum_binding_values=enum_binding_values,
                 attested_binding_ids=attested_binding_ids,
+                value_attestations=value_attestations or {},
+                row_attestations=row_attestations,
             )
             if record_operator_layer
             else None
@@ -1007,6 +1022,7 @@ def _resolve_bucket_aggregation_run(
     foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
     detail_rows: tuple[ModeloDetailRow, ...],
     profile: ModeloWorkProfile | None,
+    row_attestations: tuple[RowCarryAttestation, ...] = (),
 ) -> _BucketAggregationRun:
     """Validate the caller channels, resolve the source mesh and reconcile the two."""
     preparation = _prepare_bucket_aggregation_calculation(
@@ -1044,6 +1060,7 @@ def _resolve_bucket_aggregation_run(
             enum_binding_values=enum_binding_values,
             filing_period_date=filing_period_date,
             transaction_repository=memoized_transaction_repository,
+            row_attestations=row_attestations,
         )
     except RegistryValidationError as error:
         # A stored earlier return that does not show the boxes a carry reads is

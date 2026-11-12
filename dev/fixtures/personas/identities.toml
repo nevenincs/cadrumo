@@ -69,8 +69,9 @@ role = "fontanero.titular"
 persona = "autonomo-fontanero"
 kind = "nif"
 value = "00000026A"
-name = "Javier"
-surnames = "Montero Alcaraz"
+primer_apellido = "Montero"
+segundo_apellido = "Alcaraz"
+nombre = "Javier"
 primary = true
 
 [[identities]]
@@ -78,56 +79,63 @@ role = "asalariada.titular"
 persona = "asalariada-familia"
 kind = "nif"
 value = "00000027G"
-name = "Lucía"
-surnames = "Navarro Ibáñez"
+primer_apellido = "Navarro"
+segundo_apellido = "Ibáñez"
+nombre = "Lucía"
 
 [[identities]]
 role = "asalariada.conyuge"
 persona = "asalariada-familia"
 kind = "nif"
 value = "00000001R"
-name = "Daniel"
-surnames = "Ortega Pina"
+primer_apellido = "Ortega"
+segundo_apellido = "Pina"
+nombre = "Daniel"
 
 [[identities]]
 role = "asalariada.hijo"
 persona = "asalariada-familia"
 kind = "nif"
 value = "00000002W"
-name = "Pablo"
-surnames = "Ortega Navarro"
+primer_apellido = "Ortega"
+segundo_apellido = "Navarro"
+nombre = "Pablo"
 
 [[identities]]
 role = "asalariada.hija"
 persona = "asalariada-familia"
 kind = "nif"
 value = "00000003A"
-name = "Irene"
-surnames = "Ortega Navarro"
+primer_apellido = "Ortega"
+segundo_apellido = "Navarro"
+nombre = "Irene"
 
 [[identities]]
 role = "asalariada.madre"
 persona = "asalariada-familia"
 kind = "nif"
 value = "00000004G"
-name = "Carmen"
-surnames = "Ibáñez Roca"
+primer_apellido = "Ibáñez"
+segundo_apellido = "Roca"
+nombre = "Carmen"
 
 [[identities]]
 role = "traductora.titular"
 persona = "traductora-profesional"
 kind = "nif"
 value = "00000005M"
-name = "Elena"
-surnames = "Robles Quintana"
+primer_apellido = "Robles"
+segundo_apellido = "Quintana"
+nombre = "Elena"
 
 [[identities]]
 role = "traductora.asesor-fiscal"
 persona = "traductora-profesional"
 kind = "nif"
 value = "00000006Y"
-name = "Andrés"
-surnames = "Vidal Soler"
+primer_apellido = "Vidal"
+segundo_apellido = "Soler"
+nombre = "Andrés"
 province = "46"
 ceuta_melilla_deduction = false
 
@@ -136,32 +144,37 @@ role = "arrendador.titular"
 persona = "arrendador-jubilado"
 kind = "nif"
 value = "00000007F"
-name = "Manuel"
-surnames = "Esteve Bosch"
+primer_apellido = "Esteve"
+segundo_apellido = "Bosch"
+nombre = "Manuel"
 
 [[identities]]
 role = "arrendador.inquilina"
 persona = "arrendador-jubilado"
 kind = "nif"
 value = "00000008P"
-name = "Sara"
-surnames = "Domínguez Paredes"
+primer_apellido = "Domínguez"
+segundo_apellido = "Paredes"
+nombre = "Sara"
+birth_date = { year = "horizon-48", month = 3, day = 14 } # synthetic: outside 18-35 at signing
 
 [[identities]]
 role = "minorista.titular"
 persona = "minorista-recargo"
 kind = "nif"
 value = "00000009D"
-name = "Rosa"
-surnames = "Gil Merino"
+primer_apellido = "Gil"
+segundo_apellido = "Merino"
+nombre = "Rosa"
 
 [[identities]]
 role = "fontanero.arrendador-taller"
 persona = "autonomo-fontanero"
 kind = "nif"
 value = "00000010X"
-name = "Tomás"
-surnames = "Lozano Prieto"
+primer_apellido = "Lozano"
+segundo_apellido = "Prieto"
+nombre = "Tomás"
 
 # Consumers who receive a complete invoice (RD 1619/2012 art. 6) for a
 # domestic service, so the invoice carries their name and NIF.
@@ -171,72 +184,81 @@ role = "fontanero.particular-1"
 persona = "autonomo-fontanero"
 kind = "nif"
 value = "00000011B"
-name = "Beatriz"
-surnames = "Sanz Calvo"
+primer_apellido = "Sanz"
+segundo_apellido = "Calvo"
+nombre = "Beatriz"
 
 [[identities]]
 role = "fontanero.particular-2"
 persona = "autonomo-fontanero"
 kind = "nif"
 value = "00000012N"
-name = "Óscar"
-surnames = "Herrero Luque"
+primer_apellido = "Herrero"
+segundo_apellido = "Luque"
+nombre = "Óscar"
 
 [[identities]]
 role = "fontanero.particular-3"
 persona = "autonomo-fontanero"
 kind = "nif"
 value = "00000013J"
-name = "Nuria"
-surnames = "Pastor Gallardo"
+primer_apellido = "Pastor"
+segundo_apellido = "Gallardo"
+nombre = "Nuria"
 
 [[identities]]
 role = "fontanero.particular-4"
 persona = "autonomo-fontanero"
 kind = "nif"
 value = "00000014Z"
-name = "Raúl"
-surnames = "Cabrera Soto"
+primer_apellido = "Cabrera"
+segundo_apellido = "Soto"
+nombre = "Raúl"
 
 [[identities]]
 role = "fontanero.particular-5"
 persona = "autonomo-fontanero"
 kind = "nif"
 value = "00000015S"
-name = "Inés"
-surnames = "Valero Campos"
+primer_apellido = "Valero"
+segundo_apellido = "Campos"
+nombre = "Inés"
 
 [[identities]]
 role = "fontanero.particular-6"
 persona = "autonomo-fontanero"
 kind = "nif"
 value = "00000016Q"
-name = "Héctor"
-surnames = "Rubio Esteban"
+primer_apellido = "Rubio"
+segundo_apellido = "Esteban"
+nombre = "Héctor"
 
 [[identities]]
 role = "traductora.particular-1"
 persona = "traductora-profesional"
 kind = "nif"
 value = "00000017V"
-name = "Marta"
-surnames = "Llorens Ferrer"
+primer_apellido = "Llorens"
+segundo_apellido = "Ferrer"
+nombre = "Marta"
 
 [[identities]]
 role = "traductora.particular-2"
 persona = "traductora-profesional"
 kind = "nif"
 value = "00000018H"
-name = "Jorge"
-surnames = "Peiró Mira"
+primer_apellido = "Peiró"
+segundo_apellido = "Mira"
+nombre = "Jorge"
 
 [[identities]]
 role = "alta.titular"
 persona = "autonomo-alta-reciente"
 kind = "nif"
 value = "00000020C"
-name = "Clara"
-surnames = "Benítez Morales"
+primer_apellido = "Benítez"
+segundo_apellido = "Morales"
+nombre = "Clara"
 
 # Counters 21 to 24 are skipped: tests outside the catalogue still state them
 # in other roles.
@@ -246,8 +268,9 @@ role = "electricista.titular"
 persona = "autonomo-electricista"
 kind = "nif"
 value = "00000025W"
-name = "Alberto"
-surnames = "Requena Salinas"
+primer_apellido = "Requena"
+segundo_apellido = "Salinas"
+nombre = "Alberto"
 
 # Natural persons (NIE).
 
@@ -256,16 +279,18 @@ role = "intracom.titular"
 persona = "intracomunitario-desarrollador"
 kind = "nie"
 value = "X0000001R"
-name = "Mikkel"
-surnames = "Holm Rasmussen"
+primer_apellido = "Holm"
+segundo_apellido = "Rasmussen"
+nombre = "Mikkel"
 
 [[identities]]
 role = "sociedad.administrador"
 persona = "sociedad-limitada"
 kind = "nie"
 value = "Y0000000Z"
-name = "Ana"
-surnames = "Ferreira Costa"
+primer_apellido = "Ferreira"
+segundo_apellido = "Costa"
+nombre = "Ana"
 
 # Legal entities (CIF). B = sociedad de responsabilidad limitada,
 # H = comunidad de propietarios en régimen de propiedad horizontal,
@@ -276,161 +301,162 @@ role = "asalariada.empleador"
 persona = "asalariada-familia"
 kind = "cif"
 value = "B00000018"
-legal_name = "Servicios Logísticos Meseta, S.L."
+razon_social = "Servicios Logísticos Meseta, S.L."
 
 [[identities]]
 role = "fontanero.proveedor"
 persona = "autonomo-fontanero"
 kind = "cif"
 value = "B00000026"
-legal_name = "Suministros Hidráulicos Centro, S.L."
+razon_social = "Suministros Hidráulicos Centro, S.L."
 
 [[identities]]
 role = "fontanero.cliente-restaurante"
 persona = "autonomo-fontanero"
 kind = "cif"
 value = "B00000034"
-legal_name = "Restauración Plaza Mayor, S.L."
+razon_social = "Restauración Plaza Mayor, S.L."
 
 [[identities]]
 role = "fontanero.gestoria"
 persona = "autonomo-fontanero"
 kind = "cif"
 value = "B00000042"
-legal_name = "Gestoría Arganzuela, S.L."
+razon_social = "Gestoría Arganzuela, S.L."
 
 [[identities]]
 role = "traductora.editorial"
 persona = "traductora-profesional"
 kind = "cif"
 value = "B00000059"
-legal_name = "Ediciones del Turia, S.L."
+razon_social = "Ediciones del Turia, S.L."
 
 [[identities]]
 role = "traductora.agencia"
 persona = "traductora-profesional"
 kind = "cif"
 value = "B00000067"
-legal_name = "Lingua Levante Traducciones, S.L."
+razon_social = "Lingua Levante Traducciones, S.L."
 
 [[identities]]
 role = "traductora.proveedor-software"
 persona = "traductora-profesional"
 kind = "cif"
 value = "B00000307"
-legal_name = "Herramientas de Traducción Albufera, S.L."
+razon_social = "Herramientas de Traducción Albufera, S.L."
 
 [[identities]]
 role = "minorista.mayorista"
 persona = "minorista-recargo"
 kind = "cif"
 value = "B00000075"
-legal_name = "Textil Mayorista del Ebro, S.L."
+razon_social = "Textil Mayorista del Ebro, S.L."
 
 [[identities]]
 role = "minorista.comercializadora-electrica"
 persona = "minorista-recargo"
 kind = "cif"
 value = "B00000323"
-legal_name = "Energía Vinalopó Comercializadora, S.L."
+razon_social = "Energía Vinalopó Comercializadora, S.L."
 
 [[identities]]
 role = "intracom.cliente-nacional"
 persona = "intracomunitario-desarrollador"
 kind = "cif"
 value = "B00000083"
-legal_name = "Mediterrània Software, S.L."
+razon_social = "Mediterrània Software, S.L."
 
 [[identities]]
 role = "intracom.academia"
 persona = "intracomunitario-desarrollador"
 kind = "cif"
 value = "B00000091"
-legal_name = "Acadèmia de Sistemes Distribuïts, S.L."
+razon_social = "Acadèmia de Sistemes Distribuïts, S.L."
 
 [[identities]]
 role = "sociedad.titular"
 persona = "sociedad-limitada"
 kind = "cif"
 value = "B00000109"
-legal_name = "Talleres Digitales Olmo, S.L."
+razon_social = "Talleres Digitales Olmo, S.L."
 
 [[identities]]
 role = "sociedad.cliente"
 persona = "sociedad-limitada"
 kind = "cif"
 value = "B00000117"
-legal_name = "Hostelería Ribera Norte, S.L."
+razon_social = "Hostelería Ribera Norte, S.L."
 
 [[identities]]
 role = "sociedad.proveedor"
 persona = "sociedad-limitada"
 kind = "cif"
 value = "B00000125"
-legal_name = "Equipos y Licencias Duero, S.L."
+razon_social = "Equipos y Licencias Duero, S.L."
 
 [[identities]]
 role = "asalariada.escuela-infantil"
 persona = "asalariada-familia"
 kind = "cif"
 value = "B00000133"
-legal_name = "Escuela Infantil Los Almendros, S.L."
+razon_social = "Escuela Infantil Los Almendros, S.L."
 
 [[identities]]
 role = "alta.cliente"
 persona = "autonomo-alta-reciente"
 kind = "cif"
 value = "B00000141"
-legal_name = "Asesores Inmobiliarios Chamberí, S.L."
+razon_social = "Asesores Inmobiliarios Chamberí, S.L."
 
 [[identities]]
 role = "alta.papeleria"
 persona = "autonomo-alta-reciente"
 kind = "cif"
 value = "B00000158"
-legal_name = "Papelería Central, S.L."
+razon_social = "Papelería Central, S.L."
 
 [[identities]]
 role = "electricista.promotora"
 persona = "autonomo-electricista"
 kind = "cif"
 value = "B00000166"
-legal_name = "Promociones Residenciales Henares, S.L."
+razon_social = "Promociones Residenciales Henares, S.L."
 
 [[identities]]
 role = "electricista.cadena-hotelera"
 persona = "autonomo-electricista"
 kind = "cif"
 value = "B00000174"
-legal_name = "Hoteles Urbanos Alcalá, S.L."
+razon_social = "Hoteles Urbanos Alcalá, S.L."
 
 [[identities]]
 role = "electricista.proveedor"
 persona = "autonomo-electricista"
 kind = "cif"
 value = "B00000182"
-legal_name = "Material Eléctrico Corredor, S.L."
+razon_social = "Material Eléctrico Corredor, S.L."
 
 [[identities]]
 role = "electricista.gestoria"
 persona = "autonomo-electricista"
 kind = "cif"
 value = "B00000190"
-legal_name = "Asesoría Contable Complutense, S.L."
+razon_social = "Asesoría Contable Complutense, S.L."
 
 [[identities]]
 role = "fontanero.comunidad"
 persona = "autonomo-fontanero"
 kind = "cif"
 value = "H00000018"
-legal_name = "Comunidad de Propietarios Calle Olivar 12"
+razon_social = "Comunidad de Propietarios Calle Olivar 12"
+renderings = [{ width = 40, text = "Comunidad de Propietarios C/ Olivar 12" }]
 
 [[identities]]
 role = "arrendador.pagador-pension"
 persona = "arrendador-jubilado"
 kind = "cif"
 value = "Q0000001H"
-legal_name = "Entidad Gestora de Pensiones Públicas (sintética)"
+razon_social = "Entidad Gestora de Pensiones Públicas (sintética)"
 
 # NIF-IVA intracomunitario identifiers of non-Spanish counterparties. Shaped to each member
 # state's structure; never validated against VIES.
@@ -441,7 +467,7 @@ persona = "intracomunitario-desarrollador"
 kind = "nif_iva"
 country = "DE"
 value = "DE000000001"
-legal_name = "Nordlicht Plattformen GmbH"
+razon_social = "Nordlicht Plattformen GmbH"
 
 [[identities]]
 role = "intracom.cliente-fr"
@@ -449,7 +475,7 @@ persona = "intracomunitario-desarrollador"
 kind = "nif_iva"
 country = "FR"
 value = "FR15000000001"
-legal_name = "Atelier Numérique Garonne SARL"
+razon_social = "Atelier Numérique Garonne SARL"
 
 [[identities]]
 role = "intracom.proveedor-nube"
@@ -457,14 +483,14 @@ persona = "intracomunitario-desarrollador"
 kind = "nif_iva"
 country = "IE"
 value = "IE0000001A"
-legal_name = "Liffey Cloud Hosting Limited"
+razon_social = "Liffey Cloud Hosting Limited"
 
 [[identities]]
 role = "intracom.operador-telefonia"
 persona = "intracomunitario-desarrollador"
 kind = "cif"
 value = "B00000315"
-legal_name = "Telecomunicaciones Turia, S.L."
+razon_social = "Telecomunicaciones Turia, S.L."
 
 # Refusal-test values. Checksum-invalid on purpose; never bound to a role and
 # never used by a persona. Tests that prove identifier refusal take them from

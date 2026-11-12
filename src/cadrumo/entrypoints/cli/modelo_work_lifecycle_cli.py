@@ -8,10 +8,8 @@ from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
 
-from ...application.modelo.work_addressing import (
-    ModeloWorkRegistryYearMismatchError,
-    law_selected_revision_for_work_target,
-)
+from ...application.modelo.work_address_errors import ModeloWorkRegistryYearMismatchError
+from ...application.modelo.work_addressing import law_selected_revision_for_work_target
 from ...application.modelo.work_create_policy import (
     modelo_work_create_refusal_locale_key,
 )

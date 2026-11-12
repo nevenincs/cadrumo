@@ -66,7 +66,7 @@ from ..iva_legal_vocabulary import resolve_iva_art69_dos_service_catalogue, reso
 from ..iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ..iva_rate_role_catalogue import resolve_iva_rate_role_catalogue
 from ..iva_regime_vocabulary import resolve_iva_regime_catalogue
-from ..ledger_oss_bindings import LedgerOssProvider, OssIossLedgerObservation
+from ..ledger_oss_bindings import OssIossLedgerObservation
 from ..lorca_reduction import resolve_lorca_reduction
 from ..m303_schema_vocabulary import resolve_m303_regime_composition_catalogue, resolve_m303_tax_territory_catalogue
 from ..m347_threshold import resolve_m347_threshold_buckets
@@ -82,6 +82,7 @@ from ..refund_eligibility import resolve_refund_eligibility_policy
 from ..renta_codes_catalogue import resolve_fiscal_residency_catalogue, ue_eea_country_codes
 from ..renta_expense_policy import renta_expense_policy_declarations
 from ..rental_reduction import resolve_rental_reduction_art232_tier_catalogue
+from ..retencion_clave_catalogue import resolve_retencion_clave
 from ..retenciones_bindings import registry_schemes_for_modelo
 from ..setup_profile_bindings import mapping_fact_entries
 from ..situacion_familiar_catalogue import resolve_situacion_familiar_catalogue
@@ -89,7 +90,7 @@ from ..situacion_familiar_m145_catalogue import resolve_situacion_familiar_m145_
 from ..tax_id_format import runtime_tax_id_format, tax_id_format_value
 from ..third_party_declaration_roles import resolve_third_party_declaration_role_catalogue
 from ..travel_agency_mediation import resolve_travel_agency_mediation_catalogue
-from ..withholding_bindings import resolve_retencion_clave, withholding_role_declarations
+from ..withholding_bindings import withholding_role_declarations
 from .authored_editions import filing_year_envelope
 from .fact_scope import outside_governed_fact_validation
 from .m347_fixture import resolve_m347_counterparty_annual_threshold
@@ -232,12 +233,6 @@ def _ledger_oss_observation_validator(authority: GovernedFactSource | None) -> o
     return _OSS_OBSERVATION_VALIDATOR(observation)
 
 
-def _ledger_oss_transaction_kinds_validator(authority: GovernedFactSource | None) -> object:
-    """Run the binding selector's transaction-kind validator itself, for the reason given above."""
-    del authority
-    return LedgerOssProvider.validate_registry_transaction_kinds((TransactionKind("external_scheme_services"),))
-
-
 _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object]], ...] = (
     (
         "lorca_reduction",
@@ -355,7 +350,6 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
     ("iva_rate_slot_catalogue", lambda authority: resolve_iva_rate_token("RATE_2", _EFFECTIVE)),
     ("detail_row_catalogue", lambda authority: resolve_detail_row_owning_modelos(effective_date=_EFFECTIVE)),
     ("ledger_oss_observation", _ledger_oss_observation_validator),
-    ("ledger_oss_transaction_kinds", _ledger_oss_transaction_kinds_validator),
 )
 
 

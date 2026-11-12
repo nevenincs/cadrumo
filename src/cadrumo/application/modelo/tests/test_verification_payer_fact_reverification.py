@@ -40,6 +40,7 @@ from ....core.modelo import Modelo
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ...calculations.cross_period_clean_state import cross_period_clean_state_non_filer_modelos
 from ...user_profile.tests.payer_fact_record_support import (
@@ -86,6 +87,7 @@ def test_a_cleared_payer_fact_does_not_refuse_re_verification(
     """An unanswered fact leaves the verdict INCOMPLETE, which the gate must not block on."""
     refusal = modelo_applicability_refusal(
         record=payer_fact_record(operation, answer=None),
+        filing_year=filing_year_envelope().horizon,
         bucket_id=PROFILE_ID,
         modelo=modelo,
         operation=operation,
@@ -108,6 +110,7 @@ def test_a_payer_fact_answered_no_still_refuses_re_verification(
     """The operator's own no keeps its force; only the unprovable default was dropped."""
     refusal = modelo_applicability_refusal(
         record=payer_fact_record(operation, answer=False),
+        filing_year=filing_year_envelope().horizon,
         bucket_id=PROFILE_ID,
         modelo=modelo,
         operation=operation,
@@ -126,6 +129,7 @@ def test_a_payer_fact_answered_yes_does_not_refuse_re_verification(
 ) -> None:
     refusal = modelo_applicability_refusal(
         record=payer_fact_record(operation, answer=True),
+        filing_year=filing_year_envelope().horizon,
         bucket_id=PROFILE_ID,
         modelo=modelo,
         operation=operation,

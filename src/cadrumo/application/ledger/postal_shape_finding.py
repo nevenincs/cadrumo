@@ -48,9 +48,11 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
+from ...core.parsing.dates import parse_iso8601_date
 from ...domain.iva.establishment import (
     country_code_for_printed_country_name,
     territorial_scope_for_country,
@@ -68,6 +70,7 @@ __all__ = ["postal_shape_findings"]
 def _territory_already_settled(
     printed_country: str | None,
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether the printed country settles this party's territory alone.
@@ -79,7 +82,7 @@ def _territory_already_settled(
     default, which would suppress the report for the party we know least about.
     """
     code = country_code_for_printed_country_name(printed_country, operation=operation)
-    return territorial_scope_for_country(code, operation=operation) is not None
+    return territorial_scope_for_country(code, effective_date=effective_date, operation=operation) is not None
 
 
 def postal_shape_findings(
@@ -110,16 +113,26 @@ def postal_shape_findings(
     # it were written at module scope.
     from .invoice_draft_records import DraftDiscrepancyFinding, FindingWords
 
+    # The territorial vocabulary is read on the invoice's own date; a document
+    # that states no readable date leaves this check without its input, so it
+    # does not run.
+    effective_date = parse_iso8601_date(draft.invoice_date)
+    if effective_date is None:
+        return ()
     findings: list[DraftDiscrepancyFinding] = []
     for party in party_addresses():
         raw_printed = getattr(draft, party.postal_field, None)
         printed: str | None = raw_printed if isinstance(raw_printed, str) else None
         if printed is None or not printed.strip():
             continue
-        if territorial_scope_for_spanish_postal_code(printed, operation=operation) is not None:
+        if (
+            territorial_scope_for_spanish_postal_code(printed, effective_date=effective_date, operation=operation)
+            is not None
+        ):
             continue
         if _territory_already_settled(
             getattr(draft, party.country_field, None),
+            effective_date=effective_date,
             operation=operation,
         ):
             continue

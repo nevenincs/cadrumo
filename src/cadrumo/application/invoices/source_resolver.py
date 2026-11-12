@@ -23,6 +23,7 @@ from ...domain.calculations.registry.invoice_bindings import (
 from ...domain.calculations.registry.iva_category_catalogue import (
     require_iva_category,
 )
+from ...domain.filing.declared_party_name_filing import PartyNameRefusals
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.models import Invoice
@@ -60,6 +61,7 @@ from .source_observations import (
     resolve_m347_filer,
     row_values_not_carried_by_detail_rows,
 )
+from .source_party_names import party_name_refusal_diagnostics, with_declared_filing_names
 from .source_rectifications import place_rectifications
 from .source_resolver_ports import (
     CounterpartyProvinciaReader,
@@ -145,6 +147,7 @@ def _invoice_resolution_from_observations(
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
     m347_filer: M347Filer,
+    names_stated: bool,
 ) -> CalculationSourceResolution:
     observations = tuple(observation for _, observation in observed_items)
     binding_values = resolve_invoice_binding_values(
@@ -152,7 +155,12 @@ def _invoice_resolution_from_observations(
         observations,
         effective_date=filing_period_date(context),
     )
-    row_values = invoice_row_values(context=context, observations=observations)
+    party_name_refusals = PartyNameRefusals(modelo=str(context.modelo)) if names_stated else None
+    row_values = invoice_row_values(
+        context=context,
+        observations=observations,
+        party_name_refusals=party_name_refusals,
+    )
     resolved_binding_ids = binding_values.keys() | {binding_id for binding_id, _ in row_values}
     resolved_sources = frozenset(
         binding.source for binding in context.revision.bindings if binding.id in resolved_binding_ids
@@ -165,13 +173,13 @@ def _invoice_resolution_from_observations(
         context=context,
         resolver_id=resolver_id,
     )
-    if context.modelo == form_for_role("iva.intracommunity_summary"):
-        diagnostics += _m349_inferred_clave_diagnostics(
-            declared_invoices,
-            bucket_invoices=catalogue_invoices,
-            resolver_id=resolver_id,
-        )
-        diagnostics += _m349_unclassified_operation_diagnostics(source_invoices, resolver_id=resolver_id)
+    diagnostics += _m349_operation_clave_diagnostics(
+        context,
+        declared_invoices=declared_invoices,
+        catalogue_invoices=catalogue_invoices,
+        source_invoices=source_invoices,
+        resolver_id=resolver_id,
+    )
     diagnostics += m347_role_fact_advisories(
         source_invoices,
         context=context,
@@ -185,6 +193,13 @@ def _invoice_resolution_from_observations(
         resolver_id=resolver_id,
     )
     diagnostics += m347_exclusion_reading_advisories(observed_items, context=context, resolver_id=resolver_id)
+    if party_name_refusals is not None:
+        diagnostics += party_name_refusal_diagnostics(
+            party_name_refusals.refusals,
+            observed_items,
+            context=context,
+            resolver_id=resolver_id,
+        )
     diagnostics += m347_received_invoice_dating_advisories(
         observed_items,
         catalogue_invoices,
@@ -206,6 +221,23 @@ def _invoice_resolution_from_observations(
             for row in _invoice_provenance(invoice, observation, resolved_sources=resolved_sources)
         ),
     )
+
+
+def _m349_operation_clave_diagnostics(
+    context: CalculationSourceContext,
+    *,
+    declared_invoices: tuple[Invoice, ...],
+    catalogue_invoices: tuple[Invoice, ...],
+    source_invoices: Sequence[Invoice],
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    if context.modelo != form_for_role("iva.intracommunity_summary"):
+        return ()
+    return _m349_inferred_clave_diagnostics(
+        declared_invoices,
+        bucket_invoices=catalogue_invoices,
+        resolver_id=resolver_id,
+    ) + _m349_unclassified_operation_diagnostics(source_invoices, resolver_id=resolver_id)
 
 
 def _source_transaction_ids(observed_items: Sequence[ObservedInvoice]) -> tuple[str, ...]:
@@ -283,6 +315,9 @@ class InvoiceCatalogueSourceResolver:
         )
         try:
             observed_items = _with_stated_provincias(observed_items, self._ports.counterparty_provincias)
+            filing_names = self._ports.counterparty_filing_names
+            if filing_names is not None:
+                observed_items = with_declared_filing_names(observed_items, filing_names)
             placed_items, rectification_refusals = place_rectifications(
                 observed_items,
                 catalogue=catalogue,
@@ -308,6 +343,7 @@ class InvoiceCatalogueSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             m347_filer=m347_filer,
+            names_stated=self._ports.counterparty_filing_names is not None,
         )
 
 
@@ -469,7 +505,8 @@ def _clave_was_inferred_as_entrega(invoice: Invoice) -> bool:
     return (
         invoice.operation_type is None
         and invoice.kind is InvoiceKind.ISSUED
-        and invoice.iva_category == require_iva_category("intra_community_supply")
+        and invoice.iva_category
+        == require_iva_category("intra_community_supply", effective_date=invoice.operation_date or invoice.issued_at)
     )
 
 
@@ -507,7 +544,11 @@ def _m349_inferred_clave_diagnostics(
     # Read across the whole bucket, not the declared set: an importation is a
     # RECEIVED record that produces no Modelo 349 row of its own, so it is absent
     # from ``declared`` by construction and invisible to a scan of it.
-    if not any(invoice.iva_category == require_iva_category("import_third_country") for invoice in bucket_invoices):
+    if not any(
+        invoice.iva_category
+        == require_iva_category("import_third_country", effective_date=invoice.operation_date or invoice.issued_at)
+        for invoice in bucket_invoices
+    ):
         return ()
     numbers = ", ".join(sorted(invoice.invoice_number for invoice in inferred))
     return (

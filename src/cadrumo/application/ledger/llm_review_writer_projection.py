@@ -125,6 +125,16 @@ def project_ledger_llm_writer_result(
             iva_vehicle_use=(
                 result.transaction.iva_vehicle_use.value if result.transaction.iva_vehicle_use is not None else None
             ),
+            exemption_article=(
+                result.transaction.exemption_article.value if result.transaction.exemption_article is not None else None
+            ),
+            arrendamiento_ref=result.transaction.arrendamiento_ref,
+            inmueble_ref=result.transaction.inmueble_ref,
+            gasto_capital_inmobiliario=(
+                str(result.transaction.gasto_capital_inmobiliario)
+                if result.transaction.gasto_capital_inmobiliario is not None
+                else None
+            ),
             review_status=payload.review_status,
             bucket_event_ids=result.bucket_event_ids,
         )

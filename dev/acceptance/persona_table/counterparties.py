@@ -1,7 +1,8 @@
 """Per-counterparty comparison of a persona's stated informative-return values against the written fichero BOE.
 
-Modelo 347 and 349 state no casillas: each stated value names a counterparty
-and the concepts the law gives for it. The comparison reads the written
+Modelos 180, 190, 347 and 349 state no casillas for their perceptores and
+counterparties: each stated value names a counterparty and the concepts the
+law gives for it. The comparison reads the written
 fichero through the registry's own export parser, so every position comes from
 the hydrated export layout, and matches each stated counterparty with its
 type-2 record by the identity the persona's catalogue binds to the role. A
@@ -19,7 +20,10 @@ from cadrumo.domain.calculations.registry.export_parse_models import ParsedExpor
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.tests.personas import ExpectedValue, Identity, IdentityCatalogue
 
-_AMOUNTS = frozenset({"importe_anual", "base"})
+_AMOUNTS = frozenset(
+    {"importe_anual", "base", "base_retenciones", "retenciones", "porcentaje_retencion", "importe_integro"}
+)
+"""Concepts compared as numbers, so a stated amount and the written one agree whatever their scale."""
 _DECLARED = "declared"
 
 
@@ -33,6 +37,40 @@ class RecordDesign:
 
 
 DESIGNS: Mapping[str, RecordDesign] = {
+    "180": RecordDesign(
+        # Positions below are the type-2 field offset and length of the 2023-y-siguientes
+        # export layout (modelo-180-fichero-boe, record modelo-180-perceptor); the 2019-2022 layout is identical.
+        nif="modelo-180-perceptor-row-nif",  # type-2 positions 18-26: NIF del perceptor
+        country=None,
+        concepts={
+            # positions 79-92: base de retenciones e ingresos a cuenta
+            "base_retenciones": "modelo-180-perceptor-row-base",
+            # positions 93-96: porcentaje de retencion, 2 integer and 2 fractional digits
+            "porcentaje_retencion": "modelo-180-perceptor-row-withholding-percentage",
+            # positions 97-109: retenciones e ingresos a cuenta, 2 implied decimals
+            "retenciones": "modelo-180-perceptor-row-retenciones",
+            # position 78: modalidad
+            "modalidad": "modelo-180-perceptor-row-modality",
+            # position 114: situacion del inmueble
+            "situacion_inmueble": "modelo-180-perceptor-row-property-situation",
+            # positions 115-134: referencia catastral
+            "referencia_catastral": "modelo-180-perceptor-row-cadastral-reference",
+        },
+    ),
+    "190": RecordDesign(
+        # Positions below are the type-2 field offset and length of the 2025-y-siguientes
+        # export layout (modelo-190-fichero-boe, record modelo-190-perceptor); 2022-2024 are identical.
+        nif="modelo-190-perceptor-row-nif",  # type-2 positions 18-26: NIF del perceptor
+        country=None,
+        concepts={
+            # position 78: clave de percepcion
+            "clave": "modelo-190-perceptor-row-clave",
+            # positions 81-94: percepcion dineraria integra (sign at 81, magnitude 82-94)
+            "importe_integro": "modelo-190-perceptor-row-percibido-dinerario",
+            # positions 95-107: retenciones dinerarias practicadas, 2 implied decimals
+            "retenciones": "modelo-190-perceptor-row-retencion-practicada",
+        },
+    ),
     "347": RecordDesign(
         nif="modelo-347-contraparte-row-nif",
         country=None,

@@ -19,6 +19,10 @@ the periods holding each day asked.
 
 The statement formats this installation parses are served with them, so a
 window offers no format whose parser is not installed.
+
+The figures a payer's withholding certificate states are served per income
+class, from the declaration the record writer enforces, so a withholding form
+asks for each figure exactly where the record takes it.
 """
 
 from __future__ import annotations
@@ -37,7 +41,8 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
-from ...core.time.clock import now
+from ...core.retencion_soportada import RetencionSoportadaClase
+from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
 from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
@@ -49,6 +54,7 @@ from ...domain.categories.spending_category_catalogue import resolve_spending_ca
 from ...domain.invoices.business_premises import SituacionInmueble
 from ...domain.invoices.enums import default_invoice_class, invoice_class_rectificativa, invoice_class_simplificada
 from ...domain.iva.establishment import catalogued_country_codes
+from ...domain.renta.retencion_soportada import certificate_figures
 from ...domain.transactions.classification_effects import keeps_category, takes_usage_ratio
 from ...domain.transactions.enums import (
     BusinessClassification,
@@ -102,6 +108,7 @@ type EntryOptionFamily = Literal[
     "capital_good_disposal",
     "import_format",
     "export_format",
+    "withholding_certificate_figure",
 ]
 
 
@@ -228,6 +235,19 @@ def _tipo_renta_options(operation: PinnedAuthorityOperation) -> tuple[LedgerEntr
     )
 
 
+def _withholding_figure_options() -> tuple[LedgerEntryOptionProjection, ...]:
+    """Offer each figure a payer's certificate states, filed under the income class whose certificate states it."""
+    return tuple(
+        LedgerEntryOptionProjection(
+            value=figure.value,
+            label_key=f"{ENTRY_OPTION_LABEL_PREFIX}withholding_certificate_figure.{figure.value}",
+            group=income_class.value,
+        )
+        for income_class in RetencionSoportadaClase
+        for figure in certificate_figures(income_class)
+    )
+
+
 def _plain(tokens: Iterable[object]) -> tuple[LedgerEntryOptionProjection, ...]:
     return tuple(LedgerEntryOptionProjection(value=str(token)) for token in tokens)
 
@@ -283,6 +303,8 @@ def ledger_entry_options(
     language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
 ) -> LedgerEntryOptionsProjection:
     """Read every vocabulary from its owner, under one pinned authority generation."""
+    # Choices offered for a new entry read the IVA categories in force on the stated day, else today.
+    category_date = on_date or today_madrid()
     prorrata = resolve_prorrata_register_catalogue(effective_date=on_date, authority=operation)
     # These two owners take the scope's pinned generation, which the operation runs inside.
     capital = resolve_bienes_inversion_catalogue(effective_date=on_date)
@@ -300,7 +322,7 @@ def ledger_entry_options(
         ("m210_tipo_renta", _tipo_renta_options(operation)),
         (
             "iva_category",
-            _plain(resolve_iva_category_catalogue(effective_date=on_date, authority=operation).all_categories),
+            _plain(resolve_iva_category_catalogue(effective_date=category_date, authority=operation).all_categories),
         ),
         ("irpf_category", _plain(item.id for item in ledger_irpf_category_catalogue(authority=operation))),
         ("spending_category", _spending_options(on_date, operation)),
@@ -319,6 +341,7 @@ def ledger_entry_options(
         ("capital_good_disposal", _plain(capital.disposal_regime_choices)),
         ("import_format", _plain(installed_ledger_providers())),
         ("export_format", _plain(ExportSerializationFormat)),
+        ("withholding_certificate_figure", _withholding_figure_options()),
     )
     return LedgerEntryOptionsProjection(
         profile_id=profile_id,

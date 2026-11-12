@@ -19,13 +19,14 @@ from pydantic import ValidationError
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
-from ..calculation_revision_operator_layer import CalculationOperatorLayer
+from ..calculation_revision_operator_layer import AttestedSource, CalculationOperatorLayer, ValueAttestation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -183,3 +184,132 @@ def test_attested_bindings_are_unique_and_sorted() -> None:
     later = "modelo-130-retenciones-anteriores"
     with pytest.raises(ValidationError, match="unique and sorted"):
         CalculationOperatorLayer(binding_overrides={_BINDING: "0", later: "0"}, attested_binding_ids=(later, _BINDING))
+
+
+def _attestation_year() -> int:
+    support = published_supported_filing_years()
+    assert support is not None
+    return support.floor - 1
+
+
+def _value_attested_layer() -> CalculationOperatorLayer:
+    return CalculationOperatorLayer(
+        binding_overrides={_BINDING: "12846.3"},
+        value_attestations={
+            _BINDING: ValueAttestation(source_modelo="100", source_filing_year=_attestation_year(), source_period="0A")
+        },
+    )
+
+
+def test_a_layer_with_no_value_attestation_keeps_the_identity_it_had_before_value_attestation() -> None:
+    plain = CalculationOperatorLayer(binding_overrides={_BINDING: "12846.3"})
+    explicit_empty = CalculationOperatorLayer(binding_overrides={_BINDING: "12846.3"}, value_attestations={})
+
+    assert "value_attestations" not in plain.identity_payload()
+    assert _revision_id(plain) == _revision_id(explicit_empty)
+
+
+def test_a_value_attested_binding_is_a_statement_apart_from_a_typed_figure() -> None:
+    typed = CalculationOperatorLayer(binding_overrides={_BINDING: "12846.3"})
+    attested = _value_attested_layer()
+
+    assert attested.identity_payload()["value_attestations"] == {
+        _BINDING: {"source_modelo": "100", "source_filing_year": _attestation_year(), "source_period": "0A"}
+    }
+    assert _revision_id(attested) != _revision_id(typed)
+    assert CalculationOperatorLayer.model_validate_json(attested.model_dump_json()) == attested
+    loaded = CalculationRevision.model_validate_json(_revision(attested).model_dump_json())
+    assert loaded.operator_layer == attested
+
+
+def test_the_identity_names_the_earlier_filing_a_figure_stands_in_for() -> None:
+    other_period = CalculationOperatorLayer(
+        binding_overrides={_BINDING: "12846.3"},
+        value_attestations={
+            _BINDING: ValueAttestation(source_modelo="100", source_filing_year=_attestation_year(), source_period="1T")
+        },
+    )
+
+    assert _revision_id(other_period) != _revision_id(_value_attested_layer())
+
+
+@pytest.mark.parametrize("override", [None, "1.50", "abc"])
+def test_a_value_attested_binding_must_hold_a_canonical_decimal_override(override: str | None) -> None:
+    overrides = {} if override is None else {_BINDING: override}
+    with pytest.raises(ValidationError, match="canonical decimal override"):
+        CalculationOperatorLayer(
+            binding_overrides=overrides,
+            value_attestations={
+                _BINDING: ValueAttestation(
+                    source_modelo="100", source_filing_year=_attestation_year(), source_period="0A"
+                )
+            },
+        )
+
+
+def test_a_binding_cannot_be_both_attested_as_no_amount_and_value_attested() -> None:
+    with pytest.raises(ValidationError, match="both attested as no amount and value-attested"):
+        CalculationOperatorLayer(
+            binding_overrides={_BINDING: "0"},
+            attested_binding_ids=(_BINDING,),
+            value_attestations={
+                _BINDING: ValueAttestation(
+                    source_modelo="100", source_filing_year=_attestation_year(), source_period="0A"
+                )
+            },
+        )
+
+
+def _relation_attested_layer(*quarters: str) -> CalculationOperatorLayer:
+    first, *rest = quarters
+    year = _attestation_year()
+    return CalculationOperatorLayer(
+        binding_overrides={_BINDING: "2400.5"},
+        value_attestations={
+            _BINDING: ValueAttestation(
+                source_modelo="130",
+                source_filing_year=year,
+                source_period=first,
+                further_sources=tuple(
+                    AttestedSource(source_modelo="130", source_filing_year=year, source_period=quarter)
+                    for quarter in rest
+                ),
+            )
+        },
+    )
+
+
+def test_a_statement_for_a_relation_names_every_source_period_it_covers() -> None:
+    layer = _relation_attested_layer("1T", "2T", "3T", "4T")
+
+    (attestation,) = layer.value_attestations.values()
+    assert [source.source_period for source in attestation.sources] == ["1T", "2T", "3T", "4T"]
+    assert layer.identity_payload()["value_attestations"] == {
+        _BINDING: {
+            "source_modelo": "130",
+            "source_filing_year": _attestation_year(),
+            "source_period": "1T",
+            "further_sources": [
+                {"source_modelo": "130", "source_filing_year": _attestation_year(), "source_period": quarter}
+                for quarter in ("2T", "3T", "4T")
+            ],
+        }
+    }
+    assert CalculationOperatorLayer.model_validate_json(layer.model_dump_json()) == layer
+
+
+def test_a_single_source_statement_keeps_the_stored_identity_payload_without_the_source_list() -> None:
+    (attestation,) = _value_attested_layer().value_attestations.values()
+
+    assert attestation.identity_payload() == {
+        "source_modelo": "100",
+        "source_filing_year": _attestation_year(),
+        "source_period": "0A",
+    }
+    assert [source.source_period for source in attestation.sources] == ["0A"]
+
+
+def test_the_sources_a_statement_covers_move_the_revision_identity() -> None:
+    assert _revision_id(_relation_attested_layer("1T", "2T")) != _revision_id(
+        _relation_attested_layer("1T", "2T", "3T", "4T")
+    )

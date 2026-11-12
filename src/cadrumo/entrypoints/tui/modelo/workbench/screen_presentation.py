@@ -67,7 +67,16 @@ class WorkbenchPresentationMixin:
         self.set_class(identity.stacked, "-identity-stacked")
         self.query_one("#wb-header", Static).update(identity.text)
         self._render_deadline(deadline)
+        self._render_projection(form)
         self._render_header_result(form, width, recorded)
+
+    def _render_projection(self: ModeloWorkbenchScreen, form: ModeloWorkForm) -> None:
+        # A year calculated from another year's edition is said in the words the
+        # form serves, before any check; an authored year serves none.
+        words = form.year_projection.words
+        projection = self.query_one("#wb-projection", Static)
+        projection.update(words or "")
+        projection.display = words is not None
 
     def _render_deadline(self: ModeloWorkbenchScreen, deadline: DeadlineView | None) -> None:
         deadline_widget = self.query_one("#wb-deadline", Static)

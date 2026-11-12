@@ -27,6 +27,7 @@ from cadrumo.tests.personas import (
     values_in_force,
 )
 
+from ..persona_table.roles import edition_identities, resolve
 from .receipt import CheckStatus, ObligationCheck, ValueCheck
 
 _ABSENT = "absent"
@@ -37,7 +38,10 @@ _PRESENT = "present"
 
 
 def _states_figures(value: ExpectedValue) -> bool:
-    return bool(value.casillas or value.not_sourced or value.refusal is not None) and value.grounding != "unverified"
+    return (
+        bool(value.casillas or value.roles or value.not_sourced or value.refusal is not None)
+        and value.grounding != "unverified"
+    )
 
 
 def asserted_values(persona: Persona, envelope: YearEnvelope) -> tuple[tuple[int, ExpectedValue], ...]:
@@ -136,33 +140,55 @@ def _unreached_status(observed: CalculationObservation) -> tuple[CheckStatus, st
     return None
 
 
+def _stated_figures(year: int, value: ExpectedValue) -> list[tuple[str, str | None, str, str | None]]:
+    """Each stated figure as ``(kind, casilla, amount, unresolved role)``; a role is placed in the return's edition."""
+    stated: list[tuple[str, str | None, str, str | None]] = [
+        ("casilla", casilla, amount, None) for casilla, amount in value.casillas
+    ]
+    if value.roles:
+        held = edition_identities(value.modelo, year, value.period)
+        for key, amount in value.roles:
+            casilla = resolve(held, key)
+            stated.append(("casilla", casilla, amount, None if casilla is not None else f"role:{key}"))
+    stated += [("not_sourced", casilla, amount, None) for casilla, amount in value.not_sourced]
+    return stated
+
+
+def _figure_status(
+    kind: str, expected: Decimal | None, actual: Decimal | None, unreached: tuple[CheckStatus, str] | None
+) -> tuple[CheckStatus, str | None]:
+    shown = None if actual is None else str(actual)
+    if unreached is not None:
+        return unreached
+    if kind == "casilla":
+        return _casilla_status(expected, actual), shown
+    return _not_sourced_status(expected, actual), shown
+
+
 def _figure_checks(year: int, value: ExpectedValue, observed: CalculationObservation) -> tuple[ValueCheck, ...]:
     unreached = _unreached_status(observed)
     rows: list[ValueCheck] = []
-    for kind, pairs in (("casilla", value.casillas), ("not_sourced", value.not_sourced)):
-        for casilla, amount in pairs:
-            expected = decimal_or_none(amount)
+    for kind, casilla, amount, unresolved in _stated_figures(year, value):
+        if casilla is None:
+            status, shown = CheckStatus.GAP, f"{unresolved} unresolved in the return's edition"
+        else:
             raw = observed.casillas.get(casilla)
-            actual = None if raw is None else decimal_or_none(raw)
-            if unreached is not None:
-                status, shown = unreached
-            elif kind == "casilla":
-                status, shown = _casilla_status(expected, actual), None if actual is None else str(actual)
-            else:
-                status, shown = _not_sourced_status(expected, actual), None if actual is None else str(actual)
-            rows.append(
-                ValueCheck(
-                    year=year,
-                    modelo=value.modelo,
-                    period=value.period,
-                    casilla=casilla,
-                    kind="casilla" if kind == "casilla" else "not_sourced",
-                    expected=amount,
-                    actual=shown,
-                    status=status,
-                    legal_ref=value.legal_ref,
-                )
+            status, shown = _figure_status(
+                kind, decimal_or_none(amount), None if raw is None else decimal_or_none(raw), unreached
             )
+        rows.append(
+            ValueCheck(
+                year=year,
+                modelo=value.modelo,
+                period=value.period,
+                casilla=casilla,
+                kind="casilla" if kind == "casilla" else "not_sourced",
+                expected=amount,
+                actual=shown,
+                status=status,
+                legal_ref=value.legal_ref,
+            )
+        )
     return tuple(rows)
 
 

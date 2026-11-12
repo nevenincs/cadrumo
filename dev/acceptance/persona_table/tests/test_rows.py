@@ -26,7 +26,9 @@ from ..rows import (
     planned_rows,
     read_rows,
     replay_horizons,
+    replayed,
     select,
+    source_closure,
     stage_refusal_codes,
     write_rows,
 )
@@ -95,6 +97,19 @@ def test_history_filed_expected_refusal_and_missing_oracle_are_never_green() -> 
         Verdict.NO_ORACLE,
     )
     assert not {history.verdict, refusal.verdict, no_oracle.verdict} & GREEN
+
+
+def test_a_refused_calculation_is_red_whatever_the_oracle_states() -> None:
+    no_oracle = _plan(has_values=False, grounding="none", sources=())
+    unsourced = _plan(grounding="unverified")
+    uncompared = dataclasses.replace(_plan(), unchecked=("not-sourced:00255",))
+    verdicts = {
+        TableRow.from_plan(plan, Stage.REFUSED, reason="modelo.work.calculate refused C").verdict
+        for plan in (no_oracle, unsourced, uncompared)
+    }
+    assert verdicts == {Verdict.FAIL}
+    passed = TableRow.from_plan(uncompared, Stage.PASSED, verify=Stage.PASSED, export=Stage.PASSED)
+    assert passed.verdict is Verdict.UNCHECKED
 
 
 def test_unsupported_and_not_run_rows_are_counted_apart() -> None:
@@ -188,6 +203,51 @@ def test_a_filter_keeps_only_the_named_modelos_and_years() -> None:
     assert kept
     assert {(row.modelo, row.year) for row in kept} == {("130", envelope.horizon - 1)}
     assert select(rows) == rows
+
+
+def _row(modelo: str, year: int, period: str) -> PlannedRow:
+    return dataclasses.replace(_plan(), modelo=modelo, year=year, period=period)
+
+
+_READS = {"renta": ("instalment", "renta"), "instalment": ("instalment",), "annual-vat": ("vat",), "vat": ("vat",)}
+
+
+def _reads(modelo: str) -> tuple[str, ...]:
+    return _READS.get(modelo, ())
+
+
+def test_the_source_closure_follows_reads_transitively() -> None:
+    reads = {"a": ("b",), "b": ("c",), "c": ("a",)}
+    assert source_closure(["a"], lambda modelo: reads.get(modelo, ())) == {"a", "b", "c"}
+    assert source_closure(["d"], lambda modelo: reads.get(modelo, ())) == {"d"}
+
+
+def test_a_filtered_run_replays_the_earlier_rows_its_selection_reads_and_no_others() -> None:
+    year = _envelope().horizon - 1
+    rows = [
+        _row("instalment", year - 1, "4T"),
+        _row("vat", year - 1, "4T"),
+        _row("renta", year - 1, "0A"),
+        _row("instalment", year, "1T"),
+        _row("vat", year, "1T"),
+        _row("instalment", year, "2T"),
+        _row("annual-vat", year, "0A"),
+        _row("renta", year, "0A"),
+        _row("instalment", year + 1, "1T"),
+    ]
+    selected = select(rows, modelos=("renta",), years=(year,))
+    assert [row.key for row in selected] == [rows[7].key]
+    run = replayed(rows, selected, _reads)
+    assert run == [rows[0], rows[2], rows[3], rows[5], rows[7]]
+    assert replayed(rows, select(rows, modelos=("vat",)), _reads) == [rows[1], rows[4]]
+    assert replayed(rows, select(rows, modelos=("annual-vat",)), _reads) == [rows[1], rows[4], rows[6]]
+
+
+def test_an_unfiltered_run_replays_every_row_and_an_empty_selection_none() -> None:
+    year = _envelope().horizon - 1
+    rows = [_row("vat", year, "1T"), _row("renta", year, "0A")]
+    assert replayed(rows, select(rows), _reads) == rows
+    assert replayed(rows, select(rows, modelos=("absent",)), _reads) == []
 
 
 def test_a_baseline_line_holds_year_tokens_and_reads_back_on_the_horizon() -> None:

@@ -43,6 +43,7 @@ from ...domain.calculations.registry.travel_agency_mediation import (
     is_travel_agency_air_passenger_transport,
 )
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.filing.declared_party_name_filing import PartyNameRefusals
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
 from ...domain.invoices.models import Invoice
@@ -109,9 +110,9 @@ _OUTSIDE_ECONOMIC_ACTIVITY = "outside_economic_activity"
 _SUBSIDY_OR_AID = "subsidy_or_aid"
 
 
-def _clave_by_kind_and_category() -> dict[tuple[InvoiceKind, IvaCategory], IntracomOperationType]:
+def _clave_by_kind_and_category(effective_date: date) -> dict[tuple[InvoiceKind, IvaCategory], IntracomOperationType]:
     """Project the dated Modelo 349 category-to-clave bindings."""
-    catalogue = resolve_iva_category_catalogue()
+    catalogue = resolve_iva_category_catalogue(effective_date=effective_date)
     return {
         (InvoiceKind.ISSUED, catalogue.require("intra_community_supply")): IntracomOperationType(
             catalogue.operation_type("issued.intra_community_supply")
@@ -531,8 +532,12 @@ def _m347_reverse_charge_recipient(invoice: Invoice) -> bool:
     """
     if invoice.kind is not InvoiceKind.RECEIVED or invoice.iva_category is None:
         return False
+    devengo_date = invoice.operation_date or invoice.issued_at
     return is_inversion_sujeto_pasivo_flow(
-        derive_flow_for_classification(category=invoice.iva_category, invoice_direction=invoice.kind),
+        derive_flow_for_classification(
+            category=invoice.iva_category, invoice_direction=invoice.kind, effective_date=devengo_date
+        ),
+        effective_date=devengo_date,
     )
 
 
@@ -703,6 +708,7 @@ def intracommunity_clave(invoice: Invoice) -> str | None:
     category and makes the ordinary supply undeclarable -- measured, six
     otherwise-passing M349 flows.
     """
+    devengo_date = invoice.operation_date or invoice.issued_at
     operation_type = invoice.operation_type
     if operation_type is not None:
         return _m349_clave_for_operation_type(
@@ -714,11 +720,11 @@ def intracommunity_clave(invoice: Invoice) -> str | None:
     # Triangulation first, and kind-independent: LIVA art. 26.3 exempts the
     # intermediary's adquisición while the onward leg is a supply, so the
     # taxpayer files clave T from either side of the operation.
-    if invoice.iva_category == require_iva_category("intra_community_triangulation"):
+    if invoice.iva_category == require_iva_category("intra_community_triangulation", effective_date=devengo_date):
         return IntracomOperationType.T.value
     if invoice.iva_category is None:
         return None
-    derived = _clave_by_kind_and_category().get((invoice.kind, invoice.iva_category))
+    derived = _clave_by_kind_and_category(devengo_date).get((invoice.kind, invoice.iva_category))
     return None if derived is None else derived.value
 
 
@@ -766,17 +772,17 @@ def _m349_operador_row_from_values(
     *,
     row_index: int,
 ) -> Modelo349OperadorRow:
-    if set(values) != set(_M349_OPERADOR_ROW_BINDINGS.values()):
+    if set(values) | {"razon_social"} != set(_M349_OPERADOR_ROW_BINDINGS.values()):
         raise RegistryValidationError(f"Modelo 349 invoice row {row_index} is incomplete")
     codigo_pais = values["codigo_pais"]
     nif_comunitario = values["nif_comunitario"]
-    razon_social = values["razon_social"]
+    razon_social = values.get("razon_social")
     clave_operacion = values["clave_operacion"]
     importe = values["importe"]
     if not (
         isinstance(codigo_pais, str)
         and isinstance(nif_comunitario, str)
-        and isinstance(razon_social, str)
+        and (razon_social is None or isinstance(razon_social, str))
         and isinstance(clave_operacion, str)
         and isinstance(importe, Decimal)
     ):
@@ -799,14 +805,19 @@ def invoice_row_values(
     *,
     context: CalculationSourceContext,
     observations: tuple[InvoiceObservation, ...],
+    party_name_refusals: PartyNameRefusals | None = None,
 ) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Build the revision's invoice row families once, through the canonical row builder."""
+    """Build the revision's invoice row families once, through the canonical row builder.
+
+    ``party_name_refusals`` receives each party-name slot left without content.
+    """
     if not observations:
         return {}
     return resolve_invoice_binding_row_values(
         context.revision,
         observations,
         effective_date=filing_period_date(context),
+        party_name_refusals=party_name_refusals,
     )
 
 
@@ -853,12 +864,16 @@ def m349_rectificacion_rows_from_values(
             for binding_id, attr in _M349_RECTIFICACION_ROW_BINDINGS.items()
             if (binding_id, row_index) in row_values
         }
-        if set(values) != set(_M349_RECTIFICACION_ROW_BINDINGS.values()):
+        if set(values) | {"razon_social"} != set(_M349_RECTIFICACION_ROW_BINDINGS.values()):
             raise RegistryValidationError(f"Modelo 349 rectification row {row_index} is incomplete")
         try:
             rows.append(
                 Modelo349RectificacionRow.model_validate(
-                    {**values, "nif_comunitario": f"{values['codigo_pais']}{values['nif_comunitario']}"},
+                    {
+                        "razon_social": None,
+                        **values,
+                        "nif_comunitario": f"{values['codigo_pais']}{values['nif_comunitario']}",
+                    },
                 ),
             )
         except ValueError as exc:
@@ -866,11 +881,16 @@ def m349_rectificacion_rows_from_values(
     return tuple(rows)
 
 
-def iva_category_for_operation_type(operation_type: IntracomOperationType | None) -> IvaCategory | None:
+def iva_category_for_operation_type(
+    operation_type: IntracomOperationType | None,
+    *,
+    effective_date: date,
+) -> IvaCategory | None:
     """Return the IVA treatment an operator stated by choosing a 349 clave.
 
     Args:
         operation_type: The clave the operator selected, if any.
+        effective_date: The operation or issue date whose category vocabulary applies.
 
     Returns:
         The category that clave declares, or ``None`` when no clave was chosen.
@@ -880,7 +900,9 @@ def iva_category_for_operation_type(operation_type: IntracomOperationType | None
     """
     if operation_type is None:
         return None
-    return resolve_iva_category_catalogue().category_for_operation_type(operation_type.value)
+    return resolve_iva_category_catalogue(effective_date=effective_date).category_for_operation_type(
+        operation_type.value
+    )
 
 
 OWNED_SOURCES: tuple[BindingSourceKind, ...] = (

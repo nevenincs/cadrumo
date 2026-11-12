@@ -37,36 +37,66 @@ legal_ref = ["ley-35-2006:art-97"]
 grounding = "cited"
 note = "The annual order sets the campaign window; 30 June is the end it has fixed in recent campaigns."
 
+
 [[values]]
 modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0596" = "2180.00" }
-roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "21840.00", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "19840.00", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
+roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "21840.00", "irpf_rendimiento_trabajo_rendimiento_neto_previo" = "21840.00", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "19840.00", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00", "irpf_rendimiento_trabajo_rendimiento_neto_reducido" = "19840.00" }
 derivation = """
-Pensions are rendimientos del trabajo (art. 17.2.a). Certificate: íntegro 21840.00, retención 2180.00; the ledger holds 14 net payments
-totalling 19660.00. Neto = 21840.00 - 2000.00 (art. 19.2.f) = 19840.00; the art. 20 reduction is zero above the top of its band.
-Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): pension_integra = irpf_rendimiento_trabajo_importe_integro_dinerario (LIRPF art. 17); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); rendimiento_neto_trabajo = irpf_rendimiento_trabajo_rendimiento_neto (LIRPF art. 19); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20).
+From the payer's certificate for the ejercicio, as the taxpayer declares it (persona.toml withholding_certificates, ejercicio horizon-1):
+importe_integro 21840.00, retencion 2180.00; the certificate states no Seguridad Social contribution, so none is deducted under LIRPF art. 19.2.a.
+The ledger holds 14 net pension payments (13 x 1404.29 + 1404.23 = 19660.00).
+Pensions are rendimientos del trabajo (LIRPF art. 17.2.a). Íntegro dinerario 21840.00; no irregular income, so no art. 18 reduction.
+Rendimiento neto previo = 21840.00 - 0.00 = 21840.00 (LIRPF art. 19.1). Otros gastos 2000.00 (LIRPF art. 19.2.f; no unemployed-job-seeker,
+geographic-mobility or disability increase is stated); rendimiento neto = 21840.00 - 2000.00 = 19840.00.
+The art. 20 reduction is zero in every supported edition because the rendimiento neto del trabajo it reads (RNT = íntegro less the art. 19.2 expenses
+of letters a) to e), here 21840.00) exceeds the top of its band, and 19840.00 after letter f) does as well:
+ejercicio 2022, no reduction above 16825.00 (Manual práctico de Renta 2022, parte 1: "13.115 euros o menos 5.565 euros", "Entre 13.115,1 y 16.825 euros");
+ejercicio 2023, none above 19747.50 (Manual práctico de Renta 2023, parte 1: "14.047,5 euros o menos 6.498 euros", "Entre 14.047,5 y 19.747,5 euros");
+ejercicio 2024 onwards, none above 19747.50 (Manual práctico de Renta 2024, parte 1: "14.852 euros o menos 7.302 euros", "Entre 17.673,52 y 19.747,5 euros";
+LIRPF art. 20 as worded by Real Decreto-ley 4/2024 art. 3.1). Neto reducido = 19840.00 - 0.00 = 19840.00.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary;
+Manual práctico de Renta): importe_integro_dinerario 0003 (art. 17); rendimiento_neto_previo 0017 (art. 19); gasto_otros 0019 (art. 19.2.f);
+rendimiento_neto 0022 (art. 19); reduccion_gastos_generales 0023 (art. 20); rendimiento_neto_reducido 0025 (arts. 18-20).
 """
-legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20"]
+legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"]
 grounding = "verified"
 
 [[values]]
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-concepts = { ingresos_integros_alquiler = "11400.00", gastos_ibi = "412.00", gastos_comunidad = "540.00", gastos_seguro = "186.00", gastos_reparacion = "240.00", amortizacion = "3240.00", gastos_deducibles = "4618.00", rendimiento_neto_alquiler = "6782.00", reduccion_art_23_2 = "3391.00", rendimiento_neto_reducido_alquiler = "3391.00" }
+roles = { "irpf_rendimiento_capital_inmobiliario_ingresos_integros" = "11400.00", "irpf_inmueble_gastos_reparacion_conservacion" = "240.00", "irpf_rendimiento_capital_inmobiliario_gasto_intereses_reparacion" = "240.00", "irpf_rendimiento_capital_inmobiliario_gasto_comunidad" = "540.00", "irpf_rendimiento_capital_inmobiliario_gasto_primas_seguro" = "186.00", "irpf_rendimiento_capital_inmobiliario_gasto_tributos" = "412.00", "irpf_rendimiento_capital_inmobiliario_amortizacion_inmueble" = "3240.00", "irpf_rendimiento_capital_inmobiliario_rendimiento_neto" = "6782.00", "irpf_rendimiento_capital_inmobiliario_reduccion_arrendamiento_vivienda" = "3391.00", "irpf_rendimiento_capital_inmobiliario_rendimiento_neto_reducido" = "3391.00", "irpf_rendimiento_capital_inmobiliario_suma_rendimientos_netos_reducidos" = "3391.00" }
 derivation = """
-Ingresos = ARR-REN-01..12 12 x 950.00 = 11400.00.
-Gastos = IBI ARR-IBI-1 412.00 + comunidad ARR-COM-1..4 4 x 135.00 + seguro ARR-SEG-1 186.00 + reparación ARR-REP-1 240.00
-+ amortización 3 % x 108000.00 = 3240.00 (rental_properties.piso-arrendado) = 4618.00.
-Neto = 6782.00; reducción 50 % (art. 23.2 general tier: none of the conditions of the 60, 70 or 90 % tiers is met) = 3391.00.
-grounding is unverified for the application path only: the reducción tier is stored under a profile field keyed to one filing year
-and no operation recording rental_properties was located, so the application may not derive these concepts for horizon-1.
+Ingresos íntegros (LIRPF art. 22.1; Manual práctico de Renta, cap. 4) = rent ARR-REN-01..12, 12 x 950.00 = 11400.00; the lease runs the whole ejercicio (days_let full_year).
+Gastos deducibles (LIRPF art. 23.1.a y b; RIRPF arts. 13 and 14; Manual práctico de Renta, cap. 4, "Normativa: Arts. 23.1 a) 1º Ley IRPF y 13 a) Reglamento IRPF",
+"Arts. 23.1 a) 2º a 4º Ley IRPF y 13 b) a g) Reglamento IRPF", "Arts. 23.1 b) Ley IRPF y 13 h) y 14 Reglamento IRPF"):
+reparación y conservación ARR-REP-1 240.00, which does not exceed the ingresos 11400.00 (limit of LIRPF art. 23.1.a.1º), so the whole 240.00 is applied (casilla 0107)
+and nothing is left pending; tributos (IBI) ARR-IBI-1 412.00 (art. 23.1.a.2º); comunidad de propietarios ARR-COM-1..4, 4 x 135.00 = 540.00
+(the Manual places the community quotas among the amounts accrued by third parties for personal services, art. 23.1.a.4º, which the registry prints at the comunidad casilla);
+primas de seguro ARR-SEG-1 186.00 (RIRPF art. 13); amortización del inmueble 3 % x 108000.00 = 3240.00 (RIRPF art. 14.1 and 14.2: 3 % of the greater of the acquisition cost
+of the construction and the valor catastral of the construction; the base is the persona's rental_properties.piso-arrendado
+amortization_base 108000.00 (persona.toml:73), which persona.toml:75 states is the construction share of the acquisition value by inheritance and exceeds the
+construction share of the valor catastral, so it is the greater of the two that RIRPF art. 14.2 takes).
+Total gastos deducibles = 240.00 + 412.00 + 540.00 + 186.00 + 3240.00 = 4618.00 (no casilla prints the total, so it is not stated as a value).
+Absences: the ledger holds no suministros, gasto de servicios personales, formalización, defensa jurídica, saldo de dudoso cobro, financing interest or
+earlier pending expense, so each of those casillas is blank by the persona's facts (LIRPF art. 23.1.a lists them as deductible only when incurred).
+Rendimiento neto = 11400.00 - 4618.00 = 6782.00 (LIRPF art. 22.2).
+Reducción 50 % (LIRPF art. 23.2 as worded by Ley 12/2023, applicable from 1 January 2024 to contracts concluded after 26 May 2023: Manual práctico de Renta 2024 and 2025, parte 1, cap. 4,
+"A. Contratos de arrendamiento de vivienda celebrados a partir del 26 de mayo de 2023 - Con carácter general, se fija una reducción del 50 por 100"; none of the 60, 70 or 90 % tiers applies:
+no zona de mercado residencial tensionado, no tenant aged 18 to 35, no rehabilitation).
+The contract date decides the rate: the persona's lease starts on 1 June of horizon-2 (persona.toml:70, contract_start). This plain value covers the
+ejercicios 2024 and 2025, whose horizon-2 is 2023 and 2024, so the lease is concluded on 1 June 2023 or 1 June 2024, after 26 May 2023, and the
+Ley 12/2023 wording governs; a contract concluded before 26 May 2023 would keep 60 % in those years. Reducción = 6782.00 x 50 % = 3391.00; neto reducido = 6782.00 - 3391.00 = 3391.00 (LIRPF art. 23.2),
+which is also the sum of the netos reducidos of all properties (one property).
+Roles are Modelo 100 registry semantic_roles of the Inmueble section, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary):
+ingresos_integros 0102; gastos reparación y conservación 0106; intereses y reparación aplicados 0107; comunidad 0109; primas de seguro 0114; tributos 0115; amortización del inmueble 0131;
+rendimiento neto 0149; reducción por arrendamiento de vivienda 0150; rendimiento neto reducido 0154; suma de rendimientos netos reducidos 0156.
 """
-legal_ref = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
-grounding = "unverified"
-reason = "Arithmetic and provisions verified (art. 23 text in the bundled corpus); the application-side inputs for amortisation and the reducción tier have no located production operation for this year."
+legal_ref = ["ley-35-2006:art-22", "ley-35-2006:art-23", "rd-439-2007:art-13", "rd-439-2007:art-14"]
+grounding = "verified"
 
 [[values]]
 modelo = "100"
@@ -74,11 +104,13 @@ period = "0A"
 year = "horizon-1"
 roles = { "irpf_minimo_contribuyente_estatal" = "6700.00", "irpf_base_liquidable_general" = "23231.00" }
 derivation = """
-Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (art. 57).
-Base liquidable general = 19840.00 + 3391.00 = 23231.00 (no reductions of the base). Cuota is not asserted.
-Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): minimo_contribuyente = irpf_minimo_contribuyente_estatal (LIRPF art. 57); base_liquidable_general = irpf_base_liquidable_general (LIRPF art. 50).
+Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (LIRPF art. 57.1).
+Base liquidable general = base imponible general less reductions (LIRPF art. 50): 19840.00 (work-income neto reducido) + 3391.00 (rental neto reducido) = 23231.00;
+no reduction of the base applies, since the taxpayer states no pension-plan contribution, alimony, or other reducción (persona.toml profile and ledger.csv hold none). Cuota is not asserted.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta):
+minimo_contribuyente = irpf_minimo_contribuyente_estatal 0511 (LIRPF art. 57); base_liquidable_general = irpf_base_liquidable_general 0500 (LIRPF art. 50).
 """
-legal_ref = ["ley-35-2006:art-57"]
+legal_ref = ["ley-35-2006:art-50", "ley-35-2006:art-57"]
 grounding = "verified"
 
 # Art. 23.2 LIRPF as worded on 31 December 2021 governs a replay whose return falls before
@@ -91,13 +123,19 @@ period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:art-23-2021"
 casillas = { "0596" = "2180.00" }
-roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "21840.00", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "19840.00", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
+roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "21840.00", "irpf_rendimiento_trabajo_rendimiento_neto_previo" = "21840.00", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "19840.00", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00", "irpf_rendimiento_trabajo_rendimiento_neto_reducido" = "19840.00" }
 derivation = """
-Unchanged by the art. 23.2 wording: pensions are rendimientos del trabajo (art. 17.2.a). Certificate: íntegro 21840.00,
-retención 2180.00. Neto = 21840.00 - 2000.00 (art. 19.2.f) = 19840.00; the art. 20 reduction is zero above the top of its band.
-Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): pension_integra = irpf_rendimiento_trabajo_importe_integro_dinerario (LIRPF art. 17); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); rendimiento_neto_trabajo = irpf_rendimiento_trabajo_rendimiento_neto (LIRPF art. 19); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20).
+Unchanged by the art. 23.2 wording. From the payer's certificate for the ejercicio, as the taxpayer declares it (persona.toml withholding_certificates, ejercicio horizon-1):
+importe_integro 21840.00, retencion 2180.00; the certificate states no Seguridad Social contribution, so none is deducted under LIRPF art. 19.2.a.
+Pensions are rendimientos del trabajo (LIRPF art. 17.2.a). Rendimiento neto previo = 21840.00 (LIRPF art. 19.1); otros gastos 2000.00 (art. 19.2.f);
+rendimiento neto = 19840.00. The art. 20 reduction is zero because the rendimiento neto del trabajo it reads (21840.00; 19840.00 after letter f) exceeds the top of its band:
+ejercicio 2022, none above 16825.00 (Manual práctico de Renta 2022, parte 1: "13.115 euros o menos 5.565 euros", "Entre 13.115,1 y 16.825 euros");
+ejercicio 2023, none above 19747.50 (Manual práctico de Renta 2023, parte 1: "14.047,5 euros o menos 6.498 euros", "Entre 14.047,5 y 19.747,5 euros"). Neto reducido = 19840.00.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta):
+importe_integro_dinerario 0003 (art. 17); rendimiento_neto_previo 0017 (art. 19); gasto_otros 0019 (art. 19.2.f); rendimiento_neto 0022 (art. 19);
+reduccion_gastos_generales 0023 (art. 20); rendimiento_neto_reducido 0025 (arts. 18-20).
 """
-legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-23-2021"]
+legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-23-2021"]
 grounding = "verified"
 
 [[values]]
@@ -105,14 +143,19 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:art-23-2021"
-concepts = { ingresos_integros_alquiler = "11400.00", gastos_ibi = "412.00", gastos_comunidad = "540.00", gastos_seguro = "186.00", gastos_reparacion = "240.00", amortizacion = "3240.00", gastos_deducibles = "4618.00", rendimiento_neto_alquiler = "6782.00", reduccion_art_23_2 = "4069.20", rendimiento_neto_reducido_alquiler = "2712.80" }
+roles = { "irpf_rendimiento_capital_inmobiliario_ingresos_integros" = "11400.00", "irpf_inmueble_gastos_reparacion_conservacion" = "240.00", "irpf_rendimiento_capital_inmobiliario_gasto_intereses_reparacion" = "240.00", "irpf_rendimiento_capital_inmobiliario_gasto_comunidad" = "540.00", "irpf_rendimiento_capital_inmobiliario_gasto_primas_seguro" = "186.00", "irpf_rendimiento_capital_inmobiliario_gasto_tributos" = "412.00", "irpf_rendimiento_capital_inmobiliario_amortizacion_inmueble" = "3240.00", "irpf_rendimiento_capital_inmobiliario_rendimiento_neto" = "6782.00", "irpf_rendimiento_capital_inmobiliario_reduccion_arrendamiento_vivienda" = "4069.20", "irpf_rendimiento_capital_inmobiliario_rendimiento_neto_reducido" = "2712.80", "irpf_rendimiento_capital_inmobiliario_suma_rendimientos_netos_reducidos" = "2712.80" }
 derivation = """
-Ingresos, gastos and neto as in the plain value: 11400.00 - 4618.00 = 6782.00.
-Reducción 60 % (art. 23.2 as worded on 31-12-2021, a single rate for every dwelling lease) = 4069.20; reducido = 2712.80.
+Ingresos, gastos and neto as in the plain value (LIRPF arts. 22 and 23.1; RIRPF arts. 13 and 14): 11400.00 - 4618.00 = 6782.00, with the same absences.
+Reducción 60 % (LIRPF art. 23.2 as worded on 31 December 2021, a single rate for every dwelling lease: Manual práctico de Renta 2022 and 2023, parte 1, cap. 4,
+"Reducción 60 por 100 ... se reducirá en un 60 por 100, cualquiera que sea la edad del arrendatario"). The lease starts on 1 June of horizon-2
+(persona.toml:70): for the ejercicios 2022 and 2023 that is 1 June 2021 or 1 June 2022, before 26 May 2023, so the 2021 wording governs. Reducción = 6782.00 x 60 % = 4069.20; neto reducido = 6782.00 - 4069.20 = 2712.80,
+which is also the sum of the netos reducidos of all properties (one property).
+Roles are Modelo 100 registry semantic_roles of the Inmueble section, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary):
+ingresos_integros 0102; reparación y conservación 0106; intereses y reparación aplicados 0107; comunidad 0109; primas de seguro 0114; tributos 0115; amortización 0131;
+rendimiento neto 0149; reducción 0150; rendimiento neto reducido 0154; suma de rendimientos netos reducidos 0156.
 """
-legal_ref = ["ley-35-2006:art-23-2021", "rd-439-2007:art-14"]
-grounding = "unverified"
-reason = "Arithmetic and provision verified (art. 23 as worded in 2021 in the bundled corpus); the application-side inputs for amortisation have no located production operation for this year."
+legal_ref = ["ley-35-2006:art-22", "ley-35-2006:art-23-2021", "rd-439-2007:art-13", "rd-439-2007:art-14"]
+grounding = "verified"
 
 [[values]]
 modelo = "100"
@@ -121,9 +164,11 @@ year = "horizon-1"
 governed_by = "ley-35-2006:art-23-2021"
 roles = { "irpf_minimo_contribuyente_estatal" = "6700.00", "irpf_base_liquidable_general" = "22552.80" }
 derivation = """
-Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (art. 57).
-Base liquidable general = 19840.00 + 2712.80 = 22552.80 (no reductions of the base). Cuota is not asserted.
-Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): minimo_contribuyente = irpf_minimo_contribuyente_estatal (LIRPF art. 57); base_liquidable_general = irpf_base_liquidable_general (LIRPF art. 50).
+Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (LIRPF art. 57.1).
+Base liquidable general = base imponible general less reductions (LIRPF art. 50): 19840.00 (work-income neto reducido) + 2712.80 (rental neto reducido at 60 %) = 22552.80;
+no reduction of the base applies (persona.toml profile and ledger.csv hold none). Cuota is not asserted.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta):
+minimo_contribuyente = irpf_minimo_contribuyente_estatal 0511 (LIRPF art. 57); base_liquidable_general = irpf_base_liquidable_general 0500 (LIRPF art. 50).
 """
-legal_ref = ["ley-35-2006:art-57", "ley-35-2006:art-23-2021"]
+legal_ref = ["ley-35-2006:art-50", "ley-35-2006:art-57", "ley-35-2006:art-23-2021"]
 grounding = "verified"

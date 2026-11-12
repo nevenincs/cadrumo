@@ -23,6 +23,7 @@ from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
 from ...core.filing_year import FilingYear
+from ...core.gasto_capital_inmobiliario import GastoCapitalInmobiliario
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -44,7 +45,7 @@ from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_
 from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
-from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.iva.schema import EUMemberState, IvaCategory, IvaExemptionArticle
 from ...domain.iva.vehicle_use import IvaVehicleUse
 from ...domain.transactions.enums import TRANSFER_ALLOWED_STATES, BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
@@ -64,6 +65,7 @@ from ...domain.transactions.models import (
     Transaction,
 )
 from ...domain.transactions.own_accounts import OwnAccountId
+from ...domain.transactions.rental_link import validate_rental_link_category
 from ...domain.transactions.repository import ImportSummary
 from ..export.tabular import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
@@ -229,6 +231,10 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     iva_category: IvaCategory | None = None
+    #: The Ley 37/1992 art. 20.Uno exemption a DOMESTIC_EXEMPT row falls under, as
+    #: the operator states it. Whether the operation gives the right to deduct
+    #: depends on it, so it is never inferred from the category or the counterparty.
+    exemption_article: IvaExemptionArticle | None = None
     #: Operator-declared M303 deduction source. The taxonomy is documented as
     #: non-inferable, so it is carried from the operator rather than derived
     #: from the category, the direction, or the counterparty country.
@@ -245,6 +251,12 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
     iva_vehicle_use: IvaVehicleUse | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
+    #: The stored lease an income row of a let property belongs to, by row key.
+    arrendamiento_ref: _LedgerOptionalText = None
+    #: The stored property an expense row belongs to, by row key.
+    inmueble_ref: _LedgerOptionalText = None
+    #: Which kind of property expense the row is; the registry names the casilla it feeds.
+    gasto_capital_inmobiliario: GastoCapitalInmobiliario | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
     input_classification: InputClassification | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
@@ -294,6 +306,18 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
+    def _validate_rental_link_category(self) -> Self:
+        """Ask the domain whether a linked row carries the rental income category."""
+        validate_rental_link_category(
+            arrendamiento_ref=self.arrendamiento_ref,
+            inmueble_ref=self.inmueble_ref,
+            classification=self.business_classification,
+            irpf_category=self.irpf_category,
+        )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_direction_policy(self) -> Self:
         if self.amount < Decimal("0"):
             raise TransactionValidationError(
@@ -318,9 +342,13 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
             "operation_date": self.operation_date,
             "accrual_date": self.accrual_date,
             "iva_category": self.iva_category,
+            "exemption_article": self.exemption_article,
             "deduction_fact_kind": self.deduction_fact_kind,
             "investment_asset_id": self.investment_asset_id,
             "iva_vehicle_use": self.iva_vehicle_use,
+            "arrendamiento_ref": self.arrendamiento_ref,
+            "inmueble_ref": self.inmueble_ref,
+            "gasto_capital_inmobiliario": self.gasto_capital_inmobiliario,
             "taxable_base": self.taxable_base,
             "iva_rate": self.iva_rate,
             "iva_amount": self.iva_amount,
@@ -371,6 +399,7 @@ class ManualLedgerTransactionPatch(ManualLedgerTransactionInput):
     attachment_ids: tuple[str, ...] | None = None
     notes: _LedgerOptionalText = None
     iva_category: IvaCategory | None = None
+    exemption_article: IvaExemptionArticle | None = None
     deduction_fact_kind: IvaDeductionFactKind | None = None
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
     #: What the row's vehicle is, where LIVA art. 95.Tres.2.ª treats it apart from the
@@ -378,6 +407,9 @@ class ManualLedgerTransactionPatch(ManualLedgerTransactionInput):
     iva_vehicle_use: IvaVehicleUse | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
+    arrendamiento_ref: _LedgerOptionalText = None
+    inmueble_ref: _LedgerOptionalText = None
+    gasto_capital_inmobiliario: GastoCapitalInmobiliario | None = None
     source_jurisdiction: str | None = None
     group_label: _LedgerOptionalGroupLabel = None
     own_account_id: OwnAccountId | None = None
@@ -878,7 +910,8 @@ class BulkClassifyRow(BaseModel):
     Required columns: ``transaction_id``, ``classification``.
     Optional columns: ``category_id``, ``business_pct``, ``usage_ratio_id``,
     ``taxable_base``, ``iva_rate``, ``iva_amount``, ``iva_category``,
-    ``irpf_category``, ``notes``. Blank optional cells preserve existing values.
+    ``irpf_category``, ``arrendamiento_ref``, ``inmueble_ref``,
+    ``gasto_capital_inmobiliario``, ``notes``. Blank optional cells preserve existing values.
     Unknown column names are rejected pre-persistence to protect against
     silent field mis-mapping. The IVA facts (``taxable_base``, ``iva_rate``,
     ``iva_amount``) are typed ``Decimal`` exactly as the single-classify path
@@ -904,6 +937,9 @@ class BulkClassifyRow(BaseModel):
     iva_amount: Decimal | None = None
     iva_category: IvaCategory | None = None
     irpf_category: str | None = None
+    arrendamiento_ref: str | None = None
+    inmueble_ref: str | None = None
+    gasto_capital_inmobiliario: str | None = None
 
 
 class BulkClassifyFailure(BaseModel):
@@ -945,6 +981,9 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
         "iva_amount",
         "iva_category",
         "irpf_category",
+        "arrendamiento_ref",
+        "inmueble_ref",
+        "gasto_capital_inmobiliario",
         "notes",
     },
 )

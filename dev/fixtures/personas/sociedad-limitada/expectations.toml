@@ -42,9 +42,9 @@ modelo = "202"
 periods = ["1P", "2P", "3P"]
 year = "horizon"
 applicable = "unknown"
-reason = "Under the cuota method, pagos fraccionados are due only when the last declared return shows a positive cuota after deductions; the Modelo 200 for horizon-1 is not yet filed at the clock and the prior return is not part of the scenario."
-legal_ref = ["ley-27-2014:art-40"]
-grounding = "unverified"
+reason = "The declared INCN of the prior twelve months, 28500.00, does not exceed the 6 000 000 euros of LIS art. 40.3, so Orden HFP/227/2017 art. 1.3 obliges filing only in a period with an ingreso. Under the art. 40.2 cuota method that turns on the cuota of the last return whose deadline has passed, net of deductions, retenciones and ingresos a cuenta, and under an art. 40.3 election on the base of the first 3, 9 or 11 months; the scenario states neither the base nor an election, so the obligation stays undetermined."
+legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-40-3", "orden-hfp-227-2017:art-1"]
+grounding = "cited"
 
 [[obligations]]
 modelo = "130"
@@ -93,8 +93,8 @@ modelo = "303"
 period = "1T"
 year = "horizon-1"
 casillas = { "07" = "7000.00", "09" = "1470.00", "27" = "1470.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1186.50", "66" = "1186.50", "71" = "1186.50" }
-concepts = { resultado_regimen_general = "1186.50" }
-derivation = "07 = SOC-VTA-1 5200.00 + SOC-VTA-2 1800.00; 09 = 21 %. 28/29 = SOC-ALQ-1 1350.00 / 283.50. Resultado = 1470.00 - 283.50."
+roles = { "iva-resultado-regimen-general" = "1186.50" }
+derivation = "07 = SOC-VTA-1 5200.00 + SOC-VTA-2 1800.00; 09 = 21 %. 28/29 = SOC-ALQ-1 1350.00 / 283.50. Resultado = 1470.00 - 283.50. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -103,8 +103,8 @@ modelo = "303"
 period = "2T"
 year = "horizon-1"
 casillas = { "07" = "8200.00", "09" = "1722.00", "27" = "1722.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1438.50", "66" = "1438.50", "71" = "1438.50" }
-concepts = { resultado_regimen_general = "1438.50" }
-derivation = "07 = SOC-VTA-3 6400.00 + SOC-VTA-4 1800.00; 28/29 = SOC-ALQ-2. Resultado = 1722.00 - 283.50."
+roles = { "iva-resultado-regimen-general" = "1438.50" }
+derivation = "07 = SOC-VTA-3 6400.00 + SOC-VTA-4 1800.00; 28/29 = SOC-ALQ-2. Resultado = 1722.00 - 283.50. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -113,8 +113,8 @@ modelo = "303"
 period = "3T"
 year = "horizon-1"
 casillas = { "07" = "6500.00", "09" = "1365.00", "27" = "1365.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1081.50", "66" = "1081.50", "71" = "1081.50" }
-concepts = { resultado_regimen_general = "1081.50" }
-derivation = "07 = SOC-VTA-5 4700.00 + SOC-VTA-6 1800.00; 28/29 = SOC-ALQ-3. Resultado = 1365.00 - 283.50."
+roles = { "iva-resultado-regimen-general" = "1081.50" }
+derivation = "07 = SOC-VTA-5 4700.00 + SOC-VTA-6 1800.00; 28/29 = SOC-ALQ-3. Resultado = 1365.00 - 283.50. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -123,8 +123,8 @@ modelo = "303"
 period = "4T"
 year = "horizon-1"
 casillas = { "07" = "9100.00", "09" = "1911.00", "27" = "1911.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1627.50", "66" = "1627.50", "71" = "1627.50" }
-concepts = { resultado_regimen_general = "1627.50" }
-derivation = "07 = SOC-VTA-7 7300.00 + SOC-VTA-8 1800.00; 28/29 = SOC-ALQ-4. Resultado = 1911.00 - 283.50."
+roles = { "iva-resultado-regimen-general" = "1627.50" }
+derivation = "07 = SOC-VTA-7 7300.00 + SOC-VTA-8 1800.00; 28/29 = SOC-ALQ-4. Resultado = 1911.00 - 283.50. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -164,26 +164,32 @@ grounding = "verified"
 modelo = "200"
 period = "0A"
 year = "horizon-1"
-concepts = { ingresos_explotacion_ledger = "30800.00", gastos_explotacion_ledger = "5400.00" }
+not_sourced = { "00255" = "30800.00", "00279" = "5400.00" }
 derivation = """
 The bank ledger gives revenue 30800.00 and the equipment and licence rental 5400.00 (net of deductible IVA).
-The Modelo 200 starts from the accounting result (casilla 00501), which needs closing entries (amortisation, accruals,
-officer costs) the ledger does not hold, so no Modelo 200 casilla is asserted.
+They would fill the cuenta de pérdidas y ganancias of the Modelo 200 record design (aeat-dr-200, the same lines
+in the 2022 and 2025 designs): "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la
+cifra de negocios [00255]" (element 6, position 13, length 17) and "Cuenta de pérdidas y ganancias (I) -
+Operaciones continuadas - Otros gastos de explotación [00279]", where a rental of equipment and licences is a
+servicio exterior.
 """
 legal_ref = ["ley-27-2014:art-124"]
 grounding = "unverified"
-reason = "The accounting result is outside the bank ledger; asserting a Modelo 200 casilla would record an unproven figure."
+reason = "The cuenta de pérdidas y ganancias lines need closing entries (amortisation, accruals, officer costs) the bank ledger lacks, so these casillas stay not sourced until Sociedades sources them. The accounting result itself (role is-liquidacion-i-importe, casilla 00501 of the liquidación page) is a given the company enters (persona.toml [[work_inputs]]), so it is not asserted here."
 
 [[values]]
 modelo = "200"
 period = "0A"
 year = "horizon-1"
-concepts = { tributacion_estado_porcentaje = "100" }
+roles = { "is_tributacion_conjunta_porcentaje_estado" = "100" }
 derivation = """
 The company's domicilio fiscal is in Valladolid and its incn of the prior twelve months is 28500.00.
 The foral administrations levy the tax of an entity domiciled in their territory with a prior-year volume of
 operations up to 12 million euros, and share it by volume only above that figure (Ley 12/2002 art. 15,
 Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625).
+The role is casilla 00625 of record DP200026 in the Modelo 200 record design, element 17, position 152,
+length 5, "3 enteros y 2 decimales": "Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes
+tributación - Admón.del Estado [00625]" (aeat-dr-200, the same line in the 2022 and 2025 designs).
 """
 legal_ref = ["ley-12-2002:art-15", "ley-28-1990:art-19"]
 grounding = "verified"

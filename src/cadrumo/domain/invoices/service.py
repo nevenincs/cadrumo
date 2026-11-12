@@ -27,6 +27,7 @@ from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_fold import fold_diacritics
+from ..iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
 from ..iva.schema import InvoiceKind
 from ..transactions.enums import TransactionDirection
 from ..transactions.models import Transaction, TransactionCatalogue
@@ -305,9 +306,46 @@ def _reconciliation_amount_matches(
     return abs(transaction.raw.amount - invoice_settlement(invoice)) <= amount_tolerance
 
 
+def recipient_self_assesses(invoice: Invoice) -> bool:
+    """Whether the declarant received the invoice as the sujeto pasivo destinatario (LIVA art. 84.Uno.2.º).
+
+    Read through the flow classification the Modelo 303 invoice bindings use to
+    find a recipient self-assessment. Only a received invoice can carry it: the
+    supplier's side of a reverse charge self-assesses nothing.
+    """
+    if invoice.kind is not InvoiceKind.RECEIVED or invoice.iva_category is None:
+        return False
+    devengo_date = invoice.operation_date or invoice.issued_at
+    return is_inversion_sujeto_pasivo_flow(
+        derive_flow_for_classification(
+            category=invoice.iva_category, invoice_direction=invoice.kind, effective_date=devengo_date
+        ),
+        effective_date=devengo_date,
+    )
+
+
 def invoice_settlement(invoice: Invoice) -> Decimal:
-    """Return the cash an invoice settles for."""
-    return settlement_amount(invoice.grand_total, invoice.retention_amount)
+    """Return the cash an invoice settles for, in its own currency.
+
+    The total less a retención withheld at source. Under inversión del sujeto
+    pasivo the supplier charges no cuota: the recipient self-assesses the IVA it
+    records, so that cuota and any recargo stay outside the cash the supplier is
+    paid. The stored tax figures are unchanged; only the settlement reads them so.
+    """
+    total = invoice.grand_total
+    if recipient_self_assesses(invoice):
+        total -= invoice.iva_total + (invoice.recargo_amount or Decimal("0"))
+    return settlement_amount(total, invoice.retention_amount)
+
+
+def invoice_settlement_eur(invoice: Invoice) -> Decimal | None:
+    """Return :func:`invoice_settlement` in euro, or ``None`` when the invoice is unconverted."""
+    total = invoice.grand_total_eur
+    if total is None:
+        return None
+    if recipient_self_assesses(invoice):
+        total -= (invoice.iva_total_eur or Decimal("0")) + (invoice.recargo_amount_eur or Decimal("0"))
+    return settlement_amount(total, invoice.retention_amount_eur)
 
 
 def counterparties_overlap(invoice_counterparty: str, transaction_counterparty: str | None) -> bool:

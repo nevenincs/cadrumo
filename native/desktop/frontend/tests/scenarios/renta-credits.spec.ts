@@ -290,53 +290,32 @@ test("a credit's box on the form is shown from the view", async ({
 });
 
 for (const language of LANGUAGES) {
-  test(`the estimate leaves an unresolved credit and its totals without a figure (${language})`, async ({
+  test(`with no work income stated the estimate is refused in words naming the boxes it cannot work out (${language})`, async ({
     page: target,
   }) => {
+    // No payer certificate is in the register, so the work income the annual
+    // return reads has no figure and the application refuses the estimate.
     const panel = await openCredits(target, "renta-projected", language);
     const section = panel.locator("[data-estimate]");
     // It is an estimate before it is anything else.
     await expect(section).toContainText(
       label("desktop.modelo.credits.estimate.mark", {}, language),
     );
-    await expect(section.locator("[data-estimate-result]")).toHaveCount(0);
     await ask(panel).click();
-    const result = section.locator("[data-estimate-result]");
-    await expect(result).toBeVisible();
-    const served = await servedEstimate(target, language);
-    expect(served.unresolved_bindings.length).toBeGreaterThan(0);
-    expect(served.unresolved_casillas.length).toBeGreaterThan(0);
-    // Every explanation is the application's own words.
-    for (const row of served.unresolved_bindings) {
-      const line = result.locator(
-        `[data-unresolved-credit="${row.casilla_id}"]`,
-      );
-      await expect(line).toContainText(row.words);
-      if (row.source_words) await expect(line).toContainText(row.source_words);
-    }
-    for (const row of served.unresolved_casillas) {
-      await expect(
-        result.locator(`[data-unresolved-box="${row.casilla_id}"]`),
-      ).toBeVisible();
-      await expect(result).toContainText(row.reason_words);
-    }
-    // A box left without a figure is given none in the estimate.
-    for (const row of served.unresolved_casillas)
-      expect(
-        served.casilla_observations.some(
-          (seen) => seen.casilla_id === row.casilla_id,
-        ),
-      ).toBe(false);
-    await expect(result.locator("[data-estimate-box]")).toHaveCount(0);
-    // Each figure carries the name the application served for it.
-    for (const [group, figures] of [
-      ["quarterly", served.m130_accumulated],
-      ["annual", served.m100_projection],
-    ] as const)
-      for (const [name, words] of Object.entries(figures.words))
-        await expect(
-          result.locator(`[data-estimate-figure="${group}.${name}"]`),
-        ).toContainText(words);
+    const served = servedRefusal("project-100-0A-projected", language);
+    await expect(section.getByRole("status")).toHaveText(served.refusal_words);
+    // The boxes are named in the sentence, as the application served them.
+    const boxes = served.context.find((entry) => entry.key === "boxes")?.value;
+    expect(boxes).toBeTruthy();
+    expect(served.refusal_words).toContain(boxes!);
+    // No step is served, so none is offered, and no estimate is drawn.
+    expect(served.next_step).toBeNull();
+    await expect(section.locator("[data-estimate-step]")).toHaveCount(0);
+    await expect(section.locator("[data-estimate-result]")).toHaveCount(0);
+    // The generic failure it replaces is never shown.
+    await expect(section.getByRole("status")).not.toHaveText(
+      label("desktop.modelo.credits.estimate.refused", {}, language),
+    );
     await expect(panel.getByRole("textbox")).toHaveCount(0);
   });
 }

@@ -17,6 +17,7 @@ import pytest
 from ....domain.calculations.registry.applicability import derive_modelo_applicability
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ..projections import projection_for_taxpayer
 from .payer_fact_record_support import PAYER_FACT_GATED_MODELOS, PAYER_FACT_PATHS, payer_fact_record
 
@@ -26,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _verdict(operation: PinnedAuthorityOperation, modelo: str, *, answer: bool | None) -> ApplicabilityVerdict:
     record = payer_fact_record(operation, answer=answer)
     profile = projection_for_taxpayer(record, schema=operation.profile_schema())
-    return derive_modelo_applicability(profile, modelo, operation=operation).verdict
+    return derive_modelo_applicability(profile, modelo, operation=operation, reference_date=latest_period_end()).verdict
 
 
 @pytest.mark.parametrize("modelo", PAYER_FACT_GATED_MODELOS)

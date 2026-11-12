@@ -62,6 +62,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.form_codes import require_form_width
 from ..calculations.record_row_membership import ClosedRecordRowSet
@@ -106,7 +107,7 @@ from .calculation_revision_sources import (
     validate_revision_source_provenance,
 )
 from .calculation_screen_stamp import CalculationScreenStamp
-from .errors import ModeloError, ModeloValidationError
+from .errors import ModeloError, ModeloValidatedRecord, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .invoice_fingerprint import InvoiceFingerprintSnapshot
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -362,6 +363,8 @@ def _require_revision_fields(
         requirement = "carry" if present else "not carry"
         raise ModeloValidationError(
             f"calculation revision in state {revision.state.value!r} must {requirement} {name!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
 
 
@@ -646,7 +649,11 @@ class CalculationRevision(BaseModel):
         if self.rendering_snapshot is not None and (
             self.rendering_snapshot.registry_snapshot.snapshot_ref != self.registry_snapshot_ref
         ):
-            raise ModeloValidationError("saved rendering snapshot belongs to another calculation coordinate")
+            raise ModeloValidationError(
+                "saved rendering snapshot belongs to another calculation coordinate",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         validate_revision_source_provenance(self.source_provenance)
         derived = derive_calculation_revision_id_from_revision(self)
         validate_revision_identity(self, derived)
@@ -675,11 +682,19 @@ class CalculationRevision(BaseModel):
     @pydantic_validation_boundary
     def _freeze_source_transaction_ids(cls, value: object) -> tuple[str, ...]:
         if not isinstance(value, Sequence) or isinstance(value, str | bytes):
-            raise ModeloValidationError("source_transaction_ids must be a sequence")
+            raise ModeloValidationError(
+                "source_transaction_ids must be a sequence",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         normalized: list[str] = []
         for item in TypeAdapter(tuple[object, ...]).validate_python(value):
             if not isinstance(item, str):
-                raise ModeloValidationError("source_transaction_ids must contain strings")
+                raise ModeloValidationError(
+                    "source_transaction_ids must contain strings",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
+                )
             normalized.append(item)
         return tuple(normalized)
 
@@ -689,7 +704,11 @@ class CalculationRevision(BaseModel):
     def _normalise_source_transaction_ids(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         normalized = tuple(sorted(item.strip().lower() for item in value))
         if len(set(normalized)) != len(normalized):
-            raise ModeloValidationError("source_transaction_ids must not contain duplicates")
+            raise ModeloValidationError(
+                "source_transaction_ids must not contain duplicates",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return normalized
 
     @field_validator("m210_official_tipo_renta_code")
@@ -702,6 +721,8 @@ class CalculationRevision(BaseModel):
         if code not in m210_tipo_renta_code_projection():
             raise ModeloValidationError(
                 f"m210_official_tipo_renta_code must be a registry-projected Modelo 210 code, got {code!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         return code
 
@@ -713,7 +734,11 @@ class CalculationRevision(BaseModel):
             empty: dict[BindingId, Mapping[str, str]] = {}
             return empty
         if not isinstance(value, Mapping):
-            raise ModeloValidationError("row_binding_values must be a binding -> row-index mapping")
+            raise ModeloValidationError(
+                "row_binding_values must be a binding -> row-index mapping",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         raw_mapping = TypeAdapter(dict[object, object]).validate_python(value)
         return canonical_row_binding_values(
             raw_mapping,
@@ -734,7 +759,11 @@ class CalculationRevision(BaseModel):
             and validation_context.get("secure_calculation_revision") is True
             and not isinstance(value, list)
         ):
-            raise ModeloValidationError("secure row source identities must use list wire form")
+            raise ModeloValidationError(
+                "secure row source identities must use list wire form",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         typed: dict[RowBindingKey, RowSourceIdentity]
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowBindingKey, RowSourceIdentity]).validate_python(value)
@@ -757,13 +786,23 @@ class CalculationRevision(BaseModel):
                     for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
                 ),
                 duplicate=lambda _coordinate: ModeloValidationError(
-                    "row source identities contain a duplicate coordinate"
+                    "row source identities contain a duplicate coordinate",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
                 ),
             )
         else:
-            raise ModeloValidationError("row source identities must be a coordinate mapping")
+            raise ModeloValidationError(
+                "row source identities must be a coordinate mapping",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         if any(row_index < 1 for _binding_id, row_index in typed):
-            raise ModeloValidationError("row source identity contains a non-positive row index")
+            raise ModeloValidationError(
+                "row source identity contains a non-positive row index",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return dict(sorted(typed.items()))
 
     @field_validator("row_casilla_values", mode="before")
@@ -776,7 +815,11 @@ class CalculationRevision(BaseModel):
             and validation_context.get("secure_calculation_revision") is True
             and not isinstance(value, list)
         ):
-            raise ModeloValidationError("secure row casilla values must use list wire form")
+            raise ModeloValidationError(
+                "secure row casilla values must use list wire form",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         typed: dict[RowCasillaKey, Decimal]
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, Decimal]).validate_python(value)
@@ -792,13 +835,23 @@ class CalculationRevision(BaseModel):
                     for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
                 ),
                 duplicate=lambda _coordinate: ModeloValidationError(
-                    "row casilla values contain a duplicate coordinate"
+                    "row casilla values contain a duplicate coordinate",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
                 ),
             )
         else:
-            raise ModeloValidationError("row casilla values must be a coordinate mapping")
+            raise ModeloValidationError(
+                "row casilla values must be a coordinate mapping",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         if any(row_index < 1 for _casilla_id, row_index in typed):
-            raise ModeloValidationError("row casilla value contains a non-positive row index")
+            raise ModeloValidationError(
+                "row casilla value contains a non-positive row index",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return dict(sorted(typed.items()))
 
     @field_validator("row_casilla_provenance", mode="before")
@@ -813,7 +866,11 @@ class CalculationRevision(BaseModel):
             and validation_context.get("secure_calculation_revision") is True
             and not isinstance(value, list)
         ):
-            raise ModeloValidationError("secure row casilla provenance must use list wire form")
+            raise ModeloValidationError(
+                "secure row casilla provenance must use list wire form",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         typed: dict[RowCasillaKey, DirectRowMaterializationProvenance]
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializationProvenance]).validate_python(value)
@@ -837,13 +894,23 @@ class CalculationRevision(BaseModel):
                     for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
                 ),
                 duplicate=lambda _coordinate: ModeloValidationError(
-                    "row casilla provenance contains a duplicate coordinate"
+                    "row casilla provenance contains a duplicate coordinate",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
                 ),
             )
         else:
-            raise ModeloValidationError("row casilla provenance must be a coordinate mapping")
+            raise ModeloValidationError(
+                "row casilla provenance must be a coordinate mapping",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         if any(row_index < 1 for _casilla_id, row_index in typed):
-            raise ModeloValidationError("row casilla provenance contains a non-positive row index")
+            raise ModeloValidationError(
+                "row casilla provenance contains a non-positive row index",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return dict(sorted(typed.items()))
 
     @field_validator("closed_record_row_sets")
@@ -946,6 +1013,8 @@ class CalculationRevisionCatalogue(BaseModel):
                 raise ModeloValidationError(
                     f"catalogue key {key!r} does not match "
                     f"calculation_revision_id {revision.calculation_revision_id!r}",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
                 )
         return self
 
@@ -1029,6 +1098,12 @@ def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) ->
         raise LedgerFilingCoverageError(
             f"calculation revision {revision.calculation_revision_id!r} ledger evidence does not cover the "
             f"fingerprint snapshot: missing_from_evidence={missing} extra_in_evidence={extra}",
+            translated_message="errors.integrity.ledger_filing_evidence_diverges_from_snapshot",
+            context={
+                "calculation_revision_id": str(revision.calculation_revision_id),
+                "missing_count": str(len(missing)),
+                "extra_count": str(len(extra)),
+            },
         )
 
 

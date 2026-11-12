@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from contextlib import nullcontext
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
@@ -65,6 +65,7 @@ from ...domain.calculations.registry.schema_scalars import (
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation, ValueAttestation
 from ...domain.modelos.dt12_reduccion import (
     Dt12WindowEligibility,
     compute_dt12_reduccion_plan_pensiones,
@@ -92,6 +93,7 @@ from .calculate_input_validation import (
     decimal_binding_value,
     projected_m210_tipo_renta_code,
     refuse_row_field_casilla_override,
+    refused_text_value_verdict,
     text_value,
     typed_text_value,
     validate_detail_rows,
@@ -108,6 +110,12 @@ from .calculate_maternidad_advisory import (
     maternidad_meses_withheld_advisory,
 )
 from .calculation_action_ports import CalculationActionPorts
+from .calculation_input_refusal_doors import (
+    calculate_binding_not_overridable_verdict,
+    calculate_shortcut_group_verdict,
+    semantic_role_ambiguous_verdict,
+    semantic_role_missing_verdict,
+)
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
@@ -219,6 +227,10 @@ class WorkCalculateInputBundle:
     """
     attested_binding_ids: tuple[BindingId, ...] = ()
     """Binding overrides the operator stated hold nothing, replayed from the head's layer."""
+    value_attestations: Mapping[BindingId, ValueAttestation] = field(default_factory=dict)
+    """Figures the operator stated for earlier filings outside the envelope, replayed from the head layer."""
+    row_attestations: tuple[RowCarryAttestation, ...] = ()
+    """The operator's per-row statements of a carry no source holds, replayed from the head layer."""
 
     @classmethod
     def build(
@@ -238,6 +250,8 @@ class WorkCalculateInputBundle:
         cleared_casilla_ids: tuple[CasillaId, ...] = (),
         record_operator_layer: bool = False,
         attested_binding_ids: tuple[BindingId, ...] = (),
+        value_attestations: Mapping[BindingId, ValueAttestation] | None = None,
+        row_attestations: tuple[RowCarryAttestation, ...] = (),
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -265,6 +279,8 @@ class WorkCalculateInputBundle:
             cleared_casilla_ids=cleared_casilla_ids,
             record_operator_layer=record_operator_layer,
             attested_binding_ids=attested_binding_ids,
+            value_attestations=dict(value_attestations or {}),
+            row_attestations=row_attestations,
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
@@ -368,6 +384,8 @@ def calculate_modelo_work_revision(
         cleared_casilla_ids=inputs.cleared_casilla_ids,
         record_operator_layer=inputs.record_operator_layer,
         attested_binding_ids=inputs.attested_binding_ids,
+        value_attestations=inputs.value_attestations,
+        row_attestations=inputs.row_attestations,
         m210_official_tipo_renta_code=inputs.m210_official_tipo_renta_code,
         m210_gross_income_source_mode=inputs.m210_gross_income_source_mode,
         binding_values=inputs.optional_binding_values(),
@@ -440,6 +458,7 @@ def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_de
     raise ModeloCalculateTextInputError(
         context={"key": key, "label": casilla_def.label, "data_type": casilla_def.data_type},
         translated_message="application.modelo.errors.calculate_text_casilla_numeric_value",
+        precondition_verdict=refused_text_value_verdict(key),
     )
 
 
@@ -479,7 +498,7 @@ def resolve_casilla_overrides(
             continue
         casilla_inputs[key] = decimal(raw_value, flag="--casilla", key=key)
     return (
-        validate_casilla_input_ids(revision, casilla_inputs),
+        validate_casilla_input_ids(revision, casilla_inputs, work_unit=work_unit),
         text_casilla_inputs,
         m210_official_tipo_renta_code,
     )
@@ -513,6 +532,7 @@ def resolve_binding_overrides(
             raise ModeloCalculateBindingInputError(
                 context={"key": raw_key},
                 translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
+                precondition_verdict=calculate_binding_not_overridable_verdict(raw_key, reason="date_sourced"),
             )
         key, channel = validated_binding_input_channel(
             raw_key,
@@ -772,7 +792,11 @@ def _supplied_option_group(
     if not supplied:
         return None
     if len(supplied) != len(values):
-        raise ModeloCalculateShortcutInputError(message, translated_message=translated_message)
+        raise ModeloCalculateShortcutInputError(
+            message,
+            translated_message=translated_message,
+            precondition_verdict=calculate_shortcut_group_verdict(),
+        )
     return supplied
 
 
@@ -1161,6 +1185,7 @@ def _semantic_role_casilla_id(
             str(exc),
             context=exc.ambiguity.context(),
             translated_message="application.modelo.errors.calculate_semantic_role_ambiguous",
+            precondition_verdict=semantic_role_ambiguous_verdict(semantic_role),
         ) from exc
     if casilla_id is not None:
         return casilla_id
@@ -1171,6 +1196,7 @@ def _semantic_role_casilla_id(
             "semantic_role": semantic_role,
         },
         translated_message="application.modelo.errors.calculate_semantic_role_missing",
+        precondition_verdict=semantic_role_missing_verdict(semantic_role, work_unit),
     )
 
 

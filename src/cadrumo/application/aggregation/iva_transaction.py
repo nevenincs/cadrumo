@@ -13,7 +13,6 @@ from decimal import Decimal
 
 from ...core.i18n.render import tr
 from ...core.period import Period
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
@@ -56,6 +55,7 @@ from ...domain.iva.schema import (
     spanish_eu_member_state,
 )
 from ...domain.transactions.cash_accounting_validation import validate_cash_accounting_axis
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from .currency_predicates import is_non_eur_without_conversion
@@ -178,9 +178,9 @@ def _period_admission_issue(
 ) -> IvaLedgerAggregationIssue | None:
     """Preserve the filing-window refusal before any source-ownership diagnosis."""
     transaction_id = transaction.transaction_id
-    if is_iva_cash_accounting_none(cash_treatment, authority=operation) and not resolved_period.contains(
-        operation_date
-    ):
+    if is_iva_cash_accounting_none(
+        cash_treatment, operation_date, authority=operation
+    ) and not resolved_period.contains(operation_date):
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
@@ -240,7 +240,7 @@ def _unaccepted_cash_accounting_treatment_issue(
     Read on the date every other treatment comparison in this pipeline reads
     it, so a treatment this check admits is one those comparisons can answer.
     """
-    effective_date = today_madrid()
+    effective_date = transaction_operation_date(transaction)
     catalogue = resolve_iva_cash_accounting_catalogue(effective_date=effective_date, authority=operation)
     try:
         catalogue.require(transaction.cash_accounting_treatment)
@@ -270,6 +270,7 @@ def _cash_accounting_evidence_issue(
             validate_cash_accounting_axis(
                 treatment=transaction.cash_accounting_treatment,
                 operation_date=transaction.operation_date,
+                effective_date=transaction_operation_date(transaction),
                 payment_evidence=transaction.cash_accounting_payment_evidence,
                 taxable_base=transaction.taxable_base,
                 iva_amount=transaction.iva_amount,
@@ -333,6 +334,7 @@ def _unaccepted_row_value_issue(
     identification_state = transaction.counterparty_identification_state
     if identification_state is not None and transaction.iva_category == require_iva_category(
         "intra_community_supply",
+        effective_date=ledger_date,
         authority=operation,
     ):
         member_states = resolve_eu_member_state_catalogue(effective_date=ledger_date, authority=operation)
@@ -358,7 +360,7 @@ def _unaccepted_exemption_article_issue(
     exemption_article = transaction.exemption_article
     if exemption_article is None:
         return None
-    effective_date = today_madrid()
+    effective_date = transaction_operation_date(transaction)
     catalogue = resolve_iva_exemption_article_catalogue(effective_date=effective_date, authority=operation)
     try:
         catalogue.require(exemption_article)
@@ -369,7 +371,9 @@ def _unaccepted_exemption_article_issue(
             value=str(exemption_article),
             effective_date=effective_date,
         )
-    if effective_category != require_iva_category("domestic_exempt", authority=operation):
+    if effective_category != require_iva_category(
+        "domestic_exempt", effective_date=effective_date, authority=operation
+    ):
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
@@ -391,7 +395,7 @@ def _unaccepted_art_104_tres_exclusion_issue(
     exclusion = transaction.art_104_tres_exclusion
     if exclusion is None:
         return None
-    effective_date = today_madrid()
+    effective_date = transaction_operation_date(transaction)
     catalogue = resolve_art104_tres_exclusion_catalogue(effective_date=effective_date, authority=operation)
     try:
         declared = catalogue.require(exclusion)
@@ -710,7 +714,12 @@ def _declared_category_issue(
     if counterparty_issue is not None:
         return counterparty_issue
     catalogue = registry_component_catalogue(effective_date=effective_date, authority=operation)
-    components = category_components(explicit_category, invoice_kind, component_catalogue=catalogue)
+    components = category_components(
+        explicit_category,
+        invoice_kind,
+        effective_date=effective_date,
+        component_catalogue=catalogue,
+    )
     does_not_arise = registry_kind_applicability_token(
         "does_not_arise",
         effective_date=effective_date,
@@ -807,7 +816,11 @@ def _resolve_iva_transaction_classification(
     )
     if cash_accounting_issue is not None:
         return _IvaTransactionOutcome(gate_issue=cash_accounting_issue)
-    flow_direction = derive_flow_for_classification(category=effective_category, invoice_direction=invoice_kind)
+    flow_direction = derive_flow_for_classification(
+        category=effective_category,
+        invoice_direction=invoice_kind,
+        effective_date=transaction_operation_date(transaction),
+    )
     # Input IVA is deductible only on an exact fact kind with immutable
     # provenance; refusing here reports the row instead of failing the run.
     missing_deduction_issue = _missing_deduction_classification_issue(
@@ -859,7 +872,7 @@ def _cash_accounting_category_issue(
     effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregationIssue | None:
-    if is_iva_cash_accounting_none(transaction.cash_accounting_treatment, authority=operation):
+    if is_iva_cash_accounting_none(transaction.cash_accounting_treatment, effective_date, authority=operation):
         return None
     excluded = registry_category_projection(
         "cash_accounting_excluded",
@@ -892,9 +905,14 @@ def _missing_deduction_classification_issue(
     # of a cuota that was devengada and repercutida. Exempt, not-subject, or
     # recargo-cost rows therefore have no deduction identity to supply. A 0 %
     # sujeta row remains in the domestic family and still requires its identity.
+    effective_date = transaction_operation_date(transaction)
     if not (
-        is_deducible_flow(flow_direction)
-        and admits_iva_deduction_classification(category=category, flow_direction=flow_direction)
+        is_deducible_flow(flow_direction, effective_date=effective_date)
+        and admits_iva_deduction_classification(
+            category=category,
+            flow_direction=flow_direction,
+            effective_date=effective_date,
+        )
         and (transaction.deduction_fact_kind is None or transaction.deduction_provenance is None)
     ):
         return None
@@ -1036,7 +1054,7 @@ def _project_iva_transaction(
         base_amount=amounts.base_amount,
         iva_amount=amounts.iva_amount,
     )
-    if not is_iva_cash_accounting_none(context.cash_treatment, authority=operation):
+    if not is_iva_cash_accounting_none(context.cash_treatment, context.operation_date, authority=operation):
         observations = cash_accounting_observations(
             transaction,
             resolved_period=resolved_period,
@@ -1094,6 +1112,7 @@ def _project_iva_transaction(
         deduction_provenance=transaction.deduction_provenance,
         investment_asset_id=transaction.investment_asset_id,
         rectifies_ledger_id=transaction.rectifies_ledger_id,
+        art_104_tres_exclusion=transaction.art_104_tres_exclusion,
         operation=operation,
     )
     return _IvaTransactionOutcome(

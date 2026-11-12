@@ -14,7 +14,11 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
 from .authored_editions import newest_authored_editions
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import (
+    M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_MARITIME_WORKER_BINDINGS,
+    M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
+)
 
 # The two newest Modelo 100 editions the registry authors. Both are exercised
 # because each carries its own credit-casilla declarations.
@@ -76,6 +80,9 @@ def prior_base_binding_values(
 ) -> dict[BindingId, Decimal]:
     values: dict[BindingId, Decimal] = {
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
@@ -96,6 +103,7 @@ def prior_base_binding_values(
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+        **M100_NO_MARITIME_WORKER_BINDINGS,
     }
     if certificado_trabajo is not None:
         values[M100_RETENCIONES_TRABAJO_BINDING] = certificado_trabajo
@@ -109,6 +117,9 @@ def reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None) 
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
@@ -127,6 +138,9 @@ def reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None) 
         "renta-maritime-gross-navigation-income": Decimal("0"),
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
+        # The Art. 81.2 guarderia increment is declared year-free in every edition;
+        # neutral zero for a filer with no childcare spend.
+        "renta-profile-incremento-guarderia": Decimal("0"),
         # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
         # neutral zero for a scenario with no descendants.
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
@@ -164,6 +178,7 @@ def check_salary_certificate_retenciones_binding_populates_prior_edition_casilla
         binding_values=binding_values,
         relation_values=PRIOR_RELATION_VALUES,
         date_binding_values=PRIOR_DATE_BINDINGS,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     assert result.values[M100_RETENCIONES_TRABAJO_CASILLA] == suffered_retenciones
@@ -221,6 +236,7 @@ def check_zero_salary_certificate_retenciones_gives_zero_0596(prior_edition_snap
         binding_values=binding_values,
         relation_values=PRIOR_RELATION_VALUES,
         date_binding_values=PRIOR_DATE_BINDINGS,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     assert result.values[M100_RETENCIONES_TRABAJO_CASILLA] == Decimal("0")
@@ -247,6 +263,7 @@ def check_capital_mobiliario_retenciones_binding_reaches_0609(prior_edition_snap
         binding_values=binding_values,
         relation_values=PRIOR_RELATION_VALUES,
         date_binding_values=PRIOR_DATE_BINDINGS,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     assert result.values[M100_RETENCIONES_CAPITAL_MOBILIARIO_CASILLA] == capital_retenciones
@@ -275,6 +292,7 @@ def check_salary_certificate_retenciones_change_reflects_proportionally_in_0610(
         binding_values=low_bindings,
         relation_values=PRIOR_RELATION_VALUES,
         date_binding_values=PRIOR_DATE_BINDINGS,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
     result_high = calculate_registry_snapshot(
         prior_edition_snapshot,
@@ -288,6 +306,7 @@ def check_salary_certificate_retenciones_change_reflects_proportionally_in_0610(
         binding_values=high_bindings,
         relation_values=PRIOR_RELATION_VALUES,
         date_binding_values=PRIOR_DATE_BINDINGS,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     delta_0596 = (

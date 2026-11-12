@@ -72,6 +72,7 @@ from .m145_communication import (
 )
 from .m145_communication_period import M145CommunicationPeriod
 from .m145_communication_records_ports import M145CommunicationRecordsPorts
+from .m145_communication_refusal_doors import m145_record_decision_verdict, m145_registry_defect_verdict
 from .m145_communication_value_validation import (
     m145_constraint_issue,
     m145_value_shape_issue,
@@ -104,11 +105,20 @@ class M145CommunicationRecordAmbiguousError(M145CommunicationServiceError):
 
 
 class M145CommunicationRecordValidationError(M145CommunicationServiceError):
-    """Raised when a Modelo 145 communication operation is blocked by validation."""
+    """Raised when a Modelo 145 communication operation is blocked by validation.
+
+    Each raise site carries the door of its cause: the operator's decision for
+    stated values or stored coordinates, or a terminal verdict for registry
+    declarations no operator action repairs.
+    """
 
 
 class M145CommunicationRecordExportError(M145CommunicationServiceError):
-    """Raised when a Modelo 145 communication export cannot be rendered."""
+    """Raised when a Modelo 145 communication export cannot be rendered.
+
+    A record the encoder cannot render is the operator's decision; an export
+    design the registry declares unusably is terminal.
+    """
 
 
 class M145CommunicationRecordTransitionError(M145CommunicationServiceError):
@@ -438,6 +448,10 @@ def snapshot_for_scope(
         raise M145CommunicationRecordValidationError(
             f"Modelo 145 communication record expected surfaces {expected!r}; got {got!r}",
             context={"expected_surfaces": expected, "declared_surfaces": got},
+            precondition_verdict=m145_registry_defect_verdict(
+                "application_surfaces",
+                {"expected_surfaces": ", ".join(expected), "declared_surfaces": ", ".join(got)},
+            ),
         )
     return snapshot
 
@@ -452,7 +466,10 @@ def _require_m145_record_coordinates_current(
     if outcome.refused:
         raise M145CommunicationRecordValidationError(
             "Modelo 145 record registry coordinate cannot be re-confirmed: "
-            f"{record.registry_snapshot_ref.revision_id}: {outcome.detail}"
+            f"{record.registry_snapshot_ref.revision_id}: {outcome.detail}",
+            precondition_verdict=m145_record_decision_verdict(
+                "record_registry_coordinate", {"revision_id": str(record.registry_snapshot_ref.revision_id)}
+            ),
         )
     return record
 
@@ -819,6 +836,9 @@ def _render_m145_export_record(
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export record {record_definition.id!r} could not be rendered: {exc}",
             context={"export_record_id": record_definition.id, "reason": "canonical_fixed_width_encoder"},
+            precondition_verdict=m145_record_decision_verdict(
+                "record_encodable", {"export_record_id": str(record_definition.id)}
+            ),
         ) from exc
     return body + _LINE_ENDINGS[record_definition.line_ending]
 
@@ -858,6 +878,10 @@ def export_m145_communication_record(
                 "issue_count": validation.issue_count,
                 "issue_kinds": tuple(issue.kind.value for issue in validation.issues),
             },
+            precondition_verdict=m145_record_decision_verdict(
+                "record_valid",
+                {"issue_count": validation.issue_count, "issue_kinds": _validation_issue_summary(validation)},
+            ),
         )
     record = read_m145_communication_record(
         communication_record_id,
@@ -876,18 +900,27 @@ def export_m145_communication_record(
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export layout {layout.id!r} uses unsupported format {layout.format!r}",
             context={"export_layout_id": layout.id, "format": layout.format, "reason": "unsupported_format"},
+            precondition_verdict=m145_registry_defect_verdict(
+                "export_layout_format", {"export_layout_id": str(layout.id), "format": str(layout.format)}
+            ),
         )
     records = tuple(sorted(layout.records, key=lambda item: item.order))
     if not records:
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export layout {layout.id!r} declares no records",
             context={"export_layout_id": layout.id, "reason": "no_records"},
+            precondition_verdict=m145_registry_defect_verdict(
+                "export_layout_records", {"export_layout_id": str(layout.id)}
+            ),
         )
     encodings = {record_definition.encoding for record_definition in records}
     if len(encodings) != 1:
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export layout {layout.id!r} declares mixed encodings: {sorted(encodings)!r}",
             context={"export_layout_id": layout.id, "encodings": tuple(sorted(encodings)), "reason": "encodings"},
+            precondition_verdict=m145_registry_defect_verdict(
+                "export_layout_encoding", {"export_layout_id": str(layout.id)}
+            ),
         )
     try:
         refuse_written_shared_owners(layout, registry_snapshot=snapshot, casilla_values=dict(record.field_values))
@@ -895,6 +928,9 @@ def export_m145_communication_record(
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export layout {layout.id!r} would write one box into unrelated cells",
             context={"export_layout_id": layout.id, "reason": "shared_casilla_cells_unadjudicated"},
+            precondition_verdict=m145_registry_defect_verdict(
+                "shared_casilla_cells", {"export_layout_id": str(layout.id)}
+            ),
         ) from exc
     payload = b"".join(
         _render_m145_export_record(record_definition, record, renderer=renderer) for record_definition in records
@@ -989,6 +1025,10 @@ def mark_m145_communication_record_delivered_to_payer(
                 "issue_count": validation.issue_count,
                 "issue_kinds": tuple(issue.kind.value for issue in validation.issues),
             },
+            precondition_verdict=m145_record_decision_verdict(
+                "record_valid",
+                {"issue_count": validation.issue_count, "issue_kinds": _validation_issue_summary(validation)},
+            ),
         )
     transitioned_at = now()
     transitioned = _m145_communication_record_with_updates(
@@ -1097,6 +1137,9 @@ def create_m145_communication_record(
         raise M145CommunicationRecordValidationError(
             f"Modelo 145 communication record contains undeclared casilla ids: {unknown!r}",
             context={"unknown_casilla_count": len(unknown), "unknown_casillas": unknown},
+            precondition_verdict=m145_record_decision_verdict(
+                "record_casillas", {"unknown_casilla_count": len(unknown)}
+            ),
         )
 
     record_id = derive_m145_communication_record_id(

@@ -83,6 +83,7 @@ from .protocols import (
     RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
+from .rental_link_admission import verify_rental_link_references
 
 _MANUAL_PROVIDER_NAME = "manual-ledger"
 
@@ -95,7 +96,17 @@ _MANUAL_PROVIDER_NAME = "manual-ledger"
 #: listed here must default to ``None``, so omitting it when absent loses nothing
 #: a present value would say.
 SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset(
-    {"accrual_date", "investment_asset_id", "iva_vehicle_use", "operation_date", "own_account_id"}
+    {
+        "accrual_date",
+        "arrendamiento_ref",
+        "exemption_article",
+        "gasto_capital_inmobiliario",
+        "inmueble_ref",
+        "investment_asset_id",
+        "iva_vehicle_use",
+        "operation_date",
+        "own_account_id",
+    }
 )
 
 
@@ -183,6 +194,13 @@ def prepare_manual_transaction(
         evidence_records=ports.purchase_invoice_evidence_records,
     )
     verify_usage_ratio_reference(command, usage_ratio_profile=ports.usage_ratio_profile, operation=ports.operation)
+    verify_rental_link_references(
+        arrendamiento_ref=command.arrendamiento_ref,
+        inmueble_ref=command.inmueble_ref,
+        stored_arrendamiento_ref=None,
+        stored_inmueble_ref=None,
+        loader=ports.rental_profile_facts,
+    )
     event = build_ledger_bucket_event(
         bucket_id=command.bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_CREATED,
@@ -401,7 +419,10 @@ def _invoice_evidence_provenance(
     """
     if command.deduction_fact_kind is None or command.purchase_invoice_evidence_id is None:
         return None
-    authority = supplier_invoice_deduction_authority(command.deduction_fact_kind)
+    authority = supplier_invoice_deduction_authority(
+        command.deduction_fact_kind,
+        effective_date=command.operation_date or command.value_date or command.booked_date,
+    )
     if authority is None:
         return None
     evidence_id = command.purchase_invoice_evidence_id
@@ -527,10 +548,14 @@ def transaction_from_command(
         ),
         "notes": command.notes,
         "iva_category": command.iva_category,
+        "exemption_article": command.exemption_article,
         "deduction_fact_kind": command.deduction_fact_kind,
         "deduction_provenance": _invoice_evidence_provenance(command, evidence_records=evidence_records),
         "investment_asset_id": command.investment_asset_id,
         "iva_vehicle_use": command.iva_vehicle_use,
+        "arrendamiento_ref": command.arrendamiento_ref,
+        "inmueble_ref": command.inmueble_ref,
+        "gasto_capital_inmobiliario": command.gasto_capital_inmobiliario,
         "counterparty_country": command.counterparty_country,
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,

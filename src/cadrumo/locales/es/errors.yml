@@ -172,6 +172,7 @@ errors:
     count: recuento
     currency: moneda
     detail: detalle
+    door: orden
     ejercicio: ejercicio
     entry_count: número de entradas
     expected: esperado
@@ -197,6 +198,7 @@ errors:
     remedy: solución
     revision: revisión
     row: fila
+    schema_version: versión del esquema
     section: sección
     state: estado
     status: estado
@@ -657,6 +659,80 @@ errors:
     validate_expects_str: La validación de identidad espera un valor de texto; se
       obtuvo {got_type}.
   integrity:
+    calculation_revision_amendment_metadata_unpaired: Registra una rectificación sin
+      su motivo, o un motivo sin su rectificación. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_closed_rows_disagree: Sus filas de registro cerradas no concuerdan
+      con sus valores de vinculación guardados. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_closed_rows_foreign: Sus filas de registro cerradas pertenecen
+      a otra unidad de trabajo o a otra instantánea del registro. La aplicación escribió
+      este registro ella misma, así que se alteró o se dañó, y ningún cambio en tus
+      datos lo repara.
+    calculation_revision_handoff_outputs_disagree: 'Los valores de su traspaso al
+      resumen anual difieren de las casillas del modelo 390 que contiene: %{casilla_ids}.
+      La aplicación escribió este registro ella misma, así que se alteró o se dañó,
+      y ningún cambio en tus datos lo repara.'
+    calculation_revision_handoff_outputs_missing: 'Su traspaso al resumen anual nombra
+      casillas del modelo 390 que el cálculo no contiene: %{casilla_ids}. La aplicación
+      escribió este registro ella misma, así que se alteró o se dañó, y ningún cambio
+      en tus datos lo repara.'
+    calculation_revision_handoff_target_mismatch: Su traspaso al resumen anual del
+      modelo 303 apunta a un cálculo distinto del que lo contiene. La aplicación escribió
+      este registro ella misma, así que se alteró o se dañó, y ningún cambio en tus
+      datos lo repara.
+    calculation_revision_identity_mismatch: Su identificador guardado %{calculation_revision_id}
+      no es el derivado de sus entradas (%{derived_id}). La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
+    calculation_revision_lifecycle_order: Se actualizó por última vez (%{updated_at})
+      antes de crearse (%{created_at}). La aplicación escribió este registro ella
+      misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_observations_missing: Contiene valores de casillas pero ninguna
+      de las observaciones de las que proceden. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_observations_projection_mismatch: Sus valores de casillas
+      difieren de lo que dan sus observaciones. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_operator_layer_cleared_overlap: 'Fija y a la vez borra las
+      mismas casillas: %{casilla_ids}. La aplicación escribió este registro ella misma,
+      así que se alteró o se dañó, y ningún cambio en tus datos lo repara.'
+    calculation_revision_rectificativa_context_missing: Es una rectificativa pero
+      no se comprobó contra la presentación que corrige. La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
+    calculation_revision_row_identity_without_value: Una identidad de origen de fila
+      guardada no tiene ningún valor de fila detrás. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_row_index_mismatch: La posición de una casilla de fila difiere
+      de la de su fila de origen %{row_index} de %{binding_id}. La aplicación escribió
+      este registro ella misma, así que se alteró o se dañó, y ningún cambio en tus
+      datos lo repara.
+    calculation_revision_row_source_identity_absent: La fila %{row_index} de %{binding_id}
+      no tiene identidad de origen guardada. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_row_source_identity_mismatch: La identidad de origen guardada
+      para la fila %{row_index} de %{binding_id} difiere de la que registra su casilla.
+      La aplicación escribió este registro ella misma, así que se alteró o se dañó,
+      y ningún cambio en tus datos lo repara.
+    calculation_revision_row_source_shared: La fila %{row_index} de %{binding_id}
+      alimenta más de una casilla de fila. La aplicación escribió este registro ella
+      misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_row_source_value_not_decimal: El valor guardado de la fila
+      %{row_index} de %{binding_id} no es un número. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_row_value_mismatch: El valor de una casilla de fila difiere
+      de su fila de origen %{row_index} de %{binding_id}. La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
+    calculation_revision_row_values_provenance_mismatch: Los valores de sus casillas
+      de fila y su procedencia cubren filas distintas. La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
+    calculation_revision_secure_row_fields_missing: Su copia guardada no tiene los
+      campos de filas que toda copia así debe llevar. La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
     canonical_actividad_asset_history_persistence: No se pudo reabrir con seguridad
       el historial cifrado de activos.
     canonical_aeat_sync_workspace_projection: Las autoridades de la AEAT ya cargadas
@@ -695,6 +771,328 @@ errors:
       con su contenido; puede estar dañado o manipulado.
     canonical_unsupported_manifest_version: El manifiesto del corpus usa una versión
       no compatible.
+    filing_approval_basis_version_stale: La aprobación de la declaración usa la versión
+      de base %{version}, pero la versión de base vigente es %{current_version}. Vuelve
+      a aprobar la declaración.
+    filing_binding_row_source_kind_differs: Un valor de fila de la declaración indica
+      un origen de fila distinto de la fuente de su campo. La declaración guardada
+      está dañada; constrúyela de nuevo.
+    filing_binding_row_source_needs_row: Un valor de fila de la declaración indica
+      de dónde vienen sus filas, pero no qué fila es. La declaración guardada está
+      dañada; constrúyela de nuevo.
+    filing_draft_binding_claimed_twice: La declaración da más de un valor a la misma
+      fila de campo (%{bindings}). Deja un solo valor por fila de campo.
+    filing_draft_casilla_claimed_twice: La declaración da más de un valor a la misma
+      casilla (%{casillas}). Deja un solo valor por casilla.
+    filing_draft_modelo_differs: La declaración es del Modelo %{modelo}, pero su instantánea
+      del registro es del Modelo %{snapshot_modelo}. Construye la declaración de nuevo.
+    filing_draft_period_token_differs: La declaración es del periodo %{period}, pero
+      su instantánea del registro es del periodo %{snapshot_period}. Construye la
+      declaración de nuevo.
+    filing_draft_period_year_differs: La declaración es del ejercicio %{filing_year},
+      pero su instantánea del registro es del %{snapshot_year}. Construye la declaración
+      de nuevo.
+    filing_draft_schema_marker_differs: La declaración registra la versión de definición
+      %{schema_version}, pero su instantánea del registro indica %{expected_schema_version}.
+      Construye la declaración de nuevo.
+    filing_draft_taxpayer_diverges: La declaración nombra a dos contribuyentes distintos,
+      uno para el perfil y otro para el sujeto de la presentación. Una declaración
+      pertenece a un solo contribuyente; constrúyela de nuevo desde el perfil correcto.
+    filing_export_boolean_in_text_slot: El campo de exportación %{field} no puede
+      escribir un hecho de productor booleano en un espacio de texto de %{length}
+      bytes. La aplicación lo deriva de su propio diseño de exportación, así que ningún
+      cambio en tus datos lo corrige.
+    filing_export_draft_schema_mismatch: Se entregó a la exportación un borrador construido
+      con definiciones del modelo distintas de las que usa para escribirlo. La aplicación
+      construye y aprueba este borrador por sí misma, así que ningún cambio en tus
+      datos lo corrige.
+    filing_export_draft_unapproved: Se entregó a la exportación un borrador que no
+      está aprobado. La aplicación construye y aprueba este borrador por sí misma,
+      así que ningún cambio en tus datos lo corrige.
+    filing_export_envelope_closer_extent: El cierre del sobre de la presentación no
+      se genera con la extensión declarada de %{extent} bytes. La aplicación lo deriva
+      de su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_envelope_declarant_tax_id_absent: Se pidió al sobre de presentación
+      escribir el NIF del declarante sin el sujeto de la presentación. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_envelope_election_unresolved: El sobre de la presentación se iba
+      a escribir sin una elección de domiciliación previa resuelta. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_envelope_language_casilla_absent: Se pidió al sobre de presentación
+      escribir el idioma de la declaración sin el valor de su casilla declarada. La
+      aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
+    filing_export_envelope_layout_absent: Falta la declaración del diseño del sobre
+      de la presentación. La aplicación lo deriva de su propio diseño de exportación,
+      así que ningún cambio en tus datos lo corrige.
+    filing_export_envelope_period_not_representable: El periodo %{period} no tiene
+      representación de %{extent} caracteres en el sobre. La aplicación lo deriva
+      de su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_envelope_period_outside_range: El periodo del sobre del declarante
+      está fuera del intervalo que enumera el diseño. La aplicación lo deriva de su
+      propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_envelope_prefix_extent: El prefijo del sobre no se genera con su
+      extensión declarada de %{extent} bytes. La aplicación lo deriva de su propio
+      diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_envelope_prefix_role_authority: El papel %{role} del prefijo del
+      sobre de la presentación no tiene una autoridad de valor declarada. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_envelope_prefix_role_not_ascii: El papel %{role} del prefijo del
+      sobre de la presentación no es ASCII. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_envelope_prefix_role_width: El papel %{role} del prefijo del sobre
+      de la presentación ocupa %{actual} bytes y se esperan %{expected}. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_envelope_quarter_token_undeclared: El diseño del sobre no declara
+      el trimestre simple que necesita un trimestre del esquema. La aplicación lo
+      deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_envelope_records_unemitted: 'Las familias de registros obligatorias
+      del sobre de la presentación no tienen ninguna aparición emitida: %{records}.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.'
+    filing_export_field_binding_undeclared: El campo de exportación %{field} no declara
+      enlace. La aplicación lo deriva de su propio diseño de exportación, así que
+      ningún cambio en tus datos lo corrige.
+    filing_export_field_casilla_undeclared: El campo de exportación %{field} no declara
+      casilla. La aplicación lo deriva de su propio diseño de exportación, así que
+      ningún cambio en tus datos lo corrige.
+    filing_export_field_computed_key_undeclared: El campo de exportación %{field}
+      no declara clave calculada. La aplicación lo deriva de su propio diseño de exportación,
+      así que ningún cambio en tus datos lo corrige.
+    filing_export_field_contradicts_period: El campo de exportación %{field} contradice
+      el periodo que se presenta. La aplicación lo deriva de su propio diseño de exportación,
+      así que ningún cambio en tus datos lo corrige.
+    filing_export_field_draft_attribute_undeclared: El campo de exportación %{field}
+      no declara atributo del borrador. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_field_kind_unsupported: El tipo de campo de exportación %{kind}
+      no está admitido. La aplicación lo deriva de su propio diseño de exportación,
+      así que ningún cambio en tus datos lo corrige.
+    filing_export_field_length_undeclared: El campo de exportación %{field} no declara
+      longitud. La aplicación lo deriva de su propio diseño de exportación, así que
+      ningún cambio en tus datos lo corrige.
+    filing_export_field_offset_undeclared: El campo de exportación %{field} no declara
+      posición. La aplicación lo deriva de su propio diseño de exportación, así que
+      ningún cambio en tus datos lo corrige.
+    filing_export_field_overlap: El campo de exportación %{field} se solapa con otro
+      campo. La aplicación lo deriva de su propio diseño de exportación, así que ningún
+      cambio en tus datos lo corrige.
+    filing_export_field_producer_key_undeclared: El campo de exportación %{field}
+      no declara clave de productor. La aplicación lo deriva de su propio diseño de
+      exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_field_projection_context_absent: El campo de exportación %{field}
+      necesita un contexto de generación de la instantánea para direccionar su proyección.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
+    filing_export_field_projection_ref_undeclared: El campo de exportación %{field}
+      no declara referencia de proyección. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_layout_not_owned_by_snapshot: El diseño de exportación no pertenece
+      a la instantánea del registro seleccionada. La aplicación lo deriva de su propio
+      diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_layout_projection_address_duplicate: El diseño de exportación admite
+      la dirección de proyección duplicada %{address}. La aplicación lo deriva de
+      su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_layout_unclassified: El diseño de exportación del modelo %{modelo}
+      no se puede generar y la aplicación no tiene un motivo que lo explique. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_m190_component_declaration: La declaración del componente firmado
+      del modelo 190 está incompleta o ha cambiado. La aplicación lo deriva de su
+      propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_m190_component_wire: Un componente firmado del modelo 190 tiene
+      bytes de registro no válidos. La aplicación lo deriva de su propio diseño de
+      exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_m190_context_differs: El contexto de condiciones firmado del modelo
+      190 difiere de la fuente revisada. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_m190_source_digest: Los componentes firmados del modelo 190 carecen
+      del resumen exacto de su fuente revisada. La aplicación lo deriva de su propio
+      diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_m193_declaration_changed: La declaración de pendiente y devengo
+      del perceptor del modelo 193 está incompleta o ha cambiado. La aplicación lo
+      deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_m280_declaration_changed: Los componentes de imputación negativa
+      del modelo 280 difieren de la fuente revisada. La aplicación lo deriva de su
+      propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_m280_sign_differs: El signo de la imputación negativa del modelo
+      280 difiere de la fuente revisada. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_m280_zero_sign_differs: El signo cero explícito del modelo 280 difiere
+      de su proyección revisada. La aplicación lo deriva de su propio diseño de exportación,
+      así que ningún cambio en tus datos lo corrige.
+    filing_export_m303_evidence_design_unowned: El diseño del registro de evidencia
+      de la presentación del modelo 303 no pertenece a la instantánea seleccionada.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
+    filing_export_m303_evidence_orden_mismatch: La Orden anual de la evidencia de
+      la presentación del modelo 303 no coincide con la instantánea seleccionada.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
+    filing_export_m303_projection_layout_unowned: El diseño de la proyección de la
+      presentación del modelo 303 no pertenece a la instantánea seleccionada. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_m303_projection_snapshot_period: La instantánea de la proyección
+      de la presentación del modelo 303 no coincide con el periodo presentado. La
+      aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
+    filing_export_modelo100_comunidad_prefix_missing: Falta el prefijo del bloque
+      de comunidad elegido por el registro. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_modelo100_comunidad_total_missing: Falta la casilla de total de
+      comunidad elegida por el registro. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_modelo100_declarations_not_mapping: Las declaraciones XML del modelo
+      100 seleccionadas no son un hecho de tipo mapa. La aplicación lo deriva de su
+      propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_modelo100_declarations_unpinned: Las declaraciones de exportación
+      XML del modelo 100 necesitan una operación fijada a una generación de la autoridad.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
+    filing_export_modelo100_declarations_unresolved: No se resolvieron las declaraciones
+      XML del modelo 100. La aplicación lo deriva de su propio diseño de exportación,
+      así que ningún cambio en tus datos lo corrige.
+    filing_export_modelo100_sign_declarations_incomplete: Las declaraciones de signo
+      XML elegidas por el registro están incompletas. La aplicación lo deriva de su
+      propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_payload_consumer_unavailable: El consumidor del contenido de la
+      exportación no está disponible. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_payload_destination_count: A la exportación se le dio un número
+      de destinos del contenido distinto de uno. La aplicación lo deriva de su propio
+      diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_producer_fact_not_boolean: El campo de exportación %{field} necesita
+      un hecho de productor booleano tipado y recibió otro tipo. La aplicación lo
+      deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_producer_snapshot_modelo_mismatch: La instantánea de productores
+      de la presentación pertenece a otro modelo distinto del borrador que se exporta.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
+    filing_export_producer_unowned: La clave de productor %{key} no tiene un propietario
+      declarado. La aplicación lo deriva de su propio diseño de exportación, así que
+      ningún cambio en tus datos lo corrige.
+    filing_export_projection_address_duplicate: 'Las direcciones de proyección de
+      exportación están duplicadas: %{addresses}. La aplicación lo deriva de su propio
+      diseño de exportación, así que ningún cambio en tus datos lo corrige.'
+    filing_export_projection_address_unpreflighted: La dirección de proyección de
+      exportación %{address} no tiene un valor comprobado de antemano. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_projection_duplicate_values: El registro de proyección %{record}
+      emitió valores de proyección tipados duplicados. La aplicación lo deriva de
+      su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_projection_family_unsupported: El registro de proyección %{record}
+      mezcla familias de referencia de proyección o usa una no admitida. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_projection_occurrence_absent: El registro de proyección obligatorio
+      %{record} no tiene ninguna aparición aplicable emitida. La aplicación lo deriva
+      de su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_projection_occurrence_ambiguous: Las familias del registro de proyección
+      %{record} no se resuelven en una única aparición determinista. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_projection_plan_not_bijection: 'El plan de proyección de la presentación
+      no se corresponde uno a uno con el diseño: faltan %{missing}, sobran %{extraneous}.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.'
+    filing_export_projection_references_unemitted: El registro de proyección %{record}
+      no emitió todas las referencias de proyección tipadas redactadas. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_projection_repeat_mismatch: El registro de proyección %{record}
+      usa la repetición %{repeat} para una familia que no se repite. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_projector_field_untyped: Un proyector devolvió un campo sin una
+      referencia de proyección tipada real. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_regimen_rows_not_repeated: El registro de proyección del régimen
+      simplificado debe repetir sus filas de proyección. La aplicación lo deriva de
+      su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_result_casilla_ids_malformed: Un resultado de verificación de la
+      exportación enumera un identificador de casilla en blanco o con espacios. La
+      aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
+    filing_export_result_digest_malformed: Un resultado de exportación lleva un resumen
+      de archivo que no es un valor SHA-256 hexadecimal en minúsculas. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_sepa_marker_selection_unsupported: La marca SEPA recibió una selección
+      de cuenta para la que no tiene regla. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_shared_resolver_not_exhaustive: El resolvedor compartido de productores
+      de la presentación no cubre todas las claves que le pertenecen. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_verification_modelo100_declarations_unresolved: No se resolvieron
+      las declaraciones de verificación XML del modelo 100. La aplicación lo deriva
+      de su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_verification_signed_entry_unresolved: El campo XML %{field_id} no
+      tiene una entrada firmada con la que verificarlo. La aplicación lo deriva de
+      su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_verification_value_unrenderable: No se pudo generar el valor de
+      verificación esperado del campo de exportación %{field_id}. La aplicación lo
+      deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_xml_attribute_not_terminal: Un atributo del diccionario XML no termina
+      su ruta. La aplicación lo deriva de su propio diseño de exportación, así que
+      ningún cambio en tus datos lo corrige.
+    filing_export_xml_aux_idioma_omitted: El diseño de exportación XML omite el elemento
+      obligatorio Aux/Idioma. La aplicación lo deriva de su propio diseño de exportación,
+      así que ningún cambio en tus datos lo corrige.
+    filing_export_xml_boolean_in_non_boolean_row: Una fila de tipo %{data_type} recibió
+      un valor booleano, y solo las filas que AEAT declara booleanas pueden tenerlo.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
+    filing_export_xml_converter_non_string: El conversor XML elegido por el registro
+      (%{converter}) devolvió un valor que no es texto. La aplicación lo deriva de
+      su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_xml_converter_unavailable: El conversor XML elegido por el registro
+      (%{converter}) no está disponible. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_xml_entry_path_empty: Una entrada del diccionario XML tiene una
+      ruta vacía. La aplicación lo deriva de su propio diseño de exportación, así
+      que ningún cambio en tus datos lo corrige.
+    filing_export_xml_row_column_occurrence: La columna de fila %{binding} necesita
+      una fila repetida del diccionario para %{column} y encontró %{found}. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
+    filing_export_xml_row_column_undeclared: El enlace %{binding} lleva filas pero
+      no declara columna de fila. La aplicación lo deriva de su propio diseño de exportación,
+      así que ningún cambio en tus datos lo corrige.
+    filing_export_xml_serialiser_not_bytes: El serializador XML devolvió %{type} y
+      no bytes. La aplicación lo deriva de su propio diseño de exportación, así que
+      ningún cambio en tus datos lo corrige.
+    filing_export_xml_version_token_unresolved: La exportación XML no resolvió su
+      elemento obligatorio Aux/VERSION. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_xsd_root_absent: El origen XSD del diccionario XML %{source} no
+      declara el elemento raíz %{root}. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_xsd_source_unresolved: El diseño de exportación de diccionario XML
+      %{layout} no tiene un origen XSD resuelto. La aplicación lo deriva de su propio
+      diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_xsd_unparseable: No se pudo analizar el origen XSD del diccionario
+      XML %{source}. La aplicación lo deriva de su propio diseño de exportación, así
+      que ningún cambio en tus datos lo corrige.
+    filing_export_xsd_version_absent: El origen XSD del diccionario XML %{source}
+      no declara valores de versionxsd. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_value_kind_contradicts_trace: 'La declaración tiene en la casilla %{casilla_id}
+      un rastro de cálculo que contradice su tipo (%{kind}): solo una casilla calculada
+      lo lleva. La declaración guardada está dañada; constrúyela de nuevo.'
+    filing_value_kind_contradicts_value: 'La declaración tiene en la casilla %{casilla_id}
+      un valor que contradice su tipo (%{kind}): solo una casilla vacía no tiene valor.
+      La declaración guardada está dañada; constrúyela de nuevo.'
     integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
       el perfil seleccionado antes de continuar.
     integrity_apoderado_configuration_identity: La configuración de apoderado almacenada
@@ -706,6 +1104,10 @@ errors:
       mal configurado.
     integrity_corpus_anchor_resolution: Un ancla del corpus incluido no se resuelve
       exactamente en una unidad extraída.
+    integrity_filing_export: Una comprobación de la exportación encontró un fallo
+      en el propio diseño de exportación de la aplicación.
+    integrity_filing_export_design: Falló una comprobación del diseño de exportación
+      dentro de la aplicación.
     integrity_filing_validation: La validación de la declaración detectó un problema
       que impide continuar.
     integrity_financial_attachments_attachment_validation: El justificante adjunto
@@ -714,6 +1116,24 @@ errors:
       NIE ni CIF español válido.
     integrity_justificante_verification: La verificación del justificante con la AEAT
       no se pudo completar.
+    integrity_modelo_export_design: No se pudo escribir la exportación porque el propio
+      diseño de exportación de la aplicación se contradice.
+    integrity_modelo_export_field_unrenderable: 'No se ha escrito nada: el campo %{field_id}
+      (casilla %{casilla_id}) no se puede escribir a partir de su valor, porque el
+      diseño de registro oficial que lleva la aplicación y ese valor no concuerdan.
+      El defecto está en el diseño de exportación, no en tus datos, así que cambiar
+      tus datos no lo arregla.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'No se ha escrito nada:
+      el campo %{field_id} no se puede escribir a partir de su valor, porque el diseño
+      de registro oficial que lleva la aplicación y ese valor no concuerdan. El defecto
+      está en el diseño de exportación, no en tus datos, así que cambiar tus datos
+      no lo arregla.'
+    integrity_modelos_calculation_revision: El cálculo guardado se contradice a sí
+      mismo, así que no se puede aplicar nada de él. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    integrity_modelos_operator_layer: Los valores del operador guardados para este
+      cálculo se contradicen. La aplicación los escribió ella misma, así que el registro
+      se ha alterado o dañado y no se puede aplicar nada de él.
     integrity_outbound_storage: El contenido descargado no superó las comprobaciones
       de integridad (hash, tamaño o etiqueta).
     integrity_outbound_storage_corruption: Un fichero de metadatos sidecar contiene
@@ -776,6 +1196,18 @@ errors:
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
+    ledger_filing_evidence_diverges_from_snapshot: 'La evidencia del libro de la revisión
+      de cálculo %{calculation_revision_id} no cubre las mismas transacciones que
+      su huella: faltan %{missing_count} y sobran %{extra_count}. La revisión guardada
+      está dañada; calcula de nuevo.'
+    operator_layer_attestation_kinds_conflict: El registro guardado declara el enlace
+      %{binding_id} a la vez sin importe y con un importe declarado. La aplicación
+      escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
+      no puede usarlo.
+    operator_layer_value_attestation_not_canonical: La declaración de valor guardada
+      para el enlace %{binding_id} no contiene un importe decimal canónico. La aplicación
+      escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
+      no puede usarlo.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
     windows_credential_record: La credencial de Windows no cumple el formato requerido
@@ -1097,8 +1529,103 @@ errors:
       pertenece a otra revisión.
     modelo_workspace_manifest_capture_not_current: El manifiesto de campos cambió
       durante la lectura; vuelve a capturarlo.
+    pension_reduccion_contingencia_year_not_four_digits: El año de la contingencia
+      debe escribirse con cuatro cifras; has indicado %{value}.
+    pension_reduccion_early_contributions_exceed_total: Las aportaciones al plan de
+      pensiones hechas hasta el 31 de diciembre de 2006 (%{value}) superan las aportaciones
+      totales (%{aportaciones_totales}), aunque son una parte del total. Corrige uno
+      de los dos importes.
+    pension_reduccion_early_contributions_negative: Las aportaciones al plan de pensiones
+      hechas hasta el 31 de diciembre de 2006 no pueden ser negativas; has indicado
+      %{value}. Indica el importe como cero o más.
+    pension_reduccion_rescate_negative: El importe rescatado del plan de pensiones
+      no puede ser negativo; has indicado %{value}. Indica el importe como cero o
+      más.
+    pension_reduccion_rescate_year_not_four_digits: El año del rescate debe escribirse
+      con cuatro cifras; has indicado %{value}.
+    pension_reduccion_total_contributions_not_positive: Las aportaciones totales al
+      plan de pensiones deben ser mayores que cero; has indicado %{value}. Indica
+      el total de todas las aportaciones.
     producer_capture_not_current: Una proyección de productor cambió mientras se leía;
       vuelve a capturarla.
+    profile_access_administration_denied: Tu acceso actual no permite gestionar los
+      ajustes de acceso, así que se ha rechazado la solicitud.
+    profile_access_authentication_required: No has iniciado sesión. Inicia sesión
+      y vuelve a intentarlo.
+    profile_access_authority_unavailable: Las normas publicadas que necesita esta
+      operación no están disponibles ahora mismo. Inténtalo de nuevo más tarde.
+    profile_access_automation_suspended: El acceso automático a este perfil está suspendido.
+      Apruébalo de nuevo en persona antes de reintentar.
+    profile_access_backend_unavailable: El servicio que atiende esta solicitud no
+      está disponible ahora mismo. Inténtalo de nuevo en unos instantes.
+    profile_access_client_mismatch: Esta solicitud llegó desde un cliente distinto
+      del admitido, así que se ha rechazado.
+    profile_access_clock_invalid: El reloj del equipo no es lo bastante fiable para
+      comprobar este acceso, así que se ha rechazado. Corrige la hora del sistema
+      y vuelve a intentarlo.
+    profile_access_connection_mismatch: Esta solicitud llegó por una conexión distinta
+      de la admitida, así que se ha rechazado.
+    profile_access_custody_changed: La custodia protegida del perfil ha cambiado desde
+      que iniciaste sesión. Inicia sesión de nuevo.
+    profile_access_custody_recovering: Se perdió el proceso de trabajo del perfil,
+      así que tu sesión está suspendida mientras se recupera. Inicia sesión de nuevo
+      para reanudarla.
+    profile_access_custody_unavailable: La custodia protegida del perfil no está disponible
+      ahora mismo. Inténtalo de nuevo en unos instantes.
+    profile_access_disclosure_denied: Tu acceso actual no permite mostrar estos datos,
+      así que se ha rechazado la solicitud.
+    profile_access_fresh_password_required: Esta operación necesita tu contraseña
+      de nuevo. Inicia sesión otra vez con tu contraseña.
+    profile_access_frontend_denied: Esta operación no está permitida desde esta interfaz,
+      así que se ha rechazado.
+    profile_access_grant_expired: La autorización de acceso de esta solicitud ha caducado.
+      Concede el acceso de nuevo en persona y vuelve a intentarlo.
+    profile_access_grant_inactive: La autorización de acceso de esta solicitud no
+      está activa. Concede el acceso de nuevo en persona y vuelve a intentarlo.
+    profile_access_human_authority_required: Esta operación debe realizarla una persona,
+      no una automatización. Hazla tú y vuelve a intentarlo.
+    profile_access_key_expired: La clave de acceso de esta solicitud ha caducado.
+      Emite una clave nueva en persona y vuelve a intentarlo.
+    profile_access_key_inactive: La clave de acceso de esta solicitud no está activa.
+      Emite una clave nueva en persona y vuelve a intentarlo.
+    profile_access_operation_denied: Esta operación no está permitida con tu acceso
+      actual, así que se ha rechazado.
+    profile_access_operation_unavailable: Esta operación no está disponible ahora
+      mismo. Inténtalo de nuevo más tarde.
+    profile_access_os_locked: El equipo está bloqueado. Desbloquéalo y vuelve a intentarlo.
+    profile_access_os_session_unavailable: La sesión de usuario del equipo no está
+      disponible, así que no se puede comprobar el acceso. Entra en tu cuenta del
+      equipo y vuelve a intentarlo.
+    profile_access_parent_invalid: El acceso del que se delegó esta solicitud ya no
+      es válido, así que se ha rechazado.
+    profile_access_period_denied: Tu acceso actual no cubre este periodo, así que
+      se ha rechazado la solicitud.
+    profile_access_person_act_required: 'Este acto es solo tuyo: iniciar sesión, las
+      sesiones, las claves, los secretos y el trabajo fuera del perfil no se pueden
+      delegar. Hazlo en persona.'
+    profile_access_privilege_expansion: Esta solicitud pide más acceso del concedido,
+      así que se ha rechazado.
+    profile_access_profile_locked: El perfil está bloqueado. Inicia sesión de nuevo
+      para desbloquearlo.
+    profile_access_profile_mismatch: Esta solicitud no pertenece al perfil con el
+      que has iniciado sesión, así que se ha rechazado.
+    profile_access_provider_required: Esta operación necesita un proveedor que no
+      está configurado. Configura uno y vuelve a intentarlo.
+    profile_access_response_authority_required: Responder a la pregunta de esta operación
+      requiere una autoridad que esta solicitud no tiene, así que se ha rechazado.
+      Responde desde la ventana que inició la operación.
+    profile_access_runtime_changed: El servicio en segundo plano se reinició desde
+      que iniciaste sesión. Inicia sesión de nuevo.
+    profile_access_session_expired: Tu sesión ha caducado. Inicia sesión de nuevo.
+    profile_access_session_inactive: Tu sesión ya no está activa. Inicia sesión de
+      nuevo.
+    profile_access_storage_unavailable: El almacenamiento del perfil no está disponible
+      ahora mismo. Inténtalo de nuevo en unos instantes.
+    profile_access_subject_busy: Una operación anterior sobre el mismo elemento no
+      ha terminado. Espera a que termine y vuelve a intentarlo.
+    profile_access_transaction_authority_required: Confirmar este cambio requiere
+      una autoridad que esta solicitud no tiene, así que se ha rechazado. Confírmalo
+      en persona.
     profile_capsule_archive: No se ha podido escribir o leer el archivo de copia del
       perfil
     profile_capsule_source: El origen indicado no es una cápsula de perfil legible
@@ -1202,6 +1729,28 @@ errors:
       está soportado.
     refused_filing_calculate: El cálculo o resumen de la declaración no superó sus
       invariantes.
+    refused_filing_export_casilla_value: 'No se ha escrito nada: una casilla que indicas
+      tiene un valor que la exportación no puede escribir tal como lo sitúa el diseño
+      oficial. Vuelve a indicar esa casilla y vuelve a exportar.'
+    refused_filing_export_declared_party_name: 'No se ha escrito nada: el campo %{export_field_id}
+      nombra a una parte sin un nombre de declaración que el diseño de registro de
+      la AEAT admita ahí. Indica el nombre de declaración de la parte y vuelve a exportar.'
+    refused_filing_export_declared_party_name_missing: 'No se ha escrito nada: el
+      campo %{export_field_id} nombra a una parte sin nombre de declaración indicado.
+      El diseño de registro de la AEAT lo rellena con sus apellidos y nombre, o con
+      su razón social, y nada más puede ocupar su lugar. Indica el nombre de declaración
+      de la parte y vuelve a exportar.'
+    refused_filing_export_declared_party_name_single_surname: 'No se ha escrito nada:
+      el campo %{export_field_id} nombra a una persona física indicada con un solo
+      apellido, y el diseño de registro de la AEAT no da ninguna regla para componer
+      ese nombre. Revisa los apellidos indicados; no se declara nada en su lugar.'
+    refused_filing_export_declared_party_name_too_wide: 'No se ha escrito nada: el
+      nombre de declaración de una parte tiene %{composed_length} caracteres y el
+      campo %{export_field_id} tiene %{field_length}. El diseño de registro no permite
+      abreviarlo, así que indica una versión del nombre de %{field_length} caracteres
+      y vuelve a exportar.'
+    refused_filing_export_profile_fact_missing: 'No se ha escrito nada: la exportación
+      necesita un dato tuyo que tu perfil no indica. Indícalo y vuelve a exportar.'
     refused_financial_aggregation_category_coverage: Una transacción no tiene cobertura
       de categoría o de perfil. Clasifica la transacción antes de agregar.
     refused_financial_aggregation_missing_classification: Aún hay transacciones del
@@ -1274,6 +1823,11 @@ errors:
       como establecida en otro territorio; retire el hecho confirmado antes de sustituirlo.
     refused_ledger_counterparty_establishment_input: No se puede confirmar un hecho
       de establecimiento con un identificador de contraparte que no valida.
+    refused_ledger_counterparty_filing_name_input: El nombre indicado no es uno que
+      admita una declaración informativa. Una persona física necesita el primer apellido,
+      el nombre y el segundo apellido o la indicación de que no lo tiene; una entidad
+      solo necesita su razón social. Cada parte se escribe sin espacios iniciales,
+      finales ni dobles, y cada forma abreviada cabe en su ancho.
     refused_ledger_counterparty_provincia_input: La provincia indicada no es un código
       de provincia del INE.
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
@@ -1340,6 +1894,11 @@ errors:
       (campo 114) debe ser el titular de la cuenta que elegiste.
     refused_modelo_360_solicitud_undeclared: No hay ninguna solicitud del Modelo 360
       declarada para {filing_year}.
+    refused_modelo_390_prorrata_apartado_unrendered: 'El modelo 390 sigue rechazado:
+      tu registro de prorrata tiene filas para este ejercicio, pero la edición del
+      formulario en uso aún no incluye el apartado de prorratas (apartado 12), así
+      que no se puede verificar, registrar como presentado ni exportar sin dejar ese
+      apartado en blanco.'
     refused_modelo_aggregation_input_conflict: Un dato que has introducido contradice
       lo que dan tus registros; corrígelo antes de calcular.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementaria
@@ -1376,6 +1935,13 @@ errors:
       ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) porque la ventana de presentación
       no fija ninguna; el {export_on} solo puedes pagar el resultado de otra forma.
     refused_modelo_edit_parse: No se ha podido leer este dato.
+    refused_modelo_export_casilla_value: 'No se ha escrito nada: una casilla que indicas
+      tiene un valor que la exportación no puede escribir tal como lo sitúa el diseño
+      oficial. Vuelve a indicar esa casilla y vuelve a exportar.'
+    refused_modelo_export_declared_party_name: 'No se ha escrito nada: el campo %{export_field_id},
+      de %{field_length} posiciones, nombra a una parte sin un nombre de declaración
+      que el diseño de registro de la AEAT admita. Indica o corrige el nombre de declaración
+      de la parte y vuelve a exportar.'
     refused_modelo_export_prior_domiciliation_election_required: Una autoliquidación
       rectificativa del modelo 303 con la casilla 111 necesita una elección sobre
       la domiciliación anterior (mantenerla, o anularla o modificarla); no se indicó
@@ -1387,6 +1953,12 @@ errors:
     refused_modelo_export_required_record_absent: El diseño oficial exige al menos
       un registro %{export_record_id}, pero esta declaración no tiene ninguno, así
       que no hay nada que escribir en este formato y no se ha escrito nada.
+    refused_modelo_export_settlement: 'No se ha escrito nada: la exportación no puede
+      indicar cómo se paga o se devuelve la declaración.'
+    refused_modelo_export_unrepresentable_character: 'No se ha escrito nada: el campo
+      %{field_id} contiene el carácter «%{character}» (%{code_point}), que el diseño
+      de registro de la AEAT no permite escribir. Quitarlo o sustituirlo declararía
+      otro dato. Corrige ese dato donde lo registraste y vuelve a exportar.'
     refused_modelo_export_value_overflow: 'No se ha escrito nada: un valor no cabe
       en el campo %{field_id}, al que el diseño de registro de la AEAT da %{field_length}
       posiciones. Recortarlo declararía otro dato. Revisa ese dato o importe y vuelve
@@ -1519,6 +2091,9 @@ errors:
       58/2003, LGT art. 66 y 70). La fecha más temprana de borrado seguro es %{earliest_safe_erase_date}.
       Espera hasta esa fecha o vuelve a ejecutar con --override-retention y --reason
       para forzarlo.'
+    refused_review_drafts_unattributed: Tu perfil no tiene NIF, así que ninguno de
+      los %{draft_count} borradores guardados puede mostrarse como tuyo. Añade tu
+      NIF a tu perfil y vuelve a revisar.
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
       la sintaxis del filtro indicado.
     refused_runtime_custody_recovering: Se está restableciendo el acceso a este perfil.
@@ -1573,6 +2148,12 @@ errors:
       lo leíste; vuelve a leerlo antes de guardar.
     retencion_soportada_write_refused: No se guardó el registro de retención de este
       pagador.
+    sal_reserva_beneficio_negative: El beneficio neto que se usa para la reserva especial
+      no puede ser negativo; has indicado %{value}. Indícalo como cero o más.
+    sal_reserva_capital_social_not_positive: El capital social debe ser mayor que
+      cero; has indicado %{value}. Indica el capital social de la sociedad.
+    sal_reserva_dotada_negative: La reserva ya dotada no puede ser negativa; has indicado
+      %{value}. Indícala como cero o más.
     submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
       describirse ({cause_type}).
     submission_preflight_auth_not_ready: El proveedor de autenticación {kind} no está
@@ -1652,5 +2233,11 @@ errors:
       un perfil activo, salvo en modo de prueba.
     own_account_unknown: La cuenta propia {own_account_id} no está entre tus cuentas
       bancarias propias registradas.
+    rental_lease_unknown: El arrendamiento {ref} no es uno de los arrendamientos de
+      tu perfil. Consúltalos con «{door}».
+    rental_link_category: Una fila vinculada a un arrendamiento o a un inmueble debe
+      llevar la categoría de renta {category}; indícala con «{door}» y --irpf-category.
+    rental_property_unknown: El inmueble {ref} no es uno de los inmuebles de tu perfil.
+      Consúltalos con «{door}».
     unknown_ledger_provider: 'Proveedor de libro {provider!r} desconocido. Proveedores
       reconocidos: {providers}.'

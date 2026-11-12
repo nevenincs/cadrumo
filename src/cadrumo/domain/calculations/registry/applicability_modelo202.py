@@ -17,6 +17,7 @@ from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...contribuyente.entity_type import EntityType
 from ...deadlines.models import TaxpayerProfile
+from .applicability_models import ApplicabilityVerdict, ModeloApplicability
 from .entity_type import entity_type_legal_entity_token
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact, ScalarFactQuery
@@ -85,6 +86,10 @@ def _modelo_202_applicability_declarations(
         "legal_refs.incomplete",
         f"legal_refs.{Modelo202Modality.ART_40_3_MANDATORY.value}",
         f"legal_refs.{Modelo202Modality.ART_40_2_OPTIONAL.value}",
+        "reason.filing_mandatory",
+        "reason.filing_depends_on_ingreso",
+        "legal_refs.filing_mandatory",
+        "legal_refs.filing_depends_on_ingreso",
     }
     missing = sorted(required - declarations.keys())
     if missing:
@@ -225,10 +230,60 @@ def derive_modelo_202_modality(
     )
 
 
+def modelo_202_filing_obligation(
+    profile: TaxpayerProfile,
+    entity_applicability: ModeloApplicability,
+    *,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> ModeloApplicability:
+    """Narrow an applicable Modelo 202 entity verdict to whether filing is owed.
+
+    LIS art. 40.1 asks every contribuyente for the pago fraccionado, but the
+    Modelo 202 order (Orden HFP/227/2017 art. 1.3) makes filing unconditional
+    only when the INCN of the twelve months before the período impositivo
+    exceeds the art. 40.3 threshold. Below it, filing is owed only in a period
+    that yields an ingreso, which depends on the art. 40.2 base (the last
+    declared cuota íntegra less deductions, bonificaciones and retenciones) or
+    on an art. 40.3 option elected in the declaración censal. The profile
+    carries neither, so that case stays incomplete rather than applicable or
+    not applicable. Any verdict other than applicable passes through unchanged.
+    """
+    if entity_applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
+        return entity_applicability
+    authority = require_governed_fact_authority(authority, subject="Modelo 202 applicability")
+    modality = derive_modelo_202_modality(profile, effective_date=effective_date, authority=authority)
+    if modality.modality is Modelo202Modality.INCOMPLETE:
+        return ModeloApplicability(
+            modelo=entity_applicability.modelo,
+            verdict=ApplicabilityVerdict.INCOMPLETE,
+            reason=modality.reason,
+            legal_refs=modality.legal_refs,
+            failure=modality.failure,
+        )
+    declarations = _modelo_202_applicability_declarations(effective_date=effective_date, authority=authority)
+    if modality.modality is Modelo202Modality.ART_40_3_MANDATORY:
+        return ModeloApplicability(
+            modelo=entity_applicability.modelo,
+            verdict=ApplicabilityVerdict.APPLICABLE,
+            reason=declarations["reason.filing_mandatory"],
+            legal_refs=_modelo_202_legal_refs(declarations, "filing_mandatory"),
+            provenance=entity_applicability.provenance,
+        )
+    return ModeloApplicability(
+        modelo=entity_applicability.modelo,
+        verdict=ApplicabilityVerdict.INCOMPLETE,
+        reason=declarations["reason.filing_depends_on_ingreso"],
+        legal_refs=_modelo_202_legal_refs(declarations, "filing_depends_on_ingreso"),
+        provenance=entity_applicability.provenance,
+    )
+
+
 __all__ = [
     "Modelo202Modality",
     "Modelo202ModalityVerdict",
     "derive_modelo_202_modality",
+    "modelo_202_filing_obligation",
     "modelo_202_incn_threshold_decimal",
     "modelo_202_modality_from_inputs",
     "resolve_modelo_202_art_40_3_incn_threshold",

@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -25,6 +26,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from cadrumo.application.ledger.counterparty_establishment import record_counterparty_filing_name
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -34,6 +36,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -276,6 +279,17 @@ def test_bucket_calculation_persists_and_replays_one_declarado_record_per_counte
     invoice_repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     ledger = _ledger()
     invoice_repository.save(build_invoice_catalogue(ledger.invoices))
+    counterparties = CounterpartyEstablishmentRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    for invoice in ledger.invoices:
+        assert invoice.counterparty_tax_id is not None
+        record_counterparty_filing_name(
+            bucket_id=_BUCKET_ID,
+            tax_identifier=invoice.counterparty_tax_id,
+            filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=invoice.counterparty_name),
+            asserted_by="test-operator",
+            asserted_at=_T0,
+            repository=counterparties,
+        )
     work_unit_repository = WorkUnitCatalogueRepository(objects=secure_objects)
     work_unit = _work_unit(work_unit_repository)
 

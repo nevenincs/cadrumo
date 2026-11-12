@@ -36,7 +36,7 @@ from enum import StrEnum
 from functools import cache, partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import cast
+from typing import Final, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -96,6 +96,12 @@ from ...application.ledger.classify_requests import (
     LedgerClassifyPatch,
     LedgerClassifyPatchField,
     LedgerClassifyRequest,
+)
+from ...application.ledger.counterparty_operation import (
+    LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
+    CounterpartyFilingNameRendering,
+    LedgerCounterpartyRequest,
+    LedgerCounterpartyResult,
 )
 from ...application.ledger.evidence_add_operation import (
     LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
@@ -233,6 +239,7 @@ from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, compose_legal_full_name
 from ...tests.persona_invoices import render_facturae
 from ...tests.personas import (
+    AttestedPriorValue,
     CalculatedReturns,
     FiledReturns,
     HouseholdMember,
@@ -246,6 +253,8 @@ from ...tests.personas import (
     ProfileValue,
     ProvisionPeriods,
     WithholdingCertificate,
+    WorkIncomeNoneStatement,
+    WorkInput,
     YearEnvelope,
     filed_period_order,
     governed_provisions,
@@ -258,6 +267,10 @@ from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
 from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
+from .persona_prior_values import PriorValueAttestationError, attest_prior_values
+from .persona_rental_replay import replay_rentals
+from .persona_work_income_statements import state_work_income_none
+from .persona_work_inputs import WorkInputError, check_work_inputs, enter_work_inputs
 
 PERSONA_ACTOR = "operator:persona"
 """The actor every replayed operation is submitted under."""
@@ -326,6 +339,12 @@ class PersonaWorld:
     services: OperationComposedServices
     registry: OperationRegistry
     operation: PinnedAuthorityOperation
+    attested_prior_values: tuple[AttestedPriorValue, ...] = ()
+    """The persona's stated figures for earlier returns; :func:`run_operation` submits them after a calculation."""
+    work_inputs: tuple[WorkInput, ...] = ()
+    """The values the persona's operator enters on a return; :func:`run_operation` enters them before its first calculation."""
+    work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = ()
+    """The ejercicios whose unevidenced work income the persona states is none; submitted after a calculation."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -415,11 +434,22 @@ def _scenario(as_of: datetime) -> Generator[None]:
 
 @contextmanager
 def _operations_over(
-    root: Path, profile_id: UUID, *, workdir: Path, as_of: datetime, envelope: YearEnvelope | None = None
+    root: Path,
+    profile_id: UUID,
+    *,
+    workdir: Path,
+    as_of: datetime,
+    envelope: YearEnvelope | None = None,
+    attested_prior_values: tuple[AttestedPriorValue, ...] = (),
+    work_inputs: tuple[WorkInput, ...] = (),
+    work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = (),
 ) -> Generator[PersonaWorld]:
     """Compose a production supervisor over the profile already resumed in the isolated ``root``.
 
     ``envelope`` is the year envelope the persona was read under; the registry's own when omitted.
+    ``attested_prior_values`` are the persona's stated figures for earlier returns,
+    ``work_inputs`` the values its operator enters on a return, and
+    ``work_income_none_statements`` the ejercicios whose unevidenced work income it states is none.
     """
     with (
         profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects,
@@ -457,6 +487,9 @@ def _operations_over(
                 services=services,
                 registry=registry,
                 operation=operation,
+                attested_prior_values=attested_prior_values,
+                work_inputs=work_inputs,
+                work_income_none_statements=work_income_none_statements,
             )
         finally:
             asyncio.run(services.shutdown())
@@ -476,7 +509,14 @@ def persona_world(
         ):
             try:
                 with _operations_over(
-                    root, profile_id, workdir=tmp_path / "inputs", as_of=as_of, envelope=envelope
+                    root,
+                    profile_id,
+                    workdir=tmp_path / "inputs",
+                    as_of=as_of,
+                    envelope=envelope,
+                    attested_prior_values=persona.attested_prior_values,
+                    work_inputs=persona.work_inputs,
+                    work_income_none_statements=persona.work_income_none_statements,
                 ) as opened:
                     yield opened
             finally:
@@ -487,7 +527,11 @@ def persona_world(
 
 
 def settle_operation(
-    world: PersonaWorld, definition_id: str, payload: BaseModel, *, subject: str | None = None
+    world: PersonaWorld,
+    definition_id: str,
+    payload: BaseModel,
+    *,
+    subject: str | None = None,
 ) -> BaseModel | None:
     """Submit one registered operation, settle it, refuse anything but success, and return its public result.
 
@@ -607,11 +651,86 @@ def run_operation[Projection: BaseModel](
     *,
     subject: str | None = None,
 ) -> Projection:
-    """Settle one registered operation and return its public result as ``projection``."""
+    """Settle one registered operation and return its public result as ``projection``.
+
+    A calculation of a return the persona gives values for is preceded, on its first
+    calculation, by their entry through the declaration edit, as an operator enters them.
+    A calculation of a return the persona states a prior value for is followed by the
+    attestation of that value, where the application offers it, and calculated again so
+    the result reads the stated figure.
+    """
+    if isinstance(payload, ModeloWorkCalculateRequest) and world.work_inputs:
+        _enter_work_inputs(world, payload.work_unit_id)
     result = settle_operation(world, definition_id, payload, subject=subject)
     if not isinstance(result, projection):
         raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
+    if isinstance(payload, ModeloWorkCalculateRequest) and isinstance(result, ModeloWorkCalculatePublicResultV3):
+        result = _with_attested_prior_values(world, definition_id, payload, result, subject=subject)
+        if not isinstance(result, projection):
+            raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
     return result
+
+
+def _enter_work_inputs(world: PersonaWorld, work_unit_id: str) -> None:
+    """Enter the values the persona gives for the work unit's return, before its first calculation."""
+
+    def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
+        return settle_operation(world, definition_id, payload, subject=subject)
+
+    try:
+        enter_work_inputs(
+            world.work_inputs,
+            envelope=world.envelope,
+            operation=world.operation,
+            profile_id=world.profile_id,
+            work_unit_id=work_unit_id,
+            settle=settle,
+        )
+    except WorkInputError as error:
+        raise PersonaMaterialisationError(str(error)) from error
+
+
+def _with_attested_prior_values(
+    world: PersonaWorld,
+    definition_id: str,
+    payload: ModeloWorkCalculateRequest,
+    calculated: ModeloWorkCalculatePublicResultV3,
+    *,
+    subject: str | None,
+) -> BaseModel:
+    """``calculated``, or its calculation again once the persona's stated prior values and work-income statements are made."""
+
+    def settle(
+        definition_id: str,
+        payload: BaseModel,
+        *,
+        subject: str | None = None,
+    ) -> BaseModel | None:
+        return settle_operation(world, definition_id, payload, subject=subject)
+
+    try:
+        attested = attest_prior_values(
+            world.attested_prior_values,
+            envelope=world.envelope,
+            profile_id=world.profile_id,
+            calculated=calculated,
+            settle=settle,
+        )
+        stated = state_work_income_none(
+            world.work_income_none_statements,
+            envelope=world.envelope,
+            profile_id=world.profile_id,
+            calculated=calculated,
+            settle=settle,
+        )
+    except PriorValueAttestationError as error:
+        raise PersonaMaterialisationError(str(error)) from error
+    if not (attested or stated):
+        return calculated
+    recalculated = settle_operation(world, definition_id, payload, subject=subject)
+    if not isinstance(recalculated, ModeloWorkCalculatePublicResultV3):
+        raise PersonaMaterialisationError(f"{definition_id} published no calculation after the attestation")
+    return recalculated
 
 
 def _public_result(world: PersonaWorld, terminal: OperationPublicProjectionV1) -> BaseModel | None:
@@ -749,7 +868,73 @@ def _public_percentage(fraction: Decimal | None) -> PublicDecimal | None:
 
 def party_name(persona: Persona, role: str) -> str:
     counterparty = persona.identities.role(role)
-    return counterparty.legal_name or f"{counterparty.field('name')} {counterparty.field('surnames')}"
+    return counterparty.razon_social or f"{counterparty.field('nombre')} {counterparty.field('surnames')}"
+
+
+INFORMATIVE_MODELOS: Final = frozenset({"347", "349", "180", "190", "193"})
+"""The informative returns whose design names a third party by its filing name."""
+
+
+def informative_party_roles(persona: Persona) -> tuple[str, ...]:
+    """The roles of the third parties the persona's informative returns name, in first-named order.
+
+    A persona that files none of :data:`INFORMATIVE_MODELOS` names no party. Otherwise the counterparty
+    of every ledger row is a declarado, operador or perceptor, and the landlord of leased premises is
+    the perceptor of the Modelo 180. The payer of a withholding certificate is the taxpayer's source
+    of income on the Modelo 100, not a party an informative return names.
+    """
+    if INFORMATIVE_MODELOS.isdisjoint(persona.modelos):
+        return ()
+    payers = {certificate.payer for certificate in persona.withholding_certificates}
+    roles: dict[str, None] = {}
+    for row in persona.ledger:
+        if row.counterparty is not None and row.counterparty not in payers:
+            roles[row.counterparty] = None
+    for premises in persona.leased_premises:
+        roles[premises.landlord] = None
+    return tuple(roles)
+
+
+def _filing_name_request(persona: Persona, role: str, world: PersonaWorld) -> LedgerCounterpartyRequest:
+    """The statement of one party's filing name, in the identity's own words and order."""
+    party = persona.identities.role(role)
+    stated: dict[str, object]
+    if party.is_entity:
+        stated = {"party_kind": "entity", "razon_social": party.razon_social}
+    else:
+        stated = {
+            "party_kind": "natural_person",
+            "primer_apellido": party.primer_apellido,
+            "segundo_apellido": party.segundo_apellido,
+            "no_second_surname": party.no_second_surname,
+            "nombre": party.nombre,
+        }
+    return LedgerCounterpartyRequest.model_validate(
+        {
+            "profile_id": world.profile_id,
+            "action": "filing_name",
+            "tax_identifier": party.value,
+            "country_code": party.country,
+            "asserted_by": PERSONA_ACTOR,
+            "renderings": tuple(
+                CounterpartyFilingNameRendering(width=width, text=text) for width, text in party.renderings
+            ),
+            **stated,
+        }
+    )
+
+
+def _state_filing_names(persona: Persona, world: PersonaWorld) -> None:
+    """State each informative-return party's filing name through the registered counterparty operation."""
+    for role in informative_party_roles(persona):
+        result = run_operation(
+            world,
+            LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
+            _filing_name_request(persona, role, world),
+            LedgerCounterpartyResult,
+        )
+        if result.filing_name is None or result.recorded is not True:
+            raise PersonaMaterialisationError(f"{persona.id} {role}: the filing name was not recorded")
 
 
 def _invoice_request(persona: Persona, row: LedgerRow, world: PersonaWorld) -> InvoiceAddRequest | None:
@@ -875,6 +1060,10 @@ def declared_withholding(persona: Persona) -> list[WithholdingCertificate]:
     return [item for item in persona.withholding_certificates if item.origin == "operator_declaration"]
 
 
+def _stated_figure(figure: Decimal | None) -> PublicDecimal | None:
+    return None if figure is None else PublicDecimal(decimal=str(figure))
+
+
 def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
     zero = PublicDecimal(decimal="0.00")
     for certificate in declared_withholding(persona):
@@ -893,6 +1082,8 @@ def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
                 retencion=PublicDecimal(decimal=str(certificate.retencion)),
                 ingreso_a_cuenta=zero,
                 ingreso_a_cuenta_repercutido=zero,
+                reducciones_aplicables=_stated_figure(certificate.reducciones_aplicables),
+                gastos_deducibles=_stated_figure(certificate.gastos_deducibles),
                 origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION,
             ),
             RetencionSoportadaMutationProjection,
@@ -1510,7 +1701,9 @@ def _replay_history(persona: Persona, world: PersonaWorld) -> tuple[dict[str, st
     filed return is created, calculated, verified and filed locally, and each
     calculated return created and calculated, in the order their windows close.
     Each figure comes from the persona's replayed ledger, profile and recorded
-    observations; nothing is entered at calculation. A filed return that
+    observations, and from the values the persona's operator enters on it
+    (``work_inputs``), entered through the declaration edit before its first
+    calculation; nothing else is entered at calculation. A filed return that
     cannot verify or file from that data is refused with the operation's own
     reason, never overridden. Local filing records a PRESENTADO revision whose
     AEAT status stays pending; no receipt is made.
@@ -1680,6 +1873,10 @@ def materialise_persona(
     the setup complete; without it the profile stays in setup, the state the
     onboarding review opens.
     """
+    try:
+        check_work_inputs(persona, world.envelope, world.operation)
+    except WorkInputError as error:
+        raise PersonaMaterialisationError(str(error)) from error
     transactions: dict[str, str] = {}
     invoices: dict[str, str] = {}
     evidence: dict[str, str] = {}
@@ -1694,6 +1891,16 @@ def materialise_persona(
             _replay_withholding(persona, world)
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)
+            replay_rentals(
+                persona,
+                world.profile_id,
+                world.envelope,
+                transactions,
+                actor=PERSONA_ACTOR,
+                settle=partial(settle_operation, world),
+                load_record=partial(load_profile_record, world),
+            )
+            _state_filing_names(persona, world)
             evidence = _replay_documents(persona, world, transactions)
             _replay_inventory(persona, world, transactions)
         setup_complete = _complete_setup(world) if complete_setup else None
@@ -1740,7 +1947,16 @@ def _sealed_replay(
             raise PersonaMaterialisationError("a sealed replay runs inside an isolated storage root")
         with (
             TemporaryDirectory(prefix="persona-inputs-") as inputs,
-            _operations_over(root, profile_id, workdir=Path(inputs), as_of=as_of, envelope=envelope) as world,
+            _operations_over(
+                root,
+                profile_id,
+                workdir=Path(inputs),
+                as_of=as_of,
+                envelope=envelope,
+                attested_prior_values=persona.attested_prior_values,
+                work_inputs=persona.work_inputs,
+                work_income_none_statements=persona.work_income_none_statements,
+            ) as world,
         ):
             replayed = materialise_persona(persona, world, scope, complete_setup=complete_setup)
         ids = {
@@ -1794,7 +2010,14 @@ def _reused_persona_world(
             ids = json.loads((root.parent / _REPLAYED_IDS).read_text(encoding="utf-8"))
             try:
                 with _operations_over(
-                    root, profile_id, workdir=tmp_path / "inputs", as_of=as_of, envelope=envelope
+                    root,
+                    profile_id,
+                    workdir=tmp_path / "inputs",
+                    as_of=as_of,
+                    envelope=envelope,
+                    attested_prior_values=persona.attested_prior_values,
+                    work_inputs=persona.work_inputs,
+                    work_income_none_statements=persona.work_income_none_statements,
                 ) as world:
                     yield MaterialisedPersona(
                         persona=persona,

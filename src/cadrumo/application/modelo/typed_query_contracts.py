@@ -19,7 +19,9 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
 from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operations.public_period import PublicPeriod
+from ..operator_actions.models import PreconditionVerdict
 from ..state_projection_models import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
+from .binding_value_refusal_doors import binding_value_contract_unsupported_verdict, binding_value_refused_verdict
 from .query_read_contracts import ModeloBindingRowV1, ModeloReadinessMissingBindingV1
 
 MAX_TYPED_BINDING_VALUE_LENGTH = 16_384
@@ -37,6 +39,11 @@ class ModeloBindingValueContractUnsupportedError(CadrumoError):
         self.channel = channel
         super().__init__("modelo binding value contract unsupported")
 
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the declared door of this refusal to the generic CLI boundary."""
+        return binding_value_contract_unsupported_verdict()
+
 
 class ModeloBindingValueInvalidError(CadrumoError):
     """The caller value does not satisfy its pinned official value contract."""
@@ -46,6 +53,11 @@ class ModeloBindingValueInvalidError(CadrumoError):
         self.binding_id = binding_id
         self.channel = channel
         super().__init__("modelo binding value invalid")
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the declared door of this refusal to the generic CLI boundary."""
+        return binding_value_refused_verdict()
 
 
 class ModeloTypedBindingValue(BaseModel):

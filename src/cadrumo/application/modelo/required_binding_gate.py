@@ -40,6 +40,7 @@ from ..user_profile.projections import profile_fact_index
 from .action_errors import ModeloRequiredBindingsMissingError
 from .preconditions import build_modelo_precondition_failure
 from .profile_binding import resolve_profile_binding_value
+from .refusal_door_verdicts import caller_defect_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -211,7 +212,9 @@ def _raise_required_bindings_missing(
         "missing_bindings": missing_bindings,
     }
     if subject_leaf_key is None:
-        raise ModeloRequiredBindingsMissingError(context=context)
+        raise ModeloRequiredBindingsMissingError(
+            context=context, precondition_verdict=caller_defect_verdict("required_bindings_gate_action")
+        )
     raise ModeloRequiredBindingsMissingError(
         context=context,
         precondition_failure=build_modelo_precondition_failure(

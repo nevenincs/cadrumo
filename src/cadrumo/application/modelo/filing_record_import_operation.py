@@ -64,7 +64,8 @@ from .filing_record_import_contracts import (
 )
 from .filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from .local_observation_spreadsheet import parse_casilla_lexical_spreadsheet
-from .work_addressing import ModeloWorkRegistryYearMismatchError, law_selected_revision_for_work_target
+from .work_address_errors import ModeloWorkRegistryYearMismatchError
+from .work_addressing import law_selected_revision_for_work_target
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
 if TYPE_CHECKING:

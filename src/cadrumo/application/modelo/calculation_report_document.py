@@ -60,6 +60,7 @@ from .calculation_report_certification import (
 )
 from .calculation_summary_pdf_ports import CalculationSummaryPdfRequest, CalculationSummaryPdfWriter
 from .calculation_summary_presentation import build_calculation_summary_presentation
+from .refusal_door_verdicts import caller_defect_verdict, operator_choice_verdict
 
 if TYPE_CHECKING:
     from .review_package_signing import ReviewPackageSigningKeypair
@@ -143,6 +144,7 @@ def require_calculation_summary_pdf_available() -> None:
         raise CalculationSummaryPdfUnavailableError(
             translated_message="application.modelo.errors.calculation_summary_pdf_unavailable",
             context={"extra": PDF_EXTRA.extra, "import_name": PDF_EXTRA.import_name},
+            precondition_verdict=caller_defect_verdict("report_pdf_extra"),
         ) from exc
 
 
@@ -337,6 +339,7 @@ def _pdf_document(report: ModeloCalculationReport, rendering: CalculationSummary
         raise ExportFormatError(
             translated_message=_REFUSED_DOCUMENT_FORMAT_MESSAGE,
             context={"export_format": str(CalculationReportDocumentFormat.PDF)},
+            precondition_verdict=operator_choice_verdict("report_document_format"),
         )
     return _serialize_pdf(report, rendering)
 
@@ -387,6 +390,7 @@ def serialize_calculation_report(
         raise ExportFormatError(
             translated_message=_REFUSED_DOCUMENT_FORMAT_MESSAGE,
             context={"export_format": str(document_format)},
+            precondition_verdict=operator_choice_verdict("report_document_format"),
         )
     payload = serializer(report, pdf_rendering)
     media_type, extension = wire_names

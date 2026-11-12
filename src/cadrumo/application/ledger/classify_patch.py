@@ -13,9 +13,11 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ...domain.calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
+from ...domain.calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.iva.vehicle_use import require_iva_vehicle_use
 from ...domain.transactions.enums import BusinessClassification
@@ -41,7 +43,19 @@ from .recargo_regime import require_recargo_regime_for_purchase
 # The CSV columns that carry a value single classification also takes; the rest of the
 # columns are the row's identity, its classification and the usage ratio.
 _BULK_WIRE_COLUMNS = frozenset(
-    {"business_pct", "category_id", "taxable_base", "iva_rate", "iva_amount", "iva_category", "irpf_category", "notes"}
+    {
+        "business_pct",
+        "category_id",
+        "taxable_base",
+        "iva_rate",
+        "iva_amount",
+        "iva_category",
+        "irpf_category",
+        "arrendamiento_ref",
+        "inmueble_ref",
+        "gasto_capital_inmobiliario",
+        "notes",
+    }
 )
 
 
@@ -95,15 +109,45 @@ def _resolve_manual_authority_value(
         return _manual_spending_category(value, operation)
     if field_name == "irpf_category":
         return require_ledger_irpf_category(value, authority=operation) if value.strip() else None
+    if field_name in _MANUAL_IVA_FIELDS:
+        return _resolve_manual_iva_value(field_name, value, current=current, operation=operation)
+    return _resolve_rental_link_value(field_name, value, operation=operation)
+
+
+_MANUAL_IVA_FIELDS = frozenset(
+    {"iva_category", "exemption_article", "deduction_fact_kind", "iva_vehicle_use", "counterparty_identification_state"}
+)
+
+
+def _resolve_manual_iva_value(
+    field_name: str,
+    value: str,
+    *,
+    current: Transaction,
+    operation: PinnedAuthorityOperation,
+) -> object:
+    """Resolve an IVA classification field against the pinned authority's vocabulary."""
     if field_name == "iva_category":
         return require_iva_category(value, effective_date=current.raw.booked_date, authority=operation)
+    if field_name == "exemption_article":
+        # The row's own IVA date, as the stored row's admission reads the article.
+        effective_date = current.operation_date or current.raw.value_date or current.raw.booked_date
+        return require_iva_exemption_article(value, effective_date=effective_date, authority=operation)
     if field_name == "deduction_fact_kind":
         return require_iva_deduction_fact_kind(value, authority=operation)
     if field_name == "iva_vehicle_use":
         return require_iva_vehicle_use(value)
-    if field_name == "counterparty_identification_state":
-        return require_eu_member_state(value, authority=operation)
-    return value
+    return require_eu_member_state(value, authority=operation)
+
+
+def _resolve_rental_link_value(field_name: str, value: str, *, operation: PinnedAuthorityOperation) -> object:
+    """Resolve a rental link field: a reference is trimmed, the expense concept is the registry's; blank clears."""
+    stated = value.strip()
+    if not stated:
+        return None
+    if field_name == "gasto_capital_inmobiliario":
+        return require_gasto_capital_inmobiliario(stated, authority=operation)
+    return stated if field_name in {"arrendamiento_ref", "inmueble_ref"} else value
 
 
 def _manual_spending_category(value: str, operation: PinnedAuthorityOperation) -> str | None:

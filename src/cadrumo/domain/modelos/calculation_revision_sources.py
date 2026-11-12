@@ -15,7 +15,8 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
-from .errors import ModeloValidationError
+from ...core.operator_action_enums import NoRecoveryOutcome
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .source_disagreement import SourceDisagreementFact
 
 
@@ -109,16 +110,28 @@ class CalculationSourceRef(BaseModel):
                 raise ModeloValidationError(
                     "source provenance contributor_binding_source is required when contributor_source_kind "
                     "is a binding source kind",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
                 )
         elif contributor_kind is not self.contributor_binding_source:
             raise ModeloValidationError(
                 "source provenance contributor_binding_source must equal contributor_source_kind",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         if self.lineage_role is CalculationSourceLineageRole.PRIMARY:
             if self.parent_source_ref is not None:
-                raise ModeloValidationError("primary source provenance cannot have a parent")
+                raise ModeloValidationError(
+                    "primary source provenance cannot have a parent",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
+                )
         elif self.parent_source_ref is None:
-            raise ModeloValidationError("contributor source provenance requires a parent")
+            raise ModeloValidationError(
+                "contributor source provenance requires a parent",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
 
@@ -173,6 +186,10 @@ class CalculationNoteSentence(StrEnum):
     """A suffered-withholding class that may have income has neither a payer record nor an absence attestation."""
     RETENCION_SOPORTADA_ABSENCE_CONTRADICTED = "retencion_soportada_absence_contradicted"
     """A suffered-withholding class holds payer records and an operator's attestation that it has none."""
+    RETENCION_SOPORTADA_INCOME_RECORD_REQUIRED = "retencion_soportada_income_record_required"
+    """An absence attestation zeroes a credit but not the income of its class, which only a record states."""
+    RETENCION_SOPORTADA_RECORD_FIGURE_MISSING = "retencion_soportada_record_figure_missing"
+    """A stored payer record predates a figure an income casilla draws and does not state it."""
     CREDIT_SOURCE_DISAGREEMENT = "credit_source_disagreement"
     """A credit casilla's value and one of its declared cross-check sources state different amounts."""
     CREDIT_CROSS_CHECK_ABSENT = "credit_cross_check_absent"
@@ -208,6 +225,12 @@ class CalculationNoteSentence(StrEnum):
     """
     M347_PROVINCIA_UNSTATED = "m347_provincia_unstated"
     """One Spanish Modelo 347 declarado whose provincia the person has not stated for the counterparty."""
+    DECLARED_PARTY_NAME_MISSING = "declared_party_name_missing"
+    """One party a record names, for which the person has declared no filing name."""
+    DECLARED_PARTY_NAME_SINGLE_SURNAME = "declared_party_name_single_surname"
+    """One party declared as a natural person with one surname, which the record design gives no rule for."""
+    DECLARED_PARTY_NAME_TOO_WIDE = "declared_party_name_too_wide"
+    """One party whose declared filing name is wider than its field, with no rendering stated for that width."""
     M349_OPERATION_UNCLASSIFIED = "m349_operation_unclassified"
     """One invoice with a party in another member state and no cuota whose Modelo 349 operation no record states."""
     UNROUTED_IVA_BASE = "unrouted_iva_base"
@@ -220,6 +243,44 @@ class CalculationNoteSentence(StrEnum):
     """Purchases of an inventory book state nothing about the ledger entry that books them."""
     INVENTORY_PURCHASE_CLAIM_REFUSED = "inventory_purchase_claim_refused"
     """Purchases of an inventory book name a ledger entry that cannot stand as the one that books them."""
+    # A let property's finding, one sentence per cause; ``record`` is the property or lease it names.
+    RENTA_INMUEBLE_RECORD_UNREADABLE = "renta_inmueble_record_unreadable"
+    RENTA_INMUEBLE_TITULARIDAD_UNSTATED = "renta_inmueble_titularidad_unstated"
+    RENTA_INMUEBLE_ACQUISITION_DATE_UNSTATED = "renta_inmueble_acquisition_date_unstated"
+    RENTA_INMUEBLE_NATURALEZA_UNSTATED = "renta_inmueble_naturaleza_unstated"
+    RENTA_INMUEBLE_LEASE_NAMES_NO_PROPERTY = "renta_inmueble_lease_names_no_property"
+    RENTA_INMUEBLE_ROW_NAMES_NO_LEASE = "renta_inmueble_row_names_no_lease"
+    RENTA_INMUEBLE_ROW_NAMES_NO_PROPERTY = "renta_inmueble_row_names_no_property"
+    RENTA_INMUEBLE_INCOME_ROW_ON_PROPERTY = "renta_inmueble_income_row_on_property"
+    RENTA_INMUEBLE_EXPENSE_ROW_ON_LEASE = "renta_inmueble_expense_row_on_lease"
+    RENTA_INMUEBLE_EXPENSE_ROW_WITHOUT_CONCEPT = "renta_inmueble_expense_row_without_concept"
+    RENTA_INMUEBLE_CONCEPT_UNDECLARED = "renta_inmueble_concept_undeclared"
+    RENTA_INMUEBLE_INCOME_OUTSIDE_LEASE = "renta_inmueble_income_outside_lease"
+    RENTA_INMUEBLE_LEASE_WITHOUT_INCOME = "renta_inmueble_lease_without_income"
+    RENTA_INMUEBLE_RELATIVE_FACT_UNSTATED = "renta_inmueble_relative_fact_unstated"
+    RENTA_INMUEBLE_CURRENCY_UNCONVERTED = "renta_inmueble_currency_unconverted"
+    RENTA_INMUEBLE_REGIME_NOT_PLENO_DOMINIO = "renta_inmueble_regime_not_pleno_dominio"
+    RENTA_INMUEBLE_TITULAR_NOT_DECLARANT = "renta_inmueble_titular_not_declarant"
+    RENTA_INMUEBLE_PROPERTY_ABROAD_LET = "renta_inmueble_property_abroad_let"
+    RENTA_INMUEBLE_ACCESSORY_PROPERTY = "renta_inmueble_accessory_property"
+    RENTA_INMUEBLE_CONCURRENT_LEASES = "renta_inmueble_concurrent_leases"
+    RENTA_INMUEBLE_SEVERAL_LEASES = "renta_inmueble_several_leases"
+    RENTA_INMUEBLE_TENANTS_BEYOND_NUMBERED = "renta_inmueble_tenants_beyond_numbered"
+    RENTA_INMUEBLE_RELATIVE_TENANT = "renta_inmueble_relative_tenant"
+    RENTA_INMUEBLE_IMPROVEMENT_IN_EJERCICIO = "renta_inmueble_improvement_in_ejercicio"
+    RENTA_INMUEBLE_HELD_PART_OF_EJERCICIO = "renta_inmueble_held_part_of_ejercicio"
+    RENTA_INMUEBLE_DAYS_NOT_LET = "renta_inmueble_days_not_let"
+    RENTA_INMUEBLE_ACQUISITION_COST_UNSTATED = "renta_inmueble_acquisition_cost_unstated"
+    RENTA_INMUEBLE_CADASTRAL_VALUES_UNSTATED = "renta_inmueble_cadastral_values_unstated"
+    RENTA_INMUEBLE_CUMULATIVE_AMORTISATION_UNSTATED = "renta_inmueble_cumulative_amortisation_unstated"
+    RENTA_INMUEBLE_PENDING_EXPENSES_UNSTATED = "renta_inmueble_pending_expenses_unstated"
+    RENTA_INMUEBLE_PENDING_EXPENSES_HELD_RETURN_UNSTATED = "renta_inmueble_pending_expenses_held_return_unstated"
+    RENTA_INMUEBLE_PENDING_EXPENSES_ORIGIN_UNSPLIT = "renta_inmueble_pending_expenses_origin_unsplit"
+    RENTA_INMUEBLE_REDUCTION_FACT_UNSTATED = "renta_inmueble_reduction_fact_unstated"
+    RENTA_INMUEBLE_REDUCTION_TENANTS_MIXED = "renta_inmueble_reduction_tenants_mixed"
+    RENTA_INMUEBLE_WITHHOLDING_PAYER_NO_TENANT = "renta_inmueble_withholding_payer_no_tenant"
+    RENTA_INMUEBLE_WITHHOLDING_PAYER_SEVERAL_PROPERTIES = "renta_inmueble_withholding_payer_several_properties"
+    RENTA_INMUEBLE_BOXES_NOT_OFFERED = "renta_inmueble_boxes_not_offered"
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(
@@ -431,14 +492,22 @@ class CalculationSourceIssue(BaseModel):
     @pydantic_validation_boundary
     def _require_outcome_on_capped_value_only(self) -> Self:
         if self.value_outcome is not None and self.reason != "advisory_binding_value":
-            raise ModeloValidationError("only a capped binding value carries a resolver-stated value outcome")
+            raise ModeloValidationError(
+                "only a capped binding value carries a resolver-stated value outcome",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_disagreement_on_disagreement_reasons_only(self) -> Self:
         if (self.disagreement is not None) != (self.reason in DISAGREEMENT_REASONS):
-            raise ModeloValidationError("a source disagreement is carried by exactly the reasons that state one")
+            raise ModeloValidationError(
+                "a source disagreement is carried by exactly the reasons that state one",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
 
@@ -530,14 +599,22 @@ def validate_revision_source_provenance(rows: Sequence[CalculationSourceRef]) ->
     """Require unique primary identities and a declared primary parent for each contributor."""
     primary_refs = tuple(row.source_ref for row in rows if row.lineage_role is CalculationSourceLineageRole.PRIMARY)
     if len(primary_refs) != len(set(primary_refs)):
-        raise ModeloValidationError("source provenance primary reference is ambiguous")
+        raise ModeloValidationError(
+            "source provenance primary reference is ambiguous",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     primary_ref_set = frozenset(primary_refs)
     if any(
         row.parent_source_ref not in primary_ref_set
         for row in rows
         if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
     ):
-        raise ModeloValidationError("source provenance contributor parent does not resolve to a primary")
+        raise ModeloValidationError(
+            "source provenance contributor parent does not resolve to a primary",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
 
 
 def element_names_of(fact: CalculationNoteFact | None, names: Mapping[str, str]) -> tuple[tuple[str, str], ...]:

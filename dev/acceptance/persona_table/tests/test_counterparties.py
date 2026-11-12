@@ -84,7 +84,7 @@ def _fichero(modelo: str, period: str, rows: Sequence[Row]) -> tuple[ExportLayou
 
 def _identities() -> IdentityCatalogue:
     def identity(role: str, kind: IdentityKind, value: str, country: str | None = None) -> Identity:
-        return Identity(role=role, persona="p", kind=kind, value=value, legal_name=role, country=country)
+        return Identity(role=role, persona="p", kind=kind, value=value, razon_social=role, country=country)
 
     return IdentityCatalogue(
         identities=(
@@ -166,8 +166,23 @@ def test_a_349_operator_is_matched_by_country_and_nif_iva_and_its_base_by_value(
     ) == ["p.cliente-de clave exp I got S", "p.cliente-de base exp 7500.00 got 7500.05"]
 
 
+def test_a_180_perceptor_amount_is_compared_as_a_number_whatever_its_stated_scale() -> None:
+    row = {
+        "modelo-180-perceptor-row-nif": "00000011B",
+        "modelo-180-perceptor-row-base": Decimal("7200.00"),
+        "modelo-180-perceptor-row-retenciones": Decimal("1368.00"),
+    }
+    layout, payload = _fichero("180", "0A", [row])
+    same = _stated("180", "p.pequeno", base_retenciones="7200.0", retenciones="1368")
+    assert counterparty_mismatches([same], _identities(), layout, payload) == []
+    wrong = _stated("180", "p.pequeno", base_retenciones="7200.01", retenciones="1368.00")
+    assert counterparty_mismatches([wrong], _identities(), layout, payload) == [
+        "p.pequeno base_retenciones exp 7200.01 got 7200.00"
+    ]
+
+
 def test_values_of_other_modelos_are_not_compared() -> None:
-    other = _stated("180", "p.proveedor", clave="G")
+    other = _stated("115", "p.proveedor", clave="G")
     assert not is_compared(other)
     layout, payload = _fichero("347", "0A", [_B347])
     assert counterparty_mismatches([other], _identities(), layout, payload) == []

@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...domain.iva.schema import IvaExemptionArticle
+from ...domain.iva.vehicle_use import IvaVehicleUse
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.models import OperationTerminalReceipt
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -55,6 +57,10 @@ def _classify_refusal_receipt_matches(receipt: OperationTerminalReceipt) -> bool
     )
 
 
+def _member_value(member: IvaVehicleUse | IvaExemptionArticle | None) -> str | None:
+    return None if member is None else member.value
+
+
 def classification_result_from_action(
     profile_id: UUID,
     result: ManualLedgerTransactionResult,
@@ -78,8 +84,14 @@ def classification_result_from_action(
             else None
         ),
         investment_asset_id=result.transaction.investment_asset_id,
-        iva_vehicle_use=(
-            result.transaction.iva_vehicle_use.value if result.transaction.iva_vehicle_use is not None else None
+        iva_vehicle_use=_member_value(result.transaction.iva_vehicle_use),
+        exemption_article=_member_value(result.transaction.exemption_article),
+        arrendamiento_ref=result.transaction.arrendamiento_ref,
+        inmueble_ref=result.transaction.inmueble_ref,
+        gasto_capital_inmobiliario=(
+            str(result.transaction.gasto_capital_inmobiliario)
+            if result.transaction.gasto_capital_inmobiliario is not None
+            else None
         ),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,

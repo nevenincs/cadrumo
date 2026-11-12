@@ -49,11 +49,9 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...workflow.errors import WorkflowInputMismatchError
 from ..action_errors import ModeloAggregationBindingError
-from ..art20_advisory import art20_reduccion_advisory_finding
 from ..art52_advisory import art52_reduccion_advisory_finding
 from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ..dt12_advisory import dt12_reduccion_advisory_finding
@@ -77,6 +75,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 # ---------------------------------------------------------------------------
 
 _FILING_YEAR = filing_year_envelope().horizon
+_FACT_DATE = date(_FILING_YEAR, 12, 31)
 _M100_YEAR = newest_authored_edition("100")
 _T0 = datetime(_FILING_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _TEST_LEGAL_REF = "test-actions:legal"
@@ -91,8 +90,6 @@ _PREDICATE_OPTIONAL_LEFT_CASILLA: CasillaId = validated_casilla_id("0003")
 _PREDICATE_OPTIONAL_RIGHT_CASILLA: CasillaId = validated_casilla_id("0004")
 _DT12_INGRESO_CASILLA: CasillaId = validated_casilla_id("0003")
 _DT12_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0011")
-_ART20_RNT_CASILLA: CasillaId = validated_casilla_id("0022")
-_ART20_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0023")
 _ART52_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0468")
 _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: CasillaId = validated_casilla_id("0426")
 _ART52_EMPRESARIAL_CASILLA: CasillaId = validated_casilla_id("0427")
@@ -103,14 +100,6 @@ _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 _SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
 _M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: CasillaId = validated_casilla_id("0171")
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
-
-
-def _modelo_fact_context(authority: PinnedAuthorityOperation) -> ModeloFactResolutionContext:
-    return ModeloFactResolutionContext(
-        authority=authority,
-        filing_period=date(_FILING_YEAR, 12, 31),
-        devengo_date=date(_FILING_YEAR, 12, 31),
-    )
 
 
 @pytest.fixture
@@ -167,21 +156,6 @@ def _dt12_revision() -> ModeloRevision:
             _test_casilla_definition(
                 _DT12_REDUCCION_CASILLA,
                 semantic_role="irpf_rendimiento_trabajo_reduccion",
-            ),
-        ),
-    )
-
-
-def _art20_revision() -> ModeloRevision:
-    return _test_revision(
-        casillas=(
-            _test_casilla_definition(
-                _ART20_RNT_CASILLA,
-                semantic_role="irpf_rendimiento_trabajo_rendimiento_neto",
-            ),
-            _test_casilla_definition(
-                _ART20_REDUCCION_CASILLA,
-                semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales",
             ),
         ),
     )
@@ -502,7 +476,9 @@ def test_dt12_reduccion_advisory_message_is_localised(
     revision = _dt12_revision()
     casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
 
-    finding = dt12_reduccion_advisory_finding(revision, casilla_values, operation=authority_operation)
+    finding = dt12_reduccion_advisory_finding(
+        revision, casilla_values, operation=authority_operation, effective_date=_FACT_DATE
+    )
 
     assert finding is not None
     assert finding.message_locale_key == "application.modelo.findings.dt12a_reduccion_possible"
@@ -532,87 +508,10 @@ def test_dt12_reduccion_advisory_threshold_is_the_registry_declared_bound(
         _dt12_revision(),
         {_DT12_INGRESO_CASILLA: ingreso, _DT12_REDUCCION_CASILLA: reduccion},
         operation=authority_operation,
+        effective_date=_FACT_DATE,
     )
 
     assert (finding is not None) is expect_finding
-
-
-# ---------------------------------------------------------------------------
-# contract/contract — art. 20 LIRPF reducción advisory
-# ---------------------------------------------------------------------------
-
-
-def test_art20_reduccion_advisory_fires_within_band_and_is_localised(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """art20_reduccion_advisory_finding warns when RNT is in-band but reduction is zero.
-
-    A real revision carrying the rendimiento-neto-del-trabajo role and the
-    art. 20 general-reducción role triggers the ADVISORY finding when RNT is strictly
-    positive and below the art. 20 ceiling while the reducción casilla is zero. The
-    finding is non-blocking (ADVISORY / WARNING) and its tr()-rendered message carries
-    the rnt_id, rnt_value, and reduccion_id tokens.
-    """
-    revision = _art20_revision()
-    casilla_values = {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("0")}
-
-    finding = art20_reduccion_advisory_finding(
-        revision, casilla_values, context=_modelo_fact_context(authority_operation)
-    )
-
-    assert finding is not None
-    # Non-blocking advisory: the eligibility gate (otras rentas <= 6.500) is not engine-visible.
-    assert finding.kind == "advisory"
-    assert finding.severity == "warning"
-    assert finding.casilla_id == _ART20_REDUCCION_CASILLA
-    assert finding.legal_refs == ("ley-35-2006:art-20",)
-    assert finding.message_locale_key == "application.modelo.findings.art20_reduccion_possible"
-    assert dict(finding.message_facts) == {
-        "rnt_id": str(_ART20_RNT_CASILLA),
-        "rnt_value": Decimal("12000"),
-        "reduccion_id": str(_ART20_REDUCCION_CASILLA),
-    }
-    assert "next_action" not in finding.model_dump(mode="json")
-
-
-@pytest.mark.parametrize(
-    "casilla_values",
-    (
-        pytest.param(
-            {_ART20_RNT_CASILLA: Decimal("25000"), _ART20_REDUCCION_CASILLA: Decimal("0")},
-            id="above-ceiling",
-        ),
-        pytest.param(
-            {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("3500")},
-            id="reduction-already-declared",
-        ),
-        pytest.param({_ART20_RNT_CASILLA: Decimal("0"), _ART20_REDUCCION_CASILLA: Decimal("0")}, id="zero-rnt"),
-    ),
-)
-def test_art20_reduccion_advisory_silent_for_declared_or_ineligible_values(
-    casilla_values: dict[CasillaId, Decimal],
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """The art. 20 advisory must NOT fire when there is nothing to surface.
-
-    No false positive when: RNT is at/above the ceiling (reduction is genuinely zero),
-    the reducción is already declared, or RNT is zero.
-    """
-    assert (
-        art20_reduccion_advisory_finding(
-            _art20_revision(), casilla_values, context=_modelo_fact_context(authority_operation)
-        )
-        is None
-    )
-
-
-def test_art20_reduccion_advisory_silent_when_roles_absent(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    assert (
-        art20_reduccion_advisory_finding(_test_revision(), {}, context=_modelo_fact_context(authority_operation))
-        is None
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -644,6 +543,7 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit(
         casilla_values,
         operation=authority_operation,
         modelo="100",
+        effective_date=_FACT_DATE,
     )
 
     assert finding is not None
@@ -683,6 +583,7 @@ def test_art52_reduccion_advisory_silent_when_employer_backed(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -706,6 +607,7 @@ def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -736,6 +638,7 @@ def test_art52_reduccion_advisory_silent_when_autonomo_backed(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -759,6 +662,7 @@ def test_art52_reduccion_advisory_silent_when_under_sublimit(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -773,6 +677,7 @@ def test_art52_reduccion_advisory_silent_when_roles_absent(
             {},
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -800,6 +705,7 @@ def test_dt12_antiquity_advisory_fires_when_reduccion_applied(
         casilla_values,
         operation=authority_operation,
         modelo="100",
+        effective_date=_FACT_DATE,
     )
 
     assert finding is not None
@@ -828,6 +734,7 @@ def test_dt12_antiquity_advisory_silent_when_reduccion_zero(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -842,6 +749,7 @@ def test_dt12_antiquity_advisory_silent_when_roles_absent(
             {},
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -1093,6 +1001,9 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     )
     candidate_binding_values: dict[BindingId, Decimal] = {
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),

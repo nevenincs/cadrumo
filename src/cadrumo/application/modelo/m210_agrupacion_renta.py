@@ -35,9 +35,23 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from .refusal_door_verdicts import operator_choice_verdict, registry_defect_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+_M210_AGRUPACION_LOCALE_KEYS = {
+    "empty_group": "application.modelo.errors.m210_agrupacion_empty_group",
+    "duplicate_source_id": "application.modelo.errors.m210_agrupacion_duplicate_source_id",
+    "mixed_tipo_renta_code": "application.modelo.errors.m210_agrupacion_mixed_tipo_renta_code",
+    "annual_code_not_lease_or_sublease": "application.modelo.errors.m210_agrupacion_annual_code_not_lease_or_sublease",
+    "mixed_tipo_gravamen": "application.modelo.errors.m210_agrupacion_mixed_tipo_gravamen",
+    "missing_bien_derecho": "application.modelo.errors.m210_agrupacion_missing_bien_derecho",
+    "mixed_bien_derecho": "application.modelo.errors.m210_agrupacion_mixed_bien_derecho",
+    "payer_mode_not_declared": "application.modelo.errors.m210_agrupacion_payer_mode_not_declared",
+    "mixed_pagador": "application.modelo.errors.m210_agrupacion_mixed_pagador",
+}
 
 
 def validate_m210_agrupacion_renta_rows_for_calculation(
@@ -62,6 +76,7 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
         if m210_rows:
             raise ModeloError(
                 translated_message="errors.error.error_modelos",
+                precondition_verdict=operator_choice_verdict("m210_rows_outside_annual_group"),
                 context={
                     "modelo": str(work_unit.modelo),
                     "period": work_unit.period.registry_token,
@@ -73,6 +88,7 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
     if len(m210_rows) != len(detail_rows):
         raise ModeloError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("m210_rows_mixed_with_other_rows"),
             context={
                 "detail_row_count": str(len(detail_rows)),
                 "m210_row_count": str(len(m210_rows)),
@@ -86,18 +102,24 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
     except Modelo210AgrupacionRentaRowsError as exc:
         raise ModeloError(
             str(exc),
+            translated_message=_M210_AGRUPACION_LOCALE_KEYS.get(
+                exc.reason, "application.modelo.errors.m210_agrupacion_rows_invalid"
+            ),
             context={"reason": exc.reason, "detail": exc.detail},
+            precondition_verdict=operator_choice_verdict("m210_agrupacion_rows"),
         ) from exc
 
     if m210_official_tipo_renta_code is None:
         raise ModeloError(
             translated_message="errors.error.error_modelos",
             context={"m210_row_count": str(len(m210_rows))},
+            precondition_verdict=registry_defect_verdict("m210_official_tipo_renta_code"),
         )
     row_code = m210_rows[0].tipo_renta_code
     if row_code != m210_official_tipo_renta_code:
         raise ModeloError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("m210_row_tipo_renta_code"),
             context={
                 "selected_tipo_renta_code": m210_official_tipo_renta_code,
                 "row_tipo_renta_code": row_code,

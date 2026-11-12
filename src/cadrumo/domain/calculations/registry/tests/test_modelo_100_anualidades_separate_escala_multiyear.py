@@ -138,6 +138,8 @@ def _c(value: str) -> CasillaId:
 
 _LATER_NEUTRAL_BINDINGS: dict[str, Decimal] = {
     "renta-profile-incremento-guarderia": Decimal("0"),
+    # The edition-specific Art. 81 maternidad cotizaciones fact; this filer has no descendants.
+    "renta-profile-deduccion-maternidad-cotizaciones": Decimal("0"),
     "renta-maritime-gross-navigation-income": Decimal("0"),
     "renta-maritime-annual-salary": Decimal("0"),
     "renta-maritime-qualifying-days": Decimal("0"),
@@ -172,6 +174,9 @@ def _run(
         inputs[_anualidades_casilla(year)] = anualidades
     binding_values = {
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-anualidades-sin-minimo-descendientes": flag,

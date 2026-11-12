@@ -33,6 +33,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from .action_errors import ModeloApplicabilityFilterError, ModeloVerificationPredicateMalformedError
+from .refusal_door_verdicts import registry_defect_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -93,6 +94,7 @@ def _validated_predicate_casilla_id(token: str) -> CasillaId:
         raise ModeloError(
             translated_message="errors.error.error_modelos",
             context={"casilla_id_token": token, "casilla_id_canonical": False},
+            precondition_verdict=registry_defect_verdict("verification_predicate_casilla"),
         ) from exc
 
 
@@ -109,6 +111,7 @@ def _predicate_refusal(
             "predicate_refusal": refusal.value,
             "predicate_route": route.value,
         },
+        precondition_verdict=registry_defect_verdict("verification_predicate"),
     )
 
 
@@ -315,7 +318,12 @@ def evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) ->
             return False
         tax_regime = resolve_fiscal_residency_catalogue().definition(residency).tax_regime
         return tax_regime == _IRNR_TAX_REGIME and not profile.ue_eee_status
-    raise ModeloApplicabilityFilterError(f"Unknown applicability filter: {filter_name!r}")
+    raise ModeloApplicabilityFilterError(
+        f"Unknown applicability filter: {filter_name!r}",
+        translated_message="application.modelo.errors.applicability_filter_unknown",
+        context={"filter": filter_name},
+        precondition_verdict=registry_defect_verdict("applicability_filter"),
+    )
 
 
 _BlockingPredicateEvaluator = Callable[

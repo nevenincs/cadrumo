@@ -14,7 +14,6 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
-from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -26,7 +25,6 @@ from ..user_profile.projections import record_to_path_values
 from .action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
 )
-from .art20_advisory import art20_reduccion_advisory_finding
 from .art52_advisory import art52_reduccion_advisory_finding
 from .art109_activity_income import derive_art109_activity_income_coverage_for_work_unit
 from .attribution_received_advisory import attribution_received_omission_advisory_findings
@@ -38,6 +36,7 @@ from .m210_convenio_lob_advisory import m210_convenio_lob_advisory_finding
 from .objective_estimation_advisory import objective_estimation_exclusion_advisory_findings
 from .preconditions import ModeloPreconditionFailure
 from .shared_casilla_cells_findings import append_shared_casilla_cells_findings
+from .trabajo_income_findings import trabajo_income_findings
 from .verification_finding_contracts import (
     REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO,
     REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO,
@@ -80,33 +79,26 @@ def append_revision_advisory_findings(
     (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
     fact_coordinate = date(work_unit.filing_year, 12, 31)
-    modelo_fact_context = ModeloFactResolutionContext(
-        authority=operation,
-        filing_period=fact_coordinate,
-        devengo_date=fact_coordinate,
-    )
     for finding in (
         dt12_reduccion_advisory_finding(
             snapshot.revision,
             target.casilla_values,
             operation=operation,
-        ),
-        art20_reduccion_advisory_finding(
-            snapshot.revision,
-            target.casilla_values,
-            context=modelo_fact_context,
+            effective_date=fact_coordinate,
         ),
         art52_reduccion_advisory_finding(
             snapshot.revision,
             target.casilla_values,
             operation=operation,
             modelo=str(work_unit.modelo),
+            effective_date=fact_coordinate,
         ),
         dt12_antiquity_advisory_finding(
             snapshot.revision,
             target.casilla_values,
             operation=operation,
             modelo=str(work_unit.modelo),
+            effective_date=fact_coordinate,
         ),
         madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
             snapshot,
@@ -132,6 +124,18 @@ def append_revision_advisory_findings(
             casilla_values=target.casilla_values,
             profile_decode_context=operation.profile_decode_context(),
             profile_record=work_profile.record if work_profile is not None else None,
+        )
+    )
+    findings.extend(
+        trabajo_income_findings(
+            str(work_unit.modelo),
+            snapshot.revision,
+            target,
+            profile_values={}
+            if work_profile is None
+            else record_to_path_values(work_profile.record, as_of=fact_coordinate),
+            effective_date=fact_coordinate,
+            operation=operation,
         )
     )
 

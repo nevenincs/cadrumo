@@ -36,6 +36,7 @@ from .vocabulary import (
     INFO_MARK,
     ORIGIN_MARKS,
     STALE_MARK,
+    STATED_MARK,
     WORKBENCH_MARKS,
     Attention,
     WorkbenchMark,
@@ -98,6 +99,7 @@ LEGEND_LOCALE_KEYS: Final[tuple[LegendGroup, ...]] = (
         "workspace.modelo.legend.group.origin",
         (
             _origin(ModeloFormOrigin.ENTERED, "workspace.modelo.legend.meaning.origin.entered"),
+            LegendEntry(STATED_MARK, "tui.modelo.statements.mark.meaning", "a"),
             _origin(ModeloFormOrigin.OVERRIDES_SOURCE, "workspace.modelo.legend.meaning.origin.overrides_source"),
             _origin(ModeloFormOrigin.CALCULATED, "workspace.modelo.legend.meaning.origin.calculated"),
             _origin(ModeloFormOrigin.IMPORTED, "workspace.modelo.legend.meaning.origin.imported"),

@@ -196,6 +196,7 @@ casillas = [
     "0023",
     "0025",
     "0596",
+    "rentas-distintas-del-trabajo",
 ]
 
 [[exception]]
@@ -208,4 +209,5 @@ casillas = [
     "0023",
     "0025",
     "0596",
+    "rentas-distintas-del-trabajo",
 ]

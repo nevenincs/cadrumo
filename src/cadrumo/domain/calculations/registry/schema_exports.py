@@ -32,7 +32,9 @@ from .export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
 from .export_record_components import validate_export_record_components
 from .export_semantics import ExportComputedKey, ExportDraftAttribute
 from .export_value_policy import ExportValuePolicyValue
+from .field_absence import later_absent_when_none
 from .fixed_width_codec import (
+    ExportAlphanumericTextValue,
     ExportEncodingValue,
     ExportJustificationValue,
     ExportPaddingValue,
@@ -40,6 +42,7 @@ from .fixed_width_codec import (
 )
 from .governed_fact_scope import governed_facts_in_scope
 from .ids import BindingId, ExportFieldId, ExportLayoutId, ProjectionEndpointId, RecordId, SourceRefId
+from .party_name_composition import PartyNameComposition
 from .schema_base import (
     CasillaDataType,
     LegalRefs,
@@ -591,6 +594,13 @@ class ExportFieldDefinition(RegistryModel):
     otherwise for its unused slots, as DR369's general notes 6-7 do, which keeps an
     absent quantity apart from a declared zero.
     """
+    party_name: PartyNameComposition | None = Field(default=None, exclude_if=later_absent_when_none)
+    """How a party-name slot is composed from the parts its party's filing name states.
+
+    Carried by generated layouts from the reviewed design text that prescribes
+    the field's content, so the order and separator are the design's and the
+    width stays this field's own ``length``.
+    """
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -701,6 +711,17 @@ class ExportRecordDefinition(RegistryModel):
     record_type: str
     order: NonNegativeInt
     encoding: ExportEncodingValue
+    alphanumeric_text: ExportAlphanumericTextValue | None = Field(default=None, exclude_if=later_absent_when_none)
+    """How the record design states its alphanumeric field text is written.
+
+    Absent where the design states no rule, and the text is written as given.
+    Declared once for the record because the design states it once for all of
+    its alphanumeric and alphabetic fields.
+    """
+
+    alphanumeric_text_source_ref: SourceRefId | None = Field(default=None, exclude_if=later_absent_when_none)
+    """The design whose own text states :attr:`alphanumeric_text`; required with it."""
+
     line_ending: ExportLineEndingField
     required: bool = True
     repeat: ExportRecordRepeatField | None = None
@@ -731,6 +752,16 @@ class ExportRecordDefinition(RegistryModel):
             has_projection=has_projection,
             allow_unresolved_binding_record=allow_unresolved_binding_record,
         )
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _alphanumeric_text_names_its_source(self) -> ExportRecordDefinition:
+        if (self.alphanumeric_text is None) != (self.alphanumeric_text_source_ref is None):
+            raise RegistryValidationError(
+                f"export record {self.id!r} must declare alphanumeric_text together with "
+                "alphanumeric_text_source_ref, the design whose own text states the rule",
+            )
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -993,6 +1024,18 @@ def _validate_xml_dictionary_layout(layout: ExportLayoutDefinition) -> None:
 def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
     _validate_non_xml_metadata(layout)
     _validate_non_xml_envelope(layout)
+    _validate_alphanumeric_text_sources(layout)
+
+
+def _validate_alphanumeric_text_sources(layout: ExportLayoutDefinition) -> None:
+    """Require each record's text rule to cite a design the layout itself is built from."""
+    for record in layout.records:
+        source_ref = record.alphanumeric_text_source_ref
+        if source_ref is not None and source_ref not in layout.source_refs:
+            raise RegistryValidationError(
+                f"export layout {layout.id!r} record {record.id!r} alphanumeric text source "
+                f"{source_ref!r} must be included in source_refs",
+            )
 
 
 def _validate_non_xml_metadata(layout: ExportLayoutDefinition) -> None:

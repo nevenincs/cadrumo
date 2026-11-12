@@ -7,7 +7,7 @@ from decimal import Decimal
 from types import MappingProxyType
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ....core.action_argument_resolution import ActionArgumentResolution
 from ....core.json_contract import (
@@ -28,7 +28,13 @@ from ....core.precondition_action_invariants import (
     PreconditionEvidence,
     PreconditionOutcomeInvariant,
 )
-from ..models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..models import (
+    ActionArgumentBinding,
+    ActionReference,
+    AlternativeRecoveryAction,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -147,10 +153,17 @@ def test_application_and_wire_precondition_models_pin_the_actionable_and_closed_
         "missing_argument_names",
         "conditionality",
         "no_recovery_outcome",
+        "alternative_actions",
     )
 
     assert tuple(PreconditionVerdict.model_fields) == expected_fields
     assert tuple(ResolvedPreconditionAction.model_fields) == expected_fields
+    assert tuple(AlternativeRecoveryAction.model_fields) == (
+        "action",
+        "argument_bindings",
+        "missing_argument_names",
+        "conditionality",
+    )
     assert tuple(member.value for member in ActionConditionality) == (
         "immediate",
         "requires_arguments",
@@ -693,3 +706,264 @@ def test_verdict_rejects_evidence_for_a_different_condition() -> None:
             conditionality=ActionConditionality.NOT_APPLICABLE,
             no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
+
+
+def _missing_value() -> ActionArgumentBinding:
+    return ActionArgumentBinding(argument_name="value", status=ActionArgumentStatus.MISSING)
+
+
+def _alternative(
+    action_id: str,
+    *,
+    argument_bindings: tuple[ActionArgumentBinding, ...] = (),
+    missing_argument_names: tuple[str, ...] = (),
+    conditionality: ActionConditionality = ActionConditionality.IMMEDIATE,
+) -> AlternativeRecoveryAction:
+    return AlternativeRecoveryAction(
+        action=ActionReference(action_id=action_id),
+        argument_bindings=argument_bindings,
+        missing_argument_names=missing_argument_names,
+        conditionality=conditionality,
+    )
+
+
+def _verdict_with(*alternatives: AlternativeRecoveryAction) -> PreconditionVerdict:
+    return PreconditionVerdict(
+        failed_condition_id="profile.active",
+        evidence=(_evidence(),),
+        action=ActionReference(action_id="profile.create"),
+        argument_bindings=(_resolved_argument(),),
+        conditionality=ActionConditionality.IMMEDIATE,
+        alternative_actions=alternatives,
+    )
+
+
+def test_alternative_actions_follow_the_primary_in_the_order_they_are_offered() -> None:
+    statement = _alternative(
+        "profile.attest",
+        argument_bindings=(_missing_value(), _resolved_argument()),
+        missing_argument_names=("value",),
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+    )
+    verdict = _verdict_with(_alternative("profile.select"), statement)
+
+    assert [item.action.action_id for item in verdict.alternative_actions] == ["profile.select", "profile.attest"]
+    assert [item.argument_name for item in verdict.alternative_actions[1].argument_bindings] == ["profile_key", "value"]
+    assert verdict.model_dump(mode="json")["alternative_actions"] == [
+        {
+            "action": {"action_id": "profile.select"},
+            "argument_bindings": [],
+            "missing_argument_names": [],
+            "conditionality": "immediate",
+        },
+        {
+            "action": {"action_id": "profile.attest"},
+            "argument_bindings": [
+                {
+                    "argument_name": "profile_key",
+                    "status": "resolved",
+                    "value": "operator",
+                    "source": "operator_action.condition_evidence",
+                    "source_key": "profile_key",
+                    "source_evidence_id": "profile.active.selection",
+                },
+                {
+                    "argument_name": "value",
+                    "status": "missing",
+                    "value": None,
+                    "source": None,
+                    "source_key": None,
+                    "source_evidence_id": None,
+                },
+            ],
+            "missing_argument_names": ["value"],
+            "conditionality": "requires_arguments",
+        },
+    ]
+    assert PreconditionVerdict.model_validate_json(verdict.model_dump_json()) == verdict
+
+
+@pytest.mark.parametrize(
+    ("build", "match"),
+    (
+        pytest.param(
+            lambda: PreconditionVerdict(
+                failed_condition_id="profile.active",
+                evidence=(_evidence(),),
+                conditionality=ActionConditionality.NOT_APPLICABLE,
+                no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                alternative_actions=(_alternative("profile.select"),),
+            ),
+            "alternative recovery actions require a primary recovery action",
+            id="beside-no-recovery",
+        ),
+        pytest.param(
+            lambda: _verdict_with(_alternative("profile.select"), _alternative("profile.select")),
+            "unique across the primary and its alternatives",
+            id="alternative-repeated",
+        ),
+        pytest.param(
+            lambda: _verdict_with(_alternative("profile.create")),
+            "unique across the primary and its alternatives",
+            id="primary-repeated",
+        ),
+        pytest.param(
+            lambda: _alternative(
+                "profile.attest",
+                argument_bindings=(_missing_value(),),
+                missing_argument_names=("value",),
+                conditionality=ActionConditionality.IMMEDIATE,
+            ),
+            "missing action arguments require requires_arguments conditionality",
+            id="missing-argument-claimed-immediate",
+        ),
+        pytest.param(
+            lambda: _alternative("profile.attest", conditionality=ActionConditionality.REQUIRES_ARGUMENTS),
+            "fully resolved recovery actions require immediate conditionality",
+            id="resolved-claimed-requires-arguments",
+        ),
+        pytest.param(
+            lambda: _alternative("profile.attest", conditionality=ActionConditionality.NOT_APPLICABLE),
+            "recovery actions cannot use not_applicable conditionality",
+            id="alternative-not-applicable",
+        ),
+        pytest.param(
+            lambda: _alternative(
+                "profile.attest",
+                argument_bindings=(_missing_value(),),
+                conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+            ),
+            "missing_argument_names must exactly match missing action arguments",
+            id="missing-names-disagree",
+        ),
+        pytest.param(
+            lambda: _alternative(
+                "profile.attest",
+                argument_bindings=(_resolved_argument(), _resolved_argument()),
+            ),
+            "action argument names must be unique",
+            id="argument-repeated",
+        ),
+        pytest.param(
+            lambda: _verdict_with(
+                _alternative(
+                    "profile.attest",
+                    argument_bindings=(
+                        ActionArgumentBinding(
+                            argument_name="profile_key",
+                            status=ActionArgumentStatus.RESOLVED,
+                            value="someone_else",
+                            source=ActionArgumentSource.CONDITION_EVIDENCE,
+                            source_key="profile_key",
+                            source_evidence_id="profile.active.selection",
+                        ),
+                    ),
+                ),
+            ),
+            "value must exactly match its evidence fact",
+            id="evidence-argument-unsupported",
+        ),
+        pytest.param(
+            lambda: _verdict_with(
+                _alternative(
+                    "profile.attest",
+                    argument_bindings=(
+                        ActionArgumentBinding(
+                            argument_name="profile_key",
+                            status=ActionArgumentStatus.RESOLVED,
+                            value="operator",
+                            source=ActionArgumentSource.CONDITION_EVIDENCE,
+                            source_key="profile_key",
+                            source_evidence_id="profile.other_evidence",
+                        ),
+                    ),
+                ),
+            ),
+            "must reference declared evidence",
+            id="evidence-argument-undeclared",
+        ),
+    ),
+)
+def test_alternative_actions_obey_the_verdict_outcome_and_argument_rules(
+    build: Callable[[], object], match: str
+) -> None:
+    with pytest.raises(ValidationError, match=match):
+        build()
+
+
+class _VerdictBeforeAlternatives(BaseModel):
+    """The verdict record exactly as it was serialized before alternatives existed."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    failed_condition_id: str
+    evidence: tuple[ConditionEvidence, ...]
+    action: ActionReference | None = None
+    argument_bindings: tuple[ActionArgumentBinding, ...] = ()
+    missing_argument_names: tuple[str, ...] = ()
+    conditionality: ActionConditionality
+    no_recovery_outcome: NoRecoveryOutcome | None = None
+
+
+def _verdict_without_alternatives() -> PreconditionVerdict:
+    return PreconditionVerdict(
+        failed_condition_id="profile.active",
+        evidence=(_evidence(),),
+        action=ActionReference(action_id="profile.create"),
+        argument_bindings=(_resolved_argument(),),
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
+
+
+@pytest.mark.parametrize(
+    "build",
+    (
+        pytest.param(_verdict_without_alternatives, id="list-omitted"),
+        pytest.param(_verdict_with, id="list-empty"),
+    ),
+)
+def test_a_verdict_without_alternatives_serializes_to_the_bytes_stored_before_the_list(
+    build: Callable[[], PreconditionVerdict],
+) -> None:
+    verdict = build()
+    stored = _VerdictBeforeAlternatives(
+        failed_condition_id="profile.active",
+        evidence=(_evidence(),),
+        action=ActionReference(action_id="profile.create"),
+        argument_bindings=(_resolved_argument(),),
+        conditionality=ActionConditionality.IMMEDIATE,
+    ).model_dump_json()
+
+    assert verdict.model_dump_json() == stored
+    assert verdict.model_dump_json() == (
+        '{"failed_condition_id":"profile.active",'
+        '"evidence":[{"condition_id":"profile.active","evidence_id":"profile.active.selection",'
+        '"provenance":"application_state","values":{"bucket_count":0,"is_selected":false,"profile_key":"operator"}}],'
+        '"action":{"action_id":"profile.create"},'
+        '"argument_bindings":[{"argument_name":"profile_key","status":"resolved","value":"operator",'
+        '"source":"operator_action.condition_evidence","source_key":"profile_key",'
+        '"source_evidence_id":"profile.active.selection"}],'
+        '"missing_argument_names":[],"conditionality":"immediate","no_recovery_outcome":null}'
+    )
+    assert "alternative_actions" not in verdict.model_dump(mode="python")
+    restored = PreconditionVerdict.model_validate_json(stored)
+    assert restored == verdict
+    assert restored.alternative_actions == ()
+    assert restored.model_dump_json() == stored
+
+
+def test_a_closed_outcome_serializes_to_the_bytes_stored_before_the_list() -> None:
+    verdict = PreconditionVerdict(
+        failed_condition_id="profile.active",
+        evidence=(_evidence(),),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    )
+    stored = _VerdictBeforeAlternatives(
+        failed_condition_id="profile.active",
+        evidence=(_evidence(),),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ).model_dump_json()
+
+    assert verdict.model_dump_json() == stored

@@ -13,6 +13,7 @@ from decimal import Decimal
 from ...core.i18n.render import tr as render_tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.period import Period
+from ...core.prorrata_exclusions import Art104TresExclusion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.iva.deduction_facts import (
@@ -35,6 +36,7 @@ from ...domain.iva.schema import (
     IvaRateKind,
     default_iva_cash_accounting_treatment,
 )
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.models import Transaction
 from .iva_ledger import IvaLedgerAggregationIssue, IvaLedgerAggregationIssueReason, ProrrataLedgerReference
 from .iva_ledger_classification import (
@@ -88,9 +90,12 @@ def inadmissible_deduction_issue(
         # equivalencia acquisition cost -- there is nothing to complete and the
         # half-declaration is itself the error. Falling through, it reached the
         # operator as a payload-boundary defect from the observation's validator.
-        if is_deducible_flow(flow_direction) and admits_iva_deduction_classification(
+        if is_deducible_flow(
+            flow_direction, effective_date=transaction_operation_date(transaction)
+        ) and admits_iva_deduction_classification(
             category=category,
             flow_direction=flow_direction,
+            effective_date=transaction_operation_date(transaction),
         ):
             return None
         return IvaLedgerAggregationIssue(
@@ -119,6 +124,7 @@ def inadmissible_deduction_issue(
             iva_amount=iva_amount,
             investment_asset_id=transaction.investment_asset_id,
             rectifies_ledger_id=transaction.rectifies_ledger_id,
+            effective_date=transaction_operation_date(transaction),
         )
     except IvaValidationError as exc:
         return IvaLedgerAggregationIssue(
@@ -155,11 +161,12 @@ def iva_observation(
     deduction_provenance: IvaDeductionClassificationProvenance | None,
     investment_asset_id: str | None = None,
     rectifies_ledger_id: str | None = None,
+    art_104_tres_exclusion: Art104TresExclusion | None = None,
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerObservation:
     """Build an observation from the admitted transaction facts."""
     if cash_accounting_treatment is None:
-        cash_accounting_treatment = default_iva_cash_accounting_treatment(authority=operation)
+        cash_accounting_treatment = default_iva_cash_accounting_treatment(transaction_date, authority=operation)
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=transaction_date,
@@ -180,6 +187,7 @@ def iva_observation(
         deduction_provenance=deduction_provenance,
         investment_asset_id=investment_asset_id,
         rectifies_ledger_id=rectifies_ledger_id,
+        art_104_tres_exclusion=art_104_tres_exclusion,
     )
 
 
@@ -248,6 +256,7 @@ def cash_accounting_observations(
                 deduction_provenance=deduction_provenance,
                 investment_asset_id=transaction.investment_asset_id,
                 rectifies_ledger_id=transaction.rectifies_ledger_id,
+                art_104_tres_exclusion=transaction.art_104_tres_exclusion,
                 operation=operation,
             ),
         )
@@ -271,6 +280,7 @@ def cash_accounting_observations(
                 deduction_provenance=deduction_provenance,
                 investment_asset_id=transaction.investment_asset_id,
                 rectifies_ledger_id=transaction.rectifies_ledger_id,
+                art_104_tres_exclusion=transaction.art_104_tres_exclusion,
                 operation=operation,
             ),
         )
@@ -350,7 +360,7 @@ def resolve_iva_prorrata_attachment(
         return None, raw_reference, None
     if raw_reference is None:
         return None, None, None
-    if flow_direction != received_flow_direction():
+    if flow_direction != received_flow_direction(effective_date=transaction_operation_date(transaction)):
         return (
             None,
             IvaLedgerAggregationIssue(

@@ -9,8 +9,9 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.tests.personas import ExpectedObligation, ExpectedValue
+from cadrumo.tests.personas import ExpectedObligation, ExpectedValue, YearToken
 
+from ...persona_table.roles import edition_identities, resolve
 from ..assessment import (
     CalculationObservation,
     CalendarView,
@@ -45,7 +46,7 @@ def test_unverified_and_concept_only_values_are_not_asserted() -> None:
     stated = [value for _year, value in asserted_values(fontanero, envelope())]
     assert stated
     assert all(value.grounding != "unverified" for value in stated)
-    assert all(value.casillas or value.not_sourced or value.refusal for value in stated)
+    assert all(value.casillas or value.roles or value.not_sourced or value.refusal for value in stated)
     unverified = replace(value_with_casillas(), grounding="unverified")
     concepts_only = replace(value_with_casillas(), casillas=(), concepts=(("cuota", "1.00"),))
     widened = replace(fontanero, expectations=replace(fontanero.expectations, values=(unverified, concepts_only)))
@@ -229,3 +230,52 @@ def test_the_calendar_result_keys_rows_by_modelo_and_code_within_one_year() -> N
 def test_the_explanation_result_yields_its_verdict_when_it_carries_one() -> None:
     assert explanation({"verdict": "incomplete", "applicable": False}) == Explanation("incomplete", False)
     assert explanation({"applicable": True}) == Explanation(None, True)
+
+
+_ROLE = "iva-resultado-regimen-general"
+_ROLE_MODELO = "303"
+_ROLE_PERIOD = "1T"
+
+
+def _role_value(*roles: tuple[str, str]) -> ExpectedValue:
+    return replace(
+        value_with_casillas(),
+        modelo=_ROLE_MODELO,
+        period=_ROLE_PERIOD,
+        year=YearToken(anchor="horizon", offset=-1),
+        casillas=(),
+        not_sourced=(),
+        refusal=None,
+        grounding="verified",
+        roles=roles,
+    )
+
+
+def test_a_value_stating_only_roles_is_asserted() -> None:
+    fontanero = persona("autonomo-fontanero")
+    widened = replace(fontanero, expectations=replace(fontanero.expectations, values=(_role_value((_ROLE, "1.00")),)))
+    assert len(asserted_values(widened, envelope())) == 1
+    assert calculated_periods(widened, envelope())
+
+
+def test_a_role_is_compared_at_the_casilla_of_the_return_edition() -> None:
+    year = envelope().horizon - 1
+    casilla = resolve(edition_identities(_ROLE_MODELO, year, _ROLE_PERIOD), _ROLE)
+    assert casilla is not None
+    value = _role_value((_ROLE, "10.00"))
+    passed = assess_value(year, value, CalculationObservation(casillas={casilla: "10"}))
+    failed = assess_value(year, value, CalculationObservation(casillas={casilla: "11"}))
+    missing = assess_value(year, value, CalculationObservation(casillas={}))
+    assert [(check.casilla, check.status) for check in passed] == [(casilla, CheckStatus.PASSED)]
+    assert [check.status for check in failed] == [CheckStatus.FAIL]
+    assert [check.status for check in missing] == [CheckStatus.FAIL]
+
+
+def test_an_unresolved_role_is_a_gap_and_never_a_pass() -> None:
+    year = envelope().horizon - 1
+    value = _role_value(("no-such-continuity-key", "10.00"))
+    (check,) = assess_value(year, value, CalculationObservation(casillas={"1": "10"}))
+    assert check.status is CheckStatus.GAP
+    assert check.casilla is None
+    assert check.actual is not None
+    assert "role:no-such-continuity-key" in check.actual

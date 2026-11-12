@@ -29,7 +29,7 @@ from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
 )
-from ...application.modelo.work_addressing import (
+from ...application.modelo.work_address_errors import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
     ModeloWorkVisibleTargetAmbiguousError,

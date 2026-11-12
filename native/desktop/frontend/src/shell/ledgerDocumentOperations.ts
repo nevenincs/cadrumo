@@ -467,27 +467,58 @@ export type AttachmentQueueResult = {
 
 export type AttachmentViewRequest = { attachment_id: string };
 
-/** One page of a stored document, drawn as an image. Names exactly one of
- * the evidence record or the attachment; `page` counts from 1. */
+/** One page of a stored document: drawn as an image, or, for a structured
+ * e-invoice, the facts its own record states. Names exactly one of the
+ * evidence record or the attachment; `page` counts from 1, and `max_width`
+ * sizes a drawn page and is ignored for a structured one. */
 export type EvidencePageRequest = (
   | { evidence_id: string; attachment_id?: never }
   | { attachment_id: string; evidence_id?: never }
 ) & { page: number; max_width: number };
 
-export type EvidencePageResult = {
+type EvidencePageShared = {
   profile_id: string;
   evidence_id?: string | null;
   attachment_id: string;
-  media_type: "application/pdf" | "image/jpeg" | "image/png";
   page: number;
   page_count: number;
-  width: number;
-  height: number;
   source_sha256: string;
   file_name?: string | null;
+};
+
+/** A figure the record states, or text it states; never both. `number` is a
+ * canonical decimal. */
+export type EvidenceStructuredFact = { label_key: string } & (
+  { text: string; number?: null } | { number: string; text?: null }
+);
+
+export type EvidenceStructuredInvoice = {
+  /** A served catalogue key naming the e-invoice format. */
+  title_key: string;
+  facts: EvidenceStructuredFact[];
+  lines: { facts: EvidenceStructuredFact[] }[];
+};
+
+export type EvidenceImagePage = EvidencePageShared & {
+  media_type: "application/pdf" | "image/jpeg" | "image/png";
+  width: number;
+  height: number;
   /** A `data:image/png;base64,` URL; held in memory only. */
   image_data_url: string;
+  structured_invoice?: null;
 };
+
+/** A structured e-invoice, shown as its one page of facts and never drawn. */
+export type EvidenceStructuredPage = EvidencePageShared & {
+  media_type: "application/xml";
+  page_count: 1;
+  width?: null;
+  height?: null;
+  image_data_url?: null;
+  structured_invoice: EvidenceStructuredInvoice;
+};
+
+export type EvidencePageResult = EvidenceImagePage | EvidenceStructuredPage;
 
 export type AttachmentViewResult = {
   profile_id: string;

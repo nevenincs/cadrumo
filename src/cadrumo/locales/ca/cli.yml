@@ -85,14 +85,30 @@ cli:
           Indica-ho per preguntar què respondrà l'escala per a aquest document, que
           és l'única manera de veure una discrepància amb el que vas confirmar abans
           que una confirmació la rebutgi.
+        filing_name_help: Indica el nom amb què es declara una contrapart a les declaracions
+          informatives, en les parts que anomenen els dissenys de registre. S'indica
+          una sola vegada, per a totes les exportacions posteriors.
         group_help: Confirma el que se sap d'una contrapart, una sola vegada, per
           a tots els documents posteriors.
         identification_state_help: 'Estat membre que identifica a efectes d''IVA la
           contrapart. És una dada diferent de --scope: l''art. 25 exempta per aquesta,
           no per on estigui establerta.'
+        no_second_surname_help: Indica que la persona física té un sol cognom. Un
+          segon cognom que falta mai no s'interpreta com a absència.
+        nombre_help: El nom complet d'una persona física.
         note_help: En què es basa la resposta, amb les teves paraules. Es registra,
           mai no es consulta.
+        party_kind_help: Si la contrapart és persona física o entitat; decideix quines
+          parts indiques.
+        primer_apellido_help: El primer cognom d'una persona física, tal com el coneixes.
+        razon_social_help: La raó social o denominació completa d'una entitat, mai
+          un nom comercial.
+        rendering_help: Una forma més curta que indiques per a un camp més estret,
+          com AMPLADA=TEXT. Repeteix-ho una vegada per amplada; un nom mai no s'escurça
+          sense que ho indiquis.
         scope_help: El territori a efectes d'IVA on està establerta la contrapart.
+        segundo_apellido_help: El segon cognom d'una persona física. Omet-lo només
+          juntament amb --no-second-surname.
         tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
           imprès al document.
         view_help: Mostra què respondria l'escala d'identificació d'IVA per a aquesta
@@ -670,6 +686,8 @@ cli:
         evidence_sha256_help: SHA-256 d'un certificat que ja és al teu emmagatzematge,
           o comprovació davant de --certificate-file. Un payer_certificate necessita
           una de les dues coses.
+        gastos_deducibles_help: Despeses deduïbles que indica el pagador segons l'article
+          19.2 a), b) i c). Obligatòria per a `trabajo`; escriu 0 si no n'indica cap.
         group_help: Registra les retencions que et certifiquen els teus pagadors.
         importe_integro_help: Renda dinerària que va pagar el pagador, abans de la
           retenció.
@@ -692,6 +710,9 @@ cli:
           un registre desat. Omet-la en el primer registre.
         record_help: Registra o substitueix les xifres que declara el certificat d'un
           pagador per a un exercici i una classe de renda.
+        reducciones_aplicables_help: Reduccions que va aplicar el pagador segons els
+          articles 18.2 i 18.3, tal com les indica el certificat. Obligatòria per
+          a `trabajo`; escriu 0 si no n'indica cap.
         remove_expected_revision_help: Revisió que ha mostrat el llistat per al registre
           que vols eliminar.
         remove_help: Elimina un registre de pagador, protegit per la revisió que ha
@@ -1024,6 +1045,7 @@ cli:
         period_help: 'Codi de període: 0A anual, 1T-4T trimestres, 01-12 mesos; per
           a models censals (036) usa alta, modificacion o baja.'
         readiness:
+          actividades_prorrata: activitats del registre de prorrata
           activo_extranjero: actiu estranger
           afiliado_cotizacion: afiliat de la relació de cotitzacions
           borrador_aeat: esborrany de l’AEAT
@@ -1706,6 +1728,23 @@ cli:
           del canvi; amb --yes registra cada import com un 0 que has declarat, diferent
           d'una xifra escrita.
         attest_prior_carries_yes_help: Confirma la declaració i registra-la a l'autoliquidació
+        attest_prior_value_help: Indica la xifra que una declaració pren d'una declaració
+          anterior que l'aplicació no desa, com el Model 100 de l'any passat presentat
+          en un altre lloc. Mostra el valor i la comprovació del canvi; amb --yes
+          registra la xifra com a declarada per tu per a aquella declaració, diferent
+          d'una xifra escrita. Es rebutja si la declaració anterior està desada, perquè
+          llavors se segueix aquella declaració.
+        attest_work_income_confirm: Encara no s'ha declarat res. Executa `aeat app
+          modelo work attest-work-income %{work_unit_id} --yes` per declarar-ho.
+        attest_work_income_help: Indica que les caselles de rendiments del treball
+          que cap certificat del pagador omple (contribucions empresarials a plans
+          de pensions i mutualitats de previsió social, a assegurances de dependència,
+          aportacions al patrimoni protegit i aportacions per decisió teva) són buides,
+          per a cada casella per a la qual el formulari d'una declaració basada en
+          un registre de pagador ofereix la declaració. Mostra la declaració i la
+          comprovació del canvi; amb --yes registra cada casella com un 0 que has
+          declarat, diferent d'una xifra que has escrit.
+        attest_work_income_yes_help: Confirma la declaració i registra-la a l'autoliquidació
         autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor
           immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació
           d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament
@@ -1816,6 +1855,9 @@ cli:
           (consulta `aeat app modelo casillas`).
         entry_casilla_unknown: '%{casilla} no és un identificador de casella.'
         entry_confirm: Encara no s'ha registrat res. Executa `%{command}` per registrar-ho.
+        entry_row_help: Fila a la qual es refereix la declaració, per la identitat
+          de fila d'origen que mostra el càlcul (per exemple inmueble:1). Només per
+          a dades que es declaren per fila.
         entry_value_help: El valor, escrit com en la teva llengua de sortida (per
           exemple 1.234,56 en català o 1,234.56 en anglès).
         entry_yes_help: Confirma el canvi i registra'l a la declaració
@@ -3277,8 +3319,15 @@ cli:
         models: omesa.'
       registry_unavailable: Les definicions dels models no estan disponibles.
       secure_objects_empty: L'emmagatzematge d'objectes segurs està buit.
+      secure_objects_probe_failed: No s'ha pogut comprovar la integritat dels objectes
+        segurs en %{failed} espai(s) de noms. Això no vol dir que estiguin buits ni
+        sans.
+      secure_objects_probe_failed_detail: 'sense comprovar: %{namespaces}'
       secure_objects_readable: '%{readable} espai(s) de noms d''objectes segurs llegibles:
         %{namespaces}.'
+      secure_objects_unavailable: No s'ha pogut comprovar la integritat dels objectes
+        segurs perquè no s'ha pogut llegir l'emmagatzematge xifrat. Això no vol dir
+        que estigui buit ni sa.
       secure_objects_unreadable: '%{unreadable} fila(es) il·legible(s), %{readable}
         fila(es) llegible(s)'
       state_backend_readable: L'emmagatzematge d'estat del flux de treball és llegible.
@@ -3436,6 +3485,7 @@ cli:
         cobrada o pagada neta
       irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
       irpf_purpose_rent_expense_withholding: retenció de lloguer pagat net
+      irpf_purpose_rental_property_income: ingressos i despeses de lloguer d'un immoble
       irpf_usage_example: 'Lloguer net: --category-id {rent_category} --irpf-category
         {rent_category}. Servei professional net: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -3459,6 +3509,10 @@ cli:
     classify:
       apply_help: Desa el suggeriment de l'LLM amb origen `llm:` en lloc de només
         previsualitzar-lo.
+      arrendamiento_help: Clau de fila de l'arrendament desat al qual pertany aquesta
+        fila d'ingrés; consulta els arrendaments amb «aeat config profile arrendamiento
+        list». Un text en blanc treu el vincle. Una fila vinculada porta la categoria
+        de renda capital_inmobiliario.
       auto_split_help: Llegeix la factura adjunta i, quan conté diversos components,
         la divideix en fills base/IVA per línia; si no, la classifica al lloc (requereix
         --read-evidence).
@@ -3490,14 +3544,25 @@ cli:
       derive_non_derivable: '{category} no té un tipus espanyol simple que es pugui
         derivar: {note} Indica --taxable-base, --iva-rate i --iva-amount a mà per
         a aquesta categoria.'
+      exemption_article_help: L'exempció de l'art. 20.Uno LIVA en què encaixa una
+        fila `domestic_exempt`, com a token del vocabulari d'articles d'exempció que
+        el registre declara per a la data de la fila. Decideix si la fila compta en
+        el volum de la prorrata com a operació sense dret a deducció.
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].
       file_not_found: 'Fitxer CSV no trobat: %{path}'
+      gasto_inmobiliario_help: Classe de despesa de l'immoble, una de les que declara
+        el registre; un valor desconegut es rebutja amb les admeses. Necessita un
+        immoble vinculat (--inmueble). Un text en blanc el treu.
       help: Classificar un moviment dels teus registres al perfil actiu
       id_help: Id del moviment a classificar
       id_required: Cal un id de transacció quan no s'usa --file.
+      inmueble_help: Clau de fila de l'immoble desat al qual pertany aquesta fila
+        de despesa; consulta els immobles amb «aeat config profile inmueble list».
+        No juntament amb --arrendamiento. Un text en blanc treu el vincle. Una fila
+        vinculada porta la categoria de renda capital_inmobiliario.
       investment_asset_id_help: Identitat del registre de béns d'inversió contra la
         qual es dedueix aquesta adquisició, tal com consta en aquest registre. Obligatòria
         amb un tipus de deducció d'inversió i rebutjada en qualsevol altre.
@@ -3591,8 +3656,14 @@ cli:
           ''--scope'' per a on està establerta la contrapart, ''--identification-state''
           per a quin Estat membre la identifica a efectes d''IVA, o totes dues. Són
           fets independents i qualsevol d''ells es pot indicar per separat.'
+        rendering_malformed: '''{rendering}'' no és una forma abreujada. Escriu-la
+          com AMPLADA=TEXT, amb l''amplada del camp en caràcters i el text que vols
+          declarar-hi.'
         unverifiable_identifier: '''{identifier}'' no és un identificador fiscal verificable,
           per la qual cosa no hi ha cap contrapart sobre la qual confirmar res.'
+      lines:
+        filing_name_stated: '{identifier}: nom de declaració indicat'
+        filing_name_unchanged: '{identifier}: el nom de declaració ja estava indicat'
       notices:
         already_confirmed: '''{identifier}'' ja havia estat confirmada per ''{asserted_by}''
           com a ''{answered}''; aquesta crida no ha creat cap confirmació nova i es
@@ -3601,11 +3672,21 @@ cli:
           establert a {confirmed}, però el justificant que has aportat situa la mateixa
           part a {evidenced}. Cadrumo no fixarà cap territori per a aquesta contrapart
           fins que se''n retiri un dels dos.'
+        filing_name_already_stated: '''{identifier}'' ja té aquest nom de declaració,
+          indicat per ''{asserted_by}''; aquesta crida no ha canviat res i es manté
+          la indicació original.'
+        filing_name_kind_contradicts_identifier_form: Has indicat el nom de declaració
+          per a {declared}, però la forma d'aquest identificador fiscal espanyol és
+          la de {observed}. El nom es desa tal com l'has indicat i no s'ha canviat
+          res; comprova quina de les dues coses és correcta.
         not_confirmed: No hi ha cap establiment confirmat per a '{identifier}', de
           manera que aquest esglaó no resol res i un document el paper del qual no
           sigui concloent plantejarà la pregunta.
         nothing_to_withdraw: No hi havia res confirmat per a '{identifier}', de manera
           que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
+      party_kinds:
+        entity: una entitat
+        natural_person: una persona física
     detach:
       actor_help: Actor registrat en l'esdeveniment de cicle de vida.
       attachment_help: Id de l'adjunt que se separa; repetible.
@@ -3628,6 +3709,8 @@ cli:
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica
         l'import sense signe i defineix el flux amb --direction (OUTGOING per a sortides,
         INCOMING per a entrades, INTERNAL_TRANSFER entre els teus propis comptes).
+      rental_concept_unknown: '--gasto-inmobiliario {value!r} no reconegut. Classes
+        admeses: {accepted}.'
       unknown_category: --category-id {category!r} no reconegut. Indica un identificador
         de categoria sense prefix, com {example!r}, no una clau composta ni amb prefix
         de família. Consulta el catàleg de categories dels teus registres per veure
@@ -4268,8 +4351,15 @@ cli:
       bienes_extranjero_unset: Al teu perfil encara no consta si els teus béns i drets
         situats a l’estranger superen el llindar de declaració.
       censo_enrolment_unverified: No s'ha verificat l'alta al cens
+      deadline_windows_unavailable: El registre no té terminis per a una part d'aquest
+        interval, així que no se sap res de les obligacions que hi cauen. Revisa l'estat
+        del resum; una llista buida aquí no vol dir que no venci res.
       estimacion_objetiva_unset: Al teu perfil encara no consta quin règim d’estimació
         de l’IRPF s’aplica a la teva activitat.
+      explain_deadline_windows_unavailable: El registre no té terminis per al model
+        %{modelo} i l'any %{year}, així que no es pot indicar ni el calendari ni si
+        vas tard. Que aquí falti l'avís de presentació fora de termini no vol dir
+        que estiguis dins del termini.
       gran_empresa_unset: Al teu perfil encara no consta si el teu volum d’operacions
         de l’any natural anterior va superar el llindar de gran empresa, cosa que
         decideix si presentes amb periodicitat mensual o trimestral.

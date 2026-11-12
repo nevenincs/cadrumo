@@ -2,6 +2,9 @@ modelo:
   schema:
     '100':
       binding:
+        renta-inmueble-gastos-pendientes-anteriores-0103:
+          label: Az ingatlan négy előző adóévből levonásra váró kamatai és javítási
+            és karbantartási kiadásai
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Igen: normál módozat (N). Nem: egyszerűsített módozat (S).'
           label: A közvetlen becslés normál módozatát alkalmazza?
@@ -3660,6 +3663,9 @@ modelo:
           irpf-tipo-medio-gravamen-general-autonomico:
             label: 'Átlagos adókulcsok ( [0534] = [0532] x 100 / [0505] ); ( [0535]
               = [0533] x 100 / [0505] ): autonóm közösségi rész'
+          irpf-trabajo-rentas-distintas-del-trabajo:
+            label: A munkából származó jövedelemtől eltérő jövedelmek (a 20. cikk
+              szerinti határ) [belső]
           irpf-transparencia-fiscal-internacional-contribuyente:
             label: A hozzárendelést teljesítő adózó
           irpf-vehiculo-electrico-instalador-nif:
@@ -8371,6 +8377,9 @@ modelo:
                 ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
                 32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
                 által bevallott összeg - lásd az [1554] rovatot)
+            trabajo-mar-renta-exenta:
+              label: Tengeri munkavállalók adómentes munkajövedelme (LIRPF 7.p) cikk
+                vagy 19/1994. törvény) [belső]
           construct:
             renta-dependent-modelos:
               field:
@@ -18154,9 +18163,6 @@ modelo:
               label: A bevallás autonóm közössége
             ZRUE2:
               label: Házastárs EU- vagy EGT-tagállami lakóhelye
-            trabajo-mar-renta-exenta:
-              label: Tengeri munkavállalók adómentes munkajövedelme (LIRPF 7.p) cikk
-                vagy 19/1994. törvény) [belső]
           construct:
             renta-dependent-modelos:
               field:

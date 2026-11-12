@@ -80,6 +80,13 @@ def test_annual_volume_formula_is_inherited_only_in_grounded_editions() -> None:
     assert all(expression == expressions[0] for expression in expressions)
 
 
+def _assert_each_casilla_placed_once(revision: ModeloRevision) -> None:
+    # The edition's own casillas fix the count: each is placed once and nothing else is.
+    placed = [placement.casilla_id for placement in revision.form_layouts[0].placements]
+    assert len(placed) == len(set(placed))
+    assert set(placed) == {casilla.id for casilla in revision.casillas}
+
+
 @pytest.mark.parametrize("position", [3, 4])
 def test_historical_rectificativa_form_preserves_its_own_field_owners(position: int) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[_edition(position)]
@@ -87,7 +94,7 @@ def test_historical_rectificativa_form_preserves_its_own_field_owners(position: 
     assert form_layout_failures(revision) == ()
     assert len(layout.pages) == 6
     assert all(str(99216 + n) in (page.official_ref or "") for n, page in enumerate(layout.pages))
-    assert len(layout.placements) == len(revision.casillas) == 228
+    _assert_each_casilla_placed_once(revision)
     assert {source.source_ref for source in layout.design_sources} >= {"boe-modelo-303-2024-form-pdf"}
     blocks = [block for page in layout.pages for section in page.sections for block in section.blocks]
     assert not any(block.id in {"gasolinas", "c-112"} for block in blocks)
@@ -122,13 +129,13 @@ def test_historical_rectificativa_form_preserves_its_own_field_owners(position: 
     assert form_layout_failures(revision.model_copy(update={"form_layouts": (corrupted,)}))
 
 
-@pytest.mark.parametrize(("position", "count"), [(1, 219), (2, 220)])
-def test_complementaria_editions_do_not_inherit_rectificativa_fields(position: int, count: int) -> None:
+@pytest.mark.parametrize("position", [1, 2])
+def test_complementaria_editions_do_not_inherit_rectificativa_fields(position: int) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[_edition(position)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert len(layout.pages) == 6
-    assert len(layout.placements) == len(revision.casillas) == count
+    _assert_each_casilla_placed_once(revision)
     assert all(str(158996 + n) in (page.official_ref or "") for n, page in enumerate(layout.pages))
     assert {source.source_ref for source in layout.design_sources} >= {"boe-modelo-303-2023-form-pdf"}
     amendment = layout.pages[2].sections[-1]

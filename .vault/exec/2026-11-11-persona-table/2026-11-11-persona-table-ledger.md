@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#persona-table'
 date: '2026-11-11'
-modified: '2026-11-11'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:17a5283e4c395dafaaf7953fe794da2589e68372ef7bafabb182fd2ed7e9a50b'
+body_hash: 'sha256:367f0f8c46b50e843ef8ce23fe958c515d3b14a7fc0f02d300119ad14a3bf0c4'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -71,6 +71,27 @@ related:
 - `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/347`
 - `S13` `verify:` `persona table at feature/tui 83cea4b998 (train t6)` -> `pass`
 - `S13` `by:` `ACCEPTANCE`
+- `S09` `M` `src/cadrumo/_data/registry/aeat/modelos/100`
+- `S09` `verify:` `persona table at feature/tui 90910e5cc5 (train t14), minorista 100 2023-2025` -> `pass`
+- `S09` `by:` `ACCEPTANCE`
+- `S11` `M` `dev/fixtures/personas`
+- `S11` `verify:` `persona table at feature/tui 90910e5cc5 (train t14), minorista 100 2023-2025 export` -> `pass`
+- `S11` `by:` `ACCEPTANCE`
+- `S04` `verify:` `persona table at feature/tui 674c6ff701 (train t23), Modelo 130 69/69 compared and green, floor year 2022 by the S31 attestation` -> `pass`
+- `S05` `verify:` `persona table at feature/tui 674c6ff701 (train t23), every Modelo 130 row compared and green 69/69` -> `pass`
+- `S06` `M` `dev/acceptance/persona_table/counterparties.py`
+- `S06` `verify:` `persona table at feature/tui 674c6ff701 (train t23), 111 16/16 115 16/16 180 4/4 190 4/4 compared and green` -> `pass`
+- `S13` `verify:` `persona table at feature/tui 674c6ff701 (train t23), 390 20/20 349 16/16 347 16/16 compared and green` -> `pass`
+- `S12` `verify:` `persona_table run --tree ed243d5bd7 (t32b, 266/278): 303 x every persona/year/quarter compared on role iva-resultado-regimen-general and exported` -> `pass`
+- `S12` `by:` `ACCEPTANCE`
+- `S14` `verify:` `persona_table run --tree ed243d5bd7 (t32b, 266/278): minorista-recargo 303 rows (recargo) green` -> `pass`
+- `S14` `by:` `ACCEPTANCE`
+- `S30` `verify:` `persona_table run --tree ed243d5bd7 (t32b, 266/278): 180/190 perceptor names compared upper-unaccented in the exported file, PAGOS 109/109` -> `pass`
+- `S30` `by:` `ACCEPTANCE`
+- `S31` `verify:` `persona_table run --tree ed243d5bd7 (t32b, 266/278): floor-source 0 and the floor-year 130/100 rows green since t23 on the S31 attestation` -> `pass`
+- `S31` `by:` `ACCEPTANCE`
+- `S51` `verify:` `persona_table run --tree ed243d5bd7 (t32b, 266/278): intracomunitario-desarrollador 100 2022-2025 green on 0218/0222 since t30b` -> `pass`
+- `S51` `by:` `ACCEPTANCE`
 
 ## Notes
 
@@ -84,3 +105,5 @@ related:
 - `S08` Modelo 100 2023-2025 calculate and verify pass for every 130 persona after its quarters are filed
 - `S10` Modelo 100 2023-2025 verify passes for every persona, asalariada-familia's descendants included (0166 and names served)
 - `S13` 390 20/20, 349 16/16, 347 12/12 green; fontanero 347 4/4 expected-refusal `REFUSED_MODELO_EXPORT_VALUE_OVERFLOW` at export
+- `S14` No persona owes a prorrata 303; the prorrata part has no table row to assert.
+- `S14` PRIME order 04:2x: S14 closes for the recargo rows only; the prorrata part moved to its own open Step S54 (no persona owes a prorrata 303).

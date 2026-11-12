@@ -20,6 +20,7 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ..application.calculations.revision_carry_gate import revision_carry_outcome
+from ..application.operator_actions.catalogue import next_action
 from ..application.overview.calendar_events import build_overview_calendar_events, calendar_events_from_modelo_records
 from ..application.overview.calendar_evidence import no_aeat_history_notice
 from ..application.overview.calendar_models import (
@@ -51,6 +52,10 @@ if TYPE_CHECKING:
     from ..domain.user_profile.values import UserProfileRecord
 
 logger = get_logger(__name__)
+
+_EXPLAIN_DEADLINE_WINDOWS_UNAVAILABLE_NOTICE_CODE = "deadline.windows_unavailable.explain"
+_EXPLAIN_DEADLINE_WINDOWS_UNAVAILABLE_LOCALE_KEY = "cli.overview.warning.explain_deadline_windows_unavailable"
+_OVERVIEW_STATUS_ACTION_ID = "operator.overview.status"
 
 
 def _justificante_capture_snapshots(bucket_id: str):
@@ -256,6 +261,21 @@ def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | N
         tax_route=tax_route,
     )
     return notice
+
+
+def overview_explain_deadline_windows_unavailable_notice(*, modelo: str, year: int) -> Notice:
+    """Say that the registry has no deadline windows, so an absent schedule or lateness is unknown.
+
+    Without it an explanation with no scheduling rationale and no out-of-plazo
+    warning reads as an on-time filing.
+    """
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code=_EXPLAIN_DEADLINE_WINDOWS_UNAVAILABLE_NOTICE_CODE,
+        message=tr(_EXPLAIN_DEADLINE_WINDOWS_UNAVAILABLE_LOCALE_KEY, modelo=modelo, year=year),
+        action=next_action(_OVERVIEW_STATUS_ACTION_ID),
+        context={"modelo": modelo, "filing_year": str(year)},
+    )
 
 
 def live_censo_verified_profile_keys(record: UserProfileRecord | None) -> tuple[str, ...]:

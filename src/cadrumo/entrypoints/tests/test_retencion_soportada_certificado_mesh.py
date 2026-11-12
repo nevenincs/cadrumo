@@ -169,6 +169,11 @@ def _certificate_file(directory: Path, name: str) -> bytes:
     return data
 
 
+def _figure(value: str | None, *, default: str | None) -> PublicDecimal | None:
+    chosen = default if value is None else value
+    return None if chosen is None else PublicDecimal(decimal=chosen)
+
+
 def _request(
     payer: str,
     *,
@@ -180,20 +185,28 @@ def _request(
     fingerprint: str | None = None,
     origin: RetencionSoportadaOrigen = RetencionSoportadaOrigen.PAYER_CERTIFICATE,
     expected_revision: str | None = None,
+    income_class: RetencionSoportadaClase = RetencionSoportadaClase.TRABAJO,
+    reducciones: str | None = None,
+    gastos: str | None = None,
+    omit_work_figures: bool = False,
 ) -> OperationRequest[BaseModel]:
+    """Build a record request; a work-income request states zero reductions and expenses unless it says otherwise."""
+    states_work_figures = income_class is RetencionSoportadaClase.TRABAJO and not omit_work_figures
     return OperationRequest(
         definition_id=RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(_PROFILE),
         payload=RetencionSoportadaRecordRequest(
             profile_id=UUID(_PROFILE),
             ejercicio=_EJERCICIO,
-            income_class=RetencionSoportadaClase.TRABAJO,
+            income_class=income_class,
             payer_tax_id=payer,
             importe_integro_dinerario=PublicDecimal(decimal="20000.00"),
             valoracion_especie=PublicDecimal(decimal="0.00"),
             retencion=PublicDecimal(decimal=retencion),
             ingreso_a_cuenta=PublicDecimal(decimal=ingreso),
             ingreso_a_cuenta_repercutido=PublicDecimal(decimal=repercutido),
+            reducciones_aplicables=_figure(reducciones, default="0.00" if states_work_figures else None),
+            gastos_deducibles=_figure(gastos, default="0.00" if states_work_figures else None),
             origin=origin,
             evidence_fingerprint=fingerprint,
             source_path=file,
@@ -648,6 +661,11 @@ def test_every_refusal_the_operation_reaches_serves_its_own_sentence_in_the_work
         refused(
             "certificate_fingerprint_required", "certificate_needs_fingerprint", _request(_PAYER_A, retencion="5.00")
         )
+        refused(
+            "trabajo_certificate_figure_missing",
+            "trabajo_certificate_figure_missing",
+            _request(_PAYER_A, retencion="5.00", directory=files, file="payer-a.pdf", omit_work_figures=True),
+        )
         _run(operation, _request(_PAYER_A, retencion="100.00", directory=files, file="payer-a.pdf"))
         refused(
             "stale_revision",
@@ -655,7 +673,7 @@ def test_every_refusal_the_operation_reaches_serves_its_own_sentence_in_the_work
             _request(_PAYER_A, retencion="200.00", directory=files, file="second.pdf"),
         )
 
-    assert len(attempts) == 8
+    assert len(attempts) == 9
     for reason, key, context in attempts:
         _assert_served(context, reason=reason, key=key, language=language, tmp_path=tmp_path)
 
@@ -710,3 +728,86 @@ def test_the_served_sentences_differ_between_the_supported_languages(
 
     assert all(sentences.values())
     assert len(set(sentences.values())) == len(OutputLanguage)
+
+
+@pytest.mark.parametrize(
+    "missing",
+    [
+        {"reducciones": None, "gastos": None},
+        {"reducciones": "3060.00", "gastos": None},
+        {"reducciones": None, "gastos": "610.00"},
+    ],
+    ids=["neither", "only_reducciones", "only_gastos"],
+)
+def test_a_work_income_request_without_both_certificate_figures_is_refused_and_nothing_is_stored(
+    tmp_path: Path, operation: PinnedAuthorityOperation, missing: dict[str, str | None]
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    _certificate_file(files, "payer-a.pdf")
+    request = _request(_PAYER_A, retencion="5.00", directory=files, file="payer-a.pdf")
+    payload = cast(RetencionSoportadaRecordRequest, request.payload)
+    incomplete = request.model_copy(
+        update={
+            "payload": payload.model_copy(
+                update={
+                    "reducciones_aplicables": _figure(missing["reducciones"], default=None),
+                    "gastos_deducibles": _figure(missing["gastos"], default=None),
+                }
+            )
+        }
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        outcome, context = _run_in(operation, incomplete)
+        stored = _repository().list_revisioned(_EJERCICIO)
+        bytes_kept = _custody().holds(_sha256(b"%PDF-1.4 synthetic payer certificate payer-a.pdf"))
+
+    assert isinstance(outcome, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "trabajo_certificate_figure_missing"
+    assert stored == ()
+    assert not bytes_kept
+
+
+def test_a_request_of_another_class_carrying_the_work_figures_is_refused(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    _certificate_file(files, "payer-a.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        outcome, context = _run_in(
+            operation,
+            _request(
+                _PAYER_A,
+                retencion="5.00",
+                directory=files,
+                file="payer-a.pdf",
+                income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+                reducciones="0.00",
+                gastos="0.00",
+            ),
+        )
+        stored = _repository().list_revisioned(_EJERCICIO)
+
+    assert isinstance(outcome, OperationRefusalEvidence)
+    assert _refusal_reason(context) == "validation"
+    assert stored == ()
+
+
+def test_a_work_income_record_stores_and_reads_back_its_two_certificate_figures(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    files = tmp_path / "certificates"
+    files.mkdir()
+    _certificate_file(files, "payer-a.pdf")
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE):
+        outcome = _run(
+            operation,
+            _request(
+                _PAYER_A, retencion="5.00", directory=files, file="payer-a.pdf", reducciones="3060.00", gastos="610.00"
+            ),
+        )
+        ((record, _revision),) = _repository().list_revisioned(_EJERCICIO)
+
+    assert not isinstance(outcome, OperationRefusalEvidence)
+    assert (record.reducciones_aplicables, record.gastos_deducibles) == (Decimal("3060.00"), Decimal("610.00"))

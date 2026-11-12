@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ..calculations.registry.form_codes import form_for_role
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_references import SourceReference
@@ -25,7 +26,7 @@ from .calculation_revision_amendment import (
     m303_rectificativa_motive_is_applicable,
 )
 from .calculation_revision_m303_handoff import M303FilingInstanceEvidence
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .filing_record import FilingDeclarationKind, ModeloRecordCatalogue, is_justificante_backed_external_evidence
 from .work_unit import WorkUnit, WorkUnitCatalogue
 
@@ -65,7 +66,11 @@ def validate_calculation_revision_aggregate(
     work_unit = _require_parent_work_unit(revision, context)
     if work_unit.modelo != form_for_role("iva.periodic"):
         if identity.m303_rectificativa_motive is not None:
-            raise ModeloValidationError("an M303 rectificativa motive is forbidden for another modelo")
+            raise ModeloValidationError(
+                "an M303 rectificativa motive is forbidden for another modelo",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return None
 
     m303 = _require_m303_filing_evidence(revision)
@@ -75,16 +80,28 @@ def validate_calculation_revision_aggregate(
     motive = _require_rectificativa_motive(identity, work_unit, record_design)
     receipt = _require_target_receipt(identity, context, work_unit)
     if context.expected_taxpayer_tax_id is None:
-        raise ModeloValidationError("M303 rectificativa aggregate requires the authoritative taxpayer tax id")
+        raise ModeloValidationError(
+            "M303 rectificativa aggregate requires the authoritative taxpayer tax id",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if not receipt.matches_filing_target(
         modelo=Modelo("303").value,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         tax_id=context.expected_taxpayer_tax_id,
     ):
-        raise ModeloValidationError("M303 rectificativa justificante disagrees with the taxpayer or filing coordinate")
+        raise ModeloValidationError(
+            "M303 rectificativa justificante disagrees with the taxpayer or filing coordinate",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if receipt.presentation_id is None:
-        raise ModeloValidationError("M303 rectificativa justificante requires the original AEAT receipt number")
+        raise ModeloValidationError(
+            "M303 rectificativa justificante requires the original AEAT receipt number",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return ValidatedM303RectificativaEvidence(
         motive=motive,
         original_aeat_receipt=receipt.presentation_id,
@@ -106,9 +123,17 @@ def _require_parent_work_unit(
     """Resolve and identity-check the authoritative parent work unit."""
     work_unit = context.work_units.get(revision.work_unit_id)
     if work_unit is None:
-        raise ModeloValidationError("rectificativa calculation revision has no authoritative parent WorkUnit")
+        raise ModeloValidationError(
+            "rectificativa calculation revision has no authoritative parent WorkUnit",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if work_unit.work_unit_id != revision.work_unit_id:
-        raise ModeloValidationError("rectificativa calculation revision and parent WorkUnit identities disagree")
+        raise ModeloValidationError(
+            "rectificativa calculation revision and parent WorkUnit identities disagree",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return work_unit
 
 
@@ -116,7 +141,11 @@ def _require_m303_filing_evidence(revision: CalculationRevision) -> M303FilingIn
     """Resolve the immutable M303 evidence envelope from a revision."""
     filing_evidence = revision.filing_instance_evidence
     if filing_evidence is None:
-        raise ModeloValidationError("M303 rectificativa revision requires immutable filing-instance evidence")
+        raise ModeloValidationError(
+            "M303 rectificativa revision requires immutable filing-instance evidence",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return filing_evidence.m303
 
 
@@ -128,13 +157,29 @@ def _validate_m303_evidence_coordinate(
     regimen_snapshot = evidence.regimen_simplificado.regimen_snapshot
     calculation_result = evidence.regimen_simplificado.calculation_result
     if evidence.period != work_unit.period:
-        raise ModeloValidationError("M303 rectificativa evidence period disagrees with its parent WorkUnit")
+        raise ModeloValidationError(
+            "M303 rectificativa evidence period disagrees with its parent WorkUnit",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if regimen_snapshot.filing_year != work_unit.filing_year:
-        raise ModeloValidationError("M303 rectificativa evidence filing year disagrees with its parent WorkUnit")
+        raise ModeloValidationError(
+            "M303 rectificativa evidence filing year disagrees with its parent WorkUnit",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if regimen_snapshot.registry_revision_id != work_unit.revision_id:
-        raise ModeloValidationError("M303 rectificativa evidence registry revision disagrees with its parent WorkUnit")
+        raise ModeloValidationError(
+            "M303 rectificativa evidence registry revision disagrees with its parent WorkUnit",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if calculation_result.period != work_unit.period:
-        raise ModeloValidationError("M303 rectificativa result period disagrees with its parent WorkUnit")
+        raise ModeloValidationError(
+            "M303 rectificativa result period disagrees with its parent WorkUnit",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return regimen_snapshot.record_design
 
 
@@ -152,9 +197,17 @@ def _require_registry_snapshot(
     """
     snapshot = context.registry_snapshots.get(work_unit.work_unit_id)
     if snapshot is None:
-        raise ModeloValidationError("M303 rectificativa revision lacks exact registry snapshot context")
+        raise ModeloValidationError(
+            "M303 rectificativa revision lacks exact registry snapshot context",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if snapshot.modelo.id != form_for_role("iva.periodic") or snapshot.revision.id != work_unit.revision_id:
-        raise ModeloValidationError("M303 rectificativa registry snapshot disagrees with its parent WorkUnit")
+        raise ModeloValidationError(
+            "M303 rectificativa registry snapshot disagrees with its parent WorkUnit",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return snapshot
 
 
@@ -165,10 +218,16 @@ def _validate_record_design_authority(
     """Require the embedded M303 record design to be owned by the snapshot."""
     inspected_source = snapshot.sources.get(record_design.id)
     if inspected_source is None or inspected_source.id not in snapshot.revision.source_refs:
-        raise ModeloValidationError("M303 rectificativa record-design source is not owned by the selected revision")
+        raise ModeloValidationError(
+            "M303 rectificativa record-design source is not owned by the selected revision",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if inspected_source != record_design:
         raise ModeloValidationError(
             "M303 rectificativa embedded record-design evidence diverges from registry authority",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
 
 
@@ -187,10 +246,20 @@ def _require_rectificativa_motive(
         if motive is not None:
             raise ModeloValidationError(
                 "M303 rectificativa motive is forbidden outside the exact reviewed capability set",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
-        raise ModeloValidationError("M303 rectificativa amendment is unsupported by this exact record-design source")
+        raise ModeloValidationError(
+            "M303 rectificativa amendment is unsupported by this exact record-design source",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if motive is None:
-        raise ModeloValidationError("M303 rectificativa amendment requires exactly one persisted motive")
+        raise ModeloValidationError(
+            "M303 rectificativa amendment requires exactly one persisted motive",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return motive
 
 
@@ -202,7 +271,11 @@ def _require_target_receipt(
     """Resolve the one AEAT-accepted target receipt for a rectificativa."""
     target = context.filing_records.get(identity.amends_filing_record_id)
     if target is None:
-        raise ModeloValidationError("M303 rectificativa amended filing target does not resolve")
+        raise ModeloValidationError(
+            "M303 rectificativa amended filing target does not resolve",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     target_coordinate = (
         target.work_unit_id,
         target.bucket_id,
@@ -218,17 +291,31 @@ def _require_target_receipt(
         work_unit.period,
     )
     if target_coordinate != work_coordinate:
-        raise ModeloValidationError("M303 rectificativa amended filing target crosses its WorkUnit filing coordinate")
+        raise ModeloValidationError(
+            "M303 rectificativa amended filing target crosses its WorkUnit filing coordinate",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if not target.aeat_accepted or target.external_evidence is None:
-        raise ModeloValidationError("M303 rectificativa target must be an AEAT-accepted filing with external evidence")
+        raise ModeloValidationError(
+            "M303 rectificativa target must be an AEAT-accepted filing with external evidence",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if not is_justificante_backed_external_evidence(target.external_evidence.kind):
         raise ModeloValidationError(
             "M303 rectificativa target evidence is not backed by persisted justificante metadata",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
     target_reference_id = target.external_evidence.reference_id
     matches = tuple(receipt for receipt in context.justificantes if receipt.csv == target_reference_id)
     if len(matches) != 1:
-        raise ModeloValidationError("M303 rectificativa target evidence must resolve to exactly one justificante")
+        raise ModeloValidationError(
+            "M303 rectificativa target evidence must resolve to exactly one justificante",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return matches[0]
 
 

@@ -10,6 +10,7 @@ frame. Nothing is retried; a submission whose reply was lost stays unknown.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from typing import ClassVar, cast, override
 
 from pydantic import BaseModel
@@ -74,12 +75,25 @@ class OperationRunScreen(Screen[None]):
     #operation-run-actions Button { width: 1fr; margin: $cadrumo-space-0; }
     """)
 
-    def __init__(self, client: FrontendClient, entry: OperationCatalogueEntryV1) -> None:
-        """Bind the form to one admitted session and one registered operation."""
+    def __init__(
+        self,
+        client: FrontendClient,
+        entry: OperationCatalogueEntryV1,
+        *,
+        initial: Mapping[str, object] | None = None,
+    ) -> None:
+        """Bind the form to one admitted session and one registered operation.
+
+        ``initial`` fills named request fields before the person edits them, as
+        if they had typed those values; a name the request does not declare is
+        ignored, and a field the session fixes keeps its fixed value.
+        """
         super().__init__()
         self._client = client
         self._entry = entry
         self._fields: tuple[RequestFieldV1, ...] = request_fields(entry.input_json_schema, profile_id=client.profile_id)
+        self._initial = dict(initial or {})
+        self._settled_result: BaseModel | None = None
         self._subject_entered = subject_is_entered(
             entry.contract.subject_reference, typed_operator_input=entry.typed_operator_input
         )
@@ -159,8 +173,24 @@ class OperationRunScreen(Screen[None]):
                 Button(tr("tui.operations.action.close"), id="operation-close"), "tui.operations.action.close"
             )
 
+    @property
+    def entry(self) -> OperationCatalogueEntryV1:
+        """The operation, and the request schema, this form was built for."""
+        return self._entry
+
+    @property
+    def settled_result(self) -> BaseModel | None:
+        """The registered result the last settled run read, refusal detail included; ``None`` before one."""
+        return self._settled_result
+
     def on_mount(self) -> None:
-        """Show the subject the untouched form already determines."""
+        """Fill the values the form was opened with and show the subject they determine."""
+        if self._initial:
+            texts = self._texts()
+            known = {field.name for field in self._fields}
+            given = {name: value for name, value in self._initial.items() if name in known}
+            texts.update({name: text for name, text in field_texts(self._fields, given).items() if name in given})
+            self._show_texts(texts)
         self._show_subject(request_document(self._fields, self._texts())[0])
 
     def _texts(self) -> dict[str, str]:
@@ -367,6 +397,7 @@ class OperationRunScreen(Screen[None]):
     def _clear_result(self) -> None:
         self._show_receipt("")
         self.query_one("#operation-result-stopped", Static).update("")
+        self._settled_result = None
         self._pages = ()
         self._show_page(0)
 
@@ -400,6 +431,7 @@ class OperationRunScreen(Screen[None]):
         except CadrumoError as error:
             self._notice(resolve_error_message(error))
             return
+        self._settled_result = result
         self._pages = result_pages(result)
         self._show_page(0)
 

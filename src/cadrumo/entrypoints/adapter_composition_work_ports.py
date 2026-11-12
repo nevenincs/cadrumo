@@ -150,9 +150,10 @@ def _calculation_invoice_source_ports(
     invoice_repository: InvoiceCatalogueRepository,
     calculation_binding: CalculationRevisionPersistenceBinding,
 ) -> InvoiceSourceResolverPorts:
-    """Compose the invoice-sourced resolvers a calculation reads: catalogue, filed M349 and counterpart provinces."""
+    """Compose the invoice-sourced resolvers a calculation reads: catalogue, filed M349 and counterpart facts."""
     from ..adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
     from ..adapters.persistence.profile.invoice_source_resolver import (
+        CounterpartyFilingNameAdapter,
         CounterpartyProvinciaAdapter,
         InvoiceCatalogueSourceResolverAdapter,
         M349FiledDeclarationAdapter,
@@ -168,6 +169,9 @@ def _calculation_invoice_source_ports(
             operation=operation,
         ),
         counterparty_provincias=CounterpartyProvinciaAdapter(
+            repository=CounterpartyEstablishmentRepository(bucket_id=bucket_id, objects=objects),
+        ),
+        counterparty_filing_names=CounterpartyFilingNameAdapter(
             repository=CounterpartyEstablishmentRepository(bucket_id=bucket_id, objects=objects),
         ),
     )
@@ -603,9 +607,11 @@ def build_ledger_membership_ports(
     from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+    from ..adapters.persistence.profile.retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.aggregation.ledger_membership import LedgerMembershipPorts
+    from ..application.aggregation.retencion_soportada_repository import RetencionSoportadaPorts
 
     normalized_bucket_id = bucket_id.strip()
     objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
@@ -621,6 +627,9 @@ def build_ledger_membership_ports(
         ),
         usage_ratio_profile_loader=load_usage_ratios,
         inventory_repository=InventoryLedgerRepository(objects=objects),
+        retencion_soportada_ports=RetencionSoportadaPorts(
+            repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects)
+        ),
     )
 
 
@@ -653,6 +662,7 @@ def build_verification_repository_bundle(
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+    from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
     from ..adapters.persistence.storage.attachment import AttachmentStore
@@ -704,6 +714,7 @@ def build_verification_repository_bundle(
             bucket_id=normalized_bucket_id, transaction_repository=transaction_repository, objects=objects
         ),
         credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
+        prorrata_register=ProrrataRegisterRepository(bucket_id=normalized_bucket_id, objects=objects),
         attachment=AttachmentStore(objects=objects),
     )
 

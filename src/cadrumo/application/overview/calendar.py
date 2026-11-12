@@ -81,6 +81,7 @@ from .calendar_warnings import (
     calendar_applicability_disagreement_warnings,
     calendar_censo_enrolment_state,
     calendar_censo_reconciliation_warnings,
+    calendar_deadline_windows_unavailable_warnings,
     calendar_regime_incompatibility_warnings,
     calendar_unverified_justificante_warnings,
 )
@@ -573,12 +574,14 @@ def _schedules_for_calendar_range(
     today: date,
     engine: ScheduleProducer | None,
     operation: PinnedAuthorityOperation,
-) -> tuple[ScheduleProducer, list[Schedule]]:
-    """Return the deadline engine and per-year schedules covering ``calendar_range``.
+) -> tuple[ScheduleProducer, list[Schedule], list[int]]:
+    """Return the deadline engine, per-year schedules and unresolved years for ``calendar_range``.
 
-    A year inside the range with no registered deadline windows is a normal
-    "no data yet" state (registry-track gap R1), not an error: the year
-    contributes zero entries and every other covered year still resolves.
+    A year inside the range with no registered deadline windows is a registry
+    data gap (registry-track gap R1), not an error: the year contributes zero
+    entries and every other covered year still resolves. The year is returned
+    as unresolved so the calendar reports it as unknown rather than as a year
+    in which nothing is due.
     This catch is deliberately the narrow ``_NoDeadlineWindowsError``
     subtype; a genuine registry-integrity fault (validation failure,
     profile-condition evaluation failure) raises the bare
@@ -587,6 +590,7 @@ def _schedules_for_calendar_range(
     """
     deadline_engine = engine if engine is not None else DeadlineEngine(authority=operation)
     schedules: list[Schedule] = []
+    unresolved_years: list[int] = []
     # The prior year that ``covered_years`` adds for late-opening windows can
     # sit below the registry's support floor, where nothing resolves at all.
     modelo_ids = operation.modelo_ids()
@@ -597,12 +601,12 @@ def _schedules_for_calendar_range(
         try:
             schedules.append(deadline_engine.compute(profile, year, today=today))
         except NoDeadlineWindowsError as exc:
-            _log.debug(
-                "overview calendar ignored covered year with no registered deadline windows",
+            _log.warning(
+                "overview calendar could not resolve deadline windows for a covered year",
                 extra={"year": year, "error_type": type(exc).__name__},
             )
-            continue
-    return deadline_engine, schedules
+            unresolved_years.append(year)
+    return deadline_engine, schedules, unresolved_years
 
 
 def _calendar_obligation_projection(
@@ -634,7 +638,7 @@ def _calendar_obligation_projection(
     applicability = derive_modelo_applicability(
         profile if applicability_evidence is None else applicability_evidence.profile_for_year(filing_year),
         obligation.modelo,
-        today=today,
+        reference_date=date(filing_year, 12, 31),
         operation=operation,
         ledger_payer_facts=(
             {} if applicability_evidence is None else applicability_evidence.ledger_payer_facts_for_year(filing_year)
@@ -763,9 +767,10 @@ def build_overview_calendar(
     filing evidence, and work units are merged without storage or network I/O.
     Suppressed obligations are included only when ``show_suppressed`` is true.
     Live censo keys and per-filing-year applicability evidence inform warnings
-    and applicability decisions. Years without registered deadline windows
-    contribute no entries. An undeclared taxpayer model yields an incomplete
-    calendar with obligation coverage rather than guessed obligations.
+    and applicability decisions. A year without registered deadline windows
+    contributes no entries and is reported as an unavailable-windows warning.
+    An undeclared taxpayer model yields an incomplete calendar with obligation
+    coverage rather than guessed obligations.
 
     ``profile`` is a :class:`TaxpayerProfile`.
     """
@@ -806,7 +811,7 @@ def build_overview_calendar(
             ),
         )
 
-    deadline_engine, schedules = _schedules_for_calendar_range(
+    deadline_engine, schedules, unresolved_years = _schedules_for_calendar_range(
         profile,
         calendar_range,
         today=today,
@@ -859,6 +864,7 @@ def build_overview_calendar(
     regime_incompatibility_warnings = calendar_regime_incompatibility_warnings(
         iva_regime=profile.iva_regime,
         entries=entries_tuple,
+        evaluated_on=today,
         operation=operation,
     )
     coverage = build_obligation_coverage(
@@ -879,6 +885,7 @@ def build_overview_calendar(
             + evidence_conflict_warnings
             + regime_incompatibility_warnings
             + calendar_applicability_disagreement_warnings(disagreeing_modelos)
+            + calendar_deadline_windows_unavailable_warnings(unresolved_years)
         ),
         completeness=completeness,
         suppressed_entries=tuple(suppressed),

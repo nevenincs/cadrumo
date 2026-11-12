@@ -24,7 +24,6 @@ from datetime import date
 from typing import Final, NamedTuple
 
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
-from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.iva_category_catalogue import require_iva_category
@@ -146,29 +145,33 @@ def _coerce_enum_field(payload: dict[str, object], rule: _EnumFieldRule) -> None
     if rule.absent_when_blank and not text:
         payload[rule.field] = None
         return
-    effective_date = payload.get("issued_at")
-    if not isinstance(effective_date, date):
-        effective_date = today_madrid()
+    issued_at = payload.get("issued_at")
+    effective_date = issued_at if isinstance(issued_at, date) else None
     try:
         payload[rule.field] = answer_once(_coerce_enum_value, rule, text, effective_date=effective_date)
     except (RegistryValidationError, TypeError, ValueError) as exc:
         raise InvoiceValidationError(rule.message) from exc
 
 
-def _coerce_enum_value(rule: _EnumFieldRule, text: str, *, effective_date: date) -> object:
-    if rule.enum is OssIossRegime:
-        return require_oss_ioss_regime(text)
+def _coerce_enum_value(rule: _EnumFieldRule, text: str, *, effective_date: date | None) -> object:
     if rule.enum is TransactionKind:
         return TransactionKind(text)
     if rule.enum is EUMemberState:
         return require_eu_member_state(text)
+    if rule.enum not in _DATED_ENUMS:
+        return rule.enum(text)
+    if effective_date is None:
+        raise InvoiceValidationError(f"{rule.field} requires a normalized issued_at date")
+    if rule.enum is OssIossRegime:
+        return require_oss_ioss_regime(text, effective_date=effective_date)
     if rule.enum is IvaCategory:
         return require_iva_category(text, effective_date=effective_date)
     if rule.enum is InvoiceClass:
         return require_invoice_class(text, effective_date=effective_date)
-    if rule.enum is InvoiceOperationDateRole:
-        return require_invoice_operation_date_role(text, effective_date=effective_date)
-    return rule.enum(text)
+    return require_invoice_operation_date_role(text, effective_date=effective_date)
+
+
+_DATED_ENUMS: Final = (OssIossRegime, IvaCategory, InvoiceClass, InvoiceOperationDateRole)
 
 
 def _coerce_legal_mentions(payload: dict[str, object]) -> None:

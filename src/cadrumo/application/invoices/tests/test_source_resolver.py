@@ -23,6 +23,8 @@ from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
 from ....domain.invoices.business_premises import BusinessPremisesLease
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
@@ -41,6 +43,7 @@ from ...modelo.calculation_note_gate import gate_refuses
 from ...modelo.calculation_notes import note_attention, note_record_verdict
 from ...modelo.printed_boxes import PrintedBoxes
 from ...modelo.work_form_findings import ModeloFormAttention
+from ...operator_actions.catalogue import lookup_action
 from ..source_observations import intracommunity_clave, invoice_sources_for_revision
 from ..source_resolver import (
     InvoiceCatalogueSourceResolver,
@@ -62,9 +65,29 @@ class _InMemoryCatalogueReader:
         return self._catalogue
 
 
+class _StatedFilingNames:
+    """Each counterparty declared under its printed name, as an entity."""
+
+    def __init__(self, catalogue: InvoiceCatalogue) -> None:
+        self._names = {
+            invoice.counterparty_tax_id: DeclaredPartyFilingName(
+                kind=DeclaredPartyKind.ENTITY, razon_social=invoice.counterparty_name
+            )
+            for invoice in catalogue.values()
+            if invoice.counterparty_tax_id is not None
+        }
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
+        del country_code
+        return self._names.get(tax_identifier)
+
+
 def _resolver(catalogue: InvoiceCatalogue) -> InvoiceCatalogueSourceResolver:
     return InvoiceCatalogueSourceResolver(
-        ports=InvoiceSourceResolverPorts(catalogue_reader=_InMemoryCatalogueReader(catalogue)),
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_InMemoryCatalogueReader(catalogue),
+            counterparty_filing_names=_StatedFilingNames(catalogue),
+        ),
     )
 
 
@@ -846,3 +869,70 @@ def test_m349_raises_no_unclassified_note_for_an_invoice_that_is_no_intra_commun
     resolution = _resolver(build_invoice_catalogue([other])).resolve(context)
 
     assert not [item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified"]
+
+
+class _NoStatedFilingNames:
+    """A profile in which the person has stated no counterparty's filing name."""
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
+        del tax_identifier, country_code
+
+
+def test_m347_party_without_a_declared_filing_name_files_no_name_and_is_named_with_its_door() -> None:
+    """The record design fills the arrendatario name from the person's declared name only.
+
+    With none stated, the printed invoice name never stands in: the name cell is
+    left without content and one note per party names it, with the invoice it
+    is recognised by, until the name is declared.
+    """
+    lease = _lease(
+        "ALQ-1", "B00015016", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
+    )
+    catalogue = build_invoice_catalogue([lease])
+    resolver = InvoiceCatalogueSourceResolver(
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_InMemoryCatalogueReader(catalogue),
+            counterparty_filing_names=_NoStatedFilingNames(),
+        ),
+    )
+
+    resolution = resolver.resolve(_m347_context(2025))
+
+    names = {key: value for key, value in resolution.row_binding_values.items() if str(key[0]).endswith("-nombre")}
+    assert names == {}
+    unresolved = [item for item in resolution.diagnostics if item.reason == "declared_party_name_unresolved"]
+    assert {item.fact.sentence for item in unresolved if item.fact is not None} == {
+        CalculationNoteSentence.DECLARED_PARTY_NAME_MISSING
+    }
+    assert {item.fact.row_refs for item in unresolved if item.fact is not None} == {(lease.invoice_id,)}
+    assert all(item.remedy is not None for item in unresolved)
+    assert all(lease.counterparty_name not in str(item.casilla_id) for item in unresolved)
+
+
+def test_an_unstated_party_name_note_opens_the_counterparty_filing_name_door() -> None:
+    """The note carries the catalogued door that states the name, binding nothing that identifies the party."""
+    lease = _lease(
+        "ALQ-1", "B00015016", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
+    )
+    resolver = InvoiceCatalogueSourceResolver(
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_InMemoryCatalogueReader(build_invoice_catalogue([lease])),
+            counterparty_filing_names=_NoStatedFilingNames(),
+        ),
+    )
+    (finding, *_others) = [
+        item
+        for item in resolver.resolve(_m347_context(2025)).diagnostics
+        if item.reason == "declared_party_name_unresolved"
+    ]
+
+    verdict = note_record_verdict(finding)
+
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    assert lookup_action(verdict.action.action_id).action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    assert set(verdict.missing_argument_names) == {"tax_identifier", "country_code", "kind"}
+    assert "B00015016" not in verdict.model_dump_json()
+    assert finding.remedy is not None
+    assert "cadrumo" not in finding.remedy

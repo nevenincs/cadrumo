@@ -14,6 +14,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.errors.error_codes import resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
@@ -270,6 +271,42 @@ def test_a_layout_that_shows_a_casilla_twice_is_refused(
 
     with pytest.raises(ModeloWorkFormLayoutError, match="more than once"):
         work_form(snapshot, operation, layout=twice)
+
+
+def test_a_layout_that_forgets_a_casilla_is_refused_in_words_that_name_it(
+    snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
+) -> None:
+    complete = work_form_layout(snapshot)
+    forgetful = tuple(item for item in complete.placements if str(item.casilla_id) != _WORKING)
+
+    with pytest.raises(ModeloWorkFormLayoutError) as raised:
+        work_form(snapshot, operation, layout=work_form_layout(snapshot, placements=forgetful))
+
+    assert raised.value.translated_message == "application.modelo.errors.work_form_layout_casillas_unplaced"
+    for locale in ("en", "es", "ca", "hu"):
+        words = resolve_error_message(raised.value, locale=locale)
+        assert _WORKING in words
+        assert "%{" not in words
+
+
+def test_a_layout_that_shows_a_casilla_twice_is_refused_in_words_that_name_it(
+    snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
+) -> None:
+    layout = work_form_layout(snapshot)
+    page = layout.pages[0]
+    doubled = page.sections[1].model_copy(
+        update={"blocks": (*page.sections[1].blocks, FormFieldBlock(id="again", casilla_id="08"))}
+    )
+    twice = layout.model_copy(update={"pages": (page.model_copy(update={"sections": (page.sections[0], doubled)}),)})
+
+    with pytest.raises(ModeloWorkFormLayoutError) as raised:
+        work_form(snapshot, operation, layout=twice)
+
+    assert raised.value.translated_message == "application.modelo.errors.work_form_layout_casilla_repeated"
+    for locale in ("en", "es", "ca", "hu"):
+        words = resolve_error_message(raised.value, locale=locale)
+        assert "08" in words
+        assert "%{" not in words
 
 
 @pytest.mark.parametrize("fault", (None, "undeclared", "same-section"))

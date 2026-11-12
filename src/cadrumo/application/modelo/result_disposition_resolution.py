@@ -45,9 +45,9 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.refund_election import RefundElection
@@ -70,6 +70,7 @@ from ...domain.iva.refund_eligibility import (
     refund_eligibility_for_period,
 )
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import (
     CalculationRegistryUnavailableError,
@@ -80,6 +81,9 @@ from .action_errors import (
     ModeloResultDispositionUncodifiedError,
 )
 from .calculation_helpers import assert_snapshot_matches_work_unit_revision
+from .lifecycle_view_refusal_doors import profile_facts_verdict
+from .refusal_door_verdicts import operator_choice_verdict, registry_defect_verdict
+from .registry_input_refusals import RegistryInputCondition, registry_input_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -226,6 +230,7 @@ def base_modelo_result_disposition(
                 "revision_id": registry_revision.id,
                 "producer_key": producer_key.value,
             },
+            precondition_verdict=registry_defect_verdict("result_disposition_uncodified"),
         )
     return None
 
@@ -244,11 +249,13 @@ def _resolve_elected_disposition(
         if payment_election is not PaymentElection.INGRESO:
             raise ModeloPaymentElectionIncompatibleError(
                 translated_message="errors.error.error_modelos",
+                precondition_verdict=operator_choice_verdict("result_election"),
                 context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
             )
         if refund_election is not RefundElection.COMPENSAR:
             raise ModeloRefundElectionNotEligibleError(
                 translated_message="errors.error.error_modelos",
+                precondition_verdict=operator_choice_verdict("result_election"),
                 context={"modelo": str(work_unit.modelo), "refund_election": refund_election.value},
             )
         return None
@@ -256,6 +263,7 @@ def _resolve_elected_disposition(
         if refund_election is not RefundElection.COMPENSAR:
             raise ModeloRefundElectionNotEligibleError(
                 translated_message="errors.error.error_modelos",
+                precondition_verdict=operator_choice_verdict("result_election"),
                 context={
                     "modelo": str(work_unit.modelo),
                     "base_disposition": base_disposition.value,
@@ -267,6 +275,7 @@ def _resolve_elected_disposition(
     if payment_election is not PaymentElection.INGRESO:
         raise ModeloPaymentElectionIncompatibleError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("result_election"),
             context={
                 "modelo": str(work_unit.modelo),
                 "base_disposition": base_disposition.value,
@@ -276,6 +285,7 @@ def _resolve_elected_disposition(
     if refund_election is RefundElection.DEVOLVER and base_disposition is not ResultDisposition.COMPENSACION:
         raise ModeloRefundElectionNotEligibleError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("result_election"),
             context={
                 "modelo": str(work_unit.modelo),
                 "base_disposition": base_disposition.value,
@@ -302,11 +312,13 @@ def _apply_payment_election(
     if payment_election is PaymentElection.CUENTA_CORRIENTE:
         raise ModeloPaymentElectionCapabilityRefusedError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("result_election"),
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
     if not result_disposition_declares(str(work_unit.modelo), ResultDisposition.DOMICILIACION):
         raise ModeloPaymentElectionCapabilityRefusedError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("result_election"),
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
     return ResultDisposition.DOMICILIACION
@@ -361,6 +373,7 @@ def require_admissible_charge_account(*, work_unit: WorkUnit, charge_account: Ch
         return
     raise ModeloPaymentElectionCapabilityRefusedError(
         translated_message="errors.error.error_modelos",
+        precondition_verdict=operator_choice_verdict("result_election"),
         context={
             "modelo": str(work_unit.modelo),
             "payment_election": PaymentElection.DOMICILIACION.value,
@@ -407,6 +420,10 @@ def result_disposition_values_for_revision(
                 "filing_year": work_unit.filing_year,
                 "period": period.registry_token,
             },
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.AUTHORITY_AVAILABLE,
+                facts={"modelo": str(work_unit.modelo), "available": False},
+            ),
         ) from exc
     assert_snapshot_matches_work_unit_revision(work_unit, snapshot, period=period)
     _reject_non_revision_casilla_values(
@@ -446,15 +463,19 @@ def _reject_non_revision_casilla_values(
 
     if noncanonical_details:
         details = "; ".join(noncanonical_details)
-        raise CoreValidationError(
+        raise ModeloValidationError(
             translated_message="errors.integrity.integrity_cadrumo_core_validation",
             context={"modelo": modelo, "revision_id": revision_id, "casilla_refs": details},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
     if unknown_ids:
         unknown = ", ".join(repr(casilla_id) for casilla_id in unknown_ids)
-        raise CoreValidationError(
+        raise ModeloValidationError(
             translated_message="errors.integrity.integrity_cadrumo_core_validation",
             context={"modelo": modelo, "revision_id": revision_id, "casilla_ids": unknown},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
 
 
@@ -498,6 +519,7 @@ def _apply_modelo_303_refund_election(
                 "period": period.registry_token,
                 "iva_profile_present": False,
             },
+            profile_precondition_verdict=profile_facts_verdict(("iva.redeme_enrolled",), modelo="303"),
         )
     redeme = redeme_enrolment_state(iva_profile.redeme_enrolled)
     eligibility = refund_eligibility_for_period(period=period, redeme=redeme)
@@ -524,6 +546,7 @@ def _apply_modelo_303_refund_election(
                 "refund_eligibility": eligibility.outcome.value,
                 "refund_eligibility_basis": eligibility.basis.value,
             },
+            precondition_verdict=operator_choice_verdict("refund_election_not_eligible"),
         )
     return ResultDisposition.DEVOLUCION
 

@@ -11,7 +11,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.filing_timeliness import FilingTimeliness
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -63,6 +63,7 @@ from .filing_action_ports import FilingActionPortsFactory
 from .filing_actions import file_modelo_revision
 from .filing_projection import ModeloFilingRecordSnapshot
 from .lifecycle_advisories import ModeloLifecycleAdvisories, build_modelo_lifecycle_advisories
+from .lifecycle_view_refusal_doors import unit_status_verdict
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
@@ -189,7 +190,7 @@ class ModeloWorkRenameExecutor:
         return await await_cancellation_complete(publish(), task_name="modelo-work-rename-publication")
 
 
-class ModeloWorkDiscardApprovalStaleError(CadrumoError):
+class ModeloWorkDiscardApprovalStaleError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Raised when the approved unit is no longer the unit on disk."""
 
 
@@ -235,6 +236,7 @@ class ModeloWorkDiscardExecutor:
                 raise ModeloWorkDiscardApprovalStaleError(
                     translated_message="errors.refused.modelo_work_discard_approval_stale",
                     context={"work_unit_id": baseline.work_unit_id},
+                    precondition_verdict=unit_status_verdict("work_discard_approval", baseline.work_unit_id),
                 )
             return current
 
@@ -354,6 +356,8 @@ def _lifecycle_advisories(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references "
             f"missing work_unit_id={revision.work_unit_id!r}",
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": revision.work_unit_id},
         )
     return build_modelo_lifecycle_advisories(
         work_unit=unit, revision=revision, workflow_profile=workflow_profile, operation=operation

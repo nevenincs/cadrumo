@@ -10,13 +10,17 @@ from __future__ import annotations
 from typing import Protocol, override
 
 from ....application.invoices.source_resolver_ports import (
+    CounterpartyFilingNameReader,
     CounterpartyProvinciaReader,
     InvoiceSourceCatalogueReader,
     InvoiceSourcePersistenceError,
     M349FiledDeclaration,
     M349FiledDeclarationReader,
 )
-from ....application.ledger.counterparty_establishment import stated_counterparty_provincia
+from ....application.ledger.counterparty_establishment import (
+    stated_counterparty_filing_name,
+    stated_counterparty_provincia,
+)
 from ....application.ledger.counterparty_establishment_ports import (
     CounterpartyEstablishmentPersistenceError,
     CounterpartyEstablishmentRepositoryProtocol,
@@ -24,6 +28,7 @@ from ....application.ledger.counterparty_establishment_ports import (
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.form_codes import form_for_role
+from ....domain.filing.declared_party_name import DeclaredPartyFilingName
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ....domain.modelos.calculation_revision import (
@@ -66,6 +71,25 @@ class CounterpartyProvinciaAdapter(CounterpartyProvinciaReader):
             return stated_counterparty_provincia(tax_identifier, repository=self._repository)
         except CounterpartyEstablishmentPersistenceError as exc:
             raise InvoiceSourcePersistenceError("counterparty_provincia_load") from exc
+
+
+class CounterpartyFilingNameAdapter(CounterpartyFilingNameReader):
+    """Read the filing name declared for a counterparty from the encrypted counterparty facts."""
+
+    def __init__(self, *, repository: CounterpartyEstablishmentRepositoryProtocol) -> None:
+        """Bind an already-composed counterparty-facts repository."""
+        self._repository = repository
+
+    @override
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
+        """Return the declared filing name while translating storage failures."""
+        try:
+            stated = stated_counterparty_filing_name(
+                tax_identifier, country_code=country_code, repository=self._repository
+            )
+        except CounterpartyEstablishmentPersistenceError as exc:
+            raise InvoiceSourcePersistenceError("counterparty_filing_name_load") from exc
+        return None if stated is None else stated.declared_filing_name
 
 
 class _CalculationCatalogueLoader(Protocol):

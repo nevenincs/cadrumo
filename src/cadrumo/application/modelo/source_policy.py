@@ -33,6 +33,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
+from .refusal_door_verdicts import registry_defect_verdict
 
 
 class SourceFamily(StrEnum):
@@ -116,8 +117,10 @@ _FAMILY_AND_SURFACE: Final[Mapping[BindingSourceKind, tuple[SourceFamily, Source
         BindingSourceKind.RETENCION_SOPORTADA: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.WITHHOLDING296: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.INVENTORY: (SourceFamily.REGISTERS, SourceSurface.NONE),
+        BindingSourceKind.RENTA_INMUEBLE: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.PRORRATA_REGULARIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),
+        BindingSourceKind.PRORRATA_REGISTER_ACTIVITY: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.FOREIGN_ASSET: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.ATRIBUCION_MEMBER: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.GASTO193_CONTRIBUTOR: (SourceFamily.REGISTERS, SourceSurface.NONE),
@@ -168,7 +171,12 @@ def source_policy(kind: BindingSourceKind) -> SourcePolicyV1:
     try:
         family, surface = _FAMILY_AND_SURFACE[kind]
     except KeyError:
-        raise UnclassifiedSourceKindError(f"binding source kind {kind.value!r} has no declared family") from None
+        raise UnclassifiedSourceKindError(
+            f"binding source kind {kind.value!r} has no declared family",
+            translated_message="application.modelo.errors.binding_source_kind_unclassified",
+            context={"source_kind": kind.value},
+            precondition_verdict=registry_defect_verdict("source_kind_family"),
+        ) from None
     return SourcePolicyV1(source_kind=kind, family=family, override_policy=_override_policy(kind), surface=surface)
 
 

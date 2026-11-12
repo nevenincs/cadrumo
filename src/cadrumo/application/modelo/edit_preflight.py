@@ -163,7 +163,8 @@ def _binding_findings(
         if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT
         else _value_findings(intent, submission, tax_id_format=tax_id_format)
     )
-    if not findings and head.source_feeds_binding(binding_id):
+    # A row's statement of its carry stands where no source holds one; it overrides nothing.
+    if not findings and intent.address.row_identity is None and head.source_feeds_binding(binding_id):
         findings.append(_finding(OVERRIDES_SOURCE_VALUE, ModeloEditFindingSeverity.WARNING, intent.address))
     return findings
 

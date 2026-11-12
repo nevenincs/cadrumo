@@ -514,18 +514,96 @@ application:
         során (%{adapter_error}).
     export:
       errors:
-        draft_not_approved: Az exportáláshoz jóváhagyott piszkozat szükséges.
-        draft_snapshot_stale: Az exportáláshoz a jelenleg használt nyomtatványdefiníciókból
-          készült piszkozat szükséges.
+        block_anchor_unstated: 'Semmi sem íródott ki: a(z) %{field_casilla_id} mezőnek
+          van értéke, de a blokkját megnyitó %{casilla_id} mezőnek nincs. Töltsd ki
+          a(z) %{casilla_id} mezőt, vagy ürítsd ki a(z) %{field_casilla_id} mezőt,
+          és exportálj újra.'
+        box_not_stated_by_rows: 'Semmi sem íródott ki: a(z) %{casilla_id} mező értéke
+          nem egyezik a(z) %{element_path} sorainak összegével. Javítsd a mezőt vagy
+          a sorokat úgy, hogy minden sor a saját összegeit adja meg, és exportálj
+          újra.'
+        counterparty_rows_unattributable: 'Semmi sem íródott ki: a(z) %{record_id}
+          rekord %{row_count} ellenfélsort tartalmaz, és az egyértékű %{casillas}
+          rovatok nem rendelhetők egyikhez sem. Add meg ezeket az összegeket a sorokban,
+          és exportálj újra.'
+        devengo_year_not_earlier: 'Semmi sem íródott ki: a Modelo %{modelo} bevallásban
+          az esedékességi évnek korábbinak kell lennie a bevallás événél. Javítsd,
+          és exportálj újra.'
+        dictionary_values_not_admitted: 'Semmi sem íródott ki: a borítékelőtaggal
+          rendelkező export nem fogadhat emellett XML-bevallásfájlhoz tartozó értékeket.'
         layout_not_renderable: Ez a nyomtatvány nem tud helyi bevallás-exportfájlt
           előállítani.
+        m111_colegio_concertado_undeclared: 'Semmi sem lett kiírva: a 111-es modellhez
+          tudni kell, hogy colegio concertado vagy-e, de a profilod ezt nem mondja
+          meg. Add meg a profilodban, és exportálj újra.'
+        m190_amount_outside_keys: 'Semmi sem íródott ki: a 190-es modell %{casilla}
+          rovatának összege nem tartozik ennek a címzettnek a kulcsához és alkulcsához.
+          Töröld az összeget vagy javítsd a kulcsot, és exportálj újra.'
+        m190_clave_scope_unsupplied: 'Semmi sem íródott ki: a 190-es modell exportja
+          nem ismeri, mely kulcsokra vonatkoznak az egyes összegek, ezért nem tudja
+          ellenőrizni a címzett rekordját.'
+        m190_reintegro_magnitude_zero: 'Semmi sem íródott ki: a 190-es modell negatív
+          visszatérítéséhez nullától eltérő összeg kell. Add meg az összeget vagy
+          töröld a negatív előjelet, és exportálj újra.'
+        m190_reintegro_year_or_withholding: 'Semmi sem íródott ki: a 190-es modell
+          visszatérítéséhez a bevallási évnél korábbi esedékességi év kell, és nem
+          tartozhat hozzá levonás. Javítsd ezeket, és exportálj újra.'
+        m193_pending_mark_invalid: 'Semmi sem íródott ki: a 193-as modell függő jelölésének
+          üresnek vagy X-nek kell lennie. Javítsd, és exportálj újra.'
+        m193_pending_requires_key: 'Semmi sem íródott ki: a 193-as modellben a függő
+          jelölés és az esedékességi év csak az A, B és D kulcsra vonatkozik. Javítsd
+          a kulcsot vagy töröld őket, és exportálj újra.'
+        m193_pending_row_has_devengo: 'Semmi sem íródott ki: a 193-as modell függő
+          sorához nem tartozhat esedékességi év is. Töröld az egyiket, és exportálj
+          újra.'
+        m202_producer_facts_unsupported: 'Semmi sem lett kiírva: a 202-es modellhez
+          olyan adatok kellenek, amelyeket ez az export még nem tud a profilodból
+          venni (%{missing_fact_ids}). Exportáld, ha már támogatottak.'
+        m280_negative_imputation_key_invalid: 'Semmi sem íródott ki: a 280-as modell
+          negatív imputációjához a 2-es kulcs és az N negatív előjel kell, vagy bármely
+          más kulcs alatt nulla kitöltés. Javítsd a rekordot, és exportálj újra.'
+        m303_definitive_prorrata_missing: 'Semmi sem lett kiírva: a 303-as modell
+          beruházási javak helyesbítéséhez a végleges pro rata százalék kell, de a
+          nyilvántartásodban nincs meg erre az évre. Rendezd a nyilvántartásban, és
+          exportálj újra.'
+        m303_filing_facts_unsupplied: 'Semmi sem íródott ki: a 303-as modell exportjához
+          a bevallás teljes benyújtási adatkészlete kell, de egy sem érhető el.'
+        m303_sector_apportionment_missing: 'Semmi sem lett kiírva: a pro rata nyilvántartásodban
+          megkülönböztetett ágazatok vannak, de a főkönyved ebben az időszakban nem
+          ad rájuk arányosítást. Ellenőrizd a bemenő áfa ágazatát a főkönyvben és
+          a nyilvántartásban, és exportálj újra.'
+        m360_solicitud_undeclared: 'Semmi sem lett kiírva: a 360-as modellhez a(z)
+          %{filing_year}. év %{period} időszakának kérelemadatai kellenek, de egy
+          sincs megadva. Add meg őket a `aeat app modelo m360 declare` paranccsal,
+          és exportálj újra.'
         post_write_verification_refused: Az írás utáni ellenőrzés elutasította az
           exportált bevallásfájlt.
+        prior_domiciliation_election_differs: 'Semmi sem íródott ki: az exporthoz
+          megadott előzetes beszedési megbízási döntés (domiciliación previa) eltér
+          a 303-as modell benyújtási adataiban rögzítettől.'
+        prior_domiciliation_election_required: 'Semmi sem íródott ki: a Modelo %{modelo}
+          bevallás exportjához szükség van az előzetes beszedési megbízásra (domiciliación
+          previa) vonatkozó döntésedre, de az nincs megadva. Add meg, és exportálj
+          újra.'
+        producer_fact_required: 'Semmi sem íródott ki: az exportáláshoz szükség van
+          erre: %{fact}, de az nincs megadva. Add meg, és exportálj újra.'
+        product_identity_not_admitted: 'Semmi sem íródott ki: ennek az exportnak nincs
+          helye a termék vagy a szoftver azonosítójának, ezért nem adható meg ilyen.'
+        product_identity_required: 'Semmi sem íródott ki: az exporthoz szükség van
+          a termék és a szoftver azonosítójára, de egyik sincs megadva.'
         receipt_artefact_unreadable: Az exportnyugta olyan fájlt nevez meg, amely
           nem olvasható.
         receipt_byte_size_mismatch: Az exportált fájl mérete nem egyezik az exportnyugtával.
         receipt_digest_mismatch: Az exportált fájl ellenőrzőösszege nem egyezik az
           exportnyugtával.
+        record_binding_row_omits_fields: 'Semmi sem íródott ki: a(z) %{row}. sorból
+          hiányoznak a kötelező mezők: %{fields}. Add meg őket, és exportálj újra.'
+        record_incomplete: 'Semmi sem íródott ki: a Modelo %{modelo} bevallás egyik
+          rekordja nem a hivatalos kialakítás által előírt hosszúságú, ezért nem írható
+          ki.'
+        record_requires_positive_casilla: 'Semmi sem íródott ki: a(z) %{record_id}
+          rekord megköveteli, hogy a(z) %{casilla} rovat nullánál nagyobb legyen,
+          de nem az.'
         rendered_payload_empty: Az exportelrendezés üres bevallástartalmat állított
           elő.
         shared_casilla_cells_unadjudicated: 'A bevallás fájlja nem készült el: a(z)
@@ -535,6 +613,30 @@ application:
           vinné.'
         verify_draft_snapshot_stale: Az ellenőrzéshez a jelenleg használt nyomtatványdefiníciókból
           készült piszkozat szükséges.
+        xml_amount_unreadable: 'Semmi sem íródott ki: egy %{data_type} sor összege
+          nem olvasható. Írd pontot használva tizedesjelként, legfeljebb %{scale}
+          tizedesjeggyel és ezreselválasztó nélkül, például 1234.56. Az olyan összeget,
+          mint az 1.000, elutasítjuk, mert egyaránt olvasható egynek és ezernek.'
+        xml_boxes_without_single_row: 'Semmi sem íródott ki: a(z) %{paths} értékei
+          nem helyezhetők el, mert a(z) %{element_path} nem pontosan egyszer fordul
+          elő, hogy fogadhassa őket.'
+        xml_comunidad_ambiguous: 'Semmi sem íródott ki: a tartományi levonások több
+          autonóm közösségre (%{comunidades}) vannak kitöltve, a bevallás pedig csak
+          egyet tartalmazhat. Hagyj meg egyet, és exportálj újra.'
+        xml_date_form_refused: 'Semmi sem íródott ki: egy %{data_type} sor dátuma
+          nem abban a formában van, amelyet az AEAT elfogad (n/h/éééé, négyjegyű évvel,
+          például 2/1/1980). Javítsd, és exportálj újra.'
+        xml_holder_code_invalid: 'Semmi sem íródott ki: egy %{data_type} sor tulajdonosa
+          a következők egyike lehet: %{allowed}. Javítsd, és exportálj újra.'
+        xml_payload_root_differs: A bevallásfájl a(z) %{found} elemmel kezdődik, de
+          a szótárformátum a(z) %{expected} elemet várja.
+        xml_payload_unreadable: A bevallásfájl nem olvasható XML-ként, ezért nem lett
+          ellenőrizve.
+        xml_row_date_invalid: 'Semmi sem íródott ki: a(z) %{binding} mellett tárolt
+          dátum nem érvényes. Javítsd, és exportálj újra.'
+        xml_rows_exceed_schema: 'Semmi sem íródott ki: %{rows} sor nem fér el a(z)
+          %{element_path} elemben, amelyet a hivatalos séma legfeljebb %{limit} alkalommal
+          enged meg. Törölj sorokat, és exportálj újra.'
         xml_schema_unreadable: Az adott év hivatalos sémáját nem sikerült alkalmazni
           a bevallás értékeinek ellenőrzéséhez.
         xml_value_above_maximum: A(z) %{box} rovat összege meghaladja a(z) %{limit}
@@ -545,8 +647,15 @@ application:
           amelyet a hivatalos séma nem enged meg.
         xml_value_not_a_number: A(z) %{box} rovatnak a hivatalos séma szerint számot
           kell tartalmaznia.
+        xml_value_not_convertible: 'Semmi sem íródott ki: egy érték nem alakítható
+          át a bevallásfájl által megkövetelt formára (átalakítás: %{converter}).
+          Javítsd az értéket, és exportálj újra.'
         xml_value_not_listed: A(z) %{box} rovat értéke nem szerepel a hivatalos sémában
           felsorolt lehetőségek között.
+        xml_value_not_stated_by_rows: 'Semmi sem íródott ki: a(z) %{path} mező olyan
+          értéket tartalmaz, amelyet a(z) %{element_path} sorai nem adnak ki összegként.
+          Javítsd a mezőt vagy a sorokat úgy, hogy minden sor a saját összegeit mutassa,
+          és exportálj újra.'
         xml_value_required_missing: A hivatalos séma megköveteli a(z) %{box} rovatot,
           de nincs értéke. Add meg exportálás előtt; nem íródott ki semmi.
         xml_value_too_long: A(z) %{box} rovat %{observed} karaktert tartalmaz; a hivatalos
@@ -1043,6 +1152,15 @@ application:
         unmodelled_invoice_class: A feltüntetett számlatípusnak itt nincs megfelelője
         unnumbered_invoice: A beolvasott számlaszám nem szám
         unresolved_direction: Nem egyértelmű, melyik fél állította ki a dokumentumot
+    counterparty:
+      findings:
+        kind_contradicts_identifier_form: A bevallási nevet {declared} számára adtad
+          meg, de ennek a spanyol adóazonosítónak a formája {observed} formája. A
+          nevet úgy tároltuk, ahogy megadtad, és semmi sem változott; ellenőrizd,
+          melyik a helyes.
+      party_kinds:
+        entity: szervezet
+        natural_person: természetes személy
     draft_finding:
       breakdown_bases_disagree: A kulcsonkénti alapok összege {summed}, a dokumentum
         viszont {base} adóalapot tüntet fel. Ez ugyanannak a dokumentumnak két olvasata,
@@ -1174,6 +1292,14 @@ application:
       m210_payer_mode:
         multiple_payers_code_35: Több kifizető (35-ös kód)
         single_payer: Egy kifizető
+      withholding_certificate_figure:
+        gastos_deducibles: Levonható költségek
+        importe_integro_dinerario: Bruttó pénzbeli összeg
+        ingreso_a_cuenta: Előlegbefizetés
+        ingreso_a_cuenta_repercutido: Áthárított előlegbefizetés
+        reducciones_aplicables: Alkalmazott csökkentések
+        retencion: Levonás
+        valoracion_especie: Természetbeni érték
     errors:
       evidence_attachment_requires_ids: A bizonylatnak a nyilvántartásaidhoz való
         csatolásához vásárlási bizonyítékra vagy csatolmány-azonosítókra van szükség.
@@ -1598,6 +1724,13 @@ application:
           a hibás forrást, és számold újra. Ha ellenőrizted, hogy a felhasznált összeg
           helyes, fogadd el az azonosítójával: `aeat app modelo work accept-disagreement
           <azonosító> --reason <indoklás>`.'
+      declared_party_name_unresolved:
+        what: Egy bevallott partnernek nincs olyan bevallási neve, amelyet a rekordja
+          tartalmazhat, ezért a névmezője tartalom nélkül marad, és az export elutasításra
+          kerül.
+        what_to_do: 'Add meg a partner bevallási nevét: vezeték- és utónevét vagy
+          cégnevét (razón social), valamint rövidebb változatát, ahol a mező keskenyebb.
+          Ezután számolj újra.'
       deferred_binding_source:
         what: A Cadrumo a nyilatkozat egy értékét még nem tölti ki automatikusan.
         what_to_do: Nincs teendőd, hacsak az az érték nem vonatkozik rád. Ha igen,
@@ -1959,6 +2092,11 @@ application:
         már nem érvényes.'
       credit_source_disagreement: '{box}. mező: a megadott forrás szerint {amount},
         {cross_check} szerint viszont {compared_amount}.'
+      declared_party_name_missing: '{party} számára nincs megadott bevallási név.'
+      declared_party_name_single_surname: '{party} egyetlen vezetéknévvel van megadva,
+        amelyre a nyilvántartási minta nem ad szabályt.'
+      declared_party_name_too_wide: '{party} bevallási neve szélesebb a(z) {width}
+        karakteres mezőjénél, és ehhez a szélességhez nincs megadott változat.'
       disposal_claim_gap: '{element}: a kivezetése {date} napon történik, és {year}
         egy részére nincs rögzített értékcsökkenési leírás. A minimuma ettől még csökkenti
         a költséget.'
@@ -2043,6 +2181,94 @@ application:
         meg, a megnevezett tételek pedig {base} alapot tartalmaznak.'
       register_row_missing: '{elements}: ezek az eszközök {count} olyan tételt neveznek
         meg, amely már nem létezik.'
+      renta_inmueble_accessory_property: '{record}. ingatlan: a fő ingatlannal együtt
+        bérbe adott tartozék ingatlan, amit a számítás nem kínál.'
+      renta_inmueble_acquisition_cost_unstated: '{record}. ingatlan: nem szerepel
+        a beszerzési ára és költségei, ezért az épület értékcsökkenése nincs kiszámítva.'
+      renta_inmueble_acquisition_date_unstated: '{record}. ingatlan: nem szerepel,
+        mikor szerezted, így nem ismert, hány napig volt a tiéd.'
+      renta_inmueble_boxes_not_offered: '{record}. ingatlan: a bútorzat értékcsökkenése,
+        a 23.3. cikk szerinti csökkentés és a különleges értékcsökkenés nem elérhető;
+        ahol szükséges, add meg kézzel.'
+      renta_inmueble_cadastral_values_unstated: '{record}. ingatlan: sem a telek értéke,
+        sem az adóév kataszteri értékei nem szerepelnek, így a telek nem zárható ki
+        az értékcsökkenés alapjából.'
+      renta_inmueble_concept_undeclared: Egy főkönyvi tétel olyan kiadási jogcímet
+        ad meg, amely nem szerepel az adóév listájában.
+      renta_inmueble_concurrent_leases: '{record}. ingatlan: két bérleti szerződése
+        ugyanarra a napra esik.'
+      renta_inmueble_cumulative_amortisation_unstated: '{record}. ingatlan: az értékcsökkenése
+        elérheti a beszerzési értéket, és az adóév elején halmozott értékcsökkenés
+        nem szerepel.'
+      renta_inmueble_currency_unconverted: Egy kapcsolt főkönyvi tétel devizában van,
+        és nincs euróértéke.
+      renta_inmueble_days_not_let: '{record}. ingatlan: voltak napok, amikor a tiéd
+        volt, de nem volt bérbe adva, és ezeknek a napoknak a vélelmezett jövedelme
+        nincs kiszámítva.'
+      renta_inmueble_expense_row_on_lease: Egy kimenő főkönyvi tétel bérleti szerződéshez
+        kapcsolódik; a kiadást az ingatlanához kapcsold.
+      renta_inmueble_expense_row_without_concept: Egy ingatlanhoz kapcsolt főkönyvi
+        tétel nem adja meg a kiadás jogcímét.
+      renta_inmueble_held_part_of_ejercicio: '{record}. ingatlan: az adóév során szerezted
+        vagy ruháztad át, és a kiadásai időarányos megosztása nem elérhető.'
+      renta_inmueble_improvement_in_ejercicio: '{record}. ingatlan: egy felújítás
+        dátuma az adóévre esik, és az értékcsökkenési napjai nincsenek kiszámítva.'
+      renta_inmueble_income_outside_lease: Egy bérleti díj tétel dátuma kívül esik
+        a kapcsolt bérleti szerződés időszakán.
+      renta_inmueble_income_row_on_property: Egy bejövő főkönyvi tétel ingatlanhoz
+        kapcsolódik; a bérleti díjat a bérleti szerződéséhez kapcsold.
+      renta_inmueble_lease_names_no_property: '{record}. bérleti szerződés: olyan
+        ingatlant nevez meg, amely nincs a profilodban.'
+      renta_inmueble_lease_without_income: '{record}. bérleti szerződés: az adóévben
+        hatályos, de nincs hozzá kapcsolt bérleti díj tétel.'
+      renta_inmueble_naturaleza_unstated: '{record}. ingatlan: nem szerepel, hogy
+        városi vagy külterületi (rústico) ingatlan-e.'
+      renta_inmueble_pending_expenses_held_return_unstated: '{record}. ingatlan: az
+        előző adóév bevallása itt tárolva van, de semmi nem rendeli ehhez az ingatlanhoz
+        a benne levonásra váróként maradt kamat- és javítási kiadásokat. Add meg őket
+        ehhez az ingatlanhoz ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_origin_unsplit: '{record}. ingatlan: levonásra
+        váró kamat- és javítási kiadásai vannak, és a keletkezésük adóéve szerint
+        felosztó melléklet még nem nyújtható be. Ellenőrizd a levonásra váró összegét
+        ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_unstated: '{record}. ingatlan: a korábbi adóévekből
+        még levonásra váró kamat- és javítási kiadások nem szerepelnek, és egyik itt
+        tárolt korábbi bevallás sem tartalmazza őket.'
+      renta_inmueble_property_abroad_let: '{record}. ingatlan: külföldön van és bérbe
+        adott, külföldi jövedelemként való kezelése nem elérhető.'
+      renta_inmueble_record_unreadable: A profilod egyik ingatlan- vagy bérleti rekordja
+        nem olvasható, ezért egyetlen bérbe adott ingatlan sem kerül kiszámításra.
+      renta_inmueble_reduction_fact_unstated: '{record}. ingatlan: egy bérleti szerződésnél
+        nem szerepel, hogy lakásbérletről van-e szó, a lakás feszült piaci övezetben
+        van-e, illetve fenntartja-e a LAU 17.6. cikkét, így a 23.2. cikk szerinti
+        csökkentés nincs kiszámítva.'
+      renta_inmueble_reduction_tenants_mixed: '{record}. ingatlan: egy bérleti szerződés
+        bérlői közül csak néhány felel meg életkor alapján a 23.2. cikk szerinti csökkentésnek,
+        amely nincs kiszámítva.'
+      renta_inmueble_regime_not_pleno_dominio: '{record}. ingatlan: teljes tulajdontól
+        (pleno dominio) eltérő jogon birtokolod, amit a számítás nem kínál.'
+      renta_inmueble_relative_fact_unstated: '{record}. bérleti szerződés: nem szerepel,
+        hogy a bérlő a LIRPF 24. cikke szerinti rokon-e.'
+      renta_inmueble_relative_tenant: '{record}. bérleti szerződés: a bérlő a LIRPF
+        24. cikke szerinti rokon, és a minimális hozam nincs kiszámítva.'
+      renta_inmueble_row_names_no_lease: Egy főkönyvi tétel olyan bérleti szerződéshez
+        kapcsolódik, amely nincs a profilodban.
+      renta_inmueble_row_names_no_property: Egy főkönyvi tétel olyan ingatlanhoz kapcsolódik,
+        amely nincs a profilodban.
+      renta_inmueble_several_leases: '{record}. ingatlan: az adóévben több bérleti
+        szerződése van, és a bevallás még nem tudja szerződésenként feltüntetni őket.'
+      renta_inmueble_tenants_beyond_numbered: '{record}. bérleti szerződés: több bérlőt
+        ad meg, mint amennyit a számozott bérlőmezők befogadnak.'
+      renta_inmueble_titular_not_declarant: '{record}. ingatlan: a családi egységed
+        egy másik tagjáé, nem a tiéd.'
+      renta_inmueble_titularidad_unstated: '{record}. ingatlan: nem szerepel, ki a
+        tulajdonosa és milyen jogon.'
+      renta_inmueble_withholding_payer_no_tenant: Egy városi bérleti díjat terhelő
+        levonás olyan kifizetőt nevez meg, aki az adóév egyetlen bérleti szerződésében
+        sem bérlő.
+      renta_inmueble_withholding_payer_several_properties: Egy városi bérleti díjat
+        terhelő levonás olyan kifizetőt nevez meg, aki több ingatlanodat is bérli,
+        így nem ismert, melyikhez tartozik.
       residence_period_unknown: '{date} napra nincs rögzített adóügyi illetőség, ezért
         az eszközeid úgy számítanak, mintha a 100-as és 130-as modell lenne érvényes.'
       retencion_soportada_absence_contradicted: '{income_class} jövedelemosztály:
@@ -2052,6 +2278,13 @@ application:
         kifizetői rekord és hiánynyilatkozat sem, a profilod pedig nem jelöli hiányzónak
         ezt a jövedelmet. Rögzítsd minden kifizető igazolását, vagy jelentsd ki, hogy
         egyetlen kifizető sem vont le.'
+      retencion_soportada_income_record_required: '{income_class} jövedelemosztály:
+        azt nyilatkoztad, hogy egy kifizető sem vont le adót, de ez nem mondja meg
+        a jövedelem összegét. Vond vissza a nyilatkozatot, majd rögzítsd minden kifizető
+        igazolását operátori nyilatkozatként.'
+      retencion_soportada_record_figure_missing: '{income_class} jövedelemosztály:
+        egy tárolt kifizetői rekord nem tartalmazza az igazolás csökkentéseit és levonható
+        költségeit. Cseréld le a rekordot az igazolás adataival.'
       row_unregistered: A(z) {row_date} napi, {row_amount} összegű tétel olyan eszközt
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
@@ -2323,6 +2556,12 @@ application:
         '51': Ceuta
         '52': Melilla
     errors:
+      advisory_limit_not_numeric: A mellékelt %{fact} határérték, amellyel a program
+        ezt a bevallást ellenőrzi, nem szám. A mellékelt adatok ellentmondásosak,
+        és semmi, amit megadtál, nem okozta.
+      aggregate_preflight_provider_changed: 'A számítás nem indulhatott el: e Modelo
+        adatforrása megváltozott az előkészítés közben. Ez programhiba, és semmi,
+        amit megadtál, nem okozta. Futtasd újra a parancsot.'
       amendment_complementaria_liability_decrease: A Modelo {modelo} nyomtatvány {filing_year}
         adóévi {period} időszakára vonatkozó kiegészítő bevallás (complementaria)
         csökkentené a bevallott eredményt {baseline_result} értékről {corrected_result}
@@ -2347,6 +2586,12 @@ application:
         rovat-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyomtatványdefiníciók nem tartalmaznak
         semmit a kért nyomtatványhoz, évhez és időszakhoz.
+      applicability_filter_unknown: A mellékelt adatok egyik ellenőrzési szabálya
+        a(z) %{filter} alkalmazhatósági szűrőre hivatkozik, amelyet a program nem
+        ismer. A mellékelt adatok ellentmondásosak, és semmi, amit megadtál, nem okozta.
+      binding_source_kind_unclassified: A mellékelt szabályok nem rendelnek családot
+        a(z) %{source_kind} forrástípushoz, ezért az eredete nem magyarázható. A mellékelt
+        adatok hiányosak, és semmi, amit megadtál, nem okozta.
       calculate_binding_is_date_sourced: A --binding %{key} egy dátum típusú érték,
         amely az aktív profilodból származik (egy rólad szóló adat, például a születési
         dátumod); nem adható meg --binding révén, amely csak decimális és felsorolási
@@ -2424,6 +2669,9 @@ application:
       caller_casilla_source_binding_conflict: 'Az általad megadott rovatértékek nem
         írhatják felül azokat a rovatokat, amelyek értéke a nyilvántartásaidból származik:
         %{casillas}.'
+      catalogue_text_missing_for_language: A(z) %{text_id} szövegnek nincs megfogalmazása
+        a(z) %{language} nyelven. A mellékelt szövegek hiányosak, és semmi, amit megadtál,
+        nem okozta. Válassz másik kimeneti nyelvet.
       computed_casilla_binding_conflict: 'A nyilvántartásaidból vett értékek számított
         rovatokat céloznak, amelyek nem írhatók felül külső értékkel. Érintett rovatok:
         %{computed}.'
@@ -2441,6 +2689,10 @@ application:
       detail_row_identity_conflict: Egy általad megadott részletező sor nem egyezik
         a nyilvántartásaid szerinti sorral ugyanarra a nyilatkozóra; javítsd vagy
         töröld a számítás előtt.
+      edit_revision_id_unresolved: A szerkesztés mögötti számítás nem jelezte, melyik
+        változatot hozta létre, ezért a szerkesztés nyugtáját nem lehetett megőrizni.
+        Ez programhiba, és semmi, amit megadtál, nem okozta. Újabb szerkesztés előtt
+        listázd a bevallás változatait.
       exonerado_390_attestation_applicable_unsupported: Itt csak az a nyilatkozat
         rögzíthető, hogy a Modelo 390 nem alkalmazandó. A(z) %{filing_year}. év %{period}
         időszakára alkalmazandó Modelo 390-et ezen az úton nem lehet rögzíteni. Semmi
@@ -2506,6 +2758,14 @@ application:
         ebben a profilban, ezért nem támaszthatja alá a(z) %{filing_year}. év %{period}
         időszakának Modelo 303-át. Semmi sem lett kiszámítva. Rögzíts új nyilatkozatot
         erre az időszakra, és a kapott értékeket használd.
+      export_amended_filing_evidence_missing: 'Semmi sem íródott ki: a módosítandó
+        beadáshoz nincs rögzítve az AEAT által igazolt justificante. Importáld a bizonyítékát
+        a bevallás munkaegységéhez, és exportálj újra.'
+      export_amended_filing_justificante_unresolved: 'Semmi sem íródott ki: a módosítandó
+        beadáshoz rögzített justificante nem támasztja alá a módosítást. Hiányzik,
+        többször szerepel, vagy nem egyezik a bevallás modelljével, időszakával és
+        adózójával. Te döntöd el, melyik nyilvántartás téves: ellenőrizd a rögzített
+        beadást és a justificantét.'
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
@@ -2532,6 +2792,12 @@ application:
         például amikor a fizetendő összeg egy részét a házastársad visszatérítésének
         terhére felfüggesztik, vagy lemondasz egy visszatérítésről. A Cadrumo az idei
         nyomtatvány maradékát még nem számolja ki.'
+      export_text_unrepresentable_character: 'Semmi sem íródott ki: a(z) „%{field_value}”
+        a(z) „%{character}” (%{code_point}) karaktert tartalmazza, amelyet az AEAT
+        rekordterve a(z) „%{record_type}” rekord %{first_position}-%{last_position}.
+        pozícióján nem enged leírni. Elhagyása vagy cseréje más adatot vallana be.
+        Javítsd ott, ahol rögzítetted, úgy, ahogy az AEAT adózói nyilvántartásában
+        (censo) szerepel, és exportálj újra.'
       export_text_value_overflow: 'Semmi sem íródott ki: a(z) „%{field_value}” %{value_length}
         karakter hosszú, az AEAT rekordterve viszont a(z) „%{record_type}” rekord
         %{first_position}-%{last_position}. pozícióján csak %{field_length} karaktert
@@ -2621,6 +2887,9 @@ application:
         előzmény szükséges. Egy friss profil első M303 benyújtásához töltsd fel nulla
         összeggel a benyújtási időszak IVA-kompenzációs nyitóegyenlegét, és erősítsd
         meg.
+      iva_wallet_refusal_without_verdict: Az IVA kompenzációs tárca egyeztetésének
+        elutasítása nem jelöl meg következő lépést. Ez programhiba, és semmi, amit
+        megadtál, nem okozta.
       iva_wallet_registry_snapshot_unavailable: 'Az IVA-tárca egyeztetése blokkolva
         van a Modelo 303 esetén: a nyomtatványdefiníciók nem oldhatók fel erre az
         adóévre és időszakra, ezért az első időszaki nulla nem bizonyítható. Ellenőrizd,
@@ -2702,10 +2971,47 @@ application:
         az okát.
       local_observation_spreadsheet_malformed_rows: 'A táblázatban %{malformed_row_count}
         használhatatlan sor van: %{malformed_rows}'
+      m036_declaration_after_baja: 'A(z) %{declaration_id} 036-os modell bevallásából
+        semmi sem lett rögzítve: az utolsó rögzített bevallás, a(z) %{prior_declaration_id},
+        megszüntetés (baja), amely lezárja a nyilvántartásba vételt, és utána nem
+        következhet %{requested_event_kind}. Előbb rögzíts egy új bejelentést (alta).'
       m036_declaration_profile_bucket_mismatch: A Modelo 036 bevallása más profilt
         nevez meg, mint az a tároló, amelybe rögzülne
+      m036_declaration_without_alta: 'A(z) %{declaration_id} 036-os modell bevallásából
+        semmi sem lett rögzítve: nincs rögzített bejelentés (alta), így a(z) %{requested_event_kind}
+        nem módosíthat semmilyen nyilvántartásba vételt. Előbb rögzítsd a bejelentést
+        (alta).'
       m200_accounting_result_required: A Modelo 200 főkönyvből való számításához szükség
         van az év számviteli eredményére.
+      m210_agrupacion_annual_code_not_lease_or_sublease: Az éves 210-es modell (0A
+        időszak) csak bérleti és albérleti jövedelmet csoportosít, de a sorok más
+        jövedelemkódot használnak. Javítsd a sorok jövedelemkódját.
+      m210_agrupacion_duplicate_source_id: Az éves 210-es modell két csoportosított
+        jövedelemsora ugyanazt a forrásazonosítót viseli. Adj minden sornak saját
+        azonosítót, és számolj újra.
+      m210_agrupacion_empty_group: Az éves 210-es modell (0A időszak) legalább egy
+        csoportosított jövedelemsort igényel, de egy sincs. Add hozzá a jövedelem
+        sorait, és számolj újra.
+      m210_agrupacion_missing_bien_derecho: Az éves 210-es modell csoportosított bérleti
+        vagy albérleti sorai nem nevezik meg azt az ingatlant vagy jogot, amelyből
+        származnak. Nevezd meg minden soron.
+      m210_agrupacion_mixed_bien_derecho: Az éves 210-es modell csoportosított sorai
+        egynél több ingatlanból vagy jogból származnak. Egy éves csoport csak egyetlenből
+        állhat. Különítsd el a sorokat, és számolj újra.
+      m210_agrupacion_mixed_pagador: Az éves 210-es modell csoportosított sorai egynél
+        több kifizetőt neveznek meg, és ez a jövedelemkód nem enged több kifizetőt
+        egy csoportban. Csoportonként egy kifizetőt használj.
+      m210_agrupacion_mixed_tipo_gravamen: Az éves 210-es modell csoportosított jövedelemsorai
+        egynél több adókulcsot használnak. Egy éves csoport csak azonos kulcsú sorokból
+        állhat. Javítsd a kulcsokat, és számolj újra.
+      m210_agrupacion_mixed_tipo_renta_code: Az éves 210-es modell csoportosított
+        jövedelemsorai egynél több hivatalos jövedelemkódot használnak. Egy éves csoport
+        csak egyetlen kód soraiból állhat. Különítsd el a sorokat, és számolj újra.
+      m210_agrupacion_payer_mode_not_declared: Az éves 210-es modell csoportosított
+        sorainak kifizető-felállása nem felel meg annak, amit a hivatalos meghatározás
+        ehhez a jövedelemkódhoz megenged. Ellenőrizd a sorok kifizetői adatait.
+      m210_agrupacion_rows_invalid: Az éves 210-es modell csoportosított jövedelemsorai
+        nem érvényesek. Ellenőrizd a sorokat, és számolj újra.
       m210_ledger_manual_agrupacion_rows: A Modelo 210 nyilvántartás-módban az éves
         csoportosított jövedelemsorokat a nyilvántartásaid besorolásaiból származtatja;
         ne adj meg kézi agrupacion-renta sorokat.
@@ -2727,6 +3033,12 @@ application:
       m349_operator_rows_required: Ennek az időszaknak a főkönyvében Közösségen belüli
         ügyletek vannak a Modelo 349 partnersorai nélkül; add hozzá őket a számítás
         előtt.
+      m390_attestation_attachment_digest_differs: A 390-es modell alkalmazhatósági
+        nyilatkozatához csatolt dokumentumot a tartalma kivonatától eltérő érték azonosítja.
+        Csatold újra a dokumentumot, hogy a saját kivonata azonosítsa.
+      m390_attestation_period_year_differs: A 390-es modell alkalmazhatósági nyilatkozatának
+        időszaka a(z) %{period_year}. évhez tartozik, de a nyilatkozat a(z) %{filing_year}.
+        bevallási évre szól. Használj a bevallási év időszakát.
       novel_source_kind_rejected: 'Ismeretlen számítási forrástípus(ok) %{novel_source_kinds}
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
@@ -2750,6 +3062,11 @@ application:
         nincs függőben: mindegyiknek van már értéke vagy kijelentésed, vagy a bevallás
         nem visz át ilyet. Semmi sem változott.'
       prior_carries_unstated:
+        renta_capital_inmobiliario_gastos_pendientes: 'A %{filing_year}. évi Modelo
+          %{modelo} nem számítható ki: nem ismert, hogy egy bérbe adott ingatlannál
+          maradt-e korábbi adóévekből még le nem vont kamat- és javítási költség (%{boxes}.
+          mező). Mentsd el az előző évi bevallást, vagy add meg az ingatlan sorában
+          a(z) %{command} paranccsal, megnevezve a sort. Semmi sem lett mentve.'
         renta_negative_general_bases_pending: 'A %{filing_year}. évi Modelo %{modelo}
           nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még ki nem
           egyenlített negatív általános adóalap (%{boxes}. mező). Mentsd el az előző
@@ -2759,6 +3076,18 @@ application:
         nem számolható ki: összegeket visz át a(z) %{unfiled_period} bevallásából,
         amely még nincs benyújtva. Előbb nyújtsd be a(z) %{unfiled_period} bevallást,
         majd számolj újra. Semmi nem lett mentve.'
+      profile_activity_tipo_not_censal: A profilodban szereplő %{tipo} tevékenységtípus
+        nem érvényes nyilvántartási (censo) tevékenységtípus. Javítsd a tevékenység
+        típusát a profilodban, és számolj újra.
+      profile_descendant_birth_date_invalid: A profilodban szereplő %{number}. leszármazott
+        születési dátuma nem érvényes dátum (év-hónap-nap). Javítsd a profilodban,
+        és számolj újra.
+      profile_jurisdiction_scope_required: A profilod nem adja meg az adózási területedet,
+        és az eredménynek az államra eső részét nem lehet a közös területet feltételezve
+        megállapítani. Add meg az adózási területet a profilodban, és számolj újra.
+      profile_jurisdiction_scope_unsupported: A profilodban szereplő %{scope} adózási
+        területhez nem lehet kiszámítani az eredménynek az államra eső részét. Javítsd
+        az adózási területet a profilodban, és számolj újra.
       profile_readiness_missing: 'A profil hiányos a Modelo %{modelo} (%{period} %{filing_year})
         bevalláshoz; előbb töltsd ki ezeket a profiladatokat: %{profile_requirements}.'
       profile_readiness_not_applicable: 'A Modelo %{modelo} nem alkalmazható az aktív
@@ -2808,28 +3137,88 @@ application:
         bevallásnál visszatérítés (devolver) lett kiválasztva, de visszatérítés csak
         az év utolsó bevallási időszakában kérhető. Vidd át a jóváírást (compensar),
         vagy válaszd a visszatérítést az utolsó időszakban.
+      registry_estimation_regime_clave_missing: A bevallás mellékelt meghatározása
+        nem ad meg kódot a 0168-as rovathoz a(z) %{estimation_regime} adóalap-megállapítási
+        módhoz. A mellékelt adatok hiányosak, és semmi, amit megadtál, nem okozta.
+      registry_modelo_revisions_unreadable: A nyilvántartás nem tudja kilistázni a(z)
+        %{modelo} Modelo változatait. Ellenőrizd a modell számát.
+      registry_period_not_declared: 'A(z) %{period} időszak nincs megadva a(z) %{modelo}
+        Modelo %{revision_id} változatához. A rendelkezésre álló időszakok: %{available}.
+        Válassz közülük.'
+      registry_revision_not_declared: 'A(z) %{revision_id} változat nincs megadva
+        a(z) %{modelo} Modelóhoz. A rendelkezésre álló változatok: %{available}. Válassz
+        közülük.'
+      registry_revision_unreadable: A nyilvántartás nem tudja beolvasni a(z) %{modelo}
+        Modelo %{revision_id} változatát. Ellenőrizd a modell számát és a változatot.
+      review_package_envelope_file_unreadable: A fájl nem olvasható, titkosított felülvizsgálati
+        csomag-boríték. Ellenőrizd, hogy azt a boríték-fájlt adtad meg, amely a csomag
+        titkosításakor keletkezett.
       review_package_generic: Az áttekintő csomag összeállítása közben hiba történt.
       review_package_integrity: 'A(z) %{package_path} áttekintő csomag nem felelt
         meg az ellenőrzőösszeg-ellenőrzésnek: %{detail}.'
+      review_package_receipt_file_unreadable: A fájl nem olvasható, ellenjegyzett
+        felülvizsgálati csomag-nyugta. Ellenőrizd, hogy azt a nyugta-fájlt adtad meg,
+        amelyet a csomagra visszaküldtek.
       review_package_revision_state: 'A(z) %{calculation_revision_id} számítási revízió
         állapota %{state}, ezért nem csomagolható áttekintésre; elfogadott állapotok:
         %{eligible_states}.'
+      review_package_signature_file_unreadable: A fájl nem olvasható felülvizsgálati
+        csomag-aláírásboríték. Ellenőrizd, hogy azt az aláírásfájlt adtad meg, amely
+        a csomag aláírásakor keletkezett.
       revision_pick_explicit_id_required: Az explicit revízió kiválasztásához calculation_revision_id
         szükséges.
       revision_pick_id_requires_explicit_selector: A calculation_revision_id csak
         explicit revízió kiválasztóval érvényes.
+      semantic_role_ambiguous: A Modelo mellékelt meghatározása a(z) %{semantic_role}
+        szerepet több rovatnak is megadja (%{casilla_list}), ezért az ellenőrzés nem
+        tudja, melyiket olvassa. A mellékelt adatok ellentmondásosak, és semmi, amit
+        megadtál, nem okozta.
+      signing_capability_other_profile: 'Semmi sem lett aláírva: a művelethez elérhető
+        aláírókulcs egy másik profilhoz tartozik. Válaszd ki a kulcsot birtokló profilt,
+        és írd alá újra.'
       source_owned_binding_override: Olyan mezőbe írtál értéket, amely a nyilvántartásaidból
         származik; töröld, vagy javítsd a forrásbejegyzést.
+      trabajo_income_nothing_open: 'A(z) %{modelo} modell %{filing_year}. évi bevallásában
+        nincs olyan munkaviszonyi jövedelemrovat, amelyet nullának lehetne nyilatkozni:
+        mindegyikben van már összeg vagy a nyilatkozatod, vagy a bevallásnak nincs
+        kifizetői rekordból származó munkaviszonyi jövedelme. Semmi sem változott.'
+      value_presentation_data_type_undeclared: Nincs megadva, hogyan jelenjenek meg
+        a(z) %{data_type} adattípus értékei, ezért az érték nem látható. A mellékelt
+        adatok hiányosak, és semmi, amit megadtál, nem okozta.
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
         azonosítóval: %{verification_report_id}.'
+      withholding_order_number_above_form_ceiling: A(z) %{order_number} sorszám meghaladja
+        az űrlap által megengedett legnagyobb sorszámot. Használj kisebb számot.
       work_create_not_applicable: 'A Modelo %{modelo} a profilod szerint nem vonatkozik
         rád: %{reason} A bevallás nem jött létre.'
+      work_form_layout_binding_undefined: E Modelo űrlapterve a(z) %{binding_id} mezőt
+        helyezi el, amelyet a változat nem határoz meg. A mellékelt terv ellentmondásos,
+        és semmi, amit megadtál, nem okozta.
+      work_form_layout_casilla_not_shown: E Modelo űrlapterve a(z) %{casilla_id} rovatot
+        az űrlapra helyezi, de egyetlen oldal sem mutatja. A mellékelt terv ellentmondásos,
+        és semmi, amit megadtál, nem okozta.
+      work_form_layout_casilla_off_form: E Modelo űrlapterve a(z) %{casilla_id} rovatot
+        egy oldalra teszi anélkül, hogy helyet adna neki az űrlapon. A mellékelt terv
+        ellentmondásos, és semmi, amit megadtál, nem okozta.
+      work_form_layout_casilla_repeated: E Modelo űrlapterve a(z) %{casilla_id} rovatot
+        egynél többször helyezi el. A mellékelt terv ellentmondásos, és semmi, amit
+        megadtál, nem okozta.
+      work_form_layout_casilla_undefined: E Modelo űrlapterve a(z) %{casilla_id} rovatot
+        helyezi el, amelyet a változat nem határoz meg. A mellékelt terv ellentmondásos,
+        és semmi, amit megadtál, nem okozta.
+      work_form_layout_casillas_unplaced: E Modelo űrlapterve nem ad helyet a(z) %{casillas}
+        rovatoknak. A mellékelt terv hiányos, és semmi, amit megadtál, nem okozta.
       work_period_token_invalid: 'A --period ''%{token}'' nem érvényes időszak-token
         a Modelo %{modelo} bevalláshoz. Add meg külön: --year %{year}, és használd
         ezek egyikét: %{tokens}.'
       work_period_token_unrecognised: 'A --period ''%{token}'' nem felismerhető. Add
         meg külön: --year %{year}, és használj időszak-tokent, például 0A, 1T vagy
         01.'
+      work_registry_revision_not_law_selected: A kért %{requested_revision} nyilvántartási
+        változat nem az a változat, amelyet a jogszabály ehhez a bevalláshoz meghatároz,
+        az pedig a %{law_revision}. Az időszak és a változat összerendelését jogszabály
+        rögzíti, ezért nem írható felül. Hozd létre újra a munkaegységet a --revision
+        nélkül, hogy a jogszabály szerinti változat érvényesüljön.
       work_unit_already_discarded: A bevallás már el van vetve.
       work_unit_create_discarded: Ezt a bevallási célt elvetették. Az ismételt létrehozás
         ugyanazt az elvetett bevallást adja vissza, így nem folytatható.
@@ -2896,10 +3285,6 @@ application:
       application_not_required_maximum: 'A(z) [%{box}] rovatban %{casilla_value} szerepel,
         de %{computed_value} kell, hogy legyen: a törvény előírja, hogy az adott évben
         megengedett legnagyobb összeget kell alkalmazni, se többet, se kevesebbet.'
-      art20_reduccion_possible: A(z) [%{rnt_id}] rovat %{rnt_value} EUR nettó munkajövedelmet
-        (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
-        belül, ezért a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet
-        még nem használsz. Ellenőrizd, hogy vonatkozik-e rád.
       art52_reduccion_individual_sublimit_possible: A(z) [%{reduccion_id}] rovat %{reduccion_value}
         EUR nyugdíj-előtakarékossági (previsión social) csökkentést tartalmaz, ami
         meghaladja az Art. 52 LIRPF szerinti %{sublimit} EUR egyéni részhatárt, és
@@ -2918,9 +3303,23 @@ application:
         érték hiányzik.'
       cross_period_activity_start_missing: A Modelo %{target_modelo} bevalláshoz (%{target_filing_year},
         %{target_period} időszak) meg kell adni, mikor kezdte meg a tevékenységét.
+      cross_period_dependency_attestation_conflict: A Modelo %{source_modelo} (%{source_filing_year},
+        %{source_period} időszak) esetén %{value} összeget adtál meg, de most már
+        létezik hozzá bevallás más összeggel. Ennek a bevallásnak (Modelo %{target_modelo},
+        %{target_filing_year}, %{target_period} időszak) azt kell követnie, ezért
+        add meg újra az összeget, vagy vond vissza a megadásodat.
+      cross_period_dependency_operator_attested: Az alkalmazás nem tárol bevallást
+        a Modelo %{source_modelo} (%{source_filing_year}, %{source_period} időszak)
+        számára, ezért a(z) %{value} összeg, amelyet ez a bevallás (Modelo %{target_modelo},
+        %{target_filing_year}, %{target_period} időszak) átvesz belőle, az általad
+        megadott érték. Őrizd meg a korábbi bevallást bizonyítékként.
       cross_period_dependency_unclean: Ez a bevallás a Modelo %{source_modelo} (%{source_filing_year},
         %{source_period} időszak) adatait használja, és abban még megoldatlan problémák
         vannak. Előbb ott oldd meg őket.
+      cross_period_dependency_unclean_attestable: Ez a nyilatkozat a(z) %{source_modelo}
+        modell %{source_filing_year} évi, %{source_period} időszakának adataiból dolgozik,
+        és az a nyilatkozat még nyitott hibákat tartalmaz. Először ott oldd meg őket,
+        vagy ha nem rögzíted itt azt a bevallást, add meg magad az értékét.
       cross_period_first_year_fractional_suppression: A Modelo %{source_modelo} (%{source_filing_year},
         %{source_period} időszak) nem vonatkozik rád, mert a tevékenységed %{activity_start_date}
         napon kezdődött.
@@ -3037,6 +3436,10 @@ application:
       m303_m349_intracom_reconciliation_mismatch: A(z) %{filing_year} %{period_code}
         időszakban a Modelo 303 közösségen belüli összege (%{m303_total} EUR) és a
         Modelo 349 összege (%{m349_total} EUR) %{gap} EUR-val eltér.
+      m390_prorrata_apartado_unrendered: 'A %{filing_year}. évi Modelo 390: a prorrata-nyilvántartásod
+        erre az évre vonatkozik (%{registered_activity_rows} tevékenységsor), de a
+        nyomtatványkiadás még nem tartalmazza a prorrata részt (12. apartado), ezért
+        ez a rész üresen maradna az exportban. Még nem tudod ellenőrizni vagy exportálni.'
       madrid_nacimiento_adopcion_eligibility_advisory: 'A(z) [%{casilla_id}] rovat
         alapján (súlyozott szám: %{weighted_count}) jogosult lehetsz a madridi születési
         vagy örökbefogadási kedvezményre.'
@@ -3068,6 +3471,13 @@ application:
         nem ellenőrizhető, és nem exportálható az AEAT-nak szánt fájlként.
       registry_snapshot_unresolved: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai nem tölthetők be. Próbáld újra, vagy frissítsd az alkalmazást.
+      renta_inmueble_rows_drift: 'A(z) %{modelo} számítás bérbe adott ingatlanjai
+        a számítás óta megváltoztak: módosultak az ingatlan-, bérleti, kapcsolt főkönyvi
+        vagy levonási rekordjaik (%{rows_recorded} rögzített ingatlan, most %{rows_current},
+        %{rows_changed} módosult). Használat előtt számold újra.'
+      renta_inmueble_rows_unavailable: A(z) %{modelo} számítás bérbe adott ingatlanjainak
+        ingatlan-, bérleti, főkönyvi vagy levonási rekordjai nem olvashatók, ezért
+        nem tudható, változtak-e. Próbáld újra, amikor olvashatók, majd számold újra.
       required_maximum_unresolved: A(z) [%{box}] rovat még nem ellenőrizhető, mert
         nem ismert, mekkora az a legnagyobb összeg, amelyet a törvény szerint ebben
         az évben alkalmazni kell. Hiányzik néhány adat, amelytől ez az összeg függ.
@@ -3092,6 +3502,38 @@ application:
         forrásadó (retención). Add meg az összeget a kifizető igazolásából (certificado
         de retenciones e ingresos a cuenta). A levonást bevalló Modelo 111 nyomtatványt
         a kifizető nyújtotta be, nem te, ezért ez az érték nem tölthető ki automatikusan.
+      trabajo_deduction_not_computed: 'A munkaviszonyi jövedelmed nem tartalmazza
+        azokat a levonásokat, amelyeket csak te tudsz igazolni: szakszervezeti díj
+        (0014), szakmai kamarai díj (0015), jogvédelmi költség (0016) és a földrajzi
+        mobilitás miatti növekmény (0020). Ha bármelyik megilleti, a bevallás túlzott
+        adót mutat. Add meg ezekben a rovatokban.'
+      trabajo_disability_unstated: A profilod fogyatékosságot jelez, ezért a(z) [%{casilla_id}]
+        rovat (a fogyatékossággal élő aktív munkavállaló munkaköltségeinek növekménye)
+        megillethet. Add meg az összeget, vagy 0-t, ha nem vagy aktív munkavállaló.
+      trabajo_expense_above_limit:
+        colegio_profesional: A(z) [%{casilla_id}] rovat (szakmai kamarai díj) %{stated}
+          EUR-t mutat, ami meghaladja a %{limit} EUR törvényes határt. Csökkentsd
+          a határra vagy az alá.
+        defensa_juridica: A(z) [%{casilla_id}] rovat (jogvédelmi költség) %{stated}
+          EUR-t mutat, ami meghaladja a %{limit} EUR törvényes határt. Csökkentsd
+          a határra vagy az alá.
+      trabajo_income_unstated:
+        decision_trabajador: A(z) [%{casilla_id}] rovat (a te döntésedre teljesített
+          munkáltatói befizetések) olyan munkaviszonyi jövedelem, amelyet egyetlen
+          kifizetői igazolás sem tartalmaz. Add meg a kapott összeget, vagy nyilatkozz
+          arról, hogy nincs.
+        dependencia: A(z) [%{casilla_id}] rovat (függőségi biztosításhoz nyújtott
+          munkáltatói hozzájárulások) olyan munkaviszonyi jövedelem, amelyet egyetlen
+          kifizetői igazolás sem tartalmaz. Add meg a kapott összeget, vagy nyilatkozz
+          arról, hogy nincs.
+        patrimonio_protegido: A(z) [%{casilla_id}] rovat (fogyatékossággal élő személy
+          védett vagyonába tett befizetések) olyan munkaviszonyi jövedelem, amelyet
+          egyetlen kifizetői igazolás sem tartalmaz. Add meg a kapott összeget, vagy
+          nyilatkozz arról, hogy nincs.
+        prevision: A(z) [%{casilla_id}] rovat (nyugdíjtervekhez és szociális előrelátási
+          egyesületekhez nyújtott munkáltatói hozzájárulások) olyan munkaviszonyi
+          jövedelem, amelyet egyetlen kifizetői igazolás sem tartalmaz. Add meg a
+          kapott összeget, vagy nyilatkozz arról, hogy nincs.
       transaction_evidence_missing_deductible: Egy levonható kiadáshoz nincs csatolva
         számla vagy bizonylat. Csatold a nyilvántartásaid megfelelő tételéhez.
       transaction_evidence_missing_output: Egy felszámított IVA-t tartalmazó kiállított
@@ -3232,6 +3674,10 @@ application:
         kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó
         igazolást, majd vetíts újra.
       casilla_reason:
+        income_family_contradicts_profile: Ez a rovat a többi jövedelmedet veti össze
+          a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
+          amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
+          összegeket, majd vetíts újra. Soha nem jelenik meg nullaként.
         m210_baseline_tipo_deferred: Ehhez a rovathoz az ilyen jellegű jövedelem általános
           adókulcsa kell, amely az adóévre még nincs megalapozva, ezért nincs értéke.
         m210_convenio_rate_missing: Ehhez a rovathoz a kettős adóztatást kizáró egyezmény
@@ -3372,6 +3818,19 @@ application:
             negatív általános adóalapod (Ley 35/2006, 50.3. cikk). Minden összeg általad
             kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
             korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+        renta_trabajo_income_not_stated:
+          action: Nincs megadandó munkáltatói hozzájárulásom vagy védett vagyonba
+            tett befizetésem
+          effect: 'Általad megadott 0-ként rögzítve: ezekből a hozzájárulásokból nincs.'
+          origin: Megadtad, hogy nincs
+          statement: 'Kijelented, hogy a munkaviszonyból származó jövedelmed négy
+            rovatában nincs összeg: a nyugdíjtervekhez és szociális előrelátási egyesületekhez
+            nyújtott munkáltatói hozzájárulások (0008), a függőségi biztosításhoz
+            nyújtott munkáltatói hozzájárulások (0009), a fogyatékossággal élő személy
+            védett vagyonába tett befizetések (0010) és a te döntésedre teljesített
+            munkáltatói befizetések (0024). Minden rovat általad megadott 0-ként kerül
+            rögzítésre, a beírt számtól elkülönítve. Ezeket az összegeket egyetlen
+            kifizetői igazolás sem tartalmazza, ezért csak te adhatod meg őket.'
       credits_heading:
         mixed: Levonások
         practised: Az általad levont összegek
@@ -3397,6 +3856,7 @@ application:
           be a rovatodba, majd számolj újra.
         check_profile_value: Nézd át ezt az értéket a profilodban, javítsd, ha hibás,
           majd számolj újra.
+        check_stated_figure: Ellenőrizd az általad megadott összeget a korábbi bevallásoddal.
         compare_figures: Hasonlítsd össze a számokat, javítsd ki a hibásat, majd számolj
           újra.
         correct_and_recalculate: Javítsd ki, amit leír, majd számolj és ellenőrizz
@@ -3876,14 +4336,20 @@ application:
         felvált. Zárj be minden programot, amely a profiltárat használja, és próbáld
         újra.
       registration_label_blank: A profil neve nem lehet üres.
+      rental_lease_has_ledger_rows: A(z) %{row} bérleti szerződésre %{rows} főkönyvi
+        sor hivatkozik; előbb módosítsd vagy töröld a kapcsolatukat az «%{door}» paranccsal.
       rental_lease_property_missing: A bérleti szerződés a(z) %{inmueble} ingatlanra
         hivatkozik, ami nincs a profilodban; előbb add hozzá az «%{door}» paranccsal.
+      rental_ledger_unreadable: A profil főkönyve nem olvasható, ezért a törlés nem
+        történt meg. Semmi nem változott.
       rental_principal_missing: A(z) %{principal} főingatlan nem másik ingatlan a
         profilodban; előbb add hozzá az «%{door}» paranccsal.
       rental_property_has_accessories: A(z) %{inmueble} ingatlan tartozékainak (%{accessories})
         főingatlana; előbb módosítsd vagy töröld a főingatlanukat az «%{door}» paranccsal.
       rental_property_has_leases: A(z) %{inmueble} ingatlanhoz bérleti szerződések
         tartoznak (%{leases}); előbb töröld őket az «%{door}» paranccsal.
+      rental_property_has_ledger_rows: A(z) %{row} ingatlanra %{rows} főkönyvi sor
+        hivatkozik; előbb módosítsd vagy töröld a kapcsolatukat az «%{door}» paranccsal.
       rental_row_invalid: 'A(z) „%{leaf}” adat érvénytelen, vagy ellentmond a rekord
         más adatainak; semmi nem került mentésre. Javítsd, és ismételd meg: «%{door}».'
       rental_tenant_id_invalid: 'Egy bérlő adóazonosítója érvénytelen; ellenőrizd

@@ -112,6 +112,7 @@ const ADMITTED: [(&str, Kind); 123] = [
     ("ledger.inventory.inspect", Read),
     ("ledger.inventory.list", Read),
     ("ledger.inventory.movement.add", Write),
+    ("ledger.inventory.movement.claim", Write),
     ("ledger.inventory.movement.correct", Write),
     ("ledger.inventory.movement.reverse", Write),
     ("ledger.inventory.options", Read),

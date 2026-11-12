@@ -26,6 +26,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence_from_regimen_snapshot
+from ....application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from ....application.filing.export_producer import m303_rectificativa_motive_producer_values
 from ....application.filing.producer_snapshot import (
     AmendmentEvidence,
@@ -45,6 +46,7 @@ from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.field_origin import FieldOrigin
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
@@ -401,6 +403,10 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting(*, opera
         (context.model_copy(update={"justificantes": ()}), "exactly one justificante"),
         (context.model_copy(update={"justificantes": (receipt, receipt)}), "exactly one justificante"),
         (
+            context.model_copy(update={"expected_taxpayer_tax_id": None}),
+            "requires the authoritative taxpayer tax id",
+        ),
+        (
             context.model_copy(update={"justificantes": (receipt.model_copy(update={"tax_id": "12345678Z"}),)}),
             "disagrees with the taxpayer or filing coordinate",
         ),
@@ -427,11 +433,15 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting(*, opera
     )
     assert work_unit.modelo == Modelo("303").value
     for variant, message in variants:
-        with pytest.raises(ValidationError, match=message):
+        with pytest.raises(ValidationError, match=message) as refused:
             CalculationRevision.model_validate(
                 payload,
                 context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: variant},
             )
+        verdict = nested_terminal_precondition_verdict(refused.value)
+        assert verdict is not None, message
+        assert verdict.action is None, message
+        assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL, message
 
 
 def test_encrypted_persistence_reloads_and_revalidates_joined_authority(

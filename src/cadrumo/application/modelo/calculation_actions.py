@@ -100,6 +100,7 @@ from .calculation_action_ports import (
 from .calculation_helpers import (
     build_typed_observations,
 )
+from .calculation_input_refusal_doors import cleared_casilla_source_fed_verdict, missing_input_listing_verdict
 from .calculation_modelo_adjustments import (
     drop_row_field_template_outputs,
     m131_objective_estimation_data_base_inputs,
@@ -693,6 +694,7 @@ def _reject_clears_of_source_fed_casillas(
         raise ModeloClearedCasillaSourceFedError(
             translated_message="errors.error.error_modelo_cleared_casilla_source_fed",
             context={"casilla_ids": ",".join(fed)},
+            precondition_verdict=cleared_casilla_source_fed_verdict(",".join(fed)),
         )
 
 
@@ -881,6 +883,7 @@ def _resolve_prepared_casilla_inputs(
         resolved_bindings=prepared.channels.bindings,
         casilla_inputs=prepared.casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
+        resolved_text_bindings=prepared.channels.enum_bindings,
         profile_text_casilla_inputs=resolve_profile_text_casilla_inputs(
             revision,
             profile_text_fact_index(
@@ -960,7 +963,9 @@ def _evaluate_prepared_calculation(
             closed_record_row_sets=closed_record_row_sets,
         )
     except RegistryValidationError as error:
-        missing = ModeloWorkMissingInputError.from_registry_error(error)
+        missing = ModeloWorkMissingInputError.from_registry_error(
+            error, precondition_verdict=missing_input_listing_verdict(work_unit)
+        )
         if missing is None:
             raise
         # This boundary precedes revision publication. Earlier migrations may

@@ -56,7 +56,9 @@ _FILING_PACKAGE = Path(__file__).resolve().parent.parent
 #: standing classification.
 _FILING_OWNED_ERRORS: frozenset[str] = frozenset(
     {
+        "FilingExportDesignIntegrityError",
         "FilingExportError",
+        "FilingExportIntegrityError",
         "FilingExportValidationError",
         "ModeloApplicationError",
         "ModeloBuilderError",

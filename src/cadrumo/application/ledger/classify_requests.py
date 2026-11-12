@@ -31,11 +31,15 @@ LedgerClassifyPatchField = Literal[
     "irpf_category",
     "m210_income_classification",
     "iva_category",
+    "exemption_article",
     "deduction_fact_kind",
     "investment_asset_id",
     "iva_vehicle_use",
     "counterparty_country",
     "counterparty_identification_state",
+    "arrendamiento_ref",
+    "inmueble_ref",
+    "gasto_capital_inmobiliario",
     "notes",
 ]
 
@@ -51,11 +55,15 @@ CLASSIFY_FIELD_NAMES = frozenset(
         "irpf_category",
         "m210_income_classification",
         "iva_category",
+        "exemption_article",
         "deduction_fact_kind",
         "investment_asset_id",
         "iva_vehicle_use",
         "counterparty_country",
         "counterparty_identification_state",
+        "arrendamiento_ref",
+        "inmueble_ref",
+        "gasto_capital_inmobiliario",
         "notes",
     },
 )
@@ -63,7 +71,9 @@ CLASSIFY_FIELD_NAMES = frozenset(
 CLASSIFY_UNCLEARABLE_FIELD_NAMES = frozenset({"business_classification", "notes"})
 """Selected fields a classification can replace but never blank: the writer requires a value for each."""
 
-_ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=16)]
+_ClassifyFields = Annotated[
+    tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=len(CLASSIFY_FIELD_NAMES))
+]
 
 LedgerClassifyDecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 
@@ -96,11 +106,15 @@ class LedgerClassifyPatch(BaseModel):
     recargo_amount: LedgerClassifyDecimalText | None = None
     irpf_category: LedgerClassifyLongText | None = None
     iva_category: LedgerClassifyShortText | None = None
+    exemption_article: LedgerClassifyShortText | None = None
     deduction_fact_kind: LedgerClassifyShortText | None = None
     investment_asset_id: LedgerClassifyShortText | None = None
     iva_vehicle_use: LedgerClassifyShortText | None = None
     counterparty_country: CountryCodeAlpha2 | None = None
     counterparty_identification_state: CountryCodeAlpha2 | None = None
+    arrendamiento_ref: LedgerClassifyShortText | None = None
+    inmueble_ref: LedgerClassifyShortText | None = None
+    gasto_capital_inmobiliario: LedgerClassifyShortText | None = None
     notes: LedgerClassifyLongText | None = None
 
     @field_validator("business_classification")

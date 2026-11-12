@@ -60,6 +60,7 @@ from .casilla_help_formula import (
 )
 from .casilla_help_reach import ModeloHelpReachV1, build_casilla_help_reach
 from .printed_boxes import snapshot_printed_boxes
+from .refusal_door_verdicts import registry_defect_verdict
 from .source_policy import SourceSurface, source_policy
 from .work_form_localization import localized_text, unnamed_casilla_label
 from .workspace_models import (
@@ -175,7 +176,12 @@ def _phrase(language: OutputLanguage, name: str, /, **values: object) -> str:
     key = _HELP_LOCALE_KEYS[name]
     template = lookup_translation(key, locale=language.value)
     if template is None:
-        raise CasillaHelpCatalogueError(f"{key} has no {language.value} text")
+        raise CasillaHelpCatalogueError(
+            f"{key} has no {language.value} text",
+            translated_message="application.modelo.errors.catalogue_text_missing_for_language",
+            context={"text_id": key, "language": language.value},
+            precondition_verdict=registry_defect_verdict("help_catalogue_text"),
+        )
     return template.format(**values) if values else template
 
 

@@ -52,7 +52,6 @@ from pydantic_core import core_schema
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.registry_token import StrictRegistryToken
-from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import unique_mapping_tokens
 from .classification_engine import (
@@ -351,12 +350,12 @@ def _classification_vocabulary_group[T: StrictRegistryToken](
 
 
 def resolve_iva_classification_catalogue(
-    effective_date: date | None = None,
+    effective_date: date,
     *,
     operation: PinnedAuthorityOperation,
 ) -> IvaClassificationCatalogue:
     """Resolve the territorial and customer-status vocabulary from fact 0083."""
-    resolved = registry_iva_classification_catalogue(effective_date or today_madrid(), operation=operation)
+    resolved = registry_iva_classification_catalogue(effective_date, operation=operation)
     entries = mapping_entries(resolved, subject="IVA classification mapping")
     territorial_scopes, territorial_aliases = _classification_vocabulary_group(
         entries,
@@ -383,7 +382,7 @@ def resolve_iva_classification_catalogue(
 def require_iva_territorial_scope(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope:
     """Return a territorial scope only when 0083 declares it."""
@@ -393,7 +392,7 @@ def require_iva_territorial_scope(
 def require_customer_tax_status(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> CustomerTaxStatus:
     """Return a customer status only when 0083 declares it."""
@@ -403,7 +402,7 @@ def require_customer_tax_status(
 def territorial_scope_alias(
     alias: str,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope:
     """Return one named territorial projection from fact 0083."""
@@ -413,7 +412,7 @@ def territorial_scope_alias(
 def customer_tax_status_alias(
     alias: str,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> CustomerTaxStatus:
     """Return one named customer-status projection from fact 0083."""
@@ -471,7 +470,7 @@ def domestic_rate_tier_is_required(
     issuer_residency: IvaTerritorialScope,
     customer_residency: IvaTerritorialScope,
     kind: TransactionKind,
-    transaction_date: date | None = None,
+    transaction_date: date,
     customer_tax_status: CustomerTaxStatus | None = None,
     art_69_dos_service: IvaArt69DosService | None = None,
     operation: PinnedAuthorityOperation,
@@ -486,14 +485,13 @@ def domestic_rate_tier_is_required(
     way. Identification is probed absent: a row that needs one cannot then
     preempt a later rate-tier row, which errs toward asking.
     """
-    effective_date = transaction_date or today_madrid()
-    vocabulary = resolve_iva_classification_catalogue(effective_date, operation=operation)
-    rules = resolve_iva_classification_inputs(effective_date=effective_date, operation=operation).rules
+    vocabulary = resolve_iva_classification_catalogue(transaction_date, operation=operation)
+    rules = resolve_iva_classification_inputs(effective_date=transaction_date, operation=operation).rules
     statuses = (customer_tax_status,) if customer_tax_status is not None else vocabulary.customer_tax_statuses
     for status in statuses:
         for direction in InvoiceKind:
             criteria = IvaInvoiceClassificationCriteria(
-                transaction_date=effective_date,
+                transaction_date=transaction_date,
                 issuer_residency=issuer_residency,
                 customer_residency=customer_residency,
                 customer_tax_status=status,
@@ -607,6 +605,7 @@ class IvaClassificationResult(IvaStrictFrozen):
         matched_rule_id: Stable rule identifier (e.g.
             supplied by the selected registry revision.
         notes: Free-form explanatory note.
+        effective_date: Operation date whose catalogues the classification was resolved under.
         consumes_party_facts: Which :class:`PartyFact` values the matched branch
             actually turns on. This is how a producer assembling the criteria
             learns what to demand without holding a second copy of the law: it
@@ -656,6 +655,7 @@ class IvaClassificationResult(IvaStrictFrozen):
             " creating a separate Modelo 303 route."
         ),
     )
+    effective_date: date = Field(description="Operation date whose catalogues the classification was resolved under.")
     place_of_supply: IvaPlaceOfSupplyRule | None = Field(
         default=None,
         description=(
@@ -676,7 +676,9 @@ class IvaClassificationResult(IvaStrictFrozen):
         """Keep the Art. 20 discriminator coupled to a domestic-exempt result."""
         from ..calculations.registry.iva_category_catalogue import require_iva_category
 
-        if self.exemption_article is not None and self.category != require_iva_category("domestic_exempt"):
+        if self.exemption_article is not None and self.category != require_iva_category(
+            "domestic_exempt", effective_date=self.effective_date
+        ):
             raise IvaValidationError(
                 f"exemption_article {self.exemption_article.value!r} is only valid when "
                 f"category is DOMESTIC_EXEMPT; got category {self.category.value!r}",

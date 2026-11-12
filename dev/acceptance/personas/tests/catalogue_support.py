@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from functools import cache
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -30,12 +31,17 @@ def persona(persona_id: str) -> Persona:
 
 
 def value_with_casillas() -> ExpectedValue:
-    """A catalogue value that states casillas and no refusal."""
-    return next(
+    """A catalogue value that states casillas alone: no role, no not-sourced figure and no refusal.
+
+    The persona may also state the value's figures under registry roles; those are
+    dropped here so the tests read casillas only, whatever the catalogue re-keys.
+    """
+    sample = next(
         value
         for value in persona("autonomo-fontanero").expectations.values
         if value.casillas and value.refusal is None and value.grounding != "unverified"
     )
+    return replace(sample, roles=(), not_sourced=())
 
 
 def obligation(applicable: bool) -> ExpectedObligation:

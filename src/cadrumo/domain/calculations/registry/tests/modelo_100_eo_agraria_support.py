@@ -27,6 +27,9 @@ def neutral_binding_values() -> dict[str, Decimal]:
         # Agricultural activity is económica; the production profile resolver
         # supplies this predicate as 1/0 from taxpayer_type.irpf_income_categories.
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
@@ -44,6 +47,9 @@ def neutral_binding_values() -> dict[str, Decimal]:
         "renta-maritime-gross-navigation-income": Decimal("0"),
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
+        # The Art. 81.2 guarderia increment is declared year-free in every edition;
+        # neutral zero for a filer with no childcare spend.
+        "renta-profile-incremento-guarderia": Decimal("0"),
         # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
         # neutral zero for a scenario with no descendants.
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,

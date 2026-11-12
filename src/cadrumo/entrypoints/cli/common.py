@@ -35,7 +35,13 @@ from ...core.cli_metadata import is_metadata_invocation
 from ...core.cli_value_parsers import CliChoice, refuse_cli_value
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.i18n.render import tr
-from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
+from ...core.json_contract import (
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+    ResolvedActionReference,
+    ResolvedPreconditionAction,
+)
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
 from ...core.terminal_encoding import encode_terminal_text
@@ -77,21 +83,24 @@ class _PublishedIvaTerritorialScope:
     @property
     def choices(self) -> tuple[str, ...]:
         """Report the published territorial tokens when a schema asks for the choice set."""
+        from ...core.time.clock import today_madrid
         from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ...domain.iva.classification import resolve_iva_classification_catalogue
 
         with bundled_indexed_authority().operation() as operation:
-            catalogue = resolve_iva_classification_catalogue(operation=operation)
+            # The choice set offers the vocabulary in force now, for a new entry.
+            catalogue = resolve_iva_classification_catalogue(today_madrid(), operation=operation)
             return tuple(sorted(str(scope) for scope in catalogue.territorial_scopes))
 
     def __call__(self, value: object) -> str:
         """Return the projected token, listing the accepted set on a refusal."""
+        from ...core.time.clock import today_madrid
         from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ...domain.iva.classification import require_iva_territorial_scope
 
         CliChoice.of(self.choices)(value)
         with bundled_indexed_authority().operation() as operation:
-            return require_iva_territorial_scope(value, operation=operation)
+            return require_iva_territorial_scope(value, effective_date=today_madrid(), operation=operation)
 
 
 class _PublishedEuMemberState:
@@ -453,21 +462,31 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
             canonical_cli_path=(target.program.executable_name, *target.cli_path),
         )
 
+    def with_executable(action: ResolvedActionReference) -> ResolvedActionReference:
+        target = next(row for row in ACTION_TARGETS if row.command_key == action.target_command_key)
+        if target.program is CommandProgram.AEAT:
+            from .command_specs import COMMAND_GRAPH
+
+            executable = COMMAND_GRAPH.root().token
+        else:
+            executable = target.program.executable_name
+        cli_path = action.cli_path
+        if cli_path is None:
+            raise LookupError(f"resolved CLI action has no command path: {action.target_command_key}")
+        return action.model_copy(update={"cli_path": (executable, *cli_path)})
+
     resolved = resolve_precondition_action(verdict, target_reconciliation=target_reconciliation)
     if resolved.action is None:
         return resolved
-    target = next(row for row in ACTION_TARGETS if row.command_key == resolved.action.target_command_key)
-    if target.program is CommandProgram.AEAT:
-        from .command_specs import COMMAND_GRAPH
-
-        executable = COMMAND_GRAPH.root().token
-    else:
-        executable = target.program.executable_name
-    cli_path = resolved.action.cli_path
-    if cli_path is None:
-        raise LookupError(f"resolved CLI action has no command path: {resolved.action.target_command_key}")
-    action = resolved.action.model_copy(update={"cli_path": (executable, *cli_path)})
-    return resolved.model_copy(update={"action": action})
+    return resolved.model_copy(
+        update={
+            "action": with_executable(resolved.action),
+            "alternative_actions": tuple(
+                item.model_copy(update={"action": with_executable(item.action)})
+                for item in resolved.alternative_actions
+            ),
+        }
+    )
 
 
 def attach_cli_policy_verdict[ExceptionT: Exception](

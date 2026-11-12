@@ -448,7 +448,8 @@ def build_overview_explain(
             Defaults to today. Tests pass this explicitly; the CLI uses
             the real current date.
         operation: Optional caller-held pinned authority operation. When
-            omitted, this builder opens the bundled indexed operation.
+            omitted, this builder opens the bundled indexed operation once
+            and threads it through every deadline lookup.
         applicability_evidence: Optional per-filing-year evidence bound by
             the composition root. When supplied, the verdict and the listed
             profile facts are decided on the profile as of ``year`` and on the
@@ -489,6 +490,7 @@ def build_overview_explain(
     applicability = derive_modelo_applicability(
         year_profile,
         modelo_id,
+        reference_date=date(resolved_year, 12, 31),
         operation=operation,
         ledger_payer_facts=ledger_payer_facts,
     )
@@ -505,12 +507,14 @@ def build_overview_explain(
         modelo=modelo_id,
         year=resolved_year,
         engine=engine,
+        operation=operation,
     )
     out_of_plazo_warning = explain_out_of_plazo_warning(
         profile,
         modelo=modelo_id,
         year=resolved_year,
         today=reference_today,
+        operation=operation,
     )
 
     return OverviewExplain(
@@ -533,6 +537,7 @@ def _scheduling_rationale(
     modelo: str,
     year: int,
     engine: DeadlineExplanationEngine | None,
+    operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Return the deadline engine's scheduling text, or ``None``.
 
@@ -543,7 +548,7 @@ def _scheduling_rationale(
     :class:`~domain.deadlines.errors.DeadlineValidationError` failures remain
     typed :class:`OverviewExplainError` refusals.
     """
-    deadline_engine = engine or DeadlineEngine()
+    deadline_engine = engine or DeadlineEngine(authority=operation)
     try:
         return deadline_engine.explain(profile, modelo, year=year)
     except NoDeadlineWindowsError:
@@ -565,24 +570,44 @@ def _scheduling_rationale(
         ) from exc
 
 
-def _known_filing_close(profile: TaxpayerProfile, *, modelo: str, year: int) -> date | None:
+def _known_filing_close(
+    profile: TaxpayerProfile,
+    *,
+    modelo: str,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> date | None:
     """The latest effective close of the modelo's matching windows, or ``None`` when any is unknown or none exists."""
-    with bundled_indexed_authority().operation() as operation:
-        deadline_engine = DeadlineEngine(authority=operation)
-        try:
-            windows = deadline_engine.deadline_windows(year)
-        except NoDeadlineWindowsError:
-            return None
-        # Lateness is counted from the close the filer actually has, the same
-        # effective close every other surface judges against.
-        deadlines = tuple(
-            effective_filing_deadline(window.closes_on, modelo=modelo, operation=operation)
-            for code, revision, window in windows
-            if code == modelo and _deadline_window_matches(deadline_engine, profile, revision, window)
-        )
+    deadline_engine = DeadlineEngine(authority=operation)
+    try:
+        windows = deadline_engine.deadline_windows(year)
+    except NoDeadlineWindowsError:
+        return None
+    # Lateness is counted from the close the filer actually has, the same
+    # effective close every other surface judges against.
+    deadlines = tuple(
+        effective_filing_deadline(window.closes_on, modelo=modelo, operation=operation)
+        for code, revision, window in windows
+        if code == modelo and _deadline_window_matches(deadline_engine, profile, revision, window)
+    )
     if not deadlines or not all(deadline.close_known for deadline in deadlines):
         return None
     return max(deadline.closes_on for deadline in deadlines)
+
+
+def deadline_windows_unavailable(year: int, *, operation: PinnedAuthorityOperation) -> bool:
+    """Whether the pinned registry holds no deadline windows for ``year``.
+
+    ``True`` only for the benign no-windows data gap, the state in which an
+    explanation's scheduling rationale and out-of-plazo warning are absent
+    because nothing is known, not because the filing is on time. Any other
+    schedule failure propagates.
+    """
+    try:
+        DeadlineEngine(authority=operation).deadline_windows(year)
+    except NoDeadlineWindowsError:
+        return True
+    return False
 
 
 def explain_out_of_plazo_warning(
@@ -591,6 +616,7 @@ def explain_out_of_plazo_warning(
     modelo: str,
     year: int,
     today: date,
+    operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Return an old-deadline warning for ``overview explain``.
 
@@ -599,9 +625,10 @@ def explain_out_of_plazo_warning(
     historical return can still be applicable while its
     voluntary filing window closed long ago.
 
-    ``profile`` is a :class:`TaxpayerProfile`.
+    ``profile`` is a :class:`TaxpayerProfile`. ``operation`` is the caller's
+    pinned authority operation; the window lookup never opens its own.
     """
-    closes_on = _known_filing_close(profile, modelo=modelo, year=year)
+    closes_on = _known_filing_close(profile, modelo=modelo, year=year, operation=operation)
     if closes_on is None:
         return None
     twelve_month_boundary = twelve_month_anniversary(closes_on)

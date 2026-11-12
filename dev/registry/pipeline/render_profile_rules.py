@@ -10,6 +10,7 @@ from cadrumo.domain.calculations.registry.export_value_policy import (
     ExportValuePolicy,
     RequiredExportValuePolicyValue,
 )
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportAlphanumericText
 
 from .render_profile_evidence import ReviewedEvidence, ReviewedPolicyDecision, SourceStatedCompositeEvidence
 from .render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity, StrictModel
@@ -297,6 +298,27 @@ class TelematicTransportChoiceRule(StrictModel):
         return self
 
 
+class AlphanumericTextRule(StrictModel):
+    """The design's own rule for every alphanumeric and alphabetic field it lays out.
+
+    The design states it once, for all of its records, so the rule names no
+    anchor. ``official_statement`` repeats the design's words; the pipeline
+    finds them in the design's own text before the rule is admitted, so a rule
+    cannot rest on words its design does not contain.
+    """
+
+    rule_kind: Literal["alphanumeric_text"]
+    alphanumeric_text: ExportAlphanumericText
+    official_statement: str = Field(min_length=1)
+    justification: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _reject_whitespace_only_review_text(self) -> AlphanumericTextRule:
+        if not self.official_statement.strip() or not self.justification.strip():
+            raise ValueError("alphanumeric text statement and justification must contain non-whitespace text")
+        return self
+
+
 class RenderProfileFragment(StrictModel):
     """One deterministic, independently reviewable profile fragment."""
 
@@ -308,6 +330,7 @@ class RenderProfileFragment(StrictModel):
     signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
     literal_numeric_rules: tuple[LiteralNumericRule, ...] = ()
     telematic_transport_choice_rules: tuple[TelematicTransportChoiceRule, ...] = ()
+    alphanumeric_text_rules: tuple[AlphanumericTextRule, ...] = ()
     empty_rule_assertion: Literal["canonical_eligibility_empty"] | None = None
 
     @model_validator(mode="after")
@@ -318,6 +341,7 @@ class RenderProfileFragment(StrictModel):
             or self.signed_composite_rules
             or self.literal_numeric_rules
             or self.telematic_transport_choice_rules
+            or self.alphanumeric_text_rules
         )
         if has_rules == (self.empty_rule_assertion is not None):
             raise ValueError("render profile fragment requires rules or an exclusive empty eligibility assertion")

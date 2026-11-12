@@ -88,6 +88,7 @@ _VALUES = {
     "recorded": "1",
     "omitting": "1",
     "leaf": "nif",
+    "width": "40",
     "income_class": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD.value,
     "compared_amount": "1199.99",
     "cross_check": "retencion_soportada",
@@ -110,6 +111,7 @@ _VALUES = {
     "parties": "B00015016, B00015057",
     "invoice": "F-2025/0042",
     "counterparty": "Asesoría Ejemplo SL",
+    "record": "2",
 }
 _RAW = re.compile(
     r"[0-9a-f]{12,}"  # a hash or the tail of one

@@ -58,6 +58,7 @@ from cadrumo.domain.user_profile.values import (
     UserProfileRecord,
 )
 
+from ......domain.calculations.registry.tests.authored_editions import latest_period_end
 from .profile_record_boundary_support import PROFILE_ID
 from .profile_schema_legacy_support import publish_capsule, publish_legacy_capsule, record_session
 
@@ -428,7 +429,9 @@ def test_the_cleared_fact_stays_pending_until_answered_and_no_then_excludes_the_
 
     assert repository.pending_cleared_payer_fact_paths(PROFILE_ID) == _EXPECTED_CLEARED[version]
     with bundled_indexed_authority().operation():
-        undeclared = derive_modelo_applicability(projection_for_taxpayer(migrated, schema=schema), "349")
+        undeclared = derive_modelo_applicability(
+            projection_for_taxpayer(migrated, schema=schema), "349", reference_date=latest_period_end()
+        )
     assert undeclared.verdict is ApplicabilityVerdict.INCOMPLETE
 
     answered = repository.apply_fact_changes(
@@ -443,7 +446,9 @@ def test_the_cleared_fact_stays_pending_until_answered_and_no_then_excludes_the_
 
     assert repository.pending_cleared_payer_fact_paths(PROFILE_ID) == still_pending
     with bundled_indexed_authority().operation():
-        declared_no = derive_modelo_applicability(projection_for_taxpayer(answered, schema=schema), "349")
+        declared_no = derive_modelo_applicability(
+            projection_for_taxpayer(answered, schema=schema), "349", reference_date=latest_period_end()
+        )
     assert declared_no.verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
@@ -462,7 +467,9 @@ def test_the_cleared_art109_coverage_fact_reopens_modelo_130_until_it_is_answere
     assert _ART109 in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
     resident = _answer_residency(repository, migrated)
     with bundled_indexed_authority().operation():
-        undeclared = derive_modelo_applicability(projection_for_taxpayer(resident, schema=schema), "130")
+        undeclared = derive_modelo_applicability(
+            projection_for_taxpayer(resident, schema=schema), "130", reference_date=latest_period_end()
+        )
     assert undeclared.verdict is ApplicabilityVerdict.INCOMPLETE
 
     answered = repository.apply_fact_changes(
@@ -477,7 +484,9 @@ def test_the_cleared_art109_coverage_fact_reopens_modelo_130_until_it_is_answere
 
     assert _ART109 not in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
     with bundled_indexed_authority().operation():
-        declared_no = derive_modelo_applicability(projection_for_taxpayer(answered, schema=schema), "130")
+        declared_no = derive_modelo_applicability(
+            projection_for_taxpayer(answered, schema=schema), "130", reference_date=latest_period_end()
+        )
     assert declared_no.verdict is ApplicabilityVerdict.APPLICABLE
 
 
@@ -498,6 +507,7 @@ def test_a_stored_art109_yes_survives_every_transition(
             verdict = derive_modelo_applicability(
                 projection_for_taxpayer(resident, schema=contexts[1].schema),
                 "130",
+                reference_date=latest_period_end(),
             )
     finally:
         session.close()
@@ -524,7 +534,9 @@ def test_the_cleared_capital_income_fact_reopens_its_eight_modelos_until_it_is_a
     assert _PAYS_CAPITAL in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
     with bundled_indexed_authority().operation():
         undeclared = tuple(
-            derive_modelo_applicability(projection_for_taxpayer(migrated, schema=schema), modelo).verdict
+            derive_modelo_applicability(
+                projection_for_taxpayer(migrated, schema=schema), modelo, reference_date=latest_period_end()
+            ).verdict
             for modelo in _CAPITAL_GATED_MODELOS
         )
     assert undeclared == (ApplicabilityVerdict.INCOMPLETE,) * len(_CAPITAL_GATED_MODELOS)
@@ -542,7 +554,9 @@ def test_the_cleared_capital_income_fact_reopens_its_eight_modelos_until_it_is_a
     assert _PAYS_CAPITAL not in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
     with bundled_indexed_authority().operation():
         declared_no = tuple(
-            derive_modelo_applicability(projection_for_taxpayer(answered, schema=schema), modelo).verdict
+            derive_modelo_applicability(
+                projection_for_taxpayer(answered, schema=schema), modelo, reference_date=latest_period_end()
+            ).verdict
             for modelo in _CAPITAL_GATED_MODELOS
         )
     assert declared_no == (ApplicabilityVerdict.NOT_APPLICABLE,) * len(_CAPITAL_GATED_MODELOS)
@@ -569,6 +583,7 @@ def test_a_stored_capital_income_yes_survives_every_transition(
                 derive_modelo_applicability(
                     projection_for_taxpayer(migrated, schema=contexts[1].schema),
                     modelo,
+                    reference_date=latest_period_end(),
                 ).verdict
                 for modelo in _CAPITAL_GATED_MODELOS
             )
@@ -597,7 +612,9 @@ def test_the_cleared_residency_reopens_the_residency_gated_modelos_until_it_is_a
     assert _RESIDENCY in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
     with bundled_indexed_authority().operation():
         undeclared = tuple(
-            derive_modelo_applicability(projection_for_taxpayer(migrated, schema=schema), modelo).verdict
+            derive_modelo_applicability(
+                projection_for_taxpayer(migrated, schema=schema), modelo, reference_date=latest_period_end()
+            ).verdict
             for modelo in _RESIDENCY_DECIDED_MODELOS
         )
     assert undeclared == (ApplicabilityVerdict.INCOMPLETE,) * len(_RESIDENCY_DECIDED_MODELOS)
@@ -615,7 +632,9 @@ def test_the_cleared_residency_reopens_the_residency_gated_modelos_until_it_is_a
     assert _RESIDENCY not in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
     with bundled_indexed_authority().operation():
         declared = {
-            modelo: derive_modelo_applicability(projection_for_taxpayer(answered, schema=schema), modelo).verdict
+            modelo: derive_modelo_applicability(
+                projection_for_taxpayer(answered, schema=schema), modelo, reference_date=latest_period_end()
+            ).verdict
             for modelo in _RESIDENCY_DECIDED_MODELOS
         }
     assert declared["100"] is ApplicabilityVerdict.APPLICABLE
@@ -647,6 +666,7 @@ def test_a_stored_non_resident_residency_survives_every_transition(
                 modelo: derive_modelo_applicability(
                     projection_for_taxpayer(migrated, schema=contexts[1].schema),
                     modelo,
+                    reference_date=latest_period_end(),
                 ).verdict
                 for modelo in _RESIDENCY_DECIDED_MODELOS
             }

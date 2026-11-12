@@ -44,6 +44,7 @@ from ...domain.buckets.event_repository import bucket_event_history_write, build
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ...domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
 from .m036_lifecycle_ports import M036DeclarationRepositoryPort, M036LifecyclePorts
+from .refusal_door_verdicts import operator_choice_verdict, safety_stop_verdict
 
 
 def derive_m036_declaration_id(
@@ -257,6 +258,7 @@ def _require_profile_owns_bucket(*, profile_id: ProfileId, bucket_id: BucketId) 
                 "bucket_id": canonical_bucket,
                 "owns_bucket": False,
             },
+            precondition_verdict=safety_stop_verdict("m036_profile_bucket"),
         )
 
 
@@ -303,19 +305,23 @@ def _require_m036_sequence_valid(
         raise Modelo036TerminalStateError(
             f"m036 declaration_id={declaration_id!r} refused: prior declaration "
             f"{latest.declaration_id!r} is a terminal baja",
+            translated_message="application.modelo.errors.m036_declaration_after_baja",
             context={
                 "declaration_id": declaration_id,
                 "prior_declaration_id": latest.declaration_id,
                 "requested_event_kind": command.event_kind.value,
             },
+            precondition_verdict=operator_choice_verdict("m036_after_baja"),
         )
     if latest is None and command.event_kind is not CensoModeloEventKind.ALTA:
         raise Modelo036PriorAltaRequiredError(
             f"m036 declaration_id={declaration_id!r} refused: no prior alta on record for {command.event_kind.value!r}",
+            translated_message="application.modelo.errors.m036_declaration_without_alta",
             context={
                 "declaration_id": declaration_id,
                 "requested_event_kind": command.event_kind.value,
             },
+            precondition_verdict=operator_choice_verdict("m036_prior_alta_required"),
         )
 
 

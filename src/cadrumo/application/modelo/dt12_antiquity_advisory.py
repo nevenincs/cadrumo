@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -14,6 +15,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
 from .dt12_advisory import DT12_TRABAJO_REDUCCION_ROLE, resolve_dt12_verification_mapping
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
@@ -29,6 +31,7 @@ def dt12_antiquity_advisory_finding(
     *,
     operation: PinnedAuthorityOperation,
     modelo: str,
+    effective_date: date,
 ) -> ModeloVerificationFinding | None:
     """Warn to confirm the DT 12ª antiquity condition when reduction applies."""
     try:
@@ -38,7 +41,12 @@ def dt12_antiquity_advisory_finding(
             modelo_id=modelo,
         )
     except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+        raise ModeloError(
+            str(exc),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
 
     if reduccion_id is None:
         return None
@@ -48,7 +56,10 @@ def dt12_antiquity_advisory_finding(
         return None
 
     declaration = resolve_dt12_verification_mapping(
-        revision, operation=operation, fact_id="lirpf-dt12-antiquity-verification-mapping"
+        revision,
+        operation=operation,
+        fact_id="lirpf-dt12-antiquity-verification-mapping",
+        effective_date=effective_date,
     )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,

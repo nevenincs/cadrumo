@@ -31,6 +31,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
+from ...domain.calculations.registry.field_absence import absent_when_none
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.schema_base import CasillaDataTypeValue
 from ...domain.filing.schema import ModeloScalar
@@ -131,11 +132,17 @@ class ModeloEditBindingIntentKind(StrEnum):
     ``ATTEST_NO_AMOUNT`` records the operator's statement that a carry from an
     earlier filing holds no amount: an override of zero the operator layer marks
     attested, kept apart from a zero typed. Either other intent withdraws it.
+    ``ATTEST_PRIOR_VALUE`` records the operator's statement of a carry's value
+    where no supported earlier filing can supply it, because the earlier
+    filing's year lies outside the support envelope: the value stays the
+    override and the operator layer names the earlier filing it stands in
+    for. Any other intent on the binding withdraws it.
     """
 
     SET_OVERRIDE_VALUE = "set_override_value"
     REMOVE_OVERRIDE = "remove_override"
     ATTEST_NO_AMOUNT = "attest_no_amount"
+    ATTEST_PRIOR_VALUE = "attest_prior_value"
 
 
 class ModeloEditNonWritableReason(StrEnum):
@@ -212,10 +219,15 @@ class ModeloEditBindingAddressV1(EditModel):
     ``BindingId``, never ``CasillaId`` -- most overridable bindings (a
     fichero-BOE record-field ``manual_input`` binding, most notably) have no
     casilla at all to address through.
+
+    ``row_identity`` names the row of a repeating group a statement of a carry
+    speaks of, for a binding whose registry family is stated row by row; every
+    other intent leaves it absent, and an absent one is left out of the dump.
     """
 
     kind: Literal["binding"] = "binding"
     binding_id: BindingId
+    row_identity: str | None = Field(default=None, min_length=1, max_length=256, exclude_if=absent_when_none)
 
 
 class ModeloEditCorrectionAddressV1(EditModel):
@@ -795,6 +807,8 @@ class ModeloBindingEditIntentV1(EditModel):
     ``BindingId``. Never carries a value for ``REMOVE_OVERRIDE`` or
     ``ATTEST_NO_AMOUNT``: withdrawing an override, and stating that a carry
     holds no amount, are expressed by absence of a value, not a typed zero.
+    ``SET_OVERRIDE_VALUE`` and ``ATTEST_PRIOR_VALUE`` require one, so a blank
+    statement of a figure is refused here.
     """
 
     address: ModeloEditBindingAddressV1
@@ -803,10 +817,14 @@ class ModeloBindingEditIntentV1(EditModel):
 
     @model_validator(mode="after")
     def _require_value_only_for_set_override(self) -> ModeloBindingEditIntentV1:
-        if self.kind is ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE and self.value is None:
-            raise ValueError("SET_OVERRIDE_VALUE binding intent requires a typed value")
-        if self.kind is not ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE and self.value is not None:
-            raise ValueError("only SET_OVERRIDE_VALUE may carry a binding intent value")
+        carries_value = self.kind in {
+            ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+            ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+        }
+        if carries_value and self.value is None:
+            raise ValueError(f"{self.kind.name} binding intent requires a typed value")
+        if not carries_value and self.value is not None:
+            raise ValueError("only SET_OVERRIDE_VALUE and ATTEST_PRIOR_VALUE may carry a binding intent value")
         return self
 
 
@@ -910,6 +928,8 @@ def _intent_address_key(
     if isinstance(address, ModeloEditScalarAddressV1):
         return ("scalar", address.casilla_id)
     if isinstance(address, ModeloEditBindingAddressV1):
+        if address.row_identity is not None:
+            return ("binding_row", f"{address.binding_id}:{address.row_identity}")
         return ("binding_override", address.binding_id)
     if isinstance(address, ModeloEditCorrectionAddressV1):
         return ("correction", address.casilla_id)

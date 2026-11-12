@@ -41,6 +41,7 @@ import {
   type OpenableSurface,
 } from "./formContext";
 import { SectionView, type DrawnSection, type Shown } from "./SectionView";
+import { StatementsOffer } from "./StatementsOffer";
 import {
   clearIntent,
   editKey,
@@ -373,6 +374,7 @@ export function FormView({
         if (!editable) return true;
         const held = session.staged.get(editKey(field));
         if (held && "value" in held.intent) session.unstage(held.key);
+        else if (!held && field.stated_absent !== null) session.withdraw(field);
         else if (!held && field.filers_own)
           session.stage(field, clearIntent(field));
         return true;
@@ -455,24 +457,20 @@ export function FormView({
             <Icon name="splitColumn" />
           </IconButton>
         </div>
-        {session.carryAttestations.map((attestation) => (
-          <div
-            key={attestation.family}
-            data-carry-attestation={attestation.family}
-            className="flex flex-none items-start gap-3 border-b border-border px-6 py-3"
+        {form.year_projection.words && (
+          <p
+            data-year-projection={form.year_projection.direction}
+            className="flex-none border-b border-border px-4 py-1.5 text-sm text-muted-foreground"
           >
-            <p className="min-w-0 flex-1 text-sm text-muted-foreground">
-              {attestation.statement_words}
-            </p>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => session.attestCarries(attestation)}
-            >
-              {attestation.action_words}
-            </Button>
-          </div>
-        ))}
+            {form.year_projection.words}
+          </p>
+        )}
+        <StatementsOffer
+          key={`${envelope.work_unit_id}:${session.statements
+            .map((statement) => statement.family)
+            .join()}`}
+          session={session}
+        />
         {pages.length > 1 && page && (
           <Tabs
             value={page.id}

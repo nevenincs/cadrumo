@@ -62,6 +62,7 @@ from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
 from ...domain.filing.errors import (
+    FilingExportDeclaredPartyNameError,
     FilingExportError,
     FilingExportRequiredRecordAbsentError,
     FilingExportValueOverflowError,
@@ -75,6 +76,8 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
 from ...domain.modelos.errors import (
+    ModeloError,
+    ModeloExportDeclaredPartyNameError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
     ModeloExportRequiredRecordAbsentError,
@@ -96,13 +99,11 @@ from ..filing.export_verification import (
     FilingExportPayloadConsumer,
     assert_export_artifact_matches_receipt,
 )
-from ..filing.export_xml_value_limits import is_xml_value_refusal
 from ..filing.producer_snapshot import (
     AmendmentEvidence,
     FilingProducerSnapshot,
 )
 from ..filing.runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
-from ..filing.shared_owner_refusal import is_shared_owner_refusal
 from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitNotFoundError,
@@ -136,6 +137,7 @@ from .export_contracts import (
     ModeloIvaWalletDecisionProvenance,
     PreparedModeloExport,
 )
+from .export_field_refusal import export_field_level_refusal
 from .export_ports import ModeloExportPorts
 from .export_preparation import (
     approve_export_draft,
@@ -154,23 +156,32 @@ from .export_settlement import DeclaredSettlement, declared_settlement, settleme
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
+from .lifecycle_view_refusal_doors import no_active_profile_verdict
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_settled_row_amount_authority
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies,
 )
+from .m390_prorrata_apartado_gate import (
+    Modelo390ProrrataApartadoStage,
+    require_modelo_390_prorrata_apartado_rendered,
+)
 from .modelo_bucket_events import emit_modelo_bucket_event
 from .preconditions import (
     build_modelo_precondition_failure,
+    build_modelo_precondition_failure_for_scenario,
 )
 from .prior_domiciliation import resolveprior_domiciliation_election
-from .profile_export_binding import (
-    taxpayer_identity_profile_facts,
+from .refusal_door_verdicts import (
+    operator_choice_verdict,
+    safety_stop_verdict,
+    stored_defect_verdict,
 )
 from .required_binding_gate import (
     require_persisted_revision_required_bindings_resolved,
 )
 from .result_disposition_resolution import resolve_modelo_result_disposition
+from .trabajo_income_findings import trabajo_recorded
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 
 
@@ -563,6 +574,7 @@ def _export_result(
         software_identity_grade=None if software_identity is None else software_identity.grade,
         domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
         completeness_unverified=completeness_unverified,
+        trabajo_deductions_not_computed=trabajo_recorded(revision),
     )
 
 
@@ -627,23 +639,56 @@ def _consume_export_payload(
         raise export_write_failure(command, exc) from exc
 
 
-def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError:
+def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloError:
     """Keep a refused box's own message; the generic one would read as a disk problem."""
     if isinstance(exc, FilingExportValueOverflowError):
         return _export_value_overflow_refusal(command, exc)
+    if isinstance(exc, FilingExportDeclaredPartyNameError):
+        return _declared_party_name_refusal(command, exc)
+    refusal_context: dict[str, object] = {
+        "calculation_revision_id": command.calculation_revision_id,
+        **(exc.context or {}),
+    }
     if isinstance(exc, FilingExportRequiredRecordAbsentError):
         return ModeloExportRequiredRecordAbsentError(
-            context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
+            context=refusal_context, precondition_verdict=operator_choice_verdict("export_required_record_absent")
         )
-    if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
-        return ModeloExportError(
-            translated_message=exc.translated_message,
-            context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
-        )
+    field_refusal = export_field_level_refusal(command, exc)
+    if field_refusal is not None:
+        return field_refusal
     return ModeloExportError(
         translated_message="application.modelo.errors.export_draft_write_failed",
-        context=_export_write_failure_context(command, exc),
+        context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
+        precondition_verdict=stored_defect_verdict("export_draft_write"),
     )
+
+
+def _declared_party_name_refusal(
+    command: ModeloExportCommand, exc: FilingExportDeclaredPartyNameError
+) -> ModeloExportDeclaredPartyNameError:
+    """Name the slot, a non-identifying party handle and the door.
+
+    The party's identifier reaches only the in-process envelope, where the door
+    binds it; the name is never carried.
+    """
+    context: dict[str, object] = {"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})}
+    if exc.tax_identifier is not None:
+        context["tax_identifier"] = exc.tax_identifier
+    if exc.country_code is not None:
+        context["country_code"] = exc.country_code
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id="modelo.export.declared_party_name.unstated",
+        evidence_id="modelo.export.declared_party_name",
+        evidence_values={
+            "calculation_revision_id": command.calculation_revision_id,
+            "reason": exc.reason,
+            "named": False,
+        },
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        missing_action_arguments=("tax_identifier", "country_code", "kind"),
+    )
+    return ModeloExportDeclaredPartyNameError(context=context, precondition_verdict=failure.verdict)
 
 
 def _export_value_overflow_refusal(
@@ -671,29 +716,11 @@ def _export_value_overflow_refusal(
         return ModeloExportValueOverflowError(
             translated_message="application.modelo.errors.export_text_value_overflow",
             context={**context, "field_value": exc.rendered},
+            precondition_verdict=operator_choice_verdict("export_value_overflow"),
         )
-    return ModeloExportValueOverflowError(context=context)
-
-
-def _export_write_failure_context(command: ModeloExportCommand, exc: FilingExportError) -> dict[str, object]:
-    """Name what the operator must supply when the refusal is a missing identity fact.
-
-    The layout refuses a blank required field by its producer key, which is a
-    registry spelling the operator never sees; the profile fact it is read from
-    is what they declare. Any other export failure keeps its own cause.
-    """
-    missing_producer_key = (exc.context or {}).get("missing_producer_key")
-    profile_facts = (
-        taxpayer_identity_profile_facts(missing_producer_key) if isinstance(missing_producer_key, str) else ()
+    return ModeloExportValueOverflowError(
+        context=context, precondition_verdict=operator_choice_verdict("export_value_overflow")
     )
-    if not profile_facts:
-        return {"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)}
-    named = " or ".join(profile_facts)
-    return {
-        "calculation_revision_id": command.calculation_revision_id,
-        "cause": f"the export requires the profile fact {named}, which is not set",
-        "missing_profile_facts": list(profile_facts),
-    }
 
 
 def _emit_export_event(
@@ -872,6 +899,7 @@ def load_exportable_revision_target(
         raise ModeloExportCrossBucketRefusedError(
             translated_message="application.modelo.errors.export_cross_bucket_refused",
             context={"work_unit_id": work_unit.work_unit_id},
+            precondition_verdict=safety_stop_verdict("export_cross_profile"),
         )
     return revision, work_unit
 
@@ -918,6 +946,7 @@ def _require_modelo_export_clean_state(
     iva_wallet_decision: IvaCompensationReconciliationDecision | None,
     export_ports: ModeloExportPorts,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     require_cross_period_clean_state(
         work_unit,
@@ -940,6 +969,9 @@ def _require_modelo_export_clean_state(
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
         workflow_profile=workflow_profile,
         target_revision=revision,
+        work_unit_repository=export_ports.work_unit,
+        subject_leaf_key="modelo.export",
+        operation=operation,
     )
 
 
@@ -966,6 +998,7 @@ def _resolve_modelo_exportprior_domiciliation(
         raise ModeloExportPriorDomiciliationElectionRequiredError(
             "a Modelo 303 rectificativa stating the rectified amount requires an explicit prior-domiciliation election",
             context={"calculation_revision_id": command.calculation_revision_id, "modelo": str(work_unit.modelo)},
+            precondition_verdict=operator_choice_verdict("export_prior_domiciliation_election"),
         )
     prior_domiciliation_election = resolveprior_domiciliation_election(
         election=command.prior_domiciliation_election or PriorDomiciliationElection.KEEP,
@@ -1006,6 +1039,13 @@ def _prepare_modelo_export(
         stage=Modelo123CountAuthorityStage.EXPORT,
     )
     require_modelo_193_settled_row_amount_authority(work_unit, revision, stage=Modelo193SettledRowStage.EXPORT)
+    require_modelo_390_prorrata_apartado_rendered(
+        work_unit,
+        registry_revision_id=revision.registry_snapshot_ref.revision_id,
+        prorrata_register_repository=export_ports.prorrata_register,
+        operation=operation,
+        stage=Modelo390ProrrataApartadoStage.EXPORT,
+    )
     amendment_evidence = resolve_persisted_amendment_export_evidence(
         command,
         revision,
@@ -1053,6 +1093,7 @@ def _prepare_modelo_export(
         iva_wallet_decision=iva_wallet_decision,
         export_ports=export_ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
+        operation=operation,
     )
     prior_domiciliation_election = _resolve_modelo_exportprior_domiciliation(
         command,
@@ -1135,6 +1176,7 @@ def export_modelo_revision(
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
             translated_message="application.modelo.errors.export_no_active_bucket",
+            precondition_verdict=no_active_profile_verdict("export_bucket"),
         )
 
     # Validate the destination before touching the catalogue or writing any

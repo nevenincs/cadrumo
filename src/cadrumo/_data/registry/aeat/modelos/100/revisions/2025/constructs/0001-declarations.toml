@@ -163,6 +163,7 @@ casilla_ids = [
     "0057",
     "0023",
     "0025",
+    "rentas-distintas-del-trabajo",
     "trabajo-mar-renta-exenta",
 ]
 formulas = [
@@ -173,6 +174,8 @@ formulas = [
     "renta-trabajo-rendimiento-neto",
     "renta-trabajo-rendimiento-neto-reducido",
     "renta-trabajo-otros-gastos",
+    "renta-trabajo-reduccion-gastos-generales",
+    "renta-trabajo-rentas-distintas-del-trabajo",
     "renta-maritime-exempt-income",
 ]
 [[revisions."2025".constructs]]
@@ -223,11 +226,8 @@ casilla_ids = [
     "0598",
 ]
 formulas = [
-    "renta-capital-inmobiliario-rendimiento-neto",
-    "renta-capital-inmobiliario-rendimiento-neto-reducido",
     "renta-inmobiliario-renta-imputada-art-85",
     "renta-inmobiliario-suma-rentas-imputadas",
-    "renta-capital-inmobiliario-suma-rendimientos-reducidos",
     "renta-retenciones-arrendamientos-urbanos",
 ]
 [[revisions."2025".constructs]]

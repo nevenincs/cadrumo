@@ -2,6 +2,9 @@ modelo:
   schema:
     '100':
       binding:
+        renta-inmueble-gastos-pendientes-anteriores-0103:
+          label: Interessos i despeses de reparació i conservació de l'immoble pendents
+            de deduir dels quatre exercicis anteriors
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Sí: modalitat normal (N). No: modalitat simplificada (S).'
           label: Apliques la modalitat normal d'estimació directa?
@@ -3627,6 +3630,8 @@ modelo:
           irpf-tipo-medio-gravamen-general-autonomico:
             label: 'Tipus mitjans de gravamen ( [0534] = [0532] X 100 / [0505] );
               ( [0535] = [0533] X 100 / [0505] ): Part autonòmica'
+          irpf-trabajo-rentas-distintas-del-trabajo:
+            label: Rendes diferents de les del treball (límit de l'art. 20) [interna]
           irpf-transparencia-fiscal-internacional-contribuyente:
             label: Contribuent que ha d'efectuar l'imputació
           irpf-vehiculo-electrico-instalador-nif:
@@ -8302,6 +8307,9 @@ modelo:
                 en aquest únic període impositiu (base sobre la qual s'aplica la reducció
                 del 30 per 100 de l'article 32.1 de la Llei de l'Impost; import declarat
                 per l'operador - vegeu la casella [1554])
+            trabajo-mar-renta-exenta:
+              label: Rendiments del treball exempts dels treballadors del mar (art.
+                7.p) LIRPF o Llei 19/1994) [intern]
           construct:
             renta-dependent-modelos:
               field:
@@ -18080,9 +18088,6 @@ modelo:
               label: Comunitat autònoma de la declaració
             ZRUE2:
               label: Cònjuge país de residència UE o EEE
-            trabajo-mar-renta-exenta:
-              label: Rendiments del treball exempts dels treballadors del mar (art.
-                7.p) LIRPF o Llei 19/1994) [intern]
           construct:
             renta-dependent-modelos:
               field:

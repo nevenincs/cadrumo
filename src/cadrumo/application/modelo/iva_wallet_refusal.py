@@ -32,16 +32,17 @@ from ..operations.next_step import (
     OperationOpenIvaWalletOpeningBalanceStepV1,
     OperationOpenIvaWalletStepV1,
 )
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .action_errors import ModeloPreconditionErrorMixin
 from .iva_wallet_prior_period import prior_compensation_source_period
-from .preconditions import (
+from .iva_wallet_refusal_profiles import (
     IVA_WALLET_OPENING_BALANCE_ACTION_ID,
     IVA_WALLET_OPENING_BALANCE_SCENARIOS,
     IVA_WALLET_OVERRIDE_ACTION_ID,
     IVA_WALLET_OVERRIDE_SCENARIOS,
-    ModeloPreconditionFailure,
-    build_modelo_precondition_failure,
 )
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
+from .refusal_door_verdicts import caller_defect_verdict
 from .work_form_wording import modelo_number, period_words
 
 
@@ -86,6 +87,8 @@ class ModeloIvaWalletReconciliationBlockedError(OperationNextStepErrorMixin, Mod
         if failure is None:
             raise ModeloError(
                 "IVA-wallet reconciliation refusal was raised without its precondition verdict",
+                translated_message="application.modelo.errors.iva_wallet_refusal_without_verdict",
+                precondition_verdict=caller_defect_verdict("iva_wallet_refusal_verdict"),
             )
         return failure
 
@@ -234,11 +237,13 @@ def _opening_balance_period(
     if carry_period is None or carry_revision is None:
         raise InternalInvariantError(
             f"iva wallet refusal {reason_code} is settled by the opening balance of a period it did not name",
+            precondition_verdict=internal_invariant_verdict("iva_wallet_refusal.opening_balance_period_named"),
         )
     source_period = prior_compensation_source_period(carry_revision, carry_period)
     if source_period is None:
         raise InternalInvariantError(
             f"iva wallet refusal {reason_code} names a carry whose revision reads no single earlier period",
+            precondition_verdict=internal_invariant_verdict("iva_wallet_refusal.carry_reads_single_period"),
         )
     return source_period
 
@@ -269,6 +274,7 @@ def _wallet_action(
         if carry_period is None:
             raise InternalInvariantError(
                 f"iva wallet refusal {reason_code} is settled by an override of a period it did not name",
+                precondition_verdict=internal_invariant_verdict("iva_wallet_refusal.override_period_named"),
             )
         known: dict[str, str | int | bool | Decimal] = {
             "filing_year": carry_period.filing_year,

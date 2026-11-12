@@ -9,7 +9,11 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import (
+    M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_MARITIME_WORKER_BINDINGS,
+    M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
+)
 
 # ---------------------------------------------------------------------------
 # Oracle constants derived from LIRPF 2024 + Madrid escala 2024 — see module
@@ -114,6 +118,9 @@ RELATION_VALUES_2024: dict[RelationId, Decimal] = {
 def binding_values() -> dict[BindingId, Decimal]:
     return {
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         # declaration_type = 1 (individual) → 0461 computed = 0
@@ -133,6 +140,7 @@ def binding_values() -> dict[BindingId, Decimal]:
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+        **M100_NO_MARITIME_WORKER_BINDINGS,
     }
 
 
@@ -163,6 +171,7 @@ def check_0587_cuota_liquida_total_is_computed(m100_second_newest_snapshot: Regi
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
         date_binding_values=DATE_BINDINGS_2024,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     assert result.values[M100_CUOTA_LIQUIDA_TOTAL_CASILLA] != Decimal("0"), (
@@ -198,6 +207,7 @@ def check_0609_total_pagos_a_cuenta_computed_from_0598(m100_second_newest_snapsh
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
         date_binding_values=DATE_BINDINGS_2024,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     assert result.values[M100_RETENCIONES_ARRENDAMIENTOS_URBANOS_CASILLA] == EXPECTED_0598, (
@@ -229,6 +239,7 @@ def check_0610_cuota_diferencial_computed(m100_second_newest_snapshot: RegistryS
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
         date_binding_values=DATE_BINDINGS_2024,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     assert abs(result.values[M100_CUOTA_DIFERENCIAL_CASILLA] - EXPECTED_0610) <= TOLERANCE, (
@@ -256,6 +267,7 @@ def check_0670_resultado_declaracion_computed(m100_second_newest_snapshot: Regis
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
         date_binding_values=DATE_BINDINGS_2024,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     assert abs(result.values[M100_RESULTADO_DECLARACION_CASILLA] - EXPECTED_0670) <= TOLERANCE, (
@@ -281,6 +293,7 @@ def check_settlement_chain_not_zero_for_non_zero_base(m100_second_newest_snapsho
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
         date_binding_values=DATE_BINDINGS_2024,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     assert result.values[M100_CUOTA_LIQUIDA_TOTAL_CASILLA] > Decimal("0"), (
@@ -316,6 +329,7 @@ def check_anti_tautology_retenciones_change_affects_chain(m100_second_newest_sna
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
         date_binding_values=DATE_BINDINGS_2024,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
     _higher_retenciones = Decimal("3000")
     result_high = calculate_registry_snapshot(
@@ -326,6 +340,7 @@ def check_anti_tautology_retenciones_change_affects_chain(m100_second_newest_sna
         binding_values=binding_values(),
         relation_values=RELATION_VALUES_2024,
         date_binding_values=DATE_BINDINGS_2024,
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
     )
 
     cuota_diferencial_low = result_low.values[M100_CUOTA_DIFERENCIAL_CASILLA]

@@ -73,6 +73,8 @@ from ..user_profile.validation import (
     refuse_overlong_profile_text,
 )
 from .action_errors import ModeloProfileReadinessError
+from .lifecycle_view_refusal_doors import no_active_profile_verdict
+from .refusal_door_verdicts import operator_choice_verdict
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -468,6 +470,7 @@ def _require_not_pre_activity_period(
         message,
         context=context,
         translated_message="application.modelo.errors.profile_readiness_pre_activity",
+        profile_precondition_verdict=operator_choice_verdict("period_before_activity"),
     )
 
 
@@ -563,6 +566,7 @@ def _require_modelo_applicable_for_local_work(
         record=record,
         bucket_id=bucket_id,
         modelo=modelo,
+        filing_year=filing_year,
         operation=operation,
     )
     if refusal is None:
@@ -572,6 +576,7 @@ def _require_modelo_applicable_for_local_work(
         message,
         context=context,
         translated_message="application.modelo.errors.profile_readiness_not_applicable",
+        profile_precondition_verdict=operator_choice_verdict("modelo_not_applicable"),
     )
 
 
@@ -580,6 +585,7 @@ def modelo_applicability_refusal(
     record: UserProfileRecord,
     bucket_id: str,
     modelo: str,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, dict[str, str]] | None:
     """Return the local-work applicability refusal for a target, if any.
@@ -590,11 +596,18 @@ def modelo_applicability_refusal(
         bucket_id: Active profile bucket identifier included in the refusal
             context.
         modelo: Modelo code being checked.
+        filing_year: Year of the return; applicability is decided for the
+            tax period ending on 31 December of that year.
         operation: Caller-held pinned operation for applicability facts.
     """
     modelo_code = modelo.strip()
     profile = projection_for_taxpayer(record, schema=operation.profile_schema())
-    applicability = derive_modelo_applicability(profile, modelo_code, operation=operation)
+    applicability = derive_modelo_applicability(
+        profile,
+        modelo_code,
+        reference_date=date(filing_year, 12, 31),
+        operation=operation,
+    )
     if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return (
@@ -740,6 +753,7 @@ def _load_profile_for_modelo_work(
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_profile_missing",
             context={"bucket_id": bucket_id},
+            profile_precondition_verdict=no_active_profile_verdict("profile_readiness_profile"),
         )
     return loaded
 

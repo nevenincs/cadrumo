@@ -358,6 +358,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.modelos.errors.CalculationRevisionIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_MODELOS_CALCULATION_REVISION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_modelos_calculation_revision",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.modelos.errors.ModeloOperatorLayerIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_MODELOS_OPERATOR_LAYER",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_modelos_operator_layer",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.modelos.repository.WorkUnitPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_WORK_UNIT_PERSISTENCE",
@@ -468,6 +488,46 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.filing.errors.FilingExportIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_FILING_EXPORT",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_filing_export",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDesignIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_FILING_EXPORT_DESIGN",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_filing_export_design",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportCasillaValueRefusedError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_CASILLA_VALUE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_casilla_value",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportProfileFactMissingError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_PROFILE_FACT_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_profile_fact_missing",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.filing.errors.FilingExportValueOverflowError",
         ErrorCode(
             code="ERROR_FILING_EXPORT_VALUE_OVERFLOW",
@@ -483,6 +543,66 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_FILING_EXPORT_REQUIRED_RECORD_ABSENT",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_filing_export_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportFieldUnrenderableError",
+        ErrorCode(
+            code="ERROR_FILING_EXPORT_FIELD_UNRENDERABLE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_filing_export_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDeclaredPartyNameError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_DECLARED_PARTY_NAME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_declared_party_name",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportUnrepresentableCharacterError",
+        ErrorCode(
+            code="ERROR_FILING_EXPORT_UNREPRESENTABLE_CHARACTER",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_filing_export_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDeclaredPartyNameMissingError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_DECLARED_PARTY_NAME_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_declared_party_name_missing",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDeclaredPartyNameSingleSurnameError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_DECLARED_PARTY_NAME_SINGLE_SURNAME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_declared_party_name_single_surname",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDeclaredPartyNameTooWideError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_DECLARED_PARTY_NAME_TOO_WIDE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_declared_party_name_too_wide",
             retryable=False,
             runbook_id=None,
         ),
@@ -665,6 +785,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_EXPORT_REQUIRED_RECORD_ABSENT",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_export_required_record_absent",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.modelos.errors.ModeloExportDeclaredPartyNameError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_DECLARED_PARTY_NAME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_export_declared_party_name",
             retryable=False,
             runbook_id=None,
         ),

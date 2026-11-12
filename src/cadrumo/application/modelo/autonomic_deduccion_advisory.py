@@ -63,6 +63,7 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import profile_fact_index
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
 from .profile_derived_facts import (
     is_indeterminate_unidad_familiar,
     is_madrid_autonomic_deduccion_filing_year,
@@ -70,6 +71,7 @@ from .profile_derived_facts import (
     madrid_nacimiento_adopcion_candidate_weighted_count,
     snapshot_authored_year,
 )
+from .registry_input_refusals import registry_integrity_verdict
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
 if TYPE_CHECKING:
@@ -88,6 +90,7 @@ def _require_formula_legal_refs(
         raise RegistryValidationError(
             f"Madrid nacimiento/adopción advisory formula {formula_id!r} has legal refs absent from the selected "
             f"authority: {missing!r}",
+            precondition_verdict=registry_integrity_verdict("madrid_nacimiento_adopcion_advisory"),
         )
     return tuple(legal_refs)
 
@@ -105,11 +108,13 @@ def _advisory_legal_refs(snapshot: RegistrySnapshot, casilla_id: CasillaId) -> t
     if casilla is None or casilla.formula is None:
         raise RegistryValidationError(
             f"Madrid nacimiento/adopción advisory casilla {casilla_id!r} has no registry formula provenance",
+            precondition_verdict=registry_integrity_verdict("madrid_nacimiento_adopcion_advisory"),
         )
     formula = next((candidate for candidate in snapshot.revision.formulas if candidate.id == casilla.formula), None)
     if formula is None or not formula.legal_refs:
         raise RegistryValidationError(
             f"Madrid nacimiento/adopción advisory formula {casilla.formula!r} has no legal provenance",
+            precondition_verdict=registry_integrity_verdict("madrid_nacimiento_adopcion_advisory"),
         )
     return _require_formula_legal_refs(snapshot, formula.legal_refs, formula.id)
 
@@ -151,7 +156,12 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     try:
         casilla_id = casilla_id_for_unique_semantic_role(snapshot, _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE)
     except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+        raise ModeloError(
+            str(exc),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
     if casilla_id is None:
         return None
 

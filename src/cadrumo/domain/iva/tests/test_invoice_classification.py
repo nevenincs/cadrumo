@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 from operator import methodcaller
 from pathlib import Path
@@ -16,6 +17,7 @@ from ....core.directory_scan import scan_directory
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...invoices.enums import IvaRate
 from ...invoices.errors import InvoiceValidationError
 from ..deduction_facts import IvaDeductionClassificationProvenance
@@ -25,6 +27,8 @@ from ..invoice_classification import (
     classify_invoice_line_for_iva,
 )
 from ..schema import InvoiceKind, IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -45,7 +49,9 @@ def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido() -> 
     )
 
     for iva_rate, expected_category, expected_kind in cases:
-        classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.ISSUED)
+        classification = classify_invoice_line_for_iva(
+            iva_rate=iva_rate, invoice_kind=InvoiceKind.ISSUED, on_date=_ON_DATE
+        )
         assert classification.category == expected_category, iva_rate
         assert classification.rate_kind == expected_kind, iva_rate
         assert classification.flow_direction == IvaFlowDirection.from_registry("repercutido"), iva_rate
@@ -60,7 +66,9 @@ def test_classify_received_invoice_resolves_to_soportado() -> None:
         IvaRate.from_registry("RATE_21"),
         IvaRate.from_registry("EXEMPT"),
     ):
-        classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.RECEIVED)
+        classification = classify_invoice_line_for_iva(
+            iva_rate=iva_rate, invoice_kind=InvoiceKind.RECEIVED, on_date=_ON_DATE
+        )
         assert classification.flow_direction == IvaFlowDirection.from_registry("soportado"), iva_rate
         assert classification.settlement_sides == frozenset({IvaSettlementSide.from_registry("deducible")}), iva_rate
 
@@ -70,7 +78,9 @@ def test_classify_invoice_rejects_not_subject_rate() -> None:
     helper rejects them so callers explicitly handle them via
     IvaCategory.OPERACION_NO_SUJETA."""
     with pytest.raises(InvoiceValidationError, match="out-of-scope IVA slot"):
-        classify_invoice_line_for_iva(iva_rate=IvaRate.from_registry("NOT_SUBJECT"), invoice_kind=InvoiceKind.ISSUED)
+        classify_invoice_line_for_iva(
+            iva_rate=IvaRate.from_registry("NOT_SUBJECT"), invoice_kind=InvoiceKind.ISSUED, on_date=_ON_DATE
+        )
 
 
 def test_classification_record_validates_settlement_sides_against_flow() -> None:
@@ -85,12 +95,13 @@ def test_classification_record_validates_settlement_sides_against_flow() -> None
             settlement_sides=frozenset(
                 {IvaSettlementSide.from_registry("deducible")},  # ← doesn't match REPERCUTIDO
             ),
+            effective_date=_ON_DATE,
         )
 
 
 def test_classification_record_is_frozen() -> None:
     classification = classify_invoice_line_for_iva(
-        iva_rate=IvaRate.from_registry("RATE_21"), invoice_kind=InvoiceKind.ISSUED
+        iva_rate=IvaRate.from_registry("RATE_21"), invoice_kind=InvoiceKind.ISSUED, on_date=_ON_DATE
     )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         classification.flow_direction = IvaFlowDirection.from_registry("soportado")
@@ -105,7 +116,8 @@ def test_classification_for_reverse_charge_category_with_inconsistent_flow_rejec
             category=IvaCategory("domestic_reverse_charge"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
-            settlement_sides=frozenset({IvaSettlementSide.from_registry("devengada")}),  # missing deducible
+            settlement_sides=frozenset({IvaSettlementSide.from_registry("devengada")}),
+            effective_date=_ON_DATE,  # missing deducible
         )
 
 

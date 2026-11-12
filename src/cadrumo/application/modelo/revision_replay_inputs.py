@@ -57,6 +57,7 @@ from ...domain.modelos.row_models import (
     m349_nif_number_for_export,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -307,14 +308,20 @@ def revision_detail_record_binding_inputs(
 def _m349_row_binding_value(
     row: Modelo349OperadorRow | Modelo349RectificacionRow,
     attr: str,
-) -> ModeloInputScalar:
+) -> ModeloInputScalar | None:
+    """Return the row's value for a binding, or ``None`` for a party name not yet declared."""
     if attr == "nif_comunitario":
         return m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
     value = getattr(row, attr)
+    if value is None and attr == "razon_social":
+        return None
     # The binding map names row attributes, so a mapped attribute that is not a
     # filing scalar is a registry or row defect rather than a replayable value.
     if not isinstance(value, str | int | Decimal | bool | date):
-        raise InternalInvariantError(f"Modelo 349 replay attribute {attr!r} is not a filing scalar")
+        raise InternalInvariantError(
+            f"Modelo 349 replay attribute {attr!r} is not a filing scalar",
+            precondition_verdict=internal_invariant_verdict("m349_replay.attribute_filing_scalar"),
+        )
     return value
 
 
@@ -324,7 +331,11 @@ def _m349_row_binding_replay_inputs(
 ) -> dict[BindingId, dict[str, ModeloInputScalar]]:
     replay_inputs: dict[BindingId, dict[str, ModeloInputScalar]] = {}
     for binding_id, attr in binding_attributes.items():
-        values = {str(index): _m349_row_binding_value(row, attr) for index, row in enumerate(rows, start=1)}
+        values = {
+            str(index): value
+            for index, row in enumerate(rows, start=1)
+            if (value := _m349_row_binding_value(row, attr)) is not None
+        }
         if values:
             replay_inputs[binding_id] = values
     return replay_inputs
@@ -435,6 +446,7 @@ def _not_applicable_relation_zero_inputs(
             workflow_profile=workflow_profile,
             active_relation_ids=active_relation_ids,
             existing_relation_ids=existing_relation_ids,
+            source_filing_year=snapshot.filing_year,
             operation=operation,
         )
     }
@@ -455,12 +467,18 @@ def _not_applicable_relation_zero_ids(
     workflow_profile: TaxpayerProfile,
     active_relation_ids: frozenset[RelationId],
     existing_relation_ids: frozenset[RelationId],
+    source_filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> tuple[RelationId, ...]:
     if not conditional_on_economic_activity:
         return ()
     try:
-        applicability = derive_modelo_applicability(workflow_profile, source_modelo, operation=operation)
+        applicability = derive_modelo_applicability(
+            workflow_profile,
+            source_modelo,
+            reference_date=date(source_filing_year, 12, 31),
+            operation=operation,
+        )
     except (TypeError, ValueError):
         return ()
     if applicability.verdict is not ApplicabilityVerdict.NOT_APPLICABLE:

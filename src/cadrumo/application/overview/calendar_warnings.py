@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Iterable, Mapping
+from datetime import date
 from threading import RLock
 from types import MappingProxyType
 from typing import TYPE_CHECKING
@@ -436,6 +437,9 @@ _M303_SIMPLIFICADO_FORFAIT_ACTION_ID = "operator.modelo.describe"
 _PERIODIC_IVA_ROLE = "iva.periodic"
 _APPLICABILITY_DISAGREEMENT_WARNING_CODE = "applicability.evidence_disagreement"
 _APPLICABILITY_DISAGREEMENT_WARNING_LOCALE_KEY = "cli.overview.warning.applicability_evidence_disagreement"
+_DEADLINE_WINDOWS_UNAVAILABLE_WARNING_CODE_PREFIX = "deadline.windows_unavailable"
+_DEADLINE_WINDOWS_UNAVAILABLE_WARNING_LOCALE_KEY = "cli.overview.warning.deadline_windows_unavailable"
+_DEADLINE_WINDOWS_UNAVAILABLE_ACTION_ID = "operator.overview.status"
 
 
 def calendar_applicability_profile_keys_for_modelo(
@@ -527,6 +531,23 @@ def calendar_applicability_disagreement_warnings(affected_modelos: Iterable[str]
             fix_action=declare_next_action(_PROFILE_EDIT_ACTION_ID),
             affected_modelos=modelos,
         ),
+    )
+
+
+def calendar_deadline_windows_unavailable_warnings(filing_years: Iterable[int]) -> tuple[CalendarWarning, ...]:
+    """Return one warning per covered filing year whose deadline windows could not be resolved.
+
+    A year that yields no entries because the registry has no windows for it is
+    an unknown answer, not an answer of "nothing is due". The year is carried in
+    the warning code so a consumer can tell which part of the range is unresolved.
+    """
+    return tuple(
+        CalendarWarning(
+            code=f"{_DEADLINE_WINDOWS_UNAVAILABLE_WARNING_CODE_PREFIX}.{year}",
+            message=_DEADLINE_WINDOWS_UNAVAILABLE_WARNING_LOCALE_KEY,
+            fix_action=declare_next_action(_DEADLINE_WINDOWS_UNAVAILABLE_ACTION_ID),
+        )
+        for year in sorted(set(filing_years))
     )
 
 
@@ -649,10 +670,11 @@ def calendar_regime_incompatibility_warnings(
     *,
     iva_regime: IVARegime | None,
     entries: tuple[OverviewCalendarEntry, ...],
+    evaluated_on: date,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalendarWarning, ...]:
     """Return warnings where a surfaced modelo row lacks regime-specific calculation support."""
-    if iva_regime != iva_regime_simplificado_token(authority=operation):
+    if iva_regime != iva_regime_simplificado_token(effective_date=evaluated_on, authority=operation):
         return ()
     periodic_iva_modelo = form_for_role(_PERIODIC_IVA_ROLE, authority=operation)
     if not any(entry.modelo == periodic_iva_modelo for entry in entries):
@@ -791,6 +813,7 @@ __all__ = [
     "calendar_applicability_profile_keys_for_modelo",
     "calendar_censo_enrolment_state",
     "calendar_censo_reconciliation_warnings",
+    "calendar_deadline_windows_unavailable_warnings",
     "calendar_regime_incompatibility_warnings",
     "calendar_unverified_justificante_warnings",
 ]

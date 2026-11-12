@@ -123,6 +123,7 @@ _BINDING_KINDS: Final[Mapping[WorkbenchChangeKind, ModeloEditBindingIntentKind]]
         WorkbenchChangeKind.SET: ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
         WorkbenchChangeKind.CLEAR: ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
         WorkbenchChangeKind.RESTORE: ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+        WorkbenchChangeKind.STATE_ABSENT: ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
     }
 )
 

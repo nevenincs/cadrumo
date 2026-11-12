@@ -5,9 +5,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final, cast
 
+from pydantic import BaseModel
+
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.field_absence import later_absent_when_none
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
 
 from .semantic_map import SemanticMap
 
@@ -62,6 +69,7 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "part",
         "required_with",
         "requirement",
+        "party_name",
     },
 )
 
@@ -119,6 +127,8 @@ _RECORD_KEYS: Final[frozenset[str]] = frozenset(
         "record_type",
         "order",
         "encoding",
+        "alphanumeric_text",
+        "alphanumeric_text_source_ref",
         "line_ending",
         "required",
         "repeat",
@@ -163,6 +173,7 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "absent_fill",
         "scheme_period_part",
         "scheme_period_type",
+        "party_name",
         "legal_refs",
         "source_refs",
     },
@@ -185,6 +196,7 @@ _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = (
     "absent_fill",
     "scheme_period_part",
     "scheme_period_type",
+    "party_name",
 )
 
 
@@ -278,10 +290,10 @@ def loader_semantic_drift(recorded: Mapping[str, object], current: Mapping[str, 
 
 
 def omit_undeclared_field_keys(field: dict[str, object]) -> dict[str, object]:
-    """Drop field keys that are present only when declared and are None."""
+    """Drop field keys that are present only when declared and are None or already left out."""
     for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
-        if field[key] is None:
-            del field[key]
+        if field.get(key) is None:
+            field.pop(key, None)
     return field
 
 
@@ -313,6 +325,7 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         **({"part": payload["part"]} if payload["part"] is not None else {}),
         **({"required_with": payload["required_with"]} if payload["required_with"] is not None else {}),
         **({"requirement": payload["requirement"]} if payload["requirement"] is not None else {}),
+        **({"party_name": payload["party_name"]} if payload["party_name"] is not None else {}),
     }
 
 
@@ -458,7 +471,18 @@ def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, 
     )
 
 
-def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]:
+def _with_later_absent_keys(payload: Mapping[str, object], model: type[BaseModel]) -> Mapping[str, object]:
+    """Read a later field the dump leaves out while it holds nothing as its declared ``None``."""
+    absent = {
+        name: None
+        for name, model_field in model.model_fields.items()
+        if model_field.exclude_if is later_absent_when_none and name not in payload
+    }
+    return {**payload, **absent} if absent else payload
+
+
+def _normalise_loader_record(raw: Mapping[str, object]) -> dict[str, object]:
+    payload = _with_later_absent_keys(raw, ExportRecordDefinition)
     _require_exact_keys(payload, _RECORD_KEYS, subject="loader export record")
     fields = [
         _normalise_loader_field(item) for item in _as_object_list(payload["fields"], subject="loader record fields")
@@ -475,7 +499,7 @@ def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]
             "length": discriminator_payload["length"],
             "requires": discriminator_payload["requires"],
         }
-    return {
+    normalised: dict[str, object] = {
         "id": payload["id"],
         "record_type": payload["record_type"],
         "order": payload["order"],
@@ -489,9 +513,16 @@ def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]
         "requires_positive_casilla_id": payload["requires_positive_casilla_id"],
         "fields": fields,
     }
+    # A record whose design states no text rule projects as it did before the
+    # rule existed, so only a tree that declares one attests a new digest.
+    if payload["alphanumeric_text"] is not None:
+        normalised["alphanumeric_text"] = payload["alphanumeric_text"]
+        normalised["alphanumeric_text_source_ref"] = payload["alphanumeric_text_source_ref"]
+    return normalised
 
 
-def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
+def _normalise_loader_field(raw: Mapping[str, object]) -> dict[str, object]:
+    payload = _with_later_absent_keys(raw, ExportFieldDefinition)
     _require_exact_keys(payload, _FIELD_KEYS, subject="loader export field")
     normalised: dict[str, object] = {
         "id": payload["id"],

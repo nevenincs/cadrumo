@@ -51,6 +51,8 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ...adapter_composition_work_ports import build_calculation_action_ports
 from .observation_seeding_support import save_stamped_observation
+from .ready_profile_taxpayer import ready_profile_tax_id
+from .work_income_support import record_work_income
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -87,7 +89,8 @@ _BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0500", surface="_BAS
 _BASE_LIQUIDABLE_SOMETIDA: CasillaId = validated_casilla_id("0505", surface="_BASE_LIQUIDABLE_SOMETIDA")
 #: A direct-estimation expense the filer enters by hand, with no activity income against it.
 _ACTIVITY_MANUAL_EXPENSE: CasillaId = validated_casilla_id("0184", surface="_ACTIVITY_MANUAL_EXPENSE")
-_TRABAJO_INGRESOS: CasillaId = validated_casilla_id("0003", surface="_TRABAJO_INGRESOS")
+#: Work income above the level where the art. 20 reduction ends, so the base stays above the 2.000 applied.
+_TRABAJO_INGRESOS = Decimal("40000.00")
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
 
@@ -229,18 +232,18 @@ def test_m100_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
     _seed_prior_m100_generated_pending(obs_repo, source_year=_NEWEST_EDITION - 1, value=Decimal("4321.00"))
     _seed_zero_pagos_quarters(obs_repo, filing_year=_NEWEST_EDITION)
 
-    baseline = _calculate_m100(
-        secure_objects,
-        filing_year=_NEWEST_EDITION,
-        casilla_inputs={_TRABAJO_INGRESOS: Decimal("10000.00")},
-    ).revision
+    with bundled_indexed_authority().operation() as operation:
+        record_work_income(
+            operation=operation,
+            taxpayer_tax_id=ready_profile_tax_id(),
+            filing_year=_NEWEST_EDITION,
+            gross=_TRABAJO_INGRESOS,
+        )
+    baseline = _calculate_m100(secure_objects, filing_year=_NEWEST_EDITION).revision
     applied = _calculate_m100(
         secure_objects,
         filing_year=_NEWEST_EDITION,
-        casilla_inputs={
-            _TRABAJO_INGRESOS: Decimal("10000.00"),
-            _APPLIED_PENDING: Decimal("2000.00"),
-        },
+        casilla_inputs={_APPLIED_PENDING: Decimal("2000.00")},
     ).revision
 
     assert Decimal(applied.casilla_values[_APPLIED_PENDING]) == Decimal("2000.00")

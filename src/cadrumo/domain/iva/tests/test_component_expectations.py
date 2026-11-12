@@ -31,6 +31,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -41,6 +42,7 @@ from ....core.resources.bundled_data import bundled_path
 from ....core.toml import load_toml
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..components import (
     IvaCategoryComponents,
     IvaComponentPresence,
@@ -58,6 +60,8 @@ from ..components import (
 )
 from ..schema import InvoiceKind, IvaCategory
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
@@ -70,9 +74,9 @@ _SENTINEL_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {IvaCategory("unknown"), IvaCategory("erroneous_invoice")},
 )
 with bundled_indexed_authority().operation():
-    COMPONENT_CATALOGUE = registry_component_catalogue()
-    CATEGORY_CATALOGUE = resolve_iva_category_catalogue()
-    _CUOTA_LESS_CATEGORIES = registry_category_projection("cuota_less_m303")
+    COMPONENT_CATALOGUE = registry_component_catalogue(effective_date=_ON_DATE)
+    CATEGORY_CATALOGUE = resolve_iva_category_catalogue(effective_date=_ON_DATE)
+    _CUOTA_LESS_CATEGORIES = registry_category_projection("cuota_less_m303", effective_date=_ON_DATE)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -148,7 +152,7 @@ def test_lookup_returns_the_keyed_row_for_every_member() -> None:
     """The public accessor resolves every member without falling through."""
     for category in CATEGORY_CATALOGUE.all_categories:
         for kind in InvoiceKind:
-            assert category_components(category, kind) == COMPONENT_CATALOGUE[(category, kind)]
+            assert category_components(category, kind, effective_date=_ON_DATE) == COMPONENT_CATALOGUE[(category, kind)]
 
 
 # --------------------------------------------------------------------------- #
@@ -180,7 +184,7 @@ def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCatego
         or row.cuota_settlement == IvaCuotaSettlement("regimen_especial")
         for row in arising
     )
-    cuota_less = registry_category_projection("cuota_less_m303")
+    cuota_less = registry_category_projection("cuota_less_m303", effective_date=_ON_DATE)
     assert declared_cuota_less is (category in cuota_less), (
         f"{category.value}: table says cuota-less={declared_cuota_less}, "
         f"registry projection says {category in cuota_less}"
@@ -194,14 +198,14 @@ def test_the_cuota_less_partition_is_non_trivial() -> None:
     derivation to "everything" or "nothing" while the set comparison still
     passes against an equally-collapsed frozenset.
     """
-    derived = registry_category_projection("cuota_less_m303")
+    derived = registry_category_projection("cuota_less_m303", effective_date=_ON_DATE)
     assert 0 < len(derived) < len(COMPONENT_CATALOGUE)
 
 
 def test_evidence_exempt_extends_the_cuota_less_set_by_the_three_sentinels() -> None:
     """The evidence-exempt set stays a derived extension, not a parallel list."""
-    cuota_less = registry_category_projection("cuota_less_m303")
-    evidence_exempt = registry_category_projection("evidence_exempt")
+    cuota_less = registry_category_projection("cuota_less_m303", effective_date=_ON_DATE)
+    evidence_exempt = registry_category_projection("evidence_exempt", effective_date=_ON_DATE)
     assert cuota_less <= evidence_exempt
     assert (
         frozenset(
@@ -236,7 +240,7 @@ def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategor
         row = COMPONENT_CATALOGUE[(category, kind)]
         if row.applicability == IvaKindApplicability.from_registry("does_not_arise"):
             continue
-        assert category_bears_taxable_base(category, kind), (
+        assert category_bears_taxable_base(category, kind, effective_date=_ON_DATE), (
             f"{category.value}/{kind.value} is cuota-less but must still carry a taxable base"
         )
 
@@ -266,7 +270,7 @@ def test_zero_by_law_cuota_is_exactly_the_determinable_zero_predicate() -> None:
     recorded" so a declared-exempt invoice can recover its retención.
     """
     for (category, kind), row in COMPONENT_CATALOGUE.items():
-        assert category_cuota_is_zero_by_law(category, kind) is (
+        assert category_cuota_is_zero_by_law(category, kind, effective_date=_ON_DATE) is (
             row.cuota == IvaComponentPresence.from_registry("zero_by_law")
         )
 
@@ -405,7 +409,10 @@ def _validated_row(kwargs: dict[str, Any]) -> IvaCategoryComponents:
     """Validate one row against the component vocabulary the registry projects."""
     return IvaCategoryComponents.model_validate(
         kwargs,
-        context={"component_vocabulary": registry_component_vocabulary(), "cuota_settlement_no_token": "none"},
+        context={
+            "component_vocabulary": registry_component_vocabulary(effective_date=_ON_DATE),
+            "cuota_settlement_no_token": "none",
+        },
     )
 
 

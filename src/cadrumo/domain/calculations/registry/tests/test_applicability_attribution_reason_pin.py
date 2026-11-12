@@ -26,6 +26,7 @@ from ..applicability_models import (
     registry_applicability_reason,
 )
 from ..authority import PinnedAuthorityOperation
+from .authored_editions import latest_period_end
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -96,6 +97,7 @@ def test_derive_modelo_applicability_passes_its_pin_down_to_the_rule(
         _attribution_entity_profile(),
         _CUOTA_BEARING_MODELO,
         operation=operation,
+        reference_date=latest_period_end(),
     )
 
     assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH

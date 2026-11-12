@@ -160,25 +160,35 @@ def plan_filed_capture_queries(
         The queryable ``(modelo, year)`` pairs and the unsupported failure rows,
         each in walk order.
     """
+    return plan_filed_capture_pair_queries(
+        tuple((code, year) for code in resolved_modelos for year in range(year_to, year_from - 1, -1)),
+        operation=operation,
+    )
+
+
+def plan_filed_capture_pair_queries(
+    pairs: Sequence[tuple[str, int]],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[list[tuple[str, int]], list[FiledDataCaptureFailureRow]]:
+    """Split exact ``(modelo, year)`` pairs into queryable pairs and unsupported failure rows.
+
+    Keeps the given order and plans nothing beyond the given pairs, so a caller
+    holding a ragged grid is not widened to its bounding rectangle.
+    """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
-            return plan_filed_capture_queries(
-                resolved_modelos,
-                year_from=year_from,
-                year_to=year_to,
-                operation=indexed_operation,
-            )
+            return plan_filed_capture_pair_queries(pairs, operation=indexed_operation)
     query_pairs: list[tuple[str, int]] = []
     failures: list[FiledDataCaptureFailureRow] = []
-    for code in resolved_modelos:
-        for year in range(year_to, year_from - 1, -1):
-            unsupported_reason = filed_capture_unsupported_reason(modelo=code, year=year, operation=operation)
-            if unsupported_reason is not None:
-                failures.append(
-                    _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason),
-                )
-                continue
-            query_pairs.append((code, year))
+    for code, year in pairs:
+        unsupported_reason = filed_capture_unsupported_reason(modelo=code, year=year, operation=operation)
+        if unsupported_reason is not None:
+            failures.append(
+                _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason),
+            )
+            continue
+        query_pairs.append((code, year))
     return query_pairs, failures
 
 

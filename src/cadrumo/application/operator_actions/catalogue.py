@@ -368,6 +368,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.counterparty.filing_name",
+            target_command_key="ledger.counterparty.filing_name",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="tax_identifier",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="tax_identifier",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="country_code",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="country_code",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="kind",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.evidence.review.list",
             target_command_key="ledger.evidence.review.list",
         ),
@@ -416,6 +437,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     source_key="revision_json",
                 ),
             ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.prorrata.list",
+            target_command_key="ledger.prorrata.list",
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.inventory.movement.claim",
@@ -792,6 +817,63 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     argument_name="work_unit_id",
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.set_value",
+            target_command_key="modelo.work.set_value",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="casilla_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="casilla_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="value",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.attest_prior_value",
+            target_command_key="modelo.work.attest_prior_value",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="binding_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="binding_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="value",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
                 ),
             ),
         ),

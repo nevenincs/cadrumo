@@ -21,6 +21,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, output_language, tr
 from ...core.period import Period, PeriodKind
 from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .edit_models import ModeloEditNonWritableReason
 from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
 from .source_policy import SourceFamily
@@ -251,11 +252,19 @@ STATED_ABSENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = Mappi
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.origin"
         ),
+        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
+            "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.origin"
+        ),
     }
 )
 """What a carry the filer stated holds nothing says beside it, by the family of the statement."""
-if frozenset(STATED_ABSENT_LOCALE_KEYS) != frozenset(AbsenceAttestationFamily):
-    raise InternalInvariantError("every statement family the registry can declare needs its words")
+if frozenset(STATED_ABSENT_LOCALE_KEYS) != frozenset(
+    family for family in AbsenceAttestationFamily if not family.row_grain
+):
+    raise InternalInvariantError(
+        "every statement family the registry can declare needs its words",
+        precondition_verdict=internal_invariant_verdict("work_form_wording.statement_family_worded"),
+    )
 
 
 def _special_origin_words(

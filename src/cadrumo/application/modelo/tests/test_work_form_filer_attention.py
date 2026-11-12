@@ -157,10 +157,10 @@ def test_modelo_100_calculated_elsewhere_asks_only_for_the_income_it_holds(
 ) -> None:
     """A Renta calculated outside the workbench leaves every typed box holding a value nobody is recorded entering.
 
-    As the documented Renta walkthrough calculates it, the filer supplies the
-    salary in box 0003 and every other typed box holds zero. Read literally, the
-    earlier rule assumed every one of them; the rule now assumes the salary and
-    any box verification requires, and nothing else, while every held box stays
+    As the documented Renta walkthrough calculates it, every typed box holds zero
+    (the salary is no typed box: payer records fill it). Read literally, the
+    earlier rule assumed every one of them; the rule now assumes any box
+    verification requires, and nothing else, while every held box stays
     unattributed.
     """
     snapshot = form_snapshot(operation, "100", 2025, "0A")
@@ -168,7 +168,7 @@ def test_modelo_100_calculated_elsewhere_asks_only_for_the_income_it_holds(
     typed = {
         str(row.casilla_id) for row in rows if row.declared_input_kind is InputKind.MANUAL and not row.absent_by_design
     }
-    held = {casilla_id: Decimal("0") for casilla_id in typed} | {"0003": Decimal("24000")}
+    held = {casilla_id: Decimal("0") for casilla_id in typed}
     required = {str(item) for item in filer_required_casilla_ids(snapshot.revision)}
 
     form = built_form(operation, "100", 2025, "0A", held=held, entered=None)
@@ -178,8 +178,8 @@ def test_modelo_100_calculated_elsewhere_asks_only_for_the_income_it_holds(
     # Before the rule changed, every unattributed box was assumed.
     assert len(unattributed) == len(typed) > 1000
     assert _casilla_ids(unattributed) == typed
-    # After it, only the salary and the required boxes are.
-    assert _casilla_ids(assumed) == {"0003"} | (required & typed)
+    # After it, only the required boxes are.
+    assert _casilla_ids(assumed) == required & typed
     assert form.counts.default_to_confirm == len(assumed) < 50
 
 

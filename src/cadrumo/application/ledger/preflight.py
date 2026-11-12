@@ -49,6 +49,7 @@ from ...domain.categories.spending_category import (
 )
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.transactions.classification_effects import takes_expense_category
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.enums import (
     BusinessClassification,
     TransactionDirection,
@@ -634,6 +635,9 @@ def _catalogue_uses_home_office_usage_ratio(*, period: Period, transactions: Tra
 
 
 def _transaction_needs_expense_category(transaction: Transaction) -> bool:
+    # A rental expense is routed to its casilla by its property and expense concept, never by a category.
+    if transaction.inmueble_ref is not None and transaction.gasto_capital_inmobiliario is not None:
+        return False
     return takes_expense_category(
         transaction.direction, has_purchase_evidence=transaction.purchase_invoice_evidence_id is not None
     )
@@ -663,20 +667,21 @@ def _missing_business_classification_issue(transaction: Transaction) -> LedgerPr
 
 def _non_declarable_iva_issue(transaction: Transaction) -> LedgerPreflightIssue | None:
     iva_category = transaction.iva_category
+    effective_date = transaction_operation_date(transaction)
     if iva_category is not None:
-        if iva_category == require_iva_category("unknown"):
+        if iva_category == require_iva_category("unknown", effective_date=effective_date):
             return _preflight_issue(
                 transaction,
                 LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
                 "iva_category 'unknown' is not declarable; classify the row or query the source",
             )
-        if iva_category == require_iva_category("erroneous_invoice"):
+        if iva_category == require_iva_category("erroneous_invoice", effective_date=effective_date):
             return _preflight_issue(
                 transaction,
                 LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
                 "iva_category 'erroneous_invoice' marks a rectified/void row; not declarable",
             )
-    if iva_category == require_iva_category("recargo_equivalencia"):
+    if iva_category == require_iva_category("recargo_equivalencia", effective_date=effective_date):
         return _preflight_issue(
             transaction,
             LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,

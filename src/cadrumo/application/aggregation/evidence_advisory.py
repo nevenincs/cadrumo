@@ -49,6 +49,7 @@ too.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date
 from decimal import Decimal
 
 from ...core.aggregation import BindingSourceKind
@@ -64,6 +65,7 @@ from ...domain.iva.flow import (
 )
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.enums import (
     BUSINESS_BEARING_STATES,
     BusinessClassification,
@@ -144,6 +146,7 @@ def iva_evidence_flow(
     business_classification: BusinessClassification,
     direction: TransactionDirection,
     iva_category: IvaCategory | None,
+    effective_date: date,
 ) -> IvaFlowDirection | None:
     """Return the IVA settlement flow a ledger row answers for, or ``None``.
 
@@ -160,10 +163,12 @@ def iva_evidence_flow(
     if invoice_kind is None:
         return None
     if iva_category is None:
-        return flow_direction_for_invoice_kind(invoice_kind)
-    if iva_category in registry_category_projection("evidence_exempt"):
+        return flow_direction_for_invoice_kind(invoice_kind, effective_date=effective_date)
+    if iva_category in registry_category_projection("evidence_exempt", effective_date=effective_date):
         return None
-    return derive_flow_for_classification(category=iva_category, invoice_direction=invoice_kind)
+    return derive_flow_for_classification(
+        category=iva_category, invoice_direction=invoice_kind, effective_date=effective_date
+    )
 
 
 def calculation_revision_claims_ledger_iva(
@@ -202,6 +207,7 @@ def deductible_iva_evidence_gap(
     iva_amount: Decimal | None,
     has_deduction_evidence: bool,
     revision_claims_ledger_iva: bool,
+    effective_date: date,
 ) -> bool:
     """Return whether a row claims deductible IVA that its evidence cannot support.
 
@@ -215,7 +221,7 @@ def deductible_iva_evidence_gap(
     """
     if not revision_claims_ledger_iva:
         return False
-    if flow is None or not is_deducible_flow(flow):
+    if flow is None or not is_deducible_flow(flow, effective_date=effective_date):
         return False
     if has_deduction_evidence:
         return False
@@ -242,15 +248,18 @@ def _transaction_missing_evidence_flow(
         business_classification=transaction.business_classification,
         direction=transaction.direction,
         iva_category=transaction.iva_category,
+        effective_date=transaction_operation_date(transaction),
     )
     if flow is None:
         return None
-    if is_deducible_flow(flow):
+    operation_date = transaction_operation_date(transaction)
+    if is_deducible_flow(flow, effective_date=operation_date):
         gap = deductible_iva_evidence_gap(
             flow=flow,
             iva_amount=transaction.iva_amount,
             has_deduction_evidence=_row_has_deduction_grade_evidence(transaction),
             revision_claims_ledger_iva=revision_claims_ledger_iva,
+            effective_date=operation_date,
         )
         return flow if gap else None
     if not _positive_iva_quota(transaction):
@@ -325,7 +334,8 @@ def missing_evidence_advisory_observations(
         flow = _transaction_missing_evidence_flow(transaction, revision_claims_ledger_iva=revision_claims_ledger_iva)
         if flow is None:
             continue
-        if is_deducible_flow(flow):
+        operation_date = transaction_operation_date(transaction)
+        if is_deducible_flow(flow, effective_date=operation_date):
             diagnostics.append(
                 _missing_evidence_diagnostic(
                     transaction,
@@ -340,7 +350,7 @@ def missing_evidence_advisory_observations(
                     ),
                 ),
             )
-        elif is_devengada_flow(flow):
+        elif is_devengada_flow(flow, effective_date=operation_date):
             diagnostics.append(
                 _missing_evidence_diagnostic(
                     transaction,

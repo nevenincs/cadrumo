@@ -36,7 +36,7 @@ from .manifest import (
 from .precondition_action import resolve_precondition_action
 
 if TYPE_CHECKING:
-    from ...core.json_contract import ResolvedPreconditionAction
+    from ...core.json_contract import ResolvedActionReference, ResolvedPreconditionAction
     from ..operator_actions.models import PreconditionVerdict
 
 __all__ = [
@@ -198,12 +198,20 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("ledger.classify", ("app", "ledger", "classify"), "LedgerClassifyResult", profile_bound_write=True),
     ActionTarget(
+        "ledger.counterparty.filing_name",
+        ("app", "ledger", "counterparty", "filing-name"),
+        "CounterpartyFilingNameResult",
+        required_inputs=("tax_identifier", "kind"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "ledger.inventory.movement.claim",
         ("app", "ledger", "inventory", "movement", "claim"),
         "InventoryLedgerChangeResult",
         required_inputs=("actividad_id", "year", "correction_id", "movement_id", "ledger_row"),
         profile_bound_write=True,
     ),
+    ActionTarget("ledger.prorrata.list", ("app", "ledger", "prorrata", "list"), "ProrrataListResult"),
     ActionTarget(
         "ledger.evidence.review.list", ("app", "ledger", "evidence", "review", "list"), "EvidenceReviewListResult"
     ),
@@ -271,6 +279,20 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         profile_bound_write=True,
     ),
     ActionTarget(
+        "modelo.work.attest_work_income",
+        ("app", "modelo", "work", "attest-work-income"),
+        "WorkAttestWorkIncomeResult",
+        required_inputs=("work_unit_id",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.work.attest_prior_value",
+        ("app", "modelo", "work", "attest-prior-value"),
+        "WorkManualEntryResult",
+        required_inputs=("work_unit_id", "binding_id", "value"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "modelo.work.calculate", ("app", "modelo", "work", "calculate"), "WorkCalculateResult", profile_bound_write=True
     ),
     ActionTarget(
@@ -287,6 +309,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         ("app", "modelo", "work", "override"),
         "WorkManualEntryResult",
         required_inputs=("work_unit_id", "binding_id", "value"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.work.set_value",
+        ("app", "modelo", "work", "set-value"),
+        "WorkManualEntryResult",
+        required_inputs=("work_unit_id", "casilla_id", "value"),
         profile_bound_write=True,
     ),
     ActionTarget("modelo.work.revisions", ("app", "modelo", "work", "revisions"), "WorkRevisionsResult"),
@@ -398,10 +427,18 @@ def resolve_recorded_precondition_action(
         resolved_paths[command_key] = (target.program.executable_name, *target.cli_path) if path is None else path
         return recorded_action_target_reconciliation(command_key, canonical_cli_path=path)
 
+    def with_path(action: ResolvedActionReference) -> ResolvedActionReference:
+        action_path = resolved_paths.get(action.target_command_key)
+        return action if action_path is None else action.model_copy(update={"cli_path": action_path})
+
     resolved = resolve_precondition_action(verdict, target_reconciliation=reconcile)
     if resolved.action is None:
         return resolved
-    action_path = resolved_paths.get(resolved.action.target_command_key)
-    if action_path is None:
-        return resolved
-    return resolved.model_copy(update={"action": resolved.action.model_copy(update={"cli_path": action_path})})
+    return resolved.model_copy(
+        update={
+            "action": with_path(resolved.action),
+            "alternative_actions": tuple(
+                item.model_copy(update={"action": with_path(item.action)}) for item in resolved.alternative_actions
+            ),
+        }
+    )

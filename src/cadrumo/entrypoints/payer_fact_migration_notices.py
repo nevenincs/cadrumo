@@ -39,7 +39,6 @@ _CLEARED_SELECT_LOCALE_KEY = "cli.config.profile.notices.payer_fact_cleared_sele
 RENTAL_TIER_NOTICE_CODE = "config.profile.rental_tier_cleared"
 _RENTAL_TIER_ACTION_ID = "operator.profile.arrendamiento"
 _RENTAL_TIER_LOCALE_KEY = "cli.config.profile.notices.rental_tier_cleared"
-_RENTAL_TIER_MODELO = "100"
 
 
 def rental_tier_cleared_notice() -> Notice:
@@ -140,6 +139,20 @@ def payer_fact_gated_modelos(path: str, *, operation: PinnedAuthorityOperation) 
     )
 
 
+def _modelo_reads_rental_reduction(modelo: str, *, operation: PinnedAuthorityOperation) -> bool:
+    """Return whether any edition of ``modelo`` declares the let-property reduction column the lease facts feed."""
+    from ..application.aggregation.renta_inmueble_source import RentaInmuebleRowField
+    from ..domain.calculations.registry.renta_inmueble_bindings import renta_inmueble_columns
+
+    if modelo not in operation.modelo_ids():
+        return False
+    return any(
+        provider.row_field == RentaInmuebleRowField.REDUCCION.value
+        for edition in operation.modelo_directory(modelo).revisions
+        for _binding, provider in renta_inmueble_columns(operation.revision(modelo, edition.id))
+    )
+
+
 def pending_payer_fact_notices(
     record: UserProfileRecord | None,
     *,
@@ -165,7 +178,9 @@ def pending_payer_fact_notices(
     if modelo is not None:
         paths = tuple(path for path in paths if modelo in payer_fact_gated_modelos(path, operation=operation))
     notices = payer_fact_cleared_notices(paths, operation=operation)
-    if modelo in (None, _RENTAL_TIER_MODELO) and repository.rental_tier_finding_pending(record.profile_id):
+    if repository.rental_tier_finding_pending(record.profile_id) and (
+        modelo is None or _modelo_reads_rental_reduction(modelo, operation=operation)
+    ):
         notices = (*notices, rental_tier_cleared_notice())
     return notices
 

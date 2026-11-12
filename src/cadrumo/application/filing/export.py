@@ -67,7 +67,12 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
 )
-from ...domain.filing.errors import FilingExportError, FilingExportValidationError
+from ...domain.filing.errors import (
+    FilingExportDesignIntegrityError,
+    FilingExportError,
+    FilingExportIntegrityError,
+    FilingExportValidationError,
+)
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity, aeat_aux_version
 from ...domain.submission.models import ModeloDraftStatus
@@ -86,6 +91,7 @@ from .export_parity import (
     assert_xml_declaration_aux_declared,
 )
 from .export_producer import filing_producer_values
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 from .export_verification import (
     DeclaracionExportFormat,
     DeclaracionExportResult,
@@ -128,8 +134,8 @@ class _PreparedExportDraft:
 
 def _require_current_export_schema(draft: ModeloDraft, subview: RegistryModeloSubview) -> None:
     if draft.schema_version != subview.schema_version:
-        raise FilingExportError(
-            translated_message="application.filing.export.errors.draft_snapshot_stale",
+        raise FilingExportIntegrityError(
+            translated_message="errors.integrity.filing_export_draft_schema_mismatch",
             context={
                 "modelo": draft.modelo,
                 "draft_schema_version": draft.schema_version,
@@ -140,8 +146,8 @@ def _require_current_export_schema(draft: ModeloDraft, subview: RegistryModeloSu
 
 def _require_approved_export_draft(draft: ModeloDraft) -> None:
     if draft.status is not ModeloDraftStatus.APROBADO:
-        raise FilingExportError(
-            translated_message="application.filing.export.errors.draft_not_approved",
+        raise FilingExportIntegrityError(
+            translated_message="errors.integrity.filing_export_draft_unapproved",
             context={
                 "modelo": draft.modelo,
                 "draft_status": draft.status.value,
@@ -202,6 +208,8 @@ def _require_identity_absent_without_prefix(product_software_identity: AeatProdu
     if product_software_identity is not None:
         raise FilingExportValidationError(
             "product/software identity is only admitted for a layout that renders an envelope prefix",
+            translated_message="application.filing.export.errors.product_identity_not_admitted",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.ENVELOPE_OPTION_UNADMITTED),
         )
 
 
@@ -215,13 +223,20 @@ def _validate_envelope_prefix_options(
 ) -> None:
     _validate_envelope_identity_option(requires_product_identity, product_software_identity)
     if dictionary_values is not None:
-        raise FilingExportValidationError("an envelope-prefix export does not admit XML dictionary values")
+        raise FilingExportValidationError(
+            "an envelope-prefix export does not admit XML dictionary values",
+            translated_message="application.filing.export.errors.dictionary_values_not_admitted",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.ENVELOPE_OPTION_UNADMITTED),
+        )
     if (
         filing_envelope_modelo_policy(modelo).requiresprior_domiciliation_election
         and prior_domiciliation_election is None
     ):
         raise FilingExportValidationError(
             f"Modelo {modelo.value} export requires an explicit prior-domiciliation election",
+            translated_message="application.filing.export.errors.prior_domiciliation_election_required",
+            context={"modelo": modelo.value},
+            precondition_verdict=export_input_decision(ExportRefusalReason.PRIOR_DOMICILIATION_ELECTION_UNSTATED),
         )
 
 
@@ -232,9 +247,15 @@ def _validate_envelope_identity_option(
     if requires_product_identity and product_software_identity is None:
         raise FilingExportValidationError(
             "an envelope-prefix export requires explicit product/software identity authority",
+            translated_message="application.filing.export.errors.product_identity_required",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCT_IDENTITY_UNSUPPLIED),
         )
     if not requires_product_identity and product_software_identity is not None:
-        raise FilingExportValidationError("this envelope source declares no product/software identity slot")
+        raise FilingExportValidationError(
+            "this envelope source declares no product/software identity slot",
+            translated_message="application.filing.export.errors.product_identity_not_admitted",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.ENVELOPE_OPTION_UNADMITTED),
+        )
 
 
 def _resolved_prior_domiciliation_election(
@@ -277,7 +298,10 @@ def _prepare_export_draft(
         product_software_identity=product_software_identity,
     )
     if producer_snapshot.modelo.value != draft.modelo:
-        raise FilingExportValidationError("filing producer snapshot modelo does not match draft")
+        raise FilingExportDesignIntegrityError(
+            "filing producer snapshot modelo does not match draft",
+            translated_message="errors.integrity.filing_export_producer_snapshot_modelo_mismatch",
+        )
     return _PreparedExportDraft(
         provider=provider,
         subview=subview,
@@ -301,8 +325,9 @@ def _render_prepared_export(
 ) -> bytes:
     if prepared.renders_filing_envelope:
         if prior_domiciliation_election is None:
-            raise FilingExportError(
+            raise FilingExportIntegrityError(
                 "a filing envelope renders only with a resolved prior domiciliation election",
+                translated_message="errors.integrity.filing_export_envelope_election_unresolved",
             )
         return render_filing_envelope(
             FilingEnvelopeRenderRequest(
@@ -335,7 +360,7 @@ def _validate_prepared_export(
     payload: bytes,
 ) -> tuple[ModeloCasillaProvenance, ...]:
     if not payload:
-        raise FilingExportError(
+        raise FilingExportIntegrityError(
             translated_message="application.filing.export.errors.rendered_payload_empty",
             context={
                 "modelo": draft.modelo,
@@ -350,7 +375,10 @@ def _validate_prepared_export(
     )
     if prepared.layout.format is ExportLayoutFormat.XML_DICTIONARY:
         if prepared.xml_aux_version is None:
-            raise FilingExportError("XML dictionary export did not resolve its mandatory Aux/VERSION token")
+            raise FilingExportIntegrityError(
+                "XML dictionary export did not resolve its mandatory Aux/VERSION token",
+                translated_message="errors.integrity.filing_export_xml_version_token_unresolved",
+            )
         assert_xml_declaration_aux_declared(prepared.layout, aux_version=prepared.xml_aux_version)
     assert_rate_boxes_account_for_total(prepared.subview.rate_box_partitions, draft=draft)
     if prepared.subview.completeness_manifest is not None:
@@ -521,7 +549,10 @@ def export_draft(
             Registry parser used by the verification path.
     """
     if (output_path is None) == (payload_consumer is None):
-        raise FilingExportValidationError("export requires exactly one payload destination")
+        raise FilingExportDesignIntegrityError(
+            "export requires exactly one payload destination",
+            translated_message="errors.integrity.filing_export_payload_destination_count",
+        )
     prepared = _prepare_export_draft(
         draft,
         producer_snapshot=producer_snapshot,
@@ -551,7 +582,10 @@ def export_draft(
             mutation_writer=mutation_writer,
         )
     if payload_consumer is None:
-        raise FilingExportValidationError("export payload consumer is unavailable")
+        raise FilingExportDesignIntegrityError(
+            "export payload consumer is unavailable",
+            translated_message="errors.integrity.filing_export_payload_consumer_unavailable",
+        )
     return _consume_prepared_export(
         draft,
         prepared=prepared,
@@ -690,8 +724,10 @@ def export_layout_not_renderable_error(
     """Return the typed refusal for a layout that cannot render declaration bytes."""
     code = export_layout_renderability_reason_code(layout)
     if code is None:
-        raise FilingExportError(
+        raise FilingExportIntegrityError(
             f"modelo {modelo} export layout is not renderable and no reason code classifies why",
+            translated_message="errors.integrity.filing_export_layout_unclassified",
+            context={"modelo": modelo},
         )
     context: dict[str, object] = {"modelo": modelo, "reason_code": code.value}
     if layout is not None:
@@ -700,6 +736,7 @@ def export_layout_not_renderable_error(
     return FilingExportError(
         translated_message="application.filing.export.errors.layout_not_renderable",
         context=context,
+        precondition_verdict=export_design_terminal(ExportRefusalReason.LAYOUT_NOT_RENDERABLE),
     )
 
 
@@ -735,7 +772,10 @@ def render_export_layout(
     """
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         if xml_aux_version is None:
-            raise FilingExportValidationError("XML dictionary export requires a canonical Aux/VERSION token")
+            raise FilingExportDesignIntegrityError(
+                "XML dictionary export requires a canonical Aux/VERSION token",
+                translated_message="errors.integrity.filing_export_xml_version_token_unresolved",
+            )
         refuse_written_shared_owners(
             layout,
             registry_snapshot=registry_snapshot,
@@ -782,6 +822,8 @@ def render_filing_layout(
     ):
         raise FilingExportValidationError(
             "M303 prior-domiciliation election must match the immutable producer snapshot election",
+            translated_message="application.filing.export.errors.prior_domiciliation_election_differs",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PRIOR_DOMICILIATION_ELECTION_DIFFERS),
         )
     occurrences = _render_layout_occurrences(
         layout,
@@ -797,6 +839,8 @@ def render_filing_layout(
     if product_software_identity is None:
         raise FilingExportValidationError(
             "an auxiliary-envelope-header export requires explicit product/software identity authority",
+            translated_message="application.filing.export.errors.product_identity_required",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCT_IDENTITY_UNSUPPLIED),
         )
     prefix = render_declared_prefix(
         auxiliary_header.prefix_fields,
@@ -824,7 +868,10 @@ def _render_layout_occurrences(
     caller-authored plan, member collection, field map, or bytes.
     """
     if not any(candidate is layout for candidate in registry_snapshot.revision.export_layouts):
-        raise FilingExportValidationError("filing renderer layout is not owned by the selected registry snapshot")
+        raise FilingExportDesignIntegrityError(
+            "filing renderer layout is not owned by the selected registry snapshot",
+            translated_message="errors.integrity.filing_export_layout_not_owned_by_snapshot",
+        )
     projection_plan = _projection_plan_for_layout(
         layout,
         registry_snapshot=registry_snapshot,
@@ -855,7 +902,10 @@ def render_filing_envelope(request: FilingEnvelopeRenderRequest) -> FilingEnvelo
     """Render one modelo's variable envelope from the closed, validated request."""
     envelope = request.layout.filing_envelope
     if envelope is None:  # The request validator makes this unreachable; retain type narrowing at the public boundary.
-        raise FilingExportValidationError("filing-envelope layout declaration is absent")
+        raise FilingExportDesignIntegrityError(
+            "filing-envelope layout declaration is absent",
+            translated_message="errors.integrity.filing_export_envelope_layout_absent",
+        )
     headers = filing_producer_values(request.producer_snapshot)
     rendered_occurrences = _render_layout_occurrences(
         request.layout,
@@ -913,8 +963,10 @@ def _require_envelope_required_occurrences(
     present = {item.record_id for item in occurrences}
     missing = tuple(record.id for record in layout.records if record.required and record.id not in present)
     if missing:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"filing-envelope required record families have no emitted occurrence: {missing!r}",
+            translated_message="errors.integrity.filing_export_envelope_records_unemitted",
+            context={"records": ", ".join(map(str, missing))},
         )
 
 

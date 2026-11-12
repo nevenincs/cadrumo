@@ -163,6 +163,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
         reconciliation_sources=lambda unit, snapshot: calculation_reconciliation_source_needs(
             unit, snapshot, ports=ports
         ),
+        observations=ports.observation_repository,
     )
 
 

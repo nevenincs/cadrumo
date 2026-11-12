@@ -35,17 +35,18 @@ its keyed ``payer_ref``, never by the payer's tax identifier;
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, Final
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.retencion_soportada import RetencionSoportadaClase
+from ...core.retencion_soportada import RetencionSoportadaCantidad, RetencionSoportadaClase
 from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.credit_reconciliation import RetencionSoportadaCrossCheck
 from ...domain.calculations.registry.retencion_soportada_bindings import (
+    RETENCION_SOPORTADA_INCOME_ROLES,
     retencion_soportada_bindings,
     revision_declares_retencion_soportada,
 )
@@ -86,6 +87,7 @@ __all__ = [
     "RETENCION_SOPORTADA_SOURCE_REF_PREFIX",
     "RetencionSoportadaClassState",
     "RetencionSoportadaSourceResolver",
+    "recorded_income_classes",
 ]
 
 RETENCION_SOPORTADA_SOURCE_REF_PREFIX: Final[str] = "retencion-soportada:"
@@ -111,6 +113,15 @@ _CONTRADICTION_REMEDY: Final[str] = (
 )
 
 
+_INCOME_RECORD_REMEDY: Final[str] = (
+    "Withdraw the attestation with app ledger retencion-soportada withdraw-absence, then record each payer's "
+    "certificate with app ledger retencion-soportada record and --origin operator_declaration."
+)
+_FIGURE_MISSING_REMEDY: Final[str] = (
+    "Replace the payer record with the certificate's figures using app ledger retencion-soportada record."
+)
+
+
 class RetencionSoportadaClassState(StrEnum):
     """How one bound income class resolved on one calculation."""
 
@@ -119,11 +130,37 @@ class RetencionSoportadaClassState(StrEnum):
     DECLARED_ABSENT = "declared_absent"
     MISSING = "missing"
     CONTRADICTED = "contradicted"
+    MISSING_INCOME_RECORD = "missing_income_record"
+    """An attestation covers the class, but an income binding needs a record that states the income."""
+    FIGURE_MISSING = "figure_missing"
+    """Records exist, but one lacks a figure the binding draws (a payload written before the figure existed)."""
 
 
 _PROVEN_ZERO_STATES: Final = frozenset(
     {RetencionSoportadaClassState.ATTESTED_ABSENT, RetencionSoportadaClassState.DECLARED_ABSENT},
 )
+
+
+def recorded_income_classes(source_refs: Iterable[str]) -> frozenset[RetencionSoportadaClase]:
+    """Return the income classes that a payer record, not an attestation, contributed to a calculation.
+
+    ``source_refs`` are the provenance references of a calculation revision. A record's reference is
+    ``retencion-soportada:{ejercicio}:{income_class}:{payer_ref}``; an attestation's carries the word
+    ``absence`` where the ejercicio stands, so it names no class here.
+    """
+    classes: set[RetencionSoportadaClase] = set()
+    for ref in source_refs:
+        if not ref.startswith(RETENCION_SOPORTADA_SOURCE_REF_PREFIX):
+            continue
+        ejercicio, _, rest = ref.removeprefix(RETENCION_SOPORTADA_SOURCE_REF_PREFIX).partition(":")
+        class_token, _, payer_ref = rest.partition(":")
+        if not ejercicio.isdigit() or not payer_ref or ":" in payer_ref:
+            continue
+        try:
+            classes.add(RetencionSoportadaClase(class_token))
+        except ValueError:
+            continue
+    return frozenset(classes)
 
 
 def _source_ref(record: RetencionSoportadaRecord) -> str:
@@ -196,6 +233,29 @@ def _class_state(
     if applicability is RetencionSoportadaApplicability.DECLARED_ABSENT:
         return RetencionSoportadaClassState.DECLARED_ABSENT
     return RetencionSoportadaClassState.MISSING
+
+
+def _refined_state(
+    state: RetencionSoportadaClassState,
+    income_class: RetencionSoportadaClase,
+    quantity: RetencionSoportadaCantidad,
+    class_records: Sequence[RetencionSoportadaRecord],
+    *,
+    income_declared_absent: Callable[[], bool],
+) -> RetencionSoportadaClassState:
+    """Narrow a class state by the quantity drawn: a figure a record lacks, or income an attestation cannot state."""
+    if state is RetencionSoportadaClassState.RECORDED and not all(record.states(quantity) for record in class_records):
+        return RetencionSoportadaClassState.FIGURE_MISSING
+    if (
+        state is RetencionSoportadaClassState.ATTESTED_ABSENT
+        and (income_class, quantity) in RETENCION_SOPORTADA_INCOME_ROLES
+    ):
+        # An attestation says no payer withheld, never how much income there was; the profile's
+        # stated income categories can, when they positively exclude the class.
+        if income_declared_absent():
+            return RetencionSoportadaClassState.DECLARED_ABSENT
+        return RetencionSoportadaClassState.MISSING_INCOME_RECORD
+    return state
 
 
 def _credited_casilla(revision: ModeloRevision, binding_id: BindingId) -> CasillaId | None:
@@ -315,6 +375,22 @@ class RetencionSoportadaSourceResolver:
                     effective_date=context.period.end_date,
                     authority=operation,
                 )
+                state = _refined_state(
+                    state,
+                    income_class,
+                    provider.quantity,
+                    class_records,
+                    income_declared_absent=lambda income_class=income_class: (
+                        retencion_soportada_applicability(
+                            income_class,
+                            declared,
+                            activity_epigraphs,
+                            effective_date=context.period.end_date,
+                            authority=operation,
+                        )
+                        is RetencionSoportadaApplicability.DECLARED_ABSENT
+                    ),
+                )
                 if state is RetencionSoportadaClassState.RECORDED:
                     binding_values[binding.id] = sum(
                         (record.quantity(provider.quantity) for record in class_records),
@@ -322,7 +398,14 @@ class RetencionSoportadaSourceResolver:
                     )
                 elif state in _PROVEN_ZERO_STATES:
                     binding_values[binding.id] = Decimal("0.00")
-                    zero_provenance.setdefault(income_class, self._zero_provenance(context, income_class, attestation))
+                    zero_provenance.setdefault(
+                        income_class,
+                        self._zero_provenance(
+                            context,
+                            income_class,
+                            None if state is RetencionSoportadaClassState.DECLARED_ABSENT else attestation,
+                        ),
+                    )
                 else:
                     # Named unresolved here as well as in the note, so a formula reading the binding as an
                     # operand leaves its own box unresolved instead of failing on a missing value.
@@ -356,7 +439,21 @@ class RetencionSoportadaSourceResolver:
         income_class: RetencionSoportadaClase,
         state: RetencionSoportadaClassState,
     ) -> CalculationSourceDiagnostic:
-        if state is RetencionSoportadaClassState.CONTRADICTED:
+        if state is RetencionSoportadaClassState.MISSING_INCOME_RECORD:
+            sentence = CalculationNoteSentence.RETENCION_SOPORTADA_INCOME_RECORD_REQUIRED
+            message = (
+                f"income class {income_class.value!r} is attested as withheld by no payer, which says nothing "
+                "about the amount of its income; the income needs a payer record"
+            )
+            remedy = _INCOME_RECORD_REMEDY
+        elif state is RetencionSoportadaClassState.FIGURE_MISSING:
+            sentence = CalculationNoteSentence.RETENCION_SOPORTADA_RECORD_FIGURE_MISSING
+            message = (
+                f"a payer record of income class {income_class.value!r} was stored before the certificate figure "
+                "this binding draws existed, and does not state it"
+            )
+            remedy = _FIGURE_MISSING_REMEDY
+        elif state is RetencionSoportadaClassState.CONTRADICTED:
             sentence = CalculationNoteSentence.RETENCION_SOPORTADA_ABSENCE_CONTRADICTED
             message = (
                 f"income class {income_class.value!r} holds payer records and an attestation that no payer "

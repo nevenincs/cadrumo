@@ -9,7 +9,7 @@ from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...core.identity.continuidad import ContinuidadId
@@ -31,6 +31,8 @@ from ...domain.calculations.registry.schema_formula import FormulaExpression, Pa
 from ...domain.calculations.registry.schema_overrides import SchemaFamilyDispositionDeclaration
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from .lifecycle_view_refusal_doors import work_list_verdict
+from .refusal_door_verdicts import caller_defect_verdict
 from .work_selection import (
     ModeloWorkSelectionMode,
 )
@@ -347,7 +349,7 @@ def static_inspection_contributors() -> tuple[ModeloWorkspaceContributorIdentity
     )
 
 
-class ModeloWorkspaceStaleCursorError(CadrumoError):
+class ModeloWorkspaceStaleCursorError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Raised when a cursor's pinned coordinate no longer matches the current baseline.
 
     A stale cursor MUST refuse rather than silently return a different page:
@@ -617,7 +619,8 @@ def paginate_modelo_workspace_facet[RecordT](
             or cursor.contributor_epoch_digest != baseline.contributor_epoch_digest
         ):
             raise ModeloWorkspaceStaleCursorError(
-                f"workspace {facet.value} facet cursor no longer matches the current baseline coordinate"
+                f"workspace {facet.value} facet cursor no longer matches the current baseline coordinate",
+                precondition_verdict=work_list_verdict("workspace_cursor_stale"),
             )
         offset = int(cursor.continuation)
     else:
@@ -728,7 +731,8 @@ def resolve_static_inspection_result(
     """
     if cursor is not None and cursor.facet is not ModeloWorkspaceFacetName.SCHEMA:
         raise ModeloWorkspaceStaleCursorError(
-            f"static inspection paginates only the schema facet; cursor names {cursor.facet.value}"
+            f"static inspection paginates only the schema facet; cursor names {cursor.facet.value}",
+            precondition_verdict=caller_defect_verdict("workspace_static_cursor_facet"),
         )
 
     work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(

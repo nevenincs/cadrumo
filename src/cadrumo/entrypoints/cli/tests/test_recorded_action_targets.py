@@ -22,7 +22,10 @@ from ....application.modelo.iva_wallet_refusal import (
     ModeloIvaWalletReconciliationBlockedError,
     raise_iva_wallet_precondition,
 )
-from ....application.modelo.preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS, IVA_WALLET_OVERRIDE_SCENARIOS
+from ....application.modelo.iva_wallet_refusal_profiles import (
+    IVA_WALLET_OPENING_BALANCE_SCENARIOS,
+    IVA_WALLET_OVERRIDE_SCENARIOS,
+)
 from ....application.modelo.profile_readiness_gate import require_existing_profile_baseline_ready_for_modelo_work
 from ....application.modelo.work_profile import ModeloWorkProfile
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry, lookup_action

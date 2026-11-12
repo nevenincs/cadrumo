@@ -10,7 +10,8 @@ from ...core.decimal.coercion import coerce_decimal
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...domain.calculations.registry.export_xml_dictionary import SINO_DICTIONARY_TYPE, XML_DICTIONARY_BOOLEAN_TYPES
 from ...domain.calculations.registry.form_codes import resolve_form_codes
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
+from .export_refusal_doors import ExportRefusalReason, export_input_decision
 
 # The registry owns the two boolean wire types. A new dictionary type does not
 # accept booleans until it is explicitly declared there.
@@ -78,7 +79,10 @@ def format_xml_dictionary_value(data_type: str, value: object) -> str:
             return holder_codes[holder]
         except KeyError as exc:
             raise FilingExportValidationError(
-                f"holder for a {data_type} row must be one of {', '.join(holder_codes)}, got {value!r}"
+                f"holder for a {data_type} row must be one of {', '.join(holder_codes)}, got {value!r}",
+                translated_message="application.filing.export.errors.xml_holder_code_invalid",
+                context={"data_type": str(data_type), "allowed": ", ".join(holder_codes)},
+                precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_FORM_REFUSED),
             ) from exc
     return _format_xml_dictionary_text_value(data_type, normalized_type, value)
 
@@ -105,11 +109,13 @@ def _format_xml_dictionary_boolean_value(data_type: str, normalized_type: str, v
     # casilla on a non-boolean row. This guards a route added later, so it stays
     # total and cheap rather than trying to interpret the value.
     if normalized_type not in XML_DICTIONARY_BOOLEAN_TYPES:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"a {data_type} row cannot carry the boolean {value!r}. Only "
             f"{'/'.join(sorted(XML_DICTIONARY_BOOLEAN_TYPES))} rows are declared boolean by AEAT. "
             "The value reaching this row has the wrong type; correct it at the source rather "
             "than rendering it, because a boolean written to an amount row is filed as 1 or 0.",
+            translated_message="errors.integrity.filing_export_xml_boolean_in_non_boolean_row",
+            context={"data_type": str(data_type)},
         )
     if normalized_type == SINO_DICTIONARY_TYPE:
         return "SI" if value else "NO"
@@ -156,6 +162,9 @@ def _format_xml_dictionary_numeric_value(data_type: str, value: object, numeric:
             "declared scale does not settle it: the scale says what the field can "
             "hold, not which reading was meant. Write the amount unambiguously "
             "(1000 or 1.0) at the source.",
+            translated_message="application.filing.export.errors.xml_amount_unreadable",
+            context={"data_type": str(data_type), "scale": scale},
+            precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_FORM_REFUSED),
         )
     # Enough working precision that a figure far above any row's limit still renders,
     # because the check against the official schema is what refuses it, by its box.
@@ -183,5 +192,8 @@ def _format_xml_dictionary_text_value(data_type: str, normalized_type: str, valu
             "The accepted form is d/m/yyyy with a four-digit year, e.g. 2/1/1980. "
             "Supply the value as a date rather than as text and it is rendered "
             "correctly without this check.",
+            translated_message="application.filing.export.errors.xml_date_form_refused",
+            context={"data_type": str(data_type)},
+            precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_FORM_REFUSED),
         )
     return text

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from typing import Final
 
@@ -12,7 +13,6 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.iva_deduction_catalogue import (
     require_iva_deduction_evidence_authority,
@@ -61,9 +61,9 @@ class IvaDeductionClassificationProvenance(BaseModel):
             raise IvaValidationError(str(exc)) from exc
 
 
-def _registry_iva_deduction_declarations() -> Mapping[str, str]:
-    """Resolve the dated IVA deduction applicability catalogue."""
-    return resolve_iva_deduction_catalogue(effective_date=today_madrid()).declarations
+def _registry_iva_deduction_declarations(effective_date: date) -> Mapping[str, str]:
+    """Resolve the IVA deduction applicability catalogue in force on ``effective_date``."""
+    return resolve_iva_deduction_catalogue(effective_date=effective_date).declarations
 
 
 def _required_declaration(declarations: Mapping[str, str], key: str) -> str:
@@ -77,12 +77,19 @@ def _declared_values(declarations: Mapping[str, str], key: str) -> frozenset[str
     return frozenset(value.strip() for value in _required_declaration(declarations, key).split(",") if value.strip())
 
 
-def _declared_flow_values(declarations: Mapping[str, str], key: str) -> frozenset[str]:
+def _declared_flow_values(declarations: Mapping[str, str], key: str, *, effective_date: date) -> frozenset[str]:
     """Resolve 0085 flow relations against the canonical 0083 vocabulary."""
-    return frozenset(require_iva_flow_direction(value).value for value in _declared_values(declarations, key))
+    return frozenset(
+        require_iva_flow_direction(value, effective_date=effective_date).value
+        for value in _declared_values(declarations, key)
+    )
 
 
-def required_deduction_evidence_authority(kind: IvaDeductionFactKind) -> IvaDeductionEvidenceAuthority:
+def required_deduction_evidence_authority(
+    kind: IvaDeductionFactKind,
+    *,
+    effective_date: date,
+) -> IvaDeductionEvidenceAuthority:
     """Return the one evidence authority that can establish ``kind``.
 
     Exposes the mapping :func:`validate_iva_deduction_fact` already enforces, so
@@ -92,12 +99,16 @@ def required_deduction_evidence_authority(kind: IvaDeductionFactKind) -> IvaDedu
     rejected, and a duplicate would be free to drift.
     """
     try:
-        return resolve_iva_deduction_catalogue(effective_date=today_madrid()).required_authority(kind)
+        return resolve_iva_deduction_catalogue(effective_date=effective_date).required_authority(kind)
     except RegistryValidationError as exc:
         raise IvaValidationError(str(exc)) from exc
 
 
-def supplier_invoice_deduction_authority(kind: IvaDeductionFactKind) -> IvaDeductionEvidenceAuthority | None:
+def supplier_invoice_deduction_authority(
+    kind: IvaDeductionFactKind,
+    *,
+    effective_date: date,
+) -> IvaDeductionEvidenceAuthority | None:
     """Return the authority ``kind`` requires when the supplier's invoice justifies it, else ``None``.
 
     LIVA art. 97.Uno names the documents that justify a deduction. The
@@ -114,8 +125,8 @@ def supplier_invoice_deduction_authority(kind: IvaDeductionFactKind) -> IvaDeduc
     rectification on its rectifying document (art. 97.Dos), none of which is
     the original purchase invoice the row links, so those kinds answer ``None``.
     """
-    required = required_deduction_evidence_authority(kind)
-    catalogue = resolve_iva_deduction_catalogue(effective_date=today_madrid())
+    required = required_deduction_evidence_authority(kind, effective_date=effective_date)
+    catalogue = resolve_iva_deduction_catalogue(effective_date=effective_date)
     try:
         invoice = catalogue.authority_for_role("invoice")
         self_assessed = catalogue.projection("kind.intra_eu")
@@ -130,10 +141,13 @@ def _validate_required_authority(
     kind: IvaDeductionFactKind,
     provenance: IvaDeductionClassificationProvenance,
     declarations: Mapping[str, str],
+    *,
+    effective_date: date,
 ) -> None:
     try:
         required_authority = require_iva_deduction_evidence_authority(
             _required_declaration(declarations, f"kind.required_authority.{kind.value}"),
+            effective_date=effective_date,
         )
     except RegistryValidationError as exc:
         raise IvaValidationError(str(exc)) from exc
@@ -165,6 +179,7 @@ def _validate_rectification(
     iva_amount: Decimal,
     rectifies_ledger_id: str | None,
     declarations: Mapping[str, str],
+    effective_date: date,
 ) -> None:
     if rectifies_ledger_id is None:
         raise IvaValidationError("rectification requires rectifies_ledger_id")
@@ -172,6 +187,7 @@ def _validate_rectification(
         raise IvaValidationError("rectification base_amount and iva_amount must both be signed non-zero evidence")
     required_flow = require_iva_flow_direction(
         _required_declaration(declarations, f"rectification_flow.{category.value}"),
+        effective_date=effective_date,
     )
     if flow_direction.value != required_flow.value:
         raise IvaValidationError("rectification category and input IVA flow are not a closed legal pair")
@@ -208,13 +224,15 @@ def _source_families_admitting(
     category: IvaCategory,
     flow_direction: IvaFlowDirection,
     declarations: Mapping[str, str],
+    *,
+    effective_date: date,
 ) -> tuple[str, ...]:
     """Return every fact-0085 family whose category and flow this row satisfies."""
     return tuple(
         family
         for family in _DEDUCTION_SOURCE_FAMILIES
         if category.value in _declared_values(declarations, f"category.{family}")
-        and flow_direction.value in _declared_flow_values(declarations, f"flow.{family}")
+        and flow_direction.value in _declared_flow_values(declarations, f"flow.{family}", effective_date=effective_date)
     )
 
 
@@ -222,6 +240,7 @@ def admits_iva_deduction_classification(
     *,
     category: IvaCategory,
     flow_direction: IvaFlowDirection,
+    effective_date: date,
 ) -> bool:
     """Return whether fact 0085 grants any deduction on this category and flow.
 
@@ -239,14 +258,15 @@ def admits_iva_deduction_classification(
     zero-cuota purchase -- a received row settles as ``soportado`` whatever it is,
     so no kind satisfied the requirement and every kind failed admissibility.
     """
-    declarations = _registry_iva_deduction_declarations()
-    return bool(_source_families_admitting(category, flow_direction, declarations))
+    declarations = _registry_iva_deduction_declarations(effective_date)
+    return bool(_source_families_admitting(category, flow_direction, declarations, effective_date=effective_date))
 
 
 def deduction_evidence_authority_for_row(
     *,
     kind: IvaDeductionFactKind | None,
     category: IvaCategory | None,
+    effective_date: date,
 ) -> IvaDeductionEvidenceAuthority | None:
     """Return the registry authority establishing this row's deduction, when unambiguous.
 
@@ -254,7 +274,7 @@ def deduction_evidence_authority_for_row(
     admitted source families agree on one authority answers; an unknown or
     ambiguous category stays unresolved rather than guessing a document.
     """
-    catalogue = resolve_iva_deduction_catalogue(effective_date=today_madrid())
+    catalogue = resolve_iva_deduction_catalogue(effective_date=effective_date)
     if kind is not None:
         return catalogue.required_authority(kind) if kind in catalogue.kinds else None
     if category is None:
@@ -275,6 +295,7 @@ def _validate_non_rectification_category(
     rate_kind: IvaRateKind,
     flow_direction: IvaFlowDirection,
     declarations: Mapping[str, str],
+    effective_date: date,
 ) -> None:
     family = _source_family_for_kind(kind, declarations)
     if family is None:
@@ -285,7 +306,7 @@ def _validate_non_rectification_category(
     required_rate = declarations.get(f"rate.{family}")
     if required_rate is not None and rate_kind.value != required_rate:
         raise IvaValidationError("registry-selected compensation rate is not admissible")
-    if family not in _source_families_admitting(category, flow_direction, declarations):
+    if family not in _source_families_admitting(category, flow_direction, declarations, effective_date=effective_date):
         raise IvaValidationError("registry-selected deduction category and flow are not an admissible pair")
 
 
@@ -300,14 +321,15 @@ def validate_iva_deduction_fact(
     iva_amount: Decimal,
     investment_asset_id: str | None,
     rectifies_ledger_id: str | None,
+    effective_date: date,
 ) -> None:
     """Refuse every deduction classification combination lacking legal authority."""
     try:
-        kind = require_iva_deduction_fact_kind(kind)
+        kind = require_iva_deduction_fact_kind(kind, effective_date=effective_date)
     except RegistryValidationError as exc:
         raise IvaValidationError(str(exc)) from exc
-    declarations = _registry_iva_deduction_declarations()
-    _validate_required_authority(kind, provenance, declarations)
+    declarations = _registry_iva_deduction_declarations(effective_date)
+    _validate_required_authority(kind, provenance, declarations, effective_date=effective_date)
     if kind.value in _declared_values(declarations, "kind.owner_only"):
         raise IvaValidationError("the owner-only deduction kind is emitted only by the bienes-inversion owner")
     _validate_investment_asset_identity(kind, investment_asset_id, declarations)
@@ -320,6 +342,7 @@ def validate_iva_deduction_fact(
             iva_amount=iva_amount,
             rectifies_ledger_id=rectifies_ledger_id,
             declarations=declarations,
+            effective_date=effective_date,
         )
         return
     _validate_non_rectification_identity(
@@ -334,6 +357,7 @@ def validate_iva_deduction_fact(
         rate_kind=rate_kind,
         flow_direction=flow_direction,
         declarations=declarations,
+        effective_date=effective_date,
     )
 
 

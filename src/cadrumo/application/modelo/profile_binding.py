@@ -76,7 +76,9 @@ from ..aggregation.source_mesh import (
 )
 from ..user_profile.projections import profile_fact_index
 from .printed_boxes import first_printed_dependent, printed_boxes
+from .profile_binding_refusal_doors import binding_contract_defect_verdict, profile_fact_value_refused_verdict
 from .profile_derived_facts import (
+    INCOME_FAMILY_EXCLUDED_BINDING_PREFIX,
     ProfileBindingResolutionError,
     declared_profile_selectors,
     family_fact_context,
@@ -91,10 +93,10 @@ from .profile_derived_facts import (
     inject_derived_state_attribution_facts,
     inject_ordinary_work_maritime_facts,
     profile_declares_economic_activity,
+    profile_excludes_income_family,
     snapshot_authored_year,
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
-from .profile_rental_reduction import inject_derived_rental_reduction_facts
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
@@ -163,6 +165,9 @@ def _decimal_value(binding_id: BindingId, value: object) -> Decimal:
         f"numeric operand; the profile fact must carry a numeric value",
         translated_message="application.modelo.profile_binding.errors.decimal_value_type_invalid",
         context={"binding_id": binding_id, "value_type": type(value).__name__},
+        precondition_verdict=profile_fact_value_refused_verdict(
+            "decimal_value_type", {"binding_id": binding_id, "value_type": type(value).__name__}
+        ),
     )
 
 
@@ -184,6 +189,9 @@ def _boolean_value(binding_id: BindingId, value: object) -> bool:
         f"rather than coerced",
         translated_message="application.modelo.profile_binding.errors.boolean_value_type_invalid",
         context={"binding_id": binding_id, "value_type": type(value).__name__},
+        precondition_verdict=profile_fact_value_refused_verdict(
+            "boolean_value_type", {"binding_id": binding_id, "value_type": type(value).__name__}
+        ),
     )
 
 
@@ -249,6 +257,9 @@ def _route_resolved_binding(
                 f"profile fact for date-channel binding {binding_id!r} must be a date, got {type(value).__name__!r}",
                 translated_message="application.modelo.profile_binding.errors.date_value_type_invalid",
                 context={"binding_id": binding_id, "value_type": type(value).__name__},
+                precondition_verdict=profile_fact_value_refused_verdict(
+                    "date_value_type", {"binding_id": binding_id, "value_type": type(value).__name__}
+                ),
             )
         channels.date_values[binding_id] = value
         return
@@ -266,6 +277,9 @@ def _route_resolved_binding(
                 f"({value!r}); boolean facts are not valid enum dispatch keys",
                 translated_message="application.modelo.profile_binding.errors.enum_boolean_invalid",
                 context={"binding_id": binding_id, "value_type": "bool"},
+                precondition_verdict=binding_contract_defect_verdict(
+                    "enum_dispatch_key_type", {"binding_id": binding_id, "value_type": "bool"}
+                ),
             )
         # Unaddressed profile TEXT inputs use the existing string channel.
         # Dictionary/XSD-addressed numeric controls retain their established
@@ -282,6 +296,9 @@ def _route_resolved_binding(
             f"{declared_channel.value} quantity and is refused rather than coerced",
             translated_message="application.modelo.profile_binding.errors.boolean_value_channel_mismatch",
             context={"binding_id": binding_id, "declared_channel": declared_channel.value},
+            precondition_verdict=profile_fact_value_refused_verdict(
+                "boolean_value_channel", {"binding_id": binding_id, "declared_channel": declared_channel.value}
+            ),
         )
     # The resolver projects profile facts into engine channels; it does not
     # invent values the operator never supplied. Per-verb baselines own the
@@ -321,6 +338,10 @@ def _reject_channel_declaration_conflict(
             f"rather than resolving it on a channel its declaration does not name",
             translated_message="application.modelo.profile_binding.errors.channel_declaration_conflict",
             context={"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "date"},
+            precondition_verdict=binding_contract_defect_verdict(
+                "channel_declaration",
+                {"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "date"},
+            ),
         )
     if is_enum_channel and declared_channel not in {BindingValueChannel.ENUM, BindingValueChannel.TEXT}:
         raise ProfileBindingResolutionError(
@@ -329,6 +350,10 @@ def _reject_channel_declaration_conflict(
             f"rather than resolving it on a channel its declaration does not name",
             translated_message="application.modelo.profile_binding.errors.channel_declaration_conflict",
             context={"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "enum"},
+            precondition_verdict=binding_contract_defect_verdict(
+                "channel_declaration",
+                {"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "enum"},
+            ),
         )
 
 
@@ -348,8 +373,6 @@ class _ProfileFacts:
     fingerprint: str | None
     decided_derived_paths: frozenset[str] = frozenset()
     """Derived paths an injector decided, including those it decided to leave absent."""
-    diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
-    """Diagnostics an injector raised while deciding its paths."""
 
 
 def _is_calculation_only_profile_binding(binding: BindingDefinition) -> bool:
@@ -488,19 +511,10 @@ def _load_profile_facts(
             effective_date=date(snapshot.filing_year, 1, 1),
             operation=operation,
         )
-    rental_reduction = inject_derived_rental_reduction_facts(
-        fact_index,
-        snapshot,
-        declared_selectors,
-        bucket_id=bucket_id,
-        resolver_id=_PROFILE_RESOLVER_ID,
-        operation=operation,
-    )
     return _ProfileFacts(
         fact_index=fact_index,
         fingerprint=profile_record_fingerprint,
-        decided_derived_paths=decided_derived_paths | frozenset(rental_reduction.decided_paths),
-        diagnostics=rental_reduction.diagnostics,
+        decided_derived_paths=decided_derived_paths,
     )
 
 
@@ -668,7 +682,6 @@ def resolve_profile_sourced_bindings(
         unresolved_binding_ids=tuple(binding.id for binding in unanswered_text_bindings),
         diagnostics=(
             *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
-            *facts.diagnostics,
             *derived_binding_diagnostics(
                 selection.bindings,
                 facts.fact_index,
@@ -865,6 +878,10 @@ def resolve_profile_binding_value(
         return None
     if binding.id.endswith(_ECONOMIC_ACTIVITY_PREDICATE_BINDING_SUFFIX):
         return profile_declares_economic_activity(fact_index)
+    if binding.id.startswith(INCOME_FAMILY_EXCLUDED_BINDING_PREFIX):
+        return profile_excludes_income_family(
+            fact_index, binding.id.removeprefix(INCOME_FAMILY_EXCLUDED_BINDING_PREFIX)
+        )
     # ``profile_binding_selectors`` returns the binding's DEPENDENCY set -- every
     # fact it references -- and that includes ``required_when_profile_key``. The
     # gate fact states WHETHER the binding applies, never WHAT it holds, so it

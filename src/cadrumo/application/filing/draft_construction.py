@@ -34,7 +34,12 @@ from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_tokens,
     declared_casilla_ids,
 )
-from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry.errors import (
+    RegistryFailureClassification,
+    RegistryFailureCondition,
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
 from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
@@ -452,6 +457,12 @@ def _validate_built_draft(
     return apply_validation(draft, findings)
 
 
+_PROVIDER_SNAPSHOT_FAILURE = RegistryFailureClassification(
+    condition=RegistryFailureCondition.DECLARATION_CONSISTENT,
+    facts={"declaration": "filing_schema_provider_snapshot", "consistent": False},
+)
+
+
 def load_registry_snapshot(
     *,
     modelo: str,
@@ -463,12 +474,21 @@ def load_registry_snapshot(
     try:
         get_snapshot = getattr(schema_provider, "get_snapshot", None)
         if not callable(get_snapshot):
-            raise RegistrySnapshotError("filing schema provider carries no generation-pinned snapshot")
+            raise RegistrySnapshotError(
+                "filing schema provider carries no generation-pinned snapshot",
+                registry_failure=_PROVIDER_SNAPSHOT_FAILURE,
+            )
         snapshot = get_snapshot(modelo)
         if not isinstance(snapshot, RegistrySnapshot):
-            raise RegistrySnapshotError("filing schema provider returned an invalid registry snapshot")
+            raise RegistrySnapshotError(
+                "filing schema provider returned an invalid registry snapshot",
+                registry_failure=_PROVIDER_SNAPSHOT_FAILURE,
+            )
         if snapshot.filing_year != filing_year or snapshot.period != registry_period:
-            raise RegistrySnapshotError("filing schema provider snapshot does not match the requested period")
+            raise RegistrySnapshotError(
+                "filing schema provider snapshot does not match the requested period",
+                registry_failure=_PROVIDER_SNAPSHOT_FAILURE,
+            )
         return snapshot
     except (RegistrySnapshotError, RegistryValidationError, ModeloApplicationError) as exc:
         raise ModeloApplicationError(

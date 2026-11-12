@@ -6734,275 +6734,275 @@ position = 1086
 
 [[revisions."2025".casilla_positions]]
 id = "2002"
-position = 1967
-
-[[revisions."2025".casilla_positions]]
-id = "2003"
 position = 1968
 
 [[revisions."2025".casilla_positions]]
-id = "2004"
+id = "2003"
 position = 1969
 
 [[revisions."2025".casilla_positions]]
-id = "2005"
+id = "2004"
 position = 1970
 
 [[revisions."2025".casilla_positions]]
-id = "2006"
+id = "2005"
 position = 1971
 
 [[revisions."2025".casilla_positions]]
-id = "2007"
+id = "2006"
 position = 1972
 
 [[revisions."2025".casilla_positions]]
-id = "2008"
+id = "2007"
 position = 1973
 
 [[revisions."2025".casilla_positions]]
-id = "2009"
+id = "2008"
 position = 1974
 
 [[revisions."2025".casilla_positions]]
-id = "2010"
+id = "2009"
 position = 1975
 
 [[revisions."2025".casilla_positions]]
-id = "2011"
+id = "2010"
 position = 1976
 
 [[revisions."2025".casilla_positions]]
-id = "2012"
+id = "2011"
 position = 1977
 
 [[revisions."2025".casilla_positions]]
-id = "2013"
+id = "2012"
 position = 1978
 
 [[revisions."2025".casilla_positions]]
-id = "2014"
+id = "2013"
 position = 1979
 
 [[revisions."2025".casilla_positions]]
-id = "2015"
+id = "2014"
 position = 1980
 
 [[revisions."2025".casilla_positions]]
-id = "2022"
-position = 1987
+id = "2015"
+position = 1981
 
 [[revisions."2025".casilla_positions]]
-id = "2023"
+id = "2022"
 position = 1988
 
 [[revisions."2025".casilla_positions]]
-id = "2024"
+id = "2023"
 position = 1989
 
 [[revisions."2025".casilla_positions]]
-id = "2025"
+id = "2024"
 position = 1990
 
 [[revisions."2025".casilla_positions]]
+id = "2025"
+position = 1991
+
+[[revisions."2025".casilla_positions]]
 id = "2048"
-position = 2013
+position = 2014
 
 [[revisions."2025".casilla_positions]]
 id = "2056"
-position = 2021
-
-[[revisions."2025".casilla_positions]]
-id = "2057"
 position = 2022
 
 [[revisions."2025".casilla_positions]]
-id = "2058"
+id = "2057"
 position = 2023
 
 [[revisions."2025".casilla_positions]]
-id = "2059"
+id = "2058"
 position = 2024
 
 [[revisions."2025".casilla_positions]]
-id = "2060"
+id = "2059"
 position = 2025
 
 [[revisions."2025".casilla_positions]]
-id = "2061"
+id = "2060"
 position = 2026
 
 [[revisions."2025".casilla_positions]]
+id = "2061"
+position = 2027
+
+[[revisions."2025".casilla_positions]]
 id = "A"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "AJ"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "ANOASDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "APENOMDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "APENOMDLG_ASC"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "C"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "CONVASDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "D"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DECFAL"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DNIASDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DPFNAC_C"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DPFNAC_D"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DPGMIN_C"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DPGMIN_D"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DPNIF_C"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DPNIF_D"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DP_APENOM_C"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "DP_APENOM_D"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "E"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "ECIVIL"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "F"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "FALLASDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "FALLDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "FNACDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "G"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "H"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "HIJOSUE"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "I"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "J"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "M"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "MINUSDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "NIFDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "NORESIDENTE"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "PCTMINASDLG"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "PH18"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "RESIDENTEUE"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "SEXO_C"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "SEXO_D"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "TIPOTRIBUTACION"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "ZCCAD"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "ZRUE2"
-position = 2247
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "eo-agraria-reduccion-irregularidad-base"
-position = 2248
+position = 2249
 
 [[revisions."2025".casilla_positions]]
 id = "prestacion-inss-maternidad-paternidad-exenta"
-position = 2248
+position = 2249
 
 [[revisions."2025".family_overrides]]
 family = "formulas"
@@ -7101,24 +7101,6 @@ family = "formulas"
 selector = {revision = "2024", id = "renta-base-liquidable-general-sometida-a-gravamen"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary"]}
 sequence_removals = {source_refs = [1]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
-selector = {revision = "2024", id = "renta-capital-inmobiliario-rendimiento-neto"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimientos del capital inmobiliario", "gastos deducibles"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
-selector = {revision = "2024", id = "renta-capital-inmobiliario-rendimiento-neto-reducido"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimiento minimo computable"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
-selector = {revision = "2024", id = "renta-capital-inmobiliario-suma-rendimientos-reducidos"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimientos del capital inmobiliario"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025".family_overrides]]
 family = "formulas"
@@ -7679,7 +7661,7 @@ sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
 family = "constructs"
 selector = {revision = "2024", id = "renta-mini-model-capital-inmobiliario"}
 sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
-sequence_removals = {formulas = [2, 3, 4, 5, 6, 7], legal_refs = [2, 3], source_refs = [0, 1, 2]}
+sequence_removals = {formulas = [2, 3, 4], legal_refs = [2, 3], source_refs = [0, 1, 2]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"
@@ -8510,9 +8492,9 @@ sequence_removals = {source_refs = [0, 1]}
 [[revisions."2025".family_overrides]]
 family = "verification_expectations"
 selector = {revision = "2024", id = "modelo-100-reconcile-when-present"}
-sequence_additions = { externally_grounded_casilla_ids = ["0610", "0670"], legal_refs = ["orden-hac-277-2026:art-3"], reconcile_when_present_casilla_ids = ["0159", "1039", "2211", "2232", "trabajo-mar-renta-exenta"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"] }
-sequence_removals = { externally_grounded_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28], reconcile_when_present_casilla_ids = [17, 82, 83, 89, 90, 101, 102, 120], source_refs = [0, 1] }
-sequence_order = { reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 191, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 192, 122, 123, 124, 125, 126, 127, 128, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 129, 187, 188, 189, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 193, 194, 166, 195, 190] }
+sequence_additions = { externally_grounded_casilla_ids = ["0610", "0670"], legal_refs = ["orden-hac-277-2026:art-3"], reconcile_when_present_casilla_ids = ["0159", "1039", "2211", "2232"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"] }
+sequence_removals = { externally_grounded_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25], reconcile_when_present_casilla_ids = [79, 80, 86, 87, 98, 99, 117], source_refs = [0, 1] }
+sequence_order = { reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 189, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 190, 120, 121, 122, 123, 124, 125, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 126, 184, 185, 186, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 191, 192, 163, 188, 187] }
 
 [[revisions."2025".family_overrides]]
 family = "completeness_manifest"

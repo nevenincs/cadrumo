@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.form_codes import resolve_form_codes
@@ -32,10 +33,17 @@ from ...domain.contribuyente.family_types import MinimoDescendientesThresholds
 from ...domain.contribuyente.marriage_facts import marriage_full_year, marriage_month_start
 from ...domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus
 from ...domain.modelos.errors import ModeloError
+from ...domain.renta.retencion_soportada_applicability import declared_categories_exclude_class
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ..aggregation.renta_imputation import ActivityImputationCriterion, declared_imputation_criteria
+from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.completeness import profile_section_rows
+from .profile_binding_refusal_doors import (
+    binding_contract_defect_verdict,
+    profile_fact_absent_verdict,
+    profile_fact_value_refused_verdict,
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -45,7 +53,19 @@ _LAST_MONTH = 12
 
 
 class ProfileBindingResolutionError(ModeloError):
-    """Raised when a profile-sourced binding cannot be resolved for a calculation."""
+    """Raised when a profile-sourced binding cannot be resolved for a calculation.
+
+    Each raise site carries the door of its cause: the profile questions for an
+    absent fact, the operator's decision for a stored value the binding refuses,
+    or a terminal verdict for authored data no operator action repairs.
+    """
+
+
+def _descendant_birth_date_refused(index: int) -> PreconditionVerdict:
+    """The operator's decision on a descendant whose stored birth date is not an ISO-8601 date."""
+    return profile_fact_value_refused_verdict(
+        "descendant_birth_date", {"field": "renta_family.descendiente.birth_date", "index": index}
+    )
 
 
 def married_status_codes() -> frozenset[str]:
@@ -165,6 +185,29 @@ def profile_declares_economic_activity(fact_index: Mapping[str, UserProfileFactV
     return _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories
 
 
+INCOME_FAMILY_EXCLUDED_BINDING_PREFIX = "renta-profile-income-family-excluded-"
+"""The binding ids that ask whether the profile positively excludes one family of income."""
+
+_EXCLUDABLE_INCOME_FAMILY_CLASSES: Mapping[str, RetencionSoportadaClase] = {
+    "capital-mobiliario": RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+    "capital-inmobiliario": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO,
+    "ganancias-patrimoniales": RetencionSoportadaClase.GANANCIA_PATRIMONIAL,
+}
+
+
+def profile_excludes_income_family(fact_index: Mapping[str, UserProfileFactValue], family: str) -> bool:
+    """Whether the stated income categories positively exclude ``family``.
+
+    The same category rule as the suffered-withholding classes, which is where it lives: a stated,
+    non-empty list lacking every category of the family excludes it, and an unstated list excludes
+    nothing. Every family the bundled registry names is mapped; a test over every revision holds that.
+    """
+    income_class = _EXCLUDABLE_INCOME_FAMILY_CLASSES[family]
+    raw_categories = fact_index.get("taxpayer_type.irpf_income_categories")
+    declared = frozenset(token.strip() for token in str(raw_categories or "").split(",") if token.strip())
+    return declared_categories_exclude_class(income_class, declared or None)
+
+
 def inject_derived_estimation_modality_fact(
     fact_index: dict[str, UserProfileFactValue],
     *,
@@ -200,6 +243,11 @@ def inject_derived_estimation_modality_fact(
         if clave is None:
             raise ProfileBindingResolutionError(
                 f"the registry declares no casilla 0168 clave for the estimation regime {regime!r}",
+                translated_message="application.modelo.errors.registry_estimation_regime_clave_missing",
+                context={"estimation_regime": regime},
+                precondition_verdict=binding_contract_defect_verdict(
+                    "estimation_regime_clave", {"estimation_regime": regime}
+                ),
             )
         fact_index["irpf.estimation_directa_modalidad_clave"] = clave
     if regime:
@@ -253,6 +301,9 @@ def inject_derived_activity_tipo_clave_fact(fact_index: dict[str, UserProfileFac
     except ValueError as exc:
         raise ProfileBindingResolutionError(
             f"the profile declares tipo de actividad {tipo!r}, which is not a censal tipo de actividad",
+            translated_message="application.modelo.errors.profile_activity_tipo_not_censal",
+            context={"tipo": str(tipo)},
+            precondition_verdict=profile_fact_value_refused_verdict("activity_tipo", {"tipo_actividad": tipo}),
         ) from exc
     fact_index[_ACTIVITY_TIPO_CLAVE_PATH] = clave.value
     return (_ACTIVITY_TIPO_CLAVE_PATH,)
@@ -387,6 +438,43 @@ def declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
     )
 
 
+def derived_selector_name(stem: str, *, authored_year: int, declared_selectors: frozenset[str]) -> str:
+    """Return the profile selector a revision declares for the derived fact ``stem``.
+
+    The registry names a derived selector ``<stem>_<exercise>``. A revision
+    that inherits a binding from an earlier edition carries that edition's
+    exercise in the name, so asking only for the revision's own authored year
+    would miss a declaration the law applies to this year too. The selector the
+    revision authored for its own year wins; otherwise the one year-suffixed
+    selector of this ``stem`` the revision declares is used. With no usable
+    declaration the authored-year name is returned, which no binding consumes.
+    """
+    own = f"{stem}_{authored_year}"
+    if own in declared_selectors:
+        return own
+    prefix = f"{stem}_"
+    inherited = sorted(
+        selector
+        for selector in declared_selectors
+        if selector.startswith(prefix) and selector[len(prefix) :].isdecimal()
+    )
+    return inherited[0] if len(inherited) == 1 else own
+
+
+def derived_selector_for_snapshot(
+    snapshot: RegistrySnapshot,
+    stem: str,
+    declared_selectors: frozenset[str] | None = None,
+) -> str:
+    """Return the selector ``snapshot``'s revision declares for the derived fact ``stem``.
+
+    ``declared_selectors`` defaults to the selectors the revision's profile
+    bindings name. See :func:`derived_selector_name` for the choice.
+    """
+    declared = declared_profile_selectors(snapshot.revision) if declared_selectors is None else declared_selectors
+    return derived_selector_name(stem, authored_year=snapshot_authored_year(snapshot), declared_selectors=declared)
+
+
 def renta_family_profile_from_facts(
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> RentaFamilyProfile:
@@ -428,10 +516,16 @@ def renta_family_profile_from_facts(
         except (ValueError, TypeError) as exc:
             raise ProfileBindingResolutionError(
                 f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+                translated_message="application.modelo.errors.profile_descendant_birth_date_invalid",
+                context={"number": str(idx + 1)},
+                precondition_verdict=_descendant_birth_date_refused(idx),
             ) from exc
         if birth is None:
             raise ProfileBindingResolutionError(
                 f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+                translated_message="application.modelo.errors.profile_descendant_birth_date_invalid",
+                context={"number": str(idx + 1)},
+                precondition_verdict=_descendant_birth_date_refused(idx),
             )
         idx += 1
     descendant_facts = {
@@ -662,8 +756,8 @@ def inject_derived_minimo_descendientes_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot_authored_year(snapshot)}"
-    autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot_authored_year(snapshot)}"
+    estatal_key = derived_selector_for_snapshot(snapshot, "renta_family.descendientes_minimos_aggregate")
+    autonomico_key = derived_selector_for_snapshot(snapshot, "renta_family.descendientes_minimos_aggregate_autonomico")
 
     estatal_tranches = _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=None)
     if estatal_tranches is None:
@@ -804,8 +898,11 @@ def inject_derived_anualidades_eligibility_facts(
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
     filing_year = snapshot.filing_year
-    key = f"renta_family.anualidades_sin_minimo_descendientes_{snapshot_authored_year(snapshot)}"
-    if key not in declared_profile_selectors(snapshot.revision):
+    declared_selectors = declared_profile_selectors(snapshot.revision)
+    key = derived_selector_for_snapshot(
+        snapshot, "renta_family.anualidades_sin_minimo_descendientes", declared_selectors
+    )
+    if key not in declared_selectors:
         return
     thresholds = resolved_minimo_descendientes_thresholds(snapshot)
     if thresholds is None:
@@ -1080,7 +1177,7 @@ def inject_derived_incremento_guarderia_facts(
 def inject_derived_state_attribution_facts(
     fact_index: dict[str, UserProfileFactValue],
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Inject the M303 state-attribution ratio derived from jurisdiction_scope.
@@ -1103,6 +1200,8 @@ def inject_derived_state_attribution_facts(
     if scope is None:
         raise ProfileBindingResolutionError(
             "tax_residence.jurisdiction_scope is required; state attribution cannot default to common regime",
+            translated_message="application.modelo.errors.profile_jurisdiction_scope_required",
+            precondition_verdict=profile_fact_absent_verdict("tax_residence.jurisdiction_scope"),
         )
     try:
         fact_index[synthetic_key] = m303_tax_territory_state_attribution_ratio(
@@ -1113,4 +1212,9 @@ def inject_derived_state_attribution_facts(
     except RegistryValidationError as exc:
         raise ProfileBindingResolutionError(
             f"unsupported tax_residence.jurisdiction_scope {scope!r}; state attribution is unresolved",
+            translated_message="application.modelo.errors.profile_jurisdiction_scope_unsupported",
+            context={"scope": str(scope)},
+            precondition_verdict=profile_fact_value_refused_verdict(
+                "jurisdiction_scope", {"field": "tax_residence.jurisdiction_scope"}
+            ),
         ) from exc

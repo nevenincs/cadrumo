@@ -2,7 +2,10 @@
 
 The vocabulary and the Modelo 100 casilla each concept feeds live in one mapping
 fact, so a ledger row, the aggregation and the export read one owner. A concept
-that capitalises (an improvement) is marked as such and is never an expense.
+that capitalises (an improvement) is marked as such and is never an expense. A
+concept whose deduction the law limits to the property's gross income (LIRPF
+art. 23.1.a.1.º: financing interest and repair and conservation) is marked as
+limited, so the limit reads the vocabulary rather than a list of boxes.
 """
 
 from __future__ import annotations
@@ -20,6 +23,7 @@ from .schema_base import DateAxis
 _FACT_ID = "renta-capital-inmobiliario-gasto-concept-vocabulary"
 _ORDER_KEY = "concept_order"
 _TREATMENT_EXPENSE = "expense"
+_TREATMENT_LIMITED = "expense_limited"
 _TREATMENT_CAPITALISED = "capitalised"
 
 
@@ -30,6 +34,8 @@ class GastoCapitalInmobiliarioConcept:
     token: GastoCapitalInmobiliario
     casilla_id: str
     capitalised: bool
+    limited: bool = False
+    """Whether the deduction shares the art. 23.1.a.1.º limit of the property's gross income."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,7 +92,7 @@ def _resolve_catalogue(*, effective_date: date, authority: GovernedFactSource) -
     concepts: list[GastoCapitalInmobiliarioConcept] = []
     for name in names:
         treatment = _entry_text(entries, f"concept.{name}.treatment")
-        if treatment not in {_TREATMENT_EXPENSE, _TREATMENT_CAPITALISED}:
+        if treatment not in {_TREATMENT_EXPENSE, _TREATMENT_LIMITED, _TREATMENT_CAPITALISED}:
             raise RegistryValidationError(
                 f"rental-expense concept {name!r} declares unknown treatment {treatment!r}",
             )
@@ -95,6 +101,7 @@ def _resolve_catalogue(*, effective_date: date, authority: GovernedFactSource) -
                 token=GastoCapitalInmobiliario.from_registry(name),
                 casilla_id=_entry_text(entries, f"concept.{name}.casilla"),
                 capitalised=treatment == _TREATMENT_CAPITALISED,
+                limited=treatment == _TREATMENT_LIMITED,
             ),
         )
     return GastoCapitalInmobiliarioCatalogue(concepts=tuple(concepts))

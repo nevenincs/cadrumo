@@ -45,6 +45,7 @@ from ....domain.calculations.registry.applicability_models import ApplicabilityV
 from ....domain.calculations.registry.applicability_routes import TaxRoute
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import (
     M303RegimeComposition,
@@ -195,12 +196,12 @@ def test_core_personas_route_to_expected_modelo_verdicts() -> None:
         ("sl-m100", _sociedad_limitada, "100", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m130", _sociedad_limitada, "130", ApplicabilityVerdict.NOT_APPLICABLE, False, None),
         ("sl-m200", _sociedad_limitada, "200", ApplicabilityVerdict.APPLICABLE, True, None),
-        ("sl-m202", _sociedad_limitada, "202", ApplicabilityVerdict.APPLICABLE, True, None),
+        ("sl-m202", _sociedad_limitada, "202", ApplicabilityVerdict.INCOMPLETE, False, "cifra de negocios"),
         ("sl-m303", _sociedad_limitada, "303", ApplicabilityVerdict.APPLICABLE, True, None),
     )
 
     for case_id, profile_factory, modelo, expected_verdict, expected_applicable, reason_fragment in cases:
-        result = derive_modelo_applicability(profile_factory(), modelo)
+        result = derive_modelo_applicability(profile_factory(), modelo, reference_date=latest_period_end())
         assert result.verdict is expected_verdict, case_id
         assert result.applicable is expected_applicable, case_id
         if expected_applicable:
@@ -229,7 +230,7 @@ def test_undeclared_profile_yields_incomplete_for_every_modelo() -> None:
 
     profile = _undeclared()
     for modelo in ("100", "130", "303", "200", "202"):
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
         assert result.applicable is False
         assert "tipo de contribuyente" in result.reason
@@ -253,7 +254,7 @@ def test_natural_person_without_income_categories_is_incomplete() -> None:
         iva_regime=IVARegime("GENERAL"),
     )
     assert taxpayer_model_is_declared(profile) is False
-    result = derive_modelo_applicability(profile, "130")
+    result = derive_modelo_applicability(profile, "130", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
 
 
@@ -282,7 +283,9 @@ def test_modelo_without_seed_rule_is_incomplete(authority_operation: PinnedAutho
     than a confident guess.
     """
 
-    result = derive_modelo_applicability(calendar_autonomo(), _an_unruled_modelo(authority_operation))
+    result = derive_modelo_applicability(
+        calendar_autonomo(), _an_unruled_modelo(authority_operation), reference_date=latest_period_end()
+    )
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
 
@@ -301,7 +304,9 @@ def test_unruled_modelo_on_declared_profile_uses_unruled_reason(authority_operat
     profile = _landlord()
     assert taxpayer_model_is_declared(profile) is True
 
-    result = derive_modelo_applicability(profile, _an_unruled_modelo(authority_operation))
+    result = derive_modelo_applicability(
+        profile, _an_unruled_modelo(authority_operation), reference_date=latest_period_end()
+    )
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
     # The un-ruled rationale must NOT tell a declared operator to
@@ -316,8 +321,8 @@ def test_unruled_modelo_on_declared_profile_uses_unruled_reason(authority_operat
 def test_unruled_modelo_reason_differs_from_undeclared_reason() -> None:
     """The two INCOMPLETE causes carry structurally distinct prose."""
 
-    unruled = derive_modelo_applicability(calendar_autonomo(), "232")
-    undeclared = derive_modelo_applicability(_undeclared(), "100")
+    unruled = derive_modelo_applicability(calendar_autonomo(), "232", reference_date=latest_period_end())
+    undeclared = derive_modelo_applicability(_undeclared(), "100", reference_date=latest_period_end())
     assert unruled.reason != undeclared.reason
 
 
@@ -327,7 +332,7 @@ def test_undeclared_profile_still_uses_undeclared_reason() -> None:
     itself is incomplete. The rationale is prose only: the remedy command
     travels as a typed recovery precondition, never inside the reason."""
 
-    result = derive_modelo_applicability(_undeclared(), "100")
+    result = derive_modelo_applicability(_undeclared(), "100", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "tipo de contribuyente" in result.reason
     assert "config profile edit" not in result.reason
@@ -347,9 +352,9 @@ def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:
         entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("GENERAL"),
     )
-    result = derive_modelo_applicability(profile, "130")
+    result = derive_modelo_applicability(profile, "130", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
-    assert result.reason == derive_modelo_applicability(_undeclared(), "100").reason
+    assert result.reason == derive_modelo_applicability(_undeclared(), "100", reference_date=latest_period_end()).reason
     # Same failed condition, but the entity type IS declared: the fact that
     # distinguishes this case from a fully undeclared profile survives.
     assert result.failure == RegistryFailureClassification(
@@ -372,7 +377,7 @@ def test_attribution_entity_cuota_modelos_are_pass_through() -> None:
 
     profile = _attribution_entity()
     for modelo in ("100", "130", "200", "202"):
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH, modelo
         # A pass-through verdict is not an applicable obligation.
         assert result.applicable is False, modelo
@@ -383,7 +388,7 @@ def test_attribution_entity_pass_through_reason_is_honest() -> None:
     own and the income is taxed in the members' returns — not a generic
     'modelo does not apply' line."""
 
-    result = derive_modelo_applicability(_attribution_entity(), "200")
+    result = derive_modelo_applicability(_attribution_entity(), "200", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH
     assert "atribución de rentas" in result.reason
     assert "cada miembro" in result.reason
@@ -397,7 +402,7 @@ def test_attribution_entity_owes_modelo_184() -> None:
     the attribution entity's OWN obligation — applicable, not a
     pass-through (corporate-entity contract §2)."""
 
-    result = derive_modelo_applicability(_attribution_entity(), "184")
+    result = derive_modelo_applicability(_attribution_entity(), "184", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
     assert result.applicable is True
     assert result.legal_refs
@@ -407,7 +412,7 @@ def test_non_attribution_entities_do_not_owe_modelo_184() -> None:
     """Modelo 184 is the attribution entity's own obligation only."""
 
     for case_id, profile_factory in (("natural-person", _landlord), ("legal-entity", _sociedad_limitada)):
-        result = derive_modelo_applicability(profile_factory(), "184")
+        result = derive_modelo_applicability(profile_factory(), "184", reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, case_id
         assert result.applicable is False, case_id
 
@@ -416,7 +421,7 @@ def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
     """The Modelo 100 pass-through rationale for an attribution entity
     must not mislabel it a persona física or an entidad jurídica."""
 
-    result = derive_modelo_applicability(_attribution_entity(), "100")
+    result = derive_modelo_applicability(_attribution_entity(), "100", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH
     assert "persona física" not in result.reason
     assert "entidad jurídica" not in result.reason
@@ -532,7 +537,7 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
     )
 
     for case_id, profile, modelo, expected_verdict, expected_applicable in cases:
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
         assert result.verdict is expected_verdict, case_id
         assert result.applicable is expected_applicable, case_id
 
@@ -554,7 +559,7 @@ def test_modelo_390_follows_iva_subject_activity_gate() -> None:
     """Modelo 390 follows the annual IVA-summary gate for each core persona."""
 
     for case_id, profile_factory, expected_verdict, expected_applicable in _MODELO_390_CASES:
-        result = derive_modelo_applicability(profile_factory(), "390")
+        result = derive_modelo_applicability(profile_factory(), "390", reference_date=latest_period_end())
         assert result.verdict is expected_verdict, case_id
         assert result.applicable is expected_applicable, case_id
 
@@ -564,8 +569,8 @@ def test_modelo_390_tracks_modelo_303_verdict() -> None:
     the same applicability gate for every core persona."""
 
     for profile in (_landlord(), _salaried_only(), calendar_autonomo(), _sociedad_limitada(), _attribution_entity()):
-        m303 = derive_modelo_applicability(profile, "303")
-        m390 = derive_modelo_applicability(profile, "390")
+        m303 = derive_modelo_applicability(profile, "303", reference_date=latest_period_end())
+        m390 = derive_modelo_applicability(profile, "390", reference_date=latest_period_end())
         assert m303.verdict is m390.verdict, profile.tax_id
 
 
@@ -643,7 +648,7 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
     )
 
     for case_id, profile, modelo, expected_legal_refs in cases:
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.APPLICABLE, case_id
         assert result.applicable is True, case_id
         if expected_legal_refs is not None:
@@ -668,7 +673,7 @@ def test_modelo_111_incomplete_when_payer_fact_not_declared() -> None:
     """When the taxpayer has not answered whether they pay withheld
     income, Modelo 111 is INCOMPLETE: an unanswered question is not a no."""
 
-    result = derive_modelo_applicability(_autonomo_unanswered_payer_facts(), "111")
+    result = derive_modelo_applicability(_autonomo_unanswered_payer_facts(), "111", reference_date=latest_period_end())
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "depende de un hecho que el perfil no expresa con certeza" in result.reason
     # The undetermined rationale must not tell a declared operator to
@@ -692,12 +697,18 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
         has_employees=True,
     )
     attribution_paying = _attribution_entity().model_copy(update={"has_employees": True})
-    assert derive_modelo_applicability(paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(attribution_paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(_autonomo_unanswered_payer_facts(), "190").verdict is (
+    assert derive_modelo_applicability(paying, "190", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.APPLICABLE
+    )
+    assert derive_modelo_applicability(attribution_paying, "190", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.APPLICABLE
+    )
+    assert derive_modelo_applicability(
+        _autonomo_unanswered_payer_facts(), "190", reference_date=latest_period_end()
+    ).verdict is (ApplicabilityVerdict.INCOMPLETE)
+    assert derive_modelo_applicability(_attribution_entity(), "190", reference_date=latest_period_end()).verdict is (
         ApplicabilityVerdict.INCOMPLETE
     )
-    assert derive_modelo_applicability(_attribution_entity(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
 
 
 def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared() -> None:
@@ -709,7 +720,7 @@ def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared() -> 
         update={"third_party_transactions_above_347_threshold": None},
     )
     for modelo in ("115", "123", "349", "347"):
-        result = derive_modelo_applicability(undeclared, modelo)
+        result = derive_modelo_applicability(undeclared, modelo, reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
 
 
@@ -719,7 +730,7 @@ def test_a_stated_no_to_each_payer_question_makes_its_modelos_not_applicable() -
 
     stated_no = calendar_autonomo()
     for modelo in ("111", "190", "115", "349"):
-        result = derive_modelo_applicability(stated_no, modelo)
+        result = derive_modelo_applicability(stated_no, modelo, reference_date=latest_period_end())
         assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
 
 
@@ -729,9 +740,15 @@ def test_one_stated_no_does_not_settle_a_withholding_fact_with_an_unanswered_hal
 
     base = _autonomo_unanswered_payer_facts()
     half_answered = base.model_copy(update={"has_employees": False})
-    assert derive_modelo_applicability(half_answered, "111").verdict is ApplicabilityVerdict.INCOMPLETE
+    assert (
+        derive_modelo_applicability(half_answered, "111", reference_date=latest_period_end()).verdict
+        is ApplicabilityVerdict.INCOMPLETE
+    )
     professionals = half_answered.model_copy(update={"pays_professionals_with_retencion": True})
-    assert derive_modelo_applicability(professionals, "111").verdict is ApplicabilityVerdict.APPLICABLE
+    assert (
+        derive_modelo_applicability(professionals, "111", reference_date=latest_period_end()).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
 
 
 def test_a_stated_yes_to_each_payer_question_makes_its_modelos_applicable() -> None:
@@ -742,7 +759,9 @@ def test_a_stated_yes_to_each_payer_question_makes_its_modelos_applicable() -> N
         ("349", "does_intracomunitario"),
         ("111", "has_employees"),
     ):
-        result = derive_modelo_applicability(calendar_autonomo().model_copy(update={fact: True}), modelo)
+        result = derive_modelo_applicability(
+            calendar_autonomo().model_copy(update={fact: True}), modelo, reference_date=latest_period_end()
+        )
         assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
 
 
@@ -757,10 +776,16 @@ def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
         iva_regime=IVARegime("GENERAL"),
         pays_rent_with_retencion=True,
     )
-    assert derive_modelo_applicability(paying, "180").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(_sociedad_limitada(), "180").verdict is (ApplicabilityVerdict.INCOMPLETE)
+    assert derive_modelo_applicability(paying, "180", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.APPLICABLE
+    )
+    assert derive_modelo_applicability(_sociedad_limitada(), "180", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.INCOMPLETE
+    )
     stated_no = _sociedad_limitada().model_copy(update={"pays_rent_with_retencion": False})
-    assert derive_modelo_applicability(stated_no, "180").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
+    assert derive_modelo_applicability(stated_no, "180", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.NOT_APPLICABLE
+    )
 
 
 def test_attribution_entity_with_required_fact_owes_fact_gated_modelos() -> None:
@@ -784,7 +809,7 @@ def test_attribution_entity_with_required_fact_owes_fact_gated_modelos() -> None
     for modelo, payer_fact_update in cases:
         profile = _attribution_entity().model_copy(update=payer_fact_update)
 
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
 
         assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
 
@@ -793,7 +818,7 @@ def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_m
     """Undeclared payer/trade facts stay INCOMPLETE for attribution entities."""
 
     for modelo in ("115", "180", "123", "349", "347"):
-        result = derive_modelo_applicability(_attribution_entity(), modelo)
+        result = derive_modelo_applicability(_attribution_entity(), modelo, reference_date=latest_period_end())
 
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
 
@@ -802,9 +827,9 @@ def test_undetermined_reason_distinct_from_undeclared_and_unruled() -> None:
     """The payer-fact INCOMPLETE rationale is structurally distinct from
     both the undeclared-taxpayer and the un-ruled-modelo rationales."""
 
-    undetermined = derive_modelo_applicability(calendar_autonomo(), "111")
-    undeclared = derive_modelo_applicability(_undeclared(), "100")
-    unruled = derive_modelo_applicability(calendar_autonomo(), "232")
+    undetermined = derive_modelo_applicability(calendar_autonomo(), "111", reference_date=latest_period_end())
+    undeclared = derive_modelo_applicability(_undeclared(), "100", reference_date=latest_period_end())
+    unruled = derive_modelo_applicability(calendar_autonomo(), "232", reference_date=latest_period_end())
 
     assert undetermined.reason != undeclared.reason
     assert undetermined.reason != unruled.reason
@@ -833,7 +858,7 @@ def test_seed_legal_refs_resolve_against_the_registry(authority_operation: Pinne
         (calendar_autonomo(), "232"),
         (_attribution_entity(), "200"),
     ):
-        seed_refs.update(derive_modelo_applicability(profile, modelo).legal_refs)
+        seed_refs.update(derive_modelo_applicability(profile, modelo, reference_date=latest_period_end()).legal_refs)
     for rule in iter_modelo_applicability_rules():
         seed_refs.update(rule.legal_refs)
     assert seed_refs, "seed table carries no legal_refs"
