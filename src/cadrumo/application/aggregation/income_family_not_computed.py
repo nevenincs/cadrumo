@@ -163,7 +163,7 @@ def income_family_entry_digests_after_edit(
     """
     held = {family for family, casillas in family_casilla_ids.items() if casillas & entered_casilla_ids}
     refreshed = frozenset(family for family in held if family_casilla_ids[family] & set_casilla_ids)
-    fresh: Mapping[str, str] = current_digests(refreshed) if refreshed else {}
+    fresh: Mapping[str, str] = current_digests(refreshed) if refreshed else dict[str, str]()
     return {
         family: fresh[family] if family in refreshed else previous[family]
         for family in sorted(held)
