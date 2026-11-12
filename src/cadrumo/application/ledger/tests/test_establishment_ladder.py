@@ -39,6 +39,7 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import resolve_iva_classification_catalogue
@@ -73,6 +74,8 @@ from ..invoice_draft_records import InvoiceDraft, InvoiceDraftLine, InvoiceDraft
 from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..regime_contradiction import draft_prints_a_repercutido_line
 from .counterparty_establishment_support import InMemoryCounterpartyEstablishmentRepository
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than `from .. import`: the ledger package facade is
@@ -126,6 +129,7 @@ def _resolve(
         repository=repository,
         legends=_registry_legends(operation),
         operation=operation,
+        on_date=_ON_DATE,
     )
 
 
@@ -173,7 +177,10 @@ def test_spain_named_is_the_postal_trigger_not_an_exhausted_rung(
     the trigger is proven to survive it.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
+        assert (
+            territorial_scope_for_country("ES", operation=_authority_operation_for_test, effective_date=_ON_DATE)
+            is None
+        )
 
         resolved = _resolve(repository, country_name="España", postal_code=_MADRID, operation=operation)
 
@@ -197,7 +204,7 @@ def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
         assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
         skipped_rung_answer = territorial_scope_for_spanish_postal_code(
-            _MARSEILLE, operation=_authority_operation_for_test
+            _MARSEILLE, operation=_authority_operation_for_test, effective_date=_ON_DATE
         )
         assert skipped_rung_answer == IvaTerritorialScope.from_registry("es_mainland")
         assert skipped_rung_answer is not resolved.scope
@@ -218,7 +225,7 @@ def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
 
         assert resolved.scope == IvaTerritorialScope.from_registry("eu_member")
         assert territorial_scope_for_spanish_postal_code(
-            _CEUTA, operation=_authority_operation_for_test
+            _CEUTA, operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("es_ceuta_melilla")
 
 
@@ -252,7 +259,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
         assert resolved.rung is None
 
         lower_rung_answer = territorial_scope_for_spanish_postal_code(
-            _LAS_PALMAS, operation=_authority_operation_for_test
+            _LAS_PALMAS, operation=_authority_operation_for_test, effective_date=_ON_DATE
         )
         assert lower_rung_answer == IvaTerritorialScope.from_registry("es_canarias")
         assert resolved.scope is not lower_rung_answer
@@ -641,6 +648,7 @@ class TestDraftRouting:
             draft = InvoiceDraft(
                 supplier_tax_id=_GERMAN_IVA,
                 customer_tax_id=_SPANISH_CIF,
+                invoice_date=_ON_DATE.isoformat(),
             )
 
             resolved = resolve_draft_counterparty_establishment(
@@ -667,6 +675,7 @@ class TestDraftRouting:
             draft = InvoiceDraft(
                 supplier_tax_id=_GERMAN_IVA,
                 customer_tax_id=_SPANISH_CIF,
+                invoice_date=_ON_DATE.isoformat(),
             )
 
             resolved = resolve_draft_counterparty_establishment(
@@ -697,7 +706,7 @@ class TestDraftRouting:
         customer if set, otherwise the supplier" resolved every issued document
         to the supplier -- who, on a document the filer issued, IS the filer.
         """
-        draft = InvoiceDraft(supplier_tax_id=_SPANISH_CIF)
+        draft = InvoiceDraft(supplier_tax_id=_SPANISH_CIF, invoice_date=_ON_DATE.isoformat())
 
         side = counterparty_draft_side(draft, kind=InvoiceKind.ISSUED)
 
@@ -716,6 +725,7 @@ class TestDraftRouting:
         draft = InvoiceDraft(
             supplier_postal_code=_LAS_PALMAS,
             customer_postal_code=_MADRID,
+            invoice_date=_ON_DATE.isoformat(),
         )
 
         assert counterparty_draft_side(draft, kind=InvoiceKind.ISSUED).postal_code == _MADRID
@@ -748,7 +758,9 @@ class TestRungReachabilityFromADraft:
     ) -> None:
         """The rung the read path's country field exists to feed now fires from a draft."""
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            draft = InvoiceDraft(supplier_country="Alemania", supplier_postal_code=_BERLIN)
+            draft = InvoiceDraft(
+                supplier_country="Alemania", supplier_postal_code=_BERLIN, invoice_date=_ON_DATE.isoformat()
+            )
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
@@ -777,6 +789,7 @@ class TestRungReachabilityFromADraft:
                 supplier_tax_id=_SPANISH_CIF,
                 supplier_country="España",
                 supplier_postal_code=_LAS_PALMAS,
+                invoice_date=_ON_DATE.isoformat(),
             )
 
             resolved = resolve_draft_counterparty_establishment(
@@ -793,7 +806,7 @@ class TestRungReachabilityFromADraft:
 
     def test_the_side_selector_carries_each_party_country_to_its_own_rung(self) -> None:
         """The country follows the direction selection, or the rung reads the wrong party's."""
-        draft = InvoiceDraft(supplier_country="España", customer_country="France")
+        draft = InvoiceDraft(supplier_country="España", customer_country="France", invoice_date=_ON_DATE.isoformat())
 
         assert counterparty_draft_side(draft, kind=InvoiceKind.ISSUED).country == "France"
         assert counterparty_draft_side(draft, kind=InvoiceKind.RECEIVED).country == "España"
@@ -810,7 +823,9 @@ class TestRungReachabilityFromADraft:
         prints no country still states none.
         """
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            draft = InvoiceDraft(supplier_tax_id=_SPANISH_CIF, supplier_postal_code=_LAS_PALMAS)
+            draft = InvoiceDraft(
+                supplier_tax_id=_SPANISH_CIF, supplier_postal_code=_LAS_PALMAS, invoice_date=_ON_DATE.isoformat()
+            )
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
@@ -824,7 +839,7 @@ class TestRungReachabilityFromADraft:
             assert resolved.scope is None
             assert resolved.rung is None
             assert territorial_scope_for_spanish_postal_code(
-                _LAS_PALMAS, operation=_authority_operation_for_test
+                _LAS_PALMAS, operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("es_canarias")
 
 
@@ -847,6 +862,7 @@ _FLAT_RATE_DRAFT = InvoiceDraft(
     iva_rate=Decimal("21"),
     iva_amount=Decimal("210.00"),
     grand_total=Decimal("1210.00"),
+    invoice_date=_ON_DATE.isoformat(),
 )
 
 
@@ -863,8 +879,10 @@ def test_the_model_read_lanes_only_rate_carrier_is_collected() -> None:
     "draft",
     [
         _FLAT_RATE_DRAFT,
-        InvoiceDraft(lines=(InvoiceDraftLine(iva_rate=Decimal("21")),)),
-        InvoiceDraft(iva_breakdown=(InvoiceDraftRateBreakdown(iva_rate=Decimal("21")),)),
+        InvoiceDraft(lines=(InvoiceDraftLine(iva_rate=Decimal("21")),), invoice_date=_ON_DATE.isoformat()),
+        InvoiceDraft(
+            iva_breakdown=(InvoiceDraftRateBreakdown(iva_rate=Decimal("21")),), invoice_date=_ON_DATE.isoformat()
+        ),
     ],
     ids=["flat-model-read", "lines-structured", "subtotals-structured"],
 )
@@ -894,7 +912,7 @@ def test_the_collected_flat_rate_reaches_the_spanish_registry_lookup() -> None:
 
 def test_a_draft_charging_nothing_still_reports_no_rate() -> None:
     """The precision half: an exempt or reverse-charge draft states no rate."""
-    assert charged_iva_rates(InvoiceDraft(taxable_base=Decimal("1000.00"))) == ()
+    assert charged_iva_rates(InvoiceDraft(taxable_base=Decimal("1000.00"), invoice_date=_ON_DATE.isoformat())) == ()
 
 
 def test_reading_the_flat_carrier_is_what_makes_the_lane_visible() -> None:

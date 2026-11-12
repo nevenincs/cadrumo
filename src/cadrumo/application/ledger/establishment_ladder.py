@@ -366,6 +366,7 @@ def _spain_indicating(
     country_code: str | None,
     postal_code: str | None,
     spanish_iva_charged: bool,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
     """Return every signal placing this party in Spain, in operator-facing words.
@@ -377,7 +378,10 @@ def _spain_indicating(
     signals: list[str] = []
     if names_spain(country_code):
         signals.append("the printed address country names Spain")
-        if territorial_scope_for_spanish_postal_code(postal_code, operation=operation) is not None:
+        if (
+            territorial_scope_for_spanish_postal_code(postal_code, effective_date=effective_date, operation=operation)
+            is not None
+        ):
             signals.append("the printed postal code resolves to a Spanish IVA territory")
     if spanish_iva_charged:
         signals.append("the document charges IVA at a Spanish registry rate")
@@ -529,7 +533,12 @@ def printed_evidence(
 
     The printed IVA number appears here only as the thing that must be
     CORROBORATED. It settles no territory by itself at any point in this walk.
+
+    The territorial vocabulary is read on ``on_date``. With no date the walk
+    exhausts without a territory, and the missing date is the gap to ask for.
     """
+    if on_date is None:
+        return None, None, None
     identification = identification_state_for_printed_tax_identifier(tax_identifier, operation=operation)
     spanish_iva_charged = spanish_iva_was_charged(
         charged_iva_rates,
@@ -551,6 +560,7 @@ def printed_evidence(
             country_code=country_code,
             postal_code=postal_code,
             spanish_iva_charged=spanish_iva_charged,
+            effective_date=on_date,
             operation=operation,
         )
         if indicating:
@@ -570,7 +580,7 @@ def printed_evidence(
                 ),
             )
 
-    from_country = territorial_scope_for_country(country_code, operation=operation)
+    from_country = territorial_scope_for_country(country_code, effective_date=on_date, operation=operation)
     if from_country is not None:
         return from_country, EstablishmentRung.ADDRESS_COUNTRY, None
 
@@ -579,7 +589,9 @@ def printed_evidence(
     # stays undetermined. That refusal is the postal rung's trigger, so the CODE
     # is tested rather than the scope the code produced.
     if names_spain(country_code):
-        from_postal = territorial_scope_for_spanish_postal_code(postal_code, operation=operation)
+        from_postal = territorial_scope_for_spanish_postal_code(
+            postal_code, effective_date=on_date, operation=operation
+        )
         if from_postal is not None:
             return from_postal, EstablishmentRung.SPANISH_POSTAL_CODE, None
 
@@ -597,7 +609,9 @@ def printed_evidence(
         # carries an IVA prefix without being an ISO jurisdiction the catalogue
         # resolves, and a registration whose territory cannot be named is one
         # this walk cannot corroborate into a scope.
-        concordant = territorial_scope_for_country(identification.value.upper(), operation=operation)
+        concordant = territorial_scope_for_country(
+            identification.value.upper(), effective_date=on_date, operation=operation
+        )
         if concordant is not None:
             return concordant, EstablishmentRung.CONCORDANT_REGISTRATION, None
 
@@ -607,6 +621,7 @@ def printed_evidence(
 def scope_printed_evidence_would_establish(
     *,
     legends: tuple[RegimeLegend, ...],
+    effective_date: date,
     operation: PinnedAuthorityOperation,
     tax_identifier: str | None = None,
     stated_country_name: str | None = None,
@@ -651,6 +666,7 @@ def scope_printed_evidence_would_establish(
         postal_code: The party's printed postal code.
         legends: The dated registry declarations selected by the enclosing
             pinned authority operation.
+        effective_date: The date whose territorial vocabulary the rungs read.
         operation: The caller-owned pinned authority operation used for every
             country, territory, identification, and rate lookup.
 
@@ -667,6 +683,7 @@ def scope_printed_evidence_would_establish(
         postal_code=postal_code,
         legends=legends,
         operation=operation,
+        on_date=effective_date,
     )
     return scope
 

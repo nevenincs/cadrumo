@@ -26,12 +26,17 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..establishment import territorial_scope_for_country, territorial_scope_for_spanish_postal_code
 from ..schema import IvaTerritorialScope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,21 +52,21 @@ class TestTheExcludedTerritoriesAreRecognised:
     def test_a_canarian_code_resolves_outside_the_tai(self, printed: str) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_spanish_postal_code(
-                printed, operation=_authority_operation_for_test
+                printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("es_canarias")
 
     @pytest.mark.parametrize("printed", ["51001", "51002"])
     def test_a_ceuta_code_resolves_outside_the_tai(self, printed: str) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_spanish_postal_code(
-                printed, operation=_authority_operation_for_test
+                printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("es_ceuta_melilla")
 
     @pytest.mark.parametrize("printed", ["52001", "52006"])
     def test_a_melilla_code_resolves_outside_the_tai(self, printed: str) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_spanish_postal_code(
-                printed, operation=_authority_operation_for_test
+                printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("es_ceuta_melilla")
 
     def test_every_excluded_prefix_comes_from_the_registry(self) -> None:
@@ -87,7 +92,7 @@ class TestTheExcludedTerritoriesAreRecognised:
                 for prefix in record["postal_prefixes"]:
                     assert (
                         territorial_scope_for_spanish_postal_code(
-                            f"{prefix}001", operation=_authority_operation_for_test
+                            f"{prefix}001", operation=_authority_operation_for_test, effective_date=_ON_DATE
                         )
                         == expected
                     ), prefix
@@ -104,7 +109,12 @@ class TestTheMainlandIsNeverInvented:
     )
     def test_absent_or_malformed_evidence_resolves_to_nothing(self, printed: str | None) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            assert territorial_scope_for_spanish_postal_code(printed, operation=_authority_operation_for_test) is None
+            assert (
+                territorial_scope_for_spanish_postal_code(
+                    printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
+                )
+                is None
+            )
 
     def test_no_unreadable_input_produces_a_territory(self) -> None:
         """The property over the whole unreadable space, not a sample."""
@@ -112,7 +122,9 @@ class TestTheMainlandIsNeverInvented:
             unreadable: list[str | None] = [None, "", " ", "1", "12", "123", "1234", "123456", "1a345", "  28001  x"]
 
             assert {
-                territorial_scope_for_spanish_postal_code(probe, operation=_authority_operation_for_test)
+                territorial_scope_for_spanish_postal_code(
+                    probe, operation=_authority_operation_for_test, effective_date=_ON_DATE
+                )
                 for probe in unreadable
             } == {None}
 
@@ -124,7 +136,7 @@ class TestAWellFormedCodeOutsideTheExclusionsIsTheMainland:
     def test_a_peninsular_or_balearic_code_resolves_to_the_mainland(self, printed: str) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_spanish_postal_code(
-                printed, operation=_authority_operation_for_test
+                printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("es_mainland")
 
     def test_the_balearics_are_inside_the_tai(self) -> None:
@@ -136,7 +148,7 @@ class TestAWellFormedCodeOutsideTheExclusionsIsTheMainland:
         """
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_spanish_postal_code(
-                "07001", operation=_authority_operation_for_test
+                "07001", operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("es_mainland")
 
 
@@ -146,11 +158,17 @@ class TestTheTwoAxesComposeWithoutOverlapping:
     def test_the_country_axis_still_refuses_a_spanish_code(self) -> None:
         """If this ever answers, the two axes have started competing."""
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
+            assert (
+                territorial_scope_for_country("ES", operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
+            )
 
     def test_the_postal_axis_answers_what_the_country_axis_would_not(self) -> None:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
-            assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
+            assert (
+                territorial_scope_for_country("ES", operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
+            )
             assert territorial_scope_for_spanish_postal_code(
-                "35001", operation=_authority_operation_for_test
+                "35001", operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("es_canarias")

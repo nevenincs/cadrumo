@@ -90,19 +90,21 @@ def review_advisory_kinds(
             bundled table is a defect, not an unadvised draft.
     """
     kinds: list[ReviewAdvisoryKind] = []
+    review_date = default_invoice_extraction_period().end_date
     if (
         party_attribution_advisory(
             draft,
             legends=resolve_regime_legends(
                 operation=operation,
-                effective_date=default_invoice_extraction_period().end_date,
+                effective_date=review_date,
             ),
+            effective_date=review_date,
             operation=operation,
         )
         is not None
     ):
         kinds.append(ReviewAdvisoryKind.PARTY_ATTRIBUTION)
-    country = country_vocabulary_advisory(draft, operation=operation)
+    country = country_vocabulary_advisory(draft, effective_date=review_date, operation=operation)
     if country is not None:
         # Ordered by the status table rather than by the parties' document order:
         # a queue row whose kinds reorder because two parties swapped places is a

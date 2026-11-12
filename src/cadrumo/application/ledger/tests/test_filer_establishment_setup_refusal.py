@@ -29,9 +29,12 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.operator_action_enums import NoRecoveryOutcome
@@ -44,6 +47,8 @@ from ..confirm_establishment import confirm_establishment_filer_scope
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
 from ..preconditions import LedgerPreconditionCondition
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -85,7 +90,9 @@ def test_a_declared_postcode_resolves_the_filers_own_territory(
     """The whole point of the fact: the operator side is answered without the paper."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
-            resolve_filer_territorial_scope(profile_record=_profile(postcode), operation=_authority_operation_for_test)
+            resolve_filer_territorial_scope(
+                profile_record=_profile(postcode), operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
             == expected
         )
 
@@ -114,7 +121,9 @@ def test_an_unresolvable_own_territory_refuses_rather_than_defaulting(postcode: 
         bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(PurchaseInvoiceEvidenceInputError),
     ):
-        resolve_filer_territorial_scope(profile_record=_profile(postcode), operation=_authority_operation_for_test)
+        resolve_filer_territorial_scope(
+            profile_record=_profile(postcode), operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
 
 
 def test_no_unresolvable_input_ever_returns_a_territory() -> None:
@@ -134,7 +143,9 @@ def test_no_unresolvable_input_ever_returns_a_territory() -> None:
                     (
                         postcode,
                         resolve_filer_territorial_scope(
-                            profile_record=_profile(postcode), operation=_authority_operation_for_test
+                            profile_record=_profile(postcode),
+                            operation=_authority_operation_for_test,
+                            effective_date=_ON_DATE,
                         ),
                     )
                 )
@@ -150,14 +161,18 @@ def test_a_missing_profile_refuses_rather_than_assuming_a_territory() -> None:
         bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(PurchaseInvoiceEvidenceInputError),
     ):
-        resolve_filer_territorial_scope(profile_record=None, operation=_authority_operation_for_test)
+        resolve_filer_territorial_scope(
+            profile_record=None, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
 
 
 def test_confirm_boundary_preserves_the_exact_profile_precondition_refusal() -> None:
     """Confirm does not flatten a profile precondition into review-item prose."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            confirm_establishment_filer_scope(_profile(None), operation=_authority_operation_for_test)
+            confirm_establishment_filer_scope(
+                _profile(None), operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
         verdict = raised.value.terminal_precondition_verdict
         assert verdict is not None
@@ -174,7 +189,9 @@ class TestTheRefusalIsActionable:
         """Naming the fact path is what makes the gap addressable rather than abstract."""
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
-                resolve_filer_territorial_scope(profile_record=_profile(None), operation=_authority_operation_for_test)
+                resolve_filer_territorial_scope(
+                    profile_record=_profile(None), operation=_authority_operation_for_test, effective_date=_ON_DATE
+                )
 
             assert FILER_POSTCODE_FACT_PATH in str(caught.value)
 
@@ -182,7 +199,9 @@ class TestTheRefusalIsActionable:
         """The recovery path travels with the refusal, not in documentation elsewhere."""
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
-                resolve_filer_territorial_scope(profile_record=_profile(None), operation=_authority_operation_for_test)
+                resolve_filer_territorial_scope(
+                    profile_record=_profile(None), operation=_authority_operation_for_test, effective_date=_ON_DATE
+                )
 
             assert caught.value.terminal_precondition_verdict is not None
             assert caught.value.terminal_precondition_verdict.failed_condition_id == (
@@ -200,7 +219,7 @@ class TestTheRefusalIsActionable:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
                 resolve_filer_territorial_scope(
-                    profile_record=_profile("Madrid"), operation=_authority_operation_for_test
+                    profile_record=_profile("Madrid"), operation=_authority_operation_for_test, effective_date=_ON_DATE
                 )
 
             assert "Madrid" in str(caught.value)
