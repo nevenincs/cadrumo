@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c1f17b8ec1b42701a16023426b4f5b2cc70de10c8922f271c0821616850d105'
+body_hash: 'sha256:31d5ed2363c459b932c9d613fa9d9caceb71bb2d581f6a1b572b54ea01661746'
 related:
   - "[[2026-11-11-renta-savings-income-source-adr]]"
   - "[[2026-11-01-export-parity-suffered-withholding-schemas-adr]]"
@@ -50,6 +50,7 @@ Modelo 100 has no source for the contributions behind the reduction for social-w
   - Bundling the official 2020 and 2021 Modelo 345 designs is a later CALCULATORS item. Those years are never mapped from later designs.
 - Spouse contributions (art. 51.7) and contributions to a disabled person's system (art. 53) are refused at record time in this slice, with served words saying why. Their boxes stay operator inputs until a later slice.
 - Condition of acceptance 1: with no certificate recorded for an ejercicio, the reduction is disclosed as a limitation and does not block (ruling 09:00), unless a stored fact shows that a contribution exists for that ejercicio: an employer contribution imputed on the work-income record, a ledger row classified as a social-welfare contribution, or a typed contribution box. Then a blocking not-computed finding reaches the user with the record door.
+  - Corrected 2026-11-12 18:02 by CADRUMO-PRIME (ADR acceptance log, 18:02 entry), because the literal wording left a refused clave with no way out: a typed contribution box is an operator value, disclosed with its provenance and never blocking. The blocking stored facts are an employer contribution imputed on the work-income record and a ledger row classified as a social-welfare contribution, where the ejercicio has neither a certificate record nor a typed box. A refused record blocks until the box is typed.
 - Condition of acceptance 2: a typed contribution box beside certificate records for the same box is an aggregation conflict, resolved only through the existing override door with provenance. A record never silently overrides an operator entry, nor the reverse.
 - When a clave B or C record (employer contribution imputed to the worker) and the employer's work-income certificate disagree on the imputed amount, a structured finding reaches the user. Neither figure overrides the other.
 - Custody: one registered secure namespace, schema v1, encrypted; certificate bytes only through the existing evidence custody; nothing private in logs.
