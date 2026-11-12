@@ -19,7 +19,7 @@ const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
 
 const refusals = byName(
   import.meta.glob<LedgerErrorDetail>(
-    "@fixtures/modelo/refusal-project-quarter-incomplete-*.json",
+    "@fixtures/modelo/refusal-project-*.json",
     { import: "default" },
   ),
 );
@@ -29,6 +29,15 @@ const refusals = byName(
 async function incomplete(locale: OutputLanguage): Promise<LedgerErrorDetail> {
   const load = refusals[`refusal-project-quarter-incomplete-${locale}`];
   if (!load) throw new Error("No refusal is stored for the incomplete quarter");
+  return load();
+}
+
+/** The refusal the application recorded for the estimate of the filer with no
+ * work income stated, in `locale`. */
+async function unresolved(locale: OutputLanguage): Promise<LedgerErrorDetail> {
+  const load = refusals[`refusal-project-100-0A-projected-${locale}`];
+  if (!load)
+    throw new Error("No refusal is stored for the unresolved estimate");
   return load();
 }
 
@@ -180,27 +189,27 @@ export const RoutesToTheRegister: Story = {
 };
 
 export const EstimateUnresolved: Story = {
-  name: "Estimate: the credit and the totals that read it left without a figure",
+  name: "Estimate: no work income stated, refused naming the boxes it cannot work out",
   render: (_, { globals }) => (
     <Credits shape="renta-projected" locale={language(globals)} />
   ),
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, globals }) => {
     await ask(canvasElement);
-    await waitFor(
-      () =>
-        expect(
-          canvasElement.querySelector("[data-estimate-result]"),
-        ).not.toBeNull(),
+    const served = await unresolved(language(globals));
+    const status = await waitFor(
+      () => {
+        const found = canvasElement.querySelector(
+          "[data-estimate] [role=status]",
+        );
+        if (!found) throw new Error("the estimate has not answered yet");
+        return found;
+      },
       { timeout: 15_000 },
     );
-    expect(
-      canvasElement.querySelectorAll("[data-unresolved-credit]").length,
-    ).toBeGreaterThan(0);
-    expect(
-      canvasElement.querySelectorAll("[data-unresolved-box]").length,
-    ).toBeGreaterThan(0);
-    // No box without a figure is given one in the estimate.
-    expect(canvasElement.querySelector("[data-estimate-box]")).toBeNull();
+    // The application's sentence, naming the boxes; no step is served for it.
+    expect(status.textContent).toContain(served.refusal_words);
+    expect(canvasElement.querySelector("[data-estimate-step]")).toBeNull();
+    expect(canvasElement.querySelector("[data-estimate-result]")).toBeNull();
   },
 };
 
