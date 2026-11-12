@@ -4,8 +4,19 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from ...adapters.persistence.profile.tests.inventory_purchase_claim_support import (
+    YEAR,
+    ledger_row_of,
+    purchase_movement,
+)
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...application.bucket_event_repository import bucket_event_history_repository
+from ...application.inventory.registered_claim_candidates_operation import (
+    InventoryClaimCandidatesProjection,
+    InventoryClaimCandidatesRequest,
+)
 from ...application.inventory.registered_evidence_operation import (
     InventoryEvidenceAddProjection,
     InventoryEvidenceAddRequest,
@@ -30,6 +41,7 @@ from ...domain.contribuyente.inventory.closing_foundations import (
     PriorClosingContinuityEvidence,
 )
 from ...domain.filing_evidence import FilingEvidenceReference
+from ...domain.transactions.models import TransactionCatalogue
 from ..adapter_composition_ports import build_inventory_service_ports
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -91,6 +103,47 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
                 profile_id=context.profile_id, source_path=str(source), source_directory=str(context.input_root)
             ),
             verify=verify_evidence,
+        )
+
+    if definition_id == "ledger.inventory.movement.claim-candidates":
+        offered = ledger_row_of("conformance-equal")
+        TransactionCatalogueRepository(bucket_id=profile, objects=secure_object_repository_for_bucket(profile)).save(
+            TransactionCatalogue.from_transactions([offered, ledger_row_of("conformance-other", base=Decimal("1.00"))])
+        )
+        seeding = InventoryService(ports=build_inventory_service_ports(bucket_id=profile))
+        seeding.create(
+            bucket_id=profile,
+            actividad_id="inventory-claim-candidates",
+            year=YEAR,
+            valuation_method="fifo",
+            actor="conformance-seed",
+        )
+        seeding.movement_add(
+            bucket_id=profile,
+            actividad_id="inventory-claim-candidates",
+            year=YEAR,
+            movement=purchase_movement("conformance-purchase", claim=None),
+            actor="conformance-seed",
+        )
+        candidates_events_before = events.load()
+        candidates_before = repository.load()
+
+        def verify_candidates(outcome: ConformanceOutcome) -> None:
+            result = outcome.resolve_result(InventoryClaimCandidatesProjection)
+            assert result.outcome == "listed" and result.profile_id == context.profile_id
+            assert [item.transaction_id for item in result.candidates] == [offered.transaction_id]
+            assert repository.load() == candidates_before
+            assert events.load() == candidates_events_before
+
+        return ConformancePreparation(
+            subject,
+            InventoryClaimCandidatesRequest(
+                profile_id=context.profile_id,
+                actividad_id="inventory-claim-candidates",
+                year=YEAR,
+                movement_id="conformance-purchase",
+            ),
+            verify=verify_candidates,
         )
 
     assert definition_id == "ledger.inventory.closing-value.record"
@@ -157,6 +210,7 @@ INVENTORY_FACTS_CONFORMANCE_FAMILY = ConformanceFamily(
         RegisteredExecutorConformanceCase(definition_id, OperationTerminalCondition.SUCCEEDED, effect, (definition_id,))
         for definition_id, effect in (
             ("ledger.inventory.options", OperationEffect.NONE),
+            ("ledger.inventory.movement.claim-candidates", OperationEffect.NONE),
             ("ledger.inventory.evidence.add", OperationEffect.UPDATED),
             ("ledger.inventory.closing-value.record", OperationEffect.UPDATED),
         )

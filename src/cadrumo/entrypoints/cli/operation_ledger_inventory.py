@@ -16,6 +16,11 @@ from cadrumo_client.commands.registered_operation_contracts import RegisteredOpe
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from ...application.inventory.registered_claim_candidates_operation import (
+    INVENTORY_CLAIM_CANDIDATES_OPERATION_DEFINITION_ID,
+    InventoryClaimCandidatesProjection,
+    InventoryClaimCandidatesRequest,
+)
 from ...application.inventory.registered_evidence_operation import (
     INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
     InventoryEvidenceAddProjection,
@@ -76,6 +81,7 @@ from ...domain.contribuyente.inventory.corrections import (
     inventory_refusal_key,
 )
 from .ledger_business_payloads import (
+    InventoryClaimCandidatesResult,
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
     InventoryEvidenceAddResult,
@@ -448,6 +454,36 @@ def read_inventory_options(ctx: typer.Context, *, request: InventoryOptionsReque
     return InventoryOptionsResult.model_validate(completed.projection.model_dump(mode="json", exclude={"profile_id"}))
 
 
+def read_inventory_claim_candidates(
+    ctx: typer.Context, *, request: InventoryClaimCandidatesRequest
+) -> InventoryClaimCandidatesResult:
+    """Read the ledger transactions one purchase may claim through the exact profile worker."""
+    completed = run(
+        ctx,
+        request,
+        definition_id=INVENTORY_CLAIM_CANDIDATES_OPERATION_DEFINITION_ID,
+        result_type=InventoryClaimCandidatesProjection,
+        allow_refusal_detail=True,
+    )
+    projection = completed.projection
+    if projection.outcome == "refused":
+        if projection.refusal is None:
+            raise invalid_completion_error(completed)
+        _raise_registered_refusal(completed, projection.refusal)
+    if (
+        projection.profile_id != request.profile_id
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code is not None
+    ):
+        raise invalid_completion_error(completed)
+    return InventoryClaimCandidatesResult.model_validate(
+        _collapse_public_decimal_objects(
+            projection.model_dump(mode="json", exclude={"profile_id", "outcome", "refusal"})
+        )
+    )
+
+
 def add_inventory_evidence(ctx: typer.Context, *, request: InventoryEvidenceAddRequest) -> InventoryEvidenceAddResult:
     """Store one purchase document through the exact profile worker."""
     completed = run(
@@ -531,6 +567,7 @@ __all__ = [
     "inspect_inventory_ledger",
     "preview_inventory_valuation",
     "read_inventory_catalogue",
+    "read_inventory_claim_candidates",
     "read_inventory_options",
     "record_inventory_closing_authority",
     "record_inventory_closing_value",
