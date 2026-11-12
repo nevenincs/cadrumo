@@ -29,6 +29,7 @@ from ....core.i18n.render import tr
 from ....core.operations import TERMINAL_CONDITIONS_WITH_ERROR_DETAIL
 from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import BASE_CSS, tokenised
+from ..refusal.panel import RefusalSlot
 from .catalogue import OperationCatalogueEntryV1
 from .modal import (
     OperationModal,
@@ -36,7 +37,6 @@ from .modal import (
     OperationModalOutcomeV1,
     OperationModalSettledOutcomeV1,
 )
-from .refusal_explanation import public_refusal_explanation
 from .request_form import (
     RequestFieldV1,
     derived_subject,
@@ -47,7 +47,7 @@ from .request_form import (
     validate_request,
 )
 from .run_fields import field_label, field_widget
-from .run_result import receipt_text, result_is_readable, result_pages, stopped_operation_text
+from .run_result import receipt_text, result_is_readable, result_pages
 from .run_submission import submit_operation
 from .run_wording import failure_text, problem_text
 
@@ -149,7 +149,7 @@ class OperationRunScreen(Screen[None]):
                 yield Input(max_length=_REPLAY_KEY_MAX_LENGTH, id="operation-replay-key")
             yield Static("", id="operation-run-notice", markup=False)
             yield Static("", id="operation-result-receipt", markup=False)
-            yield Static("", id="operation-result-stopped", markup=False)
+            yield RefusalSlot(id="operation-result-stopped")
             yield Static("", id="operation-result-page", markup=False)
             yield Static("", id="operation-result-body", markup=False)
         with ItemGrid(id="operation-run-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
@@ -396,7 +396,7 @@ class OperationRunScreen(Screen[None]):
 
     def _clear_result(self) -> None:
         self._show_receipt("")
-        self.query_one("#operation-result-stopped", Static).update("")
+        self.query_one("#operation-result-stopped", RefusalSlot).show(None)
         self._settled_result = None
         self._pages = ()
         self._show_page(0)
@@ -417,11 +417,8 @@ class OperationRunScreen(Screen[None]):
     async def _show_result(self, controller: OperationController, outcome: OperationModalSettledOutcomeV1) -> None:
         projection = outcome.view_model.projection
         self._show_receipt(receipt_text(projection))
-        condition = projection.terminal_condition
-        if condition in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL:
-            stopped = stopped_operation_text(await controller.settled_error_detail(projection))
-            fallback = outcome.error_explanation or public_refusal_explanation(projection.refusal_ref) or ""
-            self.query_one("#operation-result-stopped", Static).update(stopped or fallback)
+        if projection.terminal_condition in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL:
+            self.query_one("#operation-result-stopped", RefusalSlot).show(outcome.refusal)
         readable = result_is_readable(projection)
         result_type = self._entry.result_type
         if not readable or result_type is None:

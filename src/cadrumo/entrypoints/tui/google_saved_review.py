@@ -350,7 +350,8 @@ class GoogleSavedReviewScreen(Screen[None]):
     async def _read_result(self, controller: OperationController, outcome: OperationModalSettledOutcomeV1) -> None:
         projection = outcome.view_model.projection
         if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-            self._notice(outcome.error_explanation or self._labels("google_review.notice.receipt_unavailable"))
+            sentence = None if outcome.refusal is None else outcome.refusal.sentence
+            self._notice(sentence or self._labels("google_review.notice.receipt_unavailable"))
             return
         try:
             self._require_session()

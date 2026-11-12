@@ -32,7 +32,7 @@ def operation_navigation_target(entry: OperationCatalogueEntryV1) -> TuiNavigati
     )
 
 
-def _offered_source(host: TuiSearchHostV1) -> OperationCatalogueSourceV1 | None:
+def offered_operation_source(host: TuiSearchHostV1) -> OperationCatalogueSourceV1 | None:
     """Return the catalogue door of the admitted Operations destination, when it is offered."""
     try:
         route = host.destination_catalogue.resolve(OPERATIONS_DESTINATION)
@@ -51,7 +51,7 @@ class WorkbenchOperationProviderV1(Provider):
         host = self.app
         if not isinstance(host, TuiSearchHostV1):
             return
-        source = _offered_source(host)
+        source = offered_operation_source(host)
         if source is None:
             return
         try:
@@ -80,4 +80,4 @@ def _navigation_command(
     return navigate
 
 
-__all__ = ["WorkbenchOperationProviderV1", "operation_navigation_target"]
+__all__ = ["WorkbenchOperationProviderV1", "offered_operation_source", "operation_navigation_target"]

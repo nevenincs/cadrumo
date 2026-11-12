@@ -465,7 +465,8 @@ class ProfileManagerClientComposition:
         if screen is None:
             return
         if outcome.view_model.projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-            screen.notify(outcome.error_explanation or tr("tui.aeat_sync.operation.failed"), severity="error")
+            sentence = None if outcome.refusal is None else outcome.refusal.sentence
+            screen.notify(sentence or tr("tui.aeat_sync.operation.failed"), severity="error")
             return
         try:
             updated = await asyncio.to_thread(self._overview)
