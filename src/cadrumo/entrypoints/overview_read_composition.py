@@ -22,6 +22,7 @@ from ..application.overview.calendar_models import OverviewCalendar, OverviewCal
 from ..application.overview.modelo202_instalment import Modelo202InstalmentFactsReader
 from ..application.overview.modelo202_instalment_evidence import (
     Modelo202InstalmentStores,
+    art_40_3_election_reader,
     bind_modelo_202_instalment_facts,
 )
 from ..application.overview.read_calendar_projection import (
@@ -57,7 +58,6 @@ from ..core.bucket_pointer import require_active_bucket_id
 from ..core.json_contract import Notice
 from ..core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ..core.parsing.dates import parse_iso8601_date
-from ..core.period import Period
 from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
@@ -200,15 +200,10 @@ def _modelo_202_instalment_facts(
             ).calculation_repository(),
             transactions=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects).load,
             activity_start_date=parse_iso8601_date(fact_value(record, "censo.activity_start_date")),
-            election_for=_art_40_3_election_unrecorded,
+            election_for=art_40_3_election_reader(record, schema=operation.profile_decode_context().schema),
         ),
         operation=operation,
     )
-
-
-def _art_40_3_election_unrecorded(_instalment: Period) -> bool | None:
-    """The profile records no art. 40.3 election, so every instalment's election is unstated."""
-    return None
 
 
 @dataclass(frozen=True, slots=True)

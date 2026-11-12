@@ -13,10 +13,12 @@ moved against the live transaction catalogue.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from types import MappingProxyType
+from typing import Final
 
 from ...core.period import Period
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202BaseBasis
@@ -31,6 +33,8 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.transactions.models import TransactionCatalogue
+from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.values import UserProfileRecord
 from ..aggregation.ledger_filing_snapshot import evaluate_ledger_filing_staleness
 from ..calculations.modelo_202_base_source import (
     MODELO_202_BASE_BINDING_ID,
@@ -47,6 +51,8 @@ from ..calculations.relation_prefill import resolve_relations_from_local_store
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from ..modelo.verification_cross_period import operator_value_attestations
 from ..modelo.work_addressing import ModeloWorkAddress, resolve_optional_modelo_work_address
+from ..user_profile.projections import record_to_values
+from .calendar_warnings import MODELO_202_ELECTION_PROFILE_KEY
 from .modelo202_instalment import (
     Modelo202BaseReading,
     Modelo202BaseSource,
@@ -56,6 +62,29 @@ from .modelo202_instalment import (
 )
 
 _VERIFIED_STATES = frozenset({CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO})
+_STATED_ELECTION: Final[Mapping[str, bool]] = MappingProxyType({"true": True, "false": False})
+
+
+def art_40_3_election_reader(
+    record: UserProfileRecord,
+    *,
+    schema: ProfileSchemaDefinition,
+) -> Callable[[Period], bool | None]:
+    """Read the art. 40.3 election in force at the start of each instalment's periodo impositivo.
+
+    The election binds from the periodo impositivo it was made for until it is
+    renounced, so an instalment reads the value effective on the first day of
+    its own periodo impositivo, which for these instalments is the filing year.
+    A value never stated reads as ``None``.
+
+    Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
+
+    def election_for(instalment: Period) -> bool | None:
+        values = record_to_values(record, schema=schema, as_of=date(instalment.filing_year, 1, 1))
+        return _STATED_ELECTION.get(values.get(MODELO_202_ELECTION_PROFILE_KEY, ""))
+
+    return election_for
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,4 +270,4 @@ def bind_modelo_202_instalment_facts(
     return read
 
 
-__all__ = ["Modelo202InstalmentStores", "bind_modelo_202_instalment_facts"]
+__all__ = ["Modelo202InstalmentStores", "art_40_3_election_reader", "bind_modelo_202_instalment_facts"]

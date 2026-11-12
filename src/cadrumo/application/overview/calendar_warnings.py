@@ -828,6 +828,7 @@ def build_completeness_and_warnings(
 
 
 __all__ = [
+    "MODELO_202_ELECTION_PROFILE_KEY",
     "build_completeness_and_warnings",
     "calendar_aeat_evidence_conflict_warnings",
     "calendar_applicability_disagreement_warnings",
