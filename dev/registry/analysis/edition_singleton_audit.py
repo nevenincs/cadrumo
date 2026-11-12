@@ -275,11 +275,44 @@ def _declaration_view(
     )
 
 
-def _removed_by(revision: ModeloRevision | None, predecessor_id: str) -> frozenset[str]:
-    if revision is None:
-        return frozenset[str]()
-    return frozenset(
-        str(removal.selector.id) for removal in revision.casilla_removals if removal.selector.revision == predecessor_id
+@dataclass(frozen=True, slots=True)
+class EditionRemovals:
+    """One edition's period track and the casilla removals it declares, as (selected edition, casilla id)."""
+
+    edition: str
+    track: tuple[str, ...]
+    removals: tuple[tuple[str, str], ...]
+
+
+def removed_before_successor(editions: Sequence[EditionRemovals], index: int) -> frozenset[str]:
+    """Return the casillas a later edition removes from this one before its successor on its period track.
+
+    A split year prints its periods on parallel editions, and the removal may be
+    declared by one of them against an edition that inherited the casilla from
+    this one; that removal still cites where the casilla leaves the form. The
+    carriers are this edition and every edition passed before the next one on its
+    track, whether or not that edition inherited the casilla from this one, so a
+    removal against an unrelated parallel edition is accepted too; it is not proof
+    that this edition's casilla left the form.
+    """
+    track = editions[index].track
+    carriers = {editions[index].edition}
+    removed: set[str] = set()
+    for later in editions[index + 1 :]:
+        removed.update(casilla for selected, casilla in later.removals if selected in carriers)
+        if later.track == track:
+            break
+        carriers.add(later.edition)
+    return frozenset(removed)
+
+
+def _edition_removals(revision: ModeloRevision) -> EditionRemovals:
+    return EditionRemovals(
+        edition=str(revision.id),
+        track=_period_track(revision),
+        removals=tuple(
+            (str(removal.selector.revision), str(removal.selector.id)) for removal in revision.casilla_removals
+        ),
     )
 
 
@@ -287,10 +320,7 @@ def _period_track(revision: ModeloRevision) -> tuple[str, ...]:
     return tuple(sorted(revision.period_selector.periods))
 
 
-def _edition_view(
-    revision: ModeloRevision, following: ModeloRevision | None, catalogues: RegistryCatalogues
-) -> EditionView:
-    removed = _removed_by(following, str(revision.id))
+def _edition_view(revision: ModeloRevision, removed: frozenset[str], catalogues: RegistryCatalogues) -> EditionView:
     views = (
         _declaration_view(family, item, catalogues, removed)
         for family in _SCOPED_FAMILIES
@@ -312,8 +342,9 @@ def editions_in_support(
     """Project a hydrated modelo's editions that reach the supported filing years."""
     floor = support.date_envelope().floor
     revisions = tuple(ordered_revisions(definition))
+    removals = tuple(_edition_removals(revision) for revision in revisions)
     return tuple(
-        _edition_view(revision, revisions[index + 1] if index + 1 < len(revisions) else None, catalogues)
+        _edition_view(revision, removed_before_successor(removals, index), catalogues)
         for index, revision in enumerate(revisions)
         if revision.valid_to is None or revision.valid_to >= floor
     )

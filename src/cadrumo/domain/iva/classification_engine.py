@@ -259,6 +259,7 @@ def _matched_classification(
         matched_rule_id=rule.rule_id,
         notes=rule.description,
         consumes_party_facts=rule.consumes,
+        effective_date=criteria.transaction_date,
         place_of_supply=place_of_supply_rule(
             rule.rule_id,
             on=criteria.transaction_date,
@@ -304,6 +305,7 @@ def fallback_classification(
         matched_rule_id=fallback.rule_id,
         notes=fallback.description,
         consumes_party_facts=fallback.consumes,
+        effective_date=criteria.transaction_date,
         place_of_supply=place_of_supply_rule(
             fallback.rule_id,
             on=criteria.transaction_date,

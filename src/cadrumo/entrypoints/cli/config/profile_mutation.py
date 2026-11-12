@@ -6,6 +6,7 @@ import time
 from typing import TYPE_CHECKING
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.registered_operation_errors import detailed_registered_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, remaining_budget
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -66,14 +67,16 @@ def execute_profile_mutation(
     try:
         completed = run_profile_mutation(client, request, timeout=_MUTATION_OPERATION_SECONDS)
     except ProfileMutationRunError as error:
-        context = {
-            "reason": error.reason,
+        facts = {
             "operation_id": str(error.operation_id),
             "effect": error.effect.value if (error.effect is not None and error.effect) else "unknown",
         }
         if error.terminal_condition is not None:
-            context["terminal_condition"] = error.terminal_condition.value
-        raise CliRefusedBoundaryError(error.reason, context=context) from error
+            facts["terminal_condition"] = error.terminal_condition.value
+        if error.detail is not None:
+            # The stopped executor's own error, with the verdict that names its remedy.
+            raise detailed_registered_operation_error(error.detail, facts) from error
+        raise CliRefusedBoundaryError(error.reason, context={"reason": error.reason, **facts}) from error
 
     try:
         current = client.read_profile_view((ProfileViewPageKind.FACTS,), timeout=_VIEW_READ_SECONDS)

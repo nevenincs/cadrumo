@@ -6,6 +6,8 @@ the reader the operation error detail uses.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import ValidationError
 
@@ -88,7 +90,9 @@ def test_a_binding_contract_the_registry_contradicts_is_terminal() -> None:
 
 def test_an_absent_jurisdiction_scope_opens_the_profile_questions() -> None:
     with bundled_indexed_authority().operation() as operation, pytest.raises(ProfileBindingResolutionError) as raised:
-        inject_derived_state_attribution_facts({}, operation=operation)
+        inject_derived_state_attribution_facts(
+            {}, effective_date=date(filing_year_envelope().horizon, 1, 1), operation=operation
+        )
 
     verdict = _verdict(raised.value)
 

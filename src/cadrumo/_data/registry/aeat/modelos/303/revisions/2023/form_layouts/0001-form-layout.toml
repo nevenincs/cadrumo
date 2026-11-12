@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial authored layout after visual inspection of BOE-A-2022-19290 AnnexII, printed158996-159001. First applicable periods begin January2023. The historical complementaria procedure is retained, without later rectificativa motives or boxes108/111. Rate cells retain this edition's own record-design literals and scale. Outstanding: complementaria marker and explicit no-activity declaration; annual activity descriptions; payment/refund72/73 and non-IBAN details; extra electronic activity worksheets. No operator or native visual review claimed." }
 generator_version = 1
-source_state_digest = "0ad4fa9977379cadbdb23b448002ec40aaff4f306bda97806e0b265e10713bf2"
+source_state_digest = "b64b7904ce7087a7905be58efd7d678cdea62d8d5606116f1468888bee8f8e01"
 design_sources = [
     { source_ref = "aeat-dr-303-2023", sha256 = "6d7c9b6284325b727c85e59d2a28d22653d9dbca75eca3f038f0046bda25e70f" },
     { source_ref = "boe-modelo-303-2023-form-pdf", sha256 = "71caf415a830b8f8bd08edb6d239bc3e85a1c6ca0e276512f9717a5d2c19c590" },
@@ -232,6 +232,8 @@ placements = [
     { casilla_id = "iva.soportado.interiores.base", kind = "working_figure" },
     { casilla_id = "iva.soportado.interiores.bienes-inversion", kind = "working_figure" },
     { casilla_id = "iva.soportado.interiores.bienes-inversion.base", kind = "working_figure" },
+    { casilla_id = "recargo.reducido.transitorio", kind = "working_figure" },
+    { casilla_id = "recargo.super-reducido", kind = "working_figure" },
 ]
 
 [[revisions.2023.form_layouts.pages]]

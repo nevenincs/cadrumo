@@ -29,7 +29,7 @@ guess would not be.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -42,6 +42,7 @@ from cadrumo.core.config import Settings
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.decomposition import decompose_invoice
 from cadrumo.domain.iva.schema import IvaCategory
 
@@ -58,6 +59,8 @@ from .invoice_confirmation_test_support import (
 )
 from .invoice_confirmation_test_support import runtime_profile as runtime_profile
 from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -207,6 +210,8 @@ def test_a_rate_unregistered_on_the_issue_date_resolves_to_nothing() -> None:
     assert domestic_rate_tier_from_the_document(two_per_cent, invoice_date=floor) is None
     # The same lookup on a rate registered that day resolves, so the decline
     # above is attributable to the rate's date and not to an unusable draft.
-    assert domestic_rate_tier_from_the_document(general, invoice_date=floor) == require_iva_rate_kind("general")
+    assert domestic_rate_tier_from_the_document(general, invoice_date=floor) == require_iva_rate_kind(
+        "general", effective_date=_ON_DATE
+    )
     with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
         domestic_rate_tier_from_the_document(general, invoice_date=floor - timedelta(days=1))

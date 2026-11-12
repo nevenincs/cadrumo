@@ -274,6 +274,8 @@ class CalculationNoteSentence(StrEnum):
     RENTA_INMUEBLE_CADASTRAL_VALUES_UNSTATED = "renta_inmueble_cadastral_values_unstated"
     RENTA_INMUEBLE_CUMULATIVE_AMORTISATION_UNSTATED = "renta_inmueble_cumulative_amortisation_unstated"
     RENTA_INMUEBLE_PENDING_EXPENSES_UNSTATED = "renta_inmueble_pending_expenses_unstated"
+    RENTA_INMUEBLE_PENDING_EXPENSES_HELD_RETURN_UNSTATED = "renta_inmueble_pending_expenses_held_return_unstated"
+    RENTA_INMUEBLE_PENDING_EXPENSES_ORIGIN_UNSPLIT = "renta_inmueble_pending_expenses_origin_unsplit"
     RENTA_INMUEBLE_REDUCTION_FACT_UNSTATED = "renta_inmueble_reduction_fact_unstated"
     RENTA_INMUEBLE_REDUCTION_TENANTS_MIXED = "renta_inmueble_reduction_tenants_mixed"
     RENTA_INMUEBLE_WITHHOLDING_PAYER_NO_TENANT = "renta_inmueble_withholding_payer_no_tenant"

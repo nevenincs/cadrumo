@@ -14,6 +14,7 @@ scope gate, the fact gate, and the accumulating build-time adapter.
 from __future__ import annotations
 
 from collections.abc import Callable, Collection
+from datetime import date
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
@@ -29,11 +30,13 @@ from .schema_input_kind import InputKind
 if TYPE_CHECKING:
     from .ids import BindingId
     from .schema import BindingDefinition, ModeloRevision
+    from .schema_references import TemporalSupportEnvelope
 
 __all__ = [
     "LEDGER_AGGREGATION_OPS",
     "ledger_binding_build_diagnostics",
     "ledger_binding_selector",
+    "ledger_selector_vocabulary_date",
     "ledger_target_casilla_failures",
     "require_ledger_aggregation_op",
     "require_ledger_fact",
@@ -58,6 +61,24 @@ def ledger_binding_selector[ProviderT: BaseModel](
     if binding.source != source_kind:
         raise RegistryValidationError(f"binding {binding.id!r} is not a {source_kind.value} source")
     return provider_member(binding, provider_model)
+
+
+def ledger_selector_vocabulary_date(revision: ModeloRevision, support: TemporalSupportEnvelope) -> date | None:
+    """Return the date a revision's ledger selector tokens are judged on, or ``None`` when it governs no supported date.
+
+    A binding takes effect with the revision that declares it, so its tokens must
+    be declared on the revision's own ``valid_from``. A revision that starts below
+    the support floor first governs a supported filing on the floor date, which is
+    then the earliest date its vocabulary can be read on; a revision that ends
+    before the floor, or starts after a hard ceiling, governs none.
+    """
+    window = support.date_envelope()
+    start = max(revision.valid_from, window.floor)
+    if revision.valid_to is not None and revision.valid_to < start:
+        return None
+    if window.hard_ceiling is not None and start > window.hard_ceiling:
+        return None
+    return start
 
 
 def require_ledger_aggregation_op(binding: BindingDefinition) -> None:

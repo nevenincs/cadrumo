@@ -334,7 +334,11 @@ def _project_other_placements(
                 )
             )
         elif casilla_id not in walk.seen:
-            raise ModeloWorkFormLayoutError(f"casilla {casilla_id!r} is placed on the form but no page shows it")
+            raise ModeloWorkFormLayoutError(
+                f"casilla {casilla_id!r} is placed on the form but no page shows it",
+                translated_message="application.modelo.errors.work_form_layout_casilla_not_shown",
+                context={"casilla_id": str(casilla_id)},
+            )
     return working, unplaced
 
 
@@ -352,7 +356,11 @@ def _ensure_layout_is_total(
     }
     missing = sorted(set(context.rows) - placed)
     if missing:
-        raise ModeloWorkFormLayoutError(f"the layout gives no placement to casillas {missing[:10]!r}")
+        raise ModeloWorkFormLayoutError(
+            f"the layout gives no placement to casillas {missing[:10]!r}",
+            translated_message="application.modelo.errors.work_form_layout_casillas_unplaced",
+            context={"casillas": ", ".join(str(casilla_id) for casilla_id in missing[:10])},
+        )
 
 
 def _assemble_work_form(

@@ -24,11 +24,12 @@ if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
-def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation) -> IvaCatalogue:
+def bundled_iva_catalogue(*, effective_date: date, operation: PinnedAuthorityOperation) -> IvaCatalogue:
     """Adapt one selected IVA runtime component into the operational catalogue.
 
     ``operation`` addresses only the IVA regulation component already pinned by
-    the caller.
+    the caller; ``effective_date`` selects the category vocabulary that names
+    each published regulation.
     """
     from cadrumo.domain.calculations.registry.runtime_catalogues import PublishedIvaRegulation
 
@@ -42,7 +43,7 @@ def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation) -> IvaCatalogu
 
     regulations: dict[IvaCategory, IvaRegulation] = {}
     for published in published_values:
-        category = require_iva_category(published.category, authority=operation)
+        category = require_iva_category(published.category, effective_date=effective_date, authority=operation)
         regulations[category] = IvaRegulation.model_validate(
             {
                 "category": category,
@@ -82,7 +83,9 @@ def iva_catalogue_years(*, operation: PinnedAuthorityOperation) -> frozenset[int
     """
     return years_covered_by_every_group(
         [citation.window for citation in regulation.citations]
-        for regulation in bundled_iva_catalogue(operation=operation)
+        for regulation in bundled_iva_catalogue(
+            effective_date=date(operation.supported_filing_years().horizon, 12, 31), operation=operation
+        )
         if not regulation.legal_basis_exempt
     )
 
@@ -131,7 +134,9 @@ def _resolve_catalogue(
                 "citations": tuple(citation for citation in regulation.citations if citation.window.covers_year(year)),
             },
         )
-        for category, regulation in bundled_iva_catalogue(operation=operation).regulations.items()
+        for category, regulation in bundled_iva_catalogue(
+            effective_date=date(year, 12, 31), operation=operation
+        ).regulations.items()
     }
     return IvaCatalogue(regulations=projected)
 

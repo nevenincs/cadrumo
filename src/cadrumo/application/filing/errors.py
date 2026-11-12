@@ -79,7 +79,7 @@ def casilla_value_refusal(
     )
 
 
-class _FilingTerminalErrorMixin(TerminalPreconditionErrorMixin[PreconditionVerdict]):
+class _FilingTerminalErrorMixin(TerminalPreconditionErrorMixin[object]):
     """Attach one declared filing outcome while retaining a domain error type."""
 
     precondition_condition: ClassVar[FilingPreconditionCondition]

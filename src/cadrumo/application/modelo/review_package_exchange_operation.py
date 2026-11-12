@@ -284,7 +284,9 @@ def _signed(path: Path, ports: ReviewPackageExchangeOperationPorts) -> SignedRev
         return SignedReviewPackage.model_validate_json(ports.files.read_text(path))
     except ValueError as exc:
         raise ReviewPackageSigningError(
-            str(exc), precondition_verdict=operator_choice_verdict("signature_file_unreadable")
+            str(exc),
+            translated_message="application.modelo.errors.review_package_signature_file_unreadable",
+            precondition_verdict=operator_choice_verdict("signature_file_unreadable"),
         ) from exc
 
 
@@ -293,7 +295,9 @@ def _receipt(path: Path, ports: ReviewPackageExchangeOperationPorts) -> CounterS
         return CounterSignedReceipt.model_validate_json(ports.files.read_text(path))
     except ValueError as exc:
         raise ReviewPackageCounterSigningError(
-            str(exc), precondition_verdict=operator_choice_verdict("receipt_file_unreadable")
+            str(exc),
+            translated_message="application.modelo.errors.review_package_receipt_file_unreadable",
+            precondition_verdict=operator_choice_verdict("receipt_file_unreadable"),
         ) from exc
 
 
@@ -302,7 +306,9 @@ def _envelope(path: Path, ports: ReviewPackageExchangeOperationPorts) -> Recipie
         return RecipientEncryptedPackage.model_validate_json(ports.files.read_text(path))
     except ValueError as exc:
         raise RecipientEncryptionError(
-            str(exc), precondition_verdict=operator_choice_verdict("envelope_file_unreadable")
+            str(exc),
+            translated_message="application.modelo.errors.review_package_envelope_file_unreadable",
+            precondition_verdict=operator_choice_verdict("envelope_file_unreadable"),
         ) from exc
 
 

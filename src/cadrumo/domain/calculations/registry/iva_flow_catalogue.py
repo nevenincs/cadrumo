@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
-from ....core.time.clock import today_madrid
 from ...iva.flow import IvaFlowDirection, IvaSettlementSide
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
@@ -307,7 +306,7 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
 
 def resolve_iva_flow_direction_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaFlowDirectionCatalogue:
     """Resolve the dated IVA flow and settlement vocabulary from fact 0083."""
@@ -317,7 +316,7 @@ def resolve_iva_flow_direction_catalogue(
 def require_iva_flow_direction(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaFlowDirection:
     """Return a flow token only when the selected registry declares it."""
@@ -327,7 +326,7 @@ def require_iva_flow_direction(
     ).require(value)
 
 
-def require_registry_declared_iva_flow_direction(value: object) -> IvaFlowDirection:
+def require_registry_declared_iva_flow_direction(value: object, *, effective_date: date) -> IvaFlowDirection:
     """Return one flow token declared by the facts a validation is validating.
 
     Like the rate-kind check, a registry validator resolves this vocabulary from
@@ -341,7 +340,7 @@ def require_registry_declared_iva_flow_direction(value: object) -> IvaFlowDirect
             "scope; registry validation must not resolve a flow direction through the "
             "published authority artifact",
         )
-    return resolve_iva_flow_direction_catalogue(effective_date=today_madrid(), authority=authority).require(value)
+    return resolve_iva_flow_direction_catalogue(effective_date=effective_date, authority=authority).require(value)
 
 
 __all__ = [

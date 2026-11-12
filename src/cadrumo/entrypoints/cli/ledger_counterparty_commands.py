@@ -57,6 +57,7 @@ from ...application.ledger.counterparty_operation import (
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...domain.iva.classification import require_iva_territorial_scope
 from ...domain.iva.schema import EUMemberState, IvaTerritorialScope
@@ -101,7 +102,11 @@ def _payload(ctx: typer.Context, fact: CounterpartyFactProjection) -> Counterpar
         counterparty_key=fact.counterparty_key,
         canonical_tax_identifier=fact.canonical_tax_identifier,
         territorial_scope=(
-            require_iva_territorial_scope(fact.territorial_scope, operation=authority_operation(ctx))
+            require_iva_territorial_scope(
+                fact.territorial_scope,
+                effective_date=fact.asserted_at.date(),
+                operation=authority_operation(ctx),
+            )
             if fact.territorial_scope is not None
             else None
         ),
@@ -282,7 +287,9 @@ def _counterparty_view_result(
         tax_identifier=tax_identifier,
         confirmed=resolution.territorial_scope is not None,
         territorial_scope=(
-            require_iva_territorial_scope(resolution.territorial_scope, operation=operation)
+            require_iva_territorial_scope(
+                resolution.territorial_scope, effective_date=today_madrid(), operation=operation
+            )
             if resolution.territorial_scope is not None
             else None
         ),
@@ -310,7 +317,9 @@ def _counterparty_view_result(
         # that field is what the rung will answer, and on a contradiction it
         # answers nothing.
         confirmed_scope=(
-            require_iva_territorial_scope(resolution.confirmed_scope, operation=operation)
+            require_iva_territorial_scope(
+                resolution.confirmed_scope, effective_date=today_madrid(), operation=operation
+            )
             if resolution.confirmed_scope is not None
             else None
         ),

@@ -1098,6 +1098,12 @@ def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) ->
         raise LedgerFilingCoverageError(
             f"calculation revision {revision.calculation_revision_id!r} ledger evidence does not cover the "
             f"fingerprint snapshot: missing_from_evidence={missing} extra_in_evidence={extra}",
+            translated_message="errors.integrity.ledger_filing_evidence_diverges_from_snapshot",
+            context={
+                "calculation_revision_id": str(revision.calculation_revision_id),
+                "missing_count": str(len(missing)),
+                "extra_count": str(len(extra)),
+            },
         )
 
 

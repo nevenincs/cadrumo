@@ -16,10 +16,14 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.iva_legal_vocabulary import resolve_iva_exemption_article_catalogue
 from ..classification import IvaClassificationResult
 from ..schema import IvaCategory, IvaExemptionArticle
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -29,6 +33,7 @@ def test_classification_result_accepts_no_exemption_article_by_default() -> None
     result = IvaClassificationResult(
         category=IvaCategory("domestic_exempt"),
         matched_rule_id="R04_immovable_property_exempt",
+        effective_date=_ON_DATE,
     )
 
     assert result.exemption_article is None
@@ -40,6 +45,7 @@ def test_classification_result_stamps_exemption_article_when_domestic_exempt() -
         category=IvaCategory("domestic_exempt"),
         matched_rule_id="R20_uno_8_education",
         exemption_article=IvaExemptionArticle("art_20_uno_8"),
+        effective_date=_ON_DATE,
     )
 
     assert result.exemption_article == IvaExemptionArticle("art_20_uno_8")
@@ -62,6 +68,7 @@ def test_classification_result_rejects_exemption_article_on_non_exempt_category(
                 category=non_exempt_category,
                 matched_rule_id="R_test",
                 exemption_article=IvaExemptionArticle("art_20_uno_8"),
+                effective_date=_ON_DATE,
             )
 
         message = str(exc.value)

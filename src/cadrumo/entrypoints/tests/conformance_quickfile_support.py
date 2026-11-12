@@ -13,7 +13,7 @@ from ...application.modelo.quickfile_operation_contracts import (
     QuickfileStageSnapshot,
 )
 from ...application.modelo.quickfile_operation_projections import QuickfileProjection
-from ...application.modelo.work_addressing import ModeloWorkRegistryYearMismatchError
+from ...application.modelo.work_address_errors import ModeloWorkRegistryYearMismatchError
 from ...application.operations.public_period import PublicPeriod
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

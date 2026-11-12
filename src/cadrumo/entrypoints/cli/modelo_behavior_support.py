@@ -11,11 +11,8 @@ from typing import TYPE_CHECKING
 import typer
 
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
-from ...application.modelo.work_addressing import (
-    ModeloWorkAddress,
-    ModeloWorkPeriodTokenError,
-    modelo_work_address_from_operator_target,
-)
+from ...application.modelo.work_address_errors import ModeloWorkPeriodTokenError
+from ...application.modelo.work_addressing import ModeloWorkAddress, modelo_work_address_from_operator_target
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr

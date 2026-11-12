@@ -6278,6 +6278,7 @@ sheets:
       acquisition_value: Beszerzési érték
       adquisicion_lucrativa: Ingyenes szerzés
       adquisicion_onerosa: Visszterhes szerzés
+      amortizacion: Értékcsökkenés
       amount: Összeg
       amount_donated: Adományozott összeg
       anualidades_alimentos: Tartásdíj-járadék
@@ -6297,6 +6298,7 @@ sheets:
       asset_class_code: Eszközosztály kód
       asset_identifier: Eszközazonosító
       asset_ref: Eszköz belső hivatkozása
+      base_amortizacion: Értékcsökkenési alap
       base_imponible: Adóalap
       base_imponible_assigned: Hozzárendelt adóalap
       base_retenciones: Visszatartás alapja
@@ -6405,10 +6407,16 @@ sheets:
       gasto_servicios_terceros: Harmadik felek személyes szolgáltatásai
       gasto_suministros: Szolgáltatások és közművek
       gasto_tributos: Adók, pótlékok és illetékek
+      gastos_adquisicion: Szerzési költségek és adók
       gastos_deducibles: Levonható költségek
+      gastos_pendientes_anteriores: A négy előző adóévből levonásra váró kamatok és
+        javítási kiadások
+      gastos_pendientes_aplicados: Korábbi adóévekből levonásra váró, ebben az adóévben
+        levont összeg
       geographic_mobility_clave: Földrajzi mobilitás
       house_number: Házszám
       housing_loan_communication_clave: Lakáshitel-bevallás
+      importe_adquisicion: Szerzési összeg
       importe_gastos: Költség összege
       importe_q1: 1. negyedévi összeg
       importe_q2: 2. negyedévi összeg
@@ -6429,11 +6437,18 @@ sheets:
       inquilino_2_nif_extranjero: 2. bérlő külföldi adóazonosítója
       inquilino_3_nif: 3. bérlő adóazonosítója
       inquilino_3_nif_extranjero: 3. bérlő külföldi adóazonosítója
+      intereses_reparacion_aplicados: Az adóév levont kamatai és javítási kiadásai
+      intereses_reparacion_pendientes: Az adóév levonásra váró kamatai és javítási
+        kiadásai
+      intereses_reparacion_pendientes_futuros: A következő négy adóévre levonásra
+        váró kamatok és javítási kiadások
       is_recurrent: Ismétlődő adomány
       isin_code: ISIN kód
       locality: Település
       loss: Veszteség
       loss_difference: Az átruházás vesztesége
+      mejoras_anteriores: Korábbi adóévekben végzett felújítások
+      mejoras_ejercicio: Az adóévben végzett felújítások
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
@@ -6475,6 +6490,7 @@ sheets:
       perceptor_tax_id: Kedvezményezett adóazonosítója
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
+      porcentaje_construccion: A kataszteri érték építményre jutó százaléka
       porcentaje_propiedad: Tulajdoni hányad (%)
       porcentaje_retencion: Visszatartás %
       porcentaje_titularidad_inmueble: Ingatlantulajdoni hányad százaléka
@@ -6488,18 +6504,22 @@ sheets:
       rectified_period: Helyesbített időszak
       rectified_year: Helyesbített év
       reduccion: A jövedelemre alkalmazandó csökkentés
+      reduccion_aplicable: Csökkentés alkalmazható
       reducciones: Csökkentések
       reducciones_aplicables: Alkalmazott csökkentések
       referencia_catastral: Ingatlan-nyilvántartási hivatkozás
       refund_amount: Visszatérítési összeg
+      rendimiento_neto: Nettó jövedelem
       rendimiento_neto_minorado_agricola_eo: Csökkentett nettó mezőgazdasági jövedelem
         (objektív becslés)
       rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
+      rendimiento_neto_reducido: Csökkentett nettó jövedelem
       representative_nif: Képviselő NIF-je
       representative_tax_id: Törvényes képviselő adóazonosítója
       residence_country_code: Lakóhely országkódja
       retencion_amount: Visszatartott összeg
       retencion_practicada: Alkalmazott visszatartás
+      retenciones: Levont adóelőleg
       reverse_charge_mark: Fordított adózás
       rustica: Külterületi
       second_child_compute: 2. gyermek beszámítása
@@ -6525,6 +6545,8 @@ sheets:
       transmission_value: Átruházási érték
       unit_convivencia_titular_clave: Együttélési egység vezetője
       urbana: Belterületi
+      valor_catastral: Kataszteri érték
+      valor_catastral_construccion: Az építmény kataszteri értéke
       valuation_amount: Értékelés
       valuation_event: Értékelési esemény
       valuation_event_date: Értékelési esemény dátuma

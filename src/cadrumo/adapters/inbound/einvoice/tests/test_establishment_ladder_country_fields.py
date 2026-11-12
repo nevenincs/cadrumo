@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.adapters.inbound.einvoice.parsers import ParsedEInvoice, parse_einvoice_document
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.establishment import territorial_scope_for_spanish_postal_code
 
 from .....domain.iva.schema import IvaTerritorialScope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -47,5 +52,5 @@ def test_the_cross_industry_invoice_branch_states_a_country_before_postal_routin
         assert parsed.supplier_postal_code == "38001"
         assert parsed.supplier_country_code == "ES"
         assert territorial_scope_for_spanish_postal_code(
-            "38001", operation=_authority_operation_for_test
+            "38001", operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("es_canarias")

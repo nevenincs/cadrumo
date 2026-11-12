@@ -33,6 +33,8 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table
 from dev.registry.conformance.iva_regulation_catalogue import bundled_iva_catalogue
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FLOOR = filing_year_envelope().floor
@@ -83,7 +85,7 @@ def _violation(
 def _catalogue_rows(*, operation: PinnedAuthorityOperation) -> list[tuple[str, tuple[str, ...], ValidityWindow]]:
     return [
         (f"{regulation.category.value}/{citation.legal_reference}", (citation.legal_reference,), citation.window)
-        for regulation in bundled_iva_catalogue(operation=operation)
+        for regulation in bundled_iva_catalogue(operation=operation, effective_date=_ON_DATE)
         for citation in regulation.citations
     ]
 

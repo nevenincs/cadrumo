@@ -366,6 +366,7 @@ def _spain_indicating(
     country_code: str | None,
     postal_code: str | None,
     spanish_iva_charged: bool,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
     """Return every signal placing this party in Spain, in operator-facing words.
@@ -377,7 +378,10 @@ def _spain_indicating(
     signals: list[str] = []
     if names_spain(country_code):
         signals.append("the printed address country names Spain")
-        if territorial_scope_for_spanish_postal_code(postal_code, operation=operation) is not None:
+        if (
+            territorial_scope_for_spanish_postal_code(postal_code, effective_date=effective_date, operation=operation)
+            is not None
+        ):
             signals.append("the printed postal code resolves to a Spanish IVA territory")
     if spanish_iva_charged:
         signals.append("the document charges IVA at a Spanish registry rate")
@@ -507,6 +511,73 @@ def _treatment_concurs_with_non_establishment(
     )
 
 
+def _foreign_registration_conflict(
+    identification: EUMemberState | None,
+    *,
+    country_code: str | None,
+    postal_code: str | None,
+    spanish_iva_charged: bool,
+    on_date: date,
+    operation: PinnedAuthorityOperation,
+) -> RegistrationEstablishmentConflict | None:
+    """Return the conflict a foreign IVA registration beside Spain-indicating evidence raises, or ``None``."""
+    # FOREIGN registration, not merely a registration. The conflict this raises
+    # is the characteristic face of a foreign-registered entity operating
+    # through an establecimiento permanente here, so a SPANISH identification
+    # beside Spain-indicating evidence is agreement rather than contradiction.
+    #
+    # The test used to be "is not None" and was safe only by accident: ES was
+    # absent from the identification vocabulary, so no Spanish number ever
+    # reached it. Admitting ES made the accident visible, and the condition now
+    # says what it always meant.
+    if identification is None or identification == spanish_eu_member_state(authority=operation):
+        return None
+    indicating = _spain_indicating(
+        country_code=country_code,
+        postal_code=postal_code,
+        spanish_iva_charged=spanish_iva_charged,
+        effective_date=on_date,
+        operation=operation,
+    )
+    if not indicating:
+        return None
+    return RegistrationEstablishmentConflict(
+        identification_state=identification,
+        spain_indicating=indicating,
+        detail=(
+            f"the counterparty prints a {identification.value.upper()} IVA identification while "
+            f"{'; '.join(indicating)}. A party registered in another Member State may still be "
+            f"established in Spain through a sede or establecimiento permanente, and this "
+            f"document states both -- which of the two governs its IVA treatment is not settled "
+            f"by the paper"
+        ),
+    )
+
+
+def _address_rung(
+    *,
+    country_code: str | None,
+    postal_code: str | None,
+    on_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaTerritorialScope, EstablishmentRung] | None:
+    """Return the territory the printed address settles and the rung that settled it, or ``None``."""
+    from_country = territorial_scope_for_country(country_code, effective_date=on_date, operation=operation)
+    if from_country is not None:
+        return from_country, EstablishmentRung.ADDRESS_COUNTRY
+
+    # Spain reaches here rather than above BY DESIGN: the country rung refuses to
+    # resolve `ES` because it names the State while the IVA territory inside it
+    # stays undetermined. That refusal is the postal rung's trigger, so the CODE
+    # is tested rather than the scope the code produced.
+    if not names_spain(country_code):
+        return None
+    from_postal = territorial_scope_for_spanish_postal_code(postal_code, effective_date=on_date, operation=operation)
+    if from_postal is None:
+        return None
+    return from_postal, EstablishmentRung.SPANISH_POSTAL_CODE
+
+
 def printed_evidence(
     *,
     tax_identifier: str | None,
@@ -529,7 +600,12 @@ def printed_evidence(
 
     The printed IVA number appears here only as the thing that must be
     CORROBORATED. It settles no territory by itself at any point in this walk.
+
+    The territorial vocabulary is read on ``on_date``. With no date the walk
+    exhausts without a territory, and the missing date is the gap to ask for.
     """
+    if on_date is None:
+        return None, None, None
     identification = identification_state_for_printed_tax_identifier(tax_identifier, operation=operation)
     spanish_iva_charged = spanish_iva_was_charged(
         charged_iva_rates,
@@ -537,51 +613,20 @@ def printed_evidence(
         operation=operation,
     )
 
-    # FOREIGN registration, not merely a registration. The conflict this raises
-    # is the characteristic face of a foreign-registered entity operating
-    # through an establecimiento permanente here, so a SPANISH identification
-    # beside Spain-indicating evidence is agreement rather than contradiction.
-    #
-    # The test used to be "is not None" and was safe only by accident: ES was
-    # absent from the identification vocabulary, so no Spanish number ever
-    # reached it. Admitting ES made the accident visible, and the condition now
-    # says what it always meant.
-    if identification is not None and identification != spanish_eu_member_state(authority=operation):
-        indicating = _spain_indicating(
-            country_code=country_code,
-            postal_code=postal_code,
-            spanish_iva_charged=spanish_iva_charged,
-            operation=operation,
-        )
-        if indicating:
-            return (
-                None,
-                None,
-                RegistrationEstablishmentConflict(
-                    identification_state=identification,
-                    spain_indicating=indicating,
-                    detail=(
-                        f"the counterparty prints a {identification.value.upper()} IVA identification while "
-                        f"{'; '.join(indicating)}. A party registered in another Member State may still be "
-                        f"established in Spain through a sede or establecimiento permanente, and this "
-                        f"document states both -- which of the two governs its IVA treatment is not settled "
-                        f"by the paper"
-                    ),
-                ),
-            )
+    conflict = _foreign_registration_conflict(
+        identification,
+        country_code=country_code,
+        postal_code=postal_code,
+        spanish_iva_charged=spanish_iva_charged,
+        on_date=on_date,
+        operation=operation,
+    )
+    if conflict is not None:
+        return None, None, conflict
 
-    from_country = territorial_scope_for_country(country_code, operation=operation)
-    if from_country is not None:
-        return from_country, EstablishmentRung.ADDRESS_COUNTRY, None
-
-    # Spain reaches here rather than above BY DESIGN: the country rung refuses to
-    # resolve `ES` because it names the State while the IVA territory inside it
-    # stays undetermined. That refusal is the postal rung's trigger, so the CODE
-    # is tested rather than the scope the code produced.
-    if names_spain(country_code):
-        from_postal = territorial_scope_for_spanish_postal_code(postal_code, operation=operation)
-        if from_postal is not None:
-            return from_postal, EstablishmentRung.SPANISH_POSTAL_CODE, None
+    address = _address_rung(country_code=country_code, postal_code=postal_code, on_date=on_date, operation=operation)
+    if address is not None:
+        return address[0], address[1], None
 
     if identification is not None and _treatment_concurs_with_non_establishment(
         regime_legend=regime_legend,
@@ -597,7 +642,9 @@ def printed_evidence(
         # carries an IVA prefix without being an ISO jurisdiction the catalogue
         # resolves, and a registration whose territory cannot be named is one
         # this walk cannot corroborate into a scope.
-        concordant = territorial_scope_for_country(identification.value.upper(), operation=operation)
+        concordant = territorial_scope_for_country(
+            identification.value.upper(), effective_date=on_date, operation=operation
+        )
         if concordant is not None:
             return concordant, EstablishmentRung.CONCORDANT_REGISTRATION, None
 
@@ -607,6 +654,7 @@ def printed_evidence(
 def scope_printed_evidence_would_establish(
     *,
     legends: tuple[RegimeLegend, ...],
+    effective_date: date,
     operation: PinnedAuthorityOperation,
     tax_identifier: str | None = None,
     stated_country_name: str | None = None,
@@ -651,6 +699,7 @@ def scope_printed_evidence_would_establish(
         postal_code: The party's printed postal code.
         legends: The dated registry declarations selected by the enclosing
             pinned authority operation.
+        effective_date: The date whose territorial vocabulary the rungs read.
         operation: The caller-owned pinned authority operation used for every
             country, territory, identification, and rate lookup.
 
@@ -667,6 +716,7 @@ def scope_printed_evidence_would_establish(
         postal_code=postal_code,
         legends=legends,
         operation=operation,
+        on_date=effective_date,
     )
     return scope
 

@@ -32,6 +32,8 @@ from ..iva_transaction import (
 )
 from .ledger_transaction_support import iva_transaction
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _ENVELOPE = filing_year_envelope()
@@ -63,7 +65,7 @@ def _checks(row: Transaction) -> None:
         _unaccepted_exemption_article_issue(
             row,
             transaction_id=row.transaction_id,
-            effective_category=require_iva_category("domestic_exempt", authority=operation),
+            effective_category=require_iva_category("domestic_exempt", authority=operation, effective_date=_ON_DATE),
             operation=operation,
         )
         _unaccepted_art_104_tres_exclusion_issue(row, transaction_id=row.transaction_id, operation=operation)

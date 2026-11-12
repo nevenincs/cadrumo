@@ -315,8 +315,12 @@ def recipient_self_assesses(invoice: Invoice) -> bool:
     """
     if invoice.kind is not InvoiceKind.RECEIVED or invoice.iva_category is None:
         return False
+    devengo_date = invoice.operation_date or invoice.issued_at
     return is_inversion_sujeto_pasivo_flow(
-        derive_flow_for_classification(category=invoice.iva_category, invoice_direction=invoice.kind)
+        derive_flow_for_classification(
+            category=invoice.iva_category, invoice_direction=invoice.kind, effective_date=devengo_date
+        ),
+        effective_date=devengo_date,
     )
 
 

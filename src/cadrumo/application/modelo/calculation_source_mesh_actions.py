@@ -50,6 +50,7 @@ from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
 )
+from .prior_return_held import prior_return_held
 from .transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
@@ -549,6 +550,15 @@ def _resolve_ledger_income_families(
                 authority=authority,
             )
 
+    def held_prior_return(context: CalculationSourceContext) -> bool:
+        return prior_return_held(
+            bucket_id=context.bucket_id,
+            modelo=context.modelo,
+            period=context.period,
+            observation_repository=ports.observation_repository,
+            filing_repository=ports.filing_repository,
+        )
+
     return (
         resolve_declared(
             LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
@@ -592,6 +602,7 @@ def _resolve_ledger_income_families(
             RentaInmuebleSourceResolver(
                 transaction_repository=memoized_transaction_repository,
                 retencion_soportada_ports=ports.retencion_soportada_ports,
+                prior_return_held=held_prior_return,
             )
         ),
     )

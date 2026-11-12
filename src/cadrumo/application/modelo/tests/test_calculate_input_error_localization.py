@@ -20,7 +20,8 @@ from ..calculate_input_validation import (
     validated_relation_id,
 )
 from ..selectors import ModeloCalculationRevisionSelector
-from ..work_addressing import ModeloRevisionPick, ModeloRevisionPickError
+from ..work_address_errors import ModeloRevisionPickError
+from ..work_addressing import ModeloRevisionPick
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

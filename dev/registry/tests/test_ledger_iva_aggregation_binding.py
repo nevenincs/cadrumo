@@ -21,6 +21,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,
+    ledger_iva_revision_vocabulary_failures,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding,
@@ -70,12 +71,15 @@ def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
 
 
 _MALFORMED_SELECTOR_CASES = (
-    pytest.param({"categories": ("bogus",)}, id="unknown-category"),
-    pytest.param({"rate_kinds": ("medium",)}, id="unknown-rate-kind"),
-    pytest.param({"flow_direction": "unknown"}, id="unknown-flow-direction"),
     pytest.param({"categories": ()}, id="empty-categories"),
     pytest.param({"rate_kinds": ()}, id="empty-rate-kinds"),
     pytest.param({"fact": "bogus"}, id="unknown-fact"),
+)
+
+_UNDECLARED_TOKEN_SELECTOR_CASES = (
+    pytest.param({"categories": ("bogus",)}, id="unknown-category"),
+    pytest.param({"rate_kinds": ("medium",)}, id="unknown-rate-kind"),
+    pytest.param({"flow_direction": "unknown"}, id="unknown-flow-direction"),
 )
 
 
@@ -85,6 +89,29 @@ def test_validate_rejects_malformed_selector(selector_updates: dict[str, object]
     with validating_governed_facts(compiled_bundled_authority()):
         failures = validate_ledger_iva_aggregation_binding(binding)
     assert failures, "the registry build gate must reject a malformed typed provider member"
+
+
+@pytest.mark.parametrize("selector_updates", _UNDECLARED_TOKEN_SELECTOR_CASES)
+def test_the_revision_gate_rejects_a_selector_token_its_vocabulary_does_not_declare(
+    selector_updates: dict[str, object],
+) -> None:
+    """A selector carries no date, so token membership is judged on the declaring revision's start."""
+    binding = with_selector(ledger_iva_aggregation_binding(), **selector_updates)
+
+    failures = ledger_iva_revision_vocabulary_failures(
+        revision_with_bindings(binding), authority=compiled_bundled_authority()
+    )
+
+    assert failures, "the revision gate must reject a token the dated vocabulary does not declare"
+
+
+def test_the_revision_gate_admits_the_canonical_selector() -> None:
+    """CONTROL: the refusals above are the undeclared tokens, not the gate."""
+    failures = ledger_iva_revision_vocabulary_failures(
+        revision_with_bindings(ledger_iva_aggregation_binding()), authority=compiled_bundled_authority()
+    )
+
+    assert failures == []
 
 
 def test_validate_rejects_non_sum_aggregation() -> None:
@@ -142,11 +169,10 @@ def _minimal_revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevis
     )
 
 
-def _malformed_exemption_article_selector_cases() -> tuple[ParameterSet, ...]:
+def _undeclared_exemption_article_selector_cases() -> tuple[ParameterSet, ...]:
     """Build governed selector cases only when this proof executes."""
     with validating_governed_facts(compiled_bundled_authority()):
         return (
-            pytest.param({"exemption_articles": ()}, id="empty-exemption-articles"),
             pytest.param({"exemption_articles": ("bogus",)}, id="unknown-exemption-article"),
             pytest.param(
                 {
@@ -159,10 +185,21 @@ def _malformed_exemption_article_selector_cases() -> tuple[ParameterSet, ...]:
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
-def test_validate_rejects_malformed_exemption_article_selector_without_registry_resources() -> None:
-    for case in _malformed_exemption_article_selector_cases():
-        with pytest.raises(ValidationError, match="exemption_articles"):
-            _article_filter_binding(**cast("dict[str, object]", case.values[0]))
+def test_validate_rejects_an_empty_exemption_article_selector_without_registry_resources() -> None:
+    with pytest.raises(ValidationError, match="exemption_articles"):
+        _article_filter_binding(exemption_articles=())
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_the_revision_gate_rejects_an_exemption_article_selector_its_vocabulary_refuses() -> None:
+    for case in _undeclared_exemption_article_selector_cases():
+        binding = _article_filter_binding(**cast("dict[str, object]", case.values[0]))
+
+        failures = ledger_iva_revision_vocabulary_failures(
+            _minimal_revision_with_bindings(binding), authority=compiled_bundled_authority()
+        )
+
+        assert failures, f"{case.id}: the revision gate must reject the selector"
 
 
 def _single_binding_selector_cases() -> tuple[ParameterSet, ...]:

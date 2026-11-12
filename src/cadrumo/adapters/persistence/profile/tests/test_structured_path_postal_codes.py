@@ -32,6 +32,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -45,6 +46,7 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.establishment import territorial_scope_for_spanish_postal_code
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
@@ -60,6 +62,8 @@ from .invoice_confirmation_test_support import (
     InvoiceAuthorityFixture,
     invoice_draft_extraction_kwargs,
 )
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -208,13 +212,13 @@ def test_a_facturae_document_with_no_address_resolves_to_nothing(
         assert draft.customer_postal_code is None
         assert (
             territorial_scope_for_spanish_postal_code(
-                draft.supplier_postal_code, operation=_authority_operation_for_test
+                draft.supplier_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
             )
             is None
         )
         assert (
             territorial_scope_for_spanish_postal_code(
-                draft.customer_postal_code, operation=_authority_operation_for_test
+                draft.customer_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
             )
             is None
         )
@@ -252,13 +256,17 @@ def test_a_canarian_code_survives_the_document_as_canarias(
 
         assert draft.supplier_postal_code == _CANARIAS_CODE
         assert territorial_scope_for_spanish_postal_code(
-            draft.supplier_postal_code, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("es_canarias", operation=_authority_operation_for_test)
+            draft.supplier_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "es_canarias", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
         # The other party is untouched and must still read as the mainland, so the
         # case proves a territory was RESOLVED rather than that everything moved.
         assert territorial_scope_for_spanish_postal_code(
-            draft.customer_postal_code, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("es_mainland", operation=_authority_operation_for_test)
+            draft.customer_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "es_mainland", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
 
 
 def test_a_ubl_document_carries_the_postal_zone(
@@ -342,8 +350,12 @@ def test_a_cii_document_carries_the_postcode_code(
         assert draft.supplier_postal_code == "38001"
         assert draft.customer_postal_code == "51001"
         assert territorial_scope_for_spanish_postal_code(
-            draft.supplier_postal_code, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("es_canarias", operation=_authority_operation_for_test)
+            draft.supplier_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "es_canarias", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
         assert territorial_scope_for_spanish_postal_code(
-            draft.customer_postal_code, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("es_ceuta_melilla", operation=_authority_operation_for_test)
+            draft.customer_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "es_ceuta_melilla", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )

@@ -12,7 +12,7 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .lifecycle_view_refusal_doors import work_list_verdict
 from .refusal_door_verdicts import caller_defect_verdict
-from .work_addressing import ModeloWorkSelectorContradictionError, ModeloWorkSelectorError
+from .work_address_errors import ModeloWorkSelectorContradictionError, ModeloWorkSelectorError
 from .work_lifecycle_refusal_failures import selector_incoherent_failure
 from .work_selection import (
     ModeloWorkResolution,

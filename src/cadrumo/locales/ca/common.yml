@@ -6306,6 +6306,7 @@ sheets:
       acquisition_value: Valor d'adquisició
       adquisicion_lucrativa: Adquisició lucrativa
       adquisicion_onerosa: Adquisició onerosa
+      amortizacion: Amortització
       amount: Import
       amount_donated: Import donat
       anualidades_alimentos: Anualitats per aliments
@@ -6325,6 +6326,7 @@ sheets:
       asset_class_code: Clau del bé
       asset_identifier: Identificació del bé
       asset_ref: Referència interna del bé
+      base_amortizacion: Base d'amortització
       base_imponible: Base imposable
       base_imponible_assigned: Base imposable atribuïda
       base_retenciones: Base de retencions i ingressos a compte
@@ -6433,10 +6435,16 @@ sheets:
       gasto_servicios_terceros: Serveis personals de tercers
       gasto_suministros: Serveis i subministraments
       gasto_tributos: Tributs, recàrrecs i taxes
+      gastos_adquisicion: Despeses i tributs d'adquisició
       gastos_deducibles: Despeses deduïbles
+      gastos_pendientes_anteriores: Interessos i despeses de reparació i conservació
+        pendents dels quatre exercicis anteriors
+      gastos_pendientes_aplicados: Import pendent d'exercicis anteriors aplicat en
+        aquest exercici
       geographic_mobility_clave: Mobilitat geogràfica
       house_number: Número de casa
       housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual
+      importe_adquisicion: Import d'adquisició
       importe_gastos: Import de despeses
       importe_q1: Import 1T
       importe_q2: Import 2T
@@ -6459,11 +6467,19 @@ sheets:
       inquilino_2_nif_extranjero: NIF de l'arrendatari 2 d'un altre país
       inquilino_3_nif: NIF de l'arrendatari 3
       inquilino_3_nif_extranjero: NIF de l'arrendatari 3 d'un altre país
+      intereses_reparacion_aplicados: Interessos i despeses de reparació i conservació
+        de l'exercici aplicats
+      intereses_reparacion_pendientes: Interessos i despeses de reparació i conservació
+        de l'exercici pendents
+      intereses_reparacion_pendientes_futuros: Interessos i despeses de reparació
+        i conservació pendents per als quatre exercicis següents
       is_recurrent: Donatiu recurrent
       isin_code: Codi ISIN
       locality: Localitat
       loss: Pèrdua patrimonial
       loss_difference: Pèrdua per la transmissió
+      mejoras_anteriores: Millores fetes en exercicis anteriors
+      mejoras_ejercicio: Millores fetes en l'exercici
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
@@ -6505,6 +6521,7 @@ sheets:
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepcions dineràries
       percibido_especie: Percepcions en espècie
+      porcentaje_construccion: Percentatge del valor cadastral corresponent a la construcció
       porcentaje_propiedad: Propietat (%)
       porcentaje_retencion: '% Retenció'
       porcentaje_titularidad_inmueble: Percentatge de titularitat de l'immoble
@@ -6518,18 +6535,22 @@ sheets:
       rectified_period: Període rectificat
       rectified_year: Exercici rectificat
       reduccion: Reducció aplicable al rendiment
+      reduccion_aplicable: Reducció aplicable
       reducciones: Reduccions
       reducciones_aplicables: Reduccions aplicables
       referencia_catastral: Referència cadastral
       refund_amount: Import a retornar
+      rendimiento_neto: Rendiment net
       rendimiento_neto_minorado_agricola_eo: Rendiment net minorat agrícola (estimació
         objectiva)
       rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
+      rendimiento_neto_reducido: Rendiment net reduït
       representative_nif: NIF del representant
       representative_tax_id: NIF del representant legal
       residence_country_code: Codi del país de residència
       retencion_amount: Import de la retenció
       retencion_practicada: Retenció practicada
+      retenciones: Retencions
       reverse_charge_mark: Inversió del subjecte passiu
       rustica: Rústica
       second_child_compute: Còmput del 2n fill
@@ -6556,6 +6577,8 @@ sheets:
       transmission_value: Valor de transmissió
       unit_convivencia_titular_clave: Titular de la unitat de convivència
       urbana: Urbana
+      valor_catastral: Valor cadastral
+      valor_catastral_construccion: Valor cadastral de la construcció
       valuation_amount: Valoració
       valuation_event: Esdeveniment de valoració
       valuation_event_date: Data de l'esdeveniment de valoració
