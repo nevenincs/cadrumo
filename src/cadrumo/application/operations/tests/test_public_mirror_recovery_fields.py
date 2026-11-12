@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 from pydantic import BaseModel
 
@@ -15,6 +13,7 @@ from ....core.operator_action_enums import (
     ActionEvidenceProvenance,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...modelo.work_review import ModeloWorkProgress, ModeloWorkReview
 from ...operator_actions.models import (
     ActionArgumentBinding,
@@ -31,7 +30,7 @@ from ...workbench_generation_modelo_contracts import (
 from ..public_mirror import project_public_mirror, restore_public_mirror
 
 # The review is built without the registry, so the year only has to be coherent.
-_YEAR = date.today().year
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
