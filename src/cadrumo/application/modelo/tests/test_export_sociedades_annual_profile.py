@@ -79,6 +79,7 @@ def test_the_annual_sociedades_export_profile_builds_a_snapshot_with_no_projecti
         operation=operation,
         m360_solicitud=None,
         cited_producer_keys=frozenset(),
+        periodo=None,
     )
     built = build_filing_producer_snapshot(
         modelo=Modelo(modelo),

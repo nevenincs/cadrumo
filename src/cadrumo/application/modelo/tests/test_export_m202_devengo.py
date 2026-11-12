@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.external_constants import OutputLanguage
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -64,6 +65,7 @@ from ..export_periodo_impositivo import (
     CIERRE_EJERCICIO_DIA_PATH,
     CIERRE_EJERCICIO_MES_PATH,
     FECHA_CONSTITUCION_PATH,
+    periodo_impositivo_from_facts,
     periodo_impositivo_start_from_facts,
 )
 
@@ -284,9 +286,6 @@ _PAGE_01_FACTS: Mapping[str, str] = {
     "taxpayer_type.erd_tipo_gravamen_especifico": "false",
     "taxpayer_type.cooperativa_fiscalmente_protegida": "false",
     "taxpayer_type.marca_instrumental": "false",
-    "taxpayer_type.incn_periodo_anterior_inferior_1m": "true",
-    "taxpayer_type.multiples_tipos_impositivos": "false",
-    "taxpayer_type.tipo_gravamen_is": "25",
 }
 #: The 1P instalment's own inputs: an art. 40.2 instalment with a zero base.
 _INSTALMENT_INPUTS: Mapping[str, Decimal] = {
@@ -295,6 +294,12 @@ _INSTALMENT_INPUTS: Mapping[str, Decimal] = {
     "modelo-202-incn-prior-12-months": Decimal("500000"),
     "modelo-202-cuota-base-ejercicio-anterior": Decimal("0"),
 }
+
+
+def _publishes_rates(operation: PinnedAuthorityOperation, year: int) -> bool:
+    """Whether the Modelo 200 edition of the year publishes the LIS art. 29 rates page 01 consigns."""
+    snapshot = operation.snapshot("200", filing_year=year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY)
+    return any(parameter.id == "is.modelo-200.tipo-gravamen-general" for parameter in snapshot.revision.parameters)
 
 
 @pytest.mark.parametrize("year", _YEARS)
@@ -316,27 +321,39 @@ def test_a_sociedad_stating_every_page_01_fact_exports_its_1p_instalment(
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
     on = instalment_period_in_progress_date(period, authority=operation)
     assert on is not None
-    snapshot = build_filing_producer_snapshot(
-        modelo=Modelo("202"),
-        taxpayer_tax_id=TAXPAYER_TAX_ID,
-        taxpayer_identity=taxpayer_identity(),
-        presenter=producer_snapshot_presenter(),
-        model_profile=modelo_202_producer_profile(
+    periodo = periodo_impositivo_from_facts(
+        modelo="202", on=on, profile_values=_stated(closing=(31, 12), constitution=date(year - 3, 3, 15))
+    )
+
+    def producer_profile() -> Modelo202ProducerProfile:
+        return modelo_202_producer_profile(
             workflow_profile=TaxpayerProfile(
                 tax_id=TAXPAYER_TAX_ID, iva_regime=IVARegime("GENERAL"), incn_prior_12_months=Decimal("500000")
             ),
             profile_values=_PAGE_01_FACTS,
             cited_producer_keys=cited,
             effective_date=calculation_filing_date(period, authority=operation),
-        ),
+            periodo=periodo,
+            operation=operation,
+        )
+
+    if not _publishes_rates(operation, year):
+        # Page 01 consigns rates this year's Modelo 200 edition does not publish: nothing is written.
+        with pytest.raises(FilingProducerSnapshotError, match="tipo de gravamen"):
+            producer_profile()
+        return
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo("202"),
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=producer_profile(),
         elections=elections(ResultDisposition.INGRESO),
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
         m303_filing_facts=None,
-        periodo_impositivo_start=periodo_impositivo_start_from_facts(
-            modelo="202", on=on, profile_values=_stated(closing=(31, 12), constitution=date(year - 3, 3, 15))
-        ),
+        periodo_impositivo_start=periodo.start,
     )
 
     payload = render_filing_layout(

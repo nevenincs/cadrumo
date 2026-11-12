@@ -20,7 +20,8 @@ as profile readiness naming every fact to state, never a padded or guessed date.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
+from dataclasses import dataclass
+from datetime import date, timedelta
 from typing import Final
 
 from ...core.period import Period
@@ -40,14 +41,31 @@ _FACTS_MISSING_REASON: Final = "periodo_impositivo_facts_missing"
 _CONSTITUTED_LATER_REASON: Final = "periodo_impositivo_constituted_after_period"
 
 
+@dataclass(frozen=True, slots=True)
+class PeriodoImpositivo:
+    """The período impositivo in progress and where the one before it began.
+
+    ``prior_start`` is ``None`` when this is the entity's first período: it was
+    constituted within it, so no período impositivo inmediato anterior exists.
+    """
+
+    start: date
+    prior_start: date | None
+
+    @property
+    def prior_lasted_twelve_months(self) -> bool:
+        """Whether the immediately preceding período was the twelve months before this one began."""
+        return self.prior_start is not None and self.prior_start == _same_day_a_year_earlier(self.start)
+
+
 def resolve_periodo_impositivo_start(
     *,
     modelo: str,
     bucket_id: str,
     period: Period,
     operation: PinnedAuthorityOperation,
-) -> date | None:
-    """Return the período impositivo start for an instalment, or ``None`` when the period has its own span.
+) -> PeriodoImpositivo | None:
+    """Return the período impositivo of an instalment, or ``None`` when the period has its own span.
 
     The facts are read as in force on the day whose período impositivo the
     instalment is on account of. A period with neither a span nor an instalment
@@ -63,7 +81,7 @@ def resolve_periodo_impositivo_start(
     on = instalment_period_in_progress_date(period, authority=operation)
     if on is None:
         return None
-    return periodo_impositivo_start_from_facts(
+    return periodo_impositivo_from_facts(
         modelo=modelo,
         on=on,
         profile_values=resolve_profile_path_values(bucket_id=bucket_id, operation=operation, as_of=on),
@@ -72,6 +90,15 @@ def resolve_periodo_impositivo_start(
 
 def periodo_impositivo_start_from_facts(*, modelo: str, on: date, profile_values: Mapping[str, str]) -> date:
     """Return the first day of the período impositivo in progress on ``on`` from the stated facts.
+
+    Raises:
+        FilingProducerSnapshotError: As :func:`periodo_impositivo_from_facts`.
+    """
+    return periodo_impositivo_from_facts(modelo=modelo, on=on, profile_values=profile_values).start
+
+
+def periodo_impositivo_from_facts(*, modelo: str, on: date, profile_values: Mapping[str, str]) -> PeriodoImpositivo:
+    """Return the período impositivo in progress on ``on``, and its predecessor's start, from the stated facts.
 
     Raises:
         FilingProducerSnapshotError: A fact is unstated or impossible, or the
@@ -89,7 +116,18 @@ def periodo_impositivo_start_from_facts(*, modelo: str, on: date, profile_values
     if start is None:
         # No período impositivo was in progress: the stated constitution is what contradicts the filing.
         raise _facts_refusal(modelo, (FECHA_CONSTITUCION_PATH,), reason=_CONSTITUTED_LATER_REASON)
-    return start
+    prior_start = periodo_impositivo_start(
+        on=start - timedelta(days=1), closing_day=closing_day, closing_month=closing_month, constitution=constitution
+    )
+    return PeriodoImpositivo(start=start, prior_start=prior_start)
+
+
+def _same_day_a_year_earlier(day: date) -> date:
+    try:
+        return day.replace(year=day.year - 1)
+    except ValueError:
+        # 29 February has no day a common year earlier; that year's ejercicio began on 1 March.
+        return day.replace(year=day.year - 1, month=day.month + 1, day=1)
 
 
 def _missing_paths(closing_day: int | None, closing_month: int | None, constitution: date | None) -> tuple[str, ...]:
@@ -140,6 +178,8 @@ __all__ = [
     "CIERRE_EJERCICIO_DIA_PATH",
     "CIERRE_EJERCICIO_MES_PATH",
     "FECHA_CONSTITUCION_PATH",
+    "PeriodoImpositivo",
+    "periodo_impositivo_from_facts",
     "periodo_impositivo_start_from_facts",
     "resolve_periodo_impositivo_start",
 ]

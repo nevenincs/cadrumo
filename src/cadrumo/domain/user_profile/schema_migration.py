@@ -18,8 +18,9 @@ two.
   fact. It changes no stored value, so its transition clears nothing; a
   schema-9 record that already carries the field is refused.
 - Schema 11 adds the facts the Modelo 202 page 01 states about the entity:
-  the principal CNAE, the datos adicionales marks, the tipo de gravamen, and
-  the constitution date and ejercicio closing that fix the período impositivo. It
+  the principal CNAE, the datos adicionales régimen marks, the INCN of the
+  prior período impositivo, and the constitution date and ejercicio closing
+  that fix the período impositivo. It
   changes no stored value, so its transition clears nothing; a schema-10 record
   that already carries one of the fields is refused.
 
@@ -239,9 +240,7 @@ PATHS_INTRODUCED_IN_V11: Final[frozenset[str]] = frozenset(
         "erd_tipo_gravamen_especifico",
         "cooperativa_fiscalmente_protegida",
         "marca_instrumental",
-        "incn_periodo_anterior_inferior_1m",
-        "multiples_tipos_impositivos",
-        "tipo_gravamen_is",
+        "incn_periodo_impositivo_anterior",
         "fecha_constitucion",
         "cierre_ejercicio_dia",
         "cierre_ejercicio_mes",

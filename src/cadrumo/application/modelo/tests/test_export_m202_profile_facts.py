@@ -1,4 +1,4 @@
-"""A sociedad's Modelo 202 page 01 renders the entity facts it states, and refuses with the door to state a missing one.
+"""A sociedad's Modelo 202 page 01 renders the entity facts it states and the rates the law sets.
 
 Every supported year is enumerated from the registry envelope. For each, the
 selected edition's own layout is read from the published authority, the export
@@ -9,27 +9,37 @@ the official designs: an "X o blanco" mark is X when the fact holds, the
 "superior a 6.000.000 euros" mark compares the twelve-month turnover, and the
 turnover band is "0" No consta below 10 M, "1" from 10 to 20 M, "2" from 20 to
 60 M and "3" from 60 M.
+
+The tipo de gravamen is never stated: the stated régimen marks select the LIS
+art. 29 lane and the Modelo 200 edition of the período's ejercicio publishes
+its rates, consigned as two digits joined with "/" (2025 design Nota 10). The
+expected rates are read here straight from those published parameters for the
+período's first day, so a test follows the registry rather than a year table.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.error_codes import resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from ....domain.calculations.registry.schema_formula import ParameterDefinition
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.period import calculation_filing_date
+from ....domain.period import calculation_filing_date, instalment_period_in_progress_date
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...filing.export_producer import filing_producer_values
 from ...filing.producer_snapshot import FilingProducerSnapshotError, build_filing_producer_snapshot
@@ -46,6 +56,7 @@ from ..action_errors import ModeloProfileReadinessError
 from ..export_accounts import _producer_facts_refusal
 from ..export_contracts import ModeloExportCommand
 from ..export_m202_profile import modelo_202_producer_profile
+from ..export_periodo_impositivo import PeriodoImpositivo, periodo_impositivo_from_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -56,31 +67,41 @@ _LOCALES = ("es", "ca", "en", "hu")
 _PROFILE_EDIT_ACTION = "operator.profile.edit"
 _CNAE_PATH = "taxpayer_type.principal_cnae"
 _INCN_PATH = "taxpayer_type.incn_prior_12_months"
-_PRIOR_PERIOD_PATH = "taxpayer_type.incn_periodo_anterior_inferior_1m"
+_INCN_PERIODO_ANTERIOR_PATH = "taxpayer_type.incn_periodo_impositivo_anterior"
+_COOPERATIVA_PATH = "taxpayer_type.cooperativa_fiscalmente_protegida"
+_ERD_PATH = "taxpayer_type.erd_tipo_gravamen_especifico"
+_TIPO_FACT = "tipo_gravamen_impuesto_sociedades"
 
-#: A sociedad that applies the tonnage régimen and none of the other datos adicionales.
+_GENERAL = "is.modelo-200.tipo-gravamen-general"
+_NEW_ENTITY = "is.modelo-200.tipo-gravamen-new-entity-first-2-years"
+_COOPERATIVE = "is.modelo-200.tipo-gravamen-cooperative-protected"
+_NON_PROFIT = "is.modelo-200.tipo-gravamen-non-profit-special-regime"
+_ERD = "is.modelo-200.tipo-gravamen-erd-art101"
+_MICRO_SCALE = "is.modelo-200.tipo-gravamen-pyme"
+_RATE_PARAMETERS = (_GENERAL, _NEW_ENTITY, _COOPERATIVE, _NON_PROFIT, _ERD, _MICRO_SCALE)
+
+#: A sociedad under a venture-capital régimen and none of the other datos adicionales.
 _STATED: Mapping[str, str] = {
     _CNAE_PATH: "6201",
     "taxpayer_type.regimen_ley_49_2002": "false",
     "taxpayer_type.regimen_socimi": "false",
-    "taxpayer_type.regimen_entidad_capital_riesgo": "false",
-    "taxpayer_type.regimen_entidades_navieras_tonelaje": "true",
-    "taxpayer_type.erd_tipo_gravamen_especifico": "false",
-    "taxpayer_type.cooperativa_fiscalmente_protegida": "false",
+    "taxpayer_type.regimen_entidad_capital_riesgo": "true",
+    "taxpayer_type.regimen_entidades_navieras_tonelaje": "false",
+    _ERD_PATH: "false",
+    _COOPERATIVA_PATH: "false",
     "taxpayer_type.marca_instrumental": "false",
-    _PRIOR_PERIOD_PATH: "false",
-    "taxpayer_type.multiples_tipos_impositivos": "false",
-    "taxpayer_type.tipo_gravamen_is": "25",
 }
 _TURNOVER = Decimal("15000000")
+_MICRO_TURNOVER = Decimal("500000")
+_ERD_TURNOVER = Decimal("5000000")
 
-#: The bytes each page 01 slot takes for the stated sociedad, by the designs' contents column.
+#: The bytes each stated page 01 slot takes for the stated sociedad, by the designs' contents column.
 _EXPECTED_BY_KEY: Mapping[FilingProducerKey, str] = {
     _K.M202_CNAE_ACTIVIDAD_PRINCIPAL: "6201",
     _K.M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS: " ",
     _K.M202_REGIMEN_LEY_11_2009_SOCIMI: " ",
-    _K.M202_REGIMEN_ENTIDAD_CAPITAL_RIESGO: " ",
-    _K.M202_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE: "X",
+    _K.M202_REGIMEN_ENTIDAD_CAPITAL_RIESGO: "X",
+    _K.M202_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE: " ",
     _K.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION: " ",
     _K.M202_CIFRA_NEGOCIOS_DOCE_MESES_UMBRAL: "X",
     _K.M202_COOPERATIVA_FISCALMENTE_PROTEGIDA: " ",
@@ -90,6 +111,7 @@ _EXPECTED_BY_KEY: Mapping[FilingProducerKey, str] = {
     _K.M202_COOPERATIVA_O_MULTIPLES_TIPOS: "0",
     _K.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO: "1",
 }
+_RENDERED_KEYS = frozenset({*_EXPECTED_BY_KEY, _K.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES})
 
 
 _PAGE_01_BY_YEAR: dict[int, tuple[ExportRecordDefinition, ...]] = {}
@@ -112,6 +134,40 @@ def page_01_fields(operation: PinnedAuthorityOperation) -> Mapping[int, tuple[Ex
     return _PAGE_01_BY_YEAR
 
 
+def _published_rates(operation: PinnedAuthorityOperation, year: int) -> Mapping[str, ParameterDefinition]:
+    snapshot = operation.snapshot("200", filing_year=year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY)
+    return {parameter.id: parameter for parameter in snapshot.revision.parameters}
+
+
+def _years_with_rates(operation: PinnedAuthorityOperation) -> tuple[int, ...]:
+    """The supported years whose Modelo 200 edition publishes every rate the lanes read."""
+    return tuple(year for year in _YEARS if set(_RATE_PARAMETERS) <= _published_rates(operation, year).keys())
+
+
+def _rate(operation: PinnedAuthorityOperation, year: int, parameter_id: str) -> str:
+    """The two-digit percentage the parameter publishes for the período starting on 1 January."""
+    start = date(year, 1, 1)
+    (value,) = (
+        value.value
+        for value in _published_rates(operation, year)[parameter_id].values
+        if value.valid_from <= start and (value.valid_to is None or start <= value.valid_to)
+    )
+    return f"{int(value):02d}"
+
+
+def _micro_scale(operation: PinnedAuthorityOperation, year: int) -> tuple[str, ...]:
+    start = date(year, 1, 1)
+    rows = sorted(
+        (
+            row
+            for row in _published_rates(operation, year)[_MICRO_SCALE].brackets
+            if row.valid_from <= start and (row.valid_to is None or start <= row.valid_to)
+        ),
+        key=lambda row: row.lower_bound,
+    )
+    return tuple(dict.fromkeys(f"{int(row.marginal_rate * 100):02d}" for row in rows))
+
+
 def _cited(records: tuple[ExportRecordDefinition, ...]) -> frozenset[FilingProducerKey]:
     return frozenset(
         field.producer_key for record in records for field in record.fields if field.producer_key is not None
@@ -122,18 +178,37 @@ def _sociedad(turnover: Decimal | None = _TURNOVER) -> TaxpayerProfile:
     return TaxpayerProfile(tax_id=TAXPAYER_TAX_ID, iva_regime=IVARegime("GENERAL"), incn_prior_12_months=turnover)
 
 
+def _periodo(year: int, *, constitution: date | None = None) -> PeriodoImpositivo:
+    """The calendar período the year's 1P instalment is on account of, for an entity constituted long before."""
+    on = instalment_period_in_progress_date(Period.from_year_and_code(year, _PERIOD))
+    assert on is not None
+    return periodo_impositivo_from_facts(
+        modelo="202",
+        on=on,
+        profile_values={
+            "taxpayer_type.cierre_ejercicio_dia": "31",
+            "taxpayer_type.cierre_ejercicio_mes": "12",
+            "taxpayer_type.fecha_constitucion": (constitution or date(year - 5, 1, 1)).isoformat(),
+        },
+    )
+
+
 def _resolve(
     records: tuple[ExportRecordDefinition, ...],
     year: int,
     values: Mapping[str, str],
     *,
+    operation: PinnedAuthorityOperation,
     turnover: Decimal | None = _TURNOVER,
+    periodo: PeriodoImpositivo | None = None,
 ) -> dict[FilingProducerKey, object]:
     model_profile = modelo_202_producer_profile(
         workflow_profile=_sociedad(turnover),
         profile_values=values,
         cited_producer_keys=_cited(records),
         effective_date=calculation_filing_date(Period.from_year_and_code(year, _PERIOD)),
+        periodo=periodo or _periodo(year),
+        operation=operation,
     )
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("202"),
@@ -157,45 +232,237 @@ def _rendered(
     for record in records:
         for field in record.fields:
             key = field.producer_key
-            if key is not None and (key in _EXPECTED_BY_KEY or key is _K.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES):
+            if key is not None and key in _RENDERED_KEYS:
                 rendered[key] = (field, format_field(field, header_field_value(field, headers), record=record))
     return rendered
 
 
-def _refusal(records: tuple[ExportRecordDefinition, ...], year: int, values: Mapping[str, str]) -> Exception:
+def _tipo(rendered: Mapping[FilingProducerKey, tuple[ExportFieldDefinition, str]]) -> str:
+    return rendered[_K.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES][1].rstrip()
+
+
+def _render(
+    operation: PinnedAuthorityOperation,
+    records: tuple[ExportRecordDefinition, ...],
+    year: int,
+    values: Mapping[str, str],
+    *,
+    turnover: Decimal | None = _TURNOVER,
+    periodo: PeriodoImpositivo | None = None,
+) -> dict[FilingProducerKey, tuple[ExportFieldDefinition, str]]:
+    headers = _resolve(records, year, values, operation=operation, turnover=turnover, periodo=periodo)
+    return _rendered(records, headers)
+
+
+def _refusal(
+    records: tuple[ExportRecordDefinition, ...],
+    year: int,
+    values: Mapping[str, str],
+    operation: PinnedAuthorityOperation,
+) -> Exception:
     with pytest.raises(FilingProducerSnapshotError) as refused:
-        _resolve(records, year, values)
+        _resolve(records, year, values, operation=operation)
     return _producer_facts_refusal(
         ModeloExportCommand(calculation_revision_id="a" * 64, output_path=Path("unused.txt"), actor="operator"),
         refused.value,
     )
 
 
-@pytest.mark.parametrize("year", _YEARS)
-def test_a_sociedad_that_states_its_facts_fills_page_01_as_the_design_writes_them(
-    year: int, page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]]
-) -> None:
-    records = page_01_fields[year]
-    rendered = _rendered(records, _resolve(records, year, _STATED))
+def _assert_terminal_rate_refusal(error: FilingProducerSnapshotError) -> None:
+    assert error.context is not None
+    assert error.context["fact"] == _TIPO_FACT
+    verdict = nested_terminal_precondition_verdict(error)
+    assert verdict is not None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
 
-    cited_expected = _cited(records) & (_EXPECTED_BY_KEY.keys() | {_K.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES})
-    assert _K.M202_CNAE_ACTIVIDAD_PRINCIPAL in cited_expected
-    assert set(rendered) == cited_expected
-    for key, (field, text) in rendered.items():
-        if key is _K.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES:
-            assert field.length is not None, field.id
-            assert text == "25".ljust(field.length), field.id
+
+@pytest.fixture
+def rate_years(operation: PinnedAuthorityOperation) -> tuple[int, ...]:
+    years = _years_with_rates(operation)
+    assert years, "no supported year's Modelo 200 edition publishes the LIS art. 29 rates"
+    return years
+
+
+def test_a_sociedad_fills_page_01_with_its_stated_facts_and_the_general_rate(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in rate_years:
+        records = page_01_fields[year]
+        rendered = _render(operation, records, year, _STATED)
+
+        assert _K.M202_CNAE_ACTIVIDAD_PRINCIPAL in rendered
+        assert set(rendered) == _cited(records) & _RENDERED_KEYS
+        for key, (field, text) in rendered.items():
+            if key is _K.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES:
+                assert field.length is not None, field.id
+                assert text == _rate(operation, year, _GENERAL).ljust(field.length), field.id
+            else:
+                assert text == _EXPECTED_BY_KEY[key], (year, field.id)
+
+
+def test_a_microempresa_consigns_the_scale_and_marks_the_prior_turnover(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in rate_years:
+        rendered = _render(operation, page_01_fields[year], year, _STATED, turnover=_MICRO_TURNOVER)
+
+        assert _tipo(rendered) == "/".join(_micro_scale(operation, year)), year
+        if _K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL in rendered:
+            assert rendered[_K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL][1] == "X"
+        if _K.M202_MULTIPLES_TIPOS_IMPOSITIVOS in rendered:
+            # The microempresa has its own key, so its two tranches are not "otras entidades".
+            assert rendered[_K.M202_MULTIPLES_TIPOS_IMPOSITIVOS][1] == " "
+        if _K.M202_COOPERATIVA_O_MULTIPLES_TIPOS in rendered:
+            assert rendered[_K.M202_COOPERATIVA_O_MULTIPLES_TIPOS][1] == "0"
+
+
+def test_a_reducida_dimension_entity_applying_its_rate_consigns_it(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in rate_years:
+        values = {**_STATED, _ERD_PATH: "true"}
+        rendered = _render(operation, page_01_fields[year], year, values, turnover=_ERD_TURNOVER)
+
+        assert _tipo(rendered) == _rate(operation, year, _ERD), year
+        assert rendered[_K.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION][1] == "X"
+
+
+@pytest.mark.parametrize(
+    ("path", "parameter_id"),
+    [
+        ("taxpayer_type.regimen_ley_49_2002", _NON_PROFIT),
+        ("taxpayer_type.new_entity_first_two_profit_periods", _NEW_ENTITY),
+    ],
+)
+def test_a_special_regimen_consigns_its_own_rate_even_below_the_microempresa_threshold(
+    path: str,
+    parameter_id: str,
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in rate_years:
+        values = {**_STATED, path: "true"}
+        rendered = _render(operation, page_01_fields[year], year, values, turnover=_MICRO_TURNOVER)
+
+        assert _tipo(rendered) == _rate(operation, year, parameter_id), year
+
+
+def test_a_cooperativa_consigns_its_protected_rate_before_the_rate_of_its_other_results(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in rate_years:
+        values = {**_STATED, _COOPERATIVA_PATH: "true"}
+        rendered = _render(operation, page_01_fields[year], year, values)
+
+        expected = f"{_rate(operation, year, _COOPERATIVE)}/{_rate(operation, year, _GENERAL)}"
+        assert _tipo(rendered) == expected, year
+        if _K.M202_COOPERATIVA_O_MULTIPLES_TIPOS in rendered:
+            assert rendered[_K.M202_COOPERATIVA_O_MULTIPLES_TIPOS][1] == "1"
+        if _K.M202_MULTIPLES_TIPOS_IMPOSITIVOS in rendered:
+            # The cooperativa has its own key, so its two rates are not "otras entidades".
+            assert rendered[_K.M202_MULTIPLES_TIPOS_IMPOSITIVOS][1] == " "
+
+
+def test_a_cooperativa_microempresa_is_consigned_only_on_a_single_rate_scale(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    values = {**_STATED, _COOPERATIVA_PATH: "true"}
+    for year in rate_years:
+        records = page_01_fields[year]
+        scale = _micro_scale(operation, year)
+        if len(scale) == 1:
+            rendered = _render(operation, records, year, values, turnover=_MICRO_TURNOVER)
+            assert _tipo(rendered) == f"{_rate(operation, year, _COOPERATIVE)}/{scale[0]}", year
         else:
-            assert text == _EXPECTED_BY_KEY[key], field.id
+            with pytest.raises(FilingProducerSnapshotError) as refused:
+                _resolve(records, year, values, operation=operation, turnover=_MICRO_TURNOVER)
+            _assert_terminal_rate_refusal(refused.value)
+
+
+@pytest.mark.parametrize("path", ["taxpayer_type.regimen_socimi", "taxpayer_type.regimen_entidades_navieras_tonelaje"])
+def test_a_regimen_whose_rates_are_not_published_refuses_terminally_never_a_guessed_rate(
+    path: str,
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    year = rate_years[-1]
+
+    with pytest.raises(FilingProducerSnapshotError) as refused:
+        _resolve(page_01_fields[year], year, {**_STATED, path: "true"}, operation=operation)
+
+    _assert_terminal_rate_refusal(refused.value)
+
+
+def test_a_year_whose_modelo_200_edition_publishes_no_rates_refuses_terminally(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in (year for year in _YEARS if year not in rate_years):
+        with pytest.raises(FilingProducerSnapshotError) as refused:
+            _resolve(page_01_fields[year], year, _STATED, operation=operation)
+        _assert_terminal_rate_refusal(refused.value)
+
+
+def test_a_first_periodo_has_no_preceding_turnover_so_it_is_no_microempresa(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in rate_years:
+        periodo = _periodo(year, constitution=date(year, 1, 1))
+        assert periodo.prior_start is None
+        rendered = _render(operation, page_01_fields[year], year, _STATED, turnover=_MICRO_TURNOVER, periodo=periodo)
+
+        assert _tipo(rendered) == _rate(operation, year, _GENERAL), year
+        if _K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL in rendered:
+            assert rendered[_K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL][1] == " "
+
+
+def test_a_shorter_preceding_periodo_reads_its_own_turnover_and_refuses_without_it(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in rate_years:
+        records = page_01_fields[year]
+        # Constituted mid-way through the year before, so that first período lasted under twelve months.
+        periodo = _periodo(year, constitution=date(year - 1, 7, 1))
+        assert periodo.prior_start == date(year - 1, 7, 1)
+        assert not periodo.prior_lasted_twelve_months
+
+        with pytest.raises(FilingProducerSnapshotError) as refused:
+            _resolve(records, year, _STATED, operation=operation, turnover=_TURNOVER, periodo=periodo)
+        assert refused.value.context is not None
+        assert refused.value.context["profile_path"] == _INCN_PERIODO_ANTERIOR_PATH
+
+        # The twelve-month turnover is not that período's: only its own stated turnover selects the scale.
+        values = {**_STATED, _INCN_PERIODO_ANTERIOR_PATH: str(_MICRO_TURNOVER)}
+        rendered = _render(operation, records, year, values, turnover=_TURNOVER, periodo=periodo)
+        assert _tipo(rendered) == "/".join(_micro_scale(operation, year)), year
 
 
 @pytest.mark.parametrize("year", _YEARS)
 def test_without_a_principal_cnae_the_export_refuses_with_the_door_to_state_it(
-    year: int, page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]]
+    year: int,
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
 ) -> None:
     unstated = {path: value for path, value in _STATED.items() if path != _CNAE_PATH}
 
-    failure = _refusal(page_01_fields[year], year, unstated)
+    failure = _refusal(page_01_fields[year], year, unstated, operation)
 
     assert isinstance(failure, ModeloProfileReadinessError)
     verdict = nested_terminal_precondition_verdict(failure)
@@ -214,11 +481,13 @@ def test_without_a_principal_cnae_the_export_refuses_with_the_door_to_state_it(
 
 @pytest.mark.parametrize("cnae", ["620", "62011", "62A1"])
 def test_a_principal_cnae_that_is_not_four_digits_is_refused_as_unstated(
-    cnae: str, page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]]
+    cnae: str,
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
 ) -> None:
     year = _YEARS[-1]
 
-    failure = _refusal(page_01_fields[year], year, {**_STATED, _CNAE_PATH: cnae})
+    failure = _refusal(page_01_fields[year], year, {**_STATED, _CNAE_PATH: cnae}, operation)
 
     step = error_next_step(failure, OutputLanguage.EN)
     assert isinstance(step, OperationOpenProfileFieldStepV1)
@@ -227,13 +496,14 @@ def test_a_principal_cnae_that_is_not_four_digits_is_refused_as_unstated(
 
 @pytest.mark.parametrize("year", _YEARS)
 def test_an_unstated_mark_and_turnover_are_refused_and_named_never_written_as_blank(
-    year: int, page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]]
+    year: int,
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
 ) -> None:
-    records = page_01_fields[year]
     unstated = {path: value for path, value in _STATED.items() if path != "taxpayer_type.marca_instrumental"}
 
     with pytest.raises(FilingProducerSnapshotError) as refused:
-        _resolve(records, year, unstated, turnover=None)
+        _resolve(page_01_fields[year], year, unstated, operation=operation, turnover=None)
 
     assert refused.value.context is not None
     missing = str(refused.value.context["missing_profile_paths"]).split(", ")
@@ -242,17 +512,18 @@ def test_an_unstated_mark_and_turnover_are_refused_and_named_never_written_as_bl
 
 
 @pytest.mark.parametrize("year", _YEARS)
-def test_a_fact_the_years_design_has_no_position_for_is_never_asked(
-    year: int, page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]]
+def test_an_unstated_regimen_mark_is_refused_before_any_rate_is_read(
+    year: int,
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
 ) -> None:
-    records = page_01_fields[year]
-    unstated = {path: value for path, value in _STATED.items() if path != _PRIOR_PERIOD_PATH}
+    unstated = {path: value for path, value in _STATED.items() if path != _COOPERATIVA_PATH}
 
-    if _K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL in _cited(records):
-        with pytest.raises(FilingProducerSnapshotError, match=_PRIOR_PERIOD_PATH):
-            _resolve(records, year, unstated)
-    else:
-        assert _resolve(records, year, unstated)[_K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL] is None
+    with pytest.raises(FilingProducerSnapshotError) as refused:
+        _resolve(page_01_fields[year], year, unstated, operation=operation)
+
+    assert refused.value.context is not None
+    assert _COOPERATIVA_PATH in str(refused.value.context["missing_profile_paths"]).split(", ")
 
 
 @pytest.mark.parametrize(
@@ -272,32 +543,11 @@ def test_the_turnover_mark_and_band_follow_the_designs_bounds(
     turnover: Decimal,
     above_six_million: str,
     band: str,
+    operation: PinnedAuthorityOperation,
     page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
 ) -> None:
-    for year in _YEARS:
-        records = page_01_fields[year]
-        rendered = _rendered(records, _resolve(records, year, _STATED, turnover=turnover))
+    for year in rate_years:
+        rendered = _render(operation, page_01_fields[year], year, _STATED, turnover=turnover)
         assert rendered[_K.M202_CIFRA_NEGOCIOS_DOCE_MESES_UMBRAL][1] == above_six_million
         assert rendered[_K.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO][1] == band
-
-
-@pytest.mark.parametrize(
-    ("cooperativa", "multiples", "key"),
-    [("true", "false", "1"), ("true", "true", "1"), ("false", "true", "2"), ("false", "false", "0")],
-)
-def test_the_combined_cooperativa_key_of_the_earlier_designs_reads_both_marks(
-    cooperativa: str,
-    multiples: str,
-    key: str,
-    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
-) -> None:
-    combined_years = [year for year in _YEARS if _K.M202_COOPERATIVA_O_MULTIPLES_TIPOS in _cited(page_01_fields[year])]
-    values = {
-        **_STATED,
-        "taxpayer_type.cooperativa_fiscalmente_protegida": cooperativa,
-        "taxpayer_type.multiples_tipos_impositivos": multiples,
-    }
-    for year in combined_years:
-        records = page_01_fields[year]
-        rendered = _rendered(records, _resolve(records, year, values))
-        assert rendered[_K.M202_COOPERATIVA_O_MULTIPLES_TIPOS][1] == key

@@ -134,7 +134,7 @@ from .export_contracts import (
 )
 from .export_field_refusal import export_design_fault_refusal, export_operator_decision_refusal
 from .export_m202_profile import modelo_202_producer_profile
-from .export_periodo_impositivo import resolve_periodo_impositivo_start
+from .export_periodo_impositivo import PeriodoImpositivo, resolve_periodo_impositivo_start
 from .export_ports import M303ArrivalPorts, ModeloExportPorts
 from .export_preparation import (
     require_m303_regimen_simplificado_scope_matches_profile,
@@ -577,6 +577,18 @@ def build_export_producer_snapshot(
             amendment_evidence=amendment_evidence,
             operation=operation,
         )
+        # The devengo leads page 01, so its facts are asked for before the entity facts after it;
+        # a pago fraccionado's rates are those of the same período, so it is resolved for them too.
+        periodo = (
+            resolve_periodo_impositivo_start(
+                modelo=str(modelo),
+                bucket_id=work_unit.bucket_id,
+                period=work_unit.period,
+                operation=operation,
+            )
+            if cites_period_start or modelo == form_for_role("sociedades.instalment")
+            else None
+        )
         model_profile, m303_filing_facts = resolve_export_model_profile(
             modelo=modelo,
             work_unit=work_unit,
@@ -587,16 +599,7 @@ def build_export_producer_snapshot(
             operation=operation,
             m360_solicitud=m360_solicitud,
             cited_producer_keys=cited_producer_keys,
-        )
-        periodo_start = (
-            resolve_periodo_impositivo_start(
-                modelo=str(modelo),
-                bucket_id=work_unit.bucket_id,
-                period=work_unit.period,
-                operation=operation,
-            )
-            if cites_period_start
-            else None
+            periodo=periodo,
         )
         if m360_solicitud is not None:
             account_page_refund_account = refund_account is not None
@@ -626,7 +629,7 @@ def build_export_producer_snapshot(
                 bucket_id=work_unit.bucket_id,
                 operation=operation,
             ),
-            periodo_impositivo_start=periodo_start,
+            periodo_impositivo_start=None if periodo is None else periodo.start,
         )
     except FilingProducerSnapshotError as exc:
         raise _producer_facts_refusal(command, exc) from exc
@@ -836,8 +839,13 @@ def resolve_export_model_profile(
     operation: PinnedAuthorityOperation,
     m360_solicitud: Modelo360SolicitudEntry | None,
     cited_producer_keys: frozenset[FilingProducerKey],
+    periodo: PeriodoImpositivo | None,
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
-    """Return the model profile facts this modelo's export reads, and the Modelo 303 filing facts for a 303."""
+    """Return the model profile facts this modelo's export reads, and the Modelo 303 filing facts for a 303.
+
+    ``periodo`` is the período impositivo a period without a calendar span is
+    filed for, resolved by the caller; a Modelo 202 reads its rates from it.
+    """
     if m360_solicitud is not None:
         return m360_solicitud.facts, None
     if modelo == form_for_role("iva.periodic"):
@@ -857,6 +865,9 @@ def resolve_export_model_profile(
     if modelo == form_for_role("sociedades.annual"):
         return Modelo200ProfileFacts(), None
     if modelo == form_for_role("sociedades.instalment"):
+        if periodo is None:
+            # Every pago fraccionado period lacks a calendar span, so the caller resolves its período.
+            raise ValueError("a Modelo 202 export reached its producer view without its período impositivo")
         # A pago fraccionado has no calendar span; its payment month's end is the day it is filed for.
         filing_date = calculation_filing_date(work_unit.period, authority=operation)
         return modelo_202_producer_profile(
@@ -868,6 +879,8 @@ def resolve_export_model_profile(
             ),
             cited_producer_keys=cited_producer_keys,
             effective_date=filing_date,
+            periodo=periodo,
+            operation=operation,
         ), None
     if modelo == form_for_role("withholding.work_periodic"):
         return _modelo_111_profile_facts(

@@ -18,7 +18,13 @@ design derives from a stated fact:
 - The 2019 and 2023 designs fold the cooperativa and several-rates marks into one
   key at position 126: "1" Cooperativa, "2" Otras entidades, "0" No consta.
 - The tipo de gravamen (2025 position 132, 15 positions; earlier position 127,
-  5 positions) is stated as the operator consigns it.
+  5 positions), the "INCN del período impositivo inmediato anterior inferior a 1
+  millón" mark (2025 position 130) and the several-rates mark (2025 position 131)
+  are law, not choices: they are derived from the governed LIS art. 29 rates the
+  stated régimen marks select (see ``export_m202_tipo_gravamen``).
+- The immediately preceding período's turnover is the twelve-month turnover when
+  that período lasted twelve months; otherwise it is stated on its own. An
+  entity in its first período has no preceding one, so the mark stays blank.
 
 Only the facts the selected edition's layout cites are asked for, so a fact a
 year's design has no position for never blocks that year's export.
@@ -28,8 +34,9 @@ from __future__ import annotations
 
 import re
 from collections.abc import Collection, Mapping
+from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Final
 
 from ...core.filing_producer_key import FilingProducerKey
@@ -38,30 +45,41 @@ from ...domain.calculations.registry.applicability_modelo202 import (
     modelo_202_incn_threshold_decimal,
     resolve_modelo_202_art_40_3_incn_threshold,
 )
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
 from ..filing.producer_snapshot import FilingProducerSnapshotError, Modelo202ProducerProfile
 from ..operator_actions.preconditions import profile_required_facts_missing_verdict
 from ..user_profile.completeness import pinned_registry_scope
+from .export_m202_tipo_gravamen import (
+    RegimenMarks,
+    consigned_rates,
+    governed_rates,
+    several_rates_beyond_own_keys,
+    tipo_gravamen_rates,
+)
+from .export_periodo_impositivo import PeriodoImpositivo
 
 _K = FilingProducerKey
 
 PRINCIPAL_CNAE_PATH: Final = "taxpayer_type.principal_cnae"
 INCN_PRIOR_12_MONTHS_PATH: Final = "taxpayer_type.incn_prior_12_months"
-TIPO_GRAVAMEN_PATH: Final = "taxpayer_type.tipo_gravamen_is"
+INCN_PERIODO_ANTERIOR_PATH: Final = "taxpayer_type.incn_periodo_impositivo_anterior"
+NEW_ENTITY_PATH: Final = "taxpayer_type.new_entity_first_two_profit_periods"
+LEY_49_2002_PATH: Final = "taxpayer_type.regimen_ley_49_2002"
+SOCIMI_PATH: Final = "taxpayer_type.regimen_socimi"
+NAVIERAS_PATH: Final = "taxpayer_type.regimen_entidades_navieras_tonelaje"
+ERD_PATH: Final = "taxpayer_type.erd_tipo_gravamen_especifico"
 COOPERATIVA_PATH: Final = "taxpayer_type.cooperativa_fiscalmente_protegida"
-MULTIPLES_TIPOS_PATH: Final = "taxpayer_type.multiples_tipos_impositivos"
 
-#: Every "X o blanco" mark the designs cite, with the profile fact that answers it.
+#: Every stated "X o blanco" mark the designs cite, with the profile fact that answers it.
 MARK_FACT_BY_PRODUCER_KEY: Final[Mapping[FilingProducerKey, str]] = {
-    _K.M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS: "taxpayer_type.regimen_ley_49_2002",
-    _K.M202_REGIMEN_LEY_11_2009_SOCIMI: "taxpayer_type.regimen_socimi",
+    _K.M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS: LEY_49_2002_PATH,
+    _K.M202_REGIMEN_LEY_11_2009_SOCIMI: SOCIMI_PATH,
     _K.M202_REGIMEN_ENTIDAD_CAPITAL_RIESGO: "taxpayer_type.regimen_entidad_capital_riesgo",
-    _K.M202_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE: "taxpayer_type.regimen_entidades_navieras_tonelaje",
-    _K.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION: "taxpayer_type.erd_tipo_gravamen_especifico",
+    _K.M202_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE: NAVIERAS_PATH,
+    _K.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION: ERD_PATH,
     _K.M202_COOPERATIVA_FISCALMENTE_PROTEGIDA: COOPERATIVA_PATH,
     _K.M202_MARCA_INSTRUMENTAL: "taxpayer_type.marca_instrumental",
-    _K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL: "taxpayer_type.incn_periodo_anterior_inferior_1m",
-    _K.M202_MULTIPLES_TIPOS_IMPOSITIVOS: MULTIPLES_TIPOS_PATH,
 }
 
 _MARK_FIELD_BY_PRODUCER_KEY: Final[Mapping[FilingProducerKey, str]] = {
@@ -72,9 +90,17 @@ _MARK_FIELD_BY_PRODUCER_KEY: Final[Mapping[FilingProducerKey, str]] = {
     _K.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION: "regimen_articulo_101_lis_reducida_dimension",
     _K.M202_COOPERATIVA_FISCALMENTE_PROTEGIDA: "cooperativa_fiscalmente_protegida",
     _K.M202_MARCA_INSTRUMENTAL: "marca_instrumental",
-    _K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL: "cifra_negocios_periodo_anterior_bajo_umbral",
-    _K.M202_MULTIPLES_TIPOS_IMPOSITIVOS: "multiples_tipos_impositivos",
 }
+
+#: The slots derived from the governed rates the stated régimen selects.
+_RATE_PRODUCER_KEYS: Final = frozenset(
+    {
+        _K.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES,
+        _K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL,
+        _K.M202_MULTIPLES_TIPOS_IMPOSITIVOS,
+        _K.M202_COOPERATIVA_O_MULTIPLES_TIPOS,
+    },
+)
 
 _INCN_PRODUCER_KEYS: Final = frozenset(
     {_K.M202_CIFRA_NEGOCIOS_DOCE_MESES_UMBRAL, _K.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO},
@@ -118,6 +144,10 @@ class _Reader:
             self._absent(path)
         return stated
 
+    def opt_in(self, path: str) -> bool:
+        """A yes/no whose unstated value the profile defines as no."""
+        return parse_bool(self._values.get(path)) is True
+
     def text(self, path: str, *, shape: re.Pattern[str] | None = None) -> str | None:
         stated = (self._values.get(path) or "").strip()
         if not stated or (shape is not None and not shape.match(stated)):
@@ -125,10 +155,29 @@ class _Reader:
             return None
         return stated
 
+    def amount(self, path: str) -> Decimal | None:
+        try:
+            stated = Decimal((self._values.get(path) or "").strip())
+        except InvalidOperation:
+            stated = None
+        return self.stated(path, stated if stated is not None and stated.is_finite() else None)
+
     def stated(self, path: str, value: Decimal | None) -> Decimal | None:
         if value is None:
             self._absent(path)
         return value
+
+
+@dataclass(frozen=True, slots=True)
+class _RateInputs:
+    """The stated facts the governed rates are selected by.
+
+    ``prior_incn`` is the immediately preceding período's turnover, ``None``
+    when the entity is in its first período and has none.
+    """
+
+    marks: RegimenMarks
+    prior_incn: Decimal | None
 
 
 def modelo_202_producer_profile(
@@ -137,6 +186,8 @@ def modelo_202_producer_profile(
     profile_values: Mapping[str, str],
     cited_producer_keys: Collection[FilingProducerKey],
     effective_date: date,
+    periodo: PeriodoImpositivo,
+    operation: PinnedAuthorityOperation,
 ) -> Modelo202ProducerProfile:
     """Return the Modelo 202 producer view, or refuse naming every profile fact the layout needs and lacks.
 
@@ -146,10 +197,15 @@ def modelo_202_producer_profile(
         profile_values: The profile facts in force for the period, keyed by path.
         cited_producer_keys: Every producer key the selected edition's layout cites.
         effective_date: The date the threshold fact is resolved for.
+        periodo: The período impositivo the instalment is on account of; its
+            start dates the governed rates and its predecessor the turnover
+            that selects the microempresa scale.
+        operation: The pinned authority the governed rates are read from.
 
     Raises:
         FilingProducerSnapshotError: A cited fact is unstated, or the principal CNAE
             is not four digits; the refusal opens the first such profile fact.
+            A régimen or ejercicio whose rates are not published refuses terminally.
     """
     cited = frozenset(cited_producer_keys)
     reader = _Reader(profile_values)
@@ -162,8 +218,11 @@ def modelo_202_producer_profile(
         for key, path in MARK_FACT_BY_PRODUCER_KEY.items()
         if key in cited
     }
-    combined = _combined_cooperativa_key(reader) if _K.M202_COOPERATIVA_O_MULTIPLES_TIPOS in cited else None
-    tipo = reader.text(TIPO_GRAVAMEN_PATH) if _K.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES in cited else None
+    rate_inputs = (
+        _read_rate_inputs(reader, workflow_profile=workflow_profile, periodo=periodo)
+        if cited & _RATE_PRODUCER_KEYS
+        else None
+    )
     incn = (
         reader.stated(INCN_PRIOR_12_MONTHS_PATH, workflow_profile.incn_prior_12_months)
         if cited & _INCN_PRODUCER_KEYS
@@ -171,28 +230,87 @@ def modelo_202_producer_profile(
     )
     if reader.missing:
         raise _profile_facts_missing(tuple(reader.missing))
+    derived = (
+        _derived_rate_fields(rate_inputs, cited, periodo=periodo, operation=operation)
+        if rate_inputs is not None
+        else {}
+    )
     return Modelo202ProducerProfile.model_validate(
         {
             "taxpayer_profile": workflow_profile,
             "activities": (),
             "principal_cnae": principal_cnae,
-            "cooperativa_o_multiples_tipos": combined,
-            "tipo_gravamen_impuesto_sociedades": tipo,
             **_turnover_marks(incn, cited, effective_date),
             **marks,
+            **derived,
         },
     )
 
 
-def _combined_cooperativa_key(reader: _Reader) -> str | None:
-    """The 2019 and 2023 key: a cooperativa fiscalmente protegida is "1", any other several-rates entity "2"."""
+def _read_rate_inputs(
+    reader: _Reader, *, workflow_profile: TaxpayerProfile, periodo: PeriodoImpositivo
+) -> _RateInputs | None:
+    """Read the régimen marks and the preceding período's turnover, or ``None`` when one is unstated."""
+    ley_49_2002 = reader.mark(LEY_49_2002_PATH)
+    socimi = reader.mark(SOCIMI_PATH)
+    navieras = reader.mark(NAVIERAS_PATH)
+    erd = reader.mark(ERD_PATH)
     cooperativa = reader.mark(COOPERATIVA_PATH)
-    multiples = reader.mark(MULTIPLES_TIPOS_PATH)
-    if cooperativa is None or multiples is None:
+    prior_incn: Decimal | None = None
+    if periodo.prior_lasted_twelve_months:
+        prior_incn = reader.stated(INCN_PRIOR_12_MONTHS_PATH, workflow_profile.incn_prior_12_months)
+    elif periodo.prior_start is not None:
+        prior_incn = reader.amount(INCN_PERIODO_ANTERIOR_PATH)
+    if ley_49_2002 is None or socimi is None or navieras is None or erd is None or cooperativa is None:
         return None
+    if periodo.prior_start is not None and prior_incn is None:
+        return None
+    return _RateInputs(
+        marks=RegimenMarks(
+            ley_49_2002=ley_49_2002,
+            socimi=socimi,
+            navieras_tonelaje=navieras,
+            # Opt-in by the profile's own definition: unstated leaves the otherwise-applicable rate.
+            new_entity_first_two_profit_periods=reader.opt_in(NEW_ENTITY_PATH),
+            erd_tipo_especifico=erd,
+            cooperativa_protegida=cooperativa,
+        ),
+        prior_incn=prior_incn,
+    )
+
+
+def _derived_rate_fields(
+    inputs: _RateInputs,
+    cited: frozenset[FilingProducerKey],
+    *,
+    periodo: PeriodoImpositivo,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, object]:
+    """The rate slots, derived from the governed rates of the período the stated régimen selects."""
+    rates = governed_rates(periodo_start=periodo.start, operation=operation)
+    # LIS art. 29.1 reads the "período impositivo inmediato anterior"; a first período has none to qualify it.
+    microempresa = inputs.prior_incn is not None and inputs.prior_incn < rates.microempresa_threshold()
+    applied = tipo_gravamen_rates(marks=inputs.marks, microempresa=microempresa, rates=rates)
+    several = several_rates_beyond_own_keys(rates=applied, marks=inputs.marks, microempresa=microempresa)
+    fields: dict[str, object] = {}
+    if _K.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES in cited:
+        fields["tipo_gravamen_impuesto_sociedades"] = consigned_rates(applied)
+    if _K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL in cited:
+        fields["cifra_negocios_periodo_anterior_bajo_umbral"] = microempresa
+    if _K.M202_MULTIPLES_TIPOS_IMPOSITIVOS in cited:
+        fields["multiples_tipos_impositivos"] = several
+    if _K.M202_COOPERATIVA_O_MULTIPLES_TIPOS in cited:
+        fields["cooperativa_o_multiples_tipos"] = _combined_cooperativa_key(
+            cooperativa=inputs.marks.cooperativa_protegida, several_rates=several
+        )
+    return fields
+
+
+def _combined_cooperativa_key(*, cooperativa: bool, several_rates: bool) -> str:
+    """The 2019 and 2023 key: a cooperativa fiscalmente protegida is "1", any other several-rates entity "2"."""
     if cooperativa:
         return _COMBINED_COOPERATIVA
-    return _COMBINED_OTRAS_ENTIDADES if multiples else _COMBINED_NO_CONSTA
+    return _COMBINED_OTRAS_ENTIDADES if several_rates else _COMBINED_NO_CONSTA
 
 
 def _turnover_marks(
@@ -237,10 +355,10 @@ def _profile_facts_missing(paths: tuple[str, ...]) -> FilingProducerSnapshotErro
 
 __all__ = [
     "COOPERATIVA_PATH",
+    "INCN_PERIODO_ANTERIOR_PATH",
     "INCN_PRIOR_12_MONTHS_PATH",
     "MARK_FACT_BY_PRODUCER_KEY",
-    "MULTIPLES_TIPOS_PATH",
+    "NEW_ENTITY_PATH",
     "PRINCIPAL_CNAE_PATH",
-    "TIPO_GRAVAMEN_PATH",
     "modelo_202_producer_profile",
 ]

@@ -616,7 +616,7 @@ type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Datos adicionales del Modelo 202: cooperativa fiscalmente protegida (diseño 2025 posición 128, marca X o blanco; diseños 2019 y 2023 posición 126, clave \"1\" Cooperativa). true escribe la X, o la clave 1 en los diseños 2019 y 2023; con false y multiples_tipos_impositivos también false esos diseños escriben la clave \"0\" No consta. Sin valor la exportación se rechaza."
+description = "Datos adicionales del Modelo 202: cooperativa fiscalmente protegida (diseño 2025 posición 128, marca X o blanco; diseños 2019 y 2023 posición 126, clave \"1\" Cooperativa). true escribe la X, o la clave 1 en los diseños 2019 y 2023; con false esos diseños escriben la clave \"2\" solo si los tipos de gravamen que la ley fija a la entidad son varios, y si no la clave \"0\" No consta. También selecciona el tipo protegido del art. 29 LIS que el Modelo 202 consigna. Sin valor la exportación se rechaza."
 model_selectors = ["taxpayer.cooperativa_fiscalmente_protegida"]
 legal_refs = ["orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
@@ -633,37 +633,15 @@ legal_refs = ["orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
-key = "incn_periodo_anterior_inferior_1m"
-type = "boolean"
+key = "incn_periodo_impositivo_anterior"
+type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Datos adicionales del Modelo 202 desde el diseño 2025 (posición 130, marca X o blanco): entidad con importe neto de la cifra de negocios del período impositivo inmediato anterior inferior a 1 millón de euros. Es el período impositivo anterior, no los doce meses anteriores de incn_prior_12_months, por lo que se declara aparte. Sin valor, la exportación con ese diseño se rechaza."
-model_selectors = ["taxpayer.incn_periodo_anterior_inferior_1m"]
-legal_refs = ["ley-27-2014:art-29", "orden-hfp-227-2017:art-1"]
-source_refs = ["aeat-dr-202-2025"]
-
-[[sections.fields]]
-key = "multiples_tipos_impositivos"
-type = "boolean"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Datos adicionales del Modelo 202: otra entidad, distinta de una cooperativa, con posibilidad de aplicar más de un tipo impositivo, por ejemplo una entidad ZEC (diseño 2025 posición 131, marca X o blanco; diseños 2019 y 2023 posición 126, clave \"2\" Otras entidades). true escribe la X, o la clave 2 en los diseños 2019 y 2023 salvo que la entidad sea cooperativa fiscalmente protegida, que lleva la clave 1. Sin valor la exportación se rechaza."
-model_selectors = ["taxpayer.multiples_tipos_impositivos"]
-legal_refs = ["orden-hfp-227-2017:art-1"]
-source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
-
-[[sections.fields]]
-key = "tipo_gravamen_is"
-type = "string"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Tipo de gravamen del Impuesto sobre Sociedades del ejercicio en curso tal como lo consigna el Modelo 202 (diseño 2025 posición 132, alfanumérico de 15 posiciones para los tipos, Nota 10; diseños 2019 y 2023 posición 127, 5 posiciones con los valores de su Nota 3, por ejemplo 25 o 00/25). Se exporta tal cual; un valor más largo que la posición del diseño del ejercicio se rechaza al exportar. Sin valor la exportación se rechaza."
-model_selectors = ["taxpayer.tipo_gravamen_is"]
-legal_refs = ["ley-27-2014:art-29", "orden-hfp-227-2017:art-1"]
-source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+description = "Importe neto de la cifra de negocios del período impositivo inmediato anterior, que decide la escala del art. 29.1 LIS y la marca del Modelo 202 (diseño 2025 posición 130) frente al umbral de 1 millón de euros. Solo se pide cuando ese período no duró doce meses: si los duró, es el INCN de los doce meses anteriores al inicio del período impositivo (incn_prior_12_months). Sin valor, cuando se pide, la exportación se rechaza."
+model_selectors = ["taxpayer.incn_periodo_impositivo_anterior"]
+legal_refs = ["ley-27-2014:art-29"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
 
 [[sections.fields]]
 key = "tributacion_estado_porcentaje"

@@ -271,16 +271,29 @@ def _set_export_profile_name() -> None:
     )
 
 
-def _set_emilio_legal_entity_export_profile(*, activity_start_date: date | None = None) -> None:
+def _set_emilio_legal_entity_export_profile(
+    *, activity_start_date: date | None = None, constitution_date: date | None = None
+) -> None:
     activity_start = (
         (UserProfileFact(path="censo.activity_start_date", value=activity_start_date.isoformat()),)
         if activity_start_date is not None
+        else ()
+    )
+    # A calendar ejercicio: the declaración censal's closing day and month, and the constitution date.
+    periodo_impositivo = (
+        (
+            UserProfileFact(path="taxpayer_type.cierre_ejercicio_dia", value=31),
+            UserProfileFact(path="taxpayer_type.cierre_ejercicio_mes", value=12),
+            UserProfileFact(path="taxpayer_type.fecha_constitucion", value=constitution_date.isoformat()),
+        )
+        if constitution_date is not None
         else ()
     )
     set_active_test_profile_facts(
         persona_facts_beneath(
             (
                 *activity_start,
+                *periodo_impositivo,
                 UserProfileFact(path="identity.tax_id", value="B00015016"),
                 UserProfileFact(path="identity.name", value="Emilio"),
                 UserProfileFact(path="identity.surnames", value="Corporate Persona"),
@@ -672,14 +685,16 @@ def test_export_modelo_202_without_page_01_entity_facts_refuses_with_the_door_to
 ) -> None:
     """The development identity clears the envelope header; unstated page 01 entity facts still refuse.
 
-    The profile states no principal CNAE and none of the datos adicionales the
-    official design asks for, so the export stops before any byte is written,
-    names every missing profile fact and opens the first one.
+    The profile states its ejercicio, so the devengo resolves, but no principal
+    CNAE and none of the datos adicionales the official design asks for, so the
+    export stops before any byte is written, names every missing profile fact
+    and opens the first one.
     """
 
     # The company started after the periodo impositivo the 1P art. 40.2 base reads, so that
     # instalment has no earlier Modelo 200 to take a base from and the export reaches the producer.
-    _set_emilio_legal_entity_export_profile(activity_start_date=date(_PRE_B2_LAST_EXERCISE - 1, 1, 1))
+    started = date(_PRE_B2_LAST_EXERCISE - 1, 1, 1)
+    _set_emilio_legal_entity_export_profile(activity_start_date=started, constitution_date=started)
     _, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
     out = tmp_path / f"modelo-202-{_PRE_B2_LAST_EXERCISE}-1P.boe"
 
@@ -712,7 +727,7 @@ def test_export_modelo_202_without_page_01_entity_facts_refuses_with_the_door_to
     assert context["reason"] == "m202_profile_facts_missing"
     missing = str(context["missing_profile_paths"]).split(", ")
     assert missing[0] == "taxpayer_type.principal_cnae"
-    assert "taxpayer_type.tipo_gravamen_is" in missing
+    assert "taxpayer_type.regimen_ley_49_2002" in missing
     assert context["profile_path"] == "taxpayer_type.principal_cnae"
     assert not out.exists()
 
