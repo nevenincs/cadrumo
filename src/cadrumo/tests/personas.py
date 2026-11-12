@@ -60,6 +60,7 @@ _YEAR_TOKEN = re.compile(r"(?P<anchor>horizon|floor)(?:(?P<sign>[+-])(?P<offset>
 _REVERSE_CHARGE_SUFFIX = "_reverse_charge"
 _IDENTITY_FIELDS = (
     "value",
+    "full_name",
     "primer_apellido",
     "segundo_apellido",
     "nombre",
@@ -71,7 +72,15 @@ _IDENTITY_FIELDS = (
 
 type IdentityKind = Literal["nif", "nie", "cif", "nif_iva"]
 type IdentityField = Literal[
-    "value", "primer_apellido", "segundo_apellido", "nombre", "razon_social", "name", "surnames", "legal_name"
+    "value",
+    "full_name",
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+    "razon_social",
+    "name",
+    "surnames",
+    "legal_name",
 ]
 type DocumentRelation = Literal["specimen", "source"]
 type DocumentGenerator = Literal["facturae"]
@@ -221,7 +230,10 @@ class Identity:
         return self.razon_social
 
     def field(self, name: IdentityField) -> str:
-        """Return one field of the identity, refusing a field it does not carry."""
+        """Return one field of the identity, refusing a field it does not carry.
+
+        ``full_name`` is composed by the replay, which owns the official name rule.
+        """
         found = getattr(self, name)
         if not isinstance(found, str):
             raise PersonaCatalogueError(f"identity {self.role} carries no {name}")
@@ -284,6 +296,18 @@ class ActivityRow:
     """One censo activity row, keyed by the ``activities`` section's field keys."""
 
     values: tuple[tuple[str, str], ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileRow:
+    """One row of a repeatable profile section, keyed by that section's field keys.
+
+    A value is a string, a boolean, an identity reference or a date token, rendered as
+    ``[profile]`` values are; the repeatable-row mutation records the row.
+    """
+
+    section: str
+    values: tuple[tuple[str, ProfileValue], ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -826,6 +850,8 @@ class Persona:
     attested_prior_values: tuple[AttestedPriorValue, ...] = ()
     """The figures the taxpayer states for earlier returns the application does not hold."""
     work_inputs: tuple[WorkInput, ...] = ()
+    profile_rows: tuple[ProfileRow, ...] = ()
+    """Rows of repeatable profile sections no wizard question and no dedicated block records."""
     """The casilla values the operator enters on a return because no record the application holds produces them."""
     work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = ()
     """The ejercicios whose Modelo 100 the taxpayer states holds no income of the work-income boxes no payer certificate fills."""
@@ -1116,6 +1142,7 @@ _PERSONA_TABLES = frozenset(
         "profile",
         "fields",
         "activities",
+        "profile_rows",
         "elections",
         "household",
         "own_accounts",
@@ -1189,6 +1216,26 @@ def _profile_value(question_id: str, value: object, where: str, roles: _Roles) -
         field = _choice(_string(table, "field", where), _IDENTITY_FIELDS, where) if "field" in table else "value"
         return IdentityRef(role=roles(table["identity"], where), field=field)
     return _date(table, where, biographical=question_id in BIOGRAPHICAL_DATE_KEYS)
+
+
+_DEDICATED_ROW_SECTIONS: Final = frozenset({"activities"})
+"""Repeatable sections a dedicated persona block records, so ``[[profile_rows]]`` refuses them."""
+
+
+def _profile_row(table: _Table, where: str, roles: _Roles) -> ProfileRow:
+    _keys(table, where, required=frozenset({"section", "values"}))
+    section = _string(table, "section", where)
+    if section in _DEDICATED_ROW_SECTIONS:
+        raise _fail(where, f"section {section!r} has its own block")
+    values = _table(table["values"], f"{where}.values")
+    if not values:
+        raise _fail(where, "values must name at least one field")
+    return ProfileRow(
+        section=section,
+        values=tuple(
+            (key, _profile_value(key, value, f"{where}.values.{key}", roles)) for key, value in sorted(values.items())
+        ),
+    )
 
 
 def _household(rows: object, where: str, leaves: frozenset[str], roles: _Roles) -> tuple[HouseholdMember, ...]:
@@ -2146,6 +2193,10 @@ def parse_persona(
         ),
         fields=tuple(FieldValue(path=key, value=cast(str, value)) for key, value in fields.items()),
         activities=tuple(activities),
+        profile_rows=tuple(
+            _profile_row(table, f"{where} profile_rows[{index}]", roles)
+            for index, table in enumerate(_tables(persona_document.get("profile_rows"), where))
+        ),
         elections=tuple(elections),
         descendants=_household(household.get("descendants"), f"{where} descendants", _DESCENDANT_LEAVES, roles),
         ascendants=_household(household.get("ascendants"), f"{where} ascendants", _ASCENDANT_LEAVES, roles),
@@ -2565,6 +2616,7 @@ __all__ = [
     "PriorCarries",
     "PriorValueSource",
     "ProfileAnswer",
+    "ProfileRow",
     "ProfileValue",
     "ProvisionPeriods",
     "RentalLedgerLink",

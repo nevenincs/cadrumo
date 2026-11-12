@@ -129,6 +129,7 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[profile]` | table | wizard question id → answer |
 | `[fields]` | table | profile schema path → value, for facts no wizard question asks |
 | `[[activities]]` | array | censo activity rows: `description`, `iae_epigraph`, `tipo_actividad` |
+| `[[profile_rows]]` | array | rows of other repeatable profile sections: `section` and `values` (field key → value) |
 | `[[elections]]` | array | dated elections: `question` (wizard id), `value`, `year` (token) |
 | `[[household.descendants]]` | array | one descendant row |
 | `[[household.ascendants]]` | array | one ascendant row |
@@ -178,6 +179,14 @@ profile schema.
 the question and its dated year companion (for
 `irpf-activity-income-imputation-criterion`, the year goes to
 `irpf-activity-income-imputation-year`).
+
+`[[profile_rows]]` rows go through the same repeatable-row mutation, one row
+each, for any section without a block of its own (`activities` is refused
+here). `section` names the schema section; `values` maps its field keys to a
+value written as `[profile]` values are: a string, a boolean, a date token
+table, or an identity reference. The identity field `full_name` gives the name
+an official form asks for: a person's surnames then given name, or an entity's
+razón social.
 
 ### Household rows
 

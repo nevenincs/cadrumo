@@ -12,8 +12,10 @@ import pytest
 
 from .personas import (
     PERSONAS_ROOT,
+    IdentityRef,
     Persona,
     PersonaCatalogueError,
+    PersonaDate,
     ProvisionPeriods,
     YearEnvelope,
     YearToken,
@@ -1169,3 +1171,47 @@ def test_a_work_income_statement_for_an_ejercicio_without_a_work_income_certific
     assert document["work_income_none_statements"]
     with pytest.raises(PersonaCatalogueError, match="no work-income certificate for that ejercicio"):
         _parse(document)
+
+
+def _with_profile_row(**changes: object) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    row: dict[str, object] = {
+        "section": "some_section",
+        "values": {
+            "nif": {"identity": "asalariada.titular"},
+            "apellidos_y_nombre": {"identity": "asalariada.titular", "field": "full_name"},
+            "fecha_poder": {"year": "horizon-2", "month": 3, "day": 4},
+            "notaria_otros": "NOTARIA DE PRUEBA",
+            "representante": False,
+        },
+    }
+    document["profile_rows"] = [{**row, **changes}]
+    return document
+
+
+def test_a_profile_row_keeps_its_section_and_typed_values() -> None:
+    persona = _parse(_with_profile_row())
+    (row,) = persona.profile_rows
+    values = dict(row.values)
+
+    assert row.section == "some_section"
+    assert list(values) == sorted(values)
+    assert values["notaria_otros"] == "NOTARIA DE PRUEBA"
+    assert values["representante"] is False
+    assert isinstance(values["fecha_poder"], PersonaDate)
+    assert values["apellidos_y_nombre"] == IdentityRef(role="asalariada.titular", field="full_name")
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"section": "activities"}, "has its own block"),
+        ({"values": {}}, "at least one field"),
+        ({"values": {"nif": {"identity": "fontanero.titular"}}}, "belongs to persona"),
+        ({"values": {"nif": {"identity": "asalariada.titular", "field": "cargo"}}}, "is not one of"),
+        ({"note": "x"}, "unknown fields"),
+    ],
+)
+def test_a_malformed_profile_row_is_refused(changes: dict[str, object], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_profile_row(**changes))

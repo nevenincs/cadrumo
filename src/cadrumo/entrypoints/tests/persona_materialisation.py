@@ -778,8 +778,20 @@ def submitted_answer(persona: Persona, value: ProfileValue, envelope: YearEnvelo
     if isinstance(value, tuple):
         return ",".join(value)
     if isinstance(value, IdentityRef):
-        return persona.identity(value)
+        return identity_text(persona, value)
     return value.resolve(envelope).isoformat()
+
+
+def identity_text(persona: Persona, reference: IdentityRef) -> str:
+    """One identity field as an operation takes it; ``full_name`` is the official surnames-first name or razón social."""
+    if reference.field != "full_name":
+        return persona.identity(reference)
+    holder = persona.identities.role(reference.role)
+    if holder.legal_name is not None:
+        return holder.legal_name
+    if holder.surnames is None or holder.name is None:
+        raise PersonaMaterialisationError(f"identity {reference.role} carries no name to compose")
+    return compose_legal_full_name(surnames=holder.surnames, name=holder.name)
 
 
 def patch_answers(persona: Persona, envelope: YearEnvelope) -> tuple[tuple[str, str], ...]:
@@ -1006,6 +1018,22 @@ def _replay_profile(persona: Persona, world: PersonaWorld) -> None:
                 expected_content_digest=record.content_digest,
                 section_key="activities",
                 values=tuple(ProfileRepeatableRowValue(field_key=key, value=value) for key, value in activity.values),
+            ),
+        )
+    for row in persona.profile_rows:
+        record = load_profile_record(world)
+        settle_operation(
+            world,
+            PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
+            ProfileRepeatableRowMutationOperationRequest(
+                profile_id=world.profile_id,
+                expected_revision=record.record_revision,
+                expected_content_digest=record.content_digest,
+                section_key=row.section,
+                values=tuple(
+                    ProfileRepeatableRowValue(field_key=key, value=submitted_answer(persona, value, envelope))
+                    for key, value in row.values
+                ),
             ),
         )
 
