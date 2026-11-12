@@ -7517,29 +7517,33 @@ fields = { expression = { op = "if_then_else", args = [
             ] },
         ] },
         { op = "sum", args = [
+            { op = "min", args = [{ casilla_id = "0463" }, { op = "sum", args = [{ parameter = "lirpf-art-52-individual-contribution-sublimit" }, { parameter = "renta-prevision-social-incremento-limite" }] }] },
             { op = "min", args = [
-                { op = "sum", args = [{ casilla_id = "0463" }, { casilla_id = "0465" }, { casilla_id = "0426" }, { casilla_id = "0438" }, { casilla_id = "0427" }, { casilla_id = "0499" }] },
-                { op = "sum", args = [
-                    { parameter = "lirpf-art-52-individual-contribution-sublimit" },
-                    { op = "min", args = [
-                        { op = "sum", args = [
-                            { op = "min", args = [
-                                { op = "sum", args = [
-                                    { casilla_id = "0427" },
-                                    { op = "min", args = [
-                                        { op = "sum", args = [{ casilla_id = "0426" }, { casilla_id = "0438" }] },
-                                        { op = "if_then_else", args = [
-                                            { op = "equal", args = [{ casilla_id = "0383" }, { literal = "0" }] },
-                                            { op = "lookup_bracket", args = [{ casilla_id = "0427" }, { parameter = "renta-prevision-social-aportacion-trabajador-maxima" }] },
-                                            { casilla_id = "0427" },
+                { op = "subtract", args = [{ op = "sum", args = [{ parameter = "lirpf-art-52-individual-contribution-sublimit" }, { parameter = "renta-prevision-social-incremento-limite" }] }, { op = "min", args = [{ casilla_id = "0463" }, { op = "sum", args = [{ parameter = "lirpf-art-52-individual-contribution-sublimit" }, { parameter = "renta-prevision-social-incremento-limite" }] }] }] },
+                { op = "min", args = [
+                    { op = "sum", args = [{ casilla_id = "0465" }, { casilla_id = "0426" }, { casilla_id = "0438" }, { casilla_id = "0427" }, { casilla_id = "0499" }] },
+                    { op = "sum", args = [
+                        { parameter = "lirpf-art-52-individual-contribution-sublimit" },
+                        { op = "min", args = [
+                            { op = "sum", args = [
+                                { op = "min", args = [
+                                    { op = "sum", args = [
+                                        { casilla_id = "0427" },
+                                        { op = "min", args = [
+                                            { op = "sum", args = [{ casilla_id = "0426" }, { casilla_id = "0438" }] },
+                                            { op = "if_then_else", args = [
+                                                { op = "equal", args = [{ casilla_id = "0383" }, { literal = "0" }] },
+                                                { op = "lookup_bracket", args = [{ casilla_id = "0427" }, { parameter = "renta-prevision-social-aportacion-trabajador-maxima" }] },
+                                                { casilla_id = "0427" },
+                                            ] },
                                         ] },
                                     ] },
+                                    { parameter = "renta-prevision-social-incremento-limite" },
                                 ] },
-                                { parameter = "renta-prevision-social-incremento-limite" },
+                                { op = "min", args = [{ casilla_id = "0499" }, { parameter = "renta-prevision-social-incremento-autonomos-limite" }] },
                             ] },
-                            { op = "min", args = [{ casilla_id = "0499" }, { parameter = "renta-prevision-social-incremento-autonomos-limite" }] },
+                            { parameter = "renta-prevision-social-incremento-limite" },
                         ] },
-                        { parameter = "renta-prevision-social-incremento-limite" },
                     ] },
                 ] },
             ] },

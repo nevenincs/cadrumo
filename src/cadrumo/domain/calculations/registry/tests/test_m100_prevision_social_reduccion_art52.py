@@ -321,3 +321,99 @@ def test_a_joint_return_with_contributions_leaves_the_reduction_unresolved(
         assert unresolved[target].reason.value == _JOINT_REASON
         assert target not in with_contribution.values
         assert _reduction(snapshot, without) == Decimal("0.00"), year
+
+
+#: The general excesses pending from earlier ejercicios (Anexo C.3) and the collective dependency
+#: insurance ones; the registry's role name for the first predates its reading as an excess.
+_ROLE_EXCESO_GENERAL = "irpf_red_prevision_social_aportaciones_individuales"
+_ROLE_EXCESO_DEPENDENCIA = "irpf_red_prevision_social_exceso_scd"
+_ROLE_EMPRESA_DECISION_TRABAJADOR = "irpf_red_prevision_social_aportaciones_empresa_decision_trabajador"
+_ROLE_BASE_LIQUIDABLE_GENERAL = "irpf_base_liquidable_general"
+
+
+@pytest.mark.parametrize(
+    ("excess", "expected"),
+    [
+        # 4.000 pending, no contribution of the year: the excess takes the whole 1.500 + 8.500 pool,
+        # whatever its origin, so all 4.000 reduce (the 1.500 sub-limit alone allowed 1.500).
+        pytest.param(Decimal("4000"), Decimal("4000.00"), id="above-1500"),
+        # 12.000 pending: the pool allows 10.000; the rest stays pending.
+        pytest.param(Decimal("12000"), Decimal("10000.00"), id="above-the-pool"),
+    ],
+)
+def test_earlier_excesses_reduce_against_the_whole_pool(
+    excess: Decimal,
+    expected: Decimal,
+    registry_snapshot: Callable[..., RegistrySnapshot],
+    registry_authority: PinnedAuthorityOperation,
+) -> None:
+    """RIRPF art. 51: the excess draws on the art. 52.1.b limit "por su importe total incrementado".
+
+    Gross work 52.000 -> net 50.000 -> 30% = 15.000, which does not bind.
+    """
+    for year in _formula_years(registry_authority):
+        snapshot = _snapshot(registry_snapshot, year)
+        result = _calculate(snapshot, year, {_ROLE_DINERARIO: Decimal("52000"), _ROLE_EXCESO_GENERAL: excess})
+
+        assert _reduction(snapshot, result) == expected, year
+
+
+def test_own_contributions_reduce_within_what_the_excess_leaves_of_the_pool(
+    registry_snapshot: Callable[..., RegistrySnapshot],
+    registry_authority: PinnedAuthorityOperation,
+) -> None:
+    """RIRPF art. 51: the excess goes first, then the year's own amounts within "el límite máximo conjunto restante".
+
+    Net work 50.000 -> 30% = 15.000. Excess 9.000 reduces first; 10.000 - 9.000 = 1.000 of the pool
+    remains. Own personal contribution 3.000 has its 1.500 sub-limit, so the remaining pool binds:
+    own reduction min(3.000, 1.500, 1.000) = 1.000 and 0468 = 9.000 + 1.000 = 10.000.
+    """
+    for year in _formula_years(registry_authority):
+        snapshot = _snapshot(registry_snapshot, year)
+        figures = {
+            _ROLE_DINERARIO: Decimal("52000"),
+            _ROLE_EXCESO_GENERAL: Decimal("9000"),
+            _ROLE_TRABAJADOR: Decimal("3000"),
+        }
+        result = _calculate(snapshot, year, figures)
+
+        assert _reduction(snapshot, result) == Decimal("10000.00"), year
+
+
+def test_the_manual_worked_example_of_each_rule_period(
+    registry_snapshot: Callable[..., RegistrySnapshot],
+    registry_authority: PinnedAuthorityOperation,
+) -> None:
+    """The Manual practico de Renta example "aportaciones a sistemas de previsión social", per redaction.
+
+    Net work income and general base 30.500, so 30% = 9.150 (gross 32.500 less the fixed 2.000 of
+    art. 19.2.f; the manual's gross differs only by expenses that do not reach the limit). Pending
+    from the previous ejercicio: 3.500 general and 1.500 dependency insurance. Own contributions:
+    personal plan 500, dependency insurance 1.000, and under Ley 22/2021 employer 1.500 with a
+    flexible-pay worker amount of 2.500 (manual 2022); under Ley 31/2022 employer 1.400 with 2.300,
+    of which the coefficient table admits 1.475 in the increment (manuals 2023 to 2025).
+
+    In both the own amounts are within their limits with the 1.500 reduced only by the 500 personal
+    contribution, never by the excess; the excess 5.000 reduces first and the own amounts take the
+    4.150 the 30% leaves, so 0468 = 9.150 and the base liquidable general is 30.500 - 9.150 = 21.350.
+    A sub-limit consumed by the excess would cut the own general amounts to the increment alone and
+    give 9.000 (Ley 22/2021) or 8.875 (Ley 31/2022). The manual's summary line "Remanente de base
+    imponible (30.000 - 5.000) = 25.500" misprints the 30.500 base; 30.500 - 5.000 = 25.500 is used.
+    """
+    for year in _formula_years(registry_authority):
+        snapshot = _snapshot(registry_snapshot, year)
+        coefficient_rule = _coefficient_rule(year, registry_authority)
+        figures = {
+            _ROLE_DINERARIO: Decimal("32500"),
+            _ROLE_EXCESO_GENERAL: Decimal("3500"),
+            _ROLE_EXCESO_DEPENDENCIA: Decimal("1500"),
+            _ROLE_TRABAJADOR: Decimal("500"),
+            _ROLE_EMPRESARIAL: Decimal("1400") if coefficient_rule else Decimal("1500"),
+            _ROLE_EMPRESA_DECISION_TRABAJADOR: Decimal("2300") if coefficient_rule else Decimal("2500"),
+            _ROLE_DEPENDENCIA: Decimal("1000"),
+        }
+        result = _calculate(snapshot, year, figures)
+
+        assert _value(snapshot, result, _ROLE_NETO_TRABAJO) == Decimal("30500.00"), year
+        assert _reduction(snapshot, result) == Decimal("9150.00"), year
+        assert _value(snapshot, result, _ROLE_BASE_LIQUIDABLE_GENERAL) == Decimal("21350.00"), year

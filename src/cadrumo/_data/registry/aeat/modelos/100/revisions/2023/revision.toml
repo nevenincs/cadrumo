@@ -8307,7 +8307,9 @@ restate_identity = true
 # count toward the 8.500 increment up to the coefficient table of the employer contribution (0427);
 # the multiplier is 1 when the worker's gross work income from that employer exceeds 60.000. Box 0383
 # marks income of 60.000 or less in 2023 and 2024. The own contributions of autonomos (0499) form a
-# second increment of up to 4.250, and both increments together are capped at 8.500.
+# second increment of up to 4.250, and both increments together are capped at 8.500. The excesses of
+# earlier ejercicios (0463) still reduce first against the whole 1.500 + 8.500 pool, as in the
+# edition this one amends; only the increments above changed.
 [[revisions."2023".family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "renta-reduccion-prevision-social-total"}
@@ -8333,29 +8335,33 @@ fields = { expression = { op = "if_then_else", args = [
             ] },
         ] },
         { op = "sum", args = [
+            { op = "min", args = [{ casilla_id = "0463" }, { op = "sum", args = [{ parameter = "lirpf-art-52-individual-contribution-sublimit" }, { parameter = "renta-prevision-social-incremento-limite" }] }] },
             { op = "min", args = [
-                { op = "sum", args = [{ casilla_id = "0463" }, { casilla_id = "0465" }, { casilla_id = "0426" }, { casilla_id = "0438" }, { casilla_id = "0427" }, { casilla_id = "0499" }] },
-                { op = "sum", args = [
-                    { parameter = "lirpf-art-52-individual-contribution-sublimit" },
-                    { op = "min", args = [
-                        { op = "sum", args = [
-                            { op = "min", args = [
-                                { op = "sum", args = [
-                                    { casilla_id = "0427" },
-                                    { op = "min", args = [
-                                        { op = "sum", args = [{ casilla_id = "0426" }, { casilla_id = "0438" }] },
-                                        { op = "if_then_else", args = [
-                                            { op = "equal", args = [{ casilla_id = "0383" }, { literal = "1" }] },
-                                            { op = "lookup_bracket", args = [{ casilla_id = "0427" }, { parameter = "renta-prevision-social-aportacion-trabajador-maxima" }] },
-                                            { casilla_id = "0427" },
+                { op = "subtract", args = [{ op = "sum", args = [{ parameter = "lirpf-art-52-individual-contribution-sublimit" }, { parameter = "renta-prevision-social-incremento-limite" }] }, { op = "min", args = [{ casilla_id = "0463" }, { op = "sum", args = [{ parameter = "lirpf-art-52-individual-contribution-sublimit" }, { parameter = "renta-prevision-social-incremento-limite" }] }] }] },
+                { op = "min", args = [
+                    { op = "sum", args = [{ casilla_id = "0465" }, { casilla_id = "0426" }, { casilla_id = "0438" }, { casilla_id = "0427" }, { casilla_id = "0499" }] },
+                    { op = "sum", args = [
+                        { parameter = "lirpf-art-52-individual-contribution-sublimit" },
+                        { op = "min", args = [
+                            { op = "sum", args = [
+                                { op = "min", args = [
+                                    { op = "sum", args = [
+                                        { casilla_id = "0427" },
+                                        { op = "min", args = [
+                                            { op = "sum", args = [{ casilla_id = "0426" }, { casilla_id = "0438" }] },
+                                            { op = "if_then_else", args = [
+                                                { op = "equal", args = [{ casilla_id = "0383" }, { literal = "1" }] },
+                                                { op = "lookup_bracket", args = [{ casilla_id = "0427" }, { parameter = "renta-prevision-social-aportacion-trabajador-maxima" }] },
+                                                { casilla_id = "0427" },
+                                            ] },
                                         ] },
                                     ] },
+                                    { parameter = "renta-prevision-social-incremento-limite" },
                                 ] },
-                                { parameter = "renta-prevision-social-incremento-limite" },
+                                { op = "min", args = [{ casilla_id = "0499" }, { parameter = "renta-prevision-social-incremento-autonomos-limite" }] },
                             ] },
-                            { op = "min", args = [{ casilla_id = "0499" }, { parameter = "renta-prevision-social-incremento-autonomos-limite" }] },
+                            { parameter = "renta-prevision-social-incremento-limite" },
                         ] },
-                        { parameter = "renta-prevision-social-incremento-limite" },
                     ] },
                 ] },
             ] },
