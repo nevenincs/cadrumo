@@ -2,6 +2,9 @@ modelo:
   schema:
     '100':
       binding:
+        renta-inmueble-gastos-pendientes-anteriores-0103:
+          label: Az ingatlan négy előző adóévből levonásra váró kamatai és javítási
+            és karbantartási kiadásai
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Igen: normál módozat (N). Nem: egyszerűsített módozat (S).'
           label: A közvetlen becslés normál módozatát alkalmazza?
@@ -3660,6 +3663,9 @@ modelo:
           irpf-tipo-medio-gravamen-general-autonomico:
             label: 'Átlagos adókulcsok ( [0534] = [0532] x 100 / [0505] ); ( [0535]
               = [0533] x 100 / [0505] ): autonóm közösségi rész'
+          irpf-trabajo-rentas-distintas-del-trabajo:
+            label: A munkából származó jövedelemtől eltérő jövedelmek (a 20. cikk
+              szerinti határ) [belső]
           irpf-transparencia-fiscal-internacional-contribuyente:
             label: A hozzárendelést teljesítő adózó
           irpf-vehiculo-electrico-instalador-nif:

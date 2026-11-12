@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...application.modelo.carry_attestation_submission import prior_carry_attestation_submission
+from ...application.modelo.absence_statement_submission import absence_statement_submission
 from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1, ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
@@ -37,6 +37,7 @@ from ...application.modelo.workbench_operations import (
 from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.ids import BindingId
 from ...tests.personas import Persona, PriorCarries
@@ -82,7 +83,9 @@ def _submission(
     """One intent per open carry: the stated amount where the persona states one, else the statement of none."""
     attestations = form_read.form.form.carry_attestations
     if not statement.pending:
-        return prior_carry_attestation_submission(baseline, attestations)
+        return absence_statement_submission(
+            baseline, attestations, family=AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
+        )
     open_carries = tuple(sorted({binding_id for item in attestations for binding_id in item.binding_ids}))
     amounts = _box_amounts(world, year, open_carries, statement)
     return ModeloEditSubmissionV1(

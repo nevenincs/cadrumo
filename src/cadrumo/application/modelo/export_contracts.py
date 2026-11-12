@@ -427,6 +427,14 @@ class ModeloExportResult(BaseModel):
             "every other disposition and whenever a cutoff was declared and met."
         ),
     )
+    trabajo_deductions_not_computed: bool = Field(
+        default=False,
+        description=(
+            "True when the exported revision rests on a work-income payer record: the deductions only the filer can "
+            "evidence (union dues, professional-body fees, legal-defence costs, the geographic-mobility increase) "
+            "are not computed, so the return may overstate the tax. The CLI surfaces a non-blocking limitation."
+        ),
+    )
     completeness_unverified: bool = Field(
         default=False,
         description=(

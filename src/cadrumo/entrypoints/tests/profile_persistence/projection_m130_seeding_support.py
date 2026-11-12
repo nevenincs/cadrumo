@@ -209,6 +209,8 @@ def _seed_payer_records(
             retencion=item.retencion,
             ingreso_a_cuenta=Decimal("0.00"),
             ingreso_a_cuenta_repercutido=Decimal("0.00"),
+            reducciones_aplicables=Decimal("0.00") if (item.income_class) is RetencionSoportadaClase.TRABAJO else None,
+            gastos_deducibles=Decimal("0.00") if (item.income_class) is RetencionSoportadaClase.TRABAJO else None,
             origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
             evidence_fingerprint=ports.custody.ingest(
                 source_path=Path("synthetic-certificate.pdf"),

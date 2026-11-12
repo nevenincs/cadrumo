@@ -2169,6 +2169,13 @@ application:
         kifizetői rekord és hiánynyilatkozat sem, a profilod pedig nem jelöli hiányzónak
         ezt a jövedelmet. Rögzítsd minden kifizető igazolását, vagy jelentsd ki, hogy
         egyetlen kifizető sem vont le.'
+      retencion_soportada_income_record_required: '{income_class} jövedelemosztály:
+        azt nyilatkoztad, hogy egy kifizető sem vont le adót, de ez nem mondja meg
+        a jövedelem összegét. Vond vissza a nyilatkozatot, majd rögzítsd minden kifizető
+        igazolását operátori nyilatkozatként.'
+      retencion_soportada_record_figure_missing: '{income_class} jövedelemosztály:
+        egy tárolt kifizetői rekord nem tartalmazza az igazolás csökkentéseit és levonható
+        költségeit. Cseréld le a rekordot az igazolás adataival.'
       row_unregistered: A(z) {row_date} napi, {row_amount} összegű tétel olyan eszközt
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
@@ -2956,6 +2963,10 @@ application:
         explicit revízió kiválasztóval érvényes.
       source_owned_binding_override: Olyan mezőbe írtál értéket, amely a nyilvántartásaidból
         származik; töröld, vagy javítsd a forrásbejegyzést.
+      trabajo_income_nothing_open: 'A(z) %{modelo} modell %{filing_year}. évi bevallásában
+        nincs olyan munkaviszonyi jövedelemrovat, amelyet nullának lehetne nyilatkozni:
+        mindegyikben van már összeg vagy a nyilatkozatod, vagy a bevallásnak nincs
+        kifizetői rekordból származó munkaviszonyi jövedelme. Semmi sem változott.'
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
         azonosítóval: %{verification_report_id}.'
       work_create_not_applicable: 'A Modelo %{modelo} a profilod szerint nem vonatkozik
@@ -3032,10 +3043,6 @@ application:
       application_not_required_maximum: 'A(z) [%{box}] rovatban %{casilla_value} szerepel,
         de %{computed_value} kell, hogy legyen: a törvény előírja, hogy az adott évben
         megengedett legnagyobb összeget kell alkalmazni, se többet, se kevesebbet.'
-      art20_reduccion_possible: A(z) [%{rnt_id}] rovat %{rnt_value} EUR nettó munkajövedelmet
-        (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
-        belül, ezért a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet
-        még nem használsz. Ellenőrizd, hogy vonatkozik-e rád.
       art52_reduccion_individual_sublimit_possible: A(z) [%{reduccion_id}] rovat %{reduccion_value}
         EUR nyugdíj-előtakarékossági (previsión social) csökkentést tartalmaz, ami
         meghaladja az Art. 52 LIRPF szerinti %{sublimit} EUR egyéni részhatárt, és
@@ -3251,6 +3258,38 @@ application:
         forrásadó (retención). Add meg az összeget a kifizető igazolásából (certificado
         de retenciones e ingresos a cuenta). A levonást bevalló Modelo 111 nyomtatványt
         a kifizető nyújtotta be, nem te, ezért ez az érték nem tölthető ki automatikusan.
+      trabajo_deduction_not_computed: 'A munkaviszonyi jövedelmed nem tartalmazza
+        azokat a levonásokat, amelyeket csak te tudsz igazolni: szakszervezeti díj
+        (0014), szakmai kamarai díj (0015), jogvédelmi költség (0016) és a földrajzi
+        mobilitás miatti növekmény (0020). Ha bármelyik megilleti, a bevallás túlzott
+        adót mutat. Add meg ezekben a rovatokban.'
+      trabajo_disability_unstated: A profilod fogyatékosságot jelez, ezért a(z) [%{casilla_id}]
+        rovat (a fogyatékossággal élő aktív munkavállaló munkaköltségeinek növekménye)
+        megillethet. Add meg az összeget, vagy 0-t, ha nem vagy aktív munkavállaló.
+      trabajo_expense_above_limit:
+        colegio_profesional: A(z) [%{casilla_id}] rovat (szakmai kamarai díj) %{stated}
+          EUR-t mutat, ami meghaladja a %{limit} EUR törvényes határt. Csökkentsd
+          a határra vagy az alá.
+        defensa_juridica: A(z) [%{casilla_id}] rovat (jogvédelmi költség) %{stated}
+          EUR-t mutat, ami meghaladja a %{limit} EUR törvényes határt. Csökkentsd
+          a határra vagy az alá.
+      trabajo_income_unstated:
+        decision_trabajador: A(z) [%{casilla_id}] rovat (a te döntésedre teljesített
+          munkáltatói befizetések) olyan munkaviszonyi jövedelem, amelyet egyetlen
+          kifizetői igazolás sem tartalmaz. Add meg a kapott összeget, vagy nyilatkozz
+          arról, hogy nincs.
+        dependencia: A(z) [%{casilla_id}] rovat (függőségi biztosításhoz nyújtott
+          munkáltatói hozzájárulások) olyan munkaviszonyi jövedelem, amelyet egyetlen
+          kifizetői igazolás sem tartalmaz. Add meg a kapott összeget, vagy nyilatkozz
+          arról, hogy nincs.
+        patrimonio_protegido: A(z) [%{casilla_id}] rovat (fogyatékossággal élő személy
+          védett vagyonába tett befizetések) olyan munkaviszonyi jövedelem, amelyet
+          egyetlen kifizetői igazolás sem tartalmaz. Add meg a kapott összeget, vagy
+          nyilatkozz arról, hogy nincs.
+        prevision: A(z) [%{casilla_id}] rovat (nyugdíjtervekhez és szociális előrelátási
+          egyesületekhez nyújtott munkáltatói hozzájárulások) olyan munkaviszonyi
+          jövedelem, amelyet egyetlen kifizetői igazolás sem tartalmaz. Add meg a
+          kapott összeget, vagy nyilatkozz arról, hogy nincs.
       transaction_evidence_missing_deductible: Egy levonható kiadáshoz nincs csatolva
         számla vagy bizonylat. Csatold a nyilvántartásaid megfelelő tételéhez.
       transaction_evidence_missing_output: Egy felszámított IVA-t tartalmazó kiállított
@@ -3391,6 +3430,10 @@ application:
         kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó
         igazolást, majd vetíts újra.
       casilla_reason:
+        income_family_contradicts_profile: Ez a rovat a többi jövedelmedet veti össze
+          a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
+          amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
+          összegeket, majd vetíts újra. Soha nem jelenik meg nullaként.
         m210_baseline_tipo_deferred: Ehhez a rovathoz az ilyen jellegű jövedelem általános
           adókulcsa kell, amely az adóévre még nincs megalapozva, ezért nincs értéke.
         m210_convenio_rate_missing: Ehhez a rovathoz a kettős adóztatást kizáró egyezmény
@@ -3531,6 +3574,19 @@ application:
             negatív általános adóalapod (Ley 35/2006, 50.3. cikk). Minden összeg általad
             kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
             korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+        renta_trabajo_income_not_stated:
+          action: Nincs megadandó munkáltatói hozzájárulásom vagy védett vagyonba
+            tett befizetésem
+          effect: 'Általad megadott 0-ként rögzítve: ezekből a hozzájárulásokból nincs.'
+          origin: Megadtad, hogy nincs
+          statement: 'Kijelented, hogy a munkaviszonyból származó jövedelmed négy
+            rovatában nincs összeg: a nyugdíjtervekhez és szociális előrelátási egyesületekhez
+            nyújtott munkáltatói hozzájárulások (0008), a függőségi biztosításhoz
+            nyújtott munkáltatói hozzájárulások (0009), a fogyatékossággal élő személy
+            védett vagyonába tett befizetések (0010) és a te döntésedre teljesített
+            munkáltatói befizetések (0024). Minden rovat általad megadott 0-ként kerül
+            rögzítésre, a beírt számtól elkülönítve. Ezeket az összegeket egyetlen
+            kifizetői igazolás sem tartalmazza, ezért csak te adhatod meg őket.'
       credits_heading:
         mixed: Levonások
         practised: Az általad levont összegek

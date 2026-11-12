@@ -202,6 +202,9 @@ def normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
         },
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),
@@ -347,6 +350,9 @@ def simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
         hand_typed_bound_casillas=_HAND_TYPED_INGRESOS,
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
@@ -411,6 +417,9 @@ def negative_simplified_base_scenario() -> RegistryCalculationScenario:
         hand_typed_bound_casillas=_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY,
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
@@ -479,6 +488,9 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
         hand_typed_bound_casillas={"0153": _TYPED_INMUEBLE_RETENCIONES_0153},
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),
@@ -595,6 +607,9 @@ def final_settlement_scenario() -> RegistryCalculationScenario:
         },
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),

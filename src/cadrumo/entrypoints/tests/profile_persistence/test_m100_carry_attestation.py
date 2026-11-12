@@ -20,9 +20,9 @@ import pytest
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....application.modelo.carry_attestation_submission import (
-    ModeloPriorCarryNothingOpenError,
-    prior_carry_attestation_submission,
+from ....application.modelo.absence_statement_submission import (
+    ModeloAbsenceStatementNothingOpenError,
+    absence_statement_submission,
 )
 from ....application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ....application.modelo.edit_models import (
@@ -310,8 +310,10 @@ def test_a_declaration_whose_registry_declares_no_statement_of_absence_offers_no
         offered = _form(work, OutputLanguage.EN).carry_attestations
         assert offered == ()
         # The command line, staging what the form names, has nothing to state and refuses before any edit.
-        with pytest.raises(ModeloPriorCarryNothingOpenError):
-            prior_carry_attestation_submission(work.baseline(), offered)
+        with pytest.raises(ModeloAbsenceStatementNothingOpenError):
+            absence_statement_submission(
+                work.baseline(), offered, family=AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
+            )
 
 
 @pytest.mark.parametrize("year", _renta_years())
@@ -373,7 +375,11 @@ def test_an_unstated_carry_with_no_earlier_return_is_refused_naming_every_open_c
 
 def _apply_as_submitted(work: SeededOperatorWork, *, offered: ModeloWorkForm) -> CadrumoError | None:
     """Stage what the form names, check it, then apply it as the command line submits it; the apply's refusal."""
-    submission = prior_carry_attestation_submission(work.baseline(), offered.carry_attestations)
+    submission = absence_statement_submission(
+        work.baseline(),
+        offered.carry_attestations,
+        family=AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING,
+    )
     review = preflight_modelo_edit(
         submission,
         work_catalogue=work.ports.work_unit_repository.load(),
@@ -406,7 +412,11 @@ def test_the_command_line_statement_stages_what_the_form_names_and_lets_the_refu
             renta.recalculate()
 
         offered = _form(renta, OutputLanguage.EN)
-        staged = prior_carry_attestation_submission(renta.baseline(), offered.carry_attestations).binding_intents
+        staged = absence_statement_submission(
+            renta.baseline(),
+            offered.carry_attestations,
+            family=AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING,
+        ).binding_intents
         # One statement per carry the form names, and nothing else: no value travels with it.
         assert [intent.address.binding_id for intent in staged] == sorted(_PENDING_CARRIES)
         assert {intent.kind for intent in staged} == {ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT}
@@ -421,8 +431,12 @@ def test_the_command_line_statement_stages_what_the_form_names_and_lets_the_refu
         # A second statement has nothing left to answer, and is refused before anything is staged.
         settled = _form(renta, OutputLanguage.EN)
         assert settled.carry_attestations == ()
-        with pytest.raises(ModeloPriorCarryNothingOpenError) as again:
-            prior_carry_attestation_submission(renta.baseline(), settled.carry_attestations)
+        with pytest.raises(ModeloAbsenceStatementNothingOpenError) as again:
+            absence_statement_submission(
+                renta.baseline(),
+                settled.carry_attestations,
+                family=AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING,
+            )
 
     assert head.casilla_values[validated_casilla_id("1380", surface="test")] == Decimal("0")
     layer = head.operator_layer

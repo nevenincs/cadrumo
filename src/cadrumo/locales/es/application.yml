@@ -2209,6 +2209,13 @@ application:
         ningún registro de pagador ni declaración de ausencia, y tu perfil no declara
         ausente esta renta. Registra el certificado de cada pagador o declara que
         ningún pagador practicó retención.'
+      retencion_soportada_income_record_required: 'Clase de renta {income_class}:
+        declaraste que ningún pagador practicó retención, lo que no dice nada del
+        importe de los ingresos. Retira la declaración y registra después el certificado
+        de cada pagador como declaración del operador.'
+      retencion_soportada_record_figure_missing: 'Clase de renta {income_class}: un
+        registro de pagador guardado no indica las reducciones ni los gastos deducibles
+        del certificado. Sustituye el registro por las cifras del certificado.'
       row_unregistered: El movimiento del {row_date} por {row_amount} registra un
         elemento que no está en tu registro.
       row_unregistered_undated: Un movimiento registra un elemento que no consta en
@@ -3002,6 +3009,10 @@ application:
         válido con el selector de revisión explícita.
       source_owned_binding_override: Has introducido un valor en una casilla que se
         obtiene de tus registros; quítalo o corrige el registro del que procede.
+      trabajo_income_nothing_open: 'El Modelo %{modelo} de %{filing_year} no tiene
+        ninguna casilla de rendimientos del trabajo pendiente de declarar como inexistente:
+        cada una ya tiene una cifra o tu declaración, o la declaración no tiene rendimientos
+        del trabajo de un registro de pagador. No se ha cambiado nada.'
       verification_report_not_found: No existe ningún informe de comprobación con
         id=%{verification_report_id}.
       work_create_not_applicable: 'El Modelo %{modelo} no te corresponde según tu
@@ -3078,10 +3089,6 @@ application:
       application_not_required_maximum: 'La casilla [%{box}] tiene %{casilla_value},
         pero debe ser %{computed_value}: la ley exige aplicar la mayor cuantía que
         permite este ejercicio, ni más ni menos.'
-      art20_reduccion_possible: La casilla [%{rnt_id}] recoge %{rnt_value} EUR de
-        rendimiento neto del trabajo, dentro del límite del art. 20 LIRPF, así que
-        la casilla [%{reduccion_id}] puede darte una reducción que aún no aplicas.
-        Comprueba si te corresponde.
       art52_reduccion_individual_sublimit_possible: La casilla [%{reduccion_id}] recoge
         %{reduccion_value} EUR de reducción por previsión social, por encima del sublímite
         individual de %{sublimit} EUR del art. 52 LIRPF, y no has declarado aportaciones
@@ -3297,6 +3304,37 @@ application:
         del certificado de retenciones e ingresos a cuenta de tu pagador. El modelo
         111 que la declara lo presentó tu pagador, no tú, así que este valor no puede
         rellenarse automáticamente.
+      trabajo_deduction_not_computed: 'Tus rendimientos del trabajo no incluyen las
+        deducciones que solo tú puedes acreditar: cuotas sindicales (0014), cuotas
+        de colegios profesionales (0015), gastos de defensa jurídica (0016) e incremento
+        por movilidad geográfica (0020). Si alguna te corresponde, la declaración
+        exagera tu cuota. Indícala en esas casillas.'
+      trabajo_disability_unstated: Tu perfil indica una discapacidad, así que la casilla
+        [%{casilla_id}] (incremento de los gastos del trabajo de un trabajador activo
+        con discapacidad) puede corresponderte. Indica el importe, o 0 si no eres
+        trabajador activo.
+      trabajo_expense_above_limit:
+        colegio_profesional: La casilla [%{casilla_id}] (cuotas de colegios profesionales)
+          indica %{stated} EUR, por encima del límite legal de %{limit} EUR. Redúcela
+          al límite o menos.
+        defensa_juridica: La casilla [%{casilla_id}] (gastos de defensa jurídica)
+          indica %{stated} EUR, por encima del límite legal de %{limit} EUR. Redúcela
+          al límite o menos.
+      trabajo_income_unstated:
+        decision_trabajador: La casilla [%{casilla_id}] (aportaciones de la empresa
+          por decisión tuya) es un ingreso del trabajo que ningún certificado del
+          pagador indica. Indica el importe que recibiste o declara que no hay ninguno.
+        dependencia: La casilla [%{casilla_id}] (contribuciones empresariales a seguros
+          de dependencia) es un ingreso del trabajo que ningún certificado del pagador
+          indica. Indica el importe que recibiste o declara que no hay ninguno.
+        patrimonio_protegido: La casilla [%{casilla_id}] (aportaciones al patrimonio
+          protegido de una persona con discapacidad) es un ingreso del trabajo que
+          ningún certificado del pagador indica. Indica el importe que recibiste o
+          declara que no hay ninguno.
+        prevision: La casilla [%{casilla_id}] (contribuciones empresariales a planes
+          de pensiones y mutualidades de previsión social) es un ingreso del trabajo
+          que ningún certificado del pagador indica. Indica el importe que recibiste
+          o declara que no hay ninguno.
       transaction_evidence_missing_deductible: Un gasto deducible no tiene factura
         ni justificante adjunto. Adjúntalo al apunte de tus registros.
       transaction_evidence_missing_output: Una factura emitida con IVA repercutido
@@ -3436,6 +3474,10 @@ application:
         de tus registros, así que queda sin resolver en lugar de contar como cero.
         Registra la evidencia que falta y vuelve a proyectar.
       casilla_reason:
+        income_family_contradicts_profile: Esta casilla compara tus demás rentas con
+          el límite, pero las categorías de renta que indicaste excluyen un tipo de
+          renta del que tienes importes. Corrige las categorías o retira los importes
+          y vuelve a proyectar. Nunca se muestra como cero.
         m210_baseline_tipo_deferred: Esta casilla necesita el tipo de gravamen general
           de esta clase de renta, que aún no está fundamentado para el ejercicio,
           así que no tiene valor.
@@ -3581,6 +3623,19 @@ application:
             de la Ley 35/2006). Cada importe se registra como un 0 que has declarado,
             distinto de una cifra escrita; si después una declaración anterior muestra
             un importe, la declaración señala la diferencia.
+        renta_trabajo_income_not_stated:
+          action: No tengo contribuciones de la empresa ni aportaciones al patrimonio
+            protegido que declarar
+          effect: 'Registrado como un 0 que declaraste: ninguna de estas contribuciones.'
+          origin: Declaraste que no hay ninguna
+          statement: 'Declara que no tienes nada en cuatro casillas de tus rendimientos
+            del trabajo: contribuciones empresariales a planes de pensiones y mutualidades
+            de previsión social (0008), contribuciones empresariales a seguros de
+            dependencia (0009), aportaciones al patrimonio protegido de una persona
+            con discapacidad (0010) y aportaciones de la empresa por decisión tuya
+            (0024). Cada casilla queda registrada como un 0 que declaraste, distinto
+            de una cifra que escribiste. Ningún certificado del pagador indica estos
+            importes, así que solo tú puedes declararlos.'
       credits_heading:
         mixed: Retenciones
         practised: Retenciones que has practicado

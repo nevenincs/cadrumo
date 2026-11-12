@@ -1885,3 +1885,181 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Retenciones e ingresos a cuenta"]
+
+# Whether the profile's stated income categories positively exclude a family of rentas other than work
+# income. The list the profile states is the taxpayer's complete statement for the period, so a family
+# absent from a stated list is a proven zero for the LIRPF art. 20 limit; an unstated list excludes nothing.
+
+[[revisions."2022".bindings]]
+id = "renta-profile-income-family-excluded-capital-mobiliario"
+provider = { kind = "profile", profile_key = "taxpayer_type.irpf_income_categories" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El concepto de rentas, excluidas las exentas, distintas de las del trabajo incluye la suma"]
+
+[[revisions."2022".bindings]]
+id = "renta-profile-income-family-excluded-capital-inmobiliario"
+provider = { kind = "profile", profile_key = "taxpayer_type.irpf_income_categories" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El concepto de rentas, excluidas las exentas, distintas de las del trabajo incluye la suma"]
+
+[[revisions."2022".bindings]]
+id = "renta-profile-income-family-excluded-ganancias-patrimoniales"
+provider = { kind = "profile", profile_key = "taxpayer_type.irpf_income_categories" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El concepto de rentas, excluidas las exentas, distintas de las del trabajo incluye la suma"]
+
+# The work-income casillas read the figures of the trabajo payer records. The payer's certificate is the
+# evidence (RIRPF art. 108.3) and the record is its typed copy, so each figure has one source: the sum of the
+# quantity over every trabajo record of the ejercicio. The casillas are bound, carry no aeat_prefilled marker
+# and take no alternate binding, so the borrador never supplies or overrides them.
+
+# Importe integro dinerario.
+[[revisions."2022".bindings]]
+id = "renta-retencion-soportada-trabajo-importe-integro-dinerario"
+provider = { kind = "retencion_soportada", income_class = "trabajo", quantity = "importe_integro_dinerario" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-17", "rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-3-certificado-retenciones"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "boe-rirpf-art-108-3-certificado-retenciones"
+required_text = ["deberá expedir en favor del contribuyente certificación acreditativa de las retenciones practicadas o de los ingresos a cuenta efectuados"]
+
+# Valoracion de la retribucion en especie.
+[[revisions."2022".bindings]]
+id = "renta-retencion-soportada-trabajo-valoracion-especie"
+provider = { kind = "retencion_soportada", income_class = "trabajo", quantity = "valoracion_especie" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-17", "rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-3-certificado-retenciones"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "boe-rirpf-art-108-3-certificado-retenciones"
+required_text = ["deberá expedir en favor del contribuyente certificación acreditativa de las retenciones practicadas o de los ingresos a cuenta efectuados"]
+
+# Ingresos a cuenta efectuados.
+[[revisions."2022".bindings]]
+id = "renta-retencion-soportada-trabajo-ingreso-a-cuenta"
+provider = { kind = "retencion_soportada", income_class = "trabajo", quantity = "ingreso_a_cuenta" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-17", "rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-3-certificado-retenciones"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "boe-rirpf-art-108-3-certificado-retenciones"
+required_text = ["deberá expedir en favor del contribuyente certificación acreditativa de las retenciones practicadas o de los ingresos a cuenta efectuados"]
+
+# Ingresos a cuenta repercutidos.
+[[revisions."2022".bindings]]
+id = "renta-retencion-soportada-trabajo-ingreso-a-cuenta-repercutido"
+provider = { kind = "retencion_soportada", income_class = "trabajo", quantity = "ingreso_a_cuenta_repercutido" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-17", "rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-3-certificado-retenciones"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "boe-rirpf-art-108-3-certificado-retenciones"
+required_text = ["deberá expedir en favor del contribuyente certificación acreditativa de las retenciones practicadas o de los ingresos a cuenta efectuados"]
+
+# Reducciones aplicadas por el pagador (art. 18.2 y 18.3).
+[[revisions."2022".bindings]]
+id = "renta-retencion-soportada-trabajo-reducciones-aplicables"
+provider = { kind = "retencion_soportada", income_class = "trabajo", quantity = "reducciones_aplicables" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-18", "rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-3-certificado-retenciones"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "boe-rirpf-art-108-3-certificado-retenciones"
+required_text = ["deberá expedir en favor del contribuyente certificación acreditativa de las retenciones practicadas o de los ingresos a cuenta efectuados"]
+
+# Gastos deducibles del art. 19.2 a), b) y c).
+[[revisions."2022".bindings]]
+id = "renta-retencion-soportada-trabajo-gastos-deducibles"
+provider = { kind = "retencion_soportada", income_class = "trabajo", quantity = "gastos_deducibles" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-19", "rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-3-certificado-retenciones"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "boe-rirpf-art-108-3-certificado-retenciones"
+required_text = ["deberá expedir en favor del contribuyente certificación acreditativa de las retenciones practicadas o de los ingresos a cuenta efectuados"]
+
+# No bundled payer design states the four amounts below, so the taxpayer states them. They are income, and
+# leaving one out could lower the tax: each is a typed figure or a statement that there is none.
+
+# Contribuciones empresariales a planes de pensiones y mutualidades de prevision social.
+[[revisions."2022".bindings]]
+id = "renta-trabajo-contribucion-empresarial-prevision"
+provider = { kind = "manual_input", casilla_id = "0008", data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
+absence_attestation = "renta_trabajo_income_not_stated"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Contribuciones empresariales a sistemas de previsión social (importes imputados)."]
+
+# Contribuciones empresariales a seguros de dependencia.
+[[revisions."2022".bindings]]
+id = "renta-trabajo-contribucion-empresarial-seguro-dependencia"
+provider = { kind = "manual_input", casilla_id = "0009", data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
+absence_attestation = "renta_trabajo_income_not_stated"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["se admiten, desde 1 de enero de 2013, los seguros colectivos de dependencia"]
+
+# Aportaciones al patrimonio protegido de la persona con discapacidad.
+[[revisions."2022".bindings]]
+id = "renta-trabajo-aportacion-patrimonio-protegido"
+provider = { kind = "manual_input", casilla_id = "0010", data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
+absence_attestation = "renta_trabajo_income_not_stated"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Aportaciones al patrimonio protegido de personas con discapacidad."]
+
+# Aportaciones de la empresa por decision del trabajador.
+[[revisions."2022".bindings]]
+id = "renta-trabajo-aportacion-empresa-decision-trabajador"
+provider = { kind = "manual_input", casilla_id = "0024", data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
+absence_attestation = "renta_trabajo_income_not_stated"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["la empresa que deriven de una decisión del trabajador"]

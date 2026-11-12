@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....core.aggregation import BindingSourceKind
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
 from ....core.period import Period
@@ -91,8 +92,18 @@ def _words(refusal: ModeloPriorCarryAbsenceUnstatedError, language: OutputLangua
 
 
 def _families_in(year: int) -> tuple[AbsenceAttestationFamily, ...]:
+    """The carry families the revision declares: read from an earlier filing, or stated row by row.
+
+    The work-income statement is a family too, but it states figures the filer types for this
+    ejercicio, not a carry from earlier ones, so this refusal never speaks for it.
+    """
     revision = published_snapshot("100", filing_year=year, period="0A").revision
-    declared = {binding.absence_attestation for binding in revision.bindings}
+    declared = {
+        binding.absence_attestation
+        for binding in revision.bindings
+        if binding.absence_attestation is not None
+        and (binding.source is BindingSourceKind.PREVIOUS_FILING or binding.absence_attestation.row_grain)
+    }
     return tuple(family for family in AbsenceAttestationFamily if family in declared)
 
 

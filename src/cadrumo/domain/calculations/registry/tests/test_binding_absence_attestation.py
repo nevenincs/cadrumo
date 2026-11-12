@@ -28,6 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FAMILY = AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
 _ROW_FAMILY = AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES
+_WORK_INCOME_FAMILY = AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED
 _PENDING_EXPENSES_BOX = "0103"
 _DECLARED = (
     "renta-base-liquidable-negativa-general-anterior",
@@ -63,7 +64,7 @@ def test_the_pending_negative_bases_declare_the_statement_and_validate(year: int
         binding = bindings[binding_id]
         assert binding.absence_attestation is _FAMILY
         assert BindingDefinition.model_validate(binding.model_dump()).absence_attestation is _FAMILY
-    # Only those carries declare it: every other scalar binding of the revision takes no statement.
+    # Only those carries declare this family: other families (the work-income statement) are separate.
     assert {binding.id for binding in bindings.values() if binding.absence_attestation is _FAMILY} == set(_DECLARED)
 
 
@@ -91,7 +92,7 @@ def test_the_pending_rental_expenses_column_declares_the_row_statement(year: int
         assert BindingDefinition.model_validate(binding.model_dump()).absence_attestation is _ROW_FAMILY
     assert {
         binding.absence_attestation for binding in bindings.values() if binding.absence_attestation is not None
-    } <= {_FAMILY, _ROW_FAMILY}
+    } <= {_FAMILY, _ROW_FAMILY, _WORK_INCOME_FAMILY}
 
 
 @pytest.mark.parametrize("year", _renta_years())

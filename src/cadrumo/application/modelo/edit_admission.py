@@ -220,22 +220,17 @@ def permitted_binding_entry(
     (``ATTEST_PRIOR_VALUE``); where a source exists the dependency follows it,
     so a figure stated over it is refused here and never reads as proof.
 
-    A column whose registry family the filer states row by row takes only that
-    statement, of nothing pending or of the amount, each naming its row; the
-    source that fills the column is never overridden.
+    A column whose registry family the filer states row by row is a column of
+    lines as well, so it takes no override here; its statements, each naming
+    its row, are admitted by :func:`row_statement_entry`.
 
     ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     source = binding.source
     family = binding.absence_attestation
-    if family is not None and family.row_grain and binding_applies_to_period(binding.applicability, period):
-        return ModeloEditWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id,
-            allowed_intents=(
-                ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
-                ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
-            ),
-            grammar=binding_value_grammar(binding, revision=revision),
+    if family is not None and family.row_grain:
+        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
+            binding_id=binding.id, reason=ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE
         )
     if source in BUCKET_AGGREGATION_LOCK_SOURCES:
         return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
@@ -274,6 +269,31 @@ def permitted_binding_entry(
     )
 
 
+def row_statement_entry(
+    binding: BindingDefinition, *, revision: ModeloRevision, period: str
+) -> ModeloEditWritableBindingOverrideSurfaceEntryV1 | None:
+    """Admit the per-row statements of a column whose carry the filer states row by row, or ``None``.
+
+    The column is never overridden as one value: each statement names one row
+    of the repeating group and says that row carries nothing pending or the
+    amount it carries. A column the calculation does not read for ``period``
+    takes none.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
+    family = binding.absence_attestation
+    if family is None or not family.row_grain or not binding_applies_to_period(binding.applicability, period):
+        return None
+    return ModeloEditWritableBindingOverrideSurfaceEntryV1(
+        binding_id=binding.id,
+        allowed_intents=(
+            ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
+            ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+        ),
+        grammar=binding_value_grammar(binding, revision=revision),
+    )
+
+
 def _permitted_surface(
     snapshot: RegistrySnapshot,
     *,
@@ -289,7 +309,8 @@ def _permitted_surface(
         _scalar_entry(casilla, row_field_casilla_ids=row_field_casilla_ids) for casilla in revision.casillas
     ]
     entries.extend(
-        permitted_binding_entry(
+        row_statement_entry(binding, revision=revision, period=period)
+        or permitted_binding_entry(
             binding,
             revision=revision,
             period=period,
@@ -585,4 +606,5 @@ __all__ = [
     "admit_modelo_edit_baseline",
     "permitted_binding_entry",
     "renew_modelo_edit_baseline",
+    "row_statement_entry",
 ]

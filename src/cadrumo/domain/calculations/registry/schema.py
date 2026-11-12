@@ -209,6 +209,10 @@ ModeloCadenceField = Annotated[ModeloCadence, BeforeValidator(coerce_enum_member
 """Registry token hydrated into a ModeloCadence member."""
 
 
+_ABSENCE_ATTESTATION_SOURCES: Final = frozenset({BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.MANUAL_INPUT})
+"""The sources whose figure is unknown, not zero, until the filer states it holds nothing."""
+
+
 class BindingDefinition(RegistryModel):
     """Declare one typed source-to-casilla binding in a registry revision.
 
@@ -294,12 +298,11 @@ class BindingDefinition(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_absence_attestation_reads_an_earlier_decimal(self) -> BindingDefinition:
-        """Refuse a statement of absence on a binding that is not a decimal carry from an earlier filing.
+        """Refuse a statement of absence on a binding that is neither an earlier-filing carry nor the filer's own entry.
 
-        Only such a carry is unknown, rather than zero, while no earlier return
-        supplies it; on any other binding the statement would assert a figure.
-        A row family's carry is a money column of a repeating group instead,
-        stated row by row.
+        Only an earlier-filing carry, or a figure the filer types, is unknown rather than zero while
+        nothing supplies it; on any other binding the statement would assert a figure. Both read a decimal.
+        A row family's carry is a money column of a repeating group instead, stated row by row.
         """
         family = self.absence_attestation
         if family is None:
@@ -308,10 +311,8 @@ class BindingDefinition(RegistryModel):
             fits = self.value.channel is BindingValueChannel.ROW_SET and self.value.data_type is BindingDataType.MONEY
             shape = "a money column of a repeating group"
         else:
-            fits = (
-                self.source is BindingSourceKind.PREVIOUS_FILING and self.value.channel is BindingValueChannel.DECIMAL
-            )
-            shape = "a decimal binding read from an earlier filing"
+            fits = self.source in _ABSENCE_ATTESTATION_SOURCES and self.value.channel is BindingValueChannel.DECIMAL
+            shape = "a decimal binding read from an earlier filing or typed by the filer"
         if not fits:
             raise RegistryValidationError(
                 f"binding {self.id!r}: absence_attestation {family.value!r} needs {shape}",

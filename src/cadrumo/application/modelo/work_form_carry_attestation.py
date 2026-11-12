@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from types import MappingProxyType
-from typing import Final
+from typing import Final, TypeIs
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
@@ -26,6 +26,7 @@ from .edit_models import (
     ModeloEditPermittedSurfaceEntryV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
+from .trabajo_income_findings import trabajo_recorded
 from .work_form_context import WorkFormContext
 from .work_form_models import ModeloFormCarryAttestation
 
@@ -34,6 +35,9 @@ _ACTION_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProx
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.action"
         ),
+        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
+            "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.action"
+        ),
     }
 )
 _STATEMENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
@@ -41,12 +45,18 @@ _STATEMENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingP
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.statement"
         ),
+        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
+            "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.statement"
+        ),
     }
 )
 _EFFECT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
     {
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.effect"
+        ),
+        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
+            "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.effect"
         ),
     }
 )
@@ -62,6 +72,18 @@ for _family_words in (_ACTION_LOCALE_KEYS, _STATEMENT_LOCALE_KEYS, _EFFECT_LOCAL
         )
 
 
+def _attestable_open(
+    entry: ModeloEditPermittedSurfaceEntryV1, held: frozenset[BindingId], entered: frozenset[BindingId]
+) -> TypeIs[ModeloEditWritableBindingOverrideSurfaceEntryV1]:
+    """Whether the entry is a binding the filer may state absent and that holds no value yet."""
+    return (
+        isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
+        and entry.binding_id not in held
+        and entry.binding_id not in entered
+    )
+
+
 def _open_carries_by_family(
     context: WorkFormContext, entries: Iterable[ModeloEditPermittedSurfaceEntryV1]
 ) -> dict[AbsenceAttestationFamily, list[BindingId]]:
@@ -71,16 +93,14 @@ def _open_carries_by_family(
     entered = context.overridden or frozenset(())
     open_by_family: dict[AbsenceAttestationFamily, list[BindingId]] = {}
     for entry in entries:
-        if not (
-            isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
-            and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
-            and entry.binding_id not in held
-            and entry.binding_id not in entered
-        ):
+        if not _attestable_open(entry, held, entered):
             continue
         binding = context.bindings.get(entry.binding_id)
         if binding is not None and binding.absence_attestation in _FORM_FAMILIES:
             open_by_family.setdefault(binding.absence_attestation, []).append(entry.binding_id)
+    if revision is None or not trabajo_recorded(revision):
+        # No payer record of work income, so the employer's contributions are not in question.
+        open_by_family.pop(AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED, None)
     return open_by_family
 
 
