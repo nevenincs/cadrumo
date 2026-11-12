@@ -1708,8 +1708,9 @@ application:
         what_to_do: Indica el tipus d'activitat en aquests registres d'ingressos i
           torna a calcular.
       autonomic_deducciones_not_enrolled:
-        what: Les deduccions autonòmiques de la teva comunitat de residència no es
-          calculen en aquest exercici.
+        what: Cadrumo no calcula cap deducció autonòmica de la teva comunitat de residència
+          en aquest exercici, així que el total de deduccions autonòmiques només inclou
+          els imports que escriguis tu.
         what_to_do: Si te'n correspon alguna, escriu tu el seu import a la seva casella.
       calculation_screen_outdated:
         what: Aquest càlcul es va fer abans de les comprovacions actuals de Cadrumo
@@ -3610,6 +3611,11 @@ application:
         dels teus registres, així que queda sense resoldre en lloc de comptar com
         a zero. Registra l'evidència que falta i torna a projectar.
       casilla_reason:
+        autonomic_deduction_other_comunidad: Aquesta casella suma les deduccions autonòmiques
+          de la teva comunitat de residència, però la declaració té imports a les
+          caselles de deducció d'una altra comunitat. Una declaració només porta les
+          deduccions d'una comunitat. Corregeix aquestes caselles o la teva comunitat
+          de residència, o introdueix tu aquesta casella. Mai es mostra com a zero.
         income_family_contradicts_profile: Aquesta casella compara les teves altres
           rendes amb el límit, però les categories de renda que has indicat exclouen
           un tipus de renda del qual tens imports. Corregeix les categories o retira

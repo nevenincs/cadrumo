@@ -1681,8 +1681,9 @@ application:
         what_to_do: Add meg a tevékenység típusát ezeknél a bevételi tételeknél, majd
           számolj újra.
       autonomic_deducciones_not_enrolled:
-        what: Ebben az évben a lakóhelyed szerinti autonóm közösség regionális kedvezményei
-          nincsenek kiszámítva.
+        what: Ebben az évben a Cadrumo a lakóhelyed szerinti autonóm közösség egyetlen
+          regionális kedvezményét sem számítja ki, ezért a regionális kedvezmények
+          összege csak az általad beírt összegeket tartalmazza.
         what_to_do: Ha valamelyik megillet, írd be te magad az összegét a rovatába.
       calculation_screen_outdated:
         what: Ez a számítás a Cadrumo jelenlegi ellenőrzései előtt készült, ezért
@@ -3568,6 +3569,12 @@ application:
         kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó
         igazolást, majd vetíts újra.
       casilla_reason:
+        autonomic_deduction_other_comunidad: Ez a rovat a lakóhelyed szerinti autonóm
+          közösség regionális kedvezményeit adja össze, de a bevallásban egy másik
+          közösség kedvezményrovataiban is vannak összegek. Egy bevallás csak egy
+          közösség kedvezményeit tartalmazhatja. Javítsd azokat a rovatokat vagy a
+          lakóhelyed szerinti közösséget, vagy add meg te magad ezt a rovatot. Soha
+          nem jelenik meg nullaként.
         income_family_contradicts_profile: Ez a rovat a többi jövedelmedet veti össze
           a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
           amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az

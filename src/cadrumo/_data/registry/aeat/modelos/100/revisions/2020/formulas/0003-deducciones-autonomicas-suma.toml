@@ -1,0 +1,281 @@
+# Casilla 0564 (SUMADEDAUT): the autonomic deductions of the comunidad of residence. One term per
+# comunidad, each summing the casillas its DEDAUTx row of the official dictionary names. Written by
+# `python -m dev.registry.authoring.autonomic_deduction_sum` from the dictionaries; do not edit.
+[[revisions."2020".formulas]]
+id = "renta-deducciones-autonomicas-suma"
+target_casilla_id = "0564"
+expression = { op = "sum", args = [
+    # aeat-dr-100-2020-dictionary:1237 DEDAUTA
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "andalucia" }] },
+        { op = "sum", args = [
+            { casilla_id = "0849" }, { casilla_id = "0850" }, { casilla_id = "0851" }, { casilla_id = "0852" }, { casilla_id = "0853" }, { casilla_id = "0854" },
+            { casilla_id = "0855" }, { casilla_id = "0856" }, { casilla_id = "0857" }, { casilla_id = "0858" }, { casilla_id = "0860" }, { casilla_id = "0862" },
+            { casilla_id = "0863" }, { casilla_id = "0864" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "0849" }, { casilla_id = "0850" }, { casilla_id = "0851" }, { casilla_id = "0852" }, { casilla_id = "0853" }, { casilla_id = "0854" },
+                { casilla_id = "0855" }, { casilla_id = "0856" }, { casilla_id = "0857" }, { casilla_id = "0858" }, { casilla_id = "0860" }, { casilla_id = "0862" },
+                { casilla_id = "0863" }, { casilla_id = "0864" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1254 DEDAUTAR
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "aragon" }] },
+        { op = "sum", args = [
+            { casilla_id = "0866" }, { casilla_id = "0867" }, { casilla_id = "0868" }, { casilla_id = "0869" }, { casilla_id = "0870" }, { casilla_id = "0871" },
+            { casilla_id = "0872" }, { casilla_id = "0873" }, { casilla_id = "0874" }, { casilla_id = "0875" }, { casilla_id = "0876" }, { casilla_id = "0877" },
+            { casilla_id = "0878" }, { casilla_id = "0879" }, { casilla_id = "0880" }, { casilla_id = "0881" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "0866" }, { casilla_id = "0867" }, { casilla_id = "0868" }, { casilla_id = "0869" }, { casilla_id = "0870" }, { casilla_id = "0871" },
+                { casilla_id = "0872" }, { casilla_id = "0873" }, { casilla_id = "0874" }, { casilla_id = "0875" }, { casilla_id = "0876" }, { casilla_id = "0877" },
+                { casilla_id = "0878" }, { casilla_id = "0879" }, { casilla_id = "0880" }, { casilla_id = "0881" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1273 DEDAUTPA
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "asturias" }] },
+        { op = "sum", args = [
+            { casilla_id = "0883" }, { casilla_id = "0884" }, { casilla_id = "0885" }, { casilla_id = "0886" }, { casilla_id = "0887" }, { casilla_id = "0888" },
+            { casilla_id = "0889" }, { casilla_id = "0890" }, { casilla_id = "0891" }, { casilla_id = "0892" }, { casilla_id = "0893" }, { casilla_id = "0894" },
+            { casilla_id = "0895" }, { casilla_id = "0896" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "0883" }, { casilla_id = "0884" }, { casilla_id = "0885" }, { casilla_id = "0886" }, { casilla_id = "0887" }, { casilla_id = "0888" },
+                { casilla_id = "0889" }, { casilla_id = "0890" }, { casilla_id = "0891" }, { casilla_id = "0892" }, { casilla_id = "0893" }, { casilla_id = "0894" },
+                { casilla_id = "0895" }, { casilla_id = "0896" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1292 DEDAUTIB
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "baleares" }] },
+        { op = "sum", args = [
+            { casilla_id = "0898" }, { casilla_id = "0899" }, { casilla_id = "0900" }, { casilla_id = "0901" }, { casilla_id = "0902" }, { casilla_id = "0903" },
+            { casilla_id = "0904" }, { casilla_id = "0905" }, { casilla_id = "0906" }, { casilla_id = "0907" }, { casilla_id = "0908" }, { casilla_id = "0909" },
+            { casilla_id = "0910" }, { casilla_id = "0913" }, { casilla_id = "0914" }, { casilla_id = "0915" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "0898" }, { casilla_id = "0899" }, { casilla_id = "0900" }, { casilla_id = "0901" }, { casilla_id = "0902" }, { casilla_id = "0903" },
+                { casilla_id = "0904" }, { casilla_id = "0905" }, { casilla_id = "0906" }, { casilla_id = "0907" }, { casilla_id = "0908" }, { casilla_id = "0909" },
+                { casilla_id = "0910" }, { casilla_id = "0913" }, { casilla_id = "0914" }, { casilla_id = "0915" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1321 DEDAUTCAN
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "canarias" }] },
+        { op = "sum", args = [
+            { casilla_id = "0916" }, { casilla_id = "0917" }, { casilla_id = "0918" }, { casilla_id = "0919" }, { casilla_id = "0920" }, { casilla_id = "0921" },
+            { casilla_id = "0922" }, { casilla_id = "0923" }, { casilla_id = "0924" }, { casilla_id = "0925" }, { casilla_id = "0926" }, { casilla_id = "0927" },
+            { casilla_id = "0928" }, { casilla_id = "0933" }, { casilla_id = "0934" }, { casilla_id = "0935" }, { casilla_id = "0936" }, { casilla_id = "0937" },
+            { casilla_id = "0938" }, { casilla_id = "0939" }, { casilla_id = "0940" }, { casilla_id = "0941" }, { casilla_id = "0942" }, { casilla_id = "0944" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "0916" }, { casilla_id = "0917" }, { casilla_id = "0918" }, { casilla_id = "0919" }, { casilla_id = "0920" }, { casilla_id = "0921" },
+                { casilla_id = "0922" }, { casilla_id = "0923" }, { casilla_id = "0924" }, { casilla_id = "0925" }, { casilla_id = "0926" }, { casilla_id = "0927" },
+                { casilla_id = "0928" }, { casilla_id = "0933" }, { casilla_id = "0934" }, { casilla_id = "0935" }, { casilla_id = "0936" }, { casilla_id = "0937" },
+                { casilla_id = "0938" }, { casilla_id = "0939" }, { casilla_id = "0940" }, { casilla_id = "0941" }, { casilla_id = "0942" }, { casilla_id = "0944" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1339 DEDAUTCANT
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "cantabria" }] },
+        { op = "sum", args = [
+            { casilla_id = "0946" }, { casilla_id = "0947" }, { casilla_id = "0948" }, { casilla_id = "0950" }, { casilla_id = "0951" }, { casilla_id = "0952" },
+            { casilla_id = "0953" }, { casilla_id = "0954" }, { casilla_id = "0772" }, { casilla_id = "0774" }, { casilla_id = "0775" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "0946" }, { casilla_id = "0947" }, { casilla_id = "0948" }, { casilla_id = "0950" }, { casilla_id = "0951" }, { casilla_id = "0952" },
+                { casilla_id = "0953" }, { casilla_id = "0954" }, { casilla_id = "0772" }, { casilla_id = "0774" }, { casilla_id = "0775" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1354 DEDAUTCM
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "castilla_la_mancha" }] },
+        { op = "sum", args = [
+            { casilla_id = "0957" }, { casilla_id = "0958" }, { casilla_id = "0959" }, { casilla_id = "0960" }, { casilla_id = "0961" }, { casilla_id = "0962" },
+            { casilla_id = "0963" }, { casilla_id = "0964" }, { casilla_id = "0965" }, { casilla_id = "0966" }, { casilla_id = "0967" }, { casilla_id = "0968" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "0957" }, { casilla_id = "0958" }, { casilla_id = "0959" }, { casilla_id = "0960" }, { casilla_id = "0961" }, { casilla_id = "0962" },
+                { casilla_id = "0963" }, { casilla_id = "0964" }, { casilla_id = "0965" }, { casilla_id = "0966" }, { casilla_id = "0967" }, { casilla_id = "0968" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1383 DEDAUTCL
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "castilla_y_leon" }] },
+        { op = "sum", args = [
+            { casilla_id = "0970" }, { casilla_id = "0971" }, { casilla_id = "0972" }, { casilla_id = "0973" }, { casilla_id = "0974" }, { casilla_id = "0799" },
+            { casilla_id = "0975" }, { casilla_id = "0976" }, { casilla_id = "0978" }, { casilla_id = "0979" }, { casilla_id = "0980" }, { casilla_id = "0984" },
+            { casilla_id = "0995" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "0970" }, { casilla_id = "0971" }, { casilla_id = "0972" }, { casilla_id = "0973" }, { casilla_id = "0974" }, { casilla_id = "0799" },
+                { casilla_id = "0975" }, { casilla_id = "0976" }, { casilla_id = "0978" }, { casilla_id = "0979" }, { casilla_id = "0980" }, { casilla_id = "0984" },
+                { casilla_id = "0995" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1397 DEDAUTCT
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "cataluna" }] },
+        { op = "sum", args = [
+            { casilla_id = "1000" }, { casilla_id = "1001" }, { casilla_id = "1002" }, { casilla_id = "1003" }, { casilla_id = "1004" }, { casilla_id = "1005" },
+            { casilla_id = "1006" }, { casilla_id = "1007" }, { casilla_id = "1008" }, { casilla_id = "0824" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "1000" }, { casilla_id = "1001" }, { casilla_id = "1002" }, { casilla_id = "1003" }, { casilla_id = "1004" }, { casilla_id = "1005" },
+                { casilla_id = "1006" }, { casilla_id = "1007" }, { casilla_id = "1008" }, { casilla_id = "0824" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1408 DEDAUTE
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "extremadura" }] },
+        { op = "sum", args = [
+            { casilla_id = "1010" }, { casilla_id = "1011" }, { casilla_id = "1012" }, { casilla_id = "1013" }, { casilla_id = "1014" }, { casilla_id = "1015" },
+            { casilla_id = "1016" }, { casilla_id = "1017" }, { casilla_id = "1018" }, { casilla_id = "1019" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "1010" }, { casilla_id = "1011" }, { casilla_id = "1012" }, { casilla_id = "1013" }, { casilla_id = "1014" }, { casilla_id = "1015" },
+                { casilla_id = "1016" }, { casilla_id = "1017" }, { casilla_id = "1018" }, { casilla_id = "1019" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1430 DEDAUTGA
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "galicia" }] },
+        { op = "sum", args = [
+            { casilla_id = "1021" }, { casilla_id = "1022" }, { casilla_id = "1023" }, { casilla_id = "1024" }, { casilla_id = "1025" }, { casilla_id = "1026" },
+            { casilla_id = "1027" }, { casilla_id = "1028" }, { casilla_id = "1029" }, { casilla_id = "1030" }, { casilla_id = "1031" }, { casilla_id = "1032" },
+            { casilla_id = "1034" }, { casilla_id = "1035" }, { casilla_id = "1036" }, { casilla_id = "1037" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "1021" }, { casilla_id = "1022" }, { casilla_id = "1023" }, { casilla_id = "1024" }, { casilla_id = "1025" }, { casilla_id = "1026" },
+                { casilla_id = "1027" }, { casilla_id = "1028" }, { casilla_id = "1029" }, { casilla_id = "1030" }, { casilla_id = "1031" }, { casilla_id = "1032" },
+                { casilla_id = "1034" }, { casilla_id = "1035" }, { casilla_id = "1036" }, { casilla_id = "1037" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1443 DEDAUTM
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "madrid" }] },
+        { op = "sum", args = [
+            { casilla_id = "1039" }, { casilla_id = "1040" }, { casilla_id = "1041" }, { casilla_id = "1042" }, { casilla_id = "1043" }, { casilla_id = "1044" },
+            { casilla_id = "1045" }, { casilla_id = "1046" }, { casilla_id = "1047" }, { casilla_id = "1048" }, { casilla_id = "1049" }, { casilla_id = "1050" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "1039" }, { casilla_id = "1040" }, { casilla_id = "1041" }, { casilla_id = "1042" }, { casilla_id = "1043" }, { casilla_id = "1044" },
+                { casilla_id = "1045" }, { casilla_id = "1046" }, { casilla_id = "1047" }, { casilla_id = "1048" }, { casilla_id = "1049" }, { casilla_id = "1050" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1458 DEDAUTMU
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "murcia" }] },
+        { op = "sum", args = [
+            { casilla_id = "1052" }, { casilla_id = "1053" }, { casilla_id = "1054" }, { casilla_id = "1055" }, { casilla_id = "1056" }, { casilla_id = "1057" },
+            { casilla_id = "1058" }, { casilla_id = "1059" }, { casilla_id = "1060" }, { casilla_id = "1073" }, { casilla_id = "1157" }, { casilla_id = "1158" },
+            { casilla_id = "1161" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "1052" }, { casilla_id = "1053" }, { casilla_id = "1054" }, { casilla_id = "1055" }, { casilla_id = "1056" }, { casilla_id = "1057" },
+                { casilla_id = "1058" }, { casilla_id = "1059" }, { casilla_id = "1060" }, { casilla_id = "1073" }, { casilla_id = "1157" }, { casilla_id = "1158" },
+                { casilla_id = "1161" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1487 DEDAUTLR
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "la_rioja" }] },
+        { op = "sum", args = [
+            { casilla_id = "1061" }, { casilla_id = "1062" }, { casilla_id = "1063" }, { casilla_id = "1065" }, { casilla_id = "1066" }, { casilla_id = "1068" },
+            { casilla_id = "1069" }, { casilla_id = "1072" }, { casilla_id = "1075" }, { casilla_id = "1077" }, { casilla_id = "1079" }, { casilla_id = "1080" },
+            { casilla_id = "1081" }, { casilla_id = "1082" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "1061" }, { casilla_id = "1062" }, { casilla_id = "1063" }, { casilla_id = "1065" }, { casilla_id = "1066" }, { casilla_id = "1068" },
+                { casilla_id = "1069" }, { casilla_id = "1072" }, { casilla_id = "1075" }, { casilla_id = "1077" }, { casilla_id = "1079" }, { casilla_id = "1080" },
+                { casilla_id = "1081" }, { casilla_id = "1082" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+    # aeat-dr-100-2020-dictionary:1531 DEDAUTVA
+    { op = "if_then_else", args = [
+        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "comunidad_valenciana" }] },
+        { op = "sum", args = [
+            { casilla_id = "1083" }, { casilla_id = "1084" }, { casilla_id = "1085" }, { casilla_id = "1086" }, { casilla_id = "1087" }, { casilla_id = "1088" },
+            { casilla_id = "1089" }, { casilla_id = "1090" }, { casilla_id = "1091" }, { casilla_id = "1092" }, { casilla_id = "1093" }, { casilla_id = "1094" },
+            { casilla_id = "1095" }, { casilla_id = "1097" }, { casilla_id = "1099" }, { casilla_id = "1100" }, { casilla_id = "1101" }, { casilla_id = "1102" },
+            { casilla_id = "1103" }, { casilla_id = "1104" }, { casilla_id = "1105" }, { casilla_id = "1106" }, { casilla_id = "1108" }, { casilla_id = "1110" },
+            { casilla_id = "1111" }, { casilla_id = "1112" }, { casilla_id = "1113" }, { casilla_id = "1114" }, { casilla_id = "1120" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { casilla_id = "1083" }, { casilla_id = "1084" }, { casilla_id = "1085" }, { casilla_id = "1086" }, { casilla_id = "1087" }, { casilla_id = "1088" },
+                { casilla_id = "1089" }, { casilla_id = "1090" }, { casilla_id = "1091" }, { casilla_id = "1092" }, { casilla_id = "1093" }, { casilla_id = "1094" },
+                { casilla_id = "1095" }, { casilla_id = "1097" }, { casilla_id = "1099" }, { casilla_id = "1100" }, { casilla_id = "1101" }, { casilla_id = "1102" },
+                { casilla_id = "1103" }, { casilla_id = "1104" }, { casilla_id = "1105" }, { casilla_id = "1106" }, { casilla_id = "1108" }, { casilla_id = "1110" },
+                { casilla_id = "1111" }, { casilla_id = "1112" }, { casilla_id = "1113" }, { casilla_id = "1114" }, { casilla_id = "1120" },
+            ] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-dr-100-2020-dictionary"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["El importe de las deducciones establecidas por la Comunidad Autónoma en el ejercicio de las competencias"]

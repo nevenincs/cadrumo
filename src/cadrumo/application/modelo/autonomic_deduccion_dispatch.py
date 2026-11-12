@@ -24,8 +24,9 @@ holds the other members' base, so an indeterminate unit resolves to zero and the
 verification advisory names the possible entitlement instead.
 
 A filer whose comunidad of residence has no enrolment in the edition, or who states
-none, is told so in one non-blocking note: the regional deducciones are not computed
-and can be entered by hand. Leaving a deducción out can only raise the tax.
+none, is told so in one non-blocking note: the regional deducciones are not computed,
+so the autonomic deduction total holds only the amounts entered by hand. Leaving a
+deducción out can only raise the tax.
 """
 
 from __future__ import annotations
@@ -154,7 +155,8 @@ def _not_enrolled_note(ccaa: str | None, *, bucket_id: str) -> CalculationSource
         binding_source=BindingSourceKind.PROFILE,
         message=(
             f"the edition enrols no autonomic deducción for the comunidad of residence ({stated}); "
-            "its regional deducciones are not computed and can be entered by hand"
+            "none of its regional deducciones is computed, so the autonomic deduction total "
+            "includes only the amounts entered by hand"
         ),
         resolver_id="profile",
         source_ref=f"profile:{bucket_id}:{_TAX_RESIDENCE_CCAA_KEY}",

@@ -111,7 +111,6 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
         "0557": Decimal("0"),
         "0558": Decimal("0"),
         "0559": Decimal("0"),
-        "0564": Decimal("0"),
         "0565": Decimal("0"),
         "0566": Decimal("0"),
         "0584": Decimal("0"),

@@ -1718,8 +1718,9 @@ application:
         what_to_do: Indica el tipo de actividad en esos registros de ingresos y vuelve
           a calcular.
       autonomic_deducciones_not_enrolled:
-        what: Las deducciones autonómicas de tu comunidad de residencia no se calculan
-          en este ejercicio.
+        what: Cadrumo no calcula ninguna deducción autonómica de tu comunidad de residencia
+          en este ejercicio, así que el total de deducciones autonómicas solo incluye
+          los importes que escribas tú.
         what_to_do: Si te corresponde alguna, escribe tú su importe en su casilla.
       calculation_screen_outdated:
         what: Este cálculo se hizo antes de las comprobaciones actuales de Cadrumo
@@ -3618,6 +3619,11 @@ application:
         de tus registros, así que queda sin resolver en lugar de contar como cero.
         Registra la evidencia que falta y vuelve a proyectar.
       casilla_reason:
+        autonomic_deduction_other_comunidad: Esta casilla suma las deducciones autonómicas
+          de tu comunidad de residencia, pero la declaración tiene importes en las
+          casillas de deducción de otra comunidad. Una declaración solo lleva las
+          deducciones de una comunidad. Corrige esas casillas o tu comunidad de residencia,
+          o introduce tú esta casilla. Nunca se muestra como cero.
         income_family_contradicts_profile: Esta casilla compara tus demás rentas con
           el límite, pero las categorías de renta que indicaste excluyen un tipo de
           renta del que tienes importes. Corrige las categorías o retira los importes

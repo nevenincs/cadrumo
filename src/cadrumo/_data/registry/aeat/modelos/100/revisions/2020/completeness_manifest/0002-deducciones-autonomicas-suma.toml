@@ -1,0 +1,894 @@
+# The official deduction boxes the casilla 0564 formula sums enter the calculation closure. Written by
+# `python -m dev.registry.authoring.autonomic_deduction_sum`; do not edit.
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0772"
+number = "0772"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0774"
+number = "0774"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0775"
+number = "0775"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0799"
+number = "0799"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0824"
+number = "0824"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0849"
+number = "0849"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0850"
+number = "0850"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0851"
+number = "0851"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0852"
+number = "0852"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0853"
+number = "0853"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0854"
+number = "0854"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0855"
+number = "0855"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0856"
+number = "0856"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0857"
+number = "0857"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0858"
+number = "0858"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0860"
+number = "0860"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0862"
+number = "0862"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0863"
+number = "0863"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0864"
+number = "0864"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0866"
+number = "0866"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0867"
+number = "0867"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0868"
+number = "0868"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0869"
+number = "0869"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0870"
+number = "0870"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0871"
+number = "0871"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0872"
+number = "0872"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0873"
+number = "0873"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0874"
+number = "0874"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0875"
+number = "0875"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0876"
+number = "0876"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0877"
+number = "0877"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0878"
+number = "0878"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0880"
+number = "0880"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0881"
+number = "0881"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0883"
+number = "0883"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0884"
+number = "0884"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0885"
+number = "0885"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0886"
+number = "0886"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0887"
+number = "0887"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0888"
+number = "0888"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0889"
+number = "0889"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0890"
+number = "0890"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0891"
+number = "0891"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0892"
+number = "0892"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0893"
+number = "0893"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0894"
+number = "0894"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0895"
+number = "0895"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0896"
+number = "0896"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0898"
+number = "0898"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0899"
+number = "0899"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0900"
+number = "0900"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0901"
+number = "0901"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0902"
+number = "0902"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0903"
+number = "0903"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0904"
+number = "0904"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0905"
+number = "0905"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0906"
+number = "0906"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0907"
+number = "0907"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0908"
+number = "0908"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0909"
+number = "0909"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0910"
+number = "0910"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0913"
+number = "0913"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0914"
+number = "0914"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0915"
+number = "0915"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0916"
+number = "0916"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0917"
+number = "0917"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0918"
+number = "0918"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0919"
+number = "0919"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0920"
+number = "0920"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0921"
+number = "0921"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0922"
+number = "0922"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0923"
+number = "0923"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0924"
+number = "0924"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0925"
+number = "0925"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0926"
+number = "0926"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0927"
+number = "0927"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0928"
+number = "0928"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0933"
+number = "0933"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0934"
+number = "0934"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0935"
+number = "0935"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0936"
+number = "0936"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0937"
+number = "0937"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0938"
+number = "0938"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0939"
+number = "0939"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0940"
+number = "0940"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0941"
+number = "0941"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0942"
+number = "0942"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0944"
+number = "0944"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0946"
+number = "0946"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0947"
+number = "0947"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0948"
+number = "0948"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0950"
+number = "0950"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0951"
+number = "0951"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0952"
+number = "0952"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0953"
+number = "0953"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0954"
+number = "0954"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0957"
+number = "0957"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0958"
+number = "0958"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0959"
+number = "0959"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0960"
+number = "0960"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0961"
+number = "0961"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0962"
+number = "0962"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0963"
+number = "0963"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0964"
+number = "0964"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0965"
+number = "0965"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0966"
+number = "0966"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0967"
+number = "0967"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0968"
+number = "0968"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0970"
+number = "0970"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0971"
+number = "0971"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0972"
+number = "0972"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0973"
+number = "0973"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0974"
+number = "0974"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0975"
+number = "0975"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0976"
+number = "0976"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0978"
+number = "0978"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0979"
+number = "0979"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0980"
+number = "0980"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0984"
+number = "0984"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "0995"
+number = "0995"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1000"
+number = "1000"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1001"
+number = "1001"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1002"
+number = "1002"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1003"
+number = "1003"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1004"
+number = "1004"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1005"
+number = "1005"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1006"
+number = "1006"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1007"
+number = "1007"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1008"
+number = "1008"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1010"
+number = "1010"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1011"
+number = "1011"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1012"
+number = "1012"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1013"
+number = "1013"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1014"
+number = "1014"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1015"
+number = "1015"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1016"
+number = "1016"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1017"
+number = "1017"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1018"
+number = "1018"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1019"
+number = "1019"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1021"
+number = "1021"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1022"
+number = "1022"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1023"
+number = "1023"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1024"
+number = "1024"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1025"
+number = "1025"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1026"
+number = "1026"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1027"
+number = "1027"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1028"
+number = "1028"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1029"
+number = "1029"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1030"
+number = "1030"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1031"
+number = "1031"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1032"
+number = "1032"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1034"
+number = "1034"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1035"
+number = "1035"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1036"
+number = "1036"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1037"
+number = "1037"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1039"
+number = "1039"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1040"
+number = "1040"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1041"
+number = "1041"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1042"
+number = "1042"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1043"
+number = "1043"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1044"
+number = "1044"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1045"
+number = "1045"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1046"
+number = "1046"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1047"
+number = "1047"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1048"
+number = "1048"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1049"
+number = "1049"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1050"
+number = "1050"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1052"
+number = "1052"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1053"
+number = "1053"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1054"
+number = "1054"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1055"
+number = "1055"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1056"
+number = "1056"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1057"
+number = "1057"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1058"
+number = "1058"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1059"
+number = "1059"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1060"
+number = "1060"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1061"
+number = "1061"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1062"
+number = "1062"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1063"
+number = "1063"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1065"
+number = "1065"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1066"
+number = "1066"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1068"
+number = "1068"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1069"
+number = "1069"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1072"
+number = "1072"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1073"
+number = "1073"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1075"
+number = "1075"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1077"
+number = "1077"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1079"
+number = "1079"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1080"
+number = "1080"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1081"
+number = "1081"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1082"
+number = "1082"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1083"
+number = "1083"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1084"
+number = "1084"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1085"
+number = "1085"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1086"
+number = "1086"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1087"
+number = "1087"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1088"
+number = "1088"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1089"
+number = "1089"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1090"
+number = "1090"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1091"
+number = "1091"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1092"
+number = "1092"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1093"
+number = "1093"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1094"
+number = "1094"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1095"
+number = "1095"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1097"
+number = "1097"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1099"
+number = "1099"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1100"
+number = "1100"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1101"
+number = "1101"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1102"
+number = "1102"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1103"
+number = "1103"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1104"
+number = "1104"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1105"
+number = "1105"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1106"
+number = "1106"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1108"
+number = "1108"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1110"
+number = "1110"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1111"
+number = "1111"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1112"
+number = "1112"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1113"
+number = "1113"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1114"
+number = "1114"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1120"
+number = "1120"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1157"
+number = "1157"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1158"
+number = "1158"
+
+[[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1161"
+number = "1161"
