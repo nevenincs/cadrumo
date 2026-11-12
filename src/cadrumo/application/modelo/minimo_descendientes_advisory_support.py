@@ -32,6 +32,7 @@ from ...domain.contribuyente.family_fact_context import FamilyFactResolutionCont
 from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..user_profile.profile_read_recorder import recorded_profile_view
 from .profile_derived_facts import renta_family_profile_from_facts, second_entitled_filer_indicated
 from .registry_input_refusals import registry_integrity_verdict, request_verdict
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
@@ -299,7 +300,8 @@ def _profile_fact_strings(
             ).load(bucket_id)
         except ProfileNotFoundError:
             return None
-    return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+    # Each path read from the map is noted; enumerating it reads the whole profile.
+    return recorded_profile_view({fact.path: str(fact.value) for fact in record.facts if fact.value is not None})
 
 
 def collect_minimo_descendientes_prorrata_inferred_diagnostics(

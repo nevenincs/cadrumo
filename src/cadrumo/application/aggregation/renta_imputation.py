@@ -35,6 +35,7 @@ from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+from ..user_profile.profile_read_recorder import profile_facts_at
 from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 from .source_resolution_operations import unresolved_binding_diagnostics
 
@@ -185,11 +186,8 @@ def _dated_values(facts: Iterable[UserProfileFact], path: str, year: int) -> set
     first, last = date(year, 1, 1), date(year, 12, 31)
     return {
         fact.value
-        for fact in facts
-        if fact.path == path
-        and fact.valid_from is not None
-        and fact.valid_from <= last
-        and (fact.valid_to is None or fact.valid_to >= first)
+        for fact in profile_facts_at(facts, path)
+        if fact.valid_from is not None and fact.valid_from <= last and (fact.valid_to is None or fact.valid_to >= first)
     }
 
 
@@ -228,7 +226,7 @@ class ImputationCriteria:
         dated = _dated_values(self.facts, _ESTIMATION_REGIME_PATH, year)
         if dated:
             return len(dated) == 1
-        return any(fact.path == _ESTIMATION_REGIME_PATH and fact.valid_from is None for fact in self.facts)
+        return any(fact.valid_from is None for fact in profile_facts_at(self.facts, _ESTIMATION_REGIME_PATH))
 
     def _commercial_accounting(self, year: int) -> bool | None:
         values = _dated_values(self.facts, _COMMERCIAL_ACCOUNTING_PATH, year)

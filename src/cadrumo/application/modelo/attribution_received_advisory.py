@@ -50,6 +50,7 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+from ..user_profile.profile_read_recorder import profile_facts_under
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from .semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
@@ -118,7 +119,9 @@ def attribution_received_omission_advisory_findings(
         except ProfileNotFoundError:
             return ()
 
-    total_base = _attribution_received_base_for_year(record.facts, work_unit.filing_year)
+    total_base = _attribution_received_base_for_year(
+        profile_facts_under(record.facts, "attribution_received."), work_unit.filing_year
+    )
     facts_present = total_base is not None
 
     if facts_present and not casilla_has_value:

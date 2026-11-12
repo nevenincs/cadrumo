@@ -9,6 +9,7 @@ from ...core.casilla_id import CasillaId
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
 from ...domain.contribuyente.descendant_maternity import relacion_is_ambiguous_for_maternidad
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..user_profile.profile_read_recorder import profile_facts_under
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
@@ -120,7 +121,11 @@ def ambiguous_relacion_hijo_ids(
     """
     if not contributing_hijo_ids:
         return frozenset[str]()
-    facts = {fact.path: str(fact.value) for fact in profile.record.facts if fact.value is not None}
+    facts = {
+        fact.path: str(fact.value)
+        for fact in profile_facts_under(profile.record.facts, "renta_family.descendiente.")
+        if fact.value is not None
+    }
     descendientes = descendant_list_from_facts(facts)
     return frozenset(
         hijo_id
