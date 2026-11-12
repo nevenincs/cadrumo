@@ -3571,6 +3571,7 @@
         "cadrumo.entrypoints.tui.ledger.evidence_files_review",
         "cadrumo.entrypoints.tui.ledger.evidence_files_tools",
         "cadrumo.entrypoints.tui.ledger.evidence_files_write",
+        "cadrumo.entrypoints.tui.ledger.evidence_page",
         "cadrumo.entrypoints.tui.ledger.evidence_records",
         "cadrumo.entrypoints.tui.ledger.import_flow",
         "cadrumo.entrypoints.tui.ledger.invoice_detail",
