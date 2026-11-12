@@ -15,26 +15,26 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....core.config import override_settings
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from ....domain.contribuyente.inmueble_facts import (
+from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ...application.user_profile.login_session import authenticate_profile_for_invocation
+from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+from ...application.user_profile.registration import register_profile_with_credentials
+from ...application.user_profile.section_rows import (
+    add_profile_repeatable_section_row,
+    remove_profile_repeatable_section_row,
+    update_profile_repeatable_section_row,
+)
+from ...core.config import override_settings
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ...domain.contribuyente.inmueble_facts import (
     ARRENDAMIENTO_SECTION,
     INMUEBLE_SECTION,
     inmuebles_from_facts,
     rows_from_facts,
 )
-from ....domain.user_profile.errors import ProfileSchemaValidationError, UserProfileValidationError
-from ..login_session import authenticate_profile_for_invocation
-from ..profile_record_repository import ProfileRecordRepository
-from ..registration import register_profile_with_credentials
-from ..section_rows import (
-    add_profile_repeatable_section_row,
-    remove_profile_repeatable_section_row,
-    update_profile_repeatable_section_row,
-)
+from ...domain.user_profile.errors import ProfileSchemaValidationError, UserProfileValidationError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
