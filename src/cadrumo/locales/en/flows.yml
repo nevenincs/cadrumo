@@ -188,9 +188,11 @@ flows:
           payable_invoice: Supplier invoice
           previous_filing: Previous filing
           profile: Profile
+          prorrata_register_activity: Prorrata register activities
           prorrata_regularizacion: Pro-rata adjustment
           purchase_invoice_evidence: Purchase-invoice evidence
           relation_prefill: Related filing
+          renta_inmueble: Let property
           retencion_soportada: Withholding suffered
           retenciones_aggregation: Withholding totals
           withholding: Withholding record

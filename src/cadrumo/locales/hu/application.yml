@@ -1152,6 +1152,15 @@ application:
         unmodelled_invoice_class: A feltüntetett számlatípusnak itt nincs megfelelője
         unnumbered_invoice: A beolvasott számlaszám nem szám
         unresolved_direction: Nem egyértelmű, melyik fél állította ki a dokumentumot
+    counterparty:
+      findings:
+        kind_contradicts_identifier_form: A bevallási nevet {declared} számára adtad
+          meg, de ennek a spanyol adóazonosítónak a formája {observed} formája. A
+          nevet úgy tároltuk, ahogy megadtad, és semmi sem változott; ellenőrizd,
+          melyik a helyes.
+      party_kinds:
+        entity: szervezet
+        natural_person: természetes személy
     draft_finding:
       breakdown_bases_disagree: A kulcsonkénti alapok összege {summed}, a dokumentum
         viszont {base} adóalapot tüntet fel. Ez ugyanannak a dokumentumnak két olvasata,
@@ -1283,6 +1292,14 @@ application:
       m210_payer_mode:
         multiple_payers_code_35: Több kifizető (35-ös kód)
         single_payer: Egy kifizető
+      withholding_certificate_figure:
+        gastos_deducibles: Levonható költségek
+        importe_integro_dinerario: Bruttó pénzbeli összeg
+        ingreso_a_cuenta: Előlegbefizetés
+        ingreso_a_cuenta_repercutido: Áthárított előlegbefizetés
+        reducciones_aplicables: Alkalmazott csökkentések
+        retencion: Levonás
+        valoracion_especie: Természetbeni érték
     errors:
       evidence_attachment_requires_ids: A bizonylatnak a nyilvántartásaidhoz való
         csatolásához vásárlási bizonyítékra vagy csatolmány-azonosítókra van szükség.
@@ -2164,6 +2181,94 @@ application:
         meg, a megnevezett tételek pedig {base} alapot tartalmaznak.'
       register_row_missing: '{elements}: ezek az eszközök {count} olyan tételt neveznek
         meg, amely már nem létezik.'
+      renta_inmueble_accessory_property: '{record}. ingatlan: a fő ingatlannal együtt
+        bérbe adott tartozék ingatlan, amit a számítás nem kínál.'
+      renta_inmueble_acquisition_cost_unstated: '{record}. ingatlan: nem szerepel
+        a beszerzési ára és költségei, ezért az épület értékcsökkenése nincs kiszámítva.'
+      renta_inmueble_acquisition_date_unstated: '{record}. ingatlan: nem szerepel,
+        mikor szerezted, így nem ismert, hány napig volt a tiéd.'
+      renta_inmueble_boxes_not_offered: '{record}. ingatlan: a bútorzat értékcsökkenése,
+        a 23.3. cikk szerinti csökkentés és a különleges értékcsökkenés nem elérhető;
+        ahol szükséges, add meg kézzel.'
+      renta_inmueble_cadastral_values_unstated: '{record}. ingatlan: sem a telek értéke,
+        sem az adóév kataszteri értékei nem szerepelnek, így a telek nem zárható ki
+        az értékcsökkenés alapjából.'
+      renta_inmueble_concept_undeclared: Egy főkönyvi tétel olyan kiadási jogcímet
+        ad meg, amely nem szerepel az adóév listájában.
+      renta_inmueble_concurrent_leases: '{record}. ingatlan: két bérleti szerződése
+        ugyanarra a napra esik.'
+      renta_inmueble_cumulative_amortisation_unstated: '{record}. ingatlan: az értékcsökkenése
+        elérheti a beszerzési értéket, és az adóév elején halmozott értékcsökkenés
+        nem szerepel.'
+      renta_inmueble_currency_unconverted: Egy kapcsolt főkönyvi tétel devizában van,
+        és nincs euróértéke.
+      renta_inmueble_days_not_let: '{record}. ingatlan: voltak napok, amikor a tiéd
+        volt, de nem volt bérbe adva, és ezeknek a napoknak a vélelmezett jövedelme
+        nincs kiszámítva.'
+      renta_inmueble_expense_row_on_lease: Egy kimenő főkönyvi tétel bérleti szerződéshez
+        kapcsolódik; a kiadást az ingatlanához kapcsold.
+      renta_inmueble_expense_row_without_concept: Egy ingatlanhoz kapcsolt főkönyvi
+        tétel nem adja meg a kiadás jogcímét.
+      renta_inmueble_held_part_of_ejercicio: '{record}. ingatlan: az adóév során szerezted
+        vagy ruháztad át, és a kiadásai időarányos megosztása nem elérhető.'
+      renta_inmueble_improvement_in_ejercicio: '{record}. ingatlan: egy felújítás
+        dátuma az adóévre esik, és az értékcsökkenési napjai nincsenek kiszámítva.'
+      renta_inmueble_income_outside_lease: Egy bérleti díj tétel dátuma kívül esik
+        a kapcsolt bérleti szerződés időszakán.
+      renta_inmueble_income_row_on_property: Egy bejövő főkönyvi tétel ingatlanhoz
+        kapcsolódik; a bérleti díjat a bérleti szerződéséhez kapcsold.
+      renta_inmueble_lease_names_no_property: '{record}. bérleti szerződés: olyan
+        ingatlant nevez meg, amely nincs a profilodban.'
+      renta_inmueble_lease_without_income: '{record}. bérleti szerződés: az adóévben
+        hatályos, de nincs hozzá kapcsolt bérleti díj tétel.'
+      renta_inmueble_naturaleza_unstated: '{record}. ingatlan: nem szerepel, hogy
+        városi vagy külterületi (rústico) ingatlan-e.'
+      renta_inmueble_pending_expenses_held_return_unstated: '{record}. ingatlan: az
+        előző adóév bevallása itt tárolva van, de semmi nem rendeli ehhez az ingatlanhoz
+        a benne levonásra váróként maradt kamat- és javítási kiadásokat. Add meg őket
+        ehhez az ingatlanhoz ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_origin_unsplit: '{record}. ingatlan: levonásra
+        váró kamat- és javítási kiadásai vannak, és a keletkezésük adóéve szerint
+        felosztó melléklet még nem nyújtható be. Ellenőrizd a levonásra váró összegét
+        ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_unstated: '{record}. ingatlan: a korábbi adóévekből
+        még levonásra váró kamat- és javítási kiadások nem szerepelnek, és egyik itt
+        tárolt korábbi bevallás sem tartalmazza őket.'
+      renta_inmueble_property_abroad_let: '{record}. ingatlan: külföldön van és bérbe
+        adott, külföldi jövedelemként való kezelése nem elérhető.'
+      renta_inmueble_record_unreadable: A profilod egyik ingatlan- vagy bérleti rekordja
+        nem olvasható, ezért egyetlen bérbe adott ingatlan sem kerül kiszámításra.
+      renta_inmueble_reduction_fact_unstated: '{record}. ingatlan: egy bérleti szerződésnél
+        nem szerepel, hogy lakásbérletről van-e szó, a lakás feszült piaci övezetben
+        van-e, illetve fenntartja-e a LAU 17.6. cikkét, így a 23.2. cikk szerinti
+        csökkentés nincs kiszámítva.'
+      renta_inmueble_reduction_tenants_mixed: '{record}. ingatlan: egy bérleti szerződés
+        bérlői közül csak néhány felel meg életkor alapján a 23.2. cikk szerinti csökkentésnek,
+        amely nincs kiszámítva.'
+      renta_inmueble_regime_not_pleno_dominio: '{record}. ingatlan: teljes tulajdontól
+        (pleno dominio) eltérő jogon birtokolod, amit a számítás nem kínál.'
+      renta_inmueble_relative_fact_unstated: '{record}. bérleti szerződés: nem szerepel,
+        hogy a bérlő a LIRPF 24. cikke szerinti rokon-e.'
+      renta_inmueble_relative_tenant: '{record}. bérleti szerződés: a bérlő a LIRPF
+        24. cikke szerinti rokon, és a minimális hozam nincs kiszámítva.'
+      renta_inmueble_row_names_no_lease: Egy főkönyvi tétel olyan bérleti szerződéshez
+        kapcsolódik, amely nincs a profilodban.
+      renta_inmueble_row_names_no_property: Egy főkönyvi tétel olyan ingatlanhoz kapcsolódik,
+        amely nincs a profilodban.
+      renta_inmueble_several_leases: '{record}. ingatlan: az adóévben több bérleti
+        szerződése van, és a bevallás még nem tudja szerződésenként feltüntetni őket.'
+      renta_inmueble_tenants_beyond_numbered: '{record}. bérleti szerződés: több bérlőt
+        ad meg, mint amennyit a számozott bérlőmezők befogadnak.'
+      renta_inmueble_titular_not_declarant: '{record}. ingatlan: a családi egységed
+        egy másik tagjáé, nem a tiéd.'
+      renta_inmueble_titularidad_unstated: '{record}. ingatlan: nem szerepel, ki a
+        tulajdonosa és milyen jogon.'
+      renta_inmueble_withholding_payer_no_tenant: Egy városi bérleti díjat terhelő
+        levonás olyan kifizetőt nevez meg, aki az adóév egyetlen bérleti szerződésében
+        sem bérlő.
+      renta_inmueble_withholding_payer_several_properties: Egy városi bérleti díjat
+        terhelő levonás olyan kifizetőt nevez meg, aki több ingatlanodat is bérli,
+        így nem ismert, melyikhez tartozik.
       residence_period_unknown: '{date} napra nincs rögzített adóügyi illetőség, ezért
         az eszközeid úgy számítanak, mintha a 100-as és 130-as modell lenne érvényes.'
       retencion_soportada_absence_contradicted: '{income_class} jövedelemosztály:
@@ -2957,6 +3062,11 @@ application:
         nincs függőben: mindegyiknek van már értéke vagy kijelentésed, vagy a bevallás
         nem visz át ilyet. Semmi sem változott.'
       prior_carries_unstated:
+        renta_capital_inmobiliario_gastos_pendientes: 'A %{filing_year}. évi Modelo
+          %{modelo} nem számítható ki: nem ismert, hogy egy bérbe adott ingatlannál
+          maradt-e korábbi adóévekből még le nem vont kamat- és javítási költség (%{boxes}.
+          mező). Mentsd el az előző évi bevallást, vagy add meg az ingatlan sorában
+          a(z) %{command} paranccsal, megnevezve a sort. Semmi sem lett mentve.'
         renta_negative_general_bases_pending: 'A %{filing_year}. évi Modelo %{modelo}
           nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még ki nem
           egyenlített negatív általános adóalap (%{boxes}. mező). Mentsd el az előző
@@ -3361,6 +3471,13 @@ application:
         nem ellenőrizhető, és nem exportálható az AEAT-nak szánt fájlként.
       registry_snapshot_unresolved: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai nem tölthetők be. Próbáld újra, vagy frissítsd az alkalmazást.
+      renta_inmueble_rows_drift: 'A(z) %{modelo} számítás bérbe adott ingatlanjai
+        a számítás óta megváltoztak: módosultak az ingatlan-, bérleti, kapcsolt főkönyvi
+        vagy levonási rekordjaik (%{rows_recorded} rögzített ingatlan, most %{rows_current},
+        %{rows_changed} módosult). Használat előtt számold újra.'
+      renta_inmueble_rows_unavailable: A(z) %{modelo} számítás bérbe adott ingatlanjainak
+        ingatlan-, bérleti, főkönyvi vagy levonási rekordjai nem olvashatók, ezért
+        nem tudható, változtak-e. Próbáld újra, amikor olvashatók, majd számold újra.
       required_maximum_unresolved: A(z) [%{box}] rovat még nem ellenőrizhető, mert
         nem ismert, mekkora az a legnagyobb összeg, amelyet a törvény szerint ebben
         az évben alkalmazni kell. Hiányzik néhány adat, amelytől ez az összeg függ.

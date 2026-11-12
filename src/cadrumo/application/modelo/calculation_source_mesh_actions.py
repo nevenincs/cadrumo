@@ -24,6 +24,7 @@ from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
     prorrata_source_casilla_id,
 )
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
+from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegisterError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -49,10 +50,12 @@ from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
 )
+from .prior_return_held import prior_return_held
 from .transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -83,6 +86,7 @@ def resolve_bucket_source_mesh(
     filing_period_date: date | None = None,
     profile: ModeloWorkProfile | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    row_attestations: tuple[RowCarryAttestation, ...] = (),
 ) -> CalculationSourceResolution:
     """Resolve enrolled sources against one pinned operation and profile.
 
@@ -122,6 +126,7 @@ def resolve_bucket_source_mesh(
         revision=snapshot.revision,
         caller_binding_values=dict(binding_values or {}),
         caller_enum_binding_values=dict(enum_binding_values or {}),
+        caller_row_attestations=row_attestations,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         profile=profile,
@@ -211,10 +216,17 @@ def resolve_bucket_source_mesh(
         investment_asset_profile_id=iva_investment_asset_profile_id,
         operation=ports.operation,
     )
+    return _with_closing_diagnostics(snapshot, source_resolution, operation=ports.operation)
+
+
+def _with_closing_diagnostics(
+    snapshot: RegistrySnapshot, source_resolution: CalculationSourceResolution, *, operation: PinnedAuthorityOperation
+) -> CalculationSourceResolution:
+    """Add the diagnostics of unhandled bindings, terminal origins, expected gaps and advisory values."""
     source_resolution = add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
     source_resolution = add_terminal_origin_diagnostics(snapshot.revision, source_resolution)
     source_resolution = add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
-    return add_advisory_binding_value_diagnostics(snapshot, source_resolution, operation=ports.operation)
+    return add_advisory_binding_value_diagnostics(snapshot, source_resolution, operation=operation)
 
 
 def _work_profile_and_read_ports(
@@ -493,6 +505,8 @@ def _resolve_mesh_families(
     The IVA ledger is resolved by the caller, because the annual settlement
     liquidation re-resolves it once the definitive prorrata percentage is known.
     """
+    from ..aggregation.prorrata_register_activity import ProrrataRegisterActivitySourceResolver
+
     return (
         *_resolve_ledger_income_families(
             resolve_declared,
@@ -500,6 +514,9 @@ def _resolve_mesh_families(
             memoized_transaction_repository,
             prorrata_register_repository,
             renta_catalogue_read_ports,
+        ),
+        resolve_declared(
+            ProrrataRegisterActivitySourceResolver(prorrata_register_repository=prorrata_register_repository)
         ),
         *_resolve_observation_families(
             resolve_declared,
@@ -523,7 +540,7 @@ def _resolve_ledger_income_families(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     renta_catalogue_read_ports: InvoiceCatalogueReadPorts,
 ) -> tuple[CalculationSourceResolution, ...]:
-    """Resolve the Renta expense and income ledger families, then Impatriado and IRNR income."""
+    """Resolve the Renta expense and income ledger families, Impatriado and IRNR income, then let properties."""
     from ..aggregation.impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
     from ..aggregation.modelo_bindings import (
         LedgerIrnrIncomeAggregationSourceResolver,
@@ -533,6 +550,7 @@ def _resolve_ledger_income_families(
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     )
+    from ..aggregation.renta_inmueble_resolver import RentaInmuebleSourceResolver
     from ..aggregation.source_resolution_operations import source_context_operation
 
     def imputation_filings(context: CalculationSourceContext) -> ImputationFilingHistory:
@@ -544,6 +562,15 @@ def _resolve_ledger_income_families(
                 filing_repository=ports.filing_repository,
                 authority=authority,
             )
+
+    def held_prior_return(context: CalculationSourceContext) -> bool:
+        return prior_return_held(
+            bucket_id=context.bucket_id,
+            modelo=context.modelo,
+            period=context.period,
+            observation_repository=ports.observation_repository,
+            filing_repository=ports.filing_repository,
+        )
 
     return (
         resolve_declared(
@@ -582,6 +609,13 @@ def _resolve_ledger_income_families(
         resolve_declared(
             LedgerIrnrIncomeAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
+            )
+        ),
+        resolve_declared(
+            RentaInmuebleSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+                retencion_soportada_ports=ports.retencion_soportada_ports,
+                prior_return_held=held_prior_return,
             )
         ),
     )

@@ -58,6 +58,10 @@ def _binding(
     )
 
 
+def _flag(binding_id: str, *, row_index: int, value: bool) -> ModeloBindingValue:
+    return _binding(binding_id, row_index=row_index).model_copy(update={"value": value})
+
+
 def _draft(binding_values: tuple[ModeloBindingValue, ...]) -> ModeloDraft:
     period = Period.from_year_and_code(_YEAR, "0A")
     snapshot = RegistrySnapshotRef(modelo="100", revision_id=_REVISION, modelo_year=_YEAR, period="0A")
@@ -124,6 +128,23 @@ def test_replay_attaches_exact_coordinate_without_exposing_raw_identity() -> Non
     assert replayed.draft_id != draft.draft_id
     public = f"{replayed.model_dump()!r} {replayed.model_dump_json()}"
     assert _RAW_IDENTITY not in public
+
+
+def test_replay_compares_a_flag_row_in_the_form_persistence_stores_it() -> None:
+    draft = _draft((_flag("flag-column", row_index=1, value=True), _flag("flag-column-off", row_index=1, value=False)))
+    revision = _revision(rows={"flag-column": {"1": "1"}, "flag-column-off": {"1": "0"}}, identities={})
+
+    replayed = attach_revision_row_source_identities(draft=draft, revision=revision)
+
+    assert [value.value for value in replayed.binding_values] == [True, False]
+
+
+def test_replay_refuses_a_flag_row_whose_persisted_value_is_the_other_flag() -> None:
+    draft = _draft((_flag("flag-column", row_index=1, value=True),))
+    revision = _revision(rows={"flag-column": {"1": "0"}}, identities={})
+
+    with pytest.raises(ModeloValidationError, match="does not match persisted revision row"):
+        attach_revision_row_source_identities(draft=draft, revision=revision)
 
 
 def test_replay_preserves_unidentified_m720_rows() -> None:

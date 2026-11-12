@@ -106,9 +106,14 @@ from .m303_regimen_simplificado_annual_summary_bindings import (
 )
 from .manual_input_selector import ManualInputProvider, validate_manual_input_binding
 from .profile_bindings import ProfileProvider, validate_profile_binding
+from .prorrata_register_activity_bindings import (
+    ProrrataRegisterActivityProvider,
+    validate_prorrata_register_activity_binding,
+)
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider, validate_prorrata_regularizacion_binding
 from .relation_prefill_bindings import RelationPrefillProvider, validate_relation_prefill_binding
 from .relations import validate_relation_prefill_fold_arity
+from .renta_inmueble_bindings import RentaInmuebleProvider, validate_renta_inmueble_binding
 from .retencion_soportada_bindings import RetencionSoportadaProvider, validate_retencion_soportada_binding
 from .retenciones_bindings import RetencionesAggregationProvider, validate_retenciones_aggregation_binding
 from .withholding296_bindings import Withholding296Provider, validate_withholding296_binding_selector_shape
@@ -533,6 +538,17 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         stage="post_mesh",
     ),
     _filing_grade(
+        BindingSourceKind.PRORRATA_REGISTER_ACTIVITY,
+        ProrrataRegisterActivityProvider,
+        validate_prorrata_register_activity_binding,
+        channels=frozenset({BindingValueChannel.DECIMAL, BindingValueChannel.TEXT}),
+        ops=_FOLD_OPS,
+        origins=frozenset({TerminalOriginClass.DETAIL_RECORD}),
+        output="scalar",
+        resolver_id="prorrata_register_activity",
+        stage="mesh",
+    ),
+    _filing_grade(
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
         BienesInversionRegularizacionProvider,
         validate_bienes_inversion_regularizacion_binding,
@@ -578,6 +594,20 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         origins=frozenset({TerminalOriginClass.LEDGER_AGGREGATE}),
         output="scalar_and_rows",
         resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.RENTA_INMUEBLE,
+        RentaInmuebleProvider,
+        validate_renta_inmueble_binding,
+        # A property's identification comes from its profile row and its rent and
+        # expenses from the ledger rows linked to it, so both terminal classes occur.
+        # The results boxes the rows account for are the totals of their columns.
+        channels=_MONEY_CHANNELS | _ROW_CHANNELS,
+        ops=LEDGER_AGGREGATION_OPS | _ROW_OPS,
+        origins=frozenset({TerminalOriginClass.PROFILE_FIELD, TerminalOriginClass.LEDGER_AGGREGATE}),
+        output="scalar_and_rows",
+        resolver_id="renta_inmueble",
         stage="mesh",
     ),
     _ledger_aggregation(

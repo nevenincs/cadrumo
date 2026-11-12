@@ -1070,6 +1070,97 @@ def test_a_lowered_horizon_leaves_out_an_attested_prior_value_of_a_return_below_
     ]
 
 
+_WORK_INPUT: dict[str, Any] = {
+    "modelo": "100",
+    "year": "horizon-1",
+    "period": "0A",
+    "roles": {"irpf_cuota_sindical": "120.00"},
+    "sources": {"irpf_cuota_sindical": "Recibo anual de la cuota sindical"},
+    "reason": "Ningún registro de la aplicación da la cuota sindical",
+}
+
+
+def _with_work_input(**changes: object) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["work_inputs"] = [{**_WORK_INPUT, **changes}]
+    return document
+
+
+def test_a_work_input_is_admitted_with_one_source_per_role() -> None:
+    (item,) = _parse(_with_work_input()).work_inputs
+
+    assert (item.modelo, str(item.year), item.period, item.reason) == (
+        "100",
+        "horizon-1",
+        "0A",
+        "Ningún registro de la aplicación da la cuota sindical",
+    )
+    assert item.roles == (("irpf_cuota_sindical", "120.00"),)
+    assert item.sources == (("irpf_cuota_sindical", "Recibo anual de la cuota sindical"),)
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"roles": {}}, "at least one role"),
+        ({"roles": {"irpf_cuota_sindical": "120,00"}}, "canonical decimal"),
+        ({"sources": {}}, r"none for \['irpf_cuota_sindical'\]"),
+        ({"sources": {"irpf_cuota_sindical": "Recibo", "otro": "Otro"}}, r"does not give: \['otro'\]"),
+        ({"sources": {"irpf_cuota_sindical": " "}}, "sources.irpf_cuota_sindical must be a non-empty string"),
+        ({"reason": ""}, "reason must be a non-empty string"),
+        ({"period": "5T"}, "is not one of"),
+        ({"year": str(_ENVELOPE.floor)}, "not a year token"),
+        ({"note": "extra"}, "unknown fields"),
+    ],
+)
+def test_a_malformed_work_input_is_refused(changes: dict[str, object], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_work_input(**changes))
+
+
+def test_a_work_input_missing_its_sources_or_reason_is_refused() -> None:
+    for key in ("sources", "reason"):
+        document = _with_work_input()
+        del document["work_inputs"][0][key]
+        with pytest.raises(PersonaCatalogueError, match="missing fields"):
+            _parse(document)
+
+
+def test_two_work_inputs_of_one_return_are_refused() -> None:
+    document = _with_work_input()
+    document["work_inputs"].append({**_WORK_INPUT, "roles": {"otro": "1.00"}, "sources": {"otro": "Recibo"}})
+    with pytest.raises(PersonaCatalogueError, match="two work_inputs blocks"):
+        _parse(document)
+
+
+def test_a_work_input_asserted_back_as_an_expected_role_of_its_return_is_refused() -> None:
+    # The persona's Modelo 100 horizon-1 expectations state this role.
+    role = "irpf_deduccion_maternidad"
+    document = _with_work_input(roles={role: "1.00"}, sources={role: "Recibo"})
+    with pytest.raises(PersonaCatalogueError, match="asserts it back"):
+        _parse(document)
+
+
+def test_a_work_input_may_give_a_role_another_return_asserts() -> None:
+    # The role is asserted for Modelo 100 horizon-1 and horizon-2; given on a horizon-3 return it asserts nothing back.
+    role = "irpf_deduccion_maternidad"
+    document = _with_work_input(year="horizon-3", roles={role: "1.00"}, sources={role: "Recibo"})
+    (item,) = _parse(document).work_inputs
+    assert str(item.year) == "horizon-3"
+
+
+def test_a_lowered_horizon_leaves_out_a_work_input_of_a_return_below_the_floor() -> None:
+    document = _with_work_input(year="floor-1")
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(document, envelope=_LOWERED)
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert persona.work_inputs == ()
+    assert ("work_inputs", "100", "floor-1", ("0A",)) in [
+        (item.block, item.modelo, str(item.year), item.periods) for item in persona.below_floor
+    ]
+
+
 def test_a_work_income_statement_for_an_ejercicio_without_a_work_income_certificate_is_refused() -> None:
     document = copy.deepcopy(_document("persona.toml"))
     document["withholding_certificates"] = [

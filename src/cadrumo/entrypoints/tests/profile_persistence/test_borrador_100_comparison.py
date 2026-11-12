@@ -82,6 +82,7 @@ from ....tests.fixtures.borrador.generate import render_borrador_pdf
 from ...adapter_composition_ports import build_borrador_100_snapshot_repository
 from ...live_borrador_operation_composition import build_borrador_100_operation_ports
 from .file_flow_test_support import calculation_ports_for_test
+from .work_income_support import record_work_income
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -195,7 +196,6 @@ class _Profile:
         work_unit_id: str,
         snapshot_id: str | None,
         residence: str | None = None,
-        casilla_inputs: dict[CasillaId, Decimal] | None = None,
     ) -> CalculationRevision:
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -207,7 +207,7 @@ class _Profile:
             return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit_id,
                 actor="operator-A",
-                casilla_inputs={} if casilla_inputs is None else casilla_inputs,
+                casilla_inputs={},
                 binding_values=_filler_binding_values(self.operation),
                 enum_binding_values={} if residence is None else {_RESIDENCE: residence},
                 borrador_snapshot_id=snapshot_id,
@@ -473,6 +473,17 @@ _EARNINGS_TOTAL_BOX: CasillaId = "0012"
 _EARNINGS = Decimal("32000.00")
 
 
+def _record_work_income(profile: _Profile) -> None:
+    """Record the earnings the way an operator does: as the payer's certificate of work income."""
+    record_work_income(
+        operation=profile.operation,
+        taxpayer_tax_id=_TAX_ID,
+        filing_year=_YEAR,
+        gross=_EARNINGS,
+        payer_tax_id="B00015016",
+    )
+
+
 def _printed(casilla_id: CasillaId, value: Decimal) -> Borrador100PrintedObservation:
     """A printed box the draft import does not read, kept for comparison as the import keeps one."""
     return Borrador100PrintedObservation(casilla_id=casilla_id, continuidad_id=None, value=value)
@@ -492,6 +503,7 @@ def test_printed_results_read_through_the_parser_are_kept_and_compared_box_by_bo
 ) -> None:
     """The draft's printed results are kept under their registry identity and compared, never dropped."""
     work_unit_id = profile.create_work()
+    _record_work_income(profile)
     printed = {casilla_id: Decimal("1000.00") + index for index, casilla_id in enumerate(_PRINTED_RESULTS)}
 
     snapshot_id = profile.import_pdf(
@@ -499,7 +511,7 @@ def test_printed_results_read_through_the_parser_are_kept_and_compared_box_by_bo
         printed,
         also_printed=(_printed(_EARNINGS_BOX, Decimal("31000.00")), _printed(_EARNINGS_TOTAL_BOX, _EARNINGS)),
     )
-    profile.calculate(work_unit_id, None, casilla_inputs={_EARNINGS_BOX: _EARNINGS})
+    profile.calculate(work_unit_id, None)
 
     (stored,) = profile.drafts.list_snapshots()
     assert stored.snapshot_id == snapshot_id and dict(stored.binding_values) == {}
@@ -536,12 +548,13 @@ def test_a_printed_result_never_reaches_the_calculation_that_replays_its_draft(
     """Replaying a draft whose printed results are wrong leaves every calculated box as the calculation made it."""
     work_unit_id = profile.create_work()
     wrong = Decimal("987654.32")
-    independent = profile.calculate(work_unit_id, None, casilla_inputs={_EARNINGS_BOX: _EARNINGS})
+    _record_work_income(profile)
+    independent = profile.calculate(work_unit_id, None)
     snapshot_id = profile.import_pdf(
         tmp_path, dict.fromkeys(_PRINTED_RESULTS, wrong), also_printed=(_printed(_EARNINGS_TOTAL_BOX, wrong),)
     )
 
-    head = profile.calculate(work_unit_id, snapshot_id, casilla_inputs={_EARNINGS_BOX: _EARNINGS})
+    head = profile.calculate(work_unit_id, snapshot_id)
 
     assert head.borrador_snapshot_id == snapshot_id
     assert tuple(head.bindings_sourced_from_borrador) == ()

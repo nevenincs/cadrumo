@@ -978,6 +978,7 @@ cli:
         period_help: 'Period code: 0A annual, 1T-4T quarters, 01-12 months; for censo
           modelos (036): alta (registration), modificacion (change), or baja (deregistration).'
         readiness:
+          actividades_prorrata: prorrata register activities
           activo_extranjero: foreign asset
           afiliado_cotizacion: contributions-relationship affiliate
           borrador_aeat: AEAT draft
@@ -1742,6 +1743,8 @@ cli:
           `aeat app modelo casillas`).
         entry_casilla_unknown: '%{casilla} is not a box identifier.'
         entry_confirm: Nothing was recorded yet. Run `%{command}` to record it.
+        entry_row_help: The row the statement is for, by the source row identity the
+          calculation shows (for example inmueble:1). Only for inputs stated per row.
         entry_value_help: The value, written as in your output language (for example
           1.234,56 in Spanish or 1,234.56 in English).
         entry_yes_help: Confirm the change and record it on the declaration
@@ -3309,6 +3312,10 @@ cli:
         is not inferred.
       derive_non_derivable: '{category} has no simple Spanish rate to derive: {note}
         Supply --taxable-base, --iva-rate and --iva-amount by hand for this category.'
+      exemption_article_help: The LIVA art. 20.Uno exemption a `domestic_exempt` row
+        falls under, as a token of the exemption-article vocabulary the registry declares
+        for the row's date. It decides whether the row counts in the prorrata volume
+        as an operation without the right to deduct.
       file_exclusive: --file cannot be combined with a transaction id or --classification.
       file_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,

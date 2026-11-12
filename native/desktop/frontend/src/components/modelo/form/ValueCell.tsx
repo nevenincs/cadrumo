@@ -314,9 +314,13 @@ export function ValueCell({
       tabIndex={-1}
       disabled={!editable}
       aria-label={
-        field.value_text === null && !staged && field.origin_words
-          ? `${field.box ?? ""} ${field.origin_words}`.trim()
-          : undefined
+        !staged && field.stated_absent !== null
+          ? [field.box, field.value_text, t("desktop.modelo.statements.mark")]
+              .filter(Boolean)
+              .join(" ")
+          : field.value_text === null && !staged && field.origin_words
+            ? `${field.box ?? ""} ${field.origin_words}`.trim()
+            : undefined
       }
       onClick={(event) => {
         event.stopPropagation();
@@ -336,6 +340,9 @@ export function ValueCell({
       )}
     >
       {text}
+      {!staged && field.stated_absent !== null && (
+        <Icon name="bookmark" size="xs" className="ml-1.5 shrink-0" />
+      )}
     </button>
   );
   if (!fromSource || !editable) return face;

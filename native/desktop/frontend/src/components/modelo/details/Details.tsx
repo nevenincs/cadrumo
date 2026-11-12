@@ -464,8 +464,11 @@ export function Details({
   if (!field) return <Summary envelope={envelope} />;
   const key = editKey(field);
   const staged = session.staged.get(key);
-  const restore = editsAdmitted(envelope) ? restoreIntent(field) : null;
-  const remove = editsAdmitted(envelope) ? removeIntent(field) : null;
+  // A stated box is given back only by withdrawing its whole statement,
+  // which its row offers; never one box of it alone.
+  const own = editsAdmitted(envelope) && field.stated_absent === null;
+  const restore = own ? restoreIntent(field) : null;
+  const remove = own ? removeIntent(field) : null;
   return (
     <div data-modelo-details="" className="flex flex-col gap-5 p-5">
       <div className="flex flex-col items-start gap-2">

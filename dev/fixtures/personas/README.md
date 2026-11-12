@@ -103,6 +103,7 @@ persona or a projection, a pool member or a refusal.
 | `primer_apellido`, `segundo_apellido`, `nombre` | string | natural persons: the filing name the designs compose, surnames first |
 | `no_second_surname` | bool | a natural person with a single surname says so and leaves `segundo_apellido` out |
 | `razon_social` | string | entities: the complete razón social, verbatim |
+| `birth_date` | date | a natural person whose age at a date a derived fact reads, such as a tenant's age band at signing |
 | `country` | string | `nif_iva` only, ISO 3166-1 alpha-2 |
 | `primary` | bool | only on `fontanero.titular` |
 
@@ -134,11 +135,12 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[[own_accounts]]` | array | bank accounts the taxpayer holds, with the charge and refund roles they are designated for |
 | `[[prior_carries]]` | array | per Modelo 100 year, the negative general bases of earlier ejercicios still pending |
 | `[[withholding_certificates]]` | array | retenciones soportadas declared by a payer |
-| `[[rental_properties]]` | array | declarative facts for a let dwelling |
+| `[[rental_properties]]` | array | a let dwelling: the property and lease facts the replay records, the ledger rows it links, and expectation inputs |
 | `[[officers]]` | array | company officers (`identity`, `role`, `remunerated`) |
 | `[[filed_returns]]` | array | returns the taxpayer has already filed: `modelo`, `year` (token), `periods` |
 | `[[calculated_returns]]` | array | returns the history replay calculates without filing: `modelo`, `year`, `periods` |
 | `[[local_observations]]` | array | casilla values of a return the taxpayer knows from his own copy |
+| `[[work_inputs]]` | array | values the operator enters on a return because no record produces them, by registry role |
 | `[[leased_premises]]` | array | premises the taxpayer rents and on whose rent he withholds |
 | `[[inventory]]` | array | the existencias book of one activity for one year |
 
@@ -292,6 +294,26 @@ observation operation. The product keeps such a value at calculation grade:
 it feeds a later calculation and never clears the cross-period check that
 verification applies, which needs AEAT evidence.
 
+`[[work_inputs]]` gives the values the operator enters on one return because
+no record the application holds produces them: `modelo`, `year` (token),
+`period`, `roles` as a table of registry identity (a casilla's
+`continuidad_id` or `semantic_role`) to canonical amount, `sources` as a table
+naming exactly the same roles, each with the text that states where its
+figure comes from, and a Spanish `reason`. The materialiser resolves each role
+in the edition the law selects for the return, as expectation `roles` are
+resolved, so no casilla id of one edition is frozen here; a role no edition of
+the modelo declares is refused, one naming several casillas of the edition is
+refused as ambiguous, and one the selected edition does not declare is not
+entered there, leaving the calculation to refuse on its own terms. The replay
+enters the resolved casillas through the declaration edit before the return's
+first calculation, as an operator types them; the edit records no source, so
+`sources` and `reason` stay here. One block per return. Only a casilla the
+edition leaves to the operator may be given: the materialiser refuses one the
+edition computes, binds or produces by formula. A given value is never asserted
+back: the reader refuses a role an expectation of the same return states under
+`roles`, and the materialiser a resolved casilla an expectation states under
+`casillas` or `not_sourced` or names by role.
+
 `[[leased_premises]]` describes premises the taxpayer rents for the activity:
 `key`, the `landlord` identity role, the landlord's `landlord_tax_status`,
 `landlord_tax_regime` and `landlord_province`, the Modelo 180 `situation`,
@@ -308,12 +330,31 @@ withholding is captured as Modelo 111 evidence of the payment's quarter, the
 professional being a resident individual under the IRPF, with the row's
 transaction as the payment event.
 
+### Let dwellings
+
+`[[rental_properties]]` states the property row and the lease row of a let dwelling, and the replay records
+them through the repeatable-row operation that `config profile inmueble add` and
+`config profile arrendamiento add` submit. Every fact the records require is stated, each synthetic one
+marked as such; `rehabilitacion_fecha` is omitted when there is no rehabilitation. The lease stores facts only: the
+art. 23.2 rate is derived from them and dated registry data, so a persona never states a reduction tier.
+The tenant's age band is derived at the contract date from the tenant identity's `birth_date`.
+`monthly_rent`, `days_let`, `amortization_base`, `amortization_rate` and `amortization_base_note` are
+expectation inputs and reach no record: the rent comes from the ledger rows and the amortisation from the stored
+acquisition and cadastral values.
+
+`pendiente_intereses_reparacion` states what earlier years left pending of the dwelling's interest and
+repairs under LIRPF art. 23.1.a.1; the table runner makes that statement on the property's row after the first
+calculation, as the operator does, and a persona that omits it states nothing.
+
+`ledger_links` names the ledger rows of the dwelling by reference prefix. A row linked to the lease
+(`target = "arrendamiento"`) or to the property (`target = "inmueble"` with a registry `gasto` concept) is
+classified through `ledger classify` as a rental row of the `capital_inmobiliario` category.
+
 ### Declarative blocks without an operation
 
-`[[rental_properties]]` and `[[officers]]` record scenario facts that
-expectations rely on but for which no production operation was located. The
-reader parses them, the materialiser reports them as not materialised, and no
-test may write them by another route.
+`[[officers]]` records scenario facts that expectations rely on but for which no production operation was
+located. The reader parses it, the materialiser reports it as not materialised, and no test may write it by
+another route.
 
 ## ledger.csv
 

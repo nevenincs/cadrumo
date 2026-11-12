@@ -2144,6 +2144,30 @@ desktop:
         megerősítésnek. A piszkozatod megmaradt.
       country: Ország
       established: Székhely
+      filing_name:
+        kind:
+          entity: Jogi személy
+          natural_person: Természetes személy
+        kind_contradicts: A megadott típus ({declared}) eltér az azonosító alakjától
+          ({observed}).
+        kind_label: Típus
+        no_second_surname: Nincs második vezetéknév
+        nombre: Keresztnév
+        primer_apellido: Első vezetéknév
+        razon_social: Cégnév
+        rendering_add: Változat hozzáadása
+        rendering_for: '{width} karakterhez'
+        rendering_remove: Változat törlése
+        renderings: Rövidebb változatok
+        renderings_hint: A szélesség annak a mezőnek a karakterszáma, amelybe a névnek
+          bele kell férnie.
+        save: Bevallási név mentése
+        segundo_apellido: Második vezetéknév
+        stated_by: Megadta
+        text: Szöveg
+        title: Bevallási név
+        unstated: Még nem adtál meg bevallási nevet.
+        width: Szélesség
       not_applied: A visszaadott megerősítés nem tartalmazza az összes megadott értéket.
         A piszkozatod megmaradt.
       note: Megjegyzés
@@ -4055,6 +4079,7 @@ desktop:
         closing: A záróérték rögzítése
         correct: A nyitókészlet vagy a módszer javítása
         describe: A részletek szerkesztése
+        movement_claim: A vásárlás naplótranzakciójának megadása
         movement_correct: Ennek a mozgásnak a javítása
         movement_reverse: Ennek a mozgásnak a visszavonása
         preview: Az értékelés előnézete
@@ -4062,6 +4087,17 @@ desktop:
         restore: A készletnyilvántartás visszaállítása
         retire: A készletnyilvántartás megszüntetése
       books: Készletnyilvántartások, {year}
+      claim:
+        column: Napló
+        note: Add meg, melyik naplótranzakció könyveli ezt a vásárlást, hogy egyik
+          sem, vagy töröld a korábban megadottat.
+        row: A napló könyveli ezt a vásárlást
+        row_claimed: Egy naplótranzakció könyveli
+        row_none: Egyetlen naplótranzakció sem könyveli
+        row_unstated: Nincs megadva
+        row_unstated_hint: Ez törli a korábban megadottat.
+        state_claimed: 'Könyveli: {transaction}'
+        transaction: Naplótranzakció
       closing:
         authority: Hogyan döntesz az értékről
         basis: Értékelés alapja
@@ -4150,6 +4186,7 @@ desktop:
         correct: '{name} javítása · {year}'
         describe: '{name} részletei · {year}'
         movement: 'Mozgás felvétele ide: {name} · {year}'
+        movement_claim: '{name} egy vásárlásának naplótranzakciója · {year}'
         movement_correct: '{name} egy mozgásának javítása · {year}'
         restore: '{name} visszaállítása · {year}'
         retire: '{name} megszüntetése · {year}'
@@ -4210,6 +4247,7 @@ desktop:
         correct: Javítás mentése
         describe: Részletek mentése
         movement: Mozgás felvétele
+        movement_claim: Megadás mentése
         movement_correct: Javítás mentése
         restore: Nyilvántartás visszaállítása
         retire: Nyilvántartás megszüntetése
@@ -4469,6 +4507,9 @@ desktop:
       confirm: Elvetés
       lead: Kikerül a bevallásaid listájából. Az előzményei megmaradnak.
       reason: Miért (nem kötelező)
+    export:
+      limitation:
+        title: Amit ez a fájl nem tartalmaz
     form:
       pages: A nyomtatvány oldalai
     keys:
@@ -4498,6 +4539,21 @@ desktop:
     side:
       label: A nyomtatvány mellett
       outline: Vázlat
+    statements:
+      hide: Elrejtés
+      intro: Jelöld be azokat a nyilatkozatokat, amelyek igazak rád. A bejelöltek
+        a többi módosításoddal együtt átnézésre kerülnek; ha egyről leveszed a jelölést,
+        visszavonod.
+      mark: Te nyilatkoztál róla
+      not_placed: Egy nyilatkozat olyan mezőre vonatkozik, amelyet ez az űrlap nem
+        mutat, ezért nem került átnézésre.
+      show: Megjelenítés
+      stage: Megtartás átnézésre
+      title: Tehető nyilatkozatok
+      withdraw: Nyilatkozat visszavonása
+      withdraw_kept: A nyilatkozat {box} mezője itt nem üríthető, ezért semmit sem
+        vontál vissza.
+      withdrawn: Nyilatkozat visszavonva
     view:
       compare: Összevetés
       credits: Levonások
@@ -4819,6 +4875,8 @@ desktop:
     search: Keresés
     settings: Beállítások
     tui: Munkaterület
+  refusal:
+    action_unroutable: Itt nem érhető el.
   session:
     enter_restarts: Enter újraindítja
     exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
@@ -6276,9 +6334,13 @@ sheets:
       accrual_year: Keletkezés éve
       acquisition_date: Szerzés dátuma
       acquisition_value: Beszerzési érték
+      adquisicion_lucrativa: Ingyenes szerzés
+      adquisicion_onerosa: Visszterhes szerzés
+      amortizacion: Értékcsökkenés
       amount: Összeg
       amount_donated: Adományozott összeg
       anualidades_alimentos: Tartásdíj-járadék
+      arrendado: Bérbe adva
       ascendants_75_plus_total: Felmenők 75+ (összes)
       ascendants_75_plus_whole: Felmenők 75+ (egészben)
       ascendants_disabled_33_65_total: Fogyatékos felmenők 33-65% (összes)
@@ -6294,6 +6356,7 @@ sheets:
       asset_class_code: Eszközosztály kód
       asset_identifier: Eszközazonosító
       asset_ref: Eszköz belső hivatkozása
+      base_amortizacion: Értékcsökkenési alap
       base_imponible: Adóalap
       base_imponible_assigned: Hozzárendelt adóalap
       base_retenciones: Visszatartás alapja
@@ -6359,8 +6422,11 @@ sheets:
       descendants_rest_whole: Többi leszármazott (egészben)
       descendants_under_3_total: Leszármazottak 3 alatt (összes)
       descendants_under_3_whole: Leszármazottak 3 alatt (egészben)
+      dias_arrendado: Bérbeadás napjai
+      dias_arrendado_amortizacion: Bérbeadás napjai az értékcsökkenéshez
       dias_arrendamiento: Az ingatlan bérbeadási napjainak száma
       dias_miembro: Tagsági napok száma
+      direccion: Cím
       disability_clave: Fogyatékosság
       domicilio_fiscal: A tag adóügyi lakóhelye
       donor_legal_name: Adományozó neve
@@ -6368,8 +6434,11 @@ sheets:
       door: Ajtó
       element_type: Eszköz típusa
       emerging_stock_excess_clave: Startup részvényjuttatási többlet
+      fecha_adquisicion: Az ingatlan szerzésének dátuma
+      fecha_contrato: Szerződés dátuma
       fecha_devengo: Keletkezés dátuma
       fecha_inicio_prestamo: Kölcsön kezdő dátuma
+      fecha_transmision: Az ingatlan átruházásának dátuma
       fecha_vencimiento_prestamo: Kölcsön lejárati dátuma
       financial_asset_acquisition_value: Pénzügyi eszköz beszerzési értéke
       financial_asset_disposal_value: Pénzügyi eszköz elidegenítési értéke
@@ -6385,10 +6454,27 @@ sheets:
       gain: Nyereség
       gain_difference: Az átruházás nyeresége
       garantias: Garancia
+      gasto_comunidad: Társasházi közös költség
+      gasto_defensa_juridica: Jogi képviselet költségei
+      gasto_formalizacion_contrato: Szerződéskötési költségek
+      gasto_interes_financiacion: Kamatok és egyéb finanszírozási költségek
+      gasto_otros: Egyéb levonható költségek
+      gasto_primas_seguro: Biztosítási díjak
+      gasto_reparacion_conservacion: Javítási és karbantartási költségek
+      gasto_saldos_dudoso_cobro: Kétes kintlévőségek
+      gasto_servicios_terceros: Harmadik felek személyes szolgáltatásai
+      gasto_suministros: Szolgáltatások és közművek
+      gasto_tributos: Adók, pótlékok és illetékek
+      gastos_adquisicion: Szerzési költségek és adók
       gastos_deducibles: Levonható költségek
+      gastos_pendientes_anteriores: A négy előző adóévből levonásra váró kamatok és
+        javítási kiadások
+      gastos_pendientes_aplicados: Korábbi adóévekből levonásra váró, ebben az adóévben
+        levont összeg
       geographic_mobility_clave: Földrajzi mobilitás
       house_number: Házszám
       housing_loan_communication_clave: Lakáshitel-bevallás
+      importe_adquisicion: Szerzési összeg
       importe_gastos: Költség összege
       importe_q1: 1. negyedévi összeg
       importe_q2: 2. negyedévi összeg
@@ -6402,11 +6488,25 @@ sheets:
       incapacity_kind_value: Munkaképtelenségi természetbeni érték
       ingreso_a_cuenta: Természetbeni adójóváírás
       ingreso_a_cuenta_repercutido: Áthárított előleg
+      ingresos_integros: Számítható bruttó bevétel
+      inquilino_1_nif: 1. bérlő adóazonosítója
+      inquilino_1_nif_extranjero: 1. bérlő külföldi adóazonosítója
+      inquilino_2_nif: 2. bérlő adóazonosítója
+      inquilino_2_nif_extranjero: 2. bérlő külföldi adóazonosítója
+      inquilino_3_nif: 3. bérlő adóazonosítója
+      inquilino_3_nif_extranjero: 3. bérlő külföldi adóazonosítója
+      intereses_reparacion_aplicados: Az adóév levont kamatai és javítási kiadásai
+      intereses_reparacion_pendientes: Az adóév levonásra váró kamatai és javítási
+        kiadásai
+      intereses_reparacion_pendientes_futuros: A következő négy adóévre levonásra
+        váró kamatok és javítási kiadások
       is_recurrent: Ismétlődő adomány
       isin_code: ISIN kód
       locality: Település
       loss: Veszteség
       loss_difference: Az átruházás vesztesége
+      mejoras_anteriores: Korábbi adóévekben végzett felújítások
+      mejoras_ejercicio: Az adóévben végzett felújítások
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
@@ -6448,6 +6548,8 @@ sheets:
       perceptor_tax_id: Kedvezményezett adóazonosítója
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
+      porcentaje_construccion: A kataszteri érték építményre jutó százaléka
+      porcentaje_propiedad: Tulajdoni hányad (%)
       porcentaje_retencion: Visszatartás %
       porcentaje_titularidad_inmueble: Ingatlantulajdoni hányad százaléka
       portal: Bejárat
@@ -6460,21 +6562,27 @@ sheets:
       rectified_period: Helyesbített időszak
       rectified_year: Helyesbített év
       reduccion: A jövedelemre alkalmazandó csökkentés
+      reduccion_aplicable: Csökkentés alkalmazható
       reducciones: Csökkentések
       reducciones_aplicables: Alkalmazott csökkentések
       referencia_catastral: Ingatlan-nyilvántartási hivatkozás
       refund_amount: Visszatérítési összeg
+      rendimiento_neto: Nettó jövedelem
       rendimiento_neto_minorado_agricola_eo: Csökkentett nettó mezőgazdasági jövedelem
         (objektív becslés)
       rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
+      rendimiento_neto_reducido: Csökkentett nettó jövedelem
       representative_nif: Képviselő NIF-je
       representative_tax_id: Törvényes képviselő adóazonosítója
       residence_country_code: Lakóhely országkódja
       retencion_amount: Visszatartott összeg
       retencion_practicada: Alkalmazott visszatartás
+      retenciones: Levont adóelőleg
       reverse_charge_mark: Fordított adózás
+      rustica: Külterületi
       second_child_compute: 2. gyermek beszámítása
       share_percentage: Részesedési arány
+      situacion: Elhelyezkedés (kulcs)
       situacion_inmueble: Az ingatlan elhelyezkedési státusza
       situation: Ingatlan fekvése
       spouse_or_unit_titular_tax_id: Házastárs vagy együttélési egység vezetőjének
@@ -6494,6 +6602,9 @@ sheets:
       transmission_date: Átruházás dátuma
       transmission_value: Átruházási érték
       unit_convivencia_titular_clave: Együttélési egység vezetője
+      urbana: Belterületi
+      valor_catastral: Kataszteri érték
+      valor_catastral_construccion: Az építmény kataszteri értéke
       valuation_amount: Értékelés
       valuation_event: Értékelési esemény
       valuation_event_date: Értékelési esemény dátuma
@@ -8656,10 +8767,12 @@ tui:
           action: Kérés
           actividad_id: Tevékenység
           authority_record: A záróérték teljes fájlja
+          claimed_transaction_id: Igényelt tétel
           closing_value_facts: Záróérték adatfájlja
           evidence_file: Dokumentumfájl
           evidence_folder: A dokumentum útvonalának kiinduló mappája
           kind: Mozgás fajtája
+          ledger_row: A vásárlás tétele
           movement_date: Mozgás dátuma
           movement_id: Mozgás azonosítója
           opening_stock: Nyitókészlet (nem kötelező)
@@ -8965,6 +9078,21 @@ tui:
     search:
       prompt: Keresés minden oldalon rovatszám vagy szavak alapján. Az Enter a rovathoz
         visz.
+    statements:
+      intro: Jelöld be azokat a nyilatkozatokat, amelyek igazak rád. A bejelöltek
+        a többi módosításoddal együtt átnézésre kerülnek; ha egyről leveszed a jelölést,
+        visszavonod.
+      key: Nyilatkozatok
+      mark:
+        meaning: Kijelentetted, hogy ebben a rovatban nincs összeg; ez nem általad
+          beírt érték.
+        name: Általad nyilatkozva
+      none: Ez a bevallás most nem kínál nyilatkozatot.
+      not_placed: Egy nyilatkozat olyan rovatra vonatkozik, amelyet ez a képernyő
+        nem mutat, ezért nem került átnézésre.
+      stage: Megtartás átnézésre
+      title: Tehető nyilatkozatok
+      withdraw: Nyilatkozat visszavonása
   operations:
     action:
       close: Bezárás
@@ -9112,6 +9240,9 @@ tui:
       support_matrix: 'Mire képes a Cadrumo az egyes nyomtatványokkal: számítás, exportálás,
         benyújtott példányok olvasása.'
     title: Referencia
+  refusal:
+    action_needs_details: … futtatás előtt elkéri tőled a még hiányzó adatokat.
+    action_unroutable: Itt nem érhető el.
   restricted:
     actions: 'Engedélyezett tevékenységek: {values}'
     all_periods: Minden időszak
@@ -9318,8 +9449,6 @@ tui:
         reconciliation_resolved: Rendezett
         revision_current: Aktuális
         revision_superseded: Felváltva
-workspace:
-  declarations:
   withholding:
     absence:
       state:
@@ -9352,6 +9481,8 @@ workspace:
       read_failed: A nyilvántartásokat nem sikerült beolvasni.
       read_first: Előbb olvass be egy évet.
       reading: Beolvasás…
+workspace:
+  declarations:
     availability:
       available: Elérhető
       locked: Zárolva

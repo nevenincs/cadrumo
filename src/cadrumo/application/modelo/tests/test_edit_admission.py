@@ -869,10 +869,17 @@ def test_the_surface_and_the_form_agree_on_every_published_override(
     ):
         baseline, _catalogue = _served_baseline(authority_operation, modelo, filing_year=filing_year, code=code)
         form = built_form(authority_operation, modelo, filing_year, code, permitted_surface=baseline.permitted_surface)
+        # A column the filer states row by row is admitted for statements that each name a calculated row;
+        # the form serves no field for it, so it is outside this agreement.
+        row_stated = {
+            binding.id
+            for binding in form_snapshot(authority_operation, modelo, filing_year, code).revision.bindings
+            if binding.absence_attestation is not None and binding.absence_attestation.row_grain
+        }
         writable = {
             entry.binding_id
             for entry in baseline.permitted_surface
-            if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+            if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1) and entry.binding_id not in row_stated
         }
         assert writable <= _form_bindings(form), f"{modelo}: {sorted(writable - _form_bindings(form))}"
         admitted += len(writable)

@@ -14,6 +14,7 @@ from __future__ import annotations
 import dataclasses
 import os
 import re
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from functools import cache
 from pathlib import Path
@@ -74,6 +75,7 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
     year_envelope,
 )
 from cadrumo.entrypoints.tests.persona_prior_carries import attest_prior_carries
+from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rental_carries
 from cadrumo.tests.personas import (
     ExpectedValue,
     Persona,
@@ -87,6 +89,7 @@ from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .export_readback import read_fields, readback_mismatches, readback_reason, unreadable_reason
 from .export_text import check_export_text, violation_reason
 from .roles import StatedCasilla, compared, differing, edition_identities, mismatch_text, revision_identities
+from .row_figures import merge_row_figures, row_figures
 from .rows import (
     PlannedRow,
     Stage,
@@ -259,7 +262,8 @@ def _run_return(
         calculated = _calculate(materialised, plan, work_unit_id)
     except PersonaMaterialisationError as error:
         return _refused(plan, at_calculate, error)
-    calculate, reasons = _compare(plan, values, at_calculate, calculated)
+    rows = row_figures(world, calculated)
+    calculate, reasons = _compare(plan, values, at_calculate, calculated, rows)
     revision_id = calculated.calculation_revision_id
     verify, verify_reason = _verify(world, work_unit_id, revision_id)
     export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
@@ -350,15 +354,27 @@ def _calculate(
         evidence = _m303_evidence(
             world, work_unit_id=work_unit_id, year=plan.year, period=plan.period, last_period=last_period
         )
-    return run_operation(
+    request = ModeloWorkCalculateRequest(
+        work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
+    )
+    calculated = run_operation(
         world,
         MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-        ModeloWorkCalculateRequest(
-            work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
-        ),
+        request,
         ModeloWorkCalculatePublicResultV3,
         subject=work_unit_id,
     )
+    # A let property's row stands with its net yield withheld until its pending carry is stated; the statement
+    # is kept on the revision, so calculating again reads it.
+    if plan.modelo == "100" and attest_pending_rental_carries(materialised.persona, world, work_unit_id, plan.year):
+        calculated = run_operation(
+            world,
+            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+            request,
+            ModeloWorkCalculatePublicResultV3,
+            subject=work_unit_id,
+        )
+    return calculated
 
 
 def _compare(
@@ -366,9 +382,10 @@ def _compare(
     values: list[ExpectedValue],
     stated_refusal: str | None,
     calculated: ModeloWorkCalculatePublicResultV3,
+    rows: Mapping[str, str],
 ) -> tuple[Stage, list[str]]:
     """The calculate stage against the stated values, and the reasons it is not a plain pass."""
-    mismatches = _mismatches(values, calculated, plan.unchecked)
+    mismatches = _mismatches(values, calculated, plan.unchecked, rows) + _row_conflicts(calculated, rows)
     reasons: list[str] = []
     if stated_refusal is not None:
         calculate = Stage.REFUSAL_NOT_RAISED
@@ -376,7 +393,9 @@ def _compare(
     elif not values:
         calculate = Stage.CALCULATED
     else:
-        calculate = _value_stage(values, calculated, plan.unchecked) if mismatches else Stage.PASSED
+        calculate = _value_stage(values, calculated, plan.unchecked, rows) if mismatches else Stage.PASSED
+        if _row_conflicts(calculated, rows):
+            calculate = Stage.MISMATCH
         reasons += ["; ".join(mismatches)] if mismatches else []
     unresolved = _unresolved(calculated)
     if unresolved:
@@ -385,27 +404,43 @@ def _compare(
 
 
 def _differing(
-    values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3, unchecked: tuple[str, ...]
+    values: list[ExpectedValue],
+    calculated: ModeloWorkCalculatePublicResultV3,
+    unchecked: tuple[str, ...],
+    rows: Mapping[str, str],
 ) -> list[tuple[StatedCasilla, object]]:
     """Each stated casilla, and each role resolved in the edition the calculation used, that it does not equal."""
     got = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
+    got, _conflicts = merge_row_figures(got, rows)
     unit = calculated.unit
     casillas = revision_identities(unit.modelo, unit.revision_id) if any(value.roles for value in values) else ()
     return differing(compared(values, casillas, unchecked), got)
 
 
+def _row_conflicts(calculated: ModeloWorkCalculatePublicResultV3, rows: Mapping[str, str]) -> list[str]:
+    """Each casilla whose nonzero public scalar differs from the figure its single row holds."""
+    scalars = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
+    return merge_row_figures(scalars, rows)[1]
+
+
 def _mismatches(
-    values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3, unchecked: tuple[str, ...]
+    values: list[ExpectedValue],
+    calculated: ModeloWorkCalculatePublicResultV3,
+    unchecked: tuple[str, ...],
+    rows: Mapping[str, str],
 ) -> list[str]:
     """Each stated casilla or role the calculation does not equal."""
-    return [mismatch_text(item, found) for item, found in _differing(values, calculated, unchecked)]
+    return [mismatch_text(item, found) for item, found in _differing(values, calculated, unchecked, rows)]
 
 
 def _value_stage(
-    values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3, unchecked: tuple[str, ...]
+    values: list[ExpectedValue],
+    calculated: ModeloWorkCalculatePublicResultV3,
+    unchecked: tuple[str, ...],
+    rows: Mapping[str, str],
 ) -> Stage:
     """Mismatch when a stated casilla has another value; unresolved when every differing casilla has none."""
-    found = _differing(values, calculated, unchecked)
+    found = _differing(values, calculated, unchecked, rows)
     return Stage.UNRESOLVED if all(value is None for _, value in found) else Stage.MISMATCH
 
 

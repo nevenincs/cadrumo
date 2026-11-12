@@ -26,6 +26,8 @@ from ..aggregation.modelo_bindings_renta_expenses import (
 )
 from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
+from ..aggregation.prorrata_register_activity import ProrrataRegisterActivitySourceResolver
+from ..aggregation.renta_inmueble_resolver import RentaInmuebleSourceResolver
 from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_mesh import (
     ModeloSourceResolver,
@@ -133,6 +135,8 @@ _CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteResolverStage, type[Mode
     ("mesh", ForeignAssetsAggregationSourceResolver),
     ("mesh", AtribucionMemberSourceResolver),
     ("mesh", InventorySourceResolver),
+    ("mesh", ProrrataRegisterActivitySourceResolver),
+    ("mesh", RentaInmuebleSourceResolver),
     ("mesh", PreviousFilingSourceResolver),
     ("mesh", RelationPrefillSourceResolver),
     ("mesh", IvaCompensationAnnualPartitionSourceResolver),

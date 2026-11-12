@@ -100,6 +100,44 @@ def party_name_filing_text(
     raise _refusal(FilingExportDeclaredPartyNameTooWideError, slot, composed_length=len(composed))
 
 
+@dataclass(frozen=True, slots=True)
+class PartyNameSlotFit:
+    """Whether a declared name fills one slot, judged by the composition the export itself runs.
+
+    ``refusal`` is the reason the export would refuse the slot (``missing``,
+    ``single_surname``, ``too_wide``), ``None`` when it files. ``composed_length``
+    is the length of the full name the design composes, ``None`` when it composes
+    none. ``uses_rendering`` says the slot files the operator's rendering for its
+    width because the full name is wider.
+    """
+
+    refusal: str | None
+    composed_length: int | None
+    uses_rendering: bool
+
+    @property
+    def fits(self) -> bool:
+        """Whether the export files the slot rather than refusing it."""
+        return self.refusal is None
+
+
+def party_name_slot_fit(
+    name: DeclaredPartyFilingName | None, *, composition: PartyNameComposition, slot: PartyNameSlot
+) -> PartyNameSlotFit:
+    """Run the export's own slot composition for ``name`` and report whether it files, never what it files."""
+    composed = None if name is None else compose_declared_party_name(name, composition)
+    composed_length = None if composed is None else len(composed)
+    try:
+        party_name_filing_text(name, composition=composition, slot=slot)
+    except FilingExportDeclaredPartyNameError as refusal:
+        return PartyNameSlotFit(refusal=refusal.reason, composed_length=composed_length, uses_rendering=False)
+    return PartyNameSlotFit(
+        refusal=None,
+        composed_length=composed_length,
+        uses_rendering=composed_length is not None and composed_length > slot.field_length,
+    )
+
+
 def _component_text(name: DeclaredPartyFilingName, component: PartyNameComponent) -> str | None:
     if component is PartyNameComponent.PRIMER_APELLIDO:
         return name.primer_apellido
@@ -132,6 +170,8 @@ __all__ = [
     "DECLARED_PARTY_NAME_DOOR_ACTION_ID",
     "PartyNameRefusals",
     "PartyNameSlot",
+    "PartyNameSlotFit",
     "compose_declared_party_name",
     "party_name_filing_text",
+    "party_name_slot_fit",
 ]

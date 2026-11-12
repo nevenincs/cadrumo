@@ -1045,6 +1045,7 @@ cli:
         period_help: 'Codi de període: 0A anual, 1T-4T trimestres, 01-12 mesos; per
           a models censals (036) usa alta, modificacion o baja.'
         readiness:
+          actividades_prorrata: activitats del registre de prorrata
           activo_extranjero: actiu estranger
           afiliado_cotizacion: afiliat de la relació de cotitzacions
           borrador_aeat: esborrany de l’AEAT
@@ -1854,6 +1855,9 @@ cli:
           (consulta `aeat app modelo casillas`).
         entry_casilla_unknown: '%{casilla} no és un identificador de casella.'
         entry_confirm: Encara no s'ha registrat res. Executa `%{command}` per registrar-ho.
+        entry_row_help: Fila a la qual es refereix la declaració, per la identitat
+          de fila d'origen que mostra el càlcul (per exemple inmueble:1). Només per
+          a dades que es declaren per fila.
         entry_value_help: El valor, escrit com en la teva llengua de sortida (per
           exemple 1.234,56 en català o 1,234.56 en anglès).
         entry_yes_help: Confirma el canvi i registra'l a la declaració
@@ -3540,6 +3544,10 @@ cli:
       derive_non_derivable: '{category} no té un tipus espanyol simple que es pugui
         derivar: {note} Indica --taxable-base, --iva-rate i --iva-amount a mà per
         a aquesta categoria.'
+      exemption_article_help: L'exempció de l'art. 20.Uno LIVA en què encaixa una
+        fila `domestic_exempt`, com a token del vocabulari d'articles d'exempció que
+        el registre declara per a la data de la fila. Decideix si la fila compta en
+        el volum de la prorrata com a operació sense dret a deducció.
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,

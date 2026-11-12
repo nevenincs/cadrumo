@@ -326,6 +326,10 @@ class BindingSourceKind(StrEnum):
     # boxes each Modelo 100 revision gives them. The boxes hold other facts of the
     # same kind too, so the filer's own entry stays admissible over the figure.
     ACTIVITY_ASSET_DISPOSAL = "activity_asset_disposal"
+    # One let property's ``Inmueble`` occurrence of Modelo 100: the property and
+    # lease rows of the profile joined with the ledger rows linked to them. Each
+    # column a revision declares fills its box on the property's own row.
+    RENTA_INMUEBLE = "renta_inmueble"
     # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
     # 104-105): the source that would materialise Modelo 303 casilla 44 / the
     # Modelo 390 annual regularización field from the provisional percentage
@@ -334,6 +338,11 @@ class BindingSourceKind(StrEnum):
     # Registry-declared live mesh source once the provisional-carry store and Q4
     # regularisation path are proven end to end.
     PRORRATA_REGULARIZACION = "prorrata_regularizacion"
+    # One fact of one fixed activity row of the profile's prorrata register (LIVA
+    # arts. 101-104): the CNAE code, the volumes, the kind of prorrata and its
+    # definitive percentage that Modelo 390 apartado 12 prints per activity. The
+    # register is the rows' only owner; no operator input channel duplicates them.
+    PRORRATA_REGISTER_ACTIVITY = "prorrata_register_activity"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `BindingDefinition.source`:
     # `borrador` materialises the Modelo 100 borrador prefill

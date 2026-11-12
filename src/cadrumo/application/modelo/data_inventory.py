@@ -66,6 +66,7 @@ LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PRORRATA_REGULARIZACION,
+        BindingSourceKind.PRORRATA_REGISTER_ACTIVITY,
         BindingSourceKind.RETENCIONES_AGGREGATION,
         BindingSourceKind.RETENCION_SOPORTADA,
         BindingSourceKind.WITHHOLDING,

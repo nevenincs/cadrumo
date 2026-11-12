@@ -55,8 +55,10 @@ from .ledger_renta_income_bindings import LedgerRentaIncomeProvider
 from .m303_regimen_simplificado_annual_summary_bindings import M303RegimenSimplificadoAnnualSummaryProvider
 from .manual_input_selector import ManualInputProvider
 from .profile_bindings import ProfileProvider
+from .prorrata_register_activity_bindings import ProrrataRegisterActivityProvider
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
 from .relation_prefill_bindings import RelationPrefillProvider
+from .renta_inmueble_bindings import RentaInmuebleProvider
 from .retencion_soportada_bindings import RetencionSoportadaProvider
 from .retenciones_bindings import RetencionesAggregationProvider
 from .withholding296_bindings import Withholding296Provider
@@ -75,6 +77,7 @@ BindingProvider = Annotated[
     | IvaCompensationAnnualPartitionProvider
     | M303RegimenSimplificadoAnnualSummaryProvider
     | ProrrataRegularizacionProvider
+    | ProrrataRegisterActivityProvider
     | BienesInversionRegularizacionProvider
     | LedgerIvaProvider
     | LedgerOssProvider
@@ -97,7 +100,8 @@ BindingProvider = Annotated[
     | ForeignAssetProvider
     | AtribucionMemberProvider
     | Gasto193ContributorProvider
-    | InventoryProvider,
+    | InventoryProvider
+    | RentaInmuebleProvider,
     Field(discriminator="kind"),
 ]
 """Every provider a registry binding may declare, discriminated on ``kind``."""

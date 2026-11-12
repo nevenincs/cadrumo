@@ -66,7 +66,7 @@ from .edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from .edit_services import calculation_head_digest, work_unit_record_digest
-from .edit_value_grammar import binding_value_grammar, casilla_value_grammar
+from .edit_value_grammar import ModeloEditValueGrammarV1, binding_value_grammar, casilla_value_grammar
 from .row_filled_bindings import row_filled_binding_ids
 
 if TYPE_CHECKING:
@@ -190,6 +190,31 @@ def _scalar_entry(
     )
 
 
+def _source_refusal(binding: BindingDefinition) -> ModeloEditNonWritableReason | None:
+    """Return why the binding's family or source takes no operator override, or ``None`` when the source admits one."""
+    family = binding.absence_attestation
+    if family is not None and family.row_grain:
+        return ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE
+    if binding.source in BUCKET_AGGREGATION_LOCK_SOURCES:
+        return ModeloEditNonWritableReason.SOURCE_LOCKED
+    if binding.source is not BindingSourceKind.MANUAL_INPUT and binding.source not in CALLER_OVERRIDABLE_CARRY_SOURCES:
+        return ModeloEditNonWritableReason.OVERRIDE_POLICY_UNDECIDED
+    return None
+
+
+def _placement_refusal(
+    binding: BindingDefinition, *, grammar: ModeloEditValueGrammarV1, period: str, row_filled: frozenset[str]
+) -> ModeloEditNonWritableReason | None:
+    """Return why an override the source admits still cannot be shown or read, or ``None`` when it can."""
+    if not grammar.writable:
+        return ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
+    if binding.id in row_filled:
+        return ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE
+    if not binding_applies_to_period(binding.applicability, period):
+        return ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION
+    return None
+
+
 def permitted_binding_entry(
     binding: BindingDefinition,
     *,
@@ -220,30 +245,20 @@ def permitted_binding_entry(
     (``ATTEST_PRIOR_VALUE``); where a source exists the dependency follows it,
     so a figure stated over it is refused here and never reads as proof.
 
+    A column whose registry family the filer states row by row is a column of
+    lines as well, so it takes no override here; its statements, each naming
+    its row, are admitted by :func:`row_statement_entry`.
+
     ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     source = binding.source
-    if source in BUCKET_AGGREGATION_LOCK_SOURCES:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.SOURCE_LOCKED
-        )
-    if source is not BindingSourceKind.MANUAL_INPUT and source not in CALLER_OVERRIDABLE_CARRY_SOURCES:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.OVERRIDE_POLICY_UNDECIDED
-        )
+    source_refusal = _source_refusal(binding)
+    if source_refusal is not None:
+        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(binding_id=binding.id, reason=source_refusal)
     grammar = binding_value_grammar(binding, revision=revision)
-    if not grammar.writable:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
-        )
-    if binding.id in row_filled:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.ROW_FIELD_TEMPLATE
-        )
-    if not binding_applies_to_period(binding.applicability, period):
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
-            binding_id=binding.id, reason=ModeloEditNonWritableReason.NOT_READ_BY_CALCULATION
-        )
+    placement_refusal = _placement_refusal(binding, grammar=grammar, period=period, row_filled=row_filled)
+    if placement_refusal is not None:
+        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(binding_id=binding.id, reason=placement_refusal)
     # Only a carry the registry declares a statement of absence for can be
     # stated to hold nothing; on any other binding the statement would assert a figure.
     attestable = binding.absence_attestation is not None
@@ -257,6 +272,31 @@ def permitted_binding_entry(
             *((ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,) if value_attestable else ()),
         ),
         grammar=grammar,
+    )
+
+
+def row_statement_entry(
+    binding: BindingDefinition, *, revision: ModeloRevision, period: str
+) -> ModeloEditWritableBindingOverrideSurfaceEntryV1 | None:
+    """Admit the per-row statements of a column whose carry the filer states row by row, or ``None``.
+
+    The column is never overridden as one value: each statement names one row
+    of the repeating group and says that row carries nothing pending or the
+    amount it carries. A column the calculation does not read for ``period``
+    takes none.
+
+    ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
+    """
+    family = binding.absence_attestation
+    if family is None or not family.row_grain or not binding_applies_to_period(binding.applicability, period):
+        return None
+    return ModeloEditWritableBindingOverrideSurfaceEntryV1(
+        binding_id=binding.id,
+        allowed_intents=(
+            ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
+            ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+        ),
+        grammar=binding_value_grammar(binding, revision=revision),
     )
 
 
@@ -275,7 +315,8 @@ def _permitted_surface(
         _scalar_entry(casilla, row_field_casilla_ids=row_field_casilla_ids) for casilla in revision.casillas
     ]
     entries.extend(
-        permitted_binding_entry(
+        row_statement_entry(binding, revision=revision, period=period)
+        or permitted_binding_entry(
             binding,
             revision=revision,
             period=period,
@@ -571,4 +612,5 @@ __all__ = [
     "admit_modelo_edit_baseline",
     "permitted_binding_entry",
     "renew_modelo_edit_baseline",
+    "row_statement_entry",
 ]

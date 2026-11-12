@@ -101,6 +101,7 @@ export type BindingSourceKind =
   | "bienes_inversion_regularizacion"
   | "inventory"
   | "activity_asset_disposal"
+  | "renta_inmueble"
   | "prorrata_regularizacion"
   | "borrador"
   | "iva_wallet_decision"

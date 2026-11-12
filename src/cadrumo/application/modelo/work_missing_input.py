@@ -13,6 +13,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
 from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -20,6 +21,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ...domain.modelos.work_unit import WorkUnit
+from ..aggregation.renta_inmueble_findings import RentaInmuebleDoor
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
 from .calculation_input_refusal_doors import missing_input_listing_verdict
 from .edit_admission import permitted_binding_entry
@@ -140,6 +142,13 @@ _PRIOR_CARRY_MESSAGE_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] 
     AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
         "application.modelo.errors.prior_carries_unstated.renta_negative_general_bases_pending"
     ),
+    AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES: (
+        "application.modelo.errors.prior_carries_unstated.renta_capital_inmobiliario_gastos_pendientes"
+    ),
+}
+# A carry stated property by property has its own door on the property's row, never the declaration-wide statement.
+_ROW_CARRY_DOORS: Final[Mapping[AbsenceAttestationFamily, RentaInmuebleDoor]] = {
+    AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES: RentaInmuebleDoor.ATTEST_NO_AMOUNT,
 }
 
 
@@ -193,8 +202,39 @@ class ModeloPriorCarryAbsenceUnstatedError(ModeloWorkMissingInputError):
 def _carry_box(snapshot: RegistrySnapshot, boxes: PrintedBoxes, binding_id: BindingId) -> str | None:
     casilla_id = sole_bound_casilla(snapshot.revision, binding_id)
     if casilla_id is None:
+        # A row column names the box it fills in its selector; no casilla binds it.
+        binding = next((item for item in snapshot.revision.bindings if item.id == binding_id), None)
+        target = None if binding is None else selector_as_dict(binding).get("target_casilla_id")
+        casilla_id = str(target) if target else None
+    if casilla_id is None:
         casilla_id = first_printed_dependent(snapshot, binding_id)
     return boxes.number(casilla_id)
+
+
+def _open_carry_boxes(
+    snapshot: RegistrySnapshot, boxes: PrintedBoxes, open_carry_ids: Collection[BindingId]
+) -> tuple[str, ...]:
+    """The printed box numbers the open carries feed, shortest first and then by number."""
+    found = {box for binding_id in open_carry_ids if (box := _carry_box(snapshot, boxes, binding_id)) is not None}
+    return tuple(sorted(found, key=lambda box: (len(box), box)))
+
+
+def _door_arguments(family: AbsenceAttestationFamily, work_unit: WorkUnit) -> dict[str, str]:
+    """The action arguments of the statement's door: a row-grain family names its row later, so none here."""
+    return {} if family.row_grain else {"work_unit_id": work_unit.work_unit_id}
+
+
+def _refusal_context(
+    family: AbsenceAttestationFamily, work_unit: WorkUnit, box_numbers: tuple[str, ...]
+) -> dict[str, object]:
+    context: dict[str, object] = {
+        "modelo": str(work_unit.modelo),
+        "filing_year": work_unit.filing_year,
+        "boxes": ", ".join(box_numbers),
+    }
+    if family.row_grain:
+        context["command"] = _ROW_CARRY_DOORS[family].value
+    return context
 
 
 def prior_carry_absence_unstated(
@@ -226,12 +266,7 @@ def prior_carry_absence_unstated(
             if binding.absence_attestation is family and binding_id in unresolved
         )
     )
-    box_numbers = tuple(
-        sorted(
-            {box for binding_id in open_carry_ids if (box := _carry_box(snapshot, boxes, binding_id)) is not None},
-            key=lambda box: (len(box), box),
-        )
-    )
+    box_numbers = _open_carry_boxes(snapshot, boxes, open_carry_ids)
     scenario_id = f"{_PRIOR_CARRY_SCENARIO_PREFIX}.{family.value}_unstated"
     failure = build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
@@ -247,19 +282,16 @@ def prior_carry_absence_unstated(
             "boxes": ",".join(box_numbers),
         },
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        action_argument_values={"work_unit_id": work_unit.work_unit_id},
+        action_argument_values=_door_arguments(family, work_unit),
     )
+    context = _refusal_context(family, work_unit, box_numbers)
     return ModeloPriorCarryAbsenceUnstatedError(
         missing,
         binding_id=missing.binding_id,
         family=family,
         open_carry_ids=open_carry_ids,
         translated_message=_PRIOR_CARRY_MESSAGE_LOCALE_KEYS[family],
-        context={
-            "modelo": str(work_unit.modelo),
-            "filing_year": work_unit.filing_year,
-            "boxes": ", ".join(box_numbers),
-        },
+        context=context,
         precondition_verdict=failure.verdict,
         next_step=open_work_step(work_unit),
     )

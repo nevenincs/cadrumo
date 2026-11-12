@@ -98,7 +98,7 @@ _TOTAL_PAGOS_A_CUENTA: CasillaId = validated_casilla_id("0609", surface="0609")
 _CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id("0610", surface="0610")
 _RESULTADO_DECLARACION: CasillaId = validated_casilla_id("0670", surface="0670")
 
-_BASE_LIQUIDABLE_GENERAL_LEAF: CasillaId = validated_casilla_id("0102", surface="0102")
+_BASE_LIQUIDABLE_GENERAL_LEAF: CasillaId = validated_casilla_id("0156", surface="0156")
 _BASE_LIQUIDABLE_AHORRO_LEAF: CasillaId = validated_casilla_id("0429", surface="0429")
 _RETENCION_TRABAJO: CasillaId = validated_casilla_id("0596", surface="0596")
 
@@ -155,6 +155,10 @@ def _scenario(ejercicio: int, *, retencion: str, scenario_id: str) -> RegistryCa
             _RETENCION_TRABAJO: Decimal(retencion),
         },
         hand_typed_bound_casillas={
+            _BASE_LIQUIDABLE_GENERAL_LEAF: (
+                "the general base leaf is the let properties' reduced net yield, which the edition totals from "
+                "the property rows; the scenario carries no property, so it keys that total directly"
+            ),
             _RETENCION_TRABAJO: (
                 "the salary certificate is an operator-keyed source: its binding names this casilla "
                 "as the value it fills, so the scenario keys the certified amount directly"

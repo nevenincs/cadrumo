@@ -16,6 +16,7 @@ from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction
+from ...domain.transactions.rental_link import has_rental_link
 from ..invoices.source_observations import is_rectificativa
 from . import renta_income_evidence, shared_issue_reasons
 from .business_proportion import business_proportion
@@ -124,6 +125,7 @@ def _income_transaction_is_out_of_scope(transaction: Transaction) -> bool:
     # take the expense back there rather than coming in as income here.
     return (
         transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED
+        or has_rental_link(arrendamiento_ref=transaction.arrendamiento_ref, inmueble_ref=transaction.inmueble_ref)
         or transaction.direction is not TransactionDirection.INCOMING
         or is_supplier_refund(transaction)
     )
@@ -150,8 +152,8 @@ def _income_gate_issue(
             transaction_id=transaction_id,
             reason=RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME,
             detail=(
-                f"irpf_category {transaction.irpf_category!r} belongs to rendimientos del trabajo, "
-                "not actividad económica; excluded from activity income"
+                f"irpf_category {transaction.irpf_category!r} is income of another category (rendimientos del trabajo "
+                "or capital inmobiliario), not actividad económica; excluded from activity income"
             ),
         )
     return None

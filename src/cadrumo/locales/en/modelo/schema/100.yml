@@ -2,6 +2,9 @@ modelo:
   schema:
     '100':
       binding:
+        renta-inmueble-gastos-pendientes-anteriores-0103:
+          label: Property interest and repair-and-maintenance expenses pending deduction
+            from the four previous tax years
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Yes: normal method (N). No: simplified method (S).'
           label: Do you use normal direct estimation?
