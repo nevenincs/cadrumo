@@ -3684,6 +3684,8 @@
         "cadrumo.entrypoints.tui.secret.passphrase",
         "cadrumo.entrypoints.tui.secret.registration",
         "cadrumo.entrypoints.tui.windows_input",
+        "cadrumo.entrypoints.tui.withholding",
+        "cadrumo.entrypoints.tui.withholding.screen",
         "cadrumo.entrypoints.workbench_generation_composition",
         "cadrumo.entrypoints.workflow_run_composition"
       ]
@@ -4167,6 +4169,7 @@
         "cadrumo_runtime.host.frontend.tui.runtime_profile_language",
         "cadrumo_runtime.host.frontend.tui.runtime_recovery_client",
         "cadrumo_runtime.host.frontend.tui.runtime_session",
+        "cadrumo_runtime.host.frontend.tui.runtime_withholding",
         "cadrumo_runtime.host.frontend.tui.runtime_workbench",
         "cadrumo_runtime.host.frontend.tui.secret",
         "cadrumo_runtime.host.frontend.tui.secret.automation_decision",
