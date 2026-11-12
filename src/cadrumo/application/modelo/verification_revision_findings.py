@@ -36,6 +36,7 @@ from .dt12_antiquity_advisory import dt12_antiquity_advisory_finding
 from .export_content_findings import append_export_content_findings
 from .m210_convenio_lob_advisory import m210_convenio_lob_advisory_finding
 from .objective_estimation_advisory import objective_estimation_exclusion_advisory_findings
+from .trabajo_income_findings import trabajo_income_findings
 from .preconditions import ModeloPreconditionFailure
 from .shared_casilla_cells_findings import append_shared_casilla_cells_findings
 from .verification_finding_contracts import (
@@ -125,6 +126,16 @@ def append_revision_advisory_findings(
             devengo_date=fact_coordinate,
         ),
     ):
+    findings.extend(
+        trabajo_income_findings(
+            snapshot.revision,
+            target,
+            profile_values={}
+            if work_profile is None
+            else record_to_path_values(work_profile.record, as_of=fact_coordinate),
+            effective_date=fact_coordinate,
+        )
+    )
         if finding is not None:
             findings.append(finding)
     findings.extend(objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
