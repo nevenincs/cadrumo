@@ -105,6 +105,7 @@ GREEN = frozenset({Verdict.PASSED, Verdict.NOT_OWED})
 _STAGE_REFUSAL = re.compile(r"^(?:verify|export): \S+ \S+ (?P<code>[A-Z][A-Z0-9_]+)")
 """A verify or export reason as the runner writes it: the stage, the operation, how it settled, its code."""
 _UNSUPPORTED_MARKERS = ("UNSUPPORTED", "NOT_SUPPORTED")
+_LAST_QUARTER = "4T"
 _ANNUAL = "0A"
 
 
@@ -495,19 +496,26 @@ def ended(rows: Sequence[PlannedRow], today: date) -> list[PlannedRow]:
     return [row for row in rows if period_end(row.year, row.period) < today]
 
 
-def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, str]:
-    """The order a replay runs returns in: by year, each quarter before the annual returns, then by modelo.
+def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, int, str]:
+    """The order a replay runs returns in: by year, quarters and instalments before annual returns, then by modelo.
 
     A quarter is filed locally before the next one calculates, and an annual
     summary (Modelo 180, 190, 390) or the annual Renta reads that year's filed
     quarters, so every quarter of a year runs before any annual return of it.
+    A Modelo 202 instalment reads the instalments paid before it and the year's
+    Modelo 200 folds them all, so the instalments run in the order their periods
+    end, before the annual returns.
     """
     modelo, year, period = key
     try:
         position = filed_period_order(period)
     except ValueError:
-        position = filed_period_order(_ANNUAL) + 1
-    return (year or 0, position, modelo)
+        position = filed_period_order(_LAST_QUARTER)
+    try:
+        ends = period_end(year, period).toordinal() if year is not None else 0
+    except ValueError:
+        ends = 0
+    return (year or 0, position, ends, modelo)
 
 
 def in_force(values: Sequence[ExpectedValue], envelope: YearEnvelope) -> tuple[tuple[int, ExpectedValue], ...]:

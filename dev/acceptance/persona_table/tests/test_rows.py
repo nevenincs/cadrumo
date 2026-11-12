@@ -28,6 +28,7 @@ from ..rows import (
     Stage,
     TableRow,
     Verdict,
+    chain_order,
     ended,
     in_force,
     latest_rows,
@@ -503,3 +504,14 @@ def test_a_not_owed_row_survives_its_json_line(tmp_path: Path) -> None:
     write_rows(tmp_path / "rows.jsonl", [row])
     assert list(read_rows([tmp_path / "rows.jsonl"])) == [row]
     assert row.to_baseline_json(row.horizon).count('"not-owed"') == 2
+
+
+def test_the_replay_runs_a_years_instalments_in_payment_order_before_its_annual_returns() -> None:
+    """A Modelo 202 instalment reads the earlier ones and the Modelo 200 folds them all, so order follows their ends."""
+    year = _envelope().horizon - 1
+    keys = [("200", year, "0A"), ("202", year, "3P"), ("303", year, "4T"), ("202", year, "2P"), ("202", year, "1P")]
+    ordered = sorted(keys, key=chain_order)
+    instalments = [key[2] for key in ordered if key[0] == "202"]
+    assert instalments == ["1P", "2P", "3P"]
+    assert ordered[-1] == ("200", year, "0A")
+    assert sorted(keys, key=chain_order) == sorted(reversed(keys), key=chain_order)

@@ -16,9 +16,10 @@ when its ``refusal_stage`` is verify or export, that the calculation completes
 (the persona table asserts the later stage's refusal); a casilla stated
 ``not_sourced`` asserts that the application does not yet carry the figure the
 law gives; an obligation that states a ``calendar_advice`` asserts that the
-calendar advises it instead of showing a window row; a period an obligation
-states not applicable that values are stated for is left to the persona
-table, which reads the calendar after calculating it. A modelo whose obligations
+calendar advises it instead of showing a window row; a period values are
+stated for whose verdict turns on a figure stated on its own work unit (one an
+obligation states not applicable, or one whose prior figures are attested on it)
+is left to the persona table, which reads the calendar after calculating it. A modelo whose obligations
 of one year state different applicability for different periods has each
 period's verdict read from the calendar, suppressed obligations shown, since the
 explanation states one verdict per modelo.
@@ -104,6 +105,7 @@ from .persona_materialisation import (
     PersonaMaterialisationError,
     PersonaWorld,
     ReplayScope,
+    attest_before_first_calculation,
     filing_key,
     materialised_persona,
     run_operation,
@@ -168,11 +170,13 @@ def _value_years(persona: Persona) -> set[int]:
     }
 
 
-def _stated_not_owed(persona: Persona) -> set[tuple[str, int, str]]:
-    """The returns ``(modelo, year, period)`` an obligation states not applicable that values are stated for.
+def _asserted_after_calculation(persona: Persona) -> set[tuple[str, int, str]]:
+    """The returns ``(modelo, year, period)`` whose calendar verdict this pre-calculation read cannot assert.
 
-    The persona table calculates each of them and then asserts that the calendar suppresses it, since the verdict
-    can turn on a figure stated on the return's own work unit, which this pre-calculation read does not hold.
+    Those are the returns values are stated for whose verdict turns on a figure stated on the return's own work unit:
+    one an obligation states not applicable, and one whose prior figures the persona attests on it while entering no
+    work input there (a Modelo 202 instalment whose base is the cuota of a Modelo 200 the profile does not hold). The
+    persona table calculates each of them with that figure stated and then reads the calendar, or files it.
     """
     envelope = _envelope()
     stated = {
@@ -187,7 +191,11 @@ def _stated_not_owed(persona: Persona) -> set[tuple[str, int, str]]:
         if item.applicable is False
         for period in item.periods
     }
-    return stated & not_applicable
+    entered = {(item.modelo, item.year.resolve(envelope), item.period) for item in persona.work_inputs}
+    attested_on_own_return = {
+        (entry.modelo, entry.year.resolve(envelope), entry.period) for entry in persona.attested_prior_values
+    } - entered
+    return stated & (not_applicable | attested_on_own_return)
 
 
 def _scope(persona: Persona) -> ReplayScope:
@@ -215,8 +223,8 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
     persona = _personas()[case.persona_id]
     envelope = _envelope()
     stated_obligations = [item for year, item in _asserted_obligations(persona) if year == case.year]
-    # A return stated not owed whose values are stated is asserted by the persona table after it is calculated.
-    asserted_later = _stated_not_owed(persona)
+    # The persona table asserts these returns after it calculates them with their own stated figures.
+    asserted_later = _asserted_after_calculation(persona)
     obligations = [
         replace(item, periods=periods)
         for item in stated_obligations
@@ -429,6 +437,7 @@ def _calculated_casillas(materialised: MaterialisedPersona, modelo: str, year: i
             work_unit_id = outcome.unit.work_unit_id
             if modelo == "100":
                 attest_prior_carries(materialised.persona, world, work_unit_id, year)
+            attest_before_first_calculation(world, modelo=modelo, year=year, period=period, work_unit_id=work_unit_id)
             calculated = run_operation(
                 world,
                 MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,

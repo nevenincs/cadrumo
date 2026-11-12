@@ -19,7 +19,6 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
 
 from cadrumo.application.modelo.export_projection import ModeloExportPublicResultV3
 from cadrumo.application.modelo.m303_attestation_operation import (
@@ -68,6 +67,7 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
     PersonaMaterialisationError,
     PersonaWorld,
     ReplayScope,
+    attest_before_first_calculation,
     filing_key,
     materialised_persona,
     run_operation,
@@ -75,11 +75,6 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
     year_envelope,
 )
 from cadrumo.entrypoints.tests.persona_prior_carries import attest_prior_carries
-from cadrumo.entrypoints.tests.persona_prior_values import (
-    PriorValueAttestationError,
-    attest_return_prior_values,
-    entries_on,
-)
 from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rental_carries
 from cadrumo.tests.personas import (
     ExpectedValue,
@@ -347,45 +342,6 @@ def _create(world: PersonaWorld, plan: PlannedRow) -> str | TableRow:
     return outcome.unit.work_unit_id
 
 
-def _attest_before_calculating(world: PersonaWorld, plan: PlannedRow, work_unit_id: str) -> None:
-    """State the persona's attested prior figures on a return it enters no work input on, before its first calculation.
-
-    A return with work inputs keeps the order an operator follows: its inputs are entered when it is first calculated,
-    and its attestations follow that calculation.
-    """
-    if not entries_on(
-        world.attested_prior_values, world.envelope, modelo=plan.modelo, filing_year=plan.year, period=plan.period
-    ):
-        return
-    if any(
-        item.modelo == plan.modelo and item.period == plan.period and item.year.resolve(world.envelope) == plan.year
-        for item in world.work_inputs
-    ):
-        return
-
-    def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
-        return settle_operation(world, definition_id, payload, subject=subject)
-
-    where = f"{plan.modelo} {plan.year} {plan.period}"
-    try:
-        attested = attest_return_prior_values(
-            world.attested_prior_values,
-            envelope=world.envelope,
-            profile_id=world.profile_id,
-            work_unit_id=work_unit_id,
-            modelo=plan.modelo,
-            filing_year=plan.year,
-            period=plan.period,
-            settle=settle,
-        )
-    except PriorValueAttestationError as error:
-        raise PersonaMaterialisationError(f"{where}: {error}") from error
-    if attested.unoffered:
-        raise PersonaMaterialisationError(
-            f"{where}: the application does not offer the attestation of {', '.join(attested.unoffered)}"
-        )
-
-
 def _calculate(
     materialised: MaterialisedPersona, plan: PlannedRow, work_unit_id: str
 ) -> ModeloWorkCalculatePublicResultV3:
@@ -399,7 +355,9 @@ def _calculate(
     world = materialised.world
     if plan.modelo == "100":
         attest_prior_carries(materialised.persona, world, work_unit_id, plan.year)
-    _attest_before_calculating(world, plan, work_unit_id)
+    attest_before_first_calculation(
+        world, modelo=plan.modelo, year=plan.year, period=plan.period, work_unit_id=work_unit_id
+    )
     evidence = None
     if plan.modelo == "303":
         last_period = max(

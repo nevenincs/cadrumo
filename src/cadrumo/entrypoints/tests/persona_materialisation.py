@@ -268,7 +268,12 @@ from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
 from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
-from .persona_prior_values import PriorValueAttestationError, attest_prior_values, attest_return_prior_values
+from .persona_prior_values import (
+    PriorValueAttestationError,
+    attest_prior_values,
+    attest_return_prior_values,
+    entries_on,
+)
 from .persona_rental_replay import replay_rentals
 from .persona_work_income_statements import state_work_income_none
 from .persona_work_inputs import WorkInputError, check_work_inputs, enter_work_inputs
@@ -672,6 +677,51 @@ def run_operation[Projection: BaseModel](
         if not isinstance(result, projection):
             raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
     return result
+
+
+def attested_before_calculating(world: PersonaWorld, *, modelo: str, year: int, period: str) -> bool:
+    """Whether the return's attested prior figures are stated before its first calculation.
+
+    So they are for a return the persona attests figures on and enters no work input on: its calculation refuses
+    while a required source return is neither held nor stated. A return with work inputs keeps the order an operator
+    follows: its inputs are entered when it is first calculated, and its attestations follow that calculation.
+    """
+    if not entries_on(world.attested_prior_values, world.envelope, modelo=modelo, filing_year=year, period=period):
+        return False
+    return not any(
+        item.modelo == modelo and item.period == period and item.year.resolve(world.envelope) == year
+        for item in world.work_inputs
+    )
+
+
+def attest_before_first_calculation(
+    world: PersonaWorld, *, modelo: str, year: int, period: str, work_unit_id: str
+) -> None:
+    """State the return's attested prior figures on its work unit before its first calculation, where they are so stated."""
+    if not attested_before_calculating(world, modelo=modelo, year=year, period=period):
+        return
+
+    def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
+        return settle_operation(world, definition_id, payload, subject=subject)
+
+    where = f"{modelo} {year} {period}"
+    try:
+        attested = attest_return_prior_values(
+            world.attested_prior_values,
+            envelope=world.envelope,
+            profile_id=world.profile_id,
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            filing_year=year,
+            period=period,
+            settle=settle,
+        )
+    except PriorValueAttestationError as error:
+        raise PersonaMaterialisationError(f"{where}: {error}") from error
+    if attested.unoffered:
+        raise PersonaMaterialisationError(
+            f"{where}: the application does not offer the attestation of {', '.join(attested.unoffered)}"
+        )
 
 
 def _enter_work_inputs(world: PersonaWorld, work_unit_id: str) -> None:
@@ -2205,6 +2255,8 @@ __all__ = [
     "PersonaMaterialisationError",
     "PersonaWorld",
     "ReplayScope",
+    "attest_before_first_calculation",
+    "attested_before_calculating",
     "filing_key",
     "household_leaves",
     "load_profile_record",
