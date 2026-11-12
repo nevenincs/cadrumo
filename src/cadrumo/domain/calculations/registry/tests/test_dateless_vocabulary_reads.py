@@ -14,8 +14,10 @@ import pytest
 
 from .....core.time.clock import frozen_clock, today_madrid
 from ..authority import bundled_indexed_authority
+from ..concepto_ingreso import resolve_concepto_ingreso_catalogue
 from ..entity_type import resolve_entity_vocabulary
 from ..eu_member_state_catalogue import resolve_eu_member_state_catalogue
+from ..gasto_capital_inmobiliario import resolve_gasto_capital_inmobiliario_catalogue
 from ..governed_fact_scope import GovernedFactSource
 from ..irpf_regimes import resolve_irpf_regime_vocabulary
 from ..renta_codes_catalogue import fiscal_residency_choices, ue_eea_country_codes
@@ -95,3 +97,25 @@ def test_dateless_fiscal_residency_choices_do_not_follow_the_clock(authority: Go
     newest = fiscal_residency_choices(effective_date=date(filing_year_envelope().horizon, 12, 31), authority=authority)
 
     assert outside == newest
+
+
+def test_the_dateless_income_concept_vocabulary_admits_the_envelope_union(authority: GovernedFactSource) -> None:
+    with frozen_clock(_outside_the_envelope()):
+        dateless = resolve_concepto_ingreso_catalogue(authority=authority).all_tokens
+
+    assert dateless == _union_of_dated_reads(
+        lambda on: resolve_concepto_ingreso_catalogue(effective_date=on, authority=authority).all_tokens
+    )
+
+
+def test_the_dateless_rental_expense_vocabulary_admits_the_envelope_union(authority: GovernedFactSource) -> None:
+    with frozen_clock(_outside_the_envelope()):
+        dateless = resolve_gasto_capital_inmobiliario_catalogue(authority=authority)
+    newest = resolve_gasto_capital_inmobiliario_catalogue(
+        effective_date=date(filing_year_envelope().horizon, 12, 31), authority=authority
+    )
+
+    assert dateless.all_tokens == _union_of_dated_reads(
+        lambda on: resolve_gasto_capital_inmobiliario_catalogue(effective_date=on, authority=authority).all_tokens
+    )
+    assert dateless.concepts == newest.concepts
