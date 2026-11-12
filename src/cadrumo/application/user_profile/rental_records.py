@@ -8,6 +8,7 @@ commands, the manager and the window -- gives one acceptance and one refusal:
 
 * a row must cohere as a record;
 * a lease must name a property row the profile holds;
+* a property's stated letting start cannot be later than the start of any of its leases;
 * a property's principal must be another property row the profile holds;
 * a tenant identifier must hold its control letter unless it is declared foreign;
 * a property that a lease or an accessory names cannot be removed;
@@ -41,6 +42,7 @@ from ...domain.contribuyente.inmueble_facts import (
     inmuebles_from_facts,
     rows_from_facts,
 )
+from ...domain.contribuyente.inmueble_record import require_letting_start_before_leases
 from ...domain.user_profile.errors import UserProfileValidationError
 
 if TYPE_CHECKING:
@@ -147,6 +149,13 @@ def _admit_inmueble(
             translated_message=_PRINCIPAL_MISSING_LOCALE_KEY,
             context={"principal": principal, "door": _door(INMUEBLE_SECTION, RentalRowMutation.ADD)},
         )
+    _refusing_incoherent(
+        lambda: require_letting_start_before_leases(
+            record,
+            (lease.fecha_inicio for lease in arrendamientos_from_facts(path_values) if lease.inmueble == row_key),
+        ),
+        door=_door(INMUEBLE_SECTION, mutation),
+    )
     return inmueble_row_values(record)
 
 
@@ -164,6 +173,19 @@ def _admit_arrendamiento(
         raise UserProfileValidationError(
             translated_message=_LEASE_PROPERTY_MISSING_LOCALE_KEY,
             context={"inmueble": record.inmueble, "door": _door(INMUEBLE_SECTION, RentalRowMutation.ADD)},
+        )
+    landlord_property = next(
+        (inmueble for inmueble in inmuebles_from_facts(path_values) if inmueble.clave == record.inmueble), None
+    )
+    if landlord_property is not None:
+        others = (
+            lease.fecha_inicio
+            for lease in arrendamientos_from_facts(path_values)
+            if lease.inmueble == record.inmueble and lease.clave != row_key
+        )
+        _refusing_incoherent(
+            lambda: require_letting_start_before_leases(landlord_property, (*others, record.fecha_inicio)),
+            door=_door(INMUEBLE_SECTION, RentalRowMutation.EDIT),
         )
     if len(record.inquilinos) > _tenant_capacity(authority):
         raise UserProfileValidationError(

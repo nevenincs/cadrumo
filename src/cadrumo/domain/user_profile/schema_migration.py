@@ -26,6 +26,10 @@ two.
   the row, and a stored key 1 or 2 cannot be converted into a grade, so the
   migration clears every stored key and the operator is asked for the grade and
   both circumstances of that row.
+- Schema 13 adds the date a property was first let, or that it never was, to the
+  property record. It only adds fields, so it clears nothing: a stored value that
+  predates the field was never stated, and the pending-expense statement of a
+  property lives on the calculation revision, not on the profile.
 
 Before each of those bumps the setup wizard pre-answered the affected
 questions and wrote its default as an ordinary ``manual_cli`` fact, so the
@@ -62,7 +66,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 12
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 13
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -170,7 +174,7 @@ _ASCENDANT_DISABILITY_LEAVES: Final[tuple[str, ...]] = (
 )
 """The row facts the retired key is derived from now, which a row whose key was cleared is asked for."""
 
-_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9, 10})
+_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9, 10, 12})
 """Versions whose outgoing transition only adds fields, so it clears no stored value."""
 
 
@@ -326,12 +330,18 @@ PATHS_INTRODUCED_IN_V11: Final[frozenset[str]] = frozenset(
 )
 """Fields schema 10 did not declare: the Modelo 200 page 002 relations."""
 
+PATHS_INTRODUCED_IN_V13: Final[frozenset[str]] = frozenset(
+    {"renta_inmueble.arrendado_desde", "renta_inmueble.sin_arrendar"},
+)
+"""Fields schema 12 did not declare: when the property was first let, or that it never was."""
+
 _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         7: PATHS_INTRODUCED_IN_V7,
         9: PATHS_INTRODUCED_IN_V9,
         10: PATHS_INTRODUCED_IN_V10,
         11: PATHS_INTRODUCED_IN_V11,
+        13: PATHS_INTRODUCED_IN_V13,
     },
 )
 """Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
@@ -621,6 +631,7 @@ __all__ = [
     "PATHS_INTRODUCED_IN_V9",
     "PATHS_INTRODUCED_IN_V10",
     "PATHS_INTRODUCED_IN_V11",
+    "PATHS_INTRODUCED_IN_V13",
     "RETIRED_ASCENDANT_DISABILITY_KEY_GROUP",
     "RETIRED_ASCENDANT_DISABILITY_KEY_LEAF",
     "RETIRED_RENTAL_TIER_PATH",

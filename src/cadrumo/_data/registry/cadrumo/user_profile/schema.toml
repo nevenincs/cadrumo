@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 12
+version = 13
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -2354,6 +2354,24 @@ sensitivity = "identity"
 effective_dated = true
 description = "Fecha de inicio del primer ejercicio que la aplicacion calcula, a la que se refiere la amortizacion acumulada atestada."
 legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "arrendado_desde"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha desde la que el inmueble esta arrendado por primera vez. Sin valor, el inicio del arrendamiento esta sin declarar: el primer contrato registrado no lo sustituye. No puede ser posterior al inicio de ningun contrato del inmueble."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "sin_arrendar"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Verdadero cuando el inmueble no se ha arrendado nunca todavia. Se guarda solo como verdadero; excluye una fecha de arrendamiento y todo contrato del inmueble."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
 
 [[sections]]
 key = "renta_arrendamiento"

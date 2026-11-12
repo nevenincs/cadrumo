@@ -1170,3 +1170,41 @@ def test_a_work_income_statement_for_an_ejercicio_without_a_work_income_certific
     assert document["work_income_none_statements"]
     with pytest.raises(PersonaCatalogueError, match="no work-income certificate for that ejercicio"):
         _parse(document)
+
+
+_LETTING = "arrendador-jubilado"
+
+
+def _parse_letting(persona_document: dict[str, Any]) -> Persona:
+    folder = PERSONAS_ROOT / _LETTING
+    return parse_persona(
+        _LETTING,
+        persona_document=persona_document,
+        ledger_text=(folder / "ledger.csv").read_text(encoding="utf-8"),
+        documents_document=tomllib.loads((folder / "documents.toml").read_text(encoding="utf-8")),
+        expectations_document=tomllib.loads((folder / "expectations.toml").read_text(encoding="utf-8")),
+        catalogue=identity_catalogue(),
+        envelope=_ENVELOPE,
+        omit_below_floor=False,
+    )
+
+
+def _letting_document(**changes: object) -> dict[str, Any]:
+    document = tomllib.loads((PERSONAS_ROOT / _LETTING / "persona.toml").read_text(encoding="utf-8"))
+    document["rental_properties"][0].update(changes)
+    return document
+
+
+def test_a_rental_property_states_its_letting_start_or_leaves_it_unstated() -> None:
+    assert _parse_letting(_letting_document()).rental_properties[0].arrendado_desde is None
+
+    stated = _parse_letting(_letting_document(arrendado_desde={"year": "horizon-2", "month": 6, "day": 1}))
+
+    start = stated.rental_properties[0].arrendado_desde
+    assert start is not None
+    assert (start.month, start.day) == (6, 1)
+
+
+def test_a_malformed_letting_start_is_refused() -> None:
+    with pytest.raises(PersonaCatalogueError, match=r"month must be 1..12"):
+        _parse_letting(_letting_document(arrendado_desde={"year": "horizon-2", "month": 13, "day": 1}))
