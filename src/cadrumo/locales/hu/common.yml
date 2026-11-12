@@ -8878,6 +8878,32 @@ tui:
       selection_dropped: A hivatkozás által kijelölt tétel nem jelenik meg.
       title: A Nyilvántartás nem érhető el
   modelo:
+    amendment:
+      done: 'A helyesbítés elkészült, és itt rögzítve lett. Semmi sem ment el az AEAT-hez:
+        exportáld a fájlját, és nyújtsd be te magad.'
+      incomplete: Töltsd ki mindazt, amit a helyesbítés kér, és javíts legalább egy
+        értéket.
+      key: Helyesbítés
+      kind_label: A helyesbítés fajtája
+      motive_label: A helyesbítés oka
+      unknown: Lehet, hogy ez a helyesbítés már rögzítve lett. Mielőtt újat készítesz
+        elő, ellenőrizd a műveletét.
+      values_label: Helyesbített értékek
+    disagreements:
+      accept: Elfogadom
+      key: Eltérések megválaszolása
+      none: A bevallás nem jelez eltérést a források között.
+      outcome_unknown: A válasz lehet, hogy elmentődött. Olvasd be újra a bevallást,
+        mielőtt bármi mást megválaszolnál.
+      read_failed: A válaszaidat nem sikerült beolvasni.
+      reading: A válaszaid beolvasása...
+      reason_label: Az elfogadás indoka
+      refused: A választ elutasították.
+      revoke: Visszavonom
+      sending: A válaszod küldése...
+      title: Eltérések a források között
+      unavailable: Még nincs mit megválaszolni. Előbb számold ki a bevallást.
+      your_reason: 'Az indokod: {reason}'
     editor:
       confirm_hint: Nyomd meg a ⏎ billentyűt a(z) {value} megerősítéséhez, vagy írd
         be a helyes értéket.
@@ -9066,6 +9092,9 @@ tui:
       stage: Megtartás átnézésre
       title: Tehető nyilatkozatok
       withdraw: Nyilatkozat visszavonása
+    taxation:
+      key: Közös vagy egyéni
+      reading: Mindkét módszer kiszámítása…
   operations:
     action:
       close: Bezárás

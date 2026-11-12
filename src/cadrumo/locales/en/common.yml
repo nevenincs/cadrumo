@@ -8738,6 +8738,32 @@ tui:
       selection_dropped: The entry this link selects is not shown.
       title: Records unavailable
   modelo:
+    amendment:
+      done: 'Correction prepared and recorded here. Nothing was sent to the AEAT:
+        export its file and file it yourself.'
+      incomplete: Fill in everything the correction asks for, and correct at least
+        one value.
+      key: Correct
+      kind_label: Kind of correction
+      motive_label: Reason for the rectification
+      unknown: This correction may have been recorded. Check its operation before
+        you prepare another.
+      values_label: Corrected values
+    disagreements:
+      accept: Accept
+      key: Answer disagreements
+      none: The declaration states no source disagreement.
+      outcome_unknown: The answer may have been stored. Read the declaration again
+        before answering anything else.
+      read_failed: Your answers could not be read.
+      reading: Reading your answers...
+      reason_label: Your reason for accepting
+      refused: The answer was refused.
+      revoke: Take back
+      sending: Sending your answer...
+      title: Source disagreements
+      unavailable: There is nothing to answer yet. Calculate the declaration first.
+      your_reason: 'Your reason: {reason}'
     editor:
       confirm_hint: Press ⏎ to confirm {value}, or type the right value.
       keys: 'Keys: ⏎ {save_next} · Ctrl+⏎ {save}'
@@ -8918,6 +8944,9 @@ tui:
       stage: Stage for review
       title: Statements you can make
       withdraw: Withdraw the statement
+    taxation:
+      key: Joint or individual
+      reading: Working out both ways…
   operations:
     action:
       close: Close
