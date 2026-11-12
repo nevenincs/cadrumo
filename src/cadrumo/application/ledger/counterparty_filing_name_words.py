@@ -22,18 +22,18 @@ FilingNamePart = Literal["primer_apellido", "segundo_apellido", "nombre", "razon
 FilingNameSlotState = Literal["fits", "fits_by_rendering", "missing", "single_surname", "too_wide"]
 """What a slot is in for the stated name: filed whole, filed by a rendering, or the export's refusal."""
 
-_SLOT_STATE_KEYS: dict[FilingNameSlotState, str] = {
+_SLOT_STATE_LOCALE_KEYS: dict[FilingNameSlotState, str] = {
     "fits": "application.ledger.counterparty.served.slot_state.fits",
     "fits_by_rendering": "application.ledger.counterparty.served.slot_state.fits_by_rendering",
     "missing": "application.ledger.counterparty.served.slot_state.missing",
     "single_surname": "application.ledger.counterparty.served.slot_state.single_surname",
     "too_wide": "application.ledger.counterparty.served.slot_state.too_wide",
 }
-_PARTY_KIND_KEYS: dict[DeclaredPartyKind, str] = {
+_PARTY_KIND_LOCALE_KEYS: dict[DeclaredPartyKind, str] = {
     DeclaredPartyKind.NATURAL_PERSON: "application.ledger.counterparty.served.party_kind.natural_person",
     DeclaredPartyKind.ENTITY: "application.ledger.counterparty.served.party_kind.entity",
 }
-_PART_KEYS: dict[FilingNamePart, str] = {
+_PART_LOCALE_KEYS: dict[FilingNamePart, str] = {
     "primer_apellido": "application.ledger.counterparty.served.part.primer_apellido",
     "segundo_apellido": "application.ledger.counterparty.served.part.segundo_apellido",
     "nombre": "application.ledger.counterparty.served.part.nombre",
@@ -52,17 +52,17 @@ def slot_state(*, fits: bool, refusal: FilingNameSlotRefusal | None, uses_render
 
 def slot_state_words(state: FilingNameSlotState, language: OutputLanguage) -> str:
     """The sentence for a slot's state."""
-    return tr(_SLOT_STATE_KEYS[state], locale=language.value)
+    return tr(_SLOT_STATE_LOCALE_KEYS[state], locale=language.value)
 
 
 def kind_words(kind: str, language: OutputLanguage) -> str:
     """The label for a party kind, refusing a kind the domain does not declare."""
-    return tr(_PARTY_KIND_KEYS[DeclaredPartyKind(kind)], locale=language.value)
+    return tr(_PARTY_KIND_LOCALE_KEYS[DeclaredPartyKind(kind)], locale=language.value)
 
 
 def name_part_words(part: FilingNamePart, language: OutputLanguage) -> str:
     """The label for a name part."""
-    return tr(_PART_KEYS[part], locale=language.value)
+    return tr(_PART_LOCALE_KEYS[part], locale=language.value)
 
 
 class CounterpartyPartyKindChoice(BaseModel):
