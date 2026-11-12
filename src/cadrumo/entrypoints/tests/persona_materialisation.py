@@ -745,16 +745,21 @@ def attested_before_calculating(world: PersonaWorld, *, modelo: str, year: int, 
 def attest_before_first_calculation(
     world: PersonaWorld, *, modelo: str, year: int, period: str, work_unit_id: str
 ) -> None:
-    """State the return's attested prior figures on its work unit before its first calculation, where they are so stated."""
+    """State the return's attested prior figures on its work unit before its first calculation, where they are so stated.
+
+    An entry the admitted baseline does not offer the attestation on is not submitted, as after a calculation: the
+    application then reads the figure from a source it holds, such as an earlier quarter of the same year, and that
+    source governs. Every attested binding is one its edition declares (``check_prior_value_bindings``), so an
+    unoffered entry cannot hide a binding the edition lacks.
+    """
     if not attested_before_calculating(world, modelo=modelo, year=year, period=period):
         return
 
     def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
         return settle_operation(world, definition_id, payload, subject=subject)
 
-    where = f"{modelo} {year} {period}"
     try:
-        attested = attest_return_prior_values(
+        attest_return_prior_values(
             world.attested_prior_values,
             envelope=world.envelope,
             profile_id=world.profile_id,
@@ -765,11 +770,7 @@ def attest_before_first_calculation(
             settle=settle,
         )
     except PriorValueAttestationError as error:
-        raise PersonaMaterialisationError(f"{where}: {error}") from error
-    if attested.unoffered:
-        raise PersonaMaterialisationError(
-            f"{where}: the application does not offer the attestation of {', '.join(attested.unoffered)}"
-        )
+        raise PersonaMaterialisationError(f"{modelo} {year} {period}: {error}") from error
 
 
 def _enter_work_inputs(world: PersonaWorld, work_unit_id: str) -> None:
