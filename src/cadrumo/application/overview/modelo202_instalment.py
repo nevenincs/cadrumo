@@ -138,14 +138,23 @@ def decide_modelo_202_instalment(facts: Modelo202InstalmentFacts) -> Modelo202In
     if facts.election_stated is None:
         return Modelo202InstalmentOutcome.ELECTION_UNSTATED
     if facts.election_stated:
-        calculation = facts.calculation
-        if calculation is None or not calculation.current:
-            return Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION
-        if not calculation.verified:
-            return Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION
-        if calculation.result > 0:
-            return Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE
-        return Modelo202InstalmentOutcome.ELECTED_CALCULATION_ZERO
+        return _decide_elected_instalment(facts.calculation)
+    return _decide_unelected_instalment(facts)
+
+
+def _decide_elected_instalment(calculation: Modelo202CalculationReading | None) -> Modelo202InstalmentOutcome:
+    """Decide an instalment under the art. 40.3 election from its own calculation."""
+    if calculation is None or not calculation.current:
+        return Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION
+    if not calculation.verified:
+        return Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION
+    if calculation.result > 0:
+        return Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE
+    return Modelo202InstalmentOutcome.ELECTED_CALCULATION_ZERO
+
+
+def _decide_unelected_instalment(facts: Modelo202InstalmentFacts) -> Modelo202InstalmentOutcome:
+    """Decide an instalment without the election from the art. 40.2 base."""
     if facts.base_source is None:
         return Modelo202InstalmentOutcome.BASE_UNDECLARED
     if facts.no_prior_return:

@@ -43,7 +43,7 @@ from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.time.clock import now
 from ...domain.calculations.registry.applicability import derive_modelo_applicability, taxpayer_model_is_declared
-from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict, ModeloApplicability
 from ...domain.deadlines.domiciliation_cutoff import resolve_payment_cutoff
 from ...domain.deadlines.effective_close import EffectiveFilingDeadline, effective_filing_deadline
 from ...domain.deadlines.engine import DeadlineEngine, ScheduleProducer
@@ -612,6 +612,40 @@ def _schedules_for_calendar_range(
     return deadline_engine, schedules, unresolved_years
 
 
+def _obligation_applicability(
+    obligation: ModeloDeadline,
+    profile: TaxpayerProfile,
+    applicability_evidence: FilingYearApplicabilityEvidence | None,
+    operation: PinnedAuthorityOperation,
+) -> ModeloApplicability:
+    """Derive the obligation's applicability from the profile and ledger facts of its filing year."""
+    filing_year = obligation.period.filing_year
+    return derive_modelo_applicability(
+        profile if applicability_evidence is None else applicability_evidence.profile_for_year(filing_year),
+        obligation.modelo,
+        reference_date=date(filing_year, 12, 31),
+        operation=operation,
+        ledger_payer_facts=(
+            {} if applicability_evidence is None else applicability_evidence.ledger_payer_facts_for_year(filing_year)
+        ),
+    )
+
+
+def _suppressed_calendar_entry(
+    obligation: ModeloDeadline,
+    applicability: ModeloApplicability,
+    doors: tuple[DeclaredNextAction, ...],
+) -> SuppressedCalendarEntry:
+    """Record why a non-applicable obligation is left off the calendar, with the doors that move it on."""
+    return SuppressedCalendarEntry(
+        modelo=obligation.modelo,
+        period=obligation.period,
+        verdict=applicability.verdict,
+        reason=applicability.reason,
+        actions=doors,
+    )
+
+
 def _calendar_obligation_projection(
     obligation: ModeloDeadline,
     *,
@@ -643,15 +677,7 @@ def _calendar_obligation_projection(
         operation=operation,
     )
     filing_year = obligation.period.filing_year
-    applicability = derive_modelo_applicability(
-        profile if applicability_evidence is None else applicability_evidence.profile_for_year(filing_year),
-        obligation.modelo,
-        reference_date=date(filing_year, 12, 31),
-        operation=operation,
-        ledger_payer_facts=(
-            {} if applicability_evidence is None else applicability_evidence.ledger_payer_facts_for_year(filing_year)
-        ),
-    )
+    applicability = _obligation_applicability(obligation, profile, applicability_evidence, operation)
     disagreeing_modelo = (
         obligation.modelo if applicability.evidence_disagreement is not None and intersects_range else None
     )
@@ -670,13 +696,7 @@ def _calendar_obligation_projection(
             election_unstated_modelo = obligation.modelo
     if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
         suppressed_entry = (
-            SuppressedCalendarEntry(
-                modelo=obligation.modelo,
-                period=obligation.period,
-                verdict=applicability.verdict,
-                reason=applicability.reason,
-                actions=doors,
-            )
+            _suppressed_calendar_entry(obligation, applicability, doors)
             if show_suppressed and intersects_range
             else None
         )
@@ -771,6 +791,56 @@ def _undeclared_taxpayer_model_reason(profile: TaxpayerProfile) -> str:
     return tr("application.overview.calendar.taxpayer_model_undeclared.irpf_income_categories")
 
 
+def _undeclared_taxpayer_calendar(
+    profile: TaxpayerProfile,
+    calendar_range: OverviewCalendarRange,
+    *,
+    operation: PinnedAuthorityOperation,
+    today: date,
+    engine: ScheduleProducer | None,
+    events: tuple[OverviewCalendarEvent, ...],
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    work_units: tuple[WorkUnit, ...],
+    live_censo_verified_profile_keys: tuple[str, ...] | None,
+) -> OverviewCalendar:
+    """Build the incomplete calendar of a profile whose taxpayer model is undeclared."""
+    # An undeclared taxpayer model yields an explicit
+    # incomplete answer — never a confident wrong obligation. The
+    # engine does not fall back to the autónomo guess. The profile's own
+    # local declarations are not guesses: each keeps its dated entry from
+    # its registry window, so the operator still sees when it is due.
+    # Coverage is reconciled with those declarations surfaced and nothing
+    # else, so the report honestly shows the rest of the obligation universe
+    # as advised/undetermined rather than empty — an undeclared profile can
+    # under-scope the most, so it must not read as "nothing to file".
+    work_entries = local_work_unit_entries(
+        work_units,
+        calendar_range=calendar_range,
+        today=today,
+        operation=operation,
+        engine=engine,
+        filing_evidence=filing_evidence,
+        live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+    )
+    return OverviewCalendar(
+        range=calendar_range,
+        evaluated_on=today,
+        entries=work_entries,
+        generated_at=now(),
+        warnings=(),
+        completeness=CalendarCompleteness(),
+        taxpayer_model_declared=False,
+        incomplete_reason=_undeclared_taxpayer_model_reason(profile),
+        events=calendar_events_with_filing_evidence(events, filing_evidence),
+        coverage=build_obligation_coverage(
+            profile,
+            {str(unit.modelo) for unit in work_units if unit.state is not WorkUnitState.DESCARTADO},
+            today=today,
+            operation=operation,
+        ),
+    )
+
+
 def build_overview_calendar(
     profile: TaxpayerProfile,
     calendar_range: OverviewCalendarRange,
@@ -801,40 +871,16 @@ def build_overview_calendar(
     ``profile`` is a :class:`TaxpayerProfile`.
     """
     if not taxpayer_model_is_declared(profile):
-        # An undeclared taxpayer model yields an explicit
-        # incomplete answer — never a confident wrong obligation. The
-        # engine does not fall back to the autónomo guess. The profile's own
-        # local declarations are not guesses: each keeps its dated entry from
-        # its registry window, so the operator still sees when it is due.
-        # Coverage is reconciled with those declarations surfaced and nothing
-        # else, so the report honestly shows the rest of the obligation universe
-        # as advised/undetermined rather than empty — an undeclared profile can
-        # under-scope the most, so it must not read as "nothing to file".
-        work_entries = local_work_unit_entries(
-            work_units,
-            calendar_range=calendar_range,
-            today=today,
+        return _undeclared_taxpayer_calendar(
+            profile,
+            calendar_range,
             operation=operation,
+            today=today,
             engine=engine,
+            events=events,
             filing_evidence=filing_evidence,
+            work_units=work_units,
             live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-        )
-        return OverviewCalendar(
-            range=calendar_range,
-            evaluated_on=today,
-            entries=work_entries,
-            generated_at=now(),
-            warnings=(),
-            completeness=CalendarCompleteness(),
-            taxpayer_model_declared=False,
-            incomplete_reason=_undeclared_taxpayer_model_reason(profile),
-            events=calendar_events_with_filing_evidence(events, filing_evidence),
-            coverage=build_obligation_coverage(
-                profile,
-                {str(unit.modelo) for unit in work_units if unit.state is not WorkUnitState.DESCARTADO},
-                today=today,
-                operation=operation,
-            ),
         )
 
     deadline_engine, schedules, unresolved_years = _schedules_for_calendar_range(
