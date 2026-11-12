@@ -64,7 +64,6 @@ _C0511 = validated_casilla_id("0511", surface="test_renta_chain_behaviour casill
 _C0513 = validated_casilla_id("0513", surface="test_renta_chain_behaviour casilla id")
 _C0514 = validated_casilla_id("0514", surface="test_renta_chain_behaviour casilla id")
 _C0515 = validated_casilla_id("0515", surface="test_renta_chain_behaviour casilla id")
-_C0516 = validated_casilla_id("0516", surface="test_renta_chain_behaviour casilla id")
 _C0517 = validated_casilla_id("0517", surface="test_renta_chain_behaviour casilla id")
 _C0518 = validated_casilla_id("0518", surface="test_renta_chain_behaviour casilla id")
 _C0519 = validated_casilla_id("0519", surface="test_renta_chain_behaviour casilla id")
@@ -154,8 +153,9 @@ def _base_2025_inputs() -> dict[CasillaId, Decimal]:
         # engine (renta-profile-minimo-descendientes-estatal binding)
         # and cannot be supplied
         # as inputs; see the binding_values entry in _scenario_2025.
-        _C0515: Decimal("0"),
-        _C0516: Decimal("0"),
+        # 0515 and 0516 are now computed from the mínimo por ascendientes
+        # aggregates (renta-profile-minimo-ascendientes-estatal and
+        # -autonomico) and cannot be supplied as inputs; see the same entries.
         _C0517: Decimal("0"),
         _C0518: Decimal("0"),
         # 0505 is now computed via renta-base-liquidable-general-sometida-a-gravamen
@@ -225,6 +225,10 @@ def _scenario_2025(
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine).
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            # No ascendant rows: the art. 59/61 LIRPF mínimo por ascendientes
+            # aggregates, state and autonomic, are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
@@ -379,6 +383,10 @@ def test_base_liquidable_general_applies_reductions() -> None:
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine).
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            # No ascendant rows: the art. 59/61 LIRPF mínimo por ascendientes
+            # aggregates, state and autonomic, are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
         },
         # casado: the first Art. 82 unit (Art. 84.2.3º), whose reducción is €3,400.
         enum_binding_values={
