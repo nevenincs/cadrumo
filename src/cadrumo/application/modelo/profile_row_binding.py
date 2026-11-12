@@ -41,6 +41,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider, ProfileRowsSelector
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceProvenance, RowBindingValue
+from .profile_read_recording import fact_items_under
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
@@ -74,7 +75,8 @@ def profile_row_bindings(snapshot: RegistrySnapshot) -> tuple[BindingDefinition,
 
 def _row_indexes(selector: ProfileRowsSelector, fact_index: Mapping[str, UserProfileFactValue]) -> tuple[int, ...]:
     pattern = re.compile(rf"^{re.escape(selector.object_path)}\.(\d+)\.[a-z][a-z0-9_]*$")
-    found = {int(match.group(1)) for path in fact_index if (match := pattern.match(path)) is not None}
+    section = fact_items_under(fact_index, f"{selector.object_path}.")
+    found = {int(match.group(1)) for path in section if (match := pattern.match(path)) is not None}
     return tuple(sorted(found))
 
 

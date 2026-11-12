@@ -30,6 +30,7 @@ from .profile_derived_facts import (
     renta_family_profile_from_facts,
     resolved_minimo_descendientes_thresholds,
 )
+from .profile_read_recording import fact_items_under
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -119,7 +120,7 @@ def resolve_maternidad_meses(
 def _fact_index_declares_maternidad_months(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
     """Return whether the profile fact projection declares maternity months."""
     return any(
-        key.startswith("renta_family.descendiente.") and key.endswith(".meses_madre_trabajo") for key in fact_index
+        key.endswith(".meses_madre_trabajo") for key in fact_items_under(fact_index, "renta_family.descendiente.")
     )
 
 

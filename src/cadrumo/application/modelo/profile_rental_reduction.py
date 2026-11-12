@@ -26,7 +26,7 @@ from ...domain.calculations.registry.rental_reduction import (
     resolve_rental_reduction_art232_tier_catalogue,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.contribuyente.inmueble_facts import arrendamientos_from_facts
+from ...domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, arrendamientos_from_facts
 from ...domain.renta.rental_reduction_derivation import (
     RentalReductionDerivation,
     RentalReductionRefusal,
@@ -36,6 +36,7 @@ from ...domain.renta.rental_reduction_derivation import (
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.values import UserProfileFactValue
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from .profile_read_recording import fact_items_under
 from .semantic_role_resolution import casilla_id_for_unique_semantic_role
 
 if TYPE_CHECKING:
@@ -136,7 +137,7 @@ def _derive(
     operation: PinnedAuthorityOperation,
 ) -> RentalReductionDerivation | None:
     try:
-        leases = arrendamientos_from_facts(fact_index)
+        leases = arrendamientos_from_facts(fact_items_under(fact_index, f"{ARRENDAMIENTO_SECTION}."))
     except ProfileAnswerTypeError:
         return RentalReductionDerivation(aplicable=None, refusal=RentalReductionRefusal.LEASE_UNREADABLE)
     active = leases_active_in(leases, year=devengo.year)
