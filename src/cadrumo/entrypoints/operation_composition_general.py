@@ -382,6 +382,19 @@ def compose_user_profile_operations(inputs: OperationCompositionInputs) -> Opera
     return built(definitions, build_user_profile_operation_registrations(definitions))
 
 
+def compose_user_profile_record_group_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the grouped read of related profile rows and the ledger rows naming them."""
+    from ..application.user_profile.record_group_operation import (
+        build_record_groups_definition,
+        build_record_groups_registration,
+    )
+    from .ledger_action_composition import load_ledger_rows_for_rental_references
+
+    del inputs
+    definition = build_record_groups_definition(load_ledger_rows_for_rental_references)
+    return built((definition,), (build_record_groups_registration(definition),))
+
+
 def compose_user_profile_history_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose user profile history operation."""
     from ..application.user_profile.history_operation import (

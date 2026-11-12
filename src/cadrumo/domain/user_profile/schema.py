@@ -185,6 +185,13 @@ class ProfileFieldDefinition(BaseModel):
     maximum: Decimal | None = None
     #: Whether the filing path carries this string field into a bounded producer record.
     carried_by_filing_record: bool = False
+    #: The repeatable section one of whose row keys this field holds.
+    #:
+    #: A field that names another row (a lease naming its property) stores the
+    #: row key as an integer. Declaring the section here lets every editor offer
+    #: the rows of that section to pick from, and lets a grouped read join the
+    #: rows, without either keeping a list of which fields are references.
+    references_section: _SectionKey | None = None
 
     @field_validator("type", mode="before")
     @classmethod
@@ -215,6 +222,15 @@ class ProfileFieldDefinition(BaseModel):
     def _code_list_offers_text(self) -> ProfileFieldDefinition:
         if self.code_list is not None and self.type is not ProfileFieldType.STRING:
             raise UserProfileValidationError("code_list is declared only on a string field")
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _row_reference_holds_a_row_key(self) -> ProfileFieldDefinition:
+        if self.references_section is not None and self.type is not ProfileFieldType.INTEGER:
+            raise UserProfileValidationError(
+                f"field {self.key!r}: a row reference is declared only on an integer field"
+            )
         return self
 
     @field_validator("required_for_modelos", mode="before")
@@ -485,6 +501,35 @@ class ProfileSchemaDefinition(BaseModel):
             duplicates = sorted({key for key in keys if keys.count(key) > 1})
             raise UserProfileValidationError(f"duplicate section keys {duplicates!r}")
         return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _row_references_name_repeatable_sections(self) -> Self:
+        """Refuse a row reference whose target is not a repeatable section, or that sits outside one."""
+        repeatable = {section.key: section.repeatable for section in self.sections}
+        for section in self.sections:
+            for field in section.fields:
+                target = field.references_section
+                if target is None:
+                    continue
+                if not repeatable.get(target, False):
+                    raise UserProfileValidationError(
+                        f"field {section.key}.{field.key}: references_section {target!r} is not a repeatable section"
+                    )
+                if not section.repeatable:
+                    raise UserProfileValidationError(
+                        f"field {section.key}.{field.key}: only a repeatable section's row names another row"
+                    )
+        return self
+
+    def row_references(self) -> tuple[tuple[str, str, str], ...]:
+        """Return each declared row reference as ``(section, field, referenced section)``, in schema order."""
+        return tuple(
+            (section.key, field.key, field.references_section)
+            for section in self.sections
+            for field in section.fields
+            if field.references_section is not None
+        )
 
     @property
     def field_paths(self) -> tuple[str, ...]:

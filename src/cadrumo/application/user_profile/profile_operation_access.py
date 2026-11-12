@@ -34,6 +34,7 @@ from .profile_operation_contracts import (
     ProfileRepeatableRowRemoveOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
 )
+from .record_group_contracts import ProfileRecordGroupsRequest
 from .view_operation import (
     ProfileViewOperationRequest,
 )
@@ -90,7 +91,9 @@ def resolve_profile_view_access(
     door and a session without one can still read the profile.
     """
     payload = request.payload
-    if not isinstance(payload, ProfileViewOperationRequest | ProfileImputationElectionReadRequest):
+    if not isinstance(
+        payload, ProfileViewOperationRequest | ProfileImputationElectionReadRequest | ProfileRecordGroupsRequest
+    ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _bind_exact_profile_access(
         request,

@@ -449,7 +449,11 @@ def test_the_entry_options_read_serves_the_periods_with_the_vocabularies(
         authority_operation=operation,
     )
 
-    asyncio.run(LedgerEntryOptionsExecutor().execute(request, cast(OperationExecutorContext, context)))
+    asyncio.run(
+        LedgerEntryOptionsExecutor(lambda _bucket, _operation: None).execute(
+            request, cast(OperationExecutorContext, context)
+        )
+    )
 
     (stored,) = operands.stored
     assert isinstance(stored, LedgerEntryOptionsExecutionResult)

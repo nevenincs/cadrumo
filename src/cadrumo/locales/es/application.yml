@@ -1291,6 +1291,19 @@ application:
         intra_eu_investment: Adquisiciones intracomunitarias de bienes de inversión
         reagp_compensation: Compensaciones del REAGP
         rectification: Rectificación de deducciones
+      gasto_capital_inmobiliario:
+        comunidad: Cuotas de la comunidad de propietarios
+        defensa_juridica: Gastos de defensa jurídica
+        formalizacion_contrato: Gastos de formalización del contrato
+        interes_financiacion: Intereses y demás gastos de financiación
+        mejora: Mejora, que se suma al valor de adquisición
+        otros: Otros gastos fiscalmente deducibles
+        primas_seguro: Primas de contratos de seguro
+        reparacion_conservacion: Gastos de reparación y conservación
+        saldos_dudoso_cobro: Saldos de dudoso cobro
+        servicios_terceros: Servicios prestados por terceros
+        suministros: Servicios y suministros
+        tributos: Tributos, recargos y tasas
       m210_income_concept:
         canones: Cánones
         dividend: Dividendos
@@ -4444,6 +4457,34 @@ application:
       kdf_at_fallback: La contraseña de este perfil tiene la protección mínima, porque
         este equipo no pudo confirmar a tiempo un ajuste más fuerte al crear el perfil.
         Cambia la contraseña para reforzarla; puedes volver a introducir la misma.
+    record_groups:
+      door:
+        renta_arrendamiento:
+          edit: Editar arrendamiento
+          remove: Eliminar arrendamiento
+        renta_inmueble:
+          edit: Editar inmueble
+          remove: Eliminar inmueble
+      kind:
+        ledger_row: Movimiento
+        renta_arrendamiento: Arrendamiento
+        renta_inmueble: Inmueble
+        rental_property: Inmueble arrendado
+      refusal:
+        item_too_large: Una entrada de esta lista es demasiado grande para mostrarla
+          en una página.
+        stale_revision: El perfil o sus movimientos han cambiado después de leer esta
+          lista. Vuelve a leer la lista.
+      relation:
+        renta_arrendamiento:
+          inmueble: Arrendamiento de este inmueble
+        renta_inmueble:
+          inmueble_principal: Anejo arrendado junto con este inmueble
+      renta_arrendamiento:
+        summary_ended: Arrendamiento %{row}, del %{start} al %{end}
+        summary_open: Arrendamiento %{row}, desde el %{start}
+      renta_inmueble:
+        summary: 'Inmueble %{row}: %{place}'
   wizard:
     errors:
       command_input_invalid: 'Los datos del perfil no superaron la validación: %{details}'

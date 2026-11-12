@@ -19,33 +19,42 @@ the periods holding each day asked.
 
 The statement formats this installation parses are served with them, so a
 window offers no format whose parser is not installed.
+
+The profile's own rental rows are served as the two link families a ledger row
+names them by: each lease and each property, valued by the row key a ledger row
+stores and worded by the row's summary in ``output_language``. They are read from
+the exact profile's record, so a form offers only rows the profile holds.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
-from typing import Final, Literal
+from typing import Final, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.config import override_settings
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
+from ...domain.calculations.registry.gasto_capital_inmobiliario import resolve_gasto_capital_inmobiliario_catalogue
 from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ...domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
 from ...domain.calculations.registry.prorrata_register_catalogue import resolve_prorrata_register_catalogue
 from ...domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
+from ...domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, INMUEBLE_SECTION, rows_from_facts
 from ...domain.invoices.business_premises import SituacionInmueble
 from ...domain.invoices.enums import default_invoice_class, invoice_class_rectificativa, invoice_class_simplificada
 from ...domain.iva.establishment import catalogued_country_codes
@@ -63,6 +72,7 @@ from ...domain.usage_ratios.model import eligible_usage_ratio_categories
 from ..export.tabular import ExportSerializationFormat
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
+from ..operations.error_detail import served_words_language
 from ..operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
@@ -73,6 +83,8 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from ..user_profile.record_row_words import record_row_summary_words
+from ..user_profile.rental_records import canonical_rental_ref
 from .actions_import import installed_ledger_providers
 from .entry_limits import LedgerEntryLimitsProjection, ledger_entry_limits
 from .invoice_label_vocabulary import CURRENCY_CODES
@@ -102,7 +114,13 @@ type EntryOptionFamily = Literal[
     "capital_good_disposal",
     "import_format",
     "export_format",
+    "gasto_capital_inmobiliario",
+    "rental_lease",
+    "rental_property",
 ]
+
+type EntryOptionProfileFacts = Callable[[str, PinnedAuthorityOperation], Mapping[str, str] | None]
+"""Read the path-keyed facts of one profile under the operation's pinned authority; ``None`` when it holds none."""
 
 
 class LedgerEntryOptionsRequest(BaseModel):
@@ -121,13 +139,28 @@ class LedgerEntryOptionsRequest(BaseModel):
 
 
 class LedgerEntryOptionProjection(BaseModel):
-    """One offered value, the key of its word where the backend words it, and the group it is filed under."""
+    """One offered value, the key of its word where the backend words it, and the group it is filed under.
+
+    A value that names a row of the profile has no catalogue word: its label is
+    served as ``label_words`` in ``label_words_language`` instead.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     value: str
     label_key: str | None = None
     group: str | None = None
+    label_words: str | None = None
+    label_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _label_words_travel_with_their_language(self) -> Self:
+        if (self.label_words is None) != (self.label_words_language is None):
+            raise ValueError("an option's label words and their language travel together")
+        if self.label_words is not None and self.label_key is not None:
+            raise ValueError("an option is worded by a catalogue key or by served words, not both")
+        return self
 
 
 class LedgerEntryOptionFamilyProjection(BaseModel):
@@ -274,6 +307,32 @@ def _usage_ratio_options(
     return _plain(category for category in catalogue.categories if category in eligible)
 
 
+def _rental_row_options(
+    section_key: str, profile_facts: Mapping[str, str] | None, language: OutputLanguage
+) -> tuple[LedgerEntryOptionProjection, ...]:
+    """Offer each stored row of a rental section by the reference a ledger row stores, worded by its summary."""
+    if profile_facts is None:
+        return ()
+    with override_settings(cadrumo_output_language=language.value):
+        served = served_words_language()
+        return tuple(
+            LedgerEntryOptionProjection(
+                value=canonical_rental_ref(row_key),
+                label_words=record_row_summary_words(section_key, row_key, row),
+                label_words_language=served,
+            )
+            for row_key, row in sorted(rows_from_facts(section_key, profile_facts).items())
+        )
+
+
+def _rental_concept_options(
+    on_date: date | None, operation: PinnedAuthorityOperation
+) -> tuple[LedgerEntryOptionProjection, ...]:
+    """Offer the rental expense concepts in the registry's order, each worded under its own token."""
+    catalogue = resolve_gasto_capital_inmobiliario_catalogue(effective_date=on_date, authority=operation)
+    return _worded("gasto_capital_inmobiliario", tuple(str(concept.token) for concept in catalogue.concepts))
+
+
 def ledger_entry_options(
     profile_id: UUID,
     *,
@@ -281,8 +340,13 @@ def ledger_entry_options(
     on_date: date | None = None,
     periods: LedgerPeriodsQuery | None = None,
     language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
+    profile_facts: Mapping[str, str] | None = None,
 ) -> LedgerEntryOptionsProjection:
-    """Read every vocabulary from its owner, under one pinned authority generation."""
+    """Read every vocabulary from its owner, under one pinned authority generation.
+
+    ``profile_facts`` are the facts of the profile ``profile_id`` names; without
+    them the profile holds no rental row to offer.
+    """
     # Choices offered for a new entry read the IVA categories in force on the stated day, else today.
     category_date = on_date or today_madrid()
     prorrata = resolve_prorrata_register_catalogue(effective_date=on_date, authority=operation)
@@ -321,6 +385,9 @@ def ledger_entry_options(
         ("capital_good_disposal", _plain(capital.disposal_regime_choices)),
         ("import_format", _plain(installed_ledger_providers())),
         ("export_format", _plain(ExportSerializationFormat)),
+        ("gasto_capital_inmobiliario", _rental_concept_options(on_date, operation)),
+        ("rental_lease", _rental_row_options(ARRENDAMIENTO_SECTION, profile_facts, language)),
+        ("rental_property", _rental_row_options(INMUEBLE_SECTION, profile_facts, language)),
     )
     return LedgerEntryOptionsProjection(
         profile_id=profile_id,
@@ -336,6 +403,10 @@ def ledger_entry_options(
 
 class LedgerEntryOptionsExecutor:
     """Answer the vocabularies inside the exact profile's worker."""
+
+    def __init__(self, profile_facts: EntryOptionProfileFacts) -> None:
+        """Bind the read of the profile facts the rental link families are drawn from."""
+        self._profile_facts = profile_facts
 
     async def execute(
         self,
@@ -354,6 +425,7 @@ class LedgerEntryOptionsExecutor:
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID)
+        profile_facts = await asyncio.to_thread(self._profile_facts, bucket_id, context.authority_operation)
         options = await asyncio.to_thread(
             ledger_entry_options,
             request.payload.profile_id,
@@ -361,6 +433,7 @@ class LedgerEntryOptionsExecutor:
             on_date=request.payload.on_date,
             periods=request.payload.periods,
             language=request.payload.output_language,
+            profile_facts=profile_facts,
         )
         return await context.operands.put(LedgerEntryOptionsExecutionResult(result=options), written_at=now())
 
@@ -378,15 +451,15 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     return result.result
 
 
-def build_ledger_entry_options_definition() -> OperationDefinition:
-    """Declare the exact-profile read of the ledger entry vocabularies."""
+def build_ledger_entry_options_definition(profile_facts: EntryOptionProfileFacts) -> OperationDefinition:
+    """Declare the exact-profile read of the ledger entry vocabularies, drawing rental rows from ``profile_facts``."""
     return build_single_phase_definition(
         definition_id=LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID,
         request_type=LedgerEntryOptionsRequest,
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerEntryOptionsExecutionResult,
         executor_type=LedgerEntryOptionsExecutor,
-        build=LedgerEntryOptionsExecutor,
+        build=lambda: LedgerEntryOptionsExecutor(profile_facts),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
     )
 
@@ -417,6 +490,7 @@ __all__ = [
     "ENTRY_OPTION_LABEL_PREFIX",
     "LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID",
     "EntryOptionFamily",
+    "EntryOptionProfileFacts",
     "LedgerEntryClassificationProjection",
     "LedgerEntryOptionFamilyProjection",
     "LedgerEntryOptionProjection",

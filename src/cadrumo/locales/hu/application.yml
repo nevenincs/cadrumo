@@ -1271,6 +1271,19 @@ application:
         intra_eu_investment: EU-n belüli beszerzés, beruházási tárgyi eszköz
         reagp_compensation: REAGP-kompenzáció
         rectification: Levonás helyesbítése
+      gasto_capital_inmobiliario:
+        comunidad: Társasházi közös költség
+        defensa_juridica: Jogi képviselet költségei
+        formalizacion_contrato: A bérleti szerződés megkötésének költségei
+        interes_financiacion: Kamatok és egyéb finanszírozási költségek
+        mejora: Felújítás, amely a beszerzési értéket növeli
+        otros: Egyéb adóból levonható költségek
+        primas_seguro: Biztosítási díjak
+        reparacion_conservacion: Javítási és állagmegóvási költségek
+        saldos_dudoso_cobro: Kétes kintlévőségek
+        servicios_terceros: Harmadik fél által nyújtott szolgáltatások
+        suministros: Szolgáltatások és közművek
+        tributos: Adók, pótlékok és illetékek
       m210_income_concept:
         canones: Jogdíj
         dividend: Osztalék
@@ -4384,6 +4397,33 @@ application:
         a profil létrehozásakor nem tudott időben erősebb beállítást megerősíteni.
         Változtasd meg a jelszót a megerősítéséhez; ugyanazt a jelszót is megadhatod
         újra.
+    record_groups:
+      door:
+        renta_arrendamiento:
+          edit: Bérlet szerkesztése
+          remove: Bérlet törlése
+        renta_inmueble:
+          edit: Ingatlan szerkesztése
+          remove: Ingatlan törlése
+      kind:
+        ledger_row: Tétel
+        renta_arrendamiento: Bérlet
+        renta_inmueble: Ingatlan
+        rental_property: Bérbe adott ingatlan
+      refusal:
+        item_too_large: A lista egyik eleme túl nagy ahhoz, hogy egy oldalon megjelenjen.
+        stale_revision: A profil vagy a tételei megváltoztak a lista beolvasása óta.
+          Olvasd be újra a listát.
+      relation:
+        renta_arrendamiento:
+          inmueble: Az ingatlan bérlete
+        renta_inmueble:
+          inmueble_principal: Az ingatlannal együtt bérbe adott tartozék
+      renta_arrendamiento:
+        summary_ended: 'Bérlet %{row}, kezdete: %{start}, vége: %{end}'
+        summary_open: 'Bérlet %{row}, kezdete: %{start}'
+      renta_inmueble:
+        summary: 'Ingatlan %{row}: %{place}'
   wizard:
     errors:
       command_input_invalid: 'A profiladatok érvényesítése sikertelen: %{details}'

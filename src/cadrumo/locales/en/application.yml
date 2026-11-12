@@ -1215,6 +1215,19 @@ application:
         intra_eu_investment: Intra-EU acquisitions, capital goods
         reagp_compensation: Farming compensation (REAGP)
         rectification: Rectified deduction
+      gasto_capital_inmobiliario:
+        comunidad: Owners' association fees
+        defensa_juridica: Legal defence
+        formalizacion_contrato: Drawing up the lease contract
+        interes_financiacion: Interest and other financing costs
+        mejora: Improvement, added to the acquisition value
+        otros: Other deductible expenses
+        primas_seguro: Insurance premiums
+        reparacion_conservacion: Repair and upkeep
+        saldos_dudoso_cobro: Doubtful debts
+        servicios_terceros: Services provided by third parties
+        suministros: Services and supplies
+        tributos: Taxes, surcharges and fees
       m210_income_concept:
         canones: Royalties
         dividend: Dividends
@@ -4226,6 +4239,33 @@ application:
         this computer could not confirm a stronger setting in time when the profile
         was created. Change the password to strengthen it; you can enter the same
         password again.
+    record_groups:
+      door:
+        renta_arrendamiento:
+          edit: Edit lease
+          remove: Remove lease
+        renta_inmueble:
+          edit: Edit property
+          remove: Remove property
+      kind:
+        ledger_row: Ledger entry
+        renta_arrendamiento: Lease
+        renta_inmueble: Property
+        rental_property: Rental property
+      refusal:
+        item_too_large: One item of this list is too large to show on a page.
+        stale_revision: The profile or its ledger entries changed after this list
+          was read. Read the list again.
+      relation:
+        renta_arrendamiento:
+          inmueble: Lease of this property
+        renta_inmueble:
+          inmueble_principal: Accessory let together with this property
+      renta_arrendamiento:
+        summary_ended: Lease %{row}, from %{start} to %{end}
+        summary_open: Lease %{row}, from %{start}
+      renta_inmueble:
+        summary: 'Property %{row}: %{place}'
   wizard:
     errors:
       command_input_invalid: 'The profile details are invalid: %{details}'

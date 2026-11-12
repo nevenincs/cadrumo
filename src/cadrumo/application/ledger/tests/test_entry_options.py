@@ -22,6 +22,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
+from ....domain.calculations.registry.gasto_capital_inmobiliario import resolve_gasto_capital_inmobiliario_catalogue
 from ....domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ....domain.calculations.registry.iva_deduction_catalogue import resolve_iva_deduction_catalogue
@@ -109,6 +110,9 @@ def test_every_family_is_served_once(served: dict[str, tuple[tuple[str, str | No
         "capital_good_disposal",
         "import_format",
         "export_format",
+        "gasto_capital_inmobiliario",
+        "rental_lease",
+        "rental_property",
     }
 
 
@@ -214,6 +218,24 @@ def test_prorrata_provenances_and_sector_letters_are_the_register_vocabularies(
     assert _values(served, "prorrata_sector_letter")
     for provenance in _values(served, "prorrata_provenance"):
         assert str(catalogue.require_provenance(provenance)) == provenance
+
+
+def test_rental_expense_concepts_are_the_registry_vocabulary_in_its_order_each_worded_under_its_token(
+    served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
+) -> None:
+    catalogue = resolve_gasto_capital_inmobiliario_catalogue(authority=operation)
+
+    assert _values(served, "gasto_capital_inmobiliario") == [str(concept.token) for concept in catalogue.concepts]
+    for token, key in served["gasto_capital_inmobiliario"]:
+        assert str(catalogue.require(token)) == token
+        assert key == f"application.ledger.entry_options.gasto_capital_inmobiliario.{token}"
+
+
+def test_a_profile_without_stated_facts_is_offered_no_rental_row(
+    served: dict[str, tuple[tuple[str, str | None], ...]],
+) -> None:
+    assert served["rental_lease"] == ()
+    assert served["rental_property"] == ()
 
 
 def test_capital_goods_kinds_and_disposals_are_the_register_vocabularies(
@@ -414,6 +436,10 @@ class _Events:
         del name
 
 
+def _no_profile_facts(bucket_id: str, operation: PinnedAuthorityOperation) -> None:
+    del bucket_id, operation
+
+
 def _context(operation: PinnedAuthorityOperation, *, definition_id: str, subject: str) -> SimpleNamespace:
     return SimpleNamespace(
         identity=OperationIdentity(operation_id="a" * 64, definition_id=definition_id, subject_ref=subject),
@@ -436,13 +462,33 @@ def test_the_executor_answers_for_the_active_profile(
         payload=LedgerEntryOptionsRequest(profile_id=_PROFILE),
     )
     context = _context(operation, definition_id=request.definition_id, subject=subject)
+    read: list[str] = []
 
-    asyncio.run(LedgerEntryOptionsExecutor().execute(request, cast(OperationExecutorContext, context)))
+    def profile_facts(bucket_id: str, pinned: PinnedAuthorityOperation) -> dict[str, str]:
+        assert pinned is operation
+        read.append(bucket_id)
+        return {
+            "renta_inmueble.0.situacion": "5",
+            "renta_arrendamiento.2.inmueble": "0",
+            "renta_arrendamiento.2.fecha_contrato": "2025-01-01",
+            "renta_arrendamiento.2.fecha_inicio": "2025-01-01",
+        }
+
+    asyncio.run(LedgerEntryOptionsExecutor(profile_facts).execute(request, cast(OperationExecutorContext, context)))
 
     (stored,) = context.operands.stored
     assert isinstance(stored, LedgerEntryOptionsExecutionResult)
     assert isinstance(stored.result, LedgerEntryOptionsProjection)
     assert stored.result.profile_id == _PROFILE
+    # The rental rows offered are the exact profile's own, valued by the reference a ledger row stores.
+    assert read == [str(_PROFILE)]
+    families = {family.family: family.options for family in stored.result.families}
+    assert [option.value for option in families["rental_property"]] == ["0"]
+    assert [option.value for option in families["rental_lease"]] == ["2"]
+    assert all(
+        option.label_words and option.label_words_language is not None and option.label_key is None
+        for option in (*families["rental_property"], *families["rental_lease"])
+    )
 
 
 def test_the_executor_refuses_another_active_profile(
@@ -460,14 +506,16 @@ def test_the_executor_refuses_another_active_profile(
     context = _context(operation, definition_id=request.definition_id, subject=subject)
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        asyncio.run(LedgerEntryOptionsExecutor().execute(request, cast(OperationExecutorContext, context)))
+        asyncio.run(
+            LedgerEntryOptionsExecutor(_no_profile_facts).execute(request, cast(OperationExecutorContext, context))
+        )
 
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
     assert context.operands.stored == []
 
 
 def _registration(*, context_profile: UUID = _PROFILE) -> tuple[OperationRegistry, OperationAccessContext]:
-    definition = build_ledger_entry_options_definition()
+    definition = build_ledger_entry_options_definition(_no_profile_facts)
     registration = build_ledger_entry_options_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     return registry, OperationAccessContext(

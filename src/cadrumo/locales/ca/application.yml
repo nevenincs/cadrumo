@@ -1283,6 +1283,19 @@ application:
         intra_eu_investment: Adquisicions intracomunitàries de béns d'inversió
         reagp_compensation: Compensacions del REAGP
         rectification: Rectificació de deduccions
+      gasto_capital_inmobiliario:
+        comunidad: Quotes de la comunitat de propietaris
+        defensa_juridica: Despeses de defensa jurídica
+        formalizacion_contrato: Despeses de formalització del contracte
+        interes_financiacion: Interessos i altres despeses de finançament
+        mejora: Millora, que se suma al valor d'adquisició
+        otros: Altres despeses fiscalment deduïbles
+        primas_seguro: Primes de contractes d'assegurança
+        reparacion_conservacion: Despeses de reparació i conservació
+        saldos_dudoso_cobro: Saldos de cobrament dubtós
+        servicios_terceros: Serveis prestats per tercers
+        suministros: Serveis i subministraments
+        tributos: Tributs, recàrrecs i taxes
       m210_income_concept:
         canones: Cànons
         dividend: Dividends
@@ -4437,6 +4450,34 @@ application:
         aquest ordinador no va poder confirmar a temps una configuració més forta
         quan es va crear el perfil. Canvia la contrasenya per reforçar-la; pots tornar
         a introduir la mateixa.
+    record_groups:
+      door:
+        renta_arrendamiento:
+          edit: Edita l'arrendament
+          remove: Elimina l'arrendament
+        renta_inmueble:
+          edit: Edita l'immoble
+          remove: Elimina l'immoble
+      kind:
+        ledger_row: Moviment
+        renta_arrendamiento: Arrendament
+        renta_inmueble: Immoble
+        rental_property: Immoble arrendat
+      refusal:
+        item_too_large: Una entrada d'aquesta llista és massa gran per mostrar-la
+          en una pàgina.
+        stale_revision: El perfil o els seus moviments han canviat després de llegir
+          aquesta llista. Torna a llegir la llista.
+      relation:
+        renta_arrendamiento:
+          inmueble: Arrendament d'aquest immoble
+        renta_inmueble:
+          inmueble_principal: Annex arrendat juntament amb aquest immoble
+      renta_arrendamiento:
+        summary_ended: Arrendament %{row}, del %{start} al %{end}
+        summary_open: Arrendament %{row}, des del %{start}
+      renta_inmueble:
+        summary: 'Immoble %{row}: %{place}'
   wizard:
     errors:
       command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'

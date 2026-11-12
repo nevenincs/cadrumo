@@ -165,6 +165,7 @@ _LOCAL_READS: Final = (
     "profile.history.timeline",
     "user-profile.censo-prepare",
     "user-profile.imputation-election.read",
+    "user-profile.record-groups",
     "user-profile.recovery.status",
     "user-profile.view",
     "workflow.resume.context",
