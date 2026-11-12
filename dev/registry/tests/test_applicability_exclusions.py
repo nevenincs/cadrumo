@@ -130,7 +130,7 @@ def _persona(categories: tuple[str, ...], iva_regime: str, **facts: object) -> T
 
 
 def _m347(profile: TaxpayerProfile) -> ModeloApplicability:
-    return derive_modelo_applicability(profile, "347", today=_TODAY, authority=compiled_bundled_authority())
+    return derive_modelo_applicability(profile, "347", reference_date=_TODAY, authority=compiled_bundled_authority())
 
 
 def _m347_rule() -> ModeloApplicabilityRule:
@@ -380,7 +380,7 @@ _ART109_FACT = "art109_activity_income_withholding_ge_70pct"
 
 
 def _m130(profile: TaxpayerProfile) -> ModeloApplicability:
-    return derive_modelo_applicability(profile, "130", today=_TODAY, authority=compiled_bundled_authority())
+    return derive_modelo_applicability(profile, "130", reference_date=_TODAY, authority=compiled_bundled_authority())
 
 
 def _autonomo(**facts: object) -> TaxpayerProfile:
@@ -465,7 +465,7 @@ _RETENEDOR_PAYER_FACTS: dict[str, dict[str, object]] = {
 def test_a_natural_person_without_activity_is_not_a_retenedor(modelo: str) -> None:
     profile = _persona(("capital_inmobiliario",), "NO_APLICA", **_RETENEDOR_PAYER_FACTS[modelo])
 
-    result = derive_modelo_applicability(profile, modelo, today=_TODAY, authority=compiled_bundled_authority())
+    result = derive_modelo_applicability(profile, modelo, reference_date=_TODAY, authority=compiled_bundled_authority())
 
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert _ART_76 in result.legal_refs
@@ -476,7 +476,7 @@ def test_a_natural_person_without_activity_is_not_a_retenedor(modelo: str) -> No
 def test_a_natural_person_with_activity_that_pays_withheld_income_is_a_retenedor(modelo: str) -> None:
     profile = _persona(("actividad_economica",), "GENERAL", iva=_iva(), **_RETENEDOR_PAYER_FACTS[modelo])
 
-    result = derive_modelo_applicability(profile, modelo, today=_TODAY, authority=compiled_bundled_authority())
+    result = derive_modelo_applicability(profile, modelo, reference_date=_TODAY, authority=compiled_bundled_authority())
 
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
@@ -484,7 +484,10 @@ def test_a_natural_person_with_activity_that_pays_withheld_income_is_a_retenedor
 @pytest.mark.parametrize("modelo", sorted(_RETENEDOR_PAYER_FACTS))
 def test_a_legal_entity_that_pays_withheld_income_stays_a_retenedor(modelo: str) -> None:
     result = derive_modelo_applicability(
-        _sociedad(**_RETENEDOR_PAYER_FACTS[modelo]), modelo, today=_TODAY, authority=compiled_bundled_authority()
+        _sociedad(**_RETENEDOR_PAYER_FACTS[modelo]),
+        modelo,
+        reference_date=_TODAY,
+        authority=compiled_bundled_authority(),
     )
 
     assert result.verdict is ApplicabilityVerdict.APPLICABLE

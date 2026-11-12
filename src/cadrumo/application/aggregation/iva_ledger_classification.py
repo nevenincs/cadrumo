@@ -10,7 +10,6 @@ from typing import Final
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr as render_tr
 from ...core.period import Period
-from ...core.time.clock import today_madrid
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
 )
@@ -305,7 +304,7 @@ def validate_intracom_export_counterparty(
     counterparty_country: str | None,
     eu_member_state: EUMemberState | None,
     identification_state: EUMemberState | None,
-    effective_date: date | None = None,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregationIssue | None:
     """Return a gate issue when the counterparty/category coupling is violated.
@@ -349,7 +348,7 @@ def validate_intracom_export_counterparty(
                 ),
             )
     if category in _registry_export_categories(
-        effective_date=effective_date or today_madrid(),
+        effective_date=effective_date,
         operation=operation,
     ):
         if eu_member_state is not None:

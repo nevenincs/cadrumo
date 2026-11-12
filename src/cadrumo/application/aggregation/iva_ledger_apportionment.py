@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 
 from ...core.decimal.constants import HUNDRED
@@ -12,7 +13,6 @@ from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.prorrata_register import (
     ProrrataRegisterRegime,
 )
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.ids import BindingId
@@ -237,6 +237,7 @@ def _apply_especial_apportionment(
 def _partition_by_input_classification(
     observations: Sequence[IvaLedgerObservation],
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> dict[InputClassification, list[IvaLedgerObservation]]:
     """Bucket ``observations`` by their art. 106 input classification.
@@ -255,7 +256,6 @@ def _partition_by_input_classification(
             classification the pinned vocabulary does not list. No deduction
             percentage exists for it, so it is refused rather than routed.
     """
-    effective_date = today_madrid()
     partitions: dict[InputClassification, list[IvaLedgerObservation]] = {
         classification: []
         for classification in input_classification_tokens(effective_date=effective_date, authority=operation)
@@ -343,7 +343,7 @@ def _regime_partitions(
         )
     partitions: list[IvaDeducibleCuotaPartition] = []
     for classification, partition_observations in _partition_by_input_classification(
-        observations, operation=operation
+        observations, effective_date=revision.valid_from, operation=operation
     ).items():
         if not partition_observations:
             continue
@@ -355,7 +355,7 @@ def _regime_partitions(
                 input_classification=classification,
                 deduction_percentage=deductible_percentage_for(classification, percentage),
                 regularisable=resolve_input_classification_definition(
-                    classification, authority=operation
+                    classification, effective_date=revision.valid_from, authority=operation
                 ).uses_general_percentage,
                 gross_by_binding={
                     binding_id: values.get(binding_id, Decimal("0")) for binding_id in deducible_binding_ids

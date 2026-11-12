@@ -44,6 +44,8 @@ from ....domain.iva.components import category_components
 from ....domain.iva.invoice_classification import invoice_line_to_iva_observation
 from ....domain.iva.schema import InvoiceKind
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 _YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,7 +67,7 @@ def test_a_zero_cuota_category_still_requires_its_base(category: IvaCategory) ->
     the declaration despite carrying no cuota.
     """
     with bundled_indexed_authority().operation():
-        components = category_components(category, InvoiceKind.ISSUED)
+        components = category_components(category, InvoiceKind.ISSUED, effective_date=_ON_DATE)
 
     assert components.base.value == "required", f"{category.value} should require a base"
     assert components.cuota.value == "zero_by_law", f"{category.value} should carry no cuota by law"

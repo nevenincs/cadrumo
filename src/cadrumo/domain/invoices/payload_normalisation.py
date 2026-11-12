@@ -157,7 +157,7 @@ def _coerce_enum_field(payload: dict[str, object], rule: _EnumFieldRule) -> None
 
 def _coerce_enum_value(rule: _EnumFieldRule, text: str, *, effective_date: date) -> object:
     if rule.enum is OssIossRegime:
-        return require_oss_ioss_regime(text)
+        return require_oss_ioss_regime(text, effective_date=effective_date)
     if rule.enum is TransactionKind:
         return TransactionKind(text)
     if rule.enum is EUMemberState:
