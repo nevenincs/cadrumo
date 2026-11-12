@@ -81,7 +81,7 @@ class CounterpartyFilingNameAdapter(CounterpartyFilingNameReader):
         self._repository = repository
 
     @override
-    def filing_name_of(self, tax_identifier: str, *, country_code: str) -> DeclaredPartyFilingName | None:
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
         """Return the declared filing name while translating storage failures."""
         try:
             stated = stated_counterparty_filing_name(

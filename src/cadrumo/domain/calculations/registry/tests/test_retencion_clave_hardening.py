@@ -25,7 +25,8 @@ from pydantic import ValidationError
 from .....core.aggregation import RetencionClave
 from ..authority import PinnedAuthorityOperation
 from ..governed_fact_scope import validating_governed_facts
-from ..withholding_bindings import WithholdingObservation, retencion_clave_declarations
+from ..retencion_clave_catalogue import retencion_clave_declarations
+from ..withholding_bindings import WithholdingObservation
 from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

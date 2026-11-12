@@ -10,8 +10,8 @@ an invoice to recognise it by, and the export refuses until the name is stated.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Final
+from collections.abc import Mapping, Sequence
+from typing import Final, NamedTuple
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
@@ -70,6 +70,13 @@ def with_declared_filing_names(
     return tuple(placed)
 
 
+class RefusedParty(NamedTuple):
+    """A party a refusal names: how it is shown in the note, and a row to recognise it by."""
+
+    named: str
+    rows: tuple[str, ...]
+
+
 def party_name_refusal_diagnostics(
     refusals: Sequence[FilingExportDeclaredPartyNameError],
     observed_items: Sequence[ObservedInvoice],
@@ -79,6 +86,22 @@ def party_name_refusal_diagnostics(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Name each party whose filing name a slot could not file, once per party and refusal, with an invoice."""
     earliest = _earliest_invoice_by_party(observed_items)
+    return refused_party_diagnostics(
+        refusals,
+        {handle: RefusedParty(_party_named(item), (item[0].invoice_id,)) for handle, item in earliest.items()},
+        context=context,
+        resolver_id=resolver_id,
+    )
+
+
+def refused_party_diagnostics(
+    refusals: Sequence[FilingExportDeclaredPartyNameError],
+    parties: Mapping[str, RefusedParty],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report each refusal once per party handle, reason and field, naming the party from ``parties``."""
     slots = _party_name_slot_sources(context.revision)
     diagnostics: dict[tuple[str, str, str], CalculationSourceDiagnostic] = {}
     for refusal in refusals:
@@ -87,7 +110,7 @@ def party_name_refusal_diagnostics(
         if key not in diagnostics:
             diagnostics[key] = _refusal_diagnostic(
                 refusal,
-                item=earliest.get(handle),
+                party=parties.get(handle),
                 slot=slots.get(refusal.export_field_id, (None, None)),
                 context=context,
                 resolver_id=resolver_id,
@@ -108,14 +131,14 @@ def _earliest_invoice_by_party(observed_items: Sequence[ObservedInvoice]) -> dic
 def _refusal_diagnostic(
     refusal: FilingExportDeclaredPartyNameError,
     *,
-    item: ObservedInvoice | None,
+    party: RefusedParty | None,
     slot: tuple[BindingSourceKind | None, CasillaId | None],
     context: CalculationSourceContext,
     resolver_id: str,
 ) -> CalculationSourceDiagnostic:
     source, casilla_id = slot
     handle = refusal.party_handle or ""
-    named = refusal.export_field_id if item is None else _party_named(item)
+    named = refusal.export_field_id if party is None else party.named
     return CalculationSourceDiagnostic(
         reason="declared_party_name_unresolved",
         source_kind=_INVOICE_SOURCE_KIND if source is None else source.value,
@@ -125,7 +148,7 @@ def _refusal_diagnostic(
         casilla_id=casilla_id,
         fact=CalculationNoteFact.of(
             _SENTENCES[type(refusal).reason],
-            rows=() if item is None else (item[0].invoice_id,),
+            rows=() if party is None else party.rows,
             party=named,
             width=refusal.field_length,
         ),
@@ -178,4 +201,4 @@ def _party_name_slot_sources(
     return slots
 
 
-__all__ = ["party_name_refusal_diagnostics", "with_declared_filing_names"]
+__all__ = ["RefusedParty", "party_name_refusal_diagnostics", "refused_party_diagnostics", "with_declared_filing_names"]
