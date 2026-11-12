@@ -37,8 +37,6 @@ _BASELINE: Final[dict[str, int]] = {
     "authority.py": 3,
     "concepto_ingreso.py": 1,
     "gasto_capital_inmobiliario.py": 1,
-    "iva_regime_vocabulary.py": 2,
-    "m303_schema_vocabulary.py": 2,
     "modelo_obligation_scope.py": 1,
     "modelo_pending_orden.py": 1,
     "modelo_rendering.py": 1,
