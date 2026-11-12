@@ -798,6 +798,11 @@ def _edit_refusal_failure(error_type: type[ModeloEditRefusedError]) -> ModeloPre
     )
 
 
+def modelo_edit_value_refusal_verdict() -> PreconditionVerdict:
+    """Return the door of a refused edit value: state it again on the work unit."""
+    return _edit_refusal_failure(ModeloEditRefusedError).verdict
+
+
 def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> ModeloEditRefusedError:
     """Return the registered refusal an edit's no-effect outcome settles under.
 
@@ -839,11 +844,6 @@ __all__ = [
     "ModeloDomiciliationPastCutoffError",
     "ModeloEditBaselineStaleError",
     "ModeloEditContractIncompatibleError",
-def modelo_edit_value_refusal_verdict() -> PreconditionVerdict:
-    """Return the door of a refused edit value: state it again on the work unit."""
-    return _edit_refusal_failure(ModeloEditRefusedError).verdict
-
-
     "ModeloEditIntentUnsupportedError",
     "ModeloEditRefusedError",
     "ModeloExportPeriodUnmappableError",
@@ -869,7 +869,7 @@ def modelo_edit_value_refusal_verdict() -> PreconditionVerdict:
     "export_period_unmappable_error",
     "instalment_election_refusal",
     "modelo_edit_refusal_error",
+    "modelo_edit_value_refusal_verdict",
     "modelo_work_wizard_retry_exhausted_precondition",
     "own_account_missing_error",
 ]
-    "modelo_edit_value_refusal_verdict",
