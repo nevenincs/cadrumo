@@ -71,7 +71,9 @@ CLASSIFY_FIELD_NAMES = frozenset(
 CLASSIFY_UNCLEARABLE_FIELD_NAMES = frozenset({"business_classification", "notes"})
 """Selected fields a classification can replace but never blank: the writer requires a value for each."""
 
-_ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=20)]
+_ClassifyFields = Annotated[
+    tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=len(CLASSIFY_FIELD_NAMES))
+]
 
 LedgerClassifyDecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 
