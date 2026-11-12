@@ -17,6 +17,7 @@ from pathlib import Path
 from uuid import UUID
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.aggregation.retencion_soportada_repository import record_retencion_soportada
@@ -47,6 +48,7 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -243,13 +245,14 @@ def run_projection(
     states_region: bool = True,
     quarter: QuarterSeeding = QuarterSeeding.CALCULATED,
     year: int = PROJECTION_YEAR,
+    ledger_rows: tuple[Transaction, ...] = (),
 ) -> ModeloProjectServiceResult:
     """Seed one isolated profile and return the real projection service's result for it.
 
     ``ccaa`` is the region the request names, or ``None`` to leave it to the
     profile; ``states_region`` is whether the profile's tax residence names one.
     ``year`` is the filing year the request asks for; the stored quarter is always
-    the ``PROJECTION_YEAR`` one.
+    the ``PROJECTION_YEAR`` one. ``ledger_rows`` are stored in the profile's ledger before projecting.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_profile(
@@ -261,11 +264,17 @@ def run_projection(
         _seed_first_quarter(profile, operation, seeding=quarter)
         _seed_payer_records(profile, payer_records, operation)
         with bundled_indexed_authority().operation() as projection_operation:
+            ports = build_calculation_action_ports(bucket_id=profile.bucket_id, operation=projection_operation)
+            if ledger_rows:
+                ledger = ports.transaction_repository
+                if not isinstance(ledger, TransactionCatalogueRepository):
+                    raise AssertionError("the calculation ports do not hold the profile's ledger repository")
+                ledger.save(TransactionCatalogue.from_transactions(ledger_rows))
             return project_modelo_100_from_m130(
                 year=year,
                 ccaa=ccaa,
                 bucket_id=profile.bucket_id,
-                ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=projection_operation),
+                ports=ports,
                 operation=projection_operation,
                 casilla_overrides=dict(casilla_overrides) if casilla_overrides is not None else None,
                 binding_overrides=dict(binding_overrides) if binding_overrides is not None else None,
