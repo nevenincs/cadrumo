@@ -197,6 +197,17 @@ def _replaced_descendant_facts(current: UserProfileRecord, pairs: dict[str, str]
     )
 
 
+def _stored_leaves_without(current: UserProfileRecord, remove_row_index: str | None) -> dict[str, str]:
+    """The effective stored leaves, less the row at ``remove_row_index``; a row that holds nothing is refused."""
+    stored = {path: fact.value for path, fact in record_to_effective_facts(current).items() if fact.value is not None}
+    if remove_row_index is None:
+        return stored
+    prefix = f"{DESCENDANT_OBJECT_PATH}.{remove_row_index}."
+    if not any(path.startswith(prefix) and value.strip() for path, value in stored.items()):
+        _refuse(_ROW_NOT_STORED_LOCALE_KEY)
+    return {path: value for path, value in stored.items() if not path.startswith(prefix)}
+
+
 def _composed_descendants(
     current: UserProfileRecord,
     *,
@@ -211,12 +222,7 @@ def _composed_descendants(
     """
     if descendants is not None:
         return descendants
-    stored = {path: fact.value for path, fact in record_to_effective_facts(current).items() if fact.value is not None}
-    if remove_row_index is not None:
-        prefix = f"{DESCENDANT_OBJECT_PATH}.{remove_row_index}."
-        if not any(path.startswith(prefix) and value.strip() for path, value in stored.items()):
-            _refuse(_ROW_NOT_STORED_LOCALE_KEY)
-        stored = {path: value for path, value in stored.items() if not path.startswith(prefix)}
+    stored = _stored_leaves_without(current, remove_row_index)
     kept = encode_descendant_rows(descendant_list_from_facts(stored, authority=operation), authority=operation)
     return (*kept, *(() if add_row is None else (add_row,)))
 

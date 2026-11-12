@@ -64,9 +64,12 @@ from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_adoption_token,
     descendant_relacion_entitling_tokens,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.schema import ProfileFieldType
 from cadrumo.domain.user_profile.values import UserProfileRecord
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -256,14 +259,16 @@ def test_a_person_is_added_from_the_served_form_and_removed_by_the_served_index(
     first = world.read()
     assert world.ascendants(first, add_row=_ascendant(nif="12345678z", birth_date="1948-03-04", convivientes="2")) == 1
     second = world.read()
-    assert world.ascendants(second, add_row=_ascendant(birth_date="1951-11-30", fallecimiento="2025-02-01")) == 2
+    assert (
+        world.ascendants(second, add_row=_ascendant(birth_date="1951-11-30", fallecimiento=f"{_YEAR - 1}-02-01")) == 2
+    )
 
     third = world.read()
     group, rows = third.groups[_ASCENDANT], third.rows[_ASCENDANT]
     assert (group.row_count, group.stated_count) == (2, "2")
     assert [_stated(row) for row in rows] == [
         {"nif": "12345678Z", "birth_date": "1948-03-04", "convivientes": "2"},
-        {"birth_date": "1951-11-30", "fallecimiento": "2025-02-01"},
+        {"birth_date": "1951-11-30", "fallecimiento": f"{_YEAR - 1}-02-01"},
     ]
     assert group.remove_row_action is not None
     assert group.remove_row_action.action_words == tr(f"{_ACTIONS}.remove_ascendiente", locale="en")
@@ -271,7 +276,7 @@ def test_a_person_is_added_from_the_served_form_and_removed_by_the_served_index(
     assert world.ascendants(third, remove_row_index=rows[0].row_index) == 1
     fourth = world.read()
     assert [_stated(row) for row in fourth.rows[_ASCENDANT]] == [
-        {"birth_date": "1951-11-30", "fallecimiento": "2025-02-01"}
+        {"birth_date": "1951-11-30", "fallecimiento": f"{_YEAR - 1}-02-01"}
     ]
     assert world.ascendants(fourth, remove_row_index=fourth.rows[_ASCENDANT][0].row_index) == 0
     emptied = world.read().groups[_ASCENDANT]
@@ -280,7 +285,7 @@ def test_a_person_is_added_from_the_served_form_and_removed_by_the_served_index(
 
 def test_removing_a_descendant_keeps_every_leaf_the_others_state(world: _World) -> None:
     kept_leaves = {
-        "birth_date": "2021-05-17",
+        "birth_date": f"{_YEAR - 5}-05-17",
         "convivencia": "false",
         "dependencia_economica": "true",
         "rentas_anuales": "1200.50",
@@ -289,12 +294,12 @@ def test_removing_a_descendant_keeps_every_leaf_the_others_state(world: _World) 
         "nif": "12345678Z",
     }
     whole = (
-        {"facts": [{"field_key": "birth_date", "value": "2019-02-03"}]},
+        {"facts": [{"field_key": "birth_date", "value": f"{_YEAR - 7}-02-03"}]},
         {"facts": [{"field_key": key, "value": value} for key, value in kept_leaves.items()]},
     )
     assert world.descendants(world.read(), descendants=whole) == 2
     assert _stored_descendant_leaves(world) == {
-        0: {"birth_date": "2019-02-03", "convivencia": "true"},
+        0: {"birth_date": f"{_YEAR - 7}-02-03", "convivencia": "true"},
         1: kept_leaves,
     }
 
@@ -363,7 +368,7 @@ def test_an_added_row_is_validated_like_a_whole_set(world: _World) -> None:
     before = world.record()
 
     with pytest.raises(UserProfileValidationError) as refused:
-        world.descendants(read, add_row={"facts": [{"field_key": "birth_date", "value": "2020-02-30"}]})
+        world.descendants(read, add_row={"facts": [{"field_key": "birth_date", "value": f"{_YEAR - 6}-02-30"}]})
 
     assert refused.value.context == {"row": 1}
     assert world.record().content_digest == before.content_digest
@@ -395,7 +400,11 @@ def test_one_change_of_each_kind_is_a_valid_request() -> None:
     base = {"profile_id": str(UUID(int=1)), "expected_revision": 1, "expected_content_digest": "0" * 64}
     for change in ({"ascendants": []}, {"add_row": _ascendant(birth_date="1948-03-04")}, {"remove_row_index": "12"}):
         ProfileAscendantsOperationRequest.model_validate_json(json.dumps({**base, **change}))
-    for change in ({"descendants": []}, {"add_row": _ascendant(birth_date="2020-01-01")}, {"remove_row_index": "0"}):
+    for change in (
+        {"descendants": []},
+        {"add_row": _ascendant(birth_date=f"{_YEAR - 6}-01-01")},
+        {"remove_row_index": "0"},
+    ):
         ProfileDescendantsOperationRequest.model_validate_json(json.dumps({**base, **change}))
 
 

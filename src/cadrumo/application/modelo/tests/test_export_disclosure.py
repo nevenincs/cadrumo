@@ -90,7 +90,7 @@ def _report(
         registry_snapshot_ref=RegistrySnapshotRef(modelo="100", revision_id=str(_YEAR), modelo_year=_YEAR, period="0A"),
         completeness_status=VerificationCompletenessStatus.COMPLETE,
         findings=findings,
-        run_at=datetime(2027, 1, 2, 9, minute, tzinfo=UTC),
+        run_at=datetime(_YEAR + 1, 1, 2, 9, minute, tzinfo=UTC),
         verified_by=actor,
         granted_verificado_completo=True,
     )

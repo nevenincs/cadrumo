@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -30,6 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LIMITATION_KEY = "application.modelo.findings.trabajo_deduction_not_computed"
 _CHIP_KEY = "workspace.modelo.header.chip.limitation"
+_YEAR = filing_year_envelope().horizon
 _LEGAL_REF = "ley-35-2006:art-19"
 _LANGUAGES = tuple(OutputLanguage)
 
@@ -103,7 +105,7 @@ def test_the_counts_keep_limitations_apart_from_checks_in_the_forms_language(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
     form = _with_issues(
-        built_form(operation, "100", 2025, "0A", language=language),
+        built_form(operation, "100", _YEAR, "0A", language=language),
         _advisory(disclosed=True),
         _advisory(disclosed=False),
         _advisory(disclosed=False, key="application.modelo.findings.dt12a_reduccion_possible"),
@@ -128,7 +130,7 @@ def test_the_chip_words_differ_in_every_language() -> None:
 
 
 def test_no_count_is_made_for_a_form_without_a_limitation(operation: PinnedAuthorityOperation) -> None:
-    form = _with_issues(built_form(operation, "100", 2025, "0A"), _advisory(disclosed=False))
+    form = _with_issues(built_form(operation, "100", _YEAR, "0A"), _advisory(disclosed=False))
 
     levels = {count.level for count in attention_counts(form, OutputLanguage.EN, recorded=False)}
 
@@ -138,7 +140,7 @@ def test_no_count_is_made_for_a_form_without_a_limitation(operation: PinnedAutho
 
 def test_the_issue_lines_carry_the_level_after_the_checks(operation: PinnedAuthorityOperation) -> None:
     form = _with_issues(
-        built_form(operation, "100", 2025, "0A"),
+        built_form(operation, "100", _YEAR, "0A"),
         _advisory(disclosed=True),
         _advisory(disclosed=False, key="application.modelo.findings.dt12a_reduccion_possible"),
     )
