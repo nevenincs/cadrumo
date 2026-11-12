@@ -237,7 +237,9 @@ def test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale(
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
             # Relation value: sum of M202 pagos fraccionados for the year.
             # Zero means no prior instalments have been paid.
-            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
+            "--relation", "modelo-200-pago-fraccionado-primero-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-segundo-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-tercero-40-3=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -602,7 +604,9 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
+            "--relation", "modelo-200-pago-fraccionado-primero-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-segundo-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-tercero-40-3=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output

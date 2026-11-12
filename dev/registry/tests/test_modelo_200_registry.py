@@ -524,11 +524,9 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     ``00599 = (00625 / 100) x (00592 - 01766 - 01784)`` and
     ``00611 = 00599 - pagos_fraccionados`` produce the signed results.
     Pagos fraccionados ``(00601 + 00603 + 00605)`` are sourced from the
-    company's Modelo 202 instalment filings and reach Modelo 200 through
-    the ``modelo-200-pagos-fraccionados-anuales`` cross-model
-    relation, which aggregates the 1P/2P/3P instalments; the worked
-    example's 10.000 pagos fraccionados is supplied as that relation's
-    resolved value.
+    company's Modelo 202 instalment filings, one relation per instalment
+    and modalidad; the worked example states only their 10.000 total, so it
+    is supplied as the first instalment and the others are 0.
     """
     modelo, catalogues = _load_modelo_200()
     snapshot = build_snapshot(
@@ -553,8 +551,12 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("10000"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("10000"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
         date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
     )
@@ -647,8 +649,12 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
                 "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             },
             relation_values={
-                "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-                "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+                "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+                "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+                "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+                "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+                "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+                "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
             },
             date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
         )
@@ -708,8 +714,12 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
         date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
     )

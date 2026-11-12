@@ -166,7 +166,9 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
+            "--relation", "modelo-200-pago-fraccionado-primero-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-segundo-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-tercero-40-3=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output

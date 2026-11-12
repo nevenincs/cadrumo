@@ -296,6 +296,21 @@ segmento = "DP200014B"
 number = "00599"
 
 [[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200014B:00601"
+segmento = "DP200014B"
+number = "00601"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200014B:00603"
+segmento = "DP200014B"
+number = "00603"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200014B:00605"
+segmento = "DP200014B"
+number = "00605"
+
+[[revisions."2022".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00611"
 segmento = "DP200014B"
 number = "00611"

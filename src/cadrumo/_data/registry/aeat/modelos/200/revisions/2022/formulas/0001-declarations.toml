@@ -304,19 +304,79 @@ required_text = [
     "retenciones e ingresos a cuenta",
 ]
 
-# Cuota diferencial [00611] = [00599] - pagos fraccionados, Manual práctico de Sociedades 2022
-# ("[00611] = [00599] - ([00601] + [00603] + [00605])"). aeat-dr-200-2022 prints [00599] and
-# [00611] on DP200014B as the 2023 design does, so the 2023 edition inherits this member.
-# The pagos fraccionados are the Modelo 202 instalments under either modalidad (casilla 34,
-# art. 40.3 LIS, plus casilla 03, art. 40.2 LIS); the non-elected one is 0.
+# Pagos fraccionados [00601], [00603] and [00605]: the primer, segundo and tercer pago
+# fraccionado of the periodo impositivo (Manual práctico de Sociedades 2022, "Pagos
+# fraccionados": "deberá reflejar en las casillas [00601], [00603] y [00605] ... los importes
+# correspondientes al primer, segundo y tercer pago fraccionado, respectivamente"). Each is the
+# amount the Modelo 202 instalment of that period paid, under whichever modalidad it was filed;
+# aeat-dr-200-2022 prints the three on DP200014B as the later designs do, so later editions
+# inherit these members.
+[[revisions."2022".formulas]]
+id = "modelo-200-pago-fraccionado-primero"
+target_casilla_id = "DP200014B:00601"
+expression = { op = "add", args = [
+    { binding = "modelo-200-pago-fraccionado-primero-40-2" },
+    { binding = "modelo-200-pago-fraccionado-primero-40-3" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "reflejar en las casillas [00601], [00603] y [00605] de la página 14 bis del modelo 200",
+    "los importes correspondientes al primer, segundo y tercer pago fraccionado",
+]
+
+[[revisions."2022".formulas]]
+id = "modelo-200-pago-fraccionado-segundo"
+target_casilla_id = "DP200014B:00603"
+expression = { op = "add", args = [
+    { binding = "modelo-200-pago-fraccionado-segundo-40-2" },
+    { binding = "modelo-200-pago-fraccionado-segundo-40-3" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "reflejar en las casillas [00601], [00603] y [00605] de la página 14 bis del modelo 200",
+    "los importes correspondientes al primer, segundo y tercer pago fraccionado",
+]
+
+[[revisions."2022".formulas]]
+id = "modelo-200-pago-fraccionado-tercero"
+target_casilla_id = "DP200014B:00605"
+expression = { op = "add", args = [
+    { binding = "modelo-200-pago-fraccionado-tercero-40-2" },
+    { binding = "modelo-200-pago-fraccionado-tercero-40-3" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "reflejar en las casillas [00601], [00603] y [00605] de la página 14 bis del modelo 200",
+    "los importes correspondientes al primer, segundo y tercer pago fraccionado",
+]
+
+# Cuota diferencial [00611] = [00599] - ([00601] + [00603] + [00605]), Manual práctico de
+# Sociedades 2022. aeat-dr-200-2022 prints [00599] and [00611] on DP200014B as the 2023 design
+# does, so the 2023 edition inherits this member.
 [[revisions."2022".formulas]]
 id = "modelo-200-cuota-diferencial"
 target_casilla_id = "DP200014B:00611"
 expression = { op = "subtract", args = [
     { casilla_id = "DP200014B:00599" },
     { op = "add", args = [
-        { binding = "modelo-200-pagos-fraccionados-anuales" },
-        { binding = "modelo-200-pagos-fraccionados-anuales-40-2" },
+        { casilla_id = "DP200014B:00601" },
+        { casilla_id = "DP200014B:00603" },
+        { casilla_id = "DP200014B:00605" },
     ] },
 ] }
 rounding = "money-2"

@@ -30,6 +30,13 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
+_M200_INSTALMENT_BINDINGS = tuple(
+    f"modelo-200-pago-fraccionado-{instalment}-{modalidad}"
+    for instalment in ("primero", "segundo", "tercero")
+    for modalidad in ("40-2", "40-3")
+)
+"""The Modelo 200 relation bindings that read each Modelo 202 instalment under each modalidad."""
+
 _active_native_profile: ContextVar[NativeCliProfileFixture | None] = ContextVar(
     "bindings_surface_native_profile",
     default=None,
@@ -278,20 +285,16 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
 
     assert result.exit_code == 0, result.output
     assert "missing_filter\tTrue" in result.output
-    assert "\tmodelo-200-pagos-fraccionados-anuales\trelation_prefill\trelation input\t" in result.output
-    assert "\tmodelo-200-pagos-fraccionados-anuales-40-2\trelation_prefill\trelation input\t" in result.output
+    for instalment_binding in _M200_INSTALMENT_BINDINGS:
+        assert f"\t{instalment_binding}\trelation_prefill\trelation input\t" in result.output
     assert "relation_guidance\tSome box sources below are fed by relations in the modelo definitions" in result.output
     assert "--relation RELATION_ID=VALUE before calculating." in result.output
-    assert (
-        "relation_input\tmodelo-200-pagos-fraccionados-anuales\t"
-        "fed by relation modelo-200-pagos-fraccionados-anuales\t"
-        "use --relation modelo-200-pagos-fraccionados-anuales=VALUE"
-    ) in result.output
-    assert (
-        "relation_input\tmodelo-200-pagos-fraccionados-anuales-40-2\t"
-        "fed by relation modelo-200-pagos-fraccionados-anuales-40-2\t"
-        "use --relation modelo-200-pagos-fraccionados-anuales-40-2=VALUE"
-    ) in result.output
+    for instalment_binding in _M200_INSTALMENT_BINDINGS:
+        assert (
+            f"relation_input\t{instalment_binding}\t"
+            f"fed by relation {instalment_binding}\t"
+            f"use --relation {instalment_binding}=VALUE"
+        ) in result.output
 
 
 def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_period() -> None:
@@ -315,10 +318,13 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
         ],
     )
     assert one_p.exit_code == 0, one_p.output
-    # The first installment has no earlier installment to relate to; only the
-    # taxpayer's prior-twelve-month turnover, an input every year requires, is missing.
-    assert "binding_count\t1" in one_p.output
+    # The first installment has no earlier installment to relate to. What is missing
+    # is the taxpayer's prior-twelve-month turnover, an input every year requires, and
+    # the art. 40.2 base, which reads the Modelo 200 of an earlier periodo impositivo
+    # rather than an earlier installment.
+    assert "binding_count\t2" in one_p.output
     assert "modelo-202-incn-prior-12-months" in one_p.output
+    assert "relation_input\tmodelo-202-cuota-base-ejercicio-anterior\t" in one_p.output
     assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
 
     two_p = invoke_cached_cli(
@@ -365,8 +371,16 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
 
     two_p_snapshot = published_snapshot("202", filing_year=2024, period="2P")
     three_p_snapshot = published_snapshot("202", filing_year=2024, period="3P")
-    ((_, two_p_provider),) = relation_prefill_bindings_for_period(two_p_snapshot.revision, period="2P")
-    ((_, three_p_provider),) = relation_prefill_bindings_for_period(three_p_snapshot.revision, period="3P")
+    (two_p_provider,) = (
+        provider
+        for binding, provider in relation_prefill_bindings_for_period(two_p_snapshot.revision, period="2P")
+        if binding.id == "modelo-202-pagos-fraccionados-anteriores"
+    )
+    (three_p_provider,) = (
+        provider
+        for binding, provider in relation_prefill_bindings_for_period(three_p_snapshot.revision, period="3P")
+        if binding.id == "modelo-202-pagos-fraccionados-anteriores"
+    )
     assert two_p_provider.required_period_anchors_for_target("2P") == ((0, "1P"),)
     assert three_p_provider.required_period_anchors_for_target("3P") == ((0, "1P"), (0, "2P"))
 
@@ -394,7 +408,7 @@ def test_bindings_list_without_missing_does_not_append_m200_relation_guidance() 
     assert result.exit_code == 0, result.output
     assert "missing_filter\tFalse" in result.output
     assert "relation_guidance\t" not in result.output
-    assert "relation_input\tmodelo-200-pagos-fraccionados-anuales" not in result.output
+    assert "relation_input\tmodelo-200-pago-fraccionado-" not in result.output
 
 
 def test_bindings_resolve_echoes_override_for_known_key() -> None:
@@ -769,7 +783,8 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
         assert rows[binding_id]["readiness"] == "relation input"
 
     # The specific M202 pagos-fraccionados fold-ins from the audit are present.
-    assert "modelo-200-pagos-fraccionados-anuales" in rows["modelo-200-pagos-fraccionados-anuales"]["relation_inputs"]
+    for instalment_binding in _M200_INSTALMENT_BINDINGS:
+        assert instalment_binding in rows[instalment_binding]["relation_inputs"]
 
     # A non-relation-fed binding carries an empty relation_inputs tuple.
     non_relation = [r for r in rows.values() if r["source"] != "relation_prefill"]

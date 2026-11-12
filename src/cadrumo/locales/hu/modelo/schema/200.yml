@@ -2,10 +2,20 @@ modelo:
   schema:
     '200':
       binding:
-        modelo-200-pagos-fraccionados-anuales:
-          label: Éves adóelőleg-részletek · 202-es nyomtatvány, 40.3. cikk, 34. mező
-        modelo-200-pagos-fraccionados-anuales-40-2:
-          label: Éves adóelőleg-részletek · 202-es nyomtatvány, 40.2. cikk, 03. mező
+        modelo-200-pago-fraccionado-primero-40-2:
+          label: Első adóelőleg-részlet · 202-es nyomtatvány, 40.2. cikk, 03. mező
+        modelo-200-pago-fraccionado-primero-40-3:
+          label: Első adóelőleg-részlet · 202-es nyomtatvány, 40.3. cikk, 34. mező
+        modelo-200-pago-fraccionado-segundo-40-2:
+          label: Második adóelőleg-részlet · 202-es nyomtatvány, 40.2. cikk, 03. mező
+        modelo-200-pago-fraccionado-segundo-40-3:
+          label: Második adóelőleg-részlet · 202-es nyomtatvány, 40.3. cikk, 34. mező
+        modelo-200-pago-fraccionado-tercero-40-2:
+          label: Harmadik adóelőleg-részlet · 202-es nyomtatvány, 40.2. cikk, 03.
+            mező
+        modelo-200-pago-fraccionado-tercero-40-3:
+          label: Harmadik adóelőleg-részlet · 202-es nyomtatvány, 40.3. cikk, 34.
+            mező
         modelo-200-profile-incn-prior-12-months:
           label: Az előző 12 hónap nettó árbevétele
         modelo-200-profile-legal-entity-form:

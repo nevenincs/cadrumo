@@ -100,7 +100,7 @@ def test_m210_tipo_renta_unknown_code_refuses_and_lists_accepted_and_fetch_gated
 def test_unknown_relation_override_error_names_revision_relation_ids() -> None:
     revision = published_revision("200", str(revision_covering("200", newest_authored_edition("200")).id))
     relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision)}
-    accepted_relation = "modelo-200-pagos-fraccionados-anuales"
+    accepted_relation = "modelo-200-pago-fraccionado-primero-40-3"
     assert accepted_relation in relation_ids
 
     with pytest.raises(ModeloCalculateRelationInputError) as exc_info:

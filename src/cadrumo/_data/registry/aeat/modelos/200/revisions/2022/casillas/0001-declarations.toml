@@ -21917,6 +21917,8 @@ section = ["liquidacion_iv", "pagos_fraccionados_cuota_diferencial"]
 semantic_role = "is_liquidacion_iv_pago_fraccionado_primero"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Liquidación IV primer pago fraccionado (Estado) is the single cuota-chain first-instalment casilla; no sibling casilla shares this role within the modelo revision."
+input_kind = "computed"
+formula = "modelo-200-pago-fraccionado-primero"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1504 DP200014B 28|387|17|Num
@@ -21929,6 +21931,8 @@ section = ["liquidacion_iv", "pagos_fraccionados_cuota_diferencial"]
 semantic_role = "is_liquidacion_iv_pago_fraccionado_segundo"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Liquidación IV segundo pago fraccionado (Estado) is the single cuota-chain second-instalment casilla; no sibling casilla shares this role within the modelo revision."
+input_kind = "computed"
+formula = "modelo-200-pago-fraccionado-segundo"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1506 DP200014B 30|421|17|Num
@@ -21941,6 +21945,8 @@ section = ["liquidacion_iv", "pagos_fraccionados_cuota_diferencial"]
 semantic_role = "is_liquidacion_iv_pago_fraccionado_tercero"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Liquidación IV tercer pago fraccionado (Estado) is the single cuota-chain third-instalment casilla; no sibling casilla shares this role within the modelo revision."
+input_kind = "computed"
+formula = "modelo-200-pago-fraccionado-tercero"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1508 DP200014B 32|455|17|N

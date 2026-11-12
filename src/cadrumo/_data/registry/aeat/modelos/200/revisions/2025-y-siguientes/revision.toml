@@ -15,8 +15,7 @@ reviewed_at = 2026-08-19
 # tree, with its source-hash-bound provenance and loader validation, but the
 # formulas this edition inherits do not all agree with the 2025 design and
 # manual: base imponible 00552 drops the sign of a negative base previa
-# (manual p. 349-350), cuota diferencial 00611 subtracts the Modelo 202
-# bindings instead of boxes 00601, 00603 and 00605 (p. 516), cuota integra
+# (manual p. 349-350), cuota integra
 # 00562 is not 01330 x 00558 / 100 (p. 371), and tipo de gravamen 00558 does
 # not cover the manual's rate categories (p. 372). A grade states evidence, so
 # the edition calculates and refuses export and local filing until those
@@ -21800,6 +21799,24 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
+selector = {revision = "2024", id = "modelo-200-pago-fraccionado-primero"}
+sequence_additions = {source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["reflejar en las casillas [00601], [00603] y [00605] de la página 14 bis del modelo 200", "los importes correspondientes al primer, segundo y tercer pago fraccionado"]}]}
+sequence_removals = {source_refs = [0, 1], source_citations = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-200-pago-fraccionado-segundo"}
+sequence_additions = {source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["reflejar en las casillas [00601], [00603] y [00605] de la página 14 bis del modelo 200", "los importes correspondientes al primer, segundo y tercer pago fraccionado"]}]}
+sequence_removals = {source_refs = [0, 1], source_citations = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-200-pago-fraccionado-tercero"}
+sequence_additions = {source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["reflejar en las casillas [00601], [00603] y [00605] de la página 14 bis del modelo 200", "los importes correspondientes al primer, segundo y tercer pago fraccionado"]}]}
+sequence_removals = {source_refs = [0, 1], source_citations = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
 selector = {revision = "2024", id = "modelo-200-cuota-diferencial"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["cuota diferencial (casillas 00611 y 00612)", "[00611] = [00599] - ([00601] + [00603] + [00605])"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
@@ -25738,15 +25755,39 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
-selector = {revision = "2024", id = "modelo-200-pagos-fraccionados-anuales"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["modelo 202 de pago fraccionado", "pagos fraccionados"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
+selector = {revision = "2024", id = "modelo-200-pago-fraccionado-primero-40-2"}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_removals = {source_refs = [0], source_citations = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
-selector = {revision = "2024", id = "modelo-200-pagos-fraccionados-anuales-40-2"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["modelo 202 de pago fraccionado", "pagos fraccionados"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
+selector = {revision = "2024", id = "modelo-200-pago-fraccionado-primero-40-3"}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_removals = {source_refs = [0], source_citations = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-200-pago-fraccionado-segundo-40-2"}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_removals = {source_refs = [0], source_citations = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-200-pago-fraccionado-segundo-40-3"}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_removals = {source_refs = [0], source_citations = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-200-pago-fraccionado-tercero-40-2"}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_removals = {source_refs = [0], source_citations = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-200-pago-fraccionado-tercero-40-3"}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_removals = {source_refs = [0], source_citations = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"

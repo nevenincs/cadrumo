@@ -135,8 +135,12 @@ def test_pyme_sl_pre_tranche_exercise_cuota_resolves_without_bracket_no_window()
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
         date_context={"filing_period": date(_PRE_TRANCHE_PYME_EXERCISE, 12, 31)},
     )
@@ -239,8 +243,12 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+            "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
         date_context={"filing_period": date(_PRE_TRANCHE_PYME_EXERCISE, 12, 31)},
     )

@@ -333,12 +333,19 @@ def test_committed_modelo_202_art_40_2_base_reads_the_modelo_200_box_net_of_rete
             if casilla.semantic_role == "is_retenciones_ingresos_a_cuenta"
         }
         assert retenciones, revision_200.id
+        # The official designs do not all print box 00592 on the same page (DP200014 in
+        # the oldest authored design, DP200014B later), so the cuota liquida is found by
+        # its role, not its page.
+        (cuota_liquida,) = (
+            casilla.id for casilla in revision_200.casillas if casilla.semantic_role == "is_cuota_liquida"
+        )
+        assert cuota_liquida.endswith(":00592"), revision_200.id
         formulas = {formula.target_casilla_id: formula for formula in revision_200.formulas}
         operands = _expression_casilla_ids(formulas["DP200014B:00599"].expression)
-        assert "DP200014B:00592" in operands, revision_200.id
+        assert cuota_liquida in operands, revision_200.id
         assert retenciones & operands, revision_200.id
         # The cuota liquida alone is not net of the retenciones the base subtracts.
-        assert not retenciones & _expression_casilla_ids(formulas["DP200014B:00592"].expression), revision_200.id
+        assert not retenciones & _expression_casilla_ids(formulas[cuota_liquida].expression), revision_200.id
 
 
 _M202_BASE_IMPONIBLE_PREVIA_ADVISORY_PREDICATE_ID = (
