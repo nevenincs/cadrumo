@@ -620,6 +620,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.work.amend",
+            target_command_key="modelo.work.amend",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="from_filing_record_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="filing_record_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="kind",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="reason",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="reason",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.file",
             target_command_key="modelo.work.file",
             argument_specifications=(

@@ -30,6 +30,7 @@ from ...domain.calculations.registry.schema_references import TemporalProjection
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.iva.refund_eligibility import RefundEligibility
 from ...domain.modelos.calculation_revision_sources import CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT, CalculationNoteFact
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from .work_form_findings import ModeloFormAttention
 
 
@@ -64,7 +65,11 @@ class ModeloFormCalculationNote(ModeloFormBase):
     calculation's own account of this note, as its resolver worded it for the
     filer and the calculate result carries it, in the form's language; ``None``
     when it wrote none in that language, or when only the note that persists
-    with the calculation is known.
+    with the calculation is known. ``recovery`` is the way out of the note where
+    its reason and fact open one, as a refusal verdict carries it: the action
+    and its ordered alternatives, each with its served words in the form's
+    language and the registered operations it submits. It is left out of the
+    serialized note when the note opens none.
     """
 
     reason: str = Field(min_length=1, max_length=64)
@@ -77,6 +82,7 @@ class ModeloFormCalculationNote(ModeloFormBase):
     fact: CalculationNoteFact | None = None
     element_names: tuple[tuple[str, str], ...] = ()
     message: str | None = Field(default=None, min_length=1, max_length=CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT)
+    recovery: PreconditionVerdictSnapshot | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class ModeloFormAeatData(ModeloFormBase):

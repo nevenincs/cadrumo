@@ -7976,6 +7976,16 @@ tui:
       empty: Nincs ellenőrzésre váró bizonylat.
       extract: Dokumentum beolvasása
       loading: A dokumentumok beolvasása…
+      page:
+        document: '{file} ({media}) - {page}. oldal, összesen {count}'
+        empty: A dokumentum nem állít semmit, amit meg lehetne jeleníteni.
+        fact: '{label}: {value}'
+        failed: A dokumentumot nem sikerült megjeleníteni.
+        line: '{position}. {facts}'
+        loading: A tárolt dokumentum beolvasása...
+        not_drawn: A terminál nem rajzol oldalakat. Nyisd meg a dokumentumot az ablakban,
+          hogy lásd.
+        view: Dokumentum megtekintése
       path_placeholder: Írd be a fájl elérési útját
       pending: Függőben
       printed_total_disagrees: A dokumentumon szereplő végösszeg eltér a rögzítettől.
@@ -10674,6 +10684,13 @@ workspace:
         set_nothing: új érték
         set_source: felülírja a forrásból származó értéket
       finding:
+        calculation_withdrawn: A számítás visszavonásra kerül. Számolj újra, miután
+          megadtad a korábbi évekből áthozott összegeket.
+        carry_withdrawal_filed: Ez a bevallás benyújtottként van rögzítve. Javítsd
+          önellenőrzéssel.
+        carry_withdrawal_keeps_entries: A nyilatkozat visszavonása elvetné a többi
+          értéket, amelyet ebben a bevallásban megadtál. Add meg helyette az áthozott
+          összegeket.
         clear_of_source_fed_casilla: Ezt a rovatot egy forrás tölti ki, ezért nem
           üríthető ki. Állítsd inkább vissza a forrására.
         intent_not_admitted: Ez a rovat így nem módosítható.

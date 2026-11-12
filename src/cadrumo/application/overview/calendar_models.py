@@ -502,7 +502,13 @@ class CalendarCompleteness(BaseModel):
 
 
 class SuppressedCalendarEntry(BaseModel):
-    """One non-applicable obligation retained by ``--show-suppressed``."""
+    """One non-applicable obligation retained by ``--show-suppressed``.
+
+    ``actions`` are the doors that move an undecided obligation on, the primary
+    first and its alternatives after it. Like every calendar door they carry no
+    command text and are excluded from plain serialization; the presentation
+    boundary resolves them against the live command surface.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -510,6 +516,7 @@ class SuppressedCalendarEntry(BaseModel):
     period: _CalendarPeriod
     verdict: ApplicabilityVerdict
     reason: str = Field(min_length=1)
+    actions: tuple[DeclaredNextAction, ...] = Field(default=(), exclude=True)
 
 
 class OverviewCalendar(BaseModel):

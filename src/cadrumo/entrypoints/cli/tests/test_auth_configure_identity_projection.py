@@ -10,7 +10,10 @@ from cadrumo_client.commands.payloads import AuthConfigurePayload
 
 from ....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
+from ....application.operator_actions.served_actions import NO_RECOVERY_WORDS_LOCALE_KEYS
 from ....core.auth_provider import AuthProviderKind
+from ....core.config import override_settings
+from ....core.i18n.render import tr
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..common import resolve_cli_precondition_action
 
@@ -48,10 +51,11 @@ def test_auth_configure_result_does_not_duplicate_the_envelope_profile_identity(
         identity_alignment="clave_identity_missing",
     )
 
-    payload = AuthConfigurePayload.from_result(
-        result,
-        precondition_action=resolve_cli_precondition_action(verdict),
-    ).model_dump(mode="json")
+    with override_settings(cadrumo_output_language="en"):
+        payload = AuthConfigurePayload.from_result(
+            result,
+            precondition_action=resolve_cli_precondition_action(verdict),
+        ).model_dump(mode="json")
 
     assert payload["profile_tax_id_present"] is True
     assert "active_profile" not in payload
@@ -77,4 +81,6 @@ def test_auth_configure_result_does_not_duplicate_the_envelope_profile_identity(
         "missing_argument_names": [],
         "conditionality": "not_applicable",
         "no_recovery_outcome": "operator_decision",
+        "no_recovery_words": tr(NO_RECOVERY_WORDS_LOCALE_KEYS[NoRecoveryOutcome.OPERATOR_DECISION], locale="en"),
+        "no_recovery_words_language": "en",
     }

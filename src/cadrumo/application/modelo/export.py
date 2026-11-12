@@ -181,6 +181,7 @@ from .required_binding_gate import (
     require_persisted_revision_required_bindings_resolved,
 )
 from .result_disposition_resolution import resolve_modelo_result_disposition
+from .selectors import require_work_unit_holds_a_calculation
 from .trabajo_income_findings import trabajo_recorded
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 
@@ -895,6 +896,8 @@ def load_exportable_revision_target(
             context={"work_unit_id": revision.work_unit_id},
         )
     require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
+    # A calculation withdrawn from its work unit stays stored, but it is no longer the declaration's to export.
+    require_work_unit_holds_a_calculation(work_unit)
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(
             translated_message="application.modelo.errors.export_cross_bucket_refused",

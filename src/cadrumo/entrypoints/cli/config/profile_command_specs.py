@@ -263,6 +263,7 @@ _WIZARD = "....application.wizard.results"
 _WIZARD_CONFIRM_FIELDS = frozenset(
     {
         "new-entity-first-two-profit-periods",
+        "pago-fraccionado-art-40-3-elected",
         "irpf-codigo-comercio-accounting",
         "iva-roi-enrolled",
         "iva-oss-enrolled",
@@ -316,6 +317,7 @@ _WIZARD_FIELDS = (
     "activity-start-date",
     "incn-prior-12-months",
     "new-entity-first-two-profit-periods",
+    "pago-fraccionado-art-40-3-elected",
     "iva-regime",
     "iva-m303-regime-composition",
     "iva-roi-enrolled",

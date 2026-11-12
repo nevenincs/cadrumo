@@ -437,6 +437,9 @@ _M303_SIMPLIFICADO_FORFAIT_ACTION_ID = "operator.modelo.describe"
 _PERIODIC_IVA_ROLE = "iva.periodic"
 _APPLICABILITY_DISAGREEMENT_WARNING_CODE = "applicability.evidence_disagreement"
 _APPLICABILITY_DISAGREEMENT_WARNING_LOCALE_KEY = "cli.overview.warning.applicability_evidence_disagreement"
+MODELO_202_ELECTION_PROFILE_KEY = "taxpayer.pago_fraccionado_art_40_3_elected"
+"""The selector of the art. 40.3 election, the gating key of a Modelo 202 instalment below the threshold."""
+_MODELO_202_ELECTION_WARNING_LOCALE_KEY = "cli.overview.warning.pago_fraccionado_art_40_3_unset"
 _DEADLINE_WINDOWS_UNAVAILABLE_WARNING_CODE_PREFIX = "deadline.windows_unavailable"
 _DEADLINE_WINDOWS_UNAVAILABLE_WARNING_LOCALE_KEY = "cli.overview.warning.deadline_windows_unavailable"
 _DEADLINE_WINDOWS_UNAVAILABLE_ACTION_ID = "operator.overview.status"
@@ -528,6 +531,26 @@ def calendar_applicability_disagreement_warnings(affected_modelos: Iterable[str]
         CalendarWarning(
             code=_APPLICABILITY_DISAGREEMENT_WARNING_CODE,
             message=_APPLICABILITY_DISAGREEMENT_WARNING_LOCALE_KEY,
+            fix_action=declare_next_action(_PROFILE_EDIT_ACTION_ID),
+            affected_modelos=modelos,
+        ),
+    )
+
+
+def calendar_modelo_202_election_warnings(affected_modelos: Iterable[str]) -> tuple[CalendarWarning, ...]:
+    """Name the unstated art. 40.3 election that leaves Modelo 202 instalments undecided.
+
+    The election is a profile fact the instalment verdict reads rather than a
+    registry predicate, so the registry-derived gating keys never name it; this
+    warning is its named gating-key warning.
+    """
+    modelos = tuple(sorted(set(affected_modelos)))
+    if not modelos:
+        return ()
+    return (
+        CalendarWarning(
+            code=MODELO_202_ELECTION_PROFILE_KEY,
+            message=_MODELO_202_ELECTION_WARNING_LOCALE_KEY,
             fix_action=declare_next_action(_PROFILE_EDIT_ACTION_ID),
             affected_modelos=modelos,
         ),
@@ -807,6 +830,7 @@ def build_completeness_and_warnings(
 
 
 __all__ = [
+    "MODELO_202_ELECTION_PROFILE_KEY",
     "build_completeness_and_warnings",
     "calendar_aeat_evidence_conflict_warnings",
     "calendar_applicability_disagreement_warnings",
@@ -814,6 +838,7 @@ __all__ = [
     "calendar_censo_enrolment_state",
     "calendar_censo_reconciliation_warnings",
     "calendar_deadline_windows_unavailable_warnings",
+    "calendar_modelo_202_election_warnings",
     "calendar_regime_incompatibility_warnings",
     "calendar_unverified_justificante_warnings",
 ]

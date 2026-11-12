@@ -2654,6 +2654,9 @@ application:
       detail_row_identity_conflict: Una fila de detall que has introduït no coincideix
         amb la que donen els teus registres per al mateix declarat; corregeix-la o
         treu-la abans de calcular.
+      edit_prior_carries_unstated: Aquest canvi deixa sense indicar els imports pendents
+        d'exercicis anteriors, de manera que la declaració no es pot calcular. No
+        s'ha canviat res. Indica primer aquests imports.
       edit_revision_id_unresolved: El càlcul de l'edició no ha indicat quina revisió
         ha creat, així que no s'ha pogut conservar el rebut de l'edició. És una incoherència
         del programa i res del que has introduït l'ha causada. Llista les revisions
@@ -3765,6 +3768,23 @@ application:
         applicability: Només terminis
         calculation: Només càlcul i previsualització
         filing: Càlcul, comprovació per presentar i exportació
+      binding_statement:
+        attest_no_amount:
+          action: Declara que no hi ha import
+          effect: Es registra com un 0 declarat per tu.
+          statement: Declara que aquest import pendent d'exercicis anteriors és nul.
+            Es registra com un 0 declarat per tu, diferent d'una xifra que escriguis;
+            si una declaració anterior mostra després un import, la declaració assenyala
+            la diferència.
+        attest_prior_value:
+          action: Indica l'import de la declaració anterior
+          effect: Es registra com un import declarat per tu per a la declaració anterior.
+          origin: Ho vas declarar tu per a %{source}
+          statement: Indica l'import que aquest concepte pren d'una declaració anterior
+            que no està desada aquí. El teu import s'utilitza en el seu lloc i queda
+            marcat com a declarat per tu; la verificació i l'exportació indiquen que
+            es basa en la teva declaració i, si després s'afegeix la declaració anterior,
+            la declaració assenyala qualsevol diferència.
       box_locator_help:
         one_year: Casella {box} del model {modelo}, exercici {years}.
         onwards: Casella {box} del model {modelo}, exercicis {years} i posteriors.
@@ -3864,6 +3884,79 @@ application:
         comprovació, així que no s'ha pogut fer.
       unworded: No s'ha pogut fer. El seu motiu encara no té cap frase; el seu codi
         és {error_code}.
+  operator_actions:
+    served:
+      action:
+        auth_configure: Configura el mètode d'accés
+        auth_diagnostics_view: Consulta el diagnòstic de l'accés
+        auth_login: Inicia la sessió a l'AEAT
+        diagnostics_repair: Repara l'emmagatzematge local
+        diagnostics_secure_objects_quarantine: Posa en quarantena els registres malmesos
+        diagnostics_workflow_reset_progress: Restableix el progrés del flux guiat
+        ledger_account_add: Afegeix el teu compte bancari
+        ledger_actividad_asset_correct_revision: Corregeix el registre del bé afecte
+          a l'activitat
+        ledger_classify: Classifica els teus moviments bancaris
+        ledger_classify_irpf_category: Indica la categoria d'IRPF d'aquest moviment
+        ledger_classify_movement: Classifica aquest moviment
+        ledger_counterparty_filing_name: Indica el nom de la contrapart per a la declaració
+        ledger_evidence_review_list: Revisa els documents pendents
+        ledger_inventory_movement_claim: Assigna el moviment a les teves existències
+        ledger_invoice_update_operation_type: Indica el tipus d'operació de la factura
+        ledger_link: Vincula la factura amb el seu pagament
+        ledger_preflight: Comprova els llibres d'aquest període
+        ledger_prorrata_list: Revisa el registre de la prorrata
+        ledger_review: Revisa els llibres
+        live_filed_pull: Descarrega la declaració presentada de l'AEAT
+        live_filed_pull_all: Descarrega totes les declaracions presentades de l'AEAT
+        live_notifications_list: Consulta les teves notificacions de l'AEAT
+        modelo_bindings_list: Revisa d'on surten els imports de la declaració
+        modelo_casillas: Revisa les caselles de la declaració
+        modelo_describe: Consulta la descripció d'aquest model
+        modelo_export: Exporta el fitxer de la declaració
+        modelo_filing_record_import: Registra el justificant de presentació
+        modelo_filing_record_list: Revisa els registres de presentació
+        modelo_iva_wallet_override: Corregeix el saldo d'IVA a compensar
+        modelo_iva_wallet_seed: Indica el saldo inicial d'IVA a compensar
+        modelo_verification_report_list: Revisa els informes de verificació
+        modelo_work_amend: Corregeix la declaració presentada
+        modelo_work_attest_m303_exonerado_390: Confirma que estàs exonerat del model
+          390
+        modelo_work_attest_prior_carries: Indica els imports pendents d'exercicis
+          anteriors
+        modelo_work_attest_prior_value: Indica l'import de la declaració anterior
+        modelo_work_calculate: Calcula aquesta declaració
+        modelo_work_calculate_joint_return: Calcula-la com a declaració conjunta
+        modelo_work_create: Comença aquesta declaració
+        modelo_work_file: Registra aquesta declaració com a presentada
+        modelo_work_list: Revisa les teves declaracions
+        modelo_work_override: Substitueix el valor calculat
+        modelo_work_revisions: Revisa les versions d'aquesta declaració
+        modelo_work_set_value: Introdueix el valor de la casella
+        modelo_work_status: Consulta l'estat d'aquesta declaració
+        modelo_work_verify: Verifica aquesta declaració
+        overview_explain: Consulta per què et correspon aquest model
+        overview_status: Revisa les teves obligacions tributàries
+        profile_archive_reconcile: Concilia l'arxiu del perfil
+        profile_arrendamiento: Revisa els teus arrendaments
+        profile_ascendiente: Revisa els teus ascendents
+        profile_complete_setup: Completa la configuració del teu perfil
+        profile_create: Crea un perfil
+        profile_descendiente: Revisa els teus descendents
+        profile_edit: Edita el teu perfil
+        profile_list: Revisa els teus perfils
+        profile_login: Obre el teu perfil
+        profile_logout: Tanca el teu perfil
+        profile_repair_active_pointer: Repara la selecció del perfil actiu
+        profile_repair_clear_active: Esborra la selecció del perfil actiu
+        profile_status: Comprova el teu perfil
+        storage_init: Prepara l'emmagatzematge local
+      no_recovery:
+        operator_decision: Això requereix la teva pròpia decisió; cap acció no la
+          pot prendre per tu.
+        safety: S'ha aturat per protegir les teves dades, així que no s'ofereix cap
+          acció.
+        terminal: 'Aquest rebuig és definitiu: cap acció no el resol.'
   overview:
     calendar:
       event:

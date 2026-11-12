@@ -13,6 +13,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from .....application.ledger.evidence_page_contracts import LedgerEvidencePageProjection
 from .....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from .....application.ledger.models import ManualLedgerTransactionResult
 from .....application.ledger.workspace import LedgerWorkspaceArea
@@ -218,6 +219,9 @@ class EvidenceDoor:
         self.added: list[str] = []
         self.extracted: list[str] = []
         self.confirmed: list[LedgerEvidenceConfirmationV1] = []
+        self.paged: list[str] = []
+        self.page_result: LedgerEvidencePageProjection | None = None
+        self.page_error: Exception | None = None
 
     def list_records(self) -> tuple[LedgerEvidenceRecordRowV1, ...]:
         return tuple(self.records)
@@ -258,6 +262,13 @@ class EvidenceDoor:
             discrepancies=0,
             full_projection=self.full_projection,
         )
+
+    async def page(self, evidence_id: str) -> LedgerEvidencePageProjection:
+        self.paged.append(evidence_id)
+        if self.page_error is not None:
+            raise self.page_error
+        assert self.page_result is not None
+        return self.page_result
 
     async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         self.confirmed.append(confirmation)

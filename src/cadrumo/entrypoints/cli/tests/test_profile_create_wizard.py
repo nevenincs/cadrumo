@@ -141,6 +141,7 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "name",
         "new-entity-first-two-profit-periods",
         "output-language",
+        "pago-fraccionado-art-40-3-elected",
         "patrimonio-declaration-threshold-met",
         "pays-capital-income-with-retencion",
         "pays-non-resident-income-with-retencion",

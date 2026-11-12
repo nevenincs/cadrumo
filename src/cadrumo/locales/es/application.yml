@@ -2657,6 +2657,9 @@ application:
       detail_row_identity_conflict: Una fila de detalle que has introducido no coincide
         con la que dan tus registros para el mismo declarado; corrígela o quítala
         antes de calcular.
+      edit_prior_carries_unstated: Este cambio deja sin indicar los importes pendientes
+        de ejercicios anteriores, por lo que la declaración no se puede calcular.
+        No se ha cambiado nada. Indica primero esos importes.
       edit_revision_id_unresolved: El cálculo de la edición no indicó qué revisión
         creó, así que no se pudo conservar el recibo de la edición. Es una incoherencia
         del programa y nada de lo que has introducido la causa. Lista las revisiones
@@ -3774,6 +3777,24 @@ application:
         applicability: Solo plazos
         calculation: Solo cálculo y vista previa
         filing: Cálculo, comprobación para presentar y exportación
+      binding_statement:
+        attest_no_amount:
+          action: Declara que no hay importe
+          effect: Se registra como un 0 declarado por ti.
+          statement: Declara que este importe pendiente de ejercicios anteriores es
+            nulo. Se registra como un 0 declarado por ti, distinto de una cifra que
+            escribas; si una declaración anterior muestra después un importe, la declaración
+            señala la diferencia.
+        attest_prior_value:
+          action: Indica el importe de la declaración anterior
+          effect: Se registra como un importe declarado por ti para la declaración
+            anterior.
+          origin: Lo declaraste tú para %{source}
+          statement: Indica el importe que este concepto toma de una declaración anterior
+            que no está guardada aquí. Tu importe se usa en su lugar y queda marcado
+            como declarado por ti; la verificación y la exportación indican que se
+            basa en tu declaración y, si después se añade la declaración anterior,
+            la declaración señala cualquier diferencia.
       box_locator_help:
         one_year: Casilla {box} del modelo {modelo}, ejercicio {years}.
         onwards: Casilla {box} del modelo {modelo}, ejercicio {years} y siguientes.
@@ -3871,6 +3892,80 @@ application:
         así que no se ha podido hacer.
       unworded: No se ha podido hacer. Su motivo aún no tiene una frase; su código
         es {error_code}.
+  operator_actions:
+    served:
+      action:
+        auth_configure: Configura el método de acceso
+        auth_diagnostics_view: Consulta el diagnóstico del acceso
+        auth_login: Inicia sesión en la AEAT
+        diagnostics_repair: Repara el almacenamiento local
+        diagnostics_secure_objects_quarantine: Pon en cuarentena los registros dañados
+        diagnostics_workflow_reset_progress: Restablece el progreso del flujo guiado
+        ledger_account_add: Añade tu cuenta bancaria
+        ledger_actividad_asset_correct_revision: Corrige el registro del bien afecto
+          a la actividad
+        ledger_classify: Clasifica tus movimientos bancarios
+        ledger_classify_irpf_category: Indica la categoría de IRPF de este movimiento
+        ledger_classify_movement: Clasifica este movimiento
+        ledger_counterparty_filing_name: Indica el nombre de la contraparte para la
+          declaración
+        ledger_evidence_review_list: Revisa los documentos pendientes
+        ledger_inventory_movement_claim: Asigna el movimiento a tus existencias
+        ledger_invoice_update_operation_type: Indica el tipo de operación de la factura
+        ledger_link: Vincula la factura con su pago
+        ledger_preflight: Comprueba los libros de este periodo
+        ledger_prorrata_list: Revisa el registro de la prorrata
+        ledger_review: Revisa los libros
+        live_filed_pull: Descarga la declaración presentada de la AEAT
+        live_filed_pull_all: Descarga todas las declaraciones presentadas de la AEAT
+        live_notifications_list: Consulta tus notificaciones de la AEAT
+        modelo_bindings_list: Revisa de dónde salen los importes de la declaración
+        modelo_casillas: Revisa las casillas de la declaración
+        modelo_describe: Consulta la descripción de este modelo
+        modelo_export: Exporta el fichero de la declaración
+        modelo_filing_record_import: Registra el justificante de presentación
+        modelo_filing_record_list: Revisa los registros de presentación
+        modelo_iva_wallet_override: Corrige el saldo de IVA a compensar
+        modelo_iva_wallet_seed: Indica el saldo inicial de IVA a compensar
+        modelo_verification_report_list: Revisa los informes de verificación
+        modelo_work_amend: Corrige la declaración presentada
+        modelo_work_attest_m303_exonerado_390: Confirma que estás exonerado del modelo
+          390
+        modelo_work_attest_prior_carries: Indica los importes pendientes de ejercicios
+          anteriores
+        modelo_work_attest_prior_value: Indica el importe de la declaración anterior
+        modelo_work_calculate: Calcula esta declaración
+        modelo_work_calculate_joint_return: Calcúlala como declaración conjunta
+        modelo_work_create: Empieza esta declaración
+        modelo_work_file: Registra esta declaración como presentada
+        modelo_work_list: Revisa tus declaraciones
+        modelo_work_override: Sustituye el valor calculado
+        modelo_work_revisions: Revisa las versiones de esta declaración
+        modelo_work_set_value: Introduce el valor de la casilla
+        modelo_work_status: Consulta el estado de esta declaración
+        modelo_work_verify: Verifica esta declaración
+        overview_explain: Consulta por qué te corresponde este modelo
+        overview_status: Revisa tus obligaciones tributarias
+        profile_archive_reconcile: Concilia el archivo del perfil
+        profile_arrendamiento: Revisa tus arrendamientos
+        profile_ascendiente: Revisa tus ascendientes
+        profile_complete_setup: Completa la configuración de tu perfil
+        profile_create: Crea un perfil
+        profile_descendiente: Revisa tus descendientes
+        profile_edit: Edita tu perfil
+        profile_list: Revisa tus perfiles
+        profile_login: Abre tu perfil
+        profile_logout: Cierra tu perfil
+        profile_repair_active_pointer: Repara la selección del perfil activo
+        profile_repair_clear_active: Borra la selección del perfil activo
+        profile_status: Comprueba tu perfil
+        storage_init: Prepara el almacenamiento local
+      no_recovery:
+        operator_decision: Esto requiere tu propia decisión; ninguna acción puede
+          tomarla por ti.
+        safety: Se ha detenido para proteger tus datos, así que no se ofrece ninguna
+          acción.
+        terminal: 'Este rechazo es definitivo: ninguna acción lo resuelve.'
   overview:
     calendar:
       event:

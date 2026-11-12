@@ -192,6 +192,8 @@ class SetupAnswers(BaseModel):
     """Optional INCN as a canonical decimal string."""
     new_entity_first_two_profit_periods: OptionalWizardBool = ""
     """Optional three-state bool for LIS Art. 29 new-entity rate."""
+    pago_fraccionado_art_40_3_elected: OptionalWizardBool = ""
+    """Optional three-state bool: the LIS Art. 40.3 election stated in the censal declaration."""
     irpf_income_categories: str = ""
     """Comma-separated set of IrpfIncomeCategory tokens."""
     declaration_roles: str = ""
@@ -646,6 +648,18 @@ class SetupAnswers(BaseModel):
         except InvalidOperation as exc:
             raise ValueError(f"incn_prior_12_months must be a decimal number, got {value!r}") from exc
         return value
+
+    @field_validator("pago_fraccionado_art_40_3_elected", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_pago_fraccionado_art_40_3_elected(
+        cls,
+        value: object,
+    ) -> OptionalWizardBool:
+        return _parse_optional_bool_token(
+            value,
+            field_name="pago_fraccionado_art_40_3_elected",
+        )
 
     @field_validator("new_entity_first_two_profit_periods", mode="before")
     @classmethod

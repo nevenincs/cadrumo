@@ -18,6 +18,12 @@ from cadrumo.application.ledger.evidence_add_operation import (
     LedgerEvidenceAddProjection,
     LedgerEvidenceAddRequest,
 )
+from cadrumo.application.ledger.evidence_page_contracts import (
+    EVIDENCE_PAGE_MIN_WIDTH,
+    LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
+    LedgerEvidencePageProjection,
+    LedgerEvidencePageRequest,
+)
 from cadrumo.application.ledger.evidence_read_operation import (
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
     LedgerEvidenceListProjection,
@@ -215,6 +221,29 @@ class RuntimeEvidenceTuiDoorV1:
             draft_review_sha256=projection.draft_review_sha256,
         )
         return self._draft(projection, evidence_id=evidence_id)
+
+    async def page(self, evidence_id: str) -> LedgerEvidencePageProjection:
+        """Read what the runtime serves of page one of one stored document, correlated to that record."""
+
+        def correlate(projection: LedgerEvidencePageProjection) -> None:
+            if projection.evidence_id != evidence_id or projection.page != 1:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+
+        return await self._execute(
+            # The terminal draws no image, so the smallest drawing the read allows is asked for.
+            LedgerEvidencePageRequest(
+                profile_id=self._profile_id,
+                evidence_id=evidence_id,
+                page=1,
+                max_width=EVIDENCE_PAGE_MIN_WIDTH,
+            ),
+            definition_id=LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
+            result_type=LedgerEvidencePageProjection,
+            success_effect=OperationEffect.NONE,
+            correlate=correlate,
+            # A refused read raises its recorded reason, so the screen says it in the refusal's own words.
+            explain_failure=True,
+        )
 
     async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         """Re-read and confirm only the exact source and draft reviewed in this session."""

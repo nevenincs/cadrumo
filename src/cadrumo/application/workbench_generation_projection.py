@@ -42,11 +42,14 @@ from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import validate_utc_aware
 from ..core.type_guards import is_object_mapping, is_object_tuple
+from .operations.error_detail import served_words_language
 from .operations.public_mirror import (
     excluded_canonical_fields,
     project_public_mirror,
     restore_public_mirror,
 )
+from .operator_actions.models import PreconditionVerdict
+from .operator_actions.served_actions import serve_precondition_verdict
 from .workbench_generation import (
     assemble_workbench_generation_search,
 )
@@ -218,8 +221,21 @@ def _rebuild_search(canonical: type[object], restored: dict[str, object], public
     restored["search"] = search
 
 
+def _served_verdict(verdict: BaseModel) -> BaseModel:
+    """Serve a verdict's action words in this worker's language as the generation leaves it."""
+    if not isinstance(verdict, PreconditionVerdict):
+        raise TypeError("workbench verdict serving received another model")
+    return serve_precondition_verdict(verdict, served_words_language())
+
+
 def _project(generation: WorkbenchGenerationV1) -> object:
-    return project_public_mirror(generation, WorkbenchGenerationV1, PublicWorkbenchGenerationV1, omitted=_OMITTED)
+    return project_public_mirror(
+        generation,
+        WorkbenchGenerationV1,
+        PublicWorkbenchGenerationV1,
+        omitted=_OMITTED,
+        served={PreconditionVerdict: _served_verdict},
+    )
 
 
 def _restore(public: PublicWorkbenchGenerationV1) -> object:
