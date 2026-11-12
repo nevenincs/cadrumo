@@ -164,26 +164,32 @@ grounding = "verified"
 modelo = "200"
 period = "0A"
 year = "horizon-1"
-concepts = { ingresos_explotacion_ledger = "30800.00", gastos_explotacion_ledger = "5400.00" }
+not_sourced = { "00255" = "30800.00", "00279" = "5400.00" }
 derivation = """
 The bank ledger gives revenue 30800.00 and the equipment and licence rental 5400.00 (net of deductible IVA).
-The Modelo 200 starts from the accounting result (casilla 00501), which needs closing entries (amortisation, accruals,
-officer costs) the ledger does not hold, so no Modelo 200 casilla is asserted.
+They would fill the cuenta de pérdidas y ganancias of the Modelo 200 record design (aeat-dr-200, the same lines
+in the 2022 and 2025 designs): "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la
+cifra de negocios [00255]" (element 6, position 13, length 17) and "Cuenta de pérdidas y ganancias (I) -
+Operaciones continuadas - Otros gastos de explotación [00279]", where a rental of equipment and licences is a
+servicio exterior.
 """
 legal_ref = ["ley-27-2014:art-124"]
 grounding = "unverified"
-reason = "The accounting result is outside the bank ledger; asserting a Modelo 200 casilla would record an unproven figure."
+reason = "The accounting result needs closing entries (amortisation, accruals, officer costs) the bank ledger lacks, so these casillas stay not sourced until Sociedades sources them."
 
 [[values]]
 modelo = "200"
 period = "0A"
 year = "horizon-1"
-concepts = { tributacion_estado_porcentaje = "100" }
+roles = { "is_tributacion_conjunta_porcentaje_estado" = "100" }
 derivation = """
 The company's domicilio fiscal is in Valladolid and its incn of the prior twelve months is 28500.00.
 The foral administrations levy the tax of an entity domiciled in their territory with a prior-year volume of
 operations up to 12 million euros, and share it by volume only above that figure (Ley 12/2002 art. 15,
 Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625).
+The role is casilla 00625 of record DP200026 in the Modelo 200 record design, element 17, position 152,
+length 5, "3 enteros y 2 decimales": "Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes
+tributación - Admón.del Estado [00625]" (aeat-dr-200, the same line in the 2022 and 2025 designs).
 """
 legal_ref = ["ley-12-2002:art-15", "ley-28-1990:art-19"]
 grounding = "verified"
