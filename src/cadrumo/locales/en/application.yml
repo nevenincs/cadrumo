@@ -2015,9 +2015,6 @@ application:
       capital_mobiliario_foreign_source: '{payer}: this savings position''s income
         comes from {country}, and income from another state is not computed yet. Enter
         these boxes by hand.'
-      capital_mobiliario_governed_rate_not_applicable: '{payer}: this payer pays income
-        on several positions and the general withholding rate does not split its withholding
-        between them. Enter these boxes by hand.'
       capital_mobiliario_income_in_kind: '{payer}: the payer record states income
         in kind, which is not computed yet. Enter these boxes by hand.'
       capital_mobiliario_payer_check_mismatch: '{payer}: your linked rows plus the

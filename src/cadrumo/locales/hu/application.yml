@@ -2082,9 +2082,6 @@ application:
       capital_mobiliario_foreign_source: '{payer}: a megtakarítási pozíció jövedelme
         más államból ({country}) származik, és az ilyen jövedelmet a program még nem
         számítja ki. Add meg ezeket a mezőket kézzel.'
-      capital_mobiliario_governed_rate_not_applicable: '{payer}: ez a kifizető több
-        pozíción fizet jövedelmet, és az általános levonási kulcs nem osztja meg közöttük
-        a levont adót. Add meg ezeket a mezőket kézzel.'
       capital_mobiliario_income_in_kind: '{payer}: a kifizető nyilvántartása természetbeni
         jövedelmet tartalmaz, amelyet a program még nem számít ki. Add meg ezeket
         a mezőket kézzel.'

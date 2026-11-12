@@ -49,8 +49,8 @@ def _occ(
     return CapitalMobiliarioOccurrence(ref, record, payer, D(share), D(net), D(expenses))
 
 
-def _record(integro: str, retencion: str, *, rate_applies: bool = True) -> PayerRecordEvidence:
-    return PayerRecordEvidence(_Record(D(integro), D(retencion)), governed_rate_applies=rate_applies)
+def _record(integro: str, retencion: str) -> PayerRecordEvidence:
+    return PayerRecordEvidence(_Record(D(integro), D(retencion)))
 
 
 def _run(
@@ -170,23 +170,6 @@ def test_attested_absence_has_zero_withholding_and_gross_equals_share_of_cash() 
     first, second = _computed(outcome[0]).occurrences
     assert (first.gross, first.withholding) == (D("5.25"), D("0.00"))
     assert (second.gross, second.withholding) == (D("20.00"), D("0.00"))
-
-
-def test_reduced_rate_multi_occurrence_is_refused_naming_payer() -> None:
-    outcome = _run(
-        [_occ("a1", "81"), _occ("a2", "162")],
-        {"PAYER-A": _record("300", "57", rate_applies=False)},
-    )
-    refusal = _refused(outcome[0])
-    assert refusal.kind is PayerRefusalKind.GOVERNED_RATE_NOT_APPLICABLE
-    assert refusal.payer_key == "PAYER-A"
-    assert refusal.position_refs == ("a1", "a2")
-
-
-def test_reduced_rate_single_occurrence_still_reads_the_record() -> None:
-    (outcome,) = _run([_occ("a1", "100")], {"PAYER-A": _record("107.60", "7.60", rate_applies=False)})
-    (occ,) = _computed(outcome).occurrences
-    assert (occ.gross, occ.withholding) == (D("107.60"), D("7.60"))
 
 
 def test_payers_are_independent_and_ordered_by_first_occurrence() -> None:

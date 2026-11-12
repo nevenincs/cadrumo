@@ -204,8 +204,6 @@ class CalculationNoteSentence(StrEnum):
     """The gross rebuilt from a payer's linked rows differs from the gross the payer's record states."""
     CAPITAL_MOBILIARIO_WITHHOLDING_SUM_MISMATCH = "capital_mobiliario_withholding_sum_mismatch"
     """The withholding rebuilt at the governed rate differs from the withholding the payer's record states."""
-    CAPITAL_MOBILIARIO_GOVERNED_RATE_NOT_APPLICABLE = "capital_mobiliario_governed_rate_not_applicable"
-    """A payer feeds several occurrences and the governed rate does not split its withholding."""
     CAPITAL_MOBILIARIO_PAYER_WITHOUT_ROWS = "capital_mobiliario_payer_without_rows"
     """A payer record states capital-mobiliario income that no linked ledger row shows."""
     CREDIT_SOURCE_DISAGREEMENT = "credit_source_disagreement"

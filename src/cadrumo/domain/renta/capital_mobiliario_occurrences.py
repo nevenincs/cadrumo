@@ -90,11 +90,9 @@ class CapitalMobiliarioOccurrence:
 
 @dataclass(frozen=True, slots=True)
 class PayerRecordEvidence:
-    """A payer record, with whether the governed rate applies to the payer's income."""
+    """A payer record that backs the payer's occurrences."""
 
     record: PayerRecordView
-    governed_rate_applies: bool = True
-    """False for a reduced rate, an exempt instrument or any other split the rate cannot give."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,8 +108,6 @@ class PayerRefusalKind(StrEnum):
 
     PAYER_EVIDENCE_MISSING = "payer_evidence_missing"
     """Linked rows, but neither a payer record nor an attested absence."""
-    GOVERNED_RATE_NOT_APPLICABLE = "governed_rate_not_applicable"
-    """Several occurrences, and the governed rate does not give their split."""
     PAYER_CHECK_MISMATCH = "payer_check_mismatch"
     """Rebuilt gross and the record's importe integro differ by more than a cent."""
     WITHHOLDING_SUM_MISMATCH = "withholding_sum_mismatch"
@@ -206,8 +202,6 @@ def _multiple(
     evidence: PayerRecordEvidence,
     rate: Decimal,
 ) -> PayerOutcome:
-    if not evidence.governed_rate_applies:
-        return _refusal(group, PayerRefusalKind.GOVERNED_RATE_NOT_APPLICABLE)
     record = evidence.record
     rebuilt_total = sum((o.share_of_cash for o in group), _ZERO) + record.retencion
     if not _within(rebuilt_total, record.importe_integro, 1):

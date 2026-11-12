@@ -2125,9 +2125,6 @@ application:
       capital_mobiliario_foreign_source: '{payer}: los rendimientos de esta posición
         de ahorro proceden de {country}, y los rendimientos de otro Estado aún no
         se calculan. Introduce estas casillas a mano.'
-      capital_mobiliario_governed_rate_not_applicable: '{payer}: este pagador abona
-        rendimientos en varias posiciones y el tipo general de retención no reparte
-        su retención entre ellas. Introduce estas casillas a mano.'
       capital_mobiliario_income_in_kind: '{payer}: el registro del pagador declara
         rendimientos en especie, que aún no se calculan. Introduce estas casillas
         a mano.'

@@ -2116,9 +2116,6 @@ application:
       capital_mobiliario_foreign_source: '{payer}: els rendiments d''aquesta posició
         d''estalvi provenen de {country}, i els rendiments d''un altre Estat encara
         no es calculen. Introdueix aquestes caselles a mà.'
-      capital_mobiliario_governed_rate_not_applicable: '{payer}: aquest pagador abona
-        rendiments en diverses posicions i el tipus general de retenció no en reparteix
-        la retenció entre elles. Introdueix aquestes caselles a mà.'
       capital_mobiliario_income_in_kind: '{payer}: el registre del pagador declara
         rendiments en espècie, que encara no es calculen. Introdueix aquestes caselles
         a mà.'

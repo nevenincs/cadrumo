@@ -137,10 +137,6 @@ _REFUSAL_SENTENCES: Final[Mapping[PayerRefusalKind, tuple[CalculationNoteSentenc
         CalculationNoteSentence.CAPITAL_MOBILIARIO_WITHHOLDING_SUM_MISMATCH,
         _DISAGREEMENT_DOOR,
     ),
-    PayerRefusalKind.GOVERNED_RATE_NOT_APPLICABLE: (
-        CalculationNoteSentence.CAPITAL_MOBILIARIO_GOVERNED_RATE_NOT_APPLICABLE,
-        _UNCOMPUTED_DOOR,
-    ),
 }
 
 
