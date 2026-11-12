@@ -1,4 +1,8 @@
 import type { Suggestion } from "@/components/ui/suggestions";
+import {
+  isPurchaseLedgerRow,
+  type PurchaseLedgerRow,
+} from "../../../shell/ledgerContract";
 import type { FileToken, PublicDecimal } from "../../../shell/ledger";
 import {
   AMOUNT_RULE,
@@ -23,7 +27,9 @@ import type {
   InventoryDescribeRequest,
   InventoryEvidenceAddRequest,
   InventoryEvidenceAddResult,
+  InventoryMovement,
   InventoryMovementAddRequest,
+  InventoryMovementClaimRequest,
   InventoryMovementCorrectRequest,
   InventoryMovementReverseRequest,
   InventoryProof,
@@ -579,6 +585,53 @@ export function reverseRequest(
             target_movement_id: target,
             reason: why,
           },
+    problems: c.problems,
+    missing: c.missing,
+  };
+}
+
+/** What a purchase states about the ledger transaction that books it. */
+export type PurchaseClaim = {
+  row: PurchaseLedgerRow;
+  /** The transaction a claimed purchase names; null otherwise. */
+  transaction: string | null;
+};
+
+/** The statement the read served for a purchase, or null where the read
+ * served none: an unserved statement is not shown as any of the three. */
+export function claimOf(movement: InventoryMovement): PurchaseClaim | null {
+  const served = movement as InventoryMovement & {
+    ledger_row?: string | null;
+    claimed_transaction_id?: string | null;
+  };
+  const row = served.ledger_row;
+  if (typeof row !== "string" || !isPurchaseLedgerRow(row)) return null;
+  return { row, transaction: served.claimed_transaction_id ?? null };
+}
+
+/** The statement a form makes: that a transaction books the purchase, that
+ * none does, or that nothing is stated. A transaction is named exactly when
+ * it is claimed. */
+export function claimRequest(
+  book: Book,
+  correction: string,
+  movement: string,
+  row: string,
+  transaction: string,
+): Built<InventoryMovementClaimRequest> {
+  const c = collector();
+  const stated = c.choice("row", row, ["unstated", "claimed", "none"]);
+  if (stated === "claimed" && transaction === "") c.lack("transaction");
+  return {
+    request:
+      c.ready() && stated !== null && isPurchaseLedgerRow(stated)
+        ? {
+            ...changeOf(book, correction),
+            movement_id: movement,
+            ledger_row: stated,
+            claimed_transaction_id: stated === "claimed" ? transaction : null,
+          }
+        : null,
     problems: c.problems,
     missing: c.missing,
   };

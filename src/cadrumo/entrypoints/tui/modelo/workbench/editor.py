@@ -126,6 +126,8 @@ _CAN_CHANGE_LOCALE_KEYS: Final[Mapping[ModeloFormEditability, str]] = MappingPro
 
 #: What a declaration recorded as filed allows: no change here, and a correction to change it.
 _RECORDED_LOCALE_KEY: Final[str] = "workspace.modelo.editor.can_change.recorded"
+#: The one action that takes a statement out of a box the filer stated holds no amount.
+_WITHDRAW_LOCALE_KEY: Final[str] = "tui.modelo.statements.withdraw"
 
 
 def source_surface(field: ModeloFormField) -> SourceSurface:
@@ -491,17 +493,15 @@ class CasillaEditorPanel(Vertical):
                     yield Button(self._open_label(self._open_area), id="editor-open", variant="primary")
             return
         if self._can_clear or self._can_restore:
+            # Taking out a box's statement withdraws it: one action, named as a withdrawal, whichever the box allows.
+            stated = self._field.stated_absent is not None
             with Horizontal(id="editor-alternatives"):
                 if self._can_clear:
-                    yield localized(
-                        Button(tr("workspace.modelo.editor.clear"), id="editor-clear"),
-                        "workspace.modelo.editor.clear",
-                    )
-                if self._can_restore:
-                    yield localized(
-                        Button(tr("workspace.modelo.editor.restore"), id="editor-restore"),
-                        "workspace.modelo.editor.restore",
-                    )
+                    clear_key = _WITHDRAW_LOCALE_KEY if stated else "workspace.modelo.editor.clear"
+                    yield localized(Button(tr(clear_key), id="editor-clear"), clear_key)
+                if self._can_restore and not (stated and self._can_clear):
+                    restore_key = _WITHDRAW_LOCALE_KEY if stated else "workspace.modelo.editor.restore"
+                    yield localized(Button(tr(restore_key), id="editor-restore"), restore_key)
         with Horizontal(id="editor-actions"):
             yield localized(
                 Button(tr("workspace.modelo.editor.cancel"), id="editor-cancel"),

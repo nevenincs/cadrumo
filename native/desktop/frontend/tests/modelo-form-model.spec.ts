@@ -16,6 +16,10 @@ import {
   removeIntent,
   restaged,
   restoreIntent,
+  statementEdits,
+  statementOf,
+  wholeStatements,
+  withdrawal,
   UNPLACED_PAGE,
   valueIntent,
   WORKING_FIGURES_PAGE,
@@ -26,6 +30,7 @@ import { stagedText } from "../src/components/modelo/form/stagedWords";
 import type { Translate } from "../src/shell/strings";
 import { MODELO_FIXTURES } from "./support/windowFixtures";
 import type {
+  ModeloFormCarryAttestation,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
 } from "../src/shell/modeloContract/modeloWorkForm";
@@ -164,6 +169,7 @@ test("a carry stated to hold nothing is sent as the statement, with no value", (
   const statement = {
     kind: "attest_no_amount",
     change: "set",
+    family: "renta_negative_general_bases_pending",
     words: "served action",
     effect: "served effect",
   } as const;
@@ -185,6 +191,105 @@ test("a carry stated to hold nothing is sent as the statement, with no value", (
   expect(restaged(edit, { ...open, takes_typed_value: false })).toBeNull();
   // An earlier return stored meanwhile supplies the carry: the statement goes.
   expect(restaged(edit, { ...open, origin: "imported" })).toBeNull();
+});
+
+// The Renta read places the four carries of earlier negative bases at their
+// bindings; the statement over them is shaped as the form serves one.
+const m100 = envelope("modelo-100-0A-en");
+const carries = placedFields(m100.form.form).filter(
+  (placed) =>
+    placed.field.edit_address.kind === "binding" &&
+    placed.field.edit_address.binding_id.startsWith(
+      "renta-base-liquidable-negativa-general-",
+    ),
+);
+const served: ModeloFormCarryAttestation = {
+  family: "renta_negative_general_bases_pending",
+  binding_ids: carries.map((placed) =>
+    placed.field.edit_address.kind === "binding"
+      ? placed.field.edit_address.binding_id
+      : "",
+  ),
+  action_words: "served action",
+  statement_words: "served statement",
+  effect_words: "served effect",
+};
+
+test("a statement is staged on every box it names, or on none", () => {
+  const placed = placedFields(m100.form.form);
+  expect(carries.length).toBeGreaterThan(1);
+  const edits = statementEdits(placed, served);
+  expect(edits?.map((edit) => editKey(edit.field))).toEqual(
+    served.binding_ids.map((id) => `b:${id}`),
+  );
+  expect(new Set(edits?.map((edit) => statementOf(edit.intent))).size).toBe(1);
+  // A binding the form draws nowhere stages none of the statement.
+  expect(
+    statementEdits(placed, {
+      ...served,
+      binding_ids: [...served.binding_ids, "not-on-the-form"],
+    }),
+  ).toBeNull();
+});
+
+test("a statement or withdrawal left with some of its boxes is dropped whole", () => {
+  const placed = placedFields(m100.form.form);
+  const all = new Map(
+    (statementEdits(placed, served) ?? []).map((edit) => {
+      const made = staged(edit.field, edit.intent);
+      return [made.key, made] as const;
+    }),
+  );
+  expect(wholeStatements(all, placed, [served]).dropped).toEqual([]);
+  // Served no more, the statement goes from every box.
+  expect(wholeStatements(all, placed, []).next.size).toBe(0);
+  const part = new Map([...all].slice(1));
+  const whole = wholeStatements(part, placed, [served]);
+  expect(whole.next.size).toBe(0);
+  expect(whole.dropped).toHaveLength(part.size);
+});
+
+test("a stated box withdraws its statement from every box it stands on, or from none", () => {
+  const stated = (field: PublicModeloFormField): PublicModeloFormField =>
+    carries.some((placed) => placed.field === field)
+      ? {
+          ...field,
+          stated_absent: "renta_negative_general_bases_pending",
+          clearable: true,
+        }
+      : field;
+  const placed = placedFields(m100.form.form).map((each) => ({
+    ...each,
+    field: stated(each.field),
+  }));
+  const boxes = placed.filter((each) => each.field.stated_absent !== null);
+  const first = boxes[0]!.field;
+  const offer = withdrawal(placed, first, () => true);
+  expect(offer?.kind).toBe("offered");
+  if (offer?.kind !== "offered") return;
+  expect(offer.edits.map((edit) => editKey(edit.field))).toEqual(
+    boxes.map((each) => editKey(each.field)),
+  );
+  for (const edit of offer.edits)
+    expect(edit.intent).toEqual({
+      kind: "remove_override",
+      change: "clear",
+      withdraws: "renta_negative_general_bases_pending",
+    });
+  // One box the baseline does not let be taken out keeps the whole family.
+  const last = boxes.at(-1)!.field;
+  expect(withdrawal(placed, first, (field) => field !== last)).toEqual({
+    kind: "refused",
+    field: last,
+  });
+  // A box whose own removal is not admitted offers no withdrawal.
+  expect(withdrawal(placed, first, (field) => field !== first)).toBeNull();
+  // A box no statement stands on offers none.
+  expect(withdrawal(placed, box(m130, "05"), () => true)).toBeNull();
+  // A withdrawal is kept only while the box still holds its statement.
+  const held = staged(first, offer.edits[0]!.intent);
+  expect(restaged(held, first)).toEqual(offer.edits[0]!.intent);
+  expect(restaged(held, { ...first, stated_absent: null })).toBeNull();
 });
 
 test("an entry is read by a preflight carrying only what was typed", () => {

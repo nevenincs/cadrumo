@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 from ....core.aggregation import ThirdPartyDeclarationRole
 from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.time.clock import today_madrid
 from ...contribuyente.entity_type import (
     EntityType,
     entity_type_attribution_entity_token,
@@ -37,7 +36,7 @@ from .applicability_payer_facts import (
     payer_fact_is_three_state,
 )
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, StringMappingPolicy
 from .ids import LegalRefId, ModeloId
 from .irpf_regimes import irpf_estimation_regime_directa_normal_token
 from .schema_base import DateAxis
@@ -716,6 +715,13 @@ _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS: tuple[LegalRefId, ...] = (
 )
 
 _APPLICABILITY_VERDICT_REASON_FACT_ID = "modelo-applicability-verdict-reason-catalogue"
+_APPLICABILITY_VERDICT_REASON_FACT = StringMappingFact(
+    fact_id=_APPLICABILITY_VERDICT_REASON_FACT_ID,
+    date_axis=DateAxis.FILING_PERIOD,
+    policy=StringMappingPolicy(
+        subject="modelo applicability reasons", value_whitespace=MappingValueWhitespace.PRESERVE
+    ),
+)
 
 
 def registry_applicability_reason(key: str, *, operation: PinnedAuthorityOperation | None = None) -> str:
@@ -726,16 +732,9 @@ def registry_applicability_reason(key: str, *, operation: PinnedAuthorityOperati
         with bundled_indexed_authority().operation() as indexed_operation:
             return registry_applicability_reason(key, operation=indexed_operation)
 
-    resolved = operation.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_APPLICABILITY_VERDICT_REASON_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("modelo applicability reasons must resolve as a mapping fact")
-    entries = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    # A reason read holds no date: it takes the editions inside the support
+    # envelope, never the run date.
+    entries = _APPLICABILITY_VERDICT_REASON_FACT.resolve_support_envelope_entries(operation)
     try:
         return entries[key]
     except KeyError as exc:

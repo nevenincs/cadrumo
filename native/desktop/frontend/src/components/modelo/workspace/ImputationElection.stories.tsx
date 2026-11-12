@@ -1,3 +1,4 @@
+import { RENTA_UNIT } from "@/dev/rentaUnit";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
@@ -211,7 +212,7 @@ function Sources({ locale }: { locale: OutputLanguage }) {
     <div className="flex h-full min-h-0 flex-col">
       <WorkspaceScreen
         port={port.current}
-        workUnitId="b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4"
+        workUnitId={RENTA_UNIT}
         language={locale}
         locale={locale}
         onBack={noop}

@@ -1,3 +1,4 @@
+import { RENTA_UNIT } from "./rentaUnit";
 import { requireServed } from "./servedFixtures";
 import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import type { OutputLanguage } from "../shell/modeloContract/modelo";
@@ -15,10 +16,6 @@ import { translator } from "../shell/strings";
 
 /** The Renta's own year: the declaration the other scenarios open. */
 const OWN_YEAR_SHAPE = "renta-married";
-
-/** The work unit the scenario's declarations list offers. */
-export const RENTA_UNIT =
-  "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
 
 const names = Object.keys(
   requireServed(

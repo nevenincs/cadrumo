@@ -8,10 +8,11 @@ export type Tone = "attention" | "danger" | "mine" | "source" | "quiet";
 
 export const TONE_TEXT: Record<Tone, string> = {
   attention: "text-warning",
-  danger: "text-destructive",
+  danger: "text-destructive group-aria-selected:text-destructive-ink",
   mine: "text-foreground",
   source: "text-muted-foreground",
-  quiet: "text-faint",
+  // On the chosen row's tint the faint ink falls short of AA, so it steps up.
+  quiet: "text-faint group-aria-selected:text-muted-foreground",
 };
 
 export const ORIGIN_LOOK: Record<

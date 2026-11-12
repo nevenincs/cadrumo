@@ -243,6 +243,11 @@ aggregation:
       unsupported_period: Annual period is required for Modelo 100 income aggregation
         (e.g. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: In force
+      withdrawn: Withdrawn
+    amount:
+      pago_a_cuenta: Total payments on account
     clase:
       actividad_economica: Economic activity income
       arrendamiento_inmueble_urbano: 'Income from real estate capital: urban property
@@ -292,6 +297,10 @@ aggregation:
         takes them.
       validation: 'The withholding record was not saved: check the payer ID, the amounts
         (at most two decimals) and the certificate fingerprint.'
+    origen:
+      operator_declaration: Your own declaration
+      payer_certificate: Payer's certificate
+    payer_unnamed: Payer without a stated name
     served:
       certificate_file_unreadable: The certificate file could not be read. Check that
         it still exists, is not empty and is a PDF, an image or an XML document, then
@@ -2117,6 +2126,30 @@ desktop:
         confirmation. Your draft has been kept.
       country: Country
       established: Established
+      filing_name:
+        kind:
+          entity: Entity
+          natural_person: Natural person
+        kind_contradicts: The kind stated ({declared}) differs from the form of the
+          identifier ({observed}).
+        kind_label: Kind
+        no_second_surname: No second surname
+        nombre: Given name
+        primer_apellido: First surname
+        razon_social: Company name
+        rendering_add: Add a rendering
+        rendering_for: For {width} characters
+        rendering_remove: Remove this rendering
+        renderings: Shorter renderings
+        renderings_hint: The width is the number of characters of the field the name
+          has to fit.
+        save: Save filing name
+        segundo_apellido: Second surname
+        stated_by: Stated by
+        text: Text
+        title: Filing name
+        unstated: No filing name stated.
+        width: Width
       not_applied: The returned confirmation does not contain every value you entered.
         Your draft has been kept.
       note: Note
@@ -4018,6 +4051,7 @@ desktop:
         closing: Set the closing value
         correct: Correct the opening stock or the method
         describe: Edit the details
+        movement_claim: State the ledger transaction of this purchase
         movement_correct: Correct this movement
         movement_reverse: Reverse this movement
         preview: Preview the valuation
@@ -4025,6 +4059,17 @@ desktop:
         restore: Restore the stock book
         retire: Retire the stock book
       books: Stock books for {year}
+      claim:
+        column: Ledger
+        note: Say which ledger transaction books this purchase, that none does, or
+          clear what was stated.
+        row: The ledger books this purchase
+        row_claimed: A ledger transaction books it
+        row_none: No ledger transaction books it
+        row_unstated: Not stated
+        row_unstated_hint: This clears an earlier statement.
+        state_claimed: Booked by {transaction}
+        transaction: Ledger transaction
       closing:
         authority: How the value is decided
         basis: Counted at
@@ -4111,6 +4156,7 @@ desktop:
         correct: Correct {name} · {year}
         describe: Details of {name} · {year}
         movement: Add a movement to {name} · {year}
+        movement_claim: Ledger transaction of a purchase of {name} · {year}
         movement_correct: Correct a movement of {name} · {year}
         restore: Restore {name} · {year}
         retire: Retire {name} · {year}
@@ -4168,6 +4214,7 @@ desktop:
         correct: Save the correction
         describe: Save the details
         movement: Add the movement
+        movement_claim: Save the statement
         movement_correct: Save the correction
         restore: Restore the stock book
         retire: Retire the stock book
@@ -4219,12 +4266,6 @@ desktop:
       action:
         attest: State no withholding
         record: Record certificate
-      amount:
-        importe_integro_dinerario: Gross cash amount
-        ingreso_a_cuenta: Payment on account
-        ingreso_a_cuenta_repercutido: Payment on account passed on
-        retencion: Withholding
-        valoracion_especie: Value in kind
       attested_on: Stated on {date}
       changes: Changes to the {ejercicio} certificates
       column:
@@ -4401,7 +4442,6 @@ desktop:
       lead: These boxes are filled from your withholding records, never typed here.
         To change one, correct it in your withholding records and calculate again.
       list: Withholdings
-      show: Show on the form
       show_box: Show box {box} on the form
     details:
       close: Close details
@@ -4422,6 +4462,9 @@ desktop:
       confirm: Discard
       lead: It leaves your list of declarations. Its history is kept.
       reason: Why (optional)
+    export:
+      limitation:
+        title: What this file leaves out
     form:
       pages: Pages of the form
     keys:
@@ -4450,6 +4493,19 @@ desktop:
     side:
       label: Beside the form
       outline: Outline
+    statements:
+      hide: Hide
+      intro: Tick each statement that is true for you. Every one you tick is staged
+        for review with your other changes; clearing a tick takes that statement out.
+      mark: Stated by you
+      not_placed: A statement names a box this form does not show, so it was not staged.
+      show: Show
+      stage: Stage for review
+      title: Statements you can make
+      withdraw: Withdraw the statement
+      withdraw_kept: Box {box} of this statement cannot be taken out here, so nothing
+        was withdrawn.
+      withdrawn: Statement withdrawn
     view:
       compare: Compare
       credits: Withholdings
@@ -4763,6 +4819,8 @@ desktop:
     search: Search
     settings: Settings
     tui: Workspace
+  refusal:
+    action_unroutable: Not available here.
   session:
     enter_restarts: Enter restarts
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
@@ -6989,8 +7047,6 @@ tui:
         active: Active
         id: Identifier
         label: Name
-    result:
-      remedy: 'Suggested next step: {action}'
     status:
       completed: Done.
       effect_unknown: The connection ended before an answer arrived ({code}). It may
@@ -7149,6 +7205,26 @@ tui:
           shows %{evidenced}. %{detail}'
         country: Country code (2 letters, optional)
         evidenced: Scope a document shows, for the lookup (optional)
+        filing_done: The filing name of %{identifier} was stated.
+        filing_heading: Filing name
+        filing_kind_entity: Entity
+        filing_kind_natural_person: Natural person
+        filing_no_second: No second surname
+        filing_nombre: Given name
+        filing_primer: First surname
+        filing_razon: Company name
+        filing_rendering: 'For %{width} characters: %{text}'
+        filing_renderings: Shorter renderings, as width=text; width=text (optional)
+        filing_renderings_malformed: Write each shorter rendering as a width, an equals
+          sign and its text, for example 20=Short name, and separate several with
+          a semicolon.
+        filing_review: Review filing name
+        filing_segundo: Second surname
+        filing_stage: State the filing name of %{identifier} as %{kind}.
+        filing_stated: 'Filing name of %{identifier}: %{kind} · %{name}'
+        filing_stated_by: Stated by %{name} on %{date}.
+        filing_unchanged: '%{identifier} already had this filing name.'
+        filing_unstated: No filing name is stated for %{identifier}.
         identification: EU member state of its VAT number (2 letters)
         identifier: Tax identifier
         identifier_required: Type the counterparty's tax identifier first.
@@ -8499,6 +8575,7 @@ tui:
           create: Create an inventory
           evidence_add: Store a purchase document
           movement_add: Add a movement
+          movement_claim: State the ledger entry of a purchase
           valuation_preview: Preview the valuation
         column:
           actividad: Activity
@@ -8519,10 +8596,12 @@ tui:
           action: Request
           actividad_id: Activity
           authority_record: Closing value full record file
+          claimed_transaction_id: Claimed ledger entry
           closing_value_facts: Closing value facts file
           evidence_file: Document file
           evidence_folder: Folder the document path starts from
           kind: Movement kind
+          ledger_row: Purchase's ledger entry
           movement_date: Movement date
           movement_id: Movement identifier
           opening_stock: Opening stock (optional)
@@ -8536,6 +8615,10 @@ tui:
           count: Count
           opening: Opening
           purchase: Purchase
+        ledger_row:
+          claimed: A ledger entry books this purchase
+          none: No ledger entry books this purchase
+          unstated: Clear the statement (unstated)
         list: Inventories
         method:
           coste_medio: Average cost
@@ -8823,6 +8906,19 @@ tui:
     next_line: 'Next: {action} [{key}]'
     search:
       prompt: Search every page by box number or by words. Enter goes to the box.
+    statements:
+      intro: Tick each statement that is true for you. Every one you tick is staged
+        for review with your other changes; clearing a tick takes that statement out.
+      key: Statements
+      mark:
+        meaning: You stated this box holds no amount; it is not a value you typed.
+        name: Stated by you
+      none: This declaration offers no statement to make now.
+      not_placed: A statement names a box this screen does not show, so it was not
+        staged.
+      stage: Stage for review
+      title: Statements you can make
+      withdraw: Withdraw the statement
   operations:
     action:
       close: Close
@@ -8902,8 +8998,6 @@ tui:
       unavailable: The registered operations could not be read.
     stopped:
       code: Code
-      remedy: What would let it proceed
-      remedy_command: 'Remedy command: {command}'
     title: Operations
   reference:
     action:
@@ -8969,6 +9063,9 @@ tui:
       support_matrix: 'What Cadrumo can do with each modelo: calculate, export, read
         filed copies.'
     title: Reference
+  refusal:
+    action_needs_details: … asks for details it still needs before it can run.
+    action_unroutable: Not available here.
   restricted:
     actions: 'Allowed actions: {values}'
     all_periods: All periods

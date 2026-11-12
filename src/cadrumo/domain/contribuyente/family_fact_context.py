@@ -16,7 +16,6 @@ _FAMILY_FACT_DATE_AXES: dict[str, DateAxis] = {
     "lirpf-art-58-under-three-maximum-age": DateAxis.FILING_PERIOD,
     "lirpf-art-61-shared-custody-proration-factor": DateAxis.FILING_PERIOD,
     "lirpf-art-81-adoption-entry-window-years": DateAxis.FILING_PERIOD,
-    "lirpf-art-81-contribution-ceiling-retired-effective-year": DateAxis.FILING_PERIOD,
     "lirpf-art-81-maternity-post-birth-enrollment-effective-year": DateAxis.FILING_PERIOD,
     "madrid-birth-adoption-following-periods": DateAxis.FILING_PERIOD,
     "madrid-nacimiento-adopcion-applicability": DateAxis.FILING_PERIOD,

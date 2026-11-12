@@ -380,6 +380,8 @@ cli:
         list_help: List inventory record books in the active profile
         movement_add_help: Add a purchase, sale, or adjustment movement to the inventory
           record book
+        movement_claim_candidates_help: 'List the ledger transactions a purchase may
+          claim: those whose base, IVA and recargo equal the purchase to the cent.'
         movement_claim_help: State which ledger transaction books a purchase, state
           that none does, or clear the statement; a claimed transaction leaves the
           ledger expense casillas.

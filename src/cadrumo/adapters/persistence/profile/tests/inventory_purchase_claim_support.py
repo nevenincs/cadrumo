@@ -48,7 +48,7 @@ def recargo_cost() -> InventoryAcquisitionCost:
     )
 
 
-def ledger_row_of(provider_id: str, *, base: Decimal = BASE) -> Transaction:
+def ledger_row_of(provider_id: str, *, base: Decimal = BASE, currency: str = "EUR") -> Transaction:
     gross = base + IVA + RECARGO
     return Transaction.model_validate(
         {
@@ -57,7 +57,7 @@ def ledger_row_of(provider_id: str, *, base: Decimal = BASE) -> Transaction:
                 booked_date=date(YEAR, 2, 10),
                 value_date=date(YEAR, 2, 10),
                 amount=gross,
-                currency="EUR",
+                currency=currency,
                 counterparty="Mayorista SL",
                 description="Compra de existencias",
                 provenance=RawProvenance(

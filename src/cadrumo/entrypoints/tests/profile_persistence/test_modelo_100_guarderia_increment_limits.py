@@ -38,10 +38,12 @@ from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
+from ....application.modelo.household_row_fact_input import ModeloHouseholdRowFactInputRequiredError
 from ....application.modelo.profile_derived_facts import guarderia_cap_anual
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_lifecycle import create_work_unit
-from ....application.modelo.work_missing_input import ModeloWorkMissingInputError
+from ....application.operator_actions.catalogue import lookup_action
+from ....application.operator_actions.models import PreconditionVerdict
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -54,6 +56,8 @@ from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 from ....domain.contribuyente.meses_trabajo import parse_meses_trabajo
 from ....domain.modelos.calculation_revision import CalculationRevision
+from ....domain.user_profile.registry_contract import profile_binding_selectors
+from ....domain.user_profile.schema import derived_selector_for_path
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_work_lifecycle_ports
 from .file_flow_test_support import calculation_ports_for_test
@@ -338,10 +342,30 @@ def test_the_registry_annual_cap_before_the_reform_is_the_statutory_one(filing_y
     assert guarderia_cap_anual(_snapshot(filing_year)) == _STATUTORY_ANNUAL_CAP
 
 
+def _cotizaciones_bindings(snapshot: RegistrySnapshot) -> dict[BindingId, tuple[str, ...]]:
+    """Every binding of the edition that names the cotizaciones, in its id or in a profile path, with its paths."""
+    named: dict[BindingId, tuple[str, ...]] = {}
+    for binding in snapshot.revision.bindings:
+        selectors = profile_binding_selectors(binding.provider)
+        if "cotizaciones" in binding.id or any("cotizaciones" in selector for selector in selectors):
+            named[binding.id] = selectors
+    return named
+
+
 @pytest.mark.parametrize("filing_year", _supported_years())
 def test_no_edition_asks_for_the_cotizaciones_as_a_household_figure(filing_year: int) -> None:
-    """The limit is per child, so it lives on each child's row and no binding carries one household figure."""
-    assert not [binding.id for binding in _snapshot(filing_year).revision.bindings if "cotizaciones" in binding.id]
+    """The limit is per child, so it lives on each child's row and no binding carries one household figure.
+
+    An edition may bind the engine's per-child fold, a derived path; it may not bind a stated fact.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        derived = operation.profile_decode_context().schema.derived_selectors
+    stated = [
+        binding_id
+        for binding_id, selectors in _cotizaciones_bindings(_snapshot(filing_year)).items()
+        if not selectors or any(derived_selector_for_path(selector, derived) is None for selector in selectors)
+    ]
+    assert not stated
 
 
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())
@@ -357,18 +381,38 @@ def test_a_childless_filer_calculates_without_the_cotizaciones_before_the_reform
     assert revision.casilla_values[validated_casilla_id(target)] == Decimal("0")
 
 
+def _stated_cotizaciones_leaf_and_group() -> tuple[str, str]:
+    """The row fact the real descendant serializer writes for a stated figure, and the household group it sits in."""
+    stated = _nursery_child(_supported_years()[0], months=1, monthly_spend=Decimal("1"), cotizaciones=Decimal("1"))
+    paths = [path for path, value in descendant_facts_from_list((stated,)) if value == "1" and "cotizaciones" in path]
+    assert len(paths) == 1, paths
+    row_path, leaf = paths[0].rsplit(".", 1)
+    return row_path.rsplit(".", 1)[0], leaf
+
+
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())
 def test_a_mother_owed_the_increment_is_refused_until_she_states_her_cotizaciones(
     tmp_path: Path, filing_year: int
 ) -> None:
+    """The refusal is the household row fact it waits on: the descendant row, with the door that states it."""
     monthly_spend = Decimal("50")
     assert _expected_incremento(months=_CALENDAR_MONTHS, monthly_spend=monthly_spend) > 0
     mother = _mother_facts(filing_year, months=_CALENDAR_MONTHS, monthly_spend=monthly_spend)
+    group, leaf = _stated_cotizaciones_leaf_and_group()
 
-    with _profile(tmp_path, filing_year, mother), pytest.raises(ModeloWorkMissingInputError) as refused:
+    with _profile(tmp_path, filing_year, mother), pytest.raises(ModeloHouseholdRowFactInputRequiredError) as refused:
         _calculate(filing_year)
 
-    assert refused.value.binding_id == _INCREMENTO_BINDING
+    limited = _cotizaciones_bindings(_snapshot(filing_year))
+    assert _INCREMENTO_BINDING in limited
+    assert refused.value.binding_id in limited
+    assert (refused.value.group, refused.value.fact_leaf) == (group, leaf)
+    assert refused.value.rows == (0,)
+    verdict = refused.value.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    assert verdict.action is not None
+    door = lookup_action(verdict.action.action_id)
+    assert door.target_command_key.startswith(f"config.profile.{group.rsplit('.', 1)[1]}.")
 
 
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())

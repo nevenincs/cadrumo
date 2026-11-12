@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
@@ -54,10 +55,28 @@ function OriginMark({
         {staged.intent.kind === "restore_source_value" &&
         staged.intent.change === "remove"
           ? t("workspace.modelo.staged.remove")
-          : staged.intent.kind === "restore_source_value" ||
-              staged.intent.kind === "remove_override"
-            ? t("workspace.modelo.staged.restore")
-            : t("workspace.modelo.attention.staged")}
+          : staged.intent.kind === "remove_override" &&
+              staged.intent.withdraws !== undefined
+            ? t("desktop.modelo.statements.withdrawn")
+            : staged.intent.kind === "restore_source_value" ||
+                staged.intent.kind === "remove_override"
+              ? t("workspace.modelo.staged.restore")
+              : t("workspace.modelo.attention.staged")}
+      </span>
+    );
+  // A box the filer stated holds nothing is marked so, in a word and a mark
+  // as well as the served words, never drawn as a value typed.
+  if (field.stated_absent !== null)
+    return (
+      <span
+        data-stated=""
+        className="inline-flex flex-wrap items-center gap-1.5 text-sm text-foreground"
+      >
+        <Badge variant="neutral">
+          <Icon name="bookmark" size="xs" />
+          {t("desktop.modelo.statements.mark")}
+        </Badge>
+        {field.origin_words}
       </span>
     );
   if (!field.origin_words) return null;
@@ -105,6 +124,10 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const open = editing?.key === key ? editing.request : null;
   const editable = session.editable(field);
   const confirm = !staged && editable ? confirmIntent(field) : null;
+  const withdrawal = staged ? null : session.withdrawal(field);
+  // The box of the statement that cannot be taken out, once a withdrawal
+  // was asked for and nothing was staged.
+  const [kept, setKept] = useState<PublicModeloFormField | null>(null);
   const reason = readOnlyReason(field);
   const ref = useChosenFocus<HTMLDivElement>(selected, open !== null);
   const notes = notesOf(form.notes, field);
@@ -187,6 +210,32 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
           <span className="text-xs text-faint tabular-nums">
             {t("workspace.modelo.was", {
               value: staged.field.value_text ?? "—",
+            })}
+          </span>
+        )}
+        {withdrawal && (
+          <Button
+            size="xs"
+            variant="outline"
+            data-withdraw=""
+            onClick={(event) => {
+              event.stopPropagation();
+              const outcome = session.withdraw(field);
+              setKept(outcome?.kind === "refused" ? outcome.field : null);
+            }}
+          >
+            <Icon name="erase" size="xs" />
+            {t("desktop.modelo.statements.withdraw")}
+          </Button>
+        )}
+        {kept && !staged && (
+          <span
+            role="status"
+            className="flex items-start gap-1 text-sm text-warning"
+          >
+            <Icon name="alert" size="xs" className="mt-0.5 shrink-0" />
+            {t("desktop.modelo.statements.withdraw_kept", {
+              box: kept.box ?? kept.label.text,
             })}
           </span>
         )}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from typing import ClassVar, Final, override
 
 from textual.app import ComposeResult
@@ -15,6 +16,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.i18n.render import tr
+from ....core.operator_action_enums import ActionArgumentStatus
 from ..components.account_chrome import AccountChromeScreen
 from ..components.language import localized
 from ..components.theme import BASE_CSS, tokenised
@@ -45,12 +47,17 @@ class OperationsCatalogueScreen(AccountChromeScreen):
         source: OperationCatalogueSourceV1,
         *,
         focus_token: str | None = None,
+        initial: Mapping[str, object] | None = None,
     ) -> None:
-        """Retain the admitted client, the catalogue door and the operation to open first."""
+        """Retain the admitted client, the catalogue door and the operation to open first.
+
+        ``initial`` fills the request form of that first operation, and of no other.
+        """
         super().__init__(id="operations-catalogue")
         self._client = client
         self._source = source
         self._focus_token = focus_token
+        self._initial = dict(initial or {})
         self._catalogue: OperationCatalogueV1 | None = None
 
     @override
@@ -85,7 +92,7 @@ class OperationsCatalogueScreen(AccountChromeScreen):
         focus_token, self._focus_token = self._focus_token, None
         entry = None if focus_token is None else catalogue.entry_for_token(focus_token)
         if entry is not None:
-            self.app.push_screen(OperationRunScreen(self._client, entry))
+            self.app.push_screen(OperationRunScreen(self._client, entry, initial=self._initial))
 
     def _show(self, query: str) -> None:
         catalogue = self._catalogue
@@ -163,7 +170,12 @@ class OperationsDestinationV1:
             raise ValueError("the operations factory requires its exact destination")
         focus = context.focus
         focus_token = None if focus is None or focus.semantic_key != OPERATION_FOCUS_KEY else focus.restore_token
-        return OperationsCatalogueScreen(self._client, self._source, focus_token=focus_token)
+        initial = {
+            binding.argument_name: binding.value
+            for binding in context.request_prefill
+            if binding.status is ActionArgumentStatus.RESOLVED and binding.value is not None
+        }
+        return OperationsCatalogueScreen(self._client, self._source, focus_token=focus_token, initial=initial)
 
 
 __all__ = [

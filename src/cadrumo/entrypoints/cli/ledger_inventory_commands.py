@@ -9,6 +9,7 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
+from ...application.inventory.registered_claim_candidates_operation import InventoryClaimCandidatesRequest
 from ...application.inventory.registered_evidence_operation import InventoryEvidenceAddRequest
 from ...application.inventory.registered_options_operation import InventoryOptionsRequest
 from ...application.inventory.registered_projections import InventoryLedgerProjection, InventoryListRowProjection
@@ -57,6 +58,7 @@ from .operation_ledger_inventory import (
     inspect_inventory_ledger,
     preview_inventory_valuation,
     read_inventory_catalogue,
+    read_inventory_claim_candidates,
     read_inventory_options,
     record_inventory_closing_authority,
     record_inventory_closing_value,
@@ -366,6 +368,29 @@ def inventory_movement_claim(
     emit_ledger_change(ctx, command="ledger.inventory.movement.claim", request=request)
 
 
+def inventory_movement_claim_candidates(ctx: typer.Context, actividad_id: str, year: int, movement_id: str) -> None:
+    """List the ledger transactions one purchase may claim, which are the ones the claim accepts."""
+    result = read_inventory_claim_candidates(
+        ctx,
+        request=InventoryClaimCandidatesRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            actividad_id=actividad_id,
+            year=year,
+            movement_id=movement_id,
+        ),
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.movement.claim-candidates",
+        result=result,
+        lines=tuple(
+            f"candidate\t{item.transaction_id}\t{item.booked_date}\t{item.currency}"
+            f"\t{item.taxable_base}\t{item.iva_amount}\t{item.recargo_amount}\t{item.description}"
+            for item in result.candidates
+        ),
+    )
+
+
 def inventory_movement_reverse(
     ctx: typer.Context,
     actividad_id: str,
@@ -567,6 +592,7 @@ __all__ = [
     "inventory_list",
     "inventory_movement_add",
     "inventory_movement_claim",
+    "inventory_movement_claim_candidates",
     "inventory_movement_correct",
     "inventory_movement_reverse",
     "inventory_options",

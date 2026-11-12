@@ -16,8 +16,7 @@ from typing import override
 
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.modelo import Modelo
-from ....core.time.clock import today_madrid
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, StringMappingPolicy
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
@@ -26,6 +25,13 @@ __all__ = [
     "UNMODELED_OBLIGATIONS",
     "resolve_modelo_obligation_scope",
 ]
+
+
+_OBLIGATION_SCOPE_FACT = StringMappingFact(
+    fact_id="modelo-obligation-scope-mapping",
+    date_axis=DateAxis.FILING_PERIOD,
+    policy=StringMappingPolicy(subject="Modelo obligation scope", value_whitespace=MappingValueWhitespace.PRESERVE),
+)
 
 
 def _csv(value: str) -> tuple[str, ...]:
@@ -95,16 +101,9 @@ def resolve_modelo_obligation_scope(
     cache in a value-type module.
     """
     selected_authority = require_governed_fact_authority(authority, subject="Modelo obligation scope")
-    resolved = selected_authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id="modelo-obligation-scope-mapping",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date or today_madrid(),
-        ),
+    declarations = _OBLIGATION_SCOPE_FACT.resolve_scoped_entries(
+        effective_date=effective_date, authority=selected_authority
     )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise CoreValidationError("Modelo obligation scope did not resolve as a mapping")
-    declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
     catalogue, suppressed, registry_out = _scope_partitions(declarations)
     reasons = _scope_reasons(declarations)
     _validate_scope_partitions(reasons, catalogue, suppressed, registry_out)

@@ -25,6 +25,7 @@ import { BoxNumber } from "../form/BoxNumber";
 import {
   addressKey,
   editKey,
+  statementOf,
   type FormSession,
   type StagedEdit,
 } from "../form/session";
@@ -137,6 +138,79 @@ function ChangeLine({
             ) : (
               replaces && <Icon name="swap" size="xs" />
             )}
+            {facts(t, [
+              effect,
+              changed && t("workspace.modelo.review.before_changed"),
+            ])}
+          </span>
+        </>
+      )}
+    </li>
+  );
+}
+
+/** The staged edits as the review lists them: each edit on its own line,
+ * and every box of one statement, or of one withdrawal, on one line at the
+ * place of its first box. */
+function lines(edits: readonly StagedEdit[]): StagedEdit[][] {
+  const out: StagedEdit[][] = [];
+  const grouped = new Map<string, StagedEdit[]>();
+  for (const edit of edits) {
+    const group = statementOf(edit.intent);
+    const held = group ? grouped.get(group) : undefined;
+    if (held) {
+      held.push(edit);
+      continue;
+    }
+    const line = [edit];
+    if (group) grouped.set(group, line);
+    out.push(line);
+  }
+  return out;
+}
+
+/** One statement or one withdrawal of it, on every box it covers: the boxes,
+ * what the statement says in the form's words, and what staging it does. */
+function StatementLine({
+  edits,
+  changed,
+}: {
+  edits: StagedEdit[];
+  changed: boolean;
+}) {
+  const t = useStrings();
+  const first = edits[0];
+  if (!first) return null;
+  const { intent } = first;
+  const words =
+    intent.kind === "attest_no_amount"
+      ? intent.words
+      : (first.field.origin_words ?? first.field.label.text);
+  const effect = intent.kind === "attest_no_amount" ? intent.effect : null;
+  return (
+    <li
+      data-statement-line=""
+      className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-0.5 px-3 py-2"
+    >
+      <span className="flex max-w-32 flex-wrap gap-1">
+        {edits.map((edit) => (
+          <BoxNumber key={edit.key} box={edit.field.box} size="sm" />
+        ))}
+      </span>
+      <span className="min-w-0 text-base">{words}</span>
+      <span className="text-base">
+        {intent.kind === "attest_no_amount" ? null : stagedText(t, first)}
+      </span>
+      {(effect || changed) && (
+        <>
+          <span />
+          <span
+            className={cn(
+              "col-span-2 flex items-center gap-1 text-xs",
+              changed ? "text-warning" : "text-muted-foreground",
+            )}
+          >
+            {changed && <Icon name="alert" size="xs" />}
             {facts(t, [
               effect,
               changed && t("workspace.modelo.review.before_changed"),
@@ -305,14 +379,22 @@ export function ReviewDialog({
         </DialogHeader>
         {edits.length > 0 ? (
           <ul className="flex max-h-[50vh] flex-col divide-y divide-border overflow-y-auto rounded-lg border border-border">
-            {edits.map((edit) => (
-              <ChangeLine
-                key={edit.key}
-                edit={edit}
-                effect={effectOf(edit)}
-                changed={changed.has(edit.key)}
-              />
-            ))}
+            {lines(edits).map((line) =>
+              line.length === 1 && line[0] ? (
+                <ChangeLine
+                  key={line[0].key}
+                  edit={line[0]}
+                  effect={effectOf(line[0])}
+                  changed={changed.has(line[0].key)}
+                />
+              ) : (
+                <StatementLine
+                  key={line.map((edit) => edit.key).join()}
+                  edits={line}
+                  changed={line.some((edit) => changed.has(edit.key))}
+                />
+              ),
+            )}
           </ul>
         ) : (
           phase.kind !== "applied" && (

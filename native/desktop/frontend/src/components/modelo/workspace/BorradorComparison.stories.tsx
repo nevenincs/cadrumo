@@ -1,3 +1,4 @@
+import { RENTA_UNIT } from "@/dev/rentaUnit";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
@@ -21,7 +22,7 @@ import { byName } from "@/dev/globByName";
 // values are an observation of the AEAT's own, drawn apart from the
 // calculation and never as zero.
 
-const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
+const UNIT = RENTA_UNIT;
 
 const envelopes = byName(
   import.meta.glob<Comparison>("@fixtures/modelo/borrador-100-0A-*.json", {

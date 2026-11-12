@@ -49,11 +49,12 @@ FOOTER_PRIORITY: Final[tuple[str, ...]] = (
     "c",
     "e",
     "b",
+    "a",
 )
 """Footer keys, most needed first; the footer shows as many as fit and the expanded help names them all."""
 HELP_ONLY_KEYS: Final[tuple[str, ...]] = ("space",)
 """Keys the help and the legend name that the footer never shows."""
-CHANGE_KEYS: Final[frozenset[str]] = frozenset({"R", "b", "c", "f8", "n"})
+CHANGE_KEYS: Final[frozenset[str]] = frozenset({"R", "a", "b", "c", "f8", "n"})
 """Footer keys that change a declaration or lead to what is left to do; a declaration recorded as filed shows none."""
 NONE_TO_CONFIRM_LOCALE_KEYS: Final[Mapping[bool, str]] = {
     True: "workspace.modelo.bulk_confirm.none_in_section",
@@ -122,6 +123,7 @@ SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "g": "workspace.modelo.key.go_to",
     "o": "workspace.modelo.key.sort",
     "b": "workspace.modelo.bulk_confirm.title",
+    "a": "tui.modelo.statements.key",
     "space": "workspace.modelo.key.fold",
 }
 LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {

@@ -249,6 +249,11 @@ aggregation:
       unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
         (pl. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: Hatályos
+      withdrawn: Visszavont
+    amount:
+      pago_a_cuenta: Előlegfizetések összesen
     clase:
       actividad_economica: Gazdasági tevékenységből származó jövedelem
       arrendamiento_inmueble_urbano: 'Ingatlanvagyon-jövedelem: városi ingatlan bérbeadása'
@@ -297,6 +302,10 @@ aggregation:
         fel semmit; más jövedelemosztály nem fogadja el őket.
       validation: 'A levonási rekord nem lett mentve: ellenőrizd a kifizető NIF-jét,
         az összegeket (legfeljebb két tizedesjegy) és az igazolás ujjlenyomatát.'
+    origen:
+      operator_declaration: A saját nyilatkozatod
+      payer_certificate: A kifizető igazolása
+    payer_unnamed: Megnevezés nélküli kifizető
     served:
       certificate_file_unreadable: Az igazolás fájlja nem olvasható. Ellenőrizd, hogy
         még megvan, nem üres, és PDF, kép vagy XML dokumentum, majd válaszd ki újra.
@@ -2144,6 +2153,30 @@ desktop:
         megerősítésnek. A piszkozatod megmaradt.
       country: Ország
       established: Székhely
+      filing_name:
+        kind:
+          entity: Jogi személy
+          natural_person: Természetes személy
+        kind_contradicts: A megadott típus ({declared}) eltér az azonosító alakjától
+          ({observed}).
+        kind_label: Típus
+        no_second_surname: Nincs második vezetéknév
+        nombre: Keresztnév
+        primer_apellido: Első vezetéknév
+        razon_social: Cégnév
+        rendering_add: Változat hozzáadása
+        rendering_for: '{width} karakterhez'
+        rendering_remove: Változat törlése
+        renderings: Rövidebb változatok
+        renderings_hint: A szélesség annak a mezőnek a karakterszáma, amelybe a névnek
+          bele kell férnie.
+        save: Bevallási név mentése
+        segundo_apellido: Második vezetéknév
+        stated_by: Megadta
+        text: Szöveg
+        title: Bevallási név
+        unstated: Még nem adtál meg bevallási nevet.
+        width: Szélesség
       not_applied: A visszaadott megerősítés nem tartalmazza az összes megadott értéket.
         A piszkozatod megmaradt.
       note: Megjegyzés
@@ -4055,6 +4088,7 @@ desktop:
         closing: A záróérték rögzítése
         correct: A nyitókészlet vagy a módszer javítása
         describe: A részletek szerkesztése
+        movement_claim: A vásárlás naplótranzakciójának megadása
         movement_correct: Ennek a mozgásnak a javítása
         movement_reverse: Ennek a mozgásnak a visszavonása
         preview: Az értékelés előnézete
@@ -4062,6 +4096,17 @@ desktop:
         restore: A készletnyilvántartás visszaállítása
         retire: A készletnyilvántartás megszüntetése
       books: Készletnyilvántartások, {year}
+      claim:
+        column: Napló
+        note: Add meg, melyik naplótranzakció könyveli ezt a vásárlást, hogy egyik
+          sem, vagy töröld a korábban megadottat.
+        row: A napló könyveli ezt a vásárlást
+        row_claimed: Egy naplótranzakció könyveli
+        row_none: Egyetlen naplótranzakció sem könyveli
+        row_unstated: Nincs megadva
+        row_unstated_hint: Ez törli a korábban megadottat.
+        state_claimed: 'Könyveli: {transaction}'
+        transaction: Naplótranzakció
       closing:
         authority: Hogyan döntesz az értékről
         basis: Értékelés alapja
@@ -4150,6 +4195,7 @@ desktop:
         correct: '{name} javítása · {year}'
         describe: '{name} részletei · {year}'
         movement: 'Mozgás felvétele ide: {name} · {year}'
+        movement_claim: '{name} egy vásárlásának naplótranzakciója · {year}'
         movement_correct: '{name} egy mozgásának javítása · {year}'
         restore: '{name} visszaállítása · {year}'
         retire: '{name} megszüntetése · {year}'
@@ -4210,6 +4256,7 @@ desktop:
         correct: Javítás mentése
         describe: Részletek mentése
         movement: Mozgás felvétele
+        movement_claim: Megadás mentése
         movement_correct: Javítás mentése
         restore: Nyilvántartás visszaállítása
         retire: Nyilvántartás megszüntetése
@@ -4262,12 +4309,6 @@ desktop:
       action:
         attest: Nincs levonás jelzése
         record: Igazolás rögzítése
-      amount:
-        importe_integro_dinerario: Bruttó pénzbeli összeg
-        ingreso_a_cuenta: Előlegbefizetés
-        ingreso_a_cuenta_repercutido: Áthárított előlegbefizetés
-        retencion: Levonás
-        valoracion_especie: Természetbeni érték
       attested_on: 'Jelezve: {date}'
       changes: A(z) {ejercicio} évi igazolások módosításai
       column:
@@ -4448,7 +4489,6 @@ desktop:
         írod be őket. Ha módosítani akarsz egyet, javítsd a levonási nyilvántartásaidban,
         majd számolj újra.
       list: Levonások
-      show: Megjelenítés az űrlapon
       show_box: A(z) {box} rovat megjelenítése az űrlapon
     details:
       close: Részletek bezárása
@@ -4469,6 +4509,9 @@ desktop:
       confirm: Elvetés
       lead: Kikerül a bevallásaid listájából. Az előzményei megmaradnak.
       reason: Miért (nem kötelező)
+    export:
+      limitation:
+        title: Amit ez a fájl nem tartalmaz
     form:
       pages: A nyomtatvány oldalai
     keys:
@@ -4498,6 +4541,21 @@ desktop:
     side:
       label: A nyomtatvány mellett
       outline: Vázlat
+    statements:
+      hide: Elrejtés
+      intro: Jelöld be azokat a nyilatkozatokat, amelyek igazak rád. A bejelöltek
+        a többi módosításoddal együtt átnézésre kerülnek; ha egyről leveszed a jelölést,
+        visszavonod.
+      mark: Te nyilatkoztál róla
+      not_placed: Egy nyilatkozat olyan mezőre vonatkozik, amelyet ez az űrlap nem
+        mutat, ezért nem került átnézésre.
+      show: Megjelenítés
+      stage: Megtartás átnézésre
+      title: Tehető nyilatkozatok
+      withdraw: Nyilatkozat visszavonása
+      withdraw_kept: A nyilatkozat {box} mezője itt nem üríthető, ezért semmit sem
+        vontál vissza.
+      withdrawn: Nyilatkozat visszavonva
     view:
       compare: Összevetés
       credits: Levonások
@@ -4819,6 +4877,8 @@ desktop:
     search: Keresés
     settings: Beállítások
     tui: Munkaterület
+  refusal:
+    action_unroutable: Itt nem érhető el.
   session:
     enter_restarts: Enter újraindítja
     exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
@@ -7105,8 +7165,6 @@ tui:
         active: Aktív
         id: Azonosító
         label: Név
-    result:
-      remedy: 'Javasolt következő lépés: {action}'
     status:
       completed: Kész.
       effect_unknown: A kapcsolat megszakadt, mielőtt válasz érkezett volna ({code}).
@@ -7271,6 +7329,27 @@ tui:
           szerint %{evidenced}. %{detail}'
         country: Országkód (2 betű, nem kötelező)
         evidenced: Bizonylaton szereplő hatály a lekérdezéshez (nem kötelező)
+        filing_done: '%{identifier} bevallási neve megadva.'
+        filing_heading: Bevallási név
+        filing_kind_entity: Jogi személy
+        filing_kind_natural_person: Természetes személy
+        filing_no_second: Nincs második vezetéknév
+        filing_nombre: Keresztnév
+        filing_primer: Első vezetéknév
+        filing_razon: Cégnév
+        filing_rendering: '%{width} karakterhez: %{text}'
+        filing_renderings: Rövidebb változatok, szélesség=szöveg; szélesség=szöveg
+          (nem kötelező)
+        filing_renderings_malformed: Írd a rövidebb változatot szélesség, egyenlőségjel
+          és szöveg alakban, például 20=Rövid név, többet pontosvesszővel válassz
+          el.
+        filing_review: Bevallási név ellenőrzése
+        filing_segundo: Második vezetéknév
+        filing_stage: '%{identifier} bevallási nevének megadása mint %{kind}.'
+        filing_stated: '%{identifier} bevallási neve: %{kind} · %{name}'
+        filing_stated_by: 'Megadta: %{name}, ekkor: %{date}.'
+        filing_unchanged: '%{identifier} bevallási neve már ez volt.'
+        filing_unstated: '%{identifier} számára nincs megadva bevallási név.'
         identification: Közösségi adószámának EU-tagállama (2 betű)
         identifier: Adóazonosító
         identifier_required: Előbb add meg a partner adóazonosítóját.
@@ -8636,6 +8715,7 @@ tui:
           create: Készlet létrehozása
           evidence_add: Beszerzési dokumentum mentése
           movement_add: Mozgás hozzáadása
+          movement_claim: Egy beszerzés főkönyvi tételének megadása
           valuation_preview: Értékelés előnézete
         column:
           actividad: Tevékenység
@@ -8656,10 +8736,12 @@ tui:
           action: Kérés
           actividad_id: Tevékenység
           authority_record: A záróérték teljes fájlja
+          claimed_transaction_id: Igényelt tétel
           closing_value_facts: Záróérték adatfájlja
           evidence_file: Dokumentumfájl
           evidence_folder: A dokumentum útvonalának kiinduló mappája
           kind: Mozgás fajtája
+          ledger_row: A vásárlás tétele
           movement_date: Mozgás dátuma
           movement_id: Mozgás azonosítója
           opening_stock: Nyitókészlet (nem kötelező)
@@ -8673,6 +8755,10 @@ tui:
           count: Leltár
           opening: Nyitás
           purchase: Vásárlás
+        ledger_row:
+          claimed: Egy főkönyvi tétel rögzíti ezt a beszerzést
+          none: Egy főkönyvi tétel sem rögzíti ezt a beszerzést
+          unstated: A megadás törlése (nincs megadva)
         list: Készletek
         method:
           coste_medio: Átlagköltség
@@ -8965,6 +9051,21 @@ tui:
     search:
       prompt: Keresés minden oldalon rovatszám vagy szavak alapján. Az Enter a rovathoz
         visz.
+    statements:
+      intro: Jelöld be azokat a nyilatkozatokat, amelyek igazak rád. A bejelöltek
+        a többi módosításoddal együtt átnézésre kerülnek; ha egyről leveszed a jelölést,
+        visszavonod.
+      key: Nyilatkozatok
+      mark:
+        meaning: Kijelentetted, hogy ebben a rovatban nincs összeg; ez nem általad
+          beírt érték.
+        name: Általad nyilatkozva
+      none: Ez a bevallás most nem kínál nyilatkozatot.
+      not_placed: Egy nyilatkozat olyan rovatra vonatkozik, amelyet ez a képernyő
+        nem mutat, ezért nem került átnézésre.
+      stage: Megtartás átnézésre
+      title: Tehető nyilatkozatok
+      withdraw: Nyilatkozat visszavonása
   operations:
     action:
       close: Bezárás
@@ -9045,8 +9146,6 @@ tui:
       unavailable: A regisztrált műveleteket nem sikerült beolvasni.
     stopped:
       code: Kód
-      remedy: Mi kell a folytatáshoz
-      remedy_command: 'Megoldó parancs: {command}'
     title: Műveletek
   reference:
     action:
@@ -9112,6 +9211,9 @@ tui:
       support_matrix: 'Mire képes a Cadrumo az egyes nyomtatványokkal: számítás, exportálás,
         benyújtott példányok olvasása.'
     title: Referencia
+  refusal:
+    action_needs_details: … futtatás előtt elkéri tőled a még hiányzó adatokat.
+    action_unroutable: Itt nem érhető el.
   restricted:
     actions: 'Engedélyezett tevékenységek: {values}'
     all_periods: Minden időszak

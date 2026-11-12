@@ -16,6 +16,7 @@ from .....application.actividad_asset.operation_dtos import ActivityAssetDisposa
 from .....application.actividad_asset.schedule_walk import M100GapKind
 from .....application.actividad_asset.served_words import m100_gap_words
 from .....application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
+from .....application.operations.error_detail import build_operation_error_detail
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
@@ -34,6 +35,7 @@ from .....domain.renta.actividad_asset.schedule import AssetScheduleHistory
 from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
 from ...operations.outcome import OperationOutcomeUnknownError, SessionExpiredOutcomeUnknownError
+from ...refusal.panel import RefusalSlot
 from ...tests.settling import SettleTimeoutError, settle, settle_until
 from ..actividad_asset import ActivityAssetScreen
 from ..actividad_asset_inputs import stated_revision
@@ -219,7 +221,7 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_not_reported_
 
 
 @pytest.mark.asyncio
-async def test_activity_asset_refusal_retains_the_registered_recovery_presentation() -> None:
+async def test_activity_asset_refusal_shows_its_served_refusal_and_moves_to_the_correction() -> None:
     revision = activity_asset_revision("undeclared-van")
     recovery = VehicleAffectationRecovery(
         asset_id=revision.asset_id,
@@ -242,10 +244,15 @@ async def test_activity_asset_refusal_retains_the_registered_recovery_presentati
         await _activate(pilot=pilot, screen=screen, selector="#asset-forecast")
         rejected = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
         assert "undeclared-van" in rejected
-        assert str(screen.query_one("#asset-recovery", Static).render()).strip() == (
-            "recovery\toperator.ledger.actividad_asset.correct_revision"
-            f"\tasset\tundeclared-van\trevision\t{revision.revision_id}"
-        )
+        await settle(pilot)
+        slot = screen.query_one("#asset-recovery", RefusalSlot)
+        served = build_operation_error_detail(refusal)
+        assert served is not None
+        assert slot.refusal is not None
+        assert slot.refusal.verdict is not None
+        assert slot.refusal.verdict.action_id == "operator.ledger.actividad_asset.correct_revision"
+        assert str(slot.query_one("#refusal-words", Static).render()) == served.refusal_words
+        assert not slot.query(Button)
         assert screen.focused is screen.query_one("#asset-correct", Button)
 
 
