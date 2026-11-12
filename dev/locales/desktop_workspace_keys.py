@@ -276,7 +276,6 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.discard.confirm",
         "desktop.modelo.discard.lead",
         "desktop.modelo.discard.reason",
-        "desktop.modelo.export.limitation.title",
         "desktop.modelo.form.pages",
         "desktop.modelo.keys.change",
         "desktop.modelo.keys.delete",
@@ -291,6 +290,8 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.outline.label",
         "desktop.modelo.outline.may_apply",
         "desktop.modelo.outline.needs_you",
+        "desktop.modelo.prior_values.intro",
+        "desktop.modelo.prior_values.title",
         "desktop.modelo.rename.name",
         "desktop.modelo.rename.save",
         "desktop.modelo.search.label",
@@ -315,8 +316,6 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.views.label",
         # The export warning the command line and the terminal workbench state.
         "tui.modelo.export.result.warning.cutoff_unverified",
-        # The export limitation the command line and the terminal workbench disclose.
-        "application.modelo.findings.trabajo_deduction_not_computed",
         "workspace.declarations.calendar.aeat.justificante_verified",
         "workspace.declarations.calendar.evidence.disagrees",
         "workspace.declarations.calendar.legal.due_today",

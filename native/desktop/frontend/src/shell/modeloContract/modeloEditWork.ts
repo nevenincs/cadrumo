@@ -76,10 +76,15 @@ export type ModeloEditBaselineId = string;
  * never `CasillaId` -- most overridable bindings (a fichero-BOE record-field
  * `manual_input` binding, most notably) have no casilla at all to address
  * through.
+ *
+ * `row_identity` names the row of a repeating group a statement of a carry
+ * speaks of, for a binding whose registry family is stated row by row; every
+ * other intent leaves it absent, and an absent one is left out of the dump.
  */
 export type ModeloEditBindingAddressV1 = {
   kind: "binding";
   binding_id: BindingId;
+  row_identity: string | null;
 };
 
 /**

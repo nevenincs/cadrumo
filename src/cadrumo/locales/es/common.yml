@@ -4537,9 +4537,6 @@ desktop:
       confirm: Descartar
       lead: Sale de tu lista de declaraciones. Su historial se conserva.
       reason: Por qué (opcional)
-    export:
-      limitation:
-        title: Lo que este fichero no incluye
     form:
       pages: Páginas del formulario
     keys:
@@ -4557,6 +4554,11 @@ desktop:
       label: Esquema del formulario
       may_apply: Solo si se te aplica
       needs_you: 'Te necesita: {count}'
+    prior_values:
+      intro: Si aquí no consta la declaración anterior de la que una casilla arrastra
+        un importe, puedes indicar tú ese importe. Los importes indicados para las
+        mismas declaraciones anteriores se retiran juntos.
+      title: Importes de declaraciones anteriores
     rename:
       name: Nombre
       save: Guardar el nombre
@@ -9231,6 +9233,8 @@ tui:
         muestra, así que no se ha dejado para revisar.
       prior:
         heading: Cifras que indicaste para declaraciones anteriores
+        partial: Escribe una cifra para cada casilla de esta manifestación o deja
+          todas vacías. Se hace entera o no se hace.
       stage: Dejar para revisar
       title: Manifestaciones que puedes hacer
       withdraw: Retirar la manifestación
@@ -10711,6 +10715,8 @@ workspace:
         incomplete: 'Comprobada: faltan datos que la declaración necesita.'
       done: Hecho. La declaración se ha actualizado.
       not_done: No se ha completado; tus cambios siguen aquí.
+      unknown: Puede que se haya aplicado. Vuelve a leer la declaración antes de aplicar
+        nada más.
     origin:
       calculated: Calculada
       calculation_failed: No se pudo calcular

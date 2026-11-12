@@ -32,6 +32,7 @@ import type {
   PublicModeloFormField,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
+import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { boxNotes } from "./boxNotes";
 import { calm } from "./FieldRow";
@@ -41,6 +42,7 @@ import {
   type OpenableSurface,
 } from "./formContext";
 import { SectionView, type DrawnSection, type Shown } from "./SectionView";
+import { PriorValuesOffer } from "./PriorValuesOffer";
 import { StatementsOffer } from "./StatementsOffer";
 import {
   clearIntent,
@@ -201,6 +203,11 @@ export type FormViewProps = {
   /** Whether the window can open an area; every area is taken as openable
    * when this is not given. */
   canOpenSurface?: (surface: OpenableSurface) => boolean;
+  /** Opens the place a refused statement's served way out leads to; no way
+   * out is followed when this is not given. */
+  onRefusalAction?: (intent: RefusalIntent) => void;
+  /** Whether this host opens a place a served way out leads to. */
+  opensRefusalPlace?: (place: WindowPlace) => boolean;
 };
 
 export function FormView({
@@ -210,6 +217,8 @@ export function FormView({
   onDetailsOpenChange,
   onOpenSurface,
   canOpenSurface,
+  onRefusalAction,
+  opensRefusalPlace,
 }: FormViewProps) {
   const t = useStrings();
   const form = envelope.form.form;
@@ -375,6 +384,9 @@ export function FormView({
         const held = session.staged.get(editKey(field));
         if (held && "value" in held.intent) session.unstage(held.key);
         else if (!held && field.stated_absent !== null) session.withdraw(field);
+        // Emptying a figure stated for earlier returns withdraws its family.
+        else if (!held && field.stated_prior_value?.family_id)
+          void session.enter(field, "");
         else if (!held && field.filers_own)
           session.stage(field, clearIntent(field));
         return true;
@@ -457,19 +469,32 @@ export function FormView({
             <Icon name="splitColumn" />
           </IconButton>
         </div>
-        {form.year_projection.words && (
-          <p
-            data-year-projection={form.year_projection.direction}
-            className="flex-none border-b border-border px-4 py-1.5 text-sm text-muted-foreground"
-          >
-            {form.year_projection.words}
-          </p>
-        )}
+        {/* The rung of authority this year reaches, as the registry named
+            it, and, below filing grade, the sentence saying why it cannot be
+            filed. */}
+        <p
+          data-year-projection={form.year_projection.direction}
+          data-reachable-grade={form.year_projection.reachable_grade}
+          className="flex flex-none flex-wrap gap-x-2 border-b border-border px-4 py-1.5 text-sm text-muted-foreground"
+        >
+          <span data-year-projection-grade className="font-medium">
+            {form.year_projection.reachable_grade_words}
+          </span>
+          {form.year_projection.words && (
+            <span data-year-projection-words>{form.year_projection.words}</span>
+          )}
+        </p>
         <StatementsOffer
           key={`${envelope.work_unit_id}:${session.statements
             .map((statement) => statement.family)
             .join()}`}
           session={session}
+        />
+        <PriorValuesOffer
+          key={`${envelope.work_unit_id}:prior`}
+          session={session}
+          onRefusalAction={onRefusalAction}
+          opensRefusalPlace={opensRefusalPlace}
         />
         {pages.length > 1 && page && (
           <Tabs

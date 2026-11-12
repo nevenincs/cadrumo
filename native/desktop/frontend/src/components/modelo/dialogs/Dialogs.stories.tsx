@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { ModeloShape } from "../../../dev/modeloFixture";
+import { EXPORT_DISCLOSURE } from "../../../dev/modeloExportDisclosure";
 import { translator } from "../../../shell/strings";
 import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import { StorySession, typedAmount } from "../details/Details.stories";
@@ -290,38 +291,72 @@ async function exportAgain(canvasElement: HTMLElement, locale: unknown) {
   return { t, page };
 }
 
-export const FilingWorkIncomeLimitation: Story = {
-  name: "Export and record · file that leaves out work-income deductions",
+export const FilingExportDisclosure: Story = {
+  name: "Export and record · file whose result discloses limitations",
   render: (_, { globals }) => (
     <Filing
       locale={globals.locale}
       declaration={`${M130}-exported`}
-      shape="export-work-income-limitation"
+      shape="export-disclosure"
     />
   ),
   play: async ({ canvasElement, globals }) => {
-    const { t, page } = await exportAgain(canvasElement, globals.locale);
-    // The limitation is disclosed apart from the saved file's warnings, in
-    // the sentence the command line states for it, never as a warning.
-    const sentence = await page.findByText(
-      t("application.modelo.findings.trabajo_deduction_not_computed"),
+    const { page } = await exportAgain(canvasElement, globals.locale);
+    // The served disclosure is drawn as it is: its lead sentence, then each
+    // limitation in its served words, apart from the saved file's warnings
+    // and never as one.
+    const lead = await page.findByText(
+      EXPORT_DISCLOSURE.lead_words,
       undefined,
-      { timeout: READ_WAIT },
+      {
+        timeout: READ_WAIT,
+      },
     );
-    const disclosure = sentence.closest("[data-disclosure]");
+    const disclosure = lead.closest("[data-disclosure]");
     await expect(disclosure?.getAttribute("data-disclosure")).toBe(
       "limitation",
     );
     await expect(disclosure?.getAttribute("data-tone")).toBe("neutral");
+    const drawn = [
+      ...(disclosure as HTMLElement).querySelectorAll("[data-limitation]"),
+    ];
+    await expect(drawn.map((each) => each.textContent)).toEqual(
+      EXPORT_DISCLOSURE.limitations.map((limitation) => limitation.words),
+    );
     await expect(
-      within(disclosure as HTMLElement).getByText(
-        t("desktop.modelo.export.limitation.title"),
+      drawn.map((each) => each.getAttribute("data-limitation")),
+    ).toEqual(
+      EXPORT_DISCLOSURE.limitations.map(
+        (limitation) => limitation.message_locale_key,
       ),
-    ).toBeVisible();
+    );
     await expect(
       canvasElement.ownerDocument.querySelectorAll(
         '[data-disclosure="warning"]',
       ),
+    ).toHaveLength(0);
+  },
+};
+
+export const FilingExportNoDisclosure: Story = {
+  name: "Export and record · file whose result discloses nothing",
+  render: (_, { globals }) => (
+    <Filing
+      locale={globals.locale}
+      declaration={`${M130}-exported`}
+      shape="exported"
+    />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    await exportAgain(canvasElement, globals.locale);
+    const doc = canvasElement.ownerDocument;
+    await waitFor(
+      () => expect(doc.querySelector('[data-tone="success"]')).not.toBeNull(),
+      { timeout: READ_WAIT },
+    );
+    // A result that serves no disclosure draws none.
+    await expect(
+      canvasElement.ownerDocument.querySelectorAll("[data-disclosure]"),
     ).toHaveLength(0);
   },
 };

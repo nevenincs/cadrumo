@@ -54,6 +54,7 @@ export type ModeloWorkReviewFindingSnapshot = {
   message_facts: ModeloWorkReviewFact[];
   legal_refs: LegalRefId[];
   source_refs: SourceRefId[];
+  disclosed_limitation: boolean;
 };
 
 /**

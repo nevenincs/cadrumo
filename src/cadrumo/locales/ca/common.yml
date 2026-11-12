@@ -4530,9 +4530,6 @@ desktop:
       confirm: Descartar
       lead: Surt de la teva llista de declaracions. Se'n conserva l'historial.
       reason: Per què (opcional)
-    export:
-      limitation:
-        title: El que aquest fitxer no inclou
     form:
       pages: Pàgines del formulari
     keys:
@@ -4550,6 +4547,11 @@ desktop:
       label: Esquema del formulari
       may_apply: Només si se t'aplica
       needs_you: 'Et necessita: {count}'
+    prior_values:
+      intro: Si aquí no consta la declaració anterior de la qual una casella arrossega
+        un import, pots indicar tu mateix aquest import. Els imports indicats per
+        a les mateixes declaracions anteriors es retiren junts.
+      title: Imports de declaracions anteriors
     rename:
       name: Nom
       save: Desar el nom
@@ -9214,6 +9216,8 @@ tui:
         no mostra, així que no s'ha deixat per revisar.
       prior:
         heading: Xifres que has indicat per a declaracions anteriors
+        partial: Escriu una xifra per a cada casella d'aquesta manifestació o deixa-les
+          totes buides. Es fa sencera o no es fa.
       stage: Deixar per revisar
       title: Manifestacions que pots fer
       withdraw: Retirar la manifestació
@@ -10700,6 +10704,8 @@ workspace:
         incomplete: 'Comprovada: falten dades que la declaració necessita.'
       done: Fet. La declaració s'ha actualitzat.
       not_done: No s'ha completat; els teus canvis continuen aquí.
+      unknown: Pot ser que s'hagi aplicat. Torna a llegir la declaració abans d'aplicar
+        res més.
     origin:
       calculated: Calculada
       calculation_failed: No s'ha pogut calcular

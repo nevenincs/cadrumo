@@ -135,7 +135,11 @@ _BINDING_KINDS: Final[Mapping[WorkbenchChangeKind, ModeloEditBindingIntentKind]]
         WorkbenchChangeKind.CLEAR: ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
         WorkbenchChangeKind.RESTORE: ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
         WorkbenchChangeKind.STATE_ABSENT: ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
+        WorkbenchChangeKind.STATE_PRIOR_VALUE: ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
     }
+)
+_VALUED_KINDS: Final[frozenset[WorkbenchChangeKind]] = frozenset(
+    {WorkbenchChangeKind.SET, WorkbenchChangeKind.STATE_PRIOR_VALUE}
 )
 
 
@@ -468,7 +472,7 @@ def _intents(
     binding: list[ModeloBindingEditIntentV1] = []
     for change in changes:
         address = change.address
-        value = change.value if change.kind is WorkbenchChangeKind.SET else None
+        value = change.value if change.kind in _VALUED_KINDS else None
         if isinstance(address, ModeloFormCasillaAddressV1):
             scalar.append(
                 ModeloScalarEditIntentV1(

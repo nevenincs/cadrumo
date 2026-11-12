@@ -4451,9 +4451,6 @@ desktop:
       confirm: Discard
       lead: It leaves your list of declarations. Its history is kept.
       reason: Why (optional)
-    export:
-      limitation:
-        title: What this file leaves out
     form:
       pages: Pages of the form
     keys:
@@ -4471,6 +4468,11 @@ desktop:
       label: Form outline
       may_apply: Only if it applies to you
       needs_you: 'Needs you: {count}'
+    prior_values:
+      intro: Where no earlier return a box carries from is held here, you can state
+        its figure yourself. Figures stated for the same earlier returns are withdrawn
+        together.
+      title: Figures of earlier returns
     rename:
       name: Name
       save: Save name
@@ -9029,6 +9031,8 @@ tui:
         staged.
       prior:
         heading: Figures you stated for earlier returns
+        partial: Enter a figure for every box of this statement, or leave them all
+          empty. It is stated whole or not at all.
       stage: Stage for review
       title: Statements you can make
       withdraw: Withdraw the statement
@@ -10493,6 +10497,8 @@ workspace:
         incomplete: 'Checked: some values the declaration needs are missing.'
       done: Done. The declaration has been updated.
       not_done: It did not complete; your changes are still here.
+      unknown: It may have been applied. Read the declaration again before you apply
+        anything else.
     origin:
       calculated: Calculated
       calculation_failed: Could not be calculated
