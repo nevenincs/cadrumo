@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.contribuyente.deduccion_maternidad import (
     compute_deduccion_maternidad_0611,
@@ -18,12 +19,14 @@ from ...domain.contribuyente.deduccion_maternidad import (
 )
 from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ...domain.contribuyente.family_profile import RentaFamilyProfile
+from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
-from ...domain.user_profile.values import UserProfileFactValue
+from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ..user_profile.projections import profile_fact_index
 from .profile_derived_facts import (
     declared_profile_selectors,
     family_fact_context,
+    incremento_guarderia_rows_lacking_cotizaciones,
     renta_family_profile_from_facts,
     resolved_minimo_descendientes_thresholds,
 )
@@ -34,6 +37,10 @@ if TYPE_CHECKING:
 
 _DEDUCCION_MATERNIDAD_KEY = "renta_family.deduccion_maternidad"
 _DEDUCCION_MATERNIDAD_COTIZACIONES_KEY = "renta_family.deduccion_maternidad_cotizaciones"
+_INCREMENTO_GUARDERIA_COTIZACIONES_KEY = "renta_family.incremento_guarderia_cotizaciones"
+
+COTIZACIONES_ROW_FACT_LEAF = "cotizaciones_ss_madre"
+"""The descendant row fact that both cotizaciones-limited derived facts wait on."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,6 +224,34 @@ def _resolve_maternidad_meses_from_fact_index(
         in declared_profile_selectors(snapshot.revision),
         context=context,
     )
+
+
+def descendant_rows_lacking_cotizaciones(
+    record: UserProfileRecord,
+    snapshot: RegistrySnapshot,
+    binding_id: BindingId,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[int, ...]:
+    """The descendant rows whose unstated cotizaciones leave ``binding_id`` without a value, by stored position.
+
+    A binding that consumes a cotizaciones-limited derived fact stays unresolved while a
+    child that needs the figure has none on its row. Empty when the binding consumes
+    neither derived fact, or when its value is unresolved for another reason.
+    """
+    binding = next((candidate for candidate in snapshot.revision.bindings if candidate.id == binding_id), None)
+    if binding is None:
+        return ()
+    selectors = frozenset(profile_binding_selectors(binding.provider))
+    fact_index = profile_fact_index(record, operation.profile_schema())
+    context = family_fact_context(snapshot, operation=operation)
+    rows: set[int] = set()
+    if _DEDUCCION_MATERNIDAD_COTIZACIONES_KEY in selectors:
+        resolution = _resolve_maternidad_meses_from_fact_index(fact_index, snapshot, context=context)
+        rows.update(int(hijo_id) for hijo_id, figure in resolution.cotizaciones_por_hijo if figure is None)
+    if _INCREMENTO_GUARDERIA_COTIZACIONES_KEY in selectors:
+        rows.update(incremento_guarderia_rows_lacking_cotizaciones(fact_index, snapshot, context=context))
+    return tuple(sorted(rows))
 
 
 def inject_derived_deduccion_maternidad_facts(
