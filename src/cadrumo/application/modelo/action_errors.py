@@ -279,8 +279,43 @@ class AmendmentComplementariaLiabilityDecreaseError(ModeloError):
     """
 
 
-class StoredCalculationDriftError(ModeloError):
-    """Raised when a persisted calculation revision has drifted from its content-addressed id."""
+class StoredCalculationDriftError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when a persisted calculation revision has drifted from its content-addressed id.
+
+    The stored revision can no longer be trusted, and calculating the work unit
+    again writes a fresh revision from its sources, so that is its door. The
+    work unit is bound when the raise site states it in ``context``.
+    """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_failure: ModeloPreconditionFailure | None = None,
+    ) -> None:
+        """Carry the caller's verdict, or the recalculation door of the drifted work unit."""
+        work_unit_id = None if context is None else context.get("work_unit_id")
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_failure=precondition_failure
+            or _stored_drift_failure(work_unit_id if isinstance(work_unit_id, str) else None),
+        )
+
+
+def _stored_drift_failure(work_unit_id: str | None) -> ModeloPreconditionFailure:
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.calculate",
+        scenario_id="modelo.work.calculate.stored_revision.drifted",
+        evidence_id="modelo.work.calculate.stored_revision",
+        evidence_values={"intact": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values=None if work_unit_id is None else {"work_unit_id": work_unit_id},
+        missing_action_arguments=() if work_unit_id is not None else ("work_unit_id",),
+    )
 
 
 class StoredRowFieldScalarInputError(ModeloError):
@@ -309,11 +344,11 @@ class LedgerEvidenceRecaptureRefusedError(ModeloError):
     """
 
 
-class ExternalModeloImportError(ModeloError):
+class ExternalModeloImportError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when the external-filing import path cannot persist an imported baseline."""
 
 
-class ModeloLocalObservationError(ModeloError):
+class ModeloLocalObservationError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when an operator-supplied local observation cannot be persisted."""
 
 

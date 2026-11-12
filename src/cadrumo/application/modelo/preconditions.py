@@ -578,6 +578,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
         action_id="operator.modelo.work.attest_prior_carries",
     ),
+    # A stored revision that no longer matches its content address is replaced
+    # by calculating the work unit again from its sources.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.stored_revision.intact",
+        "modelo.work.calculate.stored_revision.drifted",
+        action_id="operator.modelo.work.calculate",
+    ),
     # An input no source supplied is stated on the calculation itself; the
     # binding listing names it and the work unit's form takes the value.
     _profile(
