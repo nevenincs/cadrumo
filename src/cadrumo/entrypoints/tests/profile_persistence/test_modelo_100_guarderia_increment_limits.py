@@ -54,6 +54,8 @@ from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 from ....domain.contribuyente.meses_trabajo import parse_meses_trabajo
 from ....domain.modelos.calculation_revision import CalculationRevision
+from ....domain.user_profile.registry_contract import profile_binding_selectors
+from ....domain.user_profile.schema import derived_selector_for_path
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_work_lifecycle_ports
 from .file_flow_test_support import calculation_ports_for_test
@@ -334,10 +336,30 @@ def test_the_registry_annual_cap_before_the_reform_is_the_statutory_one(filing_y
     assert guarderia_cap_anual(_snapshot(filing_year)) == _STATUTORY_ANNUAL_CAP
 
 
+def _cotizaciones_bindings(snapshot: RegistrySnapshot) -> dict[BindingId, tuple[str, ...]]:
+    """Every binding of the edition that names the cotizaciones, in its id or in a profile path, with its paths."""
+    named: dict[BindingId, tuple[str, ...]] = {}
+    for binding in snapshot.revision.bindings:
+        selectors = profile_binding_selectors(binding.provider)
+        if "cotizaciones" in binding.id or any("cotizaciones" in selector for selector in selectors):
+            named[binding.id] = selectors
+    return named
+
+
 @pytest.mark.parametrize("filing_year", _supported_years())
 def test_no_edition_asks_for_the_cotizaciones_as_a_household_figure(filing_year: int) -> None:
-    """The limit is per child, so it lives on each child's row and no binding carries one household figure."""
-    assert not [binding.id for binding in _snapshot(filing_year).revision.bindings if "cotizaciones" in binding.id]
+    """The limit is per child, so it lives on each child's row and no binding carries one household figure.
+
+    An edition may bind the engine's per-child fold, a derived path; it may not bind a stated fact.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        derived = operation.profile_decode_context().schema.derived_selectors
+    stated = [
+        binding_id
+        for binding_id, selectors in _cotizaciones_bindings(_snapshot(filing_year)).items()
+        if not selectors or any(derived_selector_for_path(selector, derived) is None for selector in selectors)
+    ]
+    assert not stated
 
 
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())
@@ -364,7 +386,9 @@ def test_a_mother_owed_the_increment_is_refused_until_she_states_her_cotizacione
     with _profile(tmp_path, filing_year, mother), pytest.raises(ModeloWorkMissingInputError) as refused:
         _calculate(filing_year)
 
-    assert refused.value.binding_id == _INCREMENTO_BINDING
+    limited = _cotizaciones_bindings(_snapshot(filing_year))
+    assert _INCREMENTO_BINDING in limited
+    assert refused.value.binding_id in limited
 
 
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())
