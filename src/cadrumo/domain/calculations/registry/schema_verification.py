@@ -375,8 +375,9 @@ class RegistryVerificationPolicy:
 KNOWN_PROFILE_FLAG_ADVISORY_FIELDS: frozenset[str] = frozenset(
     {
         "art109_activity_income_withholding_ge_70pct",
-        # ue_eee_status: TaxpayerProfile derived property (True iff
-        # country_of_fiscal_residence is an EU/EEA code, post-Brexit). Consumed
+        # ue_eee_status: TaxpayerProfile derived flag, read on the date of the
+        # filing period under verification (True iff
+        # country_of_fiscal_residence is an EU/EEA code on that date). Consumed
         # by profile_flag_enabled directly and by
         # casilla_equals_implies_profile_flag for the M210 IRNR
         # tipo_renta="ue_residente" residence cross-check.

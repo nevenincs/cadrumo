@@ -20,6 +20,7 @@ from .calculation_report_export import (
     ModeloCalculationReportResult,
 )
 from .export_contracts import ModeloExportResult
+from .export_disclosure import ModeloExportDisclosure
 
 
 class ModeloExportRequest(CredentialFreeOperationRequest):
@@ -91,6 +92,8 @@ class ModeloExportSettledResult(BaseModel):
 
     fichero_boe: ModeloExportResult | None = None
     calculation_report: ModeloCalculationReportResult | None = None
+    #: The limits the exported calculation's verification disclosed, worded for the filer; ``None`` when it states none.
+    disclosure: ModeloExportDisclosure | None = None
 
     @model_validator(mode="after")
     def _exactly_one_receipt(self) -> ModeloExportSettledResult:

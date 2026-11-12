@@ -71,6 +71,7 @@ _CHIP_MARKS: Final[Mapping[ModeloFormAttention, WorkbenchMark]] = MappingProxyTy
         ModeloFormAttention.MISSING: MISSING_MARK,
         ModeloFormAttention.CONFIRM: CONFIRM_MARK,
         ModeloFormAttention.CHECK: CHECK_MARK,
+        ModeloFormAttention.LIMITATION: CHECK_MARK,
     }
 )
 URGENT_CHIPS: Final[frozenset[ModeloFormAttention]] = frozenset(

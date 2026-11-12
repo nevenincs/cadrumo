@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
@@ -189,26 +189,61 @@ class ProfilePlantillaMediaOperationRequest(BaseModel):
     change: Annotated[ProfilePlantillaMediaSet | ProfilePlantillaMediaRemove, Field(discriminator="kind")]
 
 
+#: The canonical stored index of one household row, as the profile view serves it in ``row_index``.
+_HOUSEHOLD_ROW_INDEX_PATTERN = r"^(0|[1-9][0-9]{0,3})$"
+
+
+def _require_one_household_change(*changes: object) -> None:
+    if sum(change is not None for change in changes) != 1:
+        raise ValueError("a household change states the whole set, one row to add or one row to remove")
+
+
 class ProfileDescendantsOperationRequest(BaseModel):
-    """Replace a complete descendant family at an exact encrypted revision."""
+    """Replace a descendant family at an exact encrypted revision.
+
+    Exactly one of ``descendants`` (the whole family), ``add_row`` (the stored
+    family plus one row) and ``remove_row_index`` (the stored family without the
+    row the view served at that index) is stated.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    descendants: tuple[ProfileDescendantRow, ...] = Field(max_length=256, repr=False)
+    descendants: tuple[ProfileDescendantRow, ...] | None = Field(default=None, max_length=256, repr=False)
+    add_row: ProfileDescendantRow | None = Field(default=None, repr=False)
+    remove_row_index: str | None = Field(default=None, pattern=_HOUSEHOLD_ROW_INDEX_PATTERN)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_one_change(self) -> Self:
+        _require_one_household_change(self.descendants, self.add_row, self.remove_row_index)
+        return self
 
 
 class ProfileAscendantsOperationRequest(BaseModel):
-    """Replace the complete set of ascendants at an exact encrypted revision."""
+    """Replace the set of ascendants at an exact encrypted revision.
+
+    Exactly one of ``ascendants`` (the whole set), ``add_row`` (the stored set
+    plus one row) and ``remove_row_index`` (the stored set without the row the
+    view served at that index) is stated.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    ascendants: tuple[ProfileAscendantRow, ...] = Field(max_length=256, repr=False)
+    ascendants: tuple[ProfileAscendantRow, ...] | None = Field(default=None, max_length=256, repr=False)
+    add_row: ProfileAscendantRow | None = Field(default=None, repr=False)
+    remove_row_index: str | None = Field(default=None, pattern=_HOUSEHOLD_ROW_INDEX_PATTERN)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_one_change(self) -> Self:
+        _require_one_household_change(self.ascendants, self.add_row, self.remove_row_index)
+        return self
 
 
 class ProfileRepeatableRowValue(BaseModel):

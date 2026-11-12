@@ -89,6 +89,7 @@ _RECORD_FINDING_LEVELS: Final[Mapping[ModeloFormAttention, str]] = MappingProxyT
         ModeloFormAttention.MISSING: "missing",
         ModeloFormAttention.CONFIRM: "confirm",
         ModeloFormAttention.CHECK: "check",
+        ModeloFormAttention.LIMITATION: "check",
     }
 )
 """Where a finding about a table's values counts on the attention scale; one for information counts nowhere."""

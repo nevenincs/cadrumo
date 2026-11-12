@@ -32,6 +32,7 @@ from ....application.modelo.edit_models import (
 )
 from ....application.modelo.edit_services import validate_binding_intent
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from ....application.modelo.work_form_findings import ModeloFormAttention, finding_attention
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
@@ -200,6 +201,9 @@ def test_a_stated_figure_clears_the_dependency_as_stated_and_verification_report
     assert reported.message_facts["value"] == _STATED_CANONICAL
     assert reported.message_facts["target_modelo"] == "130"
     assert reported.message_facts["target_filing_year"] == floor
+    # The statement is a disclosed limitation, so the form places it on its own level, never as a blocker.
+    assert reported.disclosed_limitation is True
+    assert finding_attention(reported) is ModeloFormAttention.LIMITATION
 
 
 def test_a_stated_zero_is_one_statement_and_is_not_counted_again_as_a_zero_exemption(tmp_path: Path) -> None:

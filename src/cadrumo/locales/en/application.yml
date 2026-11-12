@@ -487,9 +487,10 @@ application:
         block_anchor_unstated: 'Nothing was written: box %{field_casilla_id} has a
           value, but box %{casilla_id}, which opens its block, has none. Enter box
           %{casilla_id}, or clear box %{field_casilla_id}, and export again.'
-        box_not_stated_by_rows: 'Nothing was written: box %{casilla_id} holds a value
-          the rows of %{element_path} do not add up to. Correct the box or the rows
-          so that each row states its own figures, and export again.'
+        box_not_stated_by_rows: 'Nothing was written: box %{casilla_id} holds the
+          value %{value}, which the rows of %{element_path} do not add up to. Correct
+          the box or the rows so that each row states its own figures, and export
+          again.'
         counterparty_rows_unattributable: 'Nothing was written: record %{record_id}
           has %{row_count} counterparty rows, and the single-valued boxes %{casillas}
           cannot be attributed to one of them. Enter those figures on the rows and
@@ -2897,6 +2898,42 @@ application:
       m036_declaration_without_alta: 'Nothing was recorded for the Modelo 036 declaration
         %{declaration_id}: no alta is on record, so a %{requested_event_kind} has
         no registration to change. Record the alta first.'
+      m145_application_surfaces_mismatch: The registry's application links for Modelo
+        145 do not match the payer-communication contract, so the communication record
+        cannot be used. This is a registry defect; nothing you can change repairs
+        it.
+      m145_delivery_blocked_by_validation: The Modelo 145 communication record has
+        %{issue_count} validation issue(s), so it cannot be marked as delivered to
+        the payer. State the record again with corrected values.
+      m145_export_blocked_by_validation: The Modelo 145 communication record has %{issue_count}
+        validation issue(s), so it cannot be exported. State the record again with
+        corrected values.
+      m145_export_layout_format_unsupported: The export layout %{export_layout_id}
+        declared for Modelo 145 uses the format %{format}, which the communication
+        export cannot write. This is a registry defect; nothing you can change repairs
+        it.
+      m145_export_layout_mixed_encodings: The export layout %{export_layout_id} declared
+        for Modelo 145 mixes character encodings across its records, so the communication
+        cannot be exported. This is a registry defect; nothing you can change repairs
+        it.
+      m145_export_layout_shared_cells: The export layout %{export_layout_id} declared
+        for Modelo 145 would write one box into unrelated cells, so the communication
+        cannot be exported. This is a registry defect; nothing you can change repairs
+        it.
+      m145_export_layout_without_records: The export layout %{export_layout_id} declared
+        for Modelo 145 declares no records, so the communication cannot be exported.
+        This is a registry defect; nothing you can change repairs it.
+      m145_export_record_not_encodable: The export record %{export_record_id} of the
+        communication cannot be written in the official layout from the stated values.
+        State the record again with values the layout can hold.
+      m145_record_not_delivered: The Modelo 145 communication record is in the state
+        %{state}. Mark it as delivered to the payer before marking it locally complete.
+      m145_record_registry_coordinate_not_current: The Modelo 145 communication record
+        was stored under a registry revision that can no longer be confirmed as current,
+        so it cannot be used. State the record again under the current registry.
+      m145_record_undeclared_casillas: The communication record names %{unknown_casilla_count}
+        box(es) that the Modelo 145 revision does not declare. State the record again
+        with declared boxes only.
       m200_accounting_result_required: Modelo 200 needs the year's accounting result
         before it can be calculated from the ledger.
       m210_agrupacion_annual_code_not_lease_or_sublease: The annual Modelo 210 (period
@@ -3035,8 +3072,19 @@ application:
       reconcile_declaration_unsupported: Declaration-PDF casilla-level reconcile is
         not yet enrolled for this modelo; reconcile a downloaded justificante via
         aeat app modelo reconcile import, or wait for this modelo to be enrolled.
+      reconcile_divergence_casilla_undeclared: The comparison found a difference in
+        box %{casilla_id}, which the registry revision does not declare, so the difference
+        has no legal source to rest on. This is a defect of the revision or of the
+        program; nothing you can change repairs it.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a declaration.
+      reconcile_observation_no_numeric_fields: The captured declaration holds no numeric
+        box to compare, so it cannot be reconciled. Choose other evidence.
+      reconcile_observation_not_comparable: The captured declaration holds no comparable
+        boxes or no taxpayer identity, so it cannot be reconciled. Choose other evidence.
+      reconcile_observation_registry_not_current: The captured declaration was read
+        under registry coordinates that are no longer current, so it cannot be reconciled.
+        Choose other evidence.
       refund_election_not_eligible: Refund was elected for Modelo %{modelo} %{period}
         %{filing_year}, but a refund is only available in the year's last filing period.
         Carry the credit forward, or make the election in the last period.
@@ -3144,6 +3192,9 @@ application:
         as filed, for when the obligation window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+    export_disclosure:
+      lead: This calculation states limits, and the export carries them as they are.
+        Read them before you rely on it.
     finding_fact:
       box_unnumbered: without a number
       date_unknown: a date not recorded
@@ -3779,6 +3830,15 @@ application:
           it to get past this: file this declaration with another tool, or wait until
           its cells have been reviewed.'
       inspection_heading: All boxes, in box-number order
+      prior_value_attestation:
+        refusal:
+          source_held: The earlier return is stored here, so this carry takes its
+            figure from it and you cannot state one in its place. Open that return
+            among your declarations.
+        withdrawal:
+          action: Withdraw the figures you stated for these earlier returns
+          effect: Your stated figure is withdrawn; the carry holds no value until
+            you state it again or the earlier return is added.
       served_action:
         credit_source_disagreement: Compare the amount with each payer's certificate,
           correct the source that is wrong, and recalculate. If you have checked that
@@ -4218,6 +4278,8 @@ application:
         blank and can have at most %{limit} characters.
       ascendant_nif_invalid: The NIF or NIE of ascendant %{row} is not valid; check
         its letters and digits.
+      ascendant_row_not_stored: That ascendant is no longer stored in this profile.
+        Read the household again before removing anyone.
       ascendant_rows_over_limit: A declaration lists at most %{limit} ascendants,
         and %{count} were given.
       censal_read_identity_absent: The tax registration read contained no tax identity,
@@ -4250,6 +4312,8 @@ application:
         blank and can have at most %{limit} characters.
       descendant_nif_invalid: The NIF or NIE of descendant %{row} is not valid; check
         its letters and digits.
+      descendant_row_not_stored: That descendant is no longer stored in this profile.
+        Read the household again before removing anyone.
       descendant_rows_over_limit: A declaration lists at most %{limit} descendants,
         and %{count} were given.
       descendant_value_invalid: Descendant %{row} states a value the declaration cannot
@@ -4319,6 +4383,11 @@ application:
       row_unknown_field: 'Section ''%{section}'' declares no such fields: %{unknown}.
         Available fields: %{fields}.'
     family_rows:
+      actions:
+        add_ascendiente: Add an ascendant
+        add_descendiente: Add a descendant
+        remove_ascendiente: Remove this ascendant
+        remove_descendiente: Remove this descendant
       ascendiente:
         apellidos_nombre:
           label: Ascendant's surnames and name (surnames first)
@@ -4331,6 +4400,11 @@ application:
           label: Date of death
         nif:
           label: Ascendant's NIF/NIE (leave blank if none)
+      descendiente:
+        cotizaciones_ss_madre:
+          help: Leave blank if unknown. Write the amount with a dot for decimals and
+            no thousands separator, for example 2332.80.
+          label: Mother's Social Security contributions after this child's birth (euros)
       incomplete: '{stated} stated, {recorded} recorded'
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge

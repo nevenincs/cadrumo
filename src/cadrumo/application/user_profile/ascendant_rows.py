@@ -4,7 +4,11 @@ Ascendants are stored as ``renta_family.ascendiente.{n}.{leaf}`` facts with
 ``renta_family.ascendientes_count``, the household shape the Modelo 100 bindings
 read. A replacement states the whole set: the rows, their count and the clearing
 of every row it no longer holds are one write against one exact custody revision,
-so a stated zero is a real answer and a person left out is removed.
+so a stated zero is a real answer and a person left out is removed. A caller may
+instead name one row to add, or the stored index of one row to remove; the set is
+then composed from the rows stored at the expected revision, so the people left
+alone are rewritten from storage with every leaf they state, and the same
+validation and write publish it.
 
 The leaves are the ones an ascendant row can state and the declaration reads: the
 NIF or NIE, the surnames and name, the date of birth, the date of death and the number
@@ -38,6 +42,7 @@ from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from .household_person_tax_id import canonical_person_tax_id
 from .household_row_limit import declared_household_row_limit
 from .profile_record_repository import ProfileRecordRepository
+from .projections import record_to_effective_facts
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -63,6 +68,7 @@ _DEATH_BEFORE_BIRTH_LOCALE_KEY: Final = "application.user_profile.errors.ascenda
 _NIF_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_nif_invalid"
 _NAME_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_name_invalid"
 _COHABITING_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_convivientes_invalid"
+_ROW_NOT_STORED_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_row_not_stored"
 
 _LEAF_ORDER: Final = (_NIF_LEAF, _NAME_LEAF, _BIRTH_DATE_LEAF, _DEATH_DATE_LEAF, _COHABITING_LEAF)
 
@@ -222,6 +228,34 @@ def _replaced_ascendant_facts(current: UserProfileRecord, pairs: dict[str, str])
     )
 
 
+def _stored_leaves_without(current: UserProfileRecord, remove_row_index: str | None) -> dict[str, str]:
+    """The effective stored leaves, less the row at ``remove_row_index``; a row that holds nothing is refused."""
+    stored = {path: fact.value for path, fact in record_to_effective_facts(current).items() if fact.value is not None}
+    if remove_row_index is None:
+        return stored
+    prefix = f"{ASCENDANT_OBJECT_PATH}.{remove_row_index}."
+    if not any(path.startswith(prefix) and value.strip() for path, value in stored.items()):
+        _refuse(_ROW_NOT_STORED_LOCALE_KEY)
+    return {path: value for path, value in stored.items() if not path.startswith(prefix)}
+
+
+def _composed_ascendants(
+    current: UserProfileRecord,
+    *,
+    ascendants: tuple[ProfileAscendantRow, ...] | None,
+    add_row: ProfileAscendantRow | None,
+    remove_row_index: str | None,
+) -> tuple[ProfileAscendantRow, ...]:
+    """The whole set a change states: the set itself, or the stored rows less one removed and plus one added.
+
+    The stored rows are read from the effective facts, so a leaf the operator cleared is not written back.
+    """
+    if ascendants is not None:
+        return ascendants
+    stored = _stored_leaves_without(current, remove_row_index)
+    return (*ascendant_rows_from_facts(stored), *(() if add_row is None else (add_row,)))
+
+
 @dataclass(frozen=True, slots=True)
 class AscendantFamilyMutation:
     """Published revision and actual change, without duplicating private rows."""
@@ -234,19 +268,24 @@ class AscendantFamilyMutation:
 def replace_profile_ascendants(
     *,
     profile_id: str,
-    ascendants: tuple[ProfileAscendantRow, ...],
+    ascendants: tuple[ProfileAscendantRow, ...] | None = None,
+    add_row: ProfileAscendantRow | None = None,
+    remove_row_index: str | None = None,
     expected_revision: int,
     expected_content_digest: ContentDigest,
     operation: PinnedAuthorityOperation,
 ) -> AscendantFamilyMutation:
     """Validate and replace the whole set of ascendants against one exact custody revision.
 
-    The count and every orphaned row fact belong to the same write. Validation
-    runs before publication, so a refused set leaves the record untouched.
+    The set is ``ascendants`` when given; otherwise it is the rows stored at that
+    revision, without the row stored at ``remove_row_index`` and with ``add_row``
+    appended. The count and every orphaned row fact belong to the same write.
+    Validation runs before publication, so a refused set leaves the record untouched.
 
     Raises:
         ProfileRecordConflictError: The profile moved past the expected revision or digest.
-        UserProfileValidationError: A row or the set is outside what the declaration holds.
+        UserProfileValidationError: A row or the set is outside what the declaration holds,
+            or no row is stored at ``remove_row_index``.
     """
     decode = operation.profile_decode_context()
     current = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode).load(profile_id)
@@ -256,8 +295,9 @@ def replace_profile_ascendants(
         expected_content_digest=expected_content_digest,
         field_paths=(ASCENDANT_COUNT_PATH,),
     )
+    rows = _composed_ascendants(current, ascendants=ascendants, add_row=add_row, remove_row_index=remove_row_index)
     with validating_governed_facts(operation):
-        pairs = _validated_ascendant_facts(ascendants, operation)
+        pairs = _validated_ascendant_facts(rows, operation)
         published = apply_profile_fact_changes(
             profile_id=profile_id,
             changes=_replaced_ascendant_facts(current, pairs),
@@ -267,7 +307,7 @@ def replace_profile_ascendants(
         )
     return AscendantFamilyMutation(
         record=published,
-        total=len(ascendants),
+        total=len(rows),
         changed=published.record_revision != current.record_revision,
     )
 

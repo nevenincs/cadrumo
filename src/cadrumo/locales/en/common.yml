@@ -10114,6 +10114,7 @@ workspace:
         blocks: 'blocking: {count}'
         check: 'to check: {count}'
         confirm: 'to confirm: {count}'
+        limitation: 'limits stated: {count}'
         missing: 'missing: {count}'
       deadline: 'Deadline {date} · days left: {days}'
       deadline_passed: 'Deadline passed on {date}: filing now is late'
@@ -10385,6 +10386,7 @@ workspace:
       check: Worth checking
       confirm: To confirm
       info: For your information
+      limitation: Limit stated
       missing: Missing
     loading: Loading the declaration…
     modelo_number: Modelo {modelo}

@@ -225,6 +225,11 @@ def check_count(form: ModeloWorkForm) -> int:
     return findings + notes
 
 
+def limitation_count(form: ModeloWorkForm) -> int:
+    """How many disclosed limitations the check's findings state: figures the calculation leaves out and says so."""
+    return sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.LIMITATION)
+
+
 def _record_casillas(form: ModeloWorkForm) -> frozenset[str]:
     """The casillas a table of records carries a value of, in every record."""
     return frozenset(
@@ -411,6 +416,7 @@ __all__ = [
     "held_prerequisite_step",
     "inapplicable_pages",
     "is_result_field",
+    "limitation_count",
     "missing_count",
     "missing_findings",
     "registry_grade_refusal",
