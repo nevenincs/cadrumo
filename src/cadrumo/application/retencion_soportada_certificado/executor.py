@@ -19,6 +19,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.operations import OperationEffect
+from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -39,6 +40,7 @@ from ..ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
+from ..operations.public_scalar import PublicDecimal
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .contracts import (
@@ -121,6 +123,10 @@ def _read_certificate(request: RetencionSoportadaRecordRequest) -> _CertificateF
     return _CertificateFile(path=resolved, data=data, fingerprint=fingerprint)
 
 
+def _optional_decimal(amount: PublicDecimal | None) -> Decimal | None:
+    return None if amount is None else Decimal(amount.decimal)
+
+
 def _build_record(
     request: RetencionSoportadaRecordRequest,
     ports: RetencionSoportadaCertificadoPorts,
@@ -137,6 +143,9 @@ def _build_record(
     }
     if amounts["ingreso_a_cuenta_repercutido"] > amounts["ingreso_a_cuenta"]:
         return _CertificateRefusal("repercutido_exceeds_ingreso_a_cuenta")
+    work_figures = (request.reducciones_aplicables, request.gastos_deducibles)
+    if request.income_class is RetencionSoportadaClase.TRABAJO and None in work_figures:
+        return _CertificateRefusal("trabajo_certificate_figure_missing")
     if request.origin is RetencionSoportadaOrigen.PAYER_CERTIFICATE and fingerprint is None:
         return _CertificateRefusal("certificate_fingerprint_required")
     # A payer withholds under a Spanish identifier, and the identifier is what keys the row: a mistyped
@@ -160,6 +169,8 @@ def _build_record(
             evidence_fingerprint=fingerprint,
             replaces_evidence_fingerprint=stored.evidence_fingerprint if stored is not None else None,
             captured_at=now(),
+            reducciones_aplicables=_optional_decimal(request.reducciones_aplicables),
+            gastos_deducibles=_optional_decimal(request.gastos_deducibles),
             **amounts,
         )
     except ValidationError:

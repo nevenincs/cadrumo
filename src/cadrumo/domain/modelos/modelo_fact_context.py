@@ -12,7 +12,6 @@ from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from ..calculations.registry.schema_base import DateAxis
 
 _MODELO_FACT_DATE_AXES: dict[str, DateAxis] = {
-    "lirpf-art-20-trabajo-reduccion-rnt-ceiling": DateAxis.FILING_PERIOD,
     "lirpf-art-52-individual-contribution-sublimit": DateAxis.FILING_PERIOD,
     "lirpf-dt12-rescate-reduction-rate": DateAxis.FILING_PERIOD,
     "lirpf-dt12-general-window-following-years": DateAxis.FILING_PERIOD,

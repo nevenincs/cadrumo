@@ -2101,6 +2101,13 @@ application:
         no payer record and no absence attestation, and your profile does not declare
         this income absent. Record each payer''s certificate, or attest that no payer
         withheld.'
+      retencion_soportada_income_record_required: 'Income class {income_class}: you
+        attested that no payer withheld, which says nothing about the amount of the
+        income. Withdraw the attestation, then record each payer''s certificate as
+        an operator declaration.'
+      retencion_soportada_record_figure_missing: 'Income class {income_class}: a stored
+        payer record does not state the reductions and deductible expenses of the
+        certificate. Replace the record with the certificate''s figures.'
       row_unregistered: The ledger entry of {row_date} for {row_amount} records an
         asset your register does not hold.
       row_unregistered_undated: A ledger entry records an asset your register does
@@ -2951,6 +2958,9 @@ application:
         the key and sign again.'
       source_owned_binding_override: You entered a value in a box that comes from
         your records; remove it or correct the record it comes from.
+      trabajo_income_nothing_open: 'Modelo %{modelo} for %{filing_year} has no work-income
+        box left to state as none: each one already holds a figure or your statement,
+        or the declaration has no work income from a payer record. Nothing was changed.'
       value_presentation_data_type_undeclared: No way to show values of the data type
         %{data_type} is declared, so the figure is not shown. The bundled data is
         incomplete, and nothing you entered caused it.
@@ -3050,10 +3060,6 @@ application:
       application_not_required_maximum: 'Box [%{box}] holds %{casilla_value}, but
         it must be %{computed_value}: the law requires applying the largest amount
         this year allows, no more and no less.'
-      art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
-        from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
-        so box [%{reduccion_id}] may give you a reduction you are not using yet. Check
-        whether it applies to you.
       art52_reduccion_individual_sublimit_possible: Box [%{reduccion_id}] shows a
         pension plan (previsión social) reduction of %{reduccion_value} EUR, above
         the individual limit of %{sublimit} EUR in Art. 52 LIRPF, and no employer
@@ -3252,6 +3258,32 @@ application:
         against it. Enter the amount from your payer's certificado de retenciones
         e ingresos a cuenta. The modelo 111 that declares it was submitted by your
         payer, not by you, so this value cannot be filled in automatically.
+      trabajo_deduction_not_computed: 'Your work income does not include the deductions
+        only you can evidence: union dues (0014), professional-body fees (0015), legal-defence
+        costs (0016) and the increase for geographic mobility (0020). If any applies,
+        the return overstates your tax. State it in those boxes.'
+      trabajo_disability_unstated: Your profile states a disability, so box [%{casilla_id}]
+        (increase of the work expenses for an active worker with a disability) may
+        apply to you. State the amount, or 0 if you are not an active worker.
+      trabajo_expense_above_limit:
+        colegio_profesional: Box [%{casilla_id}] (professional-body fees) states %{stated}
+          EUR, above the legal limit of %{limit} EUR. Lower it to the limit or less.
+        defensa_juridica: Box [%{casilla_id}] (legal-defence costs) states %{stated}
+          EUR, above the legal limit of %{limit} EUR. Lower it to the limit or less.
+      trabajo_income_unstated:
+        decision_trabajador: Box [%{casilla_id}] (employer contributions made at your
+          decision) is income from work that no payer certificate states. State the
+          amount you received, or state that there is none.
+        dependencia: Box [%{casilla_id}] (employer contributions to dependency insurance)
+          is income from work that no payer certificate states. State the amount you
+          received, or state that there is none.
+        patrimonio_protegido: Box [%{casilla_id}] (contributions to the protected
+          estate of a person with a disability) is income from work that no payer
+          certificate states. State the amount you received, or state that there is
+          none.
+        prevision: Box [%{casilla_id}] (employer contributions to pension plans and
+          welfare mutuals) is income from work that no payer certificate states. State
+          the amount you received, or state that there is none.
       transaction_evidence_missing_deductible: An expense you deduct has no invoice
         or receipt attached. Attach it to the entry in your records.
       transaction_evidence_missing_output: An issued invoice on which you charge VAT
@@ -3387,6 +3419,10 @@ application:
         so it stays unresolved instead of counting as zero. Record the missing evidence,
         then project again.
       casilla_reason:
+        income_family_contradicts_profile: This box compares your other income with
+          the limit, but the income categories you stated exclude a kind of income
+          that you have figures for. Correct the categories or remove the figures,
+          then project again. It is never shown as zero.
         m210_baseline_tipo_deferred: This box needs the general rate for this kind
           of income, which is not yet grounded for the year, so it has no value.
         m210_convenio_rate_missing: This box needs the tax-treaty rate for the country
@@ -3521,6 +3557,18 @@ application:
             years is still pending offset (art. 50.3 Ley 35/2006). Each carry is recorded
             as a 0 you stated, apart from a figure you typed; if an earlier return
             later shows an amount, the declaration flags the difference.
+        renta_trabajo_income_not_stated:
+          action: I have no employer contributions or protected-estate contributions
+            to state
+          effect: 'Recorded as a 0 you stated: none of these contributions.'
+          origin: You stated there is none
+          statement: 'States that you have nothing in four boxes of your work income:
+            employer contributions to pension plans and welfare mutuals (0008), employer
+            contributions to dependency insurance (0009), contributions to the protected
+            estate of a person with a disability (0010) and employer contributions
+            made at your decision (0024). Each box is recorded as a 0 you stated,
+            apart from a figure you typed. No payer certificate states these amounts,
+            so only you can.'
       credits_heading:
         mixed: Withholdings
         practised: Withholdings you have taken

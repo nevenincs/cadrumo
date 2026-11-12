@@ -117,7 +117,11 @@ def _record(
     certificate: bytes | None = _FIRST_CERTIFICATE,
     evidence_sha256: str | None = None,
     revision: str | None = None,
+    reducciones: str | None = "3060.00",
+    gastos: str | None = "610.00",
+    figures_on_any_class: bool = False,
 ) -> Result:
+    """Invoke ``record``; the work-income figures ride along for ``trabajo`` only, unless forced."""
     command = [
         "record",
         payer,
@@ -138,6 +142,11 @@ def _record(
         "--payer-name",
         "Pagador Sintetico SL",
     ]
+    if income_class == "trabajo" or figures_on_any_class:
+        if reducciones is not None:
+            command += ["--reducciones-aplicables", reducciones]
+        if gastos is not None:
+            command += ["--gastos-deducibles", gastos]
     if certificate is not None:
         command += ["--certificate-file", str(_certificate_file(profile, certificate))]
     if evidence_sha256 is not None:
@@ -200,6 +209,7 @@ def _recorded(
         certificate=certificate,
         revision=revision,
     )
+    assert result.exit_code == 0, result.output
     return RetencionSoportadaRecordResult.model_validate_json(json.dumps(unwrap_cli_result(result)))
 
 
@@ -211,6 +221,7 @@ def _record_two_certificates(
     assert first.row.pago_a_cuenta == "1300.00"
     assert first.row.evidence_sha256 == _sha256(_FIRST_CERTIFICATE)
     assert first.row.origin == "payer_certificate"
+    assert (first.row.reducciones_aplicables, first.row.gastos_deducibles) == ("3060.00", "610.00")
     assert len(first.row.payer_ref) == 64
 
     second = _recorded(profile, _PAYER_B, retencion="450.00", origin="operator_declaration", certificate=None)
@@ -285,6 +296,22 @@ def _assert_invalid_records_refused(profile: RegisteredCliProfile) -> None:
     assert mismatched["effect"] == "none"
     unreadable = _refusal_context(_record(profile, _PAYER_C, retencion="10.00", certificate=b""))
     assert unreadable["reason"] == "certificate_file_unreadable"
+    # A work-income record states both certificate figures, and no other class takes either.
+    for reducciones, gastos in ((None, "610.00"), ("3060.00", None), (None, None)):
+        omitted = _refusal_context(
+            _record(profile, _PAYER_C, retencion="10.00", reducciones=reducciones, gastos=gastos)
+        )
+        assert omitted["reason"] == "trabajo_certificate_figure_missing"
+    carried = _refusal_context(
+        _record(
+            profile,
+            _PAYER_C,
+            retencion="10.00",
+            income_class="capital_mobiliario",
+            figures_on_any_class=True,
+        )
+    )
+    assert carried["reason"] == "validation"
     malformed = _record(profile, _PAYER_C, retencion="1.234,50")
     assert malformed.exit_code != 0
     assert "1.234,50" in malformed.output
@@ -302,6 +329,7 @@ def _remove_third_certificate(profile: RegisteredCliProfile) -> None:
     # Removal needs the revision the list showed.
     third = _recorded(profile, _PAYER_C, retencion="75.00", income_class="capital_mobiliario")
     assert third.count == 3
+    assert (third.row.reducciones_aplicables, third.row.gastos_deducibles) == (None, None)
     target = ("--ejercicio", _EJERCICIO, "--income-class", "capital_mobiliario")
     stale_removal = _refusal_context(
         _invoke(profile, "remove", third.row.payer_ref, *target, "--expected-revision", "e" * 64)

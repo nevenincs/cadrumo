@@ -50,6 +50,15 @@ income_class = "trabajo"
 origin = "operator_declaration"
 importe_integro = "21840.00"
 retencion = "2180.00"
+# A public pension certificate states no reducción (LIRPF art. 18) and no
+# deductible expense (LIRPF art. 19.2.a), so both are stated as none.
+reducciones_aplicables = "0.00"
+gastos_deducibles = "0.00"
+
+# Neither derivation names an employer contribution, patrimonio protegido or other
+# imputed work income, so he states none of it for the ejercicio.
+[[work_income_none_statements]]
+ejercicio = "horizon-1"
 
 # Declarative scenario facts for the let dwelling. No production operation that
 # records them was located; the reader keeps this block as expectation input

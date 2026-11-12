@@ -57,6 +57,7 @@ _REFUSAL_MESSAGE_LOCALE_KEYS = {
     "taxpayer_tax_id_unknown": "aggregation.retencion_soportada.errors.taxpayer_tax_id_unknown",
     "not_found": "aggregation.retencion_soportada.errors.not_found",
     "validation": "aggregation.retencion_soportada.errors.validation",
+    "trabajo_certificate_figure_missing": "aggregation.retencion_soportada.errors.trabajo_certificate_figure_missing",
 }
 
 
@@ -124,6 +125,8 @@ def _row_payload(row: RetencionSoportadaRowProjection) -> RetencionSoportadaRowP
         retencion=row.retencion.decimal,
         ingreso_a_cuenta=row.ingreso_a_cuenta.decimal,
         ingreso_a_cuenta_repercutido=row.ingreso_a_cuenta_repercutido.decimal,
+        reducciones_aplicables=None if row.reducciones_aplicables is None else row.reducciones_aplicables.decimal,
+        gastos_deducibles=None if row.gastos_deducibles is None else row.gastos_deducibles.decimal,
         pago_a_cuenta=row.pago_a_cuenta.decimal,
         origin=row.origin.value,
         evidence_sha256=row.evidence_fingerprint,

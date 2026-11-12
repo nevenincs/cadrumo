@@ -30,6 +30,7 @@ type RetencionSoportadaCertificadoRefusalReason = Literal[
     "taxpayer_tax_id_unknown",
     "not_found",
     "validation",
+    "trabajo_certificate_figure_missing",
 ]
 """Why an operation was refused before any change was stored."""
 
