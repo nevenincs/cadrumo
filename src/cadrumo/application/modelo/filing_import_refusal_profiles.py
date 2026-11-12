@@ -48,6 +48,7 @@ class FilingImportRefusalCause(StrEnum):
     SOURCE_FILE = "source_file"
     OBSERVATION_STORAGE = "observation_storage"
     RESULT_DISPOSITION = "result_disposition"
+    AUTHORITY = "authority"
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,6 +81,7 @@ FILING_IMPORT_REFUSAL_SPECS: Final[dict[FilingImportRefusalCause, FilingImportRe
         (_CAUSE.REGISTER_REFERENCE, IMPORT_LEAF, "consistent", "conflicting", None, _DECISION),
         (_CAUSE.SOURCE_CONSISTENCY, IMPORT_LEAF, "consistent", "inconsistent", None, _TERMINAL),
         (_CAUSE.FILING_CHAIN, IMPORT_LEAF, "consistent", "inconsistent", None, _TERMINAL),
+        (_CAUSE.AUTHORITY, IMPORT_LEAF, "installed", "missing", None, _TERMINAL),
         (_CAUSE.AUDIT_TEXT, LOCAL_OBSERVATION_LEAF, "stated", "blank", None, _DECISION),
         (_CAUSE.COORDINATE, LOCAL_OBSERVATION_LEAF, "consistent", "inconsistent", None, _DECISION),
         (_CAUSE.OBSERVABLE_MODELO, LOCAL_OBSERVATION_LEAF, "observable", "refused", None, _DECISION),

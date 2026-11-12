@@ -39,10 +39,11 @@ from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.period import Period
 from ...core.type_adapters import STRICT_STR_KEYED_MAPPING_ADAPTER
 from .codes import ModeloCode
-from .errors import ModeloError, ModeloValidationError
+from .errors import ModeloError, ModeloValidatedRecord, ModeloValidationError
 
 _JustificanteReference = Annotated[
     str,
@@ -65,7 +66,11 @@ def derive_participation_index_id(transaction_id: str) -> str:
     """
     trimmed = transaction_id.strip()
     if not trimmed:
-        raise ModeloValidationError("participation-index transaction_id must not be blank")
+        raise ModeloValidationError(
+            "participation-index transaction_id must not be blank",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.PARTICIPATION_INDEX,
+        )
     return trimmed
 
 
@@ -111,6 +116,8 @@ class TransactionRevisionParticipation(BaseModel):
         if self.period.filing_year != self.filing_year:
             raise ModeloValidationError(
                 f"filing_year {self.filing_year!r} does not match period year {self.period.filing_year!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.PARTICIPATION_INDEX,
             )
         return self
 
@@ -137,6 +144,8 @@ class TransactionRevisionParticipationIndex(BaseModel):
         if len(seen) != len(set(seen)):
             raise ModeloValidationError(
                 "participation index carries duplicate calculation_revision_id entries for one transaction",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.PARTICIPATION_INDEX,
             )
         return self
 

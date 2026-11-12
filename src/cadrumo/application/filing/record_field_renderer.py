@@ -37,6 +37,7 @@ from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
 from .errors import FilingPreconditionCondition, casilla_value_refusal, filing_no_recovery_verdict
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 from .m190_context_validation import require_m190_signed_reintegro_context
 from .m193_context_validation import require_m193_perceptor_devengo_context
 from .m280_context_validation import m280_contextual_sign_byte, m280_key_wire, require_m280_negative_imputation_context
@@ -479,7 +480,10 @@ def _presence_marker_value(
     # evidence describes an ordinary return; neither that absence nor a false
     # fact means a missing wire byte.
     if field.producer_key not in headers:
-        raise FilingExportValidationError(f"export field {field.id!r} requires its producer fact")
+        raise FilingExportValidationError(
+            f"export field {field.id!r} requires its producer fact",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCER_FACT_UNSUPPLIED),
+        )
     if value is True and field.presence_marker is not None:
         return field.presence_marker
     if value is False or value is None:
@@ -690,6 +694,7 @@ def format_field(field: ExportFieldDefinition, value: object, *, record: ExportR
             field_length=exc.field_length,
             rendered=exc.rendered,
             data_type=field.data_type.value,
+            precondition_verdict=export_input_decision(ExportRefusalReason.SLOT_VALUE_TOO_WIDE),
         ) from exc
     except RegistryValidationError as exc:
         raise FilingExportFieldUnrenderableError(

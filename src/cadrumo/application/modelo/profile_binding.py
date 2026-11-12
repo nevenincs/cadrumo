@@ -77,6 +77,7 @@ from ..aggregation.source_mesh import (
 )
 from ..user_profile.projections import profile_fact_index
 from .printed_boxes import first_printed_dependent, printed_boxes
+from .profile_binding_refusal_doors import binding_contract_defect_verdict, profile_fact_value_refused_verdict
 from .profile_derived_facts import (
     ProfileBindingResolutionError,
     declared_profile_selectors,
@@ -163,6 +164,9 @@ def _decimal_value(binding_id: BindingId, value: object) -> Decimal:
         f"numeric operand; the profile fact must carry a numeric value",
         translated_message="application.modelo.profile_binding.errors.decimal_value_type_invalid",
         context={"binding_id": binding_id, "value_type": type(value).__name__},
+        precondition_verdict=profile_fact_value_refused_verdict(
+            "decimal_value_type", {"binding_id": binding_id, "value_type": type(value).__name__}
+        ),
     )
 
 
@@ -184,6 +188,9 @@ def _boolean_value(binding_id: BindingId, value: object) -> bool:
         f"rather than coerced",
         translated_message="application.modelo.profile_binding.errors.boolean_value_type_invalid",
         context={"binding_id": binding_id, "value_type": type(value).__name__},
+        precondition_verdict=profile_fact_value_refused_verdict(
+            "boolean_value_type", {"binding_id": binding_id, "value_type": type(value).__name__}
+        ),
     )
 
 
@@ -249,6 +256,9 @@ def _route_resolved_binding(
                 f"profile fact for date-channel binding {binding_id!r} must be a date, got {type(value).__name__!r}",
                 translated_message="application.modelo.profile_binding.errors.date_value_type_invalid",
                 context={"binding_id": binding_id, "value_type": type(value).__name__},
+                precondition_verdict=profile_fact_value_refused_verdict(
+                    "date_value_type", {"binding_id": binding_id, "value_type": type(value).__name__}
+                ),
             )
         channels.date_values[binding_id] = value
         return
@@ -266,6 +276,9 @@ def _route_resolved_binding(
                 f"({value!r}); boolean facts are not valid enum dispatch keys",
                 translated_message="application.modelo.profile_binding.errors.enum_boolean_invalid",
                 context={"binding_id": binding_id, "value_type": "bool"},
+                precondition_verdict=binding_contract_defect_verdict(
+                    "enum_dispatch_key_type", {"binding_id": binding_id, "value_type": "bool"}
+                ),
             )
         # Unaddressed profile TEXT inputs use the existing string channel.
         # Dictionary/XSD-addressed numeric controls retain their established
@@ -282,6 +295,9 @@ def _route_resolved_binding(
             f"{declared_channel.value} quantity and is refused rather than coerced",
             translated_message="application.modelo.profile_binding.errors.boolean_value_channel_mismatch",
             context={"binding_id": binding_id, "declared_channel": declared_channel.value},
+            precondition_verdict=profile_fact_value_refused_verdict(
+                "boolean_value_channel", {"binding_id": binding_id, "declared_channel": declared_channel.value}
+            ),
         )
     # The resolver projects profile facts into engine channels; it does not
     # invent values the operator never supplied. Per-verb baselines own the
@@ -321,6 +337,10 @@ def _reject_channel_declaration_conflict(
             f"rather than resolving it on a channel its declaration does not name",
             translated_message="application.modelo.profile_binding.errors.channel_declaration_conflict",
             context={"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "date"},
+            precondition_verdict=binding_contract_defect_verdict(
+                "channel_declaration",
+                {"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "date"},
+            ),
         )
     if is_enum_channel and declared_channel not in {BindingValueChannel.ENUM, BindingValueChannel.TEXT}:
         raise ProfileBindingResolutionError(
@@ -329,6 +349,10 @@ def _reject_channel_declaration_conflict(
             f"rather than resolving it on a channel its declaration does not name",
             translated_message="application.modelo.profile_binding.errors.channel_declaration_conflict",
             context={"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "enum"},
+            precondition_verdict=binding_contract_defect_verdict(
+                "channel_declaration",
+                {"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "enum"},
+            ),
         )
 
 

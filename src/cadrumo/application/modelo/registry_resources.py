@@ -24,6 +24,8 @@ from typing import TYPE_CHECKING
 from ...core.period import Period
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.errors import ModeloError
+from .calculation_input_refusal_doors import modelo_description_verdict
+from .refusal_door_verdicts import registry_defect_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -47,12 +49,13 @@ def reject_unknown_revision(
     try:
         revisions = operation.modelo_directory(modelo).revisions
     except (RegistrySnapshotError, ValueError) as exc:
-        raise ModeloError(str(exc)) from exc
+        raise ModeloError(str(exc), precondition_verdict=registry_defect_verdict("revision_directory")) from exc
     if any(revision.id == revision_id for revision in revisions):
         return
     available = ", ".join(sorted(revision.id for revision in revisions))
     raise ModeloError(
         f"revision_id {revision_id!r} is not declared on modelo {modelo!r}. Available revisions: {available}",
+        precondition_verdict=modelo_description_verdict("revision", str(modelo)),
     )
 
 
@@ -76,7 +79,7 @@ def reject_unknown_period_for_revision(
     try:
         revision = operation.revision(modelo, revision_id)
     except (RegistrySnapshotError, ValueError) as exc:
-        raise ModeloError(str(exc)) from exc
+        raise ModeloError(str(exc), precondition_verdict=registry_defect_verdict("revision_directory")) from exc
     declared: set[str] = set()
     for schedule in revision.filing_schedules:
         declared.update(schedule.periods)
@@ -86,4 +89,5 @@ def reject_unknown_period_for_revision(
     raise ModeloError(
         f"period {period.registry_token!r} is not declared on modelo {modelo!r} "
         f"revision {revision_id!r}. Available periods: {available}",
+        precondition_verdict=modelo_description_verdict("period", str(modelo)),
     )

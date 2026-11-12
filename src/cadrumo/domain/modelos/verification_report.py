@@ -36,11 +36,11 @@ from ...core.hex import Hex64Str
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.operator_action_enums import OperatorActionAxis
+from ...core.operator_action_enums import NoRecoveryOutcome, OperatorActionAxis
 from ...core.time.utc import UtcInstant
 from ..calculations.registry.ids import LegalRefId, SourceRefId, VerificationExpectationId
 from ..calculations.registry.schema_references import RegistrySnapshotRef
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .filing_text import ModeloActorLabel
 
 """Validated string identifying the operator who triggered a verification run.
@@ -285,24 +285,40 @@ class VerificationReport(BaseModel):
         if derived != self.verification_report_id:
             raise ModeloValidationError(
                 f"verification_report_id {self.verification_report_id!r} does not match the derived id {derived!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.VERIFICATION_REPORT,
             )
         # granted_verificado_completo is a True iff completeness_status is COMPLETE
         # AND no blocking findings exist.
         has_blocking = any(finding.severity is ModeloVerificationFindingSeverity.BLOCKING for finding in self.findings)
         if self.granted_verificado_completo:
             if self.completeness_status is not VerificationCompletenessStatus.COMPLETE:
-                raise ModeloValidationError("granted_verificado_completo=True requires completeness_status=COMPLETE")
+                raise ModeloValidationError(
+                    "granted_verificado_completo=True requires completeness_status=COMPLETE",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.VERIFICATION_REPORT,
+                )
             if has_blocking:
-                raise ModeloValidationError("granted_verificado_completo=True requires no blocking findings")
+                raise ModeloValidationError(
+                    "granted_verificado_completo=True requires no blocking findings",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.VERIFICATION_REPORT,
+                )
         else:
             if self.completeness_status is VerificationCompletenessStatus.COMPLETE and not has_blocking:
                 raise ModeloValidationError(
                     "completeness_status=COMPLETE with no blocking findings must set granted_verificado_completo=True",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.VERIFICATION_REPORT,
                 )
         # Required-casilla sets must be disjoint from resolved.
         overlap = set(self.resolved_casilla_ids) & set(self.missing_required_casilla_ids)
         if overlap:
-            raise ModeloValidationError(f"casillas cannot be both resolved and missing: {sorted(overlap)!r}")
+            raise ModeloValidationError(
+                f"casillas cannot be both resolved and missing: {sorted(overlap)!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.VERIFICATION_REPORT,
+            )
         return self
 
 
@@ -327,6 +343,8 @@ class VerificationReportCatalogue(BaseModel):
             if key != report.verification_report_id:
                 raise ModeloValidationError(
                     f"catalogue key {key!r} does not match verification_report_id {report.verification_report_id!r}",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.VERIFICATION_REPORT,
                 )
         return self
 

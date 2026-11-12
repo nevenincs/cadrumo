@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 
 if TYPE_CHECKING:
     from ...core.period import Period
@@ -152,7 +153,10 @@ def reconciliation_evidence_parser() -> ReconciliationEvidenceParserPort:
     try:
         return _BOUND_RECONCILIATION_EVIDENCE_PARSER.get()
     except LookupError as error:
-        raise InternalInvariantError("reconciliation evidence parsing has not been composed") from error
+        raise InternalInvariantError(
+            "reconciliation evidence parsing has not been composed",
+            precondition_verdict=internal_invariant_verdict("reconciliation_evidence_parser.composed"),
+        ) from error
 
 
 __all__ = [

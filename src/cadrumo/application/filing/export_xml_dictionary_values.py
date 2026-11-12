@@ -11,6 +11,7 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...domain.calculations.registry.export_xml_dictionary import SINO_DICTIONARY_TYPE, XML_DICTIONARY_BOOLEAN_TYPES
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
+from .export_refusal_doors import ExportRefusalReason, export_input_decision
 
 # The registry owns the two boolean wire types. A new dictionary type does not
 # accept booleans until it is explicitly declared there.
@@ -78,7 +79,8 @@ def format_xml_dictionary_value(data_type: str, value: object) -> str:
             return holder_codes[holder]
         except KeyError as exc:
             raise FilingExportValidationError(
-                f"holder for a {data_type} row must be one of {', '.join(holder_codes)}, got {value!r}"
+                f"holder for a {data_type} row must be one of {', '.join(holder_codes)}, got {value!r}",
+                precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_FORM_REFUSED),
             ) from exc
     return _format_xml_dictionary_text_value(data_type, normalized_type, value)
 
@@ -158,6 +160,7 @@ def _format_xml_dictionary_numeric_value(data_type: str, value: object, numeric:
             "declared scale does not settle it: the scale says what the field can "
             "hold, not which reading was meant. Write the amount unambiguously "
             "(1000 or 1.0) at the source.",
+            precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_FORM_REFUSED),
         )
     # Enough working precision that a figure far above any row's limit still renders,
     # because the check against the official schema is what refuses it, by its box.
@@ -185,5 +188,6 @@ def _format_xml_dictionary_text_value(data_type: str, normalized_type: str, valu
             "The accepted form is d/m/yyyy with a four-digit year, e.g. 2/1/1980. "
             "Supply the value as a date rather than as text and it is rendered "
             "correctly without this check.",
+            precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_FORM_REFUSED),
         )
     return text

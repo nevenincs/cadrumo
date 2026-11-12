@@ -17,6 +17,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import content_hash_hex
 from ...core.irnr import M210GrossIncomeSourceMode
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ..calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.ids import BindingId, RelationId
@@ -28,7 +29,7 @@ from ..identifiers import canonical_decimal_string
 from .calculation_revision_m303_handoff import FilingInstanceEvidence, M303RegimenSimplificadoAnnualSummaryHandoff
 from .calculation_revision_operator_layer import OPERATOR_LAYER_IDENTITY_KEY, CalculationOperatorLayer
 from .calculation_screen_stamp import SCREEN_STAMP_IDENTITY_KEY
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .m156_rows import Modelo156AfiliadoRow
 from .row_models import Modelo210AgrupacionRentaRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 
@@ -46,21 +47,33 @@ def _validated_casilla_id(value: object, *, surface: str) -> CasillaId:
     try:
         return validated_casilla_id(value, surface=surface)
     except ValueError as exc:
-        raise ModeloValidationError(f"{surface} contains non-canonical casilla.id {value!r}") from exc
+        raise ModeloValidationError(
+            f"{surface} contains non-canonical casilla.id {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        ) from exc
 
 
 def _validated_binding_id(value: object, *, surface: str) -> BindingId:
     try:
         return _BINDING_ID_ADAPTER.validate_python(value)
     except ValidationError as exc:
-        raise ModeloValidationError(f"{surface} contains non-canonical binding id {value!r}") from exc
+        raise ModeloValidationError(
+            f"{surface} contains non-canonical binding id {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        ) from exc
 
 
 def _validated_relation_id(value: object, *, surface: str) -> RelationId:
     try:
         return _RELATION_ID_ADAPTER.validate_python(value)
     except ValidationError as exc:
-        raise ModeloValidationError(f"{surface} contains non-canonical relation id {value!r}") from exc
+        raise ModeloValidationError(
+            f"{surface} contains non-canonical relation id {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        ) from exc
 
 
 def detail_row_amount_text(value: Decimal) -> str:
@@ -124,23 +137,43 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
 
 def _validated_row_binding_index(value: object, *, surface: str) -> str:
     if isinstance(value, bool):
-        raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}")
+        raise ModeloValidationError(
+            f"{surface} contains non-positive row index {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if isinstance(value, int):
         index = value
     elif isinstance(value, str):
         try:
             index = int(value)
         except ValueError as exc:
-            raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}") from exc
+            raise ModeloValidationError(
+                f"{surface} contains non-positive row index {value!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            ) from exc
     else:
-        raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}")
+        raise ModeloValidationError(
+            f"{surface} contains non-positive row index {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if index < 1:
-        raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}")
+        raise ModeloValidationError(
+            f"{surface} contains non-positive row index {value!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     return str(index)
 
 
 def _duplicate_row_binding_index(row_index: str, *, surface: str, binding_id: BindingId) -> ModeloValidationError:
-    return ModeloValidationError(f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}")
+    return ModeloValidationError(
+        f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        record=ModeloValidatedRecord.CALCULATION_REVISION,
+    )
 
 
 def canonical_row_binding_values(
@@ -153,7 +186,11 @@ def canonical_row_binding_values(
     for raw_binding_id, raw_rows in row_binding_values.items():
         binding_id = _validated_binding_id(raw_binding_id, surface=surface)
         if not isinstance(raw_rows, Mapping):
-            raise ModeloValidationError(f"{surface} for binding {binding_id!r} must be a row-index mapping")
+            raise ModeloValidationError(
+                f"{surface} for binding {binding_id!r} must be a row-index mapping",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         typed_rows = TypeAdapter(dict[object, object]).validate_python(raw_rows)
         rows = index_unique_row_coordinates(
             (
@@ -287,6 +324,8 @@ def _m210_revision_id_payload(
         if code not in m210_tipo_renta_code_projection():
             raise ModeloValidationError(
                 f"m210_official_tipo_renta_code must be a registry-projected Modelo 210 code, got {code!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         parts["m210_official_tipo_renta_code"] = code
     if m210_gross_income_source_mode is not None:

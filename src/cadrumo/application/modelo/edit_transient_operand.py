@@ -20,6 +20,7 @@ from ..operations.financial_operand_contract import (
 )
 from .edit_models import ModeloEditBaselineV1, ModeloEditSubmissionV1
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from .lifecycle_view_refusal_doors import unit_status_verdict
 
 
 def _baseline(operand: BaseModel) -> BaseModel:
@@ -56,7 +57,12 @@ def modelo_edit_financial_operand(
         if committed is None:
             return None
         if committed.work_unit_id != requirement.identity.subject_ref:
-            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_BASELINE)
+            raise OperationFinancialOperandRefusedError(
+                OperationFinancialOperandRefusalCode.WRONG_BASELINE,
+                precondition_verdict=unit_status_verdict(
+                    "financial_operand_baseline", requirement.identity.subject_ref
+                ),
+            )
         return OperationFinancialOperandEffectReceiptV1(
             identity=requirement.identity,
             handoff_id=requirement.handoff_id,

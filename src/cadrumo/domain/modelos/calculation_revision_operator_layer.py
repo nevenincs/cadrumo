@@ -51,10 +51,11 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.period import RegistrySelectorPeriodCode
 from ..calculations.registry.ids import BindingId
 from ..identifiers import canonical_decimal_string
-from .errors import ModeloOperatorLayerIntegrityError, ModeloValidationError
+from .errors import ModeloOperatorLayerIntegrityError, ModeloValidatedRecord, ModeloValidationError
 
 ATTESTED_ZERO: Final = canonical_decimal_string(Decimal(0))
 """The override an attested binding holds: the canonical zero of the decimal channel."""
@@ -171,22 +172,32 @@ class CalculationOperatorLayer(BaseModel):
         if overlapping:
             raise ModeloValidationError(
                 f"operator layer casillas must reach exactly one channel; both channels carry {overlapping!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         for casilla_id, raw in self.decimal_casilla_inputs.items():
             parsed = try_parse_canonical_decimal(raw)
             if parsed is None or canonical_decimal_string(parsed) != raw:
                 raise ModeloValidationError(
                     f"operator layer decimal input for casilla {casilla_id!r} is not a canonical decimal string",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
                 )
 
     def _require_attested_bindings_hold_zero(self) -> tuple[BindingId, ...]:
         attested = self.attested_binding_ids
         if list(attested) != sorted(set(attested)):
-            raise ModeloValidationError("operator layer attested bindings must be unique and sorted")
+            raise ModeloValidationError(
+                "operator layer attested bindings must be unique and sorted",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         for binding_id in attested:
             if self.binding_overrides.get(binding_id) != ATTESTED_ZERO:
                 raise ModeloValidationError(
                     f"operator layer attested binding {binding_id!r} must hold the attested zero override",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
                 )
         return attested
 

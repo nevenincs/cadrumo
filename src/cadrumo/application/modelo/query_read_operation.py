@@ -87,6 +87,7 @@ from .registry_discovery import (
     registry_bindings_for_year,
     registry_modelo_codes,
 )
+from .registry_input_refusals import RegistryInputCondition, registry_input_verdict
 from .work_addressing import law_selected_revision_for_work_target
 
 MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID = "modelo.bindings.list"
@@ -202,6 +203,11 @@ def read_bindings_list(
             f"modelo {payload.modelo!r} is not in the calculation registry; accepted: {', '.join(known_codes)}",
             translated_message="errors.error.error_calculations_registry_validation",
             context={"modelo": payload.modelo, "accepted": ", ".join(known_codes)},
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.MODELO_DECLARED,
+                facts={"declared_modelo_count": len(known_codes), "declared": False},
+                action_arguments={"year": payload.year, "period": payload.period_code},
+            ),
         )
     rows: list[ModeloBindingRowV1] = []
     for modelo in (payload.modelo,) if payload.modelo is not None else known_codes:
@@ -243,6 +249,15 @@ def read_modelo_bindings_resolve(
                 "unknown": ", ".join(unknown),
                 "accepted": accepted,
             },
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.BINDING_DECLARED,
+                facts={"modelo": report.code, "revision_id": report.revision, "unknown_binding_count": len(unknown)},
+                action_arguments={
+                    "modelo": report.code,
+                    "year": report.filing_year,
+                    "period": report.period,
+                },
+            ),
         )
     rows = tuple(
         ModeloBindingRowV1.from_report_row(report, row, override=overrides.get(row.binding_id)) for row in report.rows

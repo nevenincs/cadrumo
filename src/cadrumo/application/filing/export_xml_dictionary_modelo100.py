@@ -15,6 +15,7 @@ from ...domain.calculations.registry.governed_fact_scope import governed_facts_i
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
 from .errors import ModeloApplicationError
+from .export_refusal_doors import ExportRefusalReason, export_input_decision
 
 #: Each family minimum the result block claims, and the occurrence that identifies whom it is claimed for.
 _FAMILY_MINIMUM_ROWS: Mapping[str, str] = {
@@ -169,6 +170,7 @@ def _modelo_100_resident_comunidad(filed: list[str]) -> str | None:
         raise FilingExportValidationError(
             "draft populates autonomic deductions for more than one comunidad "
             f"({', '.join(filed)}); a declaration may carry only one",
+            precondition_verdict=export_input_decision(ExportRefusalReason.COMUNIDAD_AMBIGUOUS),
         )
     return filed[0] if filed else None
 
