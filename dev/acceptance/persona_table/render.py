@@ -122,24 +122,24 @@ def load_coverage_gaps(path: Path) -> tuple[CoverageGap, ...]:
         raise ValueError(f"coverage file {path} is unreadable: {error}") from error
     if not isinstance(document, dict) or not isinstance(document.get("gaps"), list):
         raise ValueError(f"coverage file {path} must be an object with a 'gaps' list")
-    gaps: list[CoverageGap] = []
-    for index, item in enumerate(document["gaps"]):
-        if not isinstance(item, dict):
-            raise ValueError(f"coverage file {path}: gap {index} must be an object")
-        missing = [key for key in ("persona", "modelo", "year", "period") if key not in item]
-        if missing:
-            raise ValueError(f"coverage file {path}: gap {index} lacks {', '.join(missing)}")
-        year = item["year"]
-        if (
-            not isinstance(year, int)
-            or isinstance(year, bool)
-            or not all(isinstance(item[key], str) for key in ("persona", "modelo", "period"))
-        ):
-            raise ValueError(
-                f"coverage file {path}: gap {index} needs text persona, modelo and period and an integer year"
-            )
-        gaps.append(CoverageGap(item["persona"], item["modelo"], year, item["period"]))
-    return tuple(gaps)
+    return tuple(_coverage_gap(path, index, item) for index, item in enumerate(document["gaps"]))
+
+
+def _coverage_gap(path: Path, index: int, item: object) -> CoverageGap:
+    """One gap of a coverage file, refusing an item that is not an object of text keys and an integer year."""
+    if not isinstance(item, dict):
+        raise ValueError(f"coverage file {path}: gap {index} must be an object")
+    missing = [key for key in ("persona", "modelo", "year", "period") if key not in item]
+    if missing:
+        raise ValueError(f"coverage file {path}: gap {index} lacks {', '.join(missing)}")
+    year = item["year"]
+    if (
+        not isinstance(year, int)
+        or isinstance(year, bool)
+        or not all(isinstance(item[key], str) for key in ("persona", "modelo", "period"))
+    ):
+        raise ValueError(f"coverage file {path}: gap {index} needs text persona, modelo and period and an integer year")
+    return CoverageGap(item["persona"], item["modelo"], year, item["period"])
 
 
 def rows_line(rows: Sequence[TableRow], coverage_gaps: Sequence[CoverageGap] | None) -> str:

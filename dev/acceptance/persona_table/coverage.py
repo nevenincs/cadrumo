@@ -181,33 +181,57 @@ def compare(
     as refused and not compared.
     """
     refused = {refusal.persona: refusal.reason for refusal in refusals}
-    by_persona: dict[str, list[CalendarObservation]] = {}
-    for observation in observations:
-        by_persona.setdefault(observation.persona, []).append(observation)
+    by_persona = _group_by_persona(observations)
     report = CoverageReport(horizon=horizon, personas=sorted(table))
     for persona in report.personas:
         if persona in refused:
             report.refused.append({"persona": persona, "reason": refused[persona]})
             continue
-        runs = set(table[persona])
-        shown = projection(by_persona.get(persona, ()))
-        today = scenario_days[persona]
-        for key in sorted(set(shown) | runs):
-            modelo, year, period = key
-            where: dict[str, object] = {"persona": persona, "modelo": modelo, "year": year, "period": period}
-            observed = shown.get(key)
-            verdict = observed.verdict if observed is not None else ABSENT
-            if verdict == APPLICABLE and key in runs:
-                report.covered.append((persona, modelo, year, period))
-            elif verdict == APPLICABLE and _ended(key, today):
-                report.gaps.append(where | {"source": "calendar_applicable"})
-            elif verdict == APPLICABLE:
-                report.not_ended.append(where | {"source": "calendar_applicable"})
-            elif key in runs:
-                report.table_only.append(where | {"app_verdict": verdict})
-            if observed is not None and verdict not in _DECIDED:
-                report.undecided.append(where | {"reason": f"{verdict}: {observed.reason}", "in_table": key in runs})
+        _compare_persona(
+            report, persona, set(table[persona]), projection(by_persona.get(persona, ())), scenario_days[persona]
+        )
     return report
+
+
+def _group_by_persona(observations: Iterable[CalendarObservation]) -> dict[str, list[CalendarObservation]]:
+    """The observations split by the persona whose calendar showed them."""
+    by_persona: dict[str, list[CalendarObservation]] = {}
+    for observation in observations:
+        by_persona.setdefault(observation.persona, []).append(observation)
+    return by_persona
+
+
+def _compare_persona(
+    report: CoverageReport,
+    persona: str,
+    runs: set[ReturnKey],
+    shown: Mapping[ReturnKey, CalendarObservation],
+    today: date,
+) -> None:
+    """File each return of one persona, shown or run, under the report's buckets."""
+    for key in sorted(set(shown) | runs):
+        modelo, year, period = key
+        where: dict[str, object] = {"persona": persona, "modelo": modelo, "year": year, "period": period}
+        observed = shown.get(key)
+        verdict = observed.verdict if observed is not None else ABSENT
+        _file_verdict(report, where, key, verdict, key in runs, today)
+        if observed is not None and verdict not in _DECIDED:
+            report.undecided.append(where | {"reason": f"{verdict}: {observed.reason}", "in_table": key in runs})
+
+
+def _file_verdict(
+    report: CoverageReport, where: dict[str, object], key: ReturnKey, verdict: str, in_table: bool, today: date
+) -> None:
+    """Place one return as covered, gap, not ended or table only, by the calendar's verdict and the table."""
+    if verdict == APPLICABLE:
+        if in_table:
+            report.covered.append((str(where["persona"]), key[0], key[1], key[2]))
+        elif _ended(key, today):
+            report.gaps.append(where | {"source": "calendar_applicable"})
+        else:
+            report.not_ended.append(where | {"source": "calendar_applicable"})
+    elif in_table:
+        report.table_only.append(where | {"app_verdict": verdict})
 
 
 def render_markdown(report: CoverageReport) -> str:
@@ -222,31 +246,40 @@ def render_markdown(report: CoverageReport) -> str:
         f"undecided {len(report.undecided)}, not ended {len(report.not_ended)}, refused {len(report.refused)}",
         "",
     ]
+    for persona in report.personas:
+        lines += _persona_section(report, persona)
+    return "\n".join(lines)
+
+
+def _persona_section(report: CoverageReport, persona: str) -> list[str]:
+    """The markdown lines of one persona: its refusal, or its covered count and each bucket."""
+    lines: list[str] = [f"## {persona}", ""]
+    refusal = next((item for item in report.refused if item["persona"] == persona), None)
+    if refusal is not None:
+        return [*lines, f"- calendar refused: {refusal['reason']}", ""]
+    lines.append(f"- covered: {sum(1 for item in report.covered if item[0] == persona)}")
     sections = (
         ("gaps (calendar applicable, not run)", report.gaps, None),
         ("table only (run, calendar does not show a window)", report.table_only, "app_verdict"),
         ("undecided (calendar cannot decide)", report.undecided, "reason"),
         ("not ended at the scenario day", report.not_ended, None),
     )
-    for persona in report.personas:
-        lines.append(f"## {persona}")
-        lines.append("")
-        refusal = next((item for item in report.refused if item["persona"] == persona), None)
-        if refusal is not None:
-            lines += [f"- calendar refused: {refusal['reason']}", ""]
-            continue
-        covered = sum(1 for item in report.covered if item[0] == persona)
-        lines.append(f"- covered: {covered}")
-        for title, items, detail in sections:
-            mine = [item for item in items if item["persona"] == persona]
-            if not mine:
-                continue
-            lines.append(f"- {title}: {len(mine)}")
-            for item in mine:
-                suffix = f" — {item[detail]}" if detail is not None else ""
-                lines.append(f"  - {item['modelo']} {item['year']} {item['period']}{suffix}")
-        lines.append("")
-    return "\n".join(lines)
+    for title, items, detail in sections:
+        lines += _bucket_lines(title, items, persona, detail)
+    lines.append("")
+    return lines
+
+
+def _bucket_lines(title: str, items: list[dict[str, object]], persona: str, detail: str | None) -> list[str]:
+    """The lines for one bucket's items of one persona; none when it has none."""
+    mine = [item for item in items if item["persona"] == persona]
+    if not mine:
+        return []
+    lines = [f"- {title}: {len(mine)}"]
+    for item in mine:
+        suffix = f" — {item[detail]}" if detail is not None else ""
+        lines.append(f"  - {item['modelo']} {item['year']} {item['period']}{suffix}")
+    return lines
 
 
 __all__ = [

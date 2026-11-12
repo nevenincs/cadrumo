@@ -276,11 +276,17 @@ def classify(row: TableRow) -> Verdict:
         return _unless_unchecked(row, Verdict.NO_ORACLE)
     if row.grounding == "unverified" or not row.sources:
         return Verdict.UNVERIFIED
+    return _classify_by_stages(row)
+
+
+def _classify_by_stages(row: TableRow) -> Verdict:
+    """The verdict of a grounded row with values, from its calculate, verify and export stages."""
     if row.calculate is Stage.EXPECTED_REFUSAL:
         return _unless_unchecked(row, Verdict.EXPECTED_REFUSAL)
-    if (row.calculate, row.verify, row.export) == (Stage.PASSED, Stage.PASSED, Stage.PASSED):
+    stages = (row.calculate, row.verify, row.export)
+    if stages == (Stage.PASSED, Stage.PASSED, Stage.PASSED):
         return _unless_unchecked(row, Verdict.PASSED)
-    if (row.calculate, row.verify, row.export) == (Stage.PASSED, Stage.NOT_OWED, Stage.NOT_REACHED):
+    if stages == (Stage.PASSED, Stage.NOT_OWED, Stage.NOT_REACHED):
         return _unless_unchecked(row, Verdict.NOT_OWED)
     return Verdict.FLOOR_SOURCE if _refused_for_dropped_source(row) else Verdict.FAIL
 
