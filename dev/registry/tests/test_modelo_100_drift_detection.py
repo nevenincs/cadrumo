@@ -230,16 +230,9 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # today. They stay on disk rather than being deleted: the values are
         # official and re-entering them later would re-open the grounding work.
         # Each entry leaves this list when its consuming formula or reader lands.
-        "renta-rental-reduccion-rate-tier-50",
-        "renta-rental-reduccion-rate-tier-60",
-        "renta-rental-reduccion-rate-tier-70",
-        "renta-rental-reduccion-rate-tier-90",
         "renta-rental-amortizacion-rate",
-        "renta-rental-ejercicio-amendment-year",
         "renta-rental-joven-tenant-age-max",
         "renta-rental-joven-tenant-age-min",
-        "renta-rental-prior-rent-rebaja-threshold",
-        "renta-rental-rehab-lookback-years",
         "renta-gastos-carry-forward-anos",
         "renta-minimo-custodia-compartida-prorrata",
         "renta-minimo-descendiente-edad-maxima",

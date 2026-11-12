@@ -65,7 +65,11 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from .....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .....domain.calculations.registry.tests.modelo_100_registry_support import (
+    M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_MARITIME_WORKER_BINDINGS,
+    M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
+)
 from .....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
@@ -147,6 +151,19 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
             for binding, value in M100_NO_DESCENDANT_MATERNIDAD_BINDINGS.items()
             if binding in declared_bindings
         },
+        # The art. 81.2 guarderia increment and the 2022 edition's cotizaciones-limited
+        # art. 81 deduction, neutral zero for a scenario with no descendants.
+        **{
+            binding: Decimal("0")
+            for binding in ("renta-profile-incremento-guarderia", "renta-profile-deduccion-maternidad-cotizaciones")
+            if binding in declared_bindings
+        },
+        # The art. 7.p) and art. 75 Ley 19/1994 operands of a filer with no maritime work.
+        **{
+            binding: value
+            for binding, value in M100_NO_MARITIME_WORKER_BINDINGS.items()
+            if binding in declared_bindings
+        },
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
@@ -169,6 +186,16 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+    }
+
+
+def _boolean_binding_values_for_year(year: int) -> dict[str, bool]:
+    """Return the boolean-channel binding values: the REBECA path flag of a filer with no maritime work."""
+    declared_bindings = {binding.id for binding in _registry_snapshot_m100(year).revision.bindings}
+    return {
+        binding: value
+        for binding, value in M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS.items()
+        if binding in declared_bindings
     }
 
 
@@ -296,6 +323,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             date_context={"filing_period": date(year, 6, 30)},
             binding_values=_binding_values_for_year(year),
             enum_binding_values=_enum_binding_values_for_year(year),
+            boolean_binding_values=_boolean_binding_values_for_year(year),
             relation_values=_relation_values_for_year(year),
             date_binding_values={"renta-profile-taxpayer-birth-date": _TAXPAYER_BIRTH_DATE},
         )

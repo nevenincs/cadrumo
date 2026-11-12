@@ -507,6 +507,9 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
+        # The art. 23.2 reduction the profile derives from a dwelling lease signed under the tiers
+        # with no qualifying fact: it applies, at the 50 per cent tier.
+        boolean_binding_values={"renta-rental-reduccion-art-23-2-aplicable": True},
         enum_binding_values={
             "renta-profile-tax-residence-ccaa": "madrid",
             "renta-rental-reduccion-art-23-2-tier": "tier-50",
