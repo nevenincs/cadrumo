@@ -31,6 +31,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.tests.persona_materialisation import (
     PersonaMaterialisationError,
+    PersonaWorld,
     ReplayScope,
     materialised_persona,
     run_operation,
@@ -86,6 +87,27 @@ def _observations(
     return found
 
 
+def calendar_observations(
+    world: PersonaWorld, persona_id: str, envelope: YearEnvelope, *, from_date: date, to_date: date
+) -> list[CalendarObservation]:
+    """The returns of ``envelope``'s years the overview calendar of ``world`` projects, suppressed ones shown.
+
+    A refused read, or one that returns no calendar, raises ``PersonaMaterialisationError``.
+    """
+    request = OverviewReadRequest(
+        profile_id=world.profile_id,
+        kind=OverviewReadKind.CALENDAR,
+        output_language=OutputLanguage.ES,
+        from_date=from_date,
+        to_date=to_date,
+        show_suppressed=True,
+    )
+    payload = run_operation(world, OVERVIEW_READ_DEFINITION_IDS[request.kind], request, OverviewReadProjection).payload
+    if not isinstance(payload, OverviewCalendarRead) or payload.calendar is None:
+        raise PersonaMaterialisationError(f"the calendar read returned {type(payload).__name__} without a calendar")
+    return _observations(persona_id, payload.calendar, envelope)
+
+
 @pytest.mark.parametrize("persona_id", [p for p in persona_ids() if not _wanted() or p in _wanted()])
 def test_persona_calendar(tmp_path: Path, persona_id: str) -> None:
     """Materialise one persona at the registry's horizon and append its calendar projection."""
@@ -94,21 +116,14 @@ def test_persona_calendar(tmp_path: Path, persona_id: str) -> None:
     persona = read_persona(persona_id, envelope=envelope)
     try:
         with materialised_persona(persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
-            world = materialised.world
-            request = OverviewReadRequest(
-                profile_id=world.profile_id,
-                kind=OverviewReadKind.CALENDAR,
-                output_language=OutputLanguage.ES,
+            observations = calendar_observations(
+                materialised.world,
+                persona_id,
+                envelope,
                 from_date=date(envelope.floor, 1, 1),
                 to_date=date(envelope.horizon + 1, 12, 31),
-                show_suppressed=True,
             )
-            payload = run_operation(
-                world, OVERVIEW_READ_DEFINITION_IDS[request.kind], request, OverviewReadProjection
-            ).payload
-        if not isinstance(payload, OverviewCalendarRead) or payload.calendar is None:
-            raise PersonaMaterialisationError(f"the calendar read returned {type(payload).__name__} without a calendar")
-        lines = [observation.to_json() for observation in _observations(persona_id, payload.calendar, envelope)]
+        lines = [observation.to_json() for observation in observations]
     except (PersonaMaterialisationError, PersonaCatalogueError) as error:
         lines = [CalendarRefusal(persona_id, f"{type(error).__name__}: {error}"[:900]).to_json()]
     out.parent.mkdir(parents=True, exist_ok=True)

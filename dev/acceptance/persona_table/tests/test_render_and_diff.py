@@ -50,6 +50,17 @@ def test_the_summary_never_counts_history_filed_as_green() -> None:
     assert summary_line(rows).startswith("green 1 / 4")
 
 
+def test_the_summary_counts_a_not_owed_row_as_green_and_names_it_apart() -> None:
+    not_owed = dataclasses.replace(_row("1P", Stage.PASSED, Stage.NOT_OWED), modelo="202")
+    owed_shown = dataclasses.replace(_row("2P", Stage.PASSED, Stage.OWED_SHOWN), modelo="202")
+    rows = [_GREEN, not_owed, owed_shown]
+    assert (not_owed.verdict, owed_shown.verdict) == (Verdict.NOT_OWED, Verdict.FAIL)
+    line = summary_line(rows)
+    assert line.startswith("green 2 / 3")
+    assert "not-owed 1" in line
+    assert counts(rows)["fail:verify"] == 1
+
+
 def test_the_table_lists_every_row_with_its_verdict() -> None:
     text = render_table([_GREEN, _HISTORY], head="abc", lanes={"303": "IVA"})
     assert "# Persona table at abc" in text

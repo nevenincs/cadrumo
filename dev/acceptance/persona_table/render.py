@@ -48,16 +48,16 @@ def lane_counts(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> dict[str,
 
 def lane_line(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> str:
     """The per-lane sentence: each lane's green and total rows, and its rows held back as unchecked."""
-    return "By lane (green/total, green = pass; unchecked rows in brackets): " + ", ".join(
+    return "By lane (green/total, green = pass or not-owed; unchecked rows in brackets): " + ", ".join(
         f"{lane} {green}/{total} (unchecked {unchecked})"
         for lane, (green, total, unchecked) in lane_counts(rows, lanes).items()
     )
 
 
 def summary_line(rows: list[TableRow]) -> str:
-    """The summary sentence: green first, then every other verdict, then failing rows by stage."""
+    """The summary sentence: green (each ``GREEN`` verdict) first, then every other verdict, then red rows by stage."""
     counted = counts(rows)
-    green = counted[Verdict.PASSED.value]
+    green = sum(counted[verdict.value] for verdict in GREEN)
     parts = [f"green {green} / {len(rows)}"]
     parts += [f"{verdict.value} {counted[verdict.value]}" for verdict in Verdict if verdict is not Verdict.PASSED]
     parts += [f"red at {stage} {counted[f'fail:{stage}']}" for stage in ("calculate", "verify", "export")]
@@ -176,7 +176,7 @@ def render_table(
     """
     ordered = sorted(rows, key=lambda row: row.key)
     lines = [f"# Persona table at {head}", ""]
-    if provenance:
+    if provenance is not None and provenance:
         lines += [
             "Run provenance: " + ", ".join(f"{key} `{value}`" for key, value in sorted(provenance.items())) + ".",
             "",

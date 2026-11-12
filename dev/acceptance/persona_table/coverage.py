@@ -24,9 +24,12 @@ import json
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date
+from functools import cache
 from pathlib import Path
 
-from cadrumo.domain.period import period_end_date
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.period import calculation_filing_date
 
 OUT_ENV = "PERSONA_COVERAGE_OUT"
 """The JSON-lines file the calendar collector appends its observations to."""
@@ -114,11 +117,23 @@ def projection(observations: Iterable[CalendarObservation]) -> dict[ReturnKey, C
     return found
 
 
+@cache
+def period_end(year: int, period: str) -> date:
+    """The last day of the period of return ``(year, period)``.
+
+    A Modelo 202 instalment has no date span: its end is that of its payment
+    month, which the published authority declares, so it is read under the
+    pinned generation rather than a governed-fact scope that a bare helper lacks.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        return calculation_filing_date(Period.from_year_and_code(year, period), authority=operation)
+
+
 def _ended(key: ReturnKey, today: date) -> bool:
     """Whether the return's period ended before ``today``, as ``rows.ended`` takes it; an unknown token counts."""
     _, year, period = key
     try:
-        return period_end_date(year, period) < today
+        return period_end(year, period) < today
     except ValueError:
         return True
 
@@ -243,6 +258,7 @@ __all__ = [
     "CalendarRefusal",
     "CoverageReport",
     "compare",
+    "period_end",
     "projection",
     "read_observations",
     "render_markdown",

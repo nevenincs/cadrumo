@@ -14,7 +14,7 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from functools import cache
 from pathlib import Path
 
@@ -84,6 +84,7 @@ from cadrumo.tests.personas import (
     read_persona,
 )
 
+from .calendar_sweep import calendar_observations
 from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .export_readback import read_fields, readback_mismatches, readback_reason, unreadable_reason
 from .export_text import check_export_text, violation_reason
@@ -95,6 +96,7 @@ from .rows import (
     TableRow,
     in_force,
     is_unsupported,
+    not_owed_stage,
     not_run,
     owed_rows,
     replay_horizons,
@@ -150,7 +152,7 @@ def _sources(modelo: str) -> frozenset[str]:
             source
             for revision in revisions
             for binding in revision.bindings
-            if (source := binding_source_modelo(binding))
+            if (source := binding_source_modelo(binding)) is not None
         }
         | {
             classification.source_modelo
@@ -245,7 +247,11 @@ def _blocking_findings(verified: ModeloWorkVerifyPublicResultV2) -> str:
 def _run_return(
     materialised: MaterialisedPersona, plan: PlannedRow, values: list[ExpectedValue], exports: Path
 ) -> TableRow:
-    """Create, calculate, verify and export one return; the row records where it stopped and why."""
+    """Create, calculate, verify and export one return; the row records where it stopped and why.
+
+    A return stated not owed is created, calculated and compared, then checked against the overview calendar
+    instead of being verified, exported and filed.
+    """
     world = materialised.world
     if filing_key(plan.modelo, plan.year, plan.period) in materialised.filings:
         return TableRow.from_plan(plan, Stage.HISTORY_FILED, verify=Stage.HISTORY_FILED)
@@ -260,6 +266,10 @@ def _run_return(
         return _refused(plan, at_calculate, error)
     rows = row_figures(world, calculated)
     calculate, reasons = _compare(plan, values, at_calculate, calculated, rows)
+    if not plan.owed:
+        verify, not_owed_reason = _not_owed(materialised, plan)
+        reasons += [not_owed_reason] if not_owed_reason else []
+        return TableRow.from_plan(plan, calculate, verify=verify, reason=" | ".join(reasons)[:_REASON_LIMIT])
     revision_id = calculated.calculation_revision_id
     verify, verify_reason = _verify(world, work_unit_id, revision_id)
     export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
@@ -446,6 +456,26 @@ def _unresolved(calculated: ModeloWorkCalculatePublicResultV3) -> str:
         [f"binding {item.binding_id}" for item in calculated.unresolved_bindings]
         + [f"casilla {item.casilla_id} ({item.reason})" for item in calculated.unresolved_casillas]
     )
+
+
+def _not_owed(materialised: MaterialisedPersona, plan: PlannedRow) -> tuple[Stage, str]:
+    """The verify stage of a return stated not owed: whether the overview calendar suppresses it as not applicable.
+
+    The calendar is read after the calculation, since an instalment's applicability can turn on the base stated on
+    its own work unit. Nothing is verified, exported or filed.
+    """
+    world = materialised.world
+    try:
+        observations = calendar_observations(
+            world,
+            plan.persona,
+            world.envelope,
+            from_date=date(plan.year, 1, 1),
+            to_date=date(plan.year + 1, 12, 31),
+        )
+    except PersonaMaterialisationError as error:
+        return Stage.REFUSED, f"overview: {_short(error)}"
+    return not_owed_stage(observations, (plan.modelo, plan.year, plan.period))
 
 
 def _verify(world: PersonaWorld, work_unit_id: str, revision_id: str) -> tuple[Stage, str]:

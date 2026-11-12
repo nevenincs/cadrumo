@@ -16,7 +16,9 @@ when its ``refusal_stage`` is verify or export, that the calculation completes
 (the persona table asserts the later stage's refusal); a casilla stated
 ``not_sourced`` asserts that the application does not yet carry the figure the
 law gives; an obligation that states a ``calendar_advice`` asserts that the
-calendar advises it instead of showing a window row. A modelo whose obligations
+calendar advises it instead of showing a window row; a period an obligation
+states not applicable that values are stated for is left to the persona
+table, which reads the calendar after calculating it. A modelo whose obligations
 of one year state different applicability for different periods has each
 period's verdict read from the calendar, suppressed obligations shown, since the
 explanation states one verdict per modelo.
@@ -166,6 +168,28 @@ def _value_years(persona: Persona) -> set[int]:
     }
 
 
+def _stated_not_owed(persona: Persona) -> set[tuple[str, int, str]]:
+    """The returns ``(modelo, year, period)`` an obligation states not applicable that values are stated for.
+
+    The persona table calculates each of them and then asserts that the calendar suppresses it, since the verdict
+    can turn on a figure stated on the return's own work unit, which this pre-calculation read does not hold.
+    """
+    envelope = _envelope()
+    stated = {
+        (value.modelo, year, value.period)
+        for year, value in values_in_force(persona.expectations.values, envelope)
+        if value.counterparty is None
+        and (value.casillas or value.roles or value.not_sourced or value.refusal is not None)
+    }
+    not_applicable = {
+        (item.modelo, item.year.resolve(envelope), period)
+        for item in persona.expectations.obligations
+        if item.applicable is False
+        for period in item.periods
+    }
+    return stated & not_applicable
+
+
 def _scope(persona: Persona) -> ReplayScope:
     """The history scope when the persona holds returns or observations of earlier years, else the full ledger."""
     return (
@@ -190,7 +214,14 @@ def _next_business_day(day: date) -> date:
 def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path: Path, case: _Case) -> None:
     persona = _personas()[case.persona_id]
     envelope = _envelope()
-    obligations = [item for year, item in _asserted_obligations(persona) if year == case.year]
+    stated_obligations = [item for year, item in _asserted_obligations(persona) if year == case.year]
+    # A return stated not owed whose values are stated is asserted by the persona table after it is calculated.
+    asserted_later = _stated_not_owed(persona)
+    obligations = [
+        replace(item, periods=periods)
+        for item in stated_obligations
+        if (periods := tuple(p for p in item.periods if (item.modelo, case.year, p) not in asserted_later))
+    ]
     deadlines = [
         item
         for item in persona.expectations.deadlines
@@ -201,7 +232,7 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
     entries: dict[tuple[str, str], OverviewCalendarEntrySnapshot] = {}
     suppressed: dict[tuple[str, str], ApplicabilityVerdict] = {}
     advised: set[tuple[str, str]] = set()
-    per_period = per_period_modelos(obligations)
+    per_period = per_period_modelos(stated_obligations)
     verdicts: dict[str, tuple[ApplicabilityVerdict, bool]] = {}
     with materialised_persona(case.persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
         world = materialised.world
