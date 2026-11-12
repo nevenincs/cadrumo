@@ -261,6 +261,11 @@ aggregation:
       unsupported_period: Se requiere un periodo anual para la agregación de ingresos
         del Modelo 100 (p.ej. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: Vigente
+      withdrawn: Retirada
+    amount:
+      pago_a_cuenta: Total de pagos a cuenta
     clase:
       actividad_economica: Rendimientos de actividades económicas
       arrendamiento_inmueble_urbano: 'Rendimientos del capital inmobiliario: arrendamiento
@@ -315,6 +320,10 @@ aggregation:
         nada; ninguna otra clase de renta los admite.
       validation: 'El registro de retención no se guardó: revisa el NIF del pagador,
         los importes (como máximo dos decimales) y la huella del certificado.'
+    origen:
+      operator_declaration: Tu propia declaración
+      payer_certificate: Certificado del pagador
+    payer_unnamed: Pagador sin nombre indicado
     served:
       certificate_file_unreadable: No se pudo leer el archivo del certificado. Comprueba
         que sigue existiendo, que no está vacío y que es un PDF, una imagen o un documento
