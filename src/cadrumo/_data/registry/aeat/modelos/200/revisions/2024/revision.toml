@@ -3580,7 +3580,7 @@ family = "formulas"
 selector = {revision = "2023", id = "modelo-200-cuota-integra"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["cuota integra (casilla 00562)", "tipo de gravamen"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-fields = { expression = { op = "if_then_else", args = [
+fields = { expression = { args = [
     { op = "greater_than", args = [
         { op = "add", args = [
             { op = "text_equal", args = [
@@ -3650,7 +3650,7 @@ family = "formulas"
 selector = {revision = "2023", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-fields = { expression = { op = "if_then_else", args = [
+fields = { expression = { args = [
     { op = "greater_than", args = [
         { op = "add", args = [
             { casilla_id = "00024" },
@@ -3851,6 +3851,11 @@ selector = {revision = "2023", id = "is.modelo-200.tipo-gravamen-erd-art101"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"], values = [{value = "25", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2024-12-31}]}
 sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
 sequence_order = {values = [5, 0, 1, 2, 3, 4]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "is.modelo-200.bin-compensacion-importe-minimo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["se podran compensar en el periodo impositivo bases imponibles negativas hasta el importe de 1 millon de euros"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "parameters"
 selector = {revision = "2023", id = "is.modelo-200.tipo-gravamen-general"}

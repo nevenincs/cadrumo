@@ -9,7 +9,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casi
 from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
 from ..bindings import CasillaObservation, RegistryModeloObservation
-from ..errors import NoRevisionForPeriodError, RegistrySnapshotError
+from ..errors import FilingYearOutsideSupportEnvelopeError, NoRevisionForPeriodError, RegistrySnapshotError
 from ..relations import RegistryFoldRequirement
 from ..schema import ModeloRevision
 from ..temporal import select_revision
@@ -89,7 +89,8 @@ def source_editions_calculate(requirements: Iterable[RegistryFoldRequirement]) -
     The observations below are grounded in a calculation-grade snapshot of each
     source, so a source year answered by an applicability-grade edition cannot be
     observed through them; such a coordinate is not one this fixture can exercise.
-    A source year with no selectable edition keeps the grounding's own fallback.
+    Nor can a source year the support envelope refuses at every grade. A source
+    year with no selectable edition keeps the grounding's own fallback.
     """
     modelos, catalogues = _cross_dependency_registry_tree()
     by_id = {modelo.id: modelo for modelo in modelos}
@@ -104,6 +105,8 @@ def source_editions_calculate(requirements: Iterable[RegistryFoldRequirement]) -
                 period=requirement.periods[0],
                 support=catalogues.supported_filing_years,
             )
+        except FilingYearOutsideSupportEnvelopeError:
+            return False
         except RegistrySnapshotError:
             continue
         if revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY:

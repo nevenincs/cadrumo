@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "a3694d8963a9f328c6bbc28a534aa0f3b238c5758a74527a64e3fe63430ae736"
+source_state_digest = "0693219148de89731b2ee50eaf9bed21add71d5d1c907aba5b52437720dd143a"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -2425,15 +2425,26 @@ placements = [
     { casilla_id = "DP200012:00308", kind = "on_form", box_number = "00308" },
     { casilla_id = "DP200012:00309", kind = "on_form", box_number = "00309" },
     { casilla_id = "DP200012:00310", kind = "on_form", box_number = "00310" },
+    { casilla_id = "DP200012:00501", kind = "on_form", box_number = "00501" },
     { casilla_id = "DP200013:00311", kind = "on_form", box_number = "00311" },
     { casilla_id = "DP200013:00312", kind = "on_form", box_number = "00312" },
     { casilla_id = "DP200013:00313", kind = "on_form", box_number = "00313" },
     { casilla_id = "DP200013:00314", kind = "on_form", box_number = "00314" },
     { casilla_id = "DP200013:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200013:00418", kind = "on_form", box_number = "00418" },
+    { casilla_id = "DP200013:00547", kind = "on_form", box_number = "00547" },
+    { casilla_id = "DP200013:00550", kind = "on_form", box_number = "00550" },
+    { casilla_id = "DP200013:00552", kind = "on_form", box_number = "00552" },
+    { casilla_id = "DP200013:01032", kind = "on_form", box_number = "01032" },
+    { casilla_id = "DP200013:01033", kind = "on_form", box_number = "01033" },
+    { casilla_id = "DP200013:01034", kind = "on_form", box_number = "01034" },
+    { casilla_id = "DP200013:bin-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "DP200014:00082", kind = "on_form", box_number = "00082" },
+    { casilla_id = "DP200014:00399", kind = "on_form", box_number = "00399" },
     { casilla_id = "DP200014:00558", kind = "on_form", box_number = "00558" },
     { casilla_id = "DP200014:00562", kind = "on_form", box_number = "00562" },
     { casilla_id = "DP200014:00563", kind = "on_form", box_number = "00563" },
+    { casilla_id = "DP200014:00565", kind = "on_form", box_number = "00565" },
     { casilla_id = "DP200014:00566", kind = "on_form", box_number = "00566" },
     { casilla_id = "DP200014:00567", kind = "on_form", box_number = "00567" },
     { casilla_id = "DP200014:00568", kind = "on_form", box_number = "00568" },
@@ -2447,6 +2458,19 @@ placements = [
     { casilla_id = "DP200014:00577", kind = "on_form", box_number = "00577" },
     { casilla_id = "DP200014:00581", kind = "on_form", box_number = "00581" },
     { casilla_id = "DP200014:00582", kind = "on_form", box_number = "00582" },
+    { casilla_id = "DP200014:00583", kind = "on_form", box_number = "00583" },
+    { casilla_id = "DP200014:00584", kind = "on_form", box_number = "00584" },
+    { casilla_id = "DP200014:00585", kind = "on_form", box_number = "00585" },
+    { casilla_id = "DP200014:00588", kind = "on_form", box_number = "00588" },
+    { casilla_id = "DP200014:00590", kind = "on_form", box_number = "00590" },
+    { casilla_id = "DP200014:00592", kind = "on_form", box_number = "00592" },
+    { casilla_id = "DP200014:00619", kind = "on_form", box_number = "00619" },
+    { casilla_id = "DP200014:01039", kind = "on_form", box_number = "01039" },
+    { casilla_id = "DP200014:01040", kind = "on_form", box_number = "01040" },
+    { casilla_id = "DP200014:01041", kind = "on_form", box_number = "01041" },
+    { casilla_id = "DP200014:01330", kind = "on_form", box_number = "01330" },
+    { casilla_id = "DP200014:02314", kind = "on_form", box_number = "02314" },
+    { casilla_id = "DP200014:02315", kind = "on_form", box_number = "02315" },
     { casilla_id = "DP200014B:00083", kind = "on_form", box_number = "00083" },
     { casilla_id = "DP200014B:00599", kind = "on_form", box_number = "00599" },
     { casilla_id = "DP200014B:00601", kind = "on_form", box_number = "00601" },
@@ -3625,6 +3649,21 @@ heading_key = "modelo.schema.200.form.section.liquidacion-i-resultado-de-la-cuen
 official_heading = "Liquidación I - Resultado de la cuenta de pérdidas y ganancias"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "correcciones-por-impuesto-sociedades", heading_key = "modelo.schema.200.form.row.correcciones-por-impuesto-sociedades.heading", official_heading = "Correcciones por Impuesto Sociedades", cells = [{ kind = "casilla", casilla_id = "DP200012:00301" }, { kind = "casilla", casilla_id = "DP200012:00302" }] }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "liquidacion-i"
+heading_key = "modelo.schema.200.form.section.liquidacion-i.heading"
+official_heading = "Liquidación I"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200012:00501" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "liquidacion-i-resultado-de-la-cuenta-de-p-86ea52-2"
+heading_key = "modelo.schema.200.form.section.liquidacion-i-resultado-de-la-cuenta-de-p-86ea52.heading"
+official_heading = "Liquidación I - Resultado de la cuenta de pérdidas y ganancias"
+blocks = [
     { kind = "field", id = "field", casilla_id = "01230" },
     { kind = "field", id = "field-2", casilla_id = "01231" },
 ]
@@ -3688,12 +3727,32 @@ blocks = [
     { kind = "field", id = "field", casilla_id = "01029" },
     { kind = "field", id = "field-2", casilla_id = "01030" },
     { kind = "field", id = "field-3", casilla_id = "01031" },
+    { kind = "field", id = "field-4", casilla_id = "DP200013:00550" },
+    { kind = "field", id = "field-5", casilla_id = "DP200013:01032" },
+    { kind = "field", id = "field-6", casilla_id = "DP200013:00547" },
+    { kind = "field", id = "field-7", casilla_id = "DP200013:00552" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "liquidacion-ii-base-imponible-entidades-r-050449"
+heading_key = "modelo.schema.200.form.section.liquidacion-ii-base-imponible-entidades-r-050449.heading"
+official_heading = "Liquidación II - Base Imponible - Entidades Reducida dimensión"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "reserva-de-nivelacion", heading_key = "modelo.schema.200.form.row.reserva-de-nivelacion.heading", official_heading = "Reserva de nivelación", cells = [{ kind = "casilla", casilla_id = "DP200013:01033" }, { kind = "casilla", casilla_id = "DP200013:01034" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages]]
 id = "dp200014"
 official_ref = "DP200014"
 heading_key = "modelo.schema.200.form.page.dp200014.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "liquidacion-iii-base-imponible-entidades-9905e8"
+heading_key = "modelo.schema.200.form.section.liquidacion-iii-base-imponible-entidades-9905e8.heading"
+official_heading = "Liquidación III - Base Imponible - Entidades Reducida dimensión"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200014:01330" },
+]
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "liquidacion-iii-base-imponible-solo-entid-46742d"
@@ -3757,6 +3816,21 @@ official_heading = "Liquidación III"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200014:00581" },
     { kind = "field", id = "field-2", casilla_id = "DP200014:00582" },
+    { kind = "field", id = "field-3", casilla_id = "DP200014:00583" },
+    { kind = "field", id = "field-4", casilla_id = "DP200014:00585" },
+    { kind = "field", id = "field-5", casilla_id = "DP200014:00584" },
+    { kind = "field", id = "field-6", casilla_id = "DP200014:00588" },
+    { kind = "field", id = "field-7", casilla_id = "DP200014:01039" },
+    { kind = "field", id = "field-8", casilla_id = "DP200014:02314" },
+    { kind = "field", id = "field-9", casilla_id = "DP200014:02315" },
+    { kind = "field", id = "field-10", casilla_id = "DP200014:00565" },
+    { kind = "field", id = "field-11", casilla_id = "DP200014:00590" },
+    { kind = "field", id = "field-12", casilla_id = "DP200014:00399" },
+    { kind = "field", id = "field-13", casilla_id = "DP200014:00082" },
+    { kind = "field", id = "field-14", casilla_id = "DP200014:01040" },
+    { kind = "field", id = "field-15", casilla_id = "DP200014:01041" },
+    { kind = "field", id = "field-16", casilla_id = "DP200014:00619" },
+    { kind = "field", id = "field-17", casilla_id = "DP200014:00592" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
