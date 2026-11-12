@@ -47,6 +47,7 @@ from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.invoice_fingerprint import InvoiceFingerprintSnapshot
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from ...domain.modelos.profile_read_fingerprint import ProfileReadFingerprint
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
 )
@@ -146,6 +147,7 @@ def _build_calculation_revision(
     detail_rows: tuple[ModeloDetailRow, ...],
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: (M303RegimenSimplificadoAnnualSummaryHandoff | None),
     now: datetime,
@@ -181,6 +183,7 @@ def _build_calculation_revision(
         detail_rows=detail_rows,
         ledger_filing_snapshot=ledger_filing_snapshot,
         invoice_fingerprint=invoice_fingerprint,
+        profile_read_fingerprint=profile_read_fingerprint,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         created_at=now,
@@ -236,12 +239,13 @@ def _refreshed_draft_fingerprint(
     existing: CalculationRevision,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
     *,
     now: datetime,
 ) -> CalculationRevision | None:
     """Return the draft re-pinned to what this calculation read, when that moved.
 
-    An invoice or ledger edit that moves no casilla derives the same revision id.
+    An invoice, ledger or profile edit that moves no casilla derives the same revision id.
     Without this the operator's recalculation would land on the stored draft and
     leave it reporting drift that no further recalculation could clear.
     """
@@ -252,6 +256,8 @@ def _refreshed_draft_fingerprint(
         update["invoice_fingerprint"] = invoice_fingerprint
     if _ledger_filing_snapshot_moved(existing.ledger_filing_snapshot, ledger_filing_snapshot):
         update["ledger_filing_snapshot"] = ledger_filing_snapshot
+    if profile_read_fingerprint is not None and existing.profile_read_fingerprint != profile_read_fingerprint:
+        update["profile_read_fingerprint"] = profile_read_fingerprint
     if not update:
         return None
     return existing.model_copy(update={**update, "updated_at": now})
@@ -290,6 +296,7 @@ def _persist_duplicate_calculation_revision(
     revisions_revision_id: str,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
     revision_id: str,
     work_unit: WorkUnit,
@@ -311,7 +318,9 @@ def _persist_duplicate_calculation_revision(
         revision_id=revision_id,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
-    refreshed = _refreshed_draft_fingerprint(existing, invoice_fingerprint, ledger_filing_snapshot, now=now)
+    refreshed = _refreshed_draft_fingerprint(
+        existing, invoice_fingerprint, ledger_filing_snapshot, profile_read_fingerprint, now=now
+    )
     if refreshed is not None:
         calculation_repository.save_with_secure_object_writes(
             upsert_calculation_revision(revisions, refreshed),
@@ -648,6 +657,7 @@ def _load_calculation_publication_target(
     operation: PinnedAuthorityOperation,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
     revision_id: str,
     work_unit: WorkUnit,
@@ -668,6 +678,7 @@ def _load_calculation_publication_target(
         revisions_revision_id=revisions_revision_id,
         calculation_repository=calculation_repository,
         invoice_fingerprint=invoice_fingerprint,
+        profile_read_fingerprint=profile_read_fingerprint,
         ledger_filing_snapshot=ledger_filing_snapshot,
         revision_id=revision_id,
         work_unit=work_unit,
@@ -719,6 +730,7 @@ def persist_calculation_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None = None,
+    profile_read_fingerprint: ProfileReadFingerprint | None = None,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     additional_secure_object_writes_for_revision: (
@@ -762,6 +774,7 @@ def persist_calculation_revision(
         operation=operation,
         calculation_repository=calculation_repository,
         invoice_fingerprint=invoice_fingerprint,
+        profile_read_fingerprint=profile_read_fingerprint,
         ledger_filing_snapshot=ledger_filing_snapshot,
         revision_id=revision_id,
         work_unit=work_unit,
@@ -802,6 +815,7 @@ def persist_calculation_revision(
         detail_rows=detail_rows,
         ledger_filing_snapshot=ledger_filing_snapshot,
         invoice_fingerprint=invoice_fingerprint,
+        profile_read_fingerprint=profile_read_fingerprint,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=stamped_annual_summary_handoff,
         now=now,

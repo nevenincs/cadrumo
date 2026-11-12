@@ -65,6 +65,7 @@ from ...domain.calculations.registry.schema import BindingDefinition, RegistrySn
 from ...domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES, CasillaDataType
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from ...domain.modelos.profile_read_fingerprint import ProfileReadFingerprint, profile_read_fingerprint
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
@@ -97,11 +98,14 @@ from .profile_derived_facts import (
     snapshot_authored_year,
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
+from .profile_read_recording import RecordingFactIndex, absent_profile_read_fingerprint, redigest_profile_reads
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
 _PROFILE_RESOLVER_ID = "profile"
 _PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
+_READS_NOTHING = profile_read_fingerprint(profile_present=True, entries=())
+"""A revision whose registry selects no profile binding reads no fact, so no edit moves it."""
 
 
 if TYPE_CHECKING:
@@ -369,7 +373,8 @@ class _ProfileBindingSelection:
 class _ProfileFacts:
     """The bucket's resolved profile fact index plus its record fingerprint."""
 
-    fact_index: dict[str, UserProfileFactValue]
+    fact_index: RecordingFactIndex
+    """The index every resolution step reads, recording each read for the revision's profile-read fingerprint."""
     fingerprint: str | None
     decided_derived_paths: frozenset[str] = frozenset()
     """Derived paths an injector decided, including those it decided to leave absent."""
@@ -458,7 +463,7 @@ def _load_profile_facts(
     if schema is None:
         schema = operation.profile_schema()
     resolved_schema = schema
-    fact_index = profile_fact_index(record, resolved_schema)
+    fact_index = RecordingFactIndex(profile_fact_index(record, resolved_schema))
     family_context = family_fact_context(snapshot, operation=operation)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     inject_ordinary_work_maritime_facts(fact_index)
@@ -633,7 +638,11 @@ def resolve_profile_sourced_bindings(
     """
     selection = _select_profile_bindings(snapshot)
     if not selection.bindings and not profile_row_bindings(snapshot):
-        return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
+        return CalculationSourceResolution(
+            resolver_id=_PROFILE_RESOLVER_ID,
+            owned_sources=_PROFILE_OWNED_SOURCES,
+            profile_read_fingerprint=_READS_NOTHING,
+        )
     resolved_schema = schema or operation.profile_schema()
     facts = _load_profile_facts(
         snapshot,
@@ -644,7 +653,11 @@ def resolve_profile_sourced_bindings(
         operation=operation,
     )
     if facts is None:
-        return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
+        return CalculationSourceResolution(
+            resolver_id=_PROFILE_RESOLVER_ID,
+            owned_sources=_PROFILE_OWNED_SOURCES,
+            profile_read_fingerprint=absent_profile_read_fingerprint(),
+        )
     channels = resolve_profile_binding_channels(
         selection.bindings,
         facts.fact_index,
@@ -671,26 +684,28 @@ def resolve_profile_sourced_bindings(
         caller_binding_ids=caller_binding_ids,
         resolver_id=_PROFILE_RESOLVER_ID,
     )
+    diagnostics = (
+        *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
+        *derived_binding_diagnostics(
+            selection.bindings,
+            facts.fact_index,
+            resolved_schema,
+            bucket_id=bucket_id,
+            decided_derived_paths=facts.decided_derived_paths,
+        ),
+        *rows.diagnostics,
+    )
     return CalculationSourceResolution(
         resolver_id=_PROFILE_RESOLVER_ID,
         owned_sources=_PROFILE_OWNED_SOURCES,
+        profile_read_fingerprint=facts.fact_index.read_fingerprint(),
         binding_values=decimal_values,
         enum_binding_values=enum_values,
         date_binding_values=date_values,
         boolean_binding_values=boolean_values,
         row_binding_values=rows.row_binding_values,
         unresolved_binding_ids=tuple(binding.id for binding in unanswered_text_bindings),
-        diagnostics=(
-            *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
-            *derived_binding_diagnostics(
-                selection.bindings,
-                facts.fact_index,
-                resolved_schema,
-                bucket_id=bucket_id,
-                decided_derived_paths=facts.decided_derived_paths,
-            ),
-            *rows.diagnostics,
-        ),
+        diagnostics=diagnostics,
         provenance=tuple(
             CalculationSourceProvenance(
                 resolver_id=_PROFILE_RESOLVER_ID,
@@ -707,6 +722,39 @@ def resolve_profile_sourced_bindings(
         )
         + rows.provenance,
     )
+
+
+def current_profile_read_fingerprint(
+    snapshot: RegistrySnapshot,
+    recorded: ProfileReadFingerprint,
+    *,
+    bucket_id: str,
+    profile_record: object | None,
+    operation: PinnedAuthorityOperation,
+) -> ProfileReadFingerprint:
+    """Digest the reads ``recorded`` names over the profile as it stands now.
+
+    The index is rebuilt through the same derivation the calculation ran, so a
+    recorded read of a derived selector is digested over the selector as the
+    current inputs derive it. A revision that reads no profile fact is current
+    whatever the profile holds.
+
+    Raises:
+        ProfileBindingResolutionError: The current profile cannot be derived,
+            for example a stored date that no longer parses.
+    """
+    selection = _select_profile_bindings(snapshot)
+    if not selection.bindings and not profile_row_bindings(snapshot):
+        return recorded
+    facts = _load_profile_facts(
+        snapshot,
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        schema=None,
+        selected_bindings=selection.bindings,
+        operation=operation,
+    )
+    return redigest_profile_reads(recorded, None if facts is None else dict(dict.items(facts.fact_index)))
 
 
 def _text_compared_binding_ids(snapshot: RegistrySnapshot) -> frozenset[BindingId]:
