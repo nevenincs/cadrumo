@@ -1,10 +1,10 @@
-"""Terminal integrity transport shared by the Declarations projection refusals.
+"""Terminal stored-data integrity transport for refusals no operator input corrects.
 
-The Declarations calendar and workspace join stored authorities (schedule,
-local filing records, AEAT evidence, revisions, work catalogue). When those do
-not form one coherent view, no operator input at the refusal site corrects
-them, so the refusal states the integrity fault as a terminal outcome and
-names no command.
+A refusal that joins stored or computed authorities (schedule, local filing
+records, AEAT evidence, revisions, work catalogue, projection ports) and finds
+them incoherent has no input at the refusal site that repairs it. The class
+states the integrity fault as a terminal outcome naming the record and names no
+command.
 """
 
 from __future__ import annotations
@@ -18,8 +18,8 @@ from ..cli_exception_preconditions import CliExceptionPrecondition, cli_exceptio
 from ..operator_actions.models import PreconditionVerdict
 
 
-class DeclarationsProjectionIntegrityMixin(TerminalPreconditionErrorMixin[PreconditionVerdict]):
-    """Attach the terminal stored-data integrity verdict to a projection refusal class."""
+class StoredDataIntegrityMixin(TerminalPreconditionErrorMixin[PreconditionVerdict]):
+    """Attach the terminal stored-data integrity verdict to a refusal class."""
 
     integrity_record: ClassVar[str]
 
