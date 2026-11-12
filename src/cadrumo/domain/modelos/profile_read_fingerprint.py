@@ -5,13 +5,22 @@ edited afterwards. These records hold which fact paths (or whole sections, for a
 read that enumerated one) the calculation read, and a digest per read over the
 typed value it had. No fact value is stored beside the revision, only digests.
 
+A read is taken from one of three places. The profile resolver reads its
+derived fact index, where a derived selector (the Art. 58 aggregate) is a path
+of its own. Most other readers read the stored record, and a record read's
+digest covers every dated fact at the path, so an edit to a fact's window is a
+change as much as an edit to its value. A whole-record projection, such as the
+taxpayer projection every gate and deadline reads, is digested over what it
+produced, so only an edit that changes its result is a change.
+
 The recording and the recomputation live in
-:mod:`application.modelo.profile_read_recording`.
+:mod:`application.modelo.profile_read_recording` and
+:mod:`application.user_profile.profile_read_recorder`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -21,7 +30,7 @@ from pydantic import BaseModel
 from ...core.hashing import sha256_hex
 from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..user_profile.values import UserProfileFactValue
+from ..user_profile.values import UserProfileFact, UserProfileFactValue
 
 PROFILE_READ_FIELD_SET_VERSION = 1
 """How a read's digest is formed; a stored digest is only comparable under its own version."""
@@ -34,6 +43,14 @@ class ProfileReadScope(StrEnum):
     PREFIX = "prefix"
 
 
+class ProfileReadSource(StrEnum):
+    """Where a read was taken: the resolver's derived fact index or the stored record."""
+
+    INDEX = "index"
+    RECORD = "record"
+    PROJECTION = "projection"
+
+
 class ProfileReadEntry(BaseModel):
     """One read the calculation made and the digest of what it saw."""
 
@@ -42,6 +59,7 @@ class ProfileReadEntry(BaseModel):
     scope: ProfileReadScope
     selector: str
     fingerprint: SnapshotId
+    source: ProfileReadSource = ProfileReadSource.INDEX
 
 
 class ProfileReadFingerprint(BaseModel):
@@ -53,7 +71,7 @@ class ProfileReadFingerprint(BaseModel):
 
     Attributes:
         profile_present: Whether a profile record existed when it was calculated.
-        entries: Per-read digests, sorted by scope and selector.
+        entries: Per-read digests, sorted by source, scope and selector.
         snapshot_fingerprint: SHA-256 hex over the sorted entries and presence.
         field_set_version: How the digests were formed.
     """
@@ -98,7 +116,7 @@ def profile_prefix_read_fingerprint(facts: Mapping[str, UserProfileFactValue], p
 def profile_read_entry(
     facts: Mapping[str, UserProfileFactValue], scope: ProfileReadScope, selector: str
 ) -> ProfileReadEntry:
-    """Return the entry for one recorded read over ``facts``."""
+    """Return the entry for one recorded read of the derived fact index."""
     fingerprint = (
         profile_path_read_fingerprint(facts, selector)
         if scope is ProfileReadScope.PATH
@@ -107,13 +125,60 @@ def profile_read_entry(
     return ProfileReadEntry(scope=scope, selector=selector, fingerprint=fingerprint)
 
 
+def _window_bound(bound: date | None) -> str:
+    return "-" if bound is None else bound.isoformat()
+
+
+def _canonical_fact(fact: UserProfileFact) -> str:
+    window = f"{_window_bound(fact.valid_from)}..{_window_bound(fact.valid_to)}"
+    return f"{fact.path}@{window}={_canonical_value(fact.value)}"
+
+
+def _covers(scope: ProfileReadScope, selector: str, path: str) -> bool:
+    return path == selector if scope is ProfileReadScope.PATH else path.startswith(selector)
+
+
+def profile_record_read_fingerprint(
+    facts: Iterable[UserProfileFact], scope: ProfileReadScope, selector: str
+) -> SnapshotId:
+    """Digest every stored fact a record read covers, each with its window, in a stable order."""
+    canonical = "\n".join(sorted(_canonical_fact(fact) for fact in facts if _covers(scope, selector, fact.path)))
+    return sha256_hex(f"{scope.value}:{selector}\n{canonical}".encode())
+
+
+def profile_record_read_entry(
+    facts: Iterable[UserProfileFact], scope: ProfileReadScope, selector: str
+) -> ProfileReadEntry:
+    """Return the entry for one recorded read of the stored record."""
+    return ProfileReadEntry(
+        scope=scope,
+        selector=selector,
+        fingerprint=profile_record_read_fingerprint(facts, scope, selector),
+        source=ProfileReadSource.RECORD,
+    )
+
+
+def profile_projection_read_entry(selector: str, fingerprint: SnapshotId) -> ProfileReadEntry:
+    """Return the entry for one whole-record projection, digested over what it produced."""
+    return ProfileReadEntry(
+        scope=ProfileReadScope.PATH,
+        selector=selector,
+        fingerprint=fingerprint,
+        source=ProfileReadSource.PROJECTION,
+    )
+
+
+def _entry_key(entry: ProfileReadEntry) -> tuple[str, str, str]:
+    return (entry.source.value, entry.scope.value, entry.selector)
+
+
 def profile_read_fingerprint(*, profile_present: bool, entries: tuple[ProfileReadEntry, ...]) -> ProfileReadFingerprint:
     """Seal the entries into one order-independent fingerprint."""
-    ordered = tuple(sorted(entries, key=lambda entry: (entry.scope.value, entry.selector)))
+    ordered = tuple(sorted({_entry_key(entry): entry for entry in entries}.values(), key=_entry_key))
     canonical = "\n".join(
         (
             f"present={profile_present}",
-            *(f"{entry.scope.value}:{entry.selector}={entry.fingerprint}" for entry in ordered),
+            *(f"{entry.source.value}:{entry.scope.value}:{entry.selector}={entry.fingerprint}" for entry in ordered),
         )
     )
     return ProfileReadFingerprint(
@@ -127,10 +192,10 @@ def profile_read_fingerprint(*, profile_present: bool, entries: tuple[ProfileRea
 def changed_profile_reads(recorded: ProfileReadFingerprint, current: ProfileReadFingerprint) -> tuple[str, ...]:
     """Return the selectors whose digest moved, or every recorded selector when presence moved."""
     if recorded.profile_present != current.profile_present:
-        return tuple(entry.selector for entry in recorded.entries) or ("",)
-    now = {(entry.scope, entry.selector): entry.fingerprint for entry in current.entries}
+        return tuple(dict.fromkeys(entry.selector for entry in recorded.entries)) or ("",)
+    now = {_entry_key(entry): entry.fingerprint for entry in current.entries}
     return tuple(
-        entry.selector for entry in recorded.entries if now.get((entry.scope, entry.selector)) != entry.fingerprint
+        dict.fromkeys(entry.selector for entry in recorded.entries if now.get(_entry_key(entry)) != entry.fingerprint)
     )
 
 
@@ -139,9 +204,13 @@ __all__ = [
     "ProfileReadEntry",
     "ProfileReadFingerprint",
     "ProfileReadScope",
+    "ProfileReadSource",
     "changed_profile_reads",
     "profile_path_read_fingerprint",
     "profile_prefix_read_fingerprint",
+    "profile_projection_read_entry",
     "profile_read_entry",
     "profile_read_fingerprint",
+    "profile_record_read_entry",
+    "profile_record_read_fingerprint",
 ]

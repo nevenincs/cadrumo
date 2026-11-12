@@ -132,6 +132,7 @@ from .m303_regimen_simplificado_scope import m303_general_regime_claimed
 from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
 from .profile_maternidad_meses import COTIZACIONES_ROW_FACT_LEAF, descendant_rows_lacking_cotizaciones
+from .profile_read_recording import calculation_profile_read_fingerprint
 from .profile_readiness_gate import load_modelo_work_profile
 from .reconciliation_sources import ReconciliationSourceNeed, reconciliation_source_needs, source_period_needs
 from .revision_persistence import persist_calculation_revision
@@ -464,7 +465,10 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         work_units_revision_id=prepared.work_units_revision_id,
         ledger_filing_snapshot=ledger_filing_snapshot,
         invoice_fingerprint=invoice_fingerprint,
-        profile_read_fingerprint=channels.profile_read_fingerprint,
+        profile_read_fingerprint=calculation_profile_read_fingerprint(
+            channels.profile_read_fingerprint,
+            prepared.profile.record.facts,
+        ),
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **evaluation.resolved_text_inputs},
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,

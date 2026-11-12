@@ -44,6 +44,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..user_profile.profile_read_recorder import recording_profile_reads
 from ..user_profile.projections import record_to_path_values
 from .action_errors import (
     ModeloAggregationInputConflictError,
@@ -810,8 +811,68 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     ) = None,
     profile: ModeloWorkProfile | None = None,
 ) -> BucketAggregationCalculationResult:
-    """Calculate from bucket sources and return the revision with diagnostics."""
+    """Calculate from bucket sources and return the revision with diagnostics.
+
+    Every profile fact the run reads, from the source mesh through the engine,
+    is recorded and kept on the revision, so a later edit to one is seen.
+    """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
+    with recording_profile_reads():
+        return _calculate_recorded_bucket_aggregation(
+            work_unit_id,
+            ports=ports,
+            actor=actor,
+            casilla_inputs=casilla_inputs,
+            text_casilla_inputs=text_casilla_inputs,
+            cleared_casilla_ids=cleared_casilla_ids,
+            record_operator_layer=record_operator_layer,
+            attested_binding_ids=attested_binding_ids,
+            value_attestations=value_attestations,
+            m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+            m210_gross_income_source_mode=m210_gross_income_source_mode,
+            binding_values=binding_values,
+            enum_binding_values=enum_binding_values,
+            iva_compensation_decision=iva_compensation_decision,
+            borrador_snapshot_id=borrador_snapshot_id,
+            relation_values=relation_values,
+            filing_period_date=filing_period_date,
+            foreign_asset_observations=foreign_asset_observations,
+            foreign_asset_row_observations=foreign_asset_row_observations,
+            detail_rows=detail_rows,
+            filing_instance_evidence=filing_instance_evidence,
+            clock=clock,
+            additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+            profile=profile,
+        )
+
+
+def _calculate_recorded_bucket_aggregation(
+    work_unit_id: str,
+    *,
+    ports: CalculationActionPorts,
+    actor: str,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    cleared_casilla_ids: tuple[CasillaId, ...],
+    record_operator_layer: bool,
+    attested_binding_ids: tuple[BindingId, ...],
+    value_attestations: Mapping[BindingId, ValueAttestation] | None,
+    m210_official_tipo_renta_code: str | None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+    iva_compensation_decision: object | None,
+    borrador_snapshot_id: str | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    filing_period_date: date | None,
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
+    detail_rows: tuple[ModeloDetailRow, ...],
+    filing_instance_evidence: FilingInstanceEvidence | None,
+    clock: datetime | None,
+    additional_secure_object_writes_for_revision: Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None,
+    profile: ModeloWorkProfile | None,
+) -> BucketAggregationCalculationResult:
     run = _resolve_bucket_aggregation_run(
         work_unit_id,
         ports=ports,

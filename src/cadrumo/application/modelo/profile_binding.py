@@ -65,17 +65,21 @@ from ...domain.calculations.registry.schema import BindingDefinition, RegistrySn
 from ...domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES, CasillaDataType
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
-from ...domain.modelos.profile_read_fingerprint import ProfileReadFingerprint, profile_read_fingerprint
+from ...domain.modelos.profile_read_fingerprint import (
+    ProfileReadFingerprint,
+    ProfileReadSource,
+    profile_read_fingerprint,
+)
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
-from ...domain.user_profile.values import UserProfileFactValue
+from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from ..user_profile.projections import profile_fact_index
+from ..user_profile.projections import profile_fact_index, taxpayer_projection_read_fingerprint
 from .autonomic_deduccion_dispatch import inject_autonomic_deduccion_facts
 from .printed_boxes import first_printed_dependent, printed_boxes
 from .profile_binding_refusal_doors import binding_contract_defect_verdict, profile_fact_value_refused_verdict
@@ -442,6 +446,19 @@ def _select_profile_bindings(snapshot: RegistrySnapshot) -> _ProfileBindingSelec
     return _ProfileBindingSelection(bindings=bindings, formula_date_consumed=frozenset(formula_date_consumed))
 
 
+def _stored_profile_record(bucket_id: str, *, operation: PinnedAuthorityOperation) -> object | None:
+    """Load the bucket's stored profile record, or ``None`` when it has none."""
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    try:
+        return ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+
+
 def _load_profile_facts(
     snapshot: RegistrySnapshot,
     *,
@@ -452,17 +469,9 @@ def _load_profile_facts(
     operation: PinnedAuthorityOperation,
 ) -> _ProfileFacts | None:
     """Load and derive the bucket's profile fact index, or ``None`` when absent."""
-    record = profile_record
+    record = profile_record if profile_record is not None else _stored_profile_record(bucket_id, operation=operation)
     if record is None:
-        from ..user_profile.profile_record_repository import ProfileRecordRepository
-
-        try:
-            record = ProfileRecordRepository.for_current_session(
-                bucket_id,
-                profile_decode_context=operation.profile_decode_context(),
-            ).load(bucket_id)
-        except ProfileNotFoundError:
-            return None
+        return None
     profile_record_fingerprint = _profile_record_fingerprint(record)
     if schema is None:
         schema = operation.profile_schema()
@@ -780,27 +789,38 @@ def current_profile_read_fingerprint(
 ) -> ProfileReadFingerprint:
     """Digest the reads ``recorded`` names over the profile as it stands now.
 
-    The index is rebuilt through the same derivation the calculation ran, so a
-    recorded read of a derived selector is digested over the selector as the
-    current inputs derive it. A revision that reads no profile fact is current
-    whatever the profile holds.
+    A record read is digested over the stored facts. The derived index is
+    rebuilt, through the same derivation the calculation ran, only when the
+    revision read it, so a recorded read of a derived selector is digested over
+    the selector as the current inputs derive it.
 
     Raises:
         ProfileBindingResolutionError: The current profile cannot be derived,
             for example a stored date that no longer parses.
     """
-    selection = _select_profile_bindings(snapshot)
-    if not selection.bindings and not profile_row_bindings(snapshot):
-        return recorded
-    facts = _load_profile_facts(
-        snapshot,
-        bucket_id=bucket_id,
-        profile_record=profile_record,
-        schema=None,
-        selected_bindings=selection.bindings,
-        operation=operation,
+    record = profile_record if profile_record is not None else _stored_profile_record(bucket_id, operation=operation)
+    if not isinstance(record, UserProfileRecord):
+        return redigest_profile_reads(
+            recorded, fact_index=None, record_facts=None, projection_fingerprint=lambda _selector: None
+        )
+    fact_index: dict[str, UserProfileFactValue] | None = None
+    if any(entry.source is ProfileReadSource.INDEX for entry in recorded.entries):
+        facts = _load_profile_facts(
+            snapshot,
+            bucket_id=bucket_id,
+            profile_record=record,
+            schema=None,
+            selected_bindings=_select_profile_bindings(snapshot).bindings,
+            operation=operation,
+        )
+        fact_index = None if facts is None else dict(dict.items(facts.fact_index))
+    schema = operation.profile_schema()
+    return redigest_profile_reads(
+        recorded,
+        fact_index=fact_index,
+        record_facts=record.facts,
+        projection_fingerprint=lambda selector: taxpayer_projection_read_fingerprint(record, selector, schema=schema),
     )
-    return redigest_profile_reads(recorded, None if facts is None else dict(dict.items(facts.fact_index)))
 
 
 def _text_compared_binding_ids(snapshot: RegistrySnapshot) -> frozenset[BindingId]:

@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -50,7 +51,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id_from_revision,
 )
-from ....domain.modelos.profile_read_fingerprint import ProfileReadScope
+from ....domain.modelos.profile_read_fingerprint import ProfileReadScope, ProfileReadSource
 from ....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -76,8 +77,10 @@ _PENDING_CARRIES = (
 )
 _ELDER = "renta_family.descendiente.0.birth_date"
 _YOUNGER = "renta_family.descendiente.1.birth_date"
-#: A profile fact no Modelo 100 resolution reads: the given name the filer is addressed by.
-_UNREAD = "identity.name"
+#: Read only by the renta ledger's home-office afectación (LIRPF art. 30.2.5ª), never by the profile resolver.
+_LEDGER_ONLY = "vivienda_office.office_m2"
+#: A profile fact no Modelo 100 calculation reads: the operator's contact email.
+_UNREAD = "identity.email"
 
 
 def _year() -> int:
@@ -162,6 +165,16 @@ def _read_prefixes(revision: CalculationRevision) -> frozenset[str]:
     return frozenset(entry.selector for entry in fingerprint.entries if entry.scope is ProfileReadScope.PREFIX)
 
 
+def _read_paths_from(revision: CalculationRevision, source: ProfileReadSource) -> frozenset[str]:
+    fingerprint = revision.profile_read_fingerprint
+    assert fingerprint is not None
+    return frozenset(
+        entry.selector
+        for entry in fingerprint.entries
+        if entry.scope is ProfileReadScope.PATH and entry.source is source
+    )
+
+
 def _bound_selectors(work: SeededOperatorWork) -> frozenset[str]:
     """Every profile path a binding of the revision names directly."""
     revision = work.operation.revision(work.work_unit.modelo, work.work_unit.revision_id)
@@ -203,7 +216,7 @@ def test_an_edit_to_a_fact_the_calculation_did_not_read_does_not_fire(tmp_path: 
         assert _UNREAD not in _read_paths(calculated)
         assert not any(_UNREAD.startswith(prefix) for prefix in _read_prefixes(calculated))
 
-        _edit(work, _UNREAD, "Otra Persona")
+        _edit(work, _UNREAD, "otra.persona@example.test")
         findings = _verify(work, calculated)
 
     assert not _with_key(findings, PROFILE_DRIFT_KEY)
@@ -265,7 +278,7 @@ def test_export_refuses_a_verified_revision_whose_read_facts_were_edited(tmp_pat
         unrecorded = verified.model_copy(update={"profile_read_fingerprint": None})
         require_profile_reads_current_for_export(verified, work.work_unit, operation=work.operation)
 
-        _edit(work, _UNREAD, "Otra Persona")
+        _edit(work, _UNREAD, "otra.persona@example.test")
         require_profile_reads_current_for_export(verified, work.work_unit, operation=work.operation)
 
         _edit(work, _ELDER, date(_year() - 30, 3, 4))
@@ -283,3 +296,20 @@ def test_export_refuses_a_verified_revision_whose_read_facts_were_edited(tmp_pat
     assert context is not None
     assert context["reason"] == "profile_read_drift"
     assert context["calculation_revision_id"] == verified.calculation_revision_id
+
+
+def test_an_edit_to_a_fact_only_the_ledger_reads_fires(tmp_path: Path) -> None:
+    with _annual_work(tmp_path) as work:
+        calculated = work.require_head()
+        # The profile resolver neither binds nor reads it; the calculation's ledger source does.
+        assert _LEDGER_ONLY not in _bound_selectors(work)
+        assert _LEDGER_ONLY not in _read_paths_from(calculated, ProfileReadSource.INDEX)
+        assert _LEDGER_ONLY in _read_paths_from(calculated, ProfileReadSource.RECORD)
+
+        _edit(work, _LEDGER_ONLY, Decimal("12.5"))
+        findings = _verify(work, calculated)
+
+    (drift,) = _with_key(findings, PROFILE_DRIFT_KEY)
+    assert drift.precondition_failure is not None
+    (evidence,) = drift.precondition_failure.verdict.evidence
+    assert _LEDGER_ONLY in str(evidence.values["changed_reads"]).split("|")

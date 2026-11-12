@@ -201,11 +201,12 @@ def declared_activity_epigraphs(context: CalculationSourceContext) -> tuple[str 
     if context.profile is None:
         return None
     from ..user_profile.completeness import profile_section_rows
+    from ..user_profile.profile_read_recorder import profile_values_under
     from ..user_profile.projections import record_to_path_values
 
     values = record_to_path_values(context.profile.record, as_of=context.period.end_date)
     epigraphs: list[str | None] = []
-    for row in profile_section_rows(_ACTIVITY_SECTION, values):
+    for row in profile_section_rows(_ACTIVITY_SECTION, profile_values_under(values, f"{_ACTIVITY_SECTION}.")):
         path = ".".join(part for part in (_ACTIVITY_SECTION, row, _IAE_EPIGRAPH_FIELD) if part)
         epigraph = (values.get(path) or "").strip()
         epigraphs.append(epigraph or None)

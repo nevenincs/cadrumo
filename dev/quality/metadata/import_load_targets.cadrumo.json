@@ -2032,6 +2032,7 @@
         "cadrumo.application.user_profile.profile_pointer",
         "cadrumo.application.user_profile.profile_pointer_ports",
         "cadrumo.application.user_profile.profile_read_ports",
+        "cadrumo.application.user_profile.profile_read_recorder",
         "cadrumo.application.user_profile.profile_record_repository",
         "cadrumo.application.user_profile.profile_repository",
         "cadrumo.application.user_profile.profile_schema_migration",
