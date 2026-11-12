@@ -39,6 +39,7 @@ from .....domain.calculations.registry.binding_terminal_origin import TerminalOr
 from .....domain.calculations.registry.retencion_soportada_bindings import RETENCION_SOPORTADA_INCOME_ROLES
 from .....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from .....domain.calculations.registry.schema_references import PeriodSelector
+from .....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from .....domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from .....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
@@ -55,11 +56,14 @@ from .retencion_soportada_seed import seed_payer_certificate
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TAXPAYER = "00000000T"
-_EJERCICIO = 2025
+_SUPPORT = published_supported_filing_years()
+assert _SUPPORT is not None
+_EJERCICIO = max(_SUPPORT.years)
+_AT = datetime.now(UTC)
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 _CATEGORIES = "taxpayer_type.irpf_income_categories"
 _LEGAL_REFS = ("ley-35-2006:art-99", "rd-439-2007:art-108")
-_SOURCE_REFS = ("aeat-modelo-100-instructions-2025",)
+_SOURCE_REFS = ("synthetic-source",)
 _QUANTITIES = tuple(quantity for _, quantity in RETENCION_SOPORTADA_INCOME_ROLES)
 
 
@@ -78,9 +82,9 @@ def _binding(quantity: RetencionSoportadaCantidad) -> BindingDefinition:
 
 
 _REVISION = ModeloRevision(
-    id="2025-retencion-soportada-income-test",
-    localization_key="test.schema.revision.2025-retencion-soportada-income-test.label",
-    valid_from=date(2025, 1, 1),
+    id="retencion-soportada-income-test",
+    localization_key="test.schema.revision.retencion-soportada-income-test.label",
+    valid_from=date(_EJERCICIO, 1, 1),
     period_selector=PeriodSelector(years=(_EJERCICIO,), periods=("0A",)),
     legal_refs=_LEGAL_REFS,
     source_refs=_SOURCE_REFS,
@@ -137,7 +141,7 @@ def _attest_trabajo(operation: PinnedAuthorityOperation) -> None:
             ejercicio=_EJERCICIO,
             income_class=RetencionSoportadaClase.TRABAJO,
             note="Synthetic note: no payer withheld.",
-            attested_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+            attested_at=_AT,
         ),
         ports=RetencionSoportadaAbsenceWritePorts(
             attestations=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
@@ -257,7 +261,7 @@ def test_a_record_stored_before_the_two_figures_resolves_the_rest_and_leaves_tho
         ingreso_a_cuenta_repercutido=Decimal("0.00"),
         origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
         evidence_fingerprint="a" * 64,
-        captured_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+        captured_at=_AT,
     )
     assert legacy.reducciones_aplicables is None
     with isolated_runtime_profile(tmp_path=tmp_path):
