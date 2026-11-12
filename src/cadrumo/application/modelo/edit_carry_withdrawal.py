@@ -32,7 +32,7 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from .caller_context import caller_context_of
+from .caller_context import CalculationCallerContext, caller_context_of
 from .edit_models import (
     ModeloEditBaselineV1,
     ModeloEditBindingIntentKind,
@@ -74,23 +74,34 @@ def holds_only_carry_statements(head: CalculationRevision, carry_bindings: froze
     """
     context = caller_context_of(head)
     layer = context.operator_layer
-    if layer is None:
+    if layer is None or _holds_other_caller_input(context):
         return False
     stated = set(layer.attested_binding_ids)
     return (
-        not layer.decimal_casilla_inputs
-        and not layer.text_casilla_inputs
-        and not layer.value_attestations
-        and not context.cleared_casilla_ids
-        and not context.detail_rows
-        and context.filing_instance_evidence is None
-        and context.m210_official_tipo_renta_code is None
-        and context.m210_gross_income_source_mode is None
-        and context.borrador_snapshot_id is None
-        and bool(stated)
+        bool(stated)
         and stated <= carry_bindings
         and set(layer.binding_overrides) == stated
         and all(value == ATTESTED_ZERO for value in layer.binding_overrides.values())
+    )
+
+
+def _holds_other_caller_input(context: CalculationCallerContext) -> bool:
+    """Whether ``context`` carries any caller input besides carry-binding statements."""
+    layer = context.operator_layer
+    layer_inputs = (
+        () if layer is None else (layer.decimal_casilla_inputs, layer.text_casilla_inputs, layer.value_attestations)
+    )
+    context_inputs = (
+        context.filing_instance_evidence,
+        context.m210_official_tipo_renta_code,
+        context.m210_gross_income_source_mode,
+        context.borrador_snapshot_id,
+    )
+    return (
+        any(layer_inputs)
+        or bool(context.cleared_casilla_ids)
+        or bool(context.detail_rows)
+        or any(value is not None for value in context_inputs)
     )
 
 
