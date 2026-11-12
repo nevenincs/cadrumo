@@ -3572,6 +3572,10 @@ application:
           the limit, but the income categories you stated exclude a kind of income
           that you have figures for. Correct the categories or remove the figures,
           then project again. It is never shown as zero.
+        m200_tax_regime_unsupported: This box needs the tipo de gravamen of your entity's
+          tax regime, which is not calculated for that regime or legal form, so it
+          has no value. Enter the box yourself from the official instructions. It
+          is never shown as zero.
         m210_baseline_tipo_deferred: This box needs the general rate for this kind
           of income, which is not yet grounded for the year, so it has no value.
         m210_convenio_rate_missing: This box needs the tax-treaty rate for the country

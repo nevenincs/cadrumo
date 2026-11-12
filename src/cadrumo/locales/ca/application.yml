@@ -3752,6 +3752,10 @@ application:
           rendes amb el límit, però les categories de renda que has indicat exclouen
           un tipus de renda del qual tens imports. Corregeix les categories o retira
           els imports i torna a projectar. Mai es mostra com a zero.
+        m200_tax_regime_unsupported: Aquesta casella necessita el tipus de gravamen
+          del règim fiscal de la teva entitat, que no es calcula per a aquest règim
+          o forma jurídica, així que no té valor. Introdueix la casella tu mateix
+          segons les instruccions oficials. Mai es mostra com a zero.
         m210_baseline_tipo_deferred: Aquesta casella necessita el tipus de gravamen
           general d'aquesta classe de renda, que encara no està fonamentat per a l'exercici,
           així que no té valor.

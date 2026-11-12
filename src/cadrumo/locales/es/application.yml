@@ -3759,6 +3759,10 @@ application:
           el límite, pero las categorías de renta que indicaste excluyen un tipo de
           renta del que tienes importes. Corrige las categorías o retira los importes
           y vuelve a proyectar. Nunca se muestra como cero.
+        m200_tax_regime_unsupported: Esta casilla necesita el tipo de gravamen del
+          régimen fiscal de tu entidad, que no se calcula para ese régimen o forma
+          jurídica, así que no tiene valor. Introduce la casilla tú mismo según las
+          instrucciones oficiales. Nunca se muestra como cero.
         m210_baseline_tipo_deferred: Esta casilla necesita el tipo de gravamen general
           de esta clase de renta, que aún no está fundamentado para el ejercicio,
           así que no tiene valor.

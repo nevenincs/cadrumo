@@ -3708,6 +3708,10 @@ application:
           a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
           amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
           összegeket, majd vetíts újra. Soha nem jelenik meg nullaként.
+        m200_tax_regime_unsupported: Ehhez a rovathoz a szervezeted adózási rendszerének
+          adókulcsa (tipo de gravamen) kell, ez viszont az adott rendszerre vagy jogi
+          formára nem számolható ki, ezért a rovatnak nincs értéke. Add meg a rovatot
+          magad a hivatalos útmutató alapján. Soha nem jelenik meg nullaként.
         m210_baseline_tipo_deferred: Ehhez a rovathoz az ilyen jellegű jövedelem általános
           adókulcsa kell, amely az adóévre még nincs megalapozva, ezért nincs értéke.
         m210_convenio_rate_missing: Ehhez a rovathoz a kettős adóztatást kizáró egyezmény

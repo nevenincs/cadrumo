@@ -42,10 +42,8 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.INCOME_FAMILY_CONTRADICTS_PROFILE.value: (
             "application.modelo.projection_words.casilla_reason.income_family_contradicts_profile"
         ),
-        # Served with the general sentence until the reason has words of its own in every locale.
-        RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED.value: _OTHER_CASILLA_REASON_LOCALE_KEY,
-        RegistryUnresolvedOutcomeReason.M200_TWO_RATE_TIPO_GRAVAMEN_UNREPRESENTED.value: (
-            _OTHER_CASILLA_REASON_LOCALE_KEY
+        RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED.value: (
+            "application.modelo.projection_words.casilla_reason.m200_tax_regime_unsupported"
         ),
     }
 )
