@@ -148,7 +148,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         }
         WorkbenchIssuesScreen #issues-recoveries {
             height: auto;
-            max-height: 10;
+            max-height: $cadrumo-log-max-height;
         }
         WorkbenchIssuesScreen .issues-recovery-words {
             color: $foreground;

@@ -20,6 +20,8 @@ type Item = {
   incomplete_words?: string | null;
   max_rows?: number | null;
   leaves?: { leaf: string; label: string }[];
+  add_row_action?: { action_words: string } | null;
+  remove_row_action?: { action_words: string } | null;
   facts?: { leaf: string; value: string; masked: boolean }[];
 };
 type Served = {
@@ -57,6 +59,17 @@ const groupsOf = (scenario: string, language: Language) =>
   served.reads[scenario]!.items[language]!.filter(
     (item) => item.kind === "family_group",
   );
+
+/** The words of the add control the product served for a group. */
+const addWords = (scenario: string, index: number, language: Language = "en") =>
+  groupsOf(scenario, language)[index]!.add_row_action!.action_words;
+
+/** The words of the remove control the product served for a group. */
+const removeWords = (
+  scenario: string,
+  index: number,
+  language: Language = "en",
+) => groupsOf(scenario, language)[index]!.remove_row_action!.action_words;
 
 async function open(
   page: Page,
@@ -181,11 +194,11 @@ test.describe("the household in the profile page", () => {
     const household = await open(page, "at_cap");
     for (const [index, key] of [DESCENDANTS, ASCENDANTS].entries()) {
       const full = group(household, key);
-      await expect(
-        full.getByRole("button", {
-          name: label("desktop.profile.household.add"),
-        }),
-      ).toBeDisabled();
+      // The product serves no add control for a full group.
+      await expect(full.locator("[data-household-add]")).toHaveCount(0);
+      await expect(full).toContainText(
+        label("desktop.profile.household.cap_reached"),
+      );
       const cap = groupsOf("at_cap", "en")[index]!.max_rows!;
       await expect(full).toContainText(
         label("desktop.profile.household.limit", { count: cap, max: cap }),
@@ -194,13 +207,13 @@ test.describe("the household in the profile page", () => {
     }
   });
 
-  test("a person is added through the replacement against the revision read", async ({
+  test("a person is added through the served add control against the revision read", async ({
     page,
   }) => {
     const household = await open(page, "unknown");
     const ascendants = group(household, ASCENDANTS);
     await ascendants
-      .getByRole("button", { name: label("desktop.profile.household.add") })
+      .getByRole("button", { name: addWords("unknown", 1) })
       .click();
     const dialog = page.getByRole("dialog");
     const born = groupsOf("unknown", "en")[1]!.leaves!.find(
@@ -223,11 +236,33 @@ test.describe("the household in the profile page", () => {
       window.__scenarioHousehold!.writes(),
     );
     expect(writes).toHaveLength(1);
+    // Only the person added is sent; the product composes the set.
     expect(writes[0]!.edit).toEqual({
       kind: "ascendants",
-      rows: [{ facts: [{ field_key: "birth_date", value: "1950-02-03" }] }],
+      add_row: { facts: [{ field_key: "birth_date", value: "1950-02-03" }] },
     });
     expect(writes[0]!.expected_revision).toBeGreaterThan(0);
+  });
+
+  test("a person is removed by the index the read served, through the served remove control", async ({
+    page,
+  }) => {
+    const household = await open(page, "rows");
+    const ascendants = group(household, ASCENDANTS);
+    const first = ascendants.locator("[data-household-person]").first();
+    const index = (await first.getAttribute("data-household-person"))!;
+    await first.getByRole("button", { name: removeWords("rows", 1) }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: removeWords("rows", 1) })
+      .click();
+    await expect(ascendants.locator("[data-household-person]")).toHaveCount(1);
+    const writes = await page.evaluate(() =>
+      window.__scenarioHousehold!.writes(),
+    );
+    expect(writes.map((write) => write.edit)).toEqual([
+      { kind: "ascendants", remove_row_index: index },
+    ]);
   });
 
   test("declaring none states a zero", async ({ page }) => {
@@ -318,27 +353,24 @@ test.describe("the household in the profile page", () => {
     const household = await open(page, "rows");
     await page.evaluate(() => window.__scenarioHousehold!.loseNextAnswer());
     await group(household, ASCENDANTS)
-      .getByRole("button", {
-        name: label("desktop.profile.household.remove_person", { number: 1 }),
-      })
+      .getByRole("button", { name: removeWords("rows", 1) })
+      .first()
       .click();
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: label("desktop.profile.household.remove") })
+      .getByRole("button", { name: removeWords("rows", 1) })
       .click();
     await expect(household.getByRole("alert")).toHaveText(
       label("desktop.profile.unknown"),
     );
-    for (const add of await household
-      .getByRole("button", { name: label("desktop.profile.household.add") })
-      .all())
+    for (const add of await household.locator("[data-household-add]").all())
       await expect(add).toBeDisabled();
     await household
       .getByRole("button", { name: label("desktop.profile.refresh") })
       .click();
     await expect(
       group(household, ASCENDANTS).getByRole("button", {
-        name: label("desktop.profile.household.add"),
+        name: addWords("rows", 1),
       }),
     ).toBeEnabled();
   });

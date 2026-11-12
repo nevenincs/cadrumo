@@ -4,13 +4,19 @@ import type {
   HouseholdPersonEdit,
   HouseholdQuestion,
   HouseholdRow,
+  HouseholdRowAction,
 } from "../../shell/profileHousehold";
-import type { ProfileEdit, ProfileField } from "../../shell/userProfile";
+import type {
+  HouseholdChange,
+  ProfileEdit,
+  ProfileField,
+} from "../../shell/userProfile";
 
 // What the household element does with the groups it is served, and nothing
-// the product owns: which leaves exist, their words, answer sets, limits and
-// states are all served. The window only turns what a person typed into the
-// whole-set replacement the product takes, and says which groups it can send.
+// the product owns: which leaves exist, their words, answer sets, the answers
+// each leaf is asked after, limits, states and the controls that add or
+// remove a person are all served. The window only turns what a person typed
+// into the change the product takes, and says which groups it can send.
 
 /** The replacement each served group is written through. A group the window
  * has no replacement for is shown and never written. */
@@ -22,13 +28,37 @@ const REPLACEMENT: Readonly<Record<string, "descendants" | "ascendants">> = {
 export const replacementOf = (group: HouseholdGroup) =>
   REPLACEMENT[group.group_key] ?? null;
 
-/** Whether any recorded fact of the group is hidden. A replacement states
+/** A household change of the descendants or the ascendants. */
+const householdEdit = (
+  kind: "descendants" | "ascendants",
+  change: HouseholdChange,
+): ProfileEdit =>
+  kind === "descendants" ? { kind, ...change } : { kind, ...change };
+
+/** The change a served add or remove control submits, by the registered
+ * operation it names. A control naming any other operation, or more than
+ * one, is not one the window can send. */
+const ROW_CHANGE: Readonly<Record<string, "descendants" | "ascendants">> = {
+  "user-profile.descendants": "descendants",
+  "user-profile.ascendants": "ascendants",
+};
+
+export function rowChangeOf(
+  action: HouseholdRowAction | null,
+): "descendants" | "ascendants" | null {
+  if (action === null || action.target_operation_ids.length !== 1) return null;
+  return ROW_CHANGE[action.target_operation_ids[0]!] ?? null;
+}
+
+/** Whether any recorded fact of the group is hidden. Editing a person states
  * every person's facts again, and a hidden value cannot be stated again, so
- * such a group is never rewritten from here. */
+ * no person of such a group is edited from here. Adding or removing one
+ * person resends nobody, so a hidden value does not stop either. */
 export const hasHiddenFacts = (group: HouseholdGroup) =>
   group.rows.some((row) => row.facts.some((fact) => fact.masked));
 
-/** Why the group cannot be written from here, or null when it can. */
+/** Why the group's people cannot be edited from here, or null when they
+ * can. */
 export function blockedWrite(
   group: HouseholdGroup,
 ): "not_served" | "hidden" | "no_replacement" | null {
@@ -37,9 +67,77 @@ export function blockedWrite(
   return hasHiddenFacts(group) ? "hidden" : null;
 }
 
+/** The change that adds one person, through the group's served add control,
+ * or null when the group serves none the window can send. */
+export function addition(
+  group: HouseholdGroup,
+  person: HouseholdPersonEdit,
+): ProfileEdit | null {
+  const kind = rowChangeOf(group.add_row_action);
+  return kind === null ? null : householdEdit(kind, { add_row: person });
+}
+
+/** The change that removes the served person `row`, named by the index the
+ * read served it at, or null when the group serves no remove control the
+ * window can send. */
+export function removal(
+  group: HouseholdGroup,
+  row: HouseholdRow,
+): ProfileEdit | null {
+  const kind = rowChangeOf(group.remove_row_action);
+  return kind === null
+    ? null
+    : householdEdit(kind, { remove_row_index: row.row_index });
+}
+
+/** Whether a served condition holds for what the person has answered. */
+function holds(
+  condition: HouseholdLeaf["shown_when"][number],
+  answer: string,
+): boolean {
+  if (condition.equals !== null) return answer === condition.equals;
+  if (condition.contains !== null)
+    return answer
+      .split(",")
+      .map((token) => token.trim())
+      .includes(condition.contains);
+  return false;
+}
+
+/** The leaves asked of a person with these answers, in served order: a leaf
+ * with no condition always, any other while one of its conditions holds on a
+ * leaf that is itself asked. An answer to a leaf no longer asked counts for
+ * nothing. */
+export function shownLeaves(
+  leaves: HouseholdLeaf[],
+  values: Readonly<Record<string, string>>,
+): HouseholdLeaf[] {
+  const byKey = new Map(leaves.map((leaf) => [leaf.leaf, leaf]));
+  const asked = new Map<string, boolean>();
+  const isAsked = (leaf: HouseholdLeaf, seen: Set<string>): boolean => {
+    const known = asked.get(leaf.leaf);
+    if (known !== undefined) return known;
+    if (seen.has(leaf.leaf)) return false;
+    seen.add(leaf.leaf);
+    const shown =
+      leaf.shown_when.length === 0 ||
+      leaf.shown_when.some((condition) => {
+        const other = byKey.get(condition.leaf);
+        return (
+          other !== undefined &&
+          isAsked(other, seen) &&
+          holds(condition, (values[condition.leaf] ?? "").trim())
+        );
+      });
+    asked.set(leaf.leaf, shown);
+    return shown;
+  };
+  return leaves.filter((leaf) => isAsked(leaf, new Set()));
+}
+
 /** Whether the group already holds as many people as its design does. A
- * group that serves no limit is never full here; the product refuses what it
- * cannot hold and says why. */
+ * group that serves no limit is never full here. The product serves no add
+ * control for a full group. */
 export const atCap = (group: HouseholdGroup) =>
   group.max_rows !== null && group.rows.length >= group.max_rows;
 
@@ -58,22 +156,18 @@ export const personEdit = (row: HouseholdRow): HouseholdPersonEdit => ({
   facts: row.facts.map((fact) => ({ field_key: fact.leaf, value: fact.value })),
 });
 
-/** The replacement a change of one person makes: the person at `index` of the
- * ordered people replaced, the person added when `index` is null, or the
- * person removed when `facts` is null. Everyone else is stated as stored. */
+/** The replacement an edit of one person makes: the person at `index` of the
+ * ordered people replaced, and everyone else stated as stored. */
 export function replacement(
   group: HouseholdGroup,
-  index: number | null,
-  facts: HouseholdPersonEdit | null,
+  index: number,
+  facts: HouseholdPersonEdit,
 ): ProfileEdit | null {
   const kind = replacementOf(group);
   if (kind === null) return null;
   const people = orderedRows(group).map(personEdit);
-  if (index === null) {
-    if (facts) people.push(facts);
-  } else if (facts) people[index] = facts;
-  else people.splice(index, 1);
-  return { kind, rows: people };
+  people[index] = facts;
+  return householdEdit(kind, { rows: people });
 }
 
 /** The edit that states a household question's answer: the token of a served
@@ -100,7 +194,7 @@ export const statedChoice = (question: HouseholdQuestion) =>
 /** The group stated to have no people. */
 export const declaredNone = (group: HouseholdGroup): ProfileEdit | null => {
   const kind = replacementOf(group);
-  return kind === null ? null : { kind, rows: [] };
+  return kind === null ? null : householdEdit(kind, { rows: [] });
 };
 
 /** A leaf as the profile's typed editors take it: the same shape as a profile

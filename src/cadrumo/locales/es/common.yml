@@ -4772,9 +4772,8 @@ desktop:
     entry_required: '* obligatorio en cada registro'
     field_help: Sobre este campo
     household:
-      add: Añadir persona
       blocked_hidden: Algunos valores de este grupo están ocultos, así que aquí no
-        se pueden cambiar sus personas.
+        se pueden editar sus personas. Aún puedes añadir o quitar una persona.
       cap_reached: Este grupo está lleno, así que no se pueden añadir más personas.
       declare_none: Indicar que no hay ninguna
       edit_person: Editar persona {number}
@@ -4787,10 +4786,8 @@ desktop:
         clear: Retirar la respuesta
         unknown_help: Todavía no has indicado nada, y eso no es lo mismo que «no».
       reading: Leyendo tu familia…
-      remove: Quitar persona
       remove_help: ¿Quitar a esta persona de tu familia? El recuento se actualiza
         con ella.
-      remove_person: Quitar persona {number}
       retry: Reintentar
       saved: Familia guardada.
       state:

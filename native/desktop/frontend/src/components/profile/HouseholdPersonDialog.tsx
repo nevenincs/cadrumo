@@ -19,17 +19,20 @@ import type {
 } from "../../shell/profileHousehold";
 import { savedValue, seededValue, unreadDate } from "../../shell/profileInput";
 import { useStrings } from "../../shell/strings";
-import { leafField, typedFacts } from "./householdModel";
+import { leafField, shownLeaves, typedFacts } from "./householdModel";
 import { ProfileValueEditor } from "./ProfileValueEditor";
 
 /** What the dialog is for: a person to state, correct or take out. */
 export type PersonAction = "add" | "edit" | "remove";
 
 /**
- * One person of a household group: every leaf the group serves, in the
- * product's words, entered as the profile enters it everywhere else; or the
- * question whether to take the person out. A refusal is shown as the product
- * worded it and leaves what was typed in place.
+ * One person of a household group: every leaf the group serves and asks of
+ * this person now, in the product's words, entered as the profile enters it
+ * everywhere else; or the question whether to take the person out. A leaf is
+ * asked while one of the answers it is served after holds, and a leaf no
+ * longer asked is not stated. Adding and removing are worded by the group's
+ * served controls. A refusal is shown as the product worded it and leaves what
+ * was typed in place.
  */
 export function HouseholdPersonDialog({
   group,
@@ -71,31 +74,29 @@ export function HouseholdPersonDialog({
   const [told, setTold] = useState<ReadonlySet<string>>(new Set());
   const unread = (leaf: HouseholdGroup["leaves"][number]) =>
     unreadDate(leafField(leaf, stored(leaf.leaf)), values[leaf.leaf] ?? "");
-  const missing = group.leaves.filter(
+  const asked = shownLeaves(group.leaves, values);
+  const missing = asked.filter(
     (leaf) => leaf.required && (values[leaf.leaf] ?? "").trim() === "",
   );
   const title =
     action === "add"
-      ? t("desktop.profile.household.add")
-      : t(
-          action === "edit"
-            ? "desktop.profile.household.edit_person"
-            : "desktop.profile.household.remove_person",
-          { number },
-        );
+      ? (group.add_row_action?.action_words ?? "")
+      : action === "remove"
+        ? (group.remove_row_action?.action_words ?? "")
+        : t("desktop.profile.household.edit_person", { number });
   const submit = () => {
     if (busy) return;
     if (action === "remove") return onSave(null);
-    const refused = group.leaves.filter((leaf) => unread(leaf) !== null);
+    const refused = asked.filter((leaf) => unread(leaf) !== null);
     if (refused.length || missing.length) {
       setTold(new Set(refused.map((leaf) => leaf.leaf)));
       return;
     }
     onSave(
       typedFacts(
-        group.leaves,
+        asked,
         Object.fromEntries(
-          group.leaves.map((leaf) => [
+          asked.map((leaf) => [
             leaf.leaf,
             savedValue(
               leafField(leaf, stored(leaf.leaf)),
@@ -141,14 +142,18 @@ export function HouseholdPersonDialog({
           }}
         >
           {action !== "remove" &&
-            group.leaves.map((leaf, index) => {
+            asked.map((leaf) => {
               const text = unread(leaf);
               const refusal =
                 text !== null && told.has(leaf.leaf) ? text : null;
               const field = leafField(leaf, stored(leaf.leaf));
-              const control = `${id}-${index}`;
+              const control = `${id}-${leaf.leaf}`;
               return (
-                <Field key={leaf.leaf} data-invalid={refusal !== null}>
+                <Field
+                  key={leaf.leaf}
+                  data-household-leaf={leaf.leaf}
+                  data-invalid={refusal !== null}
+                >
                   <FieldLabel htmlFor={control}>
                     {leaf.label}
                     {leaf.required && <span aria-hidden="true"> *</span>}
@@ -239,13 +244,11 @@ export function HouseholdPersonDialog({
               type="submit"
               disabled={busy || (action !== "remove" && missing.length > 0)}
             >
-              {t(
-                busy
-                  ? "desktop.profile.saving"
-                  : action === "remove"
-                    ? "desktop.profile.household.remove"
-                    : "desktop.profile.save",
-              )}
+              {busy
+                ? t("desktop.profile.saving")
+                : action === "remove"
+                  ? title
+                  : t("desktop.profile.save")}
             </Button>
           </DialogFooter>
         </form>
