@@ -1,18 +1,6 @@
 # Year-independence baseline: findings that exist today and may only shrink.
 # Regenerate with: python -m dev.registry.analysis.year_independence_gate --write-baseline
 casilla-member|100|1039|formula|present=2025|absent=2024
-casilla-member|200|00670|binding|present=2024|absent=2023
-casilla-member|200|01494|binding|present=2024|absent=2023
-casilla-member|200|01495|binding|present=2024|absent=2023
-casilla-member|200|DP200014:00550|formula|present=2024|absent=2023
-casilla-member|200|DP200014:00552|formula|present=2024|absent=2023
-casilla-member|200|DP200014:00558|formula|present=2024|absent=2023
-casilla-member|200|DP200014:00562|formula|present=2024|absent=2023
-casilla-member|200|DP200014:00582|formula|present=2024|absent=2023
-casilla-member|200|DP200014B:00592|formula|present=2024|absent=2023
-casilla-member|200|DP200014B:00599|formula|present=2024|absent=2023
-casilla-member|200|DP200014B:00611|formula|present=2024|absent=2023
-casilla-member|200|DP200026:00625|binding|present=2024|absent=2023
 casilla-member|222|23|formula|present=2024|absent=2025-y-siguientes
 casilla-member|296|02|binding|present=2024-2025|absent=2023
 casilla-member|296|03|binding|present=2024-2025|absent=2023

@@ -35,7 +35,10 @@ import type {
   OutputLanguage,
   RecordedCalculationNote,
 } from "../../../shell/modeloContract/modelo";
-import type { ModeloExportRequest } from "../../../shell/modeloContract/modeloExport";
+import type {
+  ModeloExportDisclosure,
+  ModeloExportRequest,
+} from "../../../shell/modeloContract/modeloExport";
 import type {
   ModeloExportRequestField,
   ModeloFormArtefactOption,
@@ -49,13 +52,10 @@ import type { FormSession } from "../form/session";
 import { CalculationNotes } from "../workspace/CalculationNotes";
 import { Settlement } from "../workspace/Settlement";
 import { useModeloOperation } from "../WriteScope";
+import { servedRefusal } from "../../../shell/refusal";
 import { RefusalNotice } from "../../RefusalNotice";
 import type { LedgerErrorDetail } from "../../../shell/ledger";
-import {
-  exportDisclosures,
-  servedExportRefusal,
-  type ExportDisclosure,
-} from "./exportDisclosures";
+import { exportWarnings, type ExportWarning } from "./exportDisclosures";
 import {
   ReconciliationResult,
   type ReconciliationReport,
@@ -85,7 +85,7 @@ type Notice =
       write: Write;
       name: string;
       /** What the result warns of beside the file. */
-      warnings: readonly ExportDisclosure[];
+      warnings: readonly ExportWarning[];
     }
   | { kind: "recorded" }
   /** It committed, and what it answered could not be read. */
@@ -236,8 +236,8 @@ export function FilingView({
   const [notes, setNotes] = useState<readonly RecordedCalculationNote[]>([]);
   // What the last filing file leaves out, as its result disclosed it, kept
   // beside the file the same way.
-  const [limitations, setLimitations] = useState<readonly ExportDisclosure[]>(
-    [],
+  const [disclosure, setDisclosure] = useState<ModeloExportDisclosure | null>(
+    null,
   );
   const {
     holds,
@@ -368,18 +368,15 @@ export function FilingView({
           envelope.work_unit_id,
         ),
       (result: ModeloResult<"modelo.export">) => {
-        const disclosed = exportDisclosures(result);
         if (write === "export") {
           setNotes(result.fichero_boe?.calculation_notes ?? []);
-          setLimitations(
-            disclosed.filter((item) => item.level === "limitation"),
-          );
+          setDisclosure(result.disclosure);
         }
         return {
           kind: "saved",
           write,
           name: picked.name,
-          warnings: disclosed.filter((item) => item.level === "warning"),
+          warnings: exportWarnings(result),
         };
       },
       [picked.token],
@@ -599,7 +596,7 @@ export function FilingView({
           {t("workspace.modelo.next.apply", { count: session.stagedCount })}
         </Alert>
       )}
-      <ExportLimitations limitations={limitations} />
+      <ExportLimitations disclosure={disclosure} />
       <CalculationNotes notes={notes} />
 
       {sharedWords !== null && (
@@ -872,7 +869,7 @@ function FilingNotice({
             {notice.warnings.map((warning) => (
               <span
                 key={warning.key}
-                data-disclosure={warning.level}
+                data-disclosure="warning"
                 className="text-warning"
               >
                 {t(warning.key)}
@@ -897,12 +894,11 @@ function FilingNotice({
       return <ReconciliationResult report={notice.report} />;
     case "refused":
       // The served refusal, through the window's one refusal notice; a
-      // refusal that served no words says only that nothing was done.
+      // refusal that served no words says only that nothing was done. The
+      // filing view opens no other place, so a served way out is shown with
+      // its words and not followed from here.
       return notice.words !== null ? (
-        <RefusalNotice
-          refusal={servedExportRefusal(notice.words, notice.detail)}
-          onAction={() => undefined}
-        />
+        <RefusalNotice refusal={servedRefusal(notice.words, notice.detail)} />
       ) : (
         <Alert tone="warning" icon={<Icon name="alert" />}>
           {t("workspace.modelo.outcome.not_done")}
@@ -918,30 +914,31 @@ function FilingNotice({
 }
 
 /**
- * What the last filing file leaves out, each as the result disclosed it: an
- * omission that can only raise the tax the file states. It is a disclosure,
- * drawn apart from the warnings and in no warning colour, and kept beside the
- * file while this view shows it.
+ * What the last filing file leaves out, as its result disclosed it: the lead
+ * sentence and each limitation in the words its verification served. It is a
+ * disclosure, drawn apart from the warnings and in no warning colour, and kept
+ * beside the file while this view shows it.
  */
 function ExportLimitations({
-  limitations,
+  disclosure,
 }: {
-  limitations: readonly ExportDisclosure[];
+  disclosure: ModeloExportDisclosure | null;
 }) {
-  const t = useStrings();
-  if (limitations.length === 0) return null;
+  if (!disclosure || disclosure.limitations.length === 0) return null;
   return (
     <Alert
       tone="neutral"
       icon={<Icon name="info" />}
       data-disclosure="limitation"
     >
-      <span className="font-medium">
-        {t("desktop.modelo.export.limitation.title")}
-      </span>
-      {limitations.map((limitation) => (
-        <span key={limitation.key} className="text-sm">
-          {t(limitation.key)}
+      <span className="font-medium">{disclosure.lead_words}</span>
+      {disclosure.limitations.map((limitation, at) => (
+        <span
+          key={`${limitation.message_locale_key}-${limitation.casilla_id ?? ""}-${at}`}
+          data-limitation={limitation.message_locale_key}
+          className="text-sm"
+        >
+          {limitation.words}
         </span>
       ))}
     </Alert>

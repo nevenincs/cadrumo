@@ -1,6 +1,6 @@
 """The migration that retires the stored disability key of an ascendant row, through the real capsule.
 
-A record stored before schema 11 may hold an official disability key on an ascendant
+A record stored before schema 12 may hold an official disability key on an ascendant
 row. The key is now derived from the grade, the assistance and the judicial
 incapacity, and a key 1 or 2 cannot be converted into a grade, so the migration clears
 the key on every row, keeps every other fact, records the cleared paths as typed
@@ -61,9 +61,9 @@ def contexts() -> Iterator[tuple[ProfileCreateContext, ProfileDecodeContext]]:
         yield operation.profile_create_context(), operation.profile_decode_context()
 
 
-def test_the_schema_this_build_writes_is_eleven_and_schema_9_and_10_records_still_open() -> None:
-    assert MIGRATED_PROFILE_SCHEMA_VERSION == 11
-    assert {9, 10} <= set(SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+def test_the_schema_this_build_writes_is_twelve_and_schema_9_10_and_11_records_still_open() -> None:
+    assert MIGRATED_PROFILE_SCHEMA_VERSION == 12
+    assert {9, 10, 11} <= set(SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
     with bundled_indexed_authority().operation() as operation:
         assert operation.profile_schema().version == MIGRATED_PROFILE_SCHEMA_VERSION
 

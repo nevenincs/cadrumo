@@ -12,6 +12,7 @@ from .....application.operations.error_detail import (
     operation_catalogue_refusal_words,
 )
 from .....application.operator_actions.preconditions import profile_setup_incomplete_verdict
+from .....application.operator_actions.projection import PreconditionVerdictSnapshot
 from .....core.config import override_settings
 from .....core.errors.error_codes import get_registered_error_code_by_code
 from .....core.errors.hierarchy import RecordedRegisteredError
@@ -51,9 +52,8 @@ def test_the_served_sentence_and_the_recorded_verdict_are_carried_unchanged() ->
     assert refusal.refusal_words is not None
     assert (refusal.refusal_words.words, refusal.refusal_words.language) == ("Served sentence.", OutputLanguage.CA)
     assert refusal.verdict is not None
-    assert refusal.verdict.to_verdict() == verdict
-    assert refusal.primary_action_words is None
-    assert refusal.alternative_action_words == ()
+    assert refusal.verdict == PreconditionVerdictSnapshot.from_verdict(verdict)
+    assert refusal.no_recovery_words is None
 
 
 def test_a_detail_built_from_a_real_refusal_serves_the_sentence_the_worker_worded() -> None:

@@ -1,0 +1,181 @@
+# Modelo 200 tipos de gravamen whose rate for periods initiated in 2022 is the rate the
+# 2023 edition applies: the Manual práctico de Sociedades 2022 "Tipos de gravamen
+# vigentes" table for 2022 prints tipo general 25 por 100, entidades de nueva creación
+# 15 por 100, cooperativas fiscalmente protegidas 20 por 100 and entidades de la Ley
+# 49/2002 10 por 100, as the 2023 table does. Each value therefore starts at 2022 and
+# later editions inherit the member. The INCN-keyed rates and thresholds (23 % for INCN
+# below 1 millón de euros from Ley 31/2022 art. 39, and the LIS art. 101 lane) enter at
+# 2023 and are stated by the 2023 edition.
+
+# Entity-type-dispatched tipo gravamen parameters per LIS art. 29.
+# Each special-regime rate is a discoverable parameter cited to LIS
+# art. 29. The `lookup_parameter_by_entity_type` op routes the scalar
+# rates (general, new-entity, cooperative-protected, non-profit) via
+# the `modelo-200-tipo-gravamen-por-forma-juridica` formula, keyed on
+# the `modelo-200-profile-legal-entity-form` profile binding.
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.tipo-gravamen-general"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "tipo de gravamen",
+    "cuota integra",
+]
+
+[[revisions."2022".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.tipo-gravamen-new-entity-first-2-years"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2022".parameters.values]]
+value = "15"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.tipo-gravamen-cooperative-protected"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2022".parameters.values]]
+value = "20"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+# Cuota-integra bracket tables per LIS Art. 29 sub-form. Each is a
+# single-row bracket whose marginal_rate equals the sub-form flat rate
+# and whose fixed_addition is zero: applying the bracket to the post-
+# nivelación base 01330 yields the cuota integra 00562 directly. This
+# is the bracket counterpart of the scalar tipo-gravamen-* parameters
+# above; the cuota formula `modelo-200-cuota-integra-by-form` reaches
+# all sub-forms through a single `lookup_bracket_by_entity_type`
+# dispatch (including the micro-empresa two-tranche scale, which the
+# scalar dispatch op cannot route).
+[[revisions."2022".parameters]]
+id = "is.modelo-200.cuota-integra-bracket-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.25"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.cuota-integra-bracket-cooperative-protected"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.20"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-49-2002:art-10"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.10"
+valid_from = 2022-01-01
+
+# LIS Art. 29 newly-created-entity 15 % rate (first two profit-making
+# periods). Layered on top of the sub-form by the cuota-integra formula
+# via an `if_then_else` predicate over the
+# `new_entity_first_two_profit_periods` period-state binding; the
+# bracket form mirrors the per-form brackets above so the dispatch
+# stays uniform.
+[[revisions."2022".parameters]]
+id = "is.modelo-200.cuota-integra-bracket-new-entity"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-29"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2022".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.15"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.tipo-gravamen-non-profit-special-regime"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29", "ley-49-2002:art-10"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2022".parameters.values]]
+value = "10"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+# LIS art. 26.1: "en todo caso, se podrán compensar en el período impositivo bases
+# imponibles negativas hasta el importe de 1 millón de euros" (Manual práctico de
+# Sociedades 2022, cap. 5). The floor of the BIN compensation ceiling, read by the 2022
+# bin-aplicada-maxima member; it is a compensation amount, not an INCN threshold.
+[[revisions."2022".parameters]]
+id = "is.modelo-200.bin-compensacion-importe-minimo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-26"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["se podran compensar en el periodo impositivo bases imponibles negativas hasta el importe de 1 millon de euros"]
+
+[[revisions."2022".parameters.values]]
+value = "1000000"
+date_axis = "filing_period"
+valid_from = 2022-01-01

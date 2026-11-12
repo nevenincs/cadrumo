@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 import rtoml
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
@@ -274,17 +273,17 @@ def _with_entry(target_map, original, replacement):
     return target_map.model_copy(update={"entries": entries})
 
 
-def test_screen_covers_every_revision_the_registry_selects_for_filing() -> None:
+def test_screen_covers_every_revision_that_carries_an_export_layout() -> None:
+    # The screen checks the identity of the boxes an export layout writes, so its
+    # scope is the revisions that carry a layout, whatever grade they declare.
     worklists = identity_subject.load_bundled_m200_target_identity_worklists()
     authority = compiled_bundled_authority()
-    filing = {
-        str(revision.id)
-        for revision in authority.modelo("200").revisions.values()
-        if revision.authority_grade is RegistryAuthorityGrade.FILING
+    with_layout = {
+        str(revision.id) for revision in authority.modelo("200").revisions.values() if revision.export_layouts
     }
 
-    assert filing
-    assert filing <= {worklist.revision for worklist in worklists}
+    assert with_layout
+    assert with_layout <= {worklist.revision for worklist in worklists}
     for worklist in worklists:
         assert not worklist.map_owner_mismatches, worklist.revision
         assert not worklist.printed_identity_diagnostics, worklist.revision

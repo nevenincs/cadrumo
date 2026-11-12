@@ -10,10 +10,11 @@ COMPUTED from the Liquidación I -> III chain:
 * ``DP200014:00550`` (base imponible previa) = ``00501`` (resultado contable)
   ``+ DP200013:00417`` (total correcciones de aumento)
   ``- DP200013:00418`` (total correcciones de disminución).
-* ``DP200014:00552`` (base imponible) = ``max(00550 - 01032 - 00547, 0)`` —
-  base previa minus reserva de capitalización (LIS Art. 25) minus compensación
-  de bases imponibles negativas aplicada (LIS Art. 26), non-negative-clamped
-  («si el resultado es cero, consignar cero»).
+* ``DP200014:00552`` (base imponible) = ``00550 - 01032 - 00547`` — base
+  previa minus reserva de capitalización (LIS Art. 25) minus compensación de
+  bases imponibles negativas aplicada (LIS Art. 26), keeping the sign of a
+  negative base previa (manual práctico de Sociedades 2024, L14021 and
+  L14034-14036 of its bundled extraction).
 
 The base previa is derived from the STORED Liquidación II column subtotals
 ``00417`` / ``00418``, not from the per-row correccion leaves, so the leaves
@@ -160,23 +161,19 @@ def test_base_previa_is_complete_sum_of_resultado_and_correccion_subtotals() -> 
     assert result.values[_M200_BASE_PREVIA_CASILLA] == expected_previa
 
 
-def test_reserva_and_bin_reduce_base_with_non_negative_clamp() -> None:
-    """Reserva de capitalización and compensación BIN cannot drive base below zero.
+def test_reserva_and_bin_reduce_base_and_a_negative_base_keeps_its_sign() -> None:
+    """A negative base previa is entered with its sign in 00552; reserva and BIN reduce a positive one.
 
-    Base previa 50.000, reserva 20.000, compensación BIN 99.999 would arithmetic
-    to a negative base; the «si el resultado es cero, consignar cero» clamp pins
-    00552 to 0. A reserva/BIN within the base reduces it normally
-    (50.000 − 20.000 − 10.000 = 20.000).
+    "[00552] = [00550] - [01032] - [00547]" and, for a zero or negative 00550,
+    "la cuantía precedida del signo menos (-) tanto en dicha casilla [00550] como
+    en la casilla [00552]" (manual práctico de Sociedades 2024, L14021,
+    L14034-14036): a resultado of -30.000 gives 00550 = 00552 = -30.000. A
+    reserva/BIN within the base reduces it normally (50.000 − 20.000 − 10.000 =
+    20.000).
     """
-    clamped = _calculate(
-        {
-            M200_RESULTADO_CONTABLE_CASILLA: Decimal("50000"),
-            M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("20000"),
-            M200_BIN_APLICADA_CASILLA: Decimal("99999"),
-        },
-    )
-    assert clamped.values[_M200_BASE_PREVIA_CASILLA] == Decimal("50000.00")
-    assert clamped.values[_M200_BASE_IMPONIBLE_CASILLA] == Decimal("0.00")
+    negative = _calculate({M200_RESULTADO_CONTABLE_CASILLA: Decimal("-30000")})
+    assert negative.values[_M200_BASE_PREVIA_CASILLA] == Decimal("-30000.00")
+    assert negative.values[_M200_BASE_IMPONIBLE_CASILLA] == Decimal("-30000.00")
 
     within = _calculate(
         {

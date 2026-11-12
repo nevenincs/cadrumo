@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 
 _BINDING_WITHOUT_FACT_LOCALE_KEY: Final[str] = "application.modelo.projection_words.binding_unresolved"
+_OTHER_CASILLA_REASON_LOCALE_KEY: Final[str] = "application.modelo.projection_words.casilla_reason.other"
 _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         UNRESOLVED_OPERAND_REASON: "application.modelo.projection_words.casilla_reason.unresolved_operand",
@@ -47,10 +48,12 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_UNSUMMED_BOX.value: (
             "application.modelo.projection_words.casilla_reason.autonomic_deduction_unsummed_box"
         ),
+        RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED.value: (
+            "application.modelo.projection_words.casilla_reason.m200_tax_regime_unsupported"
+        ),
     }
 )
 """The sentence of each reason a computed box can be left without a value."""
-_OTHER_CASILLA_REASON_LOCALE_KEY: Final[str] = "application.modelo.projection_words.casilla_reason.other"
 _M130_FIGURE_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "ingresos": "application.modelo.projection_words.figure.m130.ingresos",

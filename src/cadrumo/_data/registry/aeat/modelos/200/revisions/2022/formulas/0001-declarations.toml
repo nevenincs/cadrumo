@@ -1,0 +1,364 @@
+# Base imponible previa: aeat-dr-200-2022 prints "B.I. antes de la compensación de
+# bases imponibles negativas [00550]" on DP200013 field 92 (offset 1475), the record of
+# the correcciones subtotals [00417] (field 85) and [00418] (field 86); the resultado
+# contable [00501] is DP200012 field 9 (offset 64). The Manual práctico de Sociedades
+# 2022 (cap. 5) states the same operation as the 2023 manual. Only the target record
+# differs from the 2023 edition, which states its own member.
+[[revisions."2022".formulas]]
+id = "modelo-200-base-imponible-previa"
+target_casilla_id = "DP200013:00550"
+expression = { op = "subtract", args = [
+    { op = "add", args = [
+        { casilla_id = "DP200012:00501" },
+        { casilla_id = "DP200013:00417" },
+    ] },
+    { casilla_id = "DP200013:00418" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-11", "ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "correcciones al resultado de la cuenta de perdidas y ganancias",
+    "base imponible antes de la compensacion",
+]
+
+# Base imponible [00552] = [00550] - [01032] - [00547]: aeat-dr-200-2022 DP200013
+# fields 92, 95, 98 and 101 (offsets 1475, 1526, 1577, 1628), all under "Liquidación II -
+# Base imponible"; the 2023 design moves them to DP200014. The sign is kept: for a zero or
+# negative [00550] the manual has the amount "precedida del signo menos (-)" in [00550] and
+# [00552] (manuals/sociedades/2022 L12517-12528).
+[[revisions."2022".formulas]]
+id = "modelo-200-base-imponible"
+target_casilla_id = "DP200013:00552"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [
+        { casilla_id = "DP200013:00550" },
+        { casilla_id = "DP200013:01032" },
+    ] },
+    { casilla_id = "DP200013:00547" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "compensacion de bases imponibles negativas",
+    "reserva de capitalizacion",
+]
+
+# [01330] = [00552] + [01033] - [01034]: aeat-dr-200-2022 prints [01330] on DP200014 field 6
+# (offset 13) and its operands on DP200013 fields 101-103 (offsets 1628, 1645, 1662); the
+# Manual práctico de Sociedades 2022 prints the operation in the same words as 2023.
+[[revisions."2022".formulas]]
+id = "modelo-200-base-imponible-despues-reserva-nivelacion"
+target_casilla_id = "DP200014:01330"
+expression = { op = "subtract", args = [
+    { op = "add", args = [
+        { casilla_id = "DP200013:00552" },
+        { casilla_id = "DP200013:01033" },
+    ] },
+    { casilla_id = "DP200013:01034" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "base imponible despues de la reserva de nivelacion",
+    "casilla [01330] = [00552] + [01033] - [01034]",
+]
+
+# Tipo de gravamen [00558] for periods initiated in 2022 (aeat-dr-200-2022 DP200014 field
+# 18, offset 217, "2 enteros y 2 decimales"). The Manual práctico de Sociedades 2022
+# "Tipos de gravamen vigentes" table for 2022 prints: tipo general 25 por 100; entidades
+# de nueva creación 15 por 100; cooperativas fiscalmente protegidas 20 por 100 (resultados
+# cooperativos); entidades de la Ley 49/2002 10 por 100. It prints no rate keyed to the
+# importe neto de la cifra de negocios: the 23 por 100 rate for INCN below 1 millón de
+# euros enters with Ley 31/2022 art. 39 for periods initiated from 2023, so the 2023
+# edition states its own member with the INCN lanes. Here the rate depends only on the
+# new-entity flag and the legal form, and the INCN is not read.
+[[revisions."2022".formulas]]
+id = "modelo-200-tipo-gravamen-por-forma-juridica"
+target_casilla_id = "DP200014:00558"
+expression = { op = "if_then_else", args = [
+    { binding = "modelo-200-profile-new-entity-flag" },
+    { op = "lookup_parameter_by_entity_type", args = [
+        { literal = "0" },
+        { binding = "modelo-200-profile-legal-entity-form" },
+        { dispatch_table_entries = [
+            { key = "sl", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+            { key = "sa", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+            { key = "sal", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+            { key = "sll", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+            { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+            { key = "other", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+            { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+            { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+        ] },
+    ] },
+    { op = "lookup_parameter_by_entity_type", args = [
+        { literal = "0" },
+        { binding = "modelo-200-profile-legal-entity-form" },
+        { dispatch_table_entries = [
+            { key = "sl", parameter = "is.modelo-200.tipo-gravamen-general" },
+            { key = "sa", parameter = "is.modelo-200.tipo-gravamen-general" },
+            { key = "sal", parameter = "is.modelo-200.tipo-gravamen-general" },
+            { key = "sll", parameter = "is.modelo-200.tipo-gravamen-general" },
+            { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-general" },
+            { key = "other", parameter = "is.modelo-200.tipo-gravamen-general" },
+            { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
+            { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
+        ] },
+    ] },
+] }
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-49-2002:art-10"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "tipo de gravamen",
+    "cuota integra (casilla 00562)",
+    "tipos de gravamen 2022 tipo general 25 por 100",
+]
+
+# Cuota íntegra [00562] (aeat-dr-200-2022 DP200014 field 30, offset 408) applies the 2022
+# rate to the base after the reserva de nivelación [01330]: the new-entity 15 % bracket
+# when the flag is set, else the legal form's single-row bracket (general 25 %,
+# cooperativa fiscalmente protegida 20 %, Ley 49/2002 10 %), per the Manual práctico de
+# Sociedades 2022 "Tipos de gravamen vigentes" table. No INCN lane exists for 2022 (see
+# the tipo de gravamen member above).
+[[revisions."2022".formulas]]
+id = "modelo-200-cuota-integra"
+target_casilla_id = "DP200014:00562"
+expression = { op = "if_then_else", args = [
+    { binding = "modelo-200-profile-new-entity-flag" },
+    { op = "lookup_bracket_by_entity_type", args = [
+        { casilla_id = "DP200014:01330" },
+        { binding = "modelo-200-profile-legal-entity-form" },
+        { dispatch_table_entries = [
+            { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+        ] },
+    ] },
+    { op = "lookup_bracket_by_entity_type", args = [
+        { casilla_id = "DP200014:01330" },
+        { binding = "modelo-200-profile-legal-entity-form" },
+        { dispatch_table_entries = [
+            { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+            { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+            { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+            { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+            { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+            { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+            { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" },
+            { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-49-2002:art-10"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "cuota integra (casilla 00562)",
+    "tipo de gravamen",
+]
+
+# Cuota íntegra ajustada positiva [00582] (aeat-dr-200-2022 DP200014 field 47, offset 697).
+# The Manual práctico de Sociedades 2022 prints [00582] = ([00562] + [01038]) - ([00567] +
+# [00568] + [00563] + [00566] + [00576] + [00569] + [00570] + [01344] + [01280] + [00572] +
+# [00571] + [00573] + [00575] + [00577] + [00581]): the Illes Balears bonificación [00815]
+# that the 2023 manual and design add is not printed by the 2022 design, so it is not read.
+[[revisions."2022".formulas]]
+id = "modelo-200-cuota-integra-ajustada-positiva"
+target_casilla_id = "DP200014:00582"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { op = "add", args = [
+            { casilla_id = "DP200014:00562" },
+            { casilla_id = "01038" },
+        ] },
+        { op = "add", args = [
+            { casilla_id = "DP200014:00567" },
+            { casilla_id = "DP200014:00568" },
+            { casilla_id = "DP200014:00563" },
+            { casilla_id = "DP200014:00566" },
+            { casilla_id = "DP200014:00576" },
+            { casilla_id = "DP200014:00569" },
+            { casilla_id = "DP200014:00570" },
+            { casilla_id = "01344" },
+            { casilla_id = "01280" },
+            { casilla_id = "DP200014:00572" },
+            { casilla_id = "DP200014:00571" },
+            { casilla_id = "DP200014:00573" },
+            { casilla_id = "DP200014:00575" },
+            { casilla_id = "DP200014:00577" },
+            { casilla_id = "DP200014:00581" },
+        ] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-39"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "Cuota íntegra ajustada positiva se obtiene",
+    "[00582] = ([00562] + [01038]) - ([00567] + [00568] + [00563] + [00566] + [00576] + [00569] + [00570] + [01344] + [01280] + [00572] + [00571] + [00573] + [00575] + [00577] + [00581])",
+    "Si al efectuar esta operación se obtiene una cantidad negativa o cero",
+]
+
+# Cuota líquida [00592] = max([00619], max(0, [00582] - ([00583] + [00585] + [00584] + [00588]
+# + [01039] + [02314] + [02315] + [00565] + [00590] + [00399] + [00082] + [01040] + [01041])))
+# per the Manual práctico de Sociedades 2022. aeat-dr-200-2022 prints every operand, the
+# cuota líquida mínima [00619] (art. 30 bis LIS) and [00592] on DP200014 fields 47-62
+# (offsets 697-952), under "Liquidación III - Otras deducciones"; the 2023 design moves the
+# block to DP200014B.
+[[revisions."2022".formulas]]
+id = "modelo-200-cuota-liquida"
+target_casilla_id = "DP200014:00592"
+expression = { op = "max", args = [
+    { casilla_id = "DP200014:00619" },
+    { op = "max", args = [
+        { op = "subtract", args = [
+            { casilla_id = "DP200014:00582" },
+            { op = "add", args = [
+                { casilla_id = "DP200014:00583" },
+                { casilla_id = "DP200014:00585" },
+                { casilla_id = "DP200014:00584" },
+                { casilla_id = "DP200014:00588" },
+                { casilla_id = "DP200014:01039" },
+                { casilla_id = "DP200014:02314" },
+                { casilla_id = "DP200014:02315" },
+                { casilla_id = "DP200014:00565" },
+                { casilla_id = "DP200014:00590" },
+                { casilla_id = "DP200014:00399" },
+                { casilla_id = "DP200014:00082" },
+                { casilla_id = "DP200014:01040" },
+                { casilla_id = "DP200014:01041" },
+            ] },
+        ] },
+        { literal = "0" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-36", "ley-27-2014:art-39"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "La cuota líquida se obtiene aplicando sobre la cuota íntegra ajustada positiva",
+    "[00592] = [00582] - ([00583] + [00585]",
+    "El resultado de esta operación siempre tendrá que ser una cantidad positiva o cero",
+]
+
+# Cuota del ejercicio [00599] = ([00625]/100) x ([00592] - [01766] - [01784]), Manual práctico de
+# Sociedades 2022. aeat-dr-200-2022 prints [00599] (field 24, offset 319), [01766] (field 22,
+# offset 285) and [01784] (field 23, offset 302) on DP200014B, [00592] on DP200014 field 62
+# and [00625] on DP200026. It reads the profile percentage binding, not the bound box, so
+# an absent percentage refuses the cuota instead of reading zero.
+[[revisions."2022".formulas]]
+id = "modelo-200-cuota-ejercicio-a-ingresar-devolver"
+target_casilla_id = "DP200014B:00599"
+expression = { op = "multiply", args = [
+    { op = "divide", args = [
+        { binding = "modelo-200-profile-tributacion-estado-porcentaje" },
+        { literal = "100" },
+    ] },
+    { op = "subtract", args = [
+        { op = "subtract", args = [
+            { casilla_id = "DP200014:00592" },
+            { casilla_id = "DP200014B:01766" },
+        ] },
+        { casilla_id = "DP200014B:01784" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "cuota del ejercicio a ingresar o a devolver (casilla 00599)",
+    "[00599] = ([00625]/100",
+    "retenciones e ingresos a cuenta",
+]
+
+# Cuota diferencial [00611] = [00599] - pagos fraccionados, Manual práctico de Sociedades 2022
+# ("[00611] = [00599] - ([00601] + [00603] + [00605])"). aeat-dr-200-2022 prints [00599] and
+# [00611] on DP200014B as the 2023 design does, so the 2023 edition inherits this member.
+# The pagos fraccionados are the Modelo 202 instalments under either modalidad (casilla 34,
+# art. 40.3 LIS, plus casilla 03, art. 40.2 LIS); the non-elected one is 0.
+[[revisions."2022".formulas]]
+id = "modelo-200-cuota-diferencial"
+target_casilla_id = "DP200014B:00611"
+expression = { op = "subtract", args = [
+    { casilla_id = "DP200014B:00599" },
+    { op = "add", args = [
+        { binding = "modelo-200-pagos-fraccionados-anuales" },
+        { binding = "modelo-200-pagos-fraccionados-anuales-40-2" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "cuota diferencial (casillas 00611 y 00612)",
+    "[00611] = [00599] - ([00601] + [00603] + [00605])",
+]
+
+# BIN compensation ceiling (LIS art. 26.1) = min(stock at period start [00670], max(1 millón
+# de euros, 70 % of the base imponible previa [00550])). The Manual práctico de Sociedades
+# 2022 states the 1 millón de euros floor ("en todo caso, se podrán compensar en el período
+# impositivo bases imponibles negativas hasta el importe de 1 millón de euros"); it is read
+# from its own parameter, not from an INCN threshold. aeat-dr-200-2022 prints [00550] on
+# DP200013 field 92. The 2022 manual prints the 70 alone. A nueva creación that marks
+# casilla 00070 does not apply the límite (art. 26.3 LIS, manuals/sociedades/2022 L2903), so
+# its ceiling is the stock.
+[[revisions."2022".formulas]]
+id = "modelo-200-bin-aplicada-maxima"
+target_casilla_id = "DP200013:bin-aplicada-maxima"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla_id = "00070" }, { literal = "0" }] },
+    { casilla_id = "00670" },
+    { op = "min", args = [
+        { casilla_id = "00670" },
+        { op = "max", args = [
+            { parameter = "is.modelo-200.bin-compensacion-importe-minimo" },
+            { op = "percent", args = [{ casilla_id = "DP200013:00550" }, { literal = "70" }] },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "bases imponibles negativas",
+    "se podran compensar en el periodo impositivo bases imponibles negativas hasta el importe de 1 millon de euros",
+]

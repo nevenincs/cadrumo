@@ -76,7 +76,7 @@ from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind, WorkbenchParsed, WorkbenchParseOutcome, WorkbenchRefused
 from .sources import OpenSourceSurface, surface_target
 from .status_bar import StatusBar
-from .vocabulary import origin_text
+from .vocabulary import origin_text, states_something
 
 if TYPE_CHECKING:
     from .header import StatusLine
@@ -494,7 +494,7 @@ class CasillaEditorPanel(Vertical):
             return
         if self._can_clear or self._can_restore:
             # Taking out a box's statement withdraws it: one action, named as a withdrawal, whichever the box allows.
-            stated = self._field.stated_absent is not None
+            stated = states_something(self._field)
             with Horizontal(id="editor-alternatives"):
                 if self._can_clear:
                     clear_key = _WITHDRAW_LOCALE_KEY if stated else "workspace.modelo.editor.clear"

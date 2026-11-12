@@ -164,21 +164,25 @@ def export_result_warnings(
         warnings.append(
             NoticePresentation(severity="warning", message=tr("tui.modelo.export.result.warning.cutoff_unverified"))
         )
-    served = () if result.disclosure is None else result.disclosure.limitations
+    disclosure = result.disclosure
+    served = () if disclosure is None else disclosure.limitations
+    served_words = {item.words for item in served}
     if (
         receipt is not None
         and receipt.trabajo_deductions_not_computed
-        and "application.modelo.findings.trabajo_deduction_not_computed"
-        not in {item.message_locale_key for item in served}
+        and tr("application.modelo.findings.trabajo_deduction_not_computed") not in served_words
     ):
-        # The backend's own finding words, as the CLI shows them for the same flag.
+        # The receipt flag's own finding words, as the CLI shows them for the same flag; the backend's
+        # disclosure, when it states the same sentence, is shown once.
         warnings.append(
             NoticePresentation(
                 severity="warning", message=tr("application.modelo.findings.trabajo_deduction_not_computed")
             )
         )
-    # The limits the exported calculation's verification disclosed, in the sentences the backend served.
-    warnings.extend(NoticePresentation(severity="warning", message=item.words) for item in served)
+    if disclosure is not None:
+        # The backend's lead sentence, then each limit it served, in its words and its order.
+        warnings.append(NoticePresentation(severity="info", message=disclosure.lead_words))
+        warnings.extend(NoticePresentation(severity="warning", message=item.words) for item in served)
     if result.completeness is ModeloExportCompleteness.UNVERIFIED:
         warnings.append(
             NoticePresentation(

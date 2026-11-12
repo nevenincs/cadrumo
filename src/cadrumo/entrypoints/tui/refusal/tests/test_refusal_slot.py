@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import cast, override
 
 import pytest
@@ -17,6 +18,7 @@ from .....application.search.workbench import (
     WorkbenchSearchRequest,
     WorkbenchSearchResponse,
 )
+from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionArgumentStatus
@@ -38,11 +40,19 @@ from ..intent import RefusalRouterV1
 from ..panel import RefusalPanel, RefusalSlot
 from ..routing import host_refusal_router
 from ..served import ServedRefusalV1, served_refusal
-from .refusal_fixtures import CREATE_WORK, MarkerScreen, primary_verdict, words
+from .refusal_fixtures import CREATE_WORK, MarkerScreen, primary_verdict
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _REFUSED = "The declaration does not exist yet."
+_START = "Start this declaration"
+
+
+@pytest.fixture(autouse=True)
+def _english() -> Iterator[None]:
+    """Serve every verdict's words in English, whatever the machine's language."""
+    with override_settings(cadrumo_output_language="en"):
+        yield
 
 
 def _marker(_context: TuiScreenContextV1) -> Screen[None]:
@@ -132,37 +142,29 @@ def _detail_refusal() -> ServedRefusalV1:
     return refusal
 
 
-def _worded(refusal: ServedRefusalV1) -> ServedRefusalV1:
-    """The same refusal once the backend serves words for its primary action."""
-    return ServedRefusalV1(
-        refusal_words=refusal.refusal_words,
-        verdict=refusal.verdict,
-        primary_action_words=words("Start the declaration"),
-    )
-
-
 def _text(app: App[None], selector: str) -> str:
     return str(app.query_one(selector, Static).render())
 
 
 @pytest.mark.asyncio
-async def test_a_recorded_refusal_shows_its_served_sentence_and_no_unworded_control() -> None:
+async def test_a_recorded_refusal_shows_its_served_sentence_and_the_verdicts_served_words() -> None:
     app = _Host(_detail_refusal())
     async with app.run_test() as pilot:
         await settle(pilot)
         assert _text(app, "#slot #refusal-words") == _REFUSED
-        assert not app.query(Button)
+        (button,) = app.query(Button)
+        assert str(button.label) == f"{_START} …"
         assert app.opened == []
 
 
 @pytest.mark.asyncio
 async def test_a_worded_way_out_opens_its_operation_with_the_arguments_it_was_served() -> None:
-    app = _Host(_worded(_detail_refusal()))
+    app = _Host(_detail_refusal())
     async with app.run_test() as pilot:
         await settle(pilot)
         (button,) = app.query(Button)
         assert not button.disabled
-        assert str(button.label) == "Start the declaration …"
+        assert str(button.label) == f"{_START} …"
         await pilot.click("#refusal-action-0")
         await settle(pilot)
         (target,) = app.opened
@@ -176,7 +178,7 @@ async def test_a_worded_way_out_opens_its_operation_with_the_arguments_it_was_se
 
 @pytest.mark.asyncio
 async def test_a_host_that_admits_no_destination_shows_the_way_out_disabled_with_the_reason() -> None:
-    app = _Plain(_worded(_detail_refusal()))
+    app = _Plain(_detail_refusal())
     async with app.run_test() as pilot:
         await settle(pilot)
         (button,) = app.query(Button)

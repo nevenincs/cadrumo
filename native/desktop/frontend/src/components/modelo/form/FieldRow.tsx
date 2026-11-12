@@ -15,7 +15,13 @@ import { readOnlyReason } from "./entryField";
 import { FieldFacts, FieldHelp } from "./FieldFacts";
 import { openableSurface, useForm } from "./formContext";
 import { ORIGIN_LOOK, TONE_TEXT } from "./originLook";
-import { confirmIntent, editKey, fieldKey, type StagedEdit } from "./session";
+import {
+  confirmIntent,
+  editKey,
+  fieldKey,
+  servedPriorWithdrawal,
+  type StagedEdit,
+} from "./session";
 import { ValueCell } from "./ValueCell";
 
 /** An official label written all in capitals, put in sentence case. */
@@ -56,7 +62,8 @@ function OriginMark({
         staged.intent.change === "remove"
           ? t("workspace.modelo.staged.remove")
           : staged.intent.kind === "remove_override" &&
-              staged.intent.withdraws !== undefined
+              (staged.intent.withdraws !== undefined ||
+                staged.intent.withdrawsPrior !== undefined)
             ? t("desktop.modelo.statements.withdrawn")
             : staged.intent.kind === "restore_source_value" ||
                 staged.intent.kind === "remove_override"
@@ -77,6 +84,22 @@ function OriginMark({
           {t("desktop.modelo.statements.mark")}
         </Badge>
         {field.origin_words}
+      </span>
+    );
+  // A box holding a figure the filer stated for an earlier return the
+  // application does not hold says so, with the served words for where its
+  // value comes from, never as a value typed or read from a stored return.
+  if (field.stated_prior_value)
+    return (
+      <span
+        data-stated-prior={field.stated_prior_value.family_id ?? ""}
+        className="inline-flex flex-wrap items-center gap-1.5 text-sm text-foreground"
+      >
+        <Badge variant="neutral">
+          <Icon name="bookmark" size="xs" />
+          {t("desktop.modelo.statements.mark")}
+        </Badge>
+        {field.stated_prior_value.origin_words}
       </span>
     );
   if (!field.origin_words) return null;
@@ -125,6 +148,13 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const editable = session.editable(field);
   const confirm = !staged && editable ? confirmIntent(field) : null;
   const withdrawal = staged ? null : session.withdrawal(field);
+  // The served withdrawal of every figure stated for the same earlier
+  // returns as this box's, which takes them all out together.
+  const priorFamily = staged ? null : field.stated_prior_value?.family_id;
+  const priorWithdrawal = priorFamily
+    ? servedPriorWithdrawal(session.priorValues, priorFamily)
+    : null;
+  const [priorUnplaced, setPriorUnplaced] = useState(false);
   // The box of the statement that cannot be taken out, once a withdrawal
   // was asked for and nothing was staged.
   const [kept, setKept] = useState<PublicModeloFormField | null>(null);
@@ -227,6 +257,33 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
             <Icon name="erase" size="xs" />
             {t("desktop.modelo.statements.withdraw")}
           </Button>
+        )}
+        {priorWithdrawal && (
+          <Button
+            size="xs"
+            variant="outline"
+            data-withdraw-prior=""
+            onClick={(event) => {
+              event.stopPropagation();
+              const outcome = session.withdrawPriorValues(priorWithdrawal);
+              setKept(outcome.kind === "refused" ? outcome.field : null);
+              setPriorUnplaced(
+                outcome.kind === "refused" && outcome.field === null,
+              );
+            }}
+          >
+            <Icon name="erase" size="xs" />
+            {priorWithdrawal.action_words}
+          </Button>
+        )}
+        {priorUnplaced && !staged && (
+          <span
+            role="status"
+            className="flex items-start gap-1 text-sm text-warning"
+          >
+            <Icon name="alert" size="xs" className="mt-0.5 shrink-0" />
+            {t("desktop.modelo.statements.not_placed")}
+          </span>
         )}
         {kept && !staged && (
           <span

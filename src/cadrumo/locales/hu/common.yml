@@ -4498,9 +4498,6 @@ desktop:
       confirm: Elvetés
       lead: Kikerül a bevallásaid listájából. Az előzményei megmaradnak.
       reason: Miért (nem kötelező)
-    export:
-      limitation:
-        title: Amit ez a fájl nem tartalmaz
     form:
       pages: A nyomtatvány oldalai
     keys:
@@ -4519,6 +4516,11 @@ desktop:
       label: A nyomtatvány vázlata
       may_apply: Csak ha rád vonatkozik
       needs_you: 'Rád vár: {count}'
+    prior_values:
+      intro: Ha itt nincs meg az a korábbi bevallás, amelyből egy mező összeget hoz
+        át, az összeget magad is megadhatod. Az ugyanazokhoz a korábbi bevallásokhoz
+        megadott összegeket csak együtt vonhatod vissza.
+      title: Korábbi bevallások összegei
     rename:
       name: Név
       save: Név mentése
@@ -6966,6 +6968,37 @@ tui:
     unattended: Felügyelet nélküli használat engedélyezése
     uncertain: Ismeretlen eredmény; őrizd meg a kérelem azonosítóját
     waiting: Kérelem beküldése folyamatban
+  censo:
+    action:
+      detail: Részletek megjelenítése
+      read: Olvasás újra
+      record: Bejelentés rögzítése
+    column:
+      declared_on: Bejelentés napja
+      kind: Fajta
+      recorded_at: Rögzítés napja
+    detail:
+      id: Azonosító
+      justificante: Igazolás hivatkozása
+      none: Nincs megadva
+      note: Megjegyzés
+    local_note: 'Az itteni bejelentés csak helyi nyilvántartás: ezen az eszközön tárolódik,
+      és semmit sem küld el az adóhatóságnak.'
+    prompt: Az adónyilvántartási adataidat érintő változások bejelentései, amelyeket
+      ezen az alkalmazáson kívül nyújtottál be, és itt rögzítettél.
+    records:
+      title: Rögzített bejelentések
+    status:
+      choose_declaration: Előbb válassz egy bejelentést a listából.
+      empty: Még nem rögzítettél bejelentést.
+      read_failed: A bejelentéseket nem sikerült beolvasni. Az alábbiak egyike sem
+        friss.
+      reading: A bejelentések olvasása...
+      recorded: 'Helyben rögzítve: {kind}, bejelentés napja: {declared_on}. Az adóhatóságnak
+        semmi sem lett elküldve.'
+      unconfirmed: Az az űrlap nem erősített meg eredményt. Az alábbi listát újraolvastuk,
+        és a tárolt állapotot mutatja; ellenőrizd, mielőtt újra rögzítesz.
+    title: Adónyilvántartási változások
   declarations:
     list:
       new:
@@ -6974,6 +7007,7 @@ tui:
       start_hint: Új bevallás indításához nyomd meg a + billentyűt.
   destination:
     aeat_sync: AEAT-szinkron
+    censo: Adónyilvántartási változások
     declarations: Bevallások
     home: Kezdőlap
     installation: Telepítés
@@ -9057,6 +9091,9 @@ tui:
       first_open: Először jársz itt? Nyomd meg a ? billentyűt, és megtudod, mit jelentenek
         a jelek.
       meaning:
+        level:
+          limitation: A számítás kifejezetten jelzett korlátja, vagy egy általad megadott
+            érték. Nem akadályozza a benyújtást.
         mark:
           collapsed: Nyomd meg a → billentyűt a megnyitásához.
           expanded: Nyomd meg a ← billentyűt a bezárásához.
@@ -9142,12 +9179,26 @@ tui:
       none: Ez a bevallás most nem kínál nyilatkozatot.
       not_placed: Egy nyilatkozat olyan rovatra vonatkozik, amelyet ez a képernyő
         nem mutat, ezért nem került átnézésre.
+      prior:
+        heading: A korábbi bevallásokhoz általad megadott értékek
+        partial: Írj be összeget ennek a nyilatkozatnak minden rovatához, vagy hagyd
+          mindet üresen. Vagy egészében tehető meg, vagy sehogy.
       stage: Megtartás átnézésre
       title: Tehető nyilatkozatok
       withdraw: Nyilatkozat visszavonása
     taxation:
       key: Közös vagy egyéni
       reading: Mindkét módszer kiszámítása…
+    wallet:
+      code_label: Az időszak kódja
+      key: IVA-tárca
+      no_lots: Ehhez az évhez nincs rögzített jóváírási tétel.
+      not_sent: 'Ellenőrizd a megadott adatokat: semmi sem lett elküldve.'
+      outcome_unknown: Lehet, hogy a megadott adat elmentődött. Olvasd be újra az
+        egyenleget, mielőtt bármi mást megadnál.
+      refused: A megadott adatot elutasították.
+      sending: A megadott adatok küldése...
+      year_label: Az időszak éve
   operations:
     action:
       close: Bezárás
@@ -9430,6 +9481,7 @@ tui:
       validate_ledger: Nyilvántartás ellenőrzése
     destination:
       aeat_sync: AEAT-szinkron megnyitása
+      censo: Adónyilvántartási változások megnyitása
       declarations: Bevallások megnyitása
       home: Kezdőlap megnyitása
       installation: Telepítés megnyitása
@@ -9441,6 +9493,8 @@ tui:
       withholding: Levonások megnyitása
     destination_help:
       aeat_sync: Amit az AEAT-tól már beolvastunk, és amit legközelebb be lehet olvasni
+      censo: 'Adónyilvántartási változások: a nyilvántartott adóadataid itt rögzített
+        változásai'
       declarations: Bevallások, korábbi számítások, benyújtási előzmények és naptár
       home: Következő teendők, bevallások és határidők egy pillantással
       installation: Tárhely, javítás, visszaállítás és a számítógépen lévő profilok
@@ -10607,6 +10661,8 @@ workspace:
         incomplete: 'Ellenőrizve: hiányoznak a bevalláshoz szükséges adatok.'
       done: Kész. A bevallás frissült.
       not_done: Nem fejeződött be; a módosításaid megmaradtak.
+      unknown: Lehet, hogy alkalmazva lett. Olvasd be újra a bevallást, mielőtt bármi
+        mást alkalmaznál.
     origin:
       calculated: Számított
       calculation_failed: Nem számítható ki

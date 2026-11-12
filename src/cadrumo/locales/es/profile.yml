@@ -361,6 +361,124 @@ profile:
           label: Inscripción en el SII
         voluntary_sii_enrolled:
           label: Inscripción voluntaria en el SII
+      m200_administrador:
+        apellidos_nombre_razon_social:
+          label: Apellidos y nombre o razón social
+        codigo_provincia:
+          label: Código de provincia
+        domicilio_fiscal:
+          label: Domicilio fiscal del representante en España
+        forma_juridica:
+          label: F/J (persona física o jurídica)
+        nif:
+          label: NIF
+        representante:
+          label: Representante (RPTE.)
+      m200_entidad_menor_dependiente:
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Nombre o razón social
+      m200_establecimiento_permanente:
+        beneficio_o_perdida:
+          label: Beneficio o pérdida
+        identificacion:
+          label: Identificación
+        pais_residencia_fiscal:
+          label: País de residencia fiscal
+        suma_ajustes_resultado_contable:
+          label: Suma de ajustes al resultado contable
+        suma_deducciones_di_internacional_anteriores:
+          label: Suma de deducciones por doble imposición internacional de períodos
+            anteriores
+        volumen_operaciones:
+          label: Volumen de operaciones
+      m200_participacion_directa:
+        ajuste_valor_razonable:
+          label: Ajuste por valor razonable
+        capital:
+          label: Capital
+        codigo_provincia_pais:
+          label: Código provincia/país
+        correccion_valor_perdidas_ganancias:
+          label: Corrección de valor en pérdidas y ganancias
+        efecto_correccion_valorativa_base_imponible:
+          label: Efecto de la corrección valorativa en la base imponible
+        eliminacion_deterioro_contable:
+          label: Eliminación del deterioro contable
+        eliminacion_deterioro_valores_participacion:
+          label: Eliminación del deterioro de valores representativos de la participación
+        ingresos_por_dividendos:
+          label: Ingresos por dividendos
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Nombre o razón social
+        otras_partidas_patrimonio_neto:
+          label: Otras partidas del patrimonio neto
+        porcentaje_participacion:
+          label: Porcentaje de participación
+        reservas_y_otras_partidas_fondos_propios:
+          label: Reservas y otras partidas de fondos propios
+        resultado_ultimo_ejercicio:
+          label: Resultado del último ejercicio
+        reversion_perdidas_deterioro_valores:
+          label: Reversión de pérdidas por deterioro de valores
+        saldo_correcciones_fiscales_pendientes:
+          label: Saldo de correcciones fiscales pendientes
+        valor_en_libros:
+          label: Valor en libros
+        valor_nominal_total:
+          label: Valor nominal total
+      m200_participacion_socio:
+        apellidos_nombre_razon_social:
+          label: Apellidos y nombre o razón social
+        codigo_provincia_pais:
+          label: Código provincia/país
+        forma_juridica:
+          label: F/J/Otra (forma jurídica)
+        nif:
+          label: NIF
+        nominal:
+          label: Valor nominal
+        porcentaje_participacion:
+          label: Porcentaje de participación
+        representante:
+          label: Representante (RPTE.)
+      m200_relaciones:
+        has_entidad_menor_dependiente:
+          label: ¿Integra tu entidad entidades menores dependientes?
+        has_establecimiento_permanente:
+          label: ¿Tiene tu entidad establecimientos permanentes en el extranjero?
+        has_participacion_directa:
+          label: ¿Participa tu entidad directamente en otras entidades?
+        has_participacion_socio:
+          label: ¿Tiene tu entidad socios o partícipes con participación directa?
+        has_representante_legal:
+          label: ¿Tiene tu entidad apoderados o representantes legales?
+        has_secretario_consejo:
+          label: ¿Tiene tu entidad Secretario del Consejo de Administración?
+        has_socio_sicav_disolucion:
+          label: ¿Es tu entidad socio de una SICAV disuelta?
+      m200_representante_legal:
+        apellidos_y_nombre:
+          label: Apellidos y nombre
+        fecha_poder:
+          label: Fecha del poder
+        nif:
+          label: NIF
+        notaria_otros:
+          label: Notaría/otros
+      m200_secretario_consejo:
+        apellidos_y_nombre:
+          label: Apellidos y nombre
+        nif:
+          label: NIF
+      m200_socio_sicav_disolucion:
+        nif_iic_reinversion:
+          label: NIF de la IIC de reinversión
+        nif_sociedad_disuelta:
+          label: NIF de la sociedad disuelta
       maritime_worker:
         annual_salary:
           label: Salario anual
@@ -741,6 +859,41 @@ profile:
       iva:
         summary: Tu régimen de IVA y con qué frecuencia lo presentas.
         title: Perfil de IVA
+      m200_administrador:
+        summary: Las personas que administran, dirigen o controlan la entidad, una
+          fila por persona.
+        title: Administradores
+      m200_entidad_menor_dependiente:
+        summary: Las entidades menores dependientes que integras en tu declaración,
+          una fila por entidad.
+        title: Entidades menores dependientes
+      m200_establecimiento_permanente:
+        summary: Los establecimientos permanentes que operan en el extranjero, una
+          fila por establecimiento.
+        title: Establecimientos permanentes
+      m200_participacion_directa:
+        summary: Las entidades en las que participas directamente a fin del período,
+          una fila por entidad participada.
+        title: Participaciones directas
+      m200_participacion_socio:
+        summary: Las personas y entidades que poseen una participación directa en
+          tu entidad, una fila por socio.
+        title: Relación de socios o partícipes
+      m200_relaciones:
+        summary: Si tu entidad tiene filas en cada apartado opcional de la página
+          2 del Modelo 200.
+        title: Relaciones declaradas
+      m200_representante_legal:
+        summary: Los apoderados o representantes legales de la entidad, una fila por
+          persona.
+        title: Representante legal
+      m200_secretario_consejo:
+        summary: El Secretario del Consejo de Administración, o quien cumpla sus funciones.
+        title: Secretario del Consejo de Administración
+      m200_socio_sicav_disolucion:
+        summary: Las SICAV disueltas de las que eres socio y la institución en la
+          que reinviertes la cuota de liquidación.
+        title: Socios de SICAV disueltas
       maritime_worker:
         summary: 'Solo para trabajadores del mar: la clasificación que decide deducciones
           especiales.'

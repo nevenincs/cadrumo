@@ -175,7 +175,7 @@ class ModeloDisagreementsScreen(ModalScreen[DisagreementsChangedV1 | None]):
         }
         ModeloDisagreementsScreen #disagreements-detail {
             height: auto;
-            max-height: 40%;
+            max-height: $cadrumo-dialog-detail-max-height;
             margin-top: $cadrumo-stack;
         }
         ModeloDisagreementsScreen #disagreements-note {

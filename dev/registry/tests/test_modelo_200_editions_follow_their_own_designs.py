@@ -50,8 +50,8 @@ _ABSENCE = frozenset(
 
 
 @cache
-def _modelo() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return committed_modelo(_MODELO)
+def _modelo(modelo_id: str = _MODELO) -> tuple[ModeloDefinition, RegistryCatalogues]:
+    return committed_modelo(modelo_id)
 
 
 def _support() -> SupportedFilingYearsCatalogue:
@@ -61,17 +61,17 @@ def _support() -> SupportedFilingYearsCatalogue:
     return support
 
 
-def _design_of(revision: ModeloRevision) -> str:
-    _, catalogues = _modelo()
+def _design_of(revision: ModeloRevision, modelo_id: str = _MODELO) -> str:
+    _, catalogues = _modelo(modelo_id)
     designs = [ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"]
     assert len(designs) == 1, f"edition {revision.id} cites record designs {designs}"
     return designs[0]
 
 
 @cache
-def _captions(design: str) -> dict[tuple[str, str], frozenset[str]]:
+def _captions(design: str, modelo_id: str = _MODELO) -> dict[tuple[str, str], frozenset[str]]:
     """Return, per (sheet, printed box), every caption the design prints it with."""
-    _, catalogues = _modelo()
+    _, catalogues = _modelo(modelo_id)
     corpus_path = catalogues.sources[design].corpus_path
     assert corpus_path is not None
     found: dict[tuple[str, str], set[str]] = {}
@@ -82,10 +82,10 @@ def _captions(design: str) -> dict[tuple[str, str], frozenset[str]]:
     return {box: frozenset(texts) for box, texts in found.items()}
 
 
-def _printed_with(design: str, segmento: str | None, number: str) -> frozenset[str]:
+def _printed_with(design: str, segmento: str | None, number: str, modelo_id: str = _MODELO) -> frozenset[str]:
     return frozenset(
         caption
-        for (sheet, printed), texts in _captions(design).items()
+        for (sheet, printed), texts in _captions(design, modelo_id).items()
         if printed == number and (segmento is None or sheet == segmento)
         for caption in texts
     )
@@ -110,8 +110,8 @@ def _selected(year: int) -> ModeloRevision:
     return select_revision(modelo, filing_year=year, period="0A", support=_support())
 
 
-def _storage_pairs() -> list[tuple[ModeloRevision, ModeloRevision]]:
-    modelo, _ = _modelo()
+def _storage_pairs(modelo_id: str = _MODELO) -> list[tuple[ModeloRevision, ModeloRevision]]:
+    modelo, _ = _modelo(modelo_id)
     return [
         (modelo.revisions[str(later.casilla_storage_baseline)], later)
         for later in ordered_revisions(modelo)
@@ -192,7 +192,8 @@ def _caption_evolution_covers(
     modelo: ModeloDefinition, earlier: ModeloRevision, later: ModeloRevision, casilla_id: str
 ) -> bool:
     """Connect actual design captions only through grounded label changes."""
-    _, catalogues = _modelo()
+    modelo_id = str(modelo.id)
+    _, catalogues = _modelo(modelo_id)
     occurrences = {
         str(revision.id): (revision, casilla)
         for revision in modelo.revisions.values()
@@ -200,7 +201,7 @@ def _caption_evolution_covers(
         if str(casilla.id) == casilla_id
     }
     captions = {
-        rid: _printed_with(_design_of(revision), casilla.segmento, str(casilla.number))
+        rid: _printed_with(_design_of(revision, modelo_id), casilla.segmento, str(casilla.number), modelo_id)
         for rid, (revision, casilla) in occurrences.items()
     }
     links: dict[str, set[str]] = {rid: set() for rid in occurrences}
@@ -223,7 +224,7 @@ def _caption_evolution_covers(
             if any(
                 row.continuidad_id != evolution.continuidad_id
                 or not captions[rid]
-                or _design_of(edition) not in evolution.source_refs
+                or _design_of(edition, modelo_id) not in evolution.source_refs
                 for rid in (left, right)
                 for edition, row in (occurrences[rid],)
             ):
@@ -240,19 +241,33 @@ def _caption_evolution_covers(
     return str(later.id) in reached
 
 
+# Modelo 200 has no applicability edition left to hand rows on: every edition it
+# authors calculates. Modelo 490 still carries rows out of applicability editions
+# onto later designs printed the same way, so it is the modelo this check reads.
+_APPLICABILITY_CARRIER = "490"
+
+
 def test_a_carried_row_keeps_its_caption_or_has_grounded_label_evolution() -> None:
     """Storage reuse preserves the printed concept; real caption changes require evidence."""
-    modelo, _ = _modelo()
+    modelo, _ = _modelo(_APPLICABILITY_CARRIER)
     checked = 0
-    for earlier, later in _storage_pairs():
+    for earlier, later in _storage_pairs(_APPLICABILITY_CARRIER):
         if earlier.effective_authority_grade is not RegistryAuthorityGrade.APPLICABILITY:
             continue
         earlier_rows = {str(casilla.id): casilla for casilla in earlier.casillas}
         for casilla in later.casillas:
             if str(casilla.id) not in earlier_rows or not _NUMBERED.fullmatch(str(casilla.number)):
                 continue
-            shared = _printed_with(_design_of(earlier), casilla.segmento, str(casilla.number)) & _printed_with(
-                _design_of(later), casilla.segmento, str(casilla.number)
+            shared = _printed_with(
+                _design_of(earlier, _APPLICABILITY_CARRIER),
+                casilla.segmento,
+                str(casilla.number),
+                _APPLICABILITY_CARRIER,
+            ) & _printed_with(
+                _design_of(later, _APPLICABILITY_CARRIER),
+                casilla.segmento,
+                str(casilla.number),
+                _APPLICABILITY_CARRIER,
             )
             assert shared or _caption_evolution_covers(modelo, earlier, later, str(casilla.id)), (
                 f"{later.id} carries {casilla.id} from {earlier.id} "

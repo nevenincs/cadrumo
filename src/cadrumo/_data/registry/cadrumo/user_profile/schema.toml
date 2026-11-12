@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 11
+version = 12
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -924,6 +924,630 @@ effective_dated = true
 description = "Ejercicio (filing year) the attributed base is imputed to, so the member's Modelo 100 for that year folds in the matching share and a later year's attribution stays distinct."
 model_selectors = ["attribution_received.filing_year"]
 legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-89"]
+
+# Modelo 200 page 002 and 002 bis: the administradores and the other relations of an
+# Impuesto sobre Sociedades declarant. One repeatable section per design row family; its
+# fields are the design's own fields for that family (DR200, records m200-page-002 and
+# m200-page-002b) and its row limit is the slot count of the export layout of the edition
+# in force, never a number of the profile. Which families a return must carry, and which a
+# stored fact rules out, is the registry's rule (fact m200-page-002-profile-rules).
+[[sections]]
+key = "m200_administrador"
+title = "Modelo 200 administradores"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF del consejero, gestor, director, administrador general u otro cargo análogo de dirección, administración o control de la entidad (Modelo 200, página 2, apartado A)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "apellidos_nombre_razon_social"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Apellidos y nombre, o razón social, del administrador (Modelo 200, página 2, apartado A)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "forma_juridica"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Columna F/J del apartado A: F si el administrador es persona física, J si es persona jurídica. Se consigna siempre."
+enum_values = ["F", "J"]
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "representante"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Columna RPTE. del apartado A: marca a la persona residente en España que representa al contribuyente del Impuesto sobre la Renta de No Residentes. Solo la consignan los contribuyentes del IRNR (casillas 00021 y 00046); para cualquier otro declarante queda en blanco y no se pregunta."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "domicilio_fiscal"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Domicilio fiscal del representante en España del contribuyente del IRNR (apartado A). Solo lo consignan los contribuyentes del IRNR; para cualquier otro declarante queda en blanco y no se pregunta."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "codigo_provincia"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Código de provincia, de dos dígitos, del domicilio fiscal del representante en España del contribuyente del IRNR (apartado A). Solo lo consignan los contribuyentes del IRNR; para cualquier otro declarante queda en blanco y no se pregunta."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_participacion_socio"
+title = "Modelo 200 participaciones en la declarante"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la persona o entidad que a fin del período posee una participación directa en la declarante (Modelo 200, página 2, apartado B.2). Un socio extranjero sin NIF en España consigna el equivalente de su país precedido del código del país."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "representante"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Columna RPTE. del apartado B.2: indica que el NIF consignado es el del representante legal de un socio persona física menor de edad que carece de NIF propio."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "forma_juridica"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Columna F/J/Otra del apartado B.2: F persona física; J persona jurídica (NIF que empieza por A, B, C, D, F, J, P, Q, R o S); O en los demás casos (NIF que empieza por E, H, U, V, N o W)."
+enum_values = ["F", "J", "O"]
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "apellidos_nombre_razon_social"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Apellidos y nombre, o razón social, del socio o partícipe de la declarante (apartado B.2)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "codigo_provincia_pais"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Código provincia/país del socio (apartado B.2): los dos dígitos de la provincia para un residente o un no residente con establecimiento permanente en España, o el código de dos letras del país para un no residente sin él."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nominal"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Valor nominal de la participación del socio en la declarante a fin del período (apartado B.2)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "porcentaje_participacion"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Porcentaje de participación del socio en el capital de la declarante a fin del período, con dos decimales cuando no es entero (apartado B.2)."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_representante_legal"
+title = "Modelo 200 representantes legales"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "apellidos_y_nombre"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Apellidos y nombre del apoderado o representante legal de la entidad (Modelo 200, página 2 bis, apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF del apoderado o representante legal de la entidad (apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "fecha_poder"
+type = "date"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha del poder notarial o de la escritura de apoderamiento del representante (apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "notaria_otros"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Notaría donde se otorgó el apoderamiento; una sociedad civil que lo hizo constar en documento privado consigna la fecha de ese documento (apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_secretario_consejo"
+title = "Modelo 200 secretario del consejo"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "apellidos_y_nombre"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Apellidos y nombre del Secretario del Consejo de Administración o de quien cumpla sus funciones en el órgano que lo sustituya (Modelo 200, página 2 bis, apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF del Secretario del Consejo de Administración o de quien cumpla sus funciones (apartado G)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_participacion_directa"
+title = "Modelo 200 participaciones de la declarante"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la entidad en la que la declarante participa directamente a fin del período en un 5 % o más del capital, o un 1 % si cotiza (Modelo 200, página 2, apartado B.1). Sin NIF español, el equivalente de su país precedido del código del país."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nombre_o_razon_social"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre o razón social de la entidad participada (apartado B.1)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "codigo_provincia_pais"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Código provincia/país de la entidad participada (apartado B.1): dos dígitos de provincia o el código de dos letras del país."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "porcentaje_participacion"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Porcentaje de participación de la declarante en la entidad participada, con dos decimales (apartado B.1)."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "valor_nominal_total"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Valor nominal total de la participación (apartado B.1)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "valor_en_libros"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Valor en libros de la participación (apartado B.1)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "ingresos_por_dividendos"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Ingresos por dividendos de la participación recibidos en el ejercicio declarado (apartado B.1)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "correccion_valor_perdidas_ganancias"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Corrección de valor incluida en pérdidas y ganancias del período, con su signo (apartado B.1.3.a)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "reversion_perdidas_deterioro_valores"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Reversión de pérdidas por deterioro de valores (DT 16.ª LIS), con su signo (apartado B.1.3.b)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "eliminacion_deterioro_contable"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Eliminación del deterioro contable incluido en pérdidas y ganancias (art. 13.2.b LIS) (apartado B.1.3.c)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "eliminacion_deterioro_valores_participacion"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Eliminación del deterioro de valores representativos de la participación en el capital o fondos propios (art. 15.k LIS) (apartado B.1.3.d)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "ajuste_valor_razonable"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Ajuste por la disminución de valor originada por el criterio de valor razonable (art. 15.l LIS) (apartado B.1.3.e)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "efecto_correccion_valorativa_base_imponible"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Efecto de la corrección valorativa en la base imponible del ejercicio, con su signo (apartado B.1.3.f)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "saldo_correcciones_fiscales_pendientes"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Saldo de correcciones fiscales pendientes de incorporar a la base imponible a fin de ejercicio (apartado B.1.3.g)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "capital"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Capital de la entidad participada extranjera cuyo deterioro se determina por su patrimonio neto (apartado B.1.4)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "reservas_y_otras_partidas_fondos_propios"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Reservas y otras partidas de fondos propios de la entidad participada extranjera (apartado B.1.4)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "otras_partidas_patrimonio_neto"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Otras partidas del patrimonio neto de la entidad participada extranjera, con su signo (apartado B.1.4)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "resultado_ultimo_ejercicio"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Resultado del último ejercicio de la entidad participada extranjera, con su signo (apartado B.1.4)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_entidad_menor_dependiente"
+title = "Modelo 200 entidades menores dependientes"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de cada entidad menor dependiente de la diócesis, provincia religiosa o entidad eclesiástica integrada en la declaración (Modelo 200, página 2 bis, apartado C)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nombre_o_razon_social"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre o razón social de la entidad menor dependiente (apartado C)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_establecimiento_permanente"
+title = "Modelo 200 establecimientos permanentes en el extranjero"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "identificacion"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Identificación del establecimiento permanente que opera en el extranjero; admite un código que no siga el formato NIF (Modelo 200, página 2 bis, apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "pais_residencia_fiscal"
+type = "string"
+code_list = "countries"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "País de residencia fiscal del establecimiento permanente, código de dos letras (apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "volumen_operaciones"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Volumen de operaciones del establecimiento permanente (apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "beneficio_o_perdida"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Beneficio o pérdida que obtiene el establecimiento permanente en el período impositivo, con su signo (apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "suma_ajustes_resultado_contable"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Suma de ajustes al resultado contable desde el inicio de la actividad del establecimiento permanente, con su signo (apartado D)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "suma_deducciones_di_internacional_anteriores"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Suma de deducciones por doble imposición internacional (art. 31 LIS) del establecimiento permanente acreditadas en períodos anteriores (apartado D)."
+minimum = "0"
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections]]
+key = "m200_socio_sicav_disolucion"
+title = "Modelo 200 socio de SICAV en disolución"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "nif_sociedad_disuelta"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la SICAV disuelta con liquidación de la que la declarante es socio, en el régimen especial de la DT 41.ª LIS (Modelo 200, página 2 bis, apartado E)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "nif_iic_reinversion"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la SICAV o del fondo de inversión de carácter financiero en que se reinvierte la cuota de liquidación (apartado E)."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+# Whether the entity has rows of each design-optional page 002 family. Unanswered is not
+# none: an empty family is never inferred, and an unanswered family keeps the export
+# refused. A stated no is the entity's answer that it has none; a stated yes needs rows.
+[[sections]]
+key = "m200_relaciones"
+title = "Modelo 200 relaciones declaradas"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "has_participacion_socio"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si alguna persona o entidad posee una participación directa en la declarante que se relaciona en el apartado B.2 del Modelo 200. Sin respuesta no equivale a ninguna."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_representante_legal"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la entidad relaciona apoderados o representantes legales en el apartado G del Modelo 200. Sin respuesta no equivale a ninguno."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_secretario_consejo"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la entidad tiene Secretario del Consejo de Administración, o quien cumpla sus funciones, que se relaciona en el apartado G del Modelo 200. Sin respuesta no equivale a ninguno."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_participacion_directa"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la declarante participa directamente a fin del período en otras entidades en la medida que relaciona el apartado B.1 del Modelo 200. Sin respuesta no equivale a ninguna."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_entidad_menor_dependiente"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la entidad eclesiástica integra en su declaración entidades menores dependientes (apartado C del Modelo 200). Sin respuesta no equivale a ninguna."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_establecimiento_permanente"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la entidad aporta información de establecimientos permanentes que operan en el extranjero (apartado D del Modelo 200). Sin respuesta no equivale a ninguno."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[sections.fields]]
+key = "has_socio_sicav_disolucion"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si la declarante es socio de una SICAV en el régimen especial de disolución y liquidación de la DT 41.ª LIS (apartado E del Modelo 200). Sin respuesta no equivale a ninguna."
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "vivienda_office"

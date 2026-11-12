@@ -11,6 +11,7 @@
 import type {
   AeatSoftwareIdentityGrade,
   CalculationRevisionId,
+  CasillaId,
   ContentDigest,
   FilingRecordId,
   ModeloExportArtefact,
@@ -78,6 +79,25 @@ export type ModeloExportCompleteness =
   "unverified" | "not_flagged" | "not_assessed";
 
 /**
+ * One disclosed limitation of the exported calculation, as its verification
+ * worded it.
+ */
+export type ModeloExportDisclosedLimitation = {
+  message_locale_key: string;
+  casilla_id: CasillaId | null;
+  words: string;
+};
+
+/**
+ * The disclosed limitations an export carries, with the sentence that
+ * introduces them.
+ */
+export type ModeloExportDisclosure = {
+  lead_words: string;
+  limitations: ModeloExportDisclosedLimitation[];
+};
+
+/**
  * What one exported artefact is worth as evidence, in the export service's own
  * terms.
  *
@@ -123,6 +143,7 @@ export type ModeloExportPublicResultV3 = {
   fichero_boe: ModeloFicheroBoePublicReceipt | null;
   calculation_report: ModeloCalculationReportPublicReceipt | null;
   handoff_required: boolean;
+  disclosure: ModeloExportDisclosure | null;
 };
 
 /**
