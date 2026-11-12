@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, ClassVar, Final, override
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Footer, OptionList, Static
 from textual.widgets.option_list import Option
@@ -22,6 +22,8 @@ from .....application.modelo.work_form_models import (
 from .....core.i18n.render import tr
 from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
+from ...refusal.panel import RefusalPanel, RefusalSlot
+from ...refusal.served import ServedRefusalV1
 from .casilla_list_models import AddressKey
 from .dialog_width import fit_dialog_height, fit_dialog_width
 from .editor import area_words
@@ -91,6 +93,11 @@ _OPEN_AREA_LOCALE_KEY: Final[str] = "workspace.modelo.issues.open_area"
 """Where a finding about the filer's records, rather than a box, sits: in those records."""
 
 
+def _note_words(box: str | None, message: str) -> str:
+    """A note's served sentence, led by the box it names where it names one."""
+    return message if box is None else f"[{box}] {message}"
+
+
 class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
     """Everything to look at before filing; choosing a box returns it to the workbench."""
 
@@ -139,6 +146,13 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             color: $foreground;
             text-style: bold;
         }
+        WorkbenchIssuesScreen #issues-recoveries {
+            height: auto;
+            max-height: 10;
+        }
+        WorkbenchIssuesScreen .issues-recovery-words {
+            color: $foreground;
+        }
         WorkbenchIssuesScreen #issues-actions {
             height: auto;
             margin-top: $cadrumo-stack;
@@ -178,6 +192,14 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         self._unentered = {boxes.level: boxes for boxes in unentered_levels(form)}
         self._expanded: set[int] = set()
         self._technical: set[int] = set()
+        self._recoveries = tuple(
+            (
+                None if note.message is None else _note_words(note.box, note.message),
+                ServedRefusalV1(verdict=note.recovery),
+            )
+            for note in form.calculation_notes
+            if note.recovery is not None
+        )
 
     @override
     def compose(self) -> ComposeResult:
@@ -190,6 +212,12 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
                 verdict_text(self._form, changes_unapplied=self._changes_unapplied), id="issues-verdict", markup=False
             )
             yield IssueList(*self._options(), id="issues-list")
+            if self._recoveries:
+                with VerticalScroll(id="issues-recoveries"):
+                    for index, (words, refusal) in enumerate(self._recoveries):
+                        if words is not None:
+                            yield Static(words, classes="issues-recovery-words", markup=False)
+                        yield RefusalSlot(refusal, id=f"issues-recovery-{index}")
             with Horizontal(id="issues-actions"):
                 yield localized(
                     Button(tr("workspace.modelo.result_diff.close"), id="issues-close", variant="primary"),
@@ -386,6 +414,11 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             return
         self._technical.symmetric_difference_update({index})
         self._redraw(index)
+
+    def on_refusal_panel_action_chosen(self, message: RefusalPanel.ActionChosen) -> None:
+        """Leave the list for the destination a note's way out opens; the host opens it."""
+        del message
+        self.dismiss(None)
 
     def on_button_pressed(self, _event: Button.Pressed) -> None:
         """Return to the workbench."""

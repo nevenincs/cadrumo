@@ -105,6 +105,8 @@ def change_effect_text(change: StagedChange) -> str:
     """
     if change.statement is not None:
         return change.statement.effect_words
+    if change.prior_value is not None:
+        return change.prior_value.effect_words
     if change.kind is WorkbenchChangeKind.SET:
         return typing_effect_words(change.field)
     return tr(change_effect_key(change))

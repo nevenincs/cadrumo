@@ -50,9 +50,23 @@ def test_missing_arguments_open_the_destination_form_for_them() -> None:
     assert intent.target.destination == OPERATIONS_DESTINATION
 
 
-def test_an_action_no_admitted_destination_hosts_is_unroutable() -> None:
+def test_an_action_routes_by_the_target_operations_the_verdict_served() -> None:
     (way,) = refusal_ways(ServedRefusalV1(verdict=primary_verdict(ATTEST_PRIOR_VALUE)))
-    assert operations().entry("modelo.work.attest_prior_value") is None
+    assert way.target_operation_ids == ("modelo.edit.apply", "modelo.edit.preflight", "modelo.work.form")
+    first_held = next(entry for entry in map(operations().entry, way.target_operation_ids) if entry is not None)
+
+    intent = route_refusal_way(way, destinations=destinations(), operations=operations())
+
+    assert intent is not None
+    assert intent.target.focus.restore_token == first_held.focus_token
+
+
+def test_an_action_whose_served_operations_the_catalogue_does_not_hold_is_unroutable() -> None:
+    verdict = primary_verdict(ATTEST_PRIOR_VALUE).model_copy(
+        update={"target_operation_ids": ("unregistered.operation",)}
+    )
+    (way,) = refusal_ways(ServedRefusalV1(verdict=verdict))
+    assert operations().entry("unregistered.operation") is None
 
     assert route_refusal_way(way, destinations=destinations(), operations=operations()) is None
 
@@ -87,6 +101,6 @@ def test_alternatives_route_independently_in_served_order() -> None:
     assert [way.action_id for way in ways] == [CREATE_WORK, ATTEST_PRIOR_VALUE, REVIEW_LEDGER]
     assert [None if intent is None else intent.target_command_key for intent in intents] == [
         "modelo.work.create",
-        None,
+        "modelo.work.attest_prior_value",
         "ledger.review",
     ]

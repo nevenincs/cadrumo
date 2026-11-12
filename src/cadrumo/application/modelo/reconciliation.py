@@ -91,7 +91,10 @@ from .reconciliation_records import (
     ModeloReconciliationVerdict,
     modelo_reconciliation_persistence,
 )
-from .reconciliation_refusal_doors import reconciliation_evidence_decision_verdict
+from .reconciliation_refusal_doors import (
+    reconciliation_declaration_source_decision_verdict,
+    reconciliation_evidence_decision_verdict,
+)
 from .work_address_errors import ModeloWorkUnitNotFoundError
 from .work_selection import (
     ModeloWorkSelectorRequest,
@@ -354,6 +357,7 @@ def _require_declaration_enrolled_modelo(
                 "modelo": str(work_unit.modelo),
                 "enrolled_modelos": ",".join(sorted(forms_for_role(DECLARATION_RECONCILE_ROLE))),
             },
+            precondition_verdict=reconciliation_declaration_source_decision_verdict(str(work_unit.modelo)),
         )
     return work_unit
 
@@ -448,6 +452,7 @@ def prepare_modelo_reconcile_bytes(
     if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
+            precondition_verdict=reconciliation_declaration_source_decision_verdict(),
         )
 
     try:
@@ -541,6 +546,7 @@ def prepare_parsed_declaracion(
                 "modelo": str(work_unit.modelo),
                 "enrolled_modelos": ",".join(sorted(forms_for_role(DECLARATION_RECONCILE_ROLE))),
             },
+            precondition_verdict=reconciliation_declaration_source_decision_verdict(str(work_unit.modelo)),
         )
 
     diffs: list[ModeloReconciliationDiff] = []
@@ -602,9 +608,15 @@ def prepare_filed_observation_reconciliation(
     from ..calculations.revision_carry_gate import revision_carry_outcome
 
     if revision_carry_outcome(observation.registry_snapshot_ref, operation=operation).refused:
-        raise ReconciliationEvidenceInvalidError("captured declaration registry coordinates are no longer current")
+        raise ReconciliationEvidenceInvalidError(
+            "captured declaration registry coordinates are no longer current",
+            translated_message="application.modelo.errors.reconcile_observation_registry_not_current",
+        )
     if not observation.casillas or not observation.authenticated_identity.strip():
-        raise ReconciliationEvidenceInvalidError("captured declaration has no comparable fields or taxpayer identity")
+        raise ReconciliationEvidenceInvalidError(
+            "captured declaration has no comparable fields or taxpayer identity",
+            translated_message="application.modelo.errors.reconcile_observation_not_comparable",
+        )
     advisories: list[ModeloReconciliationAdvisory] = []
     if observation.metadata.get("declaration_pdf_extraction_profile_provisional") == "true":
         advisories.append(
@@ -632,7 +644,10 @@ def prepare_filed_observation_reconciliation(
         if row.value_kind is CasillaValueKind.NUMERIC
     }
     if not values:
-        raise ReconciliationEvidenceInvalidError("captured declaration has no numeric comparison fields")
+        raise ReconciliationEvidenceInvalidError(
+            "captured declaration has no numeric comparison fields",
+            translated_message="application.modelo.errors.reconcile_observation_no_numeric_fields",
+        )
     filed_revision = _resolve_reconciliation_revision(
         work_unit, operation=operation, calculation_revision_id=calculation_revision_id
     )

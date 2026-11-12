@@ -35,7 +35,11 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from .action_errors import ModeloApplicabilityFilterError, ModeloVerificationPredicateMalformedError
+from .action_errors import (
+    ModeloApplicabilityFilterError,
+    ModeloPredicateDateRequiredError,
+    ModeloVerificationPredicateMalformedError,
+)
 from .refusal_door_verdicts import caller_defect_verdict, registry_defect_verdict
 
 if TYPE_CHECKING:
@@ -301,6 +305,21 @@ def _roll_forward_balance_reconciles(
 
 _NON_RESIDENT_IRNR_NON_EEA_FILTER = "non_resident_irnr_non_eea"
 _IRNR_TAX_REGIME = "irnr"
+_UE_EEE_STATUS_FIELD = "ue_eee_status"
+
+
+def _profile_flag(profile: TaxpayerProfile, field: str, fact_date: _date | None) -> bool:
+    """Read one named profile flag; the EU/EEA status is a fact of ``fact_date``."""
+    if field == _UE_EEE_STATUS_FIELD:
+        if fact_date is None:
+            raise ModeloPredicateDateRequiredError(
+                f"Reading {field} needs the date of the filing period; none was given",
+                translated_message="errors.refused.refused_modelo_predicate_date_required",
+                context={"fact": field},
+                precondition_verdict=caller_defect_verdict("predicate_date"),
+            )
+        return profile.ue_eee_status_on(fact_date)
+    return bool(getattr(profile, field, False))
 
 
 def evaluate_applicability_filter(
@@ -655,7 +674,13 @@ def evaluate_predicate_expression(
 
 
 _AdvisoryPredicateEvaluator = Callable[
-    [_AdmittedPredicate, Mapping[CasillaId, Decimal], Mapping[CasillaId, str], TaxpayerProfile | None],
+    [
+        _AdmittedPredicate,
+        Mapping[CasillaId, Decimal],
+        Mapping[CasillaId, str],
+        TaxpayerProfile | None,
+        _date | None,
+    ],
     bool,
 ]
 
@@ -665,6 +690,7 @@ def _advisory_ratio_ge_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     num_id, den_id = predicate.casilla_ids
     threshold = predicate.threshold
@@ -681,10 +707,11 @@ def _advisory_profile_flag_fires(
     _casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     profile: TaxpayerProfile | None,
+    fact_date: _date | None,
 ) -> bool:
     if profile is None:
         return False
-    return bool(getattr(profile, predicate.parsed.profile_field, False))
+    return _profile_flag(profile, predicate.parsed.profile_field, fact_date)
 
 
 def _advisory_positive_fires(
@@ -692,6 +719,7 @@ def _advisory_positive_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     (casilla_id,) = predicate.casilla_ids
     return casilla_values.get(casilla_id, Decimal(0)) > Decimal(0)
@@ -702,6 +730,7 @@ def _advisory_at_most_one_positive_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     return sum(1 for cid in predicate.casilla_ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) > 1
 
@@ -711,6 +740,7 @@ def _advisory_implies_nonzero_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     antecedent_id, consequent_id = predicate.casilla_ids
     antecedent = casilla_values.get(antecedent_id, Decimal(0))
@@ -723,6 +753,7 @@ def _advisory_implies_any_nonzero_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     antecedent_id, *consequent_ids = predicate.casilla_ids
     antecedent = casilla_values.get(antecedent_id, Decimal(0))
@@ -736,6 +767,7 @@ def _advisory_roll_forward_balances_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     return not _roll_forward_balance_reconciles(predicate.casilla_ids, casilla_values)
 
@@ -745,6 +777,7 @@ def _advisory_equals_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     lhs, rhs = (casilla_values.get(cid, Decimal(0)) for cid in predicate.casilla_ids)
     return lhs != rhs
@@ -755,6 +788,7 @@ def _advisory_equals_sum_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     _total_id, total, addend_sum = _equals_sum_operands(predicate, casilla_values)
     return total != addend_sum
@@ -765,6 +799,7 @@ def _advisory_casilla_equals_implies_nonzero_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     antecedent_id, consequent_id = predicate.casilla_ids
     if text_values.get(antecedent_id) != predicate.parsed.literal:
@@ -777,6 +812,7 @@ def _advisory_casilla_equals_implies_zero_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     antecedent, consequent = predicate.casilla_ids
     return text_values.get(antecedent) == predicate.parsed.literal and (
@@ -789,13 +825,14 @@ def _advisory_casilla_equals_implies_profile_flag_fires(
     _casilla_values: Mapping[CasillaId, Decimal],
     text_values: Mapping[CasillaId, str],
     profile: TaxpayerProfile | None,
+    fact_date: _date | None,
 ) -> bool:
     (antecedent_id,) = predicate.casilla_ids
     if text_values.get(antecedent_id) != predicate.parsed.literal:
         return False
     if profile is None:
         return False
-    return not bool(getattr(profile, predicate.parsed.profile_field, False))
+    return not _profile_flag(profile, predicate.parsed.profile_field, fact_date)
 
 
 def _advisory_casilla_equals_implies_diverges_fires(
@@ -803,6 +840,7 @@ def _advisory_casilla_equals_implies_diverges_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     antecedent_id, casilla_a_id, casilla_b_id = predicate.casilla_ids
     if text_values.get(antecedent_id) != predicate.parsed.literal:
@@ -817,6 +855,7 @@ def _advisory_deduccion_requires_adquisicion_before_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     amount_id, acquisition_date_id, construction_date_id = predicate.casilla_ids
     cutoff = predicate.cutoff
@@ -835,6 +874,7 @@ def _advisory_computed_diverges_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     _text_values: Mapping[CasillaId, str],
     _profile: TaxpayerProfile | None,
+    _fact_date: _date | None,
 ) -> bool:
     declared_id, computed_id = predicate.casilla_ids
     computed = casilla_values.get(computed_id, Decimal(0))
@@ -877,8 +917,14 @@ def evaluate_advisory_predicate_fires(
     casilla_values: Mapping[CasillaId, Decimal],
     text_values: Mapping[CasillaId, str] = MappingProxyType({}),
     profile: TaxpayerProfile | None = None,
+    *,
+    fact_date: _date | None = None,
 ) -> bool:
     """Return True when a registered ADVISORY predicate condition fires.
+
+    ``fact_date`` is the date the return's facts belong to. A profile flag that
+    is a dated fact (EU/EEA residence) is read on it and refuses without it;
+    every other operator ignores it.
 
     An unparseable expression, an operator with no advisory evaluator, a
     casilla count outside the operator's specification, or an unreadable
@@ -895,7 +941,7 @@ def evaluate_advisory_predicate_fires(
     """
     predicate = _required_parsed_predicate(expression, route=_ADVISORY_ROUTE)
     evaluator = _ADVISORY_PREDICATE_EVALUATORS[predicate.parsed.operator]
-    return evaluator(predicate, casilla_values, text_values, profile)
+    return evaluator(predicate, casilla_values, text_values, profile, fact_date)
 
 
 #: Suffixes of the two suffered-retencion advisory predicates. Their remedy is
@@ -1220,7 +1266,9 @@ def _evaluate_selected_predicate_findings(
         if predicate.finding_kind == "ADVISORY":
             # ADVISORY predicates fire a WARNING finding when their condition IS met
             # (affirmative logic — opposite of BLOCKING_RULE predicates).
-            if evaluate_advisory_predicate_fires(predicate.expression, casilla_values, text_values, profile):
+            if evaluate_advisory_predicate_fires(
+                predicate.expression, casilla_values, text_values, profile, fact_date=fact_date
+            ):
                 findings.append(advisory_predicate_finding(predicate))
         else:
             if not evaluate_predicate_expression(

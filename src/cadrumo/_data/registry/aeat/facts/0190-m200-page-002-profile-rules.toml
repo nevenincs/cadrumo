@@ -1,0 +1,77 @@
+[fact]
+fact_id = "m200-page-002-profile-rules"
+family = "mapping"
+
+# The Modelo 200 page 002 and 002 bis families the taxpayer profile supplies, and the
+# rules, keyed by projection kind and by legal entity form, that decide which of them a
+# return must carry. Each kind names the profile section holding its rows; every kind but
+# the administradores also names the profile fact stating that the entity has none.
+#
+# Manual práctico de Sociedades 2024 (corpus/manuals/sociedades/2024/source.pdf.extracted.md):
+# - Administradores, p. 98, lines 3838-3856: every declarant fills the apartado; F/J is
+#   always stated; RPTE., domicilio fiscal and código provincial are filled exclusively by
+#   contribuyentes del IRNR (casillas 00021 and 00046) and stay blank otherwise.
+# - B.2 participaciones en la declarante, p. 102, lines 3991-3994: a sociedad de
+#   responsabilidad limitada or a sociedad civil states at least one socio even below
+#   5 %; lines 4014-4016: the percentages add up to 100. A sociedad limitada laboral is a
+#   sociedad de responsabilidad limitada (Ley 44/2015 art. 1).
+# - C. Entidades menores dependientes, p. 102, lines 4020-4024: filled only by the
+#   entidades eclesiásticas that marked clave 00078, so a mercantile or cooperative form
+#   rules the family out.
+# The Manual práctico de Sociedades 2025 states the same rules (lines 3902-3911, 4054 and
+# 4078-4084 of its extracted text).
+[[fact.variants]]
+variant_id = "m200-page-002-profile-rules:manual"
+date_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-124", "ley-44-2015:art-1"]
+source_refs = ["aeat-modelo-200-manual-2024", "aeat-modelo-200-manual-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+  "debe ser cumplimentado por todas las entidades declarantes",
+  "En la columna «F/J», se consignará \"F\" si es una persona física, o \"J\" si se trata de una persona jurídica.",
+  "serán cumplimentadas exclusivamente por los contribuyentes del Impuesto sobre la Renta de No Residentes",
+  "En caso de sociedades de responsabilidad limitada o de sociedades civiles, aunque ninguno de los socios tenga un porcentaje igual o superior al 5 por ciento del capital, este subapartado se deberá cumplimentar, al menos, con los datos correspondientes a uno de los socios.",
+  "los porcentajes de participación de personas o entidades en la declarante ha de ser igual al 100 por cien del capital de la declarante",
+  "deberá ser cumplimentado por aquellas entidades eclesiásticas que previamente hayan marcado la clave [00078]",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-200-manual-2025"
+required_text = [
+  "debe ser cumplimentado por todas las entidades declarantes",
+  "En caso de sociedades de responsabilidad limitada o de sociedades civiles",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "kinds", value = "m200_administrador,m200_participacion_socio,m200_representante_legal,m200_secretario_consejo,m200_participacion_directa,m200_entidad_menor_dependiente,m200_establecimiento_permanente,m200_socio_sicav_disolucion" },
+  { key = "entity_form_fact", value = "taxpayer_type.legal_entity_form" },
+  { key = "non_resident_fact", value = "taxpayer_type.fiscal_residency" },
+  { key = "non_resident_value", value = "non_resident_irnr" },
+  { key = "kind.m200_administrador.section", value = "m200_administrador" },
+  { key = "kind.m200_administrador.non_resident_only_fields", value = "representante,domicilio_fiscal,codigo_provincia" },
+  { key = "kind.m200_participacion_socio.section", value = "m200_participacion_socio" },
+  { key = "kind.m200_participacion_socio.stated_answer", value = "m200_relaciones.has_participacion_socio" },
+  { key = "kind.m200_participacion_socio.rows_required_forms", value = "sl,sll,sociedad_civil_mercantil" },
+  { key = "kind.m200_participacion_socio.percentage_field", value = "porcentaje_participacion" },
+  { key = "kind.m200_participacion_socio.percentage_total", value = "100" },
+  { key = "kind.m200_participacion_socio.percentage_total_forms", value = "sl,sll,sociedad_civil_mercantil" },
+  { key = "kind.m200_representante_legal.section", value = "m200_representante_legal" },
+  { key = "kind.m200_representante_legal.stated_answer", value = "m200_relaciones.has_representante_legal" },
+  { key = "kind.m200_secretario_consejo.section", value = "m200_secretario_consejo" },
+  { key = "kind.m200_secretario_consejo.stated_answer", value = "m200_relaciones.has_secretario_consejo" },
+  { key = "kind.m200_participacion_directa.section", value = "m200_participacion_directa" },
+  { key = "kind.m200_participacion_directa.stated_answer", value = "m200_relaciones.has_participacion_directa" },
+  { key = "kind.m200_entidad_menor_dependiente.section", value = "m200_entidad_menor_dependiente" },
+  { key = "kind.m200_entidad_menor_dependiente.stated_answer", value = "m200_relaciones.has_entidad_menor_dependiente" },
+  { key = "kind.m200_entidad_menor_dependiente.not_applicable_forms", value = "sl,sa,sal,sll,cooperativa,sociedad_civil_mercantil" },
+  { key = "kind.m200_establecimiento_permanente.section", value = "m200_establecimiento_permanente" },
+  { key = "kind.m200_establecimiento_permanente.stated_answer", value = "m200_relaciones.has_establecimiento_permanente" },
+  { key = "kind.m200_socio_sicav_disolucion.section", value = "m200_socio_sicav_disolucion" },
+  { key = "kind.m200_socio_sicav_disolucion.stated_answer", value = "m200_relaciones.has_socio_sicav_disolucion" },
+]

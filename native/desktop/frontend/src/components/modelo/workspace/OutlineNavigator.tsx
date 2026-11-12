@@ -14,9 +14,11 @@ import type {
   ModeloFormOutlineGroup,
   ModeloFormText,
   PublicModeloFormField,
-  PublicModeloFormSection,
 } from "../../../shell/modeloContract/modeloWorkForm";
-import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
+import type {
+  PublicModeloFormSection,
+  PublicModeloWorkForm,
+} from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { calm } from "../form/FieldRow";
 import {

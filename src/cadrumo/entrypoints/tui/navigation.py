@@ -33,6 +33,7 @@ type TuiDestinationIdV1 = Literal[
     "workbench.home",
     "workbench.ledger",
     "workbench.withholding",
+    "workbench.censo",
     "workbench.declarations",
     "workbench.aeat_sync",
     "workbench.operations",
@@ -46,6 +47,7 @@ type TuiDestinationLabelKeyV1 = Literal[
     "tui.destination.home",
     "tui.destination.ledger",
     "tui.destination.withholding",
+    "tui.destination.censo",
     "tui.destination.declarations",
     "tui.destination.aeat_sync",
     "tui.destination.operations",
@@ -256,6 +258,7 @@ TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (
     TuiDestinationDescriptorV1(
         destination="workbench.withholding", label_key="tui.destination.withholding", zone="primary"
     ),
+    TuiDestinationDescriptorV1(destination="workbench.censo", label_key="tui.destination.censo", zone="primary"),
     TuiDestinationDescriptorV1(
         destination="workbench.declarations",
         label_key="tui.destination.declarations",

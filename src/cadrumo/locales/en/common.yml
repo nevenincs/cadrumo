@@ -4482,9 +4482,6 @@ desktop:
       confirm: Discard
       lead: It leaves your list of declarations. Its history is kept.
       reason: Why (optional)
-    export:
-      limitation:
-        title: What this file leaves out
     form:
       pages: Pages of the form
     keys:
@@ -4502,6 +4499,11 @@ desktop:
       label: Form outline
       may_apply: Only if it applies to you
       needs_you: 'Needs you: {count}'
+    prior_values:
+      intro: Where no earlier return a box carries from is held here, you can state
+        its figure yourself. Figures stated for the same earlier returns are withdrawn
+        together.
+      title: Figures of earlier returns
     rename:
       name: Name
       save: Save name
@@ -6882,6 +6884,36 @@ tui:
     unattended: Allow unattended use
     uncertain: Outcome unknown; retain request ID
     waiting: Submitting request
+  censo:
+    action:
+      detail: Show details
+      read: Read again
+      record: Record a declaration
+    column:
+      declared_on: Declared on
+      kind: Kind
+      recorded_at: Recorded on
+    detail:
+      id: Identifier
+      justificante: Receipt reference
+      none: Not stated
+      note: Note
+    local_note: 'A declaration here is a local record only: it is stored on this device
+      and nothing is sent to the tax authority.'
+    prompt: Declarations of changes to your census data that you filed outside this
+      application and recorded here.
+    records:
+      title: Recorded declarations
+    status:
+      choose_declaration: Choose a declaration in the list first.
+      empty: No declaration has been recorded yet.
+      read_failed: The declarations could not be read. Nothing below is current.
+      reading: Reading the declarations...
+      recorded: 'Recorded locally: {kind} declared on {declared_on}. Nothing was sent
+        to the tax authority.'
+      unconfirmed: That form confirmed no result. The list below was read again and
+        shows what is stored; check it before you record again.
+    title: Census changes
   declarations:
     list:
       new:
@@ -6890,6 +6922,7 @@ tui:
       start_hint: Press + to start one.
   destination:
     aeat_sync: AEAT Sync
+    censo: Census changes
     declarations: Declarations
     home: Home
     installation: Installation
@@ -8943,6 +8976,9 @@ tui:
     legend:
       first_open: New here? Press ? to see what each symbol means.
       meaning:
+        level:
+          limitation: A limit of the calculation, stated openly, or a figure you stated
+            yourself. It does not stop you from filing.
         mark:
           collapsed: Press → to open it.
           expanded: Press ← to close it.
@@ -9024,12 +9060,26 @@ tui:
       none: This declaration offers no statement to make now.
       not_placed: A statement names a box this screen does not show, so it was not
         staged.
+      prior:
+        heading: Figures you stated for earlier returns
+        partial: Enter a figure for every box of this statement, or leave them all
+          empty. It is stated whole or not at all.
       stage: Stage for review
       title: Statements you can make
       withdraw: Withdraw the statement
     taxation:
       key: Joint or individual
       reading: Working out both ways…
+    wallet:
+      code_label: Period code
+      key: IVA wallet
+      no_lots: No credit lots are recorded for this year.
+      not_sent: 'Check your entry: nothing was sent.'
+      outcome_unknown: Your entry may have been stored. Read the balance again before
+        entering anything else.
+      refused: Your entry was refused.
+      sending: Sending your entry...
+      year_label: Year of the period
   operations:
     action:
       close: Close
@@ -9310,6 +9360,7 @@ tui:
       validate_ledger: Check records
     destination:
       aeat_sync: Open AEAT Sync
+      censo: Open Census changes
       declarations: Open Declarations
       home: Open Home
       installation: Open Installation
@@ -9321,6 +9372,8 @@ tui:
       withholding: Open Withholding
     destination_help:
       aeat_sync: What has been read from the AEAT and what can be read next
+      censo: 'Census changes: the changes to your registered tax data that you recorded
+        here'
       declarations: Declarations, earlier calculations, filing history and calendar
       home: Next actions, declarations and deadlines at a glance
       installation: Storage, repair, reset and the profiles on this computer
@@ -10145,6 +10198,7 @@ workspace:
         blocks: 'blocking: {count}'
         check: 'to check: {count}'
         confirm: 'to confirm: {count}'
+        limitation: 'limits stated: {count}'
         missing: 'missing: {count}'
       deadline: 'Deadline {date} · days left: {days}'
       deadline_passed: 'Deadline passed on {date}: filing now is late'
@@ -10416,6 +10470,7 @@ workspace:
       check: Worth checking
       confirm: To confirm
       info: For your information
+      limitation: Limit stated
       missing: Missing
     loading: Loading the declaration…
     modelo_number: Modelo {modelo}
@@ -10473,6 +10528,8 @@ workspace:
         incomplete: 'Checked: some values the declaration needs are missing.'
       done: Done. The declaration has been updated.
       not_done: It did not complete; your changes are still here.
+      unknown: It may have been applied. Read the declaration again before you apply
+        anything else.
     origin:
       calculated: Calculated
       calculation_failed: Could not be calculated

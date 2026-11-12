@@ -997,7 +997,7 @@ _ATTESTED_PRIOR_VALUE: dict[str, Any] = {
     "year": "horizon-1",
     "binding": "irpf.previous_year_economic_activity_net_income",
     "value": "12846.30",
-    "source": {"modelo": "100", "year": "horizon-2", "period": "0A"},
+    "sources": [{"modelo": "100", "year": "horizon-2", "period": "0A"}],
     "derivation": "Rendimiento neto declarado en la renta del ejercicio anterior",
     "legal_ref": ["rd-439-2007:art-110"],
 }
@@ -1013,7 +1013,7 @@ def test_an_attested_prior_value_is_admitted_with_its_source_and_derivation() ->
     (item,) = _parse(_with_attested_prior_value()).attested_prior_values
 
     assert (item.modelo, item.period, str(item.year), item.value) == ("130", "1T", "horizon-1", Decimal("12846.30"))
-    assert (item.source.modelo, str(item.source.year), item.source.period) == ("100", "horizon-2", "0A")
+    assert [(source.modelo, str(source.year), source.period) for source in item.sources] == [("100", "horizon-2", "0A")]
     assert item.legal_ref == ("rd-439-2007:art-110",)
 
 
@@ -1024,9 +1024,13 @@ def test_an_attested_prior_value_is_admitted_with_its_source_and_derivation() ->
         ({"value": 12846.3}, "canonical decimal"),
         ({"period": "5T"}, "is not one of"),
         ({"year": str(_ENVELOPE.floor)}, "not a year token"),
-        ({"source": {"modelo": "100", "year": "horizon-2"}}, "missing fields"),
-        ({"source": {"modelo": "100", "year": "horizon-2", "period": "0A", "csv": "x"}}, "unknown fields"),
-        ({"source": {"modelo": "100", "year": "horizon-1", "period": "0A"}}, "does not precede"),
+        ({"sources": [{"modelo": "100", "year": "horizon-2"}]}, "missing fields"),
+        ({"sources": [{"modelo": "100", "year": "horizon-2", "period": "0A", "csv": "x"}]}, "unknown fields"),
+        ({"sources": [{"modelo": "100", "year": "horizon-1", "period": "0A"}]}, "does not precede"),
+        ({"sources": [{"modelo": "100", "year": "horizon-2", "period": "5T"}]}, "is not a filing period"),
+        ({"sources": []}, "at least one earlier return"),
+        ({"sources": [{"modelo": "100", "year": "horizon-2", "period": "0A"}] * 2}, "each earlier return once"),
+        ({"source": {"modelo": "100", "year": "horizon-2", "period": "0A"}}, "unknown fields"),
         ({"derivation": ""}, "derivation must be a non-empty string"),
         ({"legal_ref": []}, "at least one provision"),
         ({"note": "extra"}, "unknown fields"),
@@ -1037,6 +1041,29 @@ def test_a_malformed_attested_prior_value_is_refused(changes: dict[str, object],
         _parse(_with_attested_prior_value(**changes))
 
 
+def test_an_annual_return_may_attest_one_figure_for_the_instalments_of_its_own_year() -> None:
+    sources = [{"modelo": "202", "year": "horizon-1", "period": period} for period in ("1P", "2P", "3P")]
+    (item,) = _parse(
+        _with_attested_prior_value(modelo="200", period="0A", binding="instalments", sources=sources)
+    ).attested_prior_values
+
+    assert [source.period for source in item.sources] == ["1P", "2P", "3P"]
+
+
+@pytest.mark.parametrize(
+    ("changes", "sources"),
+    [
+        ({"modelo": "200", "period": "0A"}, [{"modelo": "200", "year": "horizon-1", "period": "1P"}]),
+        ({"modelo": "130", "period": "1T"}, [{"modelo": "202", "year": "horizon-1", "period": "1P"}]),
+    ],
+)
+def test_a_same_year_source_precedes_only_an_annual_return_of_another_modelo(
+    changes: dict[str, object], sources: list[dict[str, str]]
+) -> None:
+    with pytest.raises(PersonaCatalogueError, match="does not precede"):
+        _parse(_with_attested_prior_value(**changes, sources=sources))
+
+
 def test_an_attested_prior_value_listed_twice_is_refused() -> None:
     document = _with_attested_prior_value()
     document["attested_prior_values"].append(dict(_ATTESTED_PRIOR_VALUE))
@@ -1045,14 +1072,16 @@ def test_an_attested_prior_value_listed_twice_is_refused() -> None:
 
 
 def test_an_attested_prior_value_may_name_a_source_below_the_floor_but_not_one_above_the_horizon() -> None:
-    document = _with_attested_prior_value(source={"modelo": "100", "year": "floor-3", "period": "0A"})
+    document = _with_attested_prior_value(sources=[{"modelo": "100", "year": "floor-3", "period": "0A"}])
     assert _parse(document).attested_prior_values
     with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
-        _parse(_with_attested_prior_value(source={"modelo": "100", "year": "horizon+1", "period": "0A"}))
+        _parse(_with_attested_prior_value(sources=[{"modelo": "100", "year": "horizon+1", "period": "0A"}]))
 
 
 def test_a_lowered_horizon_leaves_out_an_attested_prior_value_of_a_return_below_the_floor() -> None:
-    document = _with_attested_prior_value(year="floor-1", source={"modelo": "100", "year": "floor-2", "period": "0A"})
+    document = _with_attested_prior_value(
+        year="floor-1", sources=[{"modelo": "100", "year": "floor-2", "period": "0A"}]
+    )
     with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
         _parse(document, envelope=_LOWERED)
     persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)

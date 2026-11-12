@@ -1,8 +1,12 @@
 [revisions."2022"]
 casilla_source_refs = ["aeat-dr-200-2022"]
+binding_source_refs = ["aeat-modelo-200-manual-2022"]
+formula_source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+parameter_source_refs = ["aeat-modelo-200-manual-2022"]
+dependency_classification_source_refs = ["aeat-modelo-200-manual-2022"]
 application_link_source_refs = ["boe-modelo-200-2022-form", "aeat-dr-200-2022"]
 filing_schedule_source_refs = ["boe-modelo-200-2022-form", "aeat-modelo-200-manual-2022"]
-authority_grade = "applicability"
+authority_grade = "calculation"
 # Modelo 200, declaracion del Impuesto sobre Sociedades y del IRNR (establecimientos
 # permanentes y entidades en regimen de atribucion de rentas constituidas en el
 # extranjero con presencia en territorio espanol), for periodos impositivos
@@ -22,9 +26,23 @@ authority_grade = "applicability"
 # prints with another caption, stay undeclared and are recorded as debt in
 # casillas/0001-declarations.toml.
 #
-# Grade: applicability. No formula, construct relation, binding or export layout
-# computes, checks or files these casillas, so the modelo is not calculated or
-# filed for this year; the 2024 edition's calculation authority does not reach it.
+# Grade: calculation. The Modelo 200 cuota chain (base imponible previa [00550], base
+# imponible [00552], base tras reserva de nivelacion [01330], tipo [00558], cuota
+# integra [00562], cuota integra ajustada positiva [00582], cuota liquida [00592],
+# cuota del ejercicio [00599], cuota diferencial [00611]) is authored at this edition
+# from aeat-dr-200-2022 and the Manual practico de Sociedades 2022, which states the
+# same operations as the 2023 manual. The 2022 design prints the base imponible block
+# on DP200013 ("Liquidacion II") and the otras deducciones block with the cuota
+# liquida on DP200014 ("Liquidacion III"), one record earlier than the 2023 design, so
+# the formulas that read those boxes name the 2022 records and the 2023 edition states
+# its own; the members whose boxes both designs print alike (bindings, the cuota
+# diferencial, two verification predicates, dependency classifications, the rates)
+# are declared here once and inherited. The rates are those the manual's "Tipos de
+# gravamen vigentes" table prints for 2022: no rate depends on the INCN, which Ley
+# 31/2022 art. 39 introduces only for periods initiated from 2023. This edition
+# carries no export layout for the 2022 design, so it calculates but does not file:
+# filing grade needs this year's own layout proven by round trip and an independent
+# oracle for the cuota chain.
 valid_from = 2022-01-01
 valid_to = 2022-12-31
 period_selector = { year_from = 2022, year_to = 2022, periods = ["0A"] }
@@ -34,6 +52,30 @@ legal_refs = [
     "orden-hfp-523-2023:art-6-1",
     "orden-hfp-523-2023:art-3",
     "ley-27-2014:art-124",
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-10",
+    "ley-27-2014:art-11",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-36",
+    "ley-27-2014:art-100",
+    "ley-27-2014:art-101",
+    "ley-27-2014:art-12",
+    "rd-634-2015:art-3",
+    "ley-27-2014:art-15",
+    "ley-27-2014:art-21",
+    "ley-27-2014:art-22",
+    "ley-27-2014:art-31",
+    "ley-27-2014:art-32",
+    "ley-27-2014:art-13",
+    "ley-27-2014:art-16",
+    "ley-27-2014:art-25",
+    "ley-27-2014:art-26",
+    "ley-27-2014:art-105",
+    "ley-49-2002:art-10",
 ]
 source_refs = [
     "boe-modelo-200-2022-form",

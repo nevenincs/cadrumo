@@ -53,7 +53,8 @@ from .workbench_fixture import FakeActions, FakeReader, form_counts, form_text, 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SIZE = (160, 48)
-_FIRST, _SECOND = tuple(AbsenceAttestationFamily)
+# The family set grows; two of its members are enough to show one statement per family.
+_FIRST, _SECOND, *_ = tuple(AbsenceAttestationFamily)
 #: The open carries each family's statement names, and one carry already stated under the first family.
 _OPEN: dict[AbsenceAttestationFamily, tuple[str, ...]] = {
     _FIRST: ("carry.first.a", "carry.first.b"),

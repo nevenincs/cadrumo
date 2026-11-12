@@ -69,6 +69,7 @@ from ..disagreements import ModeloDisagreementsDoorV1
 from ..lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 from ..m303_evidence import OrdinaryM303FilingEvidenceSubmission
 from ..taxation_comparison import ModeloTaxationComparisonSourceV1
+from ..wallet import ModeloIvaWalletDoorV1
 from .ports import (
     WorkbenchApplyPrerequisite,
     WorkbenchCalculationEvidence,
@@ -134,7 +135,11 @@ _BINDING_KINDS: Final[Mapping[WorkbenchChangeKind, ModeloEditBindingIntentKind]]
         WorkbenchChangeKind.CLEAR: ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
         WorkbenchChangeKind.RESTORE: ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
         WorkbenchChangeKind.STATE_ABSENT: ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
+        WorkbenchChangeKind.STATE_PRIOR_VALUE: ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
     }
+)
+_VALUED_KINDS: Final[frozenset[WorkbenchChangeKind]] = frozenset(
+    {WorkbenchChangeKind.SET, WorkbenchChangeKind.STATE_PRIOR_VALUE}
 )
 
 
@@ -467,7 +472,7 @@ def _intents(
     binding: list[ModeloBindingEditIntentV1] = []
     for change in changes:
         address = change.address
-        value = change.value if change.kind is WorkbenchChangeKind.SET else None
+        value = change.value if change.kind in _VALUED_KINDS else None
         if isinstance(address, ModeloFormCasillaAddressV1):
             scalar.append(
                 ModeloScalarEditIntentV1(
@@ -508,6 +513,7 @@ def compose_installed_modelo_workbench_factory(
     own_accounts: LedgerOwnAccountDoorV1 | None = None,
     native_review: Callable[[str], Screen[None]] | None = None,
     disagreements: Callable[[DeclarationsWorkspaceDeclarationRefV1], ModeloDisagreementsDoorV1] | None = None,
+    wallet: Callable[[DeclarationsWorkspaceDeclarationRefV1], ModeloIvaWalletDoorV1] | None = None,
 ) -> ModeloWorkspaceScreenFactoryV1:
     """Open a workbench for exactly the declarations this generation admitted.
 
@@ -536,6 +542,7 @@ def compose_installed_modelo_workbench_factory(
             actions=workbench,
             native_review=native_review,
             disagreements=None if disagreements is None else disagreements(declaration),
+            wallet=None if wallet is None else wallet(declaration),
         )
 
     return create

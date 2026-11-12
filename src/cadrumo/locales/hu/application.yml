@@ -519,9 +519,9 @@ application:
           a(z) %{casilla_id} mezőt, vagy ürítsd ki a(z) %{field_casilla_id} mezőt,
           és exportálj újra.'
         box_not_stated_by_rows: 'Semmi sem íródott ki: a(z) %{casilla_id} mező értéke
-          nem egyezik a(z) %{element_path} sorainak összegével. Javítsd a mezőt vagy
-          a sorokat úgy, hogy minden sor a saját összegeit adja meg, és exportálj
-          újra.'
+          %{value}, ami nem egyezik a(z) %{element_path} sorainak összegével. Javítsd
+          a mezőt vagy a sorokat úgy, hogy minden sor a saját összegeit adja meg,
+          és exportálj újra.'
         counterparty_rows_unattributable: 'Semmi sem íródott ki: a(z) %{record_id}
           rekord %{row_count} ellenfélsort tartalmaz, és az egyértékű %{casillas}
           rovatok nem rendelhetők egyikhez sem. Add meg ezeket az összegeket a sorokban,
@@ -3052,8 +3052,59 @@ application:
         semmi sem lett rögzítve: nincs rögzített bejelentés (alta), így a(z) %{requested_event_kind}
         nem módosíthat semmilyen nyilvántartásba vételt. Előbb rögzítsd a bejelentést
         (alta).'
+      m145_application_surfaces_mismatch: A nyilvántartás 145-ös modellhez rögzített
+        alkalmazási kapcsolatai nem egyeznek a kifizetőnek szóló közlés szerződésével,
+        ezért a közlési rekord nem használható. Ez a nyilvántartás hibája, semmi,
+        amit te megváltoztatsz, nem javítja ki.
+      m145_delivery_blocked_by_validation: A 145-ös modell közlési rekordjának %{issue_count}
+        érvényesítési hibája van, ezért nem jelölhető a kifizetőnek átadottnak. Add
+        meg újra a rekordot javított értékekkel.
+      m145_export_blocked_by_validation: A 145-ös modell közlési rekordjának %{issue_count}
+        érvényesítési hibája van, ezért nem exportálható. Add meg újra a rekordot
+        javított értékekkel.
+      m145_export_layout_format_unsupported: A 145-ös modellhez megadott %{export_layout_id}
+        exportelrendezés a(z) %{format} formátumot használja, amelyet a közlés exportja
+        nem tud kiírni. Ez a nyilvántartás hibája, semmi, amit te megváltoztatsz,
+        nem javítja ki.
+      m145_export_layout_mixed_encodings: A 145-ös modellhez megadott %{export_layout_id}
+        exportelrendezés a rekordjai között különböző karakterkódolásokat kever, ezért
+        a közlés nem exportálható. Ez a nyilvántartás hibája, semmi, amit te megváltoztatsz,
+        nem javítja ki.
+      m145_export_layout_shared_cells: A 145-ös modellhez megadott %{export_layout_id}
+        exportelrendezés ugyanazt a rovatot egymással össze nem tartozó cellákba írná,
+        ezért a közlés nem exportálható. Ez a nyilvántartás hibája, semmi, amit te
+        megváltoztatsz, nem javítja ki.
+      m145_export_layout_without_records: A 145-ös modellhez megadott %{export_layout_id}
+        exportelrendezés nem tartalmaz rekordot, ezért a közlés nem exportálható.
+        Ez a nyilvántartás hibája, semmi, amit te megváltoztatsz, nem javítja ki.
+      m145_export_record_not_encodable: A közlés %{export_record_id} exportrekordja
+        a megadott értékekkel nem írható ki a hivatalos elrendezésben. Add meg újra
+        a rekordot olyan értékekkel, amelyeket az elrendezés befogad.
+      m145_record_not_delivered: A 145-ös modell közlési rekordja a(z) %{state} állapotban
+        van. Előbb jelöld a kifizetőnek átadottnak, és csak utána helyben teljesítettnek.
+      m145_record_registry_coordinate_not_current: A 145-ös modell közlési rekordját
+        olyan nyilvántartási változattal mentették, amely már nem erősíthető meg hatályosként,
+        ezért nem használható. Add meg újra a rekordot a hatályos nyilvántartással.
+      m145_record_undeclared_casillas: A közlési rekord %{unknown_casilla_count} olyan
+        rovatot nevez meg, amelyet a 145-ös modell változata nem deklarál. Add meg
+        újra a rekordot csak deklarált rovatokkal.
       m200_accounting_result_required: A Modelo 200 főkönyvből való számításához szükség
         van az év számviteli eredményére.
+      m200_page_002_none_refused_for_form: '%{modelo} %{filing_year} modelo, 002.
+        oldal: %{entity_form} típusú szervezet nem válaszolhatja, hogy nincs %{profile_section};
+        rögzítsd a sorait a profilodban itt: %{profile_path}.'
+      m200_page_002_percentage_total: '%{modelo} %{filing_year} modelo, 002. oldal:
+        a(z) %{profile_section} százalékainak összege %{percentage_sum}, de %{entity_form}
+        típusú szervezetnél %{percentage_total} kell legyen; javítsd itt: %{profile_path}.'
+      m200_page_002_rows_contradict_answer: '%{modelo} %{filing_year} modelo, 002.
+        oldal: a(z) %{profile_section} sorokat tartalmaz, de a(z) %{deciding_fact}
+        szerint nincs ilyen; javítsd az egyiket itt: %{profile_path}.'
+      m200_page_002_rows_exceed_design: '%{modelo} %{filing_year} modelo, 002. oldal:
+        a(z) %{profile_section} %{rows} sort tartalmaz, de a hivatalos terv csak %{slots}
+        sort enged.'
+      m200_page_002_value_exceeds_design: '%{modelo} %{filing_year} modelo, 002. oldal:
+        a(z) %{profile_section} %{row} sorának %{field} mezője %{length} karakter,
+        de a hivatalos terv legfeljebb %{limit} karaktert enged; rövidítsd itt: %{profile_path}.'
       m210_agrupacion_annual_code_not_lease_or_sublease: Az éves 210-es modell (0A
         időszak) csak bérleti és albérleti jövedelmet csoportosít, de a sorok más
         jövedelemkódot használnak. Javítsd a sorok jövedelemkódját.
@@ -3233,8 +3284,21 @@ application:
         még nem támogatott ennél a nyomtatványnál; egyeztess egy letöltött igazolást
         az aeat app modelo reconcile import paranccsal, vagy várj, amíg ez a nyomtatvány
         támogatottá válik.
+      reconcile_divergence_casilla_undeclared: Az összehasonlítás eltérést talált
+        a(z) %{casilla_id} rovatban, amelyet a nyilvántartási változat nem deklarál,
+        ezért az eltérésnek nincs jogi forrása. Ez a változat vagy a program hibája,
+        semmi, amit te megváltoztatsz, nem javítja ki.
       reconcile_no_active_bucket: Nincs aktív profilmappa; futtasd a(z) `aeat config
         profile create NÉV` parancsot a bevallás egyeztetése előtt.
+      reconcile_observation_no_numeric_fields: A rögzített bevallás nem tartalmaz
+        összehasonlítható numerikus rovatot, ezért nem egyeztethető. Válassz másik
+        bizonyítékot.
+      reconcile_observation_not_comparable: A rögzített bevallás nem tartalmaz összehasonlítható
+        rovatokat vagy az adózó azonosítóját, ezért nem egyeztethető. Válassz másik
+        bizonyítékot.
+      reconcile_observation_registry_not_current: A rögzített bevallást olyan nyilvántartási
+        koordinátákkal olvasták be, amelyek már nem hatályosak, ezért nem egyeztethető.
+        Válassz másik bizonyítékot.
       refund_election_not_eligible: A Modelo %{modelo} (%{period} %{filing_year})
         bevallásnál visszatérítés (devolver) lett kiválasztva, de visszatérítés csak
         az év utolsó bevallási időszakában kérhető. Vidd át a jóváírást (compensar),
@@ -3350,6 +3414,9 @@ application:
         ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+    export_disclosure:
+      lead: Ez a számítás korlátokat jelez, és az export változatlanul tartalmazza
+        őket. Olvasd el őket, mielőtt támaszkodsz rá.
     finding_fact:
       box_unnumbered: számozatlan
       date_unknown: nem rögzített
@@ -3794,6 +3861,10 @@ application:
           nem számítható ki, mert a bevallásod nem választja szét az egyes tagok munkaviszonyból
           és gazdasági tevékenységből származó jövedelmét, a határok pedig tagonként
           külön érvényesek (LIRPF 52.1. cikk). Soha nem jelenik meg nullaként.
+        m200_tax_regime_unsupported: Ehhez a rovathoz a szervezeted adózási rendszerének
+          adókulcsa (tipo de gravamen) kell, ez viszont az adott rendszerre vagy jogi
+          formára nem számolható ki, ezért a rovatnak nincs értéke. Add meg a rovatot
+          magad a hivatalos útmutató alapján. Soha nem jelenik meg nullaként.
         m210_baseline_tipo_deferred: Ehhez a rovathoz az ilyen jellegű jövedelem általános
           adókulcsa kell, amely az adóévre még nincs megalapozva, ezért nincs értéke.
         m210_convenio_rate_missing: Ehhez a rovathoz a kettős adóztatást kizáró egyezmény
@@ -4046,6 +4117,15 @@ application:
           Ne ürítsd ki a továbblépéshez: ezt a bevallást más eszközzel add be, vagy
           várd meg, amíg a cellákat felülvizsgálják.'
       inspection_heading: Minden rovat, rovatszám szerint
+      prior_value_attestation:
+        refusal:
+          source_held: A korábbi bevallás itt van tárolva, ezért ez a tétel abból
+            veszi az összegét, és nem adhatsz meg helyette másikat. Nyisd meg a bevallásaid
+            között.
+        withdrawal:
+          action: Vond vissza az ezekre a korábbi bevallásokra megadott összegeidet
+          effect: A megadott összeged visszavonásra kerül; a tétel értéke üres marad,
+            amíg újra meg nem adod, vagy a korábbi bevallás be nem kerül.
       served_action:
         credit_source_disagreement: Vesd össze az összeget az egyes kifizetők igazolásával,
           javítsd a hibás forrást, és számold újra. Ha ellenőrizted, hogy a felhasznált
@@ -4492,6 +4572,8 @@ application:
         és legfeljebb %{limit} karakter lehet.
       ascendant_nif_invalid: A(z) %{row}. felmenő NIF- vagy NIE-száma nem érvényes;
         ellenőrizd a betűit és számjegyeit.
+      ascendant_row_not_stored: Ez a felmenő már nem szerepel ebben a profilban. Olvasd
+        be újra a családi adatokat, mielőtt bárkit eltávolítasz.
       ascendant_rows_over_limit: Egy bevallás legfeljebb %{limit} felmenőt tartalmaz,
         de %{count} lett megadva.
       censal_read_identity_absent: A nyilvántartási olvasás nem tartalmazott adóazonosítót,
@@ -4526,6 +4608,8 @@ application:
         üres, és legfeljebb %{limit} karakter lehet.
       descendant_nif_invalid: A(z) %{row}. leszármazott NIF- vagy NIE-száma nem érvényes;
         ellenőrizd a betűit és számjegyeit.
+      descendant_row_not_stored: Ez a leszármazott már nem szerepel ebben a profilban.
+        Olvasd be újra a családi adatokat, mielőtt bárkit eltávolítasz.
       descendant_rows_over_limit: Egy bevallás legfeljebb %{limit} leszármazottat
         tartalmaz, de %{count} lett megadva.
       descendant_value_invalid: A(z) %{row}. leszármazott olyan értéket ad meg, amelyet
@@ -4602,6 +4686,11 @@ application:
       row_unknown_field: 'A(z) ''%{section}'' szakasz nem deklarálja ezeket a mezőket:
         %{unknown}. Elérhető mezők: %{fields}.'
     family_rows:
+      actions:
+        add_ascendiente: Adj hozzá egy felmenőt
+        add_descendiente: Adj hozzá egy leszármazottat
+        remove_ascendiente: Távolítsd el ezt a felmenőt
+        remove_descendiente: Távolítsd el ezt a leszármazottat
       ascendiente:
         apellidos_nombre:
           label: A felmenő vezeték- és utóneve (elöl a vezetéknév)
@@ -4615,6 +4704,12 @@ application:
           label: A halálozás dátuma
         nif:
           label: A felmenő adószáma (NIF/NIE) (hagyd üresen, ha nincs)
+      descendiente:
+        cotizaciones_ss_madre:
+          help: Hagyd üresen, ha nem tudod. Az összeget tizedesponttal és ezres elválasztó
+            nélkül írd, például 2332.80.
+          label: Az anya társadalombiztosítási járulékai a gyermek születése után
+            (euró)
       incomplete: '{stated} megadva, {recorded} rögzítve'
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér

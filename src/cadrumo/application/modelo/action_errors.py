@@ -599,6 +599,15 @@ class ModeloApplicabilityFilterError(ModeloError):
     """Raised when an unknown applicability filter name is encountered."""
 
 
+class ModeloPredicateDateRequiredError(ModeloError):
+    """Raised when a predicate reads a taxpayer fact that depends on a date and the caller holds none.
+
+    EU/EEA membership is a fact of the date it is asked on. A verification run
+    names the period it checks, so a missing date is a calling-code defect;
+    the run date is never a substitute.
+    """
+
+
 class ModeloVerificationPredicateMalformedError(ModeloError):
     """Raised when a registry verification predicate cannot be admitted to its route.
 

@@ -1,10 +1,10 @@
 """Route a served way out of a refusal to the TUI destination that hosts it.
 
-The router keeps no table of its own. An action resolves through the operator
-action catalogue to the command it targets; the destination comes from the
+The router keeps no table of its own. The destination comes from the
 registries the TUI already enforces: a destination that admits the action as
 one of its action candidates, else the Operations destination when the
-operation registry publishes an operation of exactly that identity. An action
+operation registry publishes one of the target operations the verdict served
+for the action, in the order served. An action
 neither admits is unroutable, and the panel shows it disabled rather than
 dropping it or printing a command line.
 
@@ -46,18 +46,19 @@ def _candidate_target(destinations: TuiDestinationCatalogueV1, action_id: str) -
 def _operation_target(
     destinations: TuiDestinationCatalogueV1,
     operations: OperationCatalogueV1 | None,
-    target_command_key: str,
+    target_operation_ids: tuple[str, ...],
 ) -> TuiNavigationTargetV1 | None:
-    """Return the Operations form of the registered operation named ``target_command_key``, when admitted."""
+    """Return the Operations form of the first served target operation the catalogue holds, when admitted."""
     if operations is None:
-        return None
-    entry = operations.entry(target_command_key)
-    if entry is None:
         return None
     route = destinations.resolve(OPERATIONS_DESTINATION)
     if route.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:
         return None
-    return operation_navigation_target(entry)
+    for operation_id in target_operation_ids:
+        entry = operations.entry(operation_id)
+        if entry is not None:
+            return operation_navigation_target(entry)
+    return None
 
 
 def route_refusal_way(
@@ -77,7 +78,7 @@ def route_refusal_way(
     except KeyError:
         return None
     target = _candidate_target(destinations, way.action_id) or _operation_target(
-        destinations, operations, target_command_key
+        destinations, operations, way.target_operation_ids
     )
     if target is None:
         return None

@@ -29,6 +29,7 @@ from .screen_constants import (
 )
 from .session import StagedChange, StageRefusal, WorkbenchEditSession
 from .sources import OpenSourceSurface
+from .vocabulary import states_something
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen
@@ -201,7 +202,7 @@ class WorkbenchEditorMixin:
         form = self.form
         if decision.kind is WorkbenchChangeKind.SET:
             refusal = self._session.stage_value(field, decision.value, decision.display)
-        elif field.stated_absent is not None and form is not None:
+        elif states_something(field) and form is not None:
             refusal = self._session.withdraw_stated(form, field)
         elif decision.kind is WorkbenchChangeKind.CLEAR:
             refusal = self._session.stage_clear(field)

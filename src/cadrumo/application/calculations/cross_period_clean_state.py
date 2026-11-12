@@ -560,10 +560,30 @@ _ATTESTABLE_BINDING_SOURCES: Final[frozenset[BindingSourceKind]] = frozenset(
 )
 
 
+def declared_attestable_carry_requirements(
+    snapshot: RegistrySnapshot,
+    *,
+    support: SupportedFilingYearsCatalogue | None = None,
+) -> dict[BindingId, tuple[CrossPeriodDependencyRequirement, ...]]:
+    """Return, per scalar carry binding the registry declares a stated figure possible for, the returns it reads.
+
+    This is the declaration alone, whatever the profile holds: a binding is
+    listed when its value is read from earlier returns through an attestable
+    origin, so a figure the filer states can stand in for them. Whether the
+    statement is admitted now depends on which of those returns the profile
+    holds (:func:`attestable_carry_sources`). ``support`` is as for
+    :func:`cross_period_dependency_requirements`.
+    """
+    return {
+        binding_id: tuple(requirements)
+        for binding_id, requirements in _attestable_requirements_by_binding(snapshot, support=support).items()
+    }
+
+
 def _attestable_requirements_by_binding(
     snapshot: RegistrySnapshot,
     *,
-    operation: PinnedAuthorityOperation,
+    support: SupportedFilingYearsCatalogue | None,
 ) -> dict[BindingId, list[CrossPeriodDependencyRequirement]]:
     """Group the attestable-origin requirements under each scalar carry binding they feed."""
     scalar_binding_ids = {
@@ -574,7 +594,7 @@ def _attestable_requirements_by_binding(
     by_binding: dict[BindingId, list[CrossPeriodDependencyRequirement]] = {}
     if not scalar_binding_ids:
         return by_binding
-    for requirement in cross_period_dependency_requirements(snapshot, support=operation.supported_filing_years()):
+    for requirement in cross_period_dependency_requirements(snapshot, support=support):
         if requirement.origin not in _ATTESTABLE_ORIGINS:
             continue
         for binding_id in requirement.origin_ids:
@@ -599,7 +619,7 @@ def attestable_carry_sources(
     the sources, and a partial statement is not admitted. Row-set bindings stay
     sourced from records and are never offered.
     """
-    by_binding = _attestable_requirements_by_binding(snapshot, operation=operation)
+    by_binding = _attestable_requirements_by_binding(snapshot, support=operation.supported_filing_years())
     return {
         binding_id: tuple(requirements)
         for binding_id, requirements in by_binding.items()
@@ -1118,6 +1138,7 @@ __all__ = [
     "attestable_carry_sources",
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
+    "declared_attestable_carry_requirements",
     "evaluate_cross_period_clean_state",
     "partition_cross_period_requirements_by_activity_start",
     "upstream_source_absent",

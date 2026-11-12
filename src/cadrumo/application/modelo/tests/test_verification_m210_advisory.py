@@ -25,6 +25,7 @@ filing at a rate reserved for EU/EEE residents.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -35,6 +36,7 @@ from cadrumo.domain.deadlines.models import IVARegime
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
@@ -53,6 +55,7 @@ _BASE_IMPONIBLE: CasillaId = validated_casilla_id(
     "base_imponible",
     surface="test_verification_m210_advisory",
 )
+_ON = date(filing_year_envelope().horizon, 12, 31)
 _TIPO_RENTA: CasillaId = validated_casilla_id(
     "tipo_renta",
     surface="test_verification_m210_advisory",
@@ -231,10 +234,10 @@ def test_m210_ue_residente_advisory_fires_when_country_is_not_eu_eea() -> None:
     """tipo_renta == "ue_residente" with a non-EU/EEA declared country surfaces a warning advisory."""
     predicate = _m210_ue_residente_advisory_predicate()
     profile = _non_eea_irnr_profile()
-    assert profile.ue_eee_status is False
+    assert profile.ue_eee_status_on(_ON) is False
     text_values: dict[CasillaId, str] = {_TIPO_RENTA: "ue_residente"}
 
-    findings = evaluate_verification_predicates((predicate,), {}, profile, text_values)
+    findings = evaluate_verification_predicates((predicate,), {}, profile, text_values, fact_date=_ON)
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -246,10 +249,10 @@ def test_m210_ue_residente_advisory_silent_when_country_is_eu_eea() -> None:
     """tipo_renta == "ue_residente" with an EU/EEA declared country satisfies the implication."""
     predicate = _m210_ue_residente_advisory_predicate()
     profile = _eea_irnr_profile()
-    assert profile.ue_eee_status is True
+    assert profile.ue_eee_status_on(_ON) is True
     text_values: dict[CasillaId, str] = {_TIPO_RENTA: "ue_residente"}
 
-    findings = evaluate_verification_predicates((predicate,), {}, profile, text_values)
+    findings = evaluate_verification_predicates((predicate,), {}, profile, text_values, fact_date=_ON)
     assert findings == []
 
 

@@ -2319,6 +2319,28 @@ required_text = [
     "1 millón de euros",
 ]
 
+[legal."ley-27-2014:art-29-2023"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-31-2022-art-39.html#a39"
+document_id = "BOE-A-2014-12328"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328&p=20221229&tn=1#a29"
+published_at = 2014-11-28
+effective_from = 2023-01-01
+effective_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-review"
+notes = """LIS art 29.1 as Ley 31/2022 art 39 worded it for periodos impositivos from 1 January 2023: tipo general 25 por ciento, and 23 por ciento for a contribuyente whose importe neto de la cifra de negocios of the immediately preceding periodo is below 1 millón de euros. For periodos starting within 2025 onward Ley 7/2024 reworded art 29.1 and DT 44 (ley-27-2014:dt-44, "Con efectos para los períodos impositivos que se inicien dentro del año 2025, a efectos de lo dispuesto en el artículo 29.1 de la LIS") sets the transitional scale, so this redaction governs periodos 2023 and 2024 only. The bundled text is the amending article itself, which quotes the redaction in full."""
+required_text = [
+    "Artículo 29. Tipos de gravamen.",
+    "El tipo general de gravamen para los contribuyentes de este Impuesto será el 25 por ciento.",
+    "tributarán al tipo del 23 por ciento",
+    "inferior a 1 millón de euros",
+]
+
 [legal."ley-27-2014:art-75-2"]
 evidence_tier = "legal_authority"
 authority = "boe"

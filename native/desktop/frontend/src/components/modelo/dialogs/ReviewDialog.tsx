@@ -20,7 +20,9 @@ import type {
   ModeloFormTypingEffect,
   ModeloWorkbenchFormProjectionV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
+import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { RefusalNotice } from "../../RefusalNotice";
 import { BoxNumber } from "../form/BoxNumber";
 import {
   addressKey,
@@ -56,8 +58,12 @@ function effectWords(
           : "workspace.modelo.review.effect.restore",
       );
     case "remove_override":
-      return t("workspace.modelo.review.effect.restore");
+      return (
+        edit.intent.withdrawsPrior?.effect ??
+        t("workspace.modelo.review.effect.restore")
+      );
     case "attest_no_amount":
+    case "attest_prior_value":
       return edit.intent.effect;
     default:
       return effect?.words ?? null;
@@ -182,11 +188,15 @@ function StatementLine({
   const first = edits[0];
   if (!first) return null;
   const { intent } = first;
-  const words =
+  const served =
     intent.kind === "attest_no_amount"
-      ? intent.words
-      : (first.field.origin_words ?? first.field.label.text);
-  const effect = intent.kind === "attest_no_amount" ? intent.effect : null;
+      ? intent
+      : intent.kind === "remove_override"
+        ? intent.withdrawsPrior
+        : undefined;
+  const words =
+    served?.words ?? first.field.origin_words ?? first.field.label.text;
+  const effect = served?.effect ?? null;
   return (
     <li
       data-statement-line=""
@@ -222,7 +232,15 @@ function StatementLine({
   );
 }
 
-function PhaseNotice({ phase }: { phase: ReviewPhase }) {
+function PhaseNotice({
+  phase,
+  onRefusalAction,
+  opensRefusalPlace,
+}: {
+  phase: ReviewPhase;
+  onRefusalAction?: (intent: RefusalIntent) => void;
+  opensRefusalPlace?: (place: WindowPlace) => boolean;
+}) {
   const t = useStrings();
   switch (phase.kind) {
     case "checking":
@@ -250,6 +268,16 @@ function PhaseNotice({ phase }: { phase: ReviewPhase }) {
         </Alert>
       );
     case "not_applied":
+      // A served refusal, with its ways out or its no-way-out sentence,
+      // through the window's one refusal notice.
+      if (phase.refusal && phase.words !== null)
+        return (
+          <RefusalNotice
+            refusal={phase.refusal}
+            onAction={onRefusalAction}
+            opens={opensRefusalPlace}
+          />
+        );
       return (
         <Alert tone="warning" icon={<Icon name="alert" />}>
           {phase.words ?? t("workspace.modelo.operation.not_done")}
@@ -289,6 +317,8 @@ export function ReviewDialog({
   language,
   onReread,
   onPrerequisiteHeld,
+  onRefusalAction,
+  opensRefusalPlace,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -301,6 +331,10 @@ export function ReviewDialog({
   /** Whether a refused apply's prerequisite still stands, for the header's
    * next step; only this dialog sees that refusal. */
   onPrerequisiteHeld?: (held: boolean) => void;
+  /** Opens the place a refused apply's served way out names; the places
+   * this host opens are those `opensRefusalPlace` admits. */
+  onRefusalAction?: (intent: RefusalIntent) => void;
+  opensRefusalPlace?: (place: WindowPlace) => boolean;
 }) {
   const t = useStrings();
   const ackId = useId();
@@ -491,7 +525,11 @@ export function ReviewDialog({
             </span>
           </Alert>
         )}
-        <PhaseNotice phase={phase} />
+        <PhaseNotice
+          phase={phase}
+          onRefusalAction={onRefusalAction}
+          opensRefusalPlace={opensRefusalPlace}
+        />
         <ScopedWriteHoldNotice />
         {mustAcknowledge && phase.kind === "checked" && !blocked && (
           <label

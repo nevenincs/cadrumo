@@ -23,7 +23,10 @@ import type {
   AbsenceAttestationFamily,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
+  ModeloFormBindingStatement,
   ModeloFormCarryAttestation,
+  ModeloFormPriorValueWithdrawal,
+  PublicModeloFormPriorValueAttestation,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { takesEntry } from "./entryField";
@@ -56,7 +59,11 @@ export function editAddress(
   const address = field.edit_address;
   return address.kind === "casilla"
     ? { kind: "scalar", casilla_id: address.casilla_id }
-    : { kind: "binding", binding_id: address.binding_id };
+    : {
+        kind: "binding",
+        binding_id: address.binding_id,
+        row_identity: null,
+      };
 }
 
 /** A value set on a box, and the same value as the application compares
@@ -77,7 +84,10 @@ type SetValue = {
  * preflight is told it: removing an override clears a value the filer gave,
  * or gives the box back to its source. A statement and its withdrawal name
  * the statement's family, which keeps every box of it together: a family is
- * staged whole or not at all. */
+ * staged whole or not at all. A carry the application holds no earlier return
+ * for can take the figure the filer states for that return, in the words the
+ * form served; the figures stated for one family of earlier returns are
+ * withdrawn together, so their withdrawal names that family. */
 export type StagedIntent =
   | ({ kind: "set_typed_value" } & SetValue)
   | { kind: "clear_declared_value"; change: "clear" }
@@ -88,11 +98,24 @@ export type StagedIntent =
       change: Exclude<ModeloEditHeldKind, "set">;
       /** The family whose statement this removal withdraws, when it does. */
       withdraws?: AbsenceAttestationFamily;
+      /** The served withdrawal of the figures stated for one family of
+       * earlier returns that this removal is part of, when it is. */
+      withdrawsPrior?: PriorStatement;
     }
   | {
       kind: "attest_no_amount";
       change: "set";
       family: AbsenceAttestationFamily;
+      words: string;
+      effect: string;
+    }
+  | {
+      kind: "attest_prior_value";
+      change: "set";
+      value: ModeloEditWireScalar;
+      comparable: ModeloEditWireScalar;
+      /** The family of earlier returns the figure stands in for. */
+      family: string;
       words: string;
       effect: string;
     };
@@ -222,7 +245,112 @@ export function statementOf(intent: StagedIntent): string | null {
   if (intent.kind === "attest_no_amount") return `state:${intent.family}`;
   if (intent.kind === "remove_override" && intent.withdraws !== undefined)
     return `withdraw:${intent.withdraws}`;
+  if (intent.kind === "remove_override" && intent.withdrawsPrior !== undefined)
+    return `withdraw-prior:${intent.withdrawsPrior.family}`;
   return null;
+}
+
+/** The intent that withdraws the figure stated on a box for the earlier
+ * returns of `withdrawal`'s family: its value taken out at its binding, or the
+ * box given back to its source; null where the box holds no figure stated for
+ * that family or neither is offered. */
+export function priorWithdrawIntent(
+  field: PublicModeloFormField,
+  withdrawal: PriorStatement,
+): StagedIntent | null {
+  if (
+    !atBinding(field) ||
+    field.stated_prior_value?.family_id !== withdrawal.family
+  )
+    return null;
+  if (field.clearable)
+    return {
+      kind: "remove_override",
+      change: "clear",
+      withdrawsPrior: withdrawal,
+    };
+  if (field.restorable)
+    return {
+      kind: "remove_override",
+      change: "restore",
+      withdrawsPrior: withdrawal,
+    };
+  return null;
+}
+
+/** A served withdrawal as the intents of its carries name it. */
+const priorStatementOf = (
+  withdrawal: ModeloFormPriorValueWithdrawal,
+): PriorStatement => ({
+  family: withdrawal.family_id,
+  words: withdrawal.action_words,
+  effect: withdrawal.effect_words,
+});
+
+/** The box the form draws at a binding, where it draws one. */
+function boxAtBinding(
+  placed: readonly PlacedField[],
+  bindingId: string,
+): PublicModeloFormField | null {
+  return (
+    placed.find(
+      (p) =>
+        p.field.edit_address.kind === "binding" &&
+        p.field.edit_address.binding_id === bindingId,
+    )?.field ?? null
+  );
+}
+
+/** What withdrawing a family's stated figures comes to: the withdrawal of
+ * every carry the form serves it for, or, when one of them is drawn nowhere
+ * or cannot be taken out here, that carry's binding, and nothing is staged. */
+export type PriorWithdrawal =
+  | { kind: "offered"; edits: StatementEdit[] }
+  | { kind: "refused"; bindingId: string; field: PublicModeloFormField | null };
+
+/** The withdrawal of every figure stated for one family, on each binding the
+ * served `withdrawal` names, each as the baseline admits removing its value
+ * (`admits`) and as the box allows. */
+export function priorWithdrawal(
+  placed: readonly PlacedField[],
+  withdrawal: ModeloFormPriorValueWithdrawal,
+  admits: (field: PublicModeloFormField) => boolean,
+): PriorWithdrawal {
+  const edits: StatementEdit[] = [];
+  for (const bindingId of withdrawal.binding_ids) {
+    const field = boxAtBinding(placed, bindingId);
+    const intent =
+      field && admits(field)
+        ? priorWithdrawIntent(field, priorStatementOf(withdrawal))
+        : null;
+    if (!field || !intent) return { kind: "refused", bindingId, field };
+    edits.push({ field, intent });
+  }
+  return { kind: "offered", edits };
+}
+
+/** The served withdrawal of `family`'s stated figures, or null where the
+ * form serves none. */
+export function servedPriorWithdrawal(
+  served: readonly PublicModeloFormPriorValueAttestation[],
+  family: string,
+): ModeloFormPriorValueWithdrawal | null {
+  for (const entry of served)
+    if (entry.withdrawal?.family_id === family) return entry.withdrawal;
+  return null;
+}
+
+/** The statement of a figure for its earlier returns that a box offers, as
+ * the form served it on the box, or null where it offers none. A read that
+ * offers no statement leaves the list out. */
+export function priorValueStatement(
+  field: PublicModeloFormField,
+): ModeloFormBindingStatement | null {
+  return (
+    (field.statements as ModeloFormBindingStatement[] | undefined)?.find(
+      (statement) => statement.intent === "attest_prior_value",
+    ) ?? null
+  );
 }
 
 /** One box of a statement and the intent it takes. */
@@ -320,7 +448,18 @@ function coveredBy(
   intent: StagedIntent,
   placed: readonly PlacedField[],
   served: readonly ModeloFormCarryAttestation[],
+  priorValues: readonly PublicModeloFormPriorValueAttestation[],
 ): string[] {
+  if (
+    intent.kind === "remove_override" &&
+    intent.withdrawsPrior !== undefined
+  ) {
+    const withdrawal = servedPriorWithdrawal(
+      priorValues,
+      intent.withdrawsPrior.family,
+    );
+    return withdrawal ? withdrawal.binding_ids.map((id) => `b:${id}`) : [];
+  }
   if (intent.kind === "attest_no_amount") {
     const statement = served.find((each) => each.family === intent.family);
     const edits = statement ? statementEdits(placed, statement) : null;
@@ -338,6 +477,7 @@ export function wholeStatements(
   staged: ReadonlyMap<string, StagedEdit>,
   placed: readonly PlacedField[],
   served: readonly ModeloFormCarryAttestation[],
+  priorValues: readonly PublicModeloFormPriorValueAttestation[] = [],
 ): { next: Map<string, StagedEdit>; dropped: StagedEdit[] } {
   const groups = new Map<string, StagedEdit[]>();
   for (const edit of staged.values()) {
@@ -349,7 +489,7 @@ export function wholeStatements(
   for (const edits of groups.values()) {
     const first = edits[0];
     if (!first) continue;
-    const wanted = coveredBy(first.intent, placed, served);
+    const wanted = coveredBy(first.intent, placed, served, priorValues);
     const keys = new Set(edits.map((edit) => edit.key));
     if (
       wanted.length > 0 &&
@@ -415,7 +555,8 @@ export function editSubmission(
       address.kind === "binding" &&
       (intent.kind === "set_override_value" ||
         intent.kind === "remove_override" ||
-        intent.kind === "attest_no_amount")
+        intent.kind === "attest_no_amount" ||
+        intent.kind === "attest_prior_value")
     )
       binding.push({ address, kind: intent.kind, ...value });
   }
@@ -553,6 +694,14 @@ export function restaged(
     return field.stated_absent === intent.withdraws
       ? withdrawIntent(field)
       : null;
+  if (intent.kind === "remove_override" && intent.withdrawsPrior !== undefined)
+    return priorWithdrawIntent(field, intent.withdrawsPrior);
+  // A stated figure stands only while the box still offers the statement:
+  // a carry an earlier return now supplies drops it, never staged over it.
+  if (intent.kind === "attest_prior_value")
+    return field.takes_typed_value && priorValueStatement(field) !== null
+      ? intent
+      : null;
   if (intent.change === "set") {
     if (!field.takes_typed_value) return null;
     if (
@@ -580,6 +729,7 @@ export function rebasedEdits(
   report: ModeloFormRebaseEntryV1[],
   placed: readonly PlacedField[],
   served: readonly ModeloFormCarryAttestation[] = [],
+  priorValues: readonly PublicModeloFormPriorValueAttestation[] = [],
 ): {
   next: Map<string, StagedEdit>;
   found: [string, "changed" | "dropped"][];
@@ -611,7 +761,7 @@ export function rebasedEdits(
       beforeChanged: outcome === "changed" || edit.beforeChanged,
     });
   }
-  const whole = wholeStatements(next, placed, served);
+  const whole = wholeStatements(next, placed, served, priorValues);
   for (const edit of whole.dropped)
     found.push([addressKey(edit.field.address), "dropped"]);
   return { next: whole.next, found };
@@ -645,6 +795,20 @@ export type EntryOutcome =
   /** Not read: the check was refused, in its own words where it gave
    * them, or never reached the application. */
   | { kind: "failed"; code: string; words: string | null };
+
+const NO_PRIOR_VALUES: readonly PublicModeloFormPriorValueAttestation[] = [];
+
+/** The carries a form serves for stating a figure of earlier returns. The
+ * read leaves the list out when it is empty. */
+export const priorValuesOf = (
+  form: PublicModeloWorkForm,
+): readonly PublicModeloFormPriorValueAttestation[] =>
+  (form.prior_value_attestations as
+    PublicModeloFormPriorValueAttestation[] | undefined) ?? NO_PRIOR_VALUES;
+
+/** A figure stated for a carry's earlier returns, as the form served the
+ * statement: the family of those returns, the action and what it does. */
+export type PriorStatement = { family: string; words: string; effect: string };
 
 /** A request to bring a box or a section into view; `seq` repeats it. */
 export type Reveal = { key: string | null; sectionId: string; seq: number };
@@ -693,8 +857,27 @@ export type FormSession = {
   acknowledge(): void;
   /** Reads what the filer typed into a box through the application and
    * stages the value it reads. An empty entry takes back a value typed here,
-   * or else takes the filer's value out of the box. */
-  enter(field: PublicModeloFormField, text: string): Promise<EntryOutcome>;
+   * or else takes the filer's value out of the box. With `prior`, the value
+   * read is staged as the figure the filer states for the box's earlier
+   * returns, and an empty entry only takes back such a figure typed here. */
+  enter(
+    field: PublicModeloFormField,
+    text: string,
+    prior?: PriorStatement,
+  ): Promise<EntryOutcome>;
+  /** The carries the filer can state a figure of for earlier returns the
+   * application does not hold, as the form serves them; none where the
+   * declaration takes no edit. */
+  priorValues: readonly PublicModeloFormPriorValueAttestation[];
+  /** What withdrawing a family's stated figures would stage. */
+  priorWithdrawal(withdrawal: ModeloFormPriorValueWithdrawal): PriorWithdrawal;
+  /** Stages the withdrawal of every figure stated for a family, and answers
+   * it; nothing is staged when it is refused. */
+  withdrawPriorValues(
+    withdrawal: ModeloFormPriorValueWithdrawal,
+  ): PriorWithdrawal;
+  /** Whether the withdrawal of `family`'s stated figures is staged. */
+  stagesPriorWithdrawal(family: string): boolean;
   /** What a box's edit address takes, or null where it takes nothing. */
   grammarOf(field: PublicModeloFormField): ModeloEditValueGrammarV1 | null;
   /** Whether a box can be typed into here: the form admits edits, the
@@ -832,13 +1015,14 @@ export function useFormSession({
       pendingRebase,
       placed,
       form.carry_attestations,
+      priorValuesOf(form),
     );
     setStaged(next);
     // What a report moved or dropped is said until the filer acknowledges
     // it: a later check is told only the changes still held, so it adds what
     // it finds, by box, and never takes back what an earlier report dropped.
     if (found.length) setMoved((shown) => noteMoved(shown, found));
-  }, [pendingRebase, placed, staged, form.carry_attestations]);
+  }, [pendingRebase, placed, staged, form]);
   const acknowledge = useCallback(() => {
     setMoved(new Map());
     setStaged((held) => {
@@ -912,6 +1096,33 @@ export function useFormSession({
     () => (admitted ? form.carry_attestations : []),
     [admitted, form.carry_attestations],
   );
+  const servedPriorValues = priorValuesOf(form);
+  const priorValues = useMemo(
+    () => (admitted ? servedPriorValues : []),
+    [admitted, servedPriorValues],
+  );
+  const priorWithdrawalOf = useCallback(
+    (served: ModeloFormPriorValueWithdrawal) =>
+      priorWithdrawal(placed, served, admitsRemoval),
+    [placed, admitsRemoval],
+  );
+  const withdrawPriorValues = useCallback(
+    (served: ModeloFormPriorValueWithdrawal) => {
+      const offer = priorWithdrawalOf(served);
+      if (offer.kind === "offered") stageAll(offer.edits);
+      return offer;
+    },
+    [priorWithdrawalOf, stageAll],
+  );
+  const stagesPriorWithdrawal = useCallback(
+    (family: string) =>
+      [...staged.values()].some(
+        (edit) =>
+          edit.intent.kind === "remove_override" &&
+          edit.intent.withdrawsPrior?.family === family,
+      ),
+    [staged],
+  );
   const stagesStatement = useCallback(
     (statement: ModeloFormCarryAttestation) =>
       statement.binding_ids.length > 0 &&
@@ -947,10 +1158,21 @@ export function useFormSession({
     [statements, staged, unstage, stagesStatement, placed, stageAll],
   );
   const enter = useCallback(
-    async (field: PublicModeloFormField, text: string) => {
+    async (
+      field: PublicModeloFormField,
+      text: string,
+      prior?: PriorStatement,
+    ) => {
       const lexeme = text.trim();
       const key = editKey(field);
       const held = staged.get(key);
+      if (!lexeme && prior) {
+        // Emptying a figure stated here takes it back, and nothing else.
+        if (held?.intent.kind !== "attest_prior_value")
+          return { kind: "unchanged" } as const;
+        unstage(key);
+        return { kind: "staged" } as const;
+      }
       if (!lexeme) {
         // Emptying a value typed here takes it back; emptying a value the
         // box holds takes the filer's value out of it.
@@ -964,6 +1186,15 @@ export function useFormSession({
           return withdraw(field)?.kind === "offered"
             ? ({ kind: "staged" } as const)
             : ({ kind: "unchanged" } as const);
+        // Emptying a figure stated for earlier returns withdraws every figure
+        // stated for the same returns, as the form serves that withdrawal.
+        const family = field.stated_prior_value?.family_id;
+        if (family) {
+          const served = servedPriorWithdrawal(priorValues, family);
+          return served && withdrawPriorValues(served).kind === "offered"
+            ? ({ kind: "staged" } as const)
+            : ({ kind: "unchanged" } as const);
+        }
         if (!field.clearable) return { kind: "unchanged" } as const;
         stage(field, clearIntent(field));
         return { kind: "staged" } as const;
@@ -1011,6 +1242,24 @@ export function useFormSession({
         if (!entry)
           return { kind: "failed", code: "unknown", words: null } as const;
         if (entry.refusal) return { kind: "refused", entry } as const;
+        if (prior) {
+          stage(
+            field,
+            {
+              kind: "attest_prior_value",
+              change: "set",
+              value: entry.value,
+              comparable: entry.comparable_value,
+              family: prior.family,
+              words: prior.words,
+              effect: prior.effect,
+            },
+            lexeme,
+            entry.value_text,
+            entry.normalisations,
+          );
+          return { kind: "staged" } as const;
+        }
         // Typing the filer's own value again changes nothing; an assumed value
         // typed unchanged is staged, as keeping it is how it is confirmed.
         if (
@@ -1036,7 +1285,18 @@ export function useFormSession({
         } as const;
       }
     },
-    [adoptBaseline, baseline, language, port, stage, staged, unstage, withdraw],
+    [
+      adoptBaseline,
+      baseline,
+      language,
+      port,
+      priorValues,
+      stage,
+      staged,
+      unstage,
+      withdraw,
+      withdrawPriorValues,
+    ],
   );
 
   const bring = useCallback((target: PlacedField | undefined) => {
@@ -1104,6 +1364,10 @@ export function useFormSession({
     stageStatements,
     withdrawal: withdrawalOf,
     withdraw,
+    priorValues,
+    priorWithdrawal: priorWithdrawalOf,
+    withdrawPriorValues,
+    stagesPriorWithdrawal,
     discardAll,
     rebase,
     rebased,

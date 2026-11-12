@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "53af207a01879320db9b24af879894ebbc81d2615189c126f658e1ddf6b94af6"
+source_state_digest = "14c6ea3622b4828d74becea571e1a35c4296901754782b0dcb962e3819511cd5"
 design_sources = [
     { source_ref = "aeat-dr-200-2023", sha256 = "60ee0cb4ab7aa4fa2ae3dc61cb22f6a1a0797d1626a28d7bba013b44375a19aa" },
 ]
@@ -2680,6 +2680,7 @@ placements = [
     { casilla_id = "DP200012:00308", kind = "on_form", box_number = "00308" },
     { casilla_id = "DP200012:00309", kind = "on_form", box_number = "00309" },
     { casilla_id = "DP200012:00310", kind = "on_form", box_number = "00310" },
+    { casilla_id = "DP200012:00501", kind = "on_form", box_number = "00501" },
     { casilla_id = "DP200013:00311", kind = "on_form", box_number = "00311" },
     { casilla_id = "DP200013:00312", kind = "on_form", box_number = "00312" },
     { casilla_id = "DP200013:00313", kind = "on_form", box_number = "00313" },
@@ -2707,6 +2708,8 @@ placements = [
     { casilla_id = "DP200014:00582", kind = "on_form", box_number = "00582" },
     { casilla_id = "DP200014:01033", kind = "on_form", box_number = "01033" },
     { casilla_id = "DP200014:01034", kind = "on_form", box_number = "01034" },
+    { casilla_id = "DP200014:01330", kind = "on_form", box_number = "01330" },
+    { casilla_id = "DP200014:bin-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "DP200014B:00082", kind = "on_form", box_number = "00082" },
     { casilla_id = "DP200014B:00083", kind = "on_form", box_number = "00083" },
     { casilla_id = "DP200014B:00399", kind = "on_form", box_number = "00399" },
@@ -3909,6 +3912,21 @@ heading_key = "modelo.schema.200.form.section.liquidacion-i-resultado-de-la-cuen
 official_heading = "Liquidación I - Resultado de la cuenta de pérdidas y ganancias"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "correcciones-por-impuesto-sociedades", heading_key = "modelo.schema.200.form.row.correcciones-por-impuesto-sociedades.heading", official_heading = "Correcciones por Impuesto Sociedades", cells = [{ kind = "casilla", casilla_id = "DP200012:00301" }, { kind = "casilla", casilla_id = "DP200012:00302" }] }] },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "liquidacion-i"
+heading_key = "modelo.schema.200.form.section.liquidacion-i.heading"
+official_heading = "Liquidación I"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200012:00501" },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "liquidacion-i-resultado-de-la-cuenta-de-p-86ea52-2"
+heading_key = "modelo.schema.200.form.section.liquidacion-i-resultado-de-la-cuenta-de-p-86ea52.heading"
+official_heading = "Liquidación I - Resultado de la cuenta de pérdidas y ganancias"
+blocks = [
     { kind = "field", id = "field", casilla_id = "01230" },
     { kind = "field", id = "field-2", casilla_id = "01231" },
 ]
@@ -4018,6 +4036,7 @@ heading_key = "modelo.schema.200.form.section.liquidacion-iii-base-imponible-ent
 official_heading = "Liquidación III - Base Imponible - Entidades Reducida dimensión"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "reserva-de-nivelacion", heading_key = "modelo.schema.200.form.row.reserva-de-nivelacion.heading", official_heading = "Reserva de nivelación", cells = [{ kind = "casilla", casilla_id = "DP200014:01033" }, { kind = "casilla", casilla_id = "DP200014:01034" }] }] },
+    { kind = "field", id = "field", casilla_id = "DP200014:01330" },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]

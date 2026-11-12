@@ -1,0 +1,52 @@
+# Modelo 200 parameters first stated at the 2025 edition. The other parameters
+# are authored at earlier editions and inherited.
+
+# Second rate of the microempresa lane, as casilla 00558 states it. The 2025
+# record design fills 00558 with four digits: "En caso de tipo de gravamen
+# único se rellenarán los dos primeros dígitos con el tipo, y los dos últimos
+# con 00. Ej: 25% se rellenará como 2500. En caso de tipo de gravamen doble se
+# rellenarán los dos primeros dígitos con el primer tipo, y los dos últimos con
+# el segundo. Ej: 18/19% se rellenará como 1819" (aeat-dr-200-2025 DP200014
+# field 31, Nota 1; 01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md L1495,
+# L1530-1534). The 2024 design prints that field as "2 enteros y 2 decimales"
+# and no double rate, so the second rate first enters 00558 here. The first
+# rate is `is.modelo-200.tipo-gravamen-pyme-display`; the cuota of casilla 00562
+# is the `is.modelo-200.tipo-gravamen-pyme` scale and never reads this echo.
+#
+# The windows follow the first-rate parameter's:
+# - periods initiated in 2023 and 2024: one flat 23 (LIS art. 29.1 as worded by
+#   Ley 31/2022 art. 39), a single rate, so the last two digits are 00;
+# - periods initiated in 2025: 22 on the base above 50.000 euros (LIS DT
+#   44ª.1.a.ii, ley-27-2014-dt-44.html.extracted.md L5; manuals/sociedades/2025
+#   p. 373 L14980-14983 "Resto Base Imponible 22 por 100", casilla 00088 p. 85
+#   L3231-3237, novedades p. 11 L346-352);
+# - periods initiated in 2026: 21 (LIS DT 44ª.2.a.ii, L11; manual p. 11
+#   L359-365).
+[[revisions."2025-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-pyme-segundo-tipo-display"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:dt-44"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
+
+[[revisions."2025-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2025"
+required_text = ["Resto Base Imponible 22 por 100", "Por la parte de base imponible restante, al tipo del 21 por ciento."]
+
+[[revisions."2025-y-siguientes".parameters.values]]
+value = "0"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2024-12-31
+
+[[revisions."2025-y-siguientes".parameters.values]]
+value = "22"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025-y-siguientes".parameters.values]]
+value = "21"
+date_axis = "filing_period"
+valid_from = 2026-01-01
+valid_to = 2026-12-31

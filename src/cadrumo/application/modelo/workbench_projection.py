@@ -45,11 +45,12 @@ from ..operations.public_mirror import (
     restore_public_mirror,
 )
 from ..operations.public_period import PublicPeriod
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..workbench_generation_modelo_contracts import PublicCasillaConstraints, PublicModeloVerificationFinding
 from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
-from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1
+from .edit_models import ModeloEditAdmittedV1, ModeloEditBindingIntentKind, ModeloEditRefusedV1
 from .reconciliation_sources import ReconciliationSourceRequirementV1
 from .source_policy import SourceFamily
 from .work_form_declaration_facts import (
@@ -78,6 +79,7 @@ from .work_form_export_offer import (
 from .work_form_field_vocabulary import (
     ModeloFormAddressV1,
     ModeloFormBinding,
+    ModeloFormBindingAddressV1,
     ModeloFormBlocker,
     ModeloFormEditability,
     ModeloFormOrigin,
@@ -101,6 +103,7 @@ from .work_form_models import (
     ModeloFormStatedPriorValue,
 )
 from .work_form_next_step import ModeloFormNextStep
+from .work_form_prior_value_models import ModeloFormPriorValueRefusal, ModeloFormPriorValueWithdrawal
 from .work_form_service import ModeloWorkFormLoadV1
 from .work_form_typing_effect import ModeloFormTypingEffect
 from .work_review import ModeloWorkProgress
@@ -114,6 +117,28 @@ class PublicModeloFormEarlierFiling(BaseModel):
 
     modelo: str
     period: PublicPeriod
+
+
+class PublicModeloFormPriorValueAttestation(BaseModel):
+    """Typed local-human workbench view of ModeloFormPriorValueAttestation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    binding_id: str
+    edit_address: ModeloFormBindingAddressV1
+    intent: ModeloEditBindingIntentKind
+    family_id: str
+    earlier_filings: tuple[PublicModeloFormEarlierFiling, ...]
+    source_words: str
+    action_words: str
+    statement_words: str
+    effect_words: str
+    stated: bool
+    admitted: bool
+    refusal_reason: ModeloFormPriorValueRefusal | None = None
+    refusal_words: str | None = None
+    refusal: PreconditionVerdictSnapshot | None = None
+    withdrawal: ModeloFormPriorValueWithdrawal | None = None
 
 
 class PublicModeloFormValueSource(BaseModel):
@@ -421,6 +446,9 @@ class PublicModeloWorkForm(BaseModel):
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None
     carry_attestations: tuple[ModeloFormCarryAttestation, ...] = ()
+    prior_value_attestations: tuple[PublicModeloFormPriorValueAttestation, ...] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
     modelo_title: str | None
     modelo_name: str | None
     modelo_number: str | None
@@ -738,6 +766,7 @@ __all__ = [
     "PublicModeloFormIssue",
     "PublicModeloFormPage",
     "PublicModeloFormPrintedRate",
+    "PublicModeloFormPriorValueAttestation",
     "PublicModeloFormRate",
     "PublicModeloFormRepeatingBlock",
     "PublicModeloFormRepeatingRow",

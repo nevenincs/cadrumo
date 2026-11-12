@@ -71,10 +71,16 @@ class WorkbenchPresentationMixin:
         self._render_header_result(form, width, recorded)
 
     def _render_projection(self: ModeloWorkbenchScreen, form: ModeloWorkForm) -> None:
-        # A year calculated from another year's edition is said in the words the
-        # form serves, before any check; an authored year serves none.
-        words = form.year_projection.words
+        # The grade the year reaches is always said in the words the form serves; a
+        # year carried from another edition, or authored below filing grade, also
+        # says why it cannot be filed yet, before any check.
         projection = self.query_one("#wb-projection", Static)
+        grade = self.query("#wb-grade").first(Static) if self.query("#wb-grade") else None
+        if grade is None:
+            grade = Static(id="wb-grade", markup=False)
+            self.query_one("#wb-status").mount(grade, before=projection)
+        grade.update(form.year_projection.reachable_grade_words)
+        words = form.year_projection.words
         projection.update(words or "")
         projection.display = words is not None
 

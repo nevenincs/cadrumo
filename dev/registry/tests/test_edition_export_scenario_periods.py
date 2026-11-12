@@ -50,6 +50,8 @@ from ..edition_export_periods import (
 )
 from ..edition_export_scenarios import (
     edition_export_scenarios,
+    m200_export_scenario,
+    m222_export_scenario,
     supported_scenario_periods,
 )
 from .modelo_100_registry_support import loaded_registry, source_root
@@ -87,10 +89,22 @@ def _scenario_editions() -> tuple[tuple[str, str, Period], ...]:
     )
 
 
-def _corporate_scenario_modelos() -> tuple[str, ...]:
-    """The corporate modelos whose open-ended edition has an export scenario."""
-    periods = {"200": M200_SCENARIO_PERIODS, "222": M222_SCENARIO_PERIODS}
-    return tuple(modelo_id for modelo_id, table in periods.items() if open_ended_revision(modelo_id).id in table)
+#: The corporate modelos' scenario builders. A scenario's inputs, producer
+#: snapshot and software identity do not depend on the edition's grade, so they
+#: are checked for every corporate open-ended edition, not only one the exporter
+#: would admit; gating on filing grade would leave nothing to check while no
+#: corporate edition declares it.
+_CORPORATE_SCENARIO_BUILDERS = {"200": m200_export_scenario, "222": m222_export_scenario}
+
+
+def _open_ended_edition_period(modelo_id: str) -> Period:
+    """The first declared period of the first supported year the open-ended edition of ``modelo_id`` governs."""
+    modelo, catalogues = committed_modelo(modelo_id)
+    revision = modelo.revisions[open_ended_revision(modelo_id).id]
+    selector = revision.period_selector
+    year = next(year for year in catalogues.supported_filing_years.years if selector.includes_year(year))
+    token = next(iter(selector.periods_for_year(year)))
+    return Period.from_year_and_code(year, str(token))
 
 
 @pytest.mark.parametrize("modelo_id", ("200", "222", "308"))
@@ -136,9 +150,9 @@ def test_modelo296_scenario_supplies_every_required_detail_family() -> None:
     assert len(profile.anexo_certificado_rows) == 1
 
 
-@pytest.mark.parametrize("modelo_id", _corporate_scenario_modelos())
+@pytest.mark.parametrize("modelo_id", tuple(_CORPORATE_SCENARIO_BUILDERS))
 def test_corporate_scenario_defers_software_identity_until_candidate_fact_scope(modelo_id: str) -> None:
-    scenario = edition_export_scenarios(modelo_id)[open_ended_revision(modelo_id).id]
+    scenario = _CORPORATE_SCENARIO_BUILDERS[modelo_id](_open_ended_edition_period(modelo_id))
     assert scenario.product_software_identity_factory is not None
     with modelo_fact_scope(bundled_path("registry", "aeat", "modelos", modelo_id)):
         software = scenario.product_software_identity_factory()

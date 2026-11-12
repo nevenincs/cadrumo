@@ -465,8 +465,12 @@ export function Details({
   const key = editKey(field);
   const staged = session.staged.get(key);
   // A stated box is given back only by withdrawing its whole statement,
-  // which its row offers; never one box of it alone.
-  const own = editsAdmitted(envelope) && field.stated_absent === null;
+  // which its row offers; never one box of it alone. A figure stated for a
+  // family of earlier returns is likewise withdrawn with the whole family.
+  const own =
+    editsAdmitted(envelope) &&
+    field.stated_absent === null &&
+    !field.stated_prior_value?.family_id;
   const restore = own ? restoreIntent(field) : null;
   const remove = own ? removeIntent(field) : null;
   return (

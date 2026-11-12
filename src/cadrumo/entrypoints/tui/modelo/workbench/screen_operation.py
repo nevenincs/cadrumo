@@ -28,7 +28,7 @@ from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.modelo_export_artefact import ModeloExportArtefact
-from .....core.operations import OperationTerminalCondition
+from .....core.operations import OperationEffect, OperationTerminalCondition
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
 from ...components.dialogs import ConfirmScreen
 from ...operations.controller_port import OperationControllerPort
@@ -228,8 +228,13 @@ class WorkbenchOperationMixin:
         condition: OperationTerminalCondition | None,
     ) -> None:
         self._apply_prerequisite = None
-        notice = tr("workspace.modelo.operation.not_done")
         self._show_operation_refusal(outcome.refusal)
+        if outcome.view_model.projection.effect is OperationEffect.UNKNOWN:
+            # An effect that may have committed is not reported as not done, and the declaration is not read
+            # again over it: the staged changes stay as they were until the filer reads it.
+            self._notice(tr("workspace.modelo.operation.unknown"))
+            return
+        notice = tr("workspace.modelo.operation.not_done")
         if applies_changes:
             refused = condition is OperationTerminalCondition.REFUSED
             self.run_worker(partial(self._read_refused_apply, notice, refused), group="workbench-read", exclusive=True)

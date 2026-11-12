@@ -30,3 +30,19 @@ to_revision = "2024"
 evolution_kind = "retired"
 legal_refs = ["ley-11-2020:da-76"]
 source_refs = ["aeat-dr-200-2023", "aeat-dr-200-2024"]
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m200-dp200012-00501-2023-2024-label_evolved"
+continuidad_id = "is-liquidacion-i-importe"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-10"]
+source_refs = ["aeat-dr-200-2023", "aeat-dr-200-2024"]
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m200-dp200014-01330-2023-2024-label_evolved"
+continuidad_id = "is-liquidacion-iii-base-imponible-postnivelacion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2023", "aeat-dr-200-2024"]

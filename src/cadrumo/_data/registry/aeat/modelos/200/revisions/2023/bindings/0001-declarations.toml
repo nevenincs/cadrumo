@@ -1,0 +1,27 @@
+# Modelo 200 bindings stated at the 2023 edition. The other bindings are authored at
+# the 2022 edition and inherited. The INCN binding enters here because only the 2023
+# rate formulas read it: Ley 31/2022 art. 39 keys the 23 % rate to the INCN from
+# periods initiated in 2023, and no 2022 rate depends on the INCN.
+
+# Calculation-only Decimal binding: carries the importe neto de la
+# cifra de negocios of the prior 12 months. Gates the LIS Art. 29.1
+# micro-empresa scale: when INCN < 1.000.000 EUR the cuota-integra
+# formula routes the post-nivelacion base 01330 through the
+# `is.modelo-200.tipo-gravamen-pyme` two-tranche bracket scale
+# (23 flat for periods initiated in 2023 and 2024; DT 44ª 21 / 22 in 2025
+# and 19 / 21 in 2026)
+# via `lookup_bracket_by_entity_type`; otherwise the sub-form
+# dispatch applies the general / cooperative-protected / non-profit rate.
+# Sourced from the Decimal profile fact `incn_prior_12_months`. An
+# undeclared INCN raises `binding has no supplied value` so the
+# engine refuses to guess micro-empresa identification.
+[[revisions."2023".bindings]]
+id = "modelo-200-profile-incn-prior-12-months"
+provider = { kind = "profile", profile_model = "taxpayer", field = "incn_prior_12_months" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-29"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2023"
+required_text = ["tipo de gravamen"]

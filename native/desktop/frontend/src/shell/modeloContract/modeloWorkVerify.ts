@@ -16,6 +16,7 @@ import type {
   ModeloFindingSnapshot,
   ModeloVerificationReportSnapshot,
   NoRecoveryOutcome,
+  OutputLanguage,
   PublicNamedScalar,
   PublicScalar,
   RecordedCalculationNote,
@@ -24,9 +25,13 @@ import type { ActionReference } from "./modeloEditWork";
 import type { ModeloLifecycleAdvisories } from "./modeloWork";
 
 /**
- * A further declared recovery action, offered in order after the primary one.
+ * A further declared recovery action, offered in order after the primary one,
+ * with its served words.
  */
 export type ModeloAlternativeActionSnapshot = {
+  action_words: string | null;
+  action_words_language: OutputLanguage | null;
+  target_operation_ids: string[];
   action: ActionReference;
   argument_bindings: ModeloArgumentSnapshot[];
   missing_argument_names: string[];
@@ -67,9 +72,16 @@ export type ModeloFindingPreconditionSnapshot = {
  * A complete application refusal identity and its canonical recovery facts.
  *
  * `alternative_actions` is left out of the serialized snapshot when empty, so
- * a refusal without alternatives keeps the shape it was published with.
+ * a refusal without alternatives keeps the shape it was published with. The
+ * served action words and routing, or the no-way-out sentence, follow the same
+ * rule.
  */
 export type ModeloPreconditionSnapshot = {
+  no_recovery_words: string | null;
+  no_recovery_words_language: OutputLanguage | null;
+  action_words: string | null;
+  action_words_language: OutputLanguage | null;
+  target_operation_ids: string[];
   subject_leaf_key: string;
   scenario_id: string;
   failed_condition_id: string;

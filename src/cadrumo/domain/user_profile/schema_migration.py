@@ -17,6 +17,10 @@ two.
 - Schema 10 adds the LIS art. 40.3 election of the Modelo 202 as an optional
   fact. It changes no stored value, so its transition clears nothing; a
   schema-9 record that already carries the field is refused.
+- Schema 11 adds the Modelo 200 page 002 relations: the administradores, the
+  participations in and of the entity, its representatives, its secretary, its
+  dependent entities, its permanent establishments abroad, its SICAV holdings
+  and whether it has any of each. It only adds fields, so it clears nothing.
 
 Before each of those bumps the setup wizard pre-answered the affected
 questions and wrote its default as an ordinary ``manual_cli`` fact, so the
@@ -52,7 +56,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 10
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 11
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -140,7 +144,7 @@ no successor to read its value, so every stored value goes.
 """
 
 
-_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9})
+_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9, 10})
 """Versions whose outgoing transition only adds fields, so it clears no stored value."""
 
 
@@ -223,11 +227,80 @@ PATHS_INTRODUCED_IN_V9: Final[frozenset[str]] = frozenset(
 PATHS_INTRODUCED_IN_V10: Final[frozenset[str]] = frozenset({"taxpayer_type.pago_fraccionado_art_40_3_elected"})
 """Fields schema 9 did not declare: the LIS art. 40.3 election of the Modelo 202."""
 
+_M200_RELATION_LEAVES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {
+        "m200_administrador": (
+            "nif",
+            "apellidos_nombre_razon_social",
+            "forma_juridica",
+            "representante",
+            "domicilio_fiscal",
+            "codigo_provincia",
+        ),
+        "m200_participacion_socio": (
+            "nif",
+            "representante",
+            "forma_juridica",
+            "apellidos_nombre_razon_social",
+            "codigo_provincia_pais",
+            "nominal",
+            "porcentaje_participacion",
+        ),
+        "m200_representante_legal": ("apellidos_y_nombre", "nif", "fecha_poder", "notaria_otros"),
+        "m200_secretario_consejo": ("apellidos_y_nombre", "nif"),
+        "m200_participacion_directa": (
+            "nif",
+            "nombre_o_razon_social",
+            "codigo_provincia_pais",
+            "porcentaje_participacion",
+            "valor_nominal_total",
+            "valor_en_libros",
+            "ingresos_por_dividendos",
+            "correccion_valor_perdidas_ganancias",
+            "reversion_perdidas_deterioro_valores",
+            "eliminacion_deterioro_contable",
+            "eliminacion_deterioro_valores_participacion",
+            "ajuste_valor_razonable",
+            "efecto_correccion_valorativa_base_imponible",
+            "saldo_correcciones_fiscales_pendientes",
+            "capital",
+            "reservas_y_otras_partidas_fondos_propios",
+            "otras_partidas_patrimonio_neto",
+            "resultado_ultimo_ejercicio",
+        ),
+        "m200_entidad_menor_dependiente": ("nif", "nombre_o_razon_social"),
+        "m200_establecimiento_permanente": (
+            "identificacion",
+            "pais_residencia_fiscal",
+            "volumen_operaciones",
+            "beneficio_o_perdida",
+            "suma_ajustes_resultado_contable",
+            "suma_deducciones_di_internacional_anteriores",
+        ),
+        "m200_socio_sicav_disolucion": ("nif_sociedad_disuelta", "nif_iic_reinversion"),
+        "m200_relaciones": (
+            "has_participacion_socio",
+            "has_representante_legal",
+            "has_secretario_consejo",
+            "has_participacion_directa",
+            "has_entidad_menor_dependiente",
+            "has_establecimiento_permanente",
+            "has_socio_sicav_disolucion",
+        ),
+    },
+)
+
+PATHS_INTRODUCED_IN_V11: Final[frozenset[str]] = frozenset(
+    f"{section}.{leaf}" for section, leaves in _M200_RELATION_LEAVES.items() for leaf in leaves
+)
+"""Fields schema 10 did not declare: the Modelo 200 page 002 relations."""
+
 _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         7: PATHS_INTRODUCED_IN_V7,
         9: PATHS_INTRODUCED_IN_V9,
         10: PATHS_INTRODUCED_IN_V10,
+        11: PATHS_INTRODUCED_IN_V11,
     },
 )
 """Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
@@ -462,6 +535,7 @@ __all__ = [
     "PATHS_INTRODUCED_IN_V7",
     "PATHS_INTRODUCED_IN_V9",
     "PATHS_INTRODUCED_IN_V10",
+    "PATHS_INTRODUCED_IN_V11",
     "RETIRED_RENTAL_TIER_PATH",
     "SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS",
     "ProfileSchemaMigration",

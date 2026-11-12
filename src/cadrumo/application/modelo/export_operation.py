@@ -27,6 +27,7 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..ledger.commit_fence import LedgerCommitAttemptTracker, run_with_ledger_commit_fence
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
@@ -56,6 +57,7 @@ from .calculation_report_export import (
 )
 from .export import export_modelo_revision
 from .export_contracts import ModeloExportCommand, ModeloExportResult
+from .export_disclosure import export_disclosure
 from .export_ports import ModeloExportPorts, ModeloExportPortsFactory
 from .export_projection import (
     ModeloCalculationReportPublicReceipt,
@@ -137,6 +139,7 @@ def _project_modelo_export_result(result: BaseModel, terminal_receipt: Operation
                 else ModeloExportCompleteness.NOT_FLAGGED
             ),
             fichero_boe=ModeloFicheroBoePublicReceipt.from_result(filing),
+            disclosure=settled.disclosure,
         )
     report = settled.calculation_report
     if report is None:
@@ -152,6 +155,7 @@ def _project_modelo_export_result(result: BaseModel, terminal_receipt: Operation
         evidence_status=ModeloExportEvidenceStatus.LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE,
         completeness=ModeloExportCompleteness.NOT_ASSESSED,
         calculation_report=ModeloCalculationReportPublicReceipt.from_result(report),
+        disclosure=settled.disclosure,
     )
 
 
@@ -233,6 +237,16 @@ class ModeloExportExecutor:
                     active_bucket_id=active_bucket_id,
                     work_unit_repository=export_ports.work_unit,
                 )
+                # Read before anything is written, so a verification that cannot be read refuses the
+                # export with no effect rather than after its file is published.
+                disclosure = export_disclosure(
+                    require_verification_report_coordinates_current(
+                        export_ports.verification.load(operation=context.authority_operation),
+                        operation=context.authority_operation,
+                    ),
+                    calculation_revision_id=payload.calculation_revision_id,
+                    language=payload.report_language,
+                )
                 if payload.artefact is ModeloExportArtefact.FICHERO_BOE:
                     return ModeloExportSettledResult(
                         fichero_boe=self._published_fichero_boe(
@@ -242,7 +256,8 @@ class ModeloExportExecutor:
                             export_ports=export_ports,
                             operation=context.authority_operation,
                             mutation_writer=writes.call_writer,
-                        )
+                        ),
+                        disclosure=disclosure,
                     )
                 return ModeloExportSettledResult(
                     calculation_report=self._published_calculation_report(
@@ -251,7 +266,8 @@ class ModeloExportExecutor:
                         export_ports=export_ports,
                         operation=context.authority_operation,
                         mutation_writer=writes.call_writer,
-                    )
+                    ),
+                    disclosure=disclosure,
                 )
 
         try:

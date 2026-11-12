@@ -1,21 +1,23 @@
-"""The refusal panel shows served words and served ways out only, in served order, and never submits."""
+"""The refusal panel shows the words the verdict served, in served order, routes by served operations, and never submits."""
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import override
 
 import pytest
-from pydantic import ValidationError
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Static
 
+from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....core.operator_action_enums import NoRecoveryOutcome
+from ...operations.destination import OPERATIONS_DESTINATION
 from ...tests.settling import settle
 from ..intent import RefusalIntentV1, RefusalRouterV1
 from ..panel import RefusalPanel
 from ..routing import route_refusal_way
-from ..served import RefusalWayV1, ServedRefusalV1
+from ..served import RefusalWayV1, ServedRefusalV1, refusal_ways
 from .refusal_fixtures import (
     ATTEST_PRIOR_VALUE,
     CREATE_WORK,
@@ -31,6 +33,16 @@ from .refusal_fixtures import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _REFUSED = "The work cannot be checked until last year's return is in."
+_START = "Start this declaration"
+_ATTEST = "State the earlier return's figure"
+_REVIEW = "Review the ledger"
+
+
+@pytest.fixture(autouse=True)
+def _english() -> Iterator[None]:
+    """Serve every verdict's words in English, whatever the machine's language."""
+    with override_settings(cadrumo_output_language="en"):
+        yield
 
 
 def _route(way: RefusalWayV1) -> RefusalIntentV1 | None:
@@ -71,56 +83,50 @@ async def test_words_only_show_the_refusal_and_no_control() -> None:
 
 
 @pytest.mark.asyncio
-async def test_primary_only_is_one_enabled_primary_control_that_posts_its_intent() -> None:
-    refusal = ServedRefusalV1(
-        refusal_words=words(_REFUSED),
-        verdict=primary_verdict(CREATE_WORK),
-        primary_action_words=words("Start the declaration"),
-    )
+async def test_primary_door_is_the_served_words_and_posts_the_intent_of_the_served_operation() -> None:
+    refusal = ServedRefusalV1(refusal_words=words(_REFUSED), verdict=primary_verdict(CREATE_WORK))
     app = _Host(refusal)
     async with app.run_test() as pilot:
         await settle(pilot)
         (button,) = _buttons(app)
-        assert str(button.label) == "Start the declaration"
+        assert str(button.label) == _START
         assert button.variant == "primary"
         assert not button.disabled
         await pilot.click("#refusal-action-0")
         await settle(pilot)
-        assert [intent.target_command_key for intent in app.chosen] == ["modelo.work.create"]
-        assert app.chosen[0].kind == "follow"
+        (intent,) = app.chosen
+        assert intent.target_command_key == "modelo.work.create"
+        assert intent.kind == "follow"
+        assert intent.target.destination == OPERATIONS_DESTINATION
 
 
 @pytest.mark.asyncio
-async def test_primary_then_two_alternatives_keep_the_served_order() -> None:
+async def test_alternatives_follow_the_primary_in_served_order_with_their_served_words() -> None:
     refusal = ServedRefusalV1(
         refusal_words=words(_REFUSED),
         verdict=primary_verdict(CREATE_WORK, attest_alternative(), review_alternative()),
-        primary_action_words=words("Start the declaration"),
-        alternative_action_words=(words("State last year's figure"), words("Review the ledger")),
     )
     app = _Host(refusal)
     async with app.run_test() as pilot:
         await settle(pilot)
         buttons = _buttons(app)
-        assert [str(button.label) for button in buttons] == [
-            "Start the declaration",
-            "State last year's figure …",
-            "Review the ledger",
-        ]
+        assert [str(button.label) for button in buttons] == [_START, f"{_ATTEST} …", _REVIEW]
         assert [button.variant for button in buttons] == ["primary", "default", "default"]
+        assert [way.words.words for way in refusal_ways(refusal) if way.words is not None] == [
+            _START,
+            _ATTEST,
+            _REVIEW,
+        ]
 
 
 @pytest.mark.asyncio
 async def test_a_conditional_action_is_marked_and_opens_the_form_for_its_missing_arguments() -> None:
-    refusal = ServedRefusalV1(
-        verdict=primary_verdict(CREATE_WORK, missing_year=True),
-        primary_action_words=words("Start the declaration"),
-    )
+    refusal = ServedRefusalV1(verdict=primary_verdict(CREATE_WORK, missing_year=True))
     app = _Host(refusal)
     async with app.run_test() as pilot:
         await settle(pilot)
         (button,) = _buttons(app)
-        assert str(button.label) == "Start the declaration …"
+        assert str(button.label) == f"{_START} …"
         assert _text(app, "#refusal-needs-details") == tr("tui.refusal.action_needs_details")
         await pilot.click("#refusal-action-0")
         await settle(pilot)
@@ -130,15 +136,18 @@ async def test_a_conditional_action_is_marked_and_opens_the_form_for_its_missing
 
 
 @pytest.mark.asyncio
-async def test_an_unroutable_action_is_shown_disabled_with_the_reason_and_posts_nothing() -> None:
-    refusal = ServedRefusalV1(
-        verdict=primary_verdict(ATTEST_PRIOR_VALUE), primary_action_words=words("State last year's figure")
+async def test_an_action_whose_served_operations_are_not_registered_is_shown_disabled_with_the_reason_and_posts_nothing() -> (
+    None
+):
+    verdict = primary_verdict(ATTEST_PRIOR_VALUE).model_copy(
+        update={"target_operation_ids": ("unregistered.operation",)}
     )
+    refusal = ServedRefusalV1(verdict=verdict)
     app = _Host(refusal)
     async with app.run_test() as pilot:
         await settle(pilot)
         (button,) = _buttons(app)
-        assert str(button.label) == "State last year's figure"
+        assert str(button.label) == _ATTEST
         assert button.disabled
         assert _text(app, "#refusal-unroutable") == tr("tui.refusal.action_unroutable")
         await pilot.click("#refusal-action-0")
@@ -146,36 +155,62 @@ async def test_an_unroutable_action_is_shown_disabled_with_the_reason_and_posts_
         assert app.chosen == []
 
 
+@pytest.mark.asyncio
+async def test_a_served_operation_the_operations_destination_does_not_admit_is_disabled() -> None:
+    closed = destinations(unavailable=frozenset({OPERATIONS_DESTINATION}))
+
+    def closed_route(way: RefusalWayV1) -> RefusalIntentV1 | None:
+        return route_refusal_way(way, destinations=closed, operations=operations())
+
+    refusal = ServedRefusalV1(verdict=primary_verdict(CREATE_WORK))
+    assert refusal.verdict is not None
+    assert refusal.verdict.target_operation_ids == ("modelo.work.create",)
+    app = _Host(refusal, closed_route)
+    async with app.run_test() as pilot:
+        await settle(pilot)
+        (button,) = _buttons(app)
+        assert button.disabled
+        assert _text(app, "#refusal-unroutable") == tr("tui.refusal.action_unroutable")
+
+
 @pytest.mark.parametrize(
-    "outcome", [NoRecoveryOutcome.TERMINAL, NoRecoveryOutcome.OPERATOR_DECISION, NoRecoveryOutcome.SAFETY]
+    ("outcome", "sentence"),
+    [
+        (NoRecoveryOutcome.TERMINAL, "This refusal is final: no action can clear it."),
+        (NoRecoveryOutcome.OPERATOR_DECISION, "This needs your own decision; no action can take it for you."),
+        (NoRecoveryOutcome.SAFETY, "This was stopped to protect your data, so no action is offered."),
+    ],
 )
 @pytest.mark.asyncio
-async def test_no_way_out_is_its_served_words_and_no_control(outcome: NoRecoveryOutcome) -> None:
-    refusal = ServedRefusalV1(
-        refusal_words=words(_REFUSED),
-        verdict=closed_verdict(outcome),
-        no_recovery_words=words("Only you can decide this."),
-    )
+async def test_no_way_out_is_its_served_sentence_and_no_control(outcome: NoRecoveryOutcome, sentence: str) -> None:
+    refusal = ServedRefusalV1(refusal_words=words(_REFUSED), verdict=closed_verdict(outcome))
     app = _Host(refusal)
     async with app.run_test() as pilot:
         await settle(pilot)
-        assert _text(app, "#refusal-no-recovery") == "Only you can decide this."
+        assert _text(app, "#refusal-no-recovery") == sentence
         assert _buttons(app) == []
 
 
 @pytest.mark.asyncio
-async def test_before_the_backend_serves_action_words_no_control_is_drawn() -> None:
+async def test_a_way_the_backend_served_no_words_for_gets_no_control_and_is_never_routed() -> None:
     routed: list[RefusalWayV1] = []
 
     def watching(way: RefusalWayV1) -> RefusalIntentV1 | None:
         routed.append(way)
         return _route(way)
 
-    refusal = ServedRefusalV1(
-        refusal_words=words(_REFUSED),
-        verdict=primary_verdict(CREATE_WORK, attest_alternative(), review_alternative()),
+    served = primary_verdict(CREATE_WORK, attest_alternative(), review_alternative())
+    unworded = served.model_copy(
+        update={
+            "action_words": None,
+            "action_words_language": None,
+            "alternative_actions": tuple(
+                alternative.model_copy(update={"action_words": None, "action_words_language": None})
+                for alternative in served.alternative_actions
+            ),
+        }
     )
-    app = _Host(refusal, watching)
+    app = _Host(ServedRefusalV1(refusal_words=words(_REFUSED), verdict=unworded), watching)
     async with app.run_test() as pilot:
         await settle(pilot)
         assert _text(app, "#refusal-words") == _REFUSED
@@ -183,15 +218,3 @@ async def test_before_the_backend_serves_action_words_no_control_is_drawn() -> N
         assert not app.query("#refusal-unroutable")
         assert not app.query("#refusal-needs-details")
     assert routed == []
-
-
-def test_words_that_do_not_belong_to_the_verdict_are_refused() -> None:
-    with pytest.raises(ValidationError):
-        ServedRefusalV1(primary_action_words=words("Start the declaration"))
-    with pytest.raises(ValidationError):
-        ServedRefusalV1(
-            verdict=primary_verdict(CREATE_WORK, attest_alternative(), review_alternative()),
-            alternative_action_words=(words("Review the ledger"),),
-        )
-    with pytest.raises(ValidationError):
-        ServedRefusalV1(verdict=primary_verdict(CREATE_WORK), no_recovery_words=words("Nothing to do."))

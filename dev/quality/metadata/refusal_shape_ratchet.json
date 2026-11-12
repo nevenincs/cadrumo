@@ -1,31 +1,9 @@
 {
  "description": "Refusal-shape ratchet. Regenerate with `python -m dev.quality.refusal_shape --write`; entries may only be removed by giving the site a door or served words.",
  "doorless": [
-  "src/cadrumo/application/modelo/m145_communication_execution.py::M145CommunicationExecutor._publish_refusal::REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND::0",
-  "src/cadrumo/application/modelo/m145_communication_records.py::mark_m145_communication_record_locally_completed::REFUSED_M145_COMMUNICATION_RECORD_TRANSITION::0",
-  "src/cadrumo/application/modelo/reconciliation.py::_require_declaration_enrolled_modelo::REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED::0",
-  "src/cadrumo/application/modelo/reconciliation.py::prepare_modelo_reconcile_bytes::REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED::0",
-  "src/cadrumo/application/modelo/reconciliation.py::prepare_parsed_declaracion::REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED::0",
-  "src/cadrumo/application/modelo/reconciliation_comparison.py::_casilla_divergence_diff::REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED::0",
   "src/cadrumo/application/modelo/reconciliation_export_labels.py::ReconciliationWorkbookLabels.__call__::INTERNAL_I18N_MISSING_TRANSLATION::0",
   "src/cadrumo/domain/modelos/calculation_revision_operator_layer.py::CalculationOperatorLayer._require_channel_unique_canonical_values::ERROR_MODELOS_VALIDATION::0",
   "src/cadrumo/domain/modelos/verification_report.py::<module>::INTERNAL_INVARIANT::0"
  ],
- "free_text": [
-  "src/cadrumo/application/modelo/m145_communication_execution.py::M145CommunicationExecutor._publish_refusal::REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND::0",
-  "src/cadrumo/application/modelo/m145_communication_records.py::_render_m145_export_record::REFUSED_M145_COMMUNICATION_RECORD_EXPORT::0",
-  "src/cadrumo/application/modelo/m145_communication_records.py::_require_m145_record_coordinates_current::REFUSED_M145_COMMUNICATION_RECORD_VALIDATION::0",
-  "src/cadrumo/application/modelo/m145_communication_records.py::create_m145_communication_record::REFUSED_M145_COMMUNICATION_RECORD_VALIDATION::0",
-  "src/cadrumo/application/modelo/m145_communication_records.py::export_m145_communication_record::REFUSED_M145_COMMUNICATION_RECORD_EXPORT::0",
-  "src/cadrumo/application/modelo/m145_communication_records.py::export_m145_communication_record::REFUSED_M145_COMMUNICATION_RECORD_EXPORT::1",
-  "src/cadrumo/application/modelo/m145_communication_records.py::export_m145_communication_record::REFUSED_M145_COMMUNICATION_RECORD_EXPORT::2",
-  "src/cadrumo/application/modelo/m145_communication_records.py::export_m145_communication_record::REFUSED_M145_COMMUNICATION_RECORD_EXPORT::3",
-  "src/cadrumo/application/modelo/m145_communication_records.py::export_m145_communication_record::REFUSED_M145_COMMUNICATION_RECORD_VALIDATION::0",
-  "src/cadrumo/application/modelo/m145_communication_records.py::mark_m145_communication_record_delivered_to_payer::REFUSED_M145_COMMUNICATION_RECORD_VALIDATION::0",
-  "src/cadrumo/application/modelo/m145_communication_records.py::mark_m145_communication_record_locally_completed::REFUSED_M145_COMMUNICATION_RECORD_TRANSITION::0",
-  "src/cadrumo/application/modelo/m145_communication_records.py::snapshot_for_scope::REFUSED_M145_COMMUNICATION_RECORD_VALIDATION::0",
-  "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::0",
-  "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::1",
-  "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::2"
- ]
+ "free_text": []
 }

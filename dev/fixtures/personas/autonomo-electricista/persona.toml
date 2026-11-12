@@ -125,7 +125,7 @@ period = "1T"
 year = "horizon-1"
 binding = "irpf.previous_year_economic_activity_net_income"
 value = "21000.00"
-source = { modelo = "100", year = "horizon-2", period = "0A" }
+sources = [{ modelo = "100", year = "horizon-2", period = "0A" }]
 derivation = "Suma de las casillas 0224, 1479, 1553 y 1577 de su declaración de la renta del ejercicio anterior (RIRPF art. 110.3.c). Solo declaró la casilla 0224, rendimiento neto de su única actividad económica (21000.00); no tuvo rendimientos de las clases de las casillas 1479, 1553 y 1577."
 legal_ref = ["rd-439-2007:art-110"]
 
@@ -135,7 +135,7 @@ period = "2T"
 year = "horizon-1"
 binding = "irpf.previous_year_economic_activity_net_income"
 value = "21000.00"
-source = { modelo = "100", year = "horizon-2", period = "0A" }
+sources = [{ modelo = "100", year = "horizon-2", period = "0A" }]
 derivation = "Suma de las casillas 0224, 1479, 1553 y 1577 de su declaración de la renta del ejercicio anterior (RIRPF art. 110.3.c). Solo declaró la casilla 0224, rendimiento neto de su única actividad económica (21000.00); no tuvo rendimientos de las clases de las casillas 1479, 1553 y 1577."
 legal_ref = ["rd-439-2007:art-110"]
 
@@ -145,7 +145,7 @@ period = "3T"
 year = "horizon-1"
 binding = "irpf.previous_year_economic_activity_net_income"
 value = "21000.00"
-source = { modelo = "100", year = "horizon-2", period = "0A" }
+sources = [{ modelo = "100", year = "horizon-2", period = "0A" }]
 derivation = "Suma de las casillas 0224, 1479, 1553 y 1577 de su declaración de la renta del ejercicio anterior (RIRPF art. 110.3.c). Solo declaró la casilla 0224, rendimiento neto de su única actividad económica (21000.00); no tuvo rendimientos de las clases de las casillas 1479, 1553 y 1577."
 legal_ref = ["rd-439-2007:art-110"]
 
@@ -155,7 +155,7 @@ period = "4T"
 year = "horizon-1"
 binding = "irpf.previous_year_economic_activity_net_income"
 value = "21000.00"
-source = { modelo = "100", year = "horizon-2", period = "0A" }
+sources = [{ modelo = "100", year = "horizon-2", period = "0A" }]
 derivation = "Suma de las casillas 0224, 1479, 1553 y 1577 de su declaración de la renta del ejercicio anterior (RIRPF art. 110.3.c). Solo declaró la casilla 0224, rendimiento neto de su única actividad económica (21000.00); no tuvo rendimientos de las clases de las casillas 1479, 1553 y 1577."
 legal_ref = ["rd-439-2007:art-110"]
 
