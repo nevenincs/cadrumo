@@ -423,29 +423,31 @@ def test_base_liquidable_general_applies_reductions() -> None:
 
 
 def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
-    """0468 = min(0467, 10000, 30% * 0432) — aportación below both caps, full reducción applies.
+    """0468: a worker contribution to the employment plan matched by the employer, below every cap.
 
-    Oracle derivation (Art. 52 LIRPF, AEAT Renta 2025 Manual Parte 1):
+    Oracle derivation (Art. 52.1 LIRPF, AEAT Renta 2025 Manual Parte 1):
       trabajo rendimientos (0003) = 58,500 → 0019 (otros gastos, art. 19.2.f)
-        = min(2000, 58500) = 2,000 → 0025 = 0432 = 58,500 - 2,000 = 56,500
-      30% cap = 0.30 * 56,500 = 16,950
-      plan de empleo aportación (0426) = 4,200 → 0467 = 4,200
-      0468 = min(4200, 10000, 16950) = 4,200   (below both caps)
-      0435 = 56,500 (no negative G/P balance)
-      0461 = 0 (individual declaration)
-      0501 = 0 (no prior negative bases)
-      0500 = 56,500 - 4,200 - 0 - 0 = 52,300
+        = min(2000, 58500) = 2,000 → 0022 = 0432 = 58,500 - 2,000 = 56,500
+      30% cap = 0.30 * 56,500 (net work income, art. 19) = 16,950
+      contribución empresarial (0427) = 4,200; worker aportación to that plan (0426) = 4,200
+      0383 unmarked (income from that employer not above 60,000): coefficient table applies,
+        and above 1,500 of employer contribution the worker counts up to 1 x 4,200 = 4,200
+      1º increment = 4,200 + min(4,200, 4,200) = 8,400 (≤ 8,500)
+      0467 = 8,400; 0468 = min(16950, min(8400, 1500 + 8400)) = 8,400   (below every cap)
+      0435 = 56,500 (no negative G/P balance); 0461 = 0; 0501 = 0
+      0500 = 56,500 - 8,400 = 48,100
     """
     scenario = _scenario_2025(
         "plan-empleo-reduccion-below-caps",
         overrides={
-            _C0003: Decimal("58500.00"),  # trabajo → nets to 0432 = 56,500 after otros gastos
-            _C0426: Decimal("4200.00"),  # plan de empleo aportación → 0467 = 4,200
+            _C0003: Decimal("58500.00"),  # trabajo → nets to 0022 = 56,500 after otros gastos
+            _C0426: Decimal("4200.00"),  # worker aportación to the employment plan
+            _C0427: Decimal("4200.00"),  # matching contribución empresarial
         },
         expected=(
-            _expected_output(target_casilla_id=_C0467, value=Decimal("4200.00")),
-            _expected_output(target_casilla_id=_C0468, value=Decimal("4200.00")),
-            _expected_output(target_casilla_id=_C0500, value=Decimal("52300.00")),
+            _expected_output(target_casilla_id=_C0467, value=Decimal("8400.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("8400.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("48100.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario)
@@ -535,15 +537,15 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
       trabajo rendimientos (0003) = 82,000 → 0019 (otros gastos, art. 19.2.f)
         = min(2000, 82000) = 2,000 → 0432 = 82,000 - 2,000 = 80,000
       30% cap = 0.30 * 80,000 = 24,000
-      plan de empleo aportación (0426) = 15,000 → 0467 = 15,000
-      0468 = min(15000, 10000, 24000) = 10,000   (€10k absolute cap applies)
+      contribución empresarial to the plan de empleo (0427) = 15,000 → 0467 = 15,000
+      0468 = min(24000, min(15000, 1500 + min(15000, 8500))) = 10,000   (€10k absolute cap applies)
       0500 = 80,000 - 10,000 = 70,000
     """
     scenario = _scenario_2025(
         "plan-empleo-reduccion-capped-10k",
         overrides={
             _C0003: Decimal("82000.00"),  # trabajo → nets to 0432 = 80,000 after otros gastos
-            _C0426: Decimal("15000.00"),  # plan de empleo aportación → 0467 = 15,000
+            _C0427: Decimal("15000.00"),  # contribución empresarial → 0467 = 15,000
         },
         expected=(
             _expected_output(target_casilla_id=_C0467, value=Decimal("15000.00")),

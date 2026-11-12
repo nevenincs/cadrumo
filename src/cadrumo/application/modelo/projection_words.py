@@ -41,6 +41,9 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.INCOME_FAMILY_CONTRADICTS_PROFILE.value: (
             "application.modelo.projection_words.casilla_reason.income_family_contradicts_profile"
         ),
+        RegistryUnresolvedOutcomeReason.JOINT_RETURN_MEMBER_INCOME_UNAVAILABLE.value: (
+            "application.modelo.projection_words.casilla_reason.joint_return_member_income_unavailable"
+        ),
     }
 )
 """The sentence of each reason a computed box can be left without a value."""

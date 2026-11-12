@@ -3526,6 +3526,10 @@ application:
           the limit, but the income categories you stated exclude a kind of income
           that you have figures for. Correct the categories or remove the figures,
           then project again. It is never shown as zero.
+        joint_return_member_income_unavailable: This reduction cannot be calculated
+          for a joint return, because your return does not separate each member's
+          work and business income, and the limits apply to each member individually
+          (LIRPF art. 52.1). It is never shown as zero.
         m210_baseline_tipo_deferred: This box needs the general rate for this kind
           of income, which is not yet grounded for the year, so it has no value.
         m210_convenio_rate_missing: This box needs the tax-treaty rate for the country

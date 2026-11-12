@@ -3668,6 +3668,10 @@ application:
           a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
           amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
           összegeket, majd vetíts újra. Soha nem jelenik meg nullaként.
+        joint_return_member_income_unavailable: Ez a csökkentés együttes bevallásnál
+          nem számítható ki, mert a bevallásod nem választja szét az egyes tagok munkaviszonyból
+          és gazdasági tevékenységből származó jövedelmét, a határok pedig tagonként
+          külön érvényesek (LIRPF 52.1. cikk). Soha nem jelenik meg nullaként.
         m210_baseline_tipo_deferred: Ehhez a rovathoz az ilyen jellegű jövedelem általános
           adókulcsa kell, amely az adóévre még nincs megalapozva, ezért nincs értéke.
         m210_convenio_rate_missing: Ehhez a rovathoz a kettős adóztatást kizáró egyezmény

@@ -2587,3 +2587,77 @@ required_text = ["con el límite de 300 euros anuales"]
 value = "300"
 date_axis = "filing_period"
 valid_from = 2015-01-01
+
+# LIRPF art. 52.1.a: the percentage limit of the pension-system reductions, taken on the sum of
+# the net work income (art. 19, before art. 20) and the net activity income (before art. 32)
+# the taxpayer obtains individually. The percentage has not changed since 2015.
+[[revisions."2022".parameters]]
+id = "renta-prevision-social-limite-porcentual-rendimientos"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-52-2022"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["El 30 por 100 de la suma de los rendimientos netos del trabajo y de actividades económicas percibidos individualmente en el ejercicio."]
+
+[[revisions."2022".parameters.values]]
+value = "0.30"
+date_axis = "filing_period"
+valid_from = 2015-01-01
+
+# LIRPF art. 52.1.b: the general absolute limit, the same figure as the governed statutory fact of
+# this id, carried as a parameter because a formula reads parameters.
+[[revisions."2022".parameters]]
+id = "lirpf-art-52-individual-contribution-sublimit"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-52-2022"]
+source_refs = ["boe-lirpf-statutory-facts", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Límite general: 1.500 euros anuales por el total de aportaciones y de contribuciones"]
+
+[[revisions."2022".parameters.values]]
+value = "1500"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+# LIRPF art. 52.1.b: the increment of the general limit for employer contributions and the
+# qualifying worker contributions to the same instrument; from 2023 it is also the joint cap of
+# that increment and the autonomo increment.
+[[revisions."2022".parameters]]
+id = "renta-prevision-social-incremento-limite"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-52-2022"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Incremento del límite anterior: 8.500 euros siempre que este incremento proceda de"]
+
+[[revisions."2022".parameters.values]]
+value = "8500"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+# LIRPF art. 52.1, last paragraph: the own limit of the premiums to collective dependency
+# insurance paid by the employer, separate from the general limit since 2015.
+[[revisions."2022".parameters]]
+id = "renta-prevision-social-seguros-colectivos-dependencia-limite"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-52-2022"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Además, 5.000 euros anuales para las primas a seguros colectivos de dependencia satisfechas por la empresa."]
+
+[[revisions."2022".parameters.values]]
+value = "5000"
+date_axis = "filing_period"
+valid_from = 2015-01-01

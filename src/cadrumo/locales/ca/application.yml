@@ -3711,6 +3711,10 @@ application:
           rendes amb el límit, però les categories de renda que has indicat exclouen
           un tipus de renda del qual tens imports. Corregeix les categories o retira
           els imports i torna a projectar. Mai es mostra com a zero.
+        joint_return_member_income_unavailable: Aquesta reducció no es pot calcular
+          en una declaració conjunta, perquè la teva declaració no separa els rendiments
+          del treball i d'activitats econòmiques de cada membre, i els límits s'apliquen
+          a cada membre individualment (art. 52.1 LIRPF). Mai es mostra com a zero.
         m210_baseline_tipo_deferred: Aquesta casella necessita el tipus de gravamen
           general d'aquesta classe de renda, que encara no està fonamentat per a l'exercici,
           així que no té valor.

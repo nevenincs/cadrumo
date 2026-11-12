@@ -3719,6 +3719,11 @@ application:
           el límite, pero las categorías de renta que indicaste excluyen un tipo de
           renta del que tienes importes. Corrige las categorías o retira los importes
           y vuelve a proyectar. Nunca se muestra como cero.
+        joint_return_member_income_unavailable: Esta reducción no se puede calcular
+          en una declaración conjunta, porque tu declaración no separa los rendimientos
+          del trabajo y de actividades económicas de cada miembro, y los límites se
+          aplican a cada miembro individualmente (art. 52.1 LIRPF). Nunca se muestra
+          como cero.
         m210_baseline_tipo_deferred: Esta casilla necesita el tipo de gravamen general
           de esta clase de renta, que aún no está fundamentado para el ejercicio,
           así que no tiene valor.
