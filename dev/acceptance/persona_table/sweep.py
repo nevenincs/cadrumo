@@ -89,7 +89,7 @@ from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .export_readback import read_fields, readback_mismatches, readback_reason, unreadable_reason
 from .export_text import check_export_text, violation_reason
 from .roles import StatedCasilla, compared, differing, edition_identities, mismatch_text, revision_identities
-from .row_figures import row_figures
+from .row_figures import merge_row_figures, row_figures
 from .rows import (
     PlannedRow,
     Stage,
@@ -385,7 +385,7 @@ def _compare(
     rows: Mapping[str, str],
 ) -> tuple[Stage, list[str]]:
     """The calculate stage against the stated values, and the reasons it is not a plain pass."""
-    mismatches = _mismatches(values, calculated, plan.unchecked, rows)
+    mismatches = _mismatches(values, calculated, plan.unchecked, rows) + _row_conflicts(calculated, rows)
     reasons: list[str] = []
     if stated_refusal is not None:
         calculate = Stage.REFUSAL_NOT_RAISED
@@ -394,6 +394,8 @@ def _compare(
         calculate = Stage.CALCULATED
     else:
         calculate = _value_stage(values, calculated, plan.unchecked, rows) if mismatches else Stage.PASSED
+        if _row_conflicts(calculated, rows):
+            calculate = Stage.MISMATCH
         reasons += ["; ".join(mismatches)] if mismatches else []
     unresolved = _unresolved(calculated)
     if unresolved:
@@ -409,10 +411,16 @@ def _differing(
 ) -> list[tuple[StatedCasilla, object]]:
     """Each stated casilla, and each role resolved in the edition the calculation used, that it does not equal."""
     got = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
-    got |= rows
+    got, _conflicts = merge_row_figures(got, rows)
     unit = calculated.unit
     casillas = revision_identities(unit.modelo, unit.revision_id) if any(value.roles for value in values) else ()
     return differing(compared(values, casillas, unchecked), got)
+
+
+def _row_conflicts(calculated: ModeloWorkCalculatePublicResultV3, rows: Mapping[str, str]) -> list[str]:
+    """Each casilla whose nonzero public scalar differs from the figure its single row holds."""
+    scalars = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
+    return merge_row_figures(scalars, rows)[1]
 
 
 def _mismatches(
