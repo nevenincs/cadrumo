@@ -241,6 +241,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
             "application.modelo.work_form.finding_action.check_condition"
         ),
         # What this application cannot settle yet.
+        "application.modelo.findings.application_order_unsettled": (
+            "application.modelo.work_form.finding_action.await_update"
+        ),
         "application.modelo.findings.m193_settled_row_amount_authority_unresolved": (
             "application.modelo.work_form.finding_action.await_update"
         ),

@@ -390,6 +390,30 @@ def _evaluate_application_equals_present_maximum(
     return casilla_values.get(application_id, Decimal(0)) == casilla_values[maximum_id]
 
 
+def _evaluate_application_order_immaterial(
+    predicate: _AdmittedPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+    _text_values: Mapping[CasillaId, str],
+) -> bool:
+    """Hold when the amounts applied from each stock do not turn on the order the stocks are taken in.
+
+    The capacity is split across the stocks one after another, so the split
+    depends on the order only when two or more stocks are positive and a
+    positive capacity falls short of their sum. An omitted stock reads as zero;
+    an absent capacity facing two or more positive stocks never holds, because
+    the split is then unknown.
+    """
+    capacity_id, *stock_ids = predicate.casilla_ids
+    positive = [value for cid in stock_ids if (value := casilla_values.get(cid, Decimal(0))) > Decimal(0)]
+    if len(positive) <= 1:
+        return True
+    if capacity_id not in casilla_values:
+        return False
+    capacity = casilla_values[capacity_id]
+    return capacity <= Decimal(0) or capacity >= sum(positive, Decimal(0))
+
+
 def _evaluate_equals(
     predicate: _AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -508,6 +532,7 @@ _BLOCKING_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _Blocking
         VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM: (
             _evaluate_application_equals_present_maximum
         ),
+        VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL: _evaluate_application_order_immaterial,
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO: _evaluate_casilla_equals_implies_nonzero,
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO: _evaluate_casilla_equals_implies_zero,
         VerificationPredicateOperator.EQUALS: _evaluate_equals,
@@ -541,6 +566,10 @@ def evaluate_predicate_expression(
       present bound value and must not exceed it.
     - ``application_equals_present_maximum(["application_id", "maximum_id"])``
       — the maximum must be present and the application must equal it.
+    - ``application_order_immaterial(["capacity_id", "stock_id", ...])`` —
+      the split of the capacity across the stocks must not depend on their
+      order: at most one positive stock, a capacity at or below zero, or a
+      capacity covering every positive stock.
     - ``casilla_equals_implies_nonzero`` / ``casilla_equals_implies_zero`` —
       when the antecedent's operator-entered text equals the literal, the
       consequent must be non-zero, or present and zero.
@@ -900,6 +929,8 @@ def _blocking_predicate_finding(
         )
     if operator is VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM:
         return _application_maximum_finding(predicate, admitted, casilla_values)
+    if operator is VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL:
+        return _application_order_finding(predicate, admitted, casilla_values)
     if operator is VerificationPredicateOperator.EQUALS_SUM:
         total_id, _total, addend_sum = _equals_sum_operands(admitted, casilla_values)
         return ModeloVerificationFinding(
@@ -956,6 +987,42 @@ def _application_maximum_finding(
             "box": application_id,
             "casilla_value": casilla_values.get(application_id, Decimal(0)),
             "computed_value": casilla_values[maximum_id],
+        },
+        legal_refs=legal_refs,
+    )
+
+
+def _application_order_finding(
+    predicate: VerificationPredicateDefinition,
+    admitted: _AdmittedPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> ModeloVerificationFinding:
+    """Refuse filing grade where the amount applied from each origin year turns on an order no text states.
+
+    The finding names the capacity and the pending total it falls short of, or
+    says the capacity is not yet known; the calculation itself stands.
+    """
+    capacity_id, *stock_ids = admitted.casilla_ids
+    pending = sum(
+        (value for cid in stock_ids if (value := casilla_values.get(cid, Decimal(0))) > Decimal(0)), Decimal(0)
+    )
+    legal_refs = tuple(predicate.legal_refs)
+    if capacity_id not in casilla_values:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.application_order_capacity_unresolved",
+            message_facts={"predicate_id": predicate.predicate_id, "pending_total": pending},
+            legal_refs=legal_refs,
+        )
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.application_order_unsettled",
+        message_facts={
+            "predicate_id": predicate.predicate_id,
+            "capacity": casilla_values[capacity_id],
+            "pending_total": pending,
         },
         legal_refs=legal_refs,
     )

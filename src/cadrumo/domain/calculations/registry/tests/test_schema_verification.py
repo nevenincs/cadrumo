@@ -33,6 +33,9 @@ def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> 
         "application_equals_present_maximum": (
             'application_equals_present_maximum(["1389", "base-liq-neg-general-em1-aplicada-maxima"])'
         ),
+        "application_order_immaterial": (
+            'application_order_immaterial(["ahorro-rcm-paso1-capacidad", "1272", "1274", "1277", "1280"])'
+        ),
         "advisory_when_positive": 'advisory_when_positive(["0527"])',
         "advisory_when_ratio_ge": 'advisory_when_ratio_ge(["01", "02", "0.5"])',
         "equals": 'equals(["27", "iva.cuota-devengada-total"])',
