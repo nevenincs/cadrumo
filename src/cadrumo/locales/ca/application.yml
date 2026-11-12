@@ -561,9 +561,6 @@ application:
         m193_pending_row_has_devengo: 'No s''ha escrit res: una fila pendent del Modelo
           193 no pot tenir a més exercici de meritació. Treu-ne un dels dos i torna
           a exportar.'
-        m202_producer_facts_unsupported: 'No s''ha escrit res: el model 202 necessita
-          dades que aquesta exportació encara no pot prendre del teu perfil (%{missing_fact_ids}).
-          Exporta''l quan s''admetin.'
         m280_negative_imputation_key_invalid: 'No s''ha escrit res: una imputació
           negativa del Modelo 280 necessita la clau 2 amb el signe negatiu N, o farciment
           amb zeros sota qualsevol altra clau. Corregeix el registre i torna a exportar.'

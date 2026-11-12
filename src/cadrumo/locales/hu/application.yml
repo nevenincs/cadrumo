@@ -556,9 +556,6 @@ application:
         m193_pending_row_has_devengo: 'Semmi sem íródott ki: a 193-as modell függő
           sorához nem tartozhat esedékességi év is. Töröld az egyiket, és exportálj
           újra.'
-        m202_producer_facts_unsupported: 'Semmi sem lett kiírva: a 202-es modellhez
-          olyan adatok kellenek, amelyeket ez az export még nem tud a profilodból
-          venni (%{missing_fact_ids}). Exportáld, ha már támogatottak.'
         m280_negative_imputation_key_invalid: 'Semmi sem íródott ki: a 280-as modell
           negatív imputációjához a 2-es kulcs és az N negatív előjel kell, vagy bármely
           más kulcs alatt nulla kitöltés. Javítsd a rekordot, és exportálj újra.'

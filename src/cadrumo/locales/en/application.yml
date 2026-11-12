@@ -524,9 +524,6 @@ application:
           or clear them, and export again.'
         m193_pending_row_has_devengo: 'Nothing was written: a pending row in Modelo
           193 cannot also have an accrual year. Clear one of them and export again.'
-        m202_producer_facts_unsupported: 'Nothing was written: Modelo 202 needs facts
-          this export cannot take from your profile yet (%{missing_fact_ids}). Export
-          it once they are supported.'
         m280_negative_imputation_key_invalid: 'Nothing was written: a negative imputation
           in Modelo 280 needs key 2 with the negative sign N, or zero fill under any
           other key. Correct the record and export again.'

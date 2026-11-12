@@ -914,6 +914,9 @@ errors:
     filing_export_payload_destination_count: Az exportnak nem pontosan egy tartalomcélt
       adtak meg. Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért
       az adataid módosítása nem javítja ki.
+    filing_export_period_start_unresolved: 'A(z) %{modelo} %{period} adómegállapítási
+      időszakának kezdete nem állapítható meg: add meg a profilodban az alapítás dátumát,
+      valamint az üzleti év zárónapját és hónapját.'
     filing_export_producer_fact_not_boolean: A(z) %{field} exportmezőnek típusos logikai
       előállítói tényre van szüksége, de más típust kapott. Az alkalmazás ezt a saját
       exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.

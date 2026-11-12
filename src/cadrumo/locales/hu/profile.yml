@@ -119,6 +119,8 @@ profile:
       ccaa: Adóügyi illetőség szerinti autonóm közösség vagy város
       jurisdiction_scope: Melyik adóterület alkalmazandó erre a Modelo 303-ra?
     taxpayer_type:
+      cierre_ejercicio_dia: A hónap melyik napján zárul a társaság üzleti éve?
+      cierre_ejercicio_mes: Melyik hónapban zárul a társaság üzleti éve?
       cooperativa_fiscalmente_protegida: A társaság adóügyileg védett szövetkezet?
       country_of_fiscal_residence: Adóügyi illetőség szerinti ország (ISO 3166-1 alfa-2
         kód, pl. GB, DE, FR)
@@ -127,21 +129,23 @@ profile:
       entity_type: Entitástípus
       erd_tipo_gravamen_especifico: A társaság kis méretű, és a LIS 101. cikke szerinti
         sajátos adókulccsal adózik?
+      fecha_constitucion: Mikor alapították a társaságot?
       fiscal_residency: Adóügyi illetőségi kategória
-      incn_periodo_anterior_inferior_1m: A társaság nettó árbevétele az előző adóévben
-        1 millió euró alatt volt?
+      incn_periodo_impositivo_anterior: Mekkora volt a társaság nettó árbevétele az
+        előző adómegállapítási időszakban?
       incn_prior_12_months: Mi volt a nettó árbevétele az elmúlt 12 hónapban? (euróban,
         opcionális)
       irpf_income_categories: IRPF jövedelemkategóriák
       legal_entity_form: Jogi forma
       marca_instrumental: Vonatkozik a társaságra a nyomtatványterv 7. megjegyzése
         szerinti instrumentális jelölés?
-      multiples_tipos_impositivos: A társaság több társaságiadó-kulccsal adózik?
       new_entity_first_two_profit_periods: Ez egy újonnan létrehozott jogi személy
         az első két nyereséges adóidőszakának egyikében?
       pago_fraccionado_art_40_3_elected: Élt-e a társaság a cégbejelentésében (declaración
         censal) az LIS 40.3. cikkely szerinti választással a részletfizetésre?
       principal_cnae: Mi a társaság fő tevékenységének négyjegyű CNAE-kódja?
+      principal_cnae_classification: Melyik CNAE-osztályozás szerint adod meg a fő
+        tevékenységed kódját?
       regimen_entidad_capital_riesgo: A társaság a LIS 50. cikke szerinti kockázatitőke-társaság?
       regimen_entidades_navieras_tonelaje: A társaság a hajózási tonnaadó-rendszert
         alkalmazza?
@@ -150,8 +154,6 @@ profile:
       representante_fiscal_nif: A spanyolországi adóügyi képviselő NIF/NIE száma (EU-n/EGT-n
         kívüli esetén kötelező)
       representante_fiscal_nombre: A spanyolországi adóügyi képviselő neve
-      tipo_gravamen_is: Milyen társasági adókulcsot alkalmaz a társaság a Modelo 202
-        szerint?
     withholding:
       has_employees: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
       modelo_111_no_retenciones_periods: Modelo 111 forrásadó nélküli időszakok
@@ -663,6 +665,10 @@ profile:
               támogatott
           label: Területi adórendszer
       taxpayer_type:
+        cierre_ejercicio_dia:
+          label: Üzleti év zárónapja
+        cierre_ejercicio_mes:
+          label: Üzleti év záróhónapja
         cooperativa_fiscalmente_protegida:
           label: Adóügyileg védett szövetkezet
         country_of_fiscal_residence:
@@ -677,13 +683,15 @@ profile:
           label: Adózó típusa
         erd_tipo_gravamen_especifico:
           label: Kis méretű társaság sajátos adókulccsal (LIS 101. cikk)
+        fecha_constitucion:
+          label: Alapítás dátuma
         fiscal_residency:
           choices:
             non_resident_irnr: Nem spanyolországi illetőségű (IRNR)
             resident_irpf: Spanyolországi illetőségű (IRPF)
           label: Adóügyi illetőség
-        incn_periodo_anterior_inferior_1m:
-          label: Előző időszak nettó árbevétele 1 millió euró alatt
+        incn_periodo_impositivo_anterior:
+          label: Az előző adómegállapítási időszak nettó árbevétele
         incn_prior_12_months:
           label: Előző 12 hónap nettó árbevétele
         irpf_income_categories:
@@ -701,14 +709,14 @@ profile:
           label: Jogi forma
         marca_instrumental:
           label: Instrumentális jelölés (7. megjegyzés)
-        multiples_tipos_impositivos:
-          label: Több adókulccsal adózik
         new_entity_first_two_profit_periods:
           label: Az első két nyereséges időszak egyikében
         pago_fraccionado_art_40_3_elected:
           label: LIS 40.3. cikkely szerinti választás a részletfizetésnél
         principal_cnae:
           label: Fő tevékenység CNAE-kódja
+        principal_cnae_classification:
+          label: A fő tevékenység CNAE-osztályozása
         regimen_entidad_capital_riesgo:
           label: Kockázatitőke-társaság (LIS 50. cikk)
         regimen_entidades_navieras_tonelaje:
@@ -721,8 +729,6 @@ profile:
           label: Adóügyi képviselő NIF-je
         representante_fiscal_nombre:
           label: Adóügyi képviselő neve
-        tipo_gravamen_is:
-          label: Társasági adókulcs
         tributacion_estado_porcentaje:
           label: Államnak fizetett adó aránya
       vivienda_office:

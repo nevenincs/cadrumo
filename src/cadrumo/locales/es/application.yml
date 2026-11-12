@@ -564,9 +564,6 @@ application:
         m193_pending_row_has_devengo: 'No se ha escrito nada: una fila pendiente del
           Modelo 193 no puede tener además ejercicio de devengo. Quita uno de los
           dos y vuelve a exportar.'
-        m202_producer_facts_unsupported: 'No se ha escrito nada: el modelo 202 necesita
-          datos que esta exportación todavía no puede tomar de tu perfil (%{missing_fact_ids}).
-          Expórtalo cuando se admitan.'
         m280_negative_imputation_key_invalid: 'No se ha escrito nada: una imputación
           negativa del Modelo 280 necesita la clave 2 con el signo negativo N, o relleno
           con ceros bajo cualquier otra clave. Corrige el registro y vuelve a exportar.'

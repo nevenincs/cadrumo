@@ -896,6 +896,9 @@ errors:
     filing_export_payload_destination_count: The export was given a number of payload
       destinations other than one. The application derives this from its own export
       design, so no change to your data repairs it.
+    filing_export_period_start_unresolved: 'The start of the período impositivo for
+      %{modelo} %{period} can''t be worked out: state the constitution date and the
+      financial year-end day and month in your profile.'
     filing_export_producer_fact_not_boolean: The export field %{field} needs a typed
       boolean producer fact and received another type. The application derives this
       from its own export design, so no change to your data repairs it.

@@ -968,6 +968,9 @@ errors:
     filing_export_payload_destination_count: A la exportación se le dio un número
       de destinos del contenido distinto de uno. La aplicación lo deriva de su propio
       diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_period_start_unresolved: 'No se puede determinar el inicio del período
+      impositivo de %{modelo} %{period}: indica en tu perfil la fecha de constitución
+      y el día y mes de cierre del ejercicio.'
     filing_export_producer_fact_not_boolean: El campo de exportación %{field} necesita
       un hecho de productor booleano tipado y recibió otro tipo. La aplicación lo
       deriva de su propio diseño de exportación, así que ningún cambio en tus datos
