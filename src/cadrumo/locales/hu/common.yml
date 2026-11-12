@@ -2144,6 +2144,30 @@ desktop:
         megerősítésnek. A piszkozatod megmaradt.
       country: Ország
       established: Székhely
+      filing_name:
+        kind:
+          entity: Jogi személy
+          natural_person: Természetes személy
+        kind_contradicts: A megadott típus ({declared}) eltér az azonosító alakjától
+          ({observed}).
+        kind_label: Típus
+        no_second_surname: Nincs második vezetéknév
+        nombre: Keresztnév
+        primer_apellido: Első vezetéknév
+        razon_social: Cégnév
+        rendering_add: Változat hozzáadása
+        rendering_for: '{width} karakterhez'
+        rendering_remove: Változat törlése
+        renderings: Rövidebb változatok
+        renderings_hint: A szélesség annak a mezőnek a karakterszáma, amelybe a névnek
+          bele kell férnie.
+        save: Bevallási név mentése
+        segundo_apellido: Második vezetéknév
+        stated_by: Megadta
+        text: Szöveg
+        title: Bevallási név
+        unstated: Még nem adtál meg bevallási nevet.
+        width: Szélesség
       not_applied: A visszaadott megerősítés nem tartalmazza az összes megadott értéket.
         A piszkozatod megmaradt.
       note: Megjegyzés
@@ -4055,6 +4079,7 @@ desktop:
         closing: A záróérték rögzítése
         correct: A nyitókészlet vagy a módszer javítása
         describe: A részletek szerkesztése
+        movement_claim: A vásárlás naplótranzakciójának megadása
         movement_correct: Ennek a mozgásnak a javítása
         movement_reverse: Ennek a mozgásnak a visszavonása
         preview: Az értékelés előnézete
@@ -4062,6 +4087,17 @@ desktop:
         restore: A készletnyilvántartás visszaállítása
         retire: A készletnyilvántartás megszüntetése
       books: Készletnyilvántartások, {year}
+      claim:
+        column: Napló
+        note: Add meg, melyik naplótranzakció könyveli ezt a vásárlást, hogy egyik
+          sem, vagy töröld a korábban megadottat.
+        row: A napló könyveli ezt a vásárlást
+        row_claimed: Egy naplótranzakció könyveli
+        row_none: Egyetlen naplótranzakció sem könyveli
+        row_unstated: Nincs megadva
+        row_unstated_hint: Ez törli a korábban megadottat.
+        state_claimed: 'Könyveli: {transaction}'
+        transaction: Naplótranzakció
       closing:
         authority: Hogyan döntesz az értékről
         basis: Értékelés alapja
@@ -4150,6 +4186,7 @@ desktop:
         correct: '{name} javítása · {year}'
         describe: '{name} részletei · {year}'
         movement: 'Mozgás felvétele ide: {name} · {year}'
+        movement_claim: '{name} egy vásárlásának naplótranzakciója · {year}'
         movement_correct: '{name} egy mozgásának javítása · {year}'
         restore: '{name} visszaállítása · {year}'
         retire: '{name} megszüntetése · {year}'
@@ -4210,6 +4247,7 @@ desktop:
         correct: Javítás mentése
         describe: Részletek mentése
         movement: Mozgás felvétele
+        movement_claim: Megadás mentése
         movement_correct: Javítás mentése
         restore: Nyilvántartás visszaállítása
         retire: Nyilvántartás megszüntetése
@@ -4469,6 +4507,9 @@ desktop:
       confirm: Elvetés
       lead: Kikerül a bevallásaid listájából. Az előzményei megmaradnak.
       reason: Miért (nem kötelező)
+    export:
+      limitation:
+        title: Amit ez a fájl nem tartalmaz
     form:
       pages: A nyomtatvány oldalai
     keys:
@@ -4498,6 +4539,21 @@ desktop:
     side:
       label: A nyomtatvány mellett
       outline: Vázlat
+    statements:
+      hide: Elrejtés
+      intro: Jelöld be azokat a nyilatkozatokat, amelyek igazak rád. A bejelöltek
+        a többi módosításoddal együtt átnézésre kerülnek; ha egyről leveszed a jelölést,
+        visszavonod.
+      mark: Te nyilatkoztál róla
+      not_placed: Egy nyilatkozat olyan mezőre vonatkozik, amelyet ez az űrlap nem
+        mutat, ezért nem került átnézésre.
+      show: Megjelenítés
+      stage: Megtartás átnézésre
+      title: Tehető nyilatkozatok
+      withdraw: Nyilatkozat visszavonása
+      withdraw_kept: A nyilatkozat {box} mezője itt nem üríthető, ezért semmit sem
+        vontál vissza.
+      withdrawn: Nyilatkozat visszavonva
     view:
       compare: Összevetés
       credits: Levonások
@@ -4819,6 +4875,8 @@ desktop:
     search: Keresés
     settings: Beállítások
     tui: Munkaterület
+  refusal:
+    action_unroutable: Itt nem érhető el.
   session:
     enter_restarts: Enter újraindítja
     exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
@@ -8656,10 +8714,12 @@ tui:
           action: Kérés
           actividad_id: Tevékenység
           authority_record: A záróérték teljes fájlja
+          claimed_transaction_id: Igényelt tétel
           closing_value_facts: Záróérték adatfájlja
           evidence_file: Dokumentumfájl
           evidence_folder: A dokumentum útvonalának kiinduló mappája
           kind: Mozgás fajtája
+          ledger_row: A vásárlás tétele
           movement_date: Mozgás dátuma
           movement_id: Mozgás azonosítója
           opening_stock: Nyitókészlet (nem kötelező)
@@ -8965,6 +9025,21 @@ tui:
     search:
       prompt: Keresés minden oldalon rovatszám vagy szavak alapján. Az Enter a rovathoz
         visz.
+    statements:
+      intro: Jelöld be azokat a nyilatkozatokat, amelyek igazak rád. A bejelöltek
+        a többi módosításoddal együtt átnézésre kerülnek; ha egyről leveszed a jelölést,
+        visszavonod.
+      key: Nyilatkozatok
+      mark:
+        meaning: Kijelentetted, hogy ebben a rovatban nincs összeg; ez nem általad
+          beírt érték.
+        name: Általad nyilatkozva
+      none: Ez a bevallás most nem kínál nyilatkozatot.
+      not_placed: Egy nyilatkozat olyan rovatra vonatkozik, amelyet ez a képernyő
+        nem mutat, ezért nem került átnézésre.
+      stage: Megtartás átnézésre
+      title: Tehető nyilatkozatok
+      withdraw: Nyilatkozat visszavonása
   operations:
     action:
       close: Bezárás
@@ -9112,6 +9187,9 @@ tui:
       support_matrix: 'Mire képes a Cadrumo az egyes nyomtatványokkal: számítás, exportálás,
         benyújtott példányok olvasása.'
     title: Referencia
+  refusal:
+    action_needs_details: … futtatás előtt elkéri tőled a még hiányzó adatokat.
+    action_unroutable: Itt nem érhető el.
   restricted:
     actions: 'Engedélyezett tevékenységek: {values}'
     all_periods: Minden időszak

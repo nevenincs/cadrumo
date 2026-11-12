@@ -2168,6 +2168,30 @@ desktop:
         existent. Es conserva el teu esborrany.
       country: País
       established: Establerta
+      filing_name:
+        kind:
+          entity: Entitat
+          natural_person: Persona física
+        kind_contradicts: El tipus indicat ({declared}) no coincideix amb la forma
+          de l'identificador ({observed}).
+        kind_label: Tipus
+        no_second_surname: Sense segon cognom
+        nombre: Nom
+        primer_apellido: Primer cognom
+        razon_social: Raó social
+        rendering_add: Afegeix una versió
+        rendering_for: Per a {width} caràcters
+        rendering_remove: Treu aquesta versió
+        renderings: Versions més curtes
+        renderings_hint: L'amplada és el nombre de caràcters del camp on ha de cabre
+          el nom.
+        save: Desa el nom de presentació
+        segundo_apellido: Segon cognom
+        stated_by: Indicat per
+        text: Text
+        title: Nom de presentació
+        unstated: No has indicat cap nom de presentació.
+        width: Amplada
       not_applied: La confirmació retornada no conté tots els valors que has introduït.
         Es conserva el teu esborrany.
       note: Nota
@@ -4088,6 +4112,7 @@ desktop:
         closing: Fixar el valor de tancament
         correct: Corregir les existències inicials o el mètode
         describe: Editar els detalls
+        movement_claim: Indicar la transacció del llibre d'aquesta compra
         movement_correct: Corregir aquest moviment
         movement_reverse: Anul·lar aquest moviment
         preview: Veure una previsualització de la valoració
@@ -4095,6 +4120,17 @@ desktop:
         restore: Restaurar el llibre d'existències
         retire: Donar de baixa el llibre d'existències
       books: Llibres d'existències de {year}
+      claim:
+        column: Llibre
+        note: Indica quina transacció del llibre registra aquesta compra, que cap
+          ho fa, o esborra el que has indicat abans.
+        row: El llibre registra aquesta compra
+        row_claimed: La registra una transacció del llibre
+        row_none: No la registra cap transacció del llibre
+        row_unstated: Sense indicar
+        row_unstated_hint: Això esborra una indicació anterior.
+        state_claimed: Registrada per {transaction}
+        transaction: Transacció del llibre
       closing:
         authority: Com es decideix el valor
         basis: Comptat a
@@ -4182,6 +4218,7 @@ desktop:
         correct: Corregir {name} · {year}
         describe: Detalls de {name} · {year}
         movement: Afegir un moviment a {name} · {year}
+        movement_claim: Transacció del llibre d'una compra de {name} · {year}
         movement_correct: Corregir un moviment de {name} · {year}
         restore: Restaurar {name} · {year}
         retire: Donar de baixa {name} · {year}
@@ -4241,6 +4278,7 @@ desktop:
         correct: Desar la correcció
         describe: Desar els detalls
         movement: Afegir el moviment
+        movement_claim: Desar la indicació
         movement_correct: Desar la correcció
         restore: Restaurar el llibre
         retire: Donar de baixa el llibre
@@ -4501,6 +4539,9 @@ desktop:
       confirm: Descartar
       lead: Surt de la teva llista de declaracions. Se'n conserva l'historial.
       reason: Per què (opcional)
+    export:
+      limitation:
+        title: El que aquest fitxer no inclou
     form:
       pages: Pàgines del formulari
     keys:
@@ -4529,6 +4570,20 @@ desktop:
     side:
       label: Al costat del formulari
       outline: Esquema
+    statements:
+      hide: Amagar
+      intro: Marca cada manifestació que sigui certa per a tu. Les que marquis queden
+        per revisar amb els teus altres canvis; si en desmarques una, es retira.
+      mark: Manifestat per tu
+      not_placed: Una manifestació es refereix a una casella que aquest formulari
+        no mostra, així que no s'ha deixat per revisar.
+      show: Mostrar
+      stage: Deixar per revisar
+      title: Manifestacions que pots fer
+      withdraw: Retirar la manifestació
+      withdraw_kept: La casella {box} d'aquesta manifestació no es pot buidar aquí,
+        així que no s'ha retirat res.
+      withdrawn: Manifestació retirada
     view:
       compare: Compara
       credits: Retencions
@@ -4847,6 +4902,8 @@ desktop:
     search: Cerca
     settings: Configuració
     tui: Espai de treball
+  refusal:
+    action_unroutable: No està disponible aquí.
   session:
     enter_restarts: Retorn el reinicia
     exit_line: '[El procés ha acabat amb el codi {code}. Prem Retorn per tornar a
@@ -8694,10 +8751,12 @@ tui:
           action: Petició
           actividad_id: Activitat
           authority_record: Fitxer complet del valor de tancament
+          claimed_transaction_id: Moviment reclamat
           closing_value_facts: Fitxer de dades del valor de tancament
           evidence_file: Fitxer del document
           evidence_folder: Carpeta des de la qual parteix el camí del document
           kind: Tipus de moviment
+          ledger_row: Moviment de la compra
           movement_date: Data del moviment
           movement_id: Identificador del moviment
           opening_stock: Existències inicials (opcional)
@@ -9003,6 +9062,20 @@ tui:
     search:
       prompt: Cerca a totes les pàgines per número de casella o per paraules. Retorn
         et porta a la casella.
+    statements:
+      intro: Marca cada manifestació que sigui certa per a tu. Les que marquis queden
+        per revisar amb els teus altres canvis; si en desmarques una, es retira.
+      key: Manifestacions
+      mark:
+        meaning: Vas manifestar que aquesta casella no té import; no és un valor que
+          hi escrivissis.
+        name: Manifestat per tu
+      none: Aquesta declaració no ofereix ara cap manifestació.
+      not_placed: Una manifestació es refereix a una casella que aquesta pantalla
+        no mostra, així que no s'ha deixat per revisar.
+      stage: Deixar per revisar
+      title: Manifestacions que pots fer
+      withdraw: Retirar la manifestació
   operations:
     action:
       close: Tanca
@@ -9151,6 +9224,10 @@ tui:
       support_matrix: 'El que Cadrumo pot fer amb cada model: calcular, exportar,
         llegir còpies presentades.'
     title: Referència
+  refusal:
+    action_needs_details: … et demana les dades que encara falten abans de poder-se
+      executar.
+    action_unroutable: No està disponible aquí.
   restricted:
     actions: 'Accions permeses: {values}'
     all_periods: Tots els períodes

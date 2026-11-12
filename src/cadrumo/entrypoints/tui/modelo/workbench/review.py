@@ -99,7 +99,12 @@ def change_effect_key(change: StagedChange) -> str:
 
 
 def change_effect_text(change: StagedChange) -> str:
-    """Say in words what one change does, naming the source a replaced value came from."""
+    """Say in words what one change does, naming the source a replaced value came from.
+
+    A statement says what the form serves for it, never words of the workbench's own.
+    """
+    if change.statement is not None:
+        return change.statement.effect_words
     if change.kind is WorkbenchChangeKind.SET:
         return typing_effect_words(change.field)
     return tr(change_effect_key(change))

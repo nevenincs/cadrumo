@@ -2117,6 +2117,30 @@ desktop:
         confirmation. Your draft has been kept.
       country: Country
       established: Established
+      filing_name:
+        kind:
+          entity: Entity
+          natural_person: Natural person
+        kind_contradicts: The kind stated ({declared}) differs from the form of the
+          identifier ({observed}).
+        kind_label: Kind
+        no_second_surname: No second surname
+        nombre: Given name
+        primer_apellido: First surname
+        razon_social: Company name
+        rendering_add: Add a rendering
+        rendering_for: For {width} characters
+        rendering_remove: Remove this rendering
+        renderings: Shorter renderings
+        renderings_hint: The width is the number of characters of the field the name
+          has to fit.
+        save: Save filing name
+        segundo_apellido: Second surname
+        stated_by: Stated by
+        text: Text
+        title: Filing name
+        unstated: No filing name stated.
+        width: Width
       not_applied: The returned confirmation does not contain every value you entered.
         Your draft has been kept.
       note: Note
@@ -4018,6 +4042,7 @@ desktop:
         closing: Set the closing value
         correct: Correct the opening stock or the method
         describe: Edit the details
+        movement_claim: State the ledger transaction of this purchase
         movement_correct: Correct this movement
         movement_reverse: Reverse this movement
         preview: Preview the valuation
@@ -4025,6 +4050,17 @@ desktop:
         restore: Restore the stock book
         retire: Retire the stock book
       books: Stock books for {year}
+      claim:
+        column: Ledger
+        note: Say which ledger transaction books this purchase, that none does, or
+          clear what was stated.
+        row: The ledger books this purchase
+        row_claimed: A ledger transaction books it
+        row_none: No ledger transaction books it
+        row_unstated: Not stated
+        row_unstated_hint: This clears an earlier statement.
+        state_claimed: Booked by {transaction}
+        transaction: Ledger transaction
       closing:
         authority: How the value is decided
         basis: Counted at
@@ -4111,6 +4147,7 @@ desktop:
         correct: Correct {name} · {year}
         describe: Details of {name} · {year}
         movement: Add a movement to {name} · {year}
+        movement_claim: Ledger transaction of a purchase of {name} · {year}
         movement_correct: Correct a movement of {name} · {year}
         restore: Restore {name} · {year}
         retire: Retire {name} · {year}
@@ -4168,6 +4205,7 @@ desktop:
         correct: Save the correction
         describe: Save the details
         movement: Add the movement
+        movement_claim: Save the statement
         movement_correct: Save the correction
         restore: Restore the stock book
         retire: Retire the stock book
@@ -4422,6 +4460,9 @@ desktop:
       confirm: Discard
       lead: It leaves your list of declarations. Its history is kept.
       reason: Why (optional)
+    export:
+      limitation:
+        title: What this file leaves out
     form:
       pages: Pages of the form
     keys:
@@ -4450,6 +4491,19 @@ desktop:
     side:
       label: Beside the form
       outline: Outline
+    statements:
+      hide: Hide
+      intro: Tick each statement that is true for you. Every one you tick is staged
+        for review with your other changes; clearing a tick takes that statement out.
+      mark: Stated by you
+      not_placed: A statement names a box this form does not show, so it was not staged.
+      show: Show
+      stage: Stage for review
+      title: Statements you can make
+      withdraw: Withdraw the statement
+      withdraw_kept: Box {box} of this statement cannot be taken out here, so nothing
+        was withdrawn.
+      withdrawn: Statement withdrawn
     view:
       compare: Compare
       credits: Withholdings
@@ -4763,6 +4817,8 @@ desktop:
     search: Search
     settings: Settings
     tui: Workspace
+  refusal:
+    action_unroutable: Not available here.
   session:
     enter_restarts: Enter restarts
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
@@ -8519,10 +8575,12 @@ tui:
           action: Request
           actividad_id: Activity
           authority_record: Closing value full record file
+          claimed_transaction_id: Claimed ledger entry
           closing_value_facts: Closing value facts file
           evidence_file: Document file
           evidence_folder: Folder the document path starts from
           kind: Movement kind
+          ledger_row: Purchase's ledger entry
           movement_date: Movement date
           movement_id: Movement identifier
           opening_stock: Opening stock (optional)
@@ -8823,6 +8881,19 @@ tui:
     next_line: 'Next: {action} [{key}]'
     search:
       prompt: Search every page by box number or by words. Enter goes to the box.
+    statements:
+      intro: Tick each statement that is true for you. Every one you tick is staged
+        for review with your other changes; clearing a tick takes that statement out.
+      key: Statements
+      mark:
+        meaning: You stated this box holds no amount; it is not a value you typed.
+        name: Stated by you
+      none: This declaration offers no statement to make now.
+      not_placed: A statement names a box this screen does not show, so it was not
+        staged.
+      stage: Stage for review
+      title: Statements you can make
+      withdraw: Withdraw the statement
   operations:
     action:
       close: Close
@@ -8969,6 +9040,9 @@ tui:
       support_matrix: 'What Cadrumo can do with each modelo: calculate, export, read
         filed copies.'
     title: Reference
+  refusal:
+    action_needs_details: … asks for details it still needs before it can run.
+    action_unroutable: Not available here.
   restricted:
     actions: 'Allowed actions: {values}'
     all_periods: All periods

@@ -25,6 +25,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.agent.model_does_not_fit_refused",
         "desktop.agent.model_does_not_fit_shortfall",
         "desktop.providers.connection_local",
+        "desktop.refusal.action_unroutable",
         "desktop.dock.arrange",
         "desktop.dock.expand",
         "desktop.dock.restore",

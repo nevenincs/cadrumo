@@ -2167,6 +2167,30 @@ desktop:
         existente. Tu borrador se conserva.
       country: País
       established: Establecida
+      filing_name:
+        kind:
+          entity: Entidad
+          natural_person: Persona física
+        kind_contradicts: El tipo indicado ({declared}) no coincide con la forma del
+          identificador ({observed}).
+        kind_label: Tipo
+        no_second_surname: Sin segundo apellido
+        nombre: Nombre
+        primer_apellido: Primer apellido
+        razon_social: Razón social
+        rendering_add: Añadir una versión
+        rendering_for: Para {width} caracteres
+        rendering_remove: Quitar esta versión
+        renderings: Versiones más cortas
+        renderings_hint: El ancho es el número de caracteres del campo en el que debe
+          caber el nombre.
+        save: Guardar nombre de presentación
+        segundo_apellido: Segundo apellido
+        stated_by: Indicado por
+        text: Texto
+        title: Nombre de presentación
+        unstated: No has indicado ningún nombre de presentación.
+        width: Ancho
       not_applied: La confirmación devuelta no contiene todos los valores que has
         introducido. Tu borrador se conserva.
       note: Nota
@@ -4092,6 +4116,7 @@ desktop:
         closing: Fijar el valor de cierre
         correct: Corregir las existencias iniciales o el método
         describe: Editar los detalles
+        movement_claim: Indicar la transacción del libro de esta compra
         movement_correct: Corregir este movimiento
         movement_reverse: Anular este movimiento
         preview: Ver una vista previa de la valoración
@@ -4099,6 +4124,17 @@ desktop:
         restore: Restaurar el libro de existencias
         retire: Dar de baja el libro de existencias
       books: Libros de existencias de {year}
+      claim:
+        column: Libro
+        note: Indica qué transacción del libro registra esta compra, que ninguna lo
+          hace, o borra lo indicado antes.
+        row: El libro registra esta compra
+        row_claimed: La registra una transacción del libro
+        row_none: No la registra ninguna transacción del libro
+        row_unstated: Sin indicar
+        row_unstated_hint: Esto borra una indicación anterior.
+        state_claimed: Registrada por {transaction}
+        transaction: Transacción del libro
       closing:
         authority: Cómo se decide el valor
         basis: Contado a
@@ -4187,6 +4223,7 @@ desktop:
         correct: Corregir {name} · {year}
         describe: Detalles de {name} · {year}
         movement: Añadir un movimiento a {name} · {year}
+        movement_claim: Transacción del libro de una compra de {name} · {year}
         movement_correct: Corregir un movimiento de {name} · {year}
         restore: Restaurar {name} · {year}
         retire: Dar de baja {name} · {year}
@@ -4247,6 +4284,7 @@ desktop:
         correct: Guardar la corrección
         describe: Guardar los detalles
         movement: Añadir el movimiento
+        movement_claim: Guardar la indicación
         movement_correct: Guardar la corrección
         restore: Restaurar el libro
         retire: Dar de baja el libro
@@ -4508,6 +4546,9 @@ desktop:
       confirm: Descartar
       lead: Sale de tu lista de declaraciones. Su historial se conserva.
       reason: Por qué (opcional)
+    export:
+      limitation:
+        title: Lo que este fichero no incluye
     form:
       pages: Páginas del formulario
     keys:
@@ -4536,6 +4577,20 @@ desktop:
     side:
       label: Junto al formulario
       outline: Esquema
+    statements:
+      hide: Ocultar
+      intro: Marca cada manifestación que sea cierta para ti. Las que marques quedan
+        para revisar junto con tus otros cambios; si desmarcas una, se retira.
+      mark: Manifestado por ti
+      not_placed: Una manifestación se refiere a una casilla que este formulario no
+        muestra, así que no se ha dejado para revisar.
+      show: Mostrar
+      stage: Dejar para revisar
+      title: Manifestaciones que puedes hacer
+      withdraw: Retirar la manifestación
+      withdraw_kept: La casilla {box} de esta manifestación no se puede vaciar aquí,
+        así que no se ha retirado nada.
+      withdrawn: Manifestación retirada
     view:
       compare: Comparar
       credits: Retenciones
@@ -4851,6 +4906,8 @@ desktop:
     search: Buscar
     settings: Ajustes
     tui: Espacio de trabajo
+  refusal:
+    action_unroutable: No está disponible aquí.
   session:
     enter_restarts: Intro lo reinicia
     exit_line: '[El proceso terminó con el código {code}. Pulsa Intro para volver
@@ -8712,10 +8769,12 @@ tui:
           action: Petición
           actividad_id: Actividad
           authority_record: Archivo completo del valor de cierre
+          claimed_transaction_id: Movimiento reclamado
           closing_value_facts: Archivo de datos del valor de cierre
           evidence_file: Archivo del documento
           evidence_folder: Carpeta desde la que parte la ruta del documento
           kind: Tipo de movimiento
+          ledger_row: Movimiento de la compra
           movement_date: Fecha del movimiento
           movement_id: Identificador del movimiento
           opening_stock: Existencias iniciales (opcional)
@@ -9020,6 +9079,20 @@ tui:
     search:
       prompt: Busca en todas las páginas por número de casilla o por palabras. Intro
         te lleva a la casilla.
+    statements:
+      intro: Marca cada manifestación que sea cierta para ti. Las que marques quedan
+        para revisar junto con tus otros cambios; si desmarcas una, se retira.
+      key: Manifestaciones
+      mark:
+        meaning: Manifestaste que esta casilla no tiene importe; no es un valor que
+          escribieras.
+        name: Manifestado por ti
+      none: Esta declaración no ofrece ahora ninguna manifestación.
+      not_placed: Una manifestación se refiere a una casilla que esta pantalla no
+        muestra, así que no se ha dejado para revisar.
+      stage: Dejar para revisar
+      title: Manifestaciones que puedes hacer
+      withdraw: Retirar la manifestación
   operations:
     action:
       close: Cerrar
@@ -9170,6 +9243,9 @@ tui:
       support_matrix: 'Lo que Cadrumo puede hacer con cada modelo: calcular, exportar,
         leer copias presentadas.'
     title: Referencia
+  refusal:
+    action_needs_details: … te pide los datos que aún faltan antes de poder ejecutarse.
+    action_unroutable: No está disponible aquí.
   restricted:
     actions: 'Acciones permitidas: {values}'
     all_periods: Todos los períodos

@@ -833,7 +833,7 @@ DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = (
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
-    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|tui\.modelo\.export\.result\.warning|application\.inventory\.labels|application\.inventory\.service|application\.ledger\.entry_options|application\.modelo\.edit_choice|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
+    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|tui\.modelo\.export\.result\.warning|application\.modelo\.findings|application\.inventory\.labels|application\.inventory\.service|application\.ledger\.entry_options|application\.modelo\.edit_choice|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
 )
 _SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(
     r"`((?:desktop|workspace|ledger\.actividad_asset)\.[A-Za-z0-9_.]*)\$\{"
