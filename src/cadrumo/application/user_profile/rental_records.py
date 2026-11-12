@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Final, Protocol
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import validate_spanish_tax_id
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.contribuyente.inmueble_facts import (
     ARRENDAMIENTO_SECTION,
@@ -57,6 +58,7 @@ _LEASE_HAS_LEDGER_ROWS_LOCALE_KEY: Final = "application.user_profile.errors.rent
 _LEDGER_UNREADABLE_LOCALE_KEY: Final = "application.user_profile.errors.rental_ledger_unreadable"
 _LEDGER_LINK_DOOR: Final = "aeat app ledger classify"
 _TENANT_ID_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.rental_tenant_id_invalid"
+_TENANT_SLOT_ROLE: Final = "irpf_inmueble_arrendatario_nif_o_id_extranjero"
 _DOOR_FAMILY: Final = {INMUEBLE_SECTION: "inmueble", ARRENDAMIENTO_SECTION: "arrendamiento"}
 
 
@@ -97,6 +99,14 @@ def _refusing_incoherent[RecordT](build: Callable[[], RecordT], *, door: str) ->
         raise UserProfileValidationError(
             translated_message=_ROW_INVALID_LOCALE_KEY, context={"leaf": str(leaf), "door": door}
         ) from error
+
+
+def _tenant_capacity(authority: PinnedAuthorityOperation) -> int:
+    """Count the tenant identification slots the newest annual-return layout gives one property."""
+    directory = authority.modelo_directory(Modelo("100"))
+    newest = max(directory.revisions, key=lambda revision: revision.valid_from)
+    revision = authority.revision(directory.modelo_id, newest.id)
+    return sum(1 for casilla in revision.casillas if casilla.semantic_role == _TENANT_SLOT_ROLE)
 
 
 def is_rental_section(section_key: str) -> bool:
@@ -154,6 +164,11 @@ def _admit_arrendamiento(
         raise UserProfileValidationError(
             translated_message=_LEASE_PROPERTY_MISSING_LOCALE_KEY,
             context={"inmueble": record.inmueble, "door": _door(INMUEBLE_SECTION, RentalRowMutation.ADD)},
+        )
+    if len(record.inquilinos) > _tenant_capacity(authority):
+        raise UserProfileValidationError(
+            translated_message=_ROW_INVALID_LOCALE_KEY,
+            context={"leaf": "inquilinos", "door": _door(ARRENDAMIENTO_SECTION, mutation)},
         )
     tax_id_format = runtime_tax_id_format(authority=authority)
     for inquilino in record.inquilinos:

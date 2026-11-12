@@ -135,6 +135,7 @@ import type {
   InventoryListResult,
   InventoryMovementAddRequest,
   InventoryMovementAddResult,
+  InventoryMovementClaimRequest,
   InventoryMovementCorrectRequest,
   InventoryMovementReverseRequest,
   InventoryOptionsResult,
@@ -256,6 +257,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.inventory.inspect",
   "ledger.inventory.list",
   "ledger.inventory.movement.add",
+  "ledger.inventory.movement.claim",
   "ledger.inventory.movement.correct",
   "ledger.inventory.movement.reverse",
   "ledger.inventory.options",
@@ -1132,6 +1134,7 @@ export interface LedgerRequests {
   "ledger.inventory.inspect": InventoryBookRequest;
   "ledger.inventory.describe": InventoryDescribeRequest;
   "ledger.inventory.correct": InventoryCorrectRequest;
+  "ledger.inventory.movement.claim": InventoryMovementClaimRequest;
   "ledger.inventory.movement.correct": InventoryMovementCorrectRequest;
   "ledger.inventory.movement.reverse": InventoryMovementReverseRequest;
   "ledger.inventory.retire": InventoryRetireRequest;
@@ -1249,6 +1252,7 @@ export interface LedgerResults {
   "ledger.inventory.inspect": InventoryInspectResult;
   "ledger.inventory.describe": InventoryChangeResult;
   "ledger.inventory.correct": InventoryChangeResult;
+  "ledger.inventory.movement.claim": InventoryChangeResult;
   "ledger.inventory.movement.correct": InventoryChangeResult;
   "ledger.inventory.movement.reverse": InventoryChangeResult;
   "ledger.inventory.retire": InventoryChangeResult;
