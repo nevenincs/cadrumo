@@ -22,6 +22,7 @@ from typing import ClassVar, Final
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.formula_runtime_ops import read_parameter
 from ...domain.calculations.registry.gasto_capital_inmobiliario import (
@@ -41,10 +42,11 @@ from ...domain.calculations.registry.rental_reduction import (
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.row_source_identity import RowSourceIdentity
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..user_profile.projections import record_to_path_values
 from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
-from .renta_inmueble_findings import RentaInmuebleFinding, RentaInmuebleFindingKind
+from .renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFinding, RentaInmuebleFindingKind
 from .renta_inmueble_net import RentaInmuebleTerms
 from .renta_inmueble_source import (
     GASTO_COLUMN_PREFIX,
@@ -91,6 +93,7 @@ def _diagnostic(
     message: str,
     source_ref: str | None = None,
     remedy: str | None = None,
+    fact: CalculationNoteFact | None = None,
 ) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason=reason,
@@ -100,7 +103,23 @@ def _diagnostic(
         remedy=remedy,
         resolver_id=RentaInmuebleSourceResolver.resolver_id,
         source_ref=source_ref,
+        fact=fact,
     )
+
+
+_NAMED_RECORDS: Final = frozenset({"inmueble", "arrendamiento"})
+"""The subject kinds a finding's sentence names by the record's own number."""
+
+_FINDING_SENTENCES: Final = {
+    cause: CalculationNoteSentence(f"renta_inmueble_{cause.value}") for cause in RentaInmuebleCause
+}
+"""The catalogue sentence that states each finding, so it reads in every language."""
+
+
+def _finding_fact(finding: RentaInmuebleFinding) -> CalculationNoteFact:
+    kind, _separator, record = finding.subject.partition(":")
+    named = {"record": record} if kind in _NAMED_RECORDS and record else {}
+    return CalculationNoteFact.of(_FINDING_SENTENCES[finding.cause], rows=(finding.subject,), **named)
 
 
 def _finding_diagnostic(finding: RentaInmuebleFinding) -> CalculationSourceDiagnostic:
@@ -112,6 +131,7 @@ def _finding_diagnostic(finding: RentaInmuebleFinding) -> CalculationSourceDiagn
         message=finding.message,
         source_ref=finding.subject,
         remedy=None if door is None else f"Settle it with {door.value}, then calculate again.",
+        fact=_finding_fact(finding),
     )
 
 
@@ -227,6 +247,22 @@ def _totals(
         else:
             unresolved.append(binding.id)
     return values, tuple(unresolved)
+
+
+def _pending_stated(
+    declared: Iterable[tuple[BindingDefinition, RentaInmuebleProvider]], context: CalculationSourceContext
+) -> dict[str, Decimal]:
+    """Read the filer's per-property statements of the carry, on the columns whose family takes them."""
+    stated_on = {
+        binding.id
+        for binding, _provider in declared
+        if binding.absence_attestation is AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES
+    }
+    return {
+        statement.source_row_identity: statement.stated_amount
+        for statement in context.caller_row_attestations
+        if statement.binding_id in stated_on
+    }
 
 
 def resolve_renta_inmueble_terms(
@@ -361,6 +397,7 @@ class RentaInmuebleSourceResolver:
             concepts=concepts,
             terms=terms,
             withholding=withholding,
+            pending_stated=_pending_stated(declared, context),
         )
         return self._resolution(built, columns, totals, binding_ids)
 

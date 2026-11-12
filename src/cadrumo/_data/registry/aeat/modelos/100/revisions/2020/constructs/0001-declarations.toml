@@ -218,7 +218,6 @@ formulas = [
     "renta-iic-ganancias-reducidas-suma",
     "renta-iic-paraisos-fiscales-suma",
     "renta-iic-perdidas-reducidas-suma",
-    "renta-capital-inmobiliario-intereses-gastos-passthrough",
     "renta-saldo-capital-mobiliario-cap-25-base-ahorro",
     "renta-capital-mobiliario-saldo-pendiente-base-ahorro",
 ]

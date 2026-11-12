@@ -65,7 +65,7 @@ from ...domain.calculations.registry.schema_scalars import (
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-from ...domain.modelos.calculation_revision_operator_layer import ValueAttestation
+from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation, ValueAttestation
 from ...domain.modelos.dt12_reduccion import (
     Dt12WindowEligibility,
     compute_dt12_reduccion_plan_pensiones,
@@ -222,6 +222,8 @@ class WorkCalculateInputBundle:
     """Binding overrides the operator stated hold nothing, replayed from the head's layer."""
     value_attestations: Mapping[BindingId, ValueAttestation] = field(default_factory=dict)
     """Figures the operator stated for earlier filings outside the envelope, replayed from the head layer."""
+    row_attestations: tuple[RowCarryAttestation, ...] = ()
+    """The operator's per-row statements of a carry no source holds, replayed from the head layer."""
 
     @classmethod
     def build(
@@ -242,6 +244,7 @@ class WorkCalculateInputBundle:
         record_operator_layer: bool = False,
         attested_binding_ids: tuple[BindingId, ...] = (),
         value_attestations: Mapping[BindingId, ValueAttestation] | None = None,
+        row_attestations: tuple[RowCarryAttestation, ...] = (),
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -270,6 +273,7 @@ class WorkCalculateInputBundle:
             record_operator_layer=record_operator_layer,
             attested_binding_ids=attested_binding_ids,
             value_attestations=dict(value_attestations or {}),
+            row_attestations=row_attestations,
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
@@ -374,6 +378,7 @@ def calculate_modelo_work_revision(
         record_operator_layer=inputs.record_operator_layer,
         attested_binding_ids=inputs.attested_binding_ids,
         value_attestations=inputs.value_attestations,
+        row_attestations=inputs.row_attestations,
         m210_official_tipo_renta_code=inputs.m210_official_tipo_renta_code,
         m210_gross_income_source_mode=inputs.m210_gross_income_source_mode,
         binding_values=inputs.optional_binding_values(),

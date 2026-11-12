@@ -534,6 +534,12 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
         action_id="operator.modelo.work.attest_prior_carries",
     ),
+    # A property's pending interest and repairs are stated on that property's row, which the refusal names.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.prior_carries.stated",
+        "modelo.work.calculate.prior_carries.renta_capital_inmobiliario_gastos_pendientes_unstated",
+    ),
     # An input no source supplied is stated on the calculation itself; the
     # binding listing names it and the work unit's form takes the value.
     _profile(
@@ -904,6 +910,19 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.ledger_snapshot.current",
         "modelo.work.verify.ledger_snapshot.membership_unavailable",
+    ),
+    # A let property's records moved since the calculation: calculating again
+    # reads them afresh. An unreadable store has no door, as for the ledger.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.renta_inmueble_rows.current",
+        "modelo.work.verify.renta_inmueble_rows.drift_detected",
+        action_id="operator.modelo.work.calculate",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.renta_inmueble_rows.current",
+        "modelo.work.verify.renta_inmueble_rows.unavailable",
     ),
     _profile(
         "modelo.work.verify",

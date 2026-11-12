@@ -220,9 +220,23 @@ def permitted_binding_entry(
     (``ATTEST_PRIOR_VALUE``); where a source exists the dependency follows it,
     so a figure stated over it is refused here and never reads as proof.
 
+    A column whose registry family the filer states row by row takes only that
+    statement, of nothing pending or of the amount, each naming its row; the
+    source that fills the column is never overridden.
+
     ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     source = binding.source
+    family = binding.absence_attestation
+    if family is not None and family.row_grain and binding_applies_to_period(binding.applicability, period):
+        return ModeloEditWritableBindingOverrideSurfaceEntryV1(
+            binding_id=binding.id,
+            allowed_intents=(
+                ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
+                ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+            ),
+            grammar=binding_value_grammar(binding, revision=revision),
+        )
     if source in BUCKET_AGGREGATION_LOCK_SOURCES:
         return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
             binding_id=binding.id, reason=ModeloEditNonWritableReason.SOURCE_LOCKED

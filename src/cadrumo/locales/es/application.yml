@@ -2098,6 +2098,84 @@ application:
         de {price}, y los movimientos que nombran declaran una base de {base}.'
       register_row_missing: '{elements}: estos elementos indican {count} movimientos
         que ya no existen.'
+      renta_inmueble_accessory_property: 'Inmueble {record}: es un inmueble accesorio
+        arrendado con el principal, lo que el cálculo no ofrece.'
+      renta_inmueble_acquisition_cost_unstated: 'Inmueble {record}: no indica su importe
+        ni sus gastos de adquisición, así que la amortización de la construcción no
+        se calcula.'
+      renta_inmueble_acquisition_date_unstated: 'Inmueble {record}: no indica cuándo
+        se adquirió, así que se desconocen los días que lo tuviste.'
+      renta_inmueble_boxes_not_offered: 'Inmueble {record}: la amortización del mobiliario,
+        la reducción del art. 23.3 y las amortizaciones especiales no se ofrecen;
+        introdúcelas a mano cuando procedan.'
+      renta_inmueble_cadastral_values_unstated: 'Inmueble {record}: no indica ni el
+        valor del suelo ni los valores catastrales del ejercicio, así que el suelo
+        no puede excluirse de la base de amortización.'
+      renta_inmueble_concept_undeclared: Un movimiento indica un concepto de gasto
+        que la lista de este ejercicio no incluye.
+      renta_inmueble_concurrent_leases: 'Inmueble {record}: dos de sus arrendamientos
+        coinciden en algún día.'
+      renta_inmueble_cumulative_amortisation_unstated: 'Inmueble {record}: su amortización
+        puede alcanzar el valor de adquisición, y no se indica la amortización acumulada
+        al inicio del ejercicio.'
+      renta_inmueble_currency_unconverted: Un movimiento vinculado está en moneda
+        extranjera y no tiene valor en euros.
+      renta_inmueble_days_not_let: 'Inmueble {record}: lo tuviste días en que no estuvo
+        arrendado, y la renta imputada de esos días no se calcula.'
+      renta_inmueble_expense_row_on_lease: Un movimiento de salida está vinculado
+        a un arrendamiento; vincula el gasto a su inmueble.
+      renta_inmueble_expense_row_without_concept: Un movimiento vinculado a un inmueble
+        no indica su concepto de gasto.
+      renta_inmueble_held_part_of_ejercicio: 'Inmueble {record}: se adquirió o transmitió
+        durante el ejercicio, y el prorrateo de sus gastos no se ofrece.'
+      renta_inmueble_improvement_in_ejercicio: 'Inmueble {record}: una mejora tiene
+        fecha dentro del ejercicio, y sus días de amortización no se calculan.'
+      renta_inmueble_income_outside_lease: Un cobro de alquiler tiene fecha fuera
+        del periodo del arrendamiento al que está vinculado.
+      renta_inmueble_income_row_on_property: Un movimiento de entrada está vinculado
+        a un inmueble; vincula el alquiler a su arrendamiento.
+      renta_inmueble_lease_names_no_property: 'Arrendamiento {record}: nombra un inmueble
+        que tu perfil no tiene.'
+      renta_inmueble_lease_without_income: 'Arrendamiento {record}: está vigente en
+        el ejercicio y no tiene ningún cobro de alquiler vinculado.'
+      renta_inmueble_naturaleza_unstated: 'Inmueble {record}: no indica si es urbano
+        o rústico.'
+      renta_inmueble_pending_expenses_unstated: 'Inmueble {record}: no se indican
+        los gastos de intereses y reparación de ejercicios anteriores pendientes de
+        deducir, y ninguna declaración anterior guardada aquí los recoge.'
+      renta_inmueble_property_abroad_let: 'Inmueble {record}: está en el extranjero
+        y arrendado, y su tratamiento como renta extranjera no se ofrece.'
+      renta_inmueble_record_unreadable: No se puede leer un registro de inmueble o
+        de arrendamiento de tu perfil, así que no se calcula ningún inmueble arrendado.
+      renta_inmueble_reduction_fact_unstated: 'Inmueble {record}: un arrendamiento
+        no indica si es de vivienda, si la vivienda está en zona tensionada o si mantiene
+        el art. 17.6 LAU, así que la reducción del art. 23.2 no se calcula.'
+      renta_inmueble_reduction_tenants_mixed: 'Inmueble {record}: solo algunos arrendatarios
+        de un arrendamiento cumplen por edad la reducción del art. 23.2, que no se
+        calcula.'
+      renta_inmueble_regime_not_pleno_dominio: 'Inmueble {record}: lo tienes en un
+        derecho distinto del pleno dominio, que el cálculo no ofrece.'
+      renta_inmueble_relative_fact_unstated: 'Arrendamiento {record}: no indica si
+        el arrendatario es pariente según el art. 24 LIRPF.'
+      renta_inmueble_relative_tenant: 'Arrendamiento {record}: el arrendatario es
+        pariente según el art. 24 LIRPF, y el rendimiento mínimo no se calcula.'
+      renta_inmueble_row_names_no_lease: Un movimiento del libro está vinculado a
+        un arrendamiento que tu perfil no tiene.
+      renta_inmueble_row_names_no_property: Un movimiento del libro está vinculado
+        a un inmueble que tu perfil no tiene.
+      renta_inmueble_several_leases: 'Inmueble {record}: tiene más de un arrendamiento
+        en el ejercicio, y la declaración aún no puede recoger cada contrato.'
+      renta_inmueble_tenants_beyond_numbered: 'Arrendamiento {record}: indica más
+        arrendatarios de los que caben en las casillas numeradas.'
+      renta_inmueble_titular_not_declarant: 'Inmueble {record}: pertenece a un miembro
+        de tu unidad familiar distinto de ti.'
+      renta_inmueble_titularidad_unstated: 'Inmueble {record}: no indica quién es
+        su titular ni en qué derecho.'
+      renta_inmueble_withholding_payer_no_tenant: Una retención sobre alquiler urbano
+        nombra a un pagador que no es arrendatario de ningún arrendamiento del ejercicio.
+      renta_inmueble_withholding_payer_several_properties: Una retención sobre alquiler
+        urbano nombra a un pagador que arrienda más de uno de tus inmuebles, así que
+        se desconoce a cuál corresponde.
       residence_period_unknown: No hay residencia fiscal registrada para el {date},
         así que tus elementos se cuentan como si se aplicaran los Modelos 100 y 130.
       retencion_soportada_absence_contradicted: 'Clase de renta {income_class}: hay
@@ -2815,6 +2893,12 @@ application:
         cada uno ya tiene un valor o tu declaración, o la declaración no arrastra
         ninguno. No se ha cambiado nada.'
       prior_carries_unstated:
+        renta_capital_inmobiliario_gastos_pendientes: 'No se puede calcular el Modelo
+          %{modelo} de %{filing_year}: no consta si quedan intereses y gastos de reparación
+          y conservación de ejercicios anteriores pendientes de deducir en un inmueble
+          arrendado (casilla %{boxes}). Guarda la declaración del año anterior o indícalo
+          en la fila de ese inmueble con %{command}, indicando la fila. No se ha guardado
+          nada.'
         renta_negative_general_bases_pending: 'No se puede calcular el Modelo %{modelo}
           de %{filing_year}: no consta si quedan bases liquidables generales negativas
           de ejercicios anteriores pendientes de compensar (casillas %{boxes}). Guarda
@@ -3148,6 +3232,15 @@ application:
       registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
         %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
         la aplicación.
+      renta_inmueble_rows_drift: 'Los inmuebles arrendados de este cálculo del modelo
+        %{modelo} han cambiado desde que se calculó: se han modificado sus registros
+        de inmueble, arrendamiento, movimientos vinculados o retenciones (%{rows_recorded}
+        inmuebles registrados, %{rows_current} ahora, %{rows_changed} cambiados).
+        Vuelve a calcular antes de usarlo.'
+      renta_inmueble_rows_unavailable: Cadrumo no ha podido leer los registros de
+        inmuebles, arrendamientos, movimientos o retenciones de los inmuebles arrendados
+        de este cálculo del modelo %{modelo}, así que no puede saber si han cambiado.
+        Vuelve a intentarlo cuando puedan leerse y después vuelve a calcular.
       required_maximum_unresolved: La casilla [%{box}] aún no se puede comprobar,
         porque no se conoce la cuantía máxima que la ley exige aplicar en este ejercicio.
         Faltan algunas de las cifras de las que depende esa cuantía.

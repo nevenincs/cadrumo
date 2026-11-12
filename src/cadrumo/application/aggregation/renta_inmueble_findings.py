@@ -35,6 +35,7 @@ class RentaInmuebleDoor(StrEnum):
     ARRENDAMIENTO_ADD = "config profile arrendamiento add"
     ARRENDAMIENTO_EDIT = "config profile arrendamiento edit"
     LEDGER_CLASSIFY = "app ledger classify"
+    ATTEST_NO_AMOUNT = "app modelo work attest-no-amount"
 
     @property
     def path(self) -> tuple[str, ...]:
@@ -237,7 +238,7 @@ _CAUSE_TERMS: Final[dict[RentaInmuebleCause, tuple[RentaInmuebleFindingKind, Ren
     ),
     RentaInmuebleCause.PENDING_EXPENSES_UNSTATED: (
         _BLOCKING,
-        None,
+        RentaInmuebleDoor.ATTEST_NO_AMOUNT,
         "the interest and repair expenses of earlier ejercicios still pending on the let property are "
         "not stated, and no earlier return the application holds states them",
     ),

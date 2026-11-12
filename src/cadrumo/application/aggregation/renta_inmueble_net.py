@@ -114,6 +114,7 @@ class RentaInmuebleNet:
     mejoras_ejercicio: Decimal | None = None
     base_amortizacion: Decimal | None = None
     amortizacion: Decimal | None = None
+    gastos_pendientes_anteriores: Decimal | None = None
     gastos_pendientes_aplicados: Decimal | None = None
     intereses_reparacion_aplicados: Decimal | None = None
     intereses_reparacion_pendientes: Decimal | None = None
@@ -258,6 +259,7 @@ def _apply_limit(
         return None
     limited = _limited_concepts(concepts)
     own = sum((amount for concept, amount in inputs.gastos.items() if concept in limited), _ZERO)
+    net.gastos_pendientes_anteriores = _nonzero(inputs.pendiente)
     earlier = min(inputs.pendiente, inputs.ingresos)
     applied = min(own, inputs.ingresos - earlier)
     net.gastos_pendientes_aplicados = _nonzero(earlier)

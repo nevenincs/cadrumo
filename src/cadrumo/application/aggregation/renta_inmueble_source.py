@@ -99,9 +99,12 @@ class RentaInmuebleRowField(StrEnum):
     MEJORAS_EJERCICIO = "mejoras_ejercicio"
     BASE_AMORTIZACION = "base_amortizacion"
     AMORTIZACION = "amortizacion"
+    GASTOS_PENDIENTES_ANTERIORES = "gastos_pendientes_anteriores"
     GASTOS_PENDIENTES_APLICADOS = "gastos_pendientes_aplicados"
     INTERESES_REPARACION_APLICADOS = "intereses_reparacion_aplicados"
     INTERESES_REPARACION_PENDIENTES = "intereses_reparacion_pendientes"
+    INTERESES_REPARACION_PENDIENTES_FUTUROS = "intereses_reparacion_pendientes_futuros"
+    """The anexo C.1 restatement of the ejercicio's own excess carried forward: the row's 0108 again."""
     RENDIMIENTO_NETO = "rendimiento_neto"
     REDUCCION_APLICABLE = "reduccion_aplicable"
     REDUCCION = "reduccion"
@@ -150,7 +153,7 @@ class RentaInmuebleOccurrence:
     @property
     def source_identity(self) -> str:
         """Identify the property this occurrence comes from, stable across ejercicios."""
-        return f"inmueble:{self.inmueble.clave}"
+        return _source_identity(self.inmueble.clave)
 
     def gasto(self, concept: str) -> Decimal | None:
         """Return the taxpayer's part of one expense concept; ``None`` when no row states it."""
@@ -248,9 +251,11 @@ _NET_COLUMNS: Final[dict[RentaInmuebleRowField, Callable[[RentaInmuebleNet], Ren
     RentaInmuebleRowField.MEJORAS_EJERCICIO: lambda net: net.mejoras_ejercicio,
     RentaInmuebleRowField.BASE_AMORTIZACION: lambda net: net.base_amortizacion,
     RentaInmuebleRowField.AMORTIZACION: lambda net: net.amortizacion,
+    RentaInmuebleRowField.GASTOS_PENDIENTES_ANTERIORES: lambda net: net.gastos_pendientes_anteriores,
     RentaInmuebleRowField.GASTOS_PENDIENTES_APLICADOS: lambda net: net.gastos_pendientes_aplicados,
     RentaInmuebleRowField.INTERESES_REPARACION_APLICADOS: lambda net: net.intereses_reparacion_aplicados,
     RentaInmuebleRowField.INTERESES_REPARACION_PENDIENTES: lambda net: net.intereses_reparacion_pendientes,
+    RentaInmuebleRowField.INTERESES_REPARACION_PENDIENTES_FUTUROS: lambda net: net.intereses_reparacion_pendientes,
     RentaInmuebleRowField.RENDIMIENTO_NETO: lambda net: net.rendimiento_neto,
     RentaInmuebleRowField.REDUCCION_APLICABLE: lambda net: net.reduccion_aplicable,
     RentaInmuebleRowField.REDUCCION: lambda net: net.reduccion,
@@ -667,6 +672,7 @@ def _net(
     figures: tuple[Decimal | None, dict[str, Decimal]],
     withholding: tuple[RetencionSoportadaRecord, ...],
     rules: tuple[RentaInmuebleTerms, GastoCapitalInmobiliarioCatalogue],
+    pendiente: Decimal | None,
 ) -> RentaInmuebleNet | None:
     occupancy, (ingresos, gastos) = inputs.occupancy, figures
     if occupancy is None or not occupancy.leases or ingresos is None:
@@ -687,20 +693,30 @@ def _net(
             improvements_before=_total(inputs.prior_improvements) * share,
             improvements_in=_total(inputs.improvements) * share,
             withholding=withholding,
-            pendiente=_ZERO if _acquired_within(inputs.record, ejercicio) else None,
+            pendiente=pendiente,
         ),
         terms=terms,
         concepts=concepts,
     )
 
 
-def _acquired_within(record: InmuebleRecord, ejercicio: _Ejercicio) -> bool:
-    """Report whether the property was acquired inside the ejercicio, so no earlier year left it anything pending.
+def _pendiente(record: InmuebleRecord, ejercicio: _Ejercicio, stated: Mapping[str, Decimal]) -> Decimal | None:
+    """Return what earlier ejercicios left pending on the property, or ``None`` while it is unknown.
 
-    Otherwise what earlier ejercicios left pending is unknown: no earlier return
-    or attestation is read here, so the net chain stops short of the net yield.
+    The filer's statement for the property decides it. Without one, a property
+    acquired inside the ejercicio has no earlier year to leave anything pending;
+    for any other, no earlier return is read here, so the net chain stops short
+    of the net yield.
     """
-    return record.fecha_adquisicion is not None and record.fecha_adquisicion >= ejercicio.first
+    statement = stated.get(_source_identity(record.clave))
+    if statement is not None:
+        return statement
+    acquired = record.fecha_adquisicion
+    return _ZERO if acquired is not None and acquired >= ejercicio.first else None
+
+
+def _source_identity(clave: int) -> str:
+    return f"inmueble:{clave}"
 
 
 def _tenant_key(identifier: str) -> str:
@@ -742,6 +758,7 @@ def renta_inmueble_occurrences(
     concepts: GastoCapitalInmobiliarioCatalogue,
     terms: RentaInmuebleTerms,
     withholding: Iterable[RetencionSoportadaRecord] = (),
+    pending_stated: Mapping[str, Decimal] | None = None,
 ) -> RentaInmuebleOccurrences:
     """Build one occurrence per property held on at least one day of ``ejercicio``, in row-key order.
 
@@ -753,6 +770,8 @@ def renta_inmueble_occurrences(
         concepts: The rental-expense concept vocabulary in force for the ejercicio.
         terms: The dated registry data of the net chain.
         withholding: The ejercicio's suffered-withholding records, of every income class.
+        pending_stated: The filer's statement of what earlier ejercicios left pending, by the
+            source identity of the property it speaks of; zero where nothing is pending.
 
     Returns:
         The occurrences and every finding, those of a property and those no property owns.
@@ -772,9 +791,10 @@ def renta_inmueble_occurrences(
     for clave, inputs in held.items():
         own = _occurrence_findings(inputs, period)
         ingresos, gastos, read = _figures(inputs, period)
-        net = _net(inputs, period, (ingresos, gastos), placed.get(clave, ()), (terms, concepts))
+        pendiente = _pendiente(inputs.record, period, pending_stated or {})
+        net = _net(inputs, period, (ingresos, gastos), placed.get(clave, ()), (terms, concepts), pendiente)
         if net is not None:
-            own.extend(RentaInmuebleFinding(cause, f"inmueble:{clave}") for cause in net.causes)
+            own.extend(RentaInmuebleFinding(cause, _source_identity(clave)) for cause in net.causes)
         occurrences.append(
             RentaInmuebleOccurrence(
                 index=len(occurrences) + 1,
