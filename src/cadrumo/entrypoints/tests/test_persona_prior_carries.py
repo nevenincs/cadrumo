@@ -88,9 +88,19 @@ def _stating(
     token: str,
     pending: tuple[tuple[str, Decimal], ...] = (),
     family: str = GENERAL_BASES_CARRY_FAMILY,
+    *,
+    only: bool = False,
 ) -> Persona:
-    statement = PriorCarries(year=YearToken.parse(token, where="test"), family=family, pending=pending)
-    return dataclasses.replace(persona, prior_carries=(statement,))
+    """The persona stating ``family`` for ``token`` and, unless ``only``, nothing pending for every other family."""
+    year = YearToken.parse(token, where="test")
+    statements = [PriorCarries(year=year, family=family, pending=pending)]
+    if not only:
+        statements += [
+            PriorCarries(year=year, family=member.value, pending=())
+            for member in AbsenceAttestationFamily
+            if member.value != family
+        ]
+    return dataclasses.replace(persona, prior_carries=tuple(statements))
 
 
 def test_the_floor_year_return_refuses_until_the_persona_states_nothing_is_pending(
@@ -141,8 +151,7 @@ def test_a_stated_pending_amount_feeds_its_box_and_the_boxes_left_out_hold_nothi
 
 def test_the_catalogue_statement_answers_the_return_the_persona_owes(renta_world: MaterialisedPersona) -> None:
     persona, world = renta_world.persona, renta_world.world
-    (statement,) = persona.prior_carries
-    year = statement.year.resolve(world.envelope)
+    (year,) = {statement.year.resolve(world.envelope) for statement in persona.prior_carries}
     work_unit_id = _created(world, year)
 
     assert attest_prior_carries(persona, world, work_unit_id, year)
@@ -155,10 +164,18 @@ def test_a_carry_of_a_family_the_statement_does_not_name_stays_open(renta_world:
     others = [member for member in AbsenceAttestationFamily if member.value != GENERAL_BASES_CARRY_FAMILY]
     work_unit_id = _created(world, year)
 
-    for other in others:
-        persona = _stating(renta_world.persona, "floor+1", family=other.value)
-        assert attest_prior_carries(persona, world, work_unit_id, year) == ()
-    # The general-bases carries were never answered from a statement of another family.
+    # A statement of the other families leaves the general-bases carries unstated,
+    # so the calculation the apply runs refuses and nothing is recorded.
+    persona = dataclasses.replace(
+        renta_world.persona,
+        prior_carries=tuple(
+            statement
+            for other in others
+            for statement in _stating(renta_world.persona, "floor+1", family=other.value, only=True).prior_carries
+        ),
+    )
+    with pytest.raises(PersonaMaterialisationError, match=r"modelo.edit.apply settled refused"):
+        attest_prior_carries(persona, world, work_unit_id, year)
     with pytest.raises(PersonaMaterialisationError, match=_REFUSAL):
         _calculated(world, work_unit_id)
 
@@ -166,24 +183,29 @@ def test_a_carry_of_a_family_the_statement_does_not_name_stays_open(renta_world:
 def test_a_statement_answers_only_the_carries_of_its_own_family(renta_world: MaterialisedPersona) -> None:
     world = renta_world.world
     year = world.envelope.floor + 4
-    persona = _stating(renta_world.persona, "floor+4", family=GENERAL_BASES_CARRY_FAMILY)
     work_unit_id = _created(world, year)
 
-    answered = attest_prior_carries(persona, world, work_unit_id, year)
+    alone = _stating(renta_world.persona, "floor+4", family=GENERAL_BASES_CARRY_FAMILY, only=True)
+    with pytest.raises(PersonaMaterialisationError, match=r"modelo.edit.apply settled refused"):
+        attest_prior_carries(alone, world, work_unit_id, year)
+
+    every = _stating(renta_world.persona, "floor+4", family=GENERAL_BASES_CARRY_FAMILY)
+    answered = attest_prior_carries(every, world, work_unit_id, year)
     assert answered
-    assert attest_prior_carries(persona, world, work_unit_id, year) == ()
+    assert attest_prior_carries(every, world, work_unit_id, year) == ()
+    assert _calculated(world, work_unit_id)
 
 
 def test_every_family_of_the_registry_is_accepted_as_a_statement_token(renta_world: MaterialisedPersona) -> None:
     for member in AbsenceAttestationFamily:
-        persona = _stating(renta_world.persona, "floor", family=member.value)
+        persona = _stating(renta_world.persona, "floor", family=member.value, only=True)
         assert set(statement_families(persona).values()) == {member}
 
 
 def test_an_unknown_family_token_is_refused_before_anything_is_staged(renta_world: MaterialisedPersona) -> None:
     world = renta_world.world
     year = world.envelope.floor + 5
-    persona = _stating(renta_world.persona, "floor+5", family="renta_negative_nothing_pending")
+    persona = _stating(renta_world.persona, "floor+5", family="renta_negative_nothing_pending", only=True)
     work_unit_id = _created(world, year)
 
     with pytest.raises(PersonaMaterialisationError, match="is not one of"):
