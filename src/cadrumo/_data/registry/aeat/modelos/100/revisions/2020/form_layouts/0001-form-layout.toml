@@ -7,7 +7,7 @@ revision_id = "2020"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "bd9e8a12069d0375c067dfcae675e4e1ead793ec25727fce49c85fb76bf9c52a"
+source_state_digest = "341ac7bc2b1616235bacad4bc519611558f09f5d103e8f1cc1d872de7e586dc4"
 design_sources = [
     { source_ref = "aeat-dr-100-2020-dictionary", sha256 = "b7639e957131063c48e3774061b8c5c9005b720fb638ab951093833fda9e595f" },
 ]

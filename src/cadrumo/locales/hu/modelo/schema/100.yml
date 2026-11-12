@@ -2,6 +2,9 @@ modelo:
   schema:
     '100':
       binding:
+        renta-inmueble-gastos-pendientes-anteriores-0103:
+          label: Az ingatlan négy előző adóévből levonásra váró kamatai és javítási
+            és karbantartási kiadásai
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Igen: normál módozat (N). Nem: egyszerűsített módozat (S).'
           label: A közvetlen becslés normál módozatát alkalmazza?

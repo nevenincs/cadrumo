@@ -35,14 +35,13 @@ from ..operations.next_step import (
 from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .action_errors import ModeloPreconditionErrorMixin
 from .iva_wallet_prior_period import prior_compensation_source_period
-from .preconditions import (
+from .iva_wallet_refusal_profiles import (
     IVA_WALLET_OPENING_BALANCE_ACTION_ID,
     IVA_WALLET_OPENING_BALANCE_SCENARIOS,
     IVA_WALLET_OVERRIDE_ACTION_ID,
     IVA_WALLET_OVERRIDE_SCENARIOS,
-    ModeloPreconditionFailure,
-    build_modelo_precondition_failure,
 )
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 from .refusal_door_verdicts import caller_defect_verdict
 from .work_form_wording import modelo_number, period_words
 

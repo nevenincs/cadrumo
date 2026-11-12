@@ -163,12 +163,8 @@ def _prove_staged_database(path: Path, logical_generation: str) -> SnapshotProof
 def _insert_snapshot_proofs(connection: sqlite3.Connection, proofs: SnapshotProofSet) -> None:
     contract = proofs.contract
     connection.execute(
-        "INSERT INTO snapshot_proof_contract(singleton, validator_digest, window_from, window_to) VALUES (1, ?, ?, ?)",
-        (
-            contract.validator_digest,
-            None if contract.window_from is None else contract.window_from.isoformat(),
-            None if contract.window_to is None else contract.window_to.isoformat(),
-        ),
+        "INSERT INTO snapshot_proof_contract(singleton, validator_digest) VALUES (1, ?)",
+        (contract.validator_digest,),
     )
     connection.executemany(
         "INSERT INTO snapshot_proof_validator_sources(module, sha256) VALUES (?, ?)",

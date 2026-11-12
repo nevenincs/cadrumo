@@ -24,6 +24,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import PinnedAuthorityOperation
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..renta_inmueble_bindings import renta_inmueble_totals
 from ..schema import RegistrySnapshot
 from .authored_editions import supported_exercises_with_projection
 from .modelo_100_registry_support import neutral_binding_values
@@ -38,7 +39,8 @@ _JOINT_REASON = "joint-return-member-income-unavailable"
 
 _ROLE_DINERARIO = "irpf_rendimiento_trabajo_importe_integro_dinerario"
 _ROLE_NETO_TRABAJO = "irpf_rendimiento_trabajo_rendimiento_neto"
-_ROLE_ALQUILER = "irpf_rendimiento_capital_inmobiliario_ingresos_integros"
+#: The let properties' reduced net yield, the rental income the general base reads.
+_ROLE_ALQUILER = "irpf_rendimiento_capital_inmobiliario_rendimiento_neto_reducido"
 _ROLE_SALDO_GENERAL = "irpf_saldo_neto_rdtos_base_imponible_general"
 _ROLE_EO_NETO = "irpf_rendimiento_act_eco_eo_resto_rdto_neto"
 _ROLE_REDUCCION = "irpf_reduccion_prevision_social_total"
@@ -99,11 +101,17 @@ def _calculate(
     has_rent = _ROLE_ALQUILER in figures
     for family in _FAMILIES:
         booleans[_EXCLUDED_BINDING + family] = not (family == "capital-inmobiliario" and has_rent)
+    column_totals = {
+        str(provider.target_casilla_id): binding.id for binding, provider in renta_inmueble_totals(snapshot.revision)
+    }
     inputs: dict[str, Decimal] = {}
     for role, value in figures.items():
         casilla = next(item for item in snapshot.revision.casillas if item.semantic_role == role)
         if casilla.binding is not None:
             decimals[casilla.binding] = value
+        elif str(casilla.id) in column_totals:
+            # A let property's column is held per row; the calculation reads its total over the rows.
+            decimals[column_totals[str(casilla.id)]] = value
         else:
             inputs[str(casilla.id)] = value
     if any(casilla.semantic_role == _ROLE_FLAG_UP_TO_60000 for casilla in snapshot.revision.casillas):
@@ -155,7 +163,7 @@ def test_rental_income_does_not_raise_the_percentage_limit(
 
     Gross work 22.000 -> net work (art. 19) 20.000 -> 30% = 6.000. Employer contribution 8.000:
     1.500 + min(8.000, 8.500) = 9.500 >= 8.000, so the absolute limit allows 8.000.
-    0468 = min(6.000, 8.000) = 6.000. A rent of 30.000 lifts the general balance well above
+    0468 = min(6.000, 8.000) = 6.000. A reduced rental yield of 30.000 lifts the general balance above
     26.667, so 30% of that balance (the old base) would have allowed the full 8.000.
     """
     for year in _formula_years(registry_authority):

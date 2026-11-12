@@ -226,6 +226,7 @@ def authored_year_projection(period: Period) -> ModeloFormYearProjection:
         direction=TemporalProjectionDirection.AUTHORED,
         authored_filing_year=period.filing_year,
         reachable_grade=RegistryAuthorityGrade.FILING,
+        reachable_grade_words="Synthetic filing grade words",
     )
 
 

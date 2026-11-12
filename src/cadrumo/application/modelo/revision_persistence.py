@@ -196,8 +196,17 @@ def _duplicate_calculation_work_units(
     work_units: WorkUnitCatalogue,
     now: datetime,
 ) -> WorkUnitCatalogue:
-    """Restore a duplicate draft as current without touching sealed revisions."""
-    if existing.state is not CalculationRevisionState.BORRADOR:
+    """Restore a duplicate draft as current without touching sealed revisions.
+
+    A work unit whose calculation was withdrawn has no current calculation; a
+    recalculation that reproduces its verified revision exactly makes that
+    revision current again, unchanged.
+    """
+    restorable = existing.state is CalculationRevisionState.BORRADOR or (
+        existing.state is CalculationRevisionState.VERIFICADO_COMPLETO
+        and work_unit.current_calculation_revision_id is None
+    )
+    if not restorable:
         return work_units
     if work_unit.current_calculation_revision_id == revision_id:
         return work_units

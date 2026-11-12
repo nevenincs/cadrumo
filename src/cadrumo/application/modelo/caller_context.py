@@ -32,7 +32,11 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer, ValueAttestation
+from ...domain.modelos.calculation_revision_operator_layer import (
+    CalculationOperatorLayer,
+    RowCarryAttestation,
+    ValueAttestation,
+)
 from ...domain.modelos.row_models import ModeloDetailRow
 from .calculate_input import resolve_binding_overrides
 
@@ -120,6 +124,7 @@ class CallerContextCalculationInputs:
     attested_binding_ids: tuple[BindingId, ...]
     value_attestations: Mapping[BindingId, ValueAttestation]
     income_family_entry_digests: Mapping[str, str]
+    row_attestations: tuple[RowCarryAttestation, ...]
     detail_rows: tuple[ModeloDetailRow, ...]
     filing_instance_evidence: FilingInstanceEvidence | None
     m210_official_tipo_renta_code: str | None
@@ -155,6 +160,7 @@ def caller_context_calculation_inputs(
         attested_binding_ids=layer.attested_binding_ids,
         value_attestations=layer.value_attestations,
         income_family_entry_digests=layer.income_family_entry_digests,
+        row_attestations=layer.row_attestations,
         detail_rows=context.detail_rows,
         filing_instance_evidence=context.filing_instance_evidence,
         m210_official_tipo_renta_code=context.m210_official_tipo_renta_code,

@@ -494,6 +494,12 @@ sequence_additions = {source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
 sequence_removals = {source_refs = [0]}
 
 [[revisions."2023-2024".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2019-2022", id = "modelo-202-dep-200-cuota-base"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
 family = "constructs"
 selector = {revision = "2019-2022", id = "modelo-202-foundation"}
 sequence_additions = {legal_refs = ["orden-hfp-312-2023:art-unico-1-anexo-i"], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "boe-modelo-202-2023-amendment"]}
@@ -563,6 +569,12 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 family = "bindings"
 selector = {revision = "2019-2022", id = "modelo-202-pagos-fraccionados-anteriores"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["pagos fraccionados"]}], source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-202-cuota-base-ejercicio-anterior"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["modalidad", "40.2", "minorado en las deducciones y bonificaciones", "retenciones e ingresos a cuenta"]}], source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2023-2024".family_overrides]]

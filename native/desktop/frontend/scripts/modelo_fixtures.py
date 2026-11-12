@@ -2126,6 +2126,13 @@ RENTA_SMALL_CERTIFICATE = CertificateFigures(
     reducciones_aplicables=Decimal("0.00"),
     gastos_deducibles=Decimal("300.00"),
 )
+#: The small households compared, by the name their comparison is stored under after the filer's envelope, and what
+#: the payer withheld on the certificate. Neither mode owes tax on the income, so the result in each is the withheld
+#: amount returned: nothing for the first, and a refund of the same amount in both modes for the second.
+RENTA_SMALL_HOUSEHOLDS: tuple[tuple[str, Decimal], ...] = (
+    ("small", Decimal("0.00")),
+    ("small-refund", Decimal("100.00")),
+)
 #: What a comparison that recommends individual filing states, as amounts in euros: the joint result, the individual
 #: one, and the cuota resultante of each. No household of these synthetic filers reaches it.
 INDIVIDUAL_LOWER = ("2400.00", "2100.00", "3000.00", "2700.00")
@@ -2158,22 +2165,23 @@ def _write_unreached_comparison_refusals(directory: Path) -> None:
             _write(directory, f"refusal-compare-100-{RENTA_PERIOD}-{refusal.replace('_', '-')}-{language}.json", detail)
 
 
-def _write_small_comparison(directory: Path, filer: RentaFiler) -> None:
+def _write_small_comparison(directory: Path, filer: RentaFiler, *, state: str, withheld: Decimal) -> None:
     """Record the comparison of the filer's household on an income too small for either mode to owe tax on.
 
-    The household is seeded as a profile of its own with one certificate in the register of that income, nothing
-    withheld on it, so the results do not differ; it is calculated and read through the registered comparison.
+    The household is seeded as a profile of its own with one certificate in the register of that income, ``withheld``
+    withheld on it. Both modes read the same certificate, so the results do not differ; it is calculated and read
+    through the registered comparison and stored as ``state``.
     """
     from dataclasses import replace
 
-    small = replace(filer, withheld=Decimal("0.00"))
+    small = replace(filer, withheld=withheld)
     with (
         scratch_tree() as tmp,
         _renta_seeded(Path(tmp), small, read_on=small.read_on) as (persona, work),
     ):
         _record_certificate(persona, small, figures=RENTA_SMALL_CERTIFICATE)
         _calculate_renta(work)
-        _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}-{filer.envelope}-small")
+        _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}-{filer.envelope}-{state}")
 
 
 def _write_individual_comparison(directory: Path, work: Any, filer: RentaFiler) -> None:
@@ -2291,9 +2299,10 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
             _write_settlement_states(directory, work, SETTLEMENT_STATES)
         elif filer.year != RENTA_YEAR:
             _write_settlement_states(directory, work, SETTLEMENT_STATES[:1], prefix=f"{filer.envelope}-")
-    # The small household is a profile of its own, seeded once the filer's is closed.
+    # Each small household is a profile of its own, seeded once the filer's is closed.
     if filer.compared_states:
-        _write_small_comparison(directory, filer)
+        for state, withheld in RENTA_SMALL_HOUSEHOLDS:
+            _write_small_comparison(directory, filer, state=state, withheld=withheld)
 
 
 #: The filer whose profile holds the Borrador drafts: a salaried filer with one certificate in the register.

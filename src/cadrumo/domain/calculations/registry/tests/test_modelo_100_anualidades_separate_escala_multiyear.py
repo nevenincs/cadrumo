@@ -60,7 +60,7 @@ from .authored_editions import (
     filing_year_envelope,
     single_exercise_editions,
 )
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, M100_NO_LET_PROPERTY_BINDINGS
 from .published_authority import (
     PublishedGovernedFactSource,
     published_authored_revision,
@@ -176,6 +176,7 @@ def _run(
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
         "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        **M100_NO_LET_PROPERTY_BINDINGS,
         "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),

@@ -51,10 +51,17 @@ from ....application.modelo.m303_exonerado_390_applicability_attestation import 
 from ....application.modelo.operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
+    MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
+from ....application.modelo.work_amend_contracts import (
+    ModeloWorkAmendBaseline,
+    ModeloWorkAmendOverride,
+    ModeloWorkAmendRequest,
+)
+from ....application.modelo.work_amend_correction import ModeloAmendmentCorrectionContextV1
 from ....application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculateRequest,
@@ -73,6 +80,8 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
+from ....domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ..operations.controller_port import OperationControllerPort
 
 _ACTOR_REF = "operator:tui-modelo"
@@ -106,6 +115,40 @@ class ModeloWorkspaceLifecycleDoor:
     read_export_result: Callable[[OperationPublicProjectionV1], Awaitable[ModeloExportPublicResultV3]] | None = None
     profile_id: UUID | None = None
     read_review_result: Callable[[OperationPublicProjectionV1], Awaitable[CalculationReviewXlsxResult]] | None = None
+    #: Reads the correction the declaration's current filing offers, worded in the given language.
+    read_amendment_context: Callable[[OutputLanguage], Awaitable[ModeloAmendmentCorrectionContextV1]] | None = None
+
+    async def amendment_context(self, language: OutputLanguage) -> ModeloAmendmentCorrectionContextV1:
+        """Read what correcting the declaration recorded as filed offers, or refuse when it cannot be read here."""
+        read = self.read_amendment_context
+        if read is None:
+            raise ModeloLifecycleActionUnavailableError(translated_message="workspace.modelo.correction.unavailable")
+        return await read(language)
+
+    async def amend(
+        self,
+        *,
+        filing_record_id: str,
+        amendment_kind: FilingDeclarationKind,
+        overrides: tuple[ModeloWorkAmendOverride, ...],
+        reason: str,
+        m303_rectificativa_motive: M303RectificativaMotive | None,
+    ) -> OperationControllerPort:
+        """Record a local correction of the named filing; nothing is sent to the AEAT."""
+        return await self._submit(
+            OperationRequest(
+                definition_id=MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
+                subject_ref=self.work_unit_id,
+                payload=ModeloWorkAmendRequest(
+                    baseline=ModeloWorkAmendBaseline(from_filing_record_id=filing_record_id),
+                    amendment_kind=amendment_kind,
+                    overrides=overrides,
+                    reason=reason,
+                    m303_rectificativa_motive=m303_rectificativa_motive,
+                    actor=_ACTOR_REF,
+                ),
+            )
+        )
 
     async def calculate(
         self,

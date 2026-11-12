@@ -49,6 +49,7 @@ from .modelo_bindings_renta_expenses import (
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
 )
 from .oss_ioss_resolver import OssIossLedgerSourceResolver
+from .renta_inmueble_resolver import RentaInmuebleSourceResolver
 from .retencion_soportada_repository import RetencionSoportadaPorts
 from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, ModeloSourceResolver
 
@@ -301,11 +302,67 @@ def _record_membership_diagnostic(diagnostic: CalculationSourceDiagnostic, obser
     return reason != "source_domain_not_ready"
 
 
+def consumed_renta_inmueble_rows(target: CalculationRevision) -> frozenset[tuple[str, str]]:
+    """Read each let property's identity and fingerprint recorded by a :class:`CalculationRevision`."""
+    return frozenset(
+        (identity.source_row_identity, identity.fingerprint)
+        for identity in target.row_source_identities.values()
+        if identity.source_kind is BindingSourceKind.RENTA_INMUEBLE
+    )
+
+
+def observe_renta_inmueble_rows(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    profile: ModeloWorkProfile,
+    ports: LedgerMembershipPorts,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[tuple[str, str]] | None:
+    """Resolve the let properties again from the current profile, ledger and withholding records.
+
+    A row's fingerprint covers its property and lease records, its linked
+    ledger rows and its suffered withholding, never what the filer stated of it,
+    so a statement made since the calculation moves nothing. A refused cohort
+    observes no row. Returns ``None`` when a store cannot be read: an unread
+    store is never proof that nothing moved.
+    """
+    context = CalculationSourceContext(
+        bucket_id=work_unit.bucket_id,
+        work_unit_id=work_unit.work_unit_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        revision=revision,
+        profile=profile,
+        operation=operation,
+        m210_official_tipo_renta_code=target.m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=target.m210_gross_income_source_mode,
+    )
+    try:
+        with validating_governed_facts(operation):
+            resolution = RentaInmuebleSourceResolver(
+                transaction_repository=ports.transaction_repository,
+                retencion_soportada_ports=ports.retencion_soportada_ports,
+            ).resolve(context)
+    except (CadrumoError, LookupError) as exc:
+        _log.debug("renta inmueble membership unavailable error_type=%s", type(exc).__name__)
+        return None
+    if any(diagnostic.reason == "storage_degraded" for diagnostic in resolution.diagnostics):
+        return None
+    return frozenset(
+        (identity.source_row_identity, identity.fingerprint) for identity in resolution.row_source_identities.values()
+    )
+
+
 __all__ = [
     "LedgerMembershipPorts",
     "LedgerSourceMembership",
     "consumed_inventory_rows",
+    "consumed_renta_inmueble_rows",
     "ledger_transaction_ref_identity",
+    "observe_renta_inmueble_rows",
     "query_ledger_membership",
     "recorded_book_claimed_transaction_ids",
 ]

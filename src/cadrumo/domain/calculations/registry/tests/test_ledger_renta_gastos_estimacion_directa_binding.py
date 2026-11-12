@@ -32,7 +32,7 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from .authored_editions import newest_authored_edition
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, M100_NO_LET_PROPERTY_BINDINGS
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
@@ -219,6 +219,7 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),

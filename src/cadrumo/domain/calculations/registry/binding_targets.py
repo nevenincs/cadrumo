@@ -169,6 +169,7 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
     _record_foreign_asset_row_consumers(revision, record)
     _record_activity_asset_disposal_row_consumers(revision, record)
     _record_capital_mobiliario_row_consumers(revision, record)
+    _record_renta_inmueble_row_consumers(revision, record)
     return {binding_id: tuple(refs) for binding_id, refs in consumers.items()}
 
 
@@ -218,6 +219,28 @@ def _record_capital_mobiliario_row_consumers(
                 binding.id,
                 BindingConsumerKind.APPLICATION_ROW_VALUE,
                 f"capital_mobiliario_row_values.{provider.dictionary_field}",
+            )
+
+
+def _record_renta_inmueble_row_consumers(
+    revision: ModeloRevision,
+    record: Callable[[BindingId, BindingConsumerKind, str], None],
+) -> None:
+    """Index the property columns the ``renta_inmueble`` resolver carries into calculation.
+
+    Each row column earns the row consumer the resolver's indexed values and
+    source identities satisfy; a column total keeps its own consumers.
+    """
+    from .binding_selector_utils import provider_member
+    from .renta_inmueble_bindings import RentaInmuebleProvider
+
+    for binding in revision.bindings:
+        if binding.source is BindingSourceKind.RENTA_INMUEBLE:
+            provider = provider_member(binding, RentaInmuebleProvider)
+            if provider.fact != "row_field":
+                continue
+            record(
+                binding.id, BindingConsumerKind.APPLICATION_ROW_VALUE, f"renta_inmueble_row_values.{provider.row_field}"
             )
 
 

@@ -780,6 +780,14 @@ application:
       retired_book_leaves_year_unresolved: Ez a készlet ki van vezetve, de még vannak
         tételei, ezért a %{year}. évi D melléklet megoldatlan marad. Állítsd vissza,
         vagy töröld a tételeit.
+    effects:
+      purchase_ledger_row:
+        claimed: Ez a vásárlás a megjelölt főkönyvi tranzakciót könyveli; az a sor
+          kimarad a 100-as modell költségeiből, a vásárlás pedig a költségét a készletnyilvántartásba
+          viszi.
+        none: Megadod, hogy egyetlen főkönyvi tranzakció sem könyveli ezt a vásárlást.
+        unstated: Még nincs megadva semmi arról a főkönyvi tranzakcióról, amely ezt
+          a vásárlást könyveli.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Költségellenőrzés
@@ -827,6 +835,10 @@ application:
       physical_evidence_role:
         acquisition_price_valuation: Értékelés beszerzési áron
         physical_count: Fizikai leltár
+      purchase_ledger_row:
+        claimed: Főkönyvi tranzakció könyveli
+        none: Nincs a főkönyvben
+        unstated: Még nincs megadva
       retirement_reason:
         activity_ceased: A tevékenység megszűnt
         created_in_error: Tévedésből létrehozva
@@ -2237,6 +2249,94 @@ application:
         meg, a megnevezett tételek pedig {base} alapot tartalmaznak.'
       register_row_missing: '{elements}: ezek az eszközök {count} olyan tételt neveznek
         meg, amely már nem létezik.'
+      renta_inmueble_accessory_property: '{record}. ingatlan: a fő ingatlannal együtt
+        bérbe adott tartozék ingatlan, amit a számítás nem kínál.'
+      renta_inmueble_acquisition_cost_unstated: '{record}. ingatlan: nem szerepel
+        a beszerzési ára és költségei, ezért az épület értékcsökkenése nincs kiszámítva.'
+      renta_inmueble_acquisition_date_unstated: '{record}. ingatlan: nem szerepel,
+        mikor szerezted, így nem ismert, hány napig volt a tiéd.'
+      renta_inmueble_boxes_not_offered: '{record}. ingatlan: a bútorzat értékcsökkenése,
+        a 23.3. cikk szerinti csökkentés és a különleges értékcsökkenés nem elérhető;
+        ahol szükséges, add meg kézzel.'
+      renta_inmueble_cadastral_values_unstated: '{record}. ingatlan: sem a telek értéke,
+        sem az adóév kataszteri értékei nem szerepelnek, így a telek nem zárható ki
+        az értékcsökkenés alapjából.'
+      renta_inmueble_concept_undeclared: Egy főkönyvi tétel olyan kiadási jogcímet
+        ad meg, amely nem szerepel az adóév listájában.
+      renta_inmueble_concurrent_leases: '{record}. ingatlan: két bérleti szerződése
+        ugyanarra a napra esik.'
+      renta_inmueble_cumulative_amortisation_unstated: '{record}. ingatlan: az értékcsökkenése
+        elérheti a beszerzési értéket, és az adóév elején halmozott értékcsökkenés
+        nem szerepel.'
+      renta_inmueble_currency_unconverted: Egy kapcsolt főkönyvi tétel devizában van,
+        és nincs euróértéke.
+      renta_inmueble_days_not_let: '{record}. ingatlan: voltak napok, amikor a tiéd
+        volt, de nem volt bérbe adva, és ezeknek a napoknak a vélelmezett jövedelme
+        nincs kiszámítva.'
+      renta_inmueble_expense_row_on_lease: Egy kimenő főkönyvi tétel bérleti szerződéshez
+        kapcsolódik; a kiadást az ingatlanához kapcsold.
+      renta_inmueble_expense_row_without_concept: Egy ingatlanhoz kapcsolt főkönyvi
+        tétel nem adja meg a kiadás jogcímét.
+      renta_inmueble_held_part_of_ejercicio: '{record}. ingatlan: az adóév során szerezted
+        vagy ruháztad át, és a kiadásai időarányos megosztása nem elérhető.'
+      renta_inmueble_improvement_in_ejercicio: '{record}. ingatlan: egy felújítás
+        dátuma az adóévre esik, és az értékcsökkenési napjai nincsenek kiszámítva.'
+      renta_inmueble_income_outside_lease: Egy bérleti díj tétel dátuma kívül esik
+        a kapcsolt bérleti szerződés időszakán.
+      renta_inmueble_income_row_on_property: Egy bejövő főkönyvi tétel ingatlanhoz
+        kapcsolódik; a bérleti díjat a bérleti szerződéséhez kapcsold.
+      renta_inmueble_lease_names_no_property: '{record}. bérleti szerződés: olyan
+        ingatlant nevez meg, amely nincs a profilodban.'
+      renta_inmueble_lease_without_income: '{record}. bérleti szerződés: az adóévben
+        hatályos, de nincs hozzá kapcsolt bérleti díj tétel.'
+      renta_inmueble_naturaleza_unstated: '{record}. ingatlan: nem szerepel, hogy
+        városi vagy külterületi (rústico) ingatlan-e.'
+      renta_inmueble_pending_expenses_held_return_unstated: '{record}. ingatlan: az
+        előző adóév bevallása itt tárolva van, de semmi nem rendeli ehhez az ingatlanhoz
+        a benne levonásra váróként maradt kamat- és javítási kiadásokat. Add meg őket
+        ehhez az ingatlanhoz ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_origin_unsplit: '{record}. ingatlan: levonásra
+        váró kamat- és javítási kiadásai vannak, és a keletkezésük adóéve szerint
+        felosztó melléklet még nem nyújtható be. Ellenőrizd a levonásra váró összegét
+        ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_unstated: '{record}. ingatlan: a korábbi adóévekből
+        még levonásra váró kamat- és javítási kiadások nem szerepelnek, és egyik itt
+        tárolt korábbi bevallás sem tartalmazza őket.'
+      renta_inmueble_property_abroad_let: '{record}. ingatlan: külföldön van és bérbe
+        adott, külföldi jövedelemként való kezelése nem elérhető.'
+      renta_inmueble_record_unreadable: A profilod egyik ingatlan- vagy bérleti rekordja
+        nem olvasható, ezért egyetlen bérbe adott ingatlan sem kerül kiszámításra.
+      renta_inmueble_reduction_fact_unstated: '{record}. ingatlan: egy bérleti szerződésnél
+        nem szerepel, hogy lakásbérletről van-e szó, a lakás feszült piaci övezetben
+        van-e, illetve fenntartja-e a LAU 17.6. cikkét, így a 23.2. cikk szerinti
+        csökkentés nincs kiszámítva.'
+      renta_inmueble_reduction_tenants_mixed: '{record}. ingatlan: egy bérleti szerződés
+        bérlői közül csak néhány felel meg életkor alapján a 23.2. cikk szerinti csökkentésnek,
+        amely nincs kiszámítva.'
+      renta_inmueble_regime_not_pleno_dominio: '{record}. ingatlan: teljes tulajdontól
+        (pleno dominio) eltérő jogon birtokolod, amit a számítás nem kínál.'
+      renta_inmueble_relative_fact_unstated: '{record}. bérleti szerződés: nem szerepel,
+        hogy a bérlő a LIRPF 24. cikke szerinti rokon-e.'
+      renta_inmueble_relative_tenant: '{record}. bérleti szerződés: a bérlő a LIRPF
+        24. cikke szerinti rokon, és a minimális hozam nincs kiszámítva.'
+      renta_inmueble_row_names_no_lease: Egy főkönyvi tétel olyan bérleti szerződéshez
+        kapcsolódik, amely nincs a profilodban.
+      renta_inmueble_row_names_no_property: Egy főkönyvi tétel olyan ingatlanhoz kapcsolódik,
+        amely nincs a profilodban.
+      renta_inmueble_several_leases: '{record}. ingatlan: az adóévben több bérleti
+        szerződése van, és a bevallás még nem tudja szerződésenként feltüntetni őket.'
+      renta_inmueble_tenants_beyond_numbered: '{record}. bérleti szerződés: több bérlőt
+        ad meg, mint amennyit a számozott bérlőmezők befogadnak.'
+      renta_inmueble_titular_not_declarant: '{record}. ingatlan: a családi egységed
+        egy másik tagjáé, nem a tiéd.'
+      renta_inmueble_titularidad_unstated: '{record}. ingatlan: nem szerepel, ki a
+        tulajdonosa és milyen jogon.'
+      renta_inmueble_withholding_payer_no_tenant: Egy városi bérleti díjat terhelő
+        levonás olyan kifizetőt nevez meg, aki az adóév egyetlen bérleti szerződésében
+        sem bérlő.
+      renta_inmueble_withholding_payer_several_properties: Egy városi bérleti díjat
+        terhelő levonás olyan kifizetőt nevez meg, aki több ingatlanodat is bérli,
+        így nem ismert, melyikhez tartozik.
       residence_period_unknown: '{date} napra nincs rögzített adóügyi illetőség, ezért
         az eszközeid úgy számítanak, mintha a 100-as és 130-as modell lenne érvényes.'
       retencion_soportada_absence_contradicted: '{income_class} jövedelemosztály:
@@ -2657,6 +2757,9 @@ application:
       detail_row_identity_conflict: Egy általad megadott részletező sor nem egyezik
         a nyilvántartásaid szerinti sorral ugyanarra a nyilatkozóra; javítsd vagy
         töröld a számítás előtt.
+      edit_prior_carries_unstated: Ez a módosítás megadatlanul hagyja a korábbi évekből
+        áthozott összegeket, ezért a bevallás nem számolható ki. Semmi sem változott.
+        Először add meg ezeket az összegeket.
       edit_revision_id_unresolved: A szerkesztés mögötti számítás nem jelezte, melyik
         változatot hozta létre, ezért a szerkesztés nyugtáját nem lehetett megőrizni.
         Ez programhiba, és semmi, amit megadtál, nem okozta. Újabb szerkesztés előtt
@@ -3050,6 +3153,11 @@ application:
         nincs függőben: mindegyiknek van már értéke vagy kijelentésed, vagy a bevallás
         nem visz át ilyet. Semmi sem változott.'
       prior_carries_unstated:
+        renta_capital_inmobiliario_gastos_pendientes: 'A %{filing_year}. évi Modelo
+          %{modelo} nem számítható ki: nem ismert, hogy egy bérbe adott ingatlannál
+          maradt-e korábbi adóévekből még le nem vont kamat- és javítási költség (%{boxes}.
+          mező). Mentsd el az előző évi bevallást, vagy add meg az ingatlan sorában
+          a(z) %{command} paranccsal, megnevezve a sort. Semmi sem lett mentve.'
         renta_negative_general_bases_pending: 'A %{filing_year}. évi Modelo %{modelo}
           nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még ki nem
           egyenlített negatív általános adóalap (%{boxes}. mező). Mentsd el az előző
@@ -3475,6 +3583,13 @@ application:
         nem ellenőrizhető, és nem exportálható az AEAT-nak szánt fájlként.
       registry_snapshot_unresolved: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai nem tölthetők be. Próbáld újra, vagy frissítsd az alkalmazást.
+      renta_inmueble_rows_drift: 'A(z) %{modelo} számítás bérbe adott ingatlanjai
+        a számítás óta megváltoztak: módosultak az ingatlan-, bérleti, kapcsolt főkönyvi
+        vagy levonási rekordjaik (%{rows_recorded} rögzített ingatlan, most %{rows_current},
+        %{rows_changed} módosult). Használat előtt számold újra.'
+      renta_inmueble_rows_unavailable: A(z) %{modelo} számítás bérbe adott ingatlanjainak
+        ingatlan-, bérleti, főkönyvi vagy levonási rekordjai nem olvashatók, ezért
+        nem tudható, változtak-e. Próbáld újra, amikor olvashatók, majd számold újra.
       required_maximum_unresolved: A(z) [%{box}] rovat még nem ellenőrizhető, mert
         nem ismert, mekkora az a legnagyobb összeg, amelyet a törvény szerint ebben
         az évben alkalmazni kell. Hiányzik néhány adat, amelytől ez az összeg függ.
@@ -3804,6 +3919,26 @@ application:
       pattern: '{year}. {month} {day}.'
     work_form:
       additional_data_for_box: Kiegészítő adat a(z) {box}. rovathoz
+      authority_grade:
+        applicability: Csak határidők
+        calculation: Csak számítás és előnézet
+        filing: Számítás, benyújtás előtti ellenőrzés és exportálás
+      binding_statement:
+        attest_no_amount:
+          action: Jelezd, hogy nincs összeg
+          effect: Általad kijelentett 0-ként rögzül.
+          statement: Kijelenti, hogy ebben a korábbi ejercicióból áthozott tételben
+            nincs összeg. Általad kijelentett 0-ként rögzül, elkülönítve a beírt számtól;
+            ha egy korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+        attest_prior_value:
+          action: Add meg a korábbi bevallás összegét
+          effect: A korábbi bevallásra általad kijelentett összegként rögzül.
+          origin: 'Te adtad meg ehhez: %{source}'
+          statement: Megadja azt az összeget, amelyet ez a tétel egy itt nem tárolt
+            korábbi bevallásból venne át. A te összeged kerül a helyére, általad kijelentettként
+            megjelölve; az ellenőrzés és az exportálás jelzi, hogy a kijelentéseden
+            alapul, és ha a korábbi bevallás később bekerül, a bevallás jelzi az esetleges
+            eltérést.
       box_locator_help:
         one_year: A Modelo {modelo} nyomtatvány {box}. rovata, {years}. adóév.
         onwards: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. és az azt követő
@@ -3926,6 +4061,78 @@ application:
         ellenőrzésének, ezért ezt nem sikerült elvégezni.
       unworded: 'Ezt nem sikerült elvégezni. Az okához még nincs mondat; a kódja:
         {error_code}.'
+  operator_actions:
+    served:
+      action:
+        auth_configure: Állítsd be a bejelentkezési módot
+        auth_diagnostics_view: Nézd meg a bejelentkezés diagnosztikáját
+        auth_login: Jelentkezz be az AEAT-hoz
+        diagnostics_repair: Javítsd a helyi tárolót
+        diagnostics_secure_objects_quarantine: Helyezd karanténba a sérült rekordokat
+        diagnostics_workflow_reset_progress: Állítsd vissza az irányított folyamat
+          haladását
+        ledger_account_add: Add hozzá a bankszámládat
+        ledger_actividad_asset_correct_revision: Javítsd a tevékenységhez rendelt
+          eszköz nyilvántartását
+        ledger_classify: Sorold be a banki tételeidet
+        ledger_classify_irpf_category: Add meg ennek a tételnek az IRPF-kategóriáját
+        ledger_classify_movement: Sorold be ezt a tételt
+        ledger_counterparty_filing_name: Add meg a partner nevét a bevalláshoz
+        ledger_evidence_review_list: Nézd át a függő dokumentumokat
+        ledger_inventory_movement_claim: Rendeld a tételt a készletedhez
+        ledger_invoice_update_operation_type: Add meg a számla ügylettípusát
+        ledger_link: Kapcsold össze a számlát a kifizetésével
+        ledger_preflight: Ellenőrizd az időszak nyilvántartását
+        ledger_prorrata_list: Nézd át a prorrata-nyilvántartást
+        ledger_review: Nézd át a nyilvántartást
+        live_filed_pull: Töltsd le a benyújtott bevallást az AEAT-tól
+        live_filed_pull_all: Töltsd le az összes benyújtott bevallást az AEAT-tól
+        live_notifications_list: Nézd meg az AEAT-értesítéseidet
+        modelo_bindings_list: Nézd át, honnan származnak a bevallás összegei
+        modelo_casillas: Nézd át a bevallás casilláit
+        modelo_describe: Olvasd el a modelo leírását
+        modelo_export: Exportáld a bevallás fájlját
+        modelo_filing_record_import: Rögzítsd a benyújtási igazolást
+        modelo_filing_record_list: Nézd át a benyújtási nyilvántartást
+        modelo_iva_wallet_override: Javítsd a továbbvihető IVA-egyenleget
+        modelo_iva_wallet_seed: Add meg a továbbvihető IVA nyitóegyenlegét
+        modelo_verification_report_list: Nézd át az ellenőrzési jelentéseket
+        modelo_work_amend: Javítsd a benyújtott bevallást
+        modelo_work_attest_m303_exonerado_390: Erősítsd meg, hogy mentesülsz a 390-es
+          modelo alól
+        modelo_work_attest_prior_carries: Add meg a korábbi évekből áthozott összegeket
+        modelo_work_attest_prior_value: Add meg a korábbi bevallás összegét
+        modelo_work_calculate: Számold ki ezt a bevallást
+        modelo_work_calculate_joint_return: Számold ki együttes bevallásként
+        modelo_work_create: Kezdd el ezt a bevallást
+        modelo_work_file: Rögzítsd ezt a bevallást benyújtottként
+        modelo_work_list: Nézd át a bevallásaidat
+        modelo_work_override: Írd felül a kiszámított értéket
+        modelo_work_revisions: Nézd át a bevallás változatait
+        modelo_work_set_value: Add meg a casilla értékét
+        modelo_work_status: Nézd meg a bevallás állapotát
+        modelo_work_verify: Ellenőrizd ezt a bevallást
+        overview_explain: Nézd meg, miért vonatkozik rád ez a modelo
+        overview_status: Nézd át az adókötelezettségeidet
+        profile_archive_reconcile: Egyeztesd a profil archívumát
+        profile_arrendamiento: Nézd át a bérbeadásaidat
+        profile_ascendiente: Nézd át a felmenőidet
+        profile_complete_setup: Fejezd be a profilod beállítását
+        profile_create: Hozz létre egy profilt
+        profile_descendiente: Nézd át a leszármazottaidat
+        profile_edit: Szerkeszd a profilodat
+        profile_list: Nézd át a profiljaidat
+        profile_login: Nyisd meg a profilodat
+        profile_logout: Zárd be a profilodat
+        profile_repair_active_pointer: Javítsd az aktív profil kiválasztását
+        profile_repair_clear_active: Töröld az aktív profil kiválasztását
+        profile_status: Ellenőrizd a profilodat
+        storage_init: Készítsd elő a helyi tárolót
+      no_recovery:
+        operator_decision: Ehhez a saját döntésed kell; ezt semmilyen lépés nem hozhatja
+          meg helyetted.
+        safety: Ez az adataid védelmében állt le, ezért nincs felkínált lépés.
+        terminal: 'Ez az elutasítás végleges: semmilyen lépés nem oldja fel.'
   overview:
     calendar:
       event:

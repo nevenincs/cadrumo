@@ -146,6 +146,11 @@ def test_application_and_wire_precondition_models_have_one_core_invariant_owner(
 def test_application_and_wire_precondition_models_pin_the_actionable_and_closed_refusal_schema() -> None:
     """The application verdict and wire record must keep one executable grammar."""
     expected_fields = (
+        "no_recovery_words",
+        "no_recovery_words_language",
+        "action_words",
+        "action_words_language",
+        "target_operation_ids",
         "failed_condition_id",
         "evidence",
         "action",
@@ -159,6 +164,9 @@ def test_application_and_wire_precondition_models_pin_the_actionable_and_closed_
     assert tuple(PreconditionVerdict.model_fields) == expected_fields
     assert tuple(ResolvedPreconditionAction.model_fields) == expected_fields
     assert tuple(AlternativeRecoveryAction.model_fields) == (
+        "action_words",
+        "action_words_language",
+        "target_operation_ids",
         "action",
         "argument_bindings",
         "missing_argument_names",

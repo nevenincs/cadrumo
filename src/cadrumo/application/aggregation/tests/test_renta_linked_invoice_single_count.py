@@ -27,6 +27,7 @@ import pytest
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from ....domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -177,6 +178,7 @@ def test_the_annual_chain_counts_the_linked_invoice_once_to_the_rendimiento_neto
                 "renta-profile-has-economic-activity": Decimal("1"),
                 "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
                 "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+                **M100_NO_LET_PROPERTY_BINDINGS,
                 "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
                 "renta-profile-estimacion-directa": Decimal("1"),
             },

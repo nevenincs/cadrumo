@@ -19,15 +19,12 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.errors.hierarchy import CadrumoError, InternalInvariantError
-from .....core.time.clock import today_madrid
 from .. import snapshot as snapshot_module
 from .. import snapshot_proof as snapshot_proof_module
 from ..authority import PinnedAuthorityOperation
 from ..authority_store import SQLiteAuthorityReader
 from ..errors import RegistryValidationError
-from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
-from ..facts.schema import GovernedFact
-from ..governed_fact_scope import GovernedFactSource, validating_governed_facts
+from ..governed_fact_scope import validating_governed_facts
 from ..ids import RevisionId
 from ..schema import ModeloDefinition, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
@@ -225,7 +222,7 @@ def test_a_module_source_is_located_where_the_import_system_finds_it(closure: tu
 
 
 def test_the_running_validator_matches_its_own_closure(closure: tuple[ValidatorSource, ...]) -> None:
-    contract = SnapshotProofContract(closure, validator_digest(closure), None, None)
+    contract = SnapshotProofContract(closure, validator_digest(closure))
 
     assert runtime_validator_matches(contract)
 
@@ -233,20 +230,20 @@ def test_the_running_validator_matches_its_own_closure(closure: tuple[ValidatorS
 def test_a_changed_source_digest_turns_the_validator_off(closure: tuple[ValidatorSource, ...]) -> None:
     tampered = (replace(closure[0], sha256="0" * 64), *closure[1:])
 
-    assert not runtime_validator_matches(SnapshotProofContract(tampered, validator_digest(tampered), None, None))
+    assert not runtime_validator_matches(SnapshotProofContract(tampered, validator_digest(tampered)))
 
 
 def test_an_unknown_module_turns_the_validator_off(closure: tuple[ValidatorSource, ...]) -> None:
     extended = (*closure, ValidatorSource("cadrumo.domain.calculations.registry.no_such_module", "0" * 64))
 
-    assert not runtime_validator_matches(SnapshotProofContract(extended, validator_digest(extended), None, None))
+    assert not runtime_validator_matches(SnapshotProofContract(extended, validator_digest(extended)))
 
 
 def test_a_contract_whose_digest_does_not_name_its_sources_is_not_trusted(
     closure: tuple[ValidatorSource, ...],
 ) -> None:
-    assert not runtime_validator_matches(SnapshotProofContract(closure, "0" * 64, None, None))
-    assert not runtime_validator_matches(SnapshotProofContract((), validator_digest(()), None, None))
+    assert not runtime_validator_matches(SnapshotProofContract(closure, "0" * 64))
+    assert not runtime_validator_matches(SnapshotProofContract((), validator_digest(())))
 
 
 def _directories(operation: PinnedAuthorityOperation) -> Iterator[ModeloRevisionDirectory]:
@@ -415,12 +412,6 @@ class _OneModeloOperation:
     def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
         return self._operation.supported_filing_years()
 
-    def governed_fact(self, fact_id: str, /) -> GovernedFact:
-        return self._operation.governed_fact(fact_id)
-
-    def resolve_governed_fact(self, query: GovernedFactQuery, /) -> ResolvedGovernedFact:
-        return self._operation.resolve_governed_fact(query)
-
     def snapshot_proof_contract(self) -> SnapshotProofContract | None:
         return self._operation.snapshot_proof_contract()
 
@@ -432,7 +423,6 @@ class _OneModeloOperation:
         filing_year: int,
         period: str,
         grade: RegistryAuthorityGrade,
-        governed_facts: GovernedFactSource | None = None,
     ) -> RegistrySnapshot:
         if period == self._failing_period:
             raise RegistryValidationError(f"declared cell {modelo_id} {filing_year} {period} is broken")
@@ -440,9 +430,7 @@ class _OneModeloOperation:
             built = self._ungraded[1]
             ungraded_revision = built.revision.model_copy(update={"authority_grade": None})
             snapshot_module.check_snapshot_authority_grade(built.modelo, ungraded_revision, requested_grade=grade)
-        return self._operation.build_unretained_snapshot(
-            modelo_id, filing_year=filing_year, period=period, grade=grade, governed_facts=governed_facts
-        )
+        return self._operation.build_unretained_snapshot(modelo_id, filing_year=filing_year, period=period, grade=grade)
 
 
 def test_the_sweep_records_exactly_the_passing_cells_with_their_selected_revision(
@@ -478,7 +466,6 @@ def test_the_sweep_records_exactly_the_passing_cells_with_their_selected_revisio
     assert proven.proofs
     assert proven.contract.validator_sources == closure
     assert proven.contract.validator_digest == validator_digest(closure)
-    assert proven.contract.admits_date(today_madrid())
 
 
 def test_a_failing_declared_cell_blocks_the_sweep(

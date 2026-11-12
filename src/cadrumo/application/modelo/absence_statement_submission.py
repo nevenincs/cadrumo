@@ -32,7 +32,8 @@ from .work_form_models import ModeloFormCarryAttestation
 _WORDED_FAMILIES: Final[frozenset[AbsenceAttestationFamily]] = PRIOR_CARRY_FAMILIES | {
     AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED
 }
-if frozenset(AbsenceAttestationFamily) != _WORDED_FAMILIES:
+# A family stated row by row is answered on each row's own door, never by this declaration-wide statement.
+if frozenset(family for family in AbsenceAttestationFamily if not family.row_grain) != _WORDED_FAMILIES:
     raise ValueError("every statement family needs the words of its nothing-open refusal")
 
 

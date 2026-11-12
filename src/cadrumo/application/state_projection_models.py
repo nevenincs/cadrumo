@@ -246,6 +246,7 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
             "cli.app.modelo.bindings.readiness.regularizacion_bienes_inversion"
         ),
         BindingSourceKind.INVENTORY: "cli.app.modelo.bindings.readiness.inventario",
+        BindingSourceKind.RENTA_INMUEBLE: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.PRORRATA_REGULARIZACION: "cli.app.modelo.bindings.readiness.regularizacion_prorrata",
         BindingSourceKind.PRORRATA_REGISTER_ACTIVITY: "cli.app.modelo.bindings.readiness.actividades_prorrata",
         BindingSourceKind.BORRADOR: "cli.app.modelo.bindings.readiness.borrador_aeat",
@@ -295,6 +296,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: OperatorActionAxis.FILE_PRIOR_PERIOD,
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.INVENTORY: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
+        BindingSourceKind.RENTA_INMUEBLE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.PRORRATA_REGULARIZACION: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.PRORRATA_REGISTER_ACTIVITY: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.BORRADOR: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,

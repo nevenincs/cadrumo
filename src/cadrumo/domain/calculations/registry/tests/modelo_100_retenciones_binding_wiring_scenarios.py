@@ -16,6 +16,7 @@ from ..schema import RegistrySnapshot
 from .authored_editions import newest_authored_editions
 from .modelo_100_registry_support import (
     M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_LET_PROPERTY_BINDINGS,
     M100_NO_MARITIME_WORKER_BINDINGS,
     M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
 )
@@ -48,6 +49,11 @@ M100_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id(
 )
 
 M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id("0610", surface="M100_CUOTA_DIFERENCIAL_CASILLA")
+
+# The let properties' column totals the renta_inmueble source hands the engine: the net yield the
+# art. 20 limit weighs and the reduced yield box 0156 carries into the base.
+M100_INMUEBLE_RENDIMIENTO_NETO_TOTAL_BINDING: BindingId = "renta-inmueble-total-rendimiento-neto-0149"
+M100_INMUEBLE_RENDIMIENTO_NETO_REDUCIDO_TOTAL_BINDING: BindingId = "renta-inmueble-total-rendimiento-neto-reducido-0154"
 
 
 PRIOR_DATE_CONTEXT = {"filing_period": date(PRIOR_EDITION, 12, 31)}
@@ -112,6 +118,7 @@ def prior_base_binding_values(
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         **M100_NO_MARITIME_WORKER_BINDINGS,
+        **M100_NO_LET_PROPERTY_BINDINGS,
     }
     if certificado_trabajo is not None:
         values[M100_RETENCIONES_TRABAJO_BINDING] = certificado_trabajo
@@ -160,6 +167,7 @@ def reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None) 
         # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
         # neutral zero for a scenario with no descendants.
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+        **M100_NO_LET_PROPERTY_BINDINGS,
     }
     if certificado_trabajo is not None:
         values[M100_RETENCIONES_TRABAJO_BINDING] = certificado_trabajo
@@ -209,13 +217,17 @@ def check_salary_certificate_retenciones_binding_populates_reviewed_edition_casi
 ) -> None:
     """The reviewed edition keeps parity for the payee salary-certificate withholding input."""
     suffered_retenciones = Decimal("4500.00")
-    binding_values = reviewed_base_binding_values(certificado_trabajo=suffered_retenciones)
+    # One let property yielding 9.600 euros net, with no art. 23.2 reduction, reaches the base.
+    binding_values = reviewed_base_binding_values(certificado_trabajo=suffered_retenciones) | {
+        M100_INMUEBLE_RENDIMIENTO_NETO_TOTAL_BINDING: Decimal("9600"),
+        M100_INMUEBLE_RENDIMIENTO_NETO_REDUCIDO_TOTAL_BINDING: Decimal("9600"),
+    }
 
     result = calculate_registry_snapshot(
         reviewed_edition_snapshot,
         inputs=with_bound_projection(
             reviewed_edition_snapshot,
-            {"0003": Decimal("30000.00"), "0102": Decimal("9600")},
+            {"0003": Decimal("30000.00")},
             binding_values,
         ),
         date_context=REVIEWED_DATE_CONTEXT,

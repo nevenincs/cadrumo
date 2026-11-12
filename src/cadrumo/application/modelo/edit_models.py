@@ -31,6 +31,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
+from ...domain.calculations.registry.field_absence import absent_when_none
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.schema_base import CasillaDataTypeValue
 from ...domain.filing.schema import ModeloScalar
@@ -218,10 +219,15 @@ class ModeloEditBindingAddressV1(EditModel):
     ``BindingId``, never ``CasillaId`` -- most overridable bindings (a
     fichero-BOE record-field ``manual_input`` binding, most notably) have no
     casilla at all to address through.
+
+    ``row_identity`` names the row of a repeating group a statement of a carry
+    speaks of, for a binding whose registry family is stated row by row; every
+    other intent leaves it absent, and an absent one is left out of the dump.
     """
 
     kind: Literal["binding"] = "binding"
     binding_id: BindingId
+    row_identity: str | None = Field(default=None, min_length=1, max_length=256, exclude_if=absent_when_none)
 
 
 class ModeloEditCorrectionAddressV1(EditModel):
@@ -680,6 +686,19 @@ class ModeloEditDomainRefusalV1(EditModel):
         return self
 
 
+class ModeloEditCarryWithdrawalBlock(StrEnum):
+    """The fact a refused withdrawal of a calculation-refusing carry statement names.
+
+    Withdrawing such a statement returns the work unit to no current
+    calculation; these are the two cases where it cannot.
+    """
+
+    #: The declaration is recorded as filed; only an amendment corrects it.
+    FILED = "carry_withdrawal_filed"
+    #: The head holds other values of the filer's, which withdrawing would discard.
+    KEEPS_ENTRIES = "carry_withdrawal_keeps_entries"
+
+
 class ModeloEditUnsupportedIntentReason(StrEnum):
     """One closed reason per intent kind this V1 executor cannot yet reach.
 
@@ -922,6 +941,8 @@ def _intent_address_key(
     if isinstance(address, ModeloEditScalarAddressV1):
         return ("scalar", address.casilla_id)
     if isinstance(address, ModeloEditBindingAddressV1):
+        if address.row_identity is not None:
+            return ("binding_row", f"{address.binding_id}:{address.row_identity}")
         return ("binding_override", address.binding_id)
     if isinstance(address, ModeloEditCorrectionAddressV1):
         return ("correction", address.casilla_id)
@@ -1066,6 +1087,7 @@ __all__ = [
     "ModeloEditBaselineV1",
     "ModeloEditBindingAddressV1",
     "ModeloEditBindingIntentKind",
+    "ModeloEditCarryWithdrawalBlock",
     "ModeloEditCompatibilityRefusalV1",
     "ModeloEditCorrectionAddressV1",
     "ModeloEditDetailRowAddressV1",

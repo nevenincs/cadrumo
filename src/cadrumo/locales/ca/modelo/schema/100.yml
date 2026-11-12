@@ -2,6 +2,9 @@ modelo:
   schema:
     '100':
       binding:
+        renta-inmueble-gastos-pendientes-anteriores-0103:
+          label: Interessos i despeses de reparació i conservació de l'immoble pendents
+            de deduir dels quatre exercicis anteriors
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Sí: modalitat normal (N). No: modalitat simplificada (S).'
           label: Apliques la modalitat normal d'estimació directa?

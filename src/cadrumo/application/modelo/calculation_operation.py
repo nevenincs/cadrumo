@@ -233,6 +233,7 @@ def _replayed_head_inputs(
         attested_binding_ids=replay.attested_binding_ids,
         value_attestations=replay.value_attestations,
         income_family_entry_digests=replay.income_family_entry_digests,
+        row_attestations=replay.row_attestations,
     )
 
 

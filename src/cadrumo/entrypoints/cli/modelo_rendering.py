@@ -242,7 +242,7 @@ def _record_action(diagnostic: CalculationSourceDiagnostic) -> ResolvedPrecondit
     """The live command that opens the record a note names, where the note names one."""
     from ...application.modelo.calculation_notes import note_record_verdict
 
-    verdict = note_record_verdict(diagnostic)
+    verdict = note_record_verdict(diagnostic.reason, diagnostic.fact)
     return None if verdict is None else resolve_cli_precondition_action(verdict)
 
 

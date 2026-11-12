@@ -32,7 +32,11 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
 )
-from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer, ValueAttestation
+from ...domain.modelos.calculation_revision_operator_layer import (
+    CalculationOperatorLayer,
+    RowCarryAttestation,
+    ValueAttestation,
+)
 from ...domain.modelos.calculation_revision_sources import (
     CalculationSourceIssue,
 )
@@ -529,6 +533,7 @@ def resolve_bucket_aggregation_source_resolution(
     filing_period_date: date | None,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     income_family_entry_digests: Mapping[str, str] | None = None,
+    row_attestations: tuple[RowCarryAttestation, ...] = (),
 ) -> CalculationSourceResolution:
     """Resolve the mesh, then enforce its final exclusive ownership set."""
     source_resolution = resolve_bucket_source_mesh(
@@ -548,6 +553,7 @@ def resolve_bucket_aggregation_source_resolution(
         profile=preparation.profile,
         transaction_repository=transaction_repository,
         income_family_entry_digests=income_family_entry_digests,
+        row_attestations=row_attestations,
     )
     reject_caller_overrides_of_source_bindings(
         revision=preparation.snapshot.revision,
@@ -696,6 +702,7 @@ def _caller_operator_layer(
     attested_binding_ids: tuple[BindingId, ...],
     value_attestations: Mapping[BindingId, ValueAttestation],
     income_family_entry_digests: Mapping[str, str],
+    row_attestations: tuple[RowCarryAttestation, ...],
 ) -> CalculationOperatorLayer:
     """Project the validated caller tier of one run onto the persisted operator layer.
 
@@ -716,6 +723,7 @@ def _caller_operator_layer(
         attested_binding_ids=attested_binding_ids,
         value_attestations=dict(value_attestations),
         income_family_entry_digests=dict(income_family_entry_digests),
+        row_attestations=row_attestations,
     )
 
 
@@ -779,6 +787,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     attested_binding_ids: tuple[BindingId, ...] = (),
     value_attestations: Mapping[BindingId, ValueAttestation] | None = None,
     income_family_entry_digests: Mapping[str, str] | None = None,
+    row_attestations: tuple[RowCarryAttestation, ...] = (),
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -815,6 +824,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         detail_rows=detail_rows,
         profile=profile,
         income_family_entry_digests=income_family_entry_digests or {},
+        row_attestations=row_attestations,
     )
     preparation = run.preparation
     printed = snapshot_printed_boxes(ports.operation, preparation.snapshot)
@@ -835,6 +845,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 attested_binding_ids=attested_binding_ids,
                 value_attestations=value_attestations or {},
                 income_family_entry_digests=income_family_entry_digests or {},
+                row_attestations=row_attestations,
             )
             if record_operator_layer
             else None
@@ -1019,6 +1030,7 @@ def _resolve_bucket_aggregation_run(
     detail_rows: tuple[ModeloDetailRow, ...],
     profile: ModeloWorkProfile | None,
     income_family_entry_digests: Mapping[str, str] | None = None,
+    row_attestations: tuple[RowCarryAttestation, ...] = (),
 ) -> _BucketAggregationRun:
     """Validate the caller channels, resolve the source mesh and reconcile the two."""
     preparation = _prepare_bucket_aggregation_calculation(
@@ -1057,6 +1069,7 @@ def _resolve_bucket_aggregation_run(
             filing_period_date=filing_period_date,
             transaction_repository=memoized_transaction_repository,
             income_family_entry_digests=income_family_entry_digests,
+            row_attestations=row_attestations,
         )
     except RegistryValidationError as error:
         # A stored earlier return that does not show the boxes a carry reads is

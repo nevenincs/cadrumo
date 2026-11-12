@@ -339,6 +339,10 @@ class BindingSourceKind(StrEnum):
     # filer may also type, so the filer's own entry stays admissible beside the
     # figure and a differing one is reported, never applied in silence.
     PREVISION_SOCIAL_CONTRIBUTION = "prevision_social_contribution"
+    # One let property's ``Inmueble`` occurrence of Modelo 100: the property and
+    # lease rows of the profile joined with the ledger rows linked to them. Each
+    # column a revision declares fills its box on the property's own row.
+    RENTA_INMUEBLE = "renta_inmueble"
     # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
     # 104-105): the source that would materialise Modelo 303 casilla 44 / the
     # Modelo 390 annual regularización field from the provisional percentage

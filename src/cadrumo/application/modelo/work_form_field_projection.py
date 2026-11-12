@@ -18,6 +18,7 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.filing.schema import ModeloValueKind
 from .printed_boxes import printed_box_number
 from .source_policy import source_policy
+from .work_form_binding_statement import with_binding_statements
 from .work_form_errors import ModeloWorkFormLayoutError
 from .work_form_field_state import (
     BINDING_DATA_TYPE,
@@ -67,7 +68,7 @@ def project_casilla_field(
     origin = casilla_origin(row, context, required=required or casilla_id in context.calculation_required.casilla_ids)
     origin, value = _unworked_origin(casilla_id, origin, row.value, context)
     blockers = tuple(ModeloFormBlocker(code=blocker.native_code) for blocker in row.blocked_by)
-    return ModeloFormField(
+    field = ModeloFormField(
         address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
         box=printed_box_number(casilla, placement),
         label=label,
@@ -96,6 +97,7 @@ def project_casilla_field(
         standing=field_standing(origin, blockers, recorded=context.filed),
         stated_absent=_stated_absence(origin, row, context),
     )
+    return with_binding_statements(field, context)
 
 
 def _unworked_origin(
@@ -270,7 +272,7 @@ def project_binding_field(binding_id: str, context: WorkFormContext) -> ModeloFo
     policy = source_policy(binding.source)
     editability, reason = binding_input_editability(binding_id, policy.override_policy, context)
     value, origin, typed_unattributed = _binding_value_state(binding, binding_id, raw, data_type, context)
-    return ModeloFormField(
+    field = ModeloFormField(
         address=ModeloFormBindingAddressV1(binding_id=binding.id),
         box=box,
         label=label,
@@ -293,6 +295,7 @@ def project_binding_field(binding_id: str, context: WorkFormContext) -> ModeloFo
         standing=field_standing(origin, recorded=context.filed),
         stated_absent=context.stated.get(binding.id) if origin is ModeloFormOrigin.ENTERED else None,
     )
+    return with_binding_statements(field, context)
 
 
 def _binding_value(raw: str | None, data_type: str) -> ModeloFormScalar:

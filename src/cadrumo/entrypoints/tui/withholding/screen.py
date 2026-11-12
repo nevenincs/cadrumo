@@ -2,7 +2,8 @@
 
 The screen reads both lists through an injected door and draws only what they
 serve: the income class's label, the payer's name and the statement's note are
-the backend's words. A change is never assembled here. Each one opens the
+the backend's words, and so are the amount columns and the ejercicios on offer.
+A change is never assembled here. Each one opens the
 registered operation's own request form, built from the request schema the
 runtime serves, prefilled with the coordinates of the row it acts on, so
 preflight, review and the receipt are the ones every operation uses. A refusal
@@ -21,8 +22,9 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.screen import Screen
-from textual.widgets import Button, DataTable, Input, Static
+from textual.widgets import Button, DataTable, Input, Select, Static
 
+from ....application.operations.public_scalar import PublicDecimal
 from ....application.retencion_soportada_absence.contracts import (
     RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_ABSENCE_WITHDRAW_OPERATION_DEFINITION_ID,
@@ -41,6 +43,7 @@ from ....application.retencion_soportada_certificado.results import (
     RetencionSoportadaMutationProjection,
     RetencionSoportadaRowProjection,
 )
+from ....application.retencion_soportada_certificado.row_words import RetencionSoportadaAmountColumnProjection
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsenceState
@@ -54,9 +57,6 @@ from ..operations.run_screen import OperationRunScreen
 from ..operations.run_wording import failure_text
 
 WITHHOLDING_DESTINATION: Final = "workbench.withholding"
-
-_PAYER_REF_SHOWN: Final = 12
-"""How many characters of a payer's keyed reference name a payer the record serves no name for."""
 
 
 class WithholdingMutation(StrEnum):
@@ -89,18 +89,10 @@ class WithholdingDoorV1(Protocol):
         ...
 
 
-def _payer(row: RetencionSoportadaRowProjection) -> str:
-    return row.payer_legal_name or row.payer_ref[:_PAYER_REF_SHOWN]
-
-
-_ABSENCE_STATE_LOCALE_KEYS: Final[Mapping[RetencionSoportadaAbsenceState, str]] = {
-    RetencionSoportadaAbsenceState.ACTIVE: "tui.withholding.absence.state.active",
-    RetencionSoportadaAbsenceState.WITHDRAWN: "tui.withholding.absence.state.withdrawn",
-}
-
-
-def _absence_state(state: RetencionSoportadaAbsenceState) -> str:
-    return tr(_ABSENCE_STATE_LOCALE_KEYS[state])
+def _amount_cell(row: RetencionSoportadaRowProjection, column: RetencionSoportadaAmountColumnProjection) -> str:
+    """One amount of a record as the list served it; an amount the record does not state is left blank."""
+    amount = getattr(row, column.field.value, None)
+    return amount.decimal if isinstance(amount, PublicDecimal) else ""
 
 
 def mutation_refusal_words(result: BaseModel | None) -> str | None:
@@ -125,6 +117,7 @@ class WithholdingScreen(AccountChromeScreen):
     .withholding-actions { height: auto; margin-bottom: $cadrumo-stack; }
     .withholding-actions Button { margin-right: $cadrumo-space-1; }
     #withholding-ejercicio { width: $cadrumo-control-min-width; }
+    #withholding-ejercicio-select { width: $cadrumo-control-min-width; display: none; }
     #withholding-refusal { color: $warning; height: auto; }
     #withholding-status { height: auto; }
     """)
@@ -134,6 +127,8 @@ class WithholdingScreen(AccountChromeScreen):
         super().__init__(id="withholding-screen")
         self.door = door
         self.ejercicio: int | None = None
+        self.ejercicios: tuple[int, ...] = ()
+        self.amount_columns: tuple[RetencionSoportadaAmountColumnProjection, ...] = ()
         self.records: tuple[RetencionSoportadaRowProjection, ...] = ()
         self.absences: tuple[RetencionSoportadaAbsenceRowProjection, ...] = ()
         self._busy = False
@@ -147,10 +142,12 @@ class WithholdingScreen(AccountChromeScreen):
         with ContentScroll(id="withholding-page"):
             yield localized(Static(tr("tui.withholding.prompt"), markup=False), "tui.withholding.prompt")
             with Horizontal(classes="withholding-actions"):
+                # The first read needs a year typed; every read after it offers the ejercicios the list served.
                 yield localized(
                     Input(placeholder=tr("tui.withholding.ejercicio"), type="integer", id="withholding-ejercicio"),
                     "tui.withholding.ejercicio",
                 )
+                yield Select[int]((), allow_blank=True, id="withholding-ejercicio-select")
                 yield localized(
                     Button(tr("tui.withholding.action.read"), id="withholding-read", variant="primary"),
                     "tui.withholding.action.read",
@@ -201,9 +198,20 @@ class WithholdingScreen(AccountChromeScreen):
         """Draw both lists as last read, under headings in the language now on screen."""
         records = self._records_table()
         records.clear(columns=True)
-        records.add_columns(tr("tui.withholding.column.income"), tr("tui.withholding.column.payer"))
+        records.add_columns(
+            tr("tui.withholding.column.income"),
+            tr("tui.withholding.column.payer"),
+            tr("tui.withholding.column.origin"),
+            *(column.label for column in self.amount_columns),
+        )
         for index, row in enumerate(self.records):
-            records.add_row(row.income_class_label, _payer(row), key=str(index))
+            records.add_row(
+                row.income_class_label,
+                row.payer_display_name,
+                row.origin_label,
+                *(_amount_cell(row, column) for column in self.amount_columns),
+                key=str(index),
+            )
         absences = self._absences_table()
         absences.clear(columns=True)
         absences.add_columns(
@@ -215,7 +223,7 @@ class WithholdingScreen(AccountChromeScreen):
         for index, item in enumerate(self.absences):
             absences.add_row(
                 item.income_class_label,
-                _absence_state(item.state),
+                item.state_label,
                 item.attested_at.date().isoformat(),
                 item.note,
                 key=str(index),
@@ -250,13 +258,39 @@ class WithholdingScreen(AccountChromeScreen):
         """Leave the destination."""
         self.dismiss(None)
 
+    def _chosen_ejercicio(self) -> int | None:
+        """The ejercicio picked from the served ones, or typed in while none have been served yet."""
+        picker = self.query_one("#withholding-ejercicio-select", Select)
+        if picker.display:
+            return None if picker.is_blank() else int(str(picker.value))
+        try:
+            return int(self.query_one("#withholding-ejercicio", Input).value.strip())
+        except ValueError:
+            return None
+
+    def _offer_ejercicios(self) -> None:
+        """Offer the served ejercicios in place of the typed field, with the one read chosen."""
+        typed = self.query_one("#withholding-ejercicio", Input)
+        picker = self.query_one("#withholding-ejercicio-select", Select)
+        offered = self.ejercicio is not None and self.ejercicio in self.ejercicios
+        typed.display = not offered
+        picker.display = offered
+        if offered:
+            picker.set_options((str(year), year) for year in self.ejercicios)
+            picker.value = self.ejercicio
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Read the ejercicio picked, unless it is the one already read."""
+        if event.select.id != "withholding-ejercicio-select" or event.value is Select.NULL:
+            return
+        if int(str(event.value)) != self.ejercicio:
+            self._start_read()
+
     def _start_read(self) -> None:
         if self._busy:
             return
-        text = self.query_one("#withholding-ejercicio", Input).value.strip()
-        try:
-            ejercicio = int(text)
-        except ValueError:
+        ejercicio = self._chosen_ejercicio()
+        if ejercicio is None:
             self._status(tr("tui.withholding.status.ejercicio_invalid"))
             return
         self._busy = True
@@ -281,8 +315,11 @@ class WithholdingScreen(AccountChromeScreen):
         finally:
             self._busy = False
         self.ejercicio = ejercicio
+        self.ejercicios = tuple(records.ejercicios)
+        self.amount_columns = records.amount_columns
         self.records = records.rows
         self.absences = absences.attestations
+        self._offer_ejercicios()
         self._draw()
         empty = not self.records and not self.absences
         self._status(tr("tui.withholding.status.empty", ejercicio=ejercicio) if empty else "")
@@ -290,8 +327,11 @@ class WithholdingScreen(AccountChromeScreen):
     def _forget(self) -> None:
         """Drop every row read under a session that has since lapsed."""
         self.ejercicio = None
+        self.ejercicios = ()
+        self.amount_columns = ()
         self.records = ()
         self.absences = ()
+        self._offer_ejercicios()
         self._draw()
 
     def _selected[RowT](self, table: DataTable[str], rows: tuple[RowT, ...]) -> RowT | None:

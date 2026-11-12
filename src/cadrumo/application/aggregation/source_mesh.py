@@ -62,6 +62,7 @@ from ...domain.modelos.calculation_revision import (
     empty_row_source_identities,
 )
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
+from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.source_disagreement import SourceDisagreementFact
@@ -223,6 +224,8 @@ class CalculationSourceContext(BaseModel):
     # Per income family without a calculator, the digest of its ledger rows when the
     # operator entered its figures by hand; replayed from the operator layer, transient.
     income_family_entry_digests: dict[str, str] = Field(default_factory=dict, exclude=True, repr=False)
+    caller_row_attestations: tuple[RowCarryAttestation, ...] = Field(default=(), exclude=True, repr=False)
+    """The operator's per-row statements of a carry no source holds, for the resolver owning those rows."""
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None

@@ -32,6 +32,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .authored_editions import newest_authored_editions
+from .modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via scenarios.
@@ -63,6 +64,7 @@ _PRIOR_EDITION_BINDINGS = {
     "renta-profile-has-economic-activity": Decimal("1"),
     "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
     "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+    **M100_NO_LET_PROPERTY_BINDINGS,
     "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
     "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -93,6 +95,7 @@ _REVIEWED_EDITION_BINDINGS = {
     "renta-profile-has-economic-activity": Decimal("1"),
     "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
     "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+    **M100_NO_LET_PROPERTY_BINDINGS,
     "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
     "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),

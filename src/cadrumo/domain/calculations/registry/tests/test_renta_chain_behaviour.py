@@ -19,6 +19,7 @@ import pytest
 # snapshot check required by Modelo 100 parity scenarios run via scenarios.
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .authored_editions import revision_covering, source_exercise
+from .modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from .published_authority import published_source_reference
 from .registry_tree import bundled_modelo_components
 from .scenarios import (
@@ -218,6 +219,7 @@ def _scenario_2025(
             "renta-profile-has-economic-activity": Decimal("0"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             # declaration_type = 1 (individual) → 0461 = 0 by default in all base scenarios
@@ -380,6 +382,7 @@ def test_base_liquidable_general_applies_reductions() -> None:
             "renta-profile-has-economic-activity": Decimal("0"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             # declaration_type = 2 (conjunta) + situacion casado → 0461 = 3400

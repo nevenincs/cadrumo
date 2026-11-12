@@ -5,7 +5,9 @@ family = "mapping"
 # The expense concepts a ledger row may declare against a let property, each with
 # the Modelo 100 casilla of the Inmueble group it feeds. An improvement is
 # capitalised into the acquisition value and recovered through amortisation, so
-# it feeds 0129 and is never expensed.
+# it feeds 0129 and is never expensed. Financing interest and repair and
+# conservation share the limit of the property's gross income (LIRPF art.
+# 23.1.a.1.º; RIRPF art. 13.a), so their treatment is the limited expense.
 [[fact.variants]]
 variant_id = "renta-capital-inmobiliario-gasto-concept-vocabulary:2022-01-01"
 date_axis = "filing_period"
@@ -30,6 +32,7 @@ required_text = [
   "Saldos de dudoso cobro",
   "Otros gastos necesarios fiscalmente deducibles",
   "las cantidades destinadas a la ampliación o mejora de los",
+  "no podrá exceder, para cada bien o derecho, de la",
 ]
 
 [fact.variants.payload]
@@ -37,9 +40,9 @@ kind = "mapping"
 entries = [
   { key = "concept_order", value = "interes_financiacion,reparacion_conservacion,comunidad,formalizacion_contrato,defensa_juridica,servicios_terceros,suministros,primas_seguro,tributos,saldos_dudoso_cobro,otros,mejora" },
   { key = "concept.interes_financiacion.casilla", value = "0105" },
-  { key = "concept.interes_financiacion.treatment", value = "expense" },
+  { key = "concept.interes_financiacion.treatment", value = "expense_limited" },
   { key = "concept.reparacion_conservacion.casilla", value = "0106" },
-  { key = "concept.reparacion_conservacion.treatment", value = "expense" },
+  { key = "concept.reparacion_conservacion.treatment", value = "expense_limited" },
   { key = "concept.comunidad.casilla", value = "0109" },
   { key = "concept.comunidad.treatment", value = "expense" },
   { key = "concept.formalizacion_contrato.casilla", value = "0110" },

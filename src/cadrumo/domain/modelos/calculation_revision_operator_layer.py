@@ -35,6 +35,12 @@ the digest of the family's rows in the filing window when its figures were
 entered, so a later calculation can tell an entry that still stands from one
 the rows have since moved under. Replaying the layer replays the digests
 verbatim; only an edit that enters the family's figures again moves them.
+
+A carry stated per row of a repeating group is kept in
+:attr:`CalculationOperatorLayer.row_attestations`: no binding override can hold
+it, because the binding fills one value per row. Each statement names the
+binding and the source identity of the row it speaks of, and either states that
+nothing is pending or states the amount.
 """
 
 from __future__ import annotations
@@ -133,6 +139,63 @@ class ValueAttestation(BaseModel):
         return payload
 
 
+class RowCarryAttestation(BaseModel):
+    """The operator's statement of one row's carry: that nothing is pending, or the amount pending.
+
+    Attributes:
+        binding_id: The row binding whose registry family takes the statement.
+        source_row_identity: The source identity of the row the statement speaks of.
+        amount: The amount stated, as a canonical decimal string; the canonical
+            zero when ``absent``.
+        absent: Whether the statement is that the row carries nothing, rather
+            than a figure typed.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    binding_id: BindingId
+    source_row_identity: str = Field(min_length=1, max_length=256)
+    amount: str = Field(min_length=1, max_length=64)
+    absent: bool = False
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_a_canonical_amount(self) -> RowCarryAttestation:
+        parsed = try_parse_canonical_decimal(self.amount)
+        if parsed is None or canonical_decimal_string(parsed) != self.amount or parsed < 0:
+            raise ModeloOperatorLayerIntegrityError(
+                f"operator layer row statement on {self.binding_id!r} must hold a canonical nonnegative amount",
+                translated_message="errors.integrity.operator_layer_value_attestation_not_canonical",
+                context={"binding_id": self.binding_id},
+            )
+        if self.absent and self.amount != ATTESTED_ZERO:
+            raise ModeloOperatorLayerIntegrityError(
+                f"operator layer row statement of absence on {self.binding_id!r} must hold the attested zero",
+                translated_message="errors.integrity.operator_layer_attestation_kinds_conflict",
+                context={"binding_id": self.binding_id},
+            )
+        return self
+
+    @property
+    def key(self) -> tuple[BindingId, str]:
+        """Return the binding and row this statement speaks of; a layer holds one statement per key."""
+        return self.binding_id, self.source_row_identity
+
+    @property
+    def stated_amount(self) -> Decimal:
+        """Return the amount the statement puts on its row; zero for a statement of absence."""
+        return Decimal(self.amount)
+
+    def identity_payload(self) -> dict[str, object]:
+        """Return the projection the revision identity hashes."""
+        return {
+            "binding_id": self.binding_id,
+            "source_row_identity": self.source_row_identity,
+            "amount": self.amount,
+            "absent": self.absent,
+        }
+
+
 class CalculationOperatorLayer(BaseModel):
     """The values the operator authored for one calculation, split by the engine channel they reach.
 
@@ -156,6 +219,8 @@ class CalculationOperatorLayer(BaseModel):
             not calculate and whose figures the operator entered by hand, the
             lowercase SHA-256 digest of the family's ledger rows in the filing
             window at entry, keyed by family token.
+        row_attestations: The operator's statements of a carry on one row of a
+            repeating group, one per binding and row, in key order.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -166,6 +231,7 @@ class CalculationOperatorLayer(BaseModel):
     attested_binding_ids: tuple[BindingId, ...] = ()
     value_attestations: Mapping[BindingId, ValueAttestation] = Field(default_factory=dict)
     income_family_entry_digests: Mapping[str, str] = Field(default_factory=dict)
+    row_attestations: tuple[RowCarryAttestation, ...] = ()
 
     def _require_casilla_channels_canonical(self) -> None:
         overlapping = sorted(set(self.decimal_casilla_inputs).intersection(self.text_casilla_inputs))
@@ -231,12 +297,17 @@ class CalculationOperatorLayer(BaseModel):
                     translated_message="errors.integrity.operator_layer_attestation_kinds_conflict",
                     context={"binding_id": binding_id},
                 )
+        keys = [statement.key for statement in self.row_attestations]
+        if keys != sorted(set(keys)):
+            raise ModeloValidationError("operator layer row statements must be unique per binding and row, in order")
         return self
 
     @property
     def is_empty(self) -> bool:
         """Whether the operator authored no value at all in this calculation."""
-        return not (self.decimal_casilla_inputs or self.text_casilla_inputs or self.binding_overrides)
+        return not (
+            self.decimal_casilla_inputs or self.text_casilla_inputs or self.binding_overrides or self.row_attestations
+        )
 
     def casilla_ids(self) -> frozenset[CasillaId]:
         """Every casilla the operator set a value on, whatever its channel."""
@@ -245,9 +316,9 @@ class CalculationOperatorLayer(BaseModel):
     def identity_payload(self) -> dict[str, object]:
         """Return the order-canonical projection the revision identity hashes.
 
-        Attested bindings, value attestations and income-family entry digests
-        are named only when there are any, so a layer that holds none keeps the
-        identity it had before each existed.
+        Attested bindings, value attestations, income-family entry digests and
+        row statements are named only when there are any, so a layer that holds
+        none keeps the identity it had before each existed.
         """
         payload: dict[str, object] = {
             "decimal_casilla_inputs": dict(sorted(self.decimal_casilla_inputs.items())),
@@ -263,6 +334,8 @@ class CalculationOperatorLayer(BaseModel):
             }
         if self.income_family_entry_digests:
             payload["income_family_entry_digests"] = dict(sorted(self.income_family_entry_digests.items()))
+        if self.row_attestations:
+            payload["row_attestations"] = [statement.identity_payload() for statement in self.row_attestations]
         return payload
 
 
@@ -271,5 +344,6 @@ __all__ = [
     "OPERATOR_LAYER_IDENTITY_KEY",
     "AttestedSource",
     "CalculationOperatorLayer",
+    "RowCarryAttestation",
     "ValueAttestation",
 ]

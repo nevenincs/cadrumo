@@ -33,14 +33,17 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 
+from ...core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES
 from ...domain.modelos.errors import ModeloError
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
 from ..operator_actions.models import PreconditionVerdict
 from ..workflow.abort import WorkflowAbortReason
 from ..workflow.run_models import WorkflowResult
 from .edit_models import (
+    ModeloEditCarryWithdrawalBlock,
     ModeloEditCompatibilityRefusalV1,
     ModeloEditDomainRefusalV1,
     ModeloEditParseRefusalV1,
@@ -844,21 +847,88 @@ class ModeloEditContractIncompatibleError(ModeloEditRefusedError):
     edit_scenario: ClassVar[str] = "incompatible"
 
 
+class ModeloEditCarryWithdrawalKeepsEntriesError(ModeloEditRefusedError):
+    """Raised when withdrawing a carry statement would discard other values the filer entered.
+
+    The withdrawal would return the declaration to no calculation, and the
+    filer's other values live only on that calculation; the filer states the
+    carried figures instead.
+    """
+
+    edit_condition: ClassVar[str] = "carry_withdrawal"
+    edit_scenario: ClassVar[str] = "keeps_entries"
+
+
+class ModeloEditCarryWithdrawalFiledError(ModeloEditRefusedError):
+    """Raised when a carry statement is withdrawn from a declaration recorded as filed; an amendment corrects it."""
+
+    edit_condition: ClassVar[str] = "carry_withdrawal"
+    edit_scenario: ClassVar[str] = "filed"
+
+
 _EDIT_MISSING_ACTION_ARGUMENTS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
-    {"value": ("work_unit_id", "casilla_id", "value"), "baseline": ("work_unit_id",)}
+    {
+        "value": ("work_unit_id", "casilla_id", "value"),
+        "baseline": ("work_unit_id",),
+        "carry_withdrawal.keeps_entries": ("binding_id", "modelo", "period", "value", "work_unit_id", "year"),
+        "carry_withdrawal.filed": ("from_filing_record_id", "kind", "reason"),
+    }
+)
+
+_PRIOR_CARRY_CODE: Final[str] = "REFUSED_MODELO_PRIOR_CARRY_ABSENCE_UNSTATED"
+_PRIOR_CARRY_EDIT_MESSAGE_KEY: Final[str] = "application.modelo.errors.edit_prior_carries_unstated"
+_PRIOR_CARRY_FAMILIES: Final[frozenset[str]] = frozenset(family.value for family in PRIOR_CARRY_FAMILIES)
+_CARRY_WITHDRAWAL_ERRORS: Final[Mapping[str, type[ModeloEditRefusedError]]] = MappingProxyType(
+    {
+        ModeloEditCarryWithdrawalBlock.KEEPS_ENTRIES.value: ModeloEditCarryWithdrawalKeepsEntriesError,
+        ModeloEditCarryWithdrawalBlock.FILED.value: ModeloEditCarryWithdrawalFiledError,
+    }
 )
 
 
 def _edit_refusal_failure(error_type: type[ModeloEditRefusedError]) -> ModeloPreconditionFailure:
-    condition = error_type.edit_condition
+    condition, scenario = error_type.edit_condition, error_type.edit_scenario
+    missing = _EDIT_MISSING_ACTION_ARGUMENTS.get(f"{condition}.{scenario}")
     return build_modelo_precondition_failure_for_scenario(
         subject_leaf_key="modelo.work.set_value",
-        scenario_id=f"modelo.work.edit.{condition}.{error_type.edit_scenario}",
+        scenario_id=f"modelo.work.edit.{condition}.{scenario}",
         evidence_id=f"modelo.work.edit.{condition}",
         evidence_values={"admitted": False},
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        missing_action_arguments=_EDIT_MISSING_ACTION_ARGUMENTS.get(condition, ()),
+        missing_action_arguments=_EDIT_MISSING_ACTION_ARGUMENTS.get(condition, ()) if missing is None else missing,
     )
+
+
+def _prior_carry_edit_refusal(family: str) -> RecordedRegisteredError:
+    """The refusal of an edit that leaves an earlier-ejercicio carry unstated, under that refusal's public code.
+
+    It names no box, amount or binding: the door is the statement of the
+    carries, which the declaration's form serves with its own words.
+    """
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.calculate",
+        scenario_id=f"modelo.work.calculate.prior_carries.{family}_unstated",
+        evidence_id=f"modelo.work.calculate.prior_carries.{family}_unstated.observation",
+        evidence_values={"family": family},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        missing_action_arguments=("work_unit_id",),
+    )
+    return RecordedRegisteredError(
+        _PRIOR_CARRY_CODE, translated_message=_PRIOR_CARRY_EDIT_MESSAGE_KEY, precondition_verdict=failure.verdict
+    )
+
+
+def _domain_refusal_error(refusal: ModeloEditDomainRefusalV1) -> CadrumoError:
+    """The registered refusal of a domain refusal: its carry cause when it names one, else the value family."""
+    for fact in refusal.facts:
+        withdrawal = _CARRY_WITHDRAWAL_ERRORS.get(fact)
+        if withdrawal is not None:
+            return withdrawal()
+    if _PRIOR_CARRY_CODE in refusal.facts:
+        family = next((fact for fact in refusal.facts if fact in _PRIOR_CARRY_FAMILIES), None)
+        if family is not None:
+            return _prior_carry_edit_refusal(family)
+    return ModeloEditRefusedError()
 
 
 def modelo_edit_value_refusal_verdict() -> PreconditionVerdict:
@@ -866,12 +936,15 @@ def modelo_edit_value_refusal_verdict() -> PreconditionVerdict:
     return _edit_refusal_failure(ModeloEditRefusedError).verdict
 
 
-def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> ModeloEditRefusedError:
+def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> CadrumoError:
     """Return the registered refusal an edit's no-effect outcome settles under.
 
     One error per refusal family: the refusal's addresses, facts, and evidence
     are deliberately not carried, so none of them can reach operation
-    persistence or a rendered message.
+    persistence or a rendered message. Two causes are served by name: a
+    withdrawn carry statement that cannot leave the declaration uncalculated,
+    and an edit that leaves an earlier-ejercicio carry unstated, which settles
+    under that refusal's public code with the door to state the carries.
     """
     match refusal:
         case ModeloEditStaleBaselineRefusalV1():
@@ -880,7 +953,9 @@ def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> ModeloEditRefused
             return ModeloEditIntentUnsupportedError()
         case ModeloEditVersionRefusalV1() | ModeloEditCompatibilityRefusalV1():
             return ModeloEditContractIncompatibleError()
-        case ModeloEditDomainRefusalV1() | ModeloEditParseRefusalV1():
+        case ModeloEditDomainRefusalV1():
+            return _domain_refusal_error(refusal)
+        case ModeloEditParseRefusalV1():
             return ModeloEditRefusedError()
 
 
@@ -906,6 +981,8 @@ __all__ = [
     "ModeloCrossPeriodCleanStateError",
     "ModeloDomiciliationPastCutoffError",
     "ModeloEditBaselineStaleError",
+    "ModeloEditCarryWithdrawalFiledError",
+    "ModeloEditCarryWithdrawalKeepsEntriesError",
     "ModeloEditContractIncompatibleError",
     "ModeloEditIntentUnsupportedError",
     "ModeloEditRefusedError",

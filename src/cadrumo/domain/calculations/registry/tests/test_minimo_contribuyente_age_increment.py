@@ -31,6 +31,7 @@ from ..schema import RegistrySnapshot
 from .authored_editions import newest_authored_editions
 from .modelo_100_registry_support import (
     M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_LET_PROPERTY_BINDINGS,
     M100_NO_MARITIME_WORKER_BINDINGS,
     M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
 )
@@ -81,6 +82,7 @@ def _calc_prior_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -133,6 +135,7 @@ def _calc_reviewed_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),

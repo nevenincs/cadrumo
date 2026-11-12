@@ -13,7 +13,12 @@ ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "boe-lis-art-40-statutory-facts"
-required_text = ["6 millones de euros durante los 12 meses anteriores"]
+required_text = [
+  "6 millones de euros durante los 12 meses anteriores",
+  "la cuota íntegra del último período impositivo cuyo plazo de declaración estuviese vencido el primer día de los 20 naturales",
+  "deberá ser ejercida en la correspondiente declaración censal",
+  "en tanto no se renuncie a su aplicación a través de la correspondiente declaración censal",
+]
 
 [[fact.variants.source_citations]]
 source_ref = "boe-modelo-202-base-order"
@@ -31,11 +36,32 @@ entries = [
   { key = "reason.art_40_3_mandatory", value = 'Modelo 202 modalidad obligatoria: el artículo 40.3 de la LIS impone el método de la base imponible (3 / 9 / 11 primeros meses) cuando el importe neto de la cifra de negocios de los doce meses anteriores ha superado los 6.000.000 €. La modalidad del artículo 40.2 (cuota) no está disponible.' },
   { key = "reason.art_40_2_optional", value = 'Modelo 202 modalidad por defecto: el artículo 40.2 de la LIS permite el método de la cuota (18 %) cuando el importe neto de la cifra de negocios de los doce meses anteriores no ha superado los 6.000.000 €. La modalidad del artículo 40.3 sigue siendo opcional.' },
   { key = "reason.filing_mandatory", value = 'Modelo 202 obligatorio en cada periodo: el importe neto de la cifra de negocios de los doce meses anteriores al inicio del período impositivo ha superado los 6.000.000 €, y la Orden HFP/227/2017 (artículo 1.3) obliga a presentar el modelo aunque no resulte ingreso alguno en concepto de pago fraccionado.' },
-  { key = "reason.filing_depends_on_ingreso", value = 'No se puede determinar si el Modelo 202 debe presentarse: con un importe neto de la cifra de negocios de los doce meses anteriores no superior a 6.000.000 €, la Orden HFP/227/2017 (artículo 1.3) solo obliga a presentarlo en el periodo en que resulte ingreso. En la modalidad del artículo 40.2 de la LIS la base es la cuota íntegra del último período impositivo con plazo de declaración vencido, minorada en deducciones, bonificaciones, retenciones e ingresos a cuenta; si se ejerció en la declaración censal la opción del artículo 40.3, la base es la base imponible de los 3, 9 u 11 primeros meses. El perfil no recoge esa base ni la opción ejercida, y el motor no presume ninguna de las dos.' },
+  { key = "reason.filing_depends_on_ingreso", value = 'Con un importe neto de la cifra de negocios de los doce meses anteriores al inicio del período impositivo no superior a 6.000.000 €, la Orden HFP/227/2017 (artículo 1.3) solo obliga a presentar el Modelo 202 en el periodo en que resulte ingreso, y eso se decide en cada pago fraccionado. Sin la opción del artículo 40.3 de la LIS, la base es la del artículo 40.2: la cuota íntegra del último período impositivo con plazo de declaración vencido el primer día del plazo de ingreso, minorada en deducciones, bonificaciones, retenciones e ingresos a cuenta. Con la opción ejercida en la declaración censal, la base es la base imponible de los 3, 9 u 11 primeros meses, que solo resulta del cálculo del Modelo 202 de ese periodo. Para este periodo no se dispone de ninguno de esos datos, y no se presume ninguno.' },
+  { key = "reason.instalment_election_unstated", value = 'No consta si la entidad ejerció en su declaración censal la opción del artículo 40.3 de la LIS (pago fraccionado sobre la base imponible de los 3, 9 u 11 primeros meses). Con un importe neto de la cifra de negocios no superior a 6.000.000 €, de esa opción depende cómo se calcula el pago y, por tanto, si resulta ingreso y hay que presentar el Modelo 202 (Orden HFP/227/2017, artículo 1.3). Indica si la ejerciste o la renunciaste; no se presume ninguna de las dos.' },
+  { key = "reason.instalment_elected_pending_calculation", value = 'La entidad ejerció la opción del artículo 40.3 de la LIS: el pago fraccionado se calcula sobre la base imponible de los 3, 9 u 11 primeros meses del año, que solo resulta del cálculo del Modelo 202 de este periodo. No hay un cálculo de este periodo hecho sobre la normativa y la contabilidad vigentes, así que no se puede saber si resulta ingreso y hay que presentarlo (Orden HFP/227/2017, artículo 1.3).' },
+  { key = "reason.instalment_elected_pending_verification", value = 'La entidad ejerció la opción del artículo 40.3 de la LIS: el pago fraccionado se calcula sobre la base imponible de los 3, 9 u 11 primeros meses del año. El Modelo 202 de este periodo está calculado, pero el cálculo no se ha verificado, y sin verificar no consta que siga respondiendo a la contabilidad y a las facturas actuales. Hasta entonces no se puede saber si resulta ingreso y hay que presentarlo (Orden HFP/227/2017, artículo 1.3).' },
+  { key = "reason.instalment_elected_calculation_positive", value = 'Con la opción del artículo 40.3 de la LIS, el cálculo vigente y verificado del Modelo 202 de este periodo da un importe a ingresar: resulta ingreso y la presentación es obligatoria (Orden HFP/227/2017, artículo 1.3).' },
+  { key = "reason.instalment_elected_calculation_zero", value = 'Con la opción del artículo 40.3 de la LIS, el cálculo vigente y verificado del Modelo 202 de este periodo no da importe a ingresar: no resulta ingreso y no es obligatorio presentarlo (Orden HFP/227/2017, artículo 1.3).' },
+  { key = "reason.instalment_base_positive", value = 'La base del pago fraccionado del artículo 40.2 de la LIS, la cuota del último período impositivo con plazo de declaración vencido minorada en deducciones, bonificaciones, retenciones e ingresos a cuenta, es positiva: resulta ingreso y la presentación del Modelo 202 de este periodo es obligatoria (Orden HFP/227/2017, artículo 1.3).' },
+  { key = "reason.instalment_base_not_positive", value = 'La base del pago fraccionado del artículo 40.2 de la LIS, la cuota del último período impositivo con plazo de declaración vencido minorada en deducciones, bonificaciones, retenciones e ingresos a cuenta, es cero o negativa: no resulta ingreso y no es obligatorio presentar el Modelo 202 de este periodo (Orden HFP/227/2017, artículo 1.3).' },
+  { key = "reason.instalment_no_prior_return", value = 'El período impositivo del que el artículo 40.2 de la LIS toma la base de este pago fraccionado terminó antes de la fecha de inicio de actividad que declaraste: no hay declaración anterior de la que tomar la cuota, no resulta ingreso y no es obligatorio presentar el Modelo 202 de este periodo (Orden HFP/227/2017, artículo 1.3). La conclusión descansa en esa fecha declarada.' },
+  { key = "reason.instalment_base_absent", value = 'La base del artículo 40.2 de la LIS es la cuota del Modelo 200 del último período impositivo con plazo de declaración vencido, minorada en deducciones, bonificaciones, retenciones e ingresos a cuenta, y no hay ninguna declaración presentada o capturada de ese período ni una cuota declarada por ti en el Modelo 202 de este periodo. Presenta o captura ese Modelo 200, o declara la cuota que consta en él; un borrador no basta y la base no se presume.' },
+  { key = "basis.local_filing", value = 'La cuota se toma del Modelo 200 presentado en esta aplicación; no consta que la Agencia Tributaria lo haya recibido.' },
+  { key = "basis.aeat_evidence", value = 'La cuota se toma del Modelo 200 que consta en la Agencia Tributaria, capturado de su sede o de su justificante.' },
+  { key = "basis.operator_attested", value = 'La cuota es la que declaraste en el Modelo 202 de este periodo para una declaración que esta aplicación no tiene.' },
   { key = "legal_refs.not_applicable", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
   { key = "legal_refs.incomplete", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
   { key = "legal_refs.art_40_3_mandatory", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
   { key = "legal_refs.art_40_2_optional", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
   { key = "legal_refs.filing_mandatory", value = "ley-27-2014:art-40-3|orden-hfp-227-2017:art-1" },
   { key = "legal_refs.filing_depends_on_ingreso", value = "ley-27-2014:art-40|ley-27-2014:art-40-3|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.instalment_election_unstated", value = "ley-27-2014:art-40-3|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.instalment_elected_pending_calculation", value = "ley-27-2014:art-40-3|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.instalment_elected_pending_verification", value = "ley-27-2014:art-40-3|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.instalment_elected_calculation_positive", value = "ley-27-2014:art-40-3|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.instalment_elected_calculation_zero", value = "ley-27-2014:art-40-3|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.instalment_base_positive", value = "ley-27-2014:art-40|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.instalment_base_not_positive", value = "ley-27-2014:art-40|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.instalment_no_prior_return", value = "ley-27-2014:art-40|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.instalment_base_absent", value = "ley-27-2014:art-40|orden-hfp-227-2017:art-1" },
 ]

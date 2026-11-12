@@ -145,6 +145,11 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
                     Button(tr("tui.ledger.evidence.extract"), id="ledger-evidence-extract", disabled=True),
                     "tui.ledger.evidence.extract",
                 )
+                yield localized(
+                    Button(tr("tui.ledger.evidence.page.view"), id="ledger-evidence-view", disabled=True),
+                    "tui.ledger.evidence.page.view",
+                )
+                yield Static("", id="ledger-evidence-page", markup=False)
                 yield Static("", id="ledger-evidence-draft", markup=False)
                 yield localized(
                     Static(tr("tui.ledger.invoice.field.kind"), markup=False), "tui.ledger.invoice.field.kind"

@@ -62,6 +62,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
 )
 from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import (
     M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_LET_PROPERTY_BINDINGS,
 )
 from cadrumo.domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
@@ -98,7 +99,7 @@ _TOTAL_PAGOS_A_CUENTA: CasillaId = validated_casilla_id("0609", surface="0609")
 _CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id("0610", surface="0610")
 _RESULTADO_DECLARACION: CasillaId = validated_casilla_id("0670", surface="0670")
 
-_BASE_LIQUIDABLE_GENERAL_LEAF: CasillaId = validated_casilla_id("0102", surface="0102")
+_BASE_LIQUIDABLE_GENERAL_LEAF: CasillaId = validated_casilla_id("0156", surface="0156")
 # The savings base is computed from its income (0429 = max(0041, 0)), so the
 # scenario keys the same amount as income from other financial assets, an input leaf.
 _OTROS_ACTIVOS_FINANCIEROS_LEAF: CasillaId = validated_casilla_id("0031", surface="0031")
@@ -136,6 +137,7 @@ def _bindings(revision_id: str) -> dict[str, Decimal]:
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
         "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        **M100_NO_LET_PROPERTY_BINDINGS,
         "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
@@ -165,6 +167,10 @@ def _scenario(ejercicio: int, *, retencion: str, scenario_id: str) -> RegistryCa
             _RETENCION_TRABAJO: Decimal(retencion),
         },
         hand_typed_bound_casillas={
+            _BASE_LIQUIDABLE_GENERAL_LEAF: (
+                "the general base leaf is the let properties' reduced net yield, which the edition totals from "
+                "the property rows; the scenario carries no property, so it keys that total directly"
+            ),
             _RETENCION_TRABAJO: (
                 "the salary certificate is an operator-keyed source: its binding names this casilla "
                 "as the value it fills, so the scenario keys the certified amount directly"

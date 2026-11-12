@@ -49,6 +49,12 @@ from .....application.retencion_soportada_certificado.results import (
     RetencionSoportadaListProjection,
     RetencionSoportadaRowProjection,
 )
+from .....application.retencion_soportada_certificado.row_words import (
+    RetencionSoportadaAmountColumnProjection,
+    amount_columns,
+    origin_label,
+    payer_display_name,
+)
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
@@ -56,7 +62,7 @@ from .....core.retencion_soportada import RetencionSoportadaClase
 from .....core.retencion_soportada_label import retencion_soportada_clase_label
 from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen
-from .....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsenceState
+from .....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence, RetencionSoportadaAbsenceState
 from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
 from ...operations.catalogue import OperationCatalogueEntryV1, served_operation_entry
@@ -135,6 +141,8 @@ class _MemoryDoor:
         self.rows = records
         self.attestations = absences
         self.reads: list[int] = []
+        self.columns: tuple[RetencionSoportadaAmountColumnProjection, ...] = amount_columns()
+        self.years: tuple[int, ...] = tuple(sorted(filing_year_envelope().years))
         self.forms: list[tuple[WithholdingMutation, dict[str, object]]] = []
         self.settled: BaseModel | None = None
         self.expired = False
@@ -147,7 +155,13 @@ class _MemoryDoor:
         self.reads.append(ejercicio)
         if self.expired:
             raise AccountSessionExpiredError()
-        return RetencionSoportadaListProjection(profile_id=_PROFILE_ID, ejercicio=ejercicio, rows=self.rows)
+        return RetencionSoportadaListProjection(
+            profile_id=_PROFILE_ID,
+            ejercicio=ejercicio,
+            rows=self.rows,
+            amount_columns=self.columns,
+            ejercicios=self.years,
+        )
 
     async def absences(self, ejercicio: int) -> RetencionSoportadaAbsenceListProjection:
         return RetencionSoportadaAbsenceListProjection(
@@ -171,6 +185,7 @@ def _record(income_class: RetencionSoportadaClase, payer: str | None) -> Retenci
         income_class_label=retencion_soportada_clase_label(income_class),
         payer_ref=_PAYER_REF,
         payer_legal_name=payer,
+        payer_display_name=payer_display_name(payer),
         importe_integro_dinerario=_amount("1000.00"),
         valoracion_especie=_amount("0"),
         retencion=_amount("150.00"),
@@ -180,6 +195,7 @@ def _record(income_class: RetencionSoportadaClase, payer: str | None) -> Retenci
         gastos_deducibles=_amount("0") if work else None,
         pago_a_cuenta=_amount("150.00"),
         origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION,
+        origin_label=origin_label(RetencionSoportadaOrigen.OPERATOR_DECLARATION),
         evidence_fingerprint=None,
         revision_id="rev-record-1",
     )
@@ -189,15 +205,16 @@ def _absence(
     income_class: RetencionSoportadaClase, state: RetencionSoportadaAbsenceState
 ) -> RetencionSoportadaAbsenceRowProjection:
     withdrawn = state is RetencionSoportadaAbsenceState.WITHDRAWN
-    return RetencionSoportadaAbsenceRowProjection(
-        ejercicio=_YEAR,
-        income_class=income_class,
-        note="Synthetic note",
-        state=state,
-        attested_at=datetime(_YEAR, 3, 1, tzinfo=UTC),
-        withdrawn_at=datetime(_YEAR, 4, 1, tzinfo=UTC) if withdrawn else None,
+    return RetencionSoportadaAbsenceRowProjection.from_attestation(
+        RetencionSoportadaAbsence(
+            ejercicio=_YEAR,
+            income_class=income_class,
+            note="Synthetic note",
+            state=state,
+            attested_at=datetime(_YEAR, 3, 1, tzinfo=UTC),
+            withdrawn_at=datetime(_YEAR, 4, 1, tzinfo=UTC) if withdrawn else None,
+        ),
         revision_id=f"rev-absence-{state.value}",
-        income_class_label=retencion_soportada_clase_label(income_class),
     )
 
 
@@ -227,7 +244,9 @@ def _form_texts(form: OperationRunScreen, entry: OperationCatalogueEntryV1) -> d
 
 
 async def _read_year(pilot: Pilot[None], screen: WithholdingScreen, text: str) -> None:
-    screen.query_one("#withholding-ejercicio", Input).value = text
+    """Type the year while none are on offer; read again the one on offer once the list has served them."""
+    if screen.query_one("#withholding-ejercicio", Input).display:
+        screen.query_one("#withholding-ejercicio", Input).value = text
     screen.query_one("#withholding-read", Button).press()
     await settle(pilot)
 
@@ -254,14 +273,33 @@ async def test_the_destination_lists_the_served_words_of_both_lists_of_the_year_
 
             assert door.reads == [_YEAR]
             records = cast("DataTable[str]", screen.query_one("#withholding-records", DataTable))
-            assert _headers(records) == [tr("tui.withholding.column.income"), tr("tui.withholding.column.payer")]
-            # The class is named in the words the list served, whatever language they came in.
-            assert _cells(records) == [[record.income_class_label, "Synthetic Payer SL"]]
+            assert _headers(records) == [
+                tr("tui.withholding.column.income"),
+                tr("tui.withholding.column.payer"),
+                tr("tui.withholding.column.origin"),
+                *(column.label for column in door.columns),
+            ]
+            # The class and the origin are named in the words the list served, whatever language they came in.
+            assert _cells(records) == [
+                [
+                    record.income_class_label,
+                    "Synthetic Payer SL",
+                    record.origin_label,
+                    "1000.00",
+                    "0",
+                    "150.00",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "150.00",
+                ]
+            ]
             absences = cast("DataTable[str]", screen.query_one("#withholding-absences", DataTable))
             assert _cells(absences) == [
                 [
                     absence.income_class_label,
-                    tr("tui.withholding.absence.state.active"),
+                    absence.state_label,
                     f"{_YEAR}-03-01",
                     "Synthetic note",
                 ]
@@ -270,7 +308,7 @@ async def test_the_destination_lists_the_served_words_of_both_lists_of_the_year_
 
 
 @pytest.mark.asyncio
-async def test_a_payer_without_a_served_name_is_named_by_its_keyed_reference_and_an_empty_year_says_so() -> None:
+async def test_a_payer_without_a_name_shows_the_served_words_for_it_and_an_empty_year_says_so() -> None:
     door = _MemoryDoor(records=(_record(RetencionSoportadaClase.CAPITAL_MOBILIARIO, None),))
     screen = WithholdingScreen(door)
     with override_settings(cadrumo_output_language="en"):
@@ -278,7 +316,9 @@ async def test_a_payer_without_a_served_name_is_named_by_its_keyed_reference_and
             await settle(pilot)
             await _read_year(pilot, screen, str(_YEAR))
             records = cast("DataTable[str]", screen.query_one("#withholding-records", DataTable))
-            assert _cells(records)[0][1] == _PAYER_REF[:12]
+            assert _cells(records)[0][1] == door.rows[0].payer_display_name
+            # An amount the record does not state is left blank, not shown as zero.
+            assert _cells(records)[0][3:] == ["1000.00", "0", "150.00", "0", "0", "", "", "150.00"]
 
             door.rows = ()
             await _read_year(pilot, screen, str(_YEAR))
@@ -423,6 +463,60 @@ async def test_a_lapsed_session_drops_every_row_read_under_it() -> None:
             assert str(screen.query_one("#withholding-refusal", Static).render())
 
 
+@pytest.mark.asyncio
+async def test_the_amount_columns_are_the_served_ones_in_their_served_order_with_their_served_labels() -> None:
+    record = _record(RetencionSoportadaClase.TRABAJO, "Synthetic Payer SL")
+    door = _MemoryDoor(records=(record,))
+    # A shorter, reordered list proves the screen holds no column list of its own.
+    served = {column.field.value: column for column in door.columns}
+    door.columns = (served["pago_a_cuenta"], served["retencion"], served["gastos_deducibles"])
+    screen = WithholdingScreen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _read_year(pilot, screen, str(_YEAR))
+            records = cast("DataTable[str]", screen.query_one("#withholding-records", DataTable))
+            assert _headers(records)[3:] == [column.label for column in door.columns]
+            assert _cells(records)[0][3:] == ["150.00", "150.00", "0"]
+
+
+@pytest.mark.asyncio
+async def test_after_a_read_the_year_is_picked_from_the_served_ejercicios_and_picking_one_reads_it() -> None:
+    door = _MemoryDoor()
+    screen = WithholdingScreen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            typed = screen.query_one("#withholding-ejercicio", Input)
+            picker = cast("Select[int]", screen.query_one("#withholding-ejercicio-select", Select))
+            assert typed.display and not picker.display
+
+            await _read_year(pilot, screen, str(_YEAR))
+            assert picker.display and not typed.display
+            assert [value for _label, value in picker._options if value is not Select.NULL] == list(door.years)
+            assert picker.value == _YEAR
+
+            other = door.years[0]
+            assert other != _YEAR
+            picker.value = other
+            await settle_until(pilot, lambda: door.reads == [_YEAR, other], "the picked ejercicio was read")
+            assert screen.ejercicio == other
+
+
+@pytest.mark.asyncio
+async def test_a_lapsed_session_takes_back_the_offered_ejercicios_for_a_typed_year() -> None:
+    door = _MemoryDoor()
+    screen = WithholdingScreen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _read_year(pilot, screen, str(_YEAR))
+            door.expired = True
+            await _read_year(pilot, screen, str(_YEAR))
+            assert screen.query_one("#withholding-ejercicio", Input).display
+            assert not screen.query_one("#withholding-ejercicio-select", Select).display
+
+
 def test_refusal_words_are_the_served_ones_and_a_success_has_none() -> None:
     assert mutation_refusal_words(None) is None
     refused = RetencionSoportadaAbsenceMutationProjection(
@@ -462,6 +556,6 @@ def _leaf(catalogue: object, key: str) -> object:
 def test_every_chrome_key_the_destination_renders_is_worded_in_each_locale(locale: str) -> None:
     catalogue = yaml.safe_load((_LOCALES_ROOT / locale / "common.yml").read_text(encoding="utf-8"))
     keys = _screen_keys()
-    assert {"tui.withholding.status.empty", "tui.withholding.absence.state.withdrawn"} <= keys
+    assert {"tui.withholding.status.empty", "tui.withholding.column.origin"} <= keys
     missing = sorted(key for key in keys if not isinstance(_leaf(catalogue, key), str))
     assert missing == []

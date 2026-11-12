@@ -70,6 +70,9 @@ type SelectorProps = {
   /** The years that have movements, as read from the ledger, or null while
    * they are not known. */
   years: readonly number[] | null;
+  /** The key of the words naming the years offered, where they are not the
+   * years that have movements. */
+  yearsKey?: string;
   locale: string;
   /** The year the dropdown opens on while every period is shown. */
   fallbackYear: number;
@@ -104,6 +107,9 @@ export function PeriodSelector(
 ) {
   const { label, years, locale, fallbackYear, onOpenChange, className } = props;
   const t = useStrings();
+  const yearsWords = t(
+    props.yearsKey ?? "desktop.ledger.period.years_with_movements",
+  );
   const [ownOpen, setOwnOpen] = useState(false);
   const open = props.open ?? ownOpen;
   const setOpen = (next: boolean) => {
@@ -346,22 +352,18 @@ export function PeriodSelector(
               aria-hidden="true"
             >
               <span className="text-xs text-muted-foreground">
-                {t("desktop.ledger.period.years_with_movements")}
+                {yearsWords}
               </span>
               <div className="h-control-xs" />
             </div>
           ) : (
             years.length > 0 && (
-              <div
-                role="group"
-                aria-label={t("desktop.ledger.period.years_with_movements")}
-                className="grid gap-1"
-              >
+              <div role="group" aria-label={yearsWords} className="grid gap-1">
                 <span
                   aria-hidden="true"
                   className="text-xs text-muted-foreground"
                 >
-                  {t("desktop.ledger.period.years_with_movements")}
+                  {yearsWords}
                 </span>
                 <div className="ledger-period-years flex flex-wrap gap-1">
                   {years.map((year) => (

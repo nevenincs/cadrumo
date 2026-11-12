@@ -18,8 +18,13 @@ The family is authored on the binding row::
     absence_attestation = "renta_negative_general_bases_pending"
 
 It is a closed vocabulary hydrated at the loader boundary, so an unknown token
-fails registry load. The binding must read a decimal, from an earlier filing or
-from the filer's own entry.
+fails registry load. A scalar family's binding must read a decimal, from an
+earlier filing or from the filer's own entry. A row family's binding is a
+column of a repeating group whose carry the application reads from no earlier
+filing it holds, so each statement names the row it speaks of and may state an
+amount as well as an absence: the interest and repair expenses a let property
+still carries from the four previous ejercicios (Ley 35/2006 art. 23.1.a;
+RIRPF art. 13.a) are one.
 """
 
 from __future__ import annotations
@@ -45,6 +50,18 @@ class AbsenceAttestationFamily(StrEnum):
     RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING = "renta_negative_savings_gains_losses_pending"
     #: The work income no payer certificate states: the employer contributions and the protected-estate contribution.
     RENTA_TRABAJO_INCOME_NOT_STATED = "renta_trabajo_income_not_stated"
+    #: The interest and repair expenses a let property carries from the four previous ejercicios
+    #: (Ley 35/2006 art. 23.1.a), stated per property row.
+    RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES = "renta_capital_inmobiliario_gastos_pendientes"
+
+    @property
+    def row_grain(self) -> bool:
+        """Whether each statement of this family names one row of a repeating group."""
+        return self in ROW_GRAIN_FAMILIES
+
+
+ROW_GRAIN_FAMILIES: Final = frozenset({AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES})
+"""The families stated per row, each statement naming the row's source identity."""
 
 
 AbsenceAttestationFamilyField = Annotated[
@@ -62,8 +79,9 @@ PRIOR_CARRY_FAMILIES: Final[frozenset[AbsenceAttestationFamily]] = frozenset(
 """The families whose bindings carry an amount pending from an earlier ejercicio's return.
 
 A family of another kind states figures of the year itself that no source
-holds; it is never stated as a carry.
+holds, and a row family is stated on its own row; neither is stated as a
+declaration-wide carry.
 """
 
 
-__all__ = ["PRIOR_CARRY_FAMILIES", "AbsenceAttestationFamily", "AbsenceAttestationFamilyField"]
+__all__ = ["PRIOR_CARRY_FAMILIES", "ROW_GRAIN_FAMILIES", "AbsenceAttestationFamily", "AbsenceAttestationFamilyField"]

@@ -69,6 +69,7 @@ from cadrumo.domain.calculations.registry.binding_targets import revision_bindin
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
+from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
@@ -623,6 +624,8 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # The verb reads no let property's rows, so its baseline states no net rental total.
+            **M100_NO_LET_PROPERTY_BINDINGS,
         }.items()
         if key in declared_bindings
     }

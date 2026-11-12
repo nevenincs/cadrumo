@@ -6,9 +6,10 @@ rows from quarterly Modelo 130 work units, resolves the annual
 the annual Renta input leaf, threads pagos fraccionados through the relation
 channel, overlays decimal, enum, and date profile facts from
 :func:`resolve_profile_sourced_bindings`, resolves the suffered-withholding
-credits through their source-mesh resolver, and runs
-:func:`calculate_registry_snapshot` without persisting the synthetic result. A
-credit with no payer record or attestation stays unresolved, and so does every
+credits and the let properties' net rental total through their source-mesh
+resolvers, and runs :func:`calculate_registry_snapshot` without persisting the
+synthetic result. A credit with no payer record or attestation, or a rental
+total whose property figures are unknown, stays unresolved, and so does every
 box computed from it: both are reported, never shown as a number.
 
 The comparison path selects the best draft or verified
@@ -65,6 +66,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceResolution,
 )
+from ..aggregation.source_resolution_operations import merge_source_resolutions
 from ..operations.next_step import OperationNextStepErrorMixin
 from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.projections import fact_value
@@ -87,6 +89,7 @@ from .profile_readiness_gate import load_modelo_work_profile
 from .projection_declaration import ProjectionDeclaration, modelo_projection_available, registry_projection_declaration
 from .projection_next_steps import calculate_work_step, create_work_step, open_work_step
 from .projection_quarter_inputs import quarter_open_inputs
+from .projection_rental_total import rental_total_resolution
 from .projection_unresolved import (
     ModeloProjectionUnresolvedBinding,
     ModeloProjectionUnresolvedCasilla,
@@ -841,9 +844,9 @@ def _suffered_withholding_resolution(
     ports: CalculationActionPorts,
     operation: PinnedAuthorityOperation,
 ) -> CalculationSourceResolution:
-    """Resolve the suffered-withholding credits as the calculation's source mesh does.
+    """Resolve the suffered-withholding credits and the let properties' net total as the calculation's source mesh does.
 
-    Only this family is resolved: the projection's activity income is the
+    Only these two families are resolved: the projection's activity income is the
     extrapolated Modelo 130 basis, which a ledger resolution would contradict.
     The expected-missing pass then marks every credit with no value
     unresolved, so the engine never reads it as zero.
@@ -859,7 +862,9 @@ def _suffered_withholding_resolution(
         profile=profile,
         operation=operation,
     )
-    return add_expected_missing_binding_diagnostics(m100_snapshot.revision, resolver.resolve(context))
+    credits = add_expected_missing_binding_diagnostics(m100_snapshot.revision, resolver.resolve(context))
+    rental = rental_total_resolution(context, ports=ports)
+    return credits if rental is None else merge_source_resolutions((credits, rental))
 
 
 def _projection_observations(

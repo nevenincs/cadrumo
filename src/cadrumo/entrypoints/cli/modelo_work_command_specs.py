@@ -356,6 +356,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         (
             a("work_unit_id", required=True),
             a("binding_id", help_name="entry_binding", required=True),
+            o("row_identity", "--row", help_name="entry_row"),
             o("confirmed", "--yes", FLAG_VALUE, help_name="entry_yes", flag=True),
             _LANG,
         ),
@@ -370,6 +371,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             a("work_unit_id", required=True),
             a("binding_id", help_name="entry_binding", required=True),
             a("value", help_name="entry_value", required=True),
+            o("row_identity", "--row", help_name="entry_row"),
             o("confirmed", "--yes", FLAG_VALUE, help_name="entry_yes", flag=True),
             _LANG,
         ),

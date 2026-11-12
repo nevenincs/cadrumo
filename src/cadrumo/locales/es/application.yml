@@ -792,6 +792,14 @@ application:
       retired_book_leaves_year_unresolved: Este inventario está retirado pero aún
         tiene apuntes, así que el Anexo D de %{year} queda sin resolver. Restáuralo
         o elimina sus apuntes.
+    effects:
+      purchase_ledger_row:
+        claimed: Esta compra registra la transacción del libro que indicas; esa fila
+          queda fuera de los gastos del Modelo 100 y la compra lleva su coste al libro
+          de inventario.
+        none: Indicas que ninguna transacción del libro registra esta compra.
+        unstated: Todavía no se ha indicado nada sobre la transacción del libro que
+          registra esta compra.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Comprobación del coste
@@ -839,6 +847,10 @@ application:
       physical_evidence_role:
         acquisition_price_valuation: Valoración a precio de compra
         physical_count: Recuento físico
+      purchase_ledger_row:
+        claimed: Registrada por una transacción del libro
+        none: Sin transacción en el libro
+        unstated: Sin indicar
       retirement_reason:
         activity_ceased: Actividad cesada
         created_in_error: Creado por error
@@ -2280,6 +2292,92 @@ application:
         de {price}, y los movimientos que nombran declaran una base de {base}.'
       register_row_missing: '{elements}: estos elementos indican {count} movimientos
         que ya no existen.'
+      renta_inmueble_accessory_property: 'Inmueble {record}: es un inmueble accesorio
+        arrendado con el principal, lo que el cálculo no ofrece.'
+      renta_inmueble_acquisition_cost_unstated: 'Inmueble {record}: no indica su importe
+        ni sus gastos de adquisición, así que la amortización de la construcción no
+        se calcula.'
+      renta_inmueble_acquisition_date_unstated: 'Inmueble {record}: no indica cuándo
+        se adquirió, así que se desconocen los días que lo tuviste.'
+      renta_inmueble_boxes_not_offered: 'Inmueble {record}: la amortización del mobiliario,
+        la reducción del art. 23.3 y las amortizaciones especiales no se ofrecen;
+        introdúcelas a mano cuando procedan.'
+      renta_inmueble_cadastral_values_unstated: 'Inmueble {record}: no indica ni el
+        valor del suelo ni los valores catastrales del ejercicio, así que el suelo
+        no puede excluirse de la base de amortización.'
+      renta_inmueble_concept_undeclared: Un movimiento indica un concepto de gasto
+        que la lista de este ejercicio no incluye.
+      renta_inmueble_concurrent_leases: 'Inmueble {record}: dos de sus arrendamientos
+        coinciden en algún día.'
+      renta_inmueble_cumulative_amortisation_unstated: 'Inmueble {record}: su amortización
+        puede alcanzar el valor de adquisición, y no se indica la amortización acumulada
+        al inicio del ejercicio.'
+      renta_inmueble_currency_unconverted: Un movimiento vinculado está en moneda
+        extranjera y no tiene valor en euros.
+      renta_inmueble_days_not_let: 'Inmueble {record}: lo tuviste días en que no estuvo
+        arrendado, y la renta imputada de esos días no se calcula.'
+      renta_inmueble_expense_row_on_lease: Un movimiento de salida está vinculado
+        a un arrendamiento; vincula el gasto a su inmueble.
+      renta_inmueble_expense_row_without_concept: Un movimiento vinculado a un inmueble
+        no indica su concepto de gasto.
+      renta_inmueble_held_part_of_ejercicio: 'Inmueble {record}: se adquirió o transmitió
+        durante el ejercicio, y el prorrateo de sus gastos no se ofrece.'
+      renta_inmueble_improvement_in_ejercicio: 'Inmueble {record}: una mejora tiene
+        fecha dentro del ejercicio, y sus días de amortización no se calculan.'
+      renta_inmueble_income_outside_lease: Un cobro de alquiler tiene fecha fuera
+        del periodo del arrendamiento al que está vinculado.
+      renta_inmueble_income_row_on_property: Un movimiento de entrada está vinculado
+        a un inmueble; vincula el alquiler a su arrendamiento.
+      renta_inmueble_lease_names_no_property: 'Arrendamiento {record}: nombra un inmueble
+        que tu perfil no tiene.'
+      renta_inmueble_lease_without_income: 'Arrendamiento {record}: está vigente en
+        el ejercicio y no tiene ningún cobro de alquiler vinculado.'
+      renta_inmueble_naturaleza_unstated: 'Inmueble {record}: no indica si es urbano
+        o rústico.'
+      renta_inmueble_pending_expenses_held_return_unstated: 'Inmueble {record}: la
+        declaración del ejercicio anterior está guardada aquí, pero nada asigna a
+        este inmueble los gastos de intereses y reparación que dejó pendientes. Indícalos
+        para este inmueble con app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_origin_unsplit: 'Inmueble {record}: tiene gastos
+        de intereses y reparación pendientes, y el anexo que los reparte por el ejercicio
+        en que se originaron todavía no se puede presentar. Revisa su importe pendiente
+        con app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_unstated: 'Inmueble {record}: no se indican
+        los gastos de intereses y reparación de ejercicios anteriores pendientes de
+        deducir, y ninguna declaración anterior guardada aquí los recoge.'
+      renta_inmueble_property_abroad_let: 'Inmueble {record}: está en el extranjero
+        y arrendado, y su tratamiento como renta extranjera no se ofrece.'
+      renta_inmueble_record_unreadable: No se puede leer un registro de inmueble o
+        de arrendamiento de tu perfil, así que no se calcula ningún inmueble arrendado.
+      renta_inmueble_reduction_fact_unstated: 'Inmueble {record}: un arrendamiento
+        no indica si es de vivienda, si la vivienda está en zona tensionada o si mantiene
+        el art. 17.6 LAU, así que la reducción del art. 23.2 no se calcula.'
+      renta_inmueble_reduction_tenants_mixed: 'Inmueble {record}: solo algunos arrendatarios
+        de un arrendamiento cumplen por edad la reducción del art. 23.2, que no se
+        calcula.'
+      renta_inmueble_regime_not_pleno_dominio: 'Inmueble {record}: lo tienes en un
+        derecho distinto del pleno dominio, que el cálculo no ofrece.'
+      renta_inmueble_relative_fact_unstated: 'Arrendamiento {record}: no indica si
+        el arrendatario es pariente según el art. 24 LIRPF.'
+      renta_inmueble_relative_tenant: 'Arrendamiento {record}: el arrendatario es
+        pariente según el art. 24 LIRPF, y el rendimiento mínimo no se calcula.'
+      renta_inmueble_row_names_no_lease: Un movimiento del libro está vinculado a
+        un arrendamiento que tu perfil no tiene.
+      renta_inmueble_row_names_no_property: Un movimiento del libro está vinculado
+        a un inmueble que tu perfil no tiene.
+      renta_inmueble_several_leases: 'Inmueble {record}: tiene más de un arrendamiento
+        en el ejercicio, y la declaración aún no puede recoger cada contrato.'
+      renta_inmueble_tenants_beyond_numbered: 'Arrendamiento {record}: indica más
+        arrendatarios de los que caben en las casillas numeradas.'
+      renta_inmueble_titular_not_declarant: 'Inmueble {record}: pertenece a un miembro
+        de tu unidad familiar distinto de ti.'
+      renta_inmueble_titularidad_unstated: 'Inmueble {record}: no indica quién es
+        su titular ni en qué derecho.'
+      renta_inmueble_withholding_payer_no_tenant: Una retención sobre alquiler urbano
+        nombra a un pagador que no es arrendatario de ningún arrendamiento del ejercicio.
+      renta_inmueble_withholding_payer_several_properties: Una retención sobre alquiler
+        urbano nombra a un pagador que arrienda más de uno de tus inmuebles, así que
+        se desconoce a cuál corresponde.
       residence_period_unknown: No hay residencia fiscal registrada para el {date},
         así que tus elementos se cuentan como si se aplicaran los Modelos 100 y 130.
       retencion_soportada_absence_contradicted: 'Clase de renta {income_class}: hay
@@ -2703,6 +2801,9 @@ application:
       detail_row_identity_conflict: Una fila de detalle que has introducido no coincide
         con la que dan tus registros para el mismo declarado; corrígela o quítala
         antes de calcular.
+      edit_prior_carries_unstated: Este cambio deja sin indicar los importes pendientes
+        de ejercicios anteriores, por lo que la declaración no se puede calcular.
+        No se ha cambiado nada. Indica primero esos importes.
       edit_revision_id_unresolved: El cálculo de la edición no indicó qué revisión
         creó, así que no se pudo conservar el recibo de la edición. Es una incoherencia
         del programa y nada de lo que has introducido la causa. Lista las revisiones
@@ -3102,6 +3203,12 @@ application:
         cada uno ya tiene un valor o tu declaración, o la declaración no arrastra
         ninguno. No se ha cambiado nada.'
       prior_carries_unstated:
+        renta_capital_inmobiliario_gastos_pendientes: 'No se puede calcular el Modelo
+          %{modelo} de %{filing_year}: no consta si quedan intereses y gastos de reparación
+          y conservación de ejercicios anteriores pendientes de deducir en un inmueble
+          arrendado (casilla %{boxes}). Guarda la declaración del año anterior o indícalo
+          en la fila de ese inmueble con %{command}, indicando la fila. No se ha guardado
+          nada.'
         renta_negative_general_bases_pending: 'No se puede calcular el Modelo %{modelo}
           de %{filing_year}: no consta si quedan bases liquidables generales negativas
           de ejercicios anteriores pendientes de compensar (casillas %{boxes}). Guarda
@@ -3532,6 +3639,15 @@ application:
       registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
         %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
         la aplicación.
+      renta_inmueble_rows_drift: 'Los inmuebles arrendados de este cálculo del modelo
+        %{modelo} han cambiado desde que se calculó: se han modificado sus registros
+        de inmueble, arrendamiento, movimientos vinculados o retenciones (%{rows_recorded}
+        inmuebles registrados, %{rows_current} ahora, %{rows_changed} cambiados).
+        Vuelve a calcular antes de usarlo.'
+      renta_inmueble_rows_unavailable: No se han podido leer los registros de inmuebles,
+        arrendamientos, movimientos o retenciones de los inmuebles arrendados de este
+        cálculo del modelo %{modelo}, así que no se sabe si han cambiado. Vuelve a
+        intentarlo cuando puedan leerse y después vuelve a calcular.
       required_maximum_unresolved: La casilla [%{box}] aún no se puede comprobar,
         porque no se conoce la cuantía máxima que la ley exige aplicar en este ejercicio.
         Faltan algunas de las cifras de las que depende esa cuantía.
@@ -3864,6 +3980,28 @@ application:
       pattern: '{day} {month} {year}'
     work_form:
       additional_data_for_box: Dato adicional de la casilla {box}
+      authority_grade:
+        applicability: Solo plazos
+        calculation: Solo cálculo y vista previa
+        filing: Cálculo, comprobación para presentar y exportación
+      binding_statement:
+        attest_no_amount:
+          action: Declara que no hay importe
+          effect: Se registra como un 0 declarado por ti.
+          statement: Declara que este importe pendiente de ejercicios anteriores es
+            nulo. Se registra como un 0 declarado por ti, distinto de una cifra que
+            escribas; si una declaración anterior muestra después un importe, la declaración
+            señala la diferencia.
+        attest_prior_value:
+          action: Indica el importe de la declaración anterior
+          effect: Se registra como un importe declarado por ti para la declaración
+            anterior.
+          origin: Lo declaraste tú para %{source}
+          statement: Indica el importe que este concepto toma de una declaración anterior
+            que no está guardada aquí. Tu importe se usa en su lugar y queda marcado
+            como declarado por ti; la verificación y la exportación indican que se
+            basa en tu declaración y, si después se añade la declaración anterior,
+            la declaración señala cualquier diferencia.
       box_locator_help:
         one_year: Casilla {box} del modelo {modelo}, ejercicio {years}.
         onwards: Casilla {box} del modelo {modelo}, ejercicio {years} y siguientes.
@@ -3984,6 +4122,80 @@ application:
         así que no se ha podido hacer.
       unworded: No se ha podido hacer. Su motivo aún no tiene una frase; su código
         es {error_code}.
+  operator_actions:
+    served:
+      action:
+        auth_configure: Configura el método de acceso
+        auth_diagnostics_view: Consulta el diagnóstico del acceso
+        auth_login: Inicia sesión en la AEAT
+        diagnostics_repair: Repara el almacenamiento local
+        diagnostics_secure_objects_quarantine: Pon en cuarentena los registros dañados
+        diagnostics_workflow_reset_progress: Restablece el progreso del flujo guiado
+        ledger_account_add: Añade tu cuenta bancaria
+        ledger_actividad_asset_correct_revision: Corrige el registro del bien afecto
+          a la actividad
+        ledger_classify: Clasifica tus movimientos bancarios
+        ledger_classify_irpf_category: Indica la categoría de IRPF de este movimiento
+        ledger_classify_movement: Clasifica este movimiento
+        ledger_counterparty_filing_name: Indica el nombre de la contraparte para la
+          declaración
+        ledger_evidence_review_list: Revisa los documentos pendientes
+        ledger_inventory_movement_claim: Asigna el movimiento a tus existencias
+        ledger_invoice_update_operation_type: Indica el tipo de operación de la factura
+        ledger_link: Vincula la factura con su pago
+        ledger_preflight: Comprueba los libros de este periodo
+        ledger_prorrata_list: Revisa el registro de la prorrata
+        ledger_review: Revisa los libros
+        live_filed_pull: Descarga la declaración presentada de la AEAT
+        live_filed_pull_all: Descarga todas las declaraciones presentadas de la AEAT
+        live_notifications_list: Consulta tus notificaciones de la AEAT
+        modelo_bindings_list: Revisa de dónde salen los importes de la declaración
+        modelo_casillas: Revisa las casillas de la declaración
+        modelo_describe: Consulta la descripción de este modelo
+        modelo_export: Exporta el fichero de la declaración
+        modelo_filing_record_import: Registra el justificante de presentación
+        modelo_filing_record_list: Revisa los registros de presentación
+        modelo_iva_wallet_override: Corrige el saldo de IVA a compensar
+        modelo_iva_wallet_seed: Indica el saldo inicial de IVA a compensar
+        modelo_verification_report_list: Revisa los informes de verificación
+        modelo_work_amend: Corrige la declaración presentada
+        modelo_work_attest_m303_exonerado_390: Confirma que estás exonerado del modelo
+          390
+        modelo_work_attest_prior_carries: Indica los importes pendientes de ejercicios
+          anteriores
+        modelo_work_attest_prior_value: Indica el importe de la declaración anterior
+        modelo_work_calculate: Calcula esta declaración
+        modelo_work_calculate_joint_return: Calcúlala como declaración conjunta
+        modelo_work_create: Empieza esta declaración
+        modelo_work_file: Registra esta declaración como presentada
+        modelo_work_list: Revisa tus declaraciones
+        modelo_work_override: Sustituye el valor calculado
+        modelo_work_revisions: Revisa las versiones de esta declaración
+        modelo_work_set_value: Introduce el valor de la casilla
+        modelo_work_status: Consulta el estado de esta declaración
+        modelo_work_verify: Verifica esta declaración
+        overview_explain: Consulta por qué te corresponde este modelo
+        overview_status: Revisa tus obligaciones tributarias
+        profile_archive_reconcile: Concilia el archivo del perfil
+        profile_arrendamiento: Revisa tus arrendamientos
+        profile_ascendiente: Revisa tus ascendientes
+        profile_complete_setup: Completa la configuración de tu perfil
+        profile_create: Crea un perfil
+        profile_descendiente: Revisa tus descendientes
+        profile_edit: Edita tu perfil
+        profile_list: Revisa tus perfiles
+        profile_login: Abre tu perfil
+        profile_logout: Cierra tu perfil
+        profile_repair_active_pointer: Repara la selección del perfil activo
+        profile_repair_clear_active: Borra la selección del perfil activo
+        profile_status: Comprueba tu perfil
+        storage_init: Prepara el almacenamiento local
+      no_recovery:
+        operator_decision: Esto requiere tu propia decisión; ninguna acción puede
+          tomarla por ti.
+        safety: Se ha detenido para proteger tus datos, así que no se ofrece ninguna
+          acción.
+        terminal: 'Este rechazo es definitivo: ninguna acción lo resuelve.'
   overview:
     calendar:
       event:

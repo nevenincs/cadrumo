@@ -10,7 +10,7 @@ from functools import lru_cache
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ..ids import LegalRefId, SourceRefId
 from .authored_editions import newest_authored_edition, revision_covering
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, M100_NO_LET_PROPERTY_BINDINGS
 from .registry_tree import bundled_modelo_components
 from .scenarios import (
     RegistryCalculationScenario,
@@ -76,6 +76,11 @@ _HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY: dict[CasillaId, str] = {
 }
 
 
+_TYPED_INMUEBLE_RETENCIONES_0153 = (
+    "the scenario carries no let property, so the capital-inmobiliario withholding the property rows total is "
+    "typed here to exercise the urban-rental credit; the rows and their total are covered by the renta_inmueble "
+    "resolver and export tests"
+)
 _TYPED_ACTIVITY_RETENCIONES_0599 = (
     "the scenario carries no ledger rows, so the activity retenciones the ledger binding aggregates are typed "
     "here to exercise the cuota diferencial; the ledger aggregation and its grade cap are covered by their own "
@@ -192,12 +197,14 @@ def normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
         ),
         hand_typed_bound_casillas={
             **_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY,
+            "0153": _TYPED_INMUEBLE_RETENCIONES_0153,
             "0599": _TYPED_ACTIVITY_RETENCIONES_0599,
         },
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -354,6 +361,7 @@ def simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
@@ -429,6 +437,7 @@ def negative_simplified_base_scenario() -> RegistryCalculationScenario:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
@@ -499,34 +508,16 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
         inputs=inputs(
             {
                 "0083": Decimal("6172.50"),
-                "0100": Decimal("1"),
                 "0085": Decimal("365"),
-                "0102": Decimal("10000.00"),
-                "0104": Decimal("100.00"),
-                "0107": Decimal("200.00"),
-                "0109": Decimal("300.00"),
-                "0110": Decimal("40.00"),
-                "0111": Decimal("50.00"),
-                "0112": Decimal("60.00"),
-                "0113": Decimal("70.00"),
-                "0114": Decimal("80.00"),
-                "0115": Decimal("90.00"),
-                "0116": Decimal("110.00"),
-                "0117": Decimal("120.00"),
-                "0131": Decimal("400.00"),
-                "0132": Decimal("30.00"),
-                "0146": Decimal("20.00"),
-                "0147": Decimal("10.00"),
-                "0148": Decimal("500.00"),
-                "0151": Decimal("250.00"),
-                "0152": Decimal("7000.00"),
                 "0153": Decimal("800.00"),
             },
         ),
+        hand_typed_bound_casillas={"0153": _TYPED_INMUEBLE_RETENCIONES_0153},
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -551,12 +542,8 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
-        # The art. 23.2 reduction the profile derives from a dwelling lease signed under the tiers
-        # with no qualifying fact: it applies, at the 50 per cent tier.
-        boolean_binding_values={"renta-rental-reduccion-art-23-2-aplicable": True},
         enum_binding_values={
             "renta-profile-tax-residence-ccaa": "madrid",
-            "renta-rental-reduccion-art-23-2-tier": "tier-50",
         },
         relation_values={
             "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
@@ -565,66 +552,6 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
         expected_outputs=(
             expected(
-                "0149",
-                value=Decimal("7820.00"),
-                operand_refs=registry_scenarios_operand_refs(
-                    "0102",
-                    "0104",
-                    "0107",
-                    "0109",
-                    "0110",
-                    "0111",
-                    "0112",
-                    "0113",
-                    "0114",
-                    "0115",
-                    "0116",
-                    "0117",
-                    "0131",
-                    "0132",
-                    "0146",
-                    "0147",
-                    "0148",
-                ),
-                operand_casilla_refs=operand_casilla_refs(
-                    "0102",
-                    "0104",
-                    "0107",
-                    "0109",
-                    "0110",
-                    "0111",
-                    "0112",
-                    "0113",
-                    "0114",
-                    "0115",
-                    "0116",
-                    "0117",
-                    "0131",
-                    "0132",
-                    "0146",
-                    "0147",
-                    "0148",
-                ),
-                legal_refs=("ley-35-2006:art-22", "ley-35-2006:art-23", "orden-hac-277-2026:art-3"),
-                source_refs=(
-                    "aeat-dr-100-2025-dictionary",
-                    "aeat-renta-2025-manual-parte1",
-                    "boe-modelo-100-2025-form",
-                ),
-            ),
-            expected(
-                "0154",
-                value=Decimal("7000.00"),
-                operand_refs=registry_scenarios_operand_refs("0149", "0150", "0151", "0152"),
-                operand_casilla_refs=operand_casilla_refs("0149", "0150", "0151", "0152"),
-                legal_refs=(
-                    "ley-35-2006:art-22",
-                    "ley-35-2006:art-23",
-                    "ley-35-2006:art-24",
-                    "orden-hac-277-2026:art-3",
-                ),
-            ),
-            expected(
                 "0155",
                 value=Decimal("123.45"),
                 operand_refs=registry_scenarios_operand_refs(
@@ -632,20 +559,6 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
                 ),
                 operand_casilla_refs=operand_casilla_refs("0089"),
                 legal_refs=("ley-35-2006:art-22", "ley-35-2006:art-85", "orden-hac-277-2026:art-3"),
-            ),
-            expected(
-                "0156",
-                value=Decimal("7000.00"),
-                operand_refs=registry_scenarios_operand_refs(
-                    "0154",
-                ),
-                operand_casilla_refs=operand_casilla_refs("0154"),
-                legal_refs=(
-                    "ley-35-2006:art-22",
-                    "ley-35-2006:art-23",
-                    "ley-35-2006:art-24",
-                    "orden-hac-277-2026:art-3",
-                ),
             ),
             expected(
                 "0598",
@@ -724,11 +637,15 @@ def final_settlement_scenario() -> RegistryCalculationScenario:
                 "0669": Decimal("150.00"),
             },
         ),
-        hand_typed_bound_casillas={"0599": _TYPED_ACTIVITY_RETENCIONES_0599},
+        hand_typed_bound_casillas={
+            "0153": _TYPED_INMUEBLE_RETENCIONES_0153,
+            "0599": _TYPED_ACTIVITY_RETENCIONES_0599,
+        },
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),

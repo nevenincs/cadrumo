@@ -52,6 +52,9 @@ _OLDER_NEGATIVE_BASES: dict[str, BindingId] = {
     "1385": "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
 }
 _NEGATIVE_BASE_BOXES = frozenset({_EARLIER_NEGATIVE_BASE_BOX, *_OLDER_NEGATIVE_BASES})
+#: The savings negative balances pending from earlier returns (Anexo C), carried and stated like the general bases.
+_SAVINGS_CARRY_BOXES = frozenset({"1259", "1261", "1264", "1267", "1272", "1274", "1277", "1280"})
+_CARRY_BOXES = _NEGATIVE_BASE_BOXES | _SAVINGS_CARRY_BOXES
 _DIRECT_ESTIMATION_BOX = "0168"
 _DIRECT_ESTIMATION: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _ECONOMIC_ACTIVITY: BindingId = "renta-profile-has-economic-activity"
@@ -153,9 +156,9 @@ def test_the_inputs_named_are_the_ones_the_engine_refused_without(operation: Pin
             for item in calculation_required_inputs(revision, registry_period="0A", known_truths=truths).casilla_ids
         }
 
-    assert named(None) == _NEGATIVE_BASE_BOXES
-    assert named({_ECONOMIC_ACTIVITY: False}) == _NEGATIVE_BASE_BOXES
-    assert named({_ECONOMIC_ACTIVITY: True}) == _NEGATIVE_BASE_BOXES
+    assert named(None) == _CARRY_BOXES
+    assert named({_ECONOMIC_ACTIVITY: False}) == _CARRY_BOXES
+    assert named({_ECONOMIC_ACTIVITY: True}) == _CARRY_BOXES
 
 
 def test_a_carry_between_periods_of_one_year_is_not_named(operation: PinnedAuthorityOperation) -> None:

@@ -13,6 +13,11 @@ executor will use, and returns addressable findings:
   operator layer is unknown because it was stored before layers existed;
 * ``info`` findings note a restore with nothing to restore.
 
+A withdrawal that leaves a calculation-refusing carry unstated is named as
+such: as a warning that the calculation is withdrawn, or as the error its
+refusal would be when the declaration is recorded as filed or the filer's
+other values would be lost.
+
 A stale baseline returns the typed compare-and-swap refusal instead of
 findings; a baseline that merely expired should be renewed first. A green
 preflight is review material, never authority: execution repeats every check.
@@ -34,11 +39,13 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .caller_context import caller_context_of
+from .edit_carry_withdrawal import carry_withdrawal_block, is_carry_withdrawal
 from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAddressV1,
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
+    ModeloEditCarryWithdrawalBlock,
     ModeloEditFindingSeverity,
     ModeloEditFindingV1,
     ModeloEditParseRefusalV1,
@@ -62,6 +69,9 @@ REQUIRED_EMPTY = "required_empty"
 OPERATOR_LAYER_UNKNOWN = "operator_layer_unknown"
 NOTHING_TO_RESTORE = "nothing_to_restore"
 CARRY_LEFT_OPEN = "carry_left_open"
+CALCULATION_WITHDRAWN = "calculation_withdrawn"
+CARRY_WITHDRAWAL_FILED = ModeloEditCarryWithdrawalBlock.FILED.value
+CARRY_WITHDRAWAL_KEEPS_ENTRIES = ModeloEditCarryWithdrawalBlock.KEEPS_ENTRIES.value
 VALUE_REFUSED_PREFIX = "value."
 """A refused value's finding code is this prefix plus its :class:`~.edit_models.ModeloEditParseReason`."""
 
@@ -167,7 +177,8 @@ def _binding_findings(
         if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT
         else _value_findings(intent, submission, tax_id_format=tax_id_format)
     )
-    if not findings and head.source_feeds_binding(binding_id):
+    # A row's statement of its carry stands where no source holds one; it overrides nothing.
+    if not findings and intent.address.row_identity is None and head.source_feeds_binding(binding_id):
         findings.append(_finding(OVERRIDES_SOURCE_VALUE, ModeloEditFindingSeverity.WARNING, intent.address))
     return findings
 
@@ -254,6 +265,33 @@ def _held_carries(head: _Head) -> frozenset[BindingId]:
     return stored | head.operator_bindings
 
 
+def _carry_withdrawal_findings(
+    submission: ModeloEditSubmissionV1,
+    revision: CalculationRevision | None,
+    *,
+    work_catalogue: WorkUnitCatalogue,
+    carry_bindings: frozenset[BindingId],
+) -> list[ModeloEditFindingV1]:
+    """Name a withdrawal of a calculation-refusing carry statement: the calculation withdrawn, or its refusal.
+
+    One member is the whole family, so the finding concerns the submission,
+    not the one binding it names.
+    """
+    work_unit = work_catalogue.get(submission.baseline.work_unit_id)
+    if (
+        revision is None
+        or work_unit is None
+        or revision.operator_layer is None
+        or not is_carry_withdrawal(submission, carry_bindings)
+        or not set(revision.operator_layer.attested_binding_ids) & carry_bindings
+    ):
+        return []
+    block = carry_withdrawal_block(revision, work_unit, carry_bindings)
+    if block is not None:
+        return [_finding(block.value, ModeloEditFindingSeverity.ERROR)]
+    return [_finding(CALCULATION_WITHDRAWN, ModeloEditFindingSeverity.WARNING)]
+
+
 def preflight_modelo_edit(
     submission: ModeloEditSubmissionV1,
     *,
@@ -261,6 +299,7 @@ def preflight_modelo_edit(
     calculation_catalogue: CalculationRevisionCatalogue,
     tax_id_format: SpanishTaxIdFormat | None,
     prior_carry_bindings: Collection[BindingId],
+    carry_bindings: frozenset[BindingId] = frozenset(),
 ) -> ModeloEditPreflightResultV1:
     """Recheck the baseline, then evaluate every intent and the resulting required casillas.
 
@@ -268,6 +307,9 @@ def preflight_modelo_edit(
     are validated with; ``None`` reports NIF values as refused rather than
     validating them against nothing. ``prior_carry_bindings`` are the bindings
     of the revision's prior-carry families, which one statement must cover together.
+    ``carry_bindings`` are the bindings whose unstated carry refuses the
+    calculation; withdrawing a statement of one is previewed as withdrawing the
+    calculation.
     """
     baseline = submission.baseline
     stale = reconfirm_modelo_edit_baseline(
@@ -297,11 +339,17 @@ def preflight_modelo_edit(
         findings.extend(_binding_findings(binding_intent, submission, head, tax_id_format=tax_id_format))
     findings.extend(_required_empty_findings(submission, head))
     findings.extend(_open_carry_findings(submission, head, prior_carry_bindings))
+    findings.extend(
+        _carry_withdrawal_findings(submission, revision, work_catalogue=work_catalogue, carry_bindings=carry_bindings)
+    )
     return ModeloEditPreflightEvaluatedV1(baseline_id=baseline.baseline_id, findings=tuple(findings))
 
 
 __all__ = [
+    "CALCULATION_WITHDRAWN",
     "CARRY_LEFT_OPEN",
+    "CARRY_WITHDRAWAL_FILED",
+    "CARRY_WITHDRAWAL_KEEPS_ENTRIES",
     "CLEAR_OF_SOURCE_FED_CASILLA",
     "INTENT_NOT_ADMITTED",
     "NOTHING_TO_RESTORE",

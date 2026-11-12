@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from .....core.casilla_id import validated_casilla_id
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from .authored_editions import authored_revisions, newest_authored_edition, revision_covering
+from .modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from .published_authority import published_legal_reference
 from .registry_scenarios_support import (
     estimacion_objetiva_modulos_archetype_scenario,
@@ -170,6 +171,7 @@ def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),

@@ -89,6 +89,7 @@ from .work_form_findings import ModeloFormAttention
 from .work_form_header import ModeloFormHeader
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict
 from .work_form_models import (
+    ModeloFormBindingStatement,
     ModeloFormCarryAttestation,
     ModeloFormCounts,
     ModeloFormCredit,
@@ -97,6 +98,7 @@ from .work_form_models import (
     ModeloFormLayoutProvenance,
     ModeloFormOutlineGroup,
     ModeloFormSourceGroup,
+    ModeloFormStatedPriorValue,
 )
 from .work_form_next_step import ModeloFormNextStep
 from .work_form_service import ModeloWorkFormLoadV1
@@ -213,6 +215,8 @@ class PublicModeloFormField(BaseModel):
     restorable: bool
     filers_own: bool
     stated_absent: AbsenceAttestationFamily | None = None
+    stated_prior_value: ModeloFormStatedPriorValue | None = Field(default=None, exclude_if=lambda value: value is None)
+    statements: tuple[ModeloFormBindingStatement, ...] = Field(default=(), exclude_if=lambda value: not value)
     confirm_value: ModeloEditWireScalar
     takes_typed_value: bool
     clearable: bool

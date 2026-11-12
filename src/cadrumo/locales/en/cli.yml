@@ -380,6 +380,8 @@ cli:
         list_help: List inventory record books in the active profile
         movement_add_help: Add a purchase, sale, or adjustment movement to the inventory
           record book
+        movement_claim_candidates_help: 'List the ledger transactions a purchase may
+          claim: those whose base, IVA and recargo equal the purchase to the cent.'
         movement_claim_help: State which ledger transaction books a purchase, state
           that none does, or clear the statement; a claimed transaction leaves the
           ledger expense casillas.
@@ -1756,6 +1758,8 @@ cli:
           `aeat app modelo casillas`).
         entry_casilla_unknown: '%{casilla} is not a box identifier.'
         entry_confirm: Nothing was recorded yet. Run `%{command}` to record it.
+        entry_row_help: The row the statement is for, by the source row identity the
+          calculation shows (for example inmueble:1). Only for inputs stated per row.
         entry_value_help: The value, written as in your output language (for example
           1.234,56 in Spanish or 1,234.56 in English).
         entry_yes_help: Confirm the change and record it on the declaration
@@ -4142,6 +4146,11 @@ cli:
         your virtual currencies held abroad exceed the reporting threshold.
       oss_unset: Your profile does not yet record whether you are registered for the
         one-stop-shop VAT regime.
+      pago_fraccionado_art_40_3_unset: Your profile does not yet record whether the
+        entity elected, in its census declaration, the Art. 40.3 LIS option (instalments
+        on the taxable base of the first 3, 9 or 11 months). Below that article's
+        threshold, the election decides whether each Modelo 202 instalment yields
+        a payment and therefore whether you have to file it.
       patrimonio_umbral_unset: Your profile does not yet say whether your Impuesto
         sobre el Patrimonio tax is payable or your assets and rights exceed 2,000,000
         euros.

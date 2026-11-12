@@ -30,6 +30,11 @@ none of the family's casillas keeps the earlier digest, and one that leaves the
 family with no entered casilla drops it. The edit itself is never refused for
 it; a later calculation raises the family's finding again if the rows moved.
 
+A withdrawal that leaves a calculation-refusing carry unstated does not
+recalculate: :mod:`.edit_carry_withdrawal` returns the work unit to no current
+calculation, or refuses when that would discard other values or touch a
+declaration recorded as filed.
+
 The resulting calculation records the new operator layer, so the next edit or
 recalculation starts from it. Every value, channel and precondition failure
 returns a typed no-effect refusal; none escapes as a raw exception.
@@ -43,11 +48,11 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
@@ -70,11 +75,12 @@ from ...domain.modelos.calculation_revision_operator_layer import (
     ATTESTED_ZERO,
     AttestedSource,
     CalculationOperatorLayer,
+    RowCarryAttestation,
     ValueAttestation,
 )
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
-from ...domain.modelos.work_unit import WorkUnitCatalogue
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..aggregation.income_family_not_computed import (
     income_family_casilla_ids,
     income_family_entry_digests_after_edit,
@@ -83,11 +89,18 @@ from ..aggregation.income_family_not_computed import (
 from ..aggregation.modelo_bindings import aggregation_period_for_modelo
 from ..calculations.cross_period_clean_state import attestable_carry_sources
 from ..calculations.cross_period_models import CrossPeriodDependencyRequirement
+from ..operator_actions.models import ActionReference
 from .action_errors import ModeloClearedCasillaSourceFedError
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_bucket_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .caller_context import CalculationCallerContext, caller_context_calculation_inputs, caller_context_of
+from .edit_carry_withdrawal import (
+    calculation_refusing_carry_bindings,
+    carry_withdrawal_block,
+    is_carry_withdrawal,
+    withdraw_current_calculation,
+)
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from .edit_models import (
     ModeloBindingEditIntentV1,
@@ -122,6 +135,7 @@ from .edit_services import (
     validate_scalar_intent,
 )
 from .edit_value_grammar import ModeloEditValueChannel, ModeloEditValueGrammarV1
+from .household_row_fact_input import ModeloHouseholdRowFactInputRequiredError
 from .refusal_door_verdicts import caller_defect_verdict
 from .work_missing_input import ModeloPriorCarryAbsenceUnstatedError, ModeloPriorPeriodUnfiledError
 
@@ -144,6 +158,9 @@ _ROW_UNSUPPORTED_REASON: dict[ModeloEditRowIntentKind, ModeloEditUnsupportedInte
 #: as a raw failure. One raised once the commit is being written stays raised,
 #: because its effect is no longer known.
 _PRE_EFFECT_REFUSALS: tuple[type[BaseException], ...] = (CadrumoError,)
+
+#: The door an edit refused for an unstated earlier-ejercicio carry offers: state the carries.
+PRIOR_CARRIES_ACTION: Final[ActionReference] = ActionReference(action_id="operator.modelo.work.attest_prior_carries")
 
 
 def _unsupported_intent_refusal(
@@ -218,6 +235,7 @@ class _OperatorState:
     attested_binding_ids: set[BindingId] = field(default_factory=set)
     value_attestations: dict[BindingId, ValueAttestation] = field(default_factory=dict)
     income_family_entry_digests: dict[str, str] = field(default_factory=dict)
+    row_attestations: dict[tuple[BindingId, str], RowCarryAttestation] = field(default_factory=dict)
 
     @classmethod
     def from_context(cls, context: CalculationCallerContext) -> _OperatorState:
@@ -230,6 +248,7 @@ class _OperatorState:
             attested_binding_ids=set(layer.attested_binding_ids),
             value_attestations=dict(layer.value_attestations),
             income_family_entry_digests=dict(layer.income_family_entry_digests),
+            row_attestations={statement.key: statement for statement in layer.row_attestations},
         )
 
     def operator_sets(self, casilla_id: CasillaId) -> bool:
@@ -247,6 +266,7 @@ class _OperatorState:
             attested_binding_ids=tuple(sorted(self.attested_binding_ids)),
             value_attestations=dict(sorted(self.value_attestations.items())),
             income_family_entry_digests=dict(sorted(self.income_family_entry_digests.items())),
+            row_attestations=tuple(statement for _key, statement in sorted(self.row_attestations.items())),
         )
 
 
@@ -359,46 +379,155 @@ def _attest_prior_value(
     return None
 
 
+def _state_row_carry(
+    state: _OperatorState,
+    intent: ModeloBindingEditIntentV1,
+    *,
+    rows: frozenset[str],
+    grammar: ModeloEditValueGrammarV1 | None,
+    tax_id_format: SpanishTaxIdFormat | None,
+) -> ModeloEditExecutionNoEffectV1 | None:
+    """Record the operator's statement of one row's carry: nothing pending, or the amount.
+
+    The row must be one the current calculation emitted for the binding's
+    source, so a statement never speaks of a row the declaration does not hold.
+    """
+    address = intent.address
+    row = address.row_identity
+    if row is None or row not in rows:
+        return _domain_refusal(
+            ModeloEditRefusalCode.DISALLOWED_INTENT,
+            address=address,
+            facts=("row_not_calculated",),
+            condition="calculate the declaration, then state the carry of a row it holds",
+        )
+    if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT:
+        statement = RowCarryAttestation(
+            binding_id=address.binding_id, source_row_identity=row, amount=ATTESTED_ZERO, absent=True
+        )
+    else:
+        if grammar is None:
+            return _parse_refusal(
+                ModeloEditParseRefusalV1(address=address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
+            )
+        value = channel_value(intent.value, address=address, grammar=grammar, tax_id_format=tax_id_format)
+        if isinstance(value, ModeloEditParseRefusalV1):
+            return _parse_refusal(value)
+        if Decimal(value) < 0:
+            return _domain_refusal(
+                ModeloEditRefusalCode.DISALLOWED_INTENT,
+                address=address,
+                facts=("negative_carry",),
+                condition="state the amount still pending, which is never below zero",
+            )
+        statement = RowCarryAttestation(binding_id=address.binding_id, source_row_identity=row, amount=value)
+    state.row_attestations[statement.key] = statement
+    return None
+
+
+def _calculated_rows(
+    head: CalculationRevision | None, revision: ModeloRevision, binding_id: BindingId
+) -> frozenset[str]:
+    """Return the source identities of the rows ``head`` holds from the source that fills ``binding_id``."""
+    binding = next((item for item in revision.bindings if item.id == binding_id), None)
+    if head is None or binding is None:
+        return frozenset[str]()
+    return frozenset(
+        identity.source_row_identity
+        for identity in head.row_source_identities.values()
+        if identity.source_kind is binding.source
+    )
+
+
+def _row_stated(revision: ModeloRevision, binding_id: BindingId) -> bool:
+    family = next((item.absence_attestation for item in revision.bindings if item.id == binding_id), None)
+    return family is not None and family.row_grain
+
+
 def _apply_binding_intents(
     state: _OperatorState,
     submission: ModeloEditSubmissionV1,
     *,
     tax_id_format: SpanishTaxIdFormat | None,
     attestable_sources: Mapping[BindingId, tuple[CrossPeriodDependencyRequirement, ...]],
+    revision: ModeloRevision,
+    head: CalculationRevision | None,
 ) -> ModeloEditExecutionNoEffectV1 | None:
-    """Apply every binding intent to the operator state, refusing the first invalid one."""
+    """Apply every binding intent to the operator state, refusing the first invalid one.
+
+    A binding whose carry is stated row by row takes only a statement naming
+    its row; any other binding takes no row.
+    """
     for intent in submission.binding_intents:
-        binding_id = intent.address.binding_id
-        # Whatever the intent, an earlier statement on the binding gives way to it.
-        state.attested_binding_ids.discard(binding_id)
-        state.value_attestations.pop(binding_id, None)
-        if intent.kind is ModeloEditBindingIntentKind.REMOVE_OVERRIDE:
-            state.binding_overrides.pop(binding_id, None)
-            continue
-        if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT:
-            state.binding_overrides[binding_id] = ATTESTED_ZERO
-            state.attested_binding_ids.add(binding_id)
-            continue
-        grammar = modelo_edit_address_grammar(submission.baseline, intent.address)
-        if intent.kind is ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE:
-            refusal = _attest_prior_value(
-                state,
-                intent,
-                sources=attestable_sources.get(binding_id),
-                grammar=grammar,
-                tax_id_format=tax_id_format,
-            )
-            if refusal is not None:
-                return refusal
-            continue
-        if grammar is None:
-            return _parse_refusal(
-                ModeloEditParseRefusalV1(address=intent.address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
-            )
-        value = channel_value(intent.value, address=intent.address, grammar=grammar, tax_id_format=tax_id_format)
-        if isinstance(value, ModeloEditParseRefusalV1):
-            return _parse_refusal(value)
-        state.binding_overrides[binding_id] = value
+        refusal = _apply_binding_intent(
+            state,
+            intent,
+            submission,
+            tax_id_format=tax_id_format,
+            attestable_sources=attestable_sources,
+            revision=revision,
+            head=head,
+        )
+        if refusal is not None:
+            return refusal
+    return None
+
+
+def _apply_binding_intent(
+    state: _OperatorState,
+    intent: ModeloBindingEditIntentV1,
+    submission: ModeloEditSubmissionV1,
+    *,
+    tax_id_format: SpanishTaxIdFormat | None,
+    attestable_sources: Mapping[BindingId, tuple[CrossPeriodDependencyRequirement, ...]],
+    revision: ModeloRevision,
+    head: CalculationRevision | None,
+) -> ModeloEditExecutionNoEffectV1 | None:
+    """Apply one binding intent to the operator state, or refuse it."""
+    binding_id = intent.address.binding_id
+    row_stated = _row_stated(revision, binding_id)
+    if row_stated != (intent.address.row_identity is not None):
+        return _domain_refusal(
+            ModeloEditRefusalCode.DISALLOWED_INTENT,
+            address=intent.address,
+            facts=("row_statement_scope",),
+            condition="name a row exactly when the binding's carry is stated row by row",
+        )
+    if row_stated:
+        return _state_row_carry(
+            state,
+            intent,
+            rows=_calculated_rows(head, revision, binding_id),
+            grammar=modelo_edit_address_grammar(submission.baseline, intent.address),
+            tax_id_format=tax_id_format,
+        )
+    # Whatever the intent, an earlier statement on the binding gives way to it.
+    state.attested_binding_ids.discard(binding_id)
+    state.value_attestations.pop(binding_id, None)
+    if intent.kind is ModeloEditBindingIntentKind.REMOVE_OVERRIDE:
+        state.binding_overrides.pop(binding_id, None)
+        return None
+    if intent.kind is ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT:
+        state.binding_overrides[binding_id] = ATTESTED_ZERO
+        state.attested_binding_ids.add(binding_id)
+        return None
+    grammar = modelo_edit_address_grammar(submission.baseline, intent.address)
+    if intent.kind is ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE:
+        return _attest_prior_value(
+            state,
+            intent,
+            sources=attestable_sources.get(binding_id),
+            grammar=grammar,
+            tax_id_format=tax_id_format,
+        )
+    if grammar is None:
+        return _parse_refusal(
+            ModeloEditParseRefusalV1(address=intent.address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
+        )
+    value = channel_value(intent.value, address=intent.address, grammar=grammar, tax_id_format=tax_id_format)
+    if isinstance(value, ModeloEditParseRefusalV1):
+        return _parse_refusal(value)
+    state.binding_overrides[binding_id] = value
     return None
 
 
@@ -522,7 +651,7 @@ def reconstruct_detail_rows(
 
 
 def _capture_edit_receipt(
-    calculation_revision_id: str,
+    calculation_revision_id: str | None,
     bucket_event_id: str | None,
     *,
     request: ModeloEditApplyRequestV1,
@@ -612,7 +741,7 @@ def _unresolved_source_context(error: BaseException, revision: ModeloRevision) -
     """
     if isinstance(error, ModeloPriorCarryAbsenceUnstatedError):
         return _first_box_fed_by(",".join(error.open_carry_ids), revision)
-    if isinstance(error, ModeloPriorPeriodUnfiledError):
+    if isinstance(error, ModeloPriorPeriodUnfiledError | ModeloHouseholdRowFactInputRequiredError):
         return _first_box_fed_by(error.binding_id, revision)
     if not isinstance(error, RegistryValidationError) or error.context is None:
         return None
@@ -621,6 +750,22 @@ def _unresolved_source_context(error: BaseException, revision: ModeloRevision) -
     if error.translated_message == "errors.calc.previous_filing_casillas_unobserved":
         return _first_box_fed_by(error.context.get("binding_ids"), revision)
     return None
+
+
+def _with_prior_carry_door(
+    outcome: ModeloEditExecutionNoEffectV1, error: BaseException
+) -> ModeloEditExecutionNoEffectV1:
+    """Name the family and the statement door on an edit refused for an unstated carry; others pass unchanged."""
+    refusal = outcome.refusal
+    if not isinstance(error, ModeloPriorCarryAbsenceUnstatedError) or not isinstance(
+        refusal, ModeloEditDomainRefusalV1
+    ):
+        return outcome
+    return ModeloEditExecutionNoEffectV1(
+        refusal=refusal.model_copy(
+            update={"facts": (*refusal.facts, error.family.value), "recovery_action": PRIOR_CARRIES_ACTION}
+        )
+    )
 
 
 def pre_effect_refusal(
@@ -635,7 +780,16 @@ def pre_effect_refusal(
         context = _unresolved_source_context(error, revision)
         refusal = None if context is None else _unresolved_binding_edit_refusal(context, revision, code)
         if refusal is not None:
-            return refusal
+            return _with_prior_carry_door(refusal, error)
+    if isinstance(error, ModeloPriorCarryAbsenceUnstatedError):
+        return _with_prior_carry_door(
+            _domain_refusal(
+                ModeloEditRefusalCode.VALIDATION_FAILED,
+                facts=(code,),
+                condition="state the carries from earlier ejercicios before the declaration is calculated",
+            ),
+            error,
+        )
     if isinstance(error, ModeloClearedCasillaSourceFedError):
         return _domain_refusal(
             ModeloEditRefusalCode.DISALLOWED_INTENT,
@@ -658,6 +812,57 @@ class _PreparedEdit:
     cleared_casilla_ids: tuple[CasillaId, ...]
     detail_rows: tuple[ModeloDetailRow, ...]
     revision: ModeloRevision
+    head: CalculationRevision | None
+    work_unit: WorkUnit | None
+
+
+def _withdraw_carry_statement(
+    submission: ModeloEditSubmissionV1,
+    *,
+    prepared: _PreparedEdit,
+    ports: CalculationActionPorts,
+    now: datetime,
+    co_commit: Callable[[], tuple[SecureObjectWrite, ...]],
+) -> ModeloEditExecutionNoEffectV1 | None:
+    """Settle a withdrawal that left a calculation-refusing carry unstated, returning its refusal if refused.
+
+    ``None`` when the work unit returned to no current calculation, which
+    ``co_commit`` recorded, or when the edit is no such withdrawal.
+
+    It is one when the submission only withdraws statements, withdraws one of
+    such a carry, and the head holds such a statement. The work unit then
+    returns to no current calculation, or the withdrawal is refused when the
+    declaration is recorded as filed or the head holds other values of the
+    filer's.
+    """
+    head, work_unit = prepared.head, prepared.work_unit
+    carry_bindings = calculation_refusing_carry_bindings(prepared.revision)
+    if (
+        head is None
+        or work_unit is None
+        or not is_carry_withdrawal(submission, carry_bindings)
+        or head.operator_layer is None
+        or not set(head.operator_layer.attested_binding_ids) & carry_bindings
+    ):
+        return None
+    block = carry_withdrawal_block(head, work_unit, carry_bindings)
+    if block is not None:
+        return _domain_refusal(
+            ModeloEditRefusalCode.DISALLOWED_INTENT,
+            facts=(block.value,),
+            condition="replace the statement with the carried figures, or amend a declaration recorded as filed",
+        )
+    stale = withdraw_current_calculation(
+        submission.baseline,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
+        operation=ports.operation,
+        now=now,
+        co_commit=co_commit,
+    )
+    if stale is not None:
+        return ModeloEditExecutionNoEffectV1(refusal=stale)
+    return None
 
 
 def _execute_modelo_edit(
@@ -673,7 +878,9 @@ def _execute_modelo_edit(
     submission = request.submission
     captured_receipt: list[ModeloEditMutationResultReceiptV1] = []
 
-    def _co_commit_receipt(calculation_revision_id: str, bucket_event_id: str | None) -> tuple[SecureObjectWrite, ...]:
+    def _co_commit_receipt(
+        calculation_revision_id: str | None, bucket_event_id: str | None
+    ) -> tuple[SecureObjectWrite, ...]:
         return _capture_edit_receipt(
             calculation_revision_id,
             bucket_event_id,
@@ -708,6 +915,7 @@ def _execute_modelo_edit(
             attested_binding_ids=replay.attested_binding_ids,
             value_attestations=replay.value_attestations,
             income_family_entry_digests=replay.income_family_entry_digests,
+            row_attestations=replay.row_attestations,
             binding_values=replay.binding_values,
             enum_binding_values=replay.enum_binding_values,
             detail_rows=replay.detail_rows,
@@ -722,6 +930,18 @@ def _execute_modelo_edit(
     except _PRE_EFFECT_REFUSALS as refused:
         if captured_receipt:
             raise
+        if isinstance(refused, ModeloPriorCarryAbsenceUnstatedError):
+            withdrawn = _withdraw_carry_statement(
+                submission,
+                prepared=prepared,
+                ports=ports,
+                now=now,
+                co_commit=lambda: _co_commit_receipt(None, None),
+            )
+            if withdrawn is not None:
+                return withdrawn
+            if captured_receipt:
+                return ModeloEditExecutionUpdatedV1(receipt=captured_receipt[0])
         return pre_effect_refusal(refused, revision=prepared.revision)
     if not captured_receipt:
         raise ModeloError(
@@ -775,6 +995,8 @@ def _prepare_edit(
             filing_catalogue=ports.filing_repository.load(),
             work_catalogue=work_catalogue,
         ),
+        revision=snapshot.revision,
+        head=head,
     )
     if refusal is not None:
         return refusal
@@ -793,6 +1015,8 @@ def _prepare_edit(
         cleared_casilla_ids=tuple(sorted(state.cleared_casilla_ids)),
         detail_rows=detail_rows,
         revision=snapshot.revision,
+        head=head,
+        work_unit=work_catalogue.get(baseline.work_unit_id),
     )
 
 

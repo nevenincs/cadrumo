@@ -79,7 +79,7 @@ def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
     """Behavioural anchor: the LOCK / CARRY memberships are the frozen sets.
 
     Deterministic bucket-owned resolvers (ledger aggregations, invoice
-    families, inventory projection, and annual summary) are caller-locked; carry sources are
+    families, inventory projection, let-property rows and annual summary) are caller-locked; carry sources are
     caller-overridable. A membership change here is behavioural drift, not a
     representation change, and must be a conscious, reviewed decision rather
     than an accidental edit.
@@ -100,6 +100,7 @@ def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
                 BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
                 BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
                 BindingSourceKind.INVENTORY,
+                BindingSourceKind.RENTA_INMUEBLE,
                 BindingSourceKind.RETENCION_SOPORTADA,
                 BindingSourceKind.CAPITAL_MOBILIARIO_POSITION,
             },

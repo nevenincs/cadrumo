@@ -272,6 +272,11 @@ aggregation:
       unsupported_period: Annual period is required for Modelo 100 income aggregation
         (e.g. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: In force
+      withdrawn: Withdrawn
+    amount:
+      pago_a_cuenta: Total payments on account
     clase:
       actividad_economica: Economic activity income
       arrendamiento_inmueble_urbano: 'Income from real estate capital: urban property
@@ -321,6 +326,10 @@ aggregation:
         takes them.
       validation: 'The withholding record was not saved: check the payer ID, the amounts
         (at most two decimals) and the certificate fingerprint.'
+    origen:
+      operator_declaration: Your own declaration
+      payer_certificate: Payer's certificate
+    payer_unnamed: Payer without a stated name
     served:
       certificate_file_unreadable: The certificate file could not be read. Check that
         it still exists, is not empty and is a PDF, an image or an XML document, then
@@ -3689,6 +3698,7 @@ desktop:
       previous: Previous period
       year_next: Next year
       year_previous: Previous year
+      years_supported: Years you can read
       years_with_movements: Years with movements
     position: Row {row} of {count}
     prorrata:
@@ -4086,11 +4096,6 @@ desktop:
         note: Say which ledger transaction books this purchase, that none does, or
           clear what was stated.
         row: The ledger books this purchase
-        row_claimed: A ledger transaction books it
-        row_none: No ledger transaction books it
-        row_unstated: Not stated
-        row_unstated_hint: This clears an earlier statement.
-        state_claimed: Booked by {transaction}
         transaction: Ledger transaction
       closing:
         authority: How the value is decided
@@ -4288,21 +4293,16 @@ desktop:
       action:
         attest: State no withholding
         record: Record certificate
-      attested_on: Stated on {date}
       changes: Changes to the {ejercicio} certificates
       column:
         class: Income class
         document: Document
-        especie: In kind
-        ingreso: On account
-        integro: Gross cash
         note: Note
         origin: Source
-        pago: Credit
         payer: Payer
-        repercutido: Passed on
-        retencion: Withholding
         state: State
+        stated_on: Stated on
+        withdrawn_on: Withdrawn on
       correct_hint: To correct a certificate, remove it and record it again.
       document: Certificate document (optional)
       document_hint: A document stored under Documents. The record is refused if Cadrumo
@@ -4328,7 +4328,6 @@ desktop:
         payer_certificate: Payer certificate
       origin_label: Source of the figures
       payer_legal_name: Payer name (optional)
-      payer_ref: Payer {ref}
       payer_tax_id: Payer tax ID
       payer_tax_id_hint: Sent with the record to identify the payer. It is not shown
         again.
@@ -4341,7 +4340,6 @@ desktop:
         states it, or state that an income class has none.
       withdraw: Withdraw
       withdraw_of: Withdraw the statement for {class}
-      withdrawn_on: Withdrawn on {date}
   logs:
     all_loggers: All loggers
     all_origins: All origins
@@ -6253,9 +6251,13 @@ sheets:
       accrual_year: Accrual year
       acquisition_date: Acquisition date
       acquisition_value: Acquisition value
+      adquisicion_lucrativa: Acquired without consideration
+      adquisicion_onerosa: Acquired for consideration
+      amortizacion: Depreciation
       amount: Amount
       amount_donated: Amount donated
       anualidades_alimentos: Food annuities
+      arrendado: Let
       ascendants_75_plus_total: Ascendants 75+ (total)
       ascendants_75_plus_whole: Ascendants 75+ (whole)
       ascendants_disabled_33_65_total: Disabled ascendants 33-65% (total)
@@ -6269,6 +6271,7 @@ sheets:
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
       asset_ref: Internal asset reference
+      base_amortizacion: Depreciation base
       base_imponible: Tax base
       base_imponible_assigned: Tax base assigned
       base_retenciones: Withholding base
@@ -6334,8 +6337,11 @@ sheets:
       descendants_rest_whole: Remaining descendants (whole)
       descendants_under_3_total: Descendants under 3 (total)
       descendants_under_3_whole: Descendants under 3 (whole)
+      dias_arrendado: Days let
+      dias_arrendado_amortizacion: Days let for depreciation
       dias_arrendamiento: Days the property was leased
       dias_miembro: Number of days as member
+      direccion: Address
       disability_clave: Disability
       domicilio_fiscal: Member's tax domicile
       donor_legal_name: Donor legal name
@@ -6343,8 +6349,11 @@ sheets:
       door: Door
       element_type: Asset type
       emerging_stock_excess_clave: Emerging-company stock excess
+      fecha_adquisicion: Property acquisition date
+      fecha_contrato: Lease date
       fecha_devengo: Accrual date
       fecha_inicio_prestamo: Loan start date
+      fecha_transmision: Property transfer date
       fecha_vencimiento_prestamo: Loan maturity date
       financial_asset_acquisition_value: Financial asset acquisition value
       financial_asset_disposal_value: Financial asset disposal value
@@ -6360,10 +6369,27 @@ sheets:
       gain: Capital gain
       gain_difference: Gain on the transfer
       garantias: Guarantees
+      gasto_comunidad: Community charges
+      gasto_defensa_juridica: Legal defence costs
+      gasto_formalizacion_contrato: Lease formalisation costs
+      gasto_interes_financiacion: Interest and financing costs
+      gasto_otros: Other deductible expenses
+      gasto_primas_seguro: Insurance premiums
+      gasto_reparacion_conservacion: Repair and upkeep costs
+      gasto_saldos_dudoso_cobro: Doubtful debts
+      gasto_servicios_terceros: Third-party personal services
+      gasto_suministros: Services and utilities
+      gasto_tributos: Taxes, surcharges and fees
+      gastos_adquisicion: Acquisition expenses and taxes
       gastos_deducibles: Deductible expenses
+      gastos_pendientes_anteriores: Interest and repair expenses pending from the
+        four previous years
+      gastos_pendientes_aplicados: Pending amount from previous years applied this
+        year
       geographic_mobility_clave: Geographic mobility
       house_number: House number
       housing_loan_communication_clave: Home loan communication
+      importe_adquisicion: Acquisition amount
       importe_gastos: Expense amount
       importe_q1: Amount Q1
       importe_q2: Amount Q2
@@ -6377,11 +6403,24 @@ sheets:
       incapacity_kind_value: In-kind value from work incapacity
       ingreso_a_cuenta: In-kind tax credit
       ingreso_a_cuenta_repercutido: Payments on account passed on
+      ingresos_integros: Gross computable income
+      inquilino_1_nif: Tenant 1 tax ID
+      inquilino_1_nif_extranjero: Tenant 1 tax ID is foreign
+      inquilino_2_nif: Tenant 2 tax ID
+      inquilino_2_nif_extranjero: Tenant 2 tax ID is foreign
+      inquilino_3_nif: Tenant 3 tax ID
+      inquilino_3_nif_extranjero: Tenant 3 tax ID is foreign
+      intereses_reparacion_aplicados: Interest and repair expenses of the year applied
+      intereses_reparacion_pendientes: Interest and repair expenses of the year pending
+      intereses_reparacion_pendientes_futuros: Interest and repair expenses pending
+        for the following four years
       is_recurrent: Recurrent donation
       isin_code: ISIN code
       locality: Locality
       loss: Capital loss
       loss_difference: Loss on the transfer
+      mejoras_anteriores: Improvements made in previous years
+      mejoras_ejercicio: Improvements made this year
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
@@ -6423,6 +6462,8 @@ sheets:
       perceptor_tax_id: Recipient tax id
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
+      porcentaje_construccion: Construction share of the cadastral value
+      porcentaje_propiedad: Ownership (%)
       porcentaje_retencion: Withholding %
       porcentaje_titularidad_inmueble: Property ownership percentage
       portal: Entrance
@@ -6435,21 +6476,27 @@ sheets:
       rectified_period: Rectified period
       rectified_year: Rectified year
       reduccion: Reduction applicable to the income
+      reduccion_aplicable: Reduction applies
       reducciones: Reductions
       reducciones_aplicables: Applicable reductions
       referencia_catastral: Cadastral reference
       refund_amount: Refund amount
+      rendimiento_neto: Net income
       rendimiento_neto_minorado_agricola_eo: Reduced agricultural net yield (estimación
         objetiva)
       rendimiento_neto_previo_eo: Prior net yield (estimación objetiva)
+      rendimiento_neto_reducido: Reduced net income
       representative_nif: Representative NIF
       representative_tax_id: Legal representative NIF
       residence_country_code: Residence country code
       retencion_amount: Withholding amount
       retencion_practicada: Withholding applied
+      retenciones: Withholdings
       reverse_charge_mark: Reverse charge
+      rustica: Rural
       second_child_compute: 2nd child computation
       share_percentage: Share percentage
+      situacion: Location key
       situacion_inmueble: Property location status
       situation: Property situation
       spouse_or_unit_titular_tax_id: Spouse or coexistence-unit holder NIF
@@ -6468,6 +6515,9 @@ sheets:
       transmission_date: Disposal date
       transmission_value: Disposal value
       unit_convivencia_titular_clave: Coexistence unit holder
+      urbana: Urban
+      valor_catastral: Cadastral value
+      valor_catastral_construccion: Cadastral value of the construction
       valuation_amount: Valuation
       valuation_event: Valuation event
       valuation_event_date: Valuation event date
@@ -7227,6 +7277,26 @@ tui:
           shows %{evidenced}. %{detail}'
         country: Country code (2 letters, optional)
         evidenced: Scope a document shows, for the lookup (optional)
+        filing_done: The filing name of %{identifier} was stated.
+        filing_heading: Filing name
+        filing_kind_entity: Entity
+        filing_kind_natural_person: Natural person
+        filing_no_second: No second surname
+        filing_nombre: Given name
+        filing_primer: First surname
+        filing_razon: Company name
+        filing_rendering: 'For %{width} characters: %{text}'
+        filing_renderings: Shorter renderings, as width=text; width=text (optional)
+        filing_renderings_malformed: Write each shorter rendering as a width, an equals
+          sign and its text, for example 20=Short name, and separate several with
+          a semicolon.
+        filing_review: Review filing name
+        filing_segundo: Second surname
+        filing_stage: State the filing name of %{identifier} as %{kind}.
+        filing_stated: 'Filing name of %{identifier}: %{kind} · %{name}'
+        filing_stated_by: Stated by %{name} on %{date}.
+        filing_unchanged: '%{identifier} already had this filing name.'
+        filing_unstated: No filing name is stated for %{identifier}.
         identification: EU member state of its VAT number (2 letters)
         identifier: Tax identifier
         identifier_required: Type the counterparty's tax identifier first.
@@ -7862,6 +7932,16 @@ tui:
       empty: No supporting documents await review.
       extract: Read document
       loading: Reading the documents…
+      page:
+        document: '{file} ({media}) - page {page} of {count}'
+        empty: The document states nothing to show.
+        fact: '{label}: {value}'
+        failed: The document could not be shown.
+        line: '{position}. {facts}'
+        loading: Reading the stored document...
+        not_drawn: The terminal does not draw pages. Open the document in the window
+          to see it.
+        view: View document
       path_placeholder: Type the path of the file
       pending: Pending
       printed_total_disagrees: The total printed on the document differs from the
@@ -8577,7 +8657,12 @@ tui:
           create: Create an inventory
           evidence_add: Store a purchase document
           movement_add: Add a movement
+          movement_claim: State the ledger entry of a purchase
           valuation_preview: Preview the valuation
+        claim:
+          load: Show transactions this purchase can claim
+          none_offered: No ledger transaction can be claimed by this purchase.
+          prompt: Choose a transaction
         column:
           actividad: Activity
           method: Method
@@ -8736,6 +8821,32 @@ tui:
       selection_dropped: The entry this link selects is not shown.
       title: Records unavailable
   modelo:
+    amendment:
+      done: 'Correction prepared and recorded here. Nothing was sent to the AEAT:
+        export its file and file it yourself.'
+      incomplete: Fill in everything the correction asks for, and correct at least
+        one value.
+      key: Correct
+      kind_label: Kind of correction
+      motive_label: Reason for the rectification
+      unknown: This correction may have been recorded. Check its operation before
+        you prepare another.
+      values_label: Corrected values
+    disagreements:
+      accept: Accept
+      key: Answer disagreements
+      none: The declaration states no source disagreement.
+      outcome_unknown: The answer may have been stored. Read the declaration again
+        before answering anything else.
+      read_failed: Your answers could not be read.
+      reading: Reading your answers...
+      reason_label: Your reason for accepting
+      refused: The answer was refused.
+      revoke: Take back
+      sending: Sending your answer...
+      title: Source disagreements
+      unavailable: There is nothing to answer yet. Calculate the declaration first.
+      your_reason: 'Your reason: {reason}'
     editor:
       confirm_hint: Press ⏎ to confirm {value}, or type the right value.
       keys: 'Keys: ⏎ {save_next} · Ctrl+⏎ {save}'
@@ -8916,6 +9027,9 @@ tui:
       stage: Stage for review
       title: Statements you can make
       withdraw: Withdraw the statement
+    taxation:
+      key: Joint or individual
+      reading: Working out both ways…
   operations:
     action:
       close: Close
@@ -9268,10 +9382,6 @@ tui:
         revision_current: Current
         revision_superseded: Replaced
   withholding:
-    absence:
-      state:
-        active: Active
-        withdrawn: Withdrawn
     absences:
       title: Statements of no withholding
     action:
@@ -9284,6 +9394,7 @@ tui:
       attested_on: Stated on
       income: Income
       note: Note
+      origin: Stated by
       payer: Payer
       state: State
     ejercicio: Year
@@ -9323,6 +9434,15 @@ workspace:
         declaration: Declaration
         legal: Legal status
         local: Local status
+      coverage:
+        applicability_undetermined: 'Whether you need to file is not known: {modelos}.
+          Check your obligations.'
+        applicable_window_missing: 'These modelos apply, but no filing window is held
+          for them: {modelos}. Check the official calendar.'
+        no_dates: No filing dates are available for this range. That is not the same
+          as nothing being due.
+        registry_unmodeled: 'No applicability rules or filing windows are held for:
+          {modelos}. Check the official guidance on your obligations.'
       detail:
         action: 'Enter action: {action}'
         axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · AEAT receipt: {receipt}
@@ -10511,9 +10631,16 @@ workspace:
         set_nothing: new value
         set_source: replaces the value from its source
       finding:
+        calculation_withdrawn: The calculation is withdrawn. Calculate again after
+          you state the amounts carried from earlier years.
         carry_left_open: This amount from an earlier year is still open. State it,
           as nothing pending or with its amount, in this same change; the calculation
           cannot proceed while it is open.
+        carry_withdrawal_filed: This declaration is recorded as filed. Correct it
+          with an amendment.
+        carry_withdrawal_keeps_entries: Withdrawing this statement would discard the
+          other values you entered on this declaration. Enter the carried amounts
+          instead.
         clear_of_source_fed_casilla: A source fills this box, so it cannot be emptied.
           Give it back to its source instead.
         intent_not_admitted: This box cannot be changed that way.

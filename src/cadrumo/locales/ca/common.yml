@@ -290,6 +290,11 @@ aggregation:
       unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
         del Model 100 (p.ex. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: Vigent
+      withdrawn: Retirada
+    amount:
+      pago_a_cuenta: Total de pagaments a compte
     clase:
       actividad_economica: Rendiments d'activitats econòmiques
       arrendamiento_inmueble_urbano: 'Rendiments del capital immobiliari: arrendament
@@ -342,6 +347,10 @@ aggregation:
         res; cap altra classe de renda no els admet.
       validation: 'El registre de retenció no s''ha desat: revisa el NIF del pagador,
         els imports (com a màxim dos decimals) i l''empremta del certificat.'
+    origen:
+      operator_declaration: La teva pròpia declaració
+      payer_certificate: Certificat del pagador
+    payer_unnamed: Pagador sense nom indicat
     served:
       certificate_file_unreadable: No s'ha pogut llegir el fitxer del certificat.
         Comprova que encara existeix, que no està buit i que és un PDF, una imatge
@@ -3755,6 +3764,7 @@ desktop:
       previous: Període anterior
       year_next: Any següent
       year_previous: Any anterior
+      years_supported: Exercicis que pots consultar
       years_with_movements: Anys amb moviments
     position: Fila {row} de {count}
     prorrata:
@@ -4159,11 +4169,6 @@ desktop:
         note: Indica quina transacció del llibre registra aquesta compra, que cap
           ho fa, o esborra el que has indicat abans.
         row: El llibre registra aquesta compra
-        row_claimed: La registra una transacció del llibre
-        row_none: No la registra cap transacció del llibre
-        row_unstated: Sense indicar
-        row_unstated_hint: Això esborra una indicació anterior.
-        state_claimed: Registrada per {transaction}
         transaction: Transacció del llibre
       closing:
         authority: Com es decideix el valor
@@ -4364,21 +4369,16 @@ desktop:
       action:
         attest: Indica sense retencions
         record: Anota un certificat
-      attested_on: Indicat el {date}
       changes: Canvis als certificats de {ejercicio}
       column:
         class: Classe de renda
         document: Document
-        especie: En espècie
-        ingreso: A compte
-        integro: Íntegre dinerari
         note: Nota
         origin: Origen
-        pago: Crèdit
         payer: Pagador
-        repercutido: Repercutit
-        retencion: Retenció
         state: Estat
+        stated_on: Declarat el
+        withdrawn_on: Retirat el
       correct_hint: Per corregir un certificat, treu-lo i anota'l de nou.
       document: Document del certificat (opcional)
       document_hint: Un document desat a Documents. Es rebutja el registre si Cadrumo
@@ -4404,7 +4404,6 @@ desktop:
         payer_certificate: Certificat del pagador
       origin_label: Origen de les xifres
       payer_legal_name: Nom del pagador (opcional)
-      payer_ref: Pagador {ref}
       payer_tax_id: NIF del pagador
       payer_tax_id_hint: S'envia amb el registre per identificar el pagador. No es
         torna a mostrar.
@@ -4417,7 +4416,6 @@ desktop:
         el seu certificat, o indica que una classe de renda no en té cap.
       withdraw: Retira
       withdraw_of: Retira la indicació de {class}
-      withdrawn_on: Retirat el {date}
   logs:
     all_loggers: Tots els registradors
     all_origins: Tots els orígens
@@ -6388,9 +6386,13 @@ sheets:
       accrual_year: Exercici de meritació
       acquisition_date: Data d'adquisició
       acquisition_value: Valor d'adquisició
+      adquisicion_lucrativa: Adquisició lucrativa
+      adquisicion_onerosa: Adquisició onerosa
+      amortizacion: Amortització
       amount: Import
       amount_donated: Import donat
       anualidades_alimentos: Anualitats per aliments
+      arrendado: Arrendament
       ascendants_75_plus_total: Ascendents ≥ 75 anys (total)
       ascendants_75_plus_whole: Ascendents ≥ 75 anys (sencers)
       ascendants_disabled_33_65_total: Ascendents amb discapacitat 33-65% (total)
@@ -6406,6 +6408,7 @@ sheets:
       asset_class_code: Clau del bé
       asset_identifier: Identificació del bé
       asset_ref: Referència interna del bé
+      base_amortizacion: Base d'amortització
       base_imponible: Base imposable
       base_imponible_assigned: Base imposable atribuïda
       base_retenciones: Base de retencions i ingressos a compte
@@ -6471,8 +6474,11 @@ sheets:
       descendants_rest_whole: Descendents restants (sencers)
       descendants_under_3_total: Descendents < 3 anys (total)
       descendants_under_3_whole: Descendents < 3 anys (sencers)
+      dias_arrendado: Dies arrendat
+      dias_arrendado_amortizacion: Dies arrendat per a l'amortització
       dias_arrendamiento: Dies d'arrendament de l'immoble
       dias_miembro: Nombre de dies com a membre
+      direccion: Adreça
       disability_clave: Discapacitat
       domicilio_fiscal: Domicili fiscal del membre
       donor_legal_name: Nom o raó social del donant
@@ -6480,8 +6486,11 @@ sheets:
       door: Porta
       element_type: Tipus d'element patrimonial
       emerging_stock_excess_clave: Excessos de lliurament d'accions d'empreses emergents
+      fecha_adquisicion: Data d'adquisició de l'immoble
+      fecha_contrato: Data del contracte
       fecha_devengo: Data de meritació
       fecha_inicio_prestamo: Data d'inici del préstec
+      fecha_transmision: Data de transmissió de l'immoble
       fecha_vencimiento_prestamo: Data de venciment del préstec
       financial_asset_acquisition_value: Valor d’adquisició de l’actiu financer
       financial_asset_disposal_value: Valor de transmissió de l’actiu financer
@@ -6497,10 +6506,27 @@ sheets:
       gain: Guany patrimonial
       gain_difference: Guany per la transmissió
       garantias: Garanties
+      gasto_comunidad: Despeses de comunitat
+      gasto_defensa_juridica: Despeses de defensa jurídica
+      gasto_formalizacion_contrato: Despeses de formalització del contracte
+      gasto_interes_financiacion: Interessos i altres despeses de finançament
+      gasto_otros: Altres despeses fiscalment deduïbles
+      gasto_primas_seguro: Primes de contractes d'assegurança
+      gasto_reparacion_conservacion: Despeses de reparació i conservació
+      gasto_saldos_dudoso_cobro: Saldos de cobrament dubtós
+      gasto_servicios_terceros: Serveis personals de tercers
+      gasto_suministros: Serveis i subministraments
+      gasto_tributos: Tributs, recàrrecs i taxes
+      gastos_adquisicion: Despeses i tributs d'adquisició
       gastos_deducibles: Despeses deduïbles
+      gastos_pendientes_anteriores: Interessos i despeses de reparació i conservació
+        pendents dels quatre exercicis anteriors
+      gastos_pendientes_aplicados: Import pendent d'exercicis anteriors aplicat en
+        aquest exercici
       geographic_mobility_clave: Mobilitat geogràfica
       house_number: Número de casa
       housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual
+      importe_adquisicion: Import d'adquisició
       importe_gastos: Import de despeses
       importe_q1: Import 1T
       importe_q2: Import 2T
@@ -6516,11 +6542,26 @@ sheets:
       incapacity_kind_value: Valoració en espècie derivada d'incapacitat laboral
       ingreso_a_cuenta: Ingrés a compte
       ingreso_a_cuenta_repercutido: Ingressos a compte repercutits
+      ingresos_integros: Ingressos íntegres computables
+      inquilino_1_nif: NIF de l'arrendatari 1
+      inquilino_1_nif_extranjero: NIF de l'arrendatari 1 d'un altre país
+      inquilino_2_nif: NIF de l'arrendatari 2
+      inquilino_2_nif_extranjero: NIF de l'arrendatari 2 d'un altre país
+      inquilino_3_nif: NIF de l'arrendatari 3
+      inquilino_3_nif_extranjero: NIF de l'arrendatari 3 d'un altre país
+      intereses_reparacion_aplicados: Interessos i despeses de reparació i conservació
+        de l'exercici aplicats
+      intereses_reparacion_pendientes: Interessos i despeses de reparació i conservació
+        de l'exercici pendents
+      intereses_reparacion_pendientes_futuros: Interessos i despeses de reparació
+        i conservació pendents per als quatre exercicis següents
       is_recurrent: Donatiu recurrent
       isin_code: Codi ISIN
       locality: Localitat
       loss: Pèrdua patrimonial
       loss_difference: Pèrdua per la transmissió
+      mejoras_anteriores: Millores fetes en exercicis anteriors
+      mejoras_ejercicio: Millores fetes en l'exercici
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
@@ -6562,6 +6603,8 @@ sheets:
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepcions dineràries
       percibido_especie: Percepcions en espècie
+      porcentaje_construccion: Percentatge del valor cadastral corresponent a la construcció
+      porcentaje_propiedad: Propietat (%)
       porcentaje_retencion: '% Retenció'
       porcentaje_titularidad_inmueble: Percentatge de titularitat de l'immoble
       portal: Portal
@@ -6574,21 +6617,27 @@ sheets:
       rectified_period: Període rectificat
       rectified_year: Exercici rectificat
       reduccion: Reducció aplicable al rendiment
+      reduccion_aplicable: Reducció aplicable
       reducciones: Reduccions
       reducciones_aplicables: Reduccions aplicables
       referencia_catastral: Referència cadastral
       refund_amount: Import a retornar
+      rendimiento_neto: Rendiment net
       rendimiento_neto_minorado_agricola_eo: Rendiment net minorat agrícola (estimació
         objectiva)
       rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
+      rendimiento_neto_reducido: Rendiment net reduït
       representative_nif: NIF del representant
       representative_tax_id: NIF del representant legal
       residence_country_code: Codi del país de residència
       retencion_amount: Import de la retenció
       retencion_practicada: Retenció practicada
+      retenciones: Retencions
       reverse_charge_mark: Inversió del subjecte passiu
+      rustica: Rústica
       second_child_compute: Còmput del 2n fill
       share_percentage: Percentatge de participació
+      situacion: Situació (clau)
       situacion_inmueble: Situació de l'immoble
       situation: Situació de l'immoble
       spouse_or_unit_titular_tax_id: NIF del cònjuge o del titular de la unitat de
@@ -6609,6 +6658,9 @@ sheets:
       transmission_date: Data de transmissió
       transmission_value: Valor de transmissió
       unit_convivencia_titular_clave: Titular de la unitat de convivència
+      urbana: Urbana
+      valor_catastral: Valor cadastral
+      valor_catastral_construccion: Valor cadastral de la construcció
       valuation_amount: Valoració
       valuation_event: Esdeveniment de valoració
       valuation_event_date: Data de l'esdeveniment de valoració
@@ -7386,6 +7438,26 @@ tui:
           mostra %{evidenced}. %{detail}'
         country: Codi de país (2 lletres, opcional)
         evidenced: Àmbit que mostra un document, per a la consulta (opcional)
+        filing_done: S'ha indicat el nom de presentació de %{identifier}.
+        filing_heading: Nom de presentació
+        filing_kind_entity: Entitat
+        filing_kind_natural_person: Persona física
+        filing_no_second: Sense segon cognom
+        filing_nombre: Nom
+        filing_primer: Primer cognom
+        filing_razon: Raó social
+        filing_rendering: 'Per a %{width} caràcters: %{text}'
+        filing_renderings: Versions més curtes, com amplada=text; amplada=text (opcional)
+        filing_renderings_malformed: Escriu cada versió més curta com una amplada,
+          un signe igual i el seu text, per exemple 20=Nom curt, i separa'n diverses
+          amb un punt i coma.
+        filing_review: Revisar nom de presentació
+        filing_segundo: Segon cognom
+        filing_stage: Indicar el nom de presentació de %{identifier} com a %{kind}.
+        filing_stated: 'Nom de presentació de %{identifier}: %{kind} · %{name}'
+        filing_stated_by: Indicat per %{name} el %{date}.
+        filing_unchanged: '%{identifier} ja tenia aquest nom de presentació.'
+        filing_unstated: No hi ha cap nom de presentació indicat per a %{identifier}.
         identification: Estat membre de la UE del seu NIF-IVA (2 lletres)
         identifier: Identificador fiscal
         identifier_required: Escriu primer l'identificador fiscal de la contrapart.
@@ -8028,6 +8100,16 @@ tui:
       empty: No hi ha justificants pendents de revisió.
       extract: Llegeix el document
       loading: S'estan llegint els documents…
+      page:
+        document: '{file} ({media}) - pàgina {page} de {count}'
+        empty: El document no declara res per mostrar.
+        fact: '{label}: {value}'
+        failed: No s'ha pogut mostrar el document.
+        line: '{position}. {facts}'
+        loading: Llegint el document desat...
+        not_drawn: El terminal no dibuixa pàgines. Obre el document a la finestra
+          per veure'l.
+        view: Mostra el document
       path_placeholder: Escriu el camí del fitxer
       pending: Pendent
       printed_total_disagrees: El total imprès al document no coincideix amb el registrat.
@@ -8756,7 +8838,12 @@ tui:
           create: Crea un inventari
           evidence_add: Desa un document de compra
           movement_add: Afegeix un moviment
+          movement_claim: Indicar l'apunt del llibre d'una compra
           valuation_preview: Previsualitza la valoració
+        claim:
+          load: Mostra els moviments que aquesta compra pot reclamar
+          none_offered: Cap moviment del llibre pot ser reclamat per aquesta compra.
+          prompt: Tria un moviment
         column:
           actividad: Activitat
           method: Mètode
@@ -8916,6 +9003,31 @@ tui:
       selection_dropped: No es mostra l'apunt que selecciona aquest enllaç.
       title: Registres no disponibles
   modelo:
+    amendment:
+      done: 'Correcció preparada i registrada aquí. No s''ha enviat res a l''AEAT:
+        exporta''n el fitxer i presenta''l tu.'
+      incomplete: Completa tot el que demana la correcció i corregeix almenys un valor.
+      key: Corregeix
+      kind_label: Tipus de correcció
+      motive_label: Motiu de la rectificació
+      unknown: Pot ser que aquesta correcció s'hagi registrat. Comprova'n l'operació
+        abans de preparar-ne una altra.
+      values_label: Valors corregits
+    disagreements:
+      accept: Accepta
+      key: Respon discrepàncies
+      none: La declaració no planteja cap discrepància entre fonts.
+      outcome_unknown: Pot ser que la resposta s'hagi desat. Torna a llegir la declaració
+        abans de respondre res més.
+      read_failed: No s'han pogut llegir les teves respostes.
+      reading: Llegint les teves respostes...
+      reason_label: El teu motiu per acceptar
+      refused: La resposta s'ha rebutjat.
+      revoke: Retira
+      sending: Enviant la teva resposta...
+      title: Discrepàncies entre fonts
+      unavailable: Encara no hi ha res a respondre. Calcula primer la declaració.
+      your_reason: 'El teu motiu: {reason}'
     editor:
       confirm_hint: Prem ⏎ per confirmar {value} o escriu el valor correcte.
       keys: 'Tecles: ⏎ {save_next} · Ctrl+⏎ {save}'
@@ -9101,6 +9213,9 @@ tui:
       stage: Deixar per revisar
       title: Manifestacions que pots fer
       withdraw: Retirar la manifestació
+    taxation:
+      key: Conjunta o individual
+      reading: Calculant les dues opcions…
   operations:
     action:
       close: Tanca
@@ -9459,10 +9574,6 @@ tui:
         revision_current: Vigent
         revision_superseded: Substituïda
   withholding:
-    absence:
-      state:
-        active: Activa
-        withdrawn: Retirada
     absences:
       title: Declaracions d'absència de retencions
     action:
@@ -9475,6 +9586,7 @@ tui:
       attested_on: Declarada el
       income: Rendiment
       note: Nota
+      origin: Declarat per
       payer: Pagador
       state: Estat
     ejercicio: Exercici
@@ -9514,6 +9626,15 @@ workspace:
         declaration: Declaració
         legal: Situació legal
         local: Estat local
+      coverage:
+        applicability_undetermined: 'No se sap si has de presentar: {modelos}. Revisa
+          les teves obligacions.'
+        applicable_window_missing: 'Aquests models t''afecten, però no hi ha cap termini
+          de presentació registrat per a ells: {modelos}. Consulta el calendari oficial.'
+        no_dates: No hi ha dates de presentació disponibles per a aquest interval.
+          Això no vol dir que no hi hagi res pendent.
+        registry_unmodeled: 'No hi ha regles d''aplicabilitat ni terminis registrats
+          per a: {modelos}. Consulta la guia oficial sobre les teves obligacions.'
       detail:
         action: 'Acció en prémer Retorn: {action}'
         axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant de l''AEAT:
@@ -10719,9 +10840,16 @@ workspace:
         set_nothing: valor nou
         set_source: substitueix el valor del seu origen
       finding:
+        calculation_withdrawn: El càlcul es retira. Torna a calcular quan indiquis
+          els imports pendents d'exercicis anteriors.
         carry_left_open: Aquest import d'un exercici anterior continua obert. Declara'l,
           com a res pendent o amb el seu import, en aquest mateix canvi; el càlcul
           no pot continuar mentre continuï obert.
+        carry_withdrawal_filed: Aquesta declaració consta com a presentada. Corregeix-la
+          amb una declaració complementària o rectificativa.
+        carry_withdrawal_keeps_entries: Retirar aquesta declaració descartaria els
+          altres valors que has introduït en aquesta declaració. Indica els imports
+          pendents en lloc d'això.
         clear_of_source_fed_casilla: Un origen emplena aquesta casella, així que no
           es pot buidar. Torna-la al seu origen en lloc d'això.
         intent_not_admitted: Aquesta casella no es pot canviar d'aquesta manera.

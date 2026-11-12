@@ -96,17 +96,15 @@ def test_grade_and_reference_date_are_part_of_the_shared_coordinate(reader: SQLi
     assert _snapshot(operation, on=date(_YEAR + 1, 1, 20)) is dated
 
 
-def test_a_new_madrid_date_revalidates_rather_than_reusing_the_previous_day(reader: SQLiteAuthorityReader) -> None:
+def test_a_later_run_date_shares_the_snapshot_because_no_check_reads_the_clock(reader: SQLiteAuthorityReader) -> None:
     operation = PinnedAuthorityOperation(reader, reader.pin())
 
     with frozen_clock(datetime(_YEAR, 3, 10, 12, tzinfo=UTC)):
         first_day = _snapshot(operation)
-        assert _snapshot(operation) is first_day
-    with frozen_clock(datetime(_YEAR, 3, 11, 12, tzinfo=UTC)):
-        next_day = _snapshot(operation)
+    with frozen_clock(datetime(_YEAR + 3, 11, 11, 12, tzinfo=UTC)):
+        years_later = _snapshot(operation)
 
-    assert next_day is not first_day
-    assert next_day.revision.id == first_day.revision.id
+    assert years_later is first_day
 
 
 def test_another_reader_incarnation_never_serves_this_generations_snapshot(reader: SQLiteAuthorityReader) -> None:

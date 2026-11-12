@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
+from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .modelo_100_registry_support import (
@@ -46,6 +47,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
         "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        **M100_NO_LET_PROPERTY_BINDINGS,
         "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),

@@ -15,7 +15,10 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.money.rounding import CENT
 from ...core.parsing.dates import parse_date
 from ...domain.calculations.registry.queries import RegistryQueryService
-from ...domain.calculations.registry.renta_codes_catalogue import resolve_fiscal_residency_catalogue
+from ...domain.calculations.registry.renta_codes_catalogue import (
+    is_ue_eea_country_code,
+    resolve_fiscal_residency_catalogue,
+)
 from ...domain.calculations.registry.schema_verification import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     VERIFICATION_PREDICATE_SPECIFICATIONS,
@@ -33,7 +36,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from .action_errors import ModeloApplicabilityFilterError, ModeloVerificationPredicateMalformedError
-from .refusal_door_verdicts import registry_defect_verdict
+from .refusal_door_verdicts import caller_defect_verdict, registry_defect_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -300,13 +303,21 @@ _NON_RESIDENT_IRNR_NON_EEA_FILTER = "non_resident_irnr_non_eea"
 _IRNR_TAX_REGIME = "irnr"
 
 
-def evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -> bool:
+def evaluate_applicability_filter(
+    filter_name: str,
+    profile: TaxpayerProfile,
+    *,
+    fact_date: _date | None = None,
+) -> bool:
     """Return whether the profile falls inside a predicate's named applicability filter.
 
     Each filter name a registry predicate may cite has one entry here; any other
     name is refused rather than silently treated as applicable or not.
 
-    ``profile`` is a :class:`TaxpayerProfile`.
+    ``profile`` is a :class:`TaxpayerProfile`. ``fact_date`` is the date the
+    return's facts belong to: the tax regime a residency carries is read as it
+    stood then, never at the date the program runs, and a filter that reads it
+    without a date is refused.
     """
     if not filter_name:
         return True
@@ -316,8 +327,16 @@ def evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) ->
         residency = profile.fiscal_residency
         if residency is None:
             return False
-        tax_regime = resolve_fiscal_residency_catalogue().definition(residency).tax_regime
-        return tax_regime == _IRNR_TAX_REGIME and not profile.ue_eee_status
+        if fact_date is None:
+            raise ModeloError(
+                translated_message="errors.error.error_modelos",
+                context={"filter": filter_name},
+                precondition_verdict=caller_defect_verdict("applicability_filter_fact_date"),
+            )
+        tax_regime = resolve_fiscal_residency_catalogue(effective_date=fact_date).definition(residency).tax_regime
+        return tax_regime == _IRNR_TAX_REGIME and not is_ue_eea_country_code(
+            profile.country_of_fiscal_residence, effective_date=fact_date
+        )
     raise ModeloApplicabilityFilterError(
         f"Unknown applicability filter: {filter_name!r}",
         translated_message="application.modelo.errors.applicability_filter_unknown",
@@ -327,7 +346,7 @@ def evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) ->
 
 
 _BlockingPredicateEvaluator = Callable[
-    [_AdmittedPredicate, Mapping[CasillaId, Decimal], TaxpayerProfile, Mapping[CasillaId, str]],
+    [_AdmittedPredicate, Mapping[CasillaId, Decimal], TaxpayerProfile, Mapping[CasillaId, str], _date | None],
     bool,
 ]
 
@@ -337,6 +356,7 @@ def _evaluate_all_nonzero(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     return all(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in predicate.casilla_ids)
 
@@ -346,6 +366,7 @@ def _evaluate_any_nonzero(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in predicate.casilla_ids)
 
@@ -355,6 +376,7 @@ def _evaluate_at_most_one_positive(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     return sum(1 for cid in predicate.casilla_ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) <= 1
 
@@ -364,6 +386,7 @@ def _evaluate_positive_amount_within_present_bound(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     """Bound a positive amount by a present bound operand.
 
@@ -386,6 +409,7 @@ def _evaluate_application_equals_present_maximum(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     """Require a mandatory application to equal its present maximum exactly.
 
@@ -403,6 +427,7 @@ def _evaluate_application_order_immaterial(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     """Hold when the amounts applied from each stock do not turn on the order the stocks are taken in.
 
@@ -427,6 +452,7 @@ def _evaluate_equals(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     lhs, rhs = (casilla_values.get(cid, Decimal(0)) for cid in predicate.casilla_ids)
     return lhs == rhs
@@ -451,6 +477,7 @@ def _evaluate_equals_sum(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     _total_id, total, addend_sum = _equals_sum_operands(predicate, casilla_values)
     return total == addend_sum
@@ -461,6 +488,7 @@ def _evaluate_implies_nonzero(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     antecedent_id, consequent_id = predicate.casilla_ids
     antecedent = casilla_values.get(antecedent_id, Decimal(0))
@@ -475,6 +503,7 @@ def _evaluate_implies_any_nonzero(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     antecedent_id, *consequent_ids = predicate.casilla_ids
     antecedent = casilla_values.get(antecedent_id, Decimal(0))
@@ -488,6 +517,7 @@ def _evaluate_casilla_equals_implies_nonzero(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     antecedent, consequent = predicate.casilla_ids
     if text_values.get(antecedent) != predicate.parsed.literal:
@@ -500,6 +530,7 @@ def _evaluate_casilla_equals_implies_zero(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     antecedent, consequent = predicate.casilla_ids
     if text_values.get(antecedent) != predicate.parsed.literal:
@@ -512,8 +543,9 @@ def _evaluate_profile_field_required(
     _casilla_values: Mapping[CasillaId, Decimal],
     profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    fact_date: _date | None,
 ) -> bool:
-    if not evaluate_applicability_filter(predicate.parsed.applicability_filter, profile):
+    if not evaluate_applicability_filter(predicate.parsed.applicability_filter, profile, fact_date=fact_date):
         return True
     field_value = getattr(profile, predicate.parsed.profile_field, None)
     return not (field_value is None or (isinstance(field_value, str) and not field_value.strip()))
@@ -524,6 +556,7 @@ def _evaluate_roll_forward_balances(
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
 ) -> bool:
     return _roll_forward_balance_reconciles(predicate.casilla_ids, casilla_values)
 
@@ -558,6 +591,8 @@ def evaluate_predicate_expression(
     casilla_values: Mapping[CasillaId, Decimal],
     profile: TaxpayerProfile,
     text_values: Mapping[CasillaId, str] | None = None,
+    *,
+    fact_date: _date | None = None,
 ) -> bool:
     """Return True when the predicate holds, False when it is violated.
 
@@ -610,7 +645,13 @@ def evaluate_predicate_expression(
     """
     predicate = _required_parsed_predicate(expression, route=_BLOCKING_ROUTE)
     evaluator = _BLOCKING_PREDICATE_EVALUATORS[predicate.parsed.operator]
-    return evaluator(predicate, casilla_values, profile, MappingProxyType({}) if text_values is None else text_values)
+    return evaluator(
+        predicate,
+        casilla_values,
+        profile,
+        MappingProxyType({}) if text_values is None else text_values,
+        fact_date,
+    )
 
 
 _AdvisoryPredicateEvaluator = Callable[
@@ -1098,6 +1139,7 @@ def evaluate_verification_predicates(
     operation: PinnedAuthorityOperation | None = None,
     as_of: _date | None = None,
     declared_casilla_ids: Collection[CasillaId] | None = None,
+    fact_date: _date | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Evaluate Layer 2 cross-casilla predicates into verification findings.
 
@@ -1122,6 +1164,10 @@ def evaluate_verification_predicates(
     through to support profile-state-aware predicate operators such as
     ``profile_field_required`` and ``profile_flag_enabled``. Casilla-only
     operators ignore the parameter.
+
+    ``fact_date`` is the date the return's facts belong to, read by an
+    applicability filter that decides a tax fact such as the regime a
+    residency carries; such a filter refuses when it is absent.
 
     ``declared_casilla_ids`` is the selected revision's hydrated casilla set
     (inherited casillas included). When given, a blocking predicate naming a
@@ -1155,7 +1201,7 @@ def evaluate_verification_predicates(
     if declared_casilla_ids is not None:
         _refuse_undeclared_blocking_casillas(predicates, declared_casilla_ids)
     return _evaluate_selected_predicate_findings(
-        predicates, casilla_values, profile, text_values, blocking_finding_observer
+        predicates, casilla_values, profile, text_values, blocking_finding_observer, fact_date=fact_date
     )
 
 
@@ -1165,6 +1211,8 @@ def _evaluate_selected_predicate_findings(
     profile: TaxpayerProfile,
     text_values: Mapping[CasillaId, str],
     blocking_finding_observer: Callable[[ModeloVerificationFinding, VerificationPredicateDefinition], None] | None,
+    *,
+    fact_date: _date | None,
 ) -> list[ModeloVerificationFinding]:
     """Preserve registry predicate order and notify only after a blocking finding."""
     findings: list[ModeloVerificationFinding] = []
@@ -1175,7 +1223,9 @@ def _evaluate_selected_predicate_findings(
             if evaluate_advisory_predicate_fires(predicate.expression, casilla_values, text_values, profile):
                 findings.append(advisory_predicate_finding(predicate))
         else:
-            if not evaluate_predicate_expression(predicate.expression, casilla_values, profile, text_values):
+            if not evaluate_predicate_expression(
+                predicate.expression, casilla_values, profile, text_values, fact_date=fact_date
+            ):
                 finding = _blocking_predicate_finding(predicate, casilla_values)
                 findings.append(finding)
                 if blocking_finding_observer is not None:

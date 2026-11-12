@@ -268,6 +268,7 @@ from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER,
 from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
 from .persona_prior_values import PriorValueAttestationError, attest_prior_values
+from .persona_rental_replay import replay_rentals
 from .persona_work_income_statements import state_work_income_none
 from .persona_work_inputs import WorkInputError, check_work_inputs, enter_work_inputs
 
@@ -1890,6 +1891,15 @@ def materialise_persona(
             _replay_withholding(persona, world)
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)
+            replay_rentals(
+                persona,
+                world.profile_id,
+                world.envelope,
+                transactions,
+                actor=PERSONA_ACTOR,
+                settle=partial(settle_operation, world),
+                load_record=partial(load_profile_record, world),
+            )
             _state_filing_names(persona, world)
             evidence = _replay_documents(persona, world, transactions)
             _replay_inventory(persona, world, transactions)

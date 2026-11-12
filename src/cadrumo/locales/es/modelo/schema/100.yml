@@ -2,6 +2,9 @@ modelo:
   schema:
     '100':
       binding:
+        renta-inmueble-gastos-pendientes-anteriores-0103:
+          label: Intereses y gastos de reparación y conservación del inmueble pendientes
+            de deducir de los cuatro ejercicios anteriores
         renta-modelo-100-estimacion-directa-es-normal:
           help: 'Sí: modalidad normal (N). No: modalidad simplificada (S).'
           label: ¿Aplicas la modalidad normal de estimación directa?

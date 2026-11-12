@@ -264,7 +264,9 @@ STATED_ABSENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = Mappi
     }
 )
 """What a carry the filer stated holds nothing says beside it, by the family of the statement."""
-if frozenset(STATED_ABSENT_LOCALE_KEYS) != frozenset(AbsenceAttestationFamily):
+if frozenset(STATED_ABSENT_LOCALE_KEYS) != frozenset(
+    family for family in AbsenceAttestationFamily if not family.row_grain
+):
     raise InternalInvariantError(
         "every statement family the registry can declare needs its words",
         precondition_verdict=internal_invariant_verdict("work_form_wording.statement_family_worded"),
@@ -295,6 +297,8 @@ def _held_origin_words(field: ModeloFormField, *, recorded: bool, locale: str) -
     """The words for a stated absence, a filed value or a held zero, which outrank every other origin."""
     if field.stated_absent is not None:
         return tr(STATED_ABSENT_LOCALE_KEYS[field.stated_absent], locale=locale)
+    if field.stated_prior_value is not None:
+        return field.stated_prior_value.origin_words
     if recorded and field.origin in FILED_LOCALE_KEYS:
         return tr(FILED_LOCALE_KEYS[field.origin], locale=locale)
     if field.origin in HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):

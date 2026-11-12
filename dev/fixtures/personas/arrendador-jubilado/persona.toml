@@ -73,7 +73,44 @@ days_let = "full_year"
 amortization_base = "108000.00"
 amortization_rate = "0.03"
 amortization_base_note = "Construction share of the acquisition value by inheritance, which exceeds the construction share of the valor catastral."
-reduccion_art_23_2 = "tier-50"
+# Property facts below are synthetic persona facts, stated so the profile property row is complete.
+situacion = "1" # synthetic: a property with a cadastral reference in territorio comun
+referencia_catastral = "0000002VK0000N0001LH" # synthetic; control letters computed with the Catastro algorithm
+naturaleza = "urbana" # synthetic
+titularidad_regimen = "pleno_dominio" # synthetic
+titular = "primer_declarante" # synthetic
+porcentaje_propiedad = "100.00" # synthetic: the whole property is his
+importe_adquisicion = "150000.00" # synthetic: the inherited value
+valor_suelo = "42000.00" # synthetic: so the construction share of the acquisition is 108000.00
+adquisicion_titulo = "lucrativa" # synthetic: inherited, as the persona's summary states
+fecha_adquisicion = { year = "horizon-3", month = 3, day = 15 } # synthetic: inherited before the lease and before every return year
+gastos_tributos_adquisicion = "0.00" # synthetic: no acquisition expenses or taxes are added to the inherited value
+valores_catastrales = [
+  { year = "horizon-1", total = "90000.00", construccion = "54000.00" }, # synthetic
+]
+# Lease facts below are synthetic persona facts; the art. 23.2 rate is derived from them, never stated.
+fecha_contrato = { year = "horizon-2", month = 6, day = 1 } # synthetic: signed on contract_start
+fecha_inicio = { year = "horizon-2", month = 6, day = 1 } # synthetic: starts on contract_start
+uso_vivienda = true # synthetic: the let is of a dwelling
+zona_tensionada = false # synthetic
+primer_arrendamiento_vivienda = false # synthetic
+arrendatario_pariente_art24 = false # synthetic
+incumple_lau_17_6 = false # synthetic
+# The ledger rows of the let dwelling, by reference prefix: the rents link to the lease, each expense to the
+# property with its registry concept (casillas 0115, 0109, 0114 and 0106).
+ledger_links = [
+  { ref_prefix = "ARR-REN-", target = "arrendamiento" },
+  { ref_prefix = "ARR-IBI-", target = "inmueble", gasto = "tributos" },
+  { ref_prefix = "ARR-COM-", target = "inmueble", gasto = "comunidad" },
+  { ref_prefix = "ARR-SEG-", target = "inmueble", gasto = "primas_seguro" },
+  { ref_prefix = "ARR-REP-", target = "inmueble", gasto = "reparacion_conservacion" },
+]
+# Synthetic: nothing is pending under LIRPF art. 23.1.a.1 (the four-year carry of interest plus repairs that
+# exceed the rents). The dwelling carries no financing interest, its repairs (240.00) are far below its rents
+# (11400.00) in every year of the lease, and it was not let before contract_start.
+pendiente_intereses_reparacion = "0.00"
+# rehabilitacion_fecha is omitted: no rehabilitation. The tenant's age band at signing is derived from
+# the tenant identity's synthetic birth date.
 
 # His own copy of the previous year's Renta: no negative general base was left
 # pending to offset, so the four-year carry of casilla 1380 starts from zero,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES
+from ....domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, ROW_GRAIN_FAMILIES
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ..work_missing_input import PRIOR_CARRY_MESSAGE_LOCALE_KEYS, ModeloWorkMissingInputError
 
@@ -70,4 +70,4 @@ def test_missing_context_stays_unclassified() -> None:
 
 
 def test_every_statement_family_the_registry_can_declare_has_its_refusal_words() -> None:
-    assert frozenset(PRIOR_CARRY_MESSAGE_LOCALE_KEYS) == PRIOR_CARRY_FAMILIES
+    assert frozenset(PRIOR_CARRY_MESSAGE_LOCALE_KEYS) == PRIOR_CARRY_FAMILIES | ROW_GRAIN_FAMILIES

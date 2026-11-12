@@ -156,6 +156,7 @@ value = "00000008P"
 primer_apellido = "Domínguez"
 segundo_apellido = "Paredes"
 nombre = "Sara"
+birth_date = { year = "horizon-48", month = 3, day = 14 } # synthetic: outside 18-35 at signing
 
 [[identities]]
 role = "minorista.titular"

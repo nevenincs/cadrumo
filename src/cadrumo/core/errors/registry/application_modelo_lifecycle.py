@@ -58,6 +58,28 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloEditCarryWithdrawalKeepsEntriesError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_CARRY_WITHDRAWAL_KEEPS_ENTRIES",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_carry_withdrawal_keeps_entries",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloEditCarryWithdrawalFiledError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_CARRY_WITHDRAWAL_FILED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_carry_withdrawal_filed",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.m123_count_authority_gate.Modelo123CountAuthorityUnresolvedError",
         ErrorCode(
             code="REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED",
@@ -71,6 +93,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         "cadrumo.application.modelo.household_row_fact_gate.ModeloHouseholdRowFactUnstatedError",
         ErrorCode(
             code="REFUSED_MODELO_HOUSEHOLD_ROW_FACT_UNSTATED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_household_row_fact_unstated",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.household_row_fact_input.ModeloHouseholdRowFactInputRequiredError",
+        ErrorCode(
+            code="REFUSED_MODELO_HOUSEHOLD_ROW_FACT_INPUT_REQUIRED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_household_row_fact_unstated",
             retryable=False,

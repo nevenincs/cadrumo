@@ -119,6 +119,7 @@ _FAMILY_AND_SURFACE: Final[Mapping[BindingSourceKind, tuple[SourceFamily, Source
         BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.WITHHOLDING296: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.INVENTORY: (SourceFamily.REGISTERS, SourceSurface.NONE),
+        BindingSourceKind.RENTA_INMUEBLE: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.PRORRATA_REGULARIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.PRORRATA_REGISTER_ACTIVITY: (SourceFamily.REGISTERS, SourceSurface.NONE),

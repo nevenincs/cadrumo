@@ -15,6 +15,7 @@ from ...adapters.persistence.storage.tests.profile_capsule_runtime import open_t
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..modelo_maritime_operation_composition import build_modelo_maritime_preview_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -46,7 +47,12 @@ def test_existing_profile_service_uses_retained_pin_and_preserves_retmar_require
         )
         ports = build_modelo_maritime_preview_ports(profile_id=_PROFILE, operation=authority_operation)
         assert ports.operation is authority_operation and ports.profile_id == _PROFILE
-        preview = ports.preview(annual_salary=None, qualifying_days=None, gross_navigation_income=Decimal("30000"))
+        preview = ports.preview(
+            annual_salary=None,
+            qualifying_days=None,
+            gross_navigation_income=Decimal("30000"),
+            filing_year=filing_year_envelope().horizon,
+        )
         assert preview.facts.worker_class == "trabajador_del_mar" and preview.facts.vessel_registry == "REBECA"
         assert preview.retmar_mandatory_filing is registered
         assert (preview.retmar_warning_error is not None) is registered

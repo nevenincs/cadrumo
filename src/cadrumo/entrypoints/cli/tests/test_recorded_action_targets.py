@@ -22,7 +22,10 @@ from ....application.modelo.iva_wallet_refusal import (
     ModeloIvaWalletReconciliationBlockedError,
     raise_iva_wallet_precondition,
 )
-from ....application.modelo.preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS, IVA_WALLET_OVERRIDE_SCENARIOS
+from ....application.modelo.iva_wallet_refusal_profiles import (
+    IVA_WALLET_OPENING_BALANCE_SCENARIOS,
+    IVA_WALLET_OVERRIDE_SCENARIOS,
+)
 from ....application.modelo.profile_readiness_gate import require_existing_profile_baseline_ready_for_modelo_work
 from ....application.modelo.work_profile import ModeloWorkProfile
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry, lookup_action
@@ -296,7 +299,7 @@ def test_an_unclassified_m349_invoice_note_opens_the_live_invoice_update_with_th
         message="invoice 'DE-1' states no Modelo 349 operation",
         remedy="Set the invoice's operation type, then calculate again.",
     )
-    verdict = note_record_verdict(diagnostic)
+    verdict = note_record_verdict(diagnostic.reason, diagnostic.fact)
     assert verdict is not None
 
     served = resolve_recorded_precondition_action(verdict)

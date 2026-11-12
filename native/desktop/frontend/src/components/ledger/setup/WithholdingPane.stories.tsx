@@ -556,3 +556,52 @@ export const RemoveAsked: Story = {
     );
   },
 };
+
+/** The list's columns are the served ones, in the served order and words,
+ * with the payer and the source as the backend worded them; a figure a
+ * certificate does not state is left blank. */
+export const ServedColumns: Story = {
+  name: "Columns, payer and source as served",
+  play: async ({ canvasElement }) => {
+    await control(canvasElement);
+    const table = canvasElement.querySelector<HTMLElement>(
+      ".ledger-withholding-table",
+    )!;
+    const inside = within(table);
+    for (const served of [
+      "Employment income",
+      "Empresa Ejemplo SL",
+      "Payer's certificate",
+      "Gross cash amount",
+      "Applicable reductions",
+      "Total payments on account",
+    ])
+      await expect(inside.getAllByText(served)[0]).toBeVisible();
+  },
+};
+
+/** The year picker offers the ejercicios the list was served with, under
+ * words that do not call them years with movements. */
+export const ServedEjercicios: Story = {
+  name: "Ejercicios offered as served",
+  play: async ({ canvasElement }) => {
+    const canvas = await control(canvasElement);
+    await userEvent.click(
+      canvas.getByRole("button", {
+        name: new RegExp(String(STORY_PERIOD.year)),
+      }),
+    );
+    const group = await within(document.body).findByRole("group", {
+      name: word("desktop.ledger.period.years_supported"),
+    });
+    await expect(
+      within(group)
+        .getAllByRole("button")
+        .map((one) => one.textContent),
+    ).toEqual([
+      String(STORY_PERIOD.year - 2),
+      String(STORY_PERIOD.year - 1),
+      String(STORY_PERIOD.year),
+    ]);
+  },
+};

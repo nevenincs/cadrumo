@@ -410,6 +410,9 @@ cli:
         list_help: Lista los registros de existencias del perfil activo
         movement_add_help: Añade un movimiento de compra, venta o ajuste al registro
           de existencias
+        movement_claim_candidates_help: 'Lista las transacciones del libro que una
+          compra puede reclamar: aquellas cuya base, IVA y recargo coinciden con los
+          de la compra al céntimo.'
         movement_claim_help: Indica qué transacción del libro registra una compra,
           indica que ninguna lo hace o borra la indicación; una transacción reclamada
           deja las casillas de gasto del libro.
@@ -1888,6 +1891,9 @@ cli:
         entry_casilla_unknown: '%{casilla} no es un identificador de casilla.'
         entry_confirm: Todavía no se ha registrado nada. Ejecuta `%{command}` para
           registrarlo.
+        entry_row_help: Fila a la que se refiere la declaración, por la identidad
+          de fila de origen que muestra el cálculo (por ejemplo inmueble:1). Solo
+          para datos que se declaran por fila.
         entry_value_help: El valor, escrito como en tu idioma de salida (por ejemplo
           1.234,56 en español o 1,234.56 en inglés).
         entry_yes_help: Confirma el cambio y regístralo en la declaración
@@ -4454,6 +4460,11 @@ cli:
         virtuales situadas en el extranjero superan el umbral de declaración.
       oss_unset: En tu perfil aún no consta si estás dado de alta en el régimen de
         ventanilla única (OSS/IOSS).
+      pago_fraccionado_art_40_3_unset: En tu perfil aún no consta si la entidad ejerció
+        en su declaración censal la opción del artículo 40.3 de la LIS (pago fraccionado
+        sobre la base imponible de los 3, 9 u 11 primeros meses). Por debajo del umbral
+        de ese artículo, de esa opción depende si cada pago fraccionado del Modelo
+        202 da ingreso y, por tanto, si tienes que presentarlo.
       patrimonio_umbral_unset: En tu perfil aún no consta si tu cuota del Impuesto
         sobre el Patrimonio resulta a ingresar o si tus bienes y derechos superan
         2.000.000 euros.

@@ -152,6 +152,7 @@
         "cadrumo_runtime.host.frontend.tui.installed_session",
         "cadrumo_runtime.host.frontend.tui.launcher",
         "cadrumo_runtime.host.frontend.tui.modelo",
+        "cadrumo_runtime.host.frontend.tui.modelo.runtime_disagreements",
         "cadrumo_runtime.host.frontend.tui.modelo.runtime_lifecycle",
         "cadrumo_runtime.host.frontend.tui.modelo.runtime_work_create",
         "cadrumo_runtime.host.frontend.tui.modelo.runtime_workbench_reads",

@@ -344,7 +344,7 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
     tipo_renta = ctx.text_values.get(args.tipo_casilla_id, "")
     ctx.operand_refs.append(args.tipo_casilla_id)
     ctx.operand_casilla_refs.append(args.tipo_casilla_id)
-    filing_period = ctx.date_context.get("filing_period")
+    filing_period = _m210_devengo_date(ctx)
     tipo_renta_token = require_tipo_renta_irnr(tipo_renta, effective_date=filing_period)
     country = (ctx.enum_binding_values.get(args.country_binding) or "").upper()
     ctx.operand_refs.append(args.country_binding)
@@ -362,7 +362,7 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
         if not m210_allows_art_24_6_expenses(
             tipo_renta=tipo_renta_token,
             country_code=country,
-            effective_date=ctx.date_context.get("filing_period"),
+            effective_date=filing_period,
         ):
             raise RegistryValidationError(
                 "M210 gastos_deducibles require the EU/EEA Art. 24.6 path",
@@ -438,6 +438,19 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
     return substitute_value * no_catastral_fraction * recent_rate * days_fraction
 
 
+def _m210_devengo_date(ctx: _EvalContext) -> date:
+    """Return the devengo the M210 income belongs to, refusing a context that carries none.
+
+    TRLIRNR art. 24.6 admits the expense deduction by the taxpayer's EU/EEA
+    residence at devengo, so the membership read takes that date and never the
+    date the program runs.
+    """
+    devengo = ctx.date_context.get("filing_period")
+    if not isinstance(devengo, date):
+        raise RegistryValidationError("M210 base imponible requires a filing_period devengo date")
+    return devengo
+
+
 def _m210_resolve_base_args(expression: FormulaExpression) -> _M210ResolveBaseArgs:
     op = "m210_resolve_base_imponible"
     if len(expression.args) != 12:
@@ -483,9 +496,14 @@ def m210_allows_art_24_6_expenses(
     *,
     tipo_renta: TipoRentaIrnr,
     country_code: str,
-    effective_date: date | None,
+    effective_date: date,
 ) -> bool:
-    """Return whether a modelo 210 income allows the article 24.6 expense deduction."""
+    """Return whether a modelo 210 income allows the article 24.6 expense deduction.
+
+    ``effective_date`` is the devengo the income belongs to: EU/EEA membership
+    is read as it stood then, so a state that joined or left later is judged by
+    the date of the income, not the date the program runs.
+    """
     return tipo_renta == tipo_renta_ue_residente_token(effective_date=effective_date) or is_ue_eea_country_code(
         country_code,
         effective_date=effective_date,

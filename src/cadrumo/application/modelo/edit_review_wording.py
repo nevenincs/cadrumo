@@ -40,7 +40,10 @@ from .edit_models import (
 )
 from .edit_parse_text import parse_refusal_text
 from .edit_preflight import (
+    CALCULATION_WITHDRAWN,
     CARRY_LEFT_OPEN,
+    CARRY_WITHDRAWAL_FILED,
+    CARRY_WITHDRAWAL_KEEPS_ENTRIES,
     CLEAR_OF_SOURCE_FED_CASILLA,
     INTENT_NOT_ADMITTED,
     NOTHING_TO_RESTORE,
@@ -64,6 +67,9 @@ WORDED_FINDING_CODES: Final[tuple[str, ...]] = (
     REQUIRED_EMPTY,
     NOTHING_TO_RESTORE,
     CARRY_LEFT_OPEN,
+    CALCULATION_WITHDRAWN,
+    CARRY_WITHDRAWAL_FILED,
+    CARRY_WITHDRAWAL_KEEPS_ENTRIES,
 )
 """The check's findings worded by their own catalogue sentence; a refused value says how to fix it instead."""
 

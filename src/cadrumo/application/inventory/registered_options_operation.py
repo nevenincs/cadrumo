@@ -30,6 +30,7 @@ from ...domain.contribuyente.inventory.records import (
     InventoryHistoryKind,
     InventoryRetirementReason,
     MovementKind,
+    PurchaseLedgerRow,
     ValuationMethod,
 )
 from ..ledger.read_access import resolve_ledger_request_read_access
@@ -58,10 +59,14 @@ INVENTORY_OPTION_FAMILIES: Final[tuple[tuple[str, type[StrEnum]], ...]] = (
     ("history_kind", InventoryHistoryKind),
     ("movement_kind", MovementKind),
     ("physical_evidence_role", PhysicalClosingEvidenceRole),
+    ("purchase_ledger_row", PurchaseLedgerRow),
     ("retirement_reason", InventoryRetirementReason),
     ("valuation_method", ValuationMethod),
 )
 """Each form vocabulary and the enum that owns it; its words live under one label family."""
+
+INVENTORY_EFFECT_FAMILIES: Final[frozenset[str]] = frozenset({"purchase_ledger_row"})
+"""The families whose members also serve a sentence stating what choosing the member does."""
 
 type InventoryOptionRole = Literal["cost_check", "iva_check", "count_authority", "purchase"]
 
@@ -72,6 +77,16 @@ _OPTION_ROLES: Final[dict[StrEnum, InventoryOptionRole]] = {
     MovementKind.PURCHASE: "purchase",
 }
 """The members a form treats specially, named by the enums themselves so a rename cannot leave a stale copy."""
+
+
+def inventory_option_label_key(family: str, member: StrEnum) -> str:
+    """Name the catalogue key of one member's word."""
+    return f"application.inventory.labels.{family}.{member.value}"
+
+
+def inventory_option_effect_key(family: str, member: StrEnum) -> str:
+    """Name the catalogue key of the sentence stating what choosing one member does."""
+    return f"application.inventory.effects.{family}.{member.value}"
 
 
 class InventoryOptionsRequest(BaseModel):
@@ -90,6 +105,7 @@ class InventoryOptionProjection(BaseModel):
     value: str
     label_key: str
     role: InventoryOptionRole | None = None
+    effect_key: str | None = None
 
 
 class InventoryOptionFamilyProjection(BaseModel):
@@ -128,8 +144,11 @@ def inventory_options(profile_id: UUID) -> InventoryOptionsProjection:
                 options=tuple(
                     InventoryOptionProjection(
                         value=member.value,
-                        label_key=f"application.inventory.labels.{family}.{member.value}",
+                        label_key=inventory_option_label_key(family, member),
                         role=_OPTION_ROLES.get(member),
+                        effect_key=inventory_option_effect_key(family, member)
+                        if family in INVENTORY_EFFECT_FAMILIES
+                        else None,
                     )
                     for member in enum
                 ),
@@ -211,6 +230,7 @@ def build_inventory_options_registration(definition: OperationDefinition) -> Ope
 
 
 __all__ = [
+    "INVENTORY_EFFECT_FAMILIES",
     "INVENTORY_OPTIONS_OPERATION_DEFINITION_ID",
     "INVENTORY_OPTION_FAMILIES",
     "InventoryOptionFamilyProjection",
@@ -221,6 +241,8 @@ __all__ = [
     "InventoryOptionsRequest",
     "build_inventory_options_definition",
     "build_inventory_options_registration",
+    "inventory_option_effect_key",
+    "inventory_option_label_key",
     "inventory_options",
     "resolve_inventory_options_access",
 ]

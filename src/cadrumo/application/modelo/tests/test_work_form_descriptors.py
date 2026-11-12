@@ -278,8 +278,8 @@ def test_modelo_100_asks_for_no_box_the_registry_or_the_calculation_does_not_req
 ) -> None:
     """Hundreds of empty boxes sit in the Renta's calculation closure; verification requires none of them.
 
-    The boxes asked for are the four earlier years' pending negative bases, which the calculation refuses to
-    start without.
+    The boxes asked for are the earlier years' pending negative bases, general and savings, which the
+    calculation refuses to start without.
     """
     form = _form(operation, "100", 2025, "0A")
     snapshot = _snapshot(operation, "100", 2025, "0A")
@@ -294,10 +294,11 @@ def test_modelo_100_asks_for_no_box_the_registry_or_the_calculation_does_not_req
     ]
 
     assert len(empty_typed_in_closure) > 150
-    assert form.counts.needs_input == 4
-    assert [
-        address_key(field.address)[1] for field in form.fields() if field.origin is ModeloFormOrigin.NEEDS_INPUT
-    ] == ["1380", "1382", "1385", "1388"]
+    asked = [address_key(field.address)[1] for field in form.fields() if field.origin is ModeloFormOrigin.NEEDS_INPUT]
+    assert form.counts.needs_input == len(asked)
+    assert sorted(asked) == sorted(
+        ["1380", "1382", "1385", "1388", "1259", "1261", "1264", "1267", "1272", "1274", "1277", "1280"]
+    )
 
 
 def test_modelo_210_asks_for_the_boxes_the_registry_requires(operation: PinnedAuthorityOperation) -> None:

@@ -131,6 +131,8 @@ profile:
       legal_entity_form: Jogi forma
       new_entity_first_two_profit_periods: Ez egy újonnan létrehozott jogi személy
         az első két nyereséges adóidőszakának egyikében?
+      pago_fraccionado_art_40_3_elected: Élt-e a társaság a cégbejelentésében (declaración
+        censal) az LIS 40.3. cikkely szerinti választással a részletfizetésre?
       representante_fiscal_nif: A spanyolországi adóügyi képviselő NIF/NIE száma (EU-n/EGT-n
         kívüli esetén kötelező)
       representante_fiscal_nombre: A spanyolországi adóügyi képviselő neve
@@ -698,6 +700,8 @@ profile:
           label: Jogi forma
         new_entity_first_two_profit_periods:
           label: Az első két nyereséges időszak egyikében
+        pago_fraccionado_art_40_3_elected:
+          label: LIS 40.3. cikkely szerinti választás a részletfizetésnél
         representante_fiscal_nif:
           label: Adóügyi képviselő NIF-je
         representante_fiscal_nombre:

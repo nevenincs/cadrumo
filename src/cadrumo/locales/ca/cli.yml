@@ -407,6 +407,9 @@ cli:
         list_help: Llista els registres d'existències del perfil actiu
         movement_add_help: Afegeix un moviment de compra, venda o ajust al registre
           d'existències
+        movement_claim_candidates_help: 'Llista les transaccions del llibre que una
+          compra pot reclamar: aquelles la base, l''IVA i el recàrrec de les quals
+          coincideixen amb els de la compra al cèntim.'
         movement_claim_help: Indica quina transacció del llibre registra una compra,
           indica que cap ho fa o esborra la indicació; una transacció reclamada deixa
           les caselles de despesa del llibre.
@@ -1870,6 +1873,9 @@ cli:
           (consulta `aeat app modelo casillas`).
         entry_casilla_unknown: '%{casilla} no és un identificador de casella.'
         entry_confirm: Encara no s'ha registrat res. Executa `%{command}` per registrar-ho.
+        entry_row_help: Fila a la qual es refereix la declaració, per la identitat
+          de fila d'origen que mostra el càlcul (per exemple inmueble:1). Només per
+          a dades que es declaren per fila.
         entry_value_help: El valor, escrit com en la teva llengua de sortida (per
           exemple 1.234,56 en català o 1,234.56 en anglès).
         entry_yes_help: Confirma el canvi i registra'l a la declaració
@@ -4417,6 +4423,11 @@ cli:
         monedes virtuals situades a l’estranger superen el llindar de declaració.
       oss_unset: Al teu perfil encara no consta si estàs donat d’alta al règim de
         finestreta única (OSS/IOSS).
+      pago_fraccionado_art_40_3_unset: Al teu perfil encara no consta si l'entitat
+        va exercir a la seva declaració censal l'opció de l'article 40.3 de la LIS
+        (pagament fraccionat sobre la base imposable dels 3, 9 o 11 primers mesos).
+        Per sota del llindar d'aquest article, d'aquesta opció depèn si cada pagament
+        fraccionat del Model 202 dona lloc a ingrés i, per tant, si l'has de presentar.
       patrimonio_umbral_unset: Al teu perfil encara no consta si la teva quota de
         l'Impost sobre el Patrimoni resulta a ingressar o si els teus béns i drets
         superen 2.000.000 euros.

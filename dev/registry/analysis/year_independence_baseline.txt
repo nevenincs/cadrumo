@@ -12,7 +12,7 @@ casilla-member|200|DP200014:00582|formula|present=2024|absent=2023
 casilla-member|200|DP200014B:00592|formula|present=2024|absent=2023
 casilla-member|200|DP200014B:00599|formula|present=2024|absent=2023
 casilla-member|200|DP200014B:00611|formula|present=2024|absent=2023
-casilla-member|202|01|binding|present=2025-y-siguientes|absent=2023-2024
+casilla-member|200|DP200026:00625|binding|present=2024|absent=2023
 casilla-member|222|23|formula|present=2024|absent=2025-y-siguientes
 casilla-member|296|02|binding|present=2024-2025|absent=2023
 casilla-member|296|03|binding|present=2024-2025|absent=2023
@@ -39,7 +39,6 @@ edition-only|100|parameters|renta-ric-mantenimiento-plazo-anos|2025|uncited appe
 edition-only|100|parameters|renta-ric-materializacion-plazo-anos|2025|uncited appearing boundary
 edition-only|100|parameters|renta-ric-reduccion-rate-maximo|2025|uncited appearing boundary
 edition-only|100|parameters|renta-zec-tipo-gravamen-reducido|2025|uncited appearing boundary
-edition-only|202|bindings|modelo-202-cuota-base-ejercicio-anterior|2025-y-siguientes|uncited appearing boundary
 edition-only|202|formulas|modelo-202-importe-pago-fraccionado-b2-tipo-3|2025-y-siguientes|uncited appearing boundary
 edition-only|202|formulas|modelo-202-importe-pago-fraccionado-b2-tipo-4|2025-y-siguientes|uncited appearing boundary
 edition-only|202|verification_predicates|implies-nonzero:b2-base-tipo-3-implica-importe-pago-fraccionado-tipo-3|2025-y-siguientes|uncited appearing boundary

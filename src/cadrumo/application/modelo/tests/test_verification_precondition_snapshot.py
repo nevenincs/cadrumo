@@ -7,6 +7,8 @@ import json
 import pytest
 
 from ....core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
+from ...operations.error_detail import served_words_language
+from ...operator_actions.served_actions import serve_precondition_verdict
 from ..precondition_action_bindings import AlternativeActionArguments
 from ..preconditions import (
     ATTEST_PRIOR_VALUE_ACTION_ID,
@@ -54,7 +56,10 @@ def test_the_snapshot_restores_the_statement_after_the_creation_door() -> None:
     restored = ModeloPreconditionSnapshot.model_validate_json(snapshot.model_dump_json())
 
     assert restored == snapshot
-    assert restored.to_failure() == failure
+    served = serve_precondition_verdict(failure.verdict, served_words_language())
+    assert restored.to_failure() == failure.model_copy(update={"verdict": served})
+    assert restored.target_operation_ids == ("modelo.work.create",)
+    assert restored.alternative_actions[0].action_words is not None
     assert restored.action is not None
     assert restored.action.action_id == "operator.modelo.work.create"
     assert [item.action.action_id for item in restored.alternative_actions] == [ATTEST_PRIOR_VALUE_ACTION_ID]
@@ -82,6 +87,12 @@ def test_a_snapshot_without_alternatives_leaves_the_list_out_of_its_record() -> 
         "missing_argument_names",
         "conditionality",
         "no_recovery_outcome",
+        "action_words",
+        "action_words_language",
+        "target_operation_ids",
     }
     assert document["action"] == {"action_id": "operator.modelo.work.create"}
-    assert ModeloPreconditionSnapshot.model_validate_json(snapshot.model_dump_json()).to_failure() == failure
+    served = serve_precondition_verdict(failure.verdict, served_words_language())
+    assert ModeloPreconditionSnapshot.model_validate_json(snapshot.model_dump_json()).to_failure() == (
+        failure.model_copy(update={"verdict": served})
+    )
