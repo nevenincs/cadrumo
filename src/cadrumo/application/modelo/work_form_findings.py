@@ -212,6 +212,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.withholding_count_not_cross_checked": (
             "application.modelo.work_form.finding_action.settle_earlier_declaration"
         ),
+        "application.modelo.findings.withholding_total_differs_from_periodic_returns": (
+            "application.modelo.work_form.finding_action.compare_withholding_with_periodic_returns"
+        ),
         "application.modelo.findings.withholding_detail_absent_against_ledger_evidence": (
             "application.modelo.work_form.finding_action.enter_payee_payments"
         ),

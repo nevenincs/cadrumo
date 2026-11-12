@@ -12,6 +12,7 @@ language, so a line in Spanish is the Spanish catalogue's.
 from __future__ import annotations
 
 from collections.abc import Callable
+from decimal import Decimal
 from uuid import UUID
 
 import pytest
@@ -19,6 +20,7 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -38,6 +40,7 @@ from ..calculation_notes import (
 )
 from ..finding_message_text import finding_message_text
 from ..source_policy import SourceSurface
+from ..withholding_total_reconciliation import WITHHOLDING_TOTAL_MISMATCH_KEY
 from ..work_form_declaration_facts import ModeloFormCalculationNote
 from ..work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
@@ -481,3 +484,36 @@ def test_a_finding_about_a_box_that_takes_no_typed_value_never_offers_to_type_on
         "workspace.modelo.issues.what_to_do", action=say(at_source_key)
     )
     assert _line_of(lines, flagged, typed).action == say("workspace.modelo.issues.what_to_do", action=say(entry_action))
+
+
+def test_a_withholding_total_apart_from_the_periodic_returns_opens_both_sides(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The line leads to the withholding records behind the summary and to the declarations it was compared with."""
+    year = filing_year_envelope().years[-1]
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        casilla_id="decl.retenciones-total",
+        message_locale_key=WITHHOLDING_TOTAL_MISMATCH_KEY,
+        message_facts={
+            "modelo": "190",
+            "filing_year": year,
+            "source_modelo": "111",
+            "checked_periods": "1T|2T|3T|4T",
+            "summary_total": Decimal("760.00"),
+            "periodic_total": Decimal("9405.00"),
+            "gap": Decimal("8645.00"),
+        },
+        legal_refs=("rd-439-2007:art-108",),
+    )
+    form = _with_issues(built_form(operation, "190", year, "0A"), finding)
+
+    (line,) = form_issue_lines(form, OutputLanguage.EN)
+
+    assert line.level is ModeloFormAttention.CHECK
+    assert line.surface is SourceSurface.WITHHOLDING
+    assert line.compared_surface is SourceSurface.DECLARATIONS
+    assert "760.00" in line.message
+    assert "9,405.00" in line.message
+    assert "8,645.00" in line.message

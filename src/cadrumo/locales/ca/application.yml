@@ -3532,6 +3532,12 @@ application:
         tots els períodes que no hi va haver retencions. Registra les percepcions
         de cada perceptor al detall d''aquest model, o confirma cada període al teu
         perfil.'
+      withholding_total_differs_from_periodic_returns: 'El total de retencions i ingressos
+        a compte del model %{modelo} de %{filing_year} (%{summary_total} EUR) no coincideix
+        amb la suma de les declaracions del model %{source_modelo} de %{checked_periods}
+        (%{periodic_total} EUR): difereixen en %{gap} EUR. El total del model %{modelo}
+        es calcula a partir dels teus registres de retencions; una complementària
+        o un registre que només consta en un costat pot explicar la diferència.'
       xml_required_content_missing: L'esquema oficial exigeix la casella %{box} i
         no té valor, així que l'exportació rebutjaria aquesta declaració.
       xml_return_not_rendered: No es pot generar el fitxer de la declaració a partir
@@ -3842,6 +3848,9 @@ application:
           anterior.
         compare_figures: Compara les xifres, corregeix la que estigui malament i torna
           a calcular.
+        compare_withholding_with_periodic_returns: 'Revisa els teus registres de retencions
+          i les declaracions trimestrals: corregeix el registre que falti o sobri,
+          o presenta una complementària del trimestre que no quadri.'
         correct_and_recalculate: Corregeix el que indica i torna a calcular i comprovar.
         declare_asset_again: Torna a declarar aquest bé en aquesta declaració.
         enter_box_value: Escriu el valor a la casella i torna a calcular.
