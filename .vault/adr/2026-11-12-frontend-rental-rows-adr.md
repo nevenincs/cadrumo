@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:8310e2eccdfb48c9ac8616a4305c294ac441719ce0dbb28abde821e7478f4553'
+body_hash: 'sha256:d5a16b63a891c75d62308320eb289de5bac747cf552fc66f4637a1c259a55eba'
 related:
   - "[[2026-11-11-renta-rental-income-source-adr]]"
   - "[[2026-11-03-backend-served-surface-adr]]"
@@ -17,7 +17,7 @@ related:
   - '[[2026-11-12-frontend-rental-rows-reference]]'
 ---
 
-# `frontend-rental-rows` adr: `Rental property and lease rows as one served record group in both frontends, linked from the ledger by served pickers` | (**status:** `proposed`)
+# `frontend-rental-rows` adr: `Rental property and lease rows as one served record group in both frontends, linked from the ledger by served pickers` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -50,6 +50,7 @@ related:
 - The derived reduction is shown only as served: its words, the facts that decided it, and a missing fact with its way out. A frontend computes no tier and shows none while it is not served.
 - Ending a lease is offered only as a served action with served words; until then `fecha_fin` stays editable through the generic row editor.
 - Parity is stated, not assumed. The window gets the designed group, the pickers and, once served, structured inputs. The TUI gets the same group as a read-only panel in its profile manager, edits through its existing generic row screens, and the same pickers in classification and entries-add. Bulk classification in both frontends takes the link columns the operation declares.
+- Acceptance conditions (PRIME, 2026-11-12 10:15): the group's row identity is the stable row key that the ledger refs and the Modelo 100 `row_identity` use, never the integer row index; the record-group read is generic by payload kind from the start, and its linked-ledger-rows part is bounded and paged; summaries hold private facts, so stories, fixtures and logs carry no real data; nothing designed ships before its backend ask; the TUI scope is accepted as stated. Until the asks land, the group element and the pickers are built and storied against fixtures of the accepted shape and stay unwired.
 
 ## Implementation
 
