@@ -2948,6 +2948,9 @@ application:
         {output_path} ({reason}).'
       export_period_unmappable: La declaración %{work_unit_id} contiene el periodo
         %{period}, que no se puede asignar a un periodo de presentación del modelo.
+      export_profile_read_drift: El cálculo guardado %{calculation_revision_id} se
+        basa en datos del perfil que has cambiado desde entonces (%{changed_count}
+        cambiados). Vuelve a calcularlo y verifícalo antes de exportarlo.
       export_revision_state_refused: El cálculo guardado %{calculation_revision_id}
         no está comprobado y completo, ni registrado como presentado, y no se puede
         exportar.
@@ -3746,6 +3749,13 @@ application:
       printed_total_mismatch: La casilla [%{box}] no coincide con la suma de las líneas
         impresas que la componen (%{printed_sum}), así que el fichero no cuadraría
         y la AEAT podría rechazarlo.
+      profile_read_drift: Tu perfil ha cambiado después de calcular el modelo %{modelo}
+        %{filing_year}, %{period} (%{changed_count} datos que usó han cambiado). Vuelve
+        a calcularlo antes de verificarlo.
+      profile_read_fingerprint_absent: Este cálculo del modelo %{modelo} %{filing_year},
+        %{period} es anterior al seguimiento del perfil, así que Cadrumo no puede
+        saber si los datos del perfil que usó han cambiado desde entonces. Vuelve
+        a calcularlo para empezar a seguirlos.
       prorrata_seed_changed: La prorrata provisional de tu registro ha cambiado después
         de calcular el modelo %{modelo} %{filing_year}, %{period}. Vuelve a calcularlo
         antes de verificarlo.

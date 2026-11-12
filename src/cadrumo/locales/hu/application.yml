@@ -2901,6 +2901,9 @@ application:
         ({reason}).'
       export_period_unmappable: A(z) %{work_unit_id} bevallás %{period} időszakot
         tartalmaz, amely nem képezhető le a nyomtatvány bevallási időszakára.
+      export_profile_read_drift: A(z) %{calculation_revision_id} mentett számítás
+        olyan profiladatokon alapul, amelyeket azóta módosítottál (%{changed_count}
+        módosult). Számítsd ki újra, és ellenőrizd az exportálás előtt.
       export_revision_state_refused: A(z) %{calculation_revision_id} mentett számítás
         nincs ellenőrzött és teljes, illetve benyújtottként rögzített állapotban,
         ezért nem exportálható.
@@ -3688,6 +3691,13 @@ application:
       printed_total_mismatch: A(z) [%{box}] rovat nem egyezik az őt alkotó nyomtatott
         sorok összegével (%{printed_sum}), ezért a fájl összegei nem stimmelnének,
         és az AEAT elutasíthatja.
+      profile_read_drift: A profilod megváltozott a(z) %{modelo} %{filing_year}, %{period}
+        kiszámítása után (%{changed_count} felhasznált adat módosult). Számítsd ki
+        újra az ellenőrzés előtt.
+      profile_read_fingerprint_absent: Ez a(z) %{modelo} %{filing_year}, %{period}
+        számítás a profilkövetés előtt készült, ezért a Cadrumo nem tudja megmondani,
+        változtak-e azóta az általa használt profiladatok. Számítsd ki újra a követés
+        elindításához.
       prorrata_seed_changed: A nyilvántartásod ideiglenes arányosítási százaléka megváltozott
         a(z) %{modelo} %{filing_year}, %{period} kiszámítása után. Számítsd ki újra
         az ellenőrzés előtt.
