@@ -2823,6 +2823,16 @@ application:
           d''exercicis anteriors pendents de compensar (caselles %{boxes}). Desa la
           declaració de l''any anterior o indica a la declaració que no en queda cap
           de pendent. No s''ha desat res.'
+        renta_negative_savings_capital_income_pending: 'No es pot calcular el Modelo
+          %{modelo} de %{filing_year}: no consta si queden saldos negatius de rendiments
+          del capital mobiliari de la base de l''estalvi d''exercicis anteriors pendents
+          de compensar (caselles %{boxes}). Desa la declaració de l''any anterior o
+          indica a la declaració que no en queda cap de pendent. No s''ha desat res.'
+        renta_negative_savings_gains_losses_pending: 'No es pot calcular el Modelo
+          %{modelo} de %{filing_year}: no consta si queden saldos negatius de guanys i
+          pèrdues patrimonials de la base de l''estalvi d''exercicis anteriors pendents
+          de compensar (caselles %{boxes}). Desa la declaració de l''any anterior o
+          indica a la declaració que no en queda cap de pendent. No s''ha desat res.'
       prior_period_unfiled: 'Encara no es pot calcular el Model %{modelo} %{period}
         %{filing_year}: arrossega imports de la declaració de %{unfiled_period}, que
         no està presentada. Presenta primer %{unfiled_period} i torna a calcular.
@@ -2964,6 +2974,16 @@ application:
       application_not_required_maximum: 'La casella [%{box}] té %{casilla_value},
         però ha de ser %{computed_value}: la llei exigeix aplicar la quantia més gran
         que permet aquest exercici, ni més ni menys.'
+      application_order_capacity_unresolved: 'Aquest exercici compensa saldos pendents
+        de diversos exercicis anteriors (%{pending_total} en total), però encara no es
+        coneix l''import disponible per compensar-los, així que no es pot saber quant en
+        pren cada exercici. Completa els imports dels quals depèn.'
+      application_order_unsettled: 'Aquest exercici pot compensar %{capacity} dels
+        %{pending_total} pendents de diversos exercicis anteriors, i cap text oficial no
+        indica en quin ordre es prenen aquests exercicis. El que s''aplica de cadascun,
+        i el que queda pendent, depèn d''aquest ordre, així que aquesta declaració es
+        queda en càlcul i no es pot presentar des d''aquesta aplicació fins que
+        s''aclareixi la regla.'
       art20_reduccion_possible: La casella [%{rnt_id}] recull %{rnt_value} EUR de
         rendiment net del treball, dins del límit de l'art. 20 LIRPF, així que la
         casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
@@ -3457,6 +3477,29 @@ application:
             35/2006). Cada import es registra com un 0 que has declarat, diferent
             d'una xifra escrita; si després una declaració anterior mostra un import,
             la declaració assenyala la diferència.
+        renta_negative_savings_capital_income_pending:
+          action: 'No tinc rendiments del capital mobiliari negatius pendents
+            d''exercicis anteriors'
+          effect: 'Es registra com un 0 que has declarat: cap rendiment del capital
+            mobiliari negatiu pendent d''exercicis anteriors.'
+          origin: 'Has declarat que no queda res pendent'
+          statement: 'Indica que no et queda cap saldo net negatiu de rendiments del
+            capital mobiliari dels quatre exercicis anteriors pendent de compensar a la
+            base imposable de l''estalvi (art. 49.1.a de la Llei 35/2006). Cada import
+            es registra com un 0 que has declarat, diferent d''una xifra escrita; si
+            després una declaració anterior mostra un import, la declaració assenyala la
+            diferència.'
+        renta_negative_savings_gains_losses_pending:
+          action: 'No tinc pèrdues patrimonials pendents d''exercicis anteriors'
+          effect: 'Es registra com un 0 que has declarat: cap pèrdua patrimonial pendent
+            d''exercicis anteriors.'
+          origin: 'Has declarat que no queda res pendent'
+          statement: 'Indica que no et queda cap saldo negatiu de guanys i pèrdues
+            patrimonials de la base imposable de l''estalvi dels quatre exercicis
+            anteriors pendent de compensar (art. 49.1.b de la Llei 35/2006). Cada import
+            es registra com un 0 que has declarat, diferent d''una xifra escrita; si
+            després una declaració anterior mostra un import, la declaració assenyala la
+            diferència.'
       credits_heading:
         mixed: Retencions
         practised: Retencions que has practicat

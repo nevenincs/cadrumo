@@ -542,6 +542,18 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
         action_id="operator.modelo.work.attest_prior_carries",
     ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.prior_carries.stated",
+        "modelo.work.calculate.prior_carries.renta_negative_savings_capital_income_pending_unstated",
+        action_id="operator.modelo.work.attest_prior_carries",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.prior_carries.stated",
+        "modelo.work.calculate.prior_carries.renta_negative_savings_gains_losses_pending_unstated",
+        action_id="operator.modelo.work.attest_prior_carries",
+    ),
     # An input no source supplied is stated on the calculation itself; the
     # binding listing names it and the work unit's form takes the value.
     _profile(

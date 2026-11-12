@@ -118,6 +118,14 @@ _VERB_BASELINE_DECIMAL_BINDINGS: Mapping[str, Decimal] = {
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
 }
 _VERB_BASELINE_BOOLEAN_BINDINGS: Mapping[str, bool] = {
     "renta-profile-marriage-full-year": False,

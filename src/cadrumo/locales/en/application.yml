@@ -2685,6 +2685,16 @@ application:
           from earlier years are still pending offset (boxes %{boxes}). Store the
           previous year''s return, or state in the declaration that none is pending.
           Nothing was saved.'
+        renta_negative_savings_capital_income_pending: 'Modelo %{modelo} for
+          %{filing_year} cannot be calculated: it is not known whether negative capital
+          income of the savings base from earlier years is still pending offset (boxes
+          %{boxes}). Store the previous year''s return, or state in the declaration that
+          none is pending. Nothing was saved.'
+        renta_negative_savings_gains_losses_pending: 'Modelo %{modelo} for
+          %{filing_year} cannot be calculated: it is not known whether negative balances
+          of capital gains and losses of the savings base from earlier years are still
+          pending offset (boxes %{boxes}). Store the previous year''s return, or state
+          in the declaration that none is pending. Nothing was saved.'
       prior_period_unfiled: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
         yet: it carries figures from the return for %{unfiled_period}, which has not
         been filed. File %{unfiled_period} first, then calculate again. Nothing was
@@ -2811,6 +2821,15 @@ application:
       application_not_required_maximum: 'Box [%{box}] holds %{casilla_value}, but
         it must be %{computed_value}: the law requires applying the largest amount
         this year allows, no more and no less.'
+      application_order_capacity_unresolved: 'Pending balances from several earlier
+        years (%{pending_total} in total) are offset this year, but the amount available
+        to offset them is not known yet, so how much each year takes cannot be worked
+        out. Complete the figures that amount depends on.'
+      application_order_unsettled: 'This year can offset %{capacity} of the
+        %{pending_total} pending from several earlier years, and no official text says
+        in which order those years are taken. What each year applies, and what it
+        carries forward, depends on that order, so this declaration stays a calculation
+        and cannot be filed from this application until the rule is settled.'
       art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
         from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
         so box [%{reduccion_id}] may give you a reduction you are not using yet. Check
@@ -3283,6 +3302,26 @@ application:
             years is still pending offset (art. 50.3 Ley 35/2006). Each carry is recorded
             as a 0 you stated, apart from a figure you typed; if an earlier return
             later shows an amount, the declaration flags the difference.
+        renta_negative_savings_capital_income_pending:
+          action: 'I have no negative capital income pending from earlier years'
+          effect: 'Recorded as a 0 you stated: no negative capital income pending from
+            earlier years.'
+          origin: 'You stated nothing is pending'
+          statement: 'States that no negative net balance of income from movable capital
+            (rendimientos del capital mobiliario) from the four previous years is still
+            pending offset in the savings base (art. 49.1.a Ley 35/2006). Each carry is
+            recorded as a 0 you stated, apart from a figure you typed; if an earlier
+            return later shows an amount, the declaration flags the difference.'
+        renta_negative_savings_gains_losses_pending:
+          action: 'I have no capital losses pending from earlier years'
+          effect: 'Recorded as a 0 you stated: no capital losses pending from earlier
+            years.'
+          origin: 'You stated nothing is pending'
+          statement: 'States that no negative balance of capital gains and losses
+            (ganancias y pérdidas patrimoniales) of the savings base from the four
+            previous years is still pending offset (art. 49.1.b Ley 35/2006). Each carry
+            is recorded as a 0 you stated, apart from a figure you typed; if an earlier
+            return later shows an amount, the declaration flags the difference.'
       credits_heading:
         mixed: Withholdings
         practised: Withholdings you have taken

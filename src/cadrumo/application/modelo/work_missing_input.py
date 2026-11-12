@@ -131,9 +131,15 @@ class ModeloWorkMissingInputError(OperationNextStepErrorMixin, RegistryValidatio
 
 _PRIOR_CARRY_SUBJECT_LEAF_KEY: Final[str] = "modelo.work.calculate"
 _PRIOR_CARRY_SCENARIO_PREFIX: Final[str] = "modelo.work.calculate.prior_carries"
-_PRIOR_CARRY_MESSAGE_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = {
+PRIOR_CARRY_MESSAGE_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = {
     AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
         "application.modelo.errors.prior_carries_unstated.renta_negative_general_bases_pending"
+    ),
+    AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING: (
+        "application.modelo.errors.prior_carries_unstated.renta_negative_savings_capital_income_pending"
+    ),
+    AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING: (
+        "application.modelo.errors.prior_carries_unstated.renta_negative_savings_gains_losses_pending"
     ),
 }
 
@@ -249,7 +255,7 @@ def prior_carry_absence_unstated(
         binding_id=missing.binding_id,
         family=family,
         open_carry_ids=open_carry_ids,
-        translated_message=_PRIOR_CARRY_MESSAGE_LOCALE_KEYS[family],
+        translated_message=PRIOR_CARRY_MESSAGE_LOCALE_KEYS[family],
         context={
             "modelo": str(work_unit.modelo),
             "filing_year": work_unit.filing_year,
@@ -545,6 +551,7 @@ def previous_filing_unobserved(
 
 
 __all__ = [
+    "PRIOR_CARRY_MESSAGE_LOCALE_KEYS",
     "ModeloPriorCarryAbsenceUnstatedError",
     "ModeloPriorPeriodUnfiledError",
     "ModeloWorkMissingInputError",

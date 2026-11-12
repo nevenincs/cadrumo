@@ -2779,6 +2779,17 @@ application:
           egyenlített negatív általános adóalap (%{boxes}. mező). Mentsd el az előző
           évi bevallást, vagy jelezd a bevallásban, hogy nincs függőben lévő összeg.
           Semmi sem lett mentve.'
+        renta_negative_savings_capital_income_pending: 'A %{filing_year}. évi Modelo
+          %{modelo} nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még
+          ki nem egyenlített negatív ingó tőkejövedelem a megtakarítási adóalapban
+          (%{boxes}. mező). Mentsd el az előző évi bevallást, vagy jelezd a bevallásban,
+          hogy nincs függőben lévő összeg. Semmi sem lett mentve.'
+        renta_negative_savings_gains_losses_pending: 'A %{filing_year}. évi Modelo
+          %{modelo} nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még
+          ki nem egyenlített negatív vagyoni nyereség- és veszteségegyenleg a
+          megtakarítási adóalapban (%{boxes}. mező). Mentsd el az előző évi bevallást,
+          vagy jelezd a bevallásban, hogy nincs függőben lévő összeg. Semmi sem lett
+          mentve.'
       prior_period_unfiled: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány még
         nem számolható ki: összegeket visz át a(z) %{unfiled_period} bevallásából,
         amely még nincs benyújtva. Előbb nyújtsd be a(z) %{unfiled_period} bevallást,
@@ -2920,6 +2931,17 @@ application:
       application_not_required_maximum: 'A(z) [%{box}] rovatban %{casilla_value} szerepel,
         de %{computed_value} kell, hogy legyen: a törvény előírja, hogy az adott évben
         megengedett legnagyobb összeget kell alkalmazni, se többet, se kevesebbet.'
+      application_order_capacity_unresolved: 'Ebben az évben több korábbi adóévből
+        fennmaradó egyenleg (összesen %{pending_total}) kerül beszámításra, de a
+        beszámításra rendelkezésre álló összeg még nem ismert, így nem állapítható meg,
+        mennyit vesz fel az egyes évekből. Töltsd ki azokat az összegeket, amelyektől
+        függ.'
+      application_order_unsettled: 'Ebben az évben %{capacity} számítható be a több
+        korábbi adóévből fennmaradó %{pending_total} összegből, és egyetlen hivatalos
+        szöveg sem mondja meg, milyen sorrendben kell az éveket figyelembe venni. Az
+        egyes évekből beszámított és a továbbvitt összeg ettől a sorrendtől függ, ezért
+        ez a bevallás számítás marad, és ebből az alkalmazásból nem nyújtható be, amíg a
+        szabály nem tisztázott.'
       art20_reduccion_possible: A(z) [%{rnt_id}] rovat %{rnt_value} EUR nettó munkajövedelmet
         (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
         belül, ezért a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet
@@ -3411,6 +3433,28 @@ application:
             negatív általános adóalapod (Ley 35/2006, 50.3. cikk). Minden összeg általad
             kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
             korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+        renta_negative_savings_capital_income_pending:
+          action: 'Nincs korábbi évekből fennmaradó negatív tőkejövedelmem'
+          effect: 'Általad kijelentett 0-ként rögzítve: nincs korábbi évekből fennmaradó
+            negatív tőkejövedelem.'
+          origin: 'Kijelentetted, hogy nincs fennmaradó összeg'
+          statement: 'Rögzíti, hogy az előző négy adóévből nincs a megtakarítási
+            adóalapban beszámításra váró negatív nettó ingó tőkejövedelem-egyenleged
+            (rendimientos del capital mobiliario; Ley 35/2006, 49.1.a cikk). Minden
+            összeg általad kijelentett 0-ként kerül rögzítésre, a beírt számtól
+            elkülönítve; ha egy korábbi bevallás később összeget mutat, a bevallás jelzi
+            az eltérést.'
+        renta_negative_savings_gains_losses_pending:
+          action: 'Nincs korábbi évekből fennmaradó vagyoni veszteségem'
+          effect: 'Általad kijelentett 0-ként rögzítve: nincs korábbi évekből fennmaradó
+            vagyoni veszteség.'
+          origin: 'Kijelentetted, hogy nincs fennmaradó összeg'
+          statement: 'Rögzíti, hogy az előző négy adóévből nincs a megtakarítási
+            adóalapban beszámításra váró negatív vagyoni nyereség- és
+            veszteségegyenleged (ganancias y pérdidas patrimoniales; Ley 35/2006, 49.1.b
+            cikk). Minden összeg általad kijelentett 0-ként kerül rögzítésre, a beírt
+            számtól elkülönítve; ha egy korábbi bevallás később összeget mutat, a
+            bevallás jelzi az eltérést.'
       credits_heading:
         mixed: Levonások
         practised: Az általad levont összegek
