@@ -33,7 +33,7 @@ from ...domain.modelos.filing_record import (
 from ...domain.modelos.work_unit import WorkUnitState
 from .declaration_summary import DeclarationSummary
 from .declaration_targets import DeclarationTarget
-from .declarations_projection_integrity import DeclarationsProjectionIntegrityMixin
+from .stored_data_integrity import StoredDataIntegrityMixin
 
 if TYPE_CHECKING:
     pass
@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 DECLARATIONS_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 
 
-class DeclarationsWorkspaceProjectionError(DeclarationsProjectionIntegrityMixin, CadrumoError):
+class DeclarationsWorkspaceProjectionError(StoredDataIntegrityMixin, CadrumoError):
     """The supplied authorities cannot form one coherent safe snapshot.
 
     A stored-data integrity fault: no operator input at the refusal site joins

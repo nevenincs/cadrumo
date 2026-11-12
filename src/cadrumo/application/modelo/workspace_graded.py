@@ -31,6 +31,7 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..operator_actions.models import ActionReference
 from ..state_projection_models import ModeloReadinessRequest, ProjectionModeloReadiness
+from .stored_data_integrity import StoredDataIntegrityMixin
 from .work_selection import (
     ModeloWorkSelectionMode,
 )
@@ -142,7 +143,7 @@ _GRADED_SNAPSHOT_PAGINATED_FACETS = frozenset(
 )
 
 
-class ModeloWorkspaceMaterializationProvenanceMissingError(CadrumoError):
+class ModeloWorkspaceMaterializationProvenanceMissingError(StoredDataIntegrityMixin, CadrumoError):
     """Raised when a persisted repeated-row value names no source binding.
 
     A persistence invariant rather than a refusal: every ``row_casilla_values``
@@ -150,6 +151,8 @@ class ModeloWorkspaceMaterializationProvenanceMissingError(CadrumoError):
     value without one is a corrupt revision, not a state the operator can
     resolve by acting.
     """
+
+    integrity_record = "calculation_revision_row_provenance"
 
 
 def graded_snapshot_refusal(
