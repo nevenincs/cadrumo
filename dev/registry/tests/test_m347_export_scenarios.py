@@ -46,7 +46,9 @@ def test_populated_scenario_exports_both_parties_and_excludes_below_threshold(re
     assert sink.payload
     assert b"12345678Z" in sink.payload
     assert b"X0001502F" in sink.payload
-    assert b"Proveedor ficticio Ana" in sink.payload
-    assert b"Cliente ficticio Luis" in sink.payload
+    # Each party is declared as an entity; the layout files its razón social in capitals.
+    assert b"12345678Z         PROVEEDOR FICTICIO ANA " in sink.payload
+    assert b"X0001502F         CLIENTE FICTICIO LUIS " in sink.payload
+    assert b"PROVEEDOR FICTICIO BAJO UMBRAL" not in sink.payload
     assert b"00001501Y" not in sink.payload  # Below the annual declaration threshold.
     assert b"00001500M" not in sink.payload  # This scenario excludes the rental family.

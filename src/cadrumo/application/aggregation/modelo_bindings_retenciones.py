@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
@@ -14,8 +15,10 @@ from ...domain.calculations.registry.retenciones_bindings import (
     resolve_retenciones_aggregation_binding_row_values,
     resolve_retenciones_aggregation_binding_values,
 )
+from ...domain.filing.declared_party_name_filing import PartyNameRefusals
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..calculations.m115_no_relevant_payments import is_m115_no_relevant_payment_period
+from ..invoices.source_resolver_ports import CounterpartyFilingNameReader, InvoiceSourcePersistenceError
 from .errors import RetencionesWindowEmptyError
 from .modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
@@ -59,6 +62,7 @@ from .source_resolution_operations import (
     storage_degradation_resolution,
 )
 from .withholding_modelo_routing import annual_source_observations_modelo, invoice_evidence_modelos
+from .withholding_party_names import PerceptorReference, declare_perceptors, perceptor_name_refusal_diagnostics
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -97,16 +101,59 @@ class RetencionesAggregationSourceResolver:
         ports: RetencionObservationPorts,
         m115_no_relevant_payment_periods: frozenset[tuple[int, str]] = frozenset(),
         invoice_catalogue: InvoiceCatalogueReadPorts | None = None,
+        filing_names: CounterpartyFilingNameReader | None = None,
     ) -> None:
         """Use the required retención-observation capability bundle.
 
         ``invoice_catalogue`` lets a periodic modelo read the received invoices
         that state a retención beside the stored allocations; without it only
-        the store is read.
+        the store is read. ``filing_names`` is absent where no record naming a
+        perceptor is built; no name slot is then filled and none is reported.
         """
         self._ports = ports
         self._m115_no_relevant_payment_periods = m115_no_relevant_payment_periods
         self._invoice_catalogue = invoice_catalogue
+        self._filing_names = filing_names
+
+    def _degraded(self, error: BaseException) -> CalculationSourceResolution:
+        return storage_degradation_resolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            source_kinds=self.owned_sources,
+            error=error,
+        )
+
+    def _row_values_and_name_diagnostics(
+        self,
+        context: CalculationSourceContext,
+        aggregation: RetencionesAggregation,
+    ) -> tuple[dict[tuple[BindingId, int], Decimal | str | int | bool], tuple[CalculationSourceDiagnostic, ...]]:
+        """Return the type-2 row values and the diagnostics for each perceptor name left unfiled.
+
+        Raises:
+            InvoiceSourcePersistenceError: The declared filing names cannot be read.
+        """
+        if self._filing_names is None:
+            return resolve_retenciones_aggregation_binding_row_values(context.revision, aggregation), ()
+        perceptors = declare_perceptors(
+            (
+                PerceptorReference(
+                    country_code="", tax_id=row.perceptor_nif, row_ref="", printed_name=row.perceptor_name
+                )
+                for row in aggregation.type2_rows
+            ),
+            self._filing_names,
+        )
+        refusals = PartyNameRefusals(modelo=str(context.modelo))
+        values = resolve_retenciones_aggregation_binding_row_values(
+            context.revision,
+            aggregation,
+            parties=perceptors.parties,
+            party_name_refusals=refusals,
+        )
+        return values, perceptor_name_refusal_diagnostics(
+            refusals.refusals, perceptors, context=context, resolver_id=self.resolver_id
+        )
 
     @staticmethod
     def aggregate(
@@ -260,14 +307,19 @@ class RetencionesAggregationSourceResolver:
             if self._m115_attested(context):
                 with source_context_operation(context) as operation:
                     aggregation = self.aggregate(context.modelo, (), period=context.period, operation=operation)
+                try:
+                    attested_rows, attested_name_diagnostics = self._row_values_and_name_diagnostics(
+                        context, aggregation
+                    )
+                except InvoiceSourcePersistenceError as exc:
+                    return self._degraded(exc)
                 return CalculationSourceResolution(
                     resolver_id=self.resolver_id,
                     owned_sources=self.owned_sources,
                     binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
-                    row_binding_values=resolve_retenciones_aggregation_binding_row_values(
-                        context.revision, aggregation
-                    ),
+                    row_binding_values=attested_rows,
                     diagnostics=(
+                        *attested_name_diagnostics,
                         CalculationSourceDiagnostic(
                             reason="source_issue",
                             source_kind="retenciones_aggregation",
@@ -288,12 +340,17 @@ class RetencionesAggregationSourceResolver:
                 period=context.period,
                 operation=operation,
             )
+        try:
+            row_values, name_diagnostics = self._row_values_and_name_diagnostics(context, aggregation)
+        except InvoiceSourcePersistenceError as exc:
+            return self._degraded(exc)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
-            row_binding_values=resolve_retenciones_aggregation_binding_row_values(context.revision, aggregation),
+            row_binding_values=row_values,
             diagnostics=(
+                *name_diagnostics,
                 *administrador_retencion_rate_advisory_observations(
                     observations, effective_date=context.period.end_date
                 ),

@@ -76,12 +76,6 @@ A dependency classification records how another modelo's declarations reach this
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
 
-[revisions."2022".family_dispositions.extraction_profiles]
-reason = """
-An extraction profile reads values back out of a filed declaration PDF, and its label patterns must be authored against a specimen of the printed layout for the edition they claim. The corpus holds no modelo 190 justificante for this exercise: the only fixture in the tree reproduces the current printed resumen. Authoring patterns for this edition from that fixture would claim a reading capability against a layout nobody checked, so the family is declared empty rather than filled with unevidenced patterns."""
-legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
-
 [revisions."2022".family_dispositions.parameters]
 reason = """
 A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. This edition applies none: both of its formulas are op = 'add', totalling the per-position row sums the record design names, and an addition applies nothing to what it adds. The retention rates that produced those amounts were set by the retenedor at payment time under RD 439/2007 and are already recorded on each perceptor record. Empty by the shape of this modelo's calculation rather than by omission."""

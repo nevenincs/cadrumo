@@ -1134,6 +1134,22 @@ required_text = [
     "Límite del incremento",
     "con posterioridad al nacimiento, adopción",
 ]
+[[revisions."2022".bindings]]
+id = "renta-profile-deduccion-maternidad-cotizaciones"
+provider = { kind = "profile", profile_key = "renta_family.deduccion_maternidad_cotizaciones" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-redaccion-2018"]
+source_refs = ["aeat-renta-2022-manual-parte1", "aeat-dr-100-2022-dictionary"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+    "100 euros por cada mes del período impositivo en que concurran de forma",
+    "no podrá superar ninguna de las dos cantidades",
+    "Hasta 1.200 euros anuales.",
+    "cotizaciones y cuotas totales a la Seguridad Social y Mutualidades",
+]
 # Per-activity inventory projections for Anexo D. Runtime expansion supplies one
 # aligned row per complete encrypted activity ledger; the registry declares only
 # the three legal operations and never a taxpayer activity identity.

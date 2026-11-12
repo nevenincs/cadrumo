@@ -10,11 +10,12 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ..domain.filing.errors import FilingExportIntegrityError
 from ..domain.modelos.errors import CalculationRevisionIntegrityError, ModeloOperatorLayerIntegrityError
 from .operator_actions.models import PreconditionVerdict
 
@@ -40,18 +41,13 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
     registry_verdict = _calculation_registry_verdict(current)
     if registry_verdict is not None:
         return registry_verdict
-    if isinstance(current, ModeloOperatorLayerIntegrityError):
-        return cli_exception_no_recovery_verdict(
-            CliExceptionPrecondition.STORED_DATA_VALID,
-            facts={"record": "calculation_operator_layer", "valid": False},
-            outcome=NoRecoveryOutcome.TERMINAL,
-        )
-    if isinstance(current, CalculationRevisionIntegrityError):
-        return cli_exception_no_recovery_verdict(
-            CliExceptionPrecondition.STORED_DATA_VALID,
-            facts={"record": "calculation_revision", "valid": False},
-            outcome=NoRecoveryOutcome.TERMINAL,
-        )
+    for integrity_class, (precondition, record) in _TERMINAL_INTEGRITY_RECORDS.items():
+        if isinstance(current, integrity_class):
+            return cli_exception_no_recovery_verdict(
+                precondition,
+                facts={"record": record, "valid": False},
+                outcome=NoRecoveryOutcome.TERMINAL,
+            )
     if (
         isinstance(current, CoreValidationError)
         and current.context is not None
@@ -178,6 +174,7 @@ class CliExceptionPrecondition(StrEnum):
     VALIDATION_BOUNDARY = "cli.validation.boundary_clean"
     UNEXPECTED_BOUNDARY = "cli.runtime.unexpected_absent"
     STORED_DATA_VALID = "cli.storage.persisted_data_valid"
+    EXPORT_DESIGN_CONSISTENT = "cli.export.design.consistent"
     COMMAND_GROUP_AVAILABLE = "cli.command_group.available"
     REFUSAL_RETRIED = "cli.refusal.completed"
     CONFIG_BOUNDARY = "cli.config.boundary_clean"
@@ -199,6 +196,14 @@ class CliExceptionPrecondition(StrEnum):
     LEDGER_TRANSACTION_VALID = "cli.ledger.transaction.valid"
     LEDGER_INVOICE_VALID = "cli.ledger.invoice.valid"
     EXTERNAL_CONSTANTS_SECTION_VALID = "cli.external_constants.section_valid"
+
+
+#: Integrity errors no filer action repairs, with the condition and record their terminal verdict names.
+_TERMINAL_INTEGRITY_RECORDS: Final[dict[type[Exception], tuple[CliExceptionPrecondition, str]]] = {
+    ModeloOperatorLayerIntegrityError: (CliExceptionPrecondition.STORED_DATA_VALID, "calculation_operator_layer"),
+    CalculationRevisionIntegrityError: (CliExceptionPrecondition.STORED_DATA_VALID, "calculation_revision"),
+    FilingExportIntegrityError: (CliExceptionPrecondition.EXPORT_DESIGN_CONSISTENT, "filing_export_design"),
+}
 
 
 def cli_exception_no_recovery_verdict(

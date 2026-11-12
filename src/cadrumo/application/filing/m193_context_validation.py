@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
 
 _M193_PERCEPTOR_RECORD_ID = "modelo-193-perceptor"
 _M193_FILING_YEAR_ID = "modelo-193-perc-year"
@@ -19,7 +19,9 @@ _M193_CHANGED = "modelo 193 perceptor pending and devengo declaration is incompl
 
 def _field_wire(wire: str, field: ExportFieldDefinition) -> str:
     if field.offset is None or field.length is None:
-        raise FilingExportValidationError(_M193_CHANGED)
+        raise FilingExportDesignIntegrityError(
+            _M193_CHANGED, translated_message="errors.integrity.filing_export_m193_declaration_changed"
+        )
     return wire[field.offset - 1 : field.offset - 1 + field.length]
 
 
@@ -31,7 +33,9 @@ def _context_wires(record: ExportRecordDefinition, wire: str) -> tuple[str, str,
     """Return the year, clave, pendiente and devengo wire slices, refusing a changed or short record."""
     by_id = {field.id: field for field in record.fields}
     if any(identifier not in by_id for identifier in _M193_CONTEXT_FIELD_IDS):
-        raise FilingExportValidationError(_M193_CHANGED)
+        raise FilingExportDesignIntegrityError(
+            _M193_CHANGED, translated_message="errors.integrity.filing_export_m193_declaration_changed"
+        )
     if len(wire) != max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields):
         raise FilingExportValidationError("modelo 193 perceptor record is incomplete")
     filing_year, clave, pendiente, devengo = (

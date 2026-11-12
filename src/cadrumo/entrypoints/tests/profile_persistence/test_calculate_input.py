@@ -25,6 +25,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, manual_editions_printing
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.modelos.work_unit import WorkUnit
@@ -280,40 +281,37 @@ def test_period_code_casilla_override_refuses_a_malformed_token(
 
 
 # ---------------------------------------------------------------------------
-# The pre-2023 cotizaciones ceiling withholds the deduccion outright, so the
-# ambiguous-relacion advisory -- which only ever names a descendant that
-# CONTRIBUTES months -- has nothing to name. This locks the INTERACTION rather
-# than re-proving either half: `resolve_maternidad_meses` already proves
-# `pairs == ()` for a ceilinged year regardless of relacion
-# (`test_maternidad_cotizaciones_ceiling.py`), and the ambiguous-relacion check
-# reads its candidate set from exactly that field.
+# An edition that limits each child's deduccion by the mother's cotizaciones
+# leaves casilla 0611 unresolved while a contributing child states no figure, and
+# says so. The resolution of months and figures is proven in
+# `test_maternidad_cotizaciones_limit.py`; this locks that the calculate path
+# discloses it.
 # ---------------------------------------------------------------------------
 
 _MATERNIDAD_BUCKET_ID = "20000000-0000-4000-8000-000000000611"
-_MATERNIDAD_CEILINGED_FILING_YEAR = 2022
+_MATERNIDAD_LIMITED_FILING_YEAR = max(
+    set(manual_editions_printing("renta", "no podrá superar ninguna de las dos cantidades"))
+    & set(filing_year_envelope().years)
+)
 _MATERNIDAD_CASILLA_ID: CasillaId = validated_casilla_id("0611", surface="_MATERNIDAD_CASILLA_ID")
 
 
-def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_everything(
+def test_a_missing_cotizaciones_figure_is_disclosed_where_the_edition_limits_the_deduccion(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A default-relacion descendant contributing declared months to a pre-2023 filing.
+    """A descendant contributing declared months, with no cotizaciones figure, in a limiting edition.
 
-    The descendant's relacion is the unstated default -- exactly the state the
-    ambiguous-relacion advisory exists to disclose -- but the filing year predates
-    2023, when Art. 81.1 was still capped at a cotizaciones figure this application
-    cannot express. The deduccion is withheld entirely for that reason, so there is
-    nothing left for the relacion ambiguity to threaten: only the cotizaciones
-    advisory fires, never the ambiguous-relacion one.
+    The deduccion cannot be computed without the figure, so the casilla stays
+    unresolved and the missing-figure advisory fires.
     """
-    period = Period.from_year_and_code(_MATERNIDAD_CEILINGED_FILING_YEAR, "0A")
+    period = Period.from_year_and_code(_MATERNIDAD_LIMITED_FILING_YEAR, "0A")
     snapshot = published_authority_operation().snapshot(
         "100",
-        filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
+        filing_year=_MATERNIDAD_LIMITED_FILING_YEAR,
         period=period.registry_token,
     )
     child = DescendantInfo(
-        birth_date=date(_MATERNIDAD_CEILINGED_FILING_YEAR - 1, 6, 1),
+        birth_date=date(_MATERNIDAD_LIMITED_FILING_YEAR - 1, 6, 1),
         meses_madre_trabajo=tuple(range(1, 13)),
     )
     descendant_overrides = dict(descendant_facts_from_list((child,)))
@@ -335,7 +333,7 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
             work_unit = create_work_unit(
                 bucket_id=_MATERNIDAD_BUCKET_ID,
                 modelo="100",
-                filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
+                filing_year=_MATERNIDAD_LIMITED_FILING_YEAR,
                 period=period,
                 revision_id=snapshot.revision.id,
                 ports=calculation_ports.work_lifecycle_ports,
@@ -355,8 +353,7 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
 
     assert _MATERNIDAD_CASILLA_ID not in bundle.casilla_inputs
     source_kinds = {diagnostic.source_kind for diagnostic in bundle.shortcut_diagnostics}
-    assert "maternidad_cotizaciones_ceiling_inexpressible" in source_kinds
-    assert "maternidad_ambiguous_relacion" not in source_kinds
+    assert "maternidad_cotizaciones_figure_missing" in source_kinds
 
 
 _M130_PREVIOUS_YEAR_BINDING = "irpf.previous_year_economic_activity_net_income"

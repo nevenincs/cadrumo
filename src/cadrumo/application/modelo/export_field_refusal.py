@@ -3,9 +3,16 @@
 from __future__ import annotations
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.filing.errors import FilingExportFieldUnrenderableError, FilingExportUnrepresentableCharacterError
+from ...domain.filing.errors import (
+    FilingExportError,
+    FilingExportFieldUnrenderableError,
+    FilingExportIntegrityError,
+    FilingExportUnrepresentableCharacterError,
+)
 from .export_contracts import (
     ModeloExportCommand,
+    ModeloExportDesignIntegrityError,
+    ModeloExportError,
     ModeloExportFieldUnrenderableError,
     ModeloExportUnrepresentableCharacterError,
 )
@@ -46,6 +53,28 @@ def export_field_unrenderable_refusal(
             precondition_failure=failure,
         )
     return ModeloExportFieldUnrenderableError(context=context, precondition_failure=failure)
+
+
+def export_design_integrity_refusal(
+    command: ModeloExportCommand, exc: FilingExportIntegrityError
+) -> ModeloExportDesignIntegrityError:
+    """Report a fault in the application's own export design as an integrity defect, keeping its served words.
+
+    The refusal's words say what in the design disagrees; none asks for a
+    change to the filer's data, because none repairs it.
+    """
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id="modelo.export.design.inconsistent",
+        evidence_id="modelo.export.design",
+        evidence_values={"calculation_revision_id": command.calculation_revision_id, "consistent": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+    )
+    return ModeloExportDesignIntegrityError(
+        translated_message=exc.translated_message,
+        context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
+        precondition_failure=failure,
+    )
 
 
 def export_unrepresentable_character_refusal(
@@ -89,3 +118,14 @@ def export_unrepresentable_character_refusal(
         },
         precondition_failure=failure,
     )
+
+
+def export_field_level_refusal(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError | None:
+    """Return the refusal for a value the record design cannot write, or ``None`` for any other failure."""
+    if isinstance(exc, FilingExportUnrepresentableCharacterError):
+        return export_unrepresentable_character_refusal(command, exc)
+    if isinstance(exc, FilingExportFieldUnrenderableError):
+        return export_field_unrenderable_refusal(command, exc)
+    if isinstance(exc, FilingExportIntegrityError) and exc.translated_message is not None:
+        return export_design_integrity_refusal(command, exc)
+    return None

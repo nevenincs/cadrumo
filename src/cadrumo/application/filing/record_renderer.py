@@ -25,6 +25,7 @@ from ...domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ...domain.filing.errors import (
+    FilingExportDesignIntegrityError,
     FilingExportRequiredRecordAbsentError,
     FilingExportUnrepresentableCharacterError,
     FilingExportValidationError,
@@ -385,7 +386,11 @@ def _duplicate_projection_addresses(addresses: tuple[object, ...]) -> tuple[obje
 def _raise_duplicate_projection_addresses(addresses: tuple[object, ...], *, message: str) -> None:
     duplicates = _duplicate_projection_addresses(addresses)
     if duplicates:
-        raise FilingExportValidationError(f"{message}: {duplicates!r}")
+        raise FilingExportDesignIntegrityError(
+            f"{message}: {duplicates!r}",
+            translated_message="errors.integrity.filing_export_projection_address_duplicate",
+            context={"addresses": ", ".join(map(str, duplicates))},
+        )
 
 
 def _expected_projection_fields(
@@ -398,7 +403,11 @@ def _expected_projection_fields(
                 continue
             address = (context.record.id, context.occurrence, field.projection_ref)
             if address in expected_fields:
-                raise FilingExportValidationError(f"filing layout admits duplicate projection address {address!r}")
+                raise FilingExportDesignIntegrityError(
+                    f"filing layout admits duplicate projection address {address!r}",
+                    translated_message="errors.integrity.filing_export_layout_projection_address_duplicate",
+                    context={"address": str(address)},
+                )
             expected_fields[address] = (context.record, field)
     return expected_fields
 
@@ -410,8 +419,10 @@ def _require_exact_projection_addresses(
     if actual != expected:
         missing = tuple(sorted(repr(address) for address in expected - actual))
         extraneous = tuple(sorted(repr(address) for address in actual - expected))
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"filing projection plan is not an exact layout bijection; missing={missing!r}, extraneous={extraneous!r}",
+            translated_message="errors.integrity.filing_export_projection_plan_not_bijection",
+            context={"missing": ", ".join(map(str, missing)), "extraneous": ", ".join(map(str, extraneous))},
         )
 
 

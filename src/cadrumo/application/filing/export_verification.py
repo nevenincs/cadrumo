@@ -30,7 +30,7 @@ from ...domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.filing.errors import FilingExportError, FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from .export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
@@ -87,9 +87,15 @@ class DeclaracionExportResult(BaseModel):
         try:
             int(value, 16)
         except ValueError as exc:
-            raise FilingExportValidationError("file_sha256 must be a hex-encoded digest") from exc
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be a hex-encoded digest",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            ) from exc
         if value != value.lower():
-            raise FilingExportValidationError("file_sha256 must be lowercase hex")
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be lowercase hex",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            )
         return value
 
 
@@ -112,7 +118,10 @@ class FilingExportConsumedResult(BaseModel):
     @pydantic_validation_boundary
     def _validate_sha256_hex(cls, value: str) -> str:
         if any(character not in "0123456789abcdef" for character in value):
-            raise FilingExportValidationError("file_sha256 must be lowercase hexadecimal")
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be lowercase hexadecimal",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            )
         return value
 
 
@@ -159,7 +168,10 @@ class DeclaracionVerifyResult(BaseModel):
     def _validate_casilla_ids(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         for entry in value:
             if not entry or entry != entry.strip():
-                raise FilingExportValidationError("casilla-id entries must be non-blank, untrimmed identifiers")
+                raise FilingExportDesignIntegrityError(
+                    "casilla-id entries must be non-blank, untrimmed identifiers",
+                    translated_message="errors.integrity.filing_export_result_casilla_ids_malformed",
+                )
         return value
 
     @field_validator("file_sha256")
@@ -169,13 +181,22 @@ class DeclaracionVerifyResult(BaseModel):
         if value is None:
             return None
         if len(value) != SHA256_HEX_LENGTH:
-            raise FilingExportValidationError(f"file_sha256 must be {SHA256_HEX_LENGTH} hex characters when provided")
+            raise FilingExportDesignIntegrityError(
+                f"file_sha256 must be {SHA256_HEX_LENGTH} hex characters when provided",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            )
         try:
             int(value, 16)
         except ValueError as exc:
-            raise FilingExportValidationError("file_sha256 must be a hex-encoded digest") from exc
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be a hex-encoded digest",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            ) from exc
         if value != value.lower():
-            raise FilingExportValidationError("file_sha256 must be lowercase hex")
+            raise FilingExportDesignIntegrityError(
+                "file_sha256 must be lowercase hex",
+                translated_message="errors.integrity.filing_export_result_digest_malformed",
+            )
         return value
 
 
@@ -446,8 +467,10 @@ def mismatched_casilla_ids(
             else:
                 expected_wire = render_fixed_width_export_field(field, expected, record=record)
         except (KeyError, RegistryValidationError) as exc:
-            raise FilingExportValidationError(
-                f"export field {parsed.field_id!r} could not render its expected verification value"
+            raise FilingExportDesignIntegrityError(
+                f"export field {parsed.field_id!r} could not render its expected verification value",
+                translated_message="errors.integrity.filing_export_verification_value_unrenderable",
+                context={"field_id": parsed.field_id},
             ) from exc
         if expected_wire != parsed.raw:
             mismatched.append(parsed.casilla_id)
@@ -515,8 +538,10 @@ def _mismatched_xml_dictionary_casilla_ids(
 def _signed_dictionary_entry(entries: Mapping[str, XmlDictionaryEntry], field_id: str) -> XmlDictionaryEntry:
     entry = entries.get(field_id)
     if entry is None:
-        raise FilingExportValidationError(
-            f"XML dictionary field {field_id!r} could not resolve its signed entry for verification"
+        raise FilingExportDesignIntegrityError(
+            f"XML dictionary field {field_id!r} could not resolve its signed entry for verification",
+            translated_message="errors.integrity.filing_export_verification_signed_entry_unresolved",
+            context={"field_id": field_id},
         )
     return entry
 
@@ -556,8 +581,10 @@ def _xml_dictionary_checked_wire_value(
         )
         return canonical_xml_text(value_schema, entry.path, expected)
     except FilingExportValidationError as exc:
-        raise FilingExportValidationError(
-            f"XML dictionary field {entry.field_id!r} could not render its expected verification value"
+        raise FilingExportDesignIntegrityError(
+            f"XML dictionary field {entry.field_id!r} could not render its expected verification value",
+            translated_message="errors.integrity.filing_export_verification_value_unrenderable",
+            context={"field_id": entry.field_id},
         ) from exc
 
 
@@ -577,7 +604,10 @@ def xml_dictionary_expected_wire_value(
     """
     if modelo == form_for_role("renta.annual"):
         if modelo_100_declarations is None:
-            raise FilingExportValidationError("Modelo 100 XML verification declarations were not resolved")
+            raise FilingExportDesignIntegrityError(
+                "Modelo 100 XML verification declarations were not resolved",
+                translated_message="errors.integrity.filing_export_verification_modelo100_declarations_unresolved",
+            )
         value = modelo_100_sign_branch_value(
             entry,
             value,

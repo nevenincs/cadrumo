@@ -243,6 +243,14 @@ class ModeloExportFieldUnrenderableError(ModeloPreconditionErrorMixin, ModeloExp
     """
 
 
+class ModeloExportDesignIntegrityError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Integrity: the application's own export design or renderer contradicts itself.
+
+    Nothing is written. The fault is in the design the application carries, not
+    in the filer's data, so no filer action repairs it.
+    """
+
+
 class ModeloExportUnsupportedError(ModeloExportError):
     """Raised when a modelo revision has no renderable local fichero-BOE export layout."""
 

@@ -77,6 +77,9 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         # The 2025 edition computes the maternity deducción as well; neutral
         # zero for the same reason as in 2024 below.
         values.update(m100_second_newest_deduccion_maternidad_bindings())
+        # The Art. 81.2 guarderia increment is inherited from the earlier edition;
+        # neutral zero for a scenario with no guarderia spend.
+        values["renta-profile-incremento-guarderia"] = Decimal("0")
     if year == _PREVIOUS:
         values.update(
             {
