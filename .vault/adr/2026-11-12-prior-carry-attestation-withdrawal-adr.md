@@ -11,7 +11,7 @@ related:
   - '[[2026-11-08-prior-carry-attestation-reference]]'
 ---
 
-# `prior-carry-attestation` adr: `withdrawing a carry statement returns the work unit to no calculation` | (**status:** `proposed`)
+# `prior-carry-attestation` adr: `withdrawing a carry statement returns the work unit to no calculation` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -36,6 +36,7 @@ related:
 - Coordinator ruling of 2026-11-12 10:39 (the authorization sought for this amendment): option A, limited as below; not C; B not started.
 - Amends the Implementation bullet "`SET_OVERRIDE_VALUE` and `REMOVE_OVERRIDE` on that binding withdraw the attestation" of `2026-11-08-prior-carry-attestation-adr` for the case where the withdrawal leaves the carry unstated.
 - Revisions are never deleted; the withdrawn revision stays stored for audit.
+- Accepted 2026-11-12 10:45 by CADRUMO-PRIME under the operator's delegation, as written. Conditions of acceptance: every reader of the current-calculation pointer that assumed it never returns to none (workbench form, overview and readiness, verification, export approval, amendment) is listed and tested, and none shows the withdrawn revision as current; approval and export evidence of the withdrawn revision are no longer current afterwards and nothing is deleted; proof runs through the real edit executor for every Modelo 100 year the envelope admits, including both refused cases.
 
 ## Implementation
 
