@@ -3698,6 +3698,10 @@ application:
         számítás a profilkövetés előtt készült, ezért a Cadrumo nem tudja megmondani,
         változtak-e azóta az általa használt profiladatok. Számítsd ki újra a követés
         elindításához.
+      profile_read_superseded_filed: A(z) %{modelo} %{filing_year}, %{period} benyújtottként
+        szerepel, de az általa használt profiladatok közül %{changed_count} azóta
+        módosult. A benyújtott bevallás változatlan marad; ha a módosítás érinti,
+        nyújts be önellenőrzést.
       prorrata_seed_changed: A nyilvántartásod ideiglenes arányosítási százaléka megváltozott
         a(z) %{modelo} %{filing_year}, %{period} kiszámítása után. Számítsd ki újra
         az ellenőrzés előtt.
@@ -4168,6 +4172,8 @@ application:
           jövedelem, majd számolj újra.
         add_base_to_entry: Add meg az adóalapot (base imponible) a nyilvántartásodban
           szereplő tételnél, majd számolj újra.
+        amend_filed_declaration: Ellenőrizd, hogy a profil módosítása érinti-e a benyújtott
+          bevallást, és ha igen, indíts önellenőrzést.
         attach_document: Csatold a bizonylatot a nyilvántartásaid megfelelő tételéhez.
         await_update: Ezt itt még nem lehet megoldani. Frissítsd az alkalmazást, amikor
           elérhető olyan verzió, amely kezeli.

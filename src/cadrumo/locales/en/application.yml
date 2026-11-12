@@ -3564,6 +3564,10 @@ application:
       profile_read_fingerprint_absent: This modelo %{modelo} %{filing_year}, %{period}
         calculation predates profile tracking, so Cadrumo cannot say whether the profile
         facts it used have changed since. Calculate it again to start tracking them.
+      profile_read_superseded_filed: Modelo %{modelo} %{filing_year}, %{period} is
+        recorded as filed, but %{changed_count} profile facts it used have changed
+        since. The filed return stays as filed; if the change affects it, file an
+        amendment.
       prorrata_seed_changed: The provisional prorrata in your register changed after
         modelo %{modelo} %{filing_year}, %{period} was calculated. Calculate it again
         before verifying.
@@ -4011,6 +4015,8 @@ application:
           comes from, then calculate again.
         add_base_to_entry: Add the taxable amount (base imponible) to the entry in
           your records, then calculate again.
+        amend_filed_declaration: Check whether the profile change affects the filed
+          return, and if it does, start an amendment of it.
         attach_document: Attach the document to the entry in your records.
         await_update: This cannot be resolved here yet. Update the application once
           a version that covers it is available.

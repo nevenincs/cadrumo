@@ -3751,6 +3751,10 @@ application:
         %{period} és anterior al seguiment del perfil, així que Cadrumo no pot saber
         si les dades del perfil que va fer servir han canviat des d'aleshores. Torna
         a calcular-lo per començar a seguir-les.
+      profile_read_superseded_filed: El model %{modelo} %{filing_year}, %{period}
+        consta com a presentat, però %{changed_count} dades del perfil que va fer
+        servir han canviat des d'aleshores. La declaració presentada es queda tal
+        com es va presentar; si el canvi l'afecta, presenta una complementària o rectificació.
       prorrata_seed_changed: La prorrata provisional del teu registre ha canviat després
         de calcular el model %{modelo} %{filing_year}, %{period}. Torna a calcular-lo
         abans de verificar-lo.
@@ -4224,6 +4228,8 @@ application:
           i torna a calcular.
         add_base_to_entry: Afegeix la base imposable a l'apunt dels teus registres
           i torna a calcular.
+        amend_filed_declaration: Comprova si el canvi del perfil afecta la declaració
+          presentada i, si l'afecta, inicia una complementària o rectificació.
         attach_document: Adjunta el justificant a l'apunt dels teus registres.
         await_update: Encara no es pot resoldre aquí. Actualitza l'aplicació quan
           hi hagi una versió que ho cobreixi.
