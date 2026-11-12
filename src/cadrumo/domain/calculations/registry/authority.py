@@ -27,8 +27,6 @@ from ....core.hashing import content_hash_hex, sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
-from ....core.tax_domain import TaxDomain
-from ....core.time.clock import today_madrid
 from . import authority_location
 from .authority_artifact import (
     AuthorityComponentKind,
@@ -66,7 +64,6 @@ if TYPE_CHECKING:
     from ...user_profile.schema import ProfileSchemaDefinition
     from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
     from .facts.schema import GovernedFact
-    from .governed_fact_scope import GovernedFactSource
     from .ids import RevisionId
     from .schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
     from .schema_catalogues import RegistryCatalogues
@@ -251,32 +248,6 @@ class ValidatedRegistryAuthority:
     def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
         """Return the registry's single filing-year support envelope."""
         return self.catalogues.require_supported_filing_years()
-
-    def tax_domain(
-        self,
-        tax_domain: str | TaxDomain,
-        *,
-        effective_date: date | None = None,
-    ) -> TaxDomain:
-        """Return a syntax-valid tax domain only when this authority declares it."""
-        from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-        from .schema_base import DateAxis
-
-        normalized = TaxDomain(tax_domain)
-        resolved = self.resolve_governed_fact(
-            MappingFactQuery(
-                fact_id="tax-domain-catalogue",
-                date_axis=DateAxis.FILING_PERIOD,
-                effective_date=effective_date or today_madrid(),
-            )
-        )
-        if not isinstance(resolved, ResolvedMappingFact):
-            raise RegistrySnapshotError("tax-domain catalogue did not resolve as a mapping")
-        declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
-        declared = {code.strip() for code in declarations.get("catalogue.codes", "").split(",") if code.strip()}
-        if normalized.value not in declared:
-            raise RegistrySnapshotError(f"tax domain {normalized.value!r} is not present in the calculation registry")
-        return normalized
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one typed governed-fact query through this validated authority."""
@@ -507,7 +478,6 @@ class _SnapshotProjectionKey:
     on: date | None
     revision_id: RevisionId | None
     grade: RegistryAuthorityGrade
-    validated_on: date
 
 
 @dataclass(frozen=True, slots=True, weakref_slot=True)
@@ -734,9 +704,9 @@ class PinnedAuthorityOperation:
     ) -> RegistrySnapshot:
         """Return one validated snapshot built from same-generation point components.
 
-        A snapshot is validated against this operation's governed facts, some
-        resolved at today's Madrid date, so it is shared under the generation,
-        the full request coordinate and that date. Sharing needs the reader's
+        A snapshot is validated against this operation's governed facts, none
+        read at the run date, so it is shared under the generation and the full
+        request coordinate. Sharing needs the reader's
         accounted cache; any other reader builds afresh on every call.
         """
         from .schema import RegistrySnapshot
@@ -754,7 +724,6 @@ class PinnedAuthorityOperation:
             on=on,
             revision_id=revision_id,
             grade=grade,
-            validated_on=today_madrid(),
         )
         value = reader.retain_projection(
             key,
@@ -777,7 +746,6 @@ class PinnedAuthorityOperation:
         on: date | None = None,
         revision_id: RevisionId | None = None,
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
-        governed_facts: GovernedFactSource | None = None,
     ) -> RegistrySnapshot:
         """Build one validated snapshot exactly as :meth:`snapshot` does, without sharing it.
 
@@ -788,10 +756,6 @@ class PinnedAuthorityOperation:
         budget with snapshots nobody asks for again and evict the components
         that later requests need. The components the build loads are cached as
         usual.
-
-        ``governed_facts`` replaces this operation as the validation's
-        governed-fact scope; it must resolve facts of this same generation. A
-        publication sweep passes a recorder that delegates to this operation.
         """
         return self._build_snapshot(
             Modelo(modelo_id).value,
@@ -800,7 +764,6 @@ class PinnedAuthorityOperation:
             on=on,
             revision_id=revision_id,
             grade=grade,
-            governed_facts=governed_facts,
         )
 
     def snapshot_proof_contract(self) -> SnapshotProofContract | None:
@@ -820,9 +783,8 @@ class PinnedAuthorityOperation:
         """Return publication's proof for this request when every trust condition holds.
 
         The admitted physical digest already covers the proof rows. The proof
-        additionally needs this process to run the validator that proved it,
-        today's Madrid date inside the window its wall-clock fact lookups hold
-        for, and a recorded cell whose revision is the one just selected.
+        additionally needs this process to run the validator that proved it and
+        a recorded cell whose revision is the one just selected.
 
         The validator identity is checked last, once a recorded cell would
         otherwise be used: it re-reads every source module of the validator, and
@@ -834,7 +796,7 @@ class PinnedAuthorityOperation:
         if not isinstance(reader, SQLiteAuthorityReader):
             return None
         contract = reader.snapshot_proof_contract()
-        if contract is None or not contract.admits_date(today_madrid()):
+        if contract is None:
             return None
         proof = reader.snapshot_proof(
             snapshot_proof_key(selected, modelo_id=normalized, filing_year=filing_year, period=period, grade=grade)
@@ -852,7 +814,6 @@ class PinnedAuthorityOperation:
         on: date | None,
         revision_id: RevisionId | None,
         grade: RegistryAuthorityGrade,
-        governed_facts: GovernedFactSource | None = None,
     ) -> RegistrySnapshot:
         from .governed_fact_scope import validating_governed_facts
         from .schema_catalogues import RegistryCatalogues
@@ -884,7 +845,7 @@ class PinnedAuthorityOperation:
             if on is None and revision_id is None
             else None
         )
-        with validating_governed_facts(self if governed_facts is None else governed_facts):
+        with validating_governed_facts(self):
             return build_validated_snapshot(
                 modelo,
                 catalogues,

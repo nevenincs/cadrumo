@@ -33,13 +33,10 @@ _CLOCK_METHODS: Final = frozenset(
 _CORE_CLOCK_MODULE_SUFFIX: Final = "core.time.clock"
 
 _BASELINE: Final[dict[str, int]] = {
-    "authority.py": 3,
     "concepto_ingreso.py": 1,
     "gasto_capital_inmobiliario.py": 1,
     "iva_regime_vocabulary.py": 2,
     "m303_schema_vocabulary.py": 2,
-    "setup_profile_bindings.py": 1,
-    "snapshot_proof.py": 1,
     "tax_id_format.py": 2,
     "tax_identity_admission.py": 1,
 }
