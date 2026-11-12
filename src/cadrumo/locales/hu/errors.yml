@@ -1973,6 +1973,8 @@ errors:
       ezt a profilt.
     refused_profile_schema_validation: A profiladatok sértik a séma-szerződést. Javítsd
       a megjelenített értékeket.
+    refused_renta_date_required: Ez a mentesség a jövedelem adóévében hatályos szabályoktól
+      függ, ezért a számítás nem a mai dátumot használja. Add meg az adóévet.
     refused_renta_maritime_exemption_inactive: A tengeri munkából származó jövedelem
       adómentessége nem aktív.
     refused_retention_floor: 'Törlés elutasítva: %{retained_record_count} benyújtott

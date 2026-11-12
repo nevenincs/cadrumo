@@ -18,20 +18,19 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.errors.error_codes import get_registered_error_code
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ....domain.calculations.registry.queries import PinnedRegistryQueryService
 from ....domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ....domain.calculations.registry.tests.authored_editions import latest_period_end
-from ....domain.renta import maritime_exemption
-from ....domain.renta.errors import RentaValidationError
+from ....domain.renta.errors import RentaDateRequiredError, RentaValidationError
 from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
-from .. import maritime_exemption_service
 from ..maritime_exemption_service import (
     MaritimeExemptionResult,
     resolve_maritime_exemption,
@@ -89,9 +88,7 @@ def test_rebeca_selector_uses_the_supplied_authority_and_propagates_its_refusal(
         resolve_maritime_exemption(facts=facts, authority=ExpiredAuthority(), devengo_date=_DEVENGO)
 
 
-def test_rebeca_selector_reads_the_register_list_at_the_supplied_date_not_the_clock(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_rebeca_selector_reads_the_register_list_at_the_supplied_date_not_the_clock() -> None:
     seen: list[date | None] = []
 
     class RecordingAuthority:
@@ -102,11 +99,6 @@ def test_rebeca_selector_reads_the_register_list_at_the_supplied_date_not_the_cl
         def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
             raise AssertionError("a dated read must not consult the support envelope")
 
-    def forbidden_clock() -> date:
-        raise AssertionError("the run date must not decide a tax fact")
-
-    monkeypatch.setattr(maritime_exemption_service, "today_madrid", forbidden_clock)
-    monkeypatch.setattr(maritime_exemption, "today_madrid", forbidden_clock)
     facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
     with pytest.raises(RegistryValidationError, match="stop after recording"):
         resolve_maritime_exemption(
@@ -117,8 +109,20 @@ def test_rebeca_selector_reads_the_register_list_at_the_supplied_date_not_the_cl
 
 def test_rebeca_profile_without_devengo_date_refuses_instead_of_using_the_run_date() -> None:
     facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
-    with pytest.raises(RentaValidationError, match="devengo_date is required"):
+    with pytest.raises(RentaDateRequiredError) as refused:
         resolve_maritime_exemption(facts=facts, gross_navigation_income=Decimal("30000"))
+    code = get_registered_error_code(refused.value)
+    assert code.code == "REFUSED_RENTA_DATE_REQUIRED"
+    assert code.message_key == "errors.refused.refused_renta_date_required"
+    assert refused.value.context == {"door": "aeat app modelo work preview-maritime-exemption --filing-year"}
+
+
+def test_art_7p_profile_without_a_filing_period_refuses_instead_of_using_the_run_date() -> None:
+    facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_flag="foreign", waters_type="international")
+    with pytest.raises(RentaDateRequiredError):
+        resolve_maritime_exemption(
+            facts=facts, annual_salary=Decimal("36500"), qualifying_days=100, devengo_date=_DEVENGO
+        )
 
 
 class TestResolveMaritimeExemptionArt7p:
@@ -134,6 +138,7 @@ class TestResolveMaritimeExemptionArt7p:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -145,6 +150,7 @@ class TestResolveMaritimeExemptionArt7p:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -156,6 +162,7 @@ class TestResolveMaritimeExemptionArt7p:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -166,6 +173,7 @@ class TestResolveMaritimeExemptionArt7p:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -176,6 +184,7 @@ class TestResolveMaritimeExemptionArt7p:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -186,6 +195,7 @@ class TestResolveMaritimeExemptionArt7p:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("120000"),
             qualifying_days=365,
         )
@@ -195,6 +205,7 @@ class TestResolveMaritimeExemptionArt7p:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
@@ -205,6 +216,7 @@ class TestResolveMaritimeExemptionArt7p:
             resolve_maritime_exemption(
                 facts=self._FACTS,
                 devengo_date=_DEVENGO,
+                filing_period=_DEVENGO,
                 qualifying_days=100,
             )
 
@@ -216,6 +228,7 @@ class TestResolveMaritimeExemptionArt7p:
             resolve_maritime_exemption(
                 facts=self._FACTS,
                 devengo_date=_DEVENGO,
+                filing_period=_DEVENGO,
                 annual_salary=Decimal("36500"),
             )
 
@@ -235,6 +248,7 @@ class TestResolveMaritimeExemptionRebeca:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         assert len(result.observations) == 1
@@ -244,6 +258,7 @@ class TestResolveMaritimeExemptionRebeca:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         obs = result.observations[0]
@@ -253,6 +268,7 @@ class TestResolveMaritimeExemptionRebeca:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         assert result.observations[0].source_refs == _REBECA_SOURCE_REFS
@@ -262,6 +278,7 @@ class TestResolveMaritimeExemptionRebeca:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         assert _files_in_no_box(result.observations[0].casilla_id)
@@ -271,6 +288,7 @@ class TestResolveMaritimeExemptionRebeca:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("40000"),
         )
         assert result.observations[0].value == Decimal("20000")
@@ -331,6 +349,7 @@ class TestResolveMaritimeExemptionRetmarGate:
         result = resolve_maritime_exemption(
             facts=facts,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
             gross_navigation_income=Decimal("30000"),
         )
         assert result.retmar_mandatory_filing is False

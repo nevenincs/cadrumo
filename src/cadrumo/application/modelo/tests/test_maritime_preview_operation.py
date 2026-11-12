@@ -19,7 +19,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from ....domain.renta.errors import RentaValidationError
+from ....domain.renta.errors import RentaDateRequiredError
 from ....domain.renta.maritime_exemption import MaritimeExemptionInactiveError, MaritimeWorkerFacts
 from ...calculations.maritime_exemption_service import resolve_maritime_exemption
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -214,7 +214,7 @@ def test_rebeca_profile_without_a_filing_year_refuses_instead_of_using_the_run_d
 ) -> None:
     facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
     monkeypatch.setattr("cadrumo.application.modelo.maritime_preview.maritime_facts_from_active_profile", lambda: facts)
-    with pytest.raises(RentaValidationError, match="devengo_date is required"):
+    with pytest.raises(RentaDateRequiredError):
         preview_maritime_exemption_for_active_profile(
             annual_salary=None,
             qualifying_days=None,

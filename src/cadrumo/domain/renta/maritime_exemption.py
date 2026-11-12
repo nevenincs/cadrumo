@@ -42,7 +42,6 @@ from decimal import Decimal
 from typing import Final
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.time.clock import today_madrid
 from ..calculations.registry.authority import bundled_indexed_authority
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
@@ -213,7 +212,7 @@ def calculate_art_7p_exemption(
     qualifying_days: int,
     facts: MaritimeWorkerFacts,
     authority: GovernedFactSource | None = None,
-    filing_period: date | None = None,
+    filing_period: date,
 ) -> CasillaObservation:
     """Calculate the Art. 7.p) exempt amount.
 
@@ -230,7 +229,7 @@ def calculate_art_7p_exemption(
         authority: Governed-fact authority. Defaults to the scoped authority,
             else the published one.
         filing_period: Coordinate inside the tax year, for the cap and the days of
-            that year; defaults to today.
+            that year.
 
     Returns:
         :class:`CasillaObservation` carrying the exempt amount and provenance.
@@ -243,7 +242,7 @@ def calculate_art_7p_exemption(
         raise RentaValidationError("art_7p_eligible predicate is False; cannot calculate Art. 7.p) exemption")
     if not annual_salary.is_finite() or annual_salary <= Decimal("0"):
         raise RentaValidationError("annual_salary must be a positive finite Decimal")
-    coordinate = filing_period or today_madrid()
+    coordinate = filing_period
     days_of_year = 366 if calendar.isleap(coordinate.year) else 365
     if not (1 <= qualifying_days <= days_of_year):
         raise RentaValidationError("qualifying_days must be within the ordinary calendar-day input range")

@@ -2081,6 +2081,9 @@ errors:
       pudo autenticar este perfil.
     refused_profile_schema_validation: Los datos del perfil infringen el contrato
       del esquema. Corrige los valores indicados.
+    refused_renta_date_required: Esta exención depende de lo vigente en el ejercicio
+      de la renta, así que el cálculo no usa la fecha de hoy. Indica el ejercicio
+      de presentación.
     refused_renta_maritime_exemption_inactive: 'La exención DA 41 LIRPF (flota atunera)
       está inactiva: no se ha concedido la autorización de ayudas de Estado de la
       UE para 2024/2025. La AEAT confirma su no aplicabilidad. Activa esta exención

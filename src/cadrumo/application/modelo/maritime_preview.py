@@ -34,7 +34,6 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 from ...core.parsing.utils import parse_bool
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
@@ -209,7 +208,8 @@ def preview_maritime_exemption_for_active_profile(
             REBECA.
         operation: Optional caller-held generation-pinned registry operation.
         filing_year: The tax year asked about, which fixes its days, cap and fraction.
-            The REBECA pathway refuses without it, never falling back to the run date.
+            The exemption refuses a trabajador del mar profile without it, never
+            falling back to the run date.
 
     Returns:
         :class:`ModeloMaritimeExemptionPreview` carrying original facts,
@@ -231,8 +231,7 @@ def preview_maritime_exemption_for_active_profile(
                 filing_year=filing_year,
             )
     facts = maritime_facts_from_active_profile()
-    resolved_on = today_madrid() if filing_year is None else date(filing_year, 12, 31)
-    devengo_date = None if filing_year is None else resolved_on
+    resolved_on = None if filing_year is None else date(filing_year, 12, 31)
     try:
         result = resolve_maritime_exemption(
             facts=facts,
@@ -241,7 +240,7 @@ def preview_maritime_exemption_for_active_profile(
             gross_navigation_income=gross_navigation_income,
             authority=operation,
             filing_period=resolved_on,
-            devengo_date=devengo_date,
+            devengo_date=resolved_on,
         )
     except ProfileCompletenessError as exc:
         facts_without_retmar = replace(facts, retmar_registered=False)
@@ -252,7 +251,7 @@ def preview_maritime_exemption_for_active_profile(
             gross_navigation_income=gross_navigation_income,
             authority=operation,
             filing_period=resolved_on,
-            devengo_date=devengo_date,
+            devengo_date=resolved_on,
         )
         return ModeloMaritimeExemptionPreview(
             facts=facts,

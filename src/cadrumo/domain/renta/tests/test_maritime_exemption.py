@@ -429,6 +429,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert isinstance(obs, CasillaObservation)
         assert isinstance(obs.value, Decimal)
@@ -442,6 +443,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("73000"),
             qualifying_days=365,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.value == Decimal("60100")
 
@@ -451,6 +453,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("60100"),
             qualifying_days=365,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.value == Decimal("60100")
 
@@ -463,6 +466,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=1,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert isinstance(obs.value, Decimal)
         assert obs.value > Decimal("0")
@@ -475,6 +479,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.legal_refs == _ART_7P_LEGAL_REFS
 
@@ -483,6 +488,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.source_refs == _ART_7P_SOURCE_REFS
 
@@ -499,6 +505,7 @@ class TestCalculateArt7pExemption:
                 annual_salary=Decimal("36500"),
                 qualifying_days=100,
                 facts=facts,
+                filing_period=_FILING_PERIOD,
             )
 
     def test_raises_on_zero_salary(self) -> None:
@@ -509,6 +516,7 @@ class TestCalculateArt7pExemption:
                 annual_salary=Decimal("0"),
                 qualifying_days=100,
                 facts=self._BASE_FACTS,
+                filing_period=_FILING_PERIOD,
             )
 
     def test_raises_on_zero_qualifying_days(self) -> None:
@@ -519,6 +527,7 @@ class TestCalculateArt7pExemption:
                 annual_salary=Decimal("36500"),
                 qualifying_days=0,
                 facts=self._BASE_FACTS,
+                filing_period=_FILING_PERIOD,
             )
 
     def test_raises_on_qualifying_days_exceeding_year(self) -> None:
@@ -529,6 +538,7 @@ class TestCalculateArt7pExemption:
                 annual_salary=Decimal("36500"),
                 qualifying_days=366,
                 facts=self._BASE_FACTS,
+                filing_period=_FILING_PERIOD,
             )
 
 
@@ -658,6 +668,7 @@ def test_art7p_legal_refs_contain_no_wrong_provision() -> None:
         annual_salary=Decimal("36500"),
         qualifying_days=100,
         facts=facts,
+        filing_period=_FILING_PERIOD,
     )
     assert obs.legal_refs == _ART_7P_LEGAL_REFS
 
@@ -721,6 +732,7 @@ def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
             vessel_flag="foreign",
             waters_type="international",
         ),
+        filing_period=_FILING_PERIOD,
     )
     rebeca_obs = calculate_rebeca_exemption(
         gross_navigation_income=Decimal("30000"),

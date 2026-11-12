@@ -104,6 +104,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
         )
         assert len(result.observations) == 1
         obs = result.observations[0]
@@ -117,6 +118,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
             ),
             gross_navigation_income=Decimal("30000"),
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
         )
         assert len(result.observations) == 1
         obs = result.observations[0]
@@ -133,6 +135,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
             ),
             gross_navigation_income=Decimal("30000"),
             devengo_date=_DEVENGO,
+            filing_period=_DEVENGO,
         )
         obs = result.observations[0]
         assert result.casilla_values[obs.casilla_id] == obs.value

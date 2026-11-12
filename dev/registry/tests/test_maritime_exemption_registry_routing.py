@@ -26,6 +26,7 @@ from ..compiler.authority import compiled_bundled_authority
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DEVENGO_DATE = latest_period_end()
+_FILING_PERIOD = latest_period_end()
 
 
 @pytest.fixture(autouse=True)
@@ -65,6 +66,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.casilla_id == _registry_target_for(obs)
 

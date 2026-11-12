@@ -1924,6 +1924,9 @@ errors:
       this profile.
     refused_profile_schema_validation: The profile data violates the schema contract.
       Correct the values shown.
+    refused_renta_date_required: This exemption depends on the rules in force in the
+      tax year of the income, so the calculation does not use today's date. Supply
+      the filing year.
     refused_renta_maritime_exemption_inactive: 'DA 41 LIRPF exemption is inactive:
       EU state-aid clearance has not been granted as of 2024/2025. AEAT confirms non-applicability
       in official 2024 guidance. Activate only after EU clearance is granted (Ley
