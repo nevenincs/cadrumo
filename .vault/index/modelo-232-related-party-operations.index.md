@@ -6,7 +6,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:e7082ba1dd481cf93b72984274c4f3e815c9f9268b3486897c21a6ca1e76eb3d'
+body_hash: 'sha256:f9ec2888d3e117eea8f8e80c4f4787e7cbd122b092c77e5d2e90ca20adf15ed6'
 related:
   - '[[2026-11-12-modelo-232-related-party-operations-adr]]'
   - '[[2026-11-12-modelo-232-related-party-operations-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#modelo-232-related-party-ope
 
 ### adr
 
-- `2026-11-12-modelo-232-related-party-operations-adr` - `modelo-232-related-party-operations` adr: `Related-party operations fact for Modelo 232` | (**status:** `proposed`)
+- `2026-11-12-modelo-232-related-party-operations-adr` - `modelo-232-related-party-operations` adr: `Related-party operations fact for Modelo 232` | (**status:** `accepted`)
 
 ### research
 

@@ -5,12 +5,12 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:8d3a0f96b69fa1835e8adf76129e9a9c12f654c60df0e6a40c14b7182ff44f70'
+body_hash: 'sha256:48df8ea73354464457c727e3d7dfd9aed0f017c37a54bcea796e642e01bac583'
 related:
   - "[[2026-09-23-calendar-obligations-payer-fact-declaration-state-adr]]"
   - '[[2026-11-12-modelo-232-related-party-operations-research]]'
 ---
-# `modelo-232-related-party-operations` adr: `Related-party operations fact for Modelo 232` | (**status:** `proposed`)
+# `modelo-232-related-party-operations` adr: `Related-party operations fact for Modelo 232` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -43,6 +43,12 @@ The rule `modelos/232/revisions/2016-2017/applicability/0001-declarations.toml` 
 - Thresholds, the turnover share and the grounds are read from the registry parameters of the pinned revision (`modelo-232-same-related-party-threshold-eur`, `modelo-232-specific-operations-threshold-eur`, `modelo-232-same-type-turnover-share`). No consumer restates them.
 - Undeclared stays INCOMPLETE. Only a stated "none" for the ejercicio, or stated operations below every threshold with no tax-haven and no intangibles ground, gives NOT_APPLICABLE.
 - Operations between members of one tax consolidation group, and the other exclusions of art. 2.2, are stated on the record and left out of the totals. They are never inferred.
+- Conditions of the coordinator's acceptance on 2026-11-12 19:21:
+  - The records and the stated "none" live only in encrypted profile custody and are never logged.
+  - Amounts aggregate per related person for 2.1.a, and per operation type and valuation method for 2.1.b and 2.3. Operations an art. 2.2 exclusion removes are stated as excluded and shown as such, never dropped silently.
+  - The 2.3 turnover names its source with provenance. Unknown turnover leaves that ground undecided.
+  - A stated "none" for an ejercicio can be withdrawn, which returns that ejercicio to INCOMPLETE.
+  - The profile schema version number is taken in landing order.
 
 ## Implementation
 
