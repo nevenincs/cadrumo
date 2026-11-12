@@ -16,6 +16,7 @@ import { GridRoomContext } from "./gridRoom";
 import { TAB_SECTIONS, sectionName, sectionTabId } from "./ledgerWords";
 import type { MovementsMemory } from "./movements/useMovementsView";
 import type { RegistersArea } from "./setup/RegistersSection";
+import type { CounterpartyAsk } from "../../shell/counterpartyAsk";
 import { LedgerSuggestions } from "./suggestions/SuggestionsProvider";
 import { useLedgerPage } from "./useLedgerPage";
 
@@ -28,6 +29,9 @@ export type LedgerMemory = {
   /** The Registers area another part of the window asked the page to open
    * on; it is forgotten once the page leaves Registers. */
   registersArea?: RegistersArea;
+  /** What a way out elsewhere in the window asked of the counterparties; the
+   * page opens Rules › Counterparties on it and forgets it once taken. */
+  counterpartyAsk?: CounterpartyAsk;
 };
 
 /**

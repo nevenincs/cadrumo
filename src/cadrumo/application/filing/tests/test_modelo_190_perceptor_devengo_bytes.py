@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -54,12 +55,37 @@ def _row(nif: str, name: str, **fields: str) -> dict[str, ModeloInputScalar]:
     return values
 
 
+#: The type-2 row field each declarante-total binding sums; the rows here state only these two.
+_ROW_TOTAL_FIELDS: Final = {
+    "modelo-190-perceptor-rows-percepcion-dineraria-total": "percibido-dinerario",
+    "modelo-190-perceptor-rows-retencion-practicada-total": "retencion-practicada",
+}
+#: The other row totals the declarante formulas add, which no row here states.
+_UNSTATED_ROW_TOTALS: Final = (
+    "modelo-190-perceptor-rows-percepcion-especie-total",
+    "modelo-190-perceptor-rows-incapacidad-dineraria-total",
+    "modelo-190-perceptor-rows-incapacidad-especie-total",
+    "modelo-190-perceptor-rows-ingreso-a-cuenta-total",
+    "modelo-190-perceptor-rows-incapacidad-retencion-total",
+    "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total",
+)
+
+
+def _row_totals(rows: list[dict[str, ModeloInputScalar]]) -> dict[str, ModeloInputValue]:
+    """The row sums the declarante totals add over, summed from the rows themselves."""
+    totals: dict[str, ModeloInputValue] = {binding: Decimal("0.00") for binding in _UNSTATED_ROW_TOTALS}
+    for binding, field in _ROW_TOTAL_FIELDS.items():
+        totals[binding] = sum((Decimal(str(row[field])) for row in rows), Decimal("0.00"))
+    return totals
+
+
 def _export(operation: PinnedAuthorityOperation, tmp_path: Path, rows: list[dict[str, ModeloInputScalar]]) -> list[str]:
     """Export the rows and return the perceptor records of the written fichero."""
     period = Period.from_year_and_code(_YEAR, "0A")
     provider = build_runtime_schema_provider(filing_year=_YEAR, period=period, modelos=("190",), operation=operation)
     inputs: dict[str, ModeloInputValue] = {
         "decl.total-percepciones": Decimal(len(rows)),
+        **_row_totals(rows),
     }
     row_sets: dict[str, dict[str, ModeloInputScalar]] = {}
     for index, row in enumerate(rows, start=1):

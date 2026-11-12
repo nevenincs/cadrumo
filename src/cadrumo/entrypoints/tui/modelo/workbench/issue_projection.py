@@ -22,6 +22,7 @@ def _where(line: ModeloFormIssueLine) -> str:
 
 def _issue_line(line: ModeloFormIssueLine) -> IssueLine:
     surface = line.surface
+    compared = line.compared_surface
     return IssueLine(
         level=attention_level(line.level),
         box=line.box or _NO_BOX,
@@ -33,6 +34,7 @@ def _issue_line(line: ModeloFormIssueLine) -> IssueLine:
         key=None if line.address is None else address_key(line.address),
         in_records=line.in_records,
         area=surface if surface is not None and surface_target(surface) is not None else None,
+        compared_area=compared if compared is not None and surface_target(compared) is not None else None,
         from_calculation=line.from_calculation,
         recalculates=line.recalculates,
     )

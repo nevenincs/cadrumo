@@ -7,11 +7,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { facts } from "@/shell/compose";
-import { servedRefusalWords } from "../../../shell/ledger";
+import {
+  servedRefusalWords,
+  type LedgerErrorDetail,
+} from "../../../shell/ledger";
 import type {
   CounterpartyFilingName as StatedFilingName,
   LedgerCounterpartyResult,
 } from "../../../shell/ledgerClassificationSetup";
+import {
+  COUNTERPARTY_KINDS,
+  type CounterpartyKind,
+} from "../../../shell/counterpartyAsk";
+import { servedRefusal } from "../../../shell/refusal";
+import { RefusalNotice } from "../../RefusalNotice";
 import { formatTime } from "../../../shared/dateFormats";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
@@ -19,8 +28,6 @@ import { EditorField } from "./EditorField";
 import { CallLine, ChoiceField, FormGrid, useSetupWrite } from "./SetupParts";
 import type { SetupProps } from "./setupProps";
 import { setupCall } from "./setupModel";
-
-const KINDS = ["natural_person", "entity"] as const;
 
 type RenderingDraft = { key: number; width: string; text: string };
 type Draft = {
@@ -34,8 +41,11 @@ type Draft = {
 };
 
 let nextKey = 0;
-const draftOf = (stated: StatedFilingName | null | undefined): Draft => ({
-  kind: stated?.party_kind ?? "",
+const draftOf = (
+  stated: StatedFilingName | null | undefined,
+  initialKind: CounterpartyKind | null,
+): Draft => ({
+  kind: stated?.party_kind ?? initialKind ?? "",
   primer: stated?.primer_apellido ?? "",
   segundo: stated?.segundo_apellido ?? "",
   noSecond: stated?.no_second_surname ?? false,
@@ -56,10 +66,12 @@ const savedWidth = (width: string): number | null => {
 };
 
 /**
- * The name a counterparty is filed under in Modelo 347, 349, 180, 190 and 193,
- * stated once for it: a natural person's two surnames and given name, or an
- * entity's razón social, and shorter renderings for fields too narrow for it.
- * The widths of those fields are not served, so the person enters them. What
+ * The name a counterparty is filed under in the informative returns that list
+ * it, stated once for it: a natural person's surnames and given name, or an
+ * entity's company name, and shorter renderings for fields too narrow for it.
+ * The view serves every export field the name is filed into, with its width
+ * and whether the stated name fills it, and the longest each part can be to
+ * fit whole. They are shown as served, tokens and numbers unworded. What
  * the name is checked against is the backend's; nothing is decided here.
  */
 export function CounterpartyFilingName({
@@ -67,12 +79,15 @@ export function CounterpartyFilingName({
   result,
   country,
   actor,
+  initialKind = null,
   onSaved,
 }: Pick<SetupProps, "port"> & {
   result: LedgerCounterpartyResult;
   country: string;
   /** Who states it, as typed for the counterparty's other answers. */
   actor: string;
+  /** The kind a way out already bound, for a name not yet stated. */
+  initialKind?: CounterpartyKind | null;
   onSaved(): Promise<void> | void;
 }) {
   const t = useStrings();
@@ -81,7 +96,8 @@ export function CounterpartyFilingName({
     t("desktop.ledger.counterparty.filing_name.title"),
   );
   const stated = result.filing_name ?? null;
-  const [draft, setDraft] = useState<Draft>(() => draftOf(stated));
+  const [draft, setDraft] = useState<Draft>(() => draftOf(stated, initialKind));
+  const slots = result.filing_name_slots ?? [];
   const patch = (next: Partial<Draft>) =>
     setDraft((held) => ({ ...held, ...next }));
   const natural = draft.kind === "natural_person";
@@ -104,6 +120,16 @@ export function CounterpartyFilingName({
   // A view re-reads the stored name, so an uncertain write is told by it.
   const untold = async (): Promise<Landing> => "untold";
   const refused = write.last?.kind === "refused" ? write.last : null;
+  // A refusal is shown as served: its words, then its ways out in order.
+  const refusalDetail = refused
+    ? (refused.detail as LedgerErrorDetail | null)
+    : null;
+  const served =
+    refused &&
+    (servedRefusalWords(refusalDetail) !== null ||
+      refusalDetail?.precondition_verdict_json)
+      ? servedRefusal(servedRefusalWords(refusalDetail), refusalDetail)
+      : null;
 
   const save = async () => {
     if (!canSave) return;
@@ -155,10 +181,8 @@ export function CounterpartyFilingName({
       )}
     </EditorField>
   );
-  const kindWords = (kind: string) =>
-    kind === "entity"
-      ? t("desktop.ledger.counterparty.filing_name.kind.entity")
-      : t("desktop.ledger.counterparty.filing_name.kind.natural_person");
+  // The party kinds are shown as the backend names them; it serves no words for them.
+  const kindWords = (kind: string) => kind;
   const setRendering = (at: number, change: Partial<RenderingDraft>) =>
     patch({
       renderings: draft.renderings.map((held, i) =>
@@ -250,19 +274,55 @@ export function CounterpartyFilingName({
           icon={<Icon name="alert" />}
           className="ledger-counterparty-filing-name-finding"
         >
-          {t("desktop.ledger.counterparty.filing_name.kind_contradicts", {
-            declared: kindWords(finding.declared_kind),
-            observed: kindWords(finding.observed_form),
-          })}
+          {finding.words ? (
+            <span lang={finding.words_language ?? undefined}>
+              {finding.words}
+            </span>
+          ) : (
+            `${finding.code}: declared_kind=${finding.declared_kind} observed_form=${finding.observed_form}`
+          )}
         </Alert>
       ))}
+      {slots.length > 0 && (
+        <section
+          className="flex flex-col gap-1"
+          aria-label={t("desktop.ledger.counterparty.filing_name.slots")}
+        >
+          <h5 className="text-sm font-medium">
+            {t("desktop.ledger.counterparty.filing_name.slots")}
+          </h5>
+          <ul className="ledger-counterparty-filing-name-slots flex flex-col gap-1 text-sm">
+            {slots.map((slot) => (
+              <li
+                key={slot.export_field_id}
+                className="flex flex-wrap items-baseline gap-x-2"
+              >
+                <span lang={slot.edition_words_language}>
+                  {slot.edition_words}
+                </span>
+                <span className="tabular-nums">width={slot.width}</span>
+                <span>fits={String(slot.fits)}</span>
+                <span>refusal={String(slot.refusal)}</span>
+                <span>uses_rendering={String(slot.uses_rendering)}</span>
+              </li>
+            ))}
+          </ul>
+          <ul className="ledger-counterparty-filing-name-part-limits flex flex-wrap gap-x-2 text-sm tabular-nums">
+            {(result.filing_name_part_limits ?? []).map((limit) => (
+              <li key={limit.part}>
+                {limit.part}={limit.max_length}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <FormGrid>
         <ChoiceField
           label={t("desktop.ledger.counterparty.filing_name.kind_label")}
           value={draft.kind}
           onValue={(kind) => patch({ kind })}
           placeholder={t("desktop.ledger.form.choose")}
-          options={KINDS.map((kind) => ({
+          options={COUNTERPARTY_KINDS.map((kind) => ({
             value: kind,
             label: kindWords(kind),
           }))}
@@ -272,6 +332,7 @@ export function CounterpartyFilingName({
             t("desktop.ledger.counterparty.filing_name.razon_social"),
             draft.razon,
             (razon) => patch({ razon }),
+            true,
           )}
         {natural && (
           <>
@@ -279,6 +340,7 @@ export function CounterpartyFilingName({
               t("desktop.ledger.counterparty.filing_name.primer_apellido"),
               draft.primer,
               (primer) => patch({ primer }),
+              true,
             )}
             {part(
               t("desktop.ledger.counterparty.filing_name.segundo_apellido"),
@@ -290,6 +352,7 @@ export function CounterpartyFilingName({
               t("desktop.ledger.counterparty.filing_name.nombre"),
               draft.nombre,
               (nombre) => patch({ nombre }),
+              true,
             )}
             <label className="flex items-center gap-2 text-sm">
               <Checkbox
@@ -363,7 +426,7 @@ export function CounterpartyFilingName({
               </IconButton>
             </div>
           ))}
-          <div>
+          <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -395,11 +458,11 @@ export function CounterpartyFilingName({
           </Button>
         </WriteHold>
       </div>
-      <CallLine
-        call={write.last}
-        refusal={() => (refused ? servedRefusalWords(refused.detail) : null)}
-        onReread={() => void onSaved()}
-      />
+      {served ? (
+        <RefusalNotice refusal={served} />
+      ) : (
+        <CallLine call={write.last} onReread={() => void onSaved()} />
+      )}
     </section>
   );
 }

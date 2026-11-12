@@ -66,6 +66,7 @@ import { useFormSession, type FormSession } from "../form/session";
 import type { BorradorPort } from "../../../shell/borrador";
 import { CheckView } from "./CheckView";
 import { NoteRecoveries } from "./NoteRecoveries";
+import type { CounterpartyAsk } from "../../../shell/counterpartyAsk";
 import { ComparisonView, offersComparison } from "./ComparisonView";
 import { CalculationEvidenceDialog } from "./CalculationEvidenceDialog";
 import {
@@ -174,6 +175,7 @@ function Ready({
   onOpenWork,
   onOpenMovement,
   onOpenInvoice,
+  onOpenCounterparty,
   initialView,
   onLeaveGuard,
   profileCompanions,
@@ -194,6 +196,7 @@ function Ready({
   /** Opens one ledger movement in the Libro, where the shell has one. */
   onOpenMovement?: (transactionId: string) => void;
   onOpenInvoice?: (invoiceId: string) => void;
+  onOpenCounterparty?: (ask: CounterpartyAsk) => void;
   initialView: WorkspaceView;
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   profileCompanions?: ProfileCompanionKit;
@@ -939,6 +942,7 @@ function Ready({
               <NoteRecoveries
                 notes={envelope.form.form.calculation_notes}
                 onOpenInvoice={onOpenInvoice ?? null}
+                onOpenCounterparty={onOpenCounterparty ?? null}
               />
             }
             answers={<DisagreementAnswers read={disagreements} />}
@@ -1217,6 +1221,7 @@ export function WorkspaceScreen({
   onOpenWork,
   onOpenMovement,
   onOpenInvoice,
+  onOpenCounterparty,
   initialView = "form",
   onLeaveGuard,
   onWritten,
@@ -1243,6 +1248,9 @@ export function WorkspaceScreen({
   onOpenMovement?: (transactionId: string) => void;
   /** The invoice a check line asks a document for; only a window with a Libro can open it. */
   onOpenInvoice?: (invoiceId: string) => void;
+  /** The counterparty a calculation note asks a statement for; only a
+   * window with a Libro can open it. */
+  onOpenCounterparty?: (ask: CounterpartyAsk) => void;
   /** The view the declaration opens on. */
   initialView?: WorkspaceView;
   /** Hands the shell the guard that asks before staged edits are dropped. */
@@ -1367,6 +1375,7 @@ export function WorkspaceScreen({
         onOpenWork={onOpenWork}
         onOpenMovement={onOpenMovement}
         onOpenInvoice={onOpenInvoice}
+        onOpenCounterparty={onOpenCounterparty}
         initialView={initialView}
         onLeaveGuard={onLeaveGuard}
         profileCompanions={profileCompanions}

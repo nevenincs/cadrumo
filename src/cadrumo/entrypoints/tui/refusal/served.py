@@ -22,6 +22,7 @@ from ....application.operations.error_detail import (
     operation_catalogue_refusal_words,
     served_words_language,
 )
+from ....application.operations.next_step import OperationNextStepV1
 from ....application.operator_actions.projection import ActionArgumentSnapshot, PreconditionVerdictSnapshot
 from ....core.errors.error_codes import declared_error_codes_by_qualname, get_registered_error_code_by_code
 from ....core.external_constants import OutputLanguage
@@ -53,6 +54,8 @@ class ServedRefusalV1(BaseModel):
 
     refusal_words: ServedWordsV1 | None = None
     verdict: PreconditionVerdictSnapshot | None = None
+    #: The step the refusal named for putting it right, worded in the refusal's own language, when it named one.
+    next_step: OperationNextStepV1 | None = None
 
     @property
     def no_recovery_words(self) -> ServedWordsV1 | None:
@@ -159,7 +162,8 @@ def served_refusal(detail: OperationErrorDetailV1 | None, *, refusal_code: str |
 
     The sentence is the one the detail served; without a detail it is the
     registry's public sentence for ``refusal_code``, when there is one. The
-    verdict is the one the detail recorded, so its ways out are the served ones.
+    verdict is the one the detail recorded, so its ways out are the served ones; the step is the one the
+    detail recorded.
     """
     words: ServedWordsV1 | None = None
     verdict: PreconditionVerdictSnapshot | None = None
@@ -171,7 +175,7 @@ def served_refusal(detail: OperationErrorDetailV1 | None, *, refusal_code: str |
         words = _registry_words(refusal_code)
     if words is None and verdict is None:
         return None
-    return ServedRefusalV1(refusal_words=words, verdict=verdict)
+    return ServedRefusalV1(refusal_words=words, verdict=verdict, next_step=None if detail is None else detail.next_step)
 
 
 __all__ = [

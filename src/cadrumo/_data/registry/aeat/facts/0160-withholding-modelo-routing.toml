@@ -12,7 +12,7 @@ ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-modelo-111-instructions"
-required_text = ["Rendimientos del trabajo y de actividades", "Actividades profesionales"]
+required_text = ["Rendimientos del trabajo y de actividades", "Actividades profesionales", "por todos los conceptos"]
 [[fact.variants.source_citations]]
 source_ref = "aeat-modelo-115-180-folleto-actividades"
 required_text = ["modelo 115", "resumen anual de las retenciones", "modelo 180"]
@@ -27,7 +27,10 @@ source_ref = "aeat-modelo-193-procedure"
 required_text = ["193"]
 
 # The periodic self-assessment each withholding income kind settles through, and the annual
-# summary that restates it. A formalization projection never files into the two capital forms.
+# summary that restates it. An annual summary's own total of retenciones e ingresos a cuenta
+# and the periodic box that totals the same withholding "por todos los conceptos" are the two
+# figures a verification compares; neither is computed from the other. A formalization
+# projection never files into the two capital forms.
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -39,5 +42,7 @@ entries = [
   { key = "annual.periodic_percepciones.190", value = "111" },
   { key = "annual.capital_disclosure_retenciones.193", value = "123" },
   { key = "annual.source_observations.180", value = "115" },
+  { key = "annual.retenciones_total.190", value = "decl.retenciones-total" },
+  { key = "periodic.retenciones_total.111", value = "28" },
   { key = "formalization.refused.modelos", value = "123,193" },
 ]

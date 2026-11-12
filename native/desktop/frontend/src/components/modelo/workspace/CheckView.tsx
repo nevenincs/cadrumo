@@ -44,6 +44,14 @@ function Line({
     line.surface && line.surface !== "none" && canOpenSurface(line.surface)
       ? line.surface
       : null;
+  // The second door, to where the figures the finding compared are kept.
+  const compared =
+    line.compared_surface &&
+    line.compared_surface !== "none" &&
+    line.compared_surface !== surface &&
+    canOpenSurface(line.compared_surface)
+      ? line.compared_surface
+      : null;
   const body = (
     <>
       <BoxNumber box={line.box} />
@@ -62,6 +70,7 @@ function Line({
   // disagreement, or revoke the acceptance that covers it.
   const offered = onAnswer ? (line.resolution_answer ?? null) : null;
   const actions = (surface ||
+    compared ||
     invoice ||
     (line.recalculates && onRecalculate) ||
     offered) && (
@@ -78,8 +87,24 @@ function Line({
         </Button>
       )}
       {surface && (
-        <Button size="sm" variant="link" onClick={() => onOpenSurface(surface)}>
+        <Button
+          size="sm"
+          variant="link"
+          data-line-door="surface"
+          onClick={() => onOpenSurface(surface)}
+        >
           {t(`workspace.modelo.surface.open.${surface}`)}
+          <Icon name="forward" size="xs" />
+        </Button>
+      )}
+      {compared && (
+        <Button
+          size="sm"
+          variant="link"
+          data-line-door="compared_surface"
+          onClick={() => onOpenSurface(compared)}
+        >
+          {t(`workspace.modelo.surface.open.${compared}`)}
           <Icon name="forward" size="xs" />
         </Button>
       )}

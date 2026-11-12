@@ -2178,11 +2178,8 @@ desktop:
       country: País
       established: Establerta
       filing_name:
-        kind:
-          entity: Entitat
-          natural_person: Persona física
-        kind_contradicts: El tipus indicat ({declared}) no coincideix amb la forma
-          de l'identificador ({observed}).
+        asked: Un càlcul demana el nom de presentació d'una contrapart. Escriu-ne
+          el NIF i cerca-la per indicar el nom.
         kind_label: Tipus
         no_second_surname: Sense segon cognom
         nombre: Nom
@@ -2196,6 +2193,7 @@ desktop:
           el nom.
         save: Desa el nom de presentació
         segundo_apellido: Segon cognom
+        slots: On es presenta el nom
         stated_by: Indicat per
         text: Text
         title: Nom de presentació
@@ -2226,10 +2224,6 @@ desktop:
       undetermined: Sense determinar
       vat_state: Identificada a efectes de l'IVA a
       view: Consulta
-      withdraw: Retira…
-      withdraw_confirm: Retira la confirmació
-      withdraw_what: Retira la teva confirmació. Altres fonts poden continuar aportant
-        aquests valors.
     density:
       comfortable: Files àmplies
     describe:
@@ -4766,9 +4760,8 @@ desktop:
     entry_required: '* obligatori a cada registre'
     field_help: Sobre aquest camp
     household:
-      add: Afegeix una persona
       blocked_hidden: Alguns valors d'aquest grup estan amagats, així que aquí no
-        se'n poden canviar les persones.
+        se'n poden editar les persones. Encara pots afegir o treure una persona.
       cap_reached: Aquest grup és ple, així que no es poden afegir més persones.
       declare_none: Indica que no n'hi ha cap
       edit_person: Edita la persona {number}
@@ -4781,10 +4774,8 @@ desktop:
         clear: Retirar la resposta
         unknown_help: Encara no has indicat res, i això no és el mateix que «no».
       reading: Llegint la teva família…
-      remove: Treu la persona
       remove_help: Vols treure aquesta persona de la teva família? El recompte s'actualitza
         amb ella.
-      remove_person: Treu la persona {number}
       retry: Torna-ho a provar
       saved: Família desada.
       state:
@@ -7439,10 +7430,10 @@ tui:
           mostra %{evidenced}. %{detail}'
         country: Codi de país (2 lletres, opcional)
         evidenced: Àmbit que mostra un document, per a la consulta (opcional)
+        filing_asked: Un càlcul demana el nom de presentació d'una contrapart. Escriu-ne
+          l'identificador fiscal i cerca-la per indicar el nom.
         filing_done: S'ha indicat el nom de presentació de %{identifier}.
         filing_heading: Nom de presentació
-        filing_kind_entity: Entitat
-        filing_kind_natural_person: Persona física
         filing_no_second: Sense segon cognom
         filing_nombre: Nom
         filing_primer: Primer cognom
@@ -7454,6 +7445,7 @@ tui:
           amb un punt i coma.
         filing_review: Revisar nom de presentació
         filing_segundo: Segon cognom
+        filing_slots_heading: 'On es presenta el nom:'
         filing_stage: Indicar el nom de presentació de %{identifier} com a %{kind}.
         filing_stated: 'Nom de presentació de %{identifier}: %{kind} · %{name}'
         filing_stated_by: Indicat per %{name} el %{date}.
@@ -7464,15 +7456,12 @@ tui:
         identifier_required: Escriu primer l'identificador fiscal de la contrapart.
         note: Nota (opcional)
         nothing_known: No se sap res de %{identifier}.
-        nothing_to_withdraw: No hi havia cap confirmació de %{identifier} per retirar.
         prompt: Consulta el que se sap de l'establiment d'una contrapart, confirma-ho
           tu mateix o retira la teva confirmació.
         review_confirm: Revisa la confirmació
-        review_withdraw: Revisa la retirada
         scope: '%{identifier}: àmbit territorial %{scope} (font: %{source})'
         stage_confirm: 'Confirma %{identifier}: àmbit territorial %{scope} · estat
           membre %{state}.'
-        stage_withdraw: Retira la teva confirmació de %{identifier}.
         state: 'Estat membre %{state} (font: %{source})'
         territorial: Àmbit territorial (codi)
         title: Contraparts
@@ -7480,7 +7469,6 @@ tui:
           %{scope} · estat membre %{state}.'
         view: Consulta
         who_heading: Quina contrapart
-        withdrawn: S'ha retirat la teva confirmació de %{identifier}.
       destructive_accept: Sí, endavant
       destructive_title: Confirma aquest canvi
       diagnostics:

@@ -400,6 +400,7 @@ class InstalledModeloWorkbench:
             asks_elections=offer.asks_elections,
             modelo=str(self._declaration.modelo),
             own_accounts=self._own_accounts,
+            elections=offer.elections,
         )
 
     async def export(self, request: WorkbenchExportRequest) -> OperationControllerPort:
@@ -413,6 +414,7 @@ class InstalledModeloWorkbench:
             artefact=request.artefact,
             charge_account_id=request.charge_account_id,
             refund_account_id=request.refund_account_id,
+            instalment_election=request.instalment_election,
         )
 
     async def export_result(

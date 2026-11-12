@@ -70,6 +70,20 @@ flows:
     field_unavailable: Campo de perfil no disponible
     help:
       about: 'Sobre este ajuste:'
+    household:
+      close: Cerrar
+      full: Este grupo está lleno, así que no se pueden añadir más personas.
+      read_again: Volver a leer
+      read_failed: No se ha podido leer tu familia. Vuelve a leerla para intentarlo
+        de nuevo.
+      reading: Leyendo tu familia…
+      state_none_declared: Has indicado que no hay ninguna.
+      state_not_served: Tu perfil no ofrece este grupo.
+      state_unknown: No hay nada registrado para este grupo. Eso no es lo mismo que
+        ninguna.
+      title: Familia
+      unknown_outcome: Puede que el cambio se haya guardado, o no. Vuelve a leer tu
+        familia antes de cambiar nada más.
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}

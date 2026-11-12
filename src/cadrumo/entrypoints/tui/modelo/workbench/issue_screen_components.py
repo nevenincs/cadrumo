@@ -35,6 +35,7 @@ CONFIRM_SCOPE_KEY: Final[str] = "b"
 _CALCULATE_KEY: Final[str] = "c"
 
 _OPEN_AREA_KEY: Final[str] = "a"
+OPEN_COMPARED_KEY: Final[str] = "o"
 
 _CONFIRM_SCOPE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.confirm_all"
 
@@ -80,8 +81,11 @@ def _action_with_key(line: IssueLine) -> str:
         return f"{line.action} [{_CALCULATE_KEY}]"
     if line.action_targets_box and line.key is not None:
         return f"{line.action} [Enter]"
-    if line.area is not None:
-        return f"{line.action} [{_OPEN_AREA_KEY}]"
+    keys = [
+        key for key, area in ((_OPEN_AREA_KEY, line.area), (OPEN_COMPARED_KEY, line.compared_area)) if area is not None
+    ]
+    if keys:
+        return f"{line.action} {' '.join(f'[{key}]' for key in keys)}"
     return line.action
 
 
@@ -207,12 +211,13 @@ def footer_keys_for_width(
     has_open_area: bool,
     has_confirm_target: bool,
     gap: int,
+    has_compared_area: bool = False,
 ) -> set[str]:
     """Choose whole footer bindings in priority order, stopping before one would be clipped."""
     shown: set[str] = set()
     for key in priority:
         binding = _footer_binding(key, enter_binding, bindings)
-        binding = _available_footer_binding(key, binding, has_open_area, has_confirm_target)
+        binding = _available_footer_binding(key, binding, has_open_area, has_confirm_target, has_compared_area)
         if binding is None:
             continue
         cost = cell_len(f"{key_display(binding)} {binding.description}") + gap
@@ -231,11 +236,15 @@ def _footer_binding(key: str, enter_binding: Binding | None, bindings: Mapping[s
 
 
 def _available_footer_binding(
-    key: str, binding: Binding | None, has_open_area: bool, has_confirm_target: bool
+    key: str, binding: Binding | None, has_open_area: bool, has_confirm_target: bool, has_compared_area: bool
 ) -> Binding | None:
     if binding is None or not binding.description:
         return None
-    if (key == "a" and not has_open_area) or (key == "b" and not has_confirm_target):
+    if (
+        (key == _OPEN_AREA_KEY and not has_open_area)
+        or (key == OPEN_COMPARED_KEY and not has_compared_area)
+        or (key == "b" and not has_confirm_target)
+    ):
         return None
     return binding
 
@@ -243,6 +252,7 @@ def _available_footer_binding(
 __all__ = (
     "BOXES_SUFFIX",
     "ISSUE_ID_PREFIX",
+    "OPEN_COMPARED_KEY",
     "SECTION_INFIX",
     "_INTRO_SUFFIX",
     "IssueList",

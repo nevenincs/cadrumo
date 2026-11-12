@@ -126,6 +126,8 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         """How long each completed re-read took, newest last."""
         self.back_area: LedgerWorkspaceArea | None = None
         """The area Back returns to when this body was opened as one of its tools."""
+        self.opened_for_way_out = False
+        """Whether a served way out opened this tool, so its served arguments start the tool."""
         self._write_outcome_unknown = False
         self._unknown_after_refresh = 0
         """How many re-reads had started when the last unknown outcome arrived; only a later one can show it."""

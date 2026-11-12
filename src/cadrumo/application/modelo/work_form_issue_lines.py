@@ -59,6 +59,7 @@ from .calculation_notes import (
 from .disagreement_words import credit_resolution_lead_words
 from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
+from .withholding_total_reconciliation import WITHHOLDING_TOTAL_MISMATCH_KEY
 from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
 from .work_form_field_vocabulary import (
     ModeloFormAddressV1,
@@ -199,6 +200,9 @@ class ModeloFormIssueLine(BaseModel):
     #: ``address`` is a value of a table's records, so choosing the line opens the table rather than a box.
     in_records: bool = False
     surface: SourceSurface | None = None
+    #: The area holding the other declarations this line's figure was compared with, a second door beside
+    #: ``surface``; ``None`` when the line compares nothing held elsewhere.
+    compared_surface: SourceSurface | None = None
     #: The latest calculation noticed this, rather than the check.
     from_calculation: bool = False
     #: Calculating again is what puts this right.
@@ -313,6 +317,19 @@ def _field_words(field: ModeloFormField) -> str | None:
     return field.label.text or None
 
 
+_FINDING_SURFACES: Final[Mapping[str, tuple[SourceSurface, SourceSurface]]] = MappingProxyType(
+    {
+        WITHHOLDING_TOTAL_MISMATCH_KEY: (SourceSurface.WITHHOLDING, SourceSurface.DECLARATIONS),
+    }
+)
+"""The two doors of a finding that compares the form's figure with other declarations, by message.
+
+The first is where the records behind the form's own figure are kept, the second
+where the declarations it was compared with are: the filer corrects whichever is
+wrong, so the line offers both.
+"""
+
+
 def _owning_surface(field: ModeloFormField | None) -> SourceSurface | None:
     if field is None or not field.bindings:
         return None
@@ -416,6 +433,7 @@ def _finding_line(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueL
     target = _target(issue, context)
     if target is None:
         return None
+    doors = _FINDING_SURFACES.get(finding.message_locale_key)
     return ModeloFormIssueLine(
         level=issue.attention,
         box=target.box or None,
@@ -425,7 +443,8 @@ def _finding_line(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueL
         detail=target.detail,
         technical=_technical(finding, context),
         address=target.address,
-        surface=_owning_surface(target.field),
+        surface=doors[0] if doors is not None else _owning_surface(target.field),
+        compared_surface=None if doors is None else doors[1],
         recalculates=finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION,
         invoice_id=issue.open_invoice_id,
     )
