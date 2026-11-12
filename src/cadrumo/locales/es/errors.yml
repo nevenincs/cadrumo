@@ -197,6 +197,7 @@ errors:
     remedy: solución
     revision: revisión
     row: fila
+    schema_version: versión del esquema
     section: sección
     state: estado
     status: estado

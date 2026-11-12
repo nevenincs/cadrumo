@@ -189,6 +189,7 @@ errors:
     remedy: remedy
     revision: revision
     row: row
+    schema_version: schema version
     section: section
     state: state
     status: status

@@ -199,6 +199,7 @@ errors:
     remedy: solució
     revision: revisió
     row: fila
+    schema_version: versió de l'esquema
     section: secció
     state: estat
     status: estat

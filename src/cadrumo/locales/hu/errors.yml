@@ -200,6 +200,7 @@ errors:
     remedy: teendő
     revision: revízió
     row: sor
+    schema_version: sémaverzió
     section: szakasz
     state: állapot
     status: állapot
