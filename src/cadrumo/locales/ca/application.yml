@@ -529,6 +529,24 @@ application:
           exportar.'
         layout_not_renderable: Aquest model no pot produir un fitxer local d'exportació
           de la declaració.
+        m111_colegio_concertado_undeclared: 'No s''ha escrit res: el model 111 necessita
+          saber si ets un col·legi concertat i el teu perfil no ho indica. Indica-ho
+          al teu perfil i torna a exportar.'
+        m202_producer_facts_unsupported: 'No s''ha escrit res: el model 202 necessita
+          dades que aquesta exportació encara no pot prendre del teu perfil (%{missing_fact_ids}).
+          Exporta''l quan s''admetin.'
+        m303_definitive_prorrata_missing: 'No s''ha escrit res: la regularització
+          de béns d''inversió del model 303 necessita el percentatge definitiu de
+          prorrata i el teu registre de prorrata no el té per a l''any. Liquida''l
+          al registre i torna a exportar.'
+        m303_sector_apportionment_missing: 'No s''ha escrit res: el teu registre de
+          prorrata té sectors diferenciats, però el teu llibre no dona cap prorrateig
+          per a aquests en aquest període. Revisa el sector de l''IVA suportat al
+          llibre i al registre, i torna a exportar.'
+        m360_solicitud_undeclared: 'No s''ha escrit res: el model 360 necessita les
+          dades de la sol·licitud del període %{period} de %{filing_year} i no n''hi
+          ha cap de declarada. Declara-les amb `aeat app modelo m360 declare` i torna
+          a exportar.'
         post_write_verification_refused: La comprovació posterior a l'escriptura ha
           rebutjat el fitxer de declaració exportat.
         producer_fact_required: 'No s''ha escrit res: l''exportació necessita %{fact},

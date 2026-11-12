@@ -69,6 +69,7 @@ from .errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from datetime import date
 
     from .models import Invoice
 
@@ -297,8 +298,9 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceDecompositionDefect]:
     # direction, so reading it without the kind would answer about the wrong
     # side of the operation. The invoice carries its kind, so the caller never
     # has to guess.
-    row = category_components(category, invoice.kind)
-    if row.applicability == registry_kind_applicability_token("does_not_arise"):
+    devengo_date = invoice.operation_date or invoice.issued_at
+    row = category_components(category, invoice.kind, effective_date=devengo_date)
+    if row.applicability == registry_kind_applicability_token("does_not_arise", effective_date=devengo_date):
         # The category is one-directional and this invoice claims the other
         # side (an "import" the taxpayer issued, say). Its own defect rather
         # than the undeclared one: the operator DID declare a treatment, so
@@ -309,18 +311,24 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceDecompositionDefect]:
     # already declare their own components UNKNOWN, so reading that column is
     # both the same test and one that keeps working if the enum grows another
     # placeholder member.
-    if row.base == registry_component_presence_token("unknown") or row.cuota == registry_component_presence_token(
-        "unknown",
-    ):
+    unknown_presence = registry_component_presence_token("unknown", effective_date=devengo_date)
+    if row.base == unknown_presence or row.cuota == unknown_presence:
         yield InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED
         return
-    if category_bears_taxable_base(category, invoice.kind) and invoice.base_total == Decimal("0"):
+    if category_bears_taxable_base(
+        category, invoice.kind, effective_date=devengo_date
+    ) and invoice.base_total == Decimal("0"):
         yield InvoiceDecompositionDefect.TAXABLE_BASE_ABSENT
-    if _carries_a_cuota_its_category_forbids(invoice, row.cuota):
+    if _carries_a_cuota_its_category_forbids(invoice, row.cuota, effective_date=devengo_date):
         yield InvoiceDecompositionDefect.CUOTA_CONTRADICTS_CATEGORY
 
 
-def _carries_a_cuota_its_category_forbids(invoice: Invoice, cuota: IvaComponentPresence) -> bool:
+def _carries_a_cuota_its_category_forbids(
+    invoice: Invoice,
+    cuota: IvaComponentPresence,
+    *,
+    effective_date: date,
+) -> bool:
     """Whether a recorded cuota contradicts a category that has none by law.
 
     Only this direction is checked. The mirror -- a category whose cuota is
@@ -335,7 +343,7 @@ def _carries_a_cuota_its_category_forbids(invoice: Invoice, cuota: IvaComponentP
     member state's, settled through the special regime rather than through the
     Spanish general cuota that the Axis-A row describes.
     """
-    if cuota != registry_component_presence_token("zero_by_law"):
+    if cuota != registry_component_presence_token("zero_by_law", effective_date=effective_date):
         return False
     if invoice.oss_ioss_regime is not None:
         return False

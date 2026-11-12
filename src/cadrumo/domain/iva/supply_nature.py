@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Final, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import today_madrid
 from .errors import IvaValidationError
 from .schema import IvaCategory
 
@@ -108,12 +107,6 @@ class SupplyNatureDerivation(BaseModel):
 
 _NOTHING_DERIVED: Final = SupplyNatureDerivation(outcome=SupplyNatureDerivationOutcome.ABSENT)
 _ARTICLE_REFERENCE_SEPARATOR: Final[str] = ":art-"
-
-
-def _require_catalogue(catalogue: CitationCatalogue | None) -> CitationCatalogue:
-    if catalogue is None:
-        return registry_citation_catalogue(effective_date=today_madrid())
-    return catalogue
 
 
 # Registry authority: selected IVA statutory citation catalogue is consumed through the governed mapping fact
@@ -230,7 +223,7 @@ def _citation_pattern(article: str) -> re.Pattern[str]:
 def match_statutory_citations(
     printed: str | None,
     *,
-    catalogue: CitationCatalogue | None = None,
+    catalogue: CitationCatalogue,
 ) -> tuple[StatutoryCitation, ...]:
     """Return every registry-projected citation row matched in ``printed``."""
     if printed is None:
@@ -238,16 +231,15 @@ def match_statutory_citations(
     folded = printed.casefold()
     if not folded.strip():
         return ()
-    selected = _require_catalogue(catalogue)
-    if not any(qualifier.casefold() in folded for qualifier in selected.qualifiers):
+    if not any(qualifier.casefold() in folded for qualifier in catalogue.qualifiers):
         return ()
-    return tuple(citation for citation in selected.citations if _citation_pattern(citation.article).search(printed))
+    return tuple(citation for citation in catalogue.citations if _citation_pattern(citation.article).search(printed))
 
 
 def derive_supply_nature_from_citation(
     *,
     printed_citation: str | None,
-    catalogue: CitationCatalogue | None = None,
+    catalogue: CitationCatalogue,
 ) -> SupplyNatureDerivation:
     """Parse a printed citation against a selected registry catalogue."""
     citations = match_statutory_citations(printed_citation, catalogue=catalogue)
@@ -259,15 +251,14 @@ def derive_supply_nature_from_citation(
 def supply_nature_implied_by_category(
     category: IvaCategory | None,
     *,
-    catalogue: CitationCatalogue | None = None,
+    catalogue: CitationCatalogue,
     category_citations: Mapping[IvaCategory, tuple[str, ...]] | None = None,
 ) -> SupplyNatureDerivation:
     """Join a registry-projected category grounding map to citation rows."""
     if category is None:
         return _NOTHING_DERIVED
-    selected = _require_catalogue(catalogue)
     if category_citations is None:
-        category_citations = selected.category_citations
+        category_citations = catalogue.category_citations
     if not category_citations:
         raise IvaValidationError("IVA category citation map must be supplied by registry authority")
     articles = {
@@ -275,7 +266,7 @@ def supply_nature_implied_by_category(
         for reference in category_citations.get(category, ())
         if _ARTICLE_REFERENCE_SEPARATOR in reference
     }
-    citations = tuple(citation for citation in selected.citations if citation.article in articles)
+    citations = tuple(citation for citation in catalogue.citations if citation.article in articles)
     return _derive_from_citations(citations)
 
 

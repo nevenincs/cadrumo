@@ -104,6 +104,9 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         "check-docs-synonyms",
         # Registry capability checks, like the check-registry family above.
         "check-bindings",
+        # The registry's year-independence ratchet reads the registry data, like the check-registry family above;
+        # the suite enrolls code-quality primitives only.
+        "check-registry-year-independence",
         # Third-party security scanners fetched by uvx; the portable code
         # aggregate runs no network-fetched tool.
         "check-security-full",

@@ -174,6 +174,9 @@ _BASE_BINDINGS = {
     # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
     # neutral zero for a scenario with no descendants.
     "renta-profile-deduccion-maternidad": Decimal("0"),
+    # The art. 81.2 guarderia increment of an edition that computes casilla 0613;
+    # neutral zero for a scenario with no descendants.
+    "renta-profile-incremento-guarderia": Decimal("0"),
 }
 
 # Art. 75 Ley 19/1994 maritime-worker exemption path: these couples are not

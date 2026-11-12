@@ -24,6 +24,8 @@ from ..operator_actions.models import (
     PreconditionVerdict,
 )
 from ..operator_surface.models import ManifestActionProfile
+from .edit_refusal_profiles import EDIT_REFUSAL_PROFILES
+from .filing_import_refusal_profiles import FILING_IMPORT_REFUSAL_PROFILES
 from .precondition_action_bindings import (
     AlternativeActionArguments,
     action_argument_bindings,
@@ -352,6 +354,8 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.casilla_value.refused",
         action_id="operator.modelo.work.set_value",
     ),
+    *EDIT_REFUSAL_PROFILES,
+    *FILING_IMPORT_REFUSAL_PROFILES,
     # The refusals below are real but no catalogued action repairs them: the
     # registry has not adjudicated cells the stated boxes share, the schema
     # refuses a field that is no box of the declaration, the return suspends or
@@ -587,6 +591,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.prior_carries.stated",
         "modelo.work.calculate.prior_carries.renta_negative_savings_gains_losses_pending_unstated",
         action_id="operator.modelo.work.attest_prior_carries",
+    ),
+    # A stored revision that no longer matches its content address is replaced
+    # by calculating the work unit again from its sources.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.stored_revision.intact",
+        "modelo.work.calculate.stored_revision.drifted",
+        action_id="operator.modelo.work.calculate",
     ),
     # An input no source supplied is stated on the calculation itself; the
     # binding listing names it and the work unit's form takes the value.

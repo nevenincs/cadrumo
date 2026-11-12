@@ -530,6 +530,24 @@ application:
           las filas para que cada fila indique sus propias cifras, y vuelve a exportar.'
         layout_not_renderable: Este modelo no puede producir un fichero local de exportación
           de la declaración.
+        m111_colegio_concertado_undeclared: 'No se ha escrito nada: el modelo 111
+          necesita saber si eres un colegio concertado y tu perfil no lo indica. Indícalo
+          en tu perfil y vuelve a exportar.'
+        m202_producer_facts_unsupported: 'No se ha escrito nada: el modelo 202 necesita
+          datos que esta exportación todavía no puede tomar de tu perfil (%{missing_fact_ids}).
+          Expórtalo cuando se admitan.'
+        m303_definitive_prorrata_missing: 'No se ha escrito nada: la regularización
+          de bienes de inversión del modelo 303 necesita el porcentaje definitivo
+          de prorrata y tu registro de prorrata no lo tiene para el año. Liquídalo
+          en tu registro y vuelve a exportar.'
+        m303_sector_apportionment_missing: 'No se ha escrito nada: tu registro de
+          prorrata tiene sectores diferenciados, pero tu libro no da ningún prorrateo
+          para ellos en este periodo. Revisa el sector del IVA soportado en tu libro
+          y en el registro, y vuelve a exportar.'
+        m360_solicitud_undeclared: 'No se ha escrito nada: el modelo 360 necesita
+          los datos de la solicitud del periodo %{period} de %{filing_year} y no hay
+          ninguno declarado. Decláralos con `aeat app modelo m360 declare` y vuelve
+          a exportar.'
         post_write_verification_refused: La comprobación posterior a la escritura
           rechazó el fichero de declaración exportado.
         producer_fact_required: 'No se ha escrito nada: la exportación necesita %{fact},

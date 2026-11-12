@@ -7,7 +7,7 @@ revision_id = "2026-y-siguientes"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial authored layout after visual inspection of BOE-A-2026-1761 Annex III, printed12129-12134. Six pages retain existing casilla and filing-producer owners; simplified-regime totals are scalar fields, not an invented repeated table. Refund111 belongs to page6. Auxiliary calculation inputs remain separate. Printed simplified activity/module fields now address exact export projections and read immutable saved evidence through the filing projection. Their saved values are not editable spreadsheet calculations. Outstanding: extra electronic activity worksheets; annual activity descriptions (the six code/IAE pairs and third-party declaration now use saved filing evidence); explicit no-activity declaration; payment/refund72/73 and non-IBAN account details. The amendment first applies to February2026 monthly and second-quarter2026 returns; January2026 and first-quarter2026 use the separately declared 2026-hasta-01-y-1t prior-form branch and the independent 2026 record contract. No operator or native visual review claimed." }
 generator_version = 1
-source_state_digest = "d322037f0d971a82eb1932630fd22707f95fd71e4dc70cb3074428063b932e04"
+source_state_digest = "5c443a6e022a0db4a1aa6117fda1b428241ebb7859dea062b3fb09ac64383787"
 design_sources = [
     { source_ref = "aeat-dr-303-2026", sha256 = "b6ae0f98c32e71fa634af35ae4d0a05c7952ca7e557ef36d4974231645fdf904" },
     { source_ref = "boe-modelo-303-2026-form-pdf", sha256 = "0552f1b8b0e30b22a63e0cc4be29f5ba8ab050609dcb04ed16549b8eb5030694" },

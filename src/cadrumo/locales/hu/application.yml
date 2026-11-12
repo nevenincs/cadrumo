@@ -524,6 +524,24 @@ application:
           újra.'
         layout_not_renderable: Ez a nyomtatvány nem tud helyi bevallás-exportfájlt
           előállítani.
+        m111_colegio_concertado_undeclared: 'Semmi sem lett kiírva: a 111-es modellhez
+          tudni kell, hogy colegio concertado vagy-e, de a profilod ezt nem mondja
+          meg. Add meg a profilodban, és exportálj újra.'
+        m202_producer_facts_unsupported: 'Semmi sem lett kiírva: a 202-es modellhez
+          olyan adatok kellenek, amelyeket ez az export még nem tud a profilodból
+          venni (%{missing_fact_ids}). Exportáld, ha már támogatottak.'
+        m303_definitive_prorrata_missing: 'Semmi sem lett kiírva: a 303-as modell
+          beruházási javak helyesbítéséhez a végleges pro rata százalék kell, de a
+          nyilvántartásodban nincs meg erre az évre. Rendezd a nyilvántartásban, és
+          exportálj újra.'
+        m303_sector_apportionment_missing: 'Semmi sem lett kiírva: a pro rata nyilvántartásodban
+          megkülönböztetett ágazatok vannak, de a főkönyved ebben az időszakban nem
+          ad rájuk arányosítást. Ellenőrizd a bemenő áfa ágazatát a főkönyvben és
+          a nyilvántartásban, és exportálj újra.'
+        m360_solicitud_undeclared: 'Semmi sem lett kiírva: a 360-as modellhez a(z)
+          %{filing_year}. év %{period} időszakának kérelemadatai kellenek, de egy
+          sincs megadva. Add meg őket a `aeat app modelo m360 declare` paranccsal,
+          és exportálj újra.'
         post_write_verification_refused: Az írás utáni ellenőrzés elutasította az
           exportált bevallásfájlt.
         producer_fact_required: 'Semmi sem íródott ki: az exportáláshoz szükség van

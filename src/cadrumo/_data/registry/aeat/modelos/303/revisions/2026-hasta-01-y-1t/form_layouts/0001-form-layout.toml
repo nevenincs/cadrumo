@@ -7,7 +7,7 @@ revision_id = "2026-hasta-01-y-1t"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial authored January/Q1 2026 layout using the six prior BOE-A-2024-16129 printed pages99216-99221. AEAT2026 governs the independent record layout, all229 casillas, four-character CNAE and fiscal/proof substrate. Box112 is not printed on the prior annex and nonzero input is refused in this branch by its source-grounded applicability constraint. No later gasoline election is presented. Exact current2026 context/projection addresses are used. Outstanding: annual activity descriptions; no-activity declaration; payment/refund72/73 and non-IBAN details; additional electronic activity worksheets. No completed operator or native visual review claimed." }
 generator_version = 1
-source_state_digest = "e638833474a77cb1ac2b63fdd7e9d2bd100fbcc9d7c742cb5dd190e92354132f"
+source_state_digest = "97ee2512ca63c562180c7e92170f22cadbd55ac9bfbfb624d84eb99277da2c9d"
 design_sources = [
     { source_ref = "aeat-dr-303-2026", sha256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b" },
     { source_ref = "boe-modelo-303-2024-form-pdf", sha256 = "6fba5a18a81ab328bfe42249a6bc236bd790959ae1a936ec4334dab6f7b14cf5" },

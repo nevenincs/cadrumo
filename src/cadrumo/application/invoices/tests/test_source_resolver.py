@@ -75,7 +75,7 @@ class _StatedFilingNames:
             if invoice.counterparty_tax_id is not None
         }
 
-    def filing_name_of(self, tax_identifier: str, *, country_code: str) -> DeclaredPartyFilingName | None:
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
         del country_code
         return self._names.get(tax_identifier)
 
@@ -872,7 +872,7 @@ def test_m349_raises_no_unclassified_note_for_an_invoice_that_is_no_intra_commun
 class _NoStatedFilingNames:
     """A profile in which the person has stated no counterparty's filing name."""
 
-    def filing_name_of(self, tax_identifier: str, *, country_code: str) -> DeclaredPartyFilingName | None:
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
         del tax_identifier, country_code
 
 

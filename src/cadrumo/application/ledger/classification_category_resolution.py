@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.iva_category_catalogue import registry_category_projection, require_iva_category
@@ -246,7 +245,17 @@ def _unsupported_relief_claim(
     Returns:
         The operator-facing reason, or ``""`` when the claim stands.
     """
-    if declared not in registry_category_projection("relief_on_establishment_premise", authority=operation):
+    if assembly.transaction_date is None:
+        # Which categories rest on the establishment premise is read on the
+        # transaction's date. Without one nothing here can be judged, and the
+        # missing date is itself an input the assembly reports and the
+        # confirmation gate refuses on.
+        return ""
+    if declared not in registry_category_projection(
+        "relief_on_establishment_premise",
+        effective_date=assembly.transaction_date,
+        authority=operation,
+    ):
         return ""
     outstanding = {gap.field for gap in assembly.missing} & _RESIDENCY_FIELDS
     if not outstanding:
@@ -285,10 +294,11 @@ def _resolve_undeclared_ingestion_category(
             category=classified,
             classified=classified,
         )
-    projected = resolve_iva_classification_inputs(
-        effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else today_madrid()),
-        operation=operation,
-    )
+    if assembly.transaction_date is None:
+        # The rate-to-category mapping is read on the transaction's date; the
+        # assembly already reports the missing date, so nothing is inferred.
+        return IvaCategoryResolution(outcome=IvaCategoryOutcome.UNRESOLVED)
+    projected = resolve_iva_classification_inputs(effective_date=assembly.transaction_date, operation=operation)
     inferred = projected.rate_categories.get(rate_tier) if rate_tier is not None else None
     if inferred is None:
         return IvaCategoryResolution(outcome=IvaCategoryOutcome.UNRESOLVED)
@@ -401,11 +411,15 @@ def resolve_ingestion_iva_category(
                 "because absent establishment does not disprove the claim"
             ),
         )
-    tier_conflict = _rate_tier_contradiction(
-        stated,
-        rate_tier,
-        operation=operation,
-        effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else today_madrid()),
+    tier_conflict = (
+        _rate_tier_contradiction(
+            stated,
+            rate_tier,
+            operation=operation,
+            effective_date=assembly.transaction_date,
+        )
+        if assembly.transaction_date is not None
+        else ""
     )
     if tier_conflict:
         return IvaCategoryResolution(

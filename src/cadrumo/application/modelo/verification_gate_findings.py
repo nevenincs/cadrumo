@@ -52,6 +52,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.evidence_advisory import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
@@ -163,14 +164,16 @@ def cuota_less_without_base_findings(
     catalogue = transaction_repository.load()
     registry_source_refs = optional_observation_refs(target.observations, "source_refs")
 
-    cuota_less_categories = registry_category_projection("cuota_less_m303")
     findings: list[ModeloVerificationFinding] = []
     for transaction_id in sorted(target.source_transaction_ids):
         transaction = catalogue.get(transaction_id)
         if transaction is None:
             continue
         category = transaction.iva_category
-        if category is None or category not in cuota_less_categories:
+        if category is None or category not in registry_category_projection(
+            "cuota_less_m303",
+            effective_date=transaction_operation_date(transaction),
+        ):
             continue
         if transaction.taxable_base is not None:
             continue
