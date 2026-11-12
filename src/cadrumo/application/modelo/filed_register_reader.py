@@ -138,14 +138,18 @@ class _PassTransactionRepository(_PassTransactionReads):
 
 
 def _read_once_per_pass(ports: LedgerMembershipPorts) -> LedgerMembershipPorts:
-    """Bind the asset history and the transactions to one load each for every revision of a pass."""
+    """Bind the asset history and the transactions to one load each for every revision of a pass.
+
+    The invoice ports' transaction reader is usually the same ledger store, so it
+    shares the repository's pass cache rather than asking the store again.
+    """
+    transactions = _PassTransactionRepository(ports.transaction_repository)
+    reader = ports.invoice_catalogue_read_ports.transaction_reader
+    pass_reader = transactions if reader is ports.transaction_repository else _PassTransactionReads(reader)
     return replace(
         ports,
-        transaction_repository=_PassTransactionRepository(ports.transaction_repository),
-        invoice_catalogue_read_ports=replace(
-            ports.invoice_catalogue_read_ports,
-            transaction_reader=_PassTransactionReads(ports.invoice_catalogue_read_ports.transaction_reader),
-        ),
+        transaction_repository=transactions,
+        invoice_catalogue_read_ports=replace(ports.invoice_catalogue_read_ports, transaction_reader=pass_reader),
         activity_asset_history_repository=_PassHistory(ports.activity_asset_history_repository),
     )
 

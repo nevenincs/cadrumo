@@ -18,6 +18,7 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+from typing import Final
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
@@ -35,6 +36,7 @@ from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtoco
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..modelo.work_profile import ModeloWorkProfile
+from .capital_mobiliario_position_source import CapitalMobiliarioPositionSourceResolver
 from .impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
 from .inventory import InventoryLedgerRepositoryProtocol, InventorySourceResolver
 from .modelo_bindings import (
@@ -47,9 +49,20 @@ from .modelo_bindings_renta_expenses import (
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
 )
 from .oss_ioss_resolver import OssIossLedgerSourceResolver
+from .retencion_soportada_repository import RetencionSoportadaPorts
 from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, ModeloSourceResolver
 
 _log = get_logger(__name__)
+
+_MEMBERSHIP_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = LEDGER_BINDING_SOURCE_KINDS | frozenset(
+    {BindingSourceKind.CAPITAL_MOBILIARIO_POSITION}
+)
+"""The binding source kinds whose owners consume ledger rows and so enrol them in membership.
+
+The ledger aggregation kinds, plus the savings-position family: it is not a
+ledger aggregation kind, yet it reads the rows linked to a position, so a change
+to one of those rows moves the boxes it feeds.
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,6 +76,7 @@ class LedgerMembershipPorts:
     activity_asset_history_repository: ActivityAssetHistoryRepository
     usage_ratio_profile_loader: UsageRatioProfileLoader
     inventory_repository: InventoryLedgerRepositoryProtocol
+    retencion_soportada_ports: RetencionSoportadaPorts
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,7 +159,7 @@ def _query_ledger_membership(
     ports: LedgerMembershipPorts,
     operation: PinnedAuthorityOperation,
 ) -> LedgerSourceMembership:
-    selected = frozenset(binding.source for binding in revision.bindings) & LEDGER_BINDING_SOURCE_KINDS
+    selected = frozenset(binding.source for binding in revision.bindings) & _MEMBERSHIP_SOURCE_KINDS
     if not selected:
         return LedgerSourceMembership()
     context = CalculationSourceContext(
@@ -233,6 +247,10 @@ def collect_ledger_membership(
         LedgerImpatriadoIncomeAggregationSourceResolver(transaction_repository=ports.transaction_repository),
         LedgerIrnrIncomeAggregationSourceResolver(transaction_repository=ports.transaction_repository),
         OssIossLedgerSourceResolver(ports=ports.invoice_catalogue_read_ports),
+        CapitalMobiliarioPositionSourceResolver(
+            transaction_repository=ports.transaction_repository,
+            retencion_soportada_ports=ports.retencion_soportada_ports,
+        ),
     )
     observed: set[str] = set()
     asset_refs: set[str] = set()

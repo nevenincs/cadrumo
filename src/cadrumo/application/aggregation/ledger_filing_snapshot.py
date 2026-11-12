@@ -23,7 +23,8 @@ categories, the M210 source-jurisdiction/classification facts, the EU member
 state, the FX conversion, the lifecycle state, and (from field-set version 3)
 the bienes de inversion link and the customer's identifying Member State, and
 (from version 5) the operation date and the deduction evidence behind the row,
-and (from version 7) the operator-stated accrual date.
+and (from version 7) the operator-stated accrual date, and (from version 8) the
+savings-position link and its capital-mobiliario concept.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
@@ -185,6 +186,16 @@ FINGERPRINT_FIELDS_V7: tuple[tuple[str, str], ...] = (
     ("accrual_date", "accrual_date"),
 )
 
+# V8 adds the savings-position link: ``posicion_ref`` and ``concepto_capital_mobiliario``
+# decide whether a row feeds the interest and dividend boxes of the position it names
+# or an activity aggregation, and which detail record it feeds, without moving any
+# amount or date V7 watches.
+FINGERPRINT_FIELDS_V8: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V7,
+    ("posicion_ref", "posicion_ref"),
+    ("concepto_capital_mobiliario", "concepto_capital_mobiliario"),
+)
+
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: FINGERPRINT_FIELDS_V1,
     2: FINGERPRINT_FIELDS_V2,
@@ -192,10 +203,11 @@ _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     5: FINGERPRINT_FIELDS_V5,
     6: FINGERPRINT_FIELDS_V6,
     7: FINGERPRINT_FIELDS_V7,
+    8: FINGERPRINT_FIELDS_V8,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 7
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 8
 
 #: The first version whose hash sees a row's operation date.
 OPERATION_DATE_FIELD_SET_VERSION: Final = 5
