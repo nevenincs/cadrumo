@@ -16,6 +16,9 @@ from .contracts import RefusalCode, RefusalError
 #: Longest a single frontend exchange with the runtime may be granted by its caller.
 MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS = 120.0
 
+#: Below this much time left on the shared deadline, a settled operation's result read gets its own.
+MIN_SETTLED_OPERATION_READ_SECONDS = 0.25
+
 
 class OrchestrationTimeoutError(TimeoutError):
     """The last-resort timeout ended an owned wait; it says nothing about its outcome."""
@@ -115,6 +118,7 @@ def exchange_deadline(deadline: float | None = None) -> float:
 __all__ = [
     "DEFAULT_TIMEOUT_POLICY",
     "MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS",
+    "MIN_SETTLED_OPERATION_READ_SECONDS",
     "OrchestrationTimeoutError",
     "TimeoutDeadline",
     "TimeoutPolicy",
