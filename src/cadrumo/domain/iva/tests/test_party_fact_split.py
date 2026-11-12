@@ -27,6 +27,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -36,6 +37,8 @@ from ..errors import IvaValidationError
 from ..identification import identification_state_for_printed_tax_identifier
 from ..schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from .classification_authority_support import classify_with_registry_rules
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -330,7 +333,9 @@ class TestAnUnplacedOperationDemandsEverything:
         """The fail-toward-asking default, so a forgotten declaration costs a question."""
         from ..classification import IvaClassificationResult
 
-        bare = IvaClassificationResult(category=IvaCategory("unknown"), matched_rule_id="R99_fallthrough")
+        bare = IvaClassificationResult(
+            category=IvaCategory("unknown"), matched_rule_id="R99_fallthrough", effective_date=_ON_DATE
+        )
         assert bare.consumes_party_facts == frozenset(PartyFact)
 
 

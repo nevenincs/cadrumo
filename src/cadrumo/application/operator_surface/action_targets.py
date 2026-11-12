@@ -211,6 +211,7 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         required_inputs=("actividad_id", "year", "correction_id", "movement_id", "ledger_row"),
         profile_bound_write=True,
     ),
+    ActionTarget("ledger.prorrata.list", ("app", "ledger", "prorrata", "list"), "ProrrataListResult"),
     ActionTarget(
         "ledger.evidence.review.list", ("app", "ledger", "evidence", "review", "list"), "EvidenceReviewListResult"
     ),

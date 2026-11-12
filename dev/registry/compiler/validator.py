@@ -27,10 +27,13 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.invoice_bindings import InvoiceProviderBase
+from cadrumo.domain.calculations.registry.ledger_iva_bindings import ledger_iva_revision_vocabulary_failures
+from cadrumo.domain.calculations.registry.ledger_oss_bindings import ledger_oss_revision_vocabulary_failures
 from cadrumo.domain.calculations.registry.m347_threshold import resolve_counterpart_operation_claves
 from cadrumo.domain.calculations.registry.runtime_catalogues import RuntimeRegistryCatalogues
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
@@ -496,7 +499,23 @@ class RegistryValidator:
             if failure not in failures:
                 failures.append(failure)
         failures.extend(self._invoice_clave_failures(modelo, revision, prefix=prefix))
+        failures.extend(self._ledger_selector_vocabulary_failures(revision, prefix=prefix))
         return failures
+
+    def _ledger_selector_vocabulary_failures(self, revision: ModeloRevision, *, prefix: str) -> list[str]:
+        """Validate ledger IVA and OSS/IOSS selector tokens against this candidate's facts on the revision's start."""
+        if not any(binding.source in _DATED_LEDGER_SELECTOR_SOURCES for binding in revision.bindings):
+            return []
+        if self._support is None:
+            return [f"{prefix}: ledger selector vocabularies require the candidate support envelope"]
+        authority = CandidateFactAuthority(self._facts, self._support)
+        return [
+            f"{prefix}: {failure}"
+            for failure in (
+                *ledger_iva_revision_vocabulary_failures(revision, authority=authority),
+                *ledger_oss_revision_vocabulary_failures(revision, authority=authority),
+            )
+        ]
 
     def _invoice_clave_failures(self, modelo: ModeloDefinition, revision: ModeloRevision, *, prefix: str) -> list[str]:
         """Validate selectors against this candidate's dated operation catalogue."""
@@ -517,6 +536,12 @@ class RegistryValidator:
             for point in _candidate_clave_dates(modelo.id, revision, authority)
             for failure in _candidate_clave_failures_at(modelo.id, selectors, point, authority, prefix)
         ]
+
+
+_DATED_LEDGER_SELECTOR_SOURCES = frozenset(
+    {BindingSourceKind.LEDGER_IVA_AGGREGATION, BindingSourceKind.LEDGER_OSS_AGGREGATION}
+)
+"""Binding families whose selector tokens are members of a dated registry vocabulary."""
 
 
 def _candidate_clave_dates(

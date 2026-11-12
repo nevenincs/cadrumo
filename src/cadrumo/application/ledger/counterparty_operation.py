@@ -17,6 +17,7 @@ from ...core.hex import Hex64Str
 from ...core.identity.documents import IdentityDocument, IdentityError, validate_identity
 from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...domain.calculations.registry.ine_provincia_catalogue import ine_provincia_names
@@ -465,7 +466,9 @@ def _confirm_counterparty_action(
             tax_identifier=payload.tax_identifier,
             asserted_by=payload.asserted_by or "",
             territorial_scope=(
-                require_iva_territorial_scope(payload.territorial_scope, operation=context.authority_operation)
+                require_iva_territorial_scope(
+                    payload.territorial_scope, effective_date=today_madrid(), operation=context.authority_operation
+                )
                 if payload.territorial_scope is not None
                 else None
             ),
@@ -618,7 +621,9 @@ def _view_counterparty_action(
         tax_identifier=payload.tax_identifier,
         country_code=payload.country_code,
         evidenced_scope=(
-            require_iva_territorial_scope(payload.evidenced_scope, operation=context.authority_operation)
+            require_iva_territorial_scope(
+                payload.evidenced_scope, effective_date=today_madrid(), operation=context.authority_operation
+            )
             if payload.evidenced_scope is not None
             else None
         ),

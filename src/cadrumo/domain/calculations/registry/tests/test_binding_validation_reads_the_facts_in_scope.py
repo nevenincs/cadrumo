@@ -40,10 +40,12 @@ from ..iva_flow_catalogue import (
     resolve_iva_flow_direction_catalogue,
 )
 from ..iva_rate_kind_catalogue import require_registry_declared_iva_rate_kind
-from ..ledger_iva_bindings import LedgerIvaProvider
+from ..ledger_iva_bindings import LedgerIvaProvider, ledger_iva_selector_vocabulary_failures
 from ..schema_references import TemporalSupportEnvelope
 from ..snapshot_globals import SupportedFilingYearsCatalogue
 from .authored_editions import filing_year_envelope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -191,7 +193,7 @@ def _provider_payload(rate_kinds: tuple[IvaRateKind, ...], *, flow_direction: Iv
 
 
 def _projected_flow() -> IvaFlowDirection:
-    return require_iva_flow_direction("repercutido", effective_date=_EFFECTIVE)
+    return require_iva_flow_direction("repercutido", effective_date=_EFFECTIVE, authority=_scoped_facts())
 
 
 def test_a_rate_kind_declared_by_the_scoped_facts_is_accepted() -> None:
@@ -211,23 +213,24 @@ def test_validation_outside_a_scope_refuses_instead_of_reading_the_published_aut
         require_registry_declared_iva_rate_kind("general", effective_date=_EFFECTIVE)
 
 
-def test_a_binding_validates_its_rate_tiers_against_the_scoped_facts() -> None:
-    """The real provider model, not a stand-in, resolves through the scope."""
-    with validating_governed_facts(_scoped_facts()):
-        provider = LedgerIvaProvider.model_validate(
-            _provider_payload((IvaRateKind("general"),), flow_direction=_projected_flow())
-        )
+def test_a_binding_validates_its_rate_tiers_against_the_facts_it_is_given() -> None:
+    """The real provider model, not a stand-in, is checked against the named facts on the named date."""
+    provider = LedgerIvaProvider.model_validate(
+        _provider_payload((IvaRateKind("general"),), flow_direction=_projected_flow())
+    )
 
     assert provider.rate_kinds == (IvaRateKind("general"),)
+    assert ledger_iva_selector_vocabulary_failures(provider, effective_date=_EFFECTIVE, authority=_scoped_facts()) == ()
 
 
 def test_a_binding_declaring_an_undeclared_rate_tier_is_refused() -> None:
-    with validating_governed_facts(_scoped_facts()), pytest.raises(ValidationError) as refusal:
-        LedgerIvaProvider.model_validate(
-            _provider_payload((IvaRateKind("super_reduced"),), flow_direction=_projected_flow())
-        )
+    provider = LedgerIvaProvider.model_validate(
+        _provider_payload((IvaRateKind("super_reduced"),), flow_direction=_projected_flow())
+    )
 
-    assert "not declared by the facts registry" in str(refusal.value)
+    failures = ledger_iva_selector_vocabulary_failures(provider, effective_date=_EFFECTIVE, authority=_scoped_facts())
+
+    assert any("not declared by the facts registry" in failure for failure in failures)
 
 
 class _RecordingFacts:
@@ -248,7 +251,7 @@ class _RecordingFacts:
 def test_a_flow_direction_is_validated_against_the_scoped_facts_it_checked() -> None:
     scoped = _RecordingFacts(_scoped_facts())
     with validating_governed_facts(scoped):
-        flow = require_registry_declared_iva_flow_direction("operacion_con_inversion")
+        flow = require_registry_declared_iva_flow_direction("operacion_con_inversion", effective_date=_ON_DATE)
 
     assert flow.value == "operacion_con_inversion"
     assert scoped.fact_ids == ["iva-invoice-classification-catalogue"]
@@ -257,7 +260,7 @@ def test_a_flow_direction_is_validated_against_the_scoped_facts_it_checked() -> 
 def test_flow_validation_outside_a_scope_refuses_instead_of_reading_the_published_authority() -> None:
     assert governed_facts_in_scope() is None
     with pytest.raises(RegistryValidationError, match="published authority artifact"):
-        require_registry_declared_iva_flow_direction("repercutido")
+        require_registry_declared_iva_flow_direction("repercutido", effective_date=_ON_DATE)
 
 
 def test_an_explicit_flow_authority_is_used_instead_of_the_scope() -> None:
@@ -272,12 +275,26 @@ def test_an_explicit_flow_authority_is_used_instead_of_the_scope() -> None:
 
 
 def test_a_binding_validated_outside_a_scope_never_reaches_the_bundle() -> None:
-    """Absence of scoped facts is a refusal, which is what keeps the reader out of the loop."""
+    """The selector model reads no facts at all; its vocabulary check reads only the facts it is given."""
     with validating_governed_facts(_scoped_facts()):
         flow_direction = _projected_flow()
-    with pytest.raises(ValidationError) as refusal:
-        LedgerIvaProvider.model_validate(_provider_payload((IvaRateKind("general"),), flow_direction=flow_direction))
+    assert governed_facts_in_scope() is None
+    provider = LedgerIvaProvider.model_validate(
+        _provider_payload((IvaRateKind("general"),), flow_direction=flow_direction)
+    )
+    explicit = _RecordingFacts(_scoped_facts())
 
-    message = str(refusal.value)
-    assert "published authority artifact" in message
-    assert "rate_kinds" in message
+    assert ledger_iva_selector_vocabulary_failures(provider, effective_date=_EFFECTIVE, authority=explicit) == ()
+    assert explicit.fact_ids
+    assert governed_facts_in_scope() is None
+
+
+def test_a_selector_token_outside_the_closed_form_is_refused_without_reading_any_facts() -> None:
+    assert governed_facts_in_scope() is None
+    with pytest.raises(ValidationError, match="lowercase registry token"):
+        LedgerIvaProvider.model_validate(
+            {
+                **_provider_payload((IvaRateKind("general"),), flow_direction=_projected_flow()),
+                "flow_direction": "Bad Flow",
+            }
+        )

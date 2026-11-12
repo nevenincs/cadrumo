@@ -2,67 +2,67 @@
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termin"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termino-municipal-de-lorca", offset = 223, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-hfp-1359-2023:da-5", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-el-termin"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-el-termino-municipal-de-lorca", offset = 543, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-hfp-1359-2023:da-5", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municip"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municipios-afectados-por-la-dana", offset = 1205, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "real-decreto-ley-7-2024:art-11", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reducciones-total"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-reducciones-total", offset = 1222, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-hfp-1359-2023:da-5", "real-decreto-ley-7-2024:art-11", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municip"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municipios-afectados-por-la-dana", offset = 1239, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "real-decreto-ley-7-2024:art-11", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducciones-total"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-reducciones-total", offset = 1256, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-hfp-1359-2023:da-5", "real-decreto-ley-7-2024:art-11", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273", offset = 1273, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "real-decreto-ley-7-2024:art-11", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290", offset = 1290, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "real-decreto-ley-7-2024:art-11", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307", offset = 1307, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "real-decreto-ley-7-2024:art-11", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324", offset = 1324, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "real-decreto-ley-7-2024:art-11", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341", offset = 1341, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "real-decreto-ley-7-2024:art-11", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # The 2 % and 7,5 % rate boxes of the adquisiciones intracomunitarias deducible
 # block ([765]-[776]), which the 2024 diseno de registro adds for the temporary

@@ -75,7 +75,7 @@ _SENTINEL_CATEGORIES: frozenset[IvaCategory] = frozenset(
 )
 with bundled_indexed_authority().operation():
     COMPONENT_CATALOGUE = registry_component_catalogue(effective_date=_ON_DATE)
-    CATEGORY_CATALOGUE = resolve_iva_category_catalogue()
+    CATEGORY_CATALOGUE = resolve_iva_category_catalogue(effective_date=_ON_DATE)
     _CUOTA_LESS_CATEGORIES = registry_category_projection("cuota_less_m303", effective_date=_ON_DATE)
 
 

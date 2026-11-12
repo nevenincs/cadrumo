@@ -81,7 +81,7 @@ def transaction_eligible_date_span(transaction: Transaction) -> tuple[date, date
     if operation_date is None:
         return filing_date, filing_date
     candidates = [filing_date, operation_date]
-    if not is_iva_cash_accounting_none(transaction.cash_accounting_treatment):
+    if not is_iva_cash_accounting_none(transaction.cash_accounting_treatment, operation_date):
         # Both extras are criterio-de-caja constructs and must not widen a
         # general-regime row. That row files on its art. 75 devengo date, full
         # stop: it settles in one movement, so there is no collection series

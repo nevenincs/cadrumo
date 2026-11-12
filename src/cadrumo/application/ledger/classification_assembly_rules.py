@@ -85,6 +85,7 @@ def axis_forks_the_law(
     probe: Callable[[CustomerTaxStatus, TransactionKind], IvaCategory],
     *,
     slices: list[tuple[tuple[CustomerTaxStatus, ...], tuple[TransactionKind, ...]]],
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Whether ONE undetermined axis can change THIS operation's treatment.
@@ -130,7 +131,10 @@ def axis_forks_the_law(
             verdicts = {probe(status, kind) for status in statuses for kind in kinds}
         except Exception:  # reason: an unclassifiable probe is not evidence of indifference.
             return True
-        if len(verdicts) > 1 or require_iva_category("unknown", authority=operation) in verdicts:
+        if (
+            len(verdicts) > 1
+            or require_iva_category("unknown", effective_date=effective_date, authority=operation) in verdicts
+        ):
             return True
     return False
 

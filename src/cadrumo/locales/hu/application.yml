@@ -3110,6 +3110,10 @@ application:
       m303_m349_intracom_reconciliation_mismatch: A(z) %{filing_year} %{period_code}
         időszakban a Modelo 303 közösségen belüli összege (%{m303_total} EUR) és a
         Modelo 349 összege (%{m349_total} EUR) %{gap} EUR-val eltér.
+      m390_prorrata_apartado_unrendered: 'A %{filing_year}. évi Modelo 390: a prorrata-nyilvántartásod
+        erre az évre vonatkozik (%{registered_activity_rows} tevékenységsor), de a
+        nyomtatványkiadás még nem tartalmazza a prorrata részt (12. apartado), ezért
+        ez a rész üresen maradna az exportban. Még nem tudod ellenőrizni vagy exportálni.'
       madrid_nacimiento_adopcion_eligibility_advisory: 'A(z) [%{casilla_id}] rovat
         alapján (súlyozott szám: %{weighted_count}) jogosult lehetsz a madridi születési
         vagy örökbefogadási kedvezményre.'

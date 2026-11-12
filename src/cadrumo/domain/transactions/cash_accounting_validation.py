@@ -101,6 +101,7 @@ def validate_cash_accounting_axis(
     *,
     treatment: IvaCashAccountingTreatment,
     operation_date: date | None,
+    effective_date: date,
     payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...],
     taxable_base: Decimal | None,
     iva_amount: Decimal | None,
@@ -110,9 +111,10 @@ def validate_cash_accounting_axis(
     """Validate timing, direction, substrate, and settlement evidence coupling.
 
     The membership check and both token comparisons read one catalogue, so a
-    row is judged against a single resolution of the dated vocabulary.
+    row is judged against a single resolution of the dated vocabulary, selected
+    on ``effective_date``: the date the law selects the row's registry values on.
     """
-    catalogue = resolve_iva_cash_accounting_catalogue()
+    catalogue = resolve_iva_cash_accounting_catalogue(effective_date=effective_date)
     treatment = catalogue.require(treatment)
     if treatment == catalogue.none_token:
         if payment_evidence:

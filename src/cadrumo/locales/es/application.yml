@@ -3157,6 +3157,11 @@ application:
       m303_m349_intracom_reconciliation_mismatch: En el periodo %{period_code} de
         %{filing_year}, el total intracomunitario del modelo 303 (%{m303_total} EUR)
         y el total del modelo 349 (%{m349_total} EUR) difieren en %{gap} EUR.
+      m390_prorrata_apartado_unrendered: 'El modelo 390 de %{filing_year}: tu registro
+        de prorrata se aplica a este ejercicio (%{registered_activity_rows} fila(s)
+        de actividad), pero la edición del formulario aún no incluye el apartado de
+        prorratas (apartado 12), así que se exportaría con ese apartado en blanco.
+        Aún no puedes verificarlo ni exportarlo.'
       madrid_nacimiento_adopcion_eligibility_advisory: La casilla [%{casilla_id}],
         con un recuento ponderado de %{weighted_count}, puede darte derecho a la deducción
         de la Comunidad de Madrid por nacimiento o adopción.

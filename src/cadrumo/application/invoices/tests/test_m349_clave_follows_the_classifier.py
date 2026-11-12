@@ -22,6 +22,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
@@ -33,6 +34,8 @@ from ....domain.iva.classification import (
 )
 from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ..source_observations import iva_category_for_operation_type
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -70,7 +73,7 @@ def test_an_acquired_service_files_under_a_different_clave_than_acquired_goods()
         assert goods.matched_rule_id == "R11_intra_community_acquisition"
         assert services.matched_rule_id == "R13_services_b2b_eu_inbound"
 
-        catalogue = resolve_iva_category_catalogue()
+        catalogue = resolve_iva_category_catalogue(effective_date=_ON_DATE)
         goods_clave = IntracomOperationType(
             catalogue.operation_type("received.intra_community_acquisition_reverse_charge"),
         )
@@ -81,8 +84,8 @@ def test_an_acquired_service_files_under_a_different_clave_than_acquired_goods()
         assert goods_clave.value == "A"
         assert services_clave.value == "I"
         assert goods_clave is not services_clave
-        assert iva_category_for_operation_type(goods_clave) == goods.category
-        assert iva_category_for_operation_type(services_clave) == services.category
+        assert iva_category_for_operation_type(goods_clave, effective_date=_ON_DATE) == goods.category
+        assert iva_category_for_operation_type(services_clave, effective_date=_ON_DATE) == services.category
 
 
 def test_every_category_the_inbound_classifier_can_emit_for_the_eu_has_a_clave() -> None:
@@ -95,7 +98,7 @@ def test_every_category_the_inbound_classifier_can_emit_for_the_eu_has_a_clave()
     the two cannot drift apart silently.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        catalogue = resolve_iva_category_catalogue()
+        catalogue = resolve_iva_category_catalogue(effective_date=_ON_DATE)
         operation_by_category = {
             IvaCategory("intra_community_acquisition_reverse_charge"): IntracomOperationType(
                 catalogue.operation_type("received.intra_community_acquisition_reverse_charge"),
@@ -107,7 +110,7 @@ def test_every_category_the_inbound_classifier_can_emit_for_the_eu_has_a_clave()
         for kind in (TransactionKind("goods"), TransactionKind("services_general")):
             verdict = classify_iva(_eu_inbound_b2b(kind=kind), operation=_authority_operation_for_test)
             clave = operation_by_category[verdict.category]
-            assert iva_category_for_operation_type(clave) == verdict.category
+            assert iva_category_for_operation_type(clave, effective_date=_ON_DATE) == verdict.category
 
 
 def test_the_goods_and_services_acquisition_categories_are_distinct_members() -> None:

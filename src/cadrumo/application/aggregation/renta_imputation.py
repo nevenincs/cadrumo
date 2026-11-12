@@ -31,6 +31,7 @@ from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
@@ -549,7 +550,7 @@ def _accrues_when_charged(row: Transaction, kind: InvoiceKind) -> bool:
     if kind is InvoiceKind.RECEIVED:
         return row.category_id == SpendingCategory.from_registry("cuotas_autonomos_ss").value
     return row.direction is TransactionDirection.INCOMING and row.iva_category == require_iva_category(
-        "recargo_equivalencia"
+        "recargo_equivalencia", effective_date=transaction_operation_date(row)
     )
 
 
