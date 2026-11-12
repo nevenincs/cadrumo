@@ -147,6 +147,13 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
             for binding, value in M100_NO_DESCENDANT_MATERNIDAD_BINDINGS.items()
             if binding in declared_bindings
         },
+        # The art. 81.2 guarderia increment and the 2022 edition's cotizaciones-limited
+        # art. 81 deduction, neutral zero for a scenario with no descendants.
+        **{
+            binding: Decimal("0")
+            for binding in ("renta-profile-incremento-guarderia", "renta-profile-deduccion-maternidad-cotizaciones")
+            if binding in declared_bindings
+        },
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
