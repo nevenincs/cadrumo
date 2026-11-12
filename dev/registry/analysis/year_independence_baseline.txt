@@ -38,7 +38,6 @@ edition-only|100|formulas|renta-criptomonedas-ganancia-reducida-no-exenta|2025|u
 edition-only|100|formulas|renta-deduccion-madrid-nacimiento-adopcion|2025|uncited appearing boundary
 edition-only|100|formulas|renta-maritime-exempt-income|2025|uncited appearing boundary
 edition-only|100|parameters|lirpf-art-7p-exemption-cap|2025|uncited appearing boundary
-edition-only|100|parameters|rebeca-maritime-exemption-fraction|2025|uncited appearing boundary
 edition-only|100|parameters|renta-atribucion-rentas-rate-pass-through|2025|uncited appearing boundary
 edition-only|100|parameters|renta-deduccion-madrid-nacimiento-adopcion-cuantia|2025|uncited appearing boundary
 edition-only|100|parameters|renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-conjunta|2025|uncited appearing boundary

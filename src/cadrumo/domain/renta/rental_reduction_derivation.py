@@ -181,7 +181,7 @@ def _young_tenant_letting(lease: ArrendamientoRecord) -> bool | None:
     Returns ``None`` when the letting otherwise qualifies but only some of its
     natural-person tenants are in the age band.
     """
-    if not (lease.zona_tensionada and lease.primer_arrendamiento_vivienda):
+    if lease.zona_tensionada is not True or lease.primer_arrendamiento_vivienda is not True:
         return False
     bands = [tenant.franja_edad for tenant in lease.inquilinos if tenant.franja_edad is not InquilinoEdad.NO_APLICA]
     if not bands:
