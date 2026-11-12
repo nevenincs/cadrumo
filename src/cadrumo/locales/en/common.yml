@@ -7849,6 +7849,16 @@ tui:
       empty: No supporting documents await review.
       extract: Read document
       loading: Reading the documents…
+      page:
+        document: '{file} ({media}) - page {page} of {count}'
+        empty: The document states nothing to show.
+        fact: '{label}: {value}'
+        failed: The document could not be shown.
+        line: '{position}. {facts}'
+        loading: Reading the stored document...
+        not_drawn: The terminal does not draw pages. Open the document in the window
+          to see it.
+        view: View document
       path_placeholder: Type the path of the file
       pending: Pending
       printed_total_disagrees: The total printed on the document differs from the

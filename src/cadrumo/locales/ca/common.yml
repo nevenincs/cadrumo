@@ -8012,6 +8012,16 @@ tui:
       empty: No hi ha justificants pendents de revisió.
       extract: Llegeix el document
       loading: S'estan llegint els documents…
+      page:
+        document: '{file} ({media}) - pàgina {page} de {count}'
+        empty: El document no declara res per mostrar.
+        fact: '{label}: {value}'
+        failed: No s'ha pogut mostrar el document.
+        line: '{position}. {facts}'
+        loading: Llegint el document desat...
+        not_drawn: El terminal no dibuixa pàgines. Obre el document a la finestra
+          per veure'l.
+        view: Mostra el document
       path_placeholder: Escriu el camí del fitxer
       pending: Pendent
       printed_total_disagrees: El total imprès al document no coincideix amb el registrat.

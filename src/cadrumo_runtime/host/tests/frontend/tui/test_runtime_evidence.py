@@ -28,6 +28,21 @@ from cadrumo.application.ledger.evidence_errors import (
     EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
     PurchaseInvoiceEvidenceReaderError,
 )
+from cadrumo.application.ledger.evidence_page_contracts import (
+    EVIDENCE_PAGE_MIN_WIDTH,
+    LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
+    EvidencePageMediaType,
+    EvidenceStructuredFactV1,
+    EvidenceStructuredInvoiceV1,
+    LedgerEvidencePagePorts,
+    LedgerEvidencePageProjection,
+    LedgerEvidencePageRequest,
+)
+from cadrumo.application.ledger.evidence_page_errors import LedgerEvidencePageNotFoundError
+from cadrumo.application.ledger.evidence_page_operation import (
+    build_ledger_evidence_page_definition,
+    build_ledger_evidence_page_registration,
+)
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePortsFactory
 from cadrumo.application.ledger.evidence_read_operation import (
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
@@ -107,6 +122,7 @@ _RESULT_VERSIONS = {
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID: 1,
     LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID: 3,
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID: 2,
+    LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID: 1,
 }
 
 
@@ -118,12 +134,14 @@ def _contracts() -> dict[str, OperationPublicDefinitionContractV1]:
     listing = build_ledger_evidence_list_definition(evidence)
     extract = build_ledger_evidence_extract_definition(invoice_evidence)
     confirm = build_ledger_evidence_confirm_definition(invoice_evidence)
-    definitions = (add, listing, extract, confirm)
+    page = build_ledger_evidence_page_definition(cast(LedgerEvidencePagePorts, cast(object, None)))
+    definitions = (add, listing, extract, confirm, page)
     registrations = (
         build_ledger_evidence_add_registration(add),
         build_ledger_evidence_list_registration(listing),
         build_ledger_evidence_extract_registration(extract),
         build_ledger_evidence_confirm_registration(confirm),
+        build_ledger_evidence_page_registration(page),
     )
     registry = OperationRegistry(
         definitions=tuple(sorted(definitions, key=lambda item: item.definition_id)),
@@ -709,3 +727,90 @@ async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_
     )
     restored = nested_terminal_precondition_verdict(raised.value)
     assert restored == verdict
+
+
+def _structured_page(evidence_id: str = "f" * 16) -> LedgerEvidencePageProjection:
+    return LedgerEvidencePageProjection(
+        profile_id=_PROFILE_ID,
+        evidence_id=evidence_id,
+        attachment_id=_SOURCE_DIGEST,
+        media_type=EvidencePageMediaType.XML,
+        page=1,
+        page_count=1,
+        source_sha256=_SOURCE_DIGEST,
+        file_name="factura.xml",
+        structured_invoice=EvidenceStructuredInvoiceV1(
+            title_key="application.ledger.evidence.structured.title.xml_facturae",
+            facts=(
+                EvidenceStructuredFactV1(
+                    label_key="application.ledger.evidence.structured.fact.supplier_name", text="Proveedor Example SL"
+                ),
+            ),
+            lines=(),
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_runtime_evidence_page_asks_the_smallest_drawing_of_the_exact_record_and_returns_the_served_page(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = _Client()
+    served = _structured_page()
+    submissions, controllers = _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID, served, OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    page = await door.page("f" * 16)
+
+    assert page == served
+    assert submissions[0]["payload"] == LedgerEvidencePageRequest(
+        profile_id=_PROFILE_ID, evidence_id="f" * 16, page=1, max_width=EVIDENCE_PAGE_MIN_WIDTH
+    )
+    assert submissions[0]["definition_id"] == LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID
+    assert submissions[0]["subject_ref"] == profile_operation_subject(str(_PROFILE_ID))
+    assert submissions[0]["expected_session_id"] == _SESSION_ID
+    assert controllers[0].started
+
+
+@pytest.mark.asyncio
+async def test_a_page_of_another_record_is_refused_not_shown(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = _Client()
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID, _structured_page("e" * 16), OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(RefusalError) as raised:
+        await door.page("f" * 16)
+
+    assert not isinstance(raised.value, OperationOutcomeUnknownError)
+    assert raised.value.reason is RefusalCode.INVALID_FRAME
+
+
+@pytest.mark.asyncio
+async def test_a_refused_page_read_raises_the_recorded_refusal_in_its_own_words(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    detail = build_operation_error_detail(LedgerEvidencePageNotFoundError())
+    assert detail is not None
+    client = _Client()
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID, detail, OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(RecordedRegisteredError) as raised:
+        await door.page("f" * 16)
+
+    assert raised.value.recorded_code == detail.error_code
+    assert resolve_error_message(raised.value, locale="en") == resolve_error_message(
+        LedgerEvidencePageNotFoundError(), locale="en"
+    )

@@ -8027,6 +8027,16 @@ tui:
       empty: No hay justificantes pendientes de revisión.
       extract: Leer documento
       loading: Leyendo los documentos…
+      page:
+        document: '{file} ({media}) - página {page} de {count}'
+        empty: El documento no declara nada que mostrar.
+        fact: '{label}: {value}'
+        failed: No se ha podido mostrar el documento.
+        line: '{position}. {facts}'
+        loading: Leyendo el documento guardado...
+        not_drawn: El terminal no dibuja páginas. Abre el documento en la ventana
+          para verlo.
+        view: Ver documento
       path_placeholder: Escribe la ruta del fichero
       pending: Pendiente
       printed_total_disagrees: El total impreso en el documento no coincide con el
