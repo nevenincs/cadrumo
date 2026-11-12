@@ -475,7 +475,7 @@ def resolve_export_identity(
         the export path's own refusal states that far better than a half-built
         identity would.
     """
-    record = _load_profile_record(
+    record = load_export_profile_record(
         bucket_id=bucket_id,
         operation=operation,
         profile_record=profile_record,
@@ -486,7 +486,7 @@ def resolve_export_identity(
     return identity_from_profile_facts(profile_fact_index(record, resolved_schema), schema=resolved_schema)
 
 
-def _load_profile_record(
+def load_export_profile_record(
     *,
     bucket_id: str,
     operation: PinnedAuthorityOperation,
@@ -532,7 +532,7 @@ def resolve_declaration_contact(
         unfilled alphanumeric header field to blancos, so a profile that
         declares no contact still produces a legal filing.
     """
-    record = _load_profile_record(
+    record = load_export_profile_record(
         bucket_id=bucket_id,
         operation=operation,
         profile_record=profile_record,
@@ -556,7 +556,7 @@ def resolve_profile_identity_producer_values(
     filing elections: a partial profile still answers each fact it declares.
     It supplies no representative, payment selection or historical evidence.
     """
-    record = _load_profile_record(bucket_id=bucket_id, operation=operation, profile_record=profile_record)
+    record = load_export_profile_record(bucket_id=bucket_id, operation=operation, profile_record=profile_record)
     if record is None:
         return {}
     resolved_schema = operation.profile_schema() if schema is None else schema
@@ -582,7 +582,7 @@ def resolve_m303_profile_lexicals(
     answers nothing: every lexical stays ``None`` and is never read as a no.
     Export admission is what refuses such a profile and names the missing path.
     """
-    record = _load_profile_record(bucket_id=bucket_id, operation=operation, profile_record=profile_record)
+    record = load_export_profile_record(bucket_id=bucket_id, operation=operation, profile_record=profile_record)
     if not isinstance(record, UserProfileRecord):
         return M303ProfileLexicals()
     resolved_schema = operation.profile_schema() if schema is None else schema

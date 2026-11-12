@@ -1629,19 +1629,6 @@ def _attested_prior_value(table: _Table, where: str) -> AttestedPriorValue:
     )
 
 
-def _prior_value_source(source: _Table, where: str) -> PriorValueSource:
-    """One earlier return an attested figure stands in for; its period is any period a taxpayer files."""
-    _keys(source, where, required=frozenset({"modelo", "year", "period"}))
-    period = _string(source, "period", where)
-    if not is_filing_period_token(period):
-        raise _fail(where, f"{period!r} is not a filing period")
-    return PriorValueSource(
-        modelo=_string(source, "modelo", where),
-        year=YearToken.parse(source["year"], where=f"{where}.year"),
-        period=period,
-    )
-
-
 def _work_input(table: _Table, where: str) -> WorkInput:
     _keys(table, where, required=frozenset({"modelo", "year", "period", "roles", "sources", "reason"}))
     roles = _table(table["roles"], f"{where}.roles")
@@ -1668,6 +1655,19 @@ def _work_input(table: _Table, where: str) -> WorkInput:
         roles=tuple(values),
         sources=tuple((role, cast(str, sources[role])) for role, _ in values),
         reason=_string(table, "reason", where),
+    )
+
+
+def _prior_value_source(source: _Table, where: str) -> PriorValueSource:
+    """One earlier return an attested figure stands in for; its period is any period a taxpayer files."""
+    _keys(source, where, required=frozenset({"modelo", "year", "period"}))
+    period = _string(source, "period", where)
+    if not is_filing_period_token(period):
+        raise _fail(where, f"{period!r} is not a filing period")
+    return PriorValueSource(
+        modelo=_string(source, "modelo", where),
+        year=YearToken.parse(source["year"], where=f"{where}.year"),
+        period=period,
     )
 
 

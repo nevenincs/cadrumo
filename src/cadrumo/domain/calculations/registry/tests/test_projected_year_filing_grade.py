@@ -16,8 +16,15 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..errors import RegistryFailureCondition, RegistryValidationError
+from ..schema import ModeloRevision
 from ..schema_references import TemporalProjectionDirection, reachable_authority_grade
-from .authored_editions import newest_authored_edition, projected_exercise, supported_exercises_with_projection
+from .authored_editions import (
+    authored_revisions_where,
+    newest_authored_edition,
+    projected_exercise,
+    revision_first_exercise,
+    supported_exercises_with_projection,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -108,3 +115,34 @@ def test_a_projection_caps_a_declared_grade_at_calculation_and_keeps_a_lower_one
     else:
         assert reached is min(declared, RegistryAuthorityGrade.CALCULATION, key=ladder.index)
         assert ladder.index(reached) <= ladder.index(RegistryAuthorityGrade.CALCULATION)
+
+
+_HELD_BELOW_FILING = tuple(
+    (modelo, revision)
+    for modelo in ("100", "200")
+    for revision in authored_revisions_where(
+        modelo, lambda revision: revision.effective_authority_grade is not RegistryAuthorityGrade.FILING
+    )
+)
+
+
+def test_an_edition_is_held_below_filing_grade_so_the_reading_check_has_teeth() -> None:
+    assert _HELD_BELOW_FILING, (
+        "no authored edition declares less than filing grade, so the reading check proves nothing"
+    )
+
+
+@pytest.mark.parametrize(("modelo", "revision"), _HELD_BELOW_FILING, ids=lambda item: str(getattr(item, "id", item)))
+def test_an_authored_year_of_an_edition_held_below_filing_is_read_at_its_declared_grade(
+    operation: PinnedAuthorityOperation, modelo: str, revision: ModeloRevision
+) -> None:
+    year = revision_first_exercise(modelo, str(revision.id))
+
+    snapshot = operation.reading_snapshot(modelo, filing_year=year, period=_PERIOD)
+
+    assert snapshot.revision.id == revision.id
+    assert snapshot.revision_projection_direction is TemporalProjectionDirection.AUTHORED
+    assert snapshot.effective_authority_grade is revision.effective_authority_grade
+    assert snapshot.effective_authority_grade is operation.reachable_authority_grade(
+        modelo, filing_year=year, period=_PERIOD
+    )

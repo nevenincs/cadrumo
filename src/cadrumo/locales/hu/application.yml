@@ -2998,6 +2998,21 @@ application:
         (alta).'
       m200_accounting_result_required: A Modelo 200 főkönyvből való számításához szükség
         van az év számviteli eredményére.
+      m200_page_002_none_refused_for_form: '%{modelo} %{filing_year} modelo, 002.
+        oldal: %{entity_form} típusú szervezet nem válaszolhatja, hogy nincs %{profile_section};
+        rögzítsd a sorait a profilodban itt: %{profile_path}.'
+      m200_page_002_percentage_total: '%{modelo} %{filing_year} modelo, 002. oldal:
+        a(z) %{profile_section} százalékainak összege %{percentage_sum}, de %{entity_form}
+        típusú szervezetnél %{percentage_total} kell legyen; javítsd itt: %{profile_path}.'
+      m200_page_002_rows_contradict_answer: '%{modelo} %{filing_year} modelo, 002.
+        oldal: a(z) %{profile_section} sorokat tartalmaz, de a(z) %{deciding_fact}
+        szerint nincs ilyen; javítsd az egyiket itt: %{profile_path}.'
+      m200_page_002_rows_exceed_design: '%{modelo} %{filing_year} modelo, 002. oldal:
+        a(z) %{profile_section} %{rows} sort tartalmaz, de a hivatalos terv csak %{slots}
+        sort enged.'
+      m200_page_002_value_exceeds_design: '%{modelo} %{filing_year} modelo, 002. oldal:
+        a(z) %{profile_section} %{row} sorának %{field} mezője %{length} karakter,
+        de a hivatalos terv legfeljebb %{limit} karaktert enged; rövidítsd itt: %{profile_path}.'
       m210_agrupacion_annual_code_not_lease_or_sublease: Az éves 210-es modell (0A
         időszak) csak bérleti és albérleti jövedelmet csoportosít, de a sorok más
         jövedelemkódot használnak. Javítsd a sorok jövedelemkódját.

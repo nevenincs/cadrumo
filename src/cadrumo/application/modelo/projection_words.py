@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 
 _BINDING_WITHOUT_FACT_LOCALE_KEY: Final[str] = "application.modelo.projection_words.binding_unresolved"
+_OTHER_CASILLA_REASON_LOCALE_KEY: Final[str] = "application.modelo.projection_words.casilla_reason.other"
 _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         UNRESOLVED_OPERAND_REASON: "application.modelo.projection_words.casilla_reason.unresolved_operand",
@@ -41,10 +42,14 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.INCOME_FAMILY_CONTRADICTS_PROFILE.value: (
             "application.modelo.projection_words.casilla_reason.income_family_contradicts_profile"
         ),
+        # Served with the general sentence until the reason has words of its own in every locale.
+        RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED.value: _OTHER_CASILLA_REASON_LOCALE_KEY,
+        RegistryUnresolvedOutcomeReason.M200_TWO_RATE_TIPO_GRAVAMEN_UNREPRESENTED.value: (
+            _OTHER_CASILLA_REASON_LOCALE_KEY
+        ),
     }
 )
 """The sentence of each reason a computed box can be left without a value."""
-_OTHER_CASILLA_REASON_LOCALE_KEY: Final[str] = "application.modelo.projection_words.casilla_reason.other"
 _M130_FIGURE_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "ingresos": "application.modelo.projection_words.figure.m130.ingresos",

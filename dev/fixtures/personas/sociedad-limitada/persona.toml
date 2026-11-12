@@ -175,7 +175,7 @@ iva_compensation_carried_in = "0.00"
 modelo = "200"
 year = "horizon-1"
 period = "0A"
-roles = { "is-liquidacion-i-importe" = "25400.00" }
+roles = { "is-liquidacion-i-importe" = "25400.00", "is-liquidacion-iii-compensacion-bin-aplicada" = "16300.00" }
 reason = "El resultado contable antes del Impuesto sobre Sociedades sale de las cuentas cerradas del ejercicio, que ningún registro de la aplicación produce; la sociedad lo consigna en la casilla 00501."
 [work_inputs.sources]
 "is-liquidacion-i-importe" = """
@@ -190,3 +190,5 @@ cobra retribución (persona.toml línea 9 y [[officers]] remunerated = false, l�
 ausentes, todas las filas se devengan dentro del ejercicio: cada alquiler trimestral pagado el 15 de enero, \
 abril, julio y octubre (SOC-ALQ-1..4) cubre su propio trimestre, y cada venta (SOC-VTA-1..8, del 30 de enero al \
 19 de diciembre) factura un desarrollo o un mantenimiento prestado en el ejercicio."""
+"is-liquidacion-iii-compensacion-bin-aplicada" = """
+La sociedad compensa todo el saldo pendiente de bases imponibles negativas, 16300.00 (casilla 00671 de su declaración del ejercicio anterior, consignada en [[attested_prior_values]]). La compensación es una opción de la sociedad (LIS art. 26.1, "podrán ser compensadas"). Límite del art. 26.1 LIS: 70 por ciento de la base imponible previa 25400.00 = 17780.00, y en todo caso 1000000.00; 16300.00 cabe en ambos."""

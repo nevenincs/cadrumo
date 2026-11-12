@@ -23,6 +23,7 @@ from cadrumo.core.filing_projection_ref import (
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
+from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -35,7 +36,6 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.legal_grounding import verify_legal_catalogue_grounding
 from dev.registry.compiler.loader import modelo_fact_scope
-from dev.registry.edition_export_periods import M200_SCENARIO_PERIODS
 from dev.registry.edition_export_scenarios import m200_export_scenario
 from dev.registry.edition_round_trip import SYNTHETIC_TAX_ID
 
@@ -46,6 +46,7 @@ from .authored_edition_support import (
     source_with_sha256,
     sources_where,
 )
+from .filing_reach_support import with_filing_reach
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -171,15 +172,21 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
     } <= linked_surfaces
 
 
-# The exercise of the official Modelo 200 design whose generated layout is published
-# at filing grade, found by the design's pinned bytes.
+# The exercise of the official Modelo 200 design whose generated layout is published,
+# found by the design's pinned bytes.
 _GENERATED_LAYOUT_EXERCISE = source_first_exercise(
     source_with_sha256("92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509")
 )
 
 
-def test_modelo_200_generated_layout_supports_a_filing_snapshot() -> None:
-    """The published generated layout makes its earned filing claim live."""
+def test_modelo_200_generated_layout_reaches_exactly_its_declared_grade() -> None:
+    """The published generated layout is served at the grade its edition declares, and no higher.
+
+    A layout is not a filing claim. The edition carrying it is read at
+    calculation grade, where the layout and its casillas are present; a filing
+    snapshot is served only if the edition itself declares filing grade, and
+    is otherwise refused at the authority boundary with the declared rung named.
+    """
     modelo, catalogues = _load_modelo_200()
 
     snapshot = build_snapshot(
@@ -188,12 +195,36 @@ def test_modelo_200_generated_layout_supports_a_filing_snapshot() -> None:
         source_root=bundled_path(),
         filing_year=_GENERATED_LAYOUT_EXERCISE,
         period="0A",
-        grade=RegistryAuthorityGrade.FILING,
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
-
-    assert snapshot.revision.authority_grade is RegistryAuthorityGrade.FILING
     assert len(snapshot.revision.export_layouts) == 1
     assert snapshot.revision.casillas
+
+    declared = snapshot.revision.effective_authority_grade
+    if declared is RegistryAuthorityGrade.FILING:
+        filing = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=_GENERATED_LAYOUT_EXERCISE,
+            period="0A",
+            grade=RegistryAuthorityGrade.FILING,
+        )
+        assert filing.revision.id == snapshot.revision.id
+        return
+    with pytest.raises(RegistryValidationError) as exc_info:
+        build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=_GENERATED_LAYOUT_EXERCISE,
+            period="0A",
+            grade=RegistryAuthorityGrade.FILING,
+        )
+    assert str(exc_info.value) == (
+        f"modelo 200 revision {snapshot.revision.id} declares {declared.value!r} authority grade, "
+        "which cannot satisfy the requested 'filing' snapshot authority."
+    )
 
 
 # Every bundled Modelo 200 approving order, read with the exercise its applicability
@@ -720,12 +751,21 @@ def test_modelo_200_scenario_renders_its_projection_pages_and_page_21_incn_nif(r
     permanente. NIF de los establecimientos permanentes [1..5]" at positions
     288, 297, 306, 315 and 324, each nine characters, alfanumérico.  One
     supplied row fills slot 1 and leaves slots 2-5 to blancos.
+
+    The writer serves filing-grade snapshots only, and the edition is rendered
+    for its own bytes, not for a filing claim, so its grade is lifted in an
+    in-memory copy of the authority; the registry's declared grade is untouched.
     """
-    period = M200_SCENARIO_PERIODS[revision_covering("200", _CURRENT_EXERCISE).id]
+    edition = revision_covering("200", _CURRENT_EXERCISE)
+    (token,) = edition.period_selector.periods_for_year(_CURRENT_EXERCISE)
+    period = Period.from_year_and_code(_CURRENT_EXERCISE, str(token))
     scenario = m200_export_scenario(period)
     registry_root = bundled_path("registry", "aeat")
     payload, profile = _render_scenario_payload(
-        scenario, registry_root=registry_root, authority=registry_authority, period=period
+        scenario,
+        registry_root=registry_root,
+        authority=with_filing_reach(registry_authority, "200", str(edition.id)),
+        period=period,
     )
 
     page_21 = next(record for record in payload.split(b"\r\n") if record.startswith(b"<T20021000>"))

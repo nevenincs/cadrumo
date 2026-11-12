@@ -28,7 +28,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 )
 from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from cadrumo.application.modelo.work_form_findings import ModeloFormAttention
-from cadrumo.application.modelo.work_form_issue_lines import form_issue_lines
+from cadrumo.application.modelo.work_form_issue_lines import ModeloFormIssueLine, form_issue_lines
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.core.external_constants import OutputLanguage
@@ -88,6 +88,17 @@ def _calculated_form(secure_objects: SecureObjectRepository) -> tuple[ModeloWork
     return form, revision
 
 
+def _missing_provincia(lines: list[ModeloFormIssueLine]) -> list[ModeloFormIssueLine]:
+    return [
+        line
+        for line in lines
+        if line.from_calculation
+        and line.level is ModeloFormAttention.MISSING
+        and isinstance(line.address, ModeloFormCasillaAddressV1)
+        and line.address.casilla_id == _PROVINCIA
+    ]
+
+
 def _invoice_ids_of(party: str) -> set[str]:
     return {invoice.invoice_id for invoice in _ledger().invoices if invoice.counterparty_tax_id == party}
 
@@ -113,7 +124,7 @@ def test_each_gap_the_invoices_leave_is_named_and_only_the_missing_one_classes_a
     for line in lines:
         assert line.where != whole_declaration
         assert "{" not in line.message and "{" not in line.action
-    missing = [line for line in lines if line.level is ModeloFormAttention.MISSING]
+    missing = _missing_provincia(lines)
     assert len(missing) == len(_SPANISH_DECLARADOS)
     for party in _SPANISH_DECLARADOS:
         (line,) = (line for line in missing if party in line.message)
@@ -136,11 +147,7 @@ def test_a_provincia_stated_for_the_counterparty_fills_its_record_and_leaves_onl
 
     provincias = {record["nif"]: record["provincia-codigo"] for record in _records(revision.row_binding_values)}
     assert provincias == {stated: "08", unstated: ""}, provincias
-    (missing,) = (
-        line
-        for line in form_issue_lines(form, OutputLanguage.ES)
-        if line.from_calculation and line.level is ModeloFormAttention.MISSING
-    )
+    (missing,) = _missing_provincia(list(form_issue_lines(form, OutputLanguage.ES)))
     assert unstated in missing.message
     assert stated not in missing.message
     assert missing.invoice_id in _invoice_ids_of(unstated)

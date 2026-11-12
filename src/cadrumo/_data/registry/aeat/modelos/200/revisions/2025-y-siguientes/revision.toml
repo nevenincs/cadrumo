@@ -11,12 +11,17 @@ dependency_classification_source_refs = ["aeat-modelo-200-manual-2025"]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
-# The exact 2025 design is now published through the canonical generated export
-# tree, with its source-hash-bound provenance and loader validation. This
-# revision can therefore support both calculation and filing for its declared
-# epoch; 2024 remains separately calculation-grade until its own layout earns
-# the same attestation.
-authority_grade = "filing"
+# The exact 2025 design is published through the canonical generated export
+# tree, with its source-hash-bound provenance and loader validation, but the
+# formulas this edition inherits do not all agree with the 2025 design and
+# manual: base imponible 00552 drops the sign of a negative base previa
+# (manual p. 349-350), cuota diferencial 00611 subtracts the Modelo 202
+# bindings instead of boxes 00601, 00603 and 00605 (p. 516), cuota integra
+# 00562 is not 01330 x 00558 / 100 (p. 371), and tipo de gravamen 00558 does
+# not cover the manual's rate categories (p. 372). A grade states evidence, so
+# the edition calculates and refuses export and local filing until those
+# formulas hold and the filing grade is reviewed again.
+authority_grade = "calculation"
 # valid_from tracks the ejercicio this revision computes (2025), matching the
 # registry-wide convention (holds for 44/52 annual-cadence revisions), not the
 # orden's own publication/effective year. The span is left open ('y siguientes')
@@ -21805,12 +21810,90 @@ selector = {revision = "2024", id = "modelo-200-cuota-ejercicio-a-ingresar-devol
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["cuota del ejercicio a ingresar o a devolver (casilla 00599)", "[00599] = ([00625]/100", "retenciones e ingresos a cuenta"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
+# 2025 differs from 2024 for the same lane: the cuota íntegra applies the 21 /
+# 22 scale to the base (manuals/sociedades/2025 L14980-14983, L3231-3237;
+# LIS DT 44ª.1), because 00558 holds no single rate there; every other lane
+# keeps [00562] = [01330] x [00558]/100 (L14948-14954), as in 2024.
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
 selector = {revision = "2024", id = "modelo-200-cuota-integra"}
 sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["cuota integra (casilla 00562)", "tipo de gravamen"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 sequence_order = {legal_refs = [0, 1, 2, 4, 3]}
+fields = { expression = { args = [
+    { op = "greater_than", args = [
+        { op = "add", args = [
+            { op = "text_equal", args = [
+                { binding = "modelo-200-profile-legal-entity-form" },
+                { text_literal = "cooperativa" },
+            ] },
+            { casilla_id = "00017" },
+            { casilla_id = "00018" },
+            { casilla_id = "00019" },
+        ] },
+        { literal = "0" },
+    ] },
+    { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
+    { op = "if_then_else", args = [
+        { op = "greater_than", args = [
+            { op = "add", args = [
+                { casilla_id = "00024" },
+                { casilla_id = "00034" },
+                { casilla_id = "00063" },
+                { casilla_id = "DP200001:00083" },
+                { casilla_id = "00015" },
+                { casilla_id = "00079" },
+                { casilla_id = "00003" },
+                { casilla_id = "DP200001:00004" },
+                { casilla_id = "00008" },
+                { casilla_id = "00012" },
+                { casilla_id = "00048" },
+                { casilla_id = "00002" },
+                { casilla_id = "00080" },
+            ] },
+            { literal = "0" },
+        ] },
+        { op = "max", args = [{ op = "percent", args = [{ casilla_id = "DP200014:01330" }, { casilla_id = "DP200014:00558" }] }, { literal = "0" }] },
+        { op = "if_then_else", args = [
+            { op = "greater_than", args = [{ casilla_id = "00001" }, { literal = "0" }] },
+            { op = "max", args = [{ op = "percent", args = [{ casilla_id = "DP200014:01330" }, { casilla_id = "DP200014:00558" }] }, { literal = "0" }] },
+            { op = "if_then_else", args = [
+                { op = "less_than", args = [
+                    { op = "add", args = [
+                        { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sl" }] },
+                        { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sa" }] },
+                        { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sal" }] },
+                        { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sll" }] },
+                        { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "cooperativa" }] },
+                        { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sociedad_civil_mercantil" }] },
+                        { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "other" }] },
+                    ] },
+                    { literal = "1" },
+                ] },
+                { op = "max", args = [{ op = "percent", args = [{ casilla_id = "DP200014:01330" }, { casilla_id = "DP200014:00558" }] }, { literal = "0" }] },
+                { op = "if_then_else", args = [
+                    { op = "greater_than", args = [{ casilla_id = "00066" }, { literal = "0" }] },
+                    { op = "max", args = [{ op = "percent", args = [{ casilla_id = "DP200014:01330" }, { casilla_id = "DP200014:00558" }] }, { literal = "0" }] },
+                    { op = "if_then_else", args = [
+                        { binding = "modelo-200-profile-new-entity-flag" },
+                        { op = "max", args = [{ op = "percent", args = [{ casilla_id = "DP200014:01330" }, { casilla_id = "DP200014:00558" }] }, { literal = "0" }] },
+                        { op = "if_then_else", args = [
+                            { op = "less_than", args = [{ binding = "modelo-200-profile-incn-prior-12-months" }, { parameter = "is.modelo-200.incn-umbral-microempresa" }] },
+                            { op = "max", args = [
+                                { op = "lookup_bracket", args = [
+                                    { op = "max", args = [{ casilla_id = "DP200014:01330" }, { literal = "0" }] },
+                                    { parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                                ] },
+                                { literal = "0" },
+                            ] },
+                            { op = "max", args = [{ op = "percent", args = [{ casilla_id = "DP200014:01330" }, { casilla_id = "DP200014:00558" }] }, { literal = "0" }] },
+                        ] },
+                    ] },
+                ] },
+            ] },
+        ] },
+    ] },
+] } }
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
@@ -21824,12 +21907,129 @@ selector = {revision = "2024", id = "modelo-200-cuota-liquida"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["La cuota líquida se obtiene aplicando sobre la cuota íntegra ajustada positiva", "[00592] = [00582] - ([00583] + [00585]", "El resultado de esta operación siempre tendrá que ser una cantidad positiva o cero"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
+# 2025 differs from 2024 for an entity whose INCN of the prior period is below
+# 1 millón: two rates, 21 on the first 50.000 euros of base and 22 on the rest
+# (manuals/sociedades/2025 L14980-14983; casilla 00088 L3231-3237), where 2024
+# had one flat 23. Casilla 00558 then holds both rates: "En caso de tipo de
+# gravamen doble se rellenarán los dos primeros dígitos con el primer tipo, y
+# los dos últimos con el segundo" (aeat-dr-200-2025 DP200014 field 31, Nota 1,
+# 01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md L1495, L1530-1534; the
+# 2024 design reads "2 enteros y 2 decimales", 16-200-...xls.extracted.md
+# L1496). A decimal rate cannot state two rates, so that lane leaves 00558
+# without a value under a typed reason; every other lane is the 2024 one.
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
 selector = {revision = "2024", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
 sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4]}
+fields = { expression = { args = [
+    { op = "greater_than", args = [
+        { op = "add", args = [
+            { casilla_id = "00024" },
+            { casilla_id = "00034" },
+            { casilla_id = "00063" },
+            { casilla_id = "DP200001:00083" },
+            { casilla_id = "00015" },
+            { casilla_id = "00079" },
+            { casilla_id = "00003" },
+            { casilla_id = "DP200001:00004" },
+            { casilla_id = "00008" },
+            { casilla_id = "00012" },
+            { casilla_id = "00048" },
+            { casilla_id = "00002" },
+            { casilla_id = "00080" },
+        ] },
+        { literal = "0" },
+    ] },
+    { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
+    { op = "if_then_else", args = [
+        { op = "greater_than", args = [{ casilla_id = "00001" }, { literal = "0" }] },
+        { parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
+        { op = "if_then_else", args = [
+            { op = "less_than", args = [
+                { op = "add", args = [
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sl" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sa" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sal" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sll" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "cooperativa" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sociedad_civil_mercantil" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "other" }] },
+                ] },
+                { literal = "1" },
+            ] },
+            { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
+            { op = "if_then_else", args = [
+                { op = "greater_than", args = [
+                    { op = "add", args = [
+                        { op = "text_equal", args = [
+                            { binding = "modelo-200-profile-legal-entity-form" },
+                            { text_literal = "cooperativa" },
+                        ] },
+                        { casilla_id = "00017" },
+                        { casilla_id = "00018" },
+                        { casilla_id = "00019" },
+                    ] },
+                    { literal = "0" },
+                ] },
+                { op = "if_then_else", args = [
+                    { op = "greater_than", args = [
+                        { op = "add", args = [{ casilla_id = "00017" }, { casilla_id = "00018" }] },
+                        { literal = "0" },
+                    ] },
+                    { parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
+                    { op = "if_then_else", args = [
+                        { op = "greater_than", args = [{ casilla_id = "00019" }, { literal = "0" }] },
+                        { op = "if_then_else", args = [
+                            { binding = "modelo-200-profile-new-entity-flag" },
+                            { parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+                            { op = "if_then_else", args = [
+                                { op = "less_than", args = [
+                                    { binding = "modelo-200-profile-incn-prior-12-months" },
+                                    { parameter = "is.modelo-200.incn-umbral-microempresa" },
+                                ] },
+                                { op = "unresolved_outcome", args = [{ text_literal = "m200-two-rate-tipo-gravamen-unrepresented" }] },
+                                { op = "if_then_else", args = [
+                                    { op = "less_than", args = [
+                                        { binding = "modelo-200-profile-incn-prior-12-months" },
+                                        { parameter = "is.modelo-200.incn-umbral-erd-art101" },
+                                    ] },
+                                    { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                                    { parameter = "is.modelo-200.tipo-gravamen-general" },
+                                ] },
+                            ] },
+                        ] },
+                        { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
+                    ] },
+                ] },
+                { op = "if_then_else", args = [
+                    { op = "greater_than", args = [{ casilla_id = "00066" }, { literal = "0" }] },
+                    { parameter = "is.modelo-200.tipo-gravamen-general" },
+                    { op = "if_then_else", args = [
+                        { binding = "modelo-200-profile-new-entity-flag" },
+                        { parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+                        { op = "if_then_else", args = [
+                            { op = "less_than", args = [
+                                { binding = "modelo-200-profile-incn-prior-12-months" },
+                                { parameter = "is.modelo-200.incn-umbral-microempresa" },
+                            ] },
+                            { op = "unresolved_outcome", args = [{ text_literal = "m200-two-rate-tipo-gravamen-unrepresented" }] },
+                            { op = "if_then_else", args = [
+                                { op = "less_than", args = [
+                                    { binding = "modelo-200-profile-incn-prior-12-months" },
+                                    { parameter = "is.modelo-200.incn-umbral-erd-art101" },
+                                ] },
+                                { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                                { parameter = "is.modelo-200.tipo-gravamen-general" },
+                            ] },
+                        ] },
+                    ] },
+                ] },
+            ] },
+        ] },
+    ] },
+] } }
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "filing_schedules"
@@ -21975,6 +22175,12 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-erd-art101"}
 sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "is.modelo-200.bin-compensacion-importe-minimo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["se podran compensar en el periodo impositivo bases imponibles negativas hasta el importe de 1 millon de euros"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
