@@ -33,14 +33,19 @@ from ...domain.calculations.registry.facts.payloads import MappingFactEntry
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.calculations.registry.schema_base import CasillaDataType, DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .producer_snapshot import FilingProducerSnapshot
 from .producer_snapshot_m200 import Modelo200ProfileFacts
 from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 
-__all__ = ["build_m200_filing_projection_plan", "m200_projection_families", "m200_projection_slot_limits"]
+__all__ = [
+    "build_m200_filing_projection_plan",
+    "m200_projection_families",
+    "m200_projection_field_widths",
+    "m200_projection_slot_limits",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +107,26 @@ def m200_projection_slot_limits(layout: ExportLayoutDefinition) -> Mapping[str, 
             if address is not None:
                 limits[ref.projection_kind] = max(limits.get(ref.projection_kind, 0), address[0])
     return MappingProxyType(limits)
+
+
+def m200_projection_field_widths(layout: ExportLayoutDefinition) -> Mapping[tuple[str, str], int]:
+    """Return the characters a text member of each projection kind can print in ``layout``.
+
+    Keyed by projection kind and row member. A member whose slots differ in width is
+    held to the narrowest, so a value that fits is one every slot can write.
+    """
+    widths: dict[tuple[str, str], int] = {}
+    for record in layout.records:
+        for field in record.fields:
+            ref = field.projection_ref
+            if ref is None or field.length is None or field.data_type is not CasillaDataType.TEXT:
+                continue
+            address = _m200_address(ref)
+            if address is None:
+                continue
+            key = (ref.projection_kind, address[1])
+            widths[key] = min(widths.get(key, field.length), field.length)
+    return MappingProxyType(widths)
 
 
 def _add_m200_family_declaration(

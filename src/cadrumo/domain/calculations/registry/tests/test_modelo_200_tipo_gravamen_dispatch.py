@@ -39,7 +39,7 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_selector_utils import selector_as_dict
-from ..formula_runtime import calculate_registry_snapshot
+from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ..schema_formula import ParameterDefinition
 from .modelo_200_casilla_ids import (
@@ -128,7 +128,9 @@ def _snapshot(exercise: int = _DT44_FIRST_TRANSITIONAL_EXERCISE):
     return published_snapshot("200", filing_year=exercise, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _unresolved_reason(result, casilla_id: CasillaId) -> RegistryUnresolvedOutcomeReason | None:
+def _unresolved_reason(
+    result: RegistryCalculationResult, casilla_id: CasillaId
+) -> RegistryUnresolvedOutcomeReason | None:
     return next((outcome.reason for outcome in result.unresolved_outcomes if outcome.casilla_id == casilla_id), None)
 
 

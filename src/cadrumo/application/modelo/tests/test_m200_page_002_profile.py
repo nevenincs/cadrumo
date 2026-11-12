@@ -24,7 +24,11 @@ from ....domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
-from ...filing.m200_projection import m200_projection_families, m200_projection_slot_limits
+from ...filing.m200_projection import (
+    m200_projection_families,
+    m200_projection_field_widths,
+    m200_projection_slot_limits,
+)
 from ...operations.next_step import OperationOpenProfileFieldStepV1
 from ..action_errors import ModeloProfileReadinessError
 from ..m200_page_002_profile import (
@@ -282,3 +286,40 @@ def test_rows_beyond_the_design_places_refuse(operation: PinnedAuthorityOperatio
     assert refusal.context["reason"] == M200Page002Refusal.ROWS_EXCEED_DESIGN.value
     assert refusal.context["slots"] == places
     assert refusal.context["modelo"] == str(work_unit.modelo)
+
+
+def test_a_name_wider_than_its_design_place_refuses_naming_the_field_and_limit(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    _, layout = _work_unit()
+    limit = m200_projection_field_widths(layout)[("m200_administrador", "apellidos_nombre_razon_social")]
+    name = "FERREIRA COSTA ANA".ljust(limit + 1, "A")
+
+    refusal = _refusal(operation, _sociedad_limitada(**{"m200_administrador.0.apellidos_nombre_razon_social": name}))
+
+    assert refusal.context is not None
+    assert refusal.context["reason"] == M200Page002Refusal.VALUE_EXCEEDS_DESIGN.value
+    assert refusal.context["field"] == "apellidos_nombre_razon_social"
+    assert refusal.context["limit"] == limit
+    assert refusal.context["length"] == limit + 1
+    assert refusal.context["profile_path"] == "m200_administrador.apellidos_nombre_razon_social"
+    assert name not in str(refusal.context.values())
+
+
+def test_a_name_exactly_as_wide_as_its_design_place_is_carried(operation: PinnedAuthorityOperation) -> None:
+    work_unit, layout = _work_unit()
+    families = m200_projection_families(work_unit.period.end_date, authority=operation)
+    limit = m200_projection_field_widths(layout)[("m200_administrador", "apellidos_nombre_razon_social")]
+    name = "FERREIRA COSTA ANA".ljust(limit, "A")
+
+    facts = modelo_200_profile_facts(
+        work_unit=work_unit,
+        operation=operation,
+        export_layout=layout,
+        profile_record=_record(
+            operation, _sociedad_limitada(**{"m200_administrador.0.apellidos_nombre_razon_social": name})
+        ),
+    )
+
+    (administrador,) = getattr(facts.projection_rows, families["m200_administrador"])
+    assert administrador.apellidos_nombre_razon_social == name

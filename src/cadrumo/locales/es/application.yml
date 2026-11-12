@@ -2959,6 +2959,21 @@ application:
         el alta.'
       m200_accounting_result_required: El Modelo 200 necesita el resultado contable
         del ejercicio antes de calcularse a partir del libro.
+      m200_page_002_none_refused_for_form: 'Modelo %{modelo} %{filing_year}, página
+        002: una entidad %{entity_form} no puede responder que no tiene %{profile_section};
+        registra sus filas en tu perfil en %{profile_path}.'
+      m200_page_002_percentage_total: 'Modelo %{modelo} %{filing_year}, página 002:
+        los porcentajes de %{profile_section} suman %{percentage_sum}, pero una entidad
+        %{entity_form} debe sumar %{percentage_total}; corrígelos en %{profile_path}.'
+      m200_page_002_rows_contradict_answer: 'Modelo %{modelo} %{filing_year}, página
+        002: %{profile_section} tiene filas, pero %{deciding_fact} indica que no tiene
+        ninguna; corrige uno de los dos en %{profile_path}.'
+      m200_page_002_rows_exceed_design: 'Modelo %{modelo} %{filing_year}, página 002:
+        %{profile_section} tiene %{rows} filas, pero el diseño oficial solo admite
+        %{slots}.'
+      m200_page_002_value_exceeds_design: 'Modelo %{modelo} %{filing_year}, página
+        002: el campo %{field} de la fila %{row} en %{profile_section} tiene %{length}
+        caracteres, pero el diseño oficial admite %{limit}; acórtalo en %{profile_path}.'
       m210_agrupacion_annual_code_not_lease_or_sublease: El Modelo 210 anual (periodo
         0A) agrupa solo rentas de arrendamiento y subarrendamiento, pero las filas
         usan otro código de renta. Corrige el código de renta de las filas.

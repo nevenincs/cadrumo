@@ -38,7 +38,8 @@ from cadrumo.application.filing.producer_snapshot_m200 import (
     Modelo200ProjectionRows,
 )
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, schema_provider_from_authority
-from cadrumo.application.modelo.m200_page_002_profile import modelo_200_profile_facts
+from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
+from cadrumo.application.modelo.m200_page_002_profile import M200Page002Refusal, modelo_200_profile_facts
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.period import Period
@@ -52,7 +53,6 @@ from cadrumo.domain.calculations.registry.export_parse import parse_export_paylo
 from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource, validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
-from cadrumo.domain.filing.errors import FilingExportValueOverflowError
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.domain.user_profile.values import (
@@ -470,11 +470,14 @@ def test_a_notaria_wider_than_its_design_place_refuses_on_that_place(
     assert place.length is not None
     assert len(_PERSONA_NOTARIA) > place.length
 
-    with pytest.raises(FilingExportValueOverflowError) as refused:
+    with pytest.raises(ModeloProfileReadinessError) as refused:
         _export_persona(registry_authority, pinned_authority, revision_id, _PERSONA_NOTARIA)
 
-    assert refused.value.field_id == str(place.id)
-    assert refused.value.field_length == place.length
+    assert refused.value.context is not None
+    assert refused.value.context["reason"] == M200Page002Refusal.VALUE_EXCEEDS_DESIGN.value
+    assert refused.value.context["field"] == "notaria_otros"
+    assert refused.value.context["limit"] == place.length
+    assert refused.value.context["length"] == len(_PERSONA_NOTARIA)
 
 
 def _kinds_of_layout_family(

@@ -30,7 +30,11 @@ from ...domain.calculations.registry.schema_exports import ExportLayoutDefinitio
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.schema import ProfileFieldType, ProfileSchemaDefinition, ProfileSectionDefinition
 from ...domain.user_profile.values import UserProfileRecord
-from ..filing.m200_projection import m200_projection_families, m200_projection_slot_limits
+from ..filing.m200_projection import (
+    m200_projection_families,
+    m200_projection_field_widths,
+    m200_projection_slot_limits,
+)
 from ..filing.producer_snapshot_m200 import Modelo200ProfileFacts, Modelo200ProjectionRows
 from ..user_profile.completeness import profile_section_rows
 from ..user_profile.projections import record_to_path_values
@@ -65,9 +69,10 @@ class M200Page002Refusal(StrEnum):
     PERCENTAGE_TOTAL = "m200_page_002_percentage_total"
     ROWS_CONTRADICT_ANSWER = "m200_page_002_rows_contradict_answer"
     ROWS_EXCEED_DESIGN = "m200_page_002_rows_exceed_design"
+    VALUE_EXCEEDS_DESIGN = "m200_page_002_value_exceeds_design"
 
 
-_REFUSAL_MESSAGES: Mapping[M200Page002Refusal, str] = {
+_REFUSAL_LOCALE_KEYS: Mapping[M200Page002Refusal, str] = {
     M200Page002Refusal.ROWS_REQUIRED: _PROFILE_FACTS_MISSING_MESSAGE,
     M200Page002Refusal.FAMILY_UNANSWERED: _PROFILE_FACTS_MISSING_MESSAGE,
     M200Page002Refusal.ROW_INCOMPLETE: _PROFILE_FACTS_MISSING_MESSAGE,
@@ -76,6 +81,7 @@ _REFUSAL_MESSAGES: Mapping[M200Page002Refusal, str] = {
     M200Page002Refusal.PERCENTAGE_TOTAL: "application.modelo.errors.m200_page_002_percentage_total",
     M200Page002Refusal.ROWS_CONTRADICT_ANSWER: "application.modelo.errors.m200_page_002_rows_contradict_answer",
     M200Page002Refusal.ROWS_EXCEED_DESIGN: "application.modelo.errors.m200_page_002_rows_exceed_design",
+    M200Page002Refusal.VALUE_EXCEEDS_DESIGN: "application.modelo.errors.m200_page_002_value_exceeds_design",
 }
 
 
@@ -164,7 +170,8 @@ def modelo_200_profile_facts(
         ModeloProfileReadinessError: When a family the return must carry is not
             answered, a row lacks a fact the design requires of it, a stated answer
             contradicts the rows, the B.2 percentages miss their total, or more rows
-            are stored than the edition's design has places for.
+            are stored than the edition's design has places for, or a text value is
+            wider than the design place that prints it.
     """
     as_of = work_unit.period.end_date
     return Modelo200ProfileFacts(
@@ -174,6 +181,7 @@ def modelo_200_profile_facts(
             rules=resolve_m200_page_002_rules(operation, effective_date=as_of),
             families=m200_projection_families(as_of, authority=operation),
             slot_limits=m200_projection_slot_limits(export_layout),
+            field_widths=m200_projection_field_widths(export_layout),
             coordinates=_Coordinates(
                 modelo=str(work_unit.modelo),
                 filing_year=work_unit.filing_year,
@@ -191,13 +199,16 @@ def _projection_rows(
     rules: M200Page002Rules,
     families: Mapping[str, str],
     slot_limits: Mapping[str, int],
+    field_widths: Mapping[tuple[str, str], int],
     coordinates: _Coordinates,
 ) -> Modelo200ProjectionRows:
     """Map the profile's page 002 sections onto the typed projection rows, or refuse."""
     values = record_to_path_values(record, as_of=coordinates.as_of)
     projected: dict[str, tuple[dict[str, str | None], ...]] = {}
     for rule in rules.families:
-        rows = _family_rows(rule, values, schema=schema, rules=rules, slot_limits=slot_limits, at=coordinates)
+        rows = _family_rows(
+            rule, values, schema=schema, rules=rules, slot_limits=slot_limits, field_widths=field_widths, at=coordinates
+        )
         if rows:
             projected[families[rule.projection_kind]] = rows
     return Modelo200ProjectionRows.model_validate(projected)
@@ -210,6 +221,7 @@ def _family_rows(
     schema: ProfileSchemaDefinition,
     rules: M200Page002Rules,
     slot_limits: Mapping[str, int],
+    field_widths: Mapping[tuple[str, str], int],
     at: _Coordinates,
 ) -> tuple[dict[str, str | None], ...]:
     answer = _family_answer(rule, values, rules=rules)
@@ -250,7 +262,8 @@ def _family_rows(
         )
     non_resident = _non_resident(rule, values, rules=rules, at=at)
     projected = tuple(
-        _row(rule, section, key, populated, values, non_resident=non_resident, at=at) for key, populated in rows.items()
+        _row(rule, section, key, populated, values, non_resident=non_resident, field_widths=field_widths, at=at)
+        for key, populated in rows.items()
     )
     _require_percentage_total(rule, projected, form=form, rules=rules, at=at)
     return projected
@@ -297,6 +310,7 @@ def _row(
     values: Mapping[str, str],
     *,
     non_resident: bool,
+    field_widths: Mapping[tuple[str, str], int],
     at: _Coordinates,
 ) -> dict[str, str | None]:
     resident_blank = set() if non_resident else set(rule.non_resident_only_fields)
@@ -314,12 +328,26 @@ def _row(
             missing_fields=", ".join(missing),
         )
     prefix = f"{rule.section}.{key}." if key else f"{rule.section}."
-    return {
-        field.key: None
-        if field.key in resident_blank
-        else _design_value(field.type, values.get(f"{prefix}{field.key}"))
-        for field in section.fields
-    }
+    row: dict[str, str | None] = {}
+    for field in section.fields:
+        if field.key in resident_blank:
+            row[field.key] = None
+            continue
+        value = _design_value(field.type, values.get(f"{prefix}{field.key}"))
+        width = field_widths.get((rule.projection_kind, field.key))
+        if value is not None and width is not None and len(value) > width:
+            raise _refusal(
+                M200Page002Refusal.VALUE_EXCEEDS_DESIGN,
+                f"{rule.section}.{field.key}",
+                at,
+                section=rule.section,
+                row=key,
+                field=field.key,
+                limit=width,
+                length=len(value),
+            )
+        row[field.key] = value
+    return row
 
 
 def _design_value(field_type: ProfileFieldType, stored: str | None) -> str | None:
@@ -381,7 +409,7 @@ def _refusal(
     **facts: str | int,
 ) -> ModeloProfileReadinessError:
     return ModeloProfileReadinessError(
-        translated_message=_REFUSAL_MESSAGES[reason],
+        translated_message=_REFUSAL_LOCALE_KEYS[reason],
         context={
             "modelo": at.modelo,
             "filing_year": at.filing_year,
