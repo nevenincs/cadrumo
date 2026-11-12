@@ -234,10 +234,16 @@ expression = { op = "sum", args = [
     # aeat-dr-100-2020-dictionary:1487 DEDAUTLR
     { op = "if_then_else", args = [
         { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "la_rioja" }] },
-        { op = "sum", args = [
-            { casilla_id = "1061" }, { casilla_id = "1062" }, { casilla_id = "1063" }, { casilla_id = "1065" }, { casilla_id = "1066" }, { casilla_id = "1068" },
-            { casilla_id = "1069" }, { casilla_id = "1072" }, { casilla_id = "1075" }, { casilla_id = "1077" }, { casilla_id = "1079" }, { casilla_id = "1080" },
-            { casilla_id = "1081" }, { casilla_id = "1082" },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { op = "max", args = [{ casilla_id = "1078" }, { op = "negate", args = [{ casilla_id = "1078" }] }] },
+            ] }, { literal = "0" }] },
+            { op = "sum", args = [
+                { casilla_id = "1061" }, { casilla_id = "1062" }, { casilla_id = "1063" }, { casilla_id = "1065" }, { casilla_id = "1066" }, { casilla_id = "1068" },
+                { casilla_id = "1069" }, { casilla_id = "1072" }, { casilla_id = "1075" }, { casilla_id = "1077" }, { casilla_id = "1079" }, { casilla_id = "1080" },
+                { casilla_id = "1081" }, { casilla_id = "1082" },
+            ] },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-unsummed-box" }] },
         ] },
         { op = "if_then_else", args = [
             { op = "equal", args = [{ op = "sum", args = [

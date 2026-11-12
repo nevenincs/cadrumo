@@ -6,18 +6,23 @@ Each edition's declaration dictionary prints that sum once per comunidad as a
 
 The formula adds one term per comunidad, in the dictionary's order:
 
-- the comunidad of residence contributes its official sum;
+- the comunidad of residence contributes its official sum, unless a box that sum names
+  but the extraction leaves out holds an amount: then 0564 is left without a value, for
+  a typed reason, and the operator states it;
 - any other comunidad whose official sum is not zero leaves 0564 without a value,
   for a typed reason, because the return can carry only one comunidad's deductions;
 - any other comunidad contributes zero.
 
 The oldest authored edition declares the whole formula. A later edition carries a
-delta only for the comunidades whose operand list differs from the edition before
-it: their terms are replaced in place, and every other term is inherited. Each
+delta only for the comunidades whose meaning changes from the edition before it, that
+is whose set of signed operands or of left-out guards differs; a reordered list is the
+same sum and is inherited. Changed terms are replaced in place, and every other term
+is inherited, so each term keeps the dictionary row of the edition that declared it. Each
 edition's calculation-completeness manifest then lists the boxes the formula reads.
 
 ``--check`` fails when the committed declarations differ from a fresh extraction,
 or when the hydrated formula of any edition disagrees with that edition's dictionary.
+Both modes print the inventory of left-out boxes; ``--inventory PATH`` also writes it.
 
 Run ``python -m dev.registry.authoring.autonomic_deduction_sum`` to write and
 ``python -m dev.registry.authoring.autonomic_deduction_sum --check`` to verify.
@@ -48,14 +53,28 @@ from .autonomic_deduction_sum_dictionary import (
     SignedBox,
     extract_comunidad_operands,
 )
+from .autonomic_deduction_sum_inventory import LeftOutEntry, inventory_header, inventory_lines, left_out_entries
 from .autonomic_deduction_sum_manifest import manifest_files
 
-__all__ = ["EditionOperands", "check", "main", "registry_operands", "render", "write"]
+__all__ = [
+    "AuthoredTerm",
+    "EditionOperands",
+    "Meaning",
+    "check",
+    "inventory_text",
+    "main",
+    "meaning",
+    "registry_operands",
+    "render",
+    "render_delta",
+    "write",
+]
 
 MODELO: Final = "100"
 FORMULA_ID: Final = "renta-deducciones-autonomicas-suma"
 RESIDENCE_BINDING: Final = "renta-profile-tax-residence-ccaa"
 OTHER_COMUNIDAD_REASON: Final = RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_OTHER_COMUNIDAD.value
+UNSUMMED_REASON: Final = RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_UNSUMMED_BOX.value
 LEGAL_REFS: Final = ("ley-35-2006:art-77",)
 #: Formula citations quote guidance-tier text. The dictionaries are layout authority, so each
 #: edition's dictionary is listed in ``source_refs`` and each term names its row by line.
@@ -78,6 +97,15 @@ class EditionOperands:
     revision_id: str
     source_ref: str
     comunidades: tuple[ComunidadOperands, ...]
+    left_out: tuple[LeftOutEntry, ...] = ()
+
+    def guards(self, residence: str) -> tuple[str, ...]:
+        """The left-out boxes that leave the comunidad's term without a value when they hold an amount."""
+        return tuple(entry.left_out.box for entry in self.left_out if entry.residence == residence and entry.guarded)
+
+    def term(self, comunidad: ComunidadOperands) -> AuthoredTerm:
+        """The comunidad's operands and guards, in the shape the registry formula declares."""
+        return comunidad.operands, self.guards(comunidad.residence)
 
 
 def _modelo(modelos: Sequence[ModeloDefinition]) -> ModeloDefinition:
@@ -120,7 +148,9 @@ def extract_editions(
                 raise AutonomicSumExtractionError(
                     f"edition {revision.id} {comunidad.row.field}: the registry declares no casilla {missing}"
                 )
-        editions.append(EditionOperands(str(revision.id), source_ref, comunidades))
+        editions.append(
+            EditionOperands(str(revision.id), source_ref, comunidades, left_out_entries(revision, comunidades))
+        )
     return tuple(editions)
 
 
@@ -138,6 +168,34 @@ def _operand_lines(operands: tuple[SignedBox, ...], indent: str) -> list[str]:
     return [indent + ", ".join(leaves[index : index + _PER_LINE]) + "," for index in range(0, len(leaves), _PER_LINE)]
 
 
+def _magnitude_lines(guards: tuple[str, ...], indent: str) -> list[str]:
+    return [
+        f'{indent}{{ op = "max", args = [{{ casilla_id = "{box}" }}, '
+        f'{{ op = "negate", args = [{{ casilla_id = "{box}" }}] }}] }},'
+        for box in guards
+    ]
+
+
+def _resident_lines(comunidad: ComunidadOperands, guards: tuple[str, ...], indent: str) -> list[str]:
+    """The comunidad's sum, refused while any left-out box it names holds an amount."""
+    if not guards:
+        return [
+            f'{indent}{{ op = "sum", args = [',
+            *_operand_lines(comunidad.operands, indent + "    "),
+            f"{indent}] }},",
+        ]
+    inner = indent + "    "
+    return [
+        f'{indent}{{ op = "if_then_else", args = [',
+        f'{inner}{{ op = "equal", args = [{{ op = "sum", args = [',
+        *_magnitude_lines(guards, inner + "    "),
+        f'{inner}] }}, {{ literal = "0" }}] }},',
+        *_resident_lines(comunidad, (), inner),
+        f'{inner}{{ op = "unresolved_outcome", args = [{{ text_literal = "{UNSUMMED_REASON}" }}] }},',
+        f"{indent}] }},",
+    ]
+
+
 def _term_lines(edition: EditionOperands, comunidad: ComunidadOperands, indent: str) -> list[str]:
     inner = indent + "    "
     return [
@@ -145,9 +203,7 @@ def _term_lines(edition: EditionOperands, comunidad: ComunidadOperands, indent: 
         f'{indent}{{ op = "if_then_else", args = [',
         f'{inner}{{ op = "text_equal", args = [{{ binding = "{RESIDENCE_BINDING}" }}, '
         f'{{ text_literal = "{comunidad.residence}" }}] }},',
-        f'{inner}{{ op = "sum", args = [',
-        *_operand_lines(comunidad.operands, inner + "    "),
-        f"{inner}] }},",
+        *_resident_lines(comunidad, edition.guards(comunidad.residence), inner),
         f'{inner}{{ op = "if_then_else", args = [',
         f'{inner}    {{ op = "equal", args = [{{ op = "sum", args = [',
         *_operand_lines(comunidad.operands, inner + "        "),
@@ -195,7 +251,7 @@ def _changed(previous: EditionOperands, edition: EditionOperands) -> tuple[int, 
     return tuple(
         index
         for index, (old, new) in enumerate(zip(previous.comunidades, edition.comunidades, strict=True))
-        if old.operands != new.operands
+        if meaning(previous.term(old)) != meaning(edition.term(new))
     )
 
 
@@ -323,24 +379,56 @@ def _guarded_sum(other: FormulaExpression) -> tuple[SignedBox, ...] | None:
     return tuple(_signed(arg) for arg in test.args[0].args)
 
 
-def _term_operands(term: FormulaExpression) -> tuple[str, tuple[SignedBox, ...]]:
-    """Decode one comunidad term, refusing any shape the writer does not produce."""
+def _magnitude_box(expression: FormulaExpression) -> str:
+    """The box of one ``max(box, -box)`` magnitude the writer emits."""
+    if expression.op == "max" and len(expression.args) == 2:
+        box, negated = expression.args
+        if box.casilla_id is not None and _signed(negated) == SignedBox(-1, str(box.casilla_id)):
+            return str(box.casilla_id)
+    raise AutonomicSumExtractionError("a 0564 left-out guard is not the magnitude of one box")
+
+
+def _resident_sum(resident: FormulaExpression) -> tuple[FormulaExpression, tuple[str, ...]]:
+    """The resident sum and the left-out boxes guarding it, refusing any other shape."""
+    if resident.op == "sum":
+        return resident, ()
+    if resident.op == "if_then_else" and len(resident.args) == 3:
+        test, summed, unresolved = resident.args
+        refused = unresolved.op == "unresolved_outcome" and unresolved.args[0].text_literal == UNSUMMED_REASON
+        if _is_zero_test(test) and summed.op == "sum" and refused:
+            return summed, tuple(_magnitude_box(arg) for arg in test.args[0].args)
+    raise AutonomicSumExtractionError("a 0564 resident term is neither a sum nor a guarded sum")
+
+
+AuthoredTerm = tuple[tuple[SignedBox, ...], tuple[str, ...]]
+Meaning = tuple[frozenset[SignedBox], frozenset[str]]
+
+
+def meaning(term: AuthoredTerm) -> Meaning:
+    """What a comunidad term computes: its signed operands and its guards, irrespective of order."""
+    operands, guards = term
+    return frozenset(operands), frozenset(guards)
+
+
+def _term_operands(term: FormulaExpression) -> tuple[str, AuthoredTerm]:
+    """Decode one comunidad term into its operands and guards, refusing any shape the writer does not produce."""
     if term.op != "if_then_else" or len(term.args) != 3:
         raise AutonomicSumExtractionError("a 0564 term is not a residence test")
     predicate, resident, other = term.args
-    if predicate.op != "text_equal" or len(predicate.args) != 2 or resident.op != "sum":
+    if predicate.op != "text_equal" or len(predicate.args) != 2:
         raise AutonomicSumExtractionError("a 0564 term is not a residence test")
     binding, literal = predicate.args
     if binding.binding != RESIDENCE_BINDING or literal.text_literal is None:
         raise AutonomicSumExtractionError("a 0564 term does not test the residence binding")
-    operands = tuple(_signed(arg) for arg in resident.args)
+    summed, guards = _resident_sum(resident)
+    operands = tuple(_signed(arg) for arg in summed.args)
     if _guarded_sum(other) != operands:
         raise AutonomicSumExtractionError(f"the {literal.text_literal} term does not guard its other-comunidad sum")
-    return literal.text_literal, operands
+    return literal.text_literal, (operands, guards)
 
 
-def registry_operands(revision: ModeloRevision) -> Mapping[str, tuple[SignedBox, ...]]:
-    """Each comunidad's operands as the hydrated edition declares them, in term order."""
+def registry_operands(revision: ModeloRevision) -> Mapping[str, AuthoredTerm]:
+    """Each comunidad's operands and left-out guards as the hydrated edition declares them, in term order."""
     formulas = [formula for formula in revision.formulas if formula.target_casilla_id == SUMMARY_BOX]
     casilla = next(casilla for casilla in revision.casillas if str(casilla.id) == SUMMARY_BOX)
     if len(formulas) != 1 or formulas[0].id != FORMULA_ID or casilla.formula != FORMULA_ID:
@@ -359,16 +447,16 @@ def _edition_problems(revision: ModeloRevision, edition: EditionOperands) -> lis
         authored = registry_operands(revision)
     except AutonomicSumExtractionError as exc:
         return [str(exc)]
-    extracted = {comunidad.residence: comunidad.operands for comunidad in edition.comunidades}
+    extracted = {comunidad.residence: meaning(edition.term(comunidad)) for comunidad in edition.comunidades}
     problems = (
         [f"edition {edition.revision_id}: the comunidad terms differ from the dictionary rows"]
         if list(authored) != list(extracted)
         else []
     )
     return problems + [
-        f"edition {edition.revision_id} {residence}: operands differ from the dictionary"
-        for residence, operands in extracted.items()
-        if authored.get(residence) != operands
+        f"edition {edition.revision_id} {residence}: operands or left-out guards differ from the dictionary"
+        for residence, term in extracted.items()
+        if residence not in authored or meaning(authored[residence]) != term
     ]
 
 
@@ -389,10 +477,26 @@ def check(modelos: Sequence[ModeloDefinition], editions: Sequence[EditionOperand
     return problems
 
 
+def inventory_text(editions: Sequence[EditionOperands]) -> str:
+    """The inventory of every left-out box, one tab-separated line each, after a header."""
+    lines = [inventory_header()]
+    for edition in editions:
+        lines += inventory_lines(edition.revision_id, edition.source_ref, edition.left_out)
+    return "\n".join(lines) + "\n"
+
+
+def _report_inventory(editions: Sequence[EditionOperands], path: Path | None) -> None:
+    text = inventory_text(editions)
+    print(text, end="")
+    if path is not None:
+        path.write_text(text, encoding="utf-8", newline="\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     """Write the 0564 declarations, or with ``--check`` fail when they diverge from the dictionaries."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="fail when the registry diverges from the dictionaries")
+    parser.add_argument("--inventory", type=Path, help="also write the inventory of left-out boxes to this file")
     args = parser.parse_args(argv)
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     try:
@@ -400,6 +504,7 @@ def main(argv: list[str] | None = None) -> int:
     except AutonomicSumExtractionError as exc:
         print(f"autonomic-deduction-sum\tfailed\t{exc}", file=sys.stderr)
         return 1
+    _report_inventory(editions, args.inventory)
     if args.check:
         problems = check(modelos, editions)
         for problem in problems:

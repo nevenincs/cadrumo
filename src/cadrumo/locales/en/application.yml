@@ -1624,8 +1624,8 @@ application:
         what_to_do: Set the type of activity on those income entries, then calculate
           again.
       autonomic_deducciones_not_enrolled:
-        what: Cadrumo works out none of the regional deductions of your comunidad
-          of residence for this year, so the total of regional deductions includes
+        what: None of the regional deductions of your comunidad of residence is
+          worked out for this year, so the total of regional deductions includes
           only the amounts you enter yourself.
         what_to_do: If any applies to you, enter its amount yourself in its box.
       calculation_screen_outdated:
@@ -3448,6 +3448,10 @@ application:
           of your comunidad of residence, but the return has amounts in the deduction
           boxes of another comunidad. A return carries the deductions of one comunidad
           only. Correct those boxes or your comunidad of residence, or enter this
+          box yourself. It is never shown as zero.
+        autonomic_deduction_unsummed_box: This box adds the regional deductions
+          of your comunidad of residence, but the official sum also names a box that
+          this calculation does not add, and that box holds an amount. Check it, or enter this
           box yourself. It is never shown as zero.
         income_family_contradicts_profile: This box compares your other income with
           the limit, but the income categories you stated exclude a kind of income

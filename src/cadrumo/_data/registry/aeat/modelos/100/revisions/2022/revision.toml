@@ -7074,6 +7074,9 @@ family = "formulas"
 selector = {revision = "2021", id = "renta-cuota-integra-autonomica"}
 restate_identity = true
 
+# 0584 joins the deductions inside the sum, so the floor of LIRPF art. 77.2 ("El resultado de las
+# operaciones a que se refiere el apartado anterior no podrá ser negativo") covers it; the formula keeps
+# the art. 77 legal reference and that quotation from the 2020 edition.
 [[revisions."2022".family_overrides]]
 family = "formulas"
 selector = {revision = "2021", id = "renta-cuota-liquida-autonomica"}

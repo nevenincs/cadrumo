@@ -750,6 +750,10 @@ casilla_id = "1077"
 number = "1077"
 
 [[revisions."2020".completeness_manifest.casillas]]
+casilla_id = "1078"
+number = "1078"
+
+[[revisions."2020".completeness_manifest.casillas]]
 casilla_id = "1079"
 number = "1079"
 

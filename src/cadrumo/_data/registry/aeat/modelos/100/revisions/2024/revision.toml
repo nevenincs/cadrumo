@@ -10264,20 +10264,27 @@ sequence_additions = { "expression.args" = [
     # aeat-dr-100-2024-dictionary:1691 DEDAUTIB
     { op = "if_then_else", args = [
         { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "baleares" }] },
-        { op = "sum", args = [
-            { casilla_id = "0898" }, { casilla_id = "0899" }, { casilla_id = "0900" }, { casilla_id = "0901" }, { casilla_id = "0902" }, { casilla_id = "0903" },
-            { casilla_id = "0904" }, { casilla_id = "0905" }, { casilla_id = "0906" }, { casilla_id = "0907" }, { casilla_id = "0908" }, { casilla_id = "0909" },
-            { casilla_id = "0910" }, { casilla_id = "0913" }, { casilla_id = "0914" }, { casilla_id = "0915" }, { casilla_id = "1905" }, { casilla_id = "1718" },
-            { op = "negate", args = [{ casilla_id = "1719" }] }, { casilla_id = "0504" }, { casilla_id = "1721" }, { casilla_id = "1714" }, { casilla_id = "1716" }, { casilla_id = "1763" },
-            { casilla_id = "1720" }, { casilla_id = "1698" }, { casilla_id = "0770" },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { op = "max", args = [{ casilla_id = "1719" }, { op = "negate", args = [{ casilla_id = "1719" }] }] },
+                { op = "max", args = [{ casilla_id = "0504" }, { op = "negate", args = [{ casilla_id = "0504" }] }] },
+            ] }, { literal = "0" }] },
+            { op = "sum", args = [
+                { casilla_id = "0898" }, { casilla_id = "0899" }, { casilla_id = "0900" }, { casilla_id = "0901" }, { casilla_id = "0902" }, { casilla_id = "0903" },
+                { casilla_id = "0904" }, { casilla_id = "0905" }, { casilla_id = "0906" }, { casilla_id = "0907" }, { casilla_id = "0908" }, { casilla_id = "0909" },
+                { casilla_id = "0910" }, { casilla_id = "0913" }, { casilla_id = "0914" }, { casilla_id = "0915" }, { casilla_id = "1905" }, { casilla_id = "1718" },
+                { casilla_id = "1721" }, { casilla_id = "1714" }, { casilla_id = "1716" }, { casilla_id = "1763" }, { casilla_id = "1720" }, { casilla_id = "1698" },
+                { casilla_id = "0770" },
+            ] },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-unsummed-box" }] },
         ] },
         { op = "if_then_else", args = [
             { op = "equal", args = [{ op = "sum", args = [
                 { casilla_id = "0898" }, { casilla_id = "0899" }, { casilla_id = "0900" }, { casilla_id = "0901" }, { casilla_id = "0902" }, { casilla_id = "0903" },
                 { casilla_id = "0904" }, { casilla_id = "0905" }, { casilla_id = "0906" }, { casilla_id = "0907" }, { casilla_id = "0908" }, { casilla_id = "0909" },
                 { casilla_id = "0910" }, { casilla_id = "0913" }, { casilla_id = "0914" }, { casilla_id = "0915" }, { casilla_id = "1905" }, { casilla_id = "1718" },
-                { op = "negate", args = [{ casilla_id = "1719" }] }, { casilla_id = "0504" }, { casilla_id = "1721" }, { casilla_id = "1714" }, { casilla_id = "1716" }, { casilla_id = "1763" },
-                { casilla_id = "1720" }, { casilla_id = "1698" }, { casilla_id = "0770" },
+                { casilla_id = "1721" }, { casilla_id = "1714" }, { casilla_id = "1716" }, { casilla_id = "1763" }, { casilla_id = "1720" }, { casilla_id = "1698" },
+                { casilla_id = "0770" },
             ] }, { literal = "0" }] },
             { literal = "0" },
             { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },

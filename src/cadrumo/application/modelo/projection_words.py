@@ -44,6 +44,9 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_OTHER_COMUNIDAD.value: (
             "application.modelo.projection_words.casilla_reason.autonomic_deduction_other_comunidad"
         ),
+        RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_UNSUMMED_BOX.value: (
+            "application.modelo.projection_words.casilla_reason.autonomic_deduction_unsummed_box"
+        ),
     }
 )
 """The sentence of each reason a computed box can be left without a value."""

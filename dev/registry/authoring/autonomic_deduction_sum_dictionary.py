@@ -3,19 +3,22 @@
 Every Modelo 100 declaration dictionary prints one ``DEDAUTx`` row per comunidad
 mapped to the summary casilla of the autonomic deductions. Its description is the
 official sum, for example ``(suma de las casillas [1039] a [1050] + [1115])``. This
-module turns those descriptions into signed operand boxes, mechanically:
+module turns those descriptions into signed operand boxes, mechanically, and never
+guesses:
 
-- ``[a] a [b]`` is a range: every money box the dictionary prints in the comunidad's
-  own block with a number from ``a`` to ``b``. A number in the range that the
-  edition prints elsewhere, or not at all, is not that comunidad's deduction.
-- ``[n]`` names one box. The edition must print it as a money box in the
-  comunidad's own block, or the reviewed placement below must rule on it. A box the
-  edition does not print at all cannot hold a value and is reported as dropped.
-- ``+`` adds and ``-`` subtracts the next term.
+- ``[a] a [b]`` is a range and ``[n]`` names one box.
+- A named box is an operand only when the edition prints it as a money box in the
+  comunidad's own block. Every other named box is left out, with the reason and the
+  dictionary rows that show it: the edition prints no box with that number, prints it
+  outside the comunidad's block, or prints it in the block but not as an amount.
+- ``+`` adds and ``-`` subtracts the next term. A sign the publisher printed as an
+  unreadable glyph (``?``) is not read as either: the term after it is left out.
+
+No list of exceptions exists. A left-out box is reported, never summed, and the
+writer makes the formula refuse a value while such a box holds an amount.
 
 Any row whose description does not follow that grammar, a comunidad block nobody
-mapped to a residence token, a box claimed by two comunidades, or a reviewed ruling
-that no longer matches the dictionary fails the extraction. Nothing is skipped.
+mapped to a residence token, or a box summed by two comunidades fails the extraction.
 
 The runtime never reads these files: the extraction feeds the registry formula
 that :mod:`.autonomic_deduction_sum` writes and checks.
@@ -33,10 +36,14 @@ from cadrumo.domain.calculations.registry.export_xml_dictionary import decode_di
 
 __all__ = [
     "BLOCK_RESIDENCE_TOKENS",
+    "NOT_AN_AMOUNT",
+    "NOT_PRINTED",
+    "PRINTED_ELSEWHERE",
+    "UNREADABLE_SIGN",
     "AutonomicSumExtractionError",
     "ComunidadOperands",
     "DictionaryRow",
-    "DroppedOperand",
+    "LeftOutBox",
     "SignedBox",
     "extract_comunidad_operands",
     "parse_dictionary_rows",
@@ -69,78 +76,6 @@ BLOCK_RESIDENCE_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
 )
 
 
-@dataclass(frozen=True, slots=True)
-class _ReviewedPlacement:
-    """A ruling on one single-box operand that the edition prints outside the comunidad's block."""
-
-    field: str
-    casilla_id: str
-    printed_in: str
-    admitted: bool
-    reason: str
-
-
-#: Single-box operands the official sum names although the dictionary prints the box in
-#: another block. Each ruling is keyed by where the box is printed, so a renumbering
-#: that moves the box elsewhere fails the extraction instead of inheriting the ruling.
-_REVIEWED_PLACEMENTS: Final[tuple[_ReviewedPlacement, ...]] = (
-    _ReviewedPlacement(
-        field="DEDAUTIB",
-        casilla_id="0504",
-        printed_in="GravamenesRes",
-        admitted=True,
-        reason=(
-            "the dictionary names the box DEDAUTIB22: the Illes Balears increase of the autonomic cuota "
-            "for losing the birth deduction (reintegro del abono anticipado, art. 6 ter DL 1/2014)"
-        ),
-    ),
-    _ReviewedPlacement(
-        field="DEDAUTIB",
-        casilla_id="1714",
-        printed_in="CantabriaRes",
-        admitted=False,
-        reason=(
-            "the box was the Illes Balears deduction for ascendants (IB24); the edition no longer prints "
-            "that deduction and prints the number as a Cantabria amount generated in the year"
-        ),
-    ),
-    _ReviewedPlacement(
-        field="DEDAUTLR",
-        casilla_id="2048",
-        printed_in="ExcesosEficienciaEnergeticaRes",
-        admitted=False,
-        reason=(
-            "the edition prints the box as an anexo C energy-efficiency excess pending for future years, "
-            "and prints no La Rioja deduction under that number"
-        ),
-    ),
-)
-
-
-@dataclass(frozen=True, slots=True)
-class _ReviewedSign:
-    """A sign the publisher printed as an unreadable glyph between two named boxes."""
-
-    field: str
-    printed: str
-    sign: int
-    reason: str
-
-
-#: The Illes Balears row prints ``[1718] ? [1719]`` in some editions: box 1719 is the advance
-#: payment of the birth deduction of box 1718, which the edition that prints a dash subtracts.
-_REVIEWED_SIGNS: Final[tuple[_ReviewedSign, ...]] = (
-    _ReviewedSign(
-        field="DEDAUTIB",
-        printed="[1718] ? [1719]",
-        sign=-1,
-        reason=(
-            "box 1719 is the advance payment (abono anticipado) of the birth deduction in box 1718, "
-            "which the edition that prints the sign subtracts"
-        ),
-    ),
-)
-
 _ROW_RE: Final = re.compile(
     r"^(?P<field>[A-Za-z0-9_]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<box>[^\]]*)\]\[(?P<label>.*)\]\s*$"
 )
@@ -151,7 +86,7 @@ _TOKEN_RE: Final = re.compile(r"\s*(?:(?P<box>\[\d{4}\])|(?P<range>a)(?=\s)|(?P<
 
 
 class AutonomicSumExtractionError(ValueError):
-    """A dictionary row or ruling the extraction cannot read without guessing."""
+    """A dictionary row the extraction cannot read without guessing."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,12 +122,20 @@ class SignedBox:
     box: str
 
 
+#: Why a box the official sum names is not an operand of the edition.
+NOT_PRINTED: Final = "the edition prints no box with this number"
+PRINTED_ELSEWHERE: Final = "the edition prints the box outside the comunidad's block"
+NOT_AN_AMOUNT: Final = "the edition prints the box in the comunidad's block, but not as an amount"
+UNREADABLE_SIGN: Final = "the sum prints an unreadable sign before the box"
+
+
 @dataclass(frozen=True, slots=True)
-class DroppedOperand:
-    """A box the official sum names that is not an operand of this edition, and why."""
+class LeftOutBox:
+    """A box the official sum names that is not an operand of this edition, why, and where it is printed."""
 
     box: str
     reason: str
+    printed: tuple[DictionaryRow, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -202,7 +145,7 @@ class ComunidadOperands:
     residence: str
     row: DictionaryRow
     operands: tuple[SignedBox, ...]
-    dropped: tuple[DroppedOperand, ...]
+    left_out: tuple[LeftOutBox, ...]
 
 
 def parse_dictionary_rows(body: bytes) -> tuple[DictionaryRow, ...]:
@@ -230,25 +173,12 @@ def _comunidad_rows(rows: Iterable[DictionaryRow]) -> tuple[DictionaryRow, ...]:
     return tuple(row for row in rows if row.box == SUMMARY_BOX and row.in_deduction_block)
 
 
-def _resolved_glyphs(row: DictionaryRow, expression: str) -> str:
-    """Replace each reviewed unreadable sign, refusing any other one."""
-    for reviewed in _REVIEWED_SIGNS:
-        if reviewed.field == row.field and reviewed.printed in expression:
-            symbol = "-" if reviewed.sign < 0 else "+"
-            expression = expression.replace(reviewed.printed, reviewed.printed.replace("?", symbol))
-    if "?" in expression:
-        raise AutonomicSumExtractionError(
-            f"line {row.line} {row.field}: the sum prints an unreadable sign and no reviewed ruling reads it"
-        )
-    return expression
-
-
 def _terms(row: DictionaryRow) -> tuple[tuple[int, str, str | None], ...]:
-    """Parse the description into ``(sign, first box, last box or None)`` terms."""
+    """Parse the description into ``(sign, first box, last box or None)`` terms; sign 0 is unreadable."""
     summed = _SUM_RE.match(row.label.strip())
     if summed is None:
         raise AutonomicSumExtractionError(f"line {row.line} {row.field}: the description is not an official sum")
-    expression = _resolved_glyphs(row, summed["expression"])
+    expression = summed["expression"]
     tokens: list[tuple[str, str]] = []
     position = 0
     while position < len(expression):
@@ -283,7 +213,7 @@ def _fold_terms(row: DictionaryRow, tokens: list[tuple[str, str]]) -> tuple[tupl
             terms.append((sign, first, last))
             expect_term = False
         elif not expect_term and kind == "sign":
-            sign = -1 if value == "-" else 1
+            sign = {"-": -1, "?": 0}.get(value, 1)
             expect_term = True
             index += 1
         else:
@@ -301,78 +231,54 @@ class _Printed:
         return any(row.block == block and row.data_type == _MONEY_TYPE for row in self.by_box.get(box, ()))
 
 
-def _range_operands(
-    printed: _Printed, row: DictionaryRow, sign: int, first: str, last: str
-) -> tuple[list[SignedBox], list[DroppedOperand]]:
+def _classified(printed: _Printed, row: DictionaryRow, sign: int, box: str) -> SignedBox | LeftOutBox:
+    """The operand a named box is, or why it is left out."""
+    rows = printed.by_box.get(box, ())
+    if sign == 0:
+        return LeftOutBox(box, UNREADABLE_SIGN, rows)
+    if printed.own_money(box, row.block):
+        return SignedBox(sign, box)
+    if not rows:
+        return LeftOutBox(box, NOT_PRINTED, ())
+    if any(printed_row.block == row.block for printed_row in rows):
+        return LeftOutBox(box, NOT_AN_AMOUNT, rows)
+    return LeftOutBox(box, PRINTED_ELSEWHERE, rows)
+
+
+def _named_boxes(row: DictionaryRow, first: str, last: str | None) -> tuple[str, ...]:
+    if last is None:
+        return (first,)
     low, high = int(first), int(last)
     if low > high:
         raise AutonomicSumExtractionError(f"line {row.line} {row.field}: range [{first}] a [{last}] runs backwards")
-    operands: list[SignedBox] = []
-    dropped: list[DroppedOperand] = []
-    for number in range(low, high + 1):
-        box = f"{number:04d}"
-        if printed.own_money(box, row.block):
-            operands.append(SignedBox(sign, box))
-        elif box in printed.by_box:
-            dropped.append(DroppedOperand(box, f"in range [{first}] a [{last}] but printed outside {row.block}"))
-    if not operands:
-        raise AutonomicSumExtractionError(f"line {row.line} {row.field}: range [{first}] a [{last}] holds no box")
-    return operands, dropped
+    return tuple(f"{number:04d}" for number in range(low, high + 1))
 
 
-def _placement_ruling(printed: _Printed, row: DictionaryRow, box: str) -> _ReviewedPlacement:
-    """The one reviewed ruling on a box the edition prints only outside the comunidad's block."""
-    rows = printed.by_box[box]
-    blocks = {printed_row.block for printed_row in rows}
-    rulings = [
-        reviewed
-        for reviewed in _REVIEWED_PLACEMENTS
-        if reviewed.field == row.field and reviewed.casilla_id == box and reviewed.printed_in in blocks
-    ]
-    money = all(printed_row.data_type == _MONEY_TYPE for printed_row in rows)
-    if len(rulings) != 1 or len(blocks) != 1 or not money:
-        raise AutonomicSumExtractionError(
-            f"line {row.line} {row.field}: box [{box}] is printed in {sorted(blocks)}, not {row.block}, "
-            "and no reviewed ruling places it"
-        )
-    return rulings[0]
+def _merge(
+    row: DictionaryRow,
+    found: list[SignedBox | LeftOutBox],
+    operands: dict[str, SignedBox],
+    left_out: dict[str, LeftOutBox],
+) -> None:
+    """Add one term's boxes, refusing a box the sum both adds and subtracts."""
+    for item in found:
+        if isinstance(item, LeftOutBox):
+            left_out.setdefault(item.box, item)
+        elif operands.setdefault(item.box, item).sign != item.sign:
+            raise AutonomicSumExtractionError(
+                f"line {row.line} {row.field}: box [{item.box}] is both added and subtracted"
+            )
 
 
-def _single_operand(printed: _Printed, row: DictionaryRow, sign: int, box: str) -> SignedBox | DroppedOperand:
-    if printed.own_money(box, row.block):
-        return SignedBox(sign, box)
-    if box not in printed.by_box:
-        return DroppedOperand(box, "the edition prints no box with this number")
-    ruling = _placement_ruling(printed, row, box)
-    return SignedBox(sign, box) if ruling.admitted else DroppedOperand(box, ruling.reason)
-
-
-def _operands(printed: _Printed, row: DictionaryRow) -> tuple[tuple[SignedBox, ...], tuple[DroppedOperand, ...]]:
-    operands: list[SignedBox] = []
-    dropped: list[DroppedOperand] = []
+def _operands(printed: _Printed, row: DictionaryRow) -> tuple[tuple[SignedBox, ...], tuple[LeftOutBox, ...]]:
+    operands: dict[str, SignedBox] = {}
+    left_out: dict[str, LeftOutBox] = {}
     for sign, first, last in _terms(row):
-        if last is not None:
-            found, missed = _range_operands(printed, row, sign, first, last)
-            operands.extend(found)
-            dropped.extend(missed)
-            continue
-        single = _single_operand(printed, row, sign, first)
-        if isinstance(single, SignedBox):
-            operands.append(single)
-        else:
-            dropped.append(single)
-    seen: dict[str, int] = {}
-    unique: list[SignedBox] = []
-    for operand in operands:
-        if operand.box in seen:
-            if seen[operand.box] != operand.sign:
-                raise AutonomicSumExtractionError(
-                    f"line {row.line} {row.field}: box [{operand.box}] is both added and subtracted"
-                )
-            continue
-        seen[operand.box] = operand.sign
-        unique.append(operand)
-    return tuple(unique), tuple(dropped)
+        found = [_classified(printed, row, sign, box) for box in _named_boxes(row, first, last)]
+        if last is not None and sign != 0 and not any(isinstance(item, SignedBox) for item in found):
+            raise AutonomicSumExtractionError(f"line {row.line} {row.field}: range [{first}] a [{last}] holds no box")
+        _merge(row, found, operands, left_out)
+    return tuple(operands.values()), tuple(item for box, item in left_out.items() if box not in operands)
 
 
 def extract_comunidad_operands(body: bytes) -> tuple[ComunidadOperands, ...]:
@@ -393,14 +299,14 @@ def extract_comunidad_operands(body: bytes) -> tuple[ComunidadOperands, ...]:
         residence = BLOCK_RESIDENCE_TOKENS.get(row.block)
         if residence is None:
             raise AutonomicSumExtractionError(f"line {row.line} {row.field}: block {row.block} has no residence token")
-        operands, dropped = _operands(printed, row)
+        operands, left_out = _operands(printed, row)
         for operand in operands:
             if operand.box in owner:
                 raise AutonomicSumExtractionError(
                     f"line {row.line} {row.field}: box [{operand.box}] is also an operand of {owner[operand.box]}"
                 )
             owner[operand.box] = row.field
-        extracted.append(ComunidadOperands(residence, row, operands, dropped))
+        extracted.append(ComunidadOperands(residence, row, operands, left_out))
     if not extracted:
         raise AutonomicSumExtractionError(f"the dictionary prints no comunidad row for box {SUMMARY_BOX}")
     residences = [item.residence for item in extracted]

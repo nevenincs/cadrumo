@@ -9256,26 +9256,8 @@ sequence_removals = {keyed_brackets = [2], source_citations = [0]}
 [[revisions."2023".family_overrides]]
 family = "formulas"
 selector = { revision = "2022", id = "renta-deducciones-autonomicas-suma" }
-sequence_removals = { "expression.args" = [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14] }
+sequence_removals = { "expression.args" = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14] }
 sequence_additions = { "expression.args" = [
-    # aeat-dr-100-2023-dictionary:1589 DEDAUTA
-    { op = "if_then_else", args = [
-        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "andalucia" }] },
-        { op = "sum", args = [
-            { casilla_id = "0816" }, { casilla_id = "0849" }, { casilla_id = "0850" }, { casilla_id = "0851" }, { casilla_id = "0852" }, { casilla_id = "0853" },
-            { casilla_id = "0854" }, { casilla_id = "0855" }, { casilla_id = "0856" }, { casilla_id = "0857" }, { casilla_id = "0858" }, { casilla_id = "0860" },
-            { casilla_id = "0862" }, { casilla_id = "0863" }, { casilla_id = "0864" },
-        ] },
-        { op = "if_then_else", args = [
-            { op = "equal", args = [{ op = "sum", args = [
-                { casilla_id = "0816" }, { casilla_id = "0849" }, { casilla_id = "0850" }, { casilla_id = "0851" }, { casilla_id = "0852" }, { casilla_id = "0853" },
-                { casilla_id = "0854" }, { casilla_id = "0855" }, { casilla_id = "0856" }, { casilla_id = "0857" }, { casilla_id = "0858" }, { casilla_id = "0860" },
-                { casilla_id = "0862" }, { casilla_id = "0863" }, { casilla_id = "0864" },
-            ] }, { literal = "0" }] },
-            { literal = "0" },
-            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
-        ] },
-    ] },
     # aeat-dr-100-2023-dictionary:1609 DEDAUTAR
     { op = "if_then_else", args = [
         { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "aragon" }] },
@@ -9319,18 +9301,24 @@ sequence_additions = { "expression.args" = [
     # aeat-dr-100-2023-dictionary:1663 DEDAUTIB
     { op = "if_then_else", args = [
         { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "baleares" }] },
-        { op = "sum", args = [
-            { casilla_id = "0898" }, { casilla_id = "0899" }, { casilla_id = "0900" }, { casilla_id = "0901" }, { casilla_id = "0902" }, { casilla_id = "0903" },
-            { casilla_id = "0904" }, { casilla_id = "0905" }, { casilla_id = "0906" }, { casilla_id = "0907" }, { casilla_id = "0908" }, { casilla_id = "0909" },
-            { casilla_id = "0910" }, { casilla_id = "0913" }, { casilla_id = "0914" }, { casilla_id = "0915" }, { casilla_id = "1905" }, { casilla_id = "0770" },
-            { casilla_id = "1718" }, { op = "negate", args = [{ casilla_id = "1719" }] }, { casilla_id = "0504" }, { casilla_id = "1721" },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [
+                { op = "max", args = [{ casilla_id = "0504" }, { op = "negate", args = [{ casilla_id = "0504" }] }] },
+            ] }, { literal = "0" }] },
+            { op = "sum", args = [
+                { casilla_id = "0898" }, { casilla_id = "0899" }, { casilla_id = "0900" }, { casilla_id = "0901" }, { casilla_id = "0902" }, { casilla_id = "0903" },
+                { casilla_id = "0904" }, { casilla_id = "0905" }, { casilla_id = "0906" }, { casilla_id = "0907" }, { casilla_id = "0908" }, { casilla_id = "0909" },
+                { casilla_id = "0910" }, { casilla_id = "0913" }, { casilla_id = "0914" }, { casilla_id = "0915" }, { casilla_id = "1905" }, { casilla_id = "0770" },
+                { casilla_id = "1718" }, { op = "negate", args = [{ casilla_id = "1719" }] }, { casilla_id = "1721" },
+            ] },
+            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-unsummed-box" }] },
         ] },
         { op = "if_then_else", args = [
             { op = "equal", args = [{ op = "sum", args = [
                 { casilla_id = "0898" }, { casilla_id = "0899" }, { casilla_id = "0900" }, { casilla_id = "0901" }, { casilla_id = "0902" }, { casilla_id = "0903" },
                 { casilla_id = "0904" }, { casilla_id = "0905" }, { casilla_id = "0906" }, { casilla_id = "0907" }, { casilla_id = "0908" }, { casilla_id = "0909" },
                 { casilla_id = "0910" }, { casilla_id = "0913" }, { casilla_id = "0914" }, { casilla_id = "0915" }, { casilla_id = "1905" }, { casilla_id = "0770" },
-                { casilla_id = "1718" }, { op = "negate", args = [{ casilla_id = "1719" }] }, { casilla_id = "0504" }, { casilla_id = "1721" },
+                { casilla_id = "1718" }, { op = "negate", args = [{ casilla_id = "1719" }] }, { casilla_id = "1721" },
             ] }, { literal = "0" }] },
             { literal = "0" },
             { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
@@ -9393,24 +9381,6 @@ sequence_additions = { "expression.args" = [
                 { casilla_id = "0763" }, { casilla_id = "0201" }, { casilla_id = "0204" }, { casilla_id = "0207" }, { casilla_id = "0209" }, { casilla_id = "0211" },
                 { casilla_id = "0212" }, { casilla_id = "0213" }, { casilla_id = "0228" }, { casilla_id = "0229" }, { casilla_id = "1906" }, { casilla_id = "1908" },
                 { casilla_id = "1909" },
-            ] }, { literal = "0" }] },
-            { literal = "0" },
-            { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
-        ] },
-    ] },
-    # aeat-dr-100-2023-dictionary:1768 DEDAUTCL
-    { op = "if_then_else", args = [
-        { op = "text_equal", args = [{ binding = "renta-profile-tax-residence-ccaa" }, { text_literal = "castilla_y_leon" }] },
-        { op = "sum", args = [
-            { casilla_id = "0799" }, { casilla_id = "0970" }, { casilla_id = "0971" }, { casilla_id = "0972" }, { casilla_id = "0973" }, { casilla_id = "0974" },
-            { casilla_id = "0975" }, { casilla_id = "0976" }, { casilla_id = "0978" }, { casilla_id = "0979" }, { casilla_id = "0980" }, { casilla_id = "0984" },
-            { casilla_id = "0995" },
-        ] },
-        { op = "if_then_else", args = [
-            { op = "equal", args = [{ op = "sum", args = [
-                { casilla_id = "0799" }, { casilla_id = "0970" }, { casilla_id = "0971" }, { casilla_id = "0972" }, { casilla_id = "0973" }, { casilla_id = "0974" },
-                { casilla_id = "0975" }, { casilla_id = "0976" }, { casilla_id = "0978" }, { casilla_id = "0979" }, { casilla_id = "0980" }, { casilla_id = "0984" },
-                { casilla_id = "0995" },
             ] }, { literal = "0" }] },
             { literal = "0" },
             { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
@@ -9537,5 +9507,5 @@ sequence_additions = { "expression.args" = [
         ] },
     ] },
 ], source_refs = ["aeat-dr-100-2023-dictionary"] }
-sequence_order = { "expression.args" = [1, 2, 3, 4, 5, 6, 7, 8, 0, 9, 10, 11, 12, 13, 14] }
+sequence_order = { "expression.args" = [0, 3, 4, 5, 6, 7, 8, 1, 2, 9, 10, 11, 12, 13, 14] }
 # END casilla 0564 autonomic deduction sum
