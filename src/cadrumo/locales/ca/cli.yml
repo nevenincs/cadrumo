@@ -407,6 +407,9 @@ cli:
         list_help: Llista els registres d'existències del perfil actiu
         movement_add_help: Afegeix un moviment de compra, venda o ajust al registre
           d'existències
+        movement_claim_candidates_help: 'Llista les transaccions del llibre que una
+          compra pot reclamar: aquelles la base, l''IVA i el recàrrec de les quals
+          coincideixen amb els de la compra al cèntim.'
         movement_claim_help: Indica quina transacció del llibre registra una compra,
           indica que cap ho fa o esborra la indicació; una transacció reclamada deixa
           les caselles de despesa del llibre.

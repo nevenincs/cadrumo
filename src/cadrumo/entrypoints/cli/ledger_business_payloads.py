@@ -163,6 +163,8 @@ class InventoryMovementPayload(OutputSchema):
     acquisition_cost: InventoryAcquisitionCostSummaryPayload | None = None
     schema_version: _InventorySchemaVersion
     acquisition_detail: InventoryAcquisitionDetailPayload | None = None
+    ledger_row: NonEmptyStr = "unstated"
+    claimed_transaction_id: str | None = None
 
 
 class InventoryClosingAuthorityFingerprintPayload(OutputSchema):
@@ -227,6 +229,7 @@ class InventoryOptionPayload(OutputSchema):
     value: NonEmptyStr
     label_key: NonEmptyStr
     role: str | None = None
+    effect_key: str | None = None
 
 
 class InventoryOptionFamilyPayload(OutputSchema):
@@ -240,6 +243,28 @@ class InventoryOptionsResult(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory options``."""
 
     families: list[InventoryOptionFamilyPayload]
+
+
+class InventoryClaimCandidatePayload(OutputSchema):
+    """One ledger transaction a purchase may claim."""
+
+    transaction_id: NonEmptyStr
+    booked_date: IsoDateText
+    counterparty: str | None = None
+    description: NonEmptyStr
+    currency: NonEmptyStr
+    taxable_base: str | None = None
+    iva_amount: str | None = None
+    recargo_amount: str | None = None
+
+
+class InventoryClaimCandidatesResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger inventory movement claim-candidates``."""
+
+    actividad_id: NonEmptyStr
+    year: FourDigitYear
+    movement_id: NonEmptyStr
+    candidates: list[InventoryClaimCandidatePayload]
 
 
 class InventoryEvidenceAddResult(OutputSchema):

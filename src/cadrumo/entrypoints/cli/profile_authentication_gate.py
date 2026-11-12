@@ -168,6 +168,7 @@ PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_inventory_describe",
         "app_ledger_inventory_correct",
         "app_ledger_inventory_movement_claim",
+        "app_ledger_inventory_movement_claim_candidates",
         "app_ledger_inventory_movement_correct",
         "app_ledger_inventory_movement_reverse",
         "app_ledger_inventory_retire",

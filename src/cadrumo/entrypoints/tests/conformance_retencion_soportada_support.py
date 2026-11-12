@@ -91,6 +91,10 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             assert row.revision_id == revision_id
             assert row.income_class_label.strip()
             assert row.pago_a_cuenta.decimal == "1500.00"
+            assert row.origin_label.strip()
+            assert row.payer_display_name.strip()
+            assert result.ejercicios == tuple(sorted(context.operation.supported_filing_years().years))
+            assert [column.field.value for column in result.amount_columns][-1] == "pago_a_cuenta"
             assert repository.list_revisioned(_EJERCICIO) == ((seeded, revision_id),)
 
         return ConformancePreparation(
@@ -127,6 +131,9 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
                 retencion=PublicDecimal(decimal="1200.00"),
                 ingreso_a_cuenta=PublicDecimal(decimal="300.00"),
                 ingreso_a_cuenta_repercutido=PublicDecimal(decimal="300.00"),
+                # A work-income certificate states the reductions and deductible expenses the payer applied.
+                reducciones_aplicables=PublicDecimal(decimal="0.00"),
+                gastos_deducibles=PublicDecimal(decimal="0.00"),
                 origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
                 source_path="certificate.pdf",
                 source_directory=str(context.input_root),

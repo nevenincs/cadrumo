@@ -261,6 +261,27 @@ class RentaFamilyProfile(BaseModel):
             total += increment
         return total
 
+    def guarderia_rows_lacking_cotizaciones(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+        cap_anual: Decimal,
+        context: FamilyFactResolutionContext,
+    ) -> tuple[int, ...]:
+        """The positions of the descendant rows whose positive increment awaits a cotizaciones figure never stated.
+
+        The same children that leave :meth:`incremento_guarderia_0613` unresolved when
+        the cotizaciones limit applies, in the order the profile lists them.
+        """
+        lacking: list[int] = []
+        for descendant, increment in self._guarderia_child_increments(
+            filing_year, thresholds=thresholds, cap_anual=cap_anual, context=context
+        ):
+            if increment > 0 and descendant.cotizaciones_ss_madre_euros is None:
+                lacking.append(next(index for index, row in enumerate(self.descendientes) if row is descendant))
+        return tuple(lacking)
+
     def _guarderia_child_increments(
         self,
         filing_year: int,

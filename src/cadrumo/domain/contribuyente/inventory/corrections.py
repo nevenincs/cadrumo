@@ -216,6 +216,14 @@ def _require_effective_movement(ledger: InventoryLedger, movement_id: str) -> Mo
     raise _refused("movement_not_found", ledger, movement_id=movement_id)
 
 
+def require_effective_purchase(ledger: InventoryLedger, movement_id: str) -> MovementRecord:
+    """The effective purchase a ledger-row statement can name, or the typed refusal for why there is none."""
+    target = _require_effective_movement(ledger, movement_id)
+    if target.kind is not MovementKind.PURCHASE:
+        raise _refused("ledger_row_not_purchase", ledger, movement_id=movement_id)
+    return target
+
+
 def correct_movement(
     document: InventoryLedgerDocument,
     ledger: InventoryLedger,
@@ -359,9 +367,7 @@ def state_movement_ledger_row(
     )
     if _is_replay(ledger, stamp.correction_id, fingerprint):
         return ledger
-    target = _require_effective_movement(ledger, movement_id)
-    if target.kind is not MovementKind.PURCHASE:
-        raise _refused("ledger_row_not_purchase", ledger, movement_id=movement_id)
+    target = require_effective_purchase(ledger, movement_id)
     if target.ledger_row is ledger_row and target.claimed_transaction_id == claimed_transaction_id:
         raise _refused("correction_changes_nothing", ledger, movement_id=movement_id)
     if claimed_transaction_id is not None:
@@ -437,6 +443,7 @@ __all__ = [
     "describe_ledger",
     "inventory_refusal_key",
     "is_inventory_correction_refusal_reason",
+    "require_effective_purchase",
     "require_ledger_active",
     "require_ledger_open_for_stock_change",
     "restore_ledger",

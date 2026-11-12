@@ -380,6 +380,25 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         identity="ledger.inventory.movement.claim",
     ),
     CommandSpec(
+        "app_ledger_inventory_movement_claim_candidates",
+        "app_ledger_inventory_movement",
+        "claim-candidates",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.inventory.movement_claim_candidates_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(INVENTORY_ACTIVIDAD_ID_OPTION, INVENTORY_YEAR_OPTION, _MOVEMENT_ID_OPTION),
+        policy=POLICY_5,
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_inventory_commands", "inventory_movement_claim_candidates", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_business_payloads", "InventoryClaimCandidatesResult", __package__),
+            identity="ledger.inventory.movement.claim-candidates",
+        ),
+    ),
+    CommandSpec(
         "app_ledger_inventory_movement_add",
         "app_ledger_inventory_movement",
         "add",

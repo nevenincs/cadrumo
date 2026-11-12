@@ -400,6 +400,9 @@ cli:
         list_help: Készletnyilvántartások listázása az aktív profilban.
         movement_add_help: Vásárlási, értékesítési vagy helyesbítési mozgás hozzáadása
           a készletnyilvántartáshoz.
+        movement_claim_candidates_help: 'Felsorolja azokat a főkönyvi tranzakciókat,
+          amelyeket egy vásárlás megjelölhet: amelyeknek alapja, áfája és egyenértékűségi
+          pótdíja centre egyezik a vásárláséval.'
         movement_claim_help: Megadod, melyik főkönyvi tranzakció könyveli a beszerzést,
           vagy hogy egyik sem, vagy törlöd a megjelölést; a lefoglalt tranzakció kikerül
           a főkönyvi költségrovatokból.

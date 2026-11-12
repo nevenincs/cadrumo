@@ -792,6 +792,14 @@ application:
       retired_book_leaves_year_unresolved: Este inventario está retirado pero aún
         tiene apuntes, así que el Anexo D de %{year} queda sin resolver. Restáuralo
         o elimina sus apuntes.
+    effects:
+      purchase_ledger_row:
+        claimed: Esta compra registra la transacción del libro que indicas; esa fila
+          queda fuera de los gastos del Modelo 100 y la compra lleva su coste al libro
+          de inventario.
+        none: Indicas que ninguna transacción del libro registra esta compra.
+        unstated: Todavía no se ha indicado nada sobre la transacción del libro que
+          registra esta compra.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Comprobación del coste
@@ -839,6 +847,10 @@ application:
       physical_evidence_role:
         acquisition_price_valuation: Valoración a precio de compra
         physical_count: Recuento físico
+      purchase_ledger_row:
+        claimed: Registrada por una transacción del libro
+        none: Sin transacción en el libro
+        unstated: Sin indicar
       retirement_reason:
         activity_ceased: Actividad cesada
         created_in_error: Creado por error

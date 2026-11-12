@@ -33,13 +33,7 @@ _CLOCK_METHODS: Final = frozenset(
 _CORE_CLOCK_MODULE_SUFFIX: Final = "core.time.clock"
 
 _BASELINE: Final[dict[str, int]] = {
-    "applicability_models.py": 1,
     "authority.py": 3,
-    "concepto_ingreso.py": 1,
-    "gasto_capital_inmobiliario.py": 1,
-    "modelo_obligation_scope.py": 1,
-    "modelo_pending_orden.py": 1,
-    "modelo_rendering.py": 1,
     "setup_profile_bindings.py": 1,
     "snapshot_proof.py": 1,
     "tax_id_format.py": 2,
@@ -117,11 +111,13 @@ def test_the_baseline_names_only_modules_that_still_read_the_clock_as_often() ->
 @pytest.mark.parametrize(
     "module",
     [
+        "concepto_ingreso.py",
         "entity_type.py",
         "eu_member_state_catalogue.py",
         "irpf_regimes.py",
         "renta_codes_catalogue.py",
         "facts/string_mapping.py",
+        "gasto_capital_inmobiliario.py",
     ],
 )
 def test_the_vocabulary_cores_are_not_baselined(module: str) -> None:
