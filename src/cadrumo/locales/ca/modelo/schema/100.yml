@@ -8414,6 +8414,9 @@ modelo:
                 en aquest únic període impositiu (base sobre la qual s'aplica la reducció
                 del 30 per 100 de l'article 32.1 de la Llei de l'Impost; import declarat
                 per l'operador - vegeu la casella [1554])
+            trabajo-mar-renta-exenta:
+              label: Rendiments del treball exempts dels treballadors del mar (art.
+                7.p) LIRPF o Llei 19/1994) [intern]
           construct:
             renta-dependent-modelos:
               field:
@@ -18192,9 +18195,6 @@ modelo:
               label: Comunitat autònoma de la declaració
             ZRUE2:
               label: Cònjuge país de residència UE o EEE
-            trabajo-mar-renta-exenta:
-              label: Rendiments del treball exempts dels treballadors del mar (art.
-                7.p) LIRPF o Llei 19/1994) [intern]
           construct:
             renta-dependent-modelos:
               field:

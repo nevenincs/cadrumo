@@ -2654,6 +2654,19 @@ cli:
           export_target_exists: A célútvonalon már van fájl, és a biztonsági mentés
             sosem kerül felülírásra. Válassz másik --output értéket, vagy előbb helyezd
             át a meglévő fájlt; egyetlen profil sem került beolvasásra.
+      arrendamiento:
+        add_help: Adj hozzá egy bérleti szerződést --value TÉNY=ÉRTÉK adatokkal; a
+          megnevezett ingatlannak léteznie kell.
+        clear_help: Töröl egy adatot a nevével; több adathoz ismételd az opciót.
+        edit_help: Módosítsd egy bérleti szerződés adatait, és töröld a megnevezetteket;
+          a többi marad.
+        end_fecha_help: A bérleti szerződés utolsó napja (ÉÉÉÉ-HH-NN).
+        end_help: Add meg egy bérleti szerződés utolsó napját.
+        help: Rögzítsd az ingatlanaid bérleti szerződéseit.
+        list_help: Listázd a mentett bérleti szerződéseket a sorkulcsukkal.
+        remove_help: Töröld a bérleti szerződést.
+        row_help: A bérleti szerződés sorkulcsa, ahogy a «list» mutatja.
+        value_help: Egy TÉNY=ÉRTÉK adat; több adathoz ismételd az opciót.
       ascendiente:
         add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,NIF=<NIF vagy NIE>][,APELLIDOS_NOMBRE=<vezeték-
           és utónév>][,FALLECIMIENTO=ÉÉÉÉ-HH-NN][,CONVIVIENTES=<azon leszármazottak
@@ -2883,6 +2896,18 @@ cli:
           el a sorokat a remove paranccsal.'
         rows_or_none_required: Adj meg legalább egy %{flag} sort, vagy a(z) %{none}
           értéket annak rögzítésére, hogy nincs egy sem.
+      inmueble:
+        add_help: Adj hozzá egy ingatlant --value TÉNY=ÉRTÉK adatokkal; csak akkor
+          kerül mentésre, ha az adatok összhangban vannak.
+        clear_help: Töröl egy adatot a nevével; több adathoz ismételd az opciót.
+        edit_help: Módosítsd egy ingatlan adatait, és töröld a megnevezetteket; a
+          többi marad.
+        help: Rögzítsd a bérbe adott ingatlanaidat.
+        list_help: Listázd a mentett ingatlanokat a sorkulcsukkal.
+        remove_help: Töröld az ingatlant; amíg egy bérleti szerződés hivatkozik rá,
+          elutasítjuk.
+        row_help: Az ingatlan sorkulcsa, ahogy a «list» mutatja.
+        value_help: Egy TÉNY=ÉRTÉK adat; több adathoz ismételd az opciót.
       list:
         incoherent_observation_advisory: 'A profillista nem volt megbízhatóan beolvasható
           (állapot: {outcome}). Futtasd újra a parancsot; ha továbbra is fennáll,
@@ -2912,6 +2937,11 @@ cli:
           a megválaszolatlan kérdéstől, és törlésre került. Az ettől függő kötelezettségek
           meghatározatlanok maradnak, amíg a profilszerkesztő parancs {flag} kapcsolójával
           nem válaszolsz.'
+        rental_tier_cleared: 'A profilod eltárolta a bérleti jövedelem 23.2. cikk
+          szerinti csökkentési sávját. Ez az adat megszűnt: a sávot az egyes szerződések
+          adataiból vezetjük le. Rögzítsd a bérleti szerződéseidet az «aeat config
+          profile arrendamiento add» paranccsal, hogy a csökkentés újra számítható
+          legyen.'
       plantilla_media:
         average_workforce_help: Az év teljes átlagos állományi létszáma teljes munkaidős
           egyenértékben, legfeljebb két tizedesjeggyel.

@@ -17,7 +17,6 @@ from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogu
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ...domain.calculations.registry.entity_type import resolve_entity_vocabulary
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.rental_reduction import resolve_rental_reduction_art232_tier_catalogue
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -74,8 +73,6 @@ def _validate_enum_kind(
         _validate_ccaa_enum(binding, raw, operation=operation, effective_date=effective_date)
     elif kind is BindingTypedEnumKind.LEGAL_ENTITY_FORM:
         _validate_legal_entity_form_enum(binding, raw, operation=operation, effective_date=effective_date)
-    elif kind is BindingTypedEnumKind.RENTAL_REDUCTION_ART_23_2_TIER:
-        _validate_rental_reduction_enum(binding, raw, operation=operation, effective_date=effective_date)
     else:
         raise ModeloBindingValueContractUnsupportedError()
 
@@ -121,22 +118,6 @@ def _validate_legal_entity_form_enum(
     except (RegistrySnapshotError, RegistryValidationError):
         raise ModeloBindingValueContractUnsupportedError() from None
     if str(vocabulary.require_legal_entity_form(raw)) != raw:
-        raise ModeloBindingValueInvalidError()
-
-
-def _validate_rental_reduction_enum(
-    binding: BindingDefinition,
-    raw: str,
-    *,
-    operation: PinnedAuthorityOperation,
-    effective_date: date | None,
-) -> None:
-    selected_date = _require_enum_date(binding, effective_date)
-    try:
-        catalogue = resolve_rental_reduction_art232_tier_catalogue(effective_date=selected_date, authority=operation)
-    except (RegistrySnapshotError, RegistryValidationError):
-        raise ModeloBindingValueContractUnsupportedError() from None
-    if str(catalogue.require(raw)) != raw:
         raise ModeloBindingValueInvalidError()
 
 

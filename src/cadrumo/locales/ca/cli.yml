@@ -2666,6 +2666,19 @@ cli:
           export_target_exists: Ja hi ha un fitxer al camí de destinació i una còpia
             de seguretat no se sobreescriu mai. Tria un altre --output o mou primer
             el fitxer existent; no s'ha llegit cap perfil.
+      arrendamiento:
+        add_help: Afegeix un arrendament amb dades --value FET=VALOR; l'immoble que
+          anomena ha d'existir.
+        clear_help: Esborra una dada pel seu nom; repeteix l'opció per a diverses.
+        edit_help: Canvia dades d'un arrendament i esborra les que indiquis; les altres
+          es mantenen.
+        end_fecha_help: Últim dia de l'arrendament (AAAA-MM-DD).
+        end_help: Indica l'últim dia d'un arrendament.
+        help: Registra els arrendaments dels teus immobles.
+        list_help: Llista els arrendaments desats amb la seva clau de fila.
+        remove_help: Elimina un arrendament.
+        row_help: Clau de fila de l'arrendament, la que mostra «list».
+        value_help: Una dada FET=VALOR; repeteix l'opció per a diverses dades.
       ascendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,APELLIDOS_NOMBRE=<cognoms
           i nom>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<nombre de descendents
@@ -2892,6 +2905,17 @@ cli:
           l'ordre remove.
         rows_or_none_required: Indica almenys una fila %{flag}, o %{none} per declarar
           que no n'hi ha cap.
+      inmueble:
+        add_help: Afegeix un immoble amb dades --value FET=VALOR; es desa només si
+          les dades són coherents.
+        clear_help: Esborra una dada pel seu nom; repeteix l'opció per a diverses.
+        edit_help: Canvia dades d'un immoble i esborra les que indiquis; les altres
+          es mantenen.
+        help: Registra els immobles que arrendes.
+        list_help: Llista els immobles desats amb la seva clau de fila.
+        remove_help: Elimina un immoble; es rebutja mentre un arrendament el nomeni.
+        row_help: Clau de fila de l'immoble, la que mostra «list».
+        value_help: Una dada FET=VALOR; repeteix l'opció per a diverses dades.
       list:
         incoherent_observation_advisory: 'No s''ha pogut obtenir un llistat fiable
           de perfils (estat: {outcome}). Torna a executar l''ordre; si persisteix,
@@ -2921,6 +2945,10 @@ cli:
           pregunta sense resposta i s’ha esborrat. Les obligacions que en depenen
           queden sense determinar fins que responguis amb l’opció {flag} de l’ordre
           d’edició del perfil.'
+        rental_tier_cleared: 'El teu perfil desava el tram de reducció de l''art.
+          23.2 per al lloguer. Aquesta dada ja no existeix: el tram es dedueix de
+          les dades de cada contracte. Registra els teus arrendaments amb «aeat config
+          profile arrendamiento add» per tornar a calcular la reducció.'
       plantilla_media:
         average_workforce_help: Plantilla mitjana total de l'any, en equivalents a
           jornada completa i amb dos decimals com a màxim.

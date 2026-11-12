@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "9d56d0d2ae80d9a20adbac005f9c4a22ad0f25f5c1364888b731138ce5cd8991"
+source_state_digest = "3c349ee7c3be11a084354bbc0d3aba8a0c040ad750eca5681cef1b9410005934"
 design_sources = [
     { source_ref = "aeat-dr-100-2022-dictionary", sha256 = "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc" },
     { source_ref = "aeat-dr-100-2022-input-dictionary", sha256 = "78dec12e9028fe009d65f56188fedf74f7b5187378a67fe2b35ae0e1a4e54a36" },
@@ -1930,6 +1930,7 @@ placements = [
     { casilla_id = "saldo-neg-rcm-ahorro-em4-resto-paso1", kind = "working_figure" },
     { casilla_id = "saldo-neg-rcm-ahorro-paso1-capacidad", kind = "working_figure" },
     { casilla_id = "saldo-neg-rcm-ahorro-paso2-capacidad", kind = "working_figure" },
+    { casilla_id = "trabajo-mar-renta-exenta", kind = "working_figure" },
 ]
 
 [[revisions.2022.form_layouts.pages]]

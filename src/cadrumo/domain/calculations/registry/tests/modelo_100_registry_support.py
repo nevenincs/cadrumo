@@ -32,6 +32,21 @@ M100_NO_PENDING_SAVINGS_BALANCES: Final = MappingProxyType(
     },
 )
 
+M100_NO_MARITIME_WORKER_BINDINGS: Final = MappingProxyType(
+    {
+        "renta-maritime-gross-navigation-income": Decimal(0),
+        "renta-maritime-annual-salary": Decimal(0),
+        "renta-maritime-qualifying-days": Decimal(0),
+    },
+)
+"""The art. 7.p) LIRPF and art. 75 Ley 19/1994 operands of a filer with no maritime work.
+
+Every supported edition computes the maritime exemption, so a scenario of an
+unrelated chain states these as neutral zeros together with the path below."""
+
+M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS: Final = MappingProxyType({"renta-maritime-path-rebeca": False})
+"""The REBECA path flag of a filer with no maritime work."""
+
 
 def neutral_binding_values(
     bindings: Iterable[BindingDefinition],
