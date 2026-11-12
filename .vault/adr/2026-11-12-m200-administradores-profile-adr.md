@@ -13,9 +13,9 @@ related:
   - '[[2026-11-12-m200-administradores-profile-reference]]'
 ---
 
-# `m200-administradores-profile` adr: `Modelo 200 page 002 rows as profile facts` | (**status:** `proposed`)
+# `m200-administradores-profile` adr: `Modelo 200 page 002 rows as profile facts` | (**status:** `accepted`)
 
-Nothing here applies until the operator accepts it. Code may proceed on `lane/calc-iva`; nothing lands before acceptance.
+Accepted 2026-11-12 13:15 by PRIME on the operator's delegated authority, with conditions (g) to (j) below; (h) as corrected at 13:15 from ACCEPTANCE's citations of the 2024 sociedades manual.
 
 ## Problem Statement
 
@@ -39,12 +39,14 @@ The DR200 design declares the page 002 record (`m200-page-002`, `m200-page-002b`
 ## Constraints
 
 1. **Fields and cardinality come only from the design.** Each family is a repeatable profile section whose fields are the design's fields for that family. Its row limit is the design's slot count, read from the export layout of the edition in force. The profile declares no limit of its own. A later edition that changes a family declares only that difference (delta keyed, PRIME 12:11).
-2. **Administradores are required.** A Modelo 200 export with no administrador row refuses with a typed, served refusal whose door opens the profile section. It is never stated none.
-3. **Optional families need an explicit answer.** Every other family takes rows or an explicit "none", through a tri-state field per family on the same section (unanswered, none, has rows). Unanswered blocks the export with a served door. An empty family is never inferred.
+2. **Administradores are required.** A Modelo 200 export with no administrador row refuses with a typed, served refusal whose door opens the profile section. It is never stated none. In each row F/J (forma_juridica) is required. RPTE (representante), domicilio fiscal and código provincia are filled only when the declarant is an IRNR contribuyente (casilla 00021 or 00046) and stay blank for a resident entity (manual sociedades 2024, lines 3838-3860, p. 98). They are conditional on that stored fact, not asked otherwise, and when the condition holds their absence blocks (condition h).
+3. **Optional families need an explicit answer.** Every other family that could apply takes rows or an explicit "none", through a tri-state field per family on the same section (unanswered, none, has rows). Unanswered blocks the export with a served door. An empty family is never inferred.
+3a. **Not applicable is served, not asked (condition g).** A family that the design or the law restricts to an entity form or regime which a stored profile fact already rules out (for example a SICAV dissolution for a sociedad limitada) is served as not applicable, with its deciding fact. The rule and its citation live in the registry.
+3b. **B.2 participaciones en la declarante (condition j).** For a sociedad de responsabilidad limitada or a sociedad civil, B.2 carries at least one socio even below 5 %, and the percentages sum to 100 (manual sociedades 2024, lines 3986-3992 and 4013-4016, p. 102). "None" is refused for those forms. A sum other than 100 blocks with a served finding. The rule is keyed in the registry by entity form, with its citation.
 4. **Privacy.** NIF, names and domicilio fiscal are declared `sensitivity = "identity"` and live only in encrypted profile custody. Fixtures, logs, stories and documentation carry synthetic values only.
 5. **Schema version.** The schema takes the next version in landing order. A record of an earlier version that carries these paths is refused.
 6. **Surfaces.** The sections are reachable through the existing profile row operations (CLI and operation registry), with served words in the four locales. Frontends render them through the served profile sections and author nothing.
-7. **Mapping.** The export maps profile rows into `Modelo200ProjectionRows` by registry role and field name, in one mapper. There is no modelo-name branch outside the 200 producer.
+7. **Mapping (condition i).** One mapper turns profile rows into `Modelo200ProjectionRows` by registry role and field name. There is no modelo-name branch outside the 200 producer. The mapping is round-trip tested through the real export for every admitted year.
 
 ## Implementation
 
