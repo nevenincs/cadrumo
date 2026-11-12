@@ -41,7 +41,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, Final
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.retencion_soportada import RetencionSoportadaClase
+from ...core.retencion_soportada import RetencionSoportadaCantidad, RetencionSoportadaClase
 from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.credit_reconciliation import RetencionSoportadaCrossCheck
@@ -233,6 +233,24 @@ def _class_state(
     return RetencionSoportadaClassState.MISSING
 
 
+def _refined_state(
+    state: RetencionSoportadaClassState,
+    income_class: RetencionSoportadaClase,
+    quantity: RetencionSoportadaCantidad,
+    class_records: Sequence[RetencionSoportadaRecord],
+) -> RetencionSoportadaClassState:
+    """Narrow a class state by the quantity drawn: a figure a record lacks, or income an attestation cannot state."""
+    if state is RetencionSoportadaClassState.RECORDED and not all(record.states(quantity) for record in class_records):
+        return RetencionSoportadaClassState.FIGURE_MISSING
+    if (
+        state is RetencionSoportadaClassState.ATTESTED_ABSENT
+        and (income_class, quantity) in RETENCION_SOPORTADA_INCOME_ROLES
+    ):
+        # An attestation says no payer withheld, never how much income there was.
+        return RetencionSoportadaClassState.MISSING_INCOME_RECORD
+    return state
+
+
 def _credited_casilla(revision: ModeloRevision, binding_id: BindingId) -> CasillaId | None:
     """Return the one casilla a family binding credits: the box it is bound to, else the one formula reading it.
 
@@ -350,14 +368,7 @@ class RetencionSoportadaSourceResolver:
                     effective_date=context.period.end_date,
                     authority=operation,
                 )
-                is_income = (income_class, provider.quantity) in RETENCION_SOPORTADA_INCOME_ROLES
-                if state is RetencionSoportadaClassState.RECORDED and not all(
-                    record.states(provider.quantity) for record in class_records
-                ):
-                    state = RetencionSoportadaClassState.FIGURE_MISSING
-                elif state is RetencionSoportadaClassState.ATTESTED_ABSENT and is_income:
-                    # An attestation says no payer withheld, never how much income there was.
-                    state = RetencionSoportadaClassState.MISSING_INCOME_RECORD
+                state = _refined_state(state, income_class, provider.quantity, class_records)
                 if state is RetencionSoportadaClassState.RECORDED:
                     binding_values[binding.id] = sum(
                         (record.quantity(provider.quantity) for record in class_records),
