@@ -21,12 +21,14 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from typing import Final
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -44,6 +46,8 @@ from ..party_colocation import (
     party_regions,
     resolve_party_attribution_by_colocation,
 )
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -462,6 +466,7 @@ def test_a_two_column_document_clears_the_stamp_and_drops_the_advisory(
                 grounded,
                 legends=_registry_legends(operation),
                 operation=operation,
+                effective_date=_ON_DATE,
             )
             is None
         )
@@ -498,6 +503,7 @@ def test_an_unsplittable_column_keeps_the_stamp_and_the_operator_keeps_the_advis
                 grounded,
                 legends=_registry_legends(operation),
                 operation=operation,
+                effective_date=_ON_DATE,
             )
             is not None
         )

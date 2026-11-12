@@ -21,12 +21,14 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from typing import Final
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
@@ -43,6 +45,8 @@ from ..party_attribution import (
     party_addresses,
     party_attribution_advisory,
 )
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -262,6 +266,7 @@ def test_the_advisory_names_the_territory_each_party_s_values_would_establish(
             effective_date=default_invoice_extraction_period().end_date,
         ),
         operation=operation,
+        effective_date=_ON_DATE,
     )
 
     assert advisory is not None
@@ -291,8 +296,12 @@ def test_a_transposition_produces_no_finding_and_only_the_stamp_says_so(*, opera
         operation=operation,
         effective_date=default_invoice_extraction_period().end_date,
     )
-    straight_advisory = party_attribution_advisory(straight, legends=legends, operation=operation)
-    swapped_advisory = party_attribution_advisory(swapped, legends=legends, operation=operation)
+    straight_advisory = party_attribution_advisory(
+        straight, legends=legends, operation=operation, effective_date=_ON_DATE
+    )
+    swapped_advisory = party_attribution_advisory(
+        swapped, legends=legends, operation=operation, effective_date=_ON_DATE
+    )
     assert straight_advisory is not None
     assert swapped_advisory is not None
     straight_scopes = {party.role: party.scope_if_attributed for party in straight_advisory.parties}
@@ -323,6 +332,7 @@ def test_a_stamped_field_with_no_printed_value_raises_no_advisory(operation: Pin
                 effective_date=default_invoice_extraction_period().end_date,
             ),
             operation=operation,
+            effective_date=_ON_DATE,
         )
         is None
     )

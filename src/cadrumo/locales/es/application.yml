@@ -3210,6 +3210,11 @@ application:
       m303_m349_intracom_reconciliation_mismatch: En el periodo %{period_code} de
         %{filing_year}, el total intracomunitario del modelo 303 (%{m303_total} EUR)
         y el total del modelo 349 (%{m349_total} EUR) difieren en %{gap} EUR.
+      m390_prorrata_apartado_unrendered: 'El modelo 390 de %{filing_year}: tu registro
+        de prorrata se aplica a este ejercicio (%{registered_activity_rows} fila(s)
+        de actividad), pero la edición del formulario aún no incluye el apartado de
+        prorratas (apartado 12), así que se exportaría con ese apartado en blanco.
+        Aún no puedes verificarlo ni exportarlo.'
       madrid_nacimiento_adopcion_eligibility_advisory: La casilla [%{casilla_id}],
         con un recuento ponderado de %{weighted_count}, puede darte derecho a la deducción
         de la Comunidad de Madrid por nacimiento o adopción.
@@ -4127,14 +4132,20 @@ application:
         Cierra cualquier programa que esté usando el almacén de perfiles e inténtalo
         de nuevo.
       registration_label_blank: El nombre del perfil no puede estar vacío.
+      rental_lease_has_ledger_rows: El arrendamiento %{row} está nombrado por %{rows}
+        filas del libro; cambia o borra antes su vínculo con «%{door}».
       rental_lease_property_missing: El arrendamiento nombra el inmueble %{inmueble},
         que no está en tu perfil; añádelo antes con «%{door}».
+      rental_ledger_unreadable: No se pudo leer el libro del perfil, así que no se
+        hizo la eliminación. No se cambió nada.
       rental_principal_missing: El inmueble principal %{principal} no es otro inmueble
         de tu perfil; añádelo antes con «%{door}».
       rental_property_has_accessories: El inmueble %{inmueble} es el principal de
         anejos (%{accessories}); cambia o borra su principal antes con «%{door}».
       rental_property_has_leases: El inmueble %{inmueble} tiene arrendamientos (%{leases});
         elimínalos antes con «%{door}».
+      rental_property_has_ledger_rows: El inmueble %{row} está nombrado por %{rows}
+        filas del libro; cambia o borra antes su vínculo con «%{door}».
       rental_row_invalid: El dato «%{leaf}» no es válido o contradice otros datos
         del registro; no se guardó nada. Corrígelo y repite «%{door}».
       rental_tenant_id_invalid: El NIF de un arrendatario no es válido; revisa sus

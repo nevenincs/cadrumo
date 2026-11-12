@@ -50,6 +50,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from typing import TYPE_CHECKING, Final, NamedTuple
 
 from pydantic import BaseModel, Field
@@ -263,6 +264,7 @@ def party_attribution_advisory(
     draft: InvoiceDraft,
     *,
     legends: tuple[RegimeLegend, ...],
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> PartyAttributionAdvisory | None:
     """Return what an operator must be told about this draft's attribution, or ``None``.
@@ -280,6 +282,7 @@ def party_attribution_advisory(
         draft: The reviewed draft, carrying stamped provenance envelopes.
         legends: The dated registry declarations selected by the enclosing
             pinned authority operation.
+        effective_date: The date whose territorial vocabulary the quoted territories are read on.
         operation: Caller-owned pinned authority operation for the ladder's
             country, territory, identification, and rate lookups.
 
@@ -306,6 +309,7 @@ def party_attribution_advisory(
                 # reach for this party.
                 scope_if_attributed=scope_printed_evidence_would_establish(
                     legends=legends,
+                    effective_date=effective_date,
                     operation=operation,
                     tax_identifier=getattr(draft, party.tax_id_field, None),
                     stated_country_name=getattr(draft, party.country_field, None),

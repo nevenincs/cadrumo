@@ -101,8 +101,8 @@ period = "0A"
 presented = { year = "horizon-1", month = 5, day = 19 }
 csv = "R3VN8B6YJ2CF5TQA"
 justificante = "1004237695028"
-casillas = { "0224" = "33000.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
-reason = "Rendimiento neto de la actividad y bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+casillas = { "0224" = "33000.00", "1263" = "0.00", "1266" = "0.00", "1269" = "0.00", "1270" = "0.00", "1276" = "0.00", "1279" = "0.00", "1282" = "0.00", "1283" = "0.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Rendimiento neto de la actividad y bases liquidables generales negativas y saldos negativos de la base del ahorro pendientes en la declaración de la renta del ejercicio anterior"
 
 # The first-quarter Modelo 130 reads the previous ejercicio's net activity income
 # from his Modelo 100 of the year before. When that year lies below the support

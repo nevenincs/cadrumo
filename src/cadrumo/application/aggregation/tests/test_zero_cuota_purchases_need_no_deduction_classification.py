@@ -25,6 +25,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
@@ -46,6 +47,8 @@ from ..iva_ledger import (
     aggregate_iva_ledger_observations,
 )
 from .ledger_transaction_support import iva_transaction
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 type _ZeroCuotaRowFactory = Callable[..., Transaction]
 """One of the two cuota-less rows, built by a case that varies its fields."""
@@ -158,7 +161,7 @@ def test_an_out_of_scope_reta_quota_reaches_an_observation(*, operation: PinnedA
     assert len(result.observations) == 1
     observation = result.observations[0]
     assert observation.category == IvaCategory("operacion_no_sujeta")
-    assert observation.flow_direction == received_flow_direction()
+    assert observation.flow_direction == received_flow_direction(effective_date=_ON_DATE)
     assert observation.base_amount == _RETA_QUOTA
     assert observation.iva_amount == Decimal("0")
     assert observation.deduction_fact_kind is None
@@ -309,7 +312,7 @@ def test_the_observation_contract_admits_the_unclassified_cuota_less_row(
         exemption_article=IvaExemptionArticle("art_20_other"),
         rate_kind=IvaRateKind("zero"),
         applied_rate=Decimal("0"),
-        flow_direction=received_flow_direction(),
+        flow_direction=received_flow_direction(effective_date=_ON_DATE),
         base_amount=_PREMIUM,
         iva_amount=Decimal("0"),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
@@ -325,7 +328,7 @@ def test_the_observation_contract_admits_the_unclassified_cuota_less_row(
             exemption_article=IvaExemptionArticle("art_20_other"),
             rate_kind=IvaRateKind("zero"),
             applied_rate=Decimal("0"),
-            flow_direction=received_flow_direction(),
+            flow_direction=received_flow_direction(effective_date=_ON_DATE),
             base_amount=_PREMIUM,
             iva_amount=Decimal("0"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,

@@ -76,13 +76,14 @@ amortization_base_note = "Construction share of the acquisition value by inherit
 reduccion_art_23_2 = "tier-50"
 
 # His own copy of the previous year's Renta: no negative general base was left
-# pending to offset, so the four-year carry of casilla 1380 starts from zero.
+# pending to offset, so the four-year carry of casilla 1380 starts from zero,
+# and no negative savings balance either (Anexo C.3 boxes 1263, 1266, 1269, 1270, 1276, 1279, 1282 and 1283).
 [[local_observations]]
 modelo = "100"
 year = "horizon-2"
 period = "0A"
-casillas = { "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
-reason = "Bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+casillas = { "1263" = "0.00", "1266" = "0.00", "1269" = "0.00", "1270" = "0.00", "1276" = "0.00", "1279" = "0.00", "1282" = "0.00", "1283" = "0.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Bases liquidables generales negativas y saldos negativos de la base del ahorro pendientes en la declaración de la renta del ejercicio anterior"
 
 # No negative general base of an earlier ejercicio is pending: this synthetic
 # taxpayer has had no year with a negative base. Where the profile holds no

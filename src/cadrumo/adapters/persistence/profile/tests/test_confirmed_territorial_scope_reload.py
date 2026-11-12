@@ -10,7 +10,7 @@ real serializer throughout.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
@@ -23,10 +23,13 @@ from cadrumo.application.ledger.counterparty_establishment import ConfirmedCount
 from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentPersistenceError
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from .....domain.iva.classification import require_iva_territorial_scope
 from .....domain.iva.schema import IvaTerritorialScope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -103,7 +106,7 @@ def test_reload_under_a_leased_authority_returns_both_projected_axes(
 ) -> None:
     original = ConfirmedCounterpartyFacts.create(
         tax_identifier="B00015016",
-        territorial_scope=require_iva_territorial_scope("es_canarias", operation=operation),
+        territorial_scope=require_iva_territorial_scope("es_canarias", operation=operation, effective_date=_ON_DATE),
         identification_state=require_eu_member_state("FR", authority=operation),
         asserted_by="operator@example.test",
         asserted_at=datetime(2026, 4, 17, 11, 5, tzinfo=UTC),
@@ -114,5 +117,7 @@ def test_reload_under_a_leased_authority_returns_both_projected_axes(
 
     assert loaded == original
     assert loaded is not None
-    assert loaded.territorial_scope == require_iva_territorial_scope("es_canarias", operation=operation)
+    assert loaded.territorial_scope == require_iva_territorial_scope(
+        "es_canarias", operation=operation, effective_date=_ON_DATE
+    )
     assert loaded.identification_state == require_eu_member_state("FR", authority=operation)

@@ -36,7 +36,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...adapter_composition import profile_adapter_composition
 from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
-from .test_m100_carry_attestation import _FACTS, _PENDING_CARRIES, _attest, _renta_years
+from .test_m100_carry_attestation import _EVERY_CARRY, _FACTS, _attest, _renta_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -136,7 +136,7 @@ def test_an_entry_clears_the_finding_until_the_rows_change_and_a_full_clear_drop
     ):
         renta.ports.transaction_repository.save(TransactionCatalogue.from_transactions([_interest("interest-1", year)]))
         first, second = _family_casillas(renta)
-        carries = tuple(_attest(binding_id) for binding_id in _PENDING_CARRIES)
+        carries = tuple(_attest(binding_id) for binding_id in _EVERY_CARRY)
 
         # Answering the carries alone calculates, and the family stands as a finding: nothing was entered for it.
         assert renta.apply(binding=carries).refusal is None

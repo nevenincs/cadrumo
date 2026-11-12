@@ -1741,6 +1741,11 @@ errors:
       (114. mező) a választott számla tulajdonosának kell lennie.
     refused_modelo_360_solicitud_undeclared: '{filing_year} évre nincs megadott Modelo
       360 kérelem.'
+    refused_modelo_390_prorrata_apartado_unrendered: 'A Modelo 390 továbbra is elutasított:
+      a prorrata-nyilvántartásod tartalmaz sorokat erre az évre, de a használt nyomtatványkiadás
+      még nem tartalmazza a prorrata részt (12. apartado), ezért nem ellenőrizhető,
+      nem rögzíthető benyújtottként és nem exportálható úgy, hogy ez a rész üresen
+      maradjon.'
     refused_modelo_aggregation_input_conflict: Egy általad megadott adat ellentmond
       a nyilvántartásaidnak; javítsd a számítás előtt.
     refused_modelo_amendment_complementaria_liability_decrease: A kiegészítő bevallás
@@ -2063,5 +2068,12 @@ errors:
       kivéve, ha száraz-futási mód van használatban.
     own_account_unknown: A(z) {own_account_id} saját számla nem szerepel a nyilvántartott
       saját bankszámláid között.
+    rental_lease_unknown: A(z) {ref} bérleti szerződés nem szerepel a profilodban.
+      A szerződéseket az «{door}» paranccsal listázhatod.
+    rental_link_category: A bérleti szerződéshez vagy ingatlanhoz kapcsolt sornak
+      a(z) {category} jövedelemkategóriát kell viselnie; add meg az «{door}» paranccsal
+      és a --irpf-category kapcsolóval.
+    rental_property_unknown: A(z) {ref} ingatlan nem szerepel a profilodban. Az ingatlanokat
+      az «{door}» paranccsal listázhatod.
     unknown_ledger_provider: 'Ismeretlen főkönyv-szolgáltató: {provider!r}. Elismert
       szolgáltatók: {providers}.'

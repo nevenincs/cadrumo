@@ -3466,6 +3466,7 @@ desktop:
       actividad_economica: Economic activity
       arrendamiento_local: Rent of business premises
       arrendamiento_vivienda_afecto: Rent of home used for business
+      capital_inmobiliario: Rental of property
       capital_mobiliario: Movable capital income
       ganancias_patrimoniales: Capital gains and losses
       trabajo: Employment

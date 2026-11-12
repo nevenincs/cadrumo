@@ -492,19 +492,8 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         for leaf in ("modelo.work.verify", "modelo.work.file")
     ),
     *(
-        _profile(
-            leaf,
-            f"{leaf}.work_address.resolved",
-            f"{leaf}.work_address.natural_target_absent",
-        )
-        for leaf in ("modelo.work.verify", "modelo.work.file")
-    ),
-    *(
-        _profile(
-            leaf,
-            f"{leaf}.work_address.resolved",
-            f"{leaf}.work_address.exact_work_unit_absent",
-        )
+        _profile(leaf, f"{leaf}.work_address.resolved", f"{leaf}.work_address.{scenario}")
+        for scenario in ("natural_target_absent", "exact_work_unit_absent")
         for leaf in ("modelo.work.verify", "modelo.work.file")
     ),
     _profile(
@@ -525,6 +514,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             f"{leaf}.m123_count_authority.unresolved",
         )
         for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
+    # The prorrata register listing shows the rows the edition leaves out of the summary.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.m390_prorrata_apartado.rendered",
+            f"{leaf}.m390_prorrata_apartado.unrendered",
+            action_id="operator.ledger.prorrata.list",
+        )
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
     # The profile door that states a household row's required fact: the fact is the
     # filer's, and the door lists the people the profile records so the missing one is added.

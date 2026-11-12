@@ -24,7 +24,7 @@ issuer's error as authority. The resolution carries both and no fact.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
@@ -32,6 +32,7 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import resolve_iva_classification_catalogue
@@ -54,6 +55,8 @@ from ..counterparty_establishment import (
 )
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .ledger_value_fixtures import repository
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -108,7 +111,7 @@ def test_an_empty_store_never_answers_with_any_territory(
 
     assert resolution.fact is None
     assert resolution.contradiction is None
-    for scope in resolve_iva_classification_catalogue(None, operation=operation).territorial_scopes:
+    for scope in resolve_iva_classification_catalogue(_ON_DATE, operation=operation).territorial_scopes:
         assert resolution.fact is None or resolution.fact.value is not scope
 
 

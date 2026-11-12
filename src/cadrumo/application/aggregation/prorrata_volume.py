@@ -21,7 +21,7 @@ def _counts_toward_prorrata(
     if observation.flow_direction not in output_flows or not annual.contains(observation.transaction_date):
         return False
     # The cash operation information carries its whole volume; payments carry only portions.
-    cash = not is_iva_cash_accounting_none(observation.cash_accounting_treatment)
+    cash = not is_iva_cash_accounting_none(observation.cash_accounting_treatment, observation.transaction_date)
     role = IvaLedgerObservationRole.OPERATION_INFORMATIONAL if cash else IvaLedgerObservationRole.SETTLEMENT
     if observation.observation_role is not role:
         return False

@@ -173,6 +173,7 @@ def _review_item(*, field: str | None, detail: str = "", words: FindingWords | N
 def confirm_establishment_filer_scope(
     profile_record: UserProfileRecord | None,
     *,
+    effective_date: date | None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[IvaTerritorialScope | None, ConfirmationBlocker | None]:
     """Resolve the filer's own territory, or surface why it could not be.
@@ -189,7 +190,16 @@ def confirm_establishment_filer_scope(
             field=FILER_POSTCODE_FACT_PATH,
             words=FindingWords.of(DraftFindingWording.FILER_PROFILE_UNRESOLVABLE, fact=FILER_POSTCODE_FACT_PATH),
         )
-    return resolve_filer_territorial_scope(profile_record=profile_record, operation=operation), None
+    if effective_date is None:
+        # The territorial vocabulary is read on the operation's date; the missing
+        # date is the gap the classification asks for.
+        return None, None
+    return (
+        resolve_filer_territorial_scope(
+            profile_record=profile_record, effective_date=effective_date, operation=operation
+        ),
+        None,
+    )
 
 
 def _counterparty_review_items(
@@ -416,13 +426,15 @@ def resolve_confirmed_establishment(
     )
 
     state = workflow_state_repository().load()
-    filer_scope, filer_item = confirm_establishment_filer_scope(state.active_profile_record(), operation=operation)
+    transaction_date = invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date)
+    filer_scope, filer_item = confirm_establishment_filer_scope(
+        state.active_profile_record(), effective_date=transaction_date, operation=operation
+    )
     try:
         profile = load_active_taxpayer_profile(state, schema=operation.profile_schema())
     except WizardStatusError:
         profile = None
 
-    transaction_date = invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date)
     declared = _confirmed_declared_facts(
         operation, draft, kind, counterparty, filer_scope, supply_nature, transaction_date
     )
@@ -503,7 +515,13 @@ def _confirmed_declared_facts(
         # document reader: what a tax-category token means about the operation
         # is a classification question, and a reader answering it was a second
         # authority working from weaker evidence than the rule table.
-        stated_category=declared_category_from_document_record(draft.iva_category, operation=operation),
+        stated_category=(
+            None
+            if transaction_date is None
+            else declared_category_from_document_record(
+                draft.iva_category, effective_date=transaction_date, operation=operation
+            )
+        ),
         supply_nature=supply_nature,
         # The mention the reader already recovers, handed to the citation axis.
         # Both readers carry it -- the structured path reads it exactly from the

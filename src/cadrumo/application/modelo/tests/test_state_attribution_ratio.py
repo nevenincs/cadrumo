@@ -15,7 +15,7 @@ territory fact must state it explicitly.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -44,6 +44,7 @@ _RATIO_KEY = "tax_residence.state_attribution_ratio"
 _SCOPE_KEY = "tax_residence.jurisdiction_scope"
 _BINDING_ID = "modelo-303-profile-state-attribution-ratio"
 _YEAR = filing_year_envelope().horizon
+_ON_DATE = date(_YEAR, 1, 1)
 _CLOCK = datetime(_YEAR, 5, 27, 9, 0, 0, tzinfo=UTC)
 
 
@@ -52,18 +53,18 @@ def test_injector_refuses_absent_scope_instead_of_defaulting_common_regime(
 ) -> None:
     fact_index: dict[str, UserProfileFactValue] = {}
     with pytest.raises(ProfileBindingResolutionError, match="cannot default to common regime"):
-        inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+        inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
 
 
 def test_injector_common_regime_resolves_to_one_hundred(authority_operation: PinnedAuthorityOperation) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "common_regime"}
-    inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+    inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 
 def test_injector_explicit_foral_resolves_to_zero(authority_operation: PinnedAuthorityOperation) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "foral_unsupported"}
-    inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+    inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("0")
 
 
@@ -72,7 +73,7 @@ def test_injector_refuses_legacy_ratio_as_authority_without_scope(
 ) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_RATIO_KEY: Decimal("50")}
     with pytest.raises(ProfileBindingResolutionError, match="cannot default to common regime"):
-        inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+        inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
 
 
 def test_injector_overwrites_legacy_ratio_from_explicit_scope(
@@ -82,7 +83,7 @@ def test_injector_overwrites_legacy_ratio_from_explicit_scope(
         _SCOPE_KEY: "common_regime",
         _RATIO_KEY: Decimal("50"),
     }
-    inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+    inject_derived_state_attribution_facts(fact_index, effective_date=_ON_DATE, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 

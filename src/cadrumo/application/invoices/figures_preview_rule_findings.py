@@ -200,6 +200,7 @@ def _class_rule_findings(
             rectifies_invoice_number=(request.rectifies_invoice_number or "").strip().upper() or None,
             category=None if isinstance(category, InvoiceRuleFinding) else category,
             tax_id_missing=request.counterparty_tax_id is None,
+            effective_date=on_date,
         ),
     )
 

@@ -355,6 +355,10 @@ modelo:
             label: Levonási jogot keletkeztető éves ügyletvolumen
           iva-prorrata-volumen-total:
             label: Az ügyletek éves teljes volumene
+          iva-recargo-equivalencia-reducido-transitorio:
+            label: Átmeneti egyenértékűségi felár a csökkentett kulcs után - adóösszeg
+          iva-recargo-equivalencia-super-reducido:
+            label: Egyenértékűségi felár a szupercsökkentett 4%-os kulcs után - adóösszeg
           iva-rectificacion-deducciones-importaciones-base:
             label: Importok levonásainak helyesbítése - Adóalap (a hivatalos 40. rovat
               része)

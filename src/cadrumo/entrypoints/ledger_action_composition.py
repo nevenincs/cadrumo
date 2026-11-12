@@ -6,12 +6,14 @@ Core types:
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 from ..application.ledger.action_ports import LedgerActionPorts
 from ..application.ledger.import_ports import LedgerImportPorts
 from ..application.ledger.read_ports import LedgerReadPorts
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..domain.transactions.models import Transaction
 from ..domain.usage_ratios.model import UsageRatioProfile
 
 if TYPE_CHECKING:
@@ -75,6 +77,13 @@ def compose_ledger_action_ports(
         return load_usage_ratios(bucket_id=bucket_id, operation=operation)
 
     transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id)
+
+    def load_profile_facts() -> Mapping[str, str] | None:
+        from .adapter_composition_ports import build_pinned_profile_read_ports
+
+        ports = build_pinned_profile_read_ports(bucket_id=bucket_id, operation=operation)
+        return ports.path_values.load_path_values(bucket_id=bucket_id)
+
     return LedgerActionPorts(
         operation=operation,
         transaction_repository=transaction_repository,
@@ -87,7 +96,15 @@ def compose_ledger_action_ports(
         calculation_repository=calculation_persistence.calculation_repository(),
         purchase_invoice_evidence_records=evidence_records,
         fully_validated_transaction_reader=transaction_repository,
+        rental_profile_facts=load_profile_facts,
     )
+
+
+def load_ledger_rows_for_rental_references(bucket_id: str) -> Iterable[Transaction]:
+    """Read every ledger row of ``bucket_id``, in any lifecycle state, for the profile's removal guard."""
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
+
+    return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions.values()
 
 
 def compose_ledger_import_ports() -> LedgerImportPorts:
@@ -97,4 +114,8 @@ def compose_ledger_import_ports() -> LedgerImportPorts:
     return build_ledger_import_ports()
 
 
-__all__ = ["compose_ledger_action_ports", "compose_ledger_import_ports"]
+__all__ = [
+    "compose_ledger_action_ports",
+    "compose_ledger_import_ports",
+    "load_ledger_rows_for_rental_references",
+]

@@ -231,7 +231,7 @@ def _registry_export_categories(
     raw_categories = entries.get("counterparty.export_categories")
     if raw_categories is None:
         raise ValueError("IVA classification catalogue is missing counterparty.export_categories")
-    return _parse_export_categories(raw_categories, operation=operation)
+    return _parse_export_categories(raw_categories, effective_date=effective_date, operation=operation)
 
 
 def _unique_iva_classification_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
@@ -246,10 +246,15 @@ def _unique_iva_classification_entries(resolved: ResolvedMappingFact) -> dict[st
     return entries
 
 
-def _parse_export_categories(raw_categories: str, *, operation: PinnedAuthorityOperation) -> frozenset[IvaCategory]:
+def _parse_export_categories(
+    raw_categories: str,
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[IvaCategory]:
     try:
         categories = frozenset(
-            require_iva_category(token.strip(), authority=operation)
+            require_iva_category(token.strip(), effective_date=effective_date, authority=operation)
             for token in raw_categories.split(",")
             if token.strip()
         )
@@ -263,6 +268,7 @@ def _parse_export_categories(raw_categories: str, *, operation: PinnedAuthorityO
 def _export_establishment_is_answerable(
     counterparty_country: str | None,
     *,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether this country evidence may carry an export exemption.
@@ -289,8 +295,11 @@ def _export_establishment_is_answerable(
     ISO-unassigned pair, each of which genuinely establishes nothing about
     where the party is.
     """
-    if territorial_scope_for_country(counterparty_country, operation=operation) == territorial_scope_alias(
+    if territorial_scope_for_country(
+        counterparty_country, effective_date=effective_date, operation=operation
+    ) == territorial_scope_alias(
         "third_country",
+        effective_date=effective_date,
         operation=operation,
     ):
         return True
@@ -330,7 +339,7 @@ def validate_intracom_export_counterparty(
     under-declaring a German-established acquirer purchasing under a Spanish
     NIF-IVA.
     """
-    if category == require_iva_category("intra_community_supply", authority=operation):
+    if category == require_iva_category("intra_community_supply", effective_date=effective_date, authority=operation):
         if identification_state is None:
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
@@ -366,7 +375,9 @@ def validate_intracom_export_counterparty(
         # the counterparty IS, and "no country recorded" is not a place. Read
         # as one it zero-rated a supply from a fact nobody had stated, which is
         # the under-declaration direction on the issued side.
-        if not _export_establishment_is_answerable(counterparty_country, operation=operation):
+        if not _export_establishment_is_answerable(
+            counterparty_country, effective_date=effective_date, operation=operation
+        ):
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,

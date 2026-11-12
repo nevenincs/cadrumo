@@ -3526,6 +3526,7 @@ cli:
         dividendos)
       irpf_purpose_employment_income: rendimientos del trabajo (no para facturas netas)
       irpf_purpose_rent_expense_withholding: retención de alquiler pagado neto
+      irpf_purpose_rental_property_income: ingresos y gastos de alquiler de un inmueble
       irpf_usage_example: 'Alquiler neto: --category-id {rent_category} --irpf-category
         {rent_category}. Servicio profesional neto: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -3549,6 +3550,10 @@ cli:
     classify:
       apply_help: Guarda la sugerencia del LLM con origen `llm:` en lugar de solo
         previsualizarla.
+      arrendamiento_help: Clave de fila del arrendamiento guardado al que pertenece
+        esta fila de ingreso; consulta los arrendamientos con «aeat config profile
+        arrendamiento list». Un texto en blanco quita el vínculo. Una fila vinculada
+        lleva la categoría de renta capital_inmobiliario.
       auto_split_help: Lee la factura adjunta y, cuando es multicomponente, la divide
         en hijos base/IVA por línea; si no, la clasifica en su sitio (requiere --read-evidence).
       auto_split_needs_evidence: '--auto-split requiere --read-evidence: la decisión
@@ -3583,9 +3588,16 @@ cli:
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].
       file_not_found: 'Archivo CSV no encontrado: %{path}'
+      gasto_inmobiliario_help: Clase de gasto del inmueble, una de las que declara
+        el registro; un valor desconocido se rechaza con las admitidas. Necesita un
+        inmueble vinculado (--inmueble). Un texto en blanco lo quita.
       help: Clasificar un movimiento de tus registros en el perfil activo
       id_help: Id del movimiento a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --file.
+      inmueble_help: Clave de fila del inmueble guardado al que pertenece esta fila
+        de gasto; consulta los inmuebles con «aeat config profile inmueble list».
+        No junto con --arrendamiento. Un texto en blanco quita el vínculo. Una fila
+        vinculada lleva la categoría de renta capital_inmobiliario.
       investment_asset_id_help: Identidad del registro de bienes de inversión contra
         la que se deduce esta adquisición, tal como consta en ese registro. Obligatoria
         con un tipo de deducción de inversión y rechazada en cualquier otro.
@@ -3731,6 +3743,8 @@ cli:
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).
+      rental_concept_unknown: '--gasto-inmobiliario {value!r} no reconocido. Clases
+        admitidas: {accepted}.'
       unknown_category: --category-id {category!r} no reconocido. Indica un identificador
         de categoría sin prefijo, como {example!r}, no una clave compuesta ni con
         prefijo de familia. Consulta el catálogo de categorías de tus registros para

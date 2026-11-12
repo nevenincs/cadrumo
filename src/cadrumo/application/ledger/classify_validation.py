@@ -22,7 +22,7 @@ from .classify_result_contracts import (
     LedgerClassifyValidationKind,
     LedgerClassifyValidationMessages,
 )
-from .validation_messages import bounded_validation_messages, registered_refusal_causes
+from .validation_messages import ledger_refusal_messages, registered_refusal_causes
 
 LEDGER_CLASSIFY_VALIDATION_ERRORS = (ValidationError, TransactionValidationError, RegistryValidationError)
 
@@ -87,8 +87,8 @@ def needs_withholding_category_verdict(*, transaction_id: str) -> PreconditionVe
 
 
 def classify_validation_messages(error: Exception) -> LedgerClassifyValidationMessages:
-    """Retain only bounded field locations and user-actionable messages."""
-    return bounded_validation_messages(
+    """Retain only bounded field locations and user-actionable messages, said in the operator's language."""
+    return ledger_refusal_messages(
         error,
         limit=LEDGER_CLASSIFY_MAX_VALIDATION_MESSAGES,
         fallback="ledger classify values did not satisfy transaction validation",

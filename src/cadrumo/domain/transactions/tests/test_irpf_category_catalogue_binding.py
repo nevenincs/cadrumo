@@ -37,6 +37,7 @@ from ..irpf_categories import (
 )
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ..rental_link import RENTAL_LINK_IRPF_CATEGORY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -220,6 +221,14 @@ def test_predicates_resolve_through_the_closed_catalogue_with_direction() -> Non
     assert has_rent_irpf_category(_activity_category(), direction=outgoing) is False
 
 
+def test_the_rental_category_takes_both_directions_and_is_not_paid_net() -> None:
+    rental = ledger_irpf_category(RENTAL_LINK_IRPF_CATEGORY)
+
+    assert rental is not None
+    assert set(rental.directions) == {TransactionDirection.INCOMING, TransactionDirection.OUTGOING}
+    assert not rental.net_paid
+
+
 def test_catalogue_membership_is_closed_and_direction_aware() -> None:
     """Resolution answers both "is this catalogued" and "for this direction"."""
     accepted = tuple(row.id for row in ledger_irpf_category_catalogue())
@@ -229,6 +238,7 @@ def test_catalogue_membership_is_closed_and_direction_aware() -> None:
         _employment_category(),
         _RENT_CATEGORY,
         "arrendamiento_vivienda_afecto",
+        RENTAL_LINK_IRPF_CATEGORY,
         "capital_mobiliario",
         "ganancias_patrimoniales",
     }

@@ -342,6 +342,10 @@ modelo:
             label: Volum anual d'operacions que originen dret a deducció
           iva-prorrata-volumen-total:
             label: Volum anual total d'operacions
+          iva-recargo-equivalencia-reducido-transitorio:
+            label: Recàrrec d'equivalència transitori sobre el tipus reduït - quota
+          iva-recargo-equivalencia-super-reducido:
+            label: Recàrrec d'equivalència sobre el tipus superreduït del 4% - quota
           iva-rectificacion-deducciones-importaciones-base:
             label: Rectificació de deduccions en importacions - Base (part de la casella
               oficial 40)

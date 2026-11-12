@@ -73,7 +73,7 @@ class IvaCashAccountingTreatmentCatalogue:
 
 def resolve_iva_cash_accounting_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatmentCatalogue:
     """Resolve the dated IVA cash-accounting vocabulary from governed facts."""
@@ -120,7 +120,7 @@ def resolve_iva_cash_accounting_catalogue(
 
 def default_iva_cash_accounting_treatment(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
     """Return the registry-declared default cash-accounting treatment."""
@@ -133,7 +133,7 @@ def default_iva_cash_accounting_treatment(
 def require_iva_cash_accounting_treatment(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
     """Validate one value against the dated cash-accounting vocabulary."""

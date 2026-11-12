@@ -1,7 +1,8 @@
 """Answering a Modelo 100's earlier-ejercicio carries always moves the declaration forward.
 
-The four carries of the negative general bases still pending (Ley 35/2006
-art. 50.3) are read from the previous return; with none held, each one needs
+The carries still pending from earlier ejercicios, the negative general bases
+(Ley 35/2006 art. 50.3) and the negative savings balances (art. 49), are read
+from the previous return; with none held, each one needs
 the filer's answer before the declaration calculates. An Apply that answers
 them all calculates. One that answers only some is refused, and the refusal
 names a carry the filer has not answered yet, so the door the window opens on
@@ -36,7 +37,7 @@ from ....domain.calculations.registry.tests.registry_observations import registr
 from ...adapter_composition import profile_adapter_composition
 from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
 from .observation_seeding_support import save_stamped_observation
-from .test_m100_carry_attestation import _FACTS, _PENDING_CARRIES, _carry_fields, _form, _renta_years
+from .test_m100_carry_attestation import _EVERY_CARRY, _FACTS, _form, _renta_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -95,14 +96,18 @@ def test_each_refused_answer_names_a_carry_still_open_until_all_are_answered(
         seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
     ):
         _store_instalments(year)
-        box_of = {binding_id: field.box for binding_id, field in _carry_fields(_form(renta, OutputLanguage.EN)).items()}
+        box_of = {
+            field.bindings[0].binding_id: field.box
+            for field in _form(renta, OutputLanguage.EN).fields()
+            if field.bindings and field.bindings[0].binding_id in _EVERY_CARRY
+        }
         carry_of = {box: binding_id for binding_id, box in box_of.items()}
         # ANTI-VACUITY: the form shows a box for every carry, so each door has somewhere to go.
-        assert set(box_of) == set(_PENDING_CARRIES)
+        assert set(box_of) == set(_EVERY_CARRY)
 
-        answered: list[BindingId] = [_PENDING_CARRIES[0]]
+        answered: list[BindingId] = [_EVERY_CARRY[0]]
         named: list[str] = []
-        while len(answered) < len(_PENDING_CARRIES):
+        while len(answered) < len(_EVERY_CARRY):
             box = _refused_box(renta, tuple(answered), monkeypatch)
             # The refusal names a box the filer has not answered, never one already staged.
             assert box in carry_of, box
@@ -113,4 +118,4 @@ def test_each_refused_answer_names_a_carry_still_open_until_all_are_answered(
         # Every carry answered, by following the doors alone: the Apply calculates.
         applied = renta.apply(binding=tuple(_zero(binding_id) for binding_id in answered))
         assert applied.refusal is None, named
-        assert len(set(named)) == len(_PENDING_CARRIES) - 1
+        assert len(set(named)) == len(_EVERY_CARRY) - 1
