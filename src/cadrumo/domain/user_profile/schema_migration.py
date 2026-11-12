@@ -233,6 +233,7 @@ PATHS_INTRODUCED_IN_V11: Final[frozenset[str]] = frozenset(
     f"taxpayer_type.{key}"
     for key in (
         "principal_cnae",
+        "principal_cnae_classification",
         "regimen_ley_49_2002",
         "regimen_socimi",
         "regimen_entidad_capital_riesgo",

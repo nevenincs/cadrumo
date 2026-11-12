@@ -29,6 +29,7 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.cnae_classification import required_cnae_classification
 from ....domain.calculations.registry.export_semantics import ExportDraftAttribute
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -330,7 +331,12 @@ def test_a_sociedad_stating_every_page_01_fact_exports_its_1p_instalment(
             workflow_profile=TaxpayerProfile(
                 tax_id=TAXPAYER_TAX_ID, iva_regime=IVARegime("GENERAL"), incn_prior_12_months=Decimal("500000")
             ),
-            profile_values=_PAGE_01_FACTS,
+            profile_values={
+                **_PAGE_01_FACTS,
+                "taxpayer_type.principal_cnae_classification": required_cnae_classification(
+                    effective_date=calculation_filing_date(period, authority=operation), authority=operation
+                ),
+            },
             cited_producer_keys=cited,
             effective_date=calculation_filing_date(period, authority=operation),
             periodo=periodo,

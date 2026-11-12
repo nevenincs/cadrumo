@@ -726,9 +726,10 @@ def test_export_modelo_202_without_page_01_entity_facts_refuses_with_the_door_to
     assert context["cause_type"] == "FilingProducerSnapshotError"
     assert context["reason"] == "m202_profile_facts_missing"
     missing = str(context["missing_profile_paths"]).split(", ")
-    assert missing[0] == "taxpayer_type.principal_cnae"
+    # The code is a code of one classification, so the classification is asked for first.
+    assert missing[:2] == ["taxpayer_type.principal_cnae_classification", "taxpayer_type.principal_cnae"]
     assert "taxpayer_type.regimen_ley_49_2002" in missing
-    assert context["profile_path"] == "taxpayer_type.principal_cnae"
+    assert context["profile_path"] == "taxpayer_type.principal_cnae_classification"
     assert not out.exists()
 
 

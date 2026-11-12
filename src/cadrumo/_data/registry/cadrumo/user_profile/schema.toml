@@ -550,10 +550,21 @@ type = "string"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Código C.N.A.E. de cuatro dígitos de la actividad principal que consigna la página 01 del Modelo 202 (diseño 2025 posición 118; diseños 2019 y 2023 posición 117). Según la Nota 12 del diseño 2025 es CNAE-2009 en el ejercicio 2025 y CNAE-2025 desde el 2026, por lo que se declara con valid_from. Es declarado, nunca deducido de las actividades. Sin valor la exportación del Modelo 202 se rechaza y pide indicarlo."
+description = "Código C.N.A.E. de cuatro dígitos de la actividad principal que consigna la página 01 del Modelo 202 (diseño 2025 posición 118; diseños 2019 y 2023 posición 117), en la clasificación indicada en principal_cnae_classification. Cada ejercicio exige la clasificación que publica el registro (Nota 12 del diseño 2025), y un código no se convierte nunca de una clasificación a otra. Es declarado, nunca deducido de las actividades. Sin valor la exportación del Modelo 202 se rechaza y pide indicarlo."
 model_selectors = ["taxpayer.principal_cnae"]
 legal_refs = ["orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "principal_cnae_classification"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Clasificación de actividades económicas en la que se declara principal_cnae, con el identificador que publica el registro (por ejemplo cnae-2009 o cnae-2025). La exportación del Modelo 202 usa el código solo si esta clasificación es la que el registro exige para el ejercicio del pago fraccionado (Nota 12 del diseño 2025); si no coincide o falta, se rechaza y nombra la clasificación exigida."
+model_selectors = ["taxpayer.principal_cnae_classification"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025"]
 
 [[sections.fields]]
 key = "regimen_ley_49_2002"
@@ -616,7 +627,7 @@ type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Datos adicionales del Modelo 202: cooperativa fiscalmente protegida (diseño 2025 posición 128, marca X o blanco; diseños 2019 y 2023 posición 126, clave \"1\" Cooperativa). true escribe la X, o la clave 1 en los diseños 2019 y 2023; con false esos diseños escriben la clave \"2\" solo si los tipos de gravamen que la ley fija a la entidad son varios, y si no la clave \"0\" No consta. También selecciona el tipo protegido del art. 29 LIS que el Modelo 202 consigna. Sin valor la exportación se rechaza."
+description = "Datos adicionales del Modelo 202: cooperativa fiscalmente protegida (diseño 2025 posición 128, marca X o blanco; diseños 2019 y 2023 posición 126, código \"1\" Cooperativa). true escribe la X, o el código 1 en los diseños 2019 y 2023; con false esos diseños escriben el código \"2\" solo si los tipos de gravamen que la ley fija a la entidad son varios, y si no el código \"0\" No consta. También selecciona el tipo protegido del art. 29 LIS que el Modelo 202 consigna. Sin valor la exportación se rechaza."
 model_selectors = ["taxpayer.cooperativa_fiscalmente_protegida"]
 legal_refs = ["orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]

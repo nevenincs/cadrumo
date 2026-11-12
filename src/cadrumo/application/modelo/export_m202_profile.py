@@ -6,7 +6,12 @@ a fact about the entity the operator states on the profile, or a value the
 design derives from a stated fact:
 
 - The C.N.A.E. de la actividad principal (2025 design position 118, Num 4;
-  2019 and 2023 designs position 117) is stated as ``taxpayer_type.principal_cnae``.
+  2019 and 2023 designs position 117) is stated as ``taxpayer_type.principal_cnae``
+  together with the classification it is a code of. Nota 12 of the 2025 design
+  dates the classification by ejercicio, so the registry serves the one the
+  instalment's ejercicio requires and a code stated in any other is refused,
+  never converted. Only the four-digit shape is checked: no official code list
+  is in the corpus.
 - Each "X o blanco" mark is a stated yes/no: the design writes an X when the
   régimen or circumstance applies and a blank when it does not, so a blank is an
   answer and an unstated mark is refused rather than written as a no.
@@ -46,6 +51,10 @@ from ...domain.calculations.registry.applicability_modelo202 import (
     resolve_modelo_202_art_40_3_incn_threshold,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.cnae_classification import (
+    cnae_classification_names,
+    required_cnae_classification,
+)
 from ...domain.deadlines.models import TaxpayerProfile
 from ..filing.producer_snapshot import FilingProducerSnapshotError, Modelo202ProducerProfile
 from ..operator_actions.preconditions import profile_required_facts_missing_verdict
@@ -62,6 +71,7 @@ from .export_periodo_impositivo import PeriodoImpositivo
 _K = FilingProducerKey
 
 PRINCIPAL_CNAE_PATH: Final = "taxpayer_type.principal_cnae"
+PRINCIPAL_CNAE_CLASSIFICATION_PATH: Final = "taxpayer_type.principal_cnae_classification"
 INCN_PRIOR_12_MONTHS_PATH: Final = "taxpayer_type.incn_prior_12_months"
 INCN_PERIODO_ANTERIOR_PATH: Final = "taxpayer_type.incn_periodo_impositivo_anterior"
 NEW_ENTITY_PATH: Final = "taxpayer_type.new_entity_first_two_profit_periods"
@@ -133,10 +143,28 @@ class _Reader:
     def __init__(self, profile_values: Mapping[str, str]) -> None:
         self._values = profile_values
         self.missing: list[str] = []
+        #: What a missing fact must be stated as, where the path alone does not say it.
+        self.qualifiers: dict[str, str] = {}
 
     def _absent(self, path: str) -> None:
         if path not in self.missing:
             self.missing.append(path)
+
+    def classified_code(self, *, code_path: str, classification_path: str, required: str, name: str) -> str | None:
+        """A code stated in the required classification; one stated in another is refused as unstated.
+
+        The classification is named first: the code is only ever a code of the
+        classification it is stated in, so that is what the operator states first.
+        """
+        stated_classification = (self._values.get(classification_path) or "").strip()
+        if stated_classification != required:
+            self._absent(classification_path)
+        code = self.text(code_path, shape=_CNAE_SHAPE)
+        if classification_path in self.missing or code_path in self.missing:
+            self.qualifiers[classification_path] = name
+            self.qualifiers[code_path] = name
+            return None
+        return code
 
     def mark(self, path: str) -> bool | None:
         stated = parse_bool(self._values.get(path))
@@ -211,7 +239,9 @@ def modelo_202_producer_profile(
     reader = _Reader(profile_values)
     # The CNAE leads page 01, so a refusal opens it before the datos adicionales that follow it.
     principal_cnae = (
-        reader.text(PRINCIPAL_CNAE_PATH, shape=_CNAE_SHAPE) if _K.M202_CNAE_ACTIVIDAD_PRINCIPAL in cited else None
+        _principal_cnae(reader, effective_date=effective_date, operation=operation)
+        if _K.M202_CNAE_ACTIVIDAD_PRINCIPAL in cited
+        else None
     )
     marks = {
         _MARK_FIELD_BY_PRODUCER_KEY[key]: reader.mark(path)
@@ -229,7 +259,7 @@ def modelo_202_producer_profile(
         else None
     )
     if reader.missing:
-        raise _profile_facts_missing(tuple(reader.missing))
+        raise _profile_facts_missing(tuple(reader.missing), reader.qualifiers)
     derived = (
         _derived_rate_fields(rate_inputs, cited, periodo=periodo, operation=operation)
         if rate_inputs is not None
@@ -244,6 +274,17 @@ def modelo_202_producer_profile(
             **marks,
             **derived,
         },
+    )
+
+
+def _principal_cnae(reader: _Reader, *, effective_date: date, operation: PinnedAuthorityOperation) -> str | None:
+    """The principal C.N.A.E. in the classification the registry requires for the instalment's ejercicio."""
+    required = required_cnae_classification(effective_date=effective_date, authority=operation)
+    return reader.classified_code(
+        code_path=PRINCIPAL_CNAE_PATH,
+        classification_path=PRINCIPAL_CNAE_CLASSIFICATION_PATH,
+        required=required,
+        name=cnae_classification_names(authority=operation)[required],
     )
 
 
@@ -338,16 +379,18 @@ def _turnover_band(incn: Decimal) -> str:
     return next((band for lower, band in _TURNOVER_BANDS if incn >= lower), _TURNOVER_BAND_NONE)
 
 
-def _profile_facts_missing(paths: tuple[str, ...]) -> FilingProducerSnapshotError:
+def _profile_facts_missing(paths: tuple[str, ...], qualifiers: Mapping[str, str]) -> FilingProducerSnapshotError:
     listed = ", ".join(paths)
+    named = ", ".join(f"{path} ({qualifiers[path]})" if path in qualifiers else path for path in paths)
     return FilingProducerSnapshotError(
-        f"Modelo 202 export needs profile facts that are not stated: {listed}",
+        f"Modelo 202 export needs profile facts that are not stated: {named}",
         translated_message=_PRODUCER_FACT_REQUIRED_MESSAGE,
         context={
-            "fact": listed,
+            "fact": named,
             "missing_profile_paths": listed,
             "profile_path": paths[0],
             "reason": _REFUSAL_REASON,
+            **({"required_cnae_classification": next(iter(qualifiers.values()))} if qualifiers else {}),
         },
         precondition_verdict=profile_required_facts_missing_verdict(modelo="202", field_paths=paths),
     )
@@ -359,6 +402,7 @@ __all__ = [
     "INCN_PRIOR_12_MONTHS_PATH",
     "MARK_FACT_BY_PRODUCER_KEY",
     "NEW_ENTITY_PATH",
+    "PRINCIPAL_CNAE_CLASSIFICATION_PATH",
     "PRINCIPAL_CNAE_PATH",
     "modelo_202_producer_profile",
 ]

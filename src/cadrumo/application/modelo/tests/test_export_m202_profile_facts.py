@@ -22,6 +22,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
@@ -35,6 +36,10 @@ from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.cnae_classification import (
+    cnae_classification_names,
+    required_cnae_classification,
+)
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ....domain.calculations.registry.schema_formula import ParameterDefinition
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
@@ -66,6 +71,7 @@ _PERIOD = "1P"
 _LOCALES = ("es", "ca", "en", "hu")
 _PROFILE_EDIT_ACTION = "operator.profile.edit"
 _CNAE_PATH = "taxpayer_type.principal_cnae"
+_CLASSIFICATION_PATH = "taxpayer_type.principal_cnae_classification"
 _INCN_PATH = "taxpayer_type.incn_prior_12_months"
 _INCN_PERIODO_ANTERIOR_PATH = "taxpayer_type.incn_periodo_impositivo_anterior"
 _COOPERATIVA_PATH = "taxpayer_type.cooperativa_fiscalmente_protegida"
@@ -168,6 +174,14 @@ def _micro_scale(operation: PinnedAuthorityOperation, year: int) -> tuple[str, .
     return tuple(dict.fromkeys(f"{int(row.marginal_rate * 100):02d}" for row in rows))
 
 
+def _filing_date(year: int) -> date:
+    return calculation_filing_date(Period.from_year_and_code(year, _PERIOD))
+
+
+def _required_classification(operation: PinnedAuthorityOperation, year: int) -> str:
+    return required_cnae_classification(effective_date=_filing_date(year), authority=operation)
+
+
 def _cited(records: tuple[ExportRecordDefinition, ...]) -> frozenset[FilingProducerKey]:
     return frozenset(
         field.producer_key for record in records for field in record.fields if field.producer_key is not None
@@ -202,11 +216,13 @@ def _resolve(
     turnover: Decimal | None = _TURNOVER,
     periodo: PeriodoImpositivo | None = None,
 ) -> dict[FilingProducerKey, object]:
+    # The CNAE is stated in the classification the year requires unless a test states another.
+    stated = {_CLASSIFICATION_PATH: _required_classification(operation, year), **values}
     model_profile = modelo_202_producer_profile(
         workflow_profile=_sociedad(turnover),
-        profile_values=values,
+        profile_values=stated,
         cited_producer_keys=_cited(records),
-        effective_date=calculation_filing_date(Period.from_year_and_code(year, _PERIOD)),
+        effective_date=_filing_date(year),
         periodo=periodo or _periodo(year),
         operation=operation,
     )
@@ -551,3 +567,64 @@ def test_the_turnover_mark_and_band_follow_the_designs_bounds(
         rendered = _render(operation, page_01_fields[year], year, _STATED, turnover=turnover)
         assert rendered[_K.M202_CIFRA_NEGOCIOS_DOCE_MESES_UMBRAL][1] == above_six_million
         assert rendered[_K.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO][1] == band
+
+
+def _classification_changes(operation: PinnedAuthorityOperation) -> tuple[tuple[int, int], ...]:
+    """Each pair of consecutive supported years whose ejercicios require different classifications."""
+    return tuple(
+        (earlier, later)
+        for earlier, later in pairwise(_YEARS)
+        if _required_classification(operation, earlier) != _required_classification(operation, later)
+    )
+
+
+def test_each_ejercicio_consigns_the_code_stated_in_the_classification_it_requires(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+) -> None:
+    changes = _classification_changes(operation)
+    assert changes, "the envelope holds no change of CNAE classification to prove"
+    names = cnae_classification_names(authority=operation)
+    for earlier, later in changes:
+        for year in (earlier, later):
+            required = _required_classification(operation, year)
+            assert required in names
+            headers = _resolve(
+                page_01_fields[year], year, {**_STATED, _CLASSIFICATION_PATH: required}, operation=operation
+            )
+            assert headers[_K.M202_CNAE_ACTIVIDAD_PRINCIPAL] == "6201", year
+
+
+def test_a_code_stated_in_the_earlier_classification_is_refused_naming_the_one_the_ejercicio_requires(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+) -> None:
+    names = cnae_classification_names(authority=operation)
+    for earlier, later in _classification_changes(operation):
+        required_name = names[_required_classification(operation, later)]
+        values = {**_STATED, _CLASSIFICATION_PATH: _required_classification(operation, earlier)}
+
+        failure = _refusal(page_01_fields[later], later, values, operation)
+
+        assert isinstance(failure, ModeloProfileReadinessError)
+        assert failure.context is not None
+        assert failure.context["required_cnae_classification"] == required_name
+        assert str(failure.context["missing_profile_paths"]).split(", ") == [_CLASSIFICATION_PATH]
+        step = error_next_step(failure, OutputLanguage.EN)
+        assert isinstance(step, OperationOpenProfileFieldStepV1)
+        assert step.path == _CLASSIFICATION_PATH
+        for locale in _LOCALES:
+            assert required_name in resolve_error_message(failure, locale=locale)
+
+
+def test_an_unstated_classification_is_refused_and_never_assumed(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+) -> None:
+    year = _YEARS[-1]
+
+    with pytest.raises(FilingProducerSnapshotError) as refused:
+        _resolve(page_01_fields[year], year, {**_STATED, _CLASSIFICATION_PATH: ""}, operation=operation)
+
+    assert refused.value.context is not None
+    assert refused.value.context["profile_path"] == _CLASSIFICATION_PATH

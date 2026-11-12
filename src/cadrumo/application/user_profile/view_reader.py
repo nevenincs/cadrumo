@@ -15,11 +15,13 @@ from ...core.config import override_settings
 from ...core.identity.digest import ContentDigest
 from ...core.json_contract import Notice, ResolvedNoticeAction
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.cnae_classification import cnae_classification_names
 from ...domain.calculations.registry.renta_codes_catalogue import ue_eea_country_codes
 from ...domain.iva.establishment import catalogued_country_codes
 from ...domain.user_profile.schema import ProfileFieldCodeList, ProfileSchemaDefinition
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ..modelo.export_m202_profile import PRINCIPAL_CNAE_CLASSIFICATION_PATH
 from ..modelo.profile_readiness_gate import (
     modelo_work_profile_baseline_missing_paths,
     modelo_work_profile_baseline_validation_issues,
@@ -31,7 +33,7 @@ from ..workflow.profile_health import ProfileHealthStatus, assess_profile_record
 from .commands import ProfileValidationIssue, ProfileValidationReport
 from .family_question import family_question_items
 from .family_rows import family_row_items
-from .overview import ProfileOverview, build_profile_overview
+from .overview import ProfileFieldChoice, ProfileOverview, build_profile_overview
 from .password_kdf_notice import profile_kdf_floor_notice
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
@@ -267,6 +269,12 @@ def _build_overview_source(
         code_lists={
             ProfileFieldCodeList.COUNTRIES: tuple(sorted(catalogued_country_codes(operation=authority_operation))),
             ProfileFieldCodeList.EU_EEA_COUNTRIES: tuple(sorted(ue_eea_country_codes(authority=authority_operation))),
+        },
+        registry_choices={
+            PRINCIPAL_CNAE_CLASSIFICATION_PATH: tuple(
+                ProfileFieldChoice(value=identifier, label=name)
+                for identifier, name in cnae_classification_names(authority=authority_operation).items()
+            ),
         },
     )
     notices = overview.notices

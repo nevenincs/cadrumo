@@ -877,6 +877,7 @@ def build_profile_overview(
     schema: ProfileSchemaDefinition | None = None,
     flow: WizardFlow | None = None,
     code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
+    registry_choices: Mapping[str, tuple[ProfileFieldChoice, ...]] = _NO_WIZARD_CHOICES,
 ) -> ProfileOverview:
     """Project ``record`` into the manager's landing-page view.
 
@@ -905,6 +906,9 @@ def build_profile_overview(
             :attr:`ProfileFieldView.about` explains every field.
         code_lists: The code lists the caller's pinned authority holds. Without
             them a field declaring one is simply typed into.
+        registry_choices: The answers the caller's pinned authority serves for a
+            text field, by ``section.field``, with the words the registry prints
+            for each; they take the place of the wizard's for that field.
 
     Returns:
         A :class:`ProfileOverview` covering every declared section and field.
@@ -919,7 +923,7 @@ def build_profile_overview(
     resolved_schema = profile_schema_for_record(record, schema=schema)
     values = record_to_path_values(record)
     field_help = _NO_FIELD_HELP if flow is None else profile_field_help(flow)
-    wizard_choices = profile_wizard_choice_sets(flow)
+    wizard_choices = {**profile_wizard_choice_sets(flow), **registry_choices}
     ejercicio_answers = _NO_EJERCICIO_ANSWERS if flow is None else profile_field_ejercicio_answers(flow, record.facts)
 
     missing_required, conditionally_required = _required_field_paths(record, resolved_schema, values)
