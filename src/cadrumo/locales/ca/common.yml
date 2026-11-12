@@ -245,22 +245,58 @@ aggregation:
       unsupported_modelo: Model no admès per a l'agregació per model
   prevision_social_contribution:
     errors:
+      certificate_file_unreadable: No s'ha pogut llegir el --certificate-file, o és
+        buit o no és un PDF, una imatge o un document XML.
+      certificate_fingerprint_mismatch: El --evidence-sha256 no és el SHA-256 del
+        --certificate-file, així que no s'ha desat res.
+      certificate_fingerprint_required: 'Un registre d''aportacions necessita el seu
+        certificat: indica --certificate-file, o --evidence-sha256 per a un certificat
+        que ja sigui al teu emmagatzematge.'
       certificate_not_in_custody: El document del certificat que cita aquest registre
         no està desat al teu perfil, així que el registre no s'ha desat. Afegeix primer
         el document.
+      clave_pair_undefined: El disseny de registre del model 345 no defineix aquesta
+        --subclave per a aquesta --clave, o aquesta clau porta una subclau que no
+        has indicat.
       ejercicio_unsupported: Aquest exercici és fora dels que Cadrumo calcula, així
         que el registre d'aportacions no s'ha desat.
       identity_mismatch: L'emissor, el pla, la clau o l'exercici del registre no coincideixen
         amb el registre que vols canviar, així que no s'ha desat res.
+      not_found: No existeix cap registre d'aportacions amb aquesta referència d'emissor,
+        --plan-ref, --clave i --subclave en aquest exercici. Executa l'ordre list
+        per veure els registres desats.
+      same_plan_split_unstated: La casella d'aquesta clau i subclau depèn de si el
+        teu ocupador també va fer contribucions al mateix pla. Indica-ho amb --employer-same-plan
+        yes o no, o introdueix tu la casella com a valor de l'operador.
       stale_revision: El registre d'aportacions ha canviat des que el vas llegir.
         Torna a llegir-lo i repeteix el canvi.
+      validation: 'Un valor no és vàlid: comprova el NIF de l''emissor, el --plan-nif,
+        i que --amount no sigui negatiu i tingui com a màxim dos decimals.'
     served:
       beneficiary_out_of_scope: Les aportacions al sistema de previsió social del
         teu cònjuge o al d'una persona amb discapacitat no es calculen en aquesta
         versió. Introdueix tu la casella com a valor de l'operador.
+      certificate_file_unreadable: No s'ha pogut llegir el fitxer del certificat.
+        Comprova que encara existeix, que no és buit i que és un PDF, una imatge o
+        un document XML, i torna a triar-lo.
+      certificate_fingerprint_mismatch: El fitxer del certificat no coincideix amb
+        l'empremta registrada per a ell, així que no s'ha desat res. Tria el fitxer
+        correcte i torna-ho a provar.
+      certificate_fingerprint_required: Un registre d'aportacions necessita el certificat
+        que va emetre la gestora, la mutualitat o l'asseguradora. Tria el fitxer del
+        certificat o introdueix tu la casella d'aportacions com a valor de l'operador.
+      certificate_not_in_custody: Cadrumo no desa cap certificat amb aquesta empremta,
+        o el fitxer desat ja no hi coincideix. Tria el fitxer del certificat perquè
+        Cadrumo el desi entre els teus documents xifrats.
+      clave_pair_undefined: El disseny de registre del model 345 no defineix aquesta
+        subclau per a aquesta clau. Comprova la clau i la subclau que indica el certificat.
       design_not_bundled: Cadrumo no té el disseny de registre del model 345 d'aquest
         exercici, així que no situa cap aportació a sistemes de previsió social. Introdueix
         tu les caselles d'aportacions com a valors de l'operador.
+      ejercicio_unsupported: Aquest exercici és fora dels que Cadrumo admet, així
+        que el registre d'aportacions no s'ha desat.
+      identity_mismatch: El registre no coincideix amb l'emissor, el pla, la clau
+        o el certificat ja desats per a ell, així que no s'ha desat res.
       indirect_match: Una casella de la reducció per aportacions a sistemes de previsió
         social encaixa amb aquesta clau del model 345 només per analogia i cap text
         oficial no l'anomena, així que Cadrumo no la consigna allà. Introdueix tu
@@ -269,12 +305,18 @@ aggregation:
         social registrat per a aquest exercici, així que Cadrumo deixa en blanc les
         caselles d'aportacions. Registra cada certificat o introdueix tu les caselles
         com a valors de l'operador.
+      not_found: No existeix cap registre d'aportacions per a aquest exercici, emissor,
+        pla, clau i subclau. Potser ja s'ha eliminat.
       same_plan_split_unstated: La casella d'aquesta aportació depèn de si el teu
         ocupador també va fer contribucions al mateix pla, i el registre no ho indica.
         Indica-ho al registre o introdueix tu la casella com a valor de l'operador.
+      stale_revision: Aquest registre d'aportacions ha canviat des que el vas llegir.
+        Torna a llegir-lo i repeteix el canvi.
       unplaced_clave: Cap text oficial situa aquesta clau i subclau del model 345
         en una casella de la reducció per aportacions a sistemes de previsió social,
         així que Cadrumo no la situa. Introdueix tu la casella com a valor de l'operador.
+      validation: 'Un valor del registre no és vàlid: comprova els NIF de l''emissor
+        i del pla, i que l''import no sigui negatiu i tingui com a màxim dos decimals.'
   renta_ledger:
     errors:
       annual_period_required: Es requereix un període anual per als totals de Renda

@@ -548,6 +548,44 @@ cli:
           (%{invoice_id}); semmi sem jött létre.'
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Add meg a --yes kapcsolót az üzleti számla törléséhez.
+      prevision_social:
+        amount_help: Az igazoláson szereplő hozzájárulás összege euróban, például
+          1500.00.
+        beneficiary_help: 'Kinek a rendszerébe került a hozzájárulás: taxpayer, spouse
+          vagy disabled_person. Ebben a verzióban csak a taxpayer számítódik.'
+        certificate_file_help: Az igazolás fájlja (PDF vagy kép), amelyet titkosítva
+          tárolsz; az SHA-256 értéke lesz a rekord bizonyítéka.
+        clave_help: Az igazoláson szereplő 345-ös modell szerinti kulcs, A-tól M-ig.
+        ejercicio_help: Az adóév (`ejercicio`), amelyben a hozzájárulást befizették.
+        employer_same_plan_help: A munkáltatód is fizetett-e hozzájárulást ugyanabba
+          a tervbe (yes vagy no). Kötelező annál a kulcsnál és alkulcsnál, amelynek
+          mezője ettől függ.
+        evidence_sha256_help: Egy már tárolt igazolás SHA-256 értéke, vagy ellenőrzés
+          a --certificate-file fájllal szemben. A rekordhoz a kettő közül az egyik
+          kell.
+        group_help: Rögzítsd a nyugdíj-hozzájárulási igazolásaidon szereplő hozzájárulásokat.
+        invalid_input: 'Egy érték érvénytelen: ellenőrizd az évet, a kibocsátói és
+          tervhivatkozást, a revíziót és az igazolás ujjlenyomatát.'
+        issuer_name_help: A kibocsátó cégneve.
+        issuer_ref_help: A lista által mutatott kibocsátói hivatkozás (issuer_ref).
+        issuer_tax_id_help: Az igazolást kiállító pénztárkezelő, kölcsönös biztosító
+          vagy biztosító adóazonosító száma (NIF).
+        list_help: Listázd egy év tárolt hozzájárulási rekordjait adóazonosító nélkül,
+          azzal a mezővel együtt, amelybe mindegyik kerül.
+        plan_name_help: A terv neve.
+        plan_nif_help: A terv vagy az alap adóazonosító száma (NIF), ha van sajátja.
+        plan_ref_help: A lista által mutatott tervhivatkozás (plan_ref), olyan rekordhoz,
+          amely terv-NIF-et tartalmaz.
+        record_expected_revision_help: A lista által mutatott revízió egy tárolt rekord
+          javításához. Első rekordnál hagyd el.
+        record_help: Rögzítsd egy igazoláson szereplő hozzájárulást egy tervhez, kulcshoz
+          és alkulcshoz egy évben, vagy javítsd a tároltat a --expected-revision kapcsolóval.
+        remove_expected_revision_help: A lista által a törlendő rekordhoz mutatott
+          revízió.
+        remove_help: Törölj egy hozzájárulási rekordot a lista által mutatott revízió
+          alapján.
+        subclave_help: Az igazoláson szereplő 345-ös modell szerinti alkulcs, ha a
+          kulcshoz tartozik ilyen.
       prorrata:
         activity_code_help: Ebbe a szektorba sorolt CNAE / IAE tevékenységi kód (ismételhető,
           legalább egy).

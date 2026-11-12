@@ -87,6 +87,7 @@ _LOCAL_READS: Final = (
     "ledger.llm-diagnostics",
     "ledger.participation",
     "ledger.preflight",
+    "ledger.prevision_social.list",
     "ledger.prorrata.list",
     "ledger.ratios.eligible",
     "ledger.ratios.list",
@@ -242,6 +243,8 @@ _LOCAL_WRITES: Final = (
     "ledger.own_account",
     # The index is derived from stored revisions and filing records; a rebuild regenerates it.
     "ledger.participation.rebuild",
+    "ledger.prevision_social.record",
+    "ledger.prevision_social.remove",
     "ledger.prorrata.declare_gross",
     "ledger.prorrata.declare_sector",
     "ledger.prorrata.elect_especial",

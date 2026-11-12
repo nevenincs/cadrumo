@@ -558,6 +558,45 @@ cli:
           con esta identidad (%{invoice_id}); no se creó nada.'
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
+      prevision_social:
+        amount_help: Importe de la aportación en euros que indica el certificado,
+          por ejemplo 1500.00.
+        beneficiary_help: 'A qué sistema fue la aportación: taxpayer, spouse o disabled_person.
+          En esta versión solo se calcula taxpayer.'
+        certificate_file_help: Archivo del certificado (PDF o imagen) que se guarda
+          cifrado en tu almacenamiento; su SHA-256 pasa a ser la prueba del registro.
+        clave_help: Clave del modelo 345 que indica el certificado, de la A a la M.
+        ejercicio_help: Ejercicio (`ejercicio`) en el que se pagó la aportación.
+        employer_same_plan_help: Si tu empleador también hizo contribuciones al mismo
+          plan (yes o no). Es obligatorio para una clave y subclave cuya casilla depende
+          de ello.
+        evidence_sha256_help: SHA-256 de un certificado que ya está en tu almacenamiento,
+          o una comprobación frente a --certificate-file. Un registro necesita uno
+          de los dos.
+        group_help: Registra las aportaciones que indican tus certificados de aportaciones
+          a sistemas de previsión social.
+        invalid_input: 'Un valor no es válido: comprueba el ejercicio, las referencias
+          del emisor y del plan, la revisión y la huella del certificado.'
+        issuer_name_help: Razón social del emisor.
+        issuer_ref_help: Referencia del emisor (issuer_ref) que muestra la lista.
+        issuer_tax_id_help: NIF de la gestora, la mutualidad o la aseguradora que
+          emitió el certificado.
+        list_help: Lista los registros de aportaciones guardados de un ejercicio sin
+          ningún NIF, con la casilla a la que llega cada uno.
+        plan_name_help: Nombre del plan.
+        plan_nif_help: NIF del plan o del fondo, cuando tiene uno propio.
+        plan_ref_help: Referencia del plan (plan_ref) que muestra la lista, para un
+          registro que indica un NIF de plan.
+        record_expected_revision_help: Revisión que mostró la lista, para corregir
+          un registro guardado. Omítela en un primer registro.
+        record_help: Registra la aportación que indica un certificado para un plan,
+          clave y subclave en un ejercicio, o corrige la guardada con --expected-revision.
+        remove_expected_revision_help: Revisión que mostró la lista para el registro
+          que quieres eliminar.
+        remove_help: Elimina un registro de aportaciones con la revisión que mostró
+          la lista.
+        subclave_help: Subclave del modelo 345 que indica el certificado, para una
+          clave que la lleve.
       prorrata:
         activity_code_help: Código de actividad CNAE / IAE agrupado en este sector
           (repetible, al menos uno).

@@ -21,6 +21,7 @@ from .app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from .app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
 from .app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
 from .app_ledger_participation_command_specs import LEDGER_PARTICIPATION_COMMAND_SPECS
+from .app_ledger_prevision_social_command_specs import LEDGER_PREVISION_SOCIAL_COMMAND_SPECS
 from .app_ledger_prorrata_command_specs import LEDGER_PRORRATA_COMMAND_SPECS
 from .app_ledger_ratios_command_specs import LEDGER_RATIOS_COMMAND_SPECS
 from .app_ledger_retencion_soportada_absence_command_specs import (
@@ -47,6 +48,7 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *LEDGER_PARTICIPATION_COMMAND_SPECS,
     *LEDGER_PRORRATA_COMMAND_SPECS,
     *LEDGER_RATIOS_COMMAND_SPECS,
+    *LEDGER_PREVISION_SOCIAL_COMMAND_SPECS,
     *LEDGER_RETENCION_SOPORTADA_COMMAND_SPECS,
     *LEDGER_RETENCION_SOPORTADA_ABSENCE_COMMAND_SPECS,
     *LEDGER_RULE_COMMAND_SPECS,

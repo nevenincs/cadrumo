@@ -520,6 +520,44 @@ cli:
           exists (%{invoice_id}); nothing was created.'
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
+      prevision_social:
+        amount_help: Contribution amount in euros the certificate states, for example
+          1500.00.
+        beneficiary_help: 'Whose system the contribution went to: taxpayer, spouse
+          or disabled_person. Only taxpayer is calculated in this version.'
+        certificate_file_help: Certificate file (PDF or image) to keep encrypted in
+          your storage; its SHA-256 becomes the evidence of the record.
+        clave_help: Modelo 345 clave the certificate states, A to M.
+        ejercicio_help: Tax year (`ejercicio`) the contribution was paid in.
+        employer_same_plan_help: Whether your employer also contributed to the same
+          plan (yes or no). Required for a clave and subclave whose box depends on
+          it.
+        evidence_sha256_help: SHA-256 of a certificate already in your storage, or
+          a check against --certificate-file. A record needs one of the two.
+        group_help: Record the contributions your pension contribution certificates
+          report.
+        invalid_input: 'A value is not valid: check the ejercicio, the issuer and
+          plan references, the revision and the certificate fingerprint.'
+        issuer_name_help: Legal name of the issuer.
+        issuer_ref_help: Issuer reference (issuer_ref) shown by the list.
+        issuer_tax_id_help: Tax ID (NIF) of the plan manager, mutualidad or insurer
+          that issued the certificate.
+        list_help: List the stored pension contribution records of an ejercicio without
+          any tax ID, with the box each one reaches.
+        plan_name_help: Name of the plan.
+        plan_nif_help: Tax ID (NIF) of the plan or fund, where it has one of its own.
+        plan_ref_help: Plan reference (plan_ref) shown by the list, for a record that
+          names a plan NIF.
+        record_expected_revision_help: Revision the list showed, to correct a stored
+          record. Leave it out for a first record.
+        record_help: Record the contribution one certificate states for a plan, clave
+          and subclave in an ejercicio, or correct the stored one with --expected-revision.
+        remove_expected_revision_help: Revision the list showed for the record to
+          remove.
+        remove_help: Remove one pension contribution record against the revision the
+          list showed.
+        subclave_help: Modelo 345 subclave the certificate states, for a clave that
+          takes one.
       prorrata:
         activity_code_help: CNAE / IAE activity code grouped into this sector (repeatable,
           at least one).

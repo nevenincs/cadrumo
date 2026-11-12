@@ -255,6 +255,7 @@ from .operation_composition_modelo import (
     compose_modelo_work_review_operation,
     compose_modelo_workbench_operations,
 )
+from .operation_composition_prevision_social import compose_prevision_social_contribution_operations
 from .operation_composition_retencion_soportada import compose_retencion_soportada_certificado_operations
 from .operation_composition_retencion_soportada_absence import compose_retencion_soportada_absence_operations
 
@@ -412,6 +413,9 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.modelo.workbench_operations": compose_modelo_workbench_operations,
     "application.overview.pipeline_operation": compose_overview_pipeline_operation,
     "application.overview.read_operation": compose_overview_read_operation,
+    "application.prevision_social_contribution.registered_operation": (
+        compose_prevision_social_contribution_operations
+    ),
     "application.prorrata_register.registered_operations": compose_prorrata_register_registered_operations,
     "application.retencion_soportada_absence.registered_operation": compose_retencion_soportada_absence_operations,
     "application.retencion_soportada_certificado.registered_operation": (

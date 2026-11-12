@@ -230,33 +230,74 @@ aggregation:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation
   prevision_social_contribution:
     errors:
+      certificate_file_unreadable: The --certificate-file could not be read, or it
+        is empty or not a PDF, image or XML document.
+      certificate_fingerprint_mismatch: The --evidence-sha256 is not the SHA-256 of
+        the --certificate-file, so nothing was stored.
+      certificate_fingerprint_required: 'A pension contribution record needs its certificate:
+        give --certificate-file, or --evidence-sha256 for a certificate already in
+        your storage.'
       certificate_not_in_custody: The certificate document this record cites is not
         stored in your profile, so the record was not stored. Add the document first.
+      clave_pair_undefined: The Modelo 345 record design defines no such --subclave
+        for this --clave, or this clave takes a subclave you left out.
       ejercicio_unsupported: This year is outside the years Cadrumo calculates, so
         the pension contribution record was not stored.
       identity_mismatch: The record's issuer, plan, key or year do not match the record
         you asked to change, so nothing was stored.
+      not_found: No pension contribution record exists for that issuer reference,
+        --plan-ref, --clave and --subclave in this ejercicio. Run the list command
+        to see the stored records.
+      same_plan_split_unstated: The box for this clave and subclave depends on whether
+        your employer also contributed to the same plan. State it with --employer-same-plan
+        yes or no, or enter the box yourself as an operator value.
       stale_revision: The pension contribution record changed since you read it. Read
         it again and repeat the change.
+      validation: 'A value is not valid: check the issuer NIF, the --plan-nif, and
+        that --amount is not negative and has at most two decimals.'
     served:
       beneficiary_out_of_scope: Contributions to your spouse's system or to the system
         of a person with a disability are not calculated in this version. Enter the
         box yourself as an operator value.
+      certificate_file_unreadable: The certificate file could not be read. Check that
+        it still exists, is not empty and is a PDF, an image or an XML document, then
+        choose it again.
+      certificate_fingerprint_mismatch: The certificate file does not match the fingerprint
+        recorded for it, so nothing was stored. Choose the right file and try again.
+      certificate_fingerprint_required: A pension contribution record needs the certificate
+        the plan manager, mutualidad or insurer issued. Choose the certificate file,
+        or enter the contribution box yourself as an operator value.
+      certificate_not_in_custody: Cadrumo holds no stored certificate with that fingerprint,
+        or the stored file no longer matches it. Choose the certificate file so Cadrumo
+        keeps it among your encrypted documents.
+      clave_pair_undefined: The Modelo 345 record design defines no such subclave
+        for this clave. Check the clave and subclave the certificate states.
       design_not_bundled: Cadrumo holds no Modelo 345 record design for this year,
         so it places no pension contribution. Enter the contribution boxes yourself
         as operator values.
+      ejercicio_unsupported: This year is outside the filing years Cadrumo supports,
+        so the pension contribution record was not stored.
+      identity_mismatch: The record does not match the issuer, plan, clave or certificate
+        already stored for it, so nothing was stored.
       indirect_match: A box of the reduction for pension contributions fits this Modelo
         345 clave only by analogy, and no official text names it, so Cadrumo does
         not file it there. Enter the box yourself as an operator value.
       not_certified: No pension contribution certificate is recorded for this year,
         so Cadrumo leaves the contribution boxes blank. Record each certificate, or
         enter the boxes yourself as operator values.
+      not_found: No pension contribution record exists for that year, issuer, plan,
+        clave and subclave. It may already have been removed.
       same_plan_split_unstated: The box for this contribution depends on whether your
         employer also contributed to the same plan, and the record does not say. State
         it on the record, or enter the box yourself as an operator value.
+      stale_revision: This pension contribution record changed since you read it.
+        Read it again and retry.
       unplaced_clave: No official text places this Modelo 345 clave and subclave in
         a box of the reduction for pension contributions, so Cadrumo does not place
         it. Enter the box yourself as an operator value.
+      validation: 'A value of the record is not valid: check the tax IDs (NIF) of
+        the issuer and the plan, and that the amount is not negative and has at most
+        two decimals.'
   renta_ledger:
     errors:
       annual_period_required: An annual period is required for Renta totals from your

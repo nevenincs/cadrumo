@@ -555,6 +555,45 @@ cli:
           amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
+      prevision_social:
+        amount_help: Import de l'aportació en euros que indica el certificat, per
+          exemple 1500.00.
+        beneficiary_help: 'A quin sistema va anar l''aportació: taxpayer, spouse o
+          disabled_person. En aquesta versió només es calcula taxpayer.'
+        certificate_file_help: Fitxer del certificat (PDF o imatge) que es desa xifrat
+          al teu emmagatzematge; el seu SHA-256 passa a ser la prova del registre.
+        clave_help: Clau del model 345 que indica el certificat, de l'A a la M.
+        ejercicio_help: Exercici (`ejercicio`) en què es va pagar l'aportació.
+        employer_same_plan_help: Si el teu ocupador també va fer contribucions al
+          mateix pla (yes o no). És obligatori per a una clau i subclau la casella
+          de les quals en depèn.
+        evidence_sha256_help: SHA-256 d'un certificat que ja és al teu emmagatzematge,
+          o una comprovació davant de --certificate-file. Un registre en necessita
+          un dels dos.
+        group_help: Registra les aportacions que indiquen els teus certificats d'aportacions
+          a sistemes de previsió social.
+        invalid_input: 'Un valor no és vàlid: comprova l''exercici, les referències
+          de l''emissor i del pla, la revisió i l''empremta del certificat.'
+        issuer_name_help: Raó social de l'emissor.
+        issuer_ref_help: Referència de l'emissor (issuer_ref) que mostra la llista.
+        issuer_tax_id_help: NIF de la gestora, la mutualitat o l'asseguradora que
+          va emetre el certificat.
+        list_help: Llista els registres d'aportacions desats d'un exercici sense cap
+          NIF, amb la casella a la qual arriba cadascun.
+        plan_name_help: Nom del pla.
+        plan_nif_help: NIF del pla o del fons, quan en té un de propi.
+        plan_ref_help: Referència del pla (plan_ref) que mostra la llista, per a un
+          registre que indica un NIF de pla.
+        record_expected_revision_help: Revisió que va mostrar la llista, per corregir
+          un registre desat. Omet-la en un primer registre.
+        record_help: Registra l'aportació que indica un certificat per a un pla, clau
+          i subclau en un exercici, o corregeix la desada amb --expected-revision.
+        remove_expected_revision_help: Revisió que va mostrar la llista per al registre
+          que vols eliminar.
+        remove_help: Elimina un registre d'aportacions amb la revisió que va mostrar
+          la llista.
+        subclave_help: Subclau del model 345 que indica el certificat, per a una clau
+          que en porti.
       prorrata:
         activity_code_help: Codi d'activitat CNAE / IAE agrupat en aquest sector (repetible,
           com a mínim un).

@@ -29,6 +29,7 @@ from .conformance_m145_support import M145_CONFORMANCE_FAMILY
 from .conformance_maritime_preview_support import MARITIME_PREVIEW_CONFORMANCE_FAMILY
 from .conformance_modelo_audit_support import MODELO_AUDIT_CONFORMANCE_FAMILY
 from .conformance_modelo_spreadsheet_support import MODELO_SPREADSHEET_CONFORMANCE_FAMILY
+from .conformance_prevision_social_support import PREVISION_SOCIAL_CONFORMANCE_FAMILY
 from .conformance_profile_archive_support import PROFILE_ARCHIVE_CONFORMANCE_FAMILY
 from .conformance_profile_custody_support import PROFILE_CUSTODY_CONFORMANCE_FAMILY
 from .conformance_profile_history_support import PROFILE_HISTORY_CONFORMANCE_FAMILY
@@ -63,6 +64,7 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     PROFILE_ARCHIVE_CONFORMANCE_FAMILY,
     PROFILE_CUSTODY_CONFORMANCE_FAMILY,
     PROFILE_HISTORY_CONFORMANCE_FAMILY,
+    PREVISION_SOCIAL_CONFORMANCE_FAMILY,
     QUICKFILE_CONFORMANCE_FAMILY,
     RETENCION_SOPORTADA_ABSENCE_CONFORMANCE_FAMILY,
     RETENCION_SOPORTADA_CONFORMANCE_FAMILY,
