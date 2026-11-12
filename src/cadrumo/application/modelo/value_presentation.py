@@ -142,6 +142,8 @@ def value_presentation_kind(data_type: str) -> ValuePresentationKind:
     except KeyError:
         raise UnknownValuePresentationError(
             f"no presentation is declared for data type {data_type!r}",
+            translated_message="application.modelo.errors.value_presentation_data_type_undeclared",
+            context={"data_type": data_type},
             precondition_verdict=registry_defect_verdict("value_presentation_data_type"),
         ) from None
 
@@ -191,6 +193,8 @@ def _catalogue_text(translation_key: str, language: OutputLanguage) -> str:
     if text is None:
         raise ValuePresentationCatalogueError(
             f"{translation_key} has no {language.value} text",
+            translated_message="application.modelo.errors.catalogue_text_missing_for_language",
+            context={"text_id": translation_key, "language": language.value},
             precondition_verdict=registry_defect_verdict("value_presentation_text"),
         )
     return text

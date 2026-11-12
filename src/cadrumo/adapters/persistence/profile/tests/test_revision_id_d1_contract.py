@@ -29,10 +29,8 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.work_addressing import (
-    ModeloWorkRegistryYearMismatchError,
-    law_selected_revision_for_work_target,
-)
+from cadrumo.application.modelo.work_address_errors import ModeloWorkRegistryYearMismatchError
+from cadrumo.application.modelo.work_addressing import law_selected_revision_for_work_target
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.config import override_settings

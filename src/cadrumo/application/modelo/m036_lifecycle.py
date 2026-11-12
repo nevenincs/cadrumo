@@ -305,6 +305,7 @@ def _require_m036_sequence_valid(
         raise Modelo036TerminalStateError(
             f"m036 declaration_id={declaration_id!r} refused: prior declaration "
             f"{latest.declaration_id!r} is a terminal baja",
+            translated_message="application.modelo.errors.m036_declaration_after_baja",
             context={
                 "declaration_id": declaration_id,
                 "prior_declaration_id": latest.declaration_id,
@@ -315,6 +316,7 @@ def _require_m036_sequence_valid(
     if latest is None and command.event_kind is not CensoModeloEventKind.ALTA:
         raise Modelo036PriorAltaRequiredError(
             f"m036 declaration_id={declaration_id!r} refused: no prior alta on record for {command.event_kind.value!r}",
+            translated_message="application.modelo.errors.m036_declaration_without_alta",
             context={
                 "declaration_id": declaration_id,
                 "requested_event_kind": command.event_kind.value,

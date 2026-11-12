@@ -180,6 +180,7 @@ def _user_profile_definitions(rental_ledger_references: RentalLedgerReferenceRea
             result_type=ProfileMutationOperationResult,
             executor_type=ProfileFieldMutationOperationExecutor,
             phase_codes=PROFILE_FIELD_MUTATION_PHASES,
+            public_error_detail=True,
         ),
         _definition(
             definition_id=PROFILE_PATCH_OPERATION_DEFINITION_ID,
@@ -187,6 +188,7 @@ def _user_profile_definitions(rental_ledger_references: RentalLedgerReferenceRea
             result_type=ProfilePatchOperationResult,
             executor_type=ProfilePatchOperationExecutor,
             phase_codes=PROFILE_PATCH_PHASES,
+            public_error_detail=True,
         ),
         _definition(
             definition_id=PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
@@ -194,6 +196,7 @@ def _user_profile_definitions(rental_ledger_references: RentalLedgerReferenceRea
             result_type=ProfilePlantillaMediaOperationResult,
             executor_type=ProfilePlantillaMediaOperationExecutor,
             phase_codes=PROFILE_PLANTILLA_MEDIA_PHASES,
+            public_error_detail=True,
         ),
         _definition(
             definition_id=PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
@@ -217,6 +220,7 @@ def _user_profile_definitions(rental_ledger_references: RentalLedgerReferenceRea
             result_type=ProfileRepeatableRowMutationOperationResult,
             executor_type=ProfileRepeatableRowMutationOperationExecutor,
             phase_codes=PROFILE_REPEATABLE_ROW_MUTATION_PHASES,
+            public_error_detail=True,
         ),
         _definition(
             definition_id=PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
@@ -224,6 +228,7 @@ def _user_profile_definitions(rental_ledger_references: RentalLedgerReferenceRea
             result_type=ProfileRepeatableRowChangeOperationResult,
             executor_type=ProfileRepeatableRowUpdateOperationExecutor,
             phase_codes=PROFILE_REPEATABLE_ROW_UPDATE_PHASES,
+            public_error_detail=True,
         ),
         _definition(
             definition_id=PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
@@ -231,6 +236,7 @@ def _user_profile_definitions(rental_ledger_references: RentalLedgerReferenceRea
             result_type=ProfileRepeatableRowChangeOperationResult,
             executor_type=ProfileRepeatableRowRemoveOperationExecutor,
             phase_codes=PROFILE_REPEATABLE_ROW_REMOVE_PHASES,
+            public_error_detail=True,
             build=lambda: ProfileRepeatableRowRemoveOperationExecutor(rental_ledger_references),
         ),
         _definition(
@@ -239,6 +245,7 @@ def _user_profile_definitions(rental_ledger_references: RentalLedgerReferenceRea
             result_type=ProfileCompleteSetupOperationResult,
             executor_type=ProfileCompleteSetupOperationExecutor,
             phase_codes=PROFILE_COMPLETE_SETUP_PHASES,
+            public_error_detail=True,
         ),
         _definition(
             definition_id=PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,

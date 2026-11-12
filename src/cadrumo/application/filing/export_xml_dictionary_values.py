@@ -80,6 +80,8 @@ def format_xml_dictionary_value(data_type: str, value: object) -> str:
         except KeyError as exc:
             raise FilingExportValidationError(
                 f"holder for a {data_type} row must be one of {', '.join(holder_codes)}, got {value!r}",
+                translated_message="application.filing.export.errors.xml_holder_code_invalid",
+                context={"data_type": str(data_type), "allowed": ", ".join(holder_codes)},
                 precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_FORM_REFUSED),
             ) from exc
     return _format_xml_dictionary_text_value(data_type, normalized_type, value)
@@ -160,6 +162,8 @@ def _format_xml_dictionary_numeric_value(data_type: str, value: object, numeric:
             "declared scale does not settle it: the scale says what the field can "
             "hold, not which reading was meant. Write the amount unambiguously "
             "(1000 or 1.0) at the source.",
+            translated_message="application.filing.export.errors.xml_amount_unreadable",
+            context={"data_type": str(data_type), "scale": scale},
             precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_FORM_REFUSED),
         )
     # Enough working precision that a figure far above any row's limit still renders,
@@ -188,6 +192,8 @@ def _format_xml_dictionary_text_value(data_type: str, normalized_type: str, valu
             "The accepted form is d/m/yyyy with a four-digit year, e.g. 2/1/1980. "
             "Supply the value as a date rather than as text and it is rendered "
             "correctly without this check.",
+            translated_message="application.filing.export.errors.xml_date_form_refused",
+            context={"data_type": str(data_type)},
             precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_FORM_REFUSED),
         )
     return text

@@ -528,18 +528,54 @@ application:
         box_not_stated_by_rows: 'No se ha escrito nada: la casilla %{casilla_id} tiene
           un valor que las filas de %{element_path} no suman. Corrige la casilla o
           las filas para que cada fila indique sus propias cifras, y vuelve a exportar.'
+        counterparty_rows_unattributable: 'No se ha escrito nada: el registro %{record_id}
+          tiene %{row_count} filas de contraparte, y las casillas de valor único %{casillas}
+          no se pueden atribuir a una de ellas. Indica esas cifras en las filas y
+          vuelve a exportar.'
+        devengo_year_not_earlier: 'No se ha escrito nada: el ejercicio de devengo
+          del Modelo %{modelo} debe ser anterior al de la declaración. Corrígelo y
+          vuelve a exportar.'
+        dictionary_values_not_admitted: 'No se ha escrito nada: una exportación con
+          prefijo de sobre no puede recibir además valores para un fichero de declaración
+          XML.'
         layout_not_renderable: Este modelo no puede producir un fichero local de exportación
           de la declaración.
         m111_colegio_concertado_undeclared: 'No se ha escrito nada: el modelo 111
           necesita saber si eres un colegio concertado y tu perfil no lo indica. Indícalo
           en tu perfil y vuelve a exportar.'
+        m190_amount_outside_keys: 'No se ha escrito nada: el importe de la casilla
+          %{casilla} del Modelo 190 no corresponde a la clave y subclave de este perceptor.
+          Quita el importe o corrige la clave y vuelve a exportar.'
+        m190_clave_scope_unsupplied: 'No se ha escrito nada: la exportación del Modelo
+          190 no conoce las claves a las que se aplica cada importe, así que no puede
+          comprobar el registro del perceptor.'
+        m190_reintegro_magnitude_zero: 'No se ha escrito nada: un reintegro negativo
+          en el Modelo 190 necesita un importe distinto de cero. Indica el importe
+          o quita el signo negativo, y vuelve a exportar.'
+        m190_reintegro_year_or_withholding: 'No se ha escrito nada: un reintegro en
+          el Modelo 190 necesita un ejercicio de devengo anterior al de la declaración
+          y ninguna retención asociada. Corrígelos y vuelve a exportar.'
+        m193_pending_mark_invalid: 'No se ha escrito nada: la marca de pendiente del
+          Modelo 193 debe estar en blanco o ser X. Corrígela y vuelve a exportar.'
+        m193_pending_requires_key: 'No se ha escrito nada: en el Modelo 193 la marca
+          de pendiente y el ejercicio de devengo solo se aplican a las claves A, B
+          y D. Corrige la clave o quítalos, y vuelve a exportar.'
+        m193_pending_row_has_devengo: 'No se ha escrito nada: una fila pendiente del
+          Modelo 193 no puede tener además ejercicio de devengo. Quita uno de los
+          dos y vuelve a exportar.'
         m202_producer_facts_unsupported: 'No se ha escrito nada: el modelo 202 necesita
           datos que esta exportación todavía no puede tomar de tu perfil (%{missing_fact_ids}).
           Expórtalo cuando se admitan.'
+        m280_negative_imputation_key_invalid: 'No se ha escrito nada: una imputación
+          negativa del Modelo 280 necesita la clave 2 con el signo negativo N, o relleno
+          con ceros bajo cualquier otra clave. Corrige el registro y vuelve a exportar.'
         m303_definitive_prorrata_missing: 'No se ha escrito nada: la regularización
           de bienes de inversión del modelo 303 necesita el porcentaje definitivo
           de prorrata y tu registro de prorrata no lo tiene para el año. Liquídalo
           en tu registro y vuelve a exportar.'
+        m303_filing_facts_unsupplied: 'No se ha escrito nada: la exportación del Modelo
+          303 necesita un conjunto completo de hechos de presentación para esta declaración,
+          y no hay ninguno disponible.'
         m303_sector_apportionment_missing: 'No se ha escrito nada: tu registro de
           prorrata tiene sectores diferenciados, pero tu libro no da ningún prorrateo
           para ellos en este periodo. Revisa el sector del IVA soportado en tu libro
@@ -550,14 +586,31 @@ application:
           a exportar.'
         post_write_verification_refused: La comprobación posterior a la escritura
           rechazó el fichero de declaración exportado.
+        prior_domiciliation_election_differs: 'No se ha escrito nada: la elección
+          de domiciliación previa indicada para la exportación difiere de la registrada
+          en los hechos de presentación del Modelo 303.'
+        prior_domiciliation_election_required: 'No se ha escrito nada: la exportación
+          del Modelo %{modelo} necesita tu elección sobre la domiciliación previa,
+          que no está indicada. Indícala y vuelve a exportar.'
         producer_fact_required: 'No se ha escrito nada: la exportación necesita %{fact},
           que no está indicado. Indícalo y vuelve a exportar.'
+        product_identity_not_admitted: 'No se ha escrito nada: esta exportación no
+          tiene un lugar para la identidad del producto o del programa, así que no
+          se puede indicar ninguna.'
+        product_identity_required: 'No se ha escrito nada: la exportación necesita
+          la identidad del producto y del programa, y no se ha facilitado ninguna.'
         receipt_artefact_unreadable: El recibo de exportación nombra un fichero que
           no se puede leer.
         receipt_byte_size_mismatch: El tamaño del fichero exportado no coincide con
           el recibo de exportación.
         receipt_digest_mismatch: El resumen del fichero exportado no coincide con
           el recibo de exportación.
+        record_binding_row_omits_fields: 'No se ha escrito nada: la fila %{row} omite
+          los campos obligatorios %{fields}. Indícalos y vuelve a exportar.'
+        record_incomplete: 'No se ha escrito nada: un registro del Modelo %{modelo}
+          no tiene la longitud que fija el diseño oficial, así que no se puede escribir.'
+        record_requires_positive_casilla: 'No se ha escrito nada: el registro %{record_id}
+          exige que la casilla %{casilla} sea mayor que cero, y no lo es.'
         rendered_payload_empty: El diseño de exportación produjo un contenido de declaración
           vacío.
         shared_casilla_cells_unadjudicated: 'No se ha generado el fichero de la declaración:
@@ -566,6 +619,30 @@ application:
           lo mismo. Escribirlo llevaría esas cifras a conceptos que no les corresponden.'
         verify_draft_snapshot_stale: La comprobación requiere un borrador construido
           con las definiciones del modelo en uso.
+        xml_amount_unreadable: 'No se ha escrito nada: un importe de una fila %{data_type}
+          no se ha podido leer. Escríbelo con punto como separador decimal, con %{scale}
+          decimales como máximo y sin separador de millares, por ejemplo 1234.56.
+          Un importe como 1.000 se rechaza porque se lee tanto como uno como mil.'
+        xml_boxes_without_single_row: 'No se ha escrito nada: los valores de %{paths}
+          no se pueden colocar, porque %{element_path} no aparece exactamente una
+          vez para recibirlos.'
+        xml_comunidad_ambiguous: 'No se ha escrito nada: las deducciones autonómicas
+          están rellenadas para más de una comunidad (%{comunidades}), y una declaración
+          solo puede llevar una. Deja una y vuelve a exportar.'
+        xml_date_form_refused: 'No se ha escrito nada: una fecha de una fila %{data_type}
+          no tiene la forma que acepta la AEAT, que es d/m/aaaa con el año de cuatro
+          cifras, por ejemplo 2/1/1980. Corrígela y vuelve a exportar.'
+        xml_holder_code_invalid: 'No se ha escrito nada: el titular de una fila %{data_type}
+          debe ser uno de %{allowed}. Corrígelo y vuelve a exportar.'
+        xml_payload_root_differs: El fichero de declaración empieza por el elemento
+          %{found}, pero el formato de diccionario espera %{expected}.
+        xml_payload_unreadable: El fichero de declaración no se ha podido leer como
+          XML, así que no se ha comprobado.
+        xml_row_date_invalid: 'No se ha escrito nada: la fecha guardada para %{binding}
+          no es una fecha válida. Corrígela y vuelve a exportar.'
+        xml_rows_exceed_schema: 'No se ha escrito nada: %{rows} filas no caben en
+          %{element_path}, que el esquema oficial admite %{limit} veces. Quita filas
+          y vuelve a exportar.'
         xml_schema_unreadable: No se ha podido aplicar el esquema oficial de este
           ejercicio para comprobar los valores de la declaración.
         xml_value_above_maximum: La casilla %{box} tiene un importe superior a %{limit},
@@ -576,8 +653,14 @@ application:
           forma que el esquema oficial no admite.
         xml_value_not_a_number: La casilla %{box} debe contener un número según el
           esquema oficial.
+        xml_value_not_convertible: 'No se ha escrito nada: un valor no se ha podido
+          convertir a la forma que exige el fichero de declaración (conversión %{converter}).
+          Corrige el valor y vuelve a exportar.'
         xml_value_not_listed: La casilla %{box} contiene un valor fuera de las opciones
           que enumera el esquema oficial.
+        xml_value_not_stated_by_rows: 'No se ha escrito nada: el campo %{path} contiene
+          un valor que las filas de %{element_path} no suman. Corrige el campo o las
+          filas para que cada fila indique sus propias cifras, y vuelve a exportar.'
         xml_value_required_missing: El esquema oficial exige la casilla %{box} y no
           tiene valor. Indícala antes de exportar; no se ha escrito nada.
         xml_value_too_long: La casilla %{box} tiene %{observed} caracteres; el esquema
@@ -2418,6 +2501,13 @@ application:
         '51': Ceuta
         '52': Melilla
     errors:
+      advisory_limit_not_numeric: El límite incluido %{fact}, que sirve para comprobar
+        esta declaración, no es un número. Los datos incluidos son incoherentes y
+        nada de lo que has introducido lo causa.
+      aggregate_preflight_provider_changed: 'El cálculo no ha podido empezar: la fuente
+        de las cifras de este Modelo cambió mientras se preparaba. Es una incoherencia
+        del programa y nada de lo que has introducido la causa. Vuelve a ejecutar
+        el comando.'
       amendment_complementaria_liability_decrease: Una complementaria para el modelo
         {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado
         declarado de {baseline_result} a {corrected_result}. Antes de la unificación
@@ -2442,6 +2532,13 @@ application:
         faltan identificadores de casilla requeridos en el mapa corregido.'
       amendment_verification_refused_no_snapshot: Las definiciones de los modelos
         no tienen nada para el modelo, año y periodo solicitados.
+      applicability_filter_unknown: Una regla de verificación de los datos incluidos
+        cita el filtro de aplicabilidad %{filter}, que el programa no conoce. Los
+        datos incluidos son incoherentes y nada de lo que has introducido lo causa.
+      binding_source_kind_unclassified: Las reglas incluidas no asignan ninguna familia
+        al tipo de fuente %{source_kind}, así que no se puede explicar su origen.
+        Los datos incluidos están incompletos y nada de lo que has introducido lo
+        causa.
       calculate_binding_is_date_sourced: --binding %{key} es un valor de tipo fecha
         que se toma de tu perfil activo (un dato de fecha tuyo, como la fecha de nacimiento);
         no puede aportarse mediante --binding, que solo admite valores decimales y
@@ -2519,6 +2616,9 @@ application:
       calculation_summary_pdf_unreadable: El fichero no es un PDF legible ({error_type}).
       caller_casilla_source_binding_conflict: 'Los valores que introduces en las casillas
         no pueden sobrescribir casillas cuyo valor procede de tus registros: %{casillas}.'
+      catalogue_text_missing_for_language: El texto %{text_id} no tiene redacción
+        en el idioma %{language}. Los textos incluidos están incompletos y nada de
+        lo que has introducido lo causa. Elige otro idioma de salida.
       computed_casilla_binding_conflict: 'Los valores tomados de tus registros tienen
         como destino casillas calculadas; no se pueden sobrescribir con un valor externo.
         Casillas afectadas: %{computed}.'
@@ -2536,6 +2636,10 @@ application:
       detail_row_identity_conflict: Una fila de detalle que has introducido no coincide
         con la que dan tus registros para el mismo declarado; corrígela o quítala
         antes de calcular.
+      edit_revision_id_unresolved: El cálculo de la edición no indicó qué revisión
+        creó, así que no se pudo conservar el recibo de la edición. Es una incoherencia
+        del programa y nada de lo que has introducido la causa. Lista las revisiones
+        de la declaración antes de volver a editar.
       exonerado_390_attestation_applicable_unsupported: Aquí solo puede registrarse
         la declaración de que el modelo 390 no es aplicable. Un modelo 390 que sí
         es aplicable en el periodo %{period} de %{filing_year} no se registra por
@@ -2736,6 +2840,9 @@ application:
         IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
         con importe cero el saldo de apertura de la compensación IVA del periodo y
         confírmalo.
+      iva_wallet_refusal_without_verdict: La negativa de la conciliación de la cartera
+        de compensación de IVA no indica ningún paso siguiente. Es una incoherencia
+        del programa y nada de lo que has introducido la causa.
       iva_wallet_registry_snapshot_unavailable: 'La conciliación del saldo IVA está
         bloqueada para el Modelo 303: no se han podido resolver las definiciones del
         modelo para este ejercicio y periodo, por lo que no puede probarse un cero
@@ -2816,10 +2923,47 @@ application:
         indicar su motivo.
       local_observation_spreadsheet_malformed_rows: 'La hoja de cálculo tiene %{malformed_row_count}
         filas inutilizables: %{malformed_rows}'
+      m036_declaration_after_baja: 'No se ha registrado nada de la declaración del
+        Modelo 036 %{declaration_id}: la última declaración registrada, %{prior_declaration_id},
+        es una baja, que cierra el registro, y una %{requested_event_kind} no puede
+        seguirla. Registra primero una nueva alta para abrir un registro.'
       m036_declaration_profile_bucket_mismatch: La declaración del modelo 036 indica
         un perfil distinto del bucket en el que se registraría
+      m036_declaration_without_alta: 'No se ha registrado nada de la declaración del
+        Modelo 036 %{declaration_id}: no hay ninguna alta registrada, así que una
+        %{requested_event_kind} no tiene ningún registro que cambiar. Registra primero
+        el alta.'
       m200_accounting_result_required: El Modelo 200 necesita el resultado contable
         del ejercicio antes de calcularse a partir del libro.
+      m210_agrupacion_annual_code_not_lease_or_sublease: El Modelo 210 anual (periodo
+        0A) agrupa solo rentas de arrendamiento y subarrendamiento, pero las filas
+        usan otro código de renta. Corrige el código de renta de las filas.
+      m210_agrupacion_duplicate_source_id: Dos filas de renta agrupada del Modelo
+        210 anual llevan el mismo identificador de origen. Da a cada fila su propio
+        identificador y calcula de nuevo.
+      m210_agrupacion_empty_group: El Modelo 210 anual (periodo 0A) necesita al menos
+        una fila de renta agrupada y no hay ninguna. Añade las filas de la renta y
+        calcula de nuevo.
+      m210_agrupacion_missing_bien_derecho: Las filas agrupadas de arrendamiento o
+        subarrendamiento del Modelo 210 anual no indican el bien o derecho del que
+        proceden. Indícalo en cada fila.
+      m210_agrupacion_mixed_bien_derecho: Las filas agrupadas del Modelo 210 anual
+        proceden de más de un bien o derecho. Un grupo anual admite filas de uno solo.
+        Separa las filas y calcula de nuevo.
+      m210_agrupacion_mixed_pagador: Las filas agrupadas del Modelo 210 anual nombran
+        a más de un pagador y este código de renta no admite varios pagadores en un
+        grupo. Usa un solo pagador por grupo.
+      m210_agrupacion_mixed_tipo_gravamen: Las filas de renta agrupada del Modelo
+        210 anual usan más de un tipo de gravamen. Un grupo anual admite filas con
+        el mismo tipo. Corrige los tipos y calcula de nuevo.
+      m210_agrupacion_mixed_tipo_renta_code: Las filas de renta agrupada del Modelo
+        210 anual usan más de un código oficial de renta. Un grupo anual admite filas
+        de un solo código. Separa las filas y calcula de nuevo.
+      m210_agrupacion_payer_mode_not_declared: La disposición de pagadores de las
+        filas agrupadas del Modelo 210 anual no coincide con lo que permite la definición
+        oficial para este código de renta. Revisa los datos del pagador de las filas.
+      m210_agrupacion_rows_invalid: Las filas de renta agrupada del Modelo 210 anual
+        no son válidas. Revisa las filas y calcula de nuevo.
       m210_ledger_manual_agrupacion_rows: El Modelo 210 en modo registros deriva las
         filas anuales de agrupación de rentas de las clasificaciones de tus registros;
         no aportes filas manuales de agrupación de rentas.
@@ -2840,6 +2984,13 @@ application:
         modelo 303 no superó la validación.
       m349_operator_rows_required: El libro de este periodo tiene operaciones intracomunitarias
         sin sus filas de operador del Modelo 349; añádelas antes de calcular.
+      m390_attestation_attachment_digest_differs: El documento adjunto a la atestación
+        de aplicabilidad del Modelo 390 se identifica con un valor distinto del resumen
+        de su contenido. Adjunta el documento de nuevo para que se identifique con
+        su propio resumen.
+      m390_attestation_period_year_differs: El periodo de la atestación de aplicabilidad
+        del Modelo 390 pertenece al año %{period_year}, pero la atestación es del
+        ejercicio de presentación %{filing_year}. Usa un periodo de ese ejercicio.
       novel_source_kind_rejected: 'Tipo(s) de origen de cálculo no reconocido(s) %{novel_source_kinds}
         en la versión %{revision_id}: las definiciones del modelo declaran un origen
         de valor que ningún resolutor de cálculo gestiona. Añade un resolutor o márcalo
@@ -2872,6 +3023,19 @@ application:
         %{filing_year}: arrastra importes de la declaración de %{unfiled_period},
         que no está presentada. Presenta primero %{unfiled_period} y vuelve a calcular.
         No se ha guardado nada.'
+      profile_activity_tipo_not_censal: El tipo de actividad %{tipo} de tu perfil
+        no es un tipo de actividad censal. Corrige el tipo de la actividad en tu perfil
+        y calcula de nuevo.
+      profile_descendant_birth_date_invalid: La fecha de nacimiento del descendiente
+        número %{number} de tu perfil no es una fecha válida (año-mes-día). Corrígela
+        en tu perfil y calcula de nuevo.
+      profile_jurisdiction_scope_required: Tu perfil no indica tu territorio tributario
+        y la parte del resultado que corresponde al Estado no puede suponer el territorio
+        común. Indica el territorio tributario en tu perfil y calcula de nuevo.
+      profile_jurisdiction_scope_unsupported: El territorio tributario %{scope} de
+        tu perfil no es uno para el que se pueda calcular la parte del resultado que
+        corresponde al Estado. Corrige el territorio tributario en tu perfil y calcula
+        de nuevo.
       profile_readiness_missing: 'El perfil está incompleto para el Modelo %{modelo}
         %{period} %{filing_year}; completa antes estos datos de perfil: %{profile_requirements}.'
       profile_readiness_not_applicable: 'El Modelo %{modelo} no es aplicable al perfil
@@ -2921,31 +3085,89 @@ application:
         %{filing_year}, pero la devolución solo está disponible en el último periodo
         de declaración del año. Arrastra el crédito (compensar) o elige la devolución
         en el último periodo.
+      registry_estimation_regime_clave_missing: La definición incluida de la declaración
+        no declara ningún código para la casilla 0168 en el régimen de estimación
+        %{estimation_regime}. Los datos incluidos están incompletos y nada de lo que
+        has introducido lo causa.
+      registry_modelo_revisions_unreadable: El registro no puede listar las revisiones
+        del Modelo %{modelo}. Comprueba el número de modelo.
+      registry_period_not_declared: 'El periodo %{period} no está declarado para el
+        Modelo %{modelo}, revisión %{revision_id}. Los periodos disponibles son: %{available}.
+        Elige uno de ellos.'
+      registry_revision_not_declared: 'La revisión %{revision_id} no está declarada
+        para el Modelo %{modelo}. Las revisiones disponibles son: %{available}. Elige
+        una de ellas.'
+      registry_revision_unreadable: El registro no puede leer la revisión %{revision_id}
+        del Modelo %{modelo}. Comprueba el número de modelo y la revisión.
+      review_package_envelope_file_unreadable: El fichero no es un sobre cifrado legible
+        de un paquete de revisión. Comprueba que has indicado el fichero de sobre
+        que se generó al cifrar el paquete.
       review_package_generic: Se produjo un error al generar el paquete de revisión.
       review_package_integrity: 'El paquete de revisión %{package_path} no superó
         la comprobación de la suma de comprobación: %{detail}.'
+      review_package_receipt_file_unreadable: El fichero no es un recibo contrafirmado
+        legible de un paquete de revisión. Comprueba que has indicado el fichero de
+        recibo que se devolvió para el paquete.
       review_package_revision_state: 'La revisión de cálculo %{calculation_revision_id}
         está en estado %{state} y no puede empaquetarse para revisión; estados admitidos:
         %{eligible_states}.'
+      review_package_signature_file_unreadable: El fichero no es un sobre de firma
+        legible de un paquete de revisión. Comprueba que has indicado el fichero de
+        firma que se generó al firmar el paquete.
       revision_pick_explicit_id_required: La selección explícita de revisión requiere
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id solo es
         válido con el selector de revisión explícita.
+      semantic_role_ambiguous: La definición incluida de este Modelo asigna el papel
+        %{semantic_role} a más de una casilla (%{casilla_list}), así que la comprobación
+        no puede saber cuál leer. Los datos incluidos son incoherentes y nada de lo
+        que has introducido lo causa.
+      signing_capability_other_profile: 'No se ha firmado nada: la clave de firma
+        disponible para esta acción pertenece a otro perfil. Elige el perfil que posee
+        la clave y firma de nuevo.'
       source_owned_binding_override: Has introducido un valor en una casilla que se
         obtiene de tus registros; quítalo o corrige el registro del que procede.
       trabajo_income_nothing_open: 'El Modelo %{modelo} de %{filing_year} no tiene
         ninguna casilla de rendimientos del trabajo pendiente de declarar como inexistente:
         cada una ya tiene una cifra o tu declaración, o la declaración no tiene rendimientos
         del trabajo de un registro de pagador. No se ha cambiado nada.'
+      value_presentation_data_type_undeclared: No se ha declarado cómo mostrar los
+        valores del tipo de dato %{data_type}, así que la cifra no se muestra. Los
+        datos incluidos están incompletos y nada de lo que has introducido lo causa.
       verification_report_not_found: No existe ningún informe de comprobación con
         id=%{verification_report_id}.
+      withholding_order_number_above_form_ceiling: El número de orden %{order_number}
+        supera el máximo que admite el formulario. Usa un número más bajo.
       work_create_not_applicable: 'El Modelo %{modelo} no te corresponde según tu
         perfil: %{reason} No se ha creado la declaración.'
+      work_form_layout_binding_undefined: El diseño del formulario de este Modelo
+        coloca el campo %{binding_id}, que la revisión no define. El diseño incluido
+        es incoherente y nada de lo que has introducido lo causa.
+      work_form_layout_casilla_not_shown: El diseño del formulario de este Modelo
+        coloca la casilla %{casilla_id} en el formulario, pero ninguna página la muestra.
+        El diseño incluido es incoherente y nada de lo que has introducido lo causa.
+      work_form_layout_casilla_off_form: El diseño del formulario de este Modelo pone
+        la casilla %{casilla_id} en una página sin darle un lugar en el formulario.
+        El diseño incluido es incoherente y nada de lo que has introducido lo causa.
+      work_form_layout_casilla_repeated: El diseño del formulario de este Modelo coloca
+        la casilla %{casilla_id} más de una vez. El diseño incluido es incoherente
+        y nada de lo que has introducido lo causa.
+      work_form_layout_casilla_undefined: El diseño del formulario de este Modelo
+        coloca la casilla %{casilla_id}, que la revisión no define. El diseño incluido
+        es incoherente y nada de lo que has introducido lo causa.
+      work_form_layout_casillas_unplaced: El diseño del formulario de este Modelo
+        no da lugar a las casillas %{casillas}. El diseño incluido está incompleto
+        y nada de lo que has introducido lo causa.
       work_period_token_invalid: '--period ''%{token}'' no es un token de periodo
         válido para el modelo %{modelo}. Indica --year %{year} por separado y usa
         uno de: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' no se reconoce. Indica --year
         %{year} por separado y usa un token de periodo como 0A, 1T o 01.
+      work_registry_revision_not_law_selected: La revisión del registro %{requested_revision}
+        que pides no es la revisión que la ley determina para esta declaración, que
+        es %{law_revision}. La asociación entre periodo y revisión la fija la ley,
+        así que no se puede sustituir. Crea de nuevo la unidad de trabajo sin --revision
+        para usar la revisión determinada por la ley.
       work_unit_already_discarded: La declaración ya está descartada.
       work_unit_create_discarded: Este objetivo de declaración fue descartado. Volver
         a crearlo devuelve la misma declaración descartada, por lo que no se puede
@@ -3046,8 +3268,7 @@ application:
       cross_period_dependency_unclean_attestable: Esta declaración usa cifras del
         modelo %{source_modelo} de %{source_filing_year}, periodo %{source_period},
         y esa declaración aún tiene incidencias abiertas. Resuélvelas allí primero
-        o, si no vas a registrar esa declaración aquí, indica su cifra con `aeat app
-        modelo work attest-prior-value <unidad de trabajo> <binding> <valor>`.
+        o, si no vas a registrar esa declaración aquí, indica tú mismo su cifra.
       cross_period_first_year_fractional_suppression: El modelo %{source_modelo} de
         %{source_filing_year}, periodo %{source_period}, no te corresponde porque
         tu actividad empezó el %{activity_start_date}.

@@ -71,7 +71,7 @@ from .filing_import_refusal_profiles import FilingImportRefusalCause
 from .filing_import_refusals import local_observation_refusal
 from .modelo_bucket_events import build_modelo_bucket_event
 from .registry_helpers import NUMERIC_CASILLA_DATA_TYPES
-from .work_addressing import ModeloWorkSelectorError
+from .work_address_errors import ModeloWorkSelectorError
 from .work_selection import ModeloWorkSelectionMode, ModeloWorkSelectorRequest, select_modelo_work_resolution
 
 if TYPE_CHECKING:

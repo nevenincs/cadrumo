@@ -7,7 +7,6 @@ from uuid import UUID, uuid4
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
-from cadrumo_client.commands.registered_operation_projections import settled_registered_error_detail
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import bounded_deadline_after, remaining_budget
 from cadrumo_client.contracts.operation_access import (
@@ -20,6 +19,7 @@ from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_B
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, frontend_failure_code
 from cadrumo_client.transport.operation_changes import OperationChanges
+from cadrumo_client.transport.operation_settlement import settled_registered_error_detail
 
 from ....application.operations.frontend_projection import OperationReviewAvailableInteractionV1
 from ....application.operations.frontend_requests import (

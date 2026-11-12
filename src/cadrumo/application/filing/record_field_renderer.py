@@ -479,9 +479,15 @@ def _presence_marker_value(
     # The design requires the slot itself, with a blank or its constant. No
     # evidence describes an ordinary return; neither that absence nor a false
     # fact means a missing wire byte.
-    if field.producer_key not in headers:
+    producer_key = field.producer_key
+    if producer_key is None or producer_key not in headers:
         raise FilingExportValidationError(
             f"export field {field.id!r} requires its producer fact",
+            translated_message="application.filing.export.errors.producer_fact_required",
+            context={
+                "missing_producer_key": None if producer_key is None else producer_key.value,
+                "fact": field.id if producer_key is None else missing_producer_fact_names(producer_key),
+            },
             precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCER_FACT_UNSUPPLIED),
         )
     if value is True and field.presence_marker is not None:

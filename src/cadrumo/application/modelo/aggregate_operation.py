@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect
 from ...core.period import Period
@@ -17,7 +18,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.withholding_clave_breakdown import aggregate_withholding_by_clave
-from ..aggregation.errors import AggregationConfigError, AggregationUnsupportedModeloError
+from ..aggregation.errors import AggregationUnsupportedModeloError
 from ..aggregation.ledger_payment_withholding import (
     LedgerPaymentWithholdingCapture,
     LedgerPaymentWithholdingEvidenceError,
@@ -77,6 +78,7 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .aggregate_contracts import (
     AGGREGATE_COMMIT_PHASE,
@@ -288,7 +290,11 @@ class ModeloAggregateExecutor:
             provider = provider_for_modelo(command.modelo, operation=operation)
             preflight_result = aggregate_per_modelo(command, operation=operation)
         if preflight_result.provider is not provider:
-            raise AggregationConfigError("aggregate preflight provider changed")
+            raise InternalInvariantError(
+                "aggregate preflight provider changed",
+                translated_message="application.modelo.errors.aggregate_preflight_provider_changed",
+                precondition_verdict=internal_invariant_verdict("aggregate_preflight.provider_stable"),
+            )
         if payload.ledger_payment is None:
             return _PreparedModeloAggregate(
                 ports=ports,

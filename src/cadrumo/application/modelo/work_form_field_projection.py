@@ -128,7 +128,11 @@ def _casilla_source(casilla_id: str, context: WorkFormContext) -> tuple[ModeloWo
     row = context.rows.get(casilla_id)
     casilla = context.casillas.get(casilla_id)
     if row is None or casilla is None:
-        raise ModeloWorkFormLayoutError(f"the layout places casilla {casilla_id!r}, which the revision does not define")
+        raise ModeloWorkFormLayoutError(
+            f"the layout places casilla {casilla_id!r}, which the revision does not define",
+            translated_message="application.modelo.errors.work_form_layout_casilla_undefined",
+            context={"casilla_id": str(casilla_id)},
+        )
     return row, casilla
 
 
@@ -254,7 +258,11 @@ def project_binding_field(binding_id: str, context: WorkFormContext) -> ModeloFo
     """Build one field for a binding input no casilla owns."""
     binding = context.bindings.get(binding_id)
     if binding is None:
-        raise ModeloWorkFormLayoutError(f"the layout places binding {binding_id!r}, which the revision does not define")
+        raise ModeloWorkFormLayoutError(
+            f"the layout places binding {binding_id!r}, which the revision does not define",
+            translated_message="application.modelo.errors.work_form_layout_binding_undefined",
+            context={"binding_id": str(binding_id)},
+        )
     casillas = _binding_casillas(binding, context)
     label, help_text, box = _binding_presentation(binding, binding_id, context, casillas)
     raw = None if context.revision is None else context.revision.binding_overrides.get(binding.id)
