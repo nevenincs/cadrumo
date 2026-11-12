@@ -18,7 +18,9 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
 from ...invoices.source_resolver_ports import InvoiceSourcePersistenceError
+from ...modelo.calculation_notes import note_record_verdict
 from ..percepciones_observations_repository import PercepcionObservationPorts
 from ..retencion_observations_repository import RetencionObservationPorts
 from ..source_mesh import CalculationSourceContext
@@ -123,7 +125,10 @@ def test_a_perceptor_with_no_declared_name_is_named_once_with_its_door_and_its_s
     (diagnostic,) = [item for item in resolution.diagnostics if item.reason == "declared_party_name_unresolved"]
     assert (diagnostic.source_ref or "").startswith("party-name:missing:")
     assert "IMPRESO" in diagnostic.message or _UNNAMED in diagnostic.message
-    assert "counterparty filing-name" in (diagnostic.remedy or "")
+    verdict = note_record_verdict(diagnostic)
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
 
 
 def test_a_resolver_composed_without_filing_names_fills_no_name_slot_and_reports_none(

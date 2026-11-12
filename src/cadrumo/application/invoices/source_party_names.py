@@ -39,8 +39,7 @@ _PARTY_FILING_NAME_ROW_FIELD: Final = "party_filing_name"
 _INVOICE_SOURCE_KIND: Final = "invoice"
 
 _REMEDY: Final = (
-    "State the counterparty's filing name (surnames and given name, or razón social) "
-    "with 'cadrumo app ledger counterparty filing-name', then calculate again."
+    "State the counterparty's filing name (surnames and given name, or razón social), then calculate again."
 )
 
 
