@@ -90,6 +90,12 @@ ENTRY_OPTION_KEYS: Final[frozenset[str]] = frozenset(
     f"{prefix}{member}" for prefix, members in ENTRY_OPTION_FAMILIES.items() for member in members
 )
 
+#: The certificate figure words a withholding form shows from the ``label_key`` the operation
+#: serves with each figure, so the shell translates them as they come and never names them.
+WITHHOLDING_CERTIFICATE_FIGURE_KEYS: Final[frozenset[str]] = frozenset(
+    key for key in ENTRY_OPTION_KEYS if key.startswith(f"{ENTRY_OPTION_LABEL_PREFIX}withholding_certificate_figure.")
+)
+
 
 #: The chrome words of the served registry tokens, as ``prefix -> members``. The window words
 #: a served token with its chrome key and shows the token itself when the chrome has none.
