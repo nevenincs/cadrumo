@@ -42,6 +42,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13", "orden-hfp-816-2017:art-1", "orden-hfp-816-2017:art-2", "orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure", "boe-modelo-232-2017-form"]
 
+[revisions."2018-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13", "orden-hfp-816-2017:art-1", "orden-hfp-816-2017:art-2", "orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure", "boe-modelo-232-2017-form"]
+
 [revisions."2018-y-siguientes".family_dispositions.formulas]
 reason = "The declarant reports its OWN operaciones with related parties and with paraisos fiscales; the valuation of those operations is settled in the Impuesto sobre Sociedades self-assessment, not here. This form carries information about the declarant's own transactions and computes no liability, so the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [

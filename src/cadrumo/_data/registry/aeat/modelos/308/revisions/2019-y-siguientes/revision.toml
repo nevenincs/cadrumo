@@ -20,6 +20,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
 
+[revisions."2019-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
+
 [revisions.2019-y-siguientes.predecessor.none]
 reason = "No legal predecessor is declared: naming 2016-2018 would claim that the 2019 design continues the 2016 one, a separate continuity decision. The payload is stored against 2016-2018 through casilla_storage_baseline and family_storage_baseline: the two header casillas and the shared filing schedule, construct and application links carry only this edition's differences as overrides, and what this edition states itself (its liquidation and identification casillas, the export layout and its application link, the live cross-references and the record-design parity anchor) is not declared by the 2016-2018 edition. Storage reuse makes no continuity claim."
 legal_refs = ["ley-37-1992:art-21"]

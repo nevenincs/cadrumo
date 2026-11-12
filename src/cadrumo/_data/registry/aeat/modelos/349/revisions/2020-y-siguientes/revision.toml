@@ -37,6 +37,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]
 
+[revisions."2020-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "aeat-modelo-349-procedure", "aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]
+
 [revisions."2020-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
 FilingProjectionRef (cadrumo.core) is a closed discriminated union of exactly seven projection_kind members, all prefixed m303_ and used exclusively by modelo 303's engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 349's own casillas can validate. Modelo 349 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism \

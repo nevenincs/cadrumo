@@ -51,6 +51,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-2", "trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f", "ley-35-2006:art-85"]
 source_refs = ["boe-modelo-210-base-order", "aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano", "boe-modelo-210-2024-form-layout", "boe-modelo-210-2026-deadline-update", "boe-modelo-210-2026-form-layout", "aeat-dr-210-2026"]
 
+[revisions."2026-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-2", "trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f", "ley-35-2006:art-85"]
+source_refs = ["boe-modelo-210-base-order", "aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano", "boe-modelo-210-2024-form-layout", "boe-modelo-210-2026-deadline-update", "boe-modelo-210-2026-form-layout", "aeat-dr-210-2026"]
+
 [revisions."2026-y-siguientes".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification declares that this modelo's calculation depends on ANOTHER modelo the taxpayer files in an earlier or enclosing period, so the clean-state gate knows whether that source is present, suppressed or missing. Modelo 210 declares no such source. Its base and cuota are self-contained per renta (TRLIRNR arts. 24 and 25), and the one value arriving from outside -- casilla 29 retenciones e ingresos a cuenta -- is withholding SUFFERED by the non-resident and evidenced by the \

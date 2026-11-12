@@ -66,6 +66,7 @@ from .ids import (
 )
 from .m303_orden_projection_models import M303AnnualOrdenAuthority
 from .period_selector_match import selector_period_matches_request
+from .prevision_social_placement import PrevisionSocialPlacement
 from .schema_governance import (
     validate_attribution_names_somebody,
     validate_governance_stamp_coherence,
@@ -587,6 +588,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
     workbook_parity_refs: Annotated[tuple[WorkbookParityReference, ...], SCHEMA_FAMILY] = ()
     verification_expectations: Annotated[tuple[VerificationExpectationDefinition, ...], SCHEMA_FAMILY] = ()
     credit_reconciliation: Annotated[tuple[CreditReconciliationEntry, ...], SCHEMA_FAMILY] = ()
+    prevision_social_placements: Annotated[tuple[PrevisionSocialPlacement, ...], SCHEMA_FAMILY] = ()
     application_links: Annotated[tuple[ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
     deadline_windows: Annotated[tuple[DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
     filing_schedules: Annotated[tuple[ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()

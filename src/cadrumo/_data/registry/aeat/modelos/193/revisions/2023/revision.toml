@@ -65,6 +65,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2023", "aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
 
+[revisions."2023".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023", "aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
+
 [revisions."2023".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: its totals are the sums the record design itself states over this declaration's own type-2 perceptor records, so the whole calculation closes inside the edition. The 2024 sibling classifies a modelo 123 dependency because it routes the same totals through annual relation prefills grounded on a 2024 nota informativa, and that opens after this exercise ends. Empty because no cross-modelo edge exists here, not because one is unbuilt."""

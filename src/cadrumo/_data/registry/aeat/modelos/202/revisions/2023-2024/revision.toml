@@ -41,6 +41,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105", "orden-hfp-227-2017:art-1", "orden-hfp-312-2023:art-unico-1-anexo-i"]
 source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "boe-modelo-202-base-order", "boe-modelo-202-2023-amendment"]
 
+[revisions."2023-2024".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105", "orden-hfp-227-2017:art-1", "orden-hfp-312-2023:art-unico-1-anexo-i"]
+source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "boe-modelo-202-base-order", "boe-modelo-202-2023-amendment"]
+
 [revisions."2023-2024".family_dispositions.projection_endpoints]
 reason = "A projection endpoint names a FilingProjectionRef, and that type is a CLOSED union whose members are all m303_* -- the seven Modelo 303 endpoints the application projects into. No non-303 revision can populate this family at all: there is no member for it to name, so an entry here would not merely be unauthored, it would be unrepresentable. A type-level exclusion, not missing work; it changes only if the union gains a 202 member, which is a code change in core, not a registry one."
 legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]

@@ -33,7 +33,7 @@ source_refs = [
 ]
 family_storage_baseline = "2021"
 scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest", "credit_reconciliation"]
-family_disposition_removals = ["credit_reconciliation"]
+family_disposition_removals = ["credit_reconciliation", "prevision_social_placements"]
 
 [revisions."2022".family_dispositions.projection_endpoints]
 reason = """

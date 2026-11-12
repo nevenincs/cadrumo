@@ -46,6 +46,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure", "enrolled-modelo-185-layout", "aeat-dr-185-2026"]
 
+[revisions."2025-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "enrolled-modelo-185-layout", "aeat-dr-185-2026"]
+
 [revisions."2025-y-siguientes".family_dispositions.applicability]
 reason = """
 Orden HAC/1197/2025 art. 2 names the obligados: the organos o entidades gestores de la Seguridad Social, including those managing the special regimes of civil servants, the Fuerzas Armadas and Administracion de Justicia staff, and the Mutualidades alternativas a la Seguridad Social. The declarante is such an entity reporting on its afiliados or mutualistas, not the taxpayer whose profile this application models, so there is no taxpayer-profile predicate and no alternative applicability branch to encode. The obligation is carried by this revision's temporal selector. Empty because the predicate does not exist here, not because it is unbuilt."""
