@@ -646,6 +646,25 @@ def _suppressed_calendar_entry(
     )
 
 
+def _with_instalment_verdict(
+    obligation: ModeloDeadline,
+    applicability: ModeloApplicability,
+    applicability_evidence: FilingYearApplicabilityEvidence | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ModeloApplicability, tuple[DeclaredNextAction, ...], bool]:
+    """Decide a Modelo 202 instalment where facts were read: verdict, doors, and whether the election is unstated."""
+    if applicability_evidence is None or applicability_evidence.modelo_202_instalment_facts is None:
+        return applicability, (), False
+    instalment = modelo_202_instalment_verdict(
+        applicability,
+        instalment=obligation.period,
+        profile=applicability_evidence.profile_for_year(obligation.period.filing_year),
+        facts_reader=applicability_evidence.modelo_202_instalment_facts,
+        operation=operation,
+    )
+    return instalment.applicability, instalment.doors, instalment.election_unstated
+
+
 def _calendar_obligation_projection(
     obligation: ModeloDeadline,
     *,
@@ -676,24 +695,14 @@ def _calendar_obligation_projection(
         calendar_range,
         operation=operation,
     )
-    filing_year = obligation.period.filing_year
     applicability = _obligation_applicability(obligation, profile, applicability_evidence, operation)
     disagreeing_modelo = (
         obligation.modelo if applicability.evidence_disagreement is not None and intersects_range else None
     )
-    doors: tuple[DeclaredNextAction, ...] = ()
-    election_unstated_modelo: str | None = None
-    if applicability_evidence is not None and applicability_evidence.modelo_202_instalment_facts is not None:
-        instalment = modelo_202_instalment_verdict(
-            applicability,
-            instalment=obligation.period,
-            profile=applicability_evidence.profile_for_year(filing_year),
-            facts_reader=applicability_evidence.modelo_202_instalment_facts,
-            operation=operation,
-        )
-        applicability, doors = instalment.applicability, instalment.doors
-        if instalment.election_unstated and intersects_range:
-            election_unstated_modelo = obligation.modelo
+    applicability, doors, election_unstated = _with_instalment_verdict(
+        obligation, applicability, applicability_evidence, operation
+    )
+    election_unstated_modelo = obligation.modelo if election_unstated and intersects_range else None
     if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
         suppressed_entry = (
             _suppressed_calendar_entry(obligation, applicability, doors)
