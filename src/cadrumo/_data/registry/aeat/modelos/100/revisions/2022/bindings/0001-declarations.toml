@@ -1886,6 +1886,21 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Retenciones e ingresos a cuenta"]
 
+# The let properties' net yield before the art. 23.2 reduction, totalled over their rows: the
+# capital inmobiliario income the art. 20 limit weighs, which counts each yield net of its
+# expenses and before its reductions. No box of the return holds this total.
+[[revisions."2022".bindings]]
+id = "renta-inmueble-total-rendimiento-neto-0149"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "total", record = "inmueble", grouping = "per_inmueble", row_field = "rendimiento_neto", target_casilla_id = "0149" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["una vez deducidos los gastos"]
+
 # Whether the profile's stated income categories positively exclude a family of rentas other than work
 # income. The list the profile states is the taxpayer's complete statement for the period, so a family
 # absent from a stated list is a proven zero for the LIRPF art. 20 limit; an unstated list excludes nothing.

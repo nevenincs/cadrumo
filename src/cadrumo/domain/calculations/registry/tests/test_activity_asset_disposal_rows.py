@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.aggregation import BindingSourceKind
 from ..actividad_asset_disposal_bindings import (
     ActivityAssetDisposalRoute,
     ActivityAssetDisposalRowField,
@@ -108,10 +109,14 @@ def test_application_row_consumers_match_the_disposal_columns_actually_resolved(
     emitted = {binding_id for binding_id, _index in values}
     assert len(emitted) == 10
     consumers = binding_consumers(revision)
+    # Other row families (a let property's columns) earn the same consumer kind for their own resolver.
+    disposal_family = {
+        binding.id for binding in revision.bindings if binding.source is BindingSourceKind.ACTIVITY_ASSET_DISPOSAL
+    }
     application_rows = {
         binding_id
         for binding_id, refs in consumers.items()
-        if any(ref.kind is BindingConsumerKind.APPLICATION_ROW_VALUE for ref in refs)
+        if binding_id in disposal_family and any(ref.kind is BindingConsumerKind.APPLICATION_ROW_VALUE for ref in refs)
     }
     # Compare against real resolver output, not merely row declarations or names.
     assert application_rows == emitted
