@@ -67,6 +67,7 @@ from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
 )
+from ...domain.modelos.verification_report import ModeloVerificationFinding
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -94,6 +95,7 @@ from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .export_accounts import resolve_m303_filing_facts_from_arrivals
 from .export_ports import M303ArrivalPorts
 from .profile_binding import resolve_profile_sourced_bindings
+from .profile_drift_gate import filed_profile_superseded_findings
 from .profile_export_binding import resolve_m303_profile_lexicals, resolve_profile_identity_producer_values
 from .projection_declaration import modelo_projection_available
 from .registry_input_refusals import registry_integrity_verdict
@@ -556,6 +558,7 @@ def load_modelo_work_form(
         else calculation_filed_before_grade_cap(
             head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation
         ),
+        filed_findings=_filed_findings(head, review.work_unit_id, work_unit_repository, operation=operation),
     )
     form = form.model_copy(
         update={
@@ -578,6 +581,22 @@ def load_modelo_work_form(
     return ModeloWorkFormLoadV1(
         form=form, verified=state in SEALED_REVISION_STATES, filed=state in FILED_REVISION_STATES
     )
+
+
+def _filed_findings(
+    head: CalculationRevision | None,
+    work_unit_id: str,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ModeloVerificationFinding, ...]:
+    """What has changed under a declaration recorded as filed since it was filed."""
+    if head is None or head.state not in FILED_REVISION_STATES:
+        return ()
+    work_unit = work_unit_repository.load().get(work_unit_id)
+    if work_unit is None:
+        return ()
+    return filed_profile_superseded_findings(head, work_unit, operation=operation)
 
 
 def _verification_out_of_date(
