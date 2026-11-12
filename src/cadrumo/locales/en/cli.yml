@@ -3254,6 +3254,7 @@ cli:
         (received or paid net)
       irpf_purpose_employment_income: employment income (not for net-paid invoices)
       irpf_purpose_rent_expense_withholding: net-paid rent expense withholding
+      irpf_purpose_rental_property_income: rental income and expenses of a property
       irpf_usage_example: 'Net-paid rent example: --category-id {rent_category} --irpf-category
         {rent_category}. Net-paid professional service: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -3276,6 +3277,9 @@ cli:
     classify:
       apply_help: Save the LLM suggestion with source `llm:` instead of only previewing
         it.
+      arrendamiento_help: Row key of the stored lease this income row belongs to;
+        list leases with “aeat config profile arrendamiento list”. Blank text removes
+        the link. A linked row carries the income category capital_inmobiliario.
       auto_split_help: Read the attached invoice and, when it is multi-component,
         split it into per-line base/IVA children; otherwise classify it in place (requires
         --read-evidence).
@@ -3310,9 +3314,15 @@ cli:
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].
       file_not_found: 'CSV file not found: %{path}'
+      gasto_inmobiliario_help: Kind of property expense, one of the kinds the registry
+        declares; an unknown value is refused with the accepted ones. Needs a property
+        link (--inmueble). Blank text removes it.
       help: Classify one transaction in the active profile's records
       id_help: Transaction id to classify
       id_required: A transaction id is required when --file is not provided.
+      inmueble_help: Row key of the stored property this expense row belongs to; list
+        properties with “aeat config profile inmueble list”. Not together with --arrendamiento.
+        Blank text removes the link. A linked row carries the income category capital_inmobiliario.
       investment_asset_id_help: Identity of the bienes de inversión register record
         this acquisition deducts against, as declared on that record. Required by
         an investment deduction kind and refused on any other.
@@ -3450,6 +3460,8 @@ cli:
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
+      rental_concept_unknown: 'Unrecognised --gasto-inmobiliario {value!r}. Accepted
+        kinds: {accepted}.'
       unknown_category: Unrecognised --category-id {category!r}. Supply a bare category
         id such as {example!r}, not a family-prefixed or compound key. Consult the
         category catalogue of your records for recognised ids.

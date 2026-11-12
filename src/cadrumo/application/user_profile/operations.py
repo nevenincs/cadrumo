@@ -108,6 +108,7 @@ from .profile_operation_execution import (
     ProfileRepeatableRowUpdateOperationExecutor,
     ProfileViewOperationExecutor,
 )
+from .rental_records import RentalLedgerReferenceReader, unreadable_rental_ledger_references
 from .view_operation import (
     PROFILE_VIEW_OPERATION_DEFINITION_ID,
     PROFILE_VIEW_PHASES,
@@ -125,6 +126,7 @@ def _definition(
     result_type: type[BaseModel] | None,
     executor_type: type[object],
     phase_codes: tuple[str, ...],
+    build: Callable[[], object] | None = None,
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
     permitted_effects: frozenset[OperationEffect] = EFFECTS_WITHOUT_PARTIAL_COMMIT,
     capabilities: OperationCapabilities | None = None,
@@ -138,7 +140,7 @@ def _definition(
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
             executor_type=executor_type,
-            build=executor_type,
+            build=build or executor_type,
         ),
         phase_codes=phase_codes,
         interaction_kinds=frozenset[OperationInteractionKind](),
@@ -162,104 +164,119 @@ def _definition(
     )
 
 
-USER_PROFILE_OPERATION_DEFINITIONS = (
-    _definition(
-        definition_id=PROFILE_VIEW_OPERATION_DEFINITION_ID,
-        request_type=ProfileViewOperationRequest,
-        result_type=ProfileViewOperationResult,
-        executor_type=ProfileViewOperationExecutor,
-        phase_codes=PROFILE_VIEW_PHASES,
-        capabilities=EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES,
-    ),
-    _definition(
-        definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
-        request_type=ProfileFieldMutationOperationRequest,
-        result_type=ProfileMutationOperationResult,
-        executor_type=ProfileFieldMutationOperationExecutor,
-        phase_codes=PROFILE_FIELD_MUTATION_PHASES,
-        public_error_detail=True,
-    ),
-    _definition(
-        definition_id=PROFILE_PATCH_OPERATION_DEFINITION_ID,
-        request_type=ProfilePatchOperationRequest,
-        result_type=ProfilePatchOperationResult,
-        executor_type=ProfilePatchOperationExecutor,
-        phase_codes=PROFILE_PATCH_PHASES,
-        public_error_detail=True,
-    ),
-    _definition(
-        definition_id=PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
-        request_type=ProfilePlantillaMediaOperationRequest,
-        result_type=ProfilePlantillaMediaOperationResult,
-        executor_type=ProfilePlantillaMediaOperationExecutor,
-        phase_codes=PROFILE_PLANTILLA_MEDIA_PHASES,
-        public_error_detail=True,
-    ),
-    _definition(
-        definition_id=PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
-        request_type=ProfileDescendantsOperationRequest,
-        result_type=ProfileDescendantsOperationResult,
-        executor_type=ProfileDescendantsOperationExecutor,
-        phase_codes=PROFILE_DESCENDANTS_PHASES,
-        public_error_detail=True,
-    ),
-    _definition(
-        definition_id=PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
-        request_type=ProfileAscendantsOperationRequest,
-        result_type=ProfileAscendantsOperationResult,
-        executor_type=ProfileAscendantsOperationExecutor,
-        phase_codes=PROFILE_ASCENDANTS_PHASES,
-        public_error_detail=True,
-    ),
-    _definition(
-        definition_id=PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
-        request_type=ProfileRepeatableRowMutationOperationRequest,
-        result_type=ProfileRepeatableRowMutationOperationResult,
-        executor_type=ProfileRepeatableRowMutationOperationExecutor,
-        phase_codes=PROFILE_REPEATABLE_ROW_MUTATION_PHASES,
-        public_error_detail=True,
-    ),
-    _definition(
-        definition_id=PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
-        request_type=ProfileRepeatableRowUpdateOperationRequest,
-        result_type=ProfileRepeatableRowChangeOperationResult,
-        executor_type=ProfileRepeatableRowUpdateOperationExecutor,
-        phase_codes=PROFILE_REPEATABLE_ROW_UPDATE_PHASES,
-        public_error_detail=True,
-    ),
-    _definition(
-        definition_id=PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
-        request_type=ProfileRepeatableRowRemoveOperationRequest,
-        result_type=ProfileRepeatableRowChangeOperationResult,
-        executor_type=ProfileRepeatableRowRemoveOperationExecutor,
-        phase_codes=PROFILE_REPEATABLE_ROW_REMOVE_PHASES,
-        public_error_detail=True,
-    ),
-    _definition(
-        definition_id=PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
-        request_type=ProfileCompleteSetupOperationRequest,
-        result_type=ProfileCompleteSetupOperationResult,
-        executor_type=ProfileCompleteSetupOperationExecutor,
-        phase_codes=PROFILE_COMPLETE_SETUP_PHASES,
-        public_error_detail=True,
-    ),
-    _definition(
-        definition_id=PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
-        request_type=ProfileBundleExportOperationRequest,
-        result_type=ProfileBundleExportResult,
-        executor_type=ProfileBundleExportOperationExecutor,
-        phase_codes=PROFILE_BUNDLE_EXPORT_PHASES,
-        ephemeral_secret=OperationEphemeralSecretDeclaration(
-            secret_kind=PROFILE_BUNDLE_EXPORT_INPUT_KIND,
-            lifetime=timedelta(minutes=5),
+def _user_profile_definitions(rental_ledger_references: RentalLedgerReferenceReader) -> tuple[OperationDefinition, ...]:
+    return (
+        _definition(
+            definition_id=PROFILE_VIEW_OPERATION_DEFINITION_ID,
+            request_type=ProfileViewOperationRequest,
+            result_type=ProfileViewOperationResult,
+            executor_type=ProfileViewOperationExecutor,
+            phase_codes=PROFILE_VIEW_PHASES,
+            capabilities=EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES,
         ),
-    ),
-)
+        _definition(
+            definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+            request_type=ProfileFieldMutationOperationRequest,
+            result_type=ProfileMutationOperationResult,
+            executor_type=ProfileFieldMutationOperationExecutor,
+            phase_codes=PROFILE_FIELD_MUTATION_PHASES,
+            public_error_detail=True,
+        ),
+        _definition(
+            definition_id=PROFILE_PATCH_OPERATION_DEFINITION_ID,
+            request_type=ProfilePatchOperationRequest,
+            result_type=ProfilePatchOperationResult,
+            executor_type=ProfilePatchOperationExecutor,
+            phase_codes=PROFILE_PATCH_PHASES,
+            public_error_detail=True,
+        ),
+        _definition(
+            definition_id=PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
+            request_type=ProfilePlantillaMediaOperationRequest,
+            result_type=ProfilePlantillaMediaOperationResult,
+            executor_type=ProfilePlantillaMediaOperationExecutor,
+            phase_codes=PROFILE_PLANTILLA_MEDIA_PHASES,
+            public_error_detail=True,
+        ),
+        _definition(
+            definition_id=PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
+            request_type=ProfileDescendantsOperationRequest,
+            result_type=ProfileDescendantsOperationResult,
+            executor_type=ProfileDescendantsOperationExecutor,
+            phase_codes=PROFILE_DESCENDANTS_PHASES,
+            public_error_detail=True,
+        ),
+        _definition(
+            definition_id=PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
+            request_type=ProfileAscendantsOperationRequest,
+            result_type=ProfileAscendantsOperationResult,
+            executor_type=ProfileAscendantsOperationExecutor,
+            phase_codes=PROFILE_ASCENDANTS_PHASES,
+            public_error_detail=True,
+        ),
+        _definition(
+            definition_id=PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
+            request_type=ProfileRepeatableRowMutationOperationRequest,
+            result_type=ProfileRepeatableRowMutationOperationResult,
+            executor_type=ProfileRepeatableRowMutationOperationExecutor,
+            phase_codes=PROFILE_REPEATABLE_ROW_MUTATION_PHASES,
+            public_error_detail=True,
+        ),
+        _definition(
+            definition_id=PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
+            request_type=ProfileRepeatableRowUpdateOperationRequest,
+            result_type=ProfileRepeatableRowChangeOperationResult,
+            executor_type=ProfileRepeatableRowUpdateOperationExecutor,
+            phase_codes=PROFILE_REPEATABLE_ROW_UPDATE_PHASES,
+            public_error_detail=True,
+        ),
+        _definition(
+            definition_id=PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
+            request_type=ProfileRepeatableRowRemoveOperationRequest,
+            result_type=ProfileRepeatableRowChangeOperationResult,
+            executor_type=ProfileRepeatableRowRemoveOperationExecutor,
+            phase_codes=PROFILE_REPEATABLE_ROW_REMOVE_PHASES,
+            public_error_detail=True,
+            build=lambda: ProfileRepeatableRowRemoveOperationExecutor(rental_ledger_references),
+        ),
+        _definition(
+            definition_id=PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
+            request_type=ProfileCompleteSetupOperationRequest,
+            result_type=ProfileCompleteSetupOperationResult,
+            executor_type=ProfileCompleteSetupOperationExecutor,
+            phase_codes=PROFILE_COMPLETE_SETUP_PHASES,
+            public_error_detail=True,
+        ),
+        _definition(
+            definition_id=PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
+            request_type=ProfileBundleExportOperationRequest,
+            result_type=ProfileBundleExportResult,
+            executor_type=ProfileBundleExportOperationExecutor,
+            phase_codes=PROFILE_BUNDLE_EXPORT_PHASES,
+            ephemeral_secret=OperationEphemeralSecretDeclaration(
+                secret_kind=PROFILE_BUNDLE_EXPORT_INPUT_KIND,
+                lifetime=timedelta(minutes=5),
+            ),
+        ),
+    )
 
 
-def build_user_profile_operation_definitions() -> tuple[OperationDefinition, ...]:
-    """Return the one canonical profile-maintenance operation population."""
-    return USER_PROFILE_OPERATION_DEFINITIONS
+USER_PROFILE_OPERATION_DEFINITIONS = _user_profile_definitions(unreadable_rental_ledger_references)
+"""The population with no ledger read composed: removing a rental row is refused rather than guessed."""
+
+
+def build_user_profile_operation_definitions(
+    rental_ledger_references: RentalLedgerReferenceReader | None = None,
+) -> tuple[OperationDefinition, ...]:
+    """Return the one canonical profile-maintenance operation population.
+
+    ``rental_ledger_references`` reads the ledger rows that name a property or a lease,
+    which keeps a property or lease they name from being removed. Without it the
+    population refuses to remove a rental row.
+    """
+    if rental_ledger_references is None:
+        return USER_PROFILE_OPERATION_DEFINITIONS
+    return _user_profile_definitions(rental_ledger_references)
 
 
 _PROFILE_MUTATION_REGISTRATION_IDS = frozenset(

@@ -4272,14 +4272,20 @@ application:
         Cierra cualquier programa que esté usando el almacén de perfiles e inténtalo
         de nuevo.
       registration_label_blank: El nombre del perfil no puede estar vacío.
+      rental_lease_has_ledger_rows: El arrendamiento %{row} está nombrado por %{rows}
+        filas del libro; cambia o borra antes su vínculo con «%{door}».
       rental_lease_property_missing: El arrendamiento nombra el inmueble %{inmueble},
         que no está en tu perfil; añádelo antes con «%{door}».
+      rental_ledger_unreadable: No se pudo leer el libro del perfil, así que no se
+        hizo la eliminación. No se cambió nada.
       rental_principal_missing: El inmueble principal %{principal} no es otro inmueble
         de tu perfil; añádelo antes con «%{door}».
       rental_property_has_accessories: El inmueble %{inmueble} es el principal de
         anejos (%{accessories}); cambia o borra su principal antes con «%{door}».
       rental_property_has_leases: El inmueble %{inmueble} tiene arrendamientos (%{leases});
         elimínalos antes con «%{door}».
+      rental_property_has_ledger_rows: El inmueble %{row} está nombrado por %{rows}
+        filas del libro; cambia o borra antes su vínculo con «%{door}».
       rental_row_invalid: El dato «%{leaf}» no es válido o contradice otros datos
         del registro; no se guardó nada. Corrígelo y repite «%{door}».
       rental_tenant_id_invalid: El NIF de un arrendatario no es válido; revisa sus

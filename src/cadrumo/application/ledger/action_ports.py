@@ -21,6 +21,7 @@ from .protocols import (
     InvoiceCatalogueCoCommitWriterProtocol,
 )
 from .read_ports import FullyValidatedTransactionCatalogueReader, LedgerReadPorts
+from .rental_link_admission import RentalProfileFactsLoader
 from .usage_ratio_repository import UsageRatioProfileLoader
 
 if TYPE_CHECKING:
@@ -42,6 +43,9 @@ class LedgerActionPorts(LedgerReadPorts):
     #: production composition always supplies it; a read that requires it
     #: refuses rather than falling back to the ordinary read.
     fully_validated_transaction_reader: FullyValidatedTransactionCatalogueReader | None = None
+    #: Reads the profile's facts to admit the lease or property a row names. A bundle
+    #: without it admits no rental reference: every one is refused as unknown.
+    rental_profile_facts: RentalProfileFactsLoader | None = None
 
 
 class LedgerActionPortsFactory(Protocol):

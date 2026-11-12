@@ -36,6 +36,7 @@ from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
 from .rental_records import (
+    RentalLedgerReferenceReader,
     RentalRowMutation,
     admit_rental_row,
     is_rental_section,
@@ -393,10 +394,13 @@ def remove_profile_repeatable_section_row(
     expected_content_digest: str | None = None,
     schema: ProfileSchemaDefinition,
     profile_decode_context: ProfileDecodeContext,
+    rental_ledger_references: RentalLedgerReferenceReader,
 ) -> ProfileRepeatableRowChangeOutcome:
     """Remove one stable row by publishing explicit clear tombstones for its values.
 
-    A rental property that a lease or an accessory still names is refused.
+    A rental property that a lease or an accessory still names, and a property or
+    lease that a ledger row still names, is refused. The ledger is read only for
+    a rental row, through ``rental_ledger_references``.
     """
     section = _repeatable_section(schema, section_key)
     repository = ProfileRecordRepository.for_current_session(
@@ -412,7 +416,12 @@ def remove_profile_repeatable_section_row(
     _require_existing_row(section.key, row_key, current)
     present = record_to_path_values(current)
     if is_rental_section(section.key):
-        require_rental_row_removable(section.key, row_key=_rental_row_number(section.key, row_key), path_values=present)
+        require_rental_row_removable(
+            section.key,
+            row_key=_rental_row_number(section.key, row_key),
+            path_values=present,
+            ledger_references=rental_ledger_references(profile_id=profile_id),
+        )
     changes = tuple(
         UserProfileFact(path=path, value=None)
         for field in section.fields
