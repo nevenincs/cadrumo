@@ -19,6 +19,11 @@ from ..application.overview.applicability_evidence import (
     bind_filing_year_applicability_evidence,
 )
 from ..application.overview.calendar_models import OverviewCalendar, OverviewCalendarRange
+from ..application.overview.modelo202_instalment import Modelo202InstalmentFactsReader
+from ..application.overview.modelo202_instalment_evidence import (
+    Modelo202InstalmentStores,
+    bind_modelo_202_instalment_facts,
+)
 from ..application.overview.read_calendar_projection import (
     OverviewAgendaSnapshot,
     OverviewBacklogSnapshot,
@@ -51,6 +56,8 @@ from ..application.workflow.profile_bucket_models import ProfileBucketPointer
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.json_contract import Notice
 from ..core.notificacion_estado_servicio import NotificacionEstadoServicio
+from ..core.parsing.dates import parse_iso8601_date
+from ..core.period import Period
 from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
@@ -158,7 +165,48 @@ def _filing_year_applicability_evidence(
         ),
         operation=operation,
         today=today_madrid(),
+        modelo_202_instalment_facts=_modelo_202_instalment_facts(bucket_id, record, operation=operation),
     )
+
+
+def _modelo_202_instalment_facts(
+    bucket_id: str,
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Modelo202InstalmentFactsReader:
+    """Bind the Modelo 202 instalment reader to this worker's filing, work and calculation stores.
+
+    Every store is opened on the bucket's one secure-object repository and is
+    loaded only when a Modelo 202 instalment is actually decided.
+    """
+    from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+    from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+
+    objects = secure_object_repository_for_bucket(bucket_id)
+    return bind_modelo_202_instalment_facts(
+        Modelo202InstalmentStores(
+            bucket_id=bucket_id,
+            observations=CalculationObservationRepository(objects=objects),
+            work_units=WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects).load,
+            calculations=bind_calculation_revision_persistence_from_profile(
+                bucket_id=bucket_id,
+                objects=objects,
+                operation=operation,
+                profile_record=record,
+            ).calculation_repository(),
+            activity_start_date=parse_iso8601_date(fact_value(record, "censo.activity_start_date")),
+            election_for=_art_40_3_election_unrecorded,
+        ),
+        operation=operation,
+    )
+
+
+def _art_40_3_election_unrecorded(_instalment: Period) -> bool | None:
+    """The profile records no art. 40.3 election, so every instalment's election is unstated."""
+    return None
 
 
 @dataclass(frozen=True, slots=True)

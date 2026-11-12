@@ -58,6 +58,7 @@ from ...domain.deadlines.models import (
 from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.deadlines.recargo import build_recovery_for_overdue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
+from ..operator_actions.models import DeclaredNextAction
 from .calendar_evidence import (
     calendar_entry_filing_evidence,
     calendar_events_with_filing_evidence,
@@ -86,6 +87,7 @@ from .calendar_warnings import (
     calendar_unverified_justificante_warnings,
 )
 from .coverage import build_obligation_coverage
+from .modelo202_instalment import modelo_202_instalment_verdict
 from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
@@ -647,6 +649,15 @@ def _calendar_obligation_projection(
     disagreeing_modelo = (
         obligation.modelo if applicability.evidence_disagreement is not None and intersects_range else None
     )
+    doors: tuple[DeclaredNextAction, ...] = ()
+    if applicability_evidence is not None and applicability_evidence.modelo_202_instalment_facts is not None:
+        applicability, doors = modelo_202_instalment_verdict(
+            applicability,
+            instalment=obligation.period,
+            profile=applicability_evidence.profile_for_year(filing_year),
+            facts_reader=applicability_evidence.modelo_202_instalment_facts,
+            operation=operation,
+        )
     if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
         suppressed_entry = (
             SuppressedCalendarEntry(
@@ -654,6 +665,7 @@ def _calendar_obligation_projection(
                 period=obligation.period,
                 verdict=applicability.verdict,
                 reason=applicability.reason,
+                actions=doors,
             )
             if show_suppressed and intersects_range
             else None

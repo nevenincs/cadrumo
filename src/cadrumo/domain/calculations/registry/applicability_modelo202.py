@@ -38,6 +38,52 @@ class Modelo202Modality(StrEnum):
     INCOMPLETE = "incomplete"
 
 
+class Modelo202InstalmentOutcome(StrEnum):
+    """What decides one instalment's Modelo 202 filing obligation below the art. 40.3 threshold.
+
+    Each value names its served reason in the applicability catalogue.
+    """
+
+    BASE_UNDECLARED = "filing_depends_on_ingreso"
+    ELECTION_UNSTATED = "instalment_election_unstated"
+    ELECTED_PENDING_CALCULATION = "instalment_elected_pending_calculation"
+    ELECTED_CALCULATION_POSITIVE = "instalment_elected_calculation_positive"
+    ELECTED_CALCULATION_ZERO = "instalment_elected_calculation_zero"
+    BASE_POSITIVE = "instalment_base_positive"
+    BASE_NOT_POSITIVE = "instalment_base_not_positive"
+    NO_PRIOR_RETURN = "instalment_no_prior_return"
+    BASE_ABSENT = "instalment_base_absent"
+
+    @property
+    def verdict(self) -> ApplicabilityVerdict:
+        """Return the filing verdict this outcome decides (Orden HFP/227/2017 art. 1.3)."""
+        if self in _INSTALMENT_APPLICABLE:
+            return ApplicabilityVerdict.APPLICABLE
+        if self in _INSTALMENT_NOT_APPLICABLE:
+            return ApplicabilityVerdict.NOT_APPLICABLE
+        return ApplicabilityVerdict.INCOMPLETE
+
+
+_INSTALMENT_APPLICABLE = frozenset(
+    {Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE, Modelo202InstalmentOutcome.BASE_POSITIVE}
+)
+_INSTALMENT_NOT_APPLICABLE = frozenset(
+    {
+        Modelo202InstalmentOutcome.ELECTED_CALCULATION_ZERO,
+        Modelo202InstalmentOutcome.BASE_NOT_POSITIVE,
+        Modelo202InstalmentOutcome.NO_PRIOR_RETURN,
+    }
+)
+
+
+class Modelo202BaseBasis(StrEnum):
+    """Which record supplied an instalment's art. 40.2 base; each names its served sentence."""
+
+    LOCAL_FILING = "local_filing"
+    AEAT_EVIDENCE = "aeat_evidence"
+    OPERATOR_ATTESTED = "operator_attested"
+
+
 class Modelo202ModalityVerdict(BaseModel):
     """The derived Modelo 202 modality verdict and its grounding."""
 
@@ -90,6 +136,9 @@ def _modelo_202_applicability_declarations(
         "reason.filing_depends_on_ingreso",
         "legal_refs.filing_mandatory",
         "legal_refs.filing_depends_on_ingreso",
+        *(f"reason.{outcome.value}" for outcome in Modelo202InstalmentOutcome),
+        *(f"legal_refs.{outcome.value}" for outcome in Modelo202InstalmentOutcome),
+        *(f"basis.{basis.value}" for basis in Modelo202BaseBasis),
     }
     missing = sorted(required - declarations.keys())
     if missing:
@@ -245,9 +294,11 @@ def modelo_202_filing_obligation(
     exceeds the art. 40.3 threshold. Below it, filing is owed only in a period
     that yields an ingreso, which depends on the art. 40.2 base (the last
     declared cuota íntegra less deductions, bonificaciones and retenciones) or
-    on an art. 40.3 option elected in the declaración censal. The profile
-    carries neither, so that case stays incomplete rather than applicable or
-    not applicable. Any verdict other than applicable passes through unchanged.
+    on an art. 40.3 option elected in the declaración censal. Both are facts of
+    one instalment, so this per-profile answer stays incomplete there; the
+    calendar decides each instalment through
+    :func:`modelo_202_instalment_applicability`. Any verdict other than
+    applicable passes through unchanged.
     """
     if entity_applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
         return entity_applicability
@@ -279,12 +330,42 @@ def modelo_202_filing_obligation(
     )
 
 
+def modelo_202_instalment_applicability(
+    entity_applicability: ModeloApplicability,
+    outcome: Modelo202InstalmentOutcome,
+    *,
+    basis: Modelo202BaseBasis | None,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> ModeloApplicability:
+    """Return one instalment's filing verdict with the catalogue's served reason for ``outcome``.
+
+    ``basis`` names the record that supplied the art. 40.2 base, and its served
+    sentence follows the reason so the operator sees where the figure came from.
+    """
+    authority = require_governed_fact_authority(authority, subject="Modelo 202 applicability")
+    declarations = _modelo_202_applicability_declarations(effective_date=effective_date, authority=authority)
+    reason = declarations[f"reason.{outcome.value}"]
+    if basis is not None:
+        reason = f"{reason} {declarations[f'basis.{basis.value}']}"
+    return ModeloApplicability(
+        modelo=entity_applicability.modelo,
+        verdict=outcome.verdict,
+        reason=reason,
+        legal_refs=_modelo_202_legal_refs(declarations, outcome.value),
+        provenance=entity_applicability.provenance,
+    )
+
+
 __all__ = [
+    "Modelo202BaseBasis",
+    "Modelo202InstalmentOutcome",
     "Modelo202Modality",
     "Modelo202ModalityVerdict",
     "derive_modelo_202_modality",
     "modelo_202_filing_obligation",
     "modelo_202_incn_threshold_decimal",
+    "modelo_202_instalment_applicability",
     "modelo_202_modality_from_inputs",
     "resolve_modelo_202_art_40_3_incn_threshold",
 ]
