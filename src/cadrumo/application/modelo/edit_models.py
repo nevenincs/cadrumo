@@ -31,6 +31,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
+from ...domain.calculations.registry.field_absence import absent_when_none
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.schema_base import CasillaDataTypeValue
 from ...domain.filing.schema import ModeloScalar
@@ -218,10 +219,15 @@ class ModeloEditBindingAddressV1(EditModel):
     ``BindingId``, never ``CasillaId`` -- most overridable bindings (a
     fichero-BOE record-field ``manual_input`` binding, most notably) have no
     casilla at all to address through.
+
+    ``row_identity`` names the row of a repeating group a statement of a carry
+    speaks of, for a binding whose registry family is stated row by row; every
+    other intent leaves it absent, and an absent one is left out of the dump.
     """
 
     kind: Literal["binding"] = "binding"
     binding_id: BindingId
+    row_identity: str | None = Field(default=None, min_length=1, max_length=256, exclude_if=absent_when_none)
 
 
 class ModeloEditCorrectionAddressV1(EditModel):
@@ -935,6 +941,8 @@ def _intent_address_key(
     if isinstance(address, ModeloEditScalarAddressV1):
         return ("scalar", address.casilla_id)
     if isinstance(address, ModeloEditBindingAddressV1):
+        if address.row_identity is not None:
+            return ("binding_row", f"{address.binding_id}:{address.row_identity}")
         return ("binding_override", address.binding_id)
     if isinstance(address, ModeloEditCorrectionAddressV1):
         return ("correction", address.casilla_id)

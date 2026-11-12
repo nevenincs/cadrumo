@@ -17,14 +17,19 @@ The family is authored on the binding row::
     absence_attestation = "renta_negative_general_bases_pending"
 
 It is a closed vocabulary hydrated at the loader boundary, so an unknown token
-fails registry load. The binding must read a decimal, from an earlier filing or
-from the filer's own entry.
+fails registry load. A scalar family's binding must read a decimal, from an
+earlier filing or from the filer's own entry. A row family's binding is a
+column of a repeating group whose carry the application reads from no earlier
+filing it holds, so each statement names the row it speaks of and may state an
+amount as well as an absence: the interest and repair expenses a let property
+still carries from the four previous ejercicios (Ley 35/2006 art. 23.1.a;
+RIRPF art. 13.a) are one.
 """
 
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import BeforeValidator
 
@@ -38,6 +43,18 @@ class AbsenceAttestationFamily(StrEnum):
     RENTA_NEGATIVE_GENERAL_BASES_PENDING = "renta_negative_general_bases_pending"
     #: The work income no payer certificate states: the employer contributions and the protected-estate contribution.
     RENTA_TRABAJO_INCOME_NOT_STATED = "renta_trabajo_income_not_stated"
+    #: The interest and repair expenses a let property carries from the four previous ejercicios
+    #: (Ley 35/2006 art. 23.1.a), stated per property row.
+    RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES = "renta_capital_inmobiliario_gastos_pendientes"
+
+    @property
+    def row_grain(self) -> bool:
+        """Whether each statement of this family names one row of a repeating group."""
+        return self in ROW_GRAIN_FAMILIES
+
+
+ROW_GRAIN_FAMILIES: Final = frozenset({AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES})
+"""The families stated per row, each statement naming the row's source identity."""
 
 
 AbsenceAttestationFamilyField = Annotated[
@@ -46,4 +63,4 @@ AbsenceAttestationFamilyField = Annotated[
 """Registry token hydrated into an :class:`AbsenceAttestationFamily` member."""
 
 
-__all__ = ["AbsenceAttestationFamily", "AbsenceAttestationFamilyField"]
+__all__ = ["ROW_GRAIN_FAMILIES", "AbsenceAttestationFamily", "AbsenceAttestationFamilyField"]

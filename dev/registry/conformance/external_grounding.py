@@ -5,10 +5,13 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Annotated, Literal
 
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.prose_elision import ElidedProse
+from cadrumo.domain.calculations.registry.binding_provider_registration import registration_for
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.period_selector_match import selector_token_for_request
+from cadrumo.domain.calculations.registry.renta_inmueble_bindings import renta_inmueble_columns
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
@@ -195,6 +198,24 @@ def select_revision_for_filing_year(
     return None
 
 
+def _row_produced_casilla_ids(revision: ModeloRevision) -> set[CasillaId]:
+    """The boxes a filing-grade property-row binding fills, one value per let property.
+
+    The ``renta_inmueble`` resolver computes each property's row from its
+    records, so the box a row column targets is engine-produced exactly as a
+    formula target is, although the casilla itself is a row field rather than
+    ``input_kind=computed``. A column whose binding caps its grade below filing
+    grade stays out.
+    """
+    if registration_for(BindingSourceKind.RENTA_INMUEBLE).disposition != "filing_grade":
+        return set()
+    return {
+        provider.target_casilla_id
+        for binding, provider in renta_inmueble_columns(revision)
+        if binding.grade_cap is None
+    }
+
+
 def _build_row(
     *,
     modelo_id: str,
@@ -205,6 +226,7 @@ def _build_row(
 ) -> RevisionExternalGroundingRow:
     """Build one revision's grounding row and both directions of its findings."""
     computed = {casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.COMPUTED}
+    computed |= _row_produced_casilla_ids(revision)
     reconciled: set[CasillaId] = set()
     declared: set[CasillaId] = set()
     for expectation in revision.verification_expectations:
@@ -229,7 +251,7 @@ def _build_row(
                     casilla_id=casilla_id,
                     detail=(
                         f"modelo {modelo_id} revision {revision.id}: oracle-grounded casilla {casilla_id} "
-                        "is not input_kind=computed"
+                        "is neither input_kind=computed nor filled by a filing-grade property-row binding"
                     ),
                 ),
             )

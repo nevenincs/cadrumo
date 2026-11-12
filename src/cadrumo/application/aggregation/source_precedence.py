@@ -73,6 +73,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
                 BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
                 BindingSourceKind.INVENTORY,
+                BindingSourceKind.RENTA_INMUEBLE,
                 BindingSourceKind.RETENCION_SOPORTADA,
             },
         ),

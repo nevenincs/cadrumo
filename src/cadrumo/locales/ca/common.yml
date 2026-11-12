@@ -6352,9 +6352,13 @@ sheets:
       accrual_year: Exercici de meritació
       acquisition_date: Data d'adquisició
       acquisition_value: Valor d'adquisició
+      adquisicion_lucrativa: Adquisició lucrativa
+      adquisicion_onerosa: Adquisició onerosa
+      amortizacion: Amortització
       amount: Import
       amount_donated: Import donat
       anualidades_alimentos: Anualitats per aliments
+      arrendado: Arrendament
       ascendants_75_plus_total: Ascendents ≥ 75 anys (total)
       ascendants_75_plus_whole: Ascendents ≥ 75 anys (sencers)
       ascendants_disabled_33_65_total: Ascendents amb discapacitat 33-65% (total)
@@ -6370,6 +6374,7 @@ sheets:
       asset_class_code: Clau del bé
       asset_identifier: Identificació del bé
       asset_ref: Referència interna del bé
+      base_amortizacion: Base d'amortització
       base_imponible: Base imposable
       base_imponible_assigned: Base imposable atribuïda
       base_retenciones: Base de retencions i ingressos a compte
@@ -6435,8 +6440,11 @@ sheets:
       descendants_rest_whole: Descendents restants (sencers)
       descendants_under_3_total: Descendents < 3 anys (total)
       descendants_under_3_whole: Descendents < 3 anys (sencers)
+      dias_arrendado: Dies arrendat
+      dias_arrendado_amortizacion: Dies arrendat per a l'amortització
       dias_arrendamiento: Dies d'arrendament de l'immoble
       dias_miembro: Nombre de dies com a membre
+      direccion: Adreça
       disability_clave: Discapacitat
       domicilio_fiscal: Domicili fiscal del membre
       donor_legal_name: Nom o raó social del donant
@@ -6444,8 +6452,11 @@ sheets:
       door: Porta
       element_type: Tipus d'element patrimonial
       emerging_stock_excess_clave: Excessos de lliurament d'accions d'empreses emergents
+      fecha_adquisicion: Data d'adquisició de l'immoble
+      fecha_contrato: Data del contracte
       fecha_devengo: Data de meritació
       fecha_inicio_prestamo: Data d'inici del préstec
+      fecha_transmision: Data de transmissió de l'immoble
       fecha_vencimiento_prestamo: Data de venciment del préstec
       financial_asset_acquisition_value: Valor d’adquisició de l’actiu financer
       financial_asset_disposal_value: Valor de transmissió de l’actiu financer
@@ -6461,10 +6472,27 @@ sheets:
       gain: Guany patrimonial
       gain_difference: Guany per la transmissió
       garantias: Garanties
+      gasto_comunidad: Despeses de comunitat
+      gasto_defensa_juridica: Despeses de defensa jurídica
+      gasto_formalizacion_contrato: Despeses de formalització del contracte
+      gasto_interes_financiacion: Interessos i altres despeses de finançament
+      gasto_otros: Altres despeses fiscalment deduïbles
+      gasto_primas_seguro: Primes de contractes d'assegurança
+      gasto_reparacion_conservacion: Despeses de reparació i conservació
+      gasto_saldos_dudoso_cobro: Saldos de cobrament dubtós
+      gasto_servicios_terceros: Serveis personals de tercers
+      gasto_suministros: Serveis i subministraments
+      gasto_tributos: Tributs, recàrrecs i taxes
+      gastos_adquisicion: Despeses i tributs d'adquisició
       gastos_deducibles: Despeses deduïbles
+      gastos_pendientes_anteriores: Interessos i despeses de reparació i conservació
+        pendents dels quatre exercicis anteriors
+      gastos_pendientes_aplicados: Import pendent d'exercicis anteriors aplicat en
+        aquest exercici
       geographic_mobility_clave: Mobilitat geogràfica
       house_number: Número de casa
       housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual
+      importe_adquisicion: Import d'adquisició
       importe_gastos: Import de despeses
       importe_q1: Import 1T
       importe_q2: Import 2T
@@ -6480,11 +6508,26 @@ sheets:
       incapacity_kind_value: Valoració en espècie derivada d'incapacitat laboral
       ingreso_a_cuenta: Ingrés a compte
       ingreso_a_cuenta_repercutido: Ingressos a compte repercutits
+      ingresos_integros: Ingressos íntegres computables
+      inquilino_1_nif: NIF de l'arrendatari 1
+      inquilino_1_nif_extranjero: NIF de l'arrendatari 1 d'un altre país
+      inquilino_2_nif: NIF de l'arrendatari 2
+      inquilino_2_nif_extranjero: NIF de l'arrendatari 2 d'un altre país
+      inquilino_3_nif: NIF de l'arrendatari 3
+      inquilino_3_nif_extranjero: NIF de l'arrendatari 3 d'un altre país
+      intereses_reparacion_aplicados: Interessos i despeses de reparació i conservació
+        de l'exercici aplicats
+      intereses_reparacion_pendientes: Interessos i despeses de reparació i conservació
+        de l'exercici pendents
+      intereses_reparacion_pendientes_futuros: Interessos i despeses de reparació
+        i conservació pendents per als quatre exercicis següents
       is_recurrent: Donatiu recurrent
       isin_code: Codi ISIN
       locality: Localitat
       loss: Pèrdua patrimonial
       loss_difference: Pèrdua per la transmissió
+      mejoras_anteriores: Millores fetes en exercicis anteriors
+      mejoras_ejercicio: Millores fetes en l'exercici
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
@@ -6526,6 +6569,8 @@ sheets:
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepcions dineràries
       percibido_especie: Percepcions en espècie
+      porcentaje_construccion: Percentatge del valor cadastral corresponent a la construcció
+      porcentaje_propiedad: Propietat (%)
       porcentaje_retencion: '% Retenció'
       porcentaje_titularidad_inmueble: Percentatge de titularitat de l'immoble
       portal: Portal
@@ -6538,21 +6583,27 @@ sheets:
       rectified_period: Període rectificat
       rectified_year: Exercici rectificat
       reduccion: Reducció aplicable al rendiment
+      reduccion_aplicable: Reducció aplicable
       reducciones: Reduccions
       reducciones_aplicables: Reduccions aplicables
       referencia_catastral: Referència cadastral
       refund_amount: Import a retornar
+      rendimiento_neto: Rendiment net
       rendimiento_neto_minorado_agricola_eo: Rendiment net minorat agrícola (estimació
         objectiva)
       rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
+      rendimiento_neto_reducido: Rendiment net reduït
       representative_nif: NIF del representant
       representative_tax_id: NIF del representant legal
       residence_country_code: Codi del país de residència
       retencion_amount: Import de la retenció
       retencion_practicada: Retenció practicada
+      retenciones: Retencions
       reverse_charge_mark: Inversió del subjecte passiu
+      rustica: Rústica
       second_child_compute: Còmput del 2n fill
       share_percentage: Percentatge de participació
+      situacion: Situació (clau)
       situacion_inmueble: Situació de l'immoble
       situation: Situació de l'immoble
       spouse_or_unit_titular_tax_id: NIF del cònjuge o del titular de la unitat de
@@ -6573,6 +6624,9 @@ sheets:
       transmission_date: Data de transmissió
       transmission_value: Valor de transmissió
       unit_convivencia_titular_clave: Titular de la unitat de convivència
+      urbana: Urbana
+      valor_catastral: Valor cadastral
+      valor_catastral_construccion: Valor cadastral de la construcció
       valuation_amount: Valoració
       valuation_event: Esdeveniment de valoració
       valuation_event_date: Data de l'esdeveniment de valoració

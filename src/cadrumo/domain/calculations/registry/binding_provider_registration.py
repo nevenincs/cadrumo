@@ -113,6 +113,7 @@ from .prorrata_register_activity_bindings import (
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider, validate_prorrata_regularizacion_binding
 from .relation_prefill_bindings import RelationPrefillProvider, validate_relation_prefill_binding
 from .relations import validate_relation_prefill_fold_arity
+from .renta_inmueble_bindings import RentaInmuebleProvider, validate_renta_inmueble_binding
 from .retencion_soportada_bindings import RetencionSoportadaProvider, validate_retencion_soportada_binding
 from .retenciones_bindings import RetencionesAggregationProvider, validate_retenciones_aggregation_binding
 from .withholding296_bindings import Withholding296Provider, validate_withholding296_binding_selector_shape
@@ -593,6 +594,20 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         origins=frozenset({TerminalOriginClass.LEDGER_AGGREGATE}),
         output="scalar_and_rows",
         resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.RENTA_INMUEBLE,
+        RentaInmuebleProvider,
+        validate_renta_inmueble_binding,
+        # A property's identification comes from its profile row and its rent and
+        # expenses from the ledger rows linked to it, so both terminal classes occur.
+        # The results boxes the rows account for are the totals of their columns.
+        channels=_MONEY_CHANNELS | _ROW_CHANNELS,
+        ops=LEDGER_AGGREGATION_OPS | _ROW_OPS,
+        origins=frozenset({TerminalOriginClass.PROFILE_FIELD, TerminalOriginClass.LEDGER_AGGREGATE}),
+        output="scalar_and_rows",
+        resolver_id="renta_inmueble",
         stage="mesh",
     ),
     _ledger_aggregation(

@@ -2120,6 +2120,91 @@ application:
         and the ledger entries they name declare a base of {base}.'
       register_row_missing: '{elements}: these assets name {count} ledger entries
         that no longer exist.'
+      renta_inmueble_accessory_property: 'Property {record}: it is an accessory property
+        let with its principal one, which the calculation does not offer.'
+      renta_inmueble_acquisition_cost_unstated: 'Property {record}: it does not state
+        its acquisition amount and expenses, so its building amortisation is not calculated.'
+      renta_inmueble_acquisition_date_unstated: 'Property {record}: it does not say
+        when it was acquired, so the days it was held are unknown.'
+      renta_inmueble_boxes_not_offered: 'Property {record}: furniture amortisation,
+        the art. 23.3 reduction and special amortisation are not offered; enter them
+        by hand where they apply.'
+      renta_inmueble_cadastral_values_unstated: 'Property {record}: it states neither
+        its land value nor this year''s cadastral values, so the land cannot be taken
+        out of its amortisation base.'
+      renta_inmueble_concept_undeclared: A ledger entry states an expense concept
+        this year's list does not include.
+      renta_inmueble_concurrent_leases: 'Property {record}: two of its leases share
+        a day.'
+      renta_inmueble_cumulative_amortisation_unstated: 'Property {record}: its amortisation
+        may reach its acquisition value, and the amortisation accumulated at the start
+        of the year is not stated.'
+      renta_inmueble_currency_unconverted: A linked ledger entry is in a foreign currency
+        and has no euro value.
+      renta_inmueble_days_not_let: 'Property {record}: you held it on days it was
+        not let, and the imputed income of those days is not calculated.'
+      renta_inmueble_expense_row_on_lease: An outgoing ledger entry is linked to a
+        lease; link an expense to its property.
+      renta_inmueble_expense_row_without_concept: A ledger entry linked to a property
+        does not state its expense concept.
+      renta_inmueble_held_part_of_ejercicio: 'Property {record}: it was acquired or
+        transferred during the year, and the proration of its expenses is not offered.'
+      renta_inmueble_improvement_in_ejercicio: 'Property {record}: an improvement
+        is dated inside the year, and its amortisation days are not calculated.'
+      renta_inmueble_income_outside_lease: A rent entry is dated outside the period
+        of the lease it is linked to.
+      renta_inmueble_income_row_on_property: An incoming ledger entry is linked to
+        a property; link rent to its lease.
+      renta_inmueble_lease_names_no_property: 'Lease {record}: it names a property
+        your profile does not hold.'
+      renta_inmueble_lease_without_income: 'Lease {record}: it is active this year
+        and has no rent entry linked to it.'
+      renta_inmueble_naturaleza_unstated: 'Property {record}: it does not say whether
+        it is urban or rustic.'
+      renta_inmueble_pending_expenses_held_return_unstated: 'Property {record}: the
+        return of the previous year is held here, but nothing matches the interest
+        and repair expenses it left pending to this property. State them for this
+        property with app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_origin_unsplit: 'Property {record}: interest
+        and repair expenses are pending on it, and the annex that splits them by the
+        year they arose in cannot be filed yet. Review its pending amount with app
+        modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_unstated: 'Property {record}: the interest and
+        repair expenses of earlier years still pending are not stated, and no earlier
+        return held here states them.'
+      renta_inmueble_property_abroad_let: 'Property {record}: it is abroad and let,
+        and its treatment as foreign income is not offered.'
+      renta_inmueble_record_unreadable: A property or lease record of your profile
+        cannot be read, so no let property is calculated.
+      renta_inmueble_reduction_fact_unstated: 'Property {record}: a lease does not
+        say whether it is for a dwelling, whether the dwelling is in a tensioned zone
+        or whether it keeps art. 17.6 LAU, so the art. 23.2 reduction is not calculated.'
+      renta_inmueble_reduction_tenants_mixed: 'Property {record}: only some tenants
+        of a lease qualify by age for the art. 23.2 reduction, which is not calculated.'
+      renta_inmueble_regime_not_pleno_dominio: 'Property {record}: you hold it in
+        a right other than full ownership (pleno dominio), which the calculation does
+        not offer.'
+      renta_inmueble_relative_fact_unstated: 'Lease {record}: it does not say whether
+        the tenant is a relative under art. 24 LIRPF.'
+      renta_inmueble_relative_tenant: 'Lease {record}: the tenant is a relative under
+        art. 24 LIRPF, and the minimum yield is not calculated.'
+      renta_inmueble_row_names_no_lease: A ledger entry is linked to a lease your
+        profile does not hold.
+      renta_inmueble_row_names_no_property: A ledger entry is linked to a property
+        your profile does not hold.
+      renta_inmueble_several_leases: 'Property {record}: it has more than one lease
+        this year, and the return cannot yet carry each contract.'
+      renta_inmueble_tenants_beyond_numbered: 'Lease {record}: it states more tenants
+        than the numbered tenant boxes hold.'
+      renta_inmueble_titular_not_declarant: 'Property {record}: it belongs to a member
+        of your family unit other than you.'
+      renta_inmueble_titularidad_unstated: 'Property {record}: it does not say who
+        holds it and in what right.'
+      renta_inmueble_withholding_payer_no_tenant: A withholding on urban rent names
+        a payer who is not a tenant of any lease this year.
+      renta_inmueble_withholding_payer_several_properties: A withholding on urban
+        rent names a payer who rents more than one of your properties, so the property
+        it belongs to is unknown.
       residence_period_unknown: No tax residence is recorded for {date}, so your assets
         count as if Modelos 100 and 130 apply.
       retencion_soportada_absence_contradicted: 'Income class {income_class}: there
@@ -2888,6 +2973,11 @@ application:
         from earlier years left to state as not pending: each one already holds a
         value or your statement, or the declaration carries none. Nothing was changed.'
       prior_carries_unstated:
+        renta_capital_inmobiliario_gastos_pendientes: 'Modelo %{modelo} for %{filing_year}
+          cannot be calculated: it is not known whether interest and repair costs
+          from earlier years are still pending on a let property (box %{boxes}). Store
+          the previous year''s return, or state it on that property''s row with %{command},
+          naming the row. Nothing was saved.'
         renta_negative_general_bases_pending: 'Modelo %{modelo} for %{filing_year}
           cannot be calculated: it is not known whether negative general taxable bases
           from earlier years are still pending offset (boxes %{boxes}). Store the
@@ -3270,6 +3360,14 @@ application:
         cannot be checked for filing or exported as a file for AEAT.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
+      renta_inmueble_rows_drift: 'The let properties behind this %{modelo} calculation
+        changed since it was calculated: their property, lease, linked ledger or withholding
+        records moved (%{rows_recorded} properties recorded, %{rows_current} now,
+        %{rows_changed} changed). Recalculate before relying on it.'
+      renta_inmueble_rows_unavailable: The property, lease, ledger or withholding
+        records behind the let properties of this %{modelo} calculation could not
+        be read, so whether they changed is unknown. Try again when they can be read,
+        then recalculate.
       required_maximum_unresolved: Box [%{box}] cannot be checked yet, because the
         largest amount the law requires it to apply this year is not known. Some of
         the figures that amount depends on are missing.

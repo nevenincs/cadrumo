@@ -65,7 +65,11 @@ from ..aggregation.invoice_iva_source import (
     invoices_missing_source_document,
     issued_invoices_missing_source_document,
 )
-from ..aggregation.ledger_membership import LedgerMembershipPorts, query_ledger_membership
+from ..aggregation.ledger_membership import (
+    LedgerMembershipPorts,
+    observe_renta_inmueble_rows,
+    query_ledger_membership,
+)
 from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
 )
@@ -79,7 +83,11 @@ from .imputation_filings import imputation_filings_from_repositories
 from .invoice_drift_gate import invoice_drift_findings
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
-from .ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
+from .ledger_drift_gate import (
+    ledger_drift_findings,
+    renta_inmueble_drift_finding,
+    undetermined_mixed_use_contributor_finding,
+)
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 from .verification_cross_period import (
     CrossPeriodDoor,
@@ -635,8 +643,17 @@ def _ledger_snapshot_findings(
         operation=operation,
         source_refs=optional_observation_refs(target.observations, "source_refs"),
     )
+    renta_inmueble_drift = _renta_inmueble_drift_findings(
+        target=target,
+        work_unit=work_unit,
+        operation=operation,
+        work_profile=work_profile,
+        ledger_membership_ports=ledger_membership_ports,
+        failures_by_finding_id=failures_by_finding_id,
+    )
     return [
         *drift_findings,
+        *renta_inmueble_drift,
         *(() if undetermined_mixed_use is None else (undetermined_mixed_use,)),
         *invoice_drift_findings(
             target=target,
@@ -692,6 +709,52 @@ def _ledger_snapshot_findings(
             ),
         ),
     ]
+
+
+def _renta_inmueble_drift_findings(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile,
+    ledger_membership_ports: LedgerMembershipPorts,
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> tuple[ModeloVerificationFinding, ...]:
+    """Compare each let property's recorded rows with the rows its records now resolve to."""
+    revision = operation.revision(work_unit.modelo, work_unit.revision_id)
+    if not any(binding.source is BindingSourceKind.RENTA_INMUEBLE for binding in revision.bindings):
+        return ()
+    current = observe_renta_inmueble_rows(
+        target=target,
+        work_unit=work_unit,
+        revision=revision,
+        profile=work_profile,
+        ports=ledger_membership_ports,
+        operation=operation,
+    )
+    finding = renta_inmueble_drift_finding(
+        target=target,
+        work_unit=work_unit,
+        current=current,
+        source_refs=optional_observation_refs(target.observations, "source_refs"),
+    )
+    if finding is None:
+        return ()
+    scenario = "drift_detected" if current is not None else "unavailable"
+    scenario_id = f"modelo.work.verify.renta_inmueble_rows.{scenario}"
+    failures_by_finding_id[id(finding)] = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.verify",
+        scenario_id=scenario_id,
+        evidence_id="modelo.work.verify.renta_inmueble_rows",
+        evidence_values={
+            "calculation_revision_id": target.calculation_revision_id,
+            "work_unit_id": target.work_unit_id,
+            "rows_available": current is not None,
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values={"work_unit_id": target.work_unit_id} if current is not None else None,
+    )
+    return (finding,)
 
 
 def collect_verification_gate_findings(

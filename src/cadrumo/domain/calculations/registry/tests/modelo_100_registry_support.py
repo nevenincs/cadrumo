@@ -36,6 +36,12 @@ unrelated chain states these as neutral zeros together with the path below."""
 M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS: Final = MappingProxyType({"renta-maritime-path-rebeca": False})
 """The REBECA path flag of a filer with no maritime work."""
 
+M100_NO_LET_PROPERTY_BINDINGS: Final = MappingProxyType({"renta-inmueble-total-rendimiento-neto-0149": Decimal(0)})
+"""The let properties' net-yield total of a filer with no let property: the source sums no rows.
+
+The art. 20 LIRPF other-income limit reads this total in every edition that computes the
+reduction, so a scenario of an unrelated chain states it as a neutral zero."""
+
 
 def neutral_binding_values(
     bindings: Iterable[BindingDefinition],

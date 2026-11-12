@@ -94,6 +94,8 @@ class LayoutWalker:
             for item in layout.placements
         }
         self.seen: set[str] = set()
+        # Boxes met only as a repeating group's column: their own field may still follow on a later section.
+        self.columned: set[str] = set()
         self.positions: dict[str, set[tuple[str, str]]] = {}
         self.section_position: tuple[str, str] = ("", "")
 
@@ -263,6 +265,9 @@ class LayoutWalker:
         return project_binding_field(binding_id, self.context).value
 
     def _field_block(self, block: FormFieldBlock) -> ModeloFormBlock:
+        if block.casilla_id is not None and block.casilla_id in self.columned:
+            self.columned.discard(block.casilla_id)
+            self.seen.discard(block.casilla_id)
         if block.casilla_id is not None and block.casilla_id in self.seen:
             return self.alias(block)
         field = (
@@ -373,6 +378,7 @@ class LayoutWalker:
                 placement = self.placements.get(casilla_id)
                 if placement is not None and placement.kind is FormPlacementKind.ON_FORM:
                     self.seen.add(casilla_id)
+                    self.columned.add(casilla_id)
 
     def _column_data_types(self, column_casillas: tuple[str | None, ...]) -> tuple[str, ...]:
         return tuple(

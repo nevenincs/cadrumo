@@ -38,6 +38,8 @@ docs:
       prorrata_regularizacion: from your prorrata regularisation
       purchase_invoice_evidence: from the supporting documents of your received invoices
       relation_prefill: from a related modelo's result
+      renta_inmueble: from your let properties, their leases and the ledger rows linked
+        to them
       retencion_soportada: from the withholding your payers' certificates report
       retenciones_aggregation: from the withholdings you recorded
       withholding: from the withholdings you recorded

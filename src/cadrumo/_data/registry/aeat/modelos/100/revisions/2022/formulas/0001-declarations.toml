@@ -1130,47 +1130,6 @@ required_text = [
     "gasto efectivo no subvencionado",
     "se calculará proporcionalmente al número de meses",
 ]
-# The reduction's regime and tier are derived from the lease facts and the dated
-# regime fact, never entered: the legacy 60 per cent for a devengo before the
-# regime start or a contract before the cut-off, otherwise the 90, 70, 60 or 50
-# per cent tier. A lease the reduction does not reach (not a dwelling, or in
-# breach of art. 17.6 LAU) is derived as not applicable and reduces nothing.
-[[revisions."2022".formulas]]
-id = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"
-target_casilla_id = "0150"
-expression = { op = "if_then_else", args = [
-    { op = "greater_than", args = [
-        { op = "multiply", args = [{ casilla_id = "0100" }, { casilla_id = "0149" }] },
-        { literal = "0" },
-    ] },
-    { op = "if_then_else", args = [
-        { binding = "renta-rental-reduccion-art-23-2-aplicable" },
-        { op = "multiply", args = [
-            { casilla_id = "0149" },
-            { op = "lookup_parameter_by_entity_type", args = [
-                { literal = "0" },
-                { binding = "renta-rental-reduccion-art-23-2-tier" },
-                { dispatch_table_entries = [
-                    { key = "legacy-60", parameter = "renta-rental-reduccion-rate-legacy" },
-                    { key = "tier-50", parameter = "renta-rental-reduccion-rate-tier-50" },
-                    { key = "tier-60", parameter = "renta-rental-reduccion-rate-tier-60" },
-                    { key = "tier-70", parameter = "renta-rental-reduccion-rate-tier-70" },
-                    { key = "tier-90", parameter = "renta-rental-reduccion-rate-tier-90" },
-                ] },
-            ] },
-        ] },
-        { literal = "0" },
-    ] },
-    { literal = "0" },
-] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-23-2021"]
-source_refs = ["aeat-renta-2022-manual-parte1"]
-
-[[revisions."2022".formulas.source_citations]]
-source_ref = "aeat-renta-2022-manual-parte1"
-required_text = ["rendimiento neto positivo", "se reducirá en un 60 por 100"]
-
 [[revisions."2022".formulas]]
 id = "renta-maritime-exempt-income"
 target_casilla_id = "trabajo-mar-renta-exenta"
@@ -1232,9 +1191,9 @@ source_ref = "lirpf-cuota-chain-authority"
 required_text = ["siempre que no tengan rentas, excluidas las exentas, distintas de las del trabajo superiores a 6.500 euros", "el saldo resultante no podrá ser negativo"]
 
 # The other rentas, read from the boxes the bases themselves read: the net capital mobiliario of
-# both bases and the net capital inmobiliario with its imputed income, each before its reduction;
-# the net estimacion directa activity income before art. 32; the imputaciones of transparencia
-# fiscal, AIE and IIC in tax havens (the image-rights sum, box 0275, is outside the calculation
+# both bases and the let properties' net yield, totalled over their rows, with the imputed real
+# estate income, each before its reduction; the net estimacion directa activity income before
+# art. 32; the imputaciones of transparencia fiscal, AIE and IIC in tax havens (the image-rights sum, box 0275, is outside the calculation
 # completeness manifest, so it is not an operand); and the capital gains less losses of both
 # bases without compensation between them. A family the profile's stated categories exclude is a
 # proven zero; figures held for it anyway contradict the profile, so the sum stays unresolved.
@@ -1254,11 +1213,11 @@ expression = { op = "sum", args = [
     { op = "if_then_else", args = [
         { op = "equal", args = [{ binding = "renta-profile-income-family-excluded-capital-inmobiliario" }, { literal = "1" }] },
         { op = "if_then_else", args = [
-            { op = "equal", args = [{ op = "sum", args = [{ casilla_id = "0149" }, { casilla_id = "0155" }] }, { literal = "0" }] },
+            { op = "equal", args = [{ op = "sum", args = [{ binding = "renta-inmueble-total-rendimiento-neto-0149" }, { casilla_id = "0155" }] }, { literal = "0" }] },
             { literal = "0" },
             { op = "unresolved_outcome", args = [{ text_literal = "income-family-contradicts-profile" }] },
         ] },
-        { op = "sum", args = [{ casilla_id = "0149" }, { casilla_id = "0155" }] },
+        { op = "sum", args = [{ binding = "renta-inmueble-total-rendimiento-neto-0149" }, { casilla_id = "0155" }] },
     ] },
     { casilla_id = "0224" },
     { op = "if_then_else", args = [

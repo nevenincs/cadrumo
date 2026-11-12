@@ -165,6 +165,7 @@
         "dev.acceptance.persona_table.provenance",
         "dev.acceptance.persona_table.render",
         "dev.acceptance.persona_table.roles",
+        "dev.acceptance.persona_table.row_figures",
         "dev.acceptance.persona_table.rows",
         "dev.acceptance.persona_table.sweep",
         "dev.acceptance.persona_table.unchecked",

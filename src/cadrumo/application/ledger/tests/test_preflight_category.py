@@ -69,6 +69,60 @@ def test_preflight_still_flags_missing_category_on_expense_transaction(
     assert LedgerPreflightIssueReason.MISSING_CATEGORY in {issue.reason for issue in report.issues}
 
 
+def test_preflight_does_not_flag_missing_category_on_rental_expense_linked_to_a_property_with_a_concept(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A rental expense is routed by its property and concept, so it takes no deductible-expense category."""
+    rental_expense = preflight_transaction(
+        "row-rental-expense",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("135.00"),
+        category_id=None,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+        irpf_category="capital_inmobiliario",
+        inmueble_ref="0",
+        gasto_capital_inmobiliario="comunidad",
+    )
+
+    report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
+        transactions=TransactionCatalogue.from_transactions((rental_expense,)),
+        operation=operation,
+    )
+
+    assert LedgerPreflightIssueReason.MISSING_CATEGORY not in {issue.reason for issue in report.issues}
+
+
+def test_preflight_flags_missing_category_on_an_expense_linked_to_a_property_without_a_concept(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A property link without the expense concept routes nowhere, so the category is still required."""
+    unrouted = preflight_transaction(
+        "row-unrouted",
+        direction=TransactionDirection.OUTGOING,
+        category_id=None,
+        inmueble_ref="0",
+    )
+
+    report = preflight_transaction_catalogue(
+        invoices=(),
+        movement_reader=HeldTransactionCatalogue(TransactionCatalogue.from_transactions(())),
+        cash_accounting_enrolled=False,
+        bucket_id=BUCKET_ID,
+        period=Q2_2026,
+        transactions=TransactionCatalogue.from_transactions((unrouted,)),
+        operation=operation,
+    )
+
+    assert LedgerPreflightIssueReason.MISSING_CATEGORY in {issue.reason for issue in report.issues}
+
+
 def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidence(
     operation: PinnedAuthorityOperation,
 ) -> None:

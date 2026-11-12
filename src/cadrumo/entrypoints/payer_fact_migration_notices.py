@@ -140,16 +140,16 @@ def payer_fact_gated_modelos(path: str, *, operation: PinnedAuthorityOperation) 
 
 
 def _modelo_reads_rental_reduction(modelo: str, *, operation: PinnedAuthorityOperation) -> bool:
-    """Return whether any edition of ``modelo`` binds the profile's derived rental-reduction facts."""
-    from ..application.modelo.profile_rental_reduction import RENTAL_REDUCTION_TIER_PATH
-    from ..domain.user_profile.registry_contract import profile_binding_selectors
+    """Return whether any edition of ``modelo`` declares the let-property reduction column the lease facts feed."""
+    from ..application.aggregation.renta_inmueble_source import RentaInmuebleRowField
+    from ..domain.calculations.registry.renta_inmueble_bindings import renta_inmueble_columns
 
     if modelo not in operation.modelo_ids():
         return False
     return any(
-        RENTAL_REDUCTION_TIER_PATH in profile_binding_selectors(binding.provider)
+        provider.row_field == RentaInmuebleRowField.REDUCCION.value
         for edition in operation.modelo_directory(modelo).revisions
-        for binding in operation.revision(modelo, edition.id).bindings
+        for _binding, provider in renta_inmueble_columns(operation.revision(modelo, edition.id))
     )
 
 

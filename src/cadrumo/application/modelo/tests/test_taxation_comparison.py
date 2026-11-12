@@ -42,6 +42,7 @@ from ....domain.calculations.registry.tests.authored_editions import (
     newest_authored_edition,
     revision_covering,
 )
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..taxation_comparison import (
     TaxationComparisonBasis,
@@ -137,6 +138,7 @@ _BASE_BINDINGS = {
     "renta-profile-has-economic-activity": Decimal("0"),
     "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
     "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+    **M100_NO_LET_PROPERTY_BINDINGS,
     "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
     # declaration_type is intentionally absent: each mode's run supplies it.
     "renta-profile-family-minor-children-in-unit": Decimal("0"),

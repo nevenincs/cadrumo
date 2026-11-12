@@ -1236,31 +1236,670 @@ source_refs = ["boe-lirpf-statutory-facts", "aeat-renta-2022-manual-parte1"]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["días que efectivamente el trabajador ha estado"]
 
-# Derived from the lease the profile holds for the ejercicio: whether the art. 23.2
-# reduction reaches it, and the regime or tier that sets its rate.
+# Each property held in the ejercicio states its own Inmueble occurrence: the design repeats
+# Inmueble once per property, and every casilla of the group occurs once per occurrence. The
+# property and its lease come from the profile, the rent and the expenses from the ledger rows
+# linked to them; the box of each expense concept is the one the concept vocabulary gives it.
 [[revisions."2022".bindings]]
-id = "renta-rental-reduccion-art-23-2-aplicable"
-provider = { kind = "profile", profile_key = "renta_capital_inmobiliario.reduccion_art_23_2_aplicable" }
-value = { data_type = "boolean", channel = "boolean" }
-aggregation = { op = "copy" }
-legal_refs = ["ley-35-2006:art-23-2021"]
-source_refs = ["lirpf-cuota-chain-authority"]
+id = "renta-inmueble-porcentaje-propiedad-0063"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "porcentaje_propiedad", target_casilla_id = "0063" }
+value = { data_type = "decimal", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".bindings.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["arrendamiento de bienes inmuebles destinados a vivienda", "en su redacción vigente a 31 de diciembre de 2021"]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["porcentaje de titularidad"]
 
 [[revisions."2022".bindings]]
-id = "renta-rental-reduccion-art-23-2-tier"
-provider = { kind = "profile", profile_key = "renta_capital_inmobiliario.reduccion_art_23_2_tier" }
-value = { data_type = "enum", channel = "enum" }
-aggregation = { op = "copy" }
-legal_refs = ["ley-35-2006:art-23-2021"]
-source_refs = ["lirpf-cuota-chain-authority"]
+id = "renta-inmueble-situacion-0065"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "situacion", target_casilla_id = "0065" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".bindings.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["arrendamiento de bienes inmuebles destinados a vivienda", "en su redacción vigente a 31 de diciembre de 2021"]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["referencia catastral"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-referencia-catastral-0066"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "referencia_catastral", target_casilla_id = "0066" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["referencia catastral"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-urbana-0067"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "urbana", target_casilla_id = "0067" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimientos del capital inmobiliario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-rustica-0068"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "rustica", target_casilla_id = "0068" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimientos del capital inmobiliario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-direccion-0069"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "direccion", target_casilla_id = "0069" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimientos del capital inmobiliario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-arrendado-0075"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "arrendado", target_casilla_id = "0075" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimientos del capital inmobiliario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-inquilino-1-nif-0091"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "inquilino_1_nif", target_casilla_id = "0091" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["NIF del arrendatario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-inquilino-1-nif-extranjero-0092"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "inquilino_1_nif_extranjero", target_casilla_id = "0092" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["NIF del arrendatario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-fecha-contrato-0093"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "fecha_contrato", target_casilla_id = "0093" }
+value = { data_type = "date", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["NIF del arrendatario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-inquilino-2-nif-0094"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "inquilino_2_nif", target_casilla_id = "0094" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["NIF del arrendatario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-inquilino-2-nif-extranjero-0095"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "inquilino_2_nif_extranjero", target_casilla_id = "0095" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["NIF del arrendatario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-inquilino-3-nif-0097"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "inquilino_3_nif", target_casilla_id = "0097" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["NIF del arrendatario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-inquilino-3-nif-extranjero-0098"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "inquilino_3_nif_extranjero", target_casilla_id = "0098" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["NIF del arrendatario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-dias-arrendado-0101"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "dias_arrendado", target_casilla_id = "0101" }
+value = { data_type = "integer", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-ingresos-integros-0102"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "ingresos_integros", target_casilla_id = "0102" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ingresos íntegros computables"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-interes-financiacion-0105"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_interes_financiacion", target_casilla_id = "0105" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-reparacion-conservacion-0106"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_reparacion_conservacion", target_casilla_id = "0106" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-comunidad-0109"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_comunidad", target_casilla_id = "0109" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-formalizacion-contrato-0110"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_formalizacion_contrato", target_casilla_id = "0110" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-defensa-juridica-0111"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_defensa_juridica", target_casilla_id = "0111" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-servicios-terceros-0112"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_servicios_terceros", target_casilla_id = "0112" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-suministros-0113"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_suministros", target_casilla_id = "0113" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-primas-seguro-0114"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_primas_seguro", target_casilla_id = "0114" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-tributos-0115"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_tributos", target_casilla_id = "0115" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-saldos-dudoso-cobro-0116"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_saldos_dudoso_cobro", target_casilla_id = "0116" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gasto-otros-0148"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gasto_otros", target_casilla_id = "0148" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos deducibles", "proporcional al número de días"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-adquisicion-onerosa-0118"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "adquisicion_onerosa", target_casilla_id = "0118" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimientos del capital inmobiliario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-adquisicion-lucrativa-0119"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "adquisicion_lucrativa", target_casilla_id = "0119" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimientos del capital inmobiliario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-fecha-adquisicion-0120"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "fecha_adquisicion", target_casilla_id = "0120" }
+value = { data_type = "date", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimientos del capital inmobiliario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-fecha-transmision-0121"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "fecha_transmision", target_casilla_id = "0121" }
+value = { data_type = "date", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimientos del capital inmobiliario"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-dias-arrendado-amortizacion-0122"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "dias_arrendado_amortizacion", target_casilla_id = "0122" }
+value = { data_type = "integer", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["proporcional al número de días"]
+
+# The chain from a let property's gross income to its reduced net yield: the interest-and-repair
+# limit, the building amortisation, the net yield, the art. 23.2 reduction per contract and the
+# withholding its tenants suffered on it, each on the property's own occurrence.
+[[revisions."2022".bindings]]
+id = "renta-inmueble-reduccion-aplicable-0100"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "reduccion_aplicable", target_casilla_id = "0100" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23-2021"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Reducción por arrendamiento"]
+
+# 0103 is what the property still carries from the four previous ejercicios. No earlier
+# return the application holds states it, so the filer states it per property: nothing
+# pending, or the amount; until then the box stays open.
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gastos-pendientes-anteriores-0103"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_anteriores", target_casilla_id = "0103" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+absence_attestation = "renta_capital_inmobiliario_gastos_pendientes"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendientes de deducir"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gastos-pendientes-aplicados-0104"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_aplicados", target_casilla_id = "0104" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendientes de deducir"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-intereses-reparacion-aplicados-0107"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "intereses_reparacion_aplicados", target_casilla_id = "0107" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendientes de deducir"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-intereses-reparacion-pendientes-0108"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "intereses_reparacion_pendientes", target_casilla_id = "0108" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendientes de deducir", "ejercicios siguientes"]
+
+# Anexo C.1 carries the ejercicio's own excess forward per property: 1224 restates the row's 0108.
+[[revisions."2022".bindings]]
+id = "renta-inmueble-intereses-reparacion-pendientes-futuros-1224"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "intereses_reparacion_pendientes_futuros", target_casilla_id = "1224" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendientes de deducir", "ejercicios siguientes"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-valor-catastral-0123"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "valor_catastral", target_casilla_id = "0123" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["rd-439-2007:art-14"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["valor catastral"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-valor-catastral-construccion-0124"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "valor_catastral_construccion", target_casilla_id = "0124" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["rd-439-2007:art-14"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["valor catastral", "construcción"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-porcentaje-construccion-0125"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "porcentaje_construccion", target_casilla_id = "0125" }
+value = { data_type = "decimal", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["rd-439-2007:art-14"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["valor catastral", "construcción"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-importe-adquisicion-0126"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "importe_adquisicion", target_casilla_id = "0126" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["rd-439-2007:art-14"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Importe de adquisición"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-gastos-adquisicion-0127"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_adquisicion", target_casilla_id = "0127" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["rd-439-2007:art-14"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Gastos y tributos inherentes"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-mejoras-anteriores-0128"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "mejoras_anteriores", target_casilla_id = "0128" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["rd-439-2007:art-14"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["mejoras"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-mejoras-ejercicio-0129"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "mejoras_ejercicio", target_casilla_id = "0129" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["rd-439-2007:art-14"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["mejoras"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-base-amortizacion-0130"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "base_amortizacion", target_casilla_id = "0130" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Base de amortización"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-amortizacion-0131"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "amortizacion", target_casilla_id = "0131" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["3 por 100"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-rendimiento-neto-0149"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "rendimiento_neto", target_casilla_id = "0149" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimiento neto ("]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-reduccion-0150"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "reduccion", target_casilla_id = "0150" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23-2021"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Reducción por arrendamiento"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-retenciones-0153"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "retenciones", target_casilla_id = "0153" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Retenciones e ingresos a cuenta"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-rendimiento-neto-reducido-0154"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "rendimiento_neto_reducido", target_casilla_id = "0154" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Rendimiento neto reducido"]
+
+# The boxes the rows account for are the totals of their columns: 0156 sums the rows' 0154,
+# and the scalar 0153 the urban-rental withholding credit reads sums the rows' 0153.
+[[revisions."2022".bindings]]
+id = "renta-inmueble-total-rendimiento-neto-reducido-0154"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "total", record = "inmueble", grouping = "per_inmueble", row_field = "rendimiento_neto_reducido", target_casilla_id = "0154" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Suma de rendimientos netos reducidos"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-total-retenciones-0153"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "total", record = "inmueble", grouping = "per_inmueble", row_field = "retenciones", target_casilla_id = "0153" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Retenciones e ingresos a cuenta"]
+
+# The let properties' net yield before the art. 23.2 reduction, totalled over their rows: the
+# capital inmobiliario income the art. 20 limit weighs, which counts each yield net of its
+# expenses and before its reductions. No box of the return holds this total.
+[[revisions."2022".bindings]]
+id = "renta-inmueble-total-rendimiento-neto-0149"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "total", record = "inmueble", grouping = "per_inmueble", row_field = "rendimiento_neto", target_casilla_id = "0149" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["una vez deducidos los gastos"]
 
 # Whether the profile's stated income categories positively exclude a family of rentas other than work
 # income. The list the profile states is the taxpayer's complete statement for the period, so a family
