@@ -13,8 +13,10 @@ from ...application.modelo.quickfile_operation_contracts import (
     QuickfileStageSnapshot,
 )
 from ...application.modelo.quickfile_operation_projections import QuickfileProjection
+from ...application.modelo.refusal_door_verdicts import operator_choice_verdict
 from ...application.modelo.work_address_errors import ModeloWorkRegistryYearMismatchError
 from ...application.operations.public_period import PublicPeriod
+from ...application.operator_actions.projection import PreconditionVerdictSnapshot
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
@@ -81,12 +83,16 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             verification_report=None,
             export=None,
             stages=(
-                # A refusal stage carries only its registered code; this error
-                # declares no recovery verdict (quickfile_operation_projections.py:209).
+                # A refusal stage carries its registered code and the verdict of
+                # the door the refusal declares: the revision assertion is the
+                # operator's decision (work_addressing.py:717).
                 QuickfileStageSnapshot(
                     stage=QuickfileStage.READINESS,
                     status=QuickfileStageStatus.REFUSED,
                     error=QuickfileStageError(code=refusal.code, message_key=refusal.message_key),
+                    precondition_verdict=PreconditionVerdictSnapshot.from_verdict(
+                        operator_choice_verdict("registry_revision_assertion")
+                    ),
                 ),
                 *(
                     QuickfileStageSnapshot(stage=stage, status=QuickfileStageStatus.SKIPPED)
