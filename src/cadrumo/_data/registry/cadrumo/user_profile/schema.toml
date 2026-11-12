@@ -97,20 +97,6 @@ description = "Porcentaje atribuible al Estado derivado exclusivamente del regim
 legal_refs = ["ley-12-2002:art-29"]
 
 [[derived_selectors]]
-pattern = "renta_capital_inmobiliario.reduccion_art_23_2_aplicable"
-derived_from = ["renta_arrendamiento.uso_vivienda", "renta_arrendamiento.fecha_contrato", "renta_arrendamiento.zona_tensionada", "renta_arrendamiento.incumple_lau_17_6"]
-entry_surface = "aeat config profile arrendamiento edit"
-description = "Si la reduccion del art. 23.2 LIRPF alcanza el arrendamiento del ejercicio: no alcanza al que no es de vivienda ni, en el regimen de tramos, al que incumple el art. 17.6 LAU."
-legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-23-2021", "ley-35-2006:dt-38"]
-
-[[derived_selectors]]
-pattern = "renta_capital_inmobiliario.reduccion_art_23_2_tier"
-derived_from = ["renta_arrendamiento.fecha_contrato", "renta_arrendamiento.zona_tensionada", "renta_arrendamiento.primer_arrendamiento_vivienda", "renta_arrendamiento.inquilinos", "renta_arrendamiento.arrendatario_entidad_tipo", "renta_arrendamiento.arrendatario_entidad_finalidad", "renta_arrendamiento.rehabilitacion_fecha", "renta_arrendamiento.renta_inicial", "renta_arrendamiento.renta_ultima_contrato_anterior"]
-entry_surface = "aeat config profile arrendamiento edit"
-description = "Regimen o tramo de la reduccion del art. 23.2 LIRPF del arrendamiento del ejercicio: el 60 por ciento anterior a la Ley 12/2023, o el 90, 70, 60 o 50 por ciento."
-legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-23-2021", "ley-35-2006:dt-38"]
-
-[[derived_selectors]]
 pattern = "irpf.estimation_directa"
 derived_from = ["irpf.estimation_regime"]
 entry_surface = "aeat config profile edit --irpf-estimation-regime REGIME"
