@@ -14,10 +14,12 @@ consumers receive it through a :data:`Modelo202InstalmentResolver` port.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
+from typing import Final
 
 from ...core.period import Period
 from ...domain.calculations.registry.applicability_modelo202 import (
@@ -84,16 +86,36 @@ class Modelo202InstalmentResolution:
 
     def __post_init__(self) -> None:
         """Refuse a resolution whose fields contradict its kind."""
-        if self.kind is Modelo202InstalmentResolutionKind.FILED:
-            consistent = self.filing is not None and self.unresolved_reason is None
-        elif self.kind is Modelo202InstalmentResolutionKind.NOT_OWED:
-            consistent = (
-                self.amount == 0 and self.filing is None and self.grounds is not None and self.unresolved_reason is None
-            )
-        else:
-            consistent = self.amount is None and self.filing is None and self.unresolved_reason is not None
-        if not consistent:
+        if not _FIELDS_MATCH_KIND[self.kind](self):
             raise ValueError(f"Modelo 202 instalment resolution {self.kind.value} has contradicting fields")
+
+
+def _filed_fields_match(resolution: Modelo202InstalmentResolution) -> bool:
+    return resolution.filing is not None and resolution.unresolved_reason is None
+
+
+def _not_owed_fields_match(resolution: Modelo202InstalmentResolution) -> bool:
+    return (
+        resolution.amount == 0
+        and resolution.filing is None
+        and resolution.grounds is not None
+        and resolution.unresolved_reason is None
+    )
+
+
+def _unresolved_fields_match(resolution: Modelo202InstalmentResolution) -> bool:
+    return resolution.amount is None and resolution.filing is None and resolution.unresolved_reason is not None
+
+
+_FIELDS_MATCH_KIND: Final[
+    Mapping[Modelo202InstalmentResolutionKind, Callable[[Modelo202InstalmentResolution], bool]]
+] = MappingProxyType(
+    {
+        Modelo202InstalmentResolutionKind.FILED: _filed_fields_match,
+        Modelo202InstalmentResolutionKind.NOT_OWED: _not_owed_fields_match,
+        Modelo202InstalmentResolutionKind.UNRESOLVED: _unresolved_fields_match,
+    }
+)
 
 
 type Modelo202InstalmentResolver = Callable[[Period], Modelo202InstalmentResolution]

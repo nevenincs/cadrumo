@@ -889,6 +889,21 @@ def _clean_state_requirement_scope(
     )
 
 
+def _scoped_out_keys(
+    scope: _CleanStateRequirementScope,
+) -> frozenset[tuple[str, int, str, CrossPeriodDependencyOrigin, tuple[str, ...]]]:
+    """The keys of the requirements a scope settles without evaluating them."""
+    return frozenset(
+        requirement.key
+        for requirement in (
+            *scope.first_year_fractional,
+            *scope.zero_value_previous_filing,
+            *scope.m111_no_retenciones,
+            *(evidence.requirement for evidence in scope.modelo_202_not_owed),
+        )
+    )
+
+
 def _evaluate_in_scope_dependencies(
     scope: _CleanStateRequirementScope,
     *,
@@ -907,15 +922,7 @@ def _evaluate_in_scope_dependencies(
     snapshot: RegistrySnapshot,
 ) -> tuple[CrossPeriodDependencyEvidence, ...]:
     """Evaluate only requirements that were not explicitly scoped out."""
-    suppressed_keys = {
-        requirement.key
-        for requirement in (
-            *scope.first_year_fractional,
-            *scope.zero_value_previous_filing,
-            *scope.m111_no_retenciones,
-            *(evidence.requirement for evidence in scope.modelo_202_not_owed),
-        )
-    }
+    suppressed_keys = _scoped_out_keys(scope)
     dependencies: list[CrossPeriodDependencyEvidence] = []
     attestable: frozenset[BindingId] | None = None
     for requirement in scope.partition.in_scope:

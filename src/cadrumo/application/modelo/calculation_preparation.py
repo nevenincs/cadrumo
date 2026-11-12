@@ -149,6 +149,33 @@ def _with_required_profile_bindings(
     return channels
 
 
+def _clock_checked_ready_profile(
+    work_unit: WorkUnit,
+    *,
+    evaluated_at: datetime,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
+) -> ModeloWorkProfile:
+    """Refuse an invalid operation instant, then return the profile the work unit is ready to calculate on.
+
+    Wallet reconciliation can persist a refreshed decision during preparation,
+    so the instant is refused before any such write.
+    """
+    require_lifecycle_clock_not_before(
+        evaluated_at,
+        operation=ModeloLifecycleClockOperation.CALCULATE,
+        instants=work_unit_ordering_instants(work_unit),
+    )
+    from .profile_readiness_gate import require_profile_ready_for_work_unit
+
+    return require_profile_ready_for_work_unit(
+        work_unit,
+        profile_decode_context=operation.profile_decode_context(),
+        operation=operation,
+        profile=profile,
+    )
+
+
 def prepare_calculation(
     *,
     work_unit_id: str,
@@ -197,20 +224,8 @@ def prepare_calculation(
         work_unit_id=work_unit_id,
         repository_bucket_id=work_unit_repository.bucket_id,
     )
-    # Wallet reconciliation can persist a refreshed decision during preparation.
-    # Refuse an invalid operation instant before any such write.
-    require_lifecycle_clock_not_before(
-        evaluated_at,
-        operation=ModeloLifecycleClockOperation.CALCULATE,
-        instants=work_unit_ordering_instants(work_unit),
-    )
-    from .profile_readiness_gate import require_profile_ready_for_work_unit
-
-    checked_profile = require_profile_ready_for_work_unit(
-        work_unit,
-        profile_decode_context=operation.profile_decode_context(),
-        operation=operation,
-        profile=profile,
+    checked_profile = _clock_checked_ready_profile(
+        work_unit, evaluated_at=evaluated_at, operation=operation, profile=profile
     )
     profile_values = record_to_path_values(checked_profile.record)
     # Calculate needs the amount-computing rung, not the filing rung: this
