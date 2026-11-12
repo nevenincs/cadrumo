@@ -12,7 +12,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import re
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from enum import StrEnum
@@ -490,6 +490,40 @@ def select(
 ) -> list[PlannedRow]:
     """The rows a filtered run takes; an empty filter takes every row."""
     return [row for row in rows if (not modelos or row.modelo in modelos) and (not years or row.year in years)]
+
+
+def source_closure(modelos: Iterable[str], sources: Callable[[str], Iterable[str]]) -> frozenset[str]:
+    """``modelos`` and every modelo they read, transitively, as ``sources`` declares each one's reads."""
+    found: set[str] = set()
+    pending = list(modelos)
+    while pending:
+        modelo = pending.pop()
+        if modelo not in found:
+            found.add(modelo)
+            pending.extend(sources(modelo))
+    return frozenset(found)
+
+
+def replayed(
+    rows: Sequence[PlannedRow], selected: Sequence[PlannedRow], sources: Callable[[str], Iterable[str]]
+) -> list[PlannedRow]:
+    """The rows a run replays, in ``rows``' chain order, so each selected row meets the world a full run gives it.
+
+    The rows of one replay share a world: a verified return is filed locally,
+    and a later return reads it (the annual Renta reads the year's Modelo 130
+    quarters, a quarter reads the one before). A filtered run therefore also
+    replays every earlier row of a modelo the selected ones read, directly or
+    transitively, including earlier rows of the selected modelos themselves;
+    only the selected rows are emitted.
+    """
+    if len(selected) == len(rows):
+        return list(rows)
+    wanted = {row.key for row in selected}
+    if not wanted:
+        return []
+    needed = source_closure({row.modelo for row in selected}, sources)
+    last = max(index for index, row in enumerate(rows) if row.key in wanted)
+    return [row for index, row in enumerate(rows[: last + 1]) if row.key in wanted or row.modelo in needed]
 
 
 def write_rows(path: Path, rows: Iterable[TableRow]) -> None:
