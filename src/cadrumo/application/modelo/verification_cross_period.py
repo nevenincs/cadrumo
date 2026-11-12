@@ -236,10 +236,10 @@ def cross_period_clean_state_verdict_for_work_unit(
             and work_unit_repository is not None
             else None
         ),
-        modelo_202_instalment_resolver=_modelo_202_instalment_resolver(
+        modelo_202_instalment_resolver=modelo_202_instalment_resolver_for_snapshot(
             snapshot,
             bucket_id=work_unit.bucket_id,
-            stores=_Modelo202ResolverStores(
+            stores=Modelo202ResolverStores(
                 observations=observation_repository,
                 calculations=calculation_repository,
                 work_units=work_unit_repository,
@@ -252,18 +252,20 @@ def cross_period_clean_state_verdict_for_work_unit(
     )
 
 
-class _Modelo202ResolverStores(NamedTuple):
+class Modelo202ResolverStores(NamedTuple):
+    """The stores an instalment resolution reads; absent ones decide less, never more."""
+
     observations: CalculationObservationRepositoryProtocol
     calculations: CalculationRevisionCatalogueRepositoryProtocol
     work_units: WorkUnitCatalogueRepositoryProtocol | None
     transactions: TransactionCatalogueRepositoryProtocol | None
 
 
-def _modelo_202_instalment_resolver(
+def modelo_202_instalment_resolver_for_snapshot(
     snapshot: RegistrySnapshot,
     *,
     bucket_id: str,
-    stores: _Modelo202ResolverStores,
+    stores: Modelo202ResolverStores,
     activity_start_date: date | None,
     modality: Modelo202Modality | None,
     operation: PinnedAuthorityOperation,
@@ -1152,12 +1154,14 @@ def require_cross_period_clean_state(
 __all__ = [
     "IVA_COMPENSATION_CARRY_LEGAL_REF",
     "CrossPeriodDoor",
+    "Modelo202ResolverStores",
     "cross_period_clean_state_findings",
     "cross_period_clean_state_verdict_for_work_unit",
     "cross_period_door",
     "cross_period_door_operator_arguments",
     "cross_period_door_reader",
     "cross_period_expected_member_sets_from_profile",
+    "modelo_202_instalment_resolver_for_snapshot",
     "registry_modality_finding",
     "require_cross_period_clean_state",
     "zero_value_previous_filing_binding_ids",

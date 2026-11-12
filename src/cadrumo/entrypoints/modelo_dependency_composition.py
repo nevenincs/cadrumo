@@ -22,6 +22,7 @@ def build_dependency_read_ports(*, bucket_id: str, operation: PinnedAuthorityOpe
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
@@ -52,5 +53,6 @@ def build_dependency_read_ports(*, bucket_id: str, operation: PinnedAuthorityOpe
             verification=calculation_binding.verification_repository(),
             observation=CalculationObservationRepository(objects=objects),
             justificante=JustificanteRepository(objects=objects),
+            transaction=TransactionCatalogueRepository(bucket_id=profile_id, objects=objects),
         ),
     )
