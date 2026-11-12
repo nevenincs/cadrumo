@@ -11,6 +11,7 @@ from ...core.hashing import content_hash_hex
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .work_addressing import ModeloWorkSelectorContradictionError, ModeloWorkSelectorError
+from .work_lifecycle_refusal_failures import selector_incoherent_failure
 from .work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectionMode,
@@ -155,6 +156,7 @@ def work_capture_observation(
             if limb_before is None:
                 raise ModeloWorkSelectorContradictionError(
                     "implicit pointer observation requires the limb the pointer held before",
+                    precondition_failure=selector_incoherent_failure(),
                 )
             observation = (limb_before, revision_id)
         else:

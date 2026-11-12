@@ -135,6 +135,7 @@ from .profile_export_binding import resolve_export_identity
 from .registry_helpers import reject_incomplete_amendment_casillas, reject_unknown_override_casillas
 from .result_disposition_resolution import base_modelo_result_disposition
 from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs
+from .work_lifecycle_refusal_failures import amendment_duplicate_failure, amendment_unchanged_failure
 
 
 @dataclass(frozen=True, slots=True)
@@ -423,6 +424,7 @@ def _prepare_amendment_identity(
                 "calculation_revision_id": source_revision.calculation_revision_id,
                 "state": "no_op_amendment",
             },
+            precondition_failure=amendment_unchanged_failure(),
         )
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=in_force.work_unit_id,
@@ -444,6 +446,7 @@ def _prepare_amendment_identity(
         raise CalculationRevisionStateError(
             translated_message="errors.error.error_modelo_calculation_revision_state",
             context={"calculation_revision_id": new_revision_id, "state": "duplicate_amendment_revision"},
+            precondition_failure=amendment_duplicate_failure(),
         )
 
     return new_revision_id, amendment_identity, amendment_detail_rows

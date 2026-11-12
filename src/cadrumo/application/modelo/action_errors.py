@@ -50,6 +50,7 @@ from .edit_models import (
     ModeloEditVersionRefusalV1,
 )
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .work_lifecycle_refusal_failures import mutation_stale_failure, revision_state_failure, work_unit_absent_failure
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
     "ley-58-2003:art-119",
@@ -65,7 +66,16 @@ branching rules or calculation inputs.
 
 
 class WorkUnitNotFoundError(ModeloError):
-    """Raised when a work-unit lookup or mutation targets a missing id."""
+    """Raised when a work-unit lookup or mutation targets a missing id.
+
+    The work list names each unit that exists, from which the operator can
+    address one.
+    """
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the door of an absent work unit."""
+        return work_unit_absent_failure().verdict
 
 
 if TYPE_CHECKING:
@@ -113,7 +123,19 @@ class WorkUnitAlreadyDiscardedError(ModeloPreconditionErrorMixin, ModeloError):
 
 
 class WorkUnitMutationRefusedError(ModeloPreconditionErrorMixin, ModeloError):
-    """Raised when a lifecycle mutation targets a rejected work-unit state."""
+    """Raised when a lifecycle mutation targets a rejected work-unit state.
+
+    A raise site that knows a sharper door carries its own failure. Every other
+    refusal means the unit changed after the request was read, so its status
+    is the door, bound to the unit when the raise site states it in ``context``.
+    """
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the carried verdict, or the status door of a unit that changed."""
+        failure = self.precondition_failure
+        return (failure or mutation_stale_failure(self.context)).verdict
 
 
 class CalculationRevisionNotFoundError(ModeloPreconditionErrorMixin, ModeloError, CoreNotFoundError):
@@ -142,11 +164,30 @@ class CalculationRevisionNotFoundError(ModeloPreconditionErrorMixin, ModeloError
 
 
 class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):
-    """Raised when a state transition is requested from an incompatible source state."""
+    """Raised when a state transition is requested from an incompatible source state.
+
+    A raise site that knows a sharper door carries its own failure. Every other
+    refusal opens the unit's revisions, bound to the unit when the raise site
+    states it in ``context``.
+    """
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Expose the carried verdict, or the revisions door of a state the request does not admit."""
+        failure = self.precondition_failure
+        return (failure or revision_state_failure(self.context)).verdict
 
 
 class ModeloRevisionNotSealedError(OperationNextStepErrorMixin, CalculationRevisionStateError):
     """Refused: an artefact was asked of a calculation not yet verified, which checking the declaration settles."""
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Serve the step the raise site chose, not the revisions door."""
+        failure = self.precondition_failure
+        return None if failure is None else failure.verdict
 
 
 class ModeloOperationSubjectNotWorkUnitError(OperationNextStepErrorMixin, ModeloError):
