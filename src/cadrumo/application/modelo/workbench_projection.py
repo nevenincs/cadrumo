@@ -422,25 +422,6 @@ class PublicModeloWorkForm(BaseModel):
     modelo_number: str | None
     period_words: str | None
 
-    def fields(self) -> tuple[PublicModeloFormField, ...]:
-        """Return every field once, in reading order: pages, then working figures, unplaced, then answers."""
-        collected: list[PublicModeloFormField] = []
-        for page in self.pages:
-            for section in page.sections:
-                for block in section.blocks:
-                    if isinstance(block, PublicModeloFormFieldBlock):
-                        collected.append(block.field)
-                    elif isinstance(block, PublicModeloFormGridBlock):
-                        collected.extend(
-                            cell.field for row in block.rows for cell in row.cells if cell.field is not None
-                        )
-                    elif isinstance(block, PublicModeloFormBindingInputsBlock):
-                        collected.extend(block.fields)
-        collected.extend(self.working_figures)
-        collected.extend(item.field for item in self.unplaced)
-        collected.extend(self.answers)
-        return tuple(collected)
-
 
 class PublicModeloWorkFormLoadV1(BaseModel):
     """Typed local-human workbench view of ModeloWorkFormLoadV1."""
@@ -716,6 +697,27 @@ def restore_modelo_workbench_form(projection: ModeloWorkbenchFormProjectionV1) -
     return restored
 
 
+def _public_section_fields(section: PublicModeloFormSection) -> tuple[PublicModeloFormField, ...]:
+    """A section's fields in reading order, grid rows left to right."""
+    collected: list[PublicModeloFormField] = []
+    for block in section.blocks:
+        if isinstance(block, PublicModeloFormFieldBlock):
+            collected.append(block.field)
+        elif isinstance(block, PublicModeloFormGridBlock):
+            collected.extend(cell.field for row in block.rows for cell in row.cells if cell.field is not None)
+        elif isinstance(block, PublicModeloFormBindingInputsBlock):
+            collected.extend(block.fields)
+    return tuple(collected)
+
+
+def public_form_fields(form: PublicModeloWorkForm) -> tuple[PublicModeloFormField, ...]:
+    """Every field of ``form`` once, in reading order: pages, then working figures, unplaced, then answers."""
+    placed = tuple(
+        field for page in form.pages for section in page.sections for field in _public_section_fields(section)
+    )
+    return (*placed, *form.working_figures, *(item.field for item in form.unplaced), *form.answers)
+
+
 __all__ = [
     "ModeloWorkbenchFormProjectionV1",
     "PublicModeloFormBindingInputsBlock",
@@ -743,5 +745,6 @@ __all__ = [
     "PublicModeloWorkFormLoadV1",
     "PublicSpanishTaxIdFormat",
     "project_modelo_workbench_form",
+    "public_form_fields",
     "restore_modelo_workbench_form",
 ]

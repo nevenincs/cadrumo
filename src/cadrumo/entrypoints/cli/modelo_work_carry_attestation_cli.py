@@ -19,6 +19,7 @@ import typer
 
 from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...application.modelo.action_errors import ModeloEditRefusedError, modelo_edit_refusal_error
 from ...application.modelo.carry_amount_statement import prior_carry_statement_submission, resolve_prior_carry_amounts
@@ -141,22 +142,35 @@ def work_attest_prior_carries(
     amounts = resolve_prior_carry_amounts(baseline, form.form.form, attestations, amount or ())
     submission = prior_carry_statement_submission(baseline, attestations, amounts)
     review = preflight_modelo_edit_for_cli(client, submission, language=language)
-    findings = _checked(review)
-    applied: ModeloEditApplyPublicResultV1 | None = None
-    if confirmed:
-        if any(finding.blocking for finding in review.findings):
-            raise ModeloEditRefusedError()
-        applied = apply_modelo_edit_for_cli(client, submission, language=language).projection
-    result = attest_prior_carries_result(submission, attestations, findings, amounts, applied)
-    selection = "".join(f" --family {statement.family.value}" for statement in attestations) + "".join(
-        f" --amount {option.strip()}" for option in amount or ()
-    )
+    applied = _applied(client, submission, review, language=language) if confirmed else None
+    result = attest_prior_carries_result(submission, attestations, _checked(review), amounts, applied)
     emit_envelope(
         ctx,
         command=_COMMAND,
         result=result,
-        lines=attest_prior_carries_lines(result, submission.baseline.work_unit_id, selection),
+        lines=attest_prior_carries_lines(
+            result, submission.baseline.work_unit_id, _selection(attestations, amount or ())
+        ),
     )
+
+
+def _applied(
+    client: FrontendClient,
+    submission: ModeloEditSubmissionV1,
+    review: ModeloEditPreflightProjectionV1,
+    *,
+    language: OutputLanguage,
+) -> ModeloEditApplyPublicResultV1:
+    """Apply the statement the check passed; a blocking finding refuses it instead."""
+    if any(finding.blocking for finding in review.findings):
+        raise ModeloEditRefusedError()
+    return apply_modelo_edit_for_cli(client, submission, language=language).projection
+
+
+def _selection(attestations: tuple[ModeloFormCarryAttestation, ...], amounts: list[str] | tuple[str, ...]) -> str:
+    """The options that repeat this statement, each family and each amount as given."""
+    families = "".join(f" --family {statement.family.value}" for statement in attestations)
+    return families + "".join(f" --amount {option.strip()}" for option in amounts)
 
 
 __all__ = ["attest_prior_carries_lines", "attest_prior_carries_result", "work_attest_prior_carries"]

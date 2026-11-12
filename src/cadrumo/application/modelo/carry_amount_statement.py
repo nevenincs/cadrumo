@@ -28,7 +28,7 @@ from .edit_models import (
     ModeloEditSubmissionV1,
 )
 from .work_form_models import ModeloFormCarryAttestation, ModeloWorkForm
-from .workbench_projection import PublicModeloWorkForm
+from .workbench_projection import PublicModeloWorkForm, public_form_fields
 
 _AMOUNT_INVALID_MESSAGE_KEY: Final[str] = "application.modelo.errors.prior_carries_amount_invalid"
 _AMOUNT_NOT_A_CARRY_MESSAGE_KEY: Final[str] = "application.modelo.errors.prior_carries_amount_not_a_carry"
@@ -89,6 +89,19 @@ def _parse_amount(
     return box, amount
 
 
+def _carry_of_box(
+    form: ModeloWorkForm | PublicModeloWorkForm, statements: Iterable[ModeloFormCarryAttestation]
+) -> dict[str, BindingId]:
+    """The open carry binding of each box on ``form`` that feeds one of ``statements``' carries."""
+    open_carries = {binding_id for statement in statements for binding_id in statement.binding_ids}
+    fields = form.fields() if isinstance(form, ModeloWorkForm) else public_form_fields(form)
+    return {
+        field.box: field.bindings[0].binding_id
+        for field in fields
+        if field.box is not None and field.bindings and field.bindings[0].binding_id in open_carries
+    }
+
+
 def resolve_prior_carry_amounts(
     baseline: ModeloEditBaselineV1,
     form: ModeloWorkForm | PublicModeloWorkForm,
@@ -102,12 +115,7 @@ def resolve_prior_carry_amounts(
     carry are refused.
     """
     next_step = open_declaration_step(baseline)
-    open_carries = {binding_id for statement in statements for binding_id in statement.binding_ids}
-    carry_of_box = {
-        field.box: field.bindings[0].binding_id
-        for field in form.fields()
-        if field.box is not None and field.bindings and field.bindings[0].binding_id in open_carries
-    }
+    carry_of_box = _carry_of_box(form, statements)
     amounts: dict[BindingId, Decimal] = {}
     for option in options:
         box, amount = _parse_amount(option, baseline=baseline, next_step=next_step)

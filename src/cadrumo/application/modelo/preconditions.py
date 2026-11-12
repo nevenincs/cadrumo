@@ -32,6 +32,7 @@ from .precondition_action_bindings import (
     alternative_recovery_actions,
     recovery_conditionality,
 )
+from .prior_carry_refusal_profiles import PRIOR_CARRY_REFUSAL_PROFILES
 
 
 class ModeloPreconditionFailure(BaseModel):
@@ -572,26 +573,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.ledger_preflight.period_blocked",
         action_id="operator.ledger.preflight",
     ),
-    # The statement that no earlier-ejercicio carry is pending is the edit the
-    # declaration's form serves; the command line stages the same edit.
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.prior_carries.stated",
-        "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
-        action_id="operator.modelo.work.attest_prior_carries",
-    ),
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.prior_carries.stated",
-        "modelo.work.calculate.prior_carries.renta_negative_savings_capital_income_pending_unstated",
-        action_id="operator.modelo.work.attest_prior_carries",
-    ),
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.prior_carries.stated",
-        "modelo.work.calculate.prior_carries.renta_negative_savings_gains_losses_pending_unstated",
-        action_id="operator.modelo.work.attest_prior_carries",
-    ),
+    *PRIOR_CARRY_REFUSAL_PROFILES,
     # A stored revision that no longer matches its content address is replaced
     # by calculating the work unit again from its sources.
     _profile(

@@ -118,18 +118,31 @@ def select_prior_carry_attestations(
     builder refuses in its own words.
     """
     open_statements = tuple(statement for statement in attestations if statement.family in PRIOR_CARRY_FAMILIES)
-    chosen_families = tuple(dict.fromkeys(families))
-    step = open_declaration_step(baseline)
+    chosen = tuple(dict.fromkeys(families))
     open_families = tuple(sorted({statement.family for statement in open_statements}, key=lambda each: each.value))
-    for family in chosen_families:
-        if family not in open_families:
-            raise ModeloPriorCarryFamilyNothingOpenError(baseline=baseline, family=family, next_step=step)
-    missing = tuple(family for family in open_families if family not in chosen_families)
-    if missing and (chosen_families or len(open_families) > 1):
+    _require_chosen_open(baseline, chosen, open_families)
+    missing = tuple(family for family in open_families if family not in chosen)
+    if missing and (chosen or len(open_families) > 1):
         raise ModeloPriorCarryFamilyChoiceRequiredError(
-            baseline=baseline, open_families=open_families, missing_families=missing, next_step=step
+            baseline=baseline,
+            open_families=open_families,
+            missing_families=missing,
+            next_step=open_declaration_step(baseline),
         )
     return open_statements
+
+
+def _require_chosen_open(
+    baseline: ModeloEditBaselineV1,
+    chosen: tuple[AbsenceAttestationFamily, ...],
+    open_families: tuple[AbsenceAttestationFamily, ...],
+) -> None:
+    """Refuse the first chosen family that has no open carry on the form."""
+    for family in chosen:
+        if family not in open_families:
+            raise ModeloPriorCarryFamilyNothingOpenError(
+                baseline=baseline, family=family, next_step=open_declaration_step(baseline)
+            )
 
 
 _CARRY_STATEMENT_KINDS: Final[frozenset[ModeloEditBindingIntentKind]] = frozenset(

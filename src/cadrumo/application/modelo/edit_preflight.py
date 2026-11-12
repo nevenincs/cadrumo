@@ -220,13 +220,7 @@ def _open_carry_findings(
     family's absent figures never stops the calculation. A submission that
     states no carry is not about them and raises nothing.
     """
-    attestable = [
-        entry.binding_id
-        for entry in submission.baseline.permitted_surface
-        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
-        and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
-        and entry.binding_id in prior_carry_bindings
-    ]
+    attestable = _attestable_carries(submission, prior_carry_bindings)
     stated = {
         intent.address.binding_id
         for intent in submission.binding_intents
@@ -234,12 +228,30 @@ def _open_carry_findings(
     }
     if not stated:
         return []
-    held = frozenset() if head.revision is None else frozenset(head.revision.binding_overrides)
+    answered = stated | _held_carries(head)
     return [
         _finding(CARRY_LEFT_OPEN, ModeloEditFindingSeverity.ERROR, ModeloEditBindingAddressV1(binding_id=binding_id))
-        for binding_id in sorted(attestable)
-        if binding_id not in stated and binding_id not in held and binding_id not in head.operator_bindings
+        for binding_id in sorted(attestable - answered)
     ]
+
+
+def _attestable_carries(
+    submission: ModeloEditSubmissionV1, prior_carry_bindings: Collection[BindingId]
+) -> frozenset[BindingId]:
+    """The prior-carry bindings the baseline admits a statement of absence on."""
+    return frozenset(
+        entry.binding_id
+        for entry in submission.baseline.permitted_surface
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
+        and entry.binding_id in prior_carry_bindings
+    )
+
+
+def _held_carries(head: _Head) -> frozenset[BindingId]:
+    """The bindings the head already holds a value for, stored or the operator's own."""
+    stored = frozenset[BindingId]() if head.revision is None else frozenset(head.revision.binding_overrides)
+    return stored | head.operator_bindings
 
 
 def preflight_modelo_edit(
