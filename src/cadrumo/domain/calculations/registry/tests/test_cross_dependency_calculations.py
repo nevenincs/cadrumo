@@ -736,6 +736,9 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.2 guarderia increment is declared year-free in every edition;
+            # neutral zero for a filer with no childcare spend.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
@@ -840,6 +843,9 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.2 guarderia increment is declared year-free in every edition;
+            # neutral zero for a filer with no childcare spend.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
@@ -941,6 +947,9 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.2 guarderia increment is declared year-free in every edition;
+            # neutral zero for a filer with no childcare spend.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,

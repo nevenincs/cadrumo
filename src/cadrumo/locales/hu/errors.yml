@@ -725,6 +725,279 @@ errors:
       a tartalmával; a manifeszt sérült vagy manipulált lehet.
     canonical_unsupported_manifest_version: A korpusz manifesztje nem támogatott verziót
       használ.
+    filing_export_boolean_in_text_slot: A(z) %{field} exportmező nem írhat logikai
+      előállítói tényt egy %{length} bájtos szövegmezőbe. Az alkalmazás ezt a saját
+      exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_draft_schema_mismatch: Az exportálás olyan tervezetet kapott, amely
+      más modelldefiníciókból készült, mint amelyekkel kiírja. A tervezetet az alkalmazás
+      maga készíti és hagyja jóvá, ezért az adataid módosítása nem javítja ki.
+    filing_export_draft_unapproved: Az exportálás jóvá nem hagyott tervezetet kapott.
+      A tervezetet az alkalmazás maga készíti és hagyja jóvá, ezért az adataid módosítása
+      nem javítja ki.
+    filing_export_envelope_closer_extent: A beadási boríték záró eleme nem a megadott
+      %{extent} bájt hosszúságú. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_envelope_declarant_tax_id_absent: A beadási borítékot a nyilatkozó
+      adóazonosítójának kiírására kérték a beadás alanya nélkül. Az alkalmazás ezt
+      a saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
+      ki.
+    filing_export_envelope_election_unresolved: A beadási boríték egy feloldott korábbi
+      csoportos beszedési választás nélkül készült megíródni. Az alkalmazás ezt a
+      saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
+      ki.
+    filing_export_envelope_language_casilla_absent: A beadási borítékot a bevallás
+      nyelvének kiírására kérték a megadott rovat értéke nélkül. Az alkalmazás ezt
+      a saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
+      ki.
+    filing_export_envelope_layout_absent: A beadási boríték tervének megadása hiányzik.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
+    filing_export_envelope_period_not_representable: A(z) %{period} időszaknak nincs
+      %{extent} karakteres megjelenítése a borítékban. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_envelope_period_outside_range: A nyilatkozattevő borítékának időszaka
+      a terv által felsorolt tartományon kívül esik. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_envelope_prefix_extent: A boríték előtagja nem a megadott %{extent}
+      bájt hosszúságú. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_envelope_prefix_role_authority: A beadási boríték előtagjának %{role}
+      szerepéhez nincs megadott értékforrás. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_envelope_prefix_role_not_ascii: A beadási boríték előtagjának %{role}
+      szerepe nem ASCII. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_envelope_prefix_role_width: A beadási boríték előtagjának %{role}
+      szerepe %{actual} bájt, pedig %{expected} várt. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_envelope_quarter_token_undeclared: A boríték terve nem adja meg
+      az egyszerű negyedévet, amelyre a sémanegyedévnek szüksége van. Az alkalmazás
+      ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása nem
+      javítja ki.
+    filing_export_envelope_records_unemitted: 'A beadási boríték kötelező rekordcsaládjainak
+      nincs kiadott előfordulása: %{records}. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.'
+    filing_export_field_binding_undeclared: A(z) %{field} exportmező nem ad meg kötést.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
+    filing_export_field_casilla_undeclared: A(z) %{field} exportmező nem ad meg rovatot.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
+    filing_export_field_computed_key_undeclared: A(z) %{field} exportmező nem ad meg
+      számított kulcsot. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_field_contradicts_period: A(z) %{field} exportmező ellentmond a
+      beadott időszaknak. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_field_draft_attribute_undeclared: A(z) %{field} exportmező nem ad
+      meg tervezeti attribútumot. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_field_kind_unsupported: A(z) %{kind} exportmező-típus nem támogatott.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
+    filing_export_field_length_undeclared: A(z) %{field} exportmező nem ad meg hosszt.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
+    filing_export_field_offset_undeclared: A(z) %{field} exportmező nem ad meg pozíciót.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
+    filing_export_field_overlap: A(z) %{field} exportmező átfedi egy másik mezőt.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
+    filing_export_field_producer_key_undeclared: A(z) %{field} exportmező nem ad meg
+      előállító-kulcsot. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_field_projection_context_absent: A(z) %{field} exportmezőnek a pillanatképhez
+      tartozó megjelenítési környezetre van szüksége a vetülete megcímzéséhez. Az
+      alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása
+      nem javítja ki.
+    filing_export_field_projection_ref_undeclared: A(z) %{field} exportmező nem ad
+      meg vetületi hivatkozást. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_layout_not_owned_by_snapshot: Az exportálási terv nem a kiválasztott
+      nyilvántartási pillanatképhez tartozik. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_layout_projection_address_duplicate: Az exportálási terv a(z) %{address}
+      duplikált vetületi címet engedi. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_layout_unclassified: A(z) %{modelo} modell exportálási terve nem
+      állítható elő, és az alkalmazásnak nincs oka, amely megmagyarázná. Az alkalmazás
+      ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása nem
+      javítja ki.
+    filing_export_m190_component_declaration: A 190-es modell aláírt összetevőjének
+      megadása hiányos vagy megváltozott. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_m190_component_wire: A 190-es modell egy aláírt összetevője érvénytelen
+      rekordbájtokat tartalmaz. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_m190_context_differs: A 190-es modell aláírt feltételi környezete
+      eltér az átvizsgált forrástól. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_m190_source_digest: A 190-es modell aláírt összetevőiből hiányzik
+      az átvizsgált forrás pontos kivonata. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_m193_declaration_changed: A 193-as modell kedvezményezettjének függő
+      és esedékességi megadása hiányos vagy megváltozott. Az alkalmazás ezt a saját
+      exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_m280_declaration_changed: A 280-as modell negatív elszámolási összetevői
+      eltérnek az átvizsgált forrástól. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_m280_sign_differs: A 280-as modell negatív elszámolásának előjele
+      eltér az átvizsgált forrástól. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_m280_zero_sign_differs: A 280-as modell kifejezett nulla előjele
+      eltér az átvizsgált vetületétől. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_m303_evidence_design_unowned: A 303-as modell beadási bizonyíték-rekordjának
+      terve nem a kiválasztott pillanatképhez tartozik. Az alkalmazás ezt a saját
+      exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_m303_evidence_orden_mismatch: A 303-as modell beadási bizonyítékának
+      éves Ordenje nem egyezik a kiválasztott pillanatképpel. Az alkalmazás ezt a
+      saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
+      ki.
+    filing_export_m303_projection_layout_unowned: A 303-as modell beadási vetületének
+      terve nem a kiválasztott pillanatképhez tartozik. Az alkalmazás ezt a saját
+      exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_m303_projection_snapshot_period: A 303-as modell beadási vetületének
+      pillanatképe nem egyezik a beadott időszakkal. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_modelo100_comunidad_prefix_missing: A nyilvántartás által kiválasztott
+      közösségi blokk előtagja hiányzik. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_modelo100_comunidad_total_missing: A nyilvántartás által kiválasztott
+      közösségi összesítő rovat hiányzik. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_modelo100_declarations_not_mapping: A kiválasztott 100-as modell
+      XML-megadások nem leképezés típusú tények. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_modelo100_declarations_unpinned: A 100-as modell XML-exportálási
+      megadásaihoz egy hitelesítő generációhoz rögzített művelet kell. Az alkalmazás
+      ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása nem
+      javítja ki.
+    filing_export_modelo100_declarations_unresolved: A 100-as modell XML-megadásai
+      nem lettek feloldva. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_modelo100_sign_declarations_incomplete: A nyilvántartás által kiválasztott
+      XML-előjelmegadások hiányosak. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_payload_consumer_unavailable: Az export tartalmát fogadó fél nem
+      érhető el. Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért
+      az adataid módosítása nem javítja ki.
+    filing_export_payload_destination_count: Az exportnak nem pontosan egy tartalomcélt
+      adtak meg. Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért
+      az adataid módosítása nem javítja ki.
+    filing_export_producer_fact_not_boolean: A(z) %{field} exportmezőnek típusos logikai
+      előállítói tényre van szüksége, de más típust kapott. Az alkalmazás ezt a saját
+      exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_producer_snapshot_modelo_mismatch: A beadás előállítói pillanatképe
+      más modellhez tartozik, mint az exportált tervezet. Az alkalmazás ezt a saját
+      exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_producer_unowned: A(z) %{key} beadási előállító-kulcsnak nincs megadott
+      tulajdonosa. Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért
+      az adataid módosítása nem javítja ki.
+    filing_export_projection_address_duplicate: 'Az exportvetületi címek duplikáltak:
+      %{addresses}. Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért
+      az adataid módosítása nem javítja ki.'
+    filing_export_projection_address_unpreflighted: A(z) %{address} exportvetületi
+      címhez nincs előzetesen ellenőrzött érték. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_projection_duplicate_values: A(z) %{record} vetületi rekord kétszer
+      adott ki ugyanolyan típusos vetületi értéket. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_projection_family_unsupported: A(z) %{record} vetületi rekord vetületi
+      hivatkozás-családokat kever, vagy nem támogatottat használ. Az alkalmazás ezt
+      a saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
+      ki.
+    filing_export_projection_occurrence_absent: A kötelező %{record} vetületi rekordnak
+      nincs alkalmazható kiadott előfordulása. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_projection_occurrence_ambiguous: A(z) %{record} vetületi rekord
+      családjai nem oldódnak fel egyetlen determinisztikus előfordulásra. Az alkalmazás
+      ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása nem
+      javítja ki.
+    filing_export_projection_plan_not_bijection: 'A beadási vetítési terv nem felel
+      meg egyértelműen a tervnek: hiányzik %{missing}, felesleges %{extraneous}. Az
+      alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása
+      nem javítja ki.'
+    filing_export_projection_references_unemitted: A(z) %{record} vetületi rekord
+      nem adta ki az összes megírt típusos vetületi hivatkozást. Az alkalmazás ezt
+      a saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
+      ki.
+    filing_export_projection_repeat_mismatch: A(z) %{record} vetületi rekord %{repeat}
+      ismétlést használ egy nem ismétlődő családhoz. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_projector_field_untyped: Egy vetítő tényleges típusos vetületi hivatkozás
+      nélküli mezőt adott vissza. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_regimen_rows_not_repeated: Az egyszerűsített rendszer vetületi rekordjának
+      ismételnie kell a vetületi sorait. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_result_casilla_ids_malformed: Egy exportellenőrzési eredmény üres
+      vagy szóközökkel kiegészített rovatazonosítót sorol fel. Az alkalmazás ezt a
+      saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
+      ki.
+    filing_export_result_digest_malformed: Egy exporteredmény fájlkivonata nem kisbetűs
+      hexadecimális SHA-256 érték. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_sepa_marker_selection_unsupported: A SEPA-jelölés olyan számlakijelölést
+      kapott, amelyre nincs szabálya. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_shared_resolver_not_exhaustive: A közös beadási előállító-feloldó
+      nem fedi le az összes hozzá tartozó kulcsot. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_verification_modelo100_declarations_unresolved: A 100-as modell
+      XML-ellenőrzési megadásai nem lettek feloldva. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_verification_signed_entry_unresolved: A(z) %{field_id} XML-mezőhöz
+      nincs aláírt bejegyzés, amellyel ellenőrizni lehetne. Az alkalmazás ezt a saját
+      exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_verification_value_unrenderable: A(z) %{field_id} exportmező várt
+      ellenőrző értéke nem állítható elő. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_xml_attribute_not_terminal: Egy XML-szótár attribútum nem zárja
+      le az útvonalát. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_xml_aux_idioma_omitted: Az XML-exportálási terv kihagyja a kötelező
+      Aux/Idioma elemet. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_xml_boolean_in_non_boolean_row: Egy %{data_type} típusú sor logikai
+      értéket kapott, pedig csak az AEAT által logikainak megadott sorok tarthatnak
+      ilyet. Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az
+      adataid módosítása nem javítja ki.
+    filing_export_xml_converter_non_string: A nyilvántartás által kiválasztott %{converter}
+      XML-átalakító nem szöveges értéket adott vissza. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_xml_converter_unavailable: A nyilvántartás által kiválasztott %{converter}
+      XML-átalakító nem érhető el. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_xml_entry_path_empty: Egy XML-szótárbejegyzés útvonala üres. Az
+      alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása
+      nem javítja ki.
+    filing_export_xml_row_column_occurrence: A(z) %{binding} sorok oszlopának egy
+      ismétlődő szótársort kell találnia a(z) %{column} oszlophoz, de %{found} van.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
+    filing_export_xml_row_column_undeclared: A(z) %{binding} kötés sorokat hordoz,
+      de nem ad meg oszlopot a sorokhoz. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_xml_serialiser_not_bytes: Az XML-szerializáló %{type} értéket adott
+      vissza bájtok helyett. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_xml_version_token_unresolved: Az XML-export nem tudta feloldani
+      a kötelező Aux/VERSION elemet. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_xsd_root_absent: A(z) %{source} XML-szótár XSD-forrása nem ad meg
+      %{root} gyökérelemet. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
+    filing_export_xsd_source_unresolved: A(z) %{layout} XML-szótár exportálási tervnek
+      nincs feloldott XSD-forrása. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_xsd_unparseable: A(z) %{source} XML-szótár XSD-forrása nem értelmezhető.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
+    filing_export_xsd_version_absent: A(z) %{source} XML-szótár XSD-forrása nem ad
+      meg versionxsd értéket. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      ezért az adataid módosítása nem javítja ki.
     integrity_active_profile_pointer: Az aktívprofil-mutató érvénytelen; javítsd a
       kiválasztott profilt a folytatás előtt.
     integrity_apoderado_configuration_identity: A tárolt meghatalmazotti beállítás
@@ -735,6 +1008,10 @@ errors:
       konfigurálva.
     integrity_corpus_anchor_resolution: Egy csomagolt korpuszhorgony nem pontosan
       egy kinyert egységre oldódik fel.
+    integrity_filing_export: Egy exportellenőrzés hibát talált az alkalmazás saját
+      exportálási tervében.
+    integrity_filing_export_design: Egy exportálási terv ellenőrzése hibát jelzett
+      az alkalmazáson belül.
     integrity_filing_validation: A benyújtás-érvényesítés blokkoló eredményt talált.
     integrity_financial_attachments_attachment_validation: A csatolmány nem ment át
       az érvényesítésen. Ellenőrizd a fájlt, és csatold újra.
@@ -742,6 +1019,8 @@ errors:
       NIE vagy CIF.
     integrity_justificante_verification: Az AEAT-tal való bizonylat-ellenőrzést nem
       sikerült elvégezni.
+    integrity_modelo_export_design: Az exportot nem lehetett megírni, mert az alkalmazás
+      saját exportálási terve ellentmond önmagának.
     integrity_modelo_export_field_unrenderable: 'Semmi sem íródott ki: a(z) %{field_id}
       mező (casilla %{casilla_id}) nem írható ki az értékéből, mert az alkalmazás
       által hordozott hivatalos rekordterv és az érték nem egyezik. A hiba a kiviteli
@@ -1223,6 +1502,9 @@ errors:
     refused_export_format: A kért exportálási sorosítási formátum nem támogatott.
     refused_filing_calculate: A benyújtás-számítás vagy összefoglalás nem ment át
       az invariáns-ellenőrzésen.
+    refused_filing_export_casilla_value: 'Semmi sem íródott ki: egy általad megadott
+      mező olyan értéket tartalmaz, amelyet az exportálás nem tud a hivatalos terv
+      szerinti helyre írni. Add meg újra a mezőt, és exportálj újra.'
     refused_filing_export_declared_party_name: 'Semmi sem íródott ki: a(z) %{export_field_id}
       mező olyan partnert nevez meg, akinek nincs olyan bevallási neve, amelyet az
       AEAT nyilvántartási mintája ott elfogad. Add meg a partner bevallási nevét,
@@ -1241,6 +1523,9 @@ errors:
       mező pedig %{field_length} karakteres. A nyilvántartási minta nem engedi a rövidítést,
       ezért adj meg a névnek egy %{field_length} karakteres változatát, és exportálj
       újra.'
+    refused_filing_export_profile_fact_missing: 'Semmi sem íródott ki: az exportáláshoz
+      szükség van egy rád vonatkozó adatra, amelyet a profilod nem tartalmaz. Add
+      meg, és exportálj újra.'
     refused_financial_aggregation_category_coverage: Egy tranzakcióhoz hiányzik a
       kategória- vagy profil-lefedettség. Osztályozd a tranzakciót az összesítés előtt.
     refused_financial_aggregation_missing_classification: Néhány időszaki tranzakció
@@ -1412,6 +1697,9 @@ errors:
       időszak nem rögzít napot; {export_on} napon az eredményt csak más módon fizetheted
       meg.
     refused_modelo_edit_parse: Ez a bejegyzés nem olvasható.
+    refused_modelo_export_casilla_value: 'Semmi sem íródott ki: egy általad megadott
+      mező olyan értéket tartalmaz, amelyet az exportálás nem tud a hivatalos terv
+      szerinti helyre írni. Add meg újra a mezőt, és exportálj újra.'
     refused_modelo_export_declared_party_name: 'Semmi sem íródott ki: a(z) %{field_length}
       pozíció hosszú %{export_field_id} mező olyan partnert nevez meg, akinek nincs
       olyan bevallási neve, amelyet az AEAT nyilvántartási mintája elfogad. Add meg
@@ -1427,6 +1715,8 @@ errors:
     refused_modelo_export_required_record_absent: A hivatalos terv legalább egy %{export_record_id}
       rekordot ír elő, de ebben a bevallásban egy sincs, így ebben a formátumban nincs
       mit kiírni, és semmi sem íródott ki.
+    refused_modelo_export_settlement: 'Semmi sem íródott ki: az exportálás nem tudja
+      megadni, hogyan kell befizetni vagy visszaigényelni a bevallás összegét.'
     refused_modelo_export_unrepresentable_character: 'Semmi sem íródott ki: a(z) %{field_id}
       mező a(z) „%{character}” (%{code_point}) karaktert tartalmazza, amelyet az AEAT
       rekordterve nem enged leírni. Elhagyása vagy cseréje más adatot vallana be.

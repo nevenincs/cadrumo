@@ -13,7 +13,7 @@ from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryE
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
 from .errors import ModeloApplicationError
 
 #: Each family minimum the result block claims, and the occurrence that identifies whom it is claimed for.
@@ -51,8 +51,9 @@ def registry_modelo_100_xml_declarations() -> Mapping[str, str]:
     """Resolve the selected XML export declarations without a Python copy."""
     authority = governed_facts_in_scope()
     if authority is None:
-        raise FilingExportValidationError(
-            "Modelo 100 XML export declarations require a generation-pinned authority operation"
+        raise FilingExportDesignIntegrityError(
+            "Modelo 100 XML export declarations require a generation-pinned authority operation",
+            translated_message="errors.integrity.filing_export_modelo100_declarations_unpinned",
         )
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -62,7 +63,10 @@ def registry_modelo_100_xml_declarations() -> Mapping[str, str]:
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
-        raise FilingExportValidationError("selected Modelo 100 XML declarations must be a mapping fact")
+        raise FilingExportDesignIntegrityError(
+            "selected Modelo 100 XML declarations must be a mapping fact",
+            translated_message="errors.integrity.filing_export_modelo100_declarations_not_mapping",
+        )
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
@@ -70,7 +74,10 @@ def modelo_100_comunidad_block(path: str, *, declarations: Mapping[str, str]) ->
     """Return the comunidad block ``path`` sits in, or ``None`` when it is elsewhere."""
     block_prefix = declarations.get("xml.comunidad.block_prefix")
     if block_prefix is None:
-        raise FilingExportValidationError("registry-selected comunidad block prefix is missing")
+        raise FilingExportDesignIntegrityError(
+            "registry-selected comunidad block prefix is missing",
+            translated_message="errors.integrity.filing_export_modelo100_comunidad_prefix_missing",
+        )
     if not path.startswith(block_prefix):
         return None
     return path[len(block_prefix) :].split("/", 1)[0]
@@ -135,7 +142,10 @@ def _modelo_100_comunidad_casillas(
             continue
         shared_total = declarations.get("xml.comunidad.shared_total_casilla")
         if shared_total is None:
-            raise FilingExportValidationError("registry-selected comunidad total casilla is missing")
+            raise FilingExportDesignIntegrityError(
+                "registry-selected comunidad total casilla is missing",
+                translated_message="errors.integrity.filing_export_modelo100_comunidad_total_missing",
+            )
         if entry.casilla_id != shared_total:
             own_casillas_by_block.setdefault(block, set()).add(entry.casilla_id)
     return own_casillas_by_block
@@ -186,7 +196,10 @@ def _modelo_100_shared_total_paths(
     """Return shared total paths when no comunidad block is filed."""
     shared_total = declarations.get("xml.comunidad.shared_total_casilla")
     if shared_total is None:
-        raise FilingExportValidationError("registry-selected comunidad total casilla is missing")
+        raise FilingExportDesignIntegrityError(
+            "registry-selected comunidad total casilla is missing",
+            translated_message="errors.integrity.filing_export_modelo100_comunidad_total_missing",
+        )
     return frozenset(entry.path for entry in entries if str(entry.casilla_id) == shared_total)
 
 
@@ -219,7 +232,10 @@ def modelo_100_sign_branch_value(
     negative_field = declarations.get("xml.sign.negative_field")
     non_negative_field = declarations.get("xml.sign.non_negative_field")
     if negative_field is None or non_negative_field is None:
-        raise FilingExportValidationError("registry-selected XML sign declarations are incomplete")
+        raise FilingExportDesignIntegrityError(
+            "registry-selected XML sign declarations are incomplete",
+            translated_message="errors.integrity.filing_export_modelo100_sign_declarations_incomplete",
+        )
     negative_branch = entry.field_id == negative_field
     if not negative_branch and entry.field_id != non_negative_field:
         return raw

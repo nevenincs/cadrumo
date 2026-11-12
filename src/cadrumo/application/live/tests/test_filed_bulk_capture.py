@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
@@ -23,6 +23,9 @@ from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.filing_kind_evidence import SubmittedFileFilingKindMarker
+from ...auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ...auth.operator_scope_ports import OperatorScopePorts
+from ...auth.protocols import BrowserSessionFactoryPort
 from ...storage.sync_runs.records import SyncRunRecord
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import (
@@ -58,8 +61,10 @@ from ..filed_history_discovery import (
     FiledHistoryOnboardingRun,
     expected_but_not_found_notice,
 )
-from ..filed_history_pull import filed_history_pair_outcomes
+from ..filed_history_pull import filed_history_pair_outcomes, pull_filed_history
 from ..filed_observation_ports import FiledObservationArtefactProtocol, FiledObservedCasillaProtocol
+from ..iva_remote_state_ports import IvaRemoteStatePort
+from ..notification_ports import NotificationsPorts
 from ..remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledCapturePairOutcome,
@@ -923,6 +928,156 @@ def test_bulk_capture_refuses_duplicate_coordinates_before_register_contact(tmp_
         )
     assert register.opened == 0
     assert register.walks == []
+
+
+def _ragged_grid() -> tuple[tuple[str, int], ...]:
+    """Modelo 130 for two years and modelo 100 for one year inside 130's span, in walk order."""
+    last = datetime.now(UTC).year - 1
+    return (("130", last), ("100", last - 1), ("130", last - 2))
+
+
+@pytest.mark.parametrize("dry_run", [False, True], ids=["persisted", "preview"])
+def test_exact_pair_capture_reads_only_the_nominated_pairs_in_walk_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, dry_run: bool
+) -> None:
+    """A ragged grid is not widened to its modelos-by-years rectangle."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    grid = _ragged_grid()
+    year = grid[0][1]
+    register = _AccountingRegister({("100", year - 1): (_annual_declaration(year - 1, "1"),)})
+    repository = _AccountingRunRepository()
+    report = asyncio.run(
+        capture_filed_data_bulk(
+            filed_data_port=cast(FiledDataCapturePort, register),
+            ports=in_memory_filed_observation_test_bundle().ports,
+            pairs=grid,
+            output_root=tmp_path,
+            dry_run=dry_run,
+            sync_run_repository=repository,
+        )
+    )
+    report.require_consistent()
+    assert register.walks == list(grid)
+    assert register.opened == 1
+    assert report.modelos == ("130", "100")
+    assert (report.year_from, report.year_to) == (year - 2, year)
+    walked = {(pair.modelo, pair.year) for pair in report.pair_outcomes if pair.walk_attempted}
+    assert walked == set(grid)
+    unwalked = [pair for pair in report.pair_outcomes if not pair.walk_attempted]
+    assert {(pair.modelo, pair.year) for pair in unwalked} == {("130", year - 1), ("100", year), ("100", year - 2)}
+    assert all(not pair.walk_completed and pair.row_count == 0 for pair in unwalked)
+    if dry_run:
+        assert report.dry_run
+        assert report.captured_count == 0
+        assert report.observation_paths == ()
+        assert repository.records == []
+    else:
+        assert report.captured_count == 1
+        assert len(repository.records) == 1
+
+
+def test_exact_pair_capture_reports_a_refusal_on_each_nominated_pair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    grid = _ragged_grid()
+    register = _AccountingRegister({}, fail_walk=True)
+    report = asyncio.run(
+        capture_filed_data_bulk(
+            filed_data_port=cast(FiledDataCapturePort, register),
+            ports=in_memory_filed_observation_test_bundle().ports,
+            pairs=grid,
+            output_root=tmp_path,
+            dry_run=True,
+        )
+    )
+    report.require_consistent()
+    assert register.walks == list(grid)
+    assert [(failure.modelo, failure.year) for failure in report.failures] == list(grid)
+    assert report.failed_count == len(grid)
+
+
+@pytest.mark.parametrize(
+    "scope",
+    [{"modelos": ("100",)}, {"year_from": 1}, {"year_to": 1}],
+    ids=["modelos", "year_from", "year_to"],
+)
+def test_exact_pair_capture_is_exclusive_with_the_rectangle(tmp_path: Path, scope: dict[str, object]) -> None:
+    register = _AccountingRegister({})
+    with pytest.raises(ValueError, match="either exact pairs"):
+        asyncio.run(
+            capture_filed_data_bulk(
+                filed_data_port=cast(FiledDataCapturePort, register),
+                ports=in_memory_filed_observation_test_bundle().ports,
+                pairs=_ragged_grid(),
+                output_root=tmp_path,
+                dry_run=True,
+                **cast(dict[str, Any], scope),
+            )
+        )
+    assert register.opened == 0
+
+
+def test_exact_pair_capture_refuses_duplicate_or_empty_pairs(tmp_path: Path) -> None:
+    register = _AccountingRegister({})
+    grid = _ragged_grid()
+    for pairs in ((grid[0], grid[0]), ()):
+        with pytest.raises(ValueError, match=r"unique modelo/year|at least one"):
+            asyncio.run(
+                capture_filed_data_bulk(
+                    filed_data_port=cast(FiledDataCapturePort, register),
+                    ports=in_memory_filed_observation_test_bundle().ports,
+                    pairs=pairs,
+                    output_root=tmp_path,
+                    dry_run=True,
+                )
+            )
+    assert register.opened == 0
+
+
+# A dry run with injected discovery never opens a session, scope or remote read port.
+_UNREACHED_PORT: object = object()
+
+
+def test_pull_filed_history_walks_only_what_discovery_nominated(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Discovery's ragged grid reaches the register as exactly its pairs, with no rectangle refusals."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    grid = _ragged_grid()
+    signal = (FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
+    discovery = FiledHistoryDiscoveryReport(
+        pairs=tuple(FiledHistoryDiscoveryPair(modelo=modelo, ejercicio=year, signals=signal) for modelo, year in grid)
+    )
+    register = _AccountingRegister({})
+
+    async def discover(**_kwargs: object) -> FiledHistoryDiscoveryReport:
+        return discovery
+
+    run = asyncio.run(
+        pull_filed_history(
+            certificate_secret_backend_factory=cast(CertificateSecretBackendFactory, _UNREACHED_PORT),
+            browser_session_factory=cast(BrowserSessionFactoryPort, _UNREACHED_PORT),
+            operator_scope_ports=cast(OperatorScopePorts, _UNREACHED_PORT),
+            filed_data_port=cast(FiledDataCapturePort, register),
+            iva_remote_state_port=cast(IvaRemoteStatePort, _UNREACHED_PORT),
+            notifications_ports=cast(NotificationsPorts, _UNREACHED_PORT),
+            ports=in_memory_filed_observation_test_bundle().ports,
+            output_root=tmp_path,
+            dry_run=True,
+            discover=discover,
+        )
+    )
+    assert register.walks == list(grid)
+    assert [(pair.modelo, pair.ejercicio) for pair in run.pairs] == list(grid)
+    assert all(pair.walk_completed and not pair.refused for pair in run.pairs)
+    assert run.stage_failures == ()
 
 
 @pytest.mark.parametrize(

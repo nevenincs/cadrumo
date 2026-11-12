@@ -193,6 +193,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("ledger.classify", ("app", "ledger", "classify"), "LedgerClassifyResult", profile_bound_write=True),
     ActionTarget(
+        "ledger.counterparty.filing_name",
+        ("app", "ledger", "counterparty", "filing-name"),
+        "CounterpartyFilingNameResult",
+        required_inputs=("tax_identifier", "kind"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "ledger.inventory.movement.claim",
         ("app", "ledger", "inventory", "movement", "claim"),
         "InventoryLedgerChangeResult",
@@ -289,6 +296,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         ("app", "modelo", "work", "override"),
         "WorkManualEntryResult",
         required_inputs=("work_unit_id", "binding_id", "value"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.work.set_value",
+        ("app", "modelo", "work", "set-value"),
+        "WorkManualEntryResult",
+        required_inputs=("work_unit_id", "casilla_id", "value"),
         profile_bound_write=True,
     ),
     ActionTarget("modelo.work.revisions", ("app", "modelo", "work", "revisions"), "WorkRevisionsResult"),

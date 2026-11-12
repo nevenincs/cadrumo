@@ -3248,8 +3248,14 @@ cli:
         kihagyva.'
       registry_unavailable: A nyomtatványdefiníciók nem érhetők el.
       secure_objects_empty: A biztonságos objektumtár üres.
+      secure_objects_probe_failed: Nem sikerült ellenőrizni a biztonságos objektumok
+        épségét %{failed} névtérben. Ez nem jelenti azt, hogy üresek vagy épek.
+      secure_objects_probe_failed_detail: 'nem ellenőrzött: %{namespaces}'
       secure_objects_readable: '%{readable} olvasható biztonságos objektum-névtér:
         %{namespaces}.'
+      secure_objects_unavailable: Nem sikerült ellenőrizni a biztonságos objektumok
+        épségét, mert a titkosított tárat nem lehetett beolvasni. Ez nem jelenti azt,
+        hogy a tár üres vagy ép.
       secure_objects_unreadable: '%{unreadable} olvashatatlan sor, %{readable} olvasható
         sor.'
       state_backend_readable: Az állapot-tár olvasható.
@@ -4245,8 +4251,16 @@ cli:
       bienes_extranjero_unset: A profilodban még nem szerepel, hogy a külföldön lévő
         vagyonod és jogaid meghaladják-e a bejelentési értékhatárt.
       censo_enrolment_unverified: A nyilvántartásba vételt még nem ellenőrizték
+      deadline_windows_unavailable: A nyilvántartásban ennek a tartománynak egy részére
+        nincsenek határidők, ezért nem tudni semmit az ide eső kötelezettségekről.
+        Nézd meg az áttekintés állapotát; az itt látható üres lista nem jelenti azt,
+        hogy semmi sem esedékes.
       estimacion_objetiva_unset: A profilodban még nem szerepel, hogy tevékenységedre
         melyik személyi jövedelemadózási rendszer vonatkozik.
+      explain_deadline_windows_unavailable: A nyilvántartásban nincsenek határidők
+        a(z) %{modelo} modellhez és a(z) %{year}. évhez, ezért sem az ütemezés, sem
+        a késés nem állapítható meg. Ha itt nincs késedelmi figyelmeztetés, az nem
+        jelenti, hogy időben vagy.
       gran_empresa_unset: A profilodban még nem szerepel, hogy az előző naptári évi
         forgalmad meghaladta-e a nagyvállalati értékhatárt, ami eldönti, hogy havonta
         vagy negyedévente nyújtasz be bevallást.

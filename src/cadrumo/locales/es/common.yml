@@ -6281,6 +6281,7 @@ review:
       drafts_load_failed: No se pudieron cargar los borradores de presentación desde
         el backend seguro.
       invoices_load_failed: No se pudieron cargar las facturas del adaptador.
+      profile_load_failed: No se pudo cargar el perfil desde el almacén seguro.
       transactions_load_failed: No se pudieron cargar las transacciones del adaptador.
   filing:
     draft_placeholder_summary: Borrador pendiente

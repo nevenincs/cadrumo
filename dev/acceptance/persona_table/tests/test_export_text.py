@@ -89,10 +89,11 @@ def test_an_accented_vowel_fails_but_enye_and_cedilla_pass() -> None:
     assert check_export_text(_layout(), _payload("B0000002\u00c7"), _upper_case_declared) == []
 
 
-def test_the_case_rule_is_inactive_while_the_registry_declares_none() -> None:
+def test_the_case_rule_the_registry_declares_refuses_a_lower_case_letter() -> None:
     layout = _layout()
-    assert not any(declared_case_rule(record) for record in layout.records)
-    assert check_export_text(layout, _payload("b0000002a")) == []
+    assert any(declared_case_rule(record) for record in layout.records)
+    assert check_export_text(layout, _payload("B00000026")) == []
+    assert check_export_text(layout, _payload("b0000002a")) != []
 
 
 def test_a_wrong_record_length_fails() -> None:

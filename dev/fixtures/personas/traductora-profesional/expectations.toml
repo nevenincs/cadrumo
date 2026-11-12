@@ -158,11 +158,12 @@ modelo = "303"
 period = "1T"
 year = "horizon-1"
 casillas = { "07" = "5400.00", "09" = "1134.00", "27" = "1134.00", "28" = "520.00", "29" = "109.20", "45" = "109.20", "64" = "1024.80", "66" = "1024.80", "71" = "1024.80" }
-concepts = { resultado_regimen_general = "1024.80" }
+roles = { "iva-resultado-regimen-general" = "1024.80" }
 derivation = """
 07 = TRA-ING-01 3200.00 + TRA-ING-02 1900.00 + TRA-ING-03 300.00 = 5400.00; 09 = 21 % = 1134.00. Retención does not reduce the IVA base.
 28 = TRA-SW-1 120.00 + TRA-ASE-1 400.00 = 520.00; 29 = 25.20 + 84.00 = 109.20.
 Resultado = 1134.00 - 109.20 = 1024.80.
+role iva-resultado-regimen-general is the DR303 box [46] "Resultado régimen general (27 - 45)" printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition.
 """
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
@@ -172,8 +173,8 @@ modelo = "303"
 period = "2T"
 year = "horizon-1"
 casillas = { "07" = "5150.00", "09" = "1081.50", "27" = "1081.50", "28" = "520.00", "29" = "109.20", "45" = "109.20", "64" = "972.30", "66" = "972.30", "71" = "972.30" }
-concepts = { resultado_regimen_general = "972.30" }
-derivation = "07 = TRA-ING-04 2800.00 + TRA-ING-05 2350.00; 09 = 1081.50. 28/29 = TRA-SW-2 + TRA-ASE-2. Resultado = 972.30."
+roles = { "iva-resultado-regimen-general" = "972.30" }
+derivation = "07 = TRA-ING-04 2800.00 + TRA-ING-05 2350.00; 09 = 1081.50. 28/29 = TRA-SW-2 + TRA-ASE-2. Resultado = 972.30. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -182,8 +183,8 @@ modelo = "303"
 period = "3T"
 year = "horizon-1"
 casillas = { "07" = "4450.00", "09" = "934.50", "27" = "934.50", "28" = "520.00", "29" = "109.20", "45" = "109.20", "64" = "825.30", "66" = "825.30", "71" = "825.30" }
-concepts = { resultado_regimen_general = "825.30" }
-derivation = "07 = TRA-ING-06 2400.00 + TRA-ING-07 1600.00 + TRA-ING-08 450.00; 09 = 934.50. 28/29 = TRA-SW-3 + TRA-ASE-3. Resultado = 825.30."
+roles = { "iva-resultado-regimen-general" = "825.30" }
+derivation = "07 = TRA-ING-06 2400.00 + TRA-ING-07 1600.00 + TRA-ING-08 450.00; 09 = 934.50. 28/29 = TRA-SW-3 + TRA-ASE-3. Resultado = 825.30. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -192,8 +193,8 @@ modelo = "303"
 period = "4T"
 year = "horizon-1"
 casillas = { "07" = "5650.00", "09" = "1186.50", "27" = "1186.50", "28" = "520.00", "29" = "109.20", "45" = "109.20", "64" = "1077.30", "66" = "1077.30", "71" = "1077.30" }
-concepts = { resultado_regimen_general = "1077.30" }
-derivation = "07 = TRA-ING-09 3600.00 + TRA-ING-10 2050.00; 09 = 1186.50. 28/29 = TRA-SW-4 + TRA-ASE-4. Resultado = 1077.30."
+roles = { "iva-resultado-regimen-general" = "1077.30" }
+derivation = "07 = TRA-ING-09 3600.00 + TRA-ING-10 2050.00; 09 = 1186.50. 28/29 = TRA-SW-4 + TRA-ASE-4. Resultado = 1077.30. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -294,12 +295,31 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0599" = "2985.00", "0604" = "0.00" }
-concepts = { ingresos_actividad = "20650.00", gastos_actividad = "5608.00", provision_dificil_justificacion = "752.10", rendimiento_neto_actividad = "14289.90", minimo_personal = "5550.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "20650.00", "irpf_ed_suma_gastos_previos" = "5608.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "752.10", "irpf_ed_rdto_neto_previo_reduccion" = "14289.90", "irpf_minimo_contribuyente_estatal" = "5550.00" }
 derivation = """
 Ingresos = all issued bases 20650.00. Gastos = RETA 12 x 294.00 + software 4 x 120.00 + corrección 4 x 400.00 = 5608.00.
 Provisión = 5 % of 15042.00 = 752.10; rendimiento neto = 14289.90.
 0599 retenciones = 480.00 + 285.00 + 420.00 + 352.50 + 360.00 + 240.00 + 540.00 + 307.50 = 2985.00. 0604 = 0.00: RIRPF art. 109.2 exempts her from Modelo 130, so she made no pago fraccionado.
 Cuota is not asserted: it depends on the state and Valencian scales.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_previo_actividad = irpf_ed_rdto_neto_previo_reduccion (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30", "rd-439-2007:art-109"]
+grounding = "verified"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+governed_by = "ley-35-2006:da-56"
+casillas = { "0599" = "2985.00", "0604" = "0.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "20650.00", "irpf_ed_suma_gastos_previos" = "5608.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "1052.94", "irpf_ed_rdto_neto_previo_reduccion" = "13989.06", "irpf_minimo_contribuyente_estatal" = "5550.00" }
+derivation = """
+The same year as the value above where LIRPF disposición adicional quincuagésima sexta (Ley 31/2022, art. 60.2)
+governs: it sets the RIRPF art. 30 percentage at 7 % "durante el período impositivo 2023", and the Manual práctico de
+Renta 2023 (modalidad simplificada, page 443) applies "el porcentaje del 7 por 100" with the 2000.00 annual limit.
+Provisión = 7 % of 15042.00 = 1052.94 (under the cap); rendimiento neto = 20650.00 - 5608.00 - 1052.94 = 13989.06.
+Ingresos, gastos, 0599 and 0604 are those of the value above.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_previo_actividad = irpf_ed_rdto_neto_previo_reduccion (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
+"""
+legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-109"]
 grounding = "verified"

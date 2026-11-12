@@ -25,7 +25,7 @@ _MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
 _MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND = "maternidad_eligibility_ceilings_unresolved"
 
 
-_MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND = "maternidad_cotizaciones_ceiling_inexpressible"
+_MATERNIDAD_COTIZACIONES_FIGURE_SOURCE_KIND = "maternidad_cotizaciones_figure_missing"
 
 
 _MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND = "maternidad_ambiguous_relacion"
@@ -62,38 +62,33 @@ def maternidad_ceilings_unresolved_advisory(
     )
 
 
-def maternidad_cotizaciones_ceiling_advisory(
-    withheld_for_ceiling: bool,
+def maternidad_cotizaciones_figure_advisory(
+    figure_missing: bool,
     casilla_id: CasillaId,
 ) -> CalculationSourceDiagnostic | None:
-    """Advise when a pre-2023 deducción is withheld because its ceiling is unreachable.
+    """Advise when a child's cotizaciones figure is needed and was never stated.
 
-    Until 2022 Art. 81.1 capped the deducción at the mother's "cotizaciones y
-    cuotas totales a la Seguridad Social y mutualidades devengadas en cada
-    período impositivo"; the Manual Práctico de Renta 2024 records the removal
-    "desde el 1 de enero de 2023". The engine cannot apply that cap for the
-    affected years, because the cotizaciones binding exists only in the 2024
-    revision and the profile fact is 2024-pinned, so no figure is reachable.
-
-    Granting an un-ceilinged deducción for those years would over-grant and
-    therefore under-declare. Withholding is the safe direction; withholding
-    SILENTLY is not, because the operator declared months and would otherwise
-    see them vanish with no reason given. The remedy is theirs rather than the
-    engine's: the figure is computable by hand from the certificate they hold.
+    Until Ley 31/2022 Art. 81.1 limited each child's deducción to the mother's
+    "cotizaciones y cuotas totales a la Seguridad Social y Mutualidades devengadas
+    en cada período impositivo con posterioridad al nacimiento". An edition that
+    states that rule needs the figure on the child's row. Granting the deducción
+    without it would over-grant, and reading it as zero would withhold a real
+    deducción, so the casilla stays unresolved. Silence would be
+    indistinguishable from a filer who declared nothing, so the advisory names
+    what to state.
     """
-    if not withheld_for_ceiling:
+    if not figure_missing:
         return None
     return CalculationSourceDiagnostic(
         reason="source_issue",
-        source_kind=_MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND,
+        source_kind=_MATERNIDAD_COTIZACIONES_FIGURE_SOURCE_KIND,
         message=(
-            "the active profile declares meses_madre_trabajo but this filing year predates the removal of the "
-            "Art. 81.1 ceiling, when the deducción was still capped at the mother's Social Security "
-            "cotizaciones devengadas in the period. This application holds no cotizaciones figure for "
-            "such a year, so the cap cannot be applied and the deducción is withheld rather than "
-            "granted un-capped. Compute it "
-            "by hand as min(months x 100, 1200, cotizaciones devengadas) and enter the result with "
-            "`--casilla` if filing this year."
+            "the active profile declares meses_madre_trabajo for a child but states no cotizaciones "
+            "figure on that child's row, and this edition limits the Art. 81.1 deducción por maternidad "
+            "of each child to the cotizaciones y cuotas a la Seguridad Social y Mutualidades devengadas "
+            "after the birth, so the deducción is left unresolved. State the child's cotizaciones "
+            "(from the mother's certificate) on the descendiente record, or enter the casilla with "
+            "`--casilla`."
         ),
         casilla_id=casilla_id,
     )

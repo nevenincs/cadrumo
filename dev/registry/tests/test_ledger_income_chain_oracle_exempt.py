@@ -174,8 +174,10 @@ def test_the_declared_category_is_what_makes_the_cuota_zero() -> None:
     table rather than testing for nullness is what separates them, so the
     premise is asserted rather than assumed.
     """
-    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
+    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED, effective_date=_VALUE_DATE)
+    assert not category_cuota_is_zero_by_law(
+        IvaCategory("domestic_general"), InvoiceKind.ISSUED, effective_date=_VALUE_DATE
+    )
 
 
 def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None:

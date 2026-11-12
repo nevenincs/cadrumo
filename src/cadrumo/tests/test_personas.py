@@ -263,14 +263,15 @@ def test_a_history_record_below_the_floor_is_refused_unless_a_lowered_horizon_om
     persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
 
     assert persona.local_observations == ()
-    (left_out,) = [item for item in persona.below_floor if item.block == "local_observations"]
-    assert (left_out.modelo, str(left_out.year), left_out.periods) == (
+    (history,) = [item for item in persona.below_floor if item.history]
+    assert (history.block, history.modelo, str(history.year), history.periods) == (
+        "local_observations",
         observation["modelo"],
         observation["year"],
         (observation["period"],),
     )
-    assert left_out.history
-    assert f"floor {_LOWERED.floor}" in left_out.reason(_LOWERED)
+    assert f"floor {_LOWERED.floor}" in history.reason(_LOWERED)
+    assert all(item.year.precedes_floor(_LOWERED) for item in persona.below_floor)
 
 
 def test_a_withholding_certificate_below_the_floor_is_left_out_under_a_lowered_horizon() -> None:
@@ -351,7 +352,9 @@ def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon()
         (persona.expectations.deadlines, unchanged.expectations.deadlines),
     ):
         assert kept == tuple(item for item in every if str(item.year) != "horizon-2")
-    assert sorted(item.block for item in persona.below_floor) == [
+    assert persona.prior_carries == tuple(item for item in unchanged.prior_carries if str(item.year) != "horizon-2")
+    carries_dropped = {"prior_carries"} if len(persona.prior_carries) < len(unchanged.prior_carries) else set()
+    assert {item.block for item in persona.below_floor} == {
         "expectations.deadlines",
         "expectations.obligations",
         "expectations.values",
@@ -359,7 +362,8 @@ def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon()
         "local_observations",
         "withholding_certificates",
         "work_income_none_statements",
-    ]
+        *carries_dropped,
+    }
     assert sorted(item.block for item in persona.below_floor if item.history) == [
         "filed_returns",
         "local_observations",
@@ -566,6 +570,21 @@ def test_a_malformed_pending_carry_statement_is_refused(
 ) -> None:
     with pytest.raises(PersonaCatalogueError, match=message):
         _parse(_with_prior_carries(*statements))
+
+
+def test_a_pending_carry_statement_below_the_floor_is_omitted_under_a_lowered_horizon() -> None:
+    document = _with_prior_carries(
+        {"year": "horizon-1", "nothing_pending": True}, {"year": "horizon-2", "nothing_pending": True}
+    )
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(document, envelope=_LOWERED)
+
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert [str(statement.year) for statement in persona.prior_carries] == ["horizon-1"]
+    assert ("prior_carries", "100", "horizon-2", ("0A",)) in [
+        (item.block, item.modelo, str(item.year), item.periods) for item in persona.below_floor
+    ]
 
 
 def test_a_pending_carry_statement_needs_a_persona_that_files_modelo_100() -> None:

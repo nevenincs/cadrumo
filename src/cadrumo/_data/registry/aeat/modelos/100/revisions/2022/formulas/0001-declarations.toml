@@ -1075,6 +1075,31 @@ source_refs = ["lirpf-cuota-chain-authority"]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["sin que pueda resultar negativa como consecuencia de dichas disminuciones", "Si la base liquidable general resultase negativa, su importe podrá ser compensado"]
 [[revisions."2022".formulas]]
+id = "renta-deduccion-maternidad-0611-cotizaciones"
+target_casilla_id = "0611"
+# Art. 81.1 LIRPF in force until 2022: 100 euros per month in which the mother
+# carries on an activity and is registered with Social Security or a mutualidad,
+# at most 1.200 euros a year and, for each child, at most the cotizaciones y
+# cuotas devengadas after that child's birth. There is no 150 euro increment in
+# this redaction. The per-child fold happens where the descendant records live;
+# this leaf carries the one resolved value into the casilla. A child with months
+# and no stated cotizaciones figure leaves the value unresolved, so the box is
+# never computed from an assumed zero or an unlimited amount. The 2023 edition,
+# after the Ley 31/2022 reform, replaces this formula with the unlimited rule.
+expression = { binding = "renta-profile-deduccion-maternidad-cotizaciones" }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-redaccion-2018"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+    "100 euros por cada mes del período impositivo en que concurran de forma",
+    "no podrá superar ninguna de las dos cantidades",
+    "Hasta 1.200 euros anuales.",
+    "cotizaciones y cuotas totales a la Seguridad Social y Mutualidades",
+]
+[[revisions."2022".formulas]]
 id = "renta-incremento-guarderia-0613"
 target_casilla_id = "0613"
 # Art. 81.2 LIRPF in force until 2022: incremento de la deducción por maternidad

@@ -29,7 +29,7 @@ from ...domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixFieldDeclaration,
     FilingEnvelopePrefixRole,
 )
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft, registry_schema_version
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.submission.models import ModeloDraftStatus
@@ -187,7 +187,11 @@ def envelope_period_token(period: Period) -> str:
     #: record identifier ``<T{modelo}0{AAAA}{PP}0000>``, in the prefix and the relative closer.
     extent = resolve_form_codes(_FORM_ROW_CODES_FACT).integer("aeat.envelope.period_extent")
     if len(token) != extent:
-        raise FilingExportValidationError(f"filing period {period!s} has no {extent}-character envelope representation")
+        raise FilingExportDesignIntegrityError(
+            f"filing period {period!s} has no {extent}-character envelope representation",
+            translated_message="errors.integrity.filing_export_envelope_period_not_representable",
+            context={"period": str(period), "extent": extent},
+        )
     return token
 
 
@@ -197,7 +201,10 @@ def _declared_envelope_period_token(period: Period, *, envelope: FilingEnvelopeD
     if scheme_quarter is None:
         return envelope_period_token(period)
     if envelope is None or envelope.scheme_period_form != "bare_quarter":
-        raise FilingExportValidationError("a scheme quarter requires an envelope that declares its bare quarter")
+        raise FilingExportDesignIntegrityError(
+            "a scheme quarter requires an envelope that declares its bare quarter",
+            translated_message="errors.integrity.filing_export_envelope_quarter_token_undeclared",
+        )
     return scheme_quarter.value
 
 
@@ -208,7 +215,11 @@ def envelope_closer_bytes(*, modelo: Modelo, period: Period, envelope: FilingEnv
     period_token = _declared_envelope_period_token(period, envelope=envelope)
     closer = f"</T{modelo.value}{discriminant}{period.filing_year:04d}{period_token}{record_type}".encode("ascii")
     if len(closer) != (extent := resolve_form_codes(_FORM_ROW_CODES_FACT).integer("aeat.envelope.closer_extent")):
-        raise FilingExportValidationError(f"filing-envelope closer must render to the declared {extent}-byte extent")
+        raise FilingExportDesignIntegrityError(
+            f"filing-envelope closer must render to the declared {extent}-byte extent",
+            translated_message="errors.integrity.filing_export_envelope_closer_extent",
+            context={"extent": extent},
+        )
     return closer
 
 
@@ -308,7 +319,10 @@ def render_declared_prefix(
     if any(field.role is FilingEnvelopePrefixRole.DECLARANT_TAX_ID for field in prefix_fields):
         token = _declared_envelope_period_token(period, envelope=envelope)
         if envelope is None or envelope.period_tokens is None or token not in envelope.period_tokens:
-            raise FilingExportValidationError("declarant envelope period is outside the range its design lists")
+            raise FilingExportDesignIntegrityError(
+                "declarant envelope period is outside the range its design lists",
+                translated_message="errors.integrity.filing_export_envelope_period_outside_range",
+            )
     prefix = b"".join(
         render_envelope_prefix_field(
             field.role,
@@ -324,7 +338,11 @@ def render_declared_prefix(
         for field in prefix_fields
     )
     if len(prefix) != prefix_extent:
-        raise FilingExportValidationError(f"envelope prefix must render to its declared {prefix_extent}-byte extent")
+        raise FilingExportDesignIntegrityError(
+            f"envelope prefix must render to its declared {prefix_extent}-byte extent",
+            translated_message="errors.integrity.filing_export_envelope_prefix_extent",
+            context={"extent": prefix_extent},
+        )
     return prefix
 
 
@@ -371,7 +389,10 @@ def _envelope_prefix_identity_value(
         return product_software_identity.developer_tax_id
     if role is FilingEnvelopePrefixRole.DECLARANT_TAX_ID:
         if declarant_tax_id is None:
-            raise FilingExportValidationError("declarant tax ID requires the approved filing subject")
+            raise FilingExportDesignIntegrityError(
+                "declarant tax ID requires the approved filing subject",
+                translated_message="errors.integrity.filing_export_envelope_declarant_tax_id_absent",
+            )
         return declarant_tax_id
     return None
 
@@ -385,7 +406,10 @@ def _envelope_prefix_language_value(
     if role is not FilingEnvelopePrefixRole.LANGUAGE:
         return None
     if casilla_id != "decl.idioma" or casilla_values is None:
-        raise FilingExportValidationError("envelope language requires its declared casilla value")
+        raise FilingExportDesignIntegrityError(
+            "envelope language requires its declared casilla value",
+            translated_message="errors.integrity.filing_export_envelope_language_casilla_absent",
+        )
     value = casilla_values.get(casilla_id)
     if not isinstance(value, str) or value not in {member.value for member in DeclaracionIdioma}:
         raise FilingExportValidationError("envelope language must be source-listed E, C, G, or V")
@@ -421,7 +445,11 @@ def _envelope_prefix_role_value(
     language = _envelope_prefix_language_value(role, casilla_id=casilla_id, casilla_values=casilla_values)
     if language is not None:
         return language
-    raise FilingExportValidationError(f"filing-envelope prefix role {role.value!r} has no declared value authority")
+    raise FilingExportDesignIntegrityError(
+        f"filing-envelope prefix role {role.value!r} has no declared value authority",
+        translated_message="errors.integrity.filing_export_envelope_prefix_role_authority",
+        context={"role": role.value},
+    )
 
 
 def render_envelope_prefix_field(
@@ -451,9 +479,15 @@ def render_envelope_prefix_field(
     try:
         payload = value.encode("ascii")
     except UnicodeEncodeError as exc:
-        raise FilingExportValidationError(f"filing-envelope prefix role {role.value!r} is not ASCII") from exc
+        raise FilingExportDesignIntegrityError(
+            f"filing-envelope prefix role {role.value!r} is not ASCII",
+            translated_message="errors.integrity.filing_export_envelope_prefix_role_not_ascii",
+            context={"role": role.value},
+        ) from exc
     if len(payload) != length:
-        raise FilingExportValidationError(
-            f"filing-envelope prefix role {role.value!r} renders to {len(payload)} bytes, expected {length}"
+        raise FilingExportDesignIntegrityError(
+            f"filing-envelope prefix role {role.value!r} renders to {len(payload)} bytes, expected {length}",
+            translated_message="errors.integrity.filing_export_envelope_prefix_role_width",
+            context={"role": role.value, "actual": len(payload), "expected": length},
         )
     return payload

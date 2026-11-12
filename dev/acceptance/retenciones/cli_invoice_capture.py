@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 
 from dev.acceptance.installed_cli import InstalledCli
 
+from .cli_contracts import RetencionesInstalledCliError
 from .cli_observations import money_text, percentage_text, require_result, required_text
 from .scenario import (
     InstalledPeriodicCliSlice,
@@ -13,6 +15,36 @@ from .scenario import (
     Modelo190AnnualDetailInput,
     PaymentAllocation,
 )
+
+
+def declare_perceptor_filing_names(cli: InstalledCli, slices: Iterable[InstalledPeriodicCliSlice]) -> None:
+    """Declare each distinct perceptor's entity filing name once, before any annual export.
+
+    The 180/190 export files the name declared for the perceptor's tax id, not
+    the free text recorded with the invoice. Every perceptor here is an entity
+    (CIF), so its razón social is the whole declared name.
+    """
+    declared: dict[str, str] = {}
+    for slice_ in slices:
+        previous = declared.setdefault(slice_.counterparty_nif, slice_.counterparty_name)
+        if previous != slice_.counterparty_name:
+            raise RetencionesInstalledCliError(stage="filing_name_declare", diagnostic_code="perceptor_name_conflict")
+    for tax_identifier, razon_social in declared.items():
+        require_result(
+            cli,
+            (
+                "app",
+                "ledger",
+                "counterparty",
+                "filing-name",
+                tax_identifier,
+                "--kind",
+                "entity",
+                "--razon-social",
+                razon_social,
+            ),
+            stage="filing_name_declare",
+        )
 
 
 def capture_invoice_withholding(*, cli: InstalledCli, slice_: InstalledPeriodicCliSlice, year: int) -> str:

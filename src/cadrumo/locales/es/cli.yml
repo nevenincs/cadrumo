@@ -3301,8 +3301,15 @@ cli:
         de los modelos: omitida.'
       registry_unavailable: Las definiciones de los modelos no están disponibles.
       secure_objects_empty: El almacén de objetos seguros esta vacío.
+      secure_objects_probe_failed: No se pudo comprobar la integridad de los objetos
+        seguros en %{failed} espacio(s) de nombres. Esto no significa que estén vacíos
+        ni sanos.
+      secure_objects_probe_failed_detail: 'sin comprobar: %{namespaces}'
       secure_objects_readable: '%{readable} espacios de nombres de objetos seguros
         legibles: %{namespaces}.'
+      secure_objects_unavailable: No se pudo comprobar la integridad de los objetos
+        seguros porque no se pudo leer el almacén cifrado. Esto no significa que el
+        almacén esté vacío ni sano.
       secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable} fila(s)
         legible(s)'
       state_backend_readable: El almacén de estado del flujo de trabajo es accesible.
@@ -4319,8 +4326,16 @@ cli:
       bienes_extranjero_unset: En tu perfil aún no consta si tus bienes y derechos
         situados en el extranjero superan el umbral de declaración.
       censo_enrolment_unverified: No se ha verificado el alta en el censo
+      deadline_windows_unavailable: El registro no tiene plazos para una parte de
+        este intervalo, así que no se sabe nada de las obligaciones que caen en ella.
+        Revisa el estado del resumen; una lista vacía aquí no significa que no venza
+        nada.
       estimacion_objetiva_unset: En tu perfil aún no consta qué régimen de estimación
         del IRPF se aplica a tu actividad.
+      explain_deadline_windows_unavailable: El registro no tiene plazos para el modelo
+        %{modelo} y el año %{year}, así que no se puede indicar ni el calendario ni
+        si vas tarde. Que aquí falte el aviso de presentación fuera de plazo no significa
+        que estés en plazo.
       gran_empresa_unset: En tu perfil aún no consta si tu volumen de operaciones
         del año natural anterior superó el umbral de gran empresa, lo que decide si
         presentas con periodicidad mensual o trimestral.

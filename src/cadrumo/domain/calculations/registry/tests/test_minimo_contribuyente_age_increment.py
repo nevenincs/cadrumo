@@ -145,6 +145,9 @@ def _calc_reviewed_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+            # Art. 81.2 LIRPF guarderia increment, inherited by every later edition;
+            # neutral zero in a scenario with no guarderia spend.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

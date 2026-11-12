@@ -2320,7 +2320,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0611" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:835 y aeat-dr-100-2022-dictionary:911: MATER, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/DeducMaterRes/MATER, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:835 y aeat-dr-100-2022-dictionary:911: MATER, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/DeducMaterRes/MATER, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", input_kind = "computed", formula = "renta-deduccion-maternidad-0611-cotizaciones", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0612" }

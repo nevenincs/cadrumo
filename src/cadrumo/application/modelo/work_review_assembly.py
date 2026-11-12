@@ -226,6 +226,7 @@ def _persisted_decimal_bindings(
                 context={
                     "calculation_revision_id": revision.calculation_revision_id,
                     "binding_id": binding_id,
+                    "work_unit_id": revision.work_unit_id,
                 },
             ) from exc
     return decimal_bindings

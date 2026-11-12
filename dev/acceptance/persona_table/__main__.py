@@ -57,13 +57,18 @@ def _horizon() -> int:
     return _envelope().horizon
 
 
-def _rows_from(paths: Sequence[Path]) -> dict[tuple[str, str, int, str], TableRow]:
-    """The latest row per key in the run files, or the baseline directories, at ``paths``."""
+def _rows_from(paths: Sequence[Path], *, current: bool = True) -> dict[tuple[str, str, int, str], TableRow]:
+    """The latest row per key in the run files, or the baseline directories, at ``paths``.
+
+    ``current`` rows take their unchecked items from the personas of this tree; an earlier table keeps the items
+    its rows were written with, because this tree's personas are not the ones that table ran.
+    """
     files: list[Path] = []
     for path in paths:
         files += sorted(path.glob("*.jsonl")) if path.is_dir() else [path]
     latest = latest_rows(read_rows(files, horizon=_horizon()))
-    return {row.key: row for row in with_unchecked(latest.values(), _envelope())}
+    rows = with_unchecked(latest.values(), _envelope()) if current else list(latest.values())
+    return {row.key: row for row in rows}
 
 
 def _run(args: argparse.Namespace) -> int:
@@ -124,14 +129,14 @@ def _baseline(args: argparse.Namespace) -> int:
 
 
 def _diff(args: argparse.Namespace) -> int:
-    before, after = _rows_from([args.before]), _rows_from([args.after])
+    before, after = _rows_from([args.before], current=False), _rows_from([args.after])
     text = render_diff(diff_tables(before, after), before=args.before_label, after=args.after_label)
     sys.stdout.write(text)
     return 0
 
 
 def _check(args: argparse.Namespace) -> int:
-    baseline, current = _rows_from([args.baseline]), _rows_from(args.rows)
+    baseline, current = _rows_from([args.baseline], current=False), _rows_from(args.rows)
     lost = [
         key
         for key, row in baseline.items()

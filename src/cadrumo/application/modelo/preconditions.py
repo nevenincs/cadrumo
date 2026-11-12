@@ -24,6 +24,8 @@ from ..operator_actions.models import (
     PreconditionVerdict,
 )
 from ..operator_surface.models import ManifestActionProfile
+from .edit_refusal_profiles import EDIT_REFUSAL_PROFILES
+from .filing_import_refusal_profiles import FILING_IMPORT_REFUSAL_PROFILES
 from .precondition_action_bindings import (
     AlternativeActionArguments,
     action_argument_bindings,
@@ -328,6 +330,50 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.field.unrenderable",
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
+    # The application's own export design or renderer contradicts itself; no
+    # filer action repairs it.
+    _profile(
+        "modelo.export",
+        "modelo.export.design.consistent",
+        "modelo.export.design.inconsistent",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    # A party-name slot the filer's declared filing names leave without content
+    # is put right by stating that party's filing name.
+    _profile(
+        "modelo.export",
+        "modelo.export.declared_party_name.stated",
+        "modelo.export.declared_party_name.unstated",
+        action_id="operator.ledger.counterparty.filing_name",
+    ),
+    # A box the filer states holds a value the design cannot place; stating
+    # that box again on the work unit puts it right.
+    _profile(
+        "modelo.export",
+        "modelo.export.casilla_value.writable",
+        "modelo.export.casilla_value.refused",
+        action_id="operator.modelo.work.set_value",
+    ),
+    *EDIT_REFUSAL_PROFILES,
+    *FILING_IMPORT_REFUSAL_PROFILES,
+    # The refusals below are real but no catalogued action repairs them: the
+    # registry has not adjudicated cells the stated boxes share, the schema
+    # refuses a field that is no box of the declaration, the return suspends or
+    # waives part of its result where no remainder is computed, and the
+    # persisted justificante of an amended filing does not back it. A result
+    # box that holds no value is put right by calculating the declaration.
+    *(
+        _profile(
+            "modelo.export", f"modelo.export.{subject}.{sound}", f"modelo.export.{subject}.{refused}", action_id=act
+        )
+        for subject, sound, refused, act in (
+            ("shared_cells", "adjudicated", "unadjudicated", None),
+            ("schema_field", "valid", "refused", None),
+            ("settlement", "stated", "unsupported", None),
+            ("settlement", "stated", "result_unknown", "operator.modelo.work.calculate"),
+            ("amended_filing_justificante", "backs_filing", "unresolved", None),
+        )
+    ),
     _profile(
         "modelo.export",
         "modelo.export.period.maps_to_filing_period",
@@ -341,7 +387,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             f"{leaf}.external_evidence.missing",
             action_id="operator.modelo.filing_record.import",
         )
-        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard")
+        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard", "modelo.export")
     ),
     _profile(
         "modelo.work.wizard",
@@ -533,6 +579,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.prior_carries.stated",
         "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
         action_id="operator.modelo.work.attest_prior_carries",
+    ),
+    # A stored revision that no longer matches its content address is replaced
+    # by calculating the work unit again from its sources.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.stored_revision.intact",
+        "modelo.work.calculate.stored_revision.drifted",
+        action_id="operator.modelo.work.calculate",
     ),
     # An input no source supplied is stated on the calculation itself; the
     # binding listing names it and the work unit's form takes the value.

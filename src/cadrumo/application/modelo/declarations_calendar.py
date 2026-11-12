@@ -37,13 +37,20 @@ from ..overview.calendar_models import (
 from ..overview.coverage import ObligationCoverageReport
 from ..overview.evidence import CalendarEvidenceProjection
 from ..overview.home import HomeAvailability, HomeZoneState
+from .stored_data_integrity import StoredDataIntegrityMixin
 from .work_plazo import ModeloWorkConditionalRecargoPreview, conditional_recargo_preview_from_recovery
 
 DECLARATIONS_CALENDAR_CONTRACT_VERSION: Final[int] = 1
 
 
-class DeclarationsCalendarProjectionError(CadrumoError):
-    """The supplied calendar authorities cannot form one coherent safe view."""
+class DeclarationsCalendarProjectionError(StoredDataIntegrityMixin, CadrumoError):
+    """The supplied calendar authorities cannot form one coherent safe view.
+
+    A stored-data integrity fault: no operator input at the refusal site joins
+    the authorities, so the error carries the terminal integrity verdict.
+    """
+
+    integrity_record = "declarations_calendar_projection"
 
 
 class DeclarationsCalendarSource(StrEnum):

@@ -38,7 +38,7 @@ from .edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
-from .edit_number_parsing import read_edit_number_lexeme, read_typed_edit_number, validate_edit_number
+from .edit_number_parsing import read_entry_number, read_typed_edit_number, validate_edit_number
 from .edit_parse_errors import ModeloEditParseRefusedError
 from .edit_text_parsing import read_edit_boolean_lexeme, read_typed_edit_boolean, validate_edit_text_value
 from .edit_value_grammar import ModeloEditValueChannel, ModeloEditValueFamily, ModeloEditValueGrammarV1
@@ -147,8 +147,8 @@ def parse_modelo_edit_lexeme(
         if grammar.family is ModeloEditValueFamily.BOOLEAN:
             return _outcome(address, read_edit_boolean_lexeme(request.lexeme, request.entry_locale), normalisations)
         if grammar.family in {ModeloEditValueFamily.DECIMAL, ModeloEditValueFamily.INTEGER}:
-            number = read_edit_number_lexeme(request.lexeme, request.entry_locale, normalisations)
-            return _outcome(address, validate_edit_number(number, grammar), normalisations)
+            number = read_entry_number(request.lexeme, request.entry_locale, normalisations, grammar)
+            return _outcome(address, number, normalisations)
     except ModeloEditParseRefusedError as refused:
         return ModeloEditRefusedV1(
             refusal=ModeloEditParseRefusalV1(

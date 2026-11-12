@@ -44,6 +44,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from ...core.casilla_id import CasillaId
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.payment_instalment_election import (
     PaymentInstalmentElection,
     instalment_amounts,
@@ -52,8 +53,10 @@ from ...core.payment_instalment_election import (
 from ...core.result_disposition import ResultDisposition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
-from ...domain.modelos.errors import ModeloExportError
 from .action_errors import instalment_election_refusal, own_account_missing_error
+from .export_contracts import ModeloExportDesignIntegrityError, ModeloExportSettlementRefusedError
+from .export_field_refusal import export_design_fault_refusal
+from .preconditions import build_modelo_precondition_failure_for_scenario
 from .settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_remainder_casilla_ids
 
 if TYPE_CHECKING:
@@ -178,8 +181,8 @@ def settlement_dictionary_values(
         refund_account: The account AEAT pays a refund into.
 
     Raises:
-        ModeloExportError: When the settled amount is unknown or disagrees
-            with the disposition, or is one this export never composes.
+        ModeloExportSettlementRefusedError: When the settled amount is unknown or
+            disagrees with the disposition, or is one this export never composes.
         ModeloChargeAccountMissingError: When a debit needs a charge account
             the export does not hold.
         ModeloRefundAccountMissingError: When a refund needs a refund account
@@ -273,19 +276,46 @@ _REFUSAL_LOCALE_KEYS: Final = {
 }
 
 
-def _settlement_refused(disposition: ResultDisposition, refusal: SettlementRefusal) -> ModeloExportError:
-    """Refuse with the settlement's own message: the generic write failure would read as a disk problem."""
-    return ModeloExportError(
+_REFUSAL_SCENARIOS: Final = {
+    SettlementRefusal.RESULT_UNKNOWN: "modelo.export.settlement.result_unknown",
+    SettlementRefusal.SETTLEMENT_UNSUPPORTED: "modelo.export.settlement.unsupported",
+}
+
+
+def _settlement_refused(
+    disposition: ResultDisposition, refusal: SettlementRefusal
+) -> ModeloExportSettlementRefusedError:
+    """Refuse with the settlement's own message: the generic write failure would read as a disk problem.
+
+    A result that is not calculated is put right by calculating the declaration,
+    which the export leaves the work unit of; a settlement the export does not
+    compose is the operator's decision, because no catalogued action reaches it.
+    """
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id=_REFUSAL_SCENARIOS[refusal],
+        evidence_id="modelo.export.settlement",
+        evidence_values={"result_disposition": disposition.value, "settled": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        missing_action_arguments=("work_unit_id",) if refusal is SettlementRefusal.RESULT_UNKNOWN else (),
+    )
+    return ModeloExportSettlementRefusedError(
         translated_message=_REFUSAL_LOCALE_KEYS[refusal],
         context={"cause": refusal.value, "result_disposition": disposition.value},
+        precondition_failure=failure,
     )
 
 
-def _uncomposed(disposition: ResultDisposition, *, cause: str) -> ModeloExportError:
-    return ModeloExportError(
-        translated_message="application.modelo.errors.export_draft_write_failed",
-        context={"cause": cause, "result_disposition": disposition.value},
-    )
+def _uncomposed(disposition: ResultDisposition, *, cause: str) -> ModeloExportDesignIntegrityError:
+    """Refuse a disposition or amount only a design fault reaches.
+
+    The one declaration that composes a settlement, the Modelo 100, derives
+    its disposition from the sign of the very amount it is settled from and
+    otherwise elects only a payment by direct debit or a refund abroad, so a
+    disposition this export does not compose, or a pay or refund disposition
+    without an amount, cannot come from any state of the filer.
+    """
+    return export_design_fault_refusal(cause=f"{cause}:{disposition.value}")
 
 
 __all__ = [

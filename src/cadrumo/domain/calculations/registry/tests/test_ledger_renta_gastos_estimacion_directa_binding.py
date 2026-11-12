@@ -251,6 +251,8 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+            # Art. 81.2 guarderia increment (casilla 0613); neutral zero for a scenario with no descendants.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine) for both estatal and

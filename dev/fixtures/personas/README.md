@@ -425,8 +425,10 @@ back into `casillas`.
 | `cited` | the provision is named; its text was not re-read for this expectation, or the conclusion rests on administrative practice the text does not spell out |
 | `unverified` | a `reason` says what is missing; tests treat the expectation as a known gap, not as an assertion |
 
-Cuotas íntegras, autonomic scales, the Modelo 130 minoración and the Modelo 200
-result are not asserted anywhere: they need inputs the scenarios do not fix.
+The Modelo 130 minoración and the Modelo 200 result are not asserted anywhere:
+they need inputs the scenarios do not fix. A Modelo 100 result is asserted only
+where a persona fixes every input of its state and autonomic scales and derives it
+by hand with citations (asalariada-familia).
 
 ## Existing inline personas and their catalogue replacement
 
