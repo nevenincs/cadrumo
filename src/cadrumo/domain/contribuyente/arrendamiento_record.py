@@ -20,9 +20,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.errors.hierarchy import ProfileAnswerTypeError, pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 
-#: The most tenants a lease states: the three numbered pairs of casillas 0091 to 0098 and the rows that follow.
-MAX_INQUILINOS: Final = 9
-
 _TAX_ID: Final = re.compile(r"^[0-9A-Z]{5,20}$")
 
 
@@ -82,7 +79,7 @@ class ArrendamientoRecord(BaseModel):
     fecha_inicio: date
     fecha_fin: date | None = None
     uso_vivienda: bool | None = None
-    inquilinos: tuple[Inquilino, ...] = Field(default=(), max_length=MAX_INQUILINOS)
+    inquilinos: tuple[Inquilino, ...] = ()
     zona_tensionada: bool | None = None
     primer_arrendamiento_vivienda: bool | None = None
     arrendatario_entidad_tipo: ArrendatarioEntidadTipo | None = None
@@ -106,7 +103,6 @@ class ArrendamientoRecord(BaseModel):
 
 
 __all__ = [
-    "MAX_INQUILINOS",
     "ArrendamientoRecord",
     "ArrendatarioEntidadFinalidad",
     "ArrendatarioEntidadTipo",

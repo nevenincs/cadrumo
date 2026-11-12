@@ -246,6 +246,19 @@ def test_a_tenant_identifier_is_checked_unless_declared_foreign(world: _World) -
     assert (edit.context or {})["door"] == "aeat config profile arrendamiento edit"
 
 
+def test_a_lease_states_no_more_tenants_than_the_form_has_identification_slots(world: _World) -> None:
+    row = world.add(INMUEBLE_SECTION, _property())
+
+    def tenants(count: int) -> dict[str, str]:
+        return _lease(row) | {"inquilinos": ";".join(f"EXTRANJERO{n}:otra:si" for n in range(count))}
+
+    lease = world.add(ARRENDAMIENTO_SECTION, tenants(3))
+    assert world.stored(ARRENDAMIENTO_SECTION, lease)["inquilinos"].count(";") == 2
+    refused = _refusal(world, lambda: world.add(ARRENDAMIENTO_SECTION, tenants(4)))
+    assert refused.translated_message == "application.user_profile.errors.rental_row_invalid"
+    assert (refused.context or {})["leaf"] == "inquilinos"
+
+
 def test_a_lease_is_stored_in_its_canonical_form_and_carries_the_lau_fact(world: _World) -> None:
     row = world.add(INMUEBLE_SECTION, _property())
 
