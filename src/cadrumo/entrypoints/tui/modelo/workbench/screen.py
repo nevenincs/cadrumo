@@ -186,6 +186,10 @@ class ModeloWorkbenchScreen(
         ModeloWorkbenchScreen .wb-line {
             height: auto;
         }
+        ModeloWorkbenchScreen #wb-projection {
+            height: auto;
+            color: $warning;
+        }
         ModeloWorkbenchScreen #wb-result {
             width: auto;
             color: $foreground;
@@ -438,6 +442,7 @@ class ModeloWorkbenchScreen(
             yield Static(id="wb-header", markup=False)
             yield Static(id="wb-deadline", markup=False)
         with Vertical(id="wb-status"):
+            yield Static(id="wb-projection", markup=False)
             with Horizontal(id="wb-outcome", classes="wb-line"):
                 yield Static(id="wb-result", markup=False)
                 with Horizontal(id="wb-marks", classes="wb-line"):

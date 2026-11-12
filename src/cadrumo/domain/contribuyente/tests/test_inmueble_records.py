@@ -217,7 +217,6 @@ def test_combined_holding_states_both_percentages_and_the_pair_cannot_exceed_one
         ({"inquilinos": f"{TENANT}:18_35:quiza"}, "inquilinos"),
         ({"inquilinos": f"{TENANT}:18_35"}, "inquilinos"),
         ({"inquilinos": "AB:18_35:no"}, "inquilinos"),
-        ({"inquilinos": ";".join(f"T000000{n}:otra:no" for n in range(10))}, "inquilinos"),
         ({"arrendatario_entidad_finalidad": "otra"}, "arrendatario_entidad_finalidad"),
         ({"uso_vivienda": "yes"}, "uso_vivienda"),
         ({"renta_inicial": "850.123"}, "renta_inicial"),

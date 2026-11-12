@@ -92,6 +92,7 @@ def _filing_file_receipt(
     completeness_unverified: bool,
     software_identity_grade: AeatSoftwareIdentityGrade | None,
     domiciliation_cutoff_unverified: bool = False,
+    trabajo_deductions_not_computed: bool = False,
     selected_account: ModeloExportAccountReference | None = None,
 ) -> ModeloExportSettledResult:
     return ModeloExportSettledResult(
@@ -112,6 +113,7 @@ def _filing_file_receipt(
             software_identity_grade=software_identity_grade,
             completeness_unverified=completeness_unverified,
             domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
+            trabajo_deductions_not_computed=trabajo_deductions_not_computed,
             selected_account=selected_account,
         )
     )
@@ -206,6 +208,26 @@ async def test_an_unverified_timeout_is_warned_and_the_account_is_named_by_role_
         await settle(pilot)
         assert tr("tui.modelo.export.result.warning.cutoff_unverified") in _warnings(app)
         assert _table_values(app)["selected_account"] == "acc-01"
+
+
+@pytest.mark.asyncio
+async def test_uncomputed_work_income_deductions_are_warned_only_when_the_result_states_them(tmp_path: Path) -> None:
+    """The limitation is the backend's finding, shown when the receipt flags it and absent otherwise."""
+    limitation = tr("application.modelo.findings.trabajo_deduction_not_computed")
+    for flagged in (True, False):
+        result = _publicly_projected(
+            _filing_file_receipt(
+                tmp_path,
+                completeness_unverified=False,
+                software_identity_grade=None,
+                trabajo_deductions_not_computed=flagged,
+            )
+        )
+        app = App[None]()
+        async with app.run_test() as pilot:
+            await app.push_screen(ModeloExportResultScreen(result))
+            await settle(pilot)
+            assert (limitation in _warnings(app)) is flagged
 
 
 @pytest.mark.asyncio

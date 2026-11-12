@@ -41,6 +41,7 @@ from cadrumo.application.ledger.update_contracts import LEDGER_UPDATE_REQUIRED_F
 from cadrumo.application.transactions.diagnostics import LedgerImportDiagnosticKind
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+from cadrumo.domain.contribuyente.inventory.records import PurchaseLedgerRow
 from cadrumo.domain.invoices.enums import PaymentStatus
 from cadrumo.domain.invoices.service import INVOICE_MATCH_TOLERANCE, invoice_settling_direction
 from cadrumo.domain.iva.schema import InvoiceKind
@@ -122,6 +123,13 @@ _ENUMS: tuple[tuple[str, str, str | None, str, type[StrEnum]], ...] = (
         "isWithholdingOrigin",
         "Who states the figures of a recorded payer certificate.",
         RetencionSoportadaOrigen,
+    ),
+    (
+        "PURCHASE_LEDGER_ROWS",
+        "PurchaseLedgerRow",
+        "isPurchaseLedgerRow",
+        "What a stock purchase states about the ledger transaction that books it; unstated is its own state.",
+        PurchaseLedgerRow,
     ),
 )
 
