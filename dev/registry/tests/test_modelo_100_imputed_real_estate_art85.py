@@ -61,6 +61,13 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # The maritime exemption's three numeric facts, authored from the 2022
+        # edition, whose boolean predicate is answered False beside them: a
+        # taxpayer claiming nothing there still has to supply the facts, because
+        # an unsupplied binding is a refusal rather than a zero.
+        "renta-maritime-gross-navigation-income": Decimal("0"),
+        "renta-maritime-annual-salary": Decimal("0"),
+        "renta-maritime-qualifying-days": Decimal("0"),
     }
     if year == _NEWEST:
         # The production profile resolver supplies this predicate as 1/0 from
@@ -70,13 +77,6 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         # facts; neutral zero when the chain under test is unrelated.
         values["renta-profile-madrid-nacimiento-adopcion-eligible-count"] = Decimal("0")
         values["renta-profile-unidad-familiar-otros-miembros-base"] = Decimal("0")
-        # The Canarias maritime-registry exemption's three numeric facts, whose
-        # boolean predicate is answered False beside them: a taxpayer claiming
-        # nothing there still has to supply the facts, because an unsupplied
-        # binding is a refusal rather than a zero.
-        values["renta-maritime-gross-navigation-income"] = Decimal("0")
-        values["renta-maritime-annual-salary"] = Decimal("0")
-        values["renta-maritime-qualifying-days"] = Decimal("0")
         # The 2025 edition computes the maternity deducción as well; neutral
         # zero for the same reason as in 2024 below.
         values.update(m100_second_newest_deduccion_maternidad_bindings())
@@ -107,8 +107,6 @@ def _boolean_binding_values(year: int) -> dict[str, bool]:
     binding is a refusal, not a false: the registry keeps "not claimed" and "no
     answer" apart, and this scenario is claiming nothing.
     """
-    if year < _NEWEST:
-        return {}
     return {"renta-maritime-path-rebeca": False}
 
 

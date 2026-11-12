@@ -1838,6 +1838,11 @@ errors:
       (campo 114) debe ser el titular de la cuenta que elegiste.
     refused_modelo_360_solicitud_undeclared: No hay ninguna solicitud del Modelo 360
       declarada para {filing_year}.
+    refused_modelo_390_prorrata_apartado_unrendered: 'El modelo 390 sigue rechazado:
+      tu registro de prorrata tiene filas para este ejercicio, pero la edición del
+      formulario en uso aún no incluye el apartado de prorratas (apartado 12), así
+      que no se puede verificar, registrar como presentado ni exportar sin dejar ese
+      apartado en blanco.'
     refused_modelo_aggregation_input_conflict: Un dato que has introducido contradice
       lo que dan tus registros; corrígelo antes de calcular.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementaria
@@ -2166,5 +2171,11 @@ errors:
       un perfil activo, salvo en modo de prueba.
     own_account_unknown: La cuenta propia {own_account_id} no está entre tus cuentas
       bancarias propias registradas.
+    rental_lease_unknown: El arrendamiento {ref} no es uno de los arrendamientos de
+      tu perfil. Consúltalos con «{door}».
+    rental_link_category: Una fila vinculada a un arrendamiento o a un inmueble debe
+      llevar la categoría de renta {category}; indícala con «{door}» y --irpf-category.
+    rental_property_unknown: El inmueble {ref} no es uno de los inmuebles de tu perfil.
+      Consúltalos con «{door}».
     unknown_ledger_provider: 'Proveedor de libro {provider!r} desconocido. Proveedores
       reconocidos: {providers}.'

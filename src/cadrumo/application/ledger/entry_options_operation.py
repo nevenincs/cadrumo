@@ -37,7 +37,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
-from ...core.time.clock import now
+from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
 from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
@@ -283,6 +283,8 @@ def ledger_entry_options(
     language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
 ) -> LedgerEntryOptionsProjection:
     """Read every vocabulary from its owner, under one pinned authority generation."""
+    # Choices offered for a new entry read the IVA categories in force on the stated day, else today.
+    category_date = on_date or today_madrid()
     prorrata = resolve_prorrata_register_catalogue(effective_date=on_date, authority=operation)
     # These two owners take the scope's pinned generation, which the operation runs inside.
     capital = resolve_bienes_inversion_catalogue(effective_date=on_date)
@@ -300,7 +302,7 @@ def ledger_entry_options(
         ("m210_tipo_renta", _tipo_renta_options(operation)),
         (
             "iva_category",
-            _plain(resolve_iva_category_catalogue(effective_date=on_date, authority=operation).all_categories),
+            _plain(resolve_iva_category_catalogue(effective_date=category_date, authority=operation).all_categories),
         ),
         ("irpf_category", _plain(item.id for item in ledger_irpf_category_catalogue(authority=operation))),
         ("spending_category", _spending_options(on_date, operation)),

@@ -78,9 +78,11 @@ def validate_migrated_deduction_fact(transaction: Transaction) -> None:
     invoice_kind = (
         InvoiceKind.RECEIVED if transaction.direction is TransactionDirection.OUTGOING else InvoiceKind.ISSUED
     )
+    operation_date = transaction_operation_date(transaction)
     flow_direction = derive_flow_for_classification(
         category=fact.category,
         invoice_direction=invoice_kind,
+        effective_date=operation_date,
     )
     validate_iva_deduction_fact(
         kind=fact.kind,
@@ -92,7 +94,7 @@ def validate_migrated_deduction_fact(transaction: Transaction) -> None:
         iva_amount=fact.iva_amount,
         investment_asset_id=transaction.investment_asset_id,
         rectifies_ledger_id=transaction.rectifies_ledger_id,
-        effective_date=transaction_operation_date(transaction),
+        effective_date=operation_date,
     )
 
 

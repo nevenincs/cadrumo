@@ -337,7 +337,7 @@ def _apply_cii_trade_tax(tax: Element, parsed: ParsedEInvoice) -> None:
         ),
     )
     if parsed.iva_category is None:
-        parsed.iva_category = category_for(first_text(tax, "CategoryCode"))
+        parsed.iva_category = category_for(first_text(tax, "CategoryCode"), issued_on=_stated_issue_date(parsed))
     if parsed.regime_legend is None:
         parsed.regime_legend = first_text(tax, "ExemptionReason")
 
@@ -470,12 +470,12 @@ def _apply_ubl_parties(root: Element, parsed: ParsedEInvoice) -> None:
             setattr(parsed, f"{target}_country_code", ubl_country_code(found[0]))
 
 
-def _ubl_subtotal_category(subtotal: Element) -> str | None:
+def _ubl_subtotal_category(subtotal: Element, *, issued_on: date | None) -> str | None:
     """Return the tax category the subtotal's cbc:ID names, if it names one."""
     for category in find_all(subtotal, "TaxCategory"):
         for child in category:
             if local_tag_name(child.tag) == "ID" and (child.text is not None and child.text):
-                return category_for(child.text)
+                return category_for(child.text, issued_on=issued_on)
     return None
 
 
@@ -520,7 +520,7 @@ def _append_ubl_iva_subtotal(subtotal: Element, parsed: ParsedEInvoice) -> None:
         ),
     )
     if parsed.iva_category is None:
-        parsed.iva_category = _ubl_subtotal_category(subtotal)
+        parsed.iva_category = _ubl_subtotal_category(subtotal, issued_on=_stated_issue_date(parsed))
 
 
 def _ubl_irpf_subtotals(subtotals: list[Element]) -> list[Element]:

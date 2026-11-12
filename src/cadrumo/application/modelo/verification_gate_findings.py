@@ -368,8 +368,9 @@ def invoice_source_document_findings(
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     fingerprint = target.invoice_fingerprint
-    deducts = _declares_iva_flow(registry_revision, is_deducible_flow)
-    accrues = _declares_iva_flow(registry_revision, is_devengada_flow)
+    revision_date = registry_revision.valid_from
+    deducts = _declares_iva_flow(registry_revision, lambda flow: is_deducible_flow(flow, effective_date=revision_date))
+    accrues = _declares_iva_flow(registry_revision, lambda flow: is_devengada_flow(flow, effective_date=revision_date))
     if fingerprint is None or not fingerprint.rows or not (deducts or accrues):
         return []
     catalogue = invoice_repository.load()

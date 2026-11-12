@@ -25,6 +25,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaRateKind
 
@@ -42,6 +43,8 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .iva_authority_support import aggregate_iva_ledger_observations
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -83,7 +86,9 @@ def _row(category: IvaCategory) -> IvaLedgerObservation:
         transaction_date=date(2024, 6, 1),
         category=category,
         rate_kind=IvaRateKind("general"),
-        flow_direction=derive_flow_for_classification(category=category, invoice_direction=InvoiceKind.RECEIVED),
+        flow_direction=derive_flow_for_classification(
+            category=category, invoice_direction=InvoiceKind.RECEIVED, effective_date=_ON_DATE
+        ),
         cash_accounting_treatment=IvaCashAccountingTreatment("none"),
         base_amount=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),

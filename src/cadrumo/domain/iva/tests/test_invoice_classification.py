@@ -95,6 +95,7 @@ def test_classification_record_validates_settlement_sides_against_flow() -> None
             settlement_sides=frozenset(
                 {IvaSettlementSide.from_registry("deducible")},  # ← doesn't match REPERCUTIDO
             ),
+            effective_date=_ON_DATE,
         )
 
 
@@ -115,7 +116,8 @@ def test_classification_for_reverse_charge_category_with_inconsistent_flow_rejec
             category=IvaCategory("domestic_reverse_charge"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
-            settlement_sides=frozenset({IvaSettlementSide.from_registry("devengada")}),  # missing deducible
+            settlement_sides=frozenset({IvaSettlementSide.from_registry("devengada")}),
+            effective_date=_ON_DATE,  # missing deducible
         )
 
 

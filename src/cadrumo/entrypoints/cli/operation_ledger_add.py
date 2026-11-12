@@ -135,6 +135,9 @@ def run_ledger_add(
     idempotency_key: str | None,
     source_jurisdiction: str | None,
     own_account_id: str | None = None,
+    arrendamiento: str | None = None,
+    inmueble: str | None = None,
+    gasto_inmobiliario: str | None = None,
 ) -> LedgerAddOperationResult:
     """Submit one bounded add request and strictly correlate its terminal receipt."""
     client = bound_profile_client(ctx)
@@ -175,6 +178,9 @@ def run_ledger_add(
         idempotency_key=idempotency_key,
         source_jurisdiction=source_jurisdiction,
         own_account_id=own_account_id,
+        arrendamiento_ref=arrendamiento,
+        inmueble_ref=inmueble,
+        gasto_capital_inmobiliario=gasto_inmobiliario,
     )
     completed = run_registered_operation(
         client,

@@ -13,7 +13,17 @@ from .classify_requests import LedgerClassifyM210Options, LedgerClassifyPatch
 from .classify_result_contracts import LedgerClassifyOperationResult
 from .transaction_projection import LedgerM210IncomeProjection
 
-_RESULT_ONLY_FIELDS = frozenset({"deduction_fact_kind", "investment_asset_id", "iva_vehicle_use"})
+_RESULT_ONLY_FIELDS = frozenset(
+    {
+        "arrendamiento_ref",
+        "deduction_fact_kind",
+        "gasto_capital_inmobiliario",
+        "inmueble_ref",
+        "investment_asset_id",
+        "iva_vehicle_use",
+    }
+)
+_BLANK_CLEARS_FIELDS = frozenset({"arrendamiento_ref", "inmueble_ref", "gasto_capital_inmobiliario"})
 
 
 def _expected_value(field_name: str, patch: LedgerClassifyPatch, cleared: frozenset[str]) -> object:
@@ -21,7 +31,7 @@ def _expected_value(field_name: str, patch: LedgerClassifyPatch, cleared: frozen
     if field_name in cleared:
         return None
     requested = getattr(patch, field_name)
-    if field_name == "category_id":
+    if field_name == "category_id" or field_name in _BLANK_CLEARS_FIELDS:
         return (requested.strip() or None) if requested is not None else None
     if field_name == "notes":
         return requested or ""

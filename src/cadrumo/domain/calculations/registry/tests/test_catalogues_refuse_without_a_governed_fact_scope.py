@@ -66,7 +66,7 @@ from ..iva_legal_vocabulary import resolve_iva_art69_dos_service_catalogue, reso
 from ..iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ..iva_rate_role_catalogue import resolve_iva_rate_role_catalogue
 from ..iva_regime_vocabulary import resolve_iva_regime_catalogue
-from ..ledger_oss_bindings import LedgerOssProvider, OssIossLedgerObservation
+from ..ledger_oss_bindings import OssIossLedgerObservation
 from ..lorca_reduction import resolve_lorca_reduction
 from ..m303_schema_vocabulary import resolve_m303_regime_composition_catalogue, resolve_m303_tax_territory_catalogue
 from ..m347_threshold import resolve_m347_threshold_buckets
@@ -233,12 +233,6 @@ def _ledger_oss_observation_validator(authority: GovernedFactSource | None) -> o
     return _OSS_OBSERVATION_VALIDATOR(observation)
 
 
-def _ledger_oss_transaction_kinds_validator(authority: GovernedFactSource | None) -> object:
-    """Run the binding selector's transaction-kind validator itself, for the reason given above."""
-    del authority
-    return LedgerOssProvider.validate_registry_transaction_kinds((TransactionKind("external_scheme_services"),))
-
-
 _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object]], ...] = (
     (
         "lorca_reduction",
@@ -356,7 +350,6 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
     ("iva_rate_slot_catalogue", lambda authority: resolve_iva_rate_token("RATE_2", _EFFECTIVE)),
     ("detail_row_catalogue", lambda authority: resolve_detail_row_owning_modelos(effective_date=_EFFECTIVE)),
     ("ledger_oss_observation", _ledger_oss_observation_validator),
-    ("ledger_oss_transaction_kinds", _ledger_oss_transaction_kinds_validator),
 )
 
 

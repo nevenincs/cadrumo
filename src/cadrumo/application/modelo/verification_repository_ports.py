@@ -25,6 +25,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
@@ -79,6 +80,8 @@ class VerificationRepositoryBundle:
     percepcion_observation_ports: PercepcionObservationPorts
     ledger_membership_ports: LedgerMembershipPorts
     credit_resolution: CreditResolutionRepository
+    #: The prorrata register, read for which ejercicio prints a prorrata apartado.
+    prorrata_register: ProrrataRegisterRepositoryProtocol
     #: The stored documents, read for which invoices hold their factura.
     attachment: AttachmentStoreProtocol
 
