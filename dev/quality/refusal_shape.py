@@ -9,8 +9,9 @@ registered error class, and reports for each site whether it gives a door and
 whether it hands the renderer free text instead of a catalogue key.
 
 A site passes the door check when it passes ``next_step``, ``precondition_failure``,
-``precondition_verdict``, ``profile_precondition_verdict`` or
-``no_recovery_outcome`` as something other than the literal ``None``, spreads a
+``precondition_verdict``, ``profile_precondition_verdict``, ``no_recovery_outcome`` or
+``registry_failure`` (the calculation-registry classification its policy maps to a
+verdict) as something other than the literal ``None``, spreads a
 mapping into the call, or builds a class that carries a class-level default door.
 
 The checked-in ratchet lists the sites that predate the gate. Regenerate it with::
@@ -60,7 +61,14 @@ GOVERNED_TREES: Final[tuple[str, ...]] = (
 LOCALES: Final[tuple[str, ...]] = ("es", "ca", "en", "hu")
 RATCHET_PATH: Final[Path] = REPO_ROOT / "dev/quality/metadata/refusal_shape_ratchet.json"
 _DOOR_KEYWORDS: Final[frozenset[str]] = frozenset(
-    {"next_step", "precondition_failure", "precondition_verdict", "profile_precondition_verdict", "no_recovery_outcome"}
+    {
+        "next_step",
+        "precondition_failure",
+        "precondition_verdict",
+        "profile_precondition_verdict",
+        "no_recovery_outcome",
+        "registry_failure",
+    }
 )
 _SRC_ROOT: Final[Path] = REPO_ROOT / "src"
 

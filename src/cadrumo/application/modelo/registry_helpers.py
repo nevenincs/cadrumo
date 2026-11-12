@@ -617,6 +617,7 @@ def reject_unknown_import_casillas[CasillaKey](
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_registry_root_missing",
             context={"missing_path": absent_authority_file(exc)},
+            precondition_failure=filing_import_failure(FilingImportRefusalCause.AUTHORITY),
         ) from exc
     except RegistrySnapshotError as exc:
         raise ExternalModeloImportError(
