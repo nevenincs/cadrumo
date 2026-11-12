@@ -6,6 +6,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.external_constants import OutputLanguage
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operator_action_enums import (
@@ -167,9 +168,13 @@ class PreconditionVerdictSnapshot(ServedActionWords, ServedNoRecoveryWords):
     alternative_actions: tuple[AlternativeActionSnapshot, ...] = Field(default=(), exclude_if=lambda value: not value)
 
     @classmethod
-    def from_verdict(cls, verdict: PreconditionVerdict) -> Self:
-        """Copy one canonical verdict without its mapping serializer, serving its action words."""
-        verdict = serve_precondition_verdict(verdict, served_words_language())
+    def from_verdict(cls, verdict: PreconditionVerdict, language: OutputLanguage | None = None) -> Self:
+        """Copy one canonical verdict without its mapping serializer, serving its action words.
+
+        The words are served in ``language`` where the caller states the language
+        its own document is said in, else in the language of this process.
+        """
+        verdict = serve_precondition_verdict(verdict, served_words_language() if language is None else language)
         return cls(
             failed_condition_id=verdict.failed_condition_id,
             evidence=tuple(ConditionEvidenceSnapshot.from_evidence(item) for item in verdict.evidence),

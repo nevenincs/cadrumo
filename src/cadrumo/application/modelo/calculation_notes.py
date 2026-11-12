@@ -356,24 +356,27 @@ operation, so the note names the invoice and never the clave.
 """
 
 
-def note_record_verdict(diagnostic: CalculationSourceDiagnostic) -> PreconditionVerdict | None:
-    """The door to the record a note names, where its reason has one and its fact names exactly one row."""
-    inventory_door = inventory_purchase_claim_verdict(diagnostic.fact)
+def note_record_verdict(reason: str, fact: CalculationNoteFact | None) -> PreconditionVerdict | None:
+    """The door to the record a note names, where its reason has one and its fact names exactly one row.
+
+    The door is read from the note's reason and fact alone, so a note held with
+    its calculation opens the same door as the diagnostic that raised it.
+    """
+    inventory_door = inventory_purchase_claim_verdict(fact)
     if inventory_door is not None:
         return inventory_door
-    declared = _RECORD_NOTE_ACTIONS.get(diagnostic.reason)
-    fact = diagnostic.fact
+    declared = _RECORD_NOTE_ACTIONS.get(reason)
     if declared is None or fact is None or len(fact.row_refs) != 1:
         return None
     action_id, row_argument, operator_arguments = declared
     (row_ref,) = fact.row_refs
-    condition_id = f"modelo.work.calculate.{diagnostic.reason}.stated"
+    condition_id = f"modelo.work.calculate.{reason}.stated"
     return PreconditionVerdict(
         failed_condition_id=condition_id,
         evidence=(
             ConditionEvidence(
                 condition_id=condition_id,
-                evidence_id=f"modelo.work.calculate.{diagnostic.reason}",
+                evidence_id=f"modelo.work.calculate.{reason}",
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values={row_argument: row_ref},
             ),
