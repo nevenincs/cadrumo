@@ -23,6 +23,7 @@ type ChangeId =
   | "ledger.inventory.correct"
   | "ledger.inventory.movement.correct"
   | "ledger.inventory.movement.reverse"
+  | "ledger.inventory.movement.claim"
   | "ledger.inventory.retire"
   | "ledger.inventory.restore";
 
