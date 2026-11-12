@@ -162,6 +162,23 @@ aggregation:
         ugyanazt a tételt ismétlik.
       supplier_regime_observations_outside_period: Az áfa-összesítés a kért bevallási
         időszakon kívüli keltezésű megfigyeléseket tartalmaz.
+  modelo_232_related_party:
+    errors:
+      already_stated: Ez a nyilatkozat már érvényben van arra az évre. Vond vissza,
+        mielőtt újra megteszed.
+      code_unknown: A kapcsolat, a ügylet típusa vagy az értékelési módszer nem szerepel
+        a 232-es modell adott évi tervében.
+      ejercicio_unsupported: Ez az év kívül esik a Cadrumo által támogatott bevallási
+        éveken.
+      none_stated: Kijelentetted, hogy ebben az évben nem volt kapcsolt felekkel vagy
+        adóparadicsommal végzett ügyleted. Vond vissza ezt a nyilatkozatot, mielőtt
+        ügyletet adsz hozzá.
+      not_stated: Nincs visszavonható érvényes nyilatkozat, vagy a megadott nyilatkozat
+        nincs érvényben.
+      operations_present: Ebben az évben érvényes ügyletek vannak. Vond vissza őket,
+        mielőtt kijelented, hogy nem volt egy sem.
+      stale_revision: A 232-es modell nyilatkozata megváltozott, amióta elolvastad.
+        Olvasd be újra, és próbáld újra.
   modelo_bindings:
     errors:
       invoice_advance_payment_partially_collected: Egy számla előleget rögzít olyan

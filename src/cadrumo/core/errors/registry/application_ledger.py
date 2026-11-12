@@ -239,6 +239,36 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.m232_related_party_repository.Modelo232RelatedPartyRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_232_RELATED_PARTY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_232_related_party_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.m232_related_party_repository.Modelo232RelatedPartyRevisionConflictError",
+        ErrorCode(
+            code="REFUSED_MODELO_232_RELATED_PARTY_REVISION_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_232_related_party_revision_conflict",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.m232_related_party_repository.Modelo232RelatedPartyPersistenceError",
+        ErrorCode(
+            code="FAIL_MODELO_232_RELATED_PARTY_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.canonical_modelo_232_related_party_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.credit_resolution_repository.CreditResolutionPersistenceError",
         ErrorCode(
             code="FAIL_CREDIT_RESOLUTION_PERSISTENCE",

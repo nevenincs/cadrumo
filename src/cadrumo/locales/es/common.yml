@@ -168,6 +168,21 @@ aggregation:
         proveedor repiten el mismo apunte.
       supplier_regime_observations_outside_period: La agregación de IVA contiene observaciones
         fechadas fuera del periodo de declaración solicitado.
+  modelo_232_related_party:
+    errors:
+      already_stated: Esta declaración ya está vigente para ese año. Retírala antes
+        de volver a declararla.
+      code_unknown: Un tipo de vinculación, un tipo de operación o un método de valoración
+        no es de los que el diseño del modelo 232 publica para ese año.
+      ejercicio_unsupported: Este año queda fuera de los ejercicios que Cadrumo admite.
+      none_stated: Declaraste que este año no tuvo operaciones vinculadas ni con paraísos
+        fiscales. Retira esa declaración antes de añadir una operación.
+      not_stated: No hay una declaración vigente que retirar, o la declaración indicada
+        no está vigente.
+      operations_present: Este año tiene operaciones vigentes. Retíralas antes de
+        declarar que no hubo ninguna.
+      stale_revision: Esta declaración del modelo 232 cambió desde que la leíste.
+        Léela de nuevo y reinténtalo.
   modelo_bindings:
     errors:
       invoice_advance_payment_partially_collected: Una factura registra un pago anticipado

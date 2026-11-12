@@ -64,6 +64,13 @@ from ..profile.filing_history import FilingHistoryRepositoryAdapter
 from ..profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ..profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ..profile.justificante import JustificanteRepository
+from ..profile.m232_related_party_records import (
+    Modelo232GuardRepositoryAdapter,
+    Modelo232NoneRepositoryAdapter,
+    Modelo232OperationRepositoryAdapter,
+    Modelo232TurnoverRepositoryAdapter,
+    m232_related_party_row_kind,
+)
 from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository
 from ..profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from ..profile.retencion_observations import RetencionObservationRepositoryAdapter
@@ -266,6 +273,33 @@ def _natural_key_resolvers(
         return record_resolver(record, row_bucket_id)
 
     resolvers["cadrumo.renta.retencion_soportada.records"] = _retencion_soportada_row
+
+    def _m232_operation_repo() -> Modelo232OperationRepositoryAdapter:
+        return Modelo232OperationRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
+
+    def _m232_none_repo() -> Modelo232NoneRepositoryAdapter:
+        return Modelo232NoneRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
+
+    def _m232_turnover_repo() -> Modelo232TurnoverRepositoryAdapter:
+        return Modelo232TurnoverRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
+
+    def _m232_guard_repo() -> Modelo232GuardRepositoryAdapter:
+        return Modelo232GuardRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
+
+    m232_by_kind = {
+        Modelo232GuardRepositoryAdapter.row_kind: _bound_resolver(_m232_guard_repo),
+        Modelo232NoneRepositoryAdapter.row_kind: _bound_resolver(_m232_none_repo),
+        Modelo232TurnoverRepositoryAdapter.row_kind: _bound_resolver(_m232_turnover_repo),
+    }
+    m232_operation_resolver = _bound_resolver(_m232_operation_repo)
+
+    def _m232_related_party_row(record: SecureObjectRecord, row_bucket_id: str) -> str:
+        # One namespace holds operations, both statements and the guard rows; each row names its own kind.
+        kind = m232_related_party_row_kind(record.payload)
+        resolve = m232_by_kind.get(kind) if kind is not None else None
+        return (resolve or m232_operation_resolver)(record, row_bucket_id)
+
+    resolvers["cadrumo.modelo.m232.related_party"] = _m232_related_party_row
 
     def _filing_history_repo() -> ModeloHistoryRepository:
         return ModeloHistoryRepository(

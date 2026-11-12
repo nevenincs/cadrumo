@@ -155,6 +155,21 @@ aggregation:
         the same entry.
       supplier_regime_observations_outside_period: The IVA aggregation carries observations
         dated outside the requested filing period.
+  modelo_232_related_party:
+    errors:
+      already_stated: This statement is already in force for that year. Withdraw it
+        before you state it again.
+      code_unknown: A relationship, operation type or valuation method is not one
+        the Modelo 232 design publishes for that year.
+      ejercicio_unsupported: This year is outside the filing years Cadrumo supports.
+      none_stated: You stated that this year had no related-party or tax-haven operations.
+        Withdraw that statement before you add an operation.
+      not_stated: No statement in force exists to withdraw, or the statement given
+        is not in force.
+      operations_present: This year has operations in force. Withdraw them before
+        you state that there were none.
+      stale_revision: This Modelo 232 statement changed since you read it. Read it
+        again and retry.
   modelo_bindings:
     errors:
       invoice_advance_payment_partially_collected: An invoice records an advance payment
