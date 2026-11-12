@@ -46,6 +46,7 @@ from typing import NamedTuple
 
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.field_origin import FieldOrigin
+from ...core.filing_producer_key import FilingProducerKey
 from ...core.filing_timeliness import FilingTimeliness
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import NoRecoveryOutcome
@@ -101,7 +102,6 @@ from ..filing.producer_snapshot import (
     GeneralFilingProfileFacts,
     M303FilingFacts,
     Modelo111ProfileFacts,
-    Modelo202ProducerProfile,
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
@@ -133,6 +133,7 @@ from .export_contracts import (
     ModeloExportEvidenceMissingError,
 )
 from .export_field_refusal import export_design_fault_refusal, export_operator_decision_refusal
+from .export_m202_profile import modelo_202_producer_profile
 from .export_ports import M303ArrivalPorts, ModeloExportPorts
 from .export_preparation import (
     require_m303_regimen_simplificado_scope_matches_profile,
@@ -144,6 +145,7 @@ from .m303_regimen_simplificado_scope import m303_profile_readiness_failure
 from .profile_export_binding import (
     resolve_declaration_contact,
     resolve_export_identity,
+    resolve_profile_path_values,
 )
 from .profile_readiness_gate import open_profile_path_step
 from .refusal_door_verdicts import operator_choice_verdict, stored_defect_verdict
@@ -541,10 +543,13 @@ def build_export_producer_snapshot(
     m360_solicitud: Modelo360SolicitudEntry | None,
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
+    cited_producer_keys: frozenset[FilingProducerKey],
 ) -> FilingProducerSnapshot:
     """Build the sole typed producer boundary or refuse before any write.
 
     Takes ``revision`` as a :class:`CalculationRevision` and ``workflow_profile`` as a :class:`TaxpayerProfile`.
+    ``cited_producer_keys`` are the producer keys the selected edition's layout
+    cites, so a modelo asks only for the facts that edition has a position for.
     """
     presenter, taxpayer_identity = _require_export_identity(
         command,
@@ -577,6 +582,7 @@ def build_export_producer_snapshot(
             export_ports=export_ports,
             operation=operation,
             m360_solicitud=m360_solicitud,
+            cited_producer_keys=cited_producer_keys,
         )
         if m360_solicitud is not None:
             account_page_refund_account = refund_account is not None
@@ -814,6 +820,7 @@ def resolve_export_model_profile(
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
     m360_solicitud: Modelo360SolicitudEntry | None,
+    cited_producer_keys: frozenset[FilingProducerKey],
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
     """Return the model profile facts this modelo's export reads, and the Modelo 303 filing facts for a 303."""
     if m360_solicitud is not None:
@@ -835,7 +842,18 @@ def resolve_export_model_profile(
     if modelo == form_for_role("sociedades.annual"):
         return Modelo200ProfileFacts(), None
     if modelo == form_for_role("sociedades.instalment"):
-        return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
+        # A pago fraccionado has no calendar span; its payment month's end is the day it is filed for.
+        filing_date = calculation_filing_date(work_unit.period, authority=operation)
+        return modelo_202_producer_profile(
+            workflow_profile=workflow_profile,
+            profile_values=resolve_profile_path_values(
+                bucket_id=work_unit.bucket_id,
+                operation=operation,
+                as_of=filing_date,
+            ),
+            cited_producer_keys=cited_producer_keys,
+            effective_date=filing_date,
+        ), None
     if modelo == form_for_role("withholding.work_periodic"):
         return _modelo_111_profile_facts(
             workflow_profile=workflow_profile,

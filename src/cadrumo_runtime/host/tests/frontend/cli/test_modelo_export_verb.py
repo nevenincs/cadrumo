@@ -18,7 +18,6 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
-from cadrumo.application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
 from cadrumo.application.modelo.calculation_screen import calculation_screen_stamp
 from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
@@ -666,15 +665,16 @@ def test_export_refuses_an_existing_output_path_without_replace(
     assert out.read_bytes() == b"already here"
 
 
-def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomplete_producer_facts(
+def test_export_modelo_202_without_page_01_entity_facts_refuses_with_the_door_to_state_them(
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """The development identity clears the envelope header; missing Modelo 202 producer facts still refuse.
+    """The development identity clears the envelope header; unstated page 01 entity facts still refuse.
 
-    The fixture profile declares no principal CNAE or official offsets, so the
-    export must stop before any byte is written rather than render blanks.
+    The profile states no principal CNAE and none of the datos adicionales the
+    official design asks for, so the export stops before any byte is written,
+    names every missing profile fact and opens the first one.
     """
 
     # The company started after the periodo impositivo the 1P art. 40.2 base reads, so that
@@ -705,10 +705,15 @@ def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomple
 
     assert result.exit_code != 0, result.output
     error = json.loads(result.output)["error"]
-    assert error["context"]["calculation_revision_id"] == calculation_revision_id
-    assert error["context"]["cause_type"] == "FilingProducerSnapshotError"
-    assert error["context"]["reason"] == "m202_producer_facts_unsupported"
-    assert error["context"]["missing_fact_ids"] == ", ".join(item.value for item in M202_UNSUPPORTED_PRODUCER_IDS)
+    assert error["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    context = error["context"]
+    assert context["calculation_revision_id"] == calculation_revision_id
+    assert context["cause_type"] == "FilingProducerSnapshotError"
+    assert context["reason"] == "m202_profile_facts_missing"
+    missing = str(context["missing_profile_paths"]).split(", ")
+    assert missing[0] == "taxpayer_type.principal_cnae"
+    assert "taxpayer_type.tipo_gravamen_is" in missing
+    assert context["profile_path"] == "taxpayer_type.principal_cnae"
     assert not out.exists()
 
 

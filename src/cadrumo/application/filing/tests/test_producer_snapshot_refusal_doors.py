@@ -15,15 +15,13 @@ from ....core.modelo import Modelo
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.deadlines.models import IVARegime, RefundAccount, TaxpayerProfile
+from ....domain.deadlines.models import RefundAccount
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ..producer_snapshot import (
-    M202_UNSUPPORTED_PRODUCER_IDS,
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
     GeneralFilingProfileFacts,
     Modelo111ProfileFacts,
-    Modelo202ProducerProfile,
     build_filing_producer_snapshot,
 )
 from .producer_snapshot_support import (
@@ -100,29 +98,6 @@ def test_an_account_the_export_already_required_is_a_terminal_design_fault(
         _build_303(disposition, refund_account=refund_account, account_page_refund_account=account_page)
     assert raised.value.context == {"reason": reason}
     _assert_outcome(raised.value, NoRecoveryOutcome.TERMINAL)
-    _assert_words_served_in_every_locale(raised.value)
-
-
-def test_modelo_202_unsupported_producer_facts_are_an_operator_decision() -> None:
-    taxpayer_profile = TaxpayerProfile(tax_id=TAXPAYER_TAX_ID, iva=m303_profile(), iva_regime=IVARegime("GENERAL"))
-    with pytest.raises(FilingProducerSnapshotError) as raised:
-        build_filing_producer_snapshot(
-            modelo=Modelo("202"),
-            taxpayer_tax_id=TAXPAYER_TAX_ID,
-            taxpayer_identity=taxpayer_identity(),
-            presenter=producer_snapshot_presenter(),
-            model_profile=Modelo202ProducerProfile(taxpayer_profile=taxpayer_profile, activities=()),
-            elections=elections(ResultDisposition.INGRESO),
-            amendment_evidence=None,
-            refund_account=None,
-            charge_account=None,
-            m303_filing_facts=None,
-        )
-    assert raised.value.context == {
-        "missing_fact_ids": tuple(item.value for item in M202_UNSUPPORTED_PRODUCER_IDS),
-        "reason": "m202_producer_facts_unsupported",
-    }
-    _assert_outcome(raised.value, NoRecoveryOutcome.OPERATOR_DECISION)
     _assert_words_served_in_every_locale(raised.value)
 
 

@@ -28,12 +28,10 @@ from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.submission.models import ModeloDraftStatus
 from ..export_producer import filing_producer_values
 from ..producer_snapshot import (
-    M202_UNSUPPORTED_PRODUCER_IDS,
     AmendmentEvidence,
     ChargeAccountSelection,
     FilingProducerSnapshotError,
     GeneralFilingProfileFacts,
-    M202UnsupportedProducerId,
     Modelo111ProfileFacts,
     Modelo202ActivityFacts,
     Modelo202ProducerProfile,
@@ -199,25 +197,6 @@ def test_an_answered_colegio_concertado_records_how_it_was_reached() -> None:
         Modelo111ProfileFacts(colegio_concertado=False)
 
 
-def test_modelo_202_exact_unsupported_inventory_includes_no_silent_filler() -> None:
-    expected = (
-        M202UnsupportedProducerId.PRINCIPAL_CNAE,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_122,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_123,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_124,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_125,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_126,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_127,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_128,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_129,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_130,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_131,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_132,
-        M202UnsupportedProducerId.OFFICIAL_OFFSET_147,
-    )
-    assert expected == M202_UNSUPPORTED_PRODUCER_IDS
-
-
 def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatable_cnae() -> None:
     with bundled_indexed_authority().operation():
         taxpayer_profile = TaxpayerProfile(
@@ -237,25 +216,20 @@ def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatab
     assert "principal" not in facts.model_dump()
     assert "selected" not in facts.model_dump()
 
-    with pytest.raises(FilingProducerSnapshotError) as exc_info:
-        build_filing_producer_snapshot(
-            modelo=Modelo("202"),
-            taxpayer_tax_id=TAXPAYER_TAX_ID,
-            taxpayer_identity=taxpayer_identity(),
-            presenter=producer_snapshot_presenter(),
-            model_profile=facts,
-            elections=elections(ResultDisposition.INGRESO),
-            amendment_evidence=None,
-            refund_account=None,
-            charge_account=None,
-            m303_filing_facts=None,
-        )
-    for producer_id in M202_UNSUPPORTED_PRODUCER_IDS:
-        assert producer_id.value in str(exc_info.value)
-    assert exc_info.value.context == {
-        "missing_fact_ids": tuple(item.value for item in M202_UNSUPPORTED_PRODUCER_IDS),
-        "reason": "m202_producer_facts_unsupported",
-    }
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo("202"),
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=facts,
+        elections=elections(ResultDisposition.INGRESO),
+        amendment_evidence=None,
+        refund_account=None,
+        charge_account=None,
+        m303_filing_facts=None,
+    )
+    # Repeatable activities never become the declared principal CNAE.
+    assert filing_producer_values(snapshot)[FilingProducerKey.M202_CNAE_ACTIVIDAD_PRINCIPAL] is None
 
 
 def test_modelo_iva_profile_refuses_absent_tax_territory() -> None:

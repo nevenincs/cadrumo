@@ -246,6 +246,7 @@ def _persist_exported_draft(
         exported_at=exported_at,
         operation=operation,
     )
+    export_subview = schema_provider.get_subview(str(work_unit.modelo))
     producer_snapshot = build_export_producer_snapshot(
         command=command,
         work_unit=work_unit,
@@ -258,9 +259,15 @@ def _persist_exported_draft(
         m360_solicitud=m360_solicitud,
         export_ports=export_ports,
         operation=operation,
+        cited_producer_keys=frozenset(
+            field.producer_key
+            for layout in export_subview.export_layouts
+            for record in layout.records
+            for field in record.fields
+            if field.producer_key is not None
+        ),
     )
     selected_account = selected_account_reference(producer_snapshot, accounts=accounts)
-    export_subview = schema_provider.get_subview(str(work_unit.modelo))
     export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
     software_identity = envelope_stamped_software_identity(
         export_layout,

@@ -17,6 +17,10 @@ two.
 - Schema 10 adds the LIS art. 40.3 election of the Modelo 202 as an optional
   fact. It changes no stored value, so its transition clears nothing; a
   schema-9 record that already carries the field is refused.
+- Schema 11 adds the facts the Modelo 202 page 01 states about the entity:
+  the principal CNAE, the datos adicionales marks and the tipo de gravamen. It
+  changes no stored value, so its transition clears nothing; a schema-10 record
+  that already carries one of the fields is refused.
 
 Before each of those bumps the setup wizard pre-answered the affected
 questions and wrote its default as an ordinary ``manual_cli`` fact, so the
@@ -52,7 +56,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 10
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 11
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -140,7 +144,7 @@ no successor to read its value, so every stored value goes.
 """
 
 
-_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9})
+_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9, 10})
 """Versions whose outgoing transition only adds fields, so it clears no stored value."""
 
 
@@ -223,11 +227,30 @@ PATHS_INTRODUCED_IN_V9: Final[frozenset[str]] = frozenset(
 PATHS_INTRODUCED_IN_V10: Final[frozenset[str]] = frozenset({"taxpayer_type.pago_fraccionado_art_40_3_elected"})
 """Fields schema 9 did not declare: the LIS art. 40.3 election of the Modelo 202."""
 
+PATHS_INTRODUCED_IN_V11: Final[frozenset[str]] = frozenset(
+    f"taxpayer_type.{key}"
+    for key in (
+        "principal_cnae",
+        "regimen_ley_49_2002",
+        "regimen_socimi",
+        "regimen_entidad_capital_riesgo",
+        "regimen_entidades_navieras_tonelaje",
+        "erd_tipo_gravamen_especifico",
+        "cooperativa_fiscalmente_protegida",
+        "marca_instrumental",
+        "incn_periodo_anterior_inferior_1m",
+        "multiples_tipos_impositivos",
+        "tipo_gravamen_is",
+    )
+)
+"""Fields schema 10 did not declare: the entity facts the Modelo 202 page 01 states."""
+
 _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         7: PATHS_INTRODUCED_IN_V7,
         9: PATHS_INTRODUCED_IN_V9,
         10: PATHS_INTRODUCED_IN_V10,
+        11: PATHS_INTRODUCED_IN_V11,
     },
 )
 """Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
@@ -462,6 +485,7 @@ __all__ = [
     "PATHS_INTRODUCED_IN_V7",
     "PATHS_INTRODUCED_IN_V9",
     "PATHS_INTRODUCED_IN_V10",
+    "PATHS_INTRODUCED_IN_V11",
     "RETIRED_RENTAL_TIER_PATH",
     "SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS",
     "ProfileSchemaMigration",

@@ -52,7 +52,7 @@ def contexts() -> Iterator[tuple[ProfileCreateContext, ProfileDecodeContext]]:
 def test_the_election_is_the_one_field_schema_10_adds() -> None:
     assert frozenset({_ELECTION_PATH}) == PATHS_INTRODUCED_IN_V10
     assert _PRIOR_VERSION in SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
-    assert MIGRATED_PROFILE_SCHEMA_VERSION == _PRIOR_VERSION + 1
+    assert MIGRATED_PROFILE_SCHEMA_VERSION > _PRIOR_VERSION
 
 
 def test_a_schema_9_record_opens_with_every_fact_kept_and_nothing_cleared(
