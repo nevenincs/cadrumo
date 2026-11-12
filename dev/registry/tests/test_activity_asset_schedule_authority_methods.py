@@ -1214,8 +1214,35 @@ def test_the_plan_shows_the_elapsed_year_as_elapsed_and_never_as_a_zero_amount()
     assert Decimal(limits.maximum_period_years.decimal) == Decimal("20")
     assert limits.maximum_period_ends_on == date(TAX_YEAR, 3, 15)
     assert limits.legal_citations_complete
-    # The parameters the furniture election cites, in the order the authority cites them, each provision once.
+    # Entering service before the floor, the election is read under the floor edition.  Its admitted
+    # methods predate LIS DA 17 (renewables, added by RDL 18/2022 art. 22 for installations entering
+    # service from 2023) and DA 18 (vehicles and charging, RDL 4/2024 art. 4), so neither is cited.
     assert [citation.text for citation in limits.legal_citations] == [
+        "Ley 35/2006, art.\u00a028",
+        "Ley 27/2014, art.\u00a012",
+        "Real Decreto 634/2015, art.\u00a05",
+        "Real Decreto 634/2015, art.\u00a06",
+        "Real Decreto 634/2015, art.\u00a07",
+        "Ley 27/2014, art.\u00a0102",
+        "Real Decreto 439/2007, art.\u00a022",
+        "Ley 35/2006, art.\u00a029",
+        "Real Decreto 439/2007, art.\u00a030",
+    ]
+    assert limits.legal_citations[0].permalink == "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28"
+
+    new_furniture = activity_asset_schedule_asset(
+        activity_asset_schedule_linear("mobiliario"),
+        basis="10000",
+        in_service=YEAR_START,
+        asset_id="new-furniture",
+    )
+    new_operations = _published_year_operations(today=date(TAX_YEAR, 6, 30))
+    new_operations.create(new_furniture, DESCRIPTOR)
+    new_limits = new_operations.plan_limits(new_furniture.asset_id)
+    assert new_limits.legal_citations_complete
+    # The parameters a furniture election of the tax year cites, in the order the authority cites them, each
+    # provision once.
+    assert [citation.text for citation in new_limits.legal_citations] == [
         "Ley 35/2006, art.\u00a028",
         "Ley 27/2014, art.\u00a012",
         "Real Decreto 634/2015, art.\u00a05",
@@ -1228,8 +1255,9 @@ def test_the_plan_shows_the_elapsed_year_as_elapsed_and_never_as_a_zero_amount()
         "Ley 35/2006, art.\u00a029",
         "Real Decreto 439/2007, art.\u00a030",
     ]
-    assert limits.legal_citations[0].permalink == "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28"
-    assert limits.legal_citations[5].permalink == "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoctava"
+    assert (
+        new_limits.legal_citations[5].permalink == "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoctava"
+    )
 
 
 def test_a_year_before_the_registry_floor_is_typed_and_never_a_guessed_figure() -> None:
