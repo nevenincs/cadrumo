@@ -59,6 +59,11 @@ class RetencionSoportadaCantidad(StrEnum):
     only whether it enters the base imponible; art. 79.e deducts the ingresos a
     cuenta with no such condition. So repercusión never reduces the credit.
     The other quantities serve income casillas and cross-checks.
+
+    ``REDUCCIONES_APLICABLES`` and ``GASTOS_DEDUCIBLES`` are the two figures a
+    work-income certificate states beyond the payment itself: the art. 18.2 and
+    18.3 reductions the payer applied and the art. 19.2 a), b) and c) deductible
+    expenses.
     """
 
     PAGO_A_CUENTA = "pago_a_cuenta"
@@ -66,3 +71,7 @@ class RetencionSoportadaCantidad(StrEnum):
     INGRESO_A_CUENTA = "ingreso_a_cuenta"
     INGRESO_A_CUENTA_REPERCUTIDO = "ingreso_a_cuenta_repercutido"
     IMPORTE_INTEGRO = "importe_integro"
+    IMPORTE_INTEGRO_DINERARIO = "importe_integro_dinerario"
+    VALORACION_ESPECIE = "valoracion_especie"
+    REDUCCIONES_APLICABLES = "reducciones_aplicables"
+    GASTOS_DEDUCIBLES = "gastos_deducibles"

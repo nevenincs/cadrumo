@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "RETENCION_SOPORTADA_CREDIT_ROLES",
-    "RETENCION_SOPORTADA_NON_CREDIT_ROLES",
+    "RETENCION_SOPORTADA_INCOME_ROLES",
     "TOTAL_PAGOS_A_CUENTA_ROLE",
     "RetencionSoportadaProvider",
     "credit_borrador_participation_failures",
@@ -91,14 +91,48 @@ names one field per class; both urban-rental classes credit the one urban-rental
 field, whether or not the rental is an activity (2024 Renta manual, page 1490).
 """
 
-RETENCION_SOPORTADA_NON_CREDIT_ROLES: Final[Mapping[RetencionSoportadaClase, frozenset[str]]] = MappingProxyType(
-    dict.fromkeys(RetencionSoportadaClase, frozenset[str]()),
+RETENCION_SOPORTADA_INCOME_ROLES: Final[Mapping[tuple[RetencionSoportadaClase, RetencionSoportadaCantidad], str]] = (
+    MappingProxyType(
+        {
+            (
+                RetencionSoportadaClase.TRABAJO,
+                RetencionSoportadaCantidad.IMPORTE_INTEGRO_DINERARIO,
+            ): "irpf_rendimiento_trabajo_importe_integro_dinerario",
+            (
+                RetencionSoportadaClase.TRABAJO,
+                RetencionSoportadaCantidad.VALORACION_ESPECIE,
+            ): "irpf_rendimiento_trabajo_especie_valoracion",
+            (
+                RetencionSoportadaClase.TRABAJO,
+                RetencionSoportadaCantidad.INGRESO_A_CUENTA,
+            ): "irpf_rendimiento_trabajo_especie_ingreso_cuenta",
+            (
+                RetencionSoportadaClase.TRABAJO,
+                RetencionSoportadaCantidad.INGRESO_A_CUENTA_REPERCUTIDO,
+            ): "irpf_rendimiento_trabajo_especie_ingreso_cuenta_repercutido",
+            (
+                RetencionSoportadaClase.TRABAJO,
+                RetencionSoportadaCantidad.REDUCCIONES_APLICABLES,
+            ): "irpf_rendimiento_trabajo_reduccion",
+            (
+                RetencionSoportadaClase.TRABAJO,
+                RetencionSoportadaCantidad.GASTOS_DEDUCIBLES,
+            ): "irpf_rendimiento_trabajo_gasto_ss_mutualidad",
+        },
+    )
 )
-"""The income or cross-check roles each class may fill with a quantity other than the credit.
+"""The one income casilla role each (income class, quantity) pair may fill, closed.
 
-Empty for every class: no income casilla is admitted until a decision names it,
-so every quantity other than ``pago_a_cuenta`` is refused wherever it is bound.
+A quantity other than the credit is admitted only through this table, so no other
+class draws an income figure and no other quantity (``importe_integro``, the
+combined cross-check, included) reaches a casilla. The roles come from the
+payer certificate's own fields as the official individual-declaration
+dictionaries name them.
 """
+
+_INCOME_ROLE_PAIRS: Final[Mapping[str, tuple[RetencionSoportadaClase, RetencionSoportadaCantidad]]] = MappingProxyType(
+    {role: pair for pair, role in RETENCION_SOPORTADA_INCOME_ROLES.items()}
+)
 
 
 class RetencionSoportadaProvider(BaseModel):
@@ -210,7 +244,7 @@ def _computed_casilla_failures(revision: ModeloRevision, binding: BindingDefinit
     return failures
 
 
-def _target_failures(
+def _credit_target_failures(
     binding: BindingDefinition,
     provider: RetencionSoportadaProvider,
     credit_set: frozenset[CasillaId],
@@ -218,23 +252,98 @@ def _target_failures(
     role: str | None,
 ) -> list[str]:
     failures: list[str] = []
-    if provider.quantity is RetencionSoportadaCantidad.PAGO_A_CUENTA:
-        if target_id not in credit_set:
-            failures.append(
-                f"binding {binding.id!r} draws pago_a_cuenta into casilla {target_id!r}, which is not an "
-                f"operand of the {TOTAL_PAGOS_A_CUENTA_ROLE!r} total",
-            )
-        if role not in RETENCION_SOPORTADA_CREDIT_ROLES[provider.income_class]:
-            failures.append(
-                f"binding {binding.id!r}: income class {provider.income_class.value!r} does not credit "
-                f"casilla {target_id!r} with role {role!r}",
-            )
-    elif role not in RETENCION_SOPORTADA_NON_CREDIT_ROLES[provider.income_class]:
+    if target_id not in credit_set:
         failures.append(
-            f"binding {binding.id!r}: quantity {provider.quantity.value!r} of income class "
-            f"{provider.income_class.value!r} is admitted on no casilla role, and casilla {target_id!r} "
-            f"has role {role!r}",
+            f"binding {binding.id!r} draws pago_a_cuenta into casilla {target_id!r}, which is not an "
+            f"operand of the {TOTAL_PAGOS_A_CUENTA_ROLE!r} total",
         )
+    if role not in RETENCION_SOPORTADA_CREDIT_ROLES[provider.income_class]:
+        failures.append(
+            f"binding {binding.id!r}: income class {provider.income_class.value!r} does not credit "
+            f"casilla {target_id!r} with role {role!r}",
+        )
+    return failures
+
+
+def _income_reach_failures(revision: ModeloRevision, binding: BindingDefinition) -> list[str]:
+    """Return the refusals of an income binding read other than directly by one casilla."""
+    failures: list[str] = []
+    if binding.aeat_prefilled:
+        failures.append(f"binding {binding.id!r} is an income binding and cannot be aeat_prefilled")
+    if any(binding.id in expression_binding_refs(formula.expression) for formula in revision.formulas):
+        failures.append(f"binding {binding.id!r} is an income binding and cannot be a formula operand")
+    failures.extend(
+        f"binding {binding.id!r} is an alternate binding of casilla {casilla.id!r}; an income binding is the "
+        "only source of its casilla"
+        for casilla in revision.casillas
+        if binding.id in casilla.alternate_bindings
+    )
+    return failures
+
+
+def _income_target_failures(
+    revision: ModeloRevision,
+    binding: BindingDefinition,
+    provider: RetencionSoportadaProvider,
+    expected: str,
+) -> list[str]:
+    """Return the refusals of an income binding whose directly bound casillas are not the pair's role."""
+    direct = [casilla for casilla in revision.casillas if casilla.binding == binding.id]
+    if not direct:
+        return [
+            f"binding {binding.id!r} is an income binding and fills a casilla of role {expected!r} directly; "
+            "no casilla binds it",
+        ]
+    return [
+        f"binding {binding.id!r}: casilla {casilla.id!r} has role {casilla.semantic_role!r}, but "
+        f"{provider.quantity.value!r} of income class {provider.income_class.value!r} fills role {expected!r}"
+        for casilla in direct
+        if casilla.semantic_role != expected
+    ]
+
+
+def _income_binding_failures(
+    revision: ModeloRevision,
+    binding: BindingDefinition,
+    provider: RetencionSoportadaProvider,
+) -> list[str]:
+    """Return the refusals of a binding that draws an income quantity rather than the credit.
+
+    The pair must be in :data:`RETENCION_SOPORTADA_INCOME_ROLES`; the binding is
+    the only source of exactly one casilla of that pair's role, never an
+    operand, an alternate, or a borrador-supplied value.
+    """
+    expected = RETENCION_SOPORTADA_INCOME_ROLES.get((provider.income_class, provider.quantity))
+    if expected is None:
+        return [
+            f"binding {binding.id!r}: quantity {provider.quantity.value!r} of income class "
+            f"{provider.income_class.value!r} is admitted on no casilla role",
+        ]
+    return [
+        *_income_reach_failures(revision, binding),
+        *_income_target_failures(revision, binding, provider, expected),
+    ]
+
+
+def _one_source_per_figure_failures(revision: ModeloRevision) -> list[str]:
+    """Return a refusal for each casilla of an income role that does not take exactly its family binding."""
+    family_pairs = {
+        binding.id: (provider.income_class, provider.quantity)
+        for binding, provider in retencion_soportada_bindings(revision)
+    }
+    if not any(pair in RETENCION_SOPORTADA_INCOME_ROLES for pair in family_pairs.values()):
+        return []
+    failures: list[str] = []
+    for casilla in revision.casillas:
+        pair = _INCOME_ROLE_PAIRS.get(casilla.semantic_role or "")
+        if pair is None:
+            continue
+        if casilla.binding is None or family_pairs.get(casilla.binding) != pair or casilla.alternate_bindings:
+            failures.append(
+                f"casilla {casilla.id!r} has income role {casilla.semantic_role!r}, which the "
+                f"retencion_soportada family fills once it declares an income binding; the casilla must take "
+                f"exactly its family binding for {pair[1].value!r} of income class {pair[0].value!r}",
+            )
     return failures
 
 
@@ -244,12 +353,15 @@ def _binding_failures(
     provider: RetencionSoportadaProvider,
     credit_set: frozenset[CasillaId],
 ) -> list[str]:
-    casillas = {casilla.id: casilla for casilla in revision.casillas}
     failures = _computed_casilla_failures(revision, binding)
+    if provider.quantity is not RetencionSoportadaCantidad.PAGO_A_CUENTA:
+        failures.extend(_income_binding_failures(revision, binding, provider))
+        return failures
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
     for target_id in _target_casilla_ids(revision, binding.id):
         target = casillas.get(target_id)
         role = None if target is None else target.semantic_role
-        failures.extend(_target_failures(binding, provider, credit_set, target_id, role))
+        failures.extend(_credit_target_failures(binding, provider, credit_set, target_id, role))
     return failures
 
 
@@ -258,8 +370,11 @@ def retencion_soportada_revision_failures(revision: ModeloRevision) -> tuple[str
 
     These checks need the casillas and formulas around a binding, which a
     per-binding validator does not see: the target's semantic role must be one
-    the income class admits, a credit must land in the derived credit set, and
-    a computed casilla takes a family value only through its formula.
+    the income class admits, a credit must land in the derived credit set, a
+    computed casilla takes a family value only through its formula, an income
+    quantity fills only the casilla of its table role as that casilla's sole
+    source, and once any income binding is declared every casilla of an income
+    role takes exactly its family binding.
 
     ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
@@ -270,6 +385,7 @@ def retencion_soportada_revision_failures(revision: ModeloRevision) -> tuple[str
     failures: list[str] = []
     for binding, provider in family:
         failures.extend(_binding_failures(revision, binding, provider, credit_set))
+    failures.extend(_one_source_per_figure_failures(revision))
     return tuple(failures)
 
 

@@ -15,6 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.retencion_soportada import RetencionSoportadaCantidad, RetencionSoportadaClase
+from ..errors import RentaValidationError
 from ..retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -35,6 +36,8 @@ def _payload(**overrides: object) -> dict[str, object]:
         "retencion": "1200.00",
         "ingreso_a_cuenta": "300.00",
         "ingreso_a_cuenta_repercutido": "300.00",
+        "reducciones_aplicables": "3060.00",
+        "gastos_deducibles": "610.00",
         "origin": "payer_certificate",
         "evidence_fingerprint": _FINGERPRINT,
         "captured_at": datetime(2026, 4, 2, 9, 0, tzinfo=UTC).isoformat(),
@@ -107,3 +110,60 @@ def test_a_correction_may_name_the_certificate_it_rests_on_as_the_one_it_replace
 def test_an_operator_declaration_needs_no_certificate() -> None:
     record = _record(origin="operator_declaration", evidence_fingerprint=None)
     assert record.evidence_fingerprint is None
+
+
+def test_the_income_quantities_read_the_certificates_own_figures() -> None:
+    record = _record()
+    assert record.quantity(RetencionSoportadaCantidad.IMPORTE_INTEGRO_DINERARIO) == Decimal("20000.00")
+    assert record.quantity(RetencionSoportadaCantidad.VALORACION_ESPECIE) == Decimal("1000.00")
+    assert record.quantity(RetencionSoportadaCantidad.REDUCCIONES_APLICABLES) == Decimal("3060.00")
+    assert record.quantity(RetencionSoportadaCantidad.GASTOS_DEDUCIBLES) == Decimal("610.00")
+    # The combined gross stays a cross-check: dinerario + valoracion + ingreso a cuenta - repercutido.
+    assert record.quantity(RetencionSoportadaCantidad.IMPORTE_INTEGRO) == Decimal("21000.00")
+
+
+def test_an_explicit_zero_is_the_certificates_statement_of_none() -> None:
+    record = _record(reducciones_aplicables="0.00", gastos_deducibles="0.00")
+    assert record.quantity(RetencionSoportadaCantidad.REDUCCIONES_APLICABLES) == Decimal("0.00")
+    assert record.quantity(RetencionSoportadaCantidad.GASTOS_DEDUCIBLES) == Decimal("0.00")
+    assert not record.lacks_work_certificate_figures
+
+
+def test_a_payload_without_the_two_figures_parses_and_refuses_to_state_them() -> None:
+    payload = _payload()
+    del payload["reducciones_aplicables"]
+    del payload["gastos_deducibles"]
+    record = RetencionSoportadaRecord.model_validate_json(json.dumps(payload))
+
+    assert record.reducciones_aplicables is None
+    assert record.gastos_deducibles is None
+    assert record.lacks_work_certificate_figures
+    assert not record.states(RetencionSoportadaCantidad.REDUCCIONES_APLICABLES)
+    assert not record.states(RetencionSoportadaCantidad.GASTOS_DEDUCIBLES)
+    assert record.states(RetencionSoportadaCantidad.IMPORTE_INTEGRO_DINERARIO)
+    assert record.quantity(RetencionSoportadaCantidad.IMPORTE_INTEGRO_DINERARIO) == Decimal("20000.00")
+    for missing in (RetencionSoportadaCantidad.REDUCCIONES_APLICABLES, RetencionSoportadaCantidad.GASTOS_DEDUCIBLES):
+        with pytest.raises(RentaValidationError):
+            record.quantity(missing)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"income_class": "capital_mobiliario"},
+        {"income_class": "arrendamiento_inmueble_urbano", "gastos_deducibles": None},
+        {"reducciones_aplicables": None},
+        {"gastos_deducibles": None},
+        {"reducciones_aplicables": "-0.01"},
+        {"gastos_deducibles": "610.001"},
+    ],
+)
+def test_the_two_figures_belong_to_work_income_and_come_as_a_pair(overrides: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        _record(**overrides)
+
+
+def test_a_record_of_another_class_states_neither_figure_and_round_trips() -> None:
+    record = _record(income_class="capital_mobiliario", reducciones_aplicables=None, gastos_deducibles=None)
+    assert not record.lacks_work_certificate_figures
+    assert RetencionSoportadaRecord.model_validate_json(record.model_dump_json()) == record

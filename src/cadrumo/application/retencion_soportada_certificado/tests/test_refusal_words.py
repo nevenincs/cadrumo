@@ -30,8 +30,8 @@ def _code(reason: RetencionSoportadaCertificadoRefusalReason) -> str:
     return RETENCION_SOPORTADA_WRITE_REFUSAL_CODE
 
 
-def test_the_operation_has_thirteen_refusal_reasons() -> None:
-    assert len(_REASONS) == 13
+def test_the_operation_has_fourteen_refusal_reasons() -> None:
+    assert len(_REASONS) == 14
 
 
 @pytest.mark.parametrize("language", list(OutputLanguage))
