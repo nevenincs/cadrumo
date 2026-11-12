@@ -16,7 +16,10 @@ when its ``refusal_stage`` is verify or export, that the calculation completes
 (the persona table asserts the later stage's refusal); a casilla stated
 ``not_sourced`` asserts that the application does not yet carry the figure the
 law gives; an obligation that states a ``calendar_advice`` asserts that the
-calendar advises it instead of showing a window row.
+calendar advises it instead of showing a window row. A modelo whose obligations
+of one year state different applicability for different periods has each
+period's verdict read from the calendar, suppressed obligations shown, since the
+explanation states one verdict per modelo.
 
 The stated periods run in chain order, quarters before the annual returns, and
 a quarter whose verification is granted is filed locally before the next one
@@ -84,7 +87,15 @@ from ...application.overview.read_result import OverviewReadProjection
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...tests.personas import ExpectedObligation, Persona, YearEnvelope, persona_ids, read_persona, values_in_force
+from ...tests.personas import (
+    ExpectedObligation,
+    Persona,
+    YearEnvelope,
+    per_period_modelos,
+    persona_ids,
+    read_persona,
+    values_in_force,
+)
 from .persona_materialisation import (
     PERSONA_ACTOR,
     MaterialisedPersona,
@@ -188,7 +199,9 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
 
     problems: list[str] = []
     entries: dict[tuple[str, str], OverviewCalendarEntrySnapshot] = {}
+    suppressed: dict[tuple[str, str], ApplicabilityVerdict] = {}
     advised: set[tuple[str, str]] = set()
+    per_period = per_period_modelos(obligations)
     verdicts: dict[str, tuple[ApplicabilityVerdict, bool]] = {}
     with materialised_persona(case.persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
         world = materialised.world
@@ -201,6 +214,7 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
                     output_language=OutputLanguage.ES,
                     from_date=date(case.year, 1, 1),
                     to_date=date(case.year + 1, 12, 31),
+                    show_suppressed=True,
                 ),
             ).payload
         except PersonaMaterialisationError as error:
@@ -213,8 +227,16 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
                 for entry in calendar_read.calendar.entries
                 if entry.filing_year == case.year
             }
+            suppressed = {
+                (row.modelo, code): row.verdict
+                for row in calendar_read.calendar.suppressed_entries
+                for row_year, _, code in (row.period.rpartition(" "),)
+                if row_year == str(case.year)
+            }
             advised = {(item.modelo, item.reason.value) for item in calendar_read.calendar.coverage.advised}
         for item in obligations:
+            if item.modelo in per_period:
+                continue
             try:
                 explained = _read(
                     world,
@@ -240,6 +262,19 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
             if item.applicable
             else (ApplicabilityVerdict.NOT_APPLICABLE, False)
         )
+        calendar_read_refused = any("calendar read was refused" in each for each in problems)
+        if item.modelo in per_period and not calendar_read_refused:
+            for period in item.periods:
+                shown = (
+                    ApplicabilityVerdict.APPLICABLE
+                    if (item.modelo, period) in entries
+                    else suppressed.get((item.modelo, period))
+                )
+                if shown != expected_verdict[0]:
+                    problems.append(
+                        f"Modelo {item.modelo} {case.year} {period}: calendar shows {shown or 'nothing'}, "
+                        f"expected {expected_verdict[0]} ({item.legal_ref})"
+                    )
         if item.modelo in verdicts and verdicts[item.modelo] != expected_verdict:
             problems.append(
                 f"Modelo {item.modelo} {case.year}: explanation says {verdicts[item.modelo]}, "

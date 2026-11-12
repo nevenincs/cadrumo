@@ -49,7 +49,16 @@ _INCOMPLETE_PROFILE = "REFUSED_CLI_BOUNDARY"
 
 
 def _calendar(journey: Journey, year: int) -> CalendarView:
-    args = ("app", "overview", "calendar", "--from", f"{year}-01-01", "--to", f"{year + 1}-12-31")
+    args = (
+        "app",
+        "overview",
+        "calendar",
+        "--from",
+        f"{year}-01-01",
+        "--to",
+        f"{year + 1}-12-31",
+        "--show-suppressed",
+    )
     reply = journey.run(f"obligations.{year}.calendar", args)
     if not reply.ok and reply.refusal is not None and reply.refusal.startswith(_INCOMPLETE_PROFILE):
         journey.note(

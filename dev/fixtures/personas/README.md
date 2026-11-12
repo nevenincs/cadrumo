@@ -437,6 +437,13 @@ provision that fixes the window, such as the annual Orden, is not yet published)
 or `applicability_undetermined`. The test then asserts that the calendar advises
 the modelo with that reason and shows no window row for it.
 
+A modelo may take several `[[obligations]]` of one year whose `applicable`
+differs by period, such as a Modelo 202 instalment not owed while the others stay
+undecided. The overview explanation states one verdict per modelo and year, so
+the persona journey then asserts each period's verdict from the calendar read
+with suppressed obligations shown: a window row is `applicable`, and a
+suppressed row carries its own verdict.
+
 `[[deadlines]]`: `modelo`, `period`, `year`, `statutory_end` (date), optional
 `note`. `statutory_end` is the last day the provision gives, before any shift.
 The registry-derived window end must equal it or be the next business day after

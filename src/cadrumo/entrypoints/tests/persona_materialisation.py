@@ -260,6 +260,7 @@ from ...tests.personas import (
     governed_provisions,
     persona_inputs_digest,
     read_persona,
+    values_in_force,
 )
 from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -267,7 +268,7 @@ from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
 from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
-from .persona_prior_values import PriorValueAttestationError, attest_prior_values
+from .persona_prior_values import PriorValueAttestationError, attest_prior_values, attest_return_prior_values
 from .persona_rental_replay import replay_rentals
 from .persona_work_income_statements import state_work_income_none
 from .persona_work_inputs import WorkInputError, check_work_inputs, enter_work_inputs
@@ -309,8 +310,10 @@ class ReplayScope(StrEnum):
     The local observations are recorded and every rent payment on leased
     premises is captured as withholding; then every filed return is created,
     calculated, verified and filed locally, and every calculated return is
-    created and calculated. Opt-in: a consumer that walks those periods itself
-    replays the full scope.
+    created and calculated. Then every return the persona attests a prior value
+    on that neither the history nor a stated value calculates is created and
+    attested, which calculates it. Opt-in: a consumer that walks those periods
+    itself replays the full scope.
     """
 
     def includes(self, other: ReplayScope) -> bool:
@@ -1809,6 +1812,77 @@ def _replay_history(persona: Persona, world: PersonaWorld) -> tuple[dict[str, st
     return filings, calculations
 
 
+def attested_returns_to_replay(persona: Persona, envelope: YearEnvelope) -> tuple[tuple[str, int, str], ...]:
+    """Each ``(modelo, year, period)`` the persona attests a prior value on that nothing else calculates.
+
+    A return of the history is calculated by the history replay, and a return a
+    stated value names is calculated where that value is assessed; each attests
+    its prior values after that calculation. Any other attested return would
+    never be calculated, so its attestation is replayed on its own.
+    """
+    calculated = {(block.modelo, year, period) for year, period, block in history_periods(persona, envelope)}
+    calculated |= {
+        (value.modelo, year, value.period) for year, value in values_in_force(persona.expectations.values, envelope)
+    }
+    attested = {(item.modelo, item.year.resolve(envelope), item.period) for item in persona.attested_prior_values}
+    return tuple(sorted(attested - calculated, key=lambda item: (item[1], item[0], item[2])))
+
+
+def _replay_attested_returns(persona: Persona, world: PersonaWorld) -> dict[str, str]:
+    """Create and attest each return of :func:`attested_returns_to_replay`; returns key to calculated revision id.
+
+    The attestation is submitted before any calculation, as a calculating edit:
+    such a return may refuse its calculation until the figure is stated. The
+    values the persona enters on the return are entered first, as before any
+    first calculation. A stated figure the application does not offer to
+    attest refuses the replay; it is never skipped.
+    """
+    calculations: dict[str, str] = {}
+
+    def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
+        return settle_operation(world, definition_id, payload, subject=subject)
+
+    for modelo, year, period in attested_returns_to_replay(persona, world.envelope):
+        where = f"{persona.id} Modelo {modelo} {year} {period}"
+        created = settle_operation(
+            world,
+            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+            ModeloWorkCreateRequest(
+                profile_id=world.profile_id,
+                modelo=modelo,
+                period=PublicPeriod(filing_year=year, code=period),
+                actor=PERSONA_ACTOR,
+            ),
+        )
+        outcome = getattr(created, "outcome", None)
+        if not isinstance(outcome, ModeloWorkCreateSuccess):
+            raise PersonaMaterialisationError(f"{where}: work creation refused: {outcome}")
+        work_unit_id = outcome.unit.work_unit_id
+        try:
+            if world.work_inputs:
+                _enter_work_inputs(world, work_unit_id)
+            attested = attest_return_prior_values(
+                world.attested_prior_values,
+                envelope=world.envelope,
+                profile_id=world.profile_id,
+                work_unit_id=work_unit_id,
+                modelo=modelo,
+                filing_year=year,
+                period=period,
+                settle=settle,
+            )
+        except (PersonaMaterialisationError, PriorValueAttestationError) as error:
+            raise PersonaMaterialisationError(f"{where}: {error}") from error
+        if attested.unoffered:
+            raise PersonaMaterialisationError(
+                f"{where}: the application does not offer the attestation of {', '.join(attested.unoffered)}"
+            )
+        if attested.applied is None:
+            raise PersonaMaterialisationError(f"{where}: the attestation was not applied")
+        calculations[filing_key(modelo, year, period)] = attested.applied.calculation_revision_id
+    return calculations
+
+
 def _complete_setup(world: PersonaWorld) -> bool:
     """Declare the replayed profile's setup complete through the production operation; whether it now is.
 
@@ -1933,13 +2007,18 @@ def materialise_persona(
             _replay_inventory(persona, world, transactions)
         setup_complete = _complete_setup(world) if complete_setup else None
         if scope.includes(ReplayScope.RECORDS) and (
-            persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings
+            persona.filed_returns
+            or persona.calculated_returns
+            or persona.local_observations
+            or persona.aeat_filings
+            or (scope.includes(ReplayScope.HISTORY) and attested_returns_to_replay(persona, world.envelope))
         ):
             if setup_complete is not True:
                 raise PersonaMaterialisationError(f"{persona.id}: replaying its returns needs a completed setup")
             _replay_records(persona, world, transactions=transactions, invoices=invoices)
             if scope.includes(ReplayScope.HISTORY):
                 filings, calculations = _replay_history(persona, world)
+                calculations |= _replay_attested_returns(persona, world)
     return MaterialisedPersona(
         persona=persona,
         world=world,

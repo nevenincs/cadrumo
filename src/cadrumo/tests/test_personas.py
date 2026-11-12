@@ -1002,7 +1002,7 @@ def test_an_attested_prior_value_is_admitted_with_its_source_and_derivation() ->
     [
         ({"value": "12.846,30"}, "canonical decimal"),
         ({"value": 12846.3}, "canonical decimal"),
-        ({"period": "5T"}, "is not one of"),
+        ({"period": "5T"}, "is not a filing period"),
         ({"year": str(_ENVELOPE.floor)}, "not a year token"),
         ({"sources": [{"modelo": "100", "year": "horizon-2"}]}, "missing fields"),
         ({"sources": [{"modelo": "100", "year": "horizon-2", "period": "0A", "csv": "x"}]}, "unknown fields"),
@@ -1028,6 +1028,15 @@ def test_an_annual_return_may_attest_one_figure_for_the_instalments_of_its_own_y
     ).attested_prior_values
 
     assert [source.period for source in item.sources] == ["1P", "2P", "3P"]
+
+
+def test_an_instalment_may_attest_the_figure_its_base_reads_from_an_earlier_annual_return() -> None:
+    sources = [{"modelo": "200", "year": "horizon-2", "period": "0A"}]
+    (item,) = _parse(
+        _with_attested_prior_value(modelo="202", period="1P", year="horizon", binding="base", sources=sources)
+    ).attested_prior_values
+
+    assert (item.modelo, item.period, str(item.year)) == ("202", "1P", "horizon")
 
 
 @pytest.mark.parametrize(

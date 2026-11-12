@@ -17,7 +17,7 @@ import csv
 import dataclasses
 import re
 import tomllib
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -1614,9 +1614,12 @@ def _attested_prior_value(table: _Table, where: str) -> AttestedPriorValue:
     legal_ref = _strings(table, "legal_ref", where)
     if not legal_ref:
         raise _fail(where, "legal_ref must name at least one provision")
+    period = _string(table, "period", where)
+    if not is_filing_period_token(period):
+        raise _fail(where, f"{period!r} is not a filing period")
     return AttestedPriorValue(
         modelo=_string(table, "modelo", where),
-        period=_choice(_string(table, "period", where), _FILED_PERIODS, where),
+        period=period,
         year=YearToken.parse(table["year"], where=f"{where}.year"),
         binding=_string(table, "binding", where),
         value=_amount(table["value"], f"{where}.value"),
@@ -2069,6 +2072,18 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
 
 def _value_key(value: ExpectedValue) -> tuple[str, str, str, str | None]:
     return (value.modelo, value.period, str(value.year), value.counterparty)
+
+
+def per_period_modelos(obligations: Iterable[ExpectedObligation]) -> frozenset[str]:
+    """The modelos whose obligations of one year state different applicability for different periods.
+
+    An overview explanation states one verdict per modelo and year, so these
+    are asserted per period from the calendar, suppressed obligations shown.
+    """
+    stated: dict[str, set[bool | str]] = {}
+    for item in obligations:
+        stated.setdefault(item.modelo, set()).add(item.applicable)
+    return frozenset(modelo for modelo, held in stated.items() if len(held) > 1)
 
 
 def values_in_force(values: tuple[ExpectedValue, ...], envelope: YearEnvelope) -> tuple[tuple[int, ExpectedValue], ...]:
@@ -2641,6 +2656,7 @@ __all__ = [
     "identity_catalogue",
     "parse_identity_catalogue",
     "parse_persona",
+    "per_period_modelos",
     "persona_ids",
     "persona_inputs_digest",
     "read_persona",
