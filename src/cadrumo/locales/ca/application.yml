@@ -2969,10 +2969,6 @@ application:
       application_not_required_maximum: 'La casella [%{box}] té %{casilla_value},
         però ha de ser %{computed_value}: la llei exigeix aplicar la quantia més gran
         que permet aquest exercici, ni més ni menys.'
-      art20_reduccion_possible: La casella [%{rnt_id}] recull %{rnt_value} EUR de
-        rendiment net del treball, dins del límit de l'art. 20 LIRPF, així que la
-        casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
-        Comprova si et correspon.
       art52_reduccion_individual_sublimit_possible: La casella [%{reduccion_id}] recull
         %{reduccion_value} EUR de reducció per previsió social, per sobre del sublímit
         individual de %{sublimit} EUR de l'art. 52 LIRPF, i no has declarat aportacions

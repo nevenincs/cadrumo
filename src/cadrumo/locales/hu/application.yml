@@ -2925,10 +2925,6 @@ application:
       application_not_required_maximum: 'A(z) [%{box}] rovatban %{casilla_value} szerepel,
         de %{computed_value} kell, hogy legyen: a törvény előírja, hogy az adott évben
         megengedett legnagyobb összeget kell alkalmazni, se többet, se kevesebbet.'
-      art20_reduccion_possible: A(z) [%{rnt_id}] rovat %{rnt_value} EUR nettó munkajövedelmet
-        (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
-        belül, ezért a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet
-        még nem használsz. Ellenőrizd, hogy vonatkozik-e rád.
       art52_reduccion_individual_sublimit_possible: A(z) [%{reduccion_id}] rovat %{reduccion_value}
         EUR nyugdíj-előtakarékossági (previsión social) csökkentést tartalmaz, ami
         meghaladja az Art. 52 LIRPF szerinti %{sublimit} EUR egyéni részhatárt, és

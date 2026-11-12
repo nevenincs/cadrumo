@@ -2815,10 +2815,6 @@ application:
       application_not_required_maximum: 'Box [%{box}] holds %{casilla_value}, but
         it must be %{computed_value}: the law requires applying the largest amount
         this year allows, no more and no less.'
-      art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
-        from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
-        so box [%{reduccion_id}] may give you a reduction you are not using yet. Check
-        whether it applies to you.
       art52_reduccion_individual_sublimit_possible: Box [%{reduccion_id}] shows a
         pension plan (previsión social) reduction of %{reduccion_value} EUR, above
         the individual limit of %{sublimit} EUR in Art. 52 LIRPF, and no employer

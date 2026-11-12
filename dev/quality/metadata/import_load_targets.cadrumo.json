@@ -1176,7 +1176,6 @@
         "cadrumo.application.modelo.amendment_kind_resolution",
         "cadrumo.application.modelo.amendment_projection",
         "cadrumo.application.modelo.art109_activity_income",
-        "cadrumo.application.modelo.art20_advisory",
         "cadrumo.application.modelo.art52_advisory",
         "cadrumo.application.modelo.attribution_received_advisory",
         "cadrumo.application.modelo.audit_operation",
