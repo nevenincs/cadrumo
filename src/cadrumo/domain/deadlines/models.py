@@ -40,8 +40,10 @@ from ...core.time.utc import UtcInstant
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_collection
 from ..calculations.registry.renta_codes_catalogue import (
+    EnvelopeMembership,
     fiscal_residency_requires_country,
     is_ue_eea_country_code,
+    ue_eea_membership_across_envelope,
 )
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import FiscalResidency
@@ -483,9 +485,26 @@ def is_ue_eee_country_code(country_code: str | None) -> bool:
     return is_ue_eea_country_code(country_code)
 
 
-def irnr_representante_fiscal_required(country_code: str | None) -> bool:
-    """Return True when an IRNR fiscal residence country requires representante fiscal."""
-    return country_code is not None and not is_ue_eee_country_code(country_code)
+def irnr_representante_fiscal_required(country_code: str | None, *, effective_date: date) -> bool:
+    """Return True when an IRNR fiscal residence country requires representante fiscal on ``effective_date``."""
+    return country_code is not None and not is_ue_eea_country_code(country_code, effective_date=effective_date)
+
+
+def irnr_representante_fiscal_required_on_every_date(country_code: str | None) -> bool | None:
+    """Return the representante fiscal requirement when the registry gives one answer for every date.
+
+    A country that is outside the EU/EEA on every date of the support envelope
+    requires a representante fiscal whatever date a caller later holds, and one
+    inside it on every date never does. Where the editions differ the answer
+    belongs to the date of the fact being decided, so this returns ``None``
+    rather than choosing a date.
+    """
+    membership = ue_eea_membership_across_envelope(country_code)
+    if membership is None or membership is EnvelopeMembership.EVERY_EDITION:
+        return False
+    if membership is EnvelopeMembership.NO_EDITION:
+        return True
+    return None
 
 
 class TaxpayerProfile(BaseModel):
@@ -744,8 +763,12 @@ class TaxpayerProfile(BaseModel):
         representative in Spain. Both NIF and name are required together;
         partial declaration is rejected.
         """
-        if fiscal_residency_requires_country(self.fiscal_residency) and irnr_representante_fiscal_required(
-            self.country_of_fiscal_residence
+        # A profile carries no date, so only a country whose membership is the
+        # same on every date is decided here; one that differs between
+        # editions is decided where the date of the fact is held.
+        if (
+            fiscal_residency_requires_country(self.fiscal_residency)
+            and irnr_representante_fiscal_required_on_every_date(self.country_of_fiscal_residence) is True
         ):
             nif_missing = self.representante_fiscal_nif is None
             nombre_missing = self.representante_fiscal_nombre is None
