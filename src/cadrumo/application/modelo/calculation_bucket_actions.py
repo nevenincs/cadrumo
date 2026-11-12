@@ -23,7 +23,6 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
@@ -40,7 +39,7 @@ from ...domain.modelos.calculation_revision_operator_layer import (
 from ...domain.modelos.calculation_revision_sources import (
     CalculationSourceIssue,
 )
-from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
+from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -48,6 +47,11 @@ from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..user_profile.projections import record_to_path_values
 from .action_errors import (
     ModeloAggregationInputConflictError,
+)
+from .bucket_m210_input_guards import (
+    reject_manual_m210_agrupacion_rows_in_ledger_mode,
+    reject_manual_m210_gross_income_override_in_ledger_mode,
+    validate_m210_official_tipo_renta_selection,
 )
 from .calculation_action_ports import (
     CalculationActionPorts,
@@ -364,16 +368,16 @@ def _resolved_m210_gross_income_mode(
     ledger projection downstream.
     """
     mode = m210_gross_source_mode(work_unit, m210_gross_income_source_mode)
-    _reject_manual_m210_gross_income_override_in_ledger_mode(
+    reject_manual_m210_gross_income_override_in_ledger_mode(
         mode=mode,
         casilla_inputs=casilla_inputs or {},
     )
-    _validate_m210_official_tipo_renta_selection(
+    validate_m210_official_tipo_renta_selection(
         mode=mode,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         text_casilla_inputs=text_casilla_inputs or {},
     )
-    _reject_manual_m210_agrupacion_rows_in_ledger_mode(
+    reject_manual_m210_agrupacion_rows_in_ledger_mode(
         mode=mode,
         detail_rows=detail_rows,
     )
@@ -1144,84 +1148,6 @@ def _merge_detail_row_binding_values(
     for binding_id, value in detail_row_binding_values.items():
         merged[binding_id] = merged.get(binding_id, Decimal("0")) + value
     return merged
-
-
-def _reject_manual_m210_gross_income_override_in_ledger_mode(
-    *,
-    mode: M210GrossIncomeSourceMode | None,
-    casilla_inputs: Mapping[CasillaId, Decimal],
-) -> None:
-    """Keep explicit ledger and manual M210 [5] authority mutually exclusive."""
-    if mode is not M210GrossIncomeSourceMode.LEDGER:
-        return
-    if "rendimientos_integros" in casilla_inputs:
-        raise ModeloAggregationInputConflictError(
-            translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
-            context={"casillas": ["rendimientos_integros"]},
-            precondition_failure=build_modelo_calculate_refusal_failure(
-                scenario="m210.gross_income_source.ledger_with_manual_gross_income",
-                evidence_values={"rejected_casilla_ids": "rendimientos_integros", "ledger_source": True},
-            ),
-        )
-
-
-def _validate_m210_official_tipo_renta_selection(
-    *,
-    mode: M210GrossIncomeSourceMode | None,
-    m210_official_tipo_renta_code: str | None,
-    text_casilla_inputs: Mapping[CasillaId, str],
-) -> None:
-    """Keep raw M210 code and conceptual formula token coherent at the application boundary."""
-    if m210_official_tipo_renta_code is None:
-        if mode is M210GrossIncomeSourceMode.LEDGER:
-            raise ModeloAggregationInputConflictError(
-                translated_message="application.modelo.errors.m210_ledger_source_selection_required",
-                precondition_failure=build_modelo_calculate_refusal_failure(
-                    scenario="m210.tipo_renta.ledger_selection_missing",
-                    evidence_values={"ledger_source": True, "official_tipo_renta_code_stated": False},
-                ),
-            )
-        return
-    expected_tipo_renta = m210_tipo_renta_code_projection().get(m210_official_tipo_renta_code)
-    if expected_tipo_renta is None or text_casilla_inputs.get("tipo_renta") != expected_tipo_renta.value:
-        raise ModeloAggregationInputConflictError(
-            translated_message="application.modelo.errors.m210_official_tipo_renta_selection_mismatch",
-            context={
-                "official_tipo_renta_code": m210_official_tipo_renta_code,
-                "expected_tipo_renta": expected_tipo_renta.value if expected_tipo_renta is not None else None,
-                "tipo_renta": text_casilla_inputs.get("tipo_renta"),
-            },
-            precondition_failure=build_modelo_calculate_refusal_failure(
-                scenario="m210.tipo_renta.official_code_mismatch",
-                evidence_values={
-                    "official_tipo_renta_code": m210_official_tipo_renta_code,
-                    "official_code_recognised": expected_tipo_renta is not None,
-                },
-            ),
-        )
-
-
-def _reject_manual_m210_agrupacion_rows_in_ledger_mode(
-    *,
-    mode: M210GrossIncomeSourceMode | None,
-    detail_rows: tuple[ModeloDetailRow, ...],
-) -> None:
-    """Keep annual M210 ledger evidence on the same classified-row authority."""
-    if mode is M210GrossIncomeSourceMode.LEDGER and any(
-        isinstance(row, Modelo210AgrupacionRentaRow) for row in detail_rows
-    ):
-        raise ModeloAggregationInputConflictError(
-            translated_message="application.modelo.errors.m210_ledger_manual_agrupacion_rows",
-            precondition_failure=build_modelo_calculate_refusal_failure(
-                scenario="m210.gross_income_source.ledger_with_manual_agrupacion_rows",
-                evidence_values={
-                    "ledger_source": True,
-                    "manual_agrupacion_row_count": sum(
-                        isinstance(row, Modelo210AgrupacionRentaRow) for row in detail_rows
-                    ),
-                },
-            ),
-        )
 
 
 def _merge_bucket_bound_inputs(

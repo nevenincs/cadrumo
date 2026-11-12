@@ -182,6 +182,28 @@ type ProfileRecordGroupStreamItem = Annotated[
 ]
 
 
+def _require_refusal_words_together(code: object, words: object, language: object) -> None:
+    if (code is None) != (words is None) or (words is None) != (language is None):
+        raise ValueError("a refusal code, its words and their language travel together")
+
+
+def _require_refusal_carries_no_page(code: object, items: tuple[object, ...], next_cursor: int | None) -> None:
+    if code is None or items or next_cursor is not None:
+        raise ValueError("a refused record group read carries no page")
+
+
+def _require_consistent_page(
+    code: object, cursor: int, items: tuple[object, ...], total_items: int, next_cursor: int | None
+) -> None:
+    if code is not None or cursor + len(items) > total_items:
+        raise ValueError("invalid record group page")
+    if cursor < total_items and not items:
+        raise ValueError("a record group page cannot claim progress without an item")
+    expected_next = cursor + len(items)
+    if next_cursor != (expected_next if expected_next < total_items else None):
+        raise ValueError("record group continuation does not match the page items")
+
+
 class ProfileRecordGroupsRefusalCode(StrEnum):
     """A read that cannot truthfully yield the page asked for."""
 
@@ -212,21 +234,11 @@ class ProfileRecordGroupsResult(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_page(self) -> Self:
-        if (self.refusal_code is None) != (self.refusal_words is None) or (self.refusal_words is None) != (
-            self.refusal_words_language is None
-        ):
-            raise ValueError("a refusal code, its words and their language travel together")
+        _require_refusal_words_together(self.refusal_code, self.refusal_words, self.refusal_words_language)
         if self.outcome == "refused":
-            if self.refusal_code is None or self.items or self.next_cursor is not None:
-                raise ValueError("a refused record group read carries no page")
-            return self
-        if self.refusal_code is not None or self.cursor + len(self.items) > self.total_items:
-            raise ValueError("invalid record group page")
-        if self.cursor < self.total_items and not self.items:
-            raise ValueError("a record group page cannot claim progress without an item")
-        expected_next = self.cursor + len(self.items)
-        if self.next_cursor != (expected_next if expected_next < self.total_items else None):
-            raise ValueError("record group continuation does not match the page items")
+            _require_refusal_carries_no_page(self.refusal_code, self.items, self.next_cursor)
+        else:
+            _require_consistent_page(self.refusal_code, self.cursor, self.items, self.total_items, self.next_cursor)
         return self
 
 

@@ -550,8 +550,8 @@ def test_the_executor_answers_for_the_active_profile(
         return {
             "renta_inmueble.0.situacion": "5",
             "renta_arrendamiento.2.inmueble": "0",
-            "renta_arrendamiento.2.fecha_contrato": "2025-01-01",
-            "renta_arrendamiento.2.fecha_inicio": "2025-01-01",
+            "renta_arrendamiento.2.fecha_contrato": _ON_DATE.isoformat(),
+            "renta_arrendamiento.2.fecha_inicio": _ON_DATE.isoformat(),
         }
 
     asyncio.run(LedgerEntryOptionsExecutor(profile_facts).execute(request, cast(OperationExecutorContext, context)))

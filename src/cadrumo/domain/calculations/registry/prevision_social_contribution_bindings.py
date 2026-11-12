@@ -104,6 +104,18 @@ def prevision_social_contribution_binding_by_casilla(revision: ModeloRevision) -
     return {casilla_id: bindings[0] for casilla_id, bindings in owners.items() if len(bindings) == 1}
 
 
+def _placed_declared_casillas(revision: ModeloRevision) -> list[str]:
+    """Return the declared boxes the revision's placement rows name, in order."""
+    declared = {str(casilla.id) for casilla in revision.casillas}
+    return sorted(
+        {
+            str(row.casilla_id)
+            for row in revision.prevision_social_placements
+            if row.casilla_id is not None and str(row.casilla_id) in declared
+        }
+    )
+
+
 def prevision_social_contribution_revision_failures(revision: ModeloRevision) -> tuple[str, ...]:
     """Return every way the revision's family bindings and placement rows fail to meet.
 
@@ -113,21 +125,16 @@ def prevision_social_contribution_revision_failures(revision: ModeloRevision) ->
     the placement rows' own check, so it is not reported here a second time.
     """
     failures: list[str] = []
-    declared = {str(casilla.id) for casilla in revision.casillas}
-    placed = sorted(
-        {
-            str(row.casilla_id)
-            for row in revision.prevision_social_placements
-            if row.casilla_id is not None and str(row.casilla_id) in declared
-        }
-    )
+    placed = _placed_declared_casillas(revision)
     bindings = prevision_social_contribution_bindings(revision)
     if placed and not bindings:
         failures.append(f"revision {revision.id!r} places pension contributions but declares no family binding")
     targets = casillas_by_binding(revision)
-    for binding, _provider in bindings:
-        if len(targets.get(binding.id, ())) != 1:
-            failures.append(f"prevision social contribution binding {binding.id!r} must fill exactly one casilla")
+    failures.extend(
+        f"prevision social contribution binding {binding.id!r} must fill exactly one casilla"
+        for binding, _provider in bindings
+        if len(targets.get(binding.id, ())) != 1
+    )
     if bindings:
         owned = {str(casilla_id) for casilla_id in prevision_social_contribution_binding_by_casilla(revision)}
         failures.extend(

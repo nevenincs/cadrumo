@@ -151,6 +151,39 @@ class PrevisionSocialPlacement(RegistryModel):
         return (self.clave, self.subclave, self.employer_contributed_to_same_plan)
 
 
+def _undeclared_casilla_failures(revision: ModeloRevision) -> list[str]:
+    """Name each placement whose casilla the revision does not declare."""
+    casilla_ids = {str(casilla.id) for casilla in revision.casillas}
+    return [
+        f"prevision social placement {row.id!r} places casilla {row.casilla_id!r}, "
+        f"which revision {revision.id!r} does not declare"
+        for row in revision.prevision_social_placements
+        if row.casilla_id is not None and str(row.casilla_id) not in casilla_ids
+    ]
+
+
+def _duplicate_key_failures(key_counts: Counter[PrevisionSocialPlacementKey]) -> list[str]:
+    """Name each placement key declared more than once."""
+    return [
+        f"prevision social placement key {placement_id(*key)!r} is declared {count} times"
+        for key, count in sorted(key_counts.items(), key=lambda item: placement_id(*item[0]))
+        if count > 1
+    ]
+
+
+def _split_pair_failures(key_counts: Counter[PrevisionSocialPlacementKey]) -> list[str]:
+    """Name each pair that is not declared wholly unsplit or with both same-plan answers."""
+    splits_by_pair: dict[tuple[PrevisionSocialClave, PrevisionSocialSubclave | None], set[bool | None]] = {}
+    for clave, subclave, split in key_counts:
+        splits_by_pair.setdefault((clave, subclave), set()).add(split)
+    return [
+        f"prevision social placement pair {placement_id(clave, subclave, None)!r} must declare "
+        "both same-plan answers and no unsplit row"
+        for (clave, subclave), splits in sorted(splits_by_pair.items(), key=lambda item: placement_id(*item[0], None))
+        if splits not in ({None}, {True, False})
+    ]
+
+
 def prevision_social_placement_revision_failures(revision: ModeloRevision) -> tuple[str, ...]:
     """Return every way the revision's placements disagree with the rest of the revision.
 
@@ -158,30 +191,12 @@ def prevision_social_placement_revision_failures(revision: ModeloRevision) -> tu
     once; and a pair split on the same-plan answer declares both answers and no
     unsplit row, so no record falls between them.
     """
-    failures: list[str] = []
-    casilla_ids = {str(casilla.id) for casilla in revision.casillas}
-    for row in revision.prevision_social_placements:
-        if row.casilla_id is not None and str(row.casilla_id) not in casilla_ids:
-            failures.append(
-                f"prevision social placement {row.id!r} places casilla {row.casilla_id!r}, "
-                f"which revision {revision.id!r} does not declare"
-            )
     key_counts = Counter(row.key for row in revision.prevision_social_placements)
-    failures.extend(
-        f"prevision social placement key {placement_id(*key)!r} is declared {count} times"
-        for key, count in sorted(key_counts.items(), key=lambda item: placement_id(*item[0]))
-        if count > 1
+    return (
+        *_undeclared_casilla_failures(revision),
+        *_duplicate_key_failures(key_counts),
+        *_split_pair_failures(key_counts),
     )
-    splits_by_pair: dict[tuple[PrevisionSocialClave, PrevisionSocialSubclave | None], set[bool | None]] = {}
-    for clave, subclave, split in key_counts:
-        splits_by_pair.setdefault((clave, subclave), set()).add(split)
-    for (clave, subclave), splits in sorted(splits_by_pair.items(), key=lambda item: placement_id(*item[0], None)):
-        if splits not in ({None}, {True, False}):
-            failures.append(
-                f"prevision social placement pair {placement_id(clave, subclave, None)!r} must declare "
-                "both same-plan answers and no unsplit row"
-            )
-    return tuple(failures)
 
 
 def placement_texts_cover(

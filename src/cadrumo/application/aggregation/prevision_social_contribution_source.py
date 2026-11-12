@@ -184,12 +184,17 @@ class PrevisionSocialContributionSourceResolver:
             )
         with source_context_operation(context) as operation:
             reading = _read(context, records, operation)
+        return self._resolution(revision, context.caller_casilla_ids, reading)
+
+    def _resolution(
+        self, revision: ModeloRevision, caller_casilla_ids: frozenset[CasillaId], reading: _Reading
+    ) -> CalculationSourceResolution:
         targets = {
             binding_id: casilla_id
             for casilla_id, binding_id in prevision_social_contribution_binding_by_casilla(revision).items()
         }
         family = tuple(binding.id for binding, _provider in prevision_social_contribution_bindings(revision))
-        typed = bool(context.caller_casilla_ids & frozenset(targets.values()))
+        typed = bool(caller_casilla_ids & frozenset(targets.values()))
         empty = tuple(binding_id for binding_id in family if binding_id not in reading.placed)
         held_open = bool(reading.refused) and not typed
         return CalculationSourceResolution(
@@ -199,18 +204,31 @@ class PrevisionSocialContributionSourceResolver:
             value_outcomes=dict.fromkeys(reading.placed, BindingValueOutcome.FROM_BEARING_ROWS),
             unresolved_binding_ids=empty,
             inapplicable_binding_ids=() if held_open else empty,
-            diagnostics=(
-                *(self._refused_diagnostics(reading.refused, empty, targets) if held_open else ()),
-                *(() if reading.recorded else (self._not_certified(),)),
-                *self._inherited_diagnostics(reading.placed, targets),
-            ),
-            provenance=tuple(
-                self._node(record)
-                for entry in reading.placed.values()
-                for record in sorted(
-                    entry.records, key=lambda item: prevision_social_contribution_record_key(item.identity)
-                )
-            ),
+            diagnostics=self._diagnostics(reading, empty, targets, held_open=held_open),
+            provenance=self._provenance(reading.placed),
+        )
+
+    def _diagnostics(
+        self,
+        reading: _Reading,
+        empty: Sequence[BindingId],
+        targets: Mapping[BindingId, CasillaId],
+        *,
+        held_open: bool,
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        return (
+            *(self._refused_diagnostics(reading.refused, empty, targets) if held_open else ()),
+            *(() if reading.recorded else (self._not_certified(),)),
+            *self._inherited_diagnostics(reading.placed, targets),
+        )
+
+    def _provenance(self, placed: Mapping[BindingId, _Placed]) -> tuple[CalculationSourceProvenance, ...]:
+        return tuple(
+            self._node(record)
+            for entry in placed.values()
+            for record in sorted(
+                entry.records, key=lambda item: prevision_social_contribution_record_key(item.identity)
+            )
         )
 
     def _refused_diagnostics(

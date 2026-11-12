@@ -18,6 +18,7 @@ from ...core.prevision_social import PrevisionSocialBeneficiario, PrevisionSocia
 from ..calculations.registry.errors import RegistryValidationError
 
 if TYPE_CHECKING:
+    from ..calculations.registry.prevision_social_placement import PrevisionSocialPlacement
     from ..calculations.registry.schema import ModeloRevision
     from .prevision_social_contribution import PrevisionSocialContribution
 
@@ -41,6 +42,35 @@ class ContributionPlacementRefused(BaseModel):
     reason: PrevisionSocialPlacementRefusal
 
 
+def _same_plan_rows(
+    matching: tuple[PrevisionSocialPlacement, ...], record: PrevisionSocialContribution
+) -> tuple[PrevisionSocialPlacement, ...] | ContributionPlacementRefused:
+    """Return the rows ``record``'s same-plan answer selects, or the refusal when it states none."""
+    split = tuple(row for row in matching if row.employer_contributed_to_same_plan is not None)
+    if not split:
+        return matching
+    if record.employer_contributed_to_same_plan is None:
+        return ContributionPlacementRefused(reason=PrevisionSocialPlacementRefusal.SAME_PLAN_SPLIT_UNSTATED)
+    return tuple(
+        row for row in split if row.employer_contributed_to_same_plan is record.employer_contributed_to_same_plan
+    )
+
+
+def _candidate_rows(
+    revision: ModeloRevision, record: PrevisionSocialContribution
+) -> tuple[PrevisionSocialPlacement, ...] | ContributionPlacementRefused:
+    """Return the rows that can place ``record``, or the refusal that stops the search."""
+    if record.beneficiary is not PrevisionSocialBeneficiario.TAXPAYER:
+        return ContributionPlacementRefused(reason=PrevisionSocialPlacementRefusal.BENEFICIARY_OUT_OF_SCOPE)
+    rows = revision.prevision_social_placements
+    if not rows:
+        return ContributionPlacementRefused(reason=PrevisionSocialPlacementRefusal.DESIGN_NOT_BUNDLED)
+    matching = tuple(row for row in rows if row.clave is record.clave and row.subclave is record.subclave)
+    if not matching:
+        return ContributionPlacementRefused(reason=PrevisionSocialPlacementRefusal.UNPLACED_CLAVE)
+    return _same_plan_rows(matching, record)
+
+
 def place_contribution(
     revision: ModeloRevision,
     record: PrevisionSocialContribution,
@@ -52,22 +82,10 @@ def place_contribution(
     Modelo 345 design behind it. A pair the revision does not declare is not
     defined by its design, and is refused as unplaced.
     """
-    if record.beneficiary is not PrevisionSocialBeneficiario.TAXPAYER:
-        return ContributionPlacementRefused(reason=PrevisionSocialPlacementRefusal.BENEFICIARY_OUT_OF_SCOPE)
-    rows = revision.prevision_social_placements
-    if not rows:
-        return ContributionPlacementRefused(reason=PrevisionSocialPlacementRefusal.DESIGN_NOT_BUNDLED)
-    matching = tuple(row for row in rows if row.clave is record.clave and row.subclave is record.subclave)
-    if not matching:
-        return ContributionPlacementRefused(reason=PrevisionSocialPlacementRefusal.UNPLACED_CLAVE)
-    split = tuple(row for row in matching if row.employer_contributed_to_same_plan is not None)
-    if split:
-        if record.employer_contributed_to_same_plan is None:
-            return ContributionPlacementRefused(reason=PrevisionSocialPlacementRefusal.SAME_PLAN_SPLIT_UNSTATED)
-        matching = tuple(
-            row for row in split if row.employer_contributed_to_same_plan is record.employer_contributed_to_same_plan
-        )
-    (row,) = matching
+    candidates = _candidate_rows(revision, record)
+    if isinstance(candidates, ContributionPlacementRefused):
+        return candidates
+    (row,) = candidates
     if row.refusal is not None:
         return ContributionPlacementRefused(reason=row.refusal)
     if row.casilla_id is None:

@@ -11,7 +11,7 @@ persistence.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from collections.abc import Set as AbstractSet
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -386,6 +386,59 @@ def _changed_sealed_write(
     return bool(blockers) and not evidence_only and not command_changes_no_ledger_value(command, current)
 
 
+def _verify_update_references(
+    command: ManualLedgerTransactionCommand,
+    current: Transaction,
+    replacement: Transaction,
+    ports: LedgerActionPorts,
+) -> None:
+    verify_evidence_references(
+        command,
+        transaction_id=replacement.transaction_id,
+        invoice_repository=ports.invoice_repository,
+        attachment_store=ports.attachment_store,
+        evidence_records=ports.purchase_invoice_evidence_records,
+    )
+    verify_usage_ratio_reference(command, usage_ratio_profile=ports.usage_ratio_profile, operation=ports.operation)
+    verify_rental_link_references(
+        arrendamiento_ref=command.arrendamiento_ref,
+        inmueble_ref=command.inmueble_ref,
+        stored_arrendamiento_ref=current.arrendamiento_ref,
+        stored_inmueble_ref=current.inmueble_ref,
+        loader=ports.rental_profile_facts,
+    )
+    verify_savings_link_references(
+        posicion_ref=command.posicion_ref,
+        concepto=None if command.concepto_capital_mobiliario is None else str(command.concepto_capital_mobiliario),
+        stored_posicion_ref=current.posicion_ref,
+        stored_concepto=(
+            None if current.concepto_capital_mobiliario is None else str(current.concepto_capital_mobiliario)
+        ),
+        booked_date=command.booked_date,
+        operation=ports.operation,
+        loader=ports.rental_profile_facts,
+    )
+
+
+def _build_update_events(
+    command: ManualLedgerTransactionCommand,
+    event_specs: Sequence[EventSpec],
+    now: datetime,
+) -> tuple[BucketEvent, ...]:
+    return tuple(
+        build_ledger_bucket_event(
+            bucket_id=command.bucket_id,
+            event_type=event_type,
+            occurred_at=now,
+            actor=command.actor,
+            object_type=object_type,
+            object_id=object_id,
+            payload=payload,
+        )
+        for event_type, object_type, object_id, payload in event_specs
+    )
+
+
 def prepare_manual_transaction_update(
     *,
     current: Transaction,
@@ -458,50 +511,14 @@ def prepare_manual_transaction_update(
     _require_finalized_revisions_undisturbed(
         current, replacement, blockers=finalized_blockers, evidence_only=evidence_only, restated=restated
     )
-    verify_evidence_references(
-        command,
-        transaction_id=replacement.transaction_id,
-        invoice_repository=ports.invoice_repository,
-        attachment_store=ports.attachment_store,
-        evidence_records=ports.purchase_invoice_evidence_records,
-    )
-    verify_usage_ratio_reference(command, usage_ratio_profile=ports.usage_ratio_profile, operation=ports.operation)
-    verify_rental_link_references(
-        arrendamiento_ref=command.arrendamiento_ref,
-        inmueble_ref=command.inmueble_ref,
-        stored_arrendamiento_ref=current.arrendamiento_ref,
-        stored_inmueble_ref=current.inmueble_ref,
-        loader=ports.rental_profile_facts,
-    )
-    verify_savings_link_references(
-        posicion_ref=command.posicion_ref,
-        concepto=None if command.concepto_capital_mobiliario is None else str(command.concepto_capital_mobiliario),
-        stored_posicion_ref=current.posicion_ref,
-        stored_concepto=(
-            None if current.concepto_capital_mobiliario is None else str(current.concepto_capital_mobiliario)
-        ),
-        booked_date=command.booked_date,
-        operation=ports.operation,
-        loader=ports.rental_profile_facts,
-    )
+    _verify_update_references(command, current, replacement, ports)
     event_specs = _update_event_specs(
         current=current,
         replacement=replacement,
         command=command,
         previous_transaction_id=previous_transaction_id,
     )
-    events = tuple(
-        build_ledger_bucket_event(
-            bucket_id=command.bucket_id,
-            event_type=event_type,
-            occurred_at=now,
-            actor=command.actor,
-            object_type=object_type,
-            object_id=object_id,
-            payload=payload,
-        )
-        for event_type, object_type, object_id, payload in event_specs
-    )
+    events = _build_update_events(command, event_specs, now)
     primary_event_id = primary_lineage_event_id(events)
     evidence_event_ids = derive_evidence_event_ids(events)
     replacement = transaction_from_command(

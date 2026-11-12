@@ -25,7 +25,7 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel
 
-from ..binding_provider_registration import absolute_coordinate_offenders
+from ..binding_provider_coordinates import absolute_coordinate_offenders
 from ..ids import RevisionId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

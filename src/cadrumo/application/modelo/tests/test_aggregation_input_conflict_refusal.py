@@ -43,12 +43,12 @@ from ..action_errors import (
     ModeloAggregationBindingError,
     ModeloAggregationInputConflictError,
 )
-from ..calculation_bucket_actions import (
-    _merge_bucket_bound_inputs,
-    _reject_manual_m210_agrupacion_rows_in_ledger_mode,
-    _reject_manual_m210_gross_income_override_in_ledger_mode,
-    _validate_m210_official_tipo_renta_selection,
+from ..bucket_m210_input_guards import (
+    reject_manual_m210_agrupacion_rows_in_ledger_mode,
+    reject_manual_m210_gross_income_override_in_ledger_mode,
+    validate_m210_official_tipo_renta_selection,
 )
+from ..calculation_bucket_actions import _merge_bucket_bound_inputs
 from ..calculation_modelo_adjustments import union_detail_rows_by_identity
 from ..calculation_source_guards import (
     assert_no_novel_source_kinds,
@@ -141,7 +141,7 @@ def test_a_miswired_resolver_handoff_stays_a_failure() -> None:
 
 def test_a_manual_gross_income_over_the_ledger_route_serves_an_operator_decision() -> None:
     with pytest.raises(ModeloAggregationInputConflictError) as refused:
-        _reject_manual_m210_gross_income_override_in_ledger_mode(
+        reject_manual_m210_gross_income_override_in_ledger_mode(
             mode=M210GrossIncomeSourceMode.LEDGER, casilla_inputs={"rendimientos_integros": Decimal("1")}
         )
 
@@ -152,14 +152,14 @@ def test_a_manual_gross_income_over_the_ledger_route_serves_an_operator_decision
 
 def test_the_manual_route_keeps_a_typed_gross_income() -> None:
     """ANTI-VACUITY: the same input under the manual route is admitted."""
-    _reject_manual_m210_gross_income_override_in_ledger_mode(
+    reject_manual_m210_gross_income_override_in_ledger_mode(
         mode=M210GrossIncomeSourceMode.MANUAL, casilla_inputs={"rendimientos_integros": Decimal("1")}
     )
 
 
 def test_the_ledger_route_without_an_official_tipo_renta_code_serves_an_operator_decision() -> None:
     with pytest.raises(ModeloAggregationInputConflictError) as refused:
-        _validate_m210_official_tipo_renta_selection(
+        validate_m210_official_tipo_renta_selection(
             mode=M210GrossIncomeSourceMode.LEDGER, m210_official_tipo_renta_code=None, text_casilla_inputs={}
         )
 
@@ -168,7 +168,7 @@ def test_the_ledger_route_without_an_official_tipo_renta_code_serves_an_operator
 
 def test_an_unrecognised_official_tipo_renta_code_serves_an_operator_decision() -> None:
     with pytest.raises(ModeloAggregationInputConflictError) as refused:
-        _validate_m210_official_tipo_renta_selection(
+        validate_m210_official_tipo_renta_selection(
             mode=M210GrossIncomeSourceMode.MANUAL, m210_official_tipo_renta_code="ZZ", text_casilla_inputs={}
         )
 
@@ -187,7 +187,7 @@ def test_manual_agrupacion_rows_over_the_ledger_route_serve_an_operator_decision
     )
 
     with pytest.raises(ModeloAggregationInputConflictError) as refused:
-        _reject_manual_m210_agrupacion_rows_in_ledger_mode(mode=M210GrossIncomeSourceMode.LEDGER, detail_rows=(row,))
+        reject_manual_m210_agrupacion_rows_in_ledger_mode(mode=M210GrossIncomeSourceMode.LEDGER, detail_rows=(row,))
 
     _assert_door(
         refused.value,

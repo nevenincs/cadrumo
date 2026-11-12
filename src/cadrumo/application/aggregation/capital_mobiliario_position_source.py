@@ -205,10 +205,8 @@ class _Computation:
     payers_used: frozenset[str]
 
 
-def _compute(join: CapitalMobiliarioJoin, read: _PayerEvidenceRead, rate: Decimal) -> _Computation:
-    """Run the arithmetic for every payer whose evidence admits it; every other payer is a finding."""
-    in_kind = {key for key, record in read.records.items() if record.valoracion_especie > 0}
-    findings: list[_Finding] = [_join_finding(item) for item in join.findings]
+def _in_kind_findings(join: CapitalMobiliarioJoin, in_kind: set[str], read: _PayerEvidenceRead) -> list[_Finding]:
+    findings: list[_Finding] = []
     for key in sorted(in_kind):
         record = read.records[key]
         affected = _records_of(item for item in join.occurrences if item.payer_key == key)
@@ -220,6 +218,27 @@ def _compute(join: CapitalMobiliarioJoin, read: _PayerEvidenceRead, rate: Decima
                 {"payer": _payer_name(record, join.payer_names)},
             )
         )
+    return findings
+
+
+def _payers_without_rows_findings(join: CapitalMobiliarioJoin, read: _PayerEvidenceRead) -> list[_Finding]:
+    return [
+        _Finding(
+            CalculationNoteSentence.CAPITAL_MOBILIARIO_PAYER_WITHOUT_ROWS,
+            _POSITION_DOOR,
+            None,
+            {"payer": _payer_name(record, join.payer_names)},
+        )
+        for key, record in sorted(read.records.items())
+        if key not in join.linked_payer_keys
+    ]
+
+
+def _compute(join: CapitalMobiliarioJoin, read: _PayerEvidenceRead, rate: Decimal) -> _Computation:
+    """Run the arithmetic for every payer whose evidence admits it; every other payer is a finding."""
+    in_kind = {key for key, record in read.records.items() if record.valoracion_especie > 0}
+    findings: list[_Finding] = [_join_finding(item) for item in join.findings]
+    findings.extend(_in_kind_findings(join, in_kind, read))
     computable = tuple(item for item in join.occurrences if item.payer_key not in in_kind)
     outcomes = compute_capital_mobiliario_occurrences(
         computable, _evidence(read, {item.payer_key for item in computable}), rate
@@ -232,16 +251,7 @@ def _compute(join: CapitalMobiliarioJoin, read: _PayerEvidenceRead, rate: Decima
         affected = _records_of(item for item in computable if item.payer_key == outcome.payer_key)
         payer = join.payer_names.get(outcome.payer_key, outcome.position_refs[0])
         findings.append(_refusal_finding(outcome, payer, affected))
-    for key, record in sorted(read.records.items()):
-        if key not in join.linked_payer_keys:
-            findings.append(
-                _Finding(
-                    CalculationNoteSentence.CAPITAL_MOBILIARIO_PAYER_WITHOUT_ROWS,
-                    _POSITION_DOOR,
-                    None,
-                    {"payer": _payer_name(record, join.payer_names)},
-                )
-            )
+    findings.extend(_payers_without_rows_findings(join, read))
     used = frozenset(item.payer_key for item in computed)
     return _Computation(tuple(computed), tuple(findings), used)
 
