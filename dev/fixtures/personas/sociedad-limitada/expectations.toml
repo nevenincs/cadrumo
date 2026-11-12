@@ -169,6 +169,7 @@ derivation = "SOC-ALQ-1..4 4 x 1633.50 = 6534.00."
 legal_ref = ["rd-1065-2007:art-33"]
 grounding = "verified"
 
+
 [[values]]
 modelo = "200"
 period = "0A"
@@ -190,40 +191,79 @@ reason = "The cuenta de pérdidas y ganancias lines need closing entries (amorti
 modelo = "200"
 period = "0A"
 year = "horizon-1"
-roles = { "is_tributacion_conjunta_porcentaje_estado" = "100" }
+governed_by = "ley-27-2014:art-29-2023"
+not_sourced = { "00255" = "30800.00", "00279" = "5400.00" }
 derivation = """
-The company's domicilio fiscal is in Valladolid and its incn of the prior twelve months is 28500.00.
-The foral administrations levy the tax of an entity domiciled in their territory with a prior-year volume of
-operations up to 12 million euros, and share it by volume only above that figure (Ley 12/2002 art. 15,
-Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625).
-The role is casilla 00625 of record DP200026 in the Modelo 200 record design, element 17, position 152,
-length 5, "3 enteros y 2 decimales": "Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes
-tributación - Admón.del Estado [00625]" (aeat-dr-200, the same line in the 2022 and 2025 designs).
+The bank ledger gives revenue 30800.00 and the equipment and licence rental 5400.00 (net of deductible IVA).
+They would fill the cuenta de pérdidas y ganancias of the Modelo 200 record design (aeat-dr-200, the same lines
+in the 2022 and 2025 designs): "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la
+cifra de negocios [00255]" (element 6, position 13, length 17) and "Cuenta de pérdidas y ganancias (I) -
+Operaciones continuadas - Otros gastos de explotación [00279]", where a rental of equipment and licences is a
+servicio exterior.
+Restated under ley-27-2014:art-29-2023 because a value limited to a provision replaces every plain value of the same return in the
+years that provision governs; these figures do not depend on the tax rate.
 """
-legal_ref = ["ley-12-2002:art-15", "ley-28-1990:art-19"]
-grounding = "verified"
+legal_ref = ["ley-27-2014:art-124", "ley-27-2014:art-29-2023"]
+grounding = "unverified"
+reason = "The cuenta de pérdidas y ganancias lines need closing entries (amortisation, accruals, officer costs) the bank ledger lacks, so these casillas stay not sourced until Sociedades sources them. The accounting result itself (role is-liquidacion-i-importe, casilla 00501 of the liquidación page) is a given the company enters (persona.toml [[work_inputs]]), so it is not asserted here."
 
 [[values]]
 modelo = "200"
 period = "0A"
 year = "horizon-1"
-roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2275.00", "is_cuota_liquida" = "2275.00", "is_liquidacion_iv_cuota_diferencial" = "2275.00" }
+governed_by = "ley-27-2014:dt-44"
+not_sourced = { "00255" = "30800.00", "00279" = "5400.00" }
 derivation = """
-Base imponible previa 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
+The bank ledger gives revenue 30800.00 and the equipment and licence rental 5400.00 (net of deductible IVA).
+They would fill the cuenta de pérdidas y ganancias of the Modelo 200 record design (aeat-dr-200, the same lines
+in the 2022 and 2025 designs): "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la
+cifra de negocios [00255]" (element 6, position 13, length 17) and "Cuenta de pérdidas y ganancias (I) -
+Operaciones continuadas - Otros gastos de explotación [00279]", where a rental of equipment and licences is a
+servicio exterior.
+Restated under ley-27-2014:dt-44 because a value limited to a provision replaces every plain value of the same return in the
+years that provision governs; these figures do not depend on the tax rate.
+"""
+legal_ref = ["ley-27-2014:art-124", "ley-27-2014:dt-44"]
+grounding = "unverified"
+reason = "The cuenta de pérdidas y ganancias lines need closing entries (amortisation, accruals, officer costs) the bank ledger lacks, so these casillas stay not sourced until Sociedades sources them. The accounting result itself (role is-liquidacion-i-importe, casilla 00501 of the liquidación page) is a given the company enters (persona.toml [[work_inputs]]), so it is not asserted here."
+
+[[values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2275.00", "is_cuota_liquida" = "2275.00", "is_liquidacion_iv_cuota_diferencial" = "2275.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
+derivation = """
+Cuota íntegra, LIS art. 29.1 as worded before Ley 31/2022 (periodos before 2023): tipo general 25 %, there being no reduced rate for an
+INCN below 1 millón de euros (Ley 31/2022 art. 39 introduced it from 2023); 9100.00 x 25 % = 2275.00. This plain value holds in a year
+neither the 2023 redaction nor DT 44 governs.
+Base imponible previa 00550 = 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
 (no amortización, no retribución de administradores, no periodificación, as that source states). The company compensates its whole pending
 base imponible negativa, 16300.00 (casilla 00671 of the prior return, persona.toml [[attested_prior_values]]), within LIS art. 26.1
-(70 % x 25400.00 = 17780.00, and in any case 1000000.00): base imponible = 25400.00 - 16300.00 = 9100.00.
+(70 % x 25400.00 = 17780.00, and in any case 1000000.00); 00547 is its elective work input and is not asserted back. No reserva de
+capitalización (01032, LIS art. 25) or de nivelación (LIS art. 105) is applied: the persona dota neither. So
+00552 = 00550 - 01032 - 00547 = 25400.00 - 0 - 16300.00 = 9100.00 (manual Sociedades 2024 source.pdf.extracted.md:14021; 2025 :14097),
+and the base after the reserva de nivelación 01330 = 00552 = 9100.00 (manual 2024 :14609), on which 00562 = 01330 x 00558 / 100
+(manual 2024 :14654; 2025 :14952).
 Pagos fraccionados 00601/00603/00605 are 0.00: under art. 40.2 each is 18 % of a prior cuota of 0.00, and art. 40.3 was never elected
-(persona.toml [[attested_prior_values]]). No deducciones, bonificaciones, retenciones or ingresos a cuenta, and the State levies 100 %
-(00625), so cuota líquida and cuota diferencial (manual práctico de Sociedades: [00611] = [00599] - ([00601] + [00603] + [00605]))
-both equal the cuota íntegra.
-Cuota íntegra, LIS art. 29.1 as worded before Ley 31/2022 (periodos before 2023): tipo general 25 %, there being no reduced rate for an
-INCN below 1 millón de euros; 9100.00 x 25 % = 2275.00. This plain value holds in a year neither the 2023 redaction nor DT 44 governs.
-Roles are Modelo 200 registry semantic_roles of the liquidación pages DP200014 and DP200014B (aeat-dr-200), resolved to each edition's casilla:
-base imponible previa 00550, compensación 00547, base imponible 00552, cuota íntegra 00562, cuota líquida 00592, pagos fraccionados
-00601/00603/00605, cuota diferencial 00611.
+(persona.toml [[attested_prior_values]]). No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
+ingresos a cuenta (01766, 01784) and the State levies 100 % (00625), so 00599 = (00625 / 100) x (00592 - 01766 - 01784) = 00592
+(manual 2024 :20345; 2025 :20653). 00611 is "Cuota diferencial (Estado)" in both designs, the State share before retenciones are
+netted elsewhere: 00611 = 00599 - (00601 + 00603 + 00605) = cuota íntegra (manual 2024 :20582; 2025 :20895).
+Tributación conjunta: the domicilio fiscal is in Valladolid and the incn of the prior twelve months is 28500.00; the foral administrations
+levy an entity domiciled in their territory with a prior-year volume of operations up to 12 million euros and share by volume only above
+it (Ley 12/2002 art. 15, Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625 of record DP200026, element 17,
+position 152, length 5, "3 enteros y 2 decimales").
+Boxes per aeat-dr-200 (corpus aeat_official/disenos_registro/modelo_200; 2024 design 16-200-ejercicio-2024-...xls.extracted.md, 2025 design
+01-200-ejercicio-2025-...xls.extracted.md, same captions in both): 00550 "B.I. antes de la compensación de bases imponibles negativas"
+(2024 :1471; 2025 :1470), 00547 "Compensación de bases imponibles negativas períodos anteriores" (:1477; :1476), 00552 "Base imponible"
+(:1480; :1479), 00558 "Tipo de gravamen" (:1496; :1495), 00562 "Cuota íntegra" (:1509; :1508), 00592 "Cuota líquida" (:1557; :1561),
+00599 "Cuota del ejercicio a ingresar o a devolver - Estado" (:1577; :1581), 00601/00603/00605 pagos fraccionados - Estado
+(:1579-1583; :1583-1587), 00611 "Cuota diferencial - Estado" (:1585; :1589), 00625 "Admón.del Estado" (:4445; :4560).
+Roles are Modelo 200 registry semantic_roles of pages DP200014, DP200014B and DP200026, resolved to each edition's casilla:
+base imponible previa 00550, base imponible 00552, cuota íntegra 00562, cuota líquida 00592, pagos fraccionados 00601/00603/00605,
+cuota diferencial 00611, porcentaje Estado 00625.
 """
-legal_ref = ["ley-27-2014:art-10", "ley-27-2014:art-26", "ley-27-2014:art-40", "ley-27-2014:art-29"]
+legal_ref = ["ley-27-2014:art-10", "ley-27-2014:art-26", "ley-27-2014:art-40", "ley-12-2002:art-15", "ley-28-1990:art-19", "ley-27-2014:art-29"]
 grounding = "verified"
 
 [[values]]
@@ -231,24 +271,41 @@ modelo = "200"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-27-2014:art-29-2023"
-roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2093.00", "is_cuota_liquida" = "2093.00", "is_liquidacion_iv_cuota_diferencial" = "2093.00" }
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2093.00", "is_cuota_liquida" = "2093.00", "is_liquidacion_iv_cuota_diferencial" = "2093.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
 derivation = """
-Base imponible previa 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
+Cuota íntegra, LIS art. 29.1 as Ley 31/2022 art. 39 worded it for periodos 2023 and 2024: 23 % for an entity whose INCN of the
+prior periodo is below 1 millón de euros and that is not an entidad patrimonial (28500.00 here, a web-development activity; manual
+práctico de Sociedades 2024 source.pdf.extracted.md:14682 "Entidades INCN < 1 millón de euros en el período impositivo inmediato
+anterior ... 23 por 100"). 00558 = 23.00, a single rate, "2 enteros y 2 decimales" (2024 design :1496).
+9100.00 x 23 % = 2093.00.
+Base imponible previa 00550 = 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
 (no amortización, no retribución de administradores, no periodificación, as that source states). The company compensates its whole pending
 base imponible negativa, 16300.00 (casilla 00671 of the prior return, persona.toml [[attested_prior_values]]), within LIS art. 26.1
-(70 % x 25400.00 = 17780.00, and in any case 1000000.00): base imponible = 25400.00 - 16300.00 = 9100.00.
+(70 % x 25400.00 = 17780.00, and in any case 1000000.00); 00547 is its elective work input and is not asserted back. No reserva de
+capitalización (01032, LIS art. 25) or de nivelación (LIS art. 105) is applied: the persona dota neither. So
+00552 = 00550 - 01032 - 00547 = 25400.00 - 0 - 16300.00 = 9100.00 (manual Sociedades 2024 source.pdf.extracted.md:14021; 2025 :14097),
+and the base after the reserva de nivelación 01330 = 00552 = 9100.00 (manual 2024 :14609), on which 00562 = 01330 x 00558 / 100
+(manual 2024 :14654; 2025 :14952).
 Pagos fraccionados 00601/00603/00605 are 0.00: under art. 40.2 each is 18 % of a prior cuota of 0.00, and art. 40.3 was never elected
-(persona.toml [[attested_prior_values]]). No deducciones, bonificaciones, retenciones or ingresos a cuenta, and the State levies 100 %
-(00625), so cuota líquida and cuota diferencial (manual práctico de Sociedades: [00611] = [00599] - ([00601] + [00603] + [00605]))
-both equal the cuota íntegra.
-Cuota íntegra, LIS art. 29.1 as Ley 31/2022 art. 39 worded it for periodos 2023 and 2024: 23 % for an entity whose INCN of the
-prior periodo is below 1 millón de euros (28500.00 here; manual práctico de Sociedades 2024, rate table "Entidades INCN < 1 millón de
-euros en el período impositivo inmediato anterior ... 23 por 100"); 9100.00 x 23 % = 2093.00.
-Roles are Modelo 200 registry semantic_roles of the liquidación pages DP200014 and DP200014B (aeat-dr-200), resolved to each edition's casilla:
-base imponible previa 00550, compensación 00547, base imponible 00552, cuota íntegra 00562, cuota líquida 00592, pagos fraccionados
-00601/00603/00605, cuota diferencial 00611.
+(persona.toml [[attested_prior_values]]). No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
+ingresos a cuenta (01766, 01784) and the State levies 100 % (00625), so 00599 = (00625 / 100) x (00592 - 01766 - 01784) = 00592
+(manual 2024 :20345; 2025 :20653). 00611 is "Cuota diferencial (Estado)" in both designs, the State share before retenciones are
+netted elsewhere: 00611 = 00599 - (00601 + 00603 + 00605) = cuota íntegra (manual 2024 :20582; 2025 :20895).
+Tributación conjunta: the domicilio fiscal is in Valladolid and the incn of the prior twelve months is 28500.00; the foral administrations
+levy an entity domiciled in their territory with a prior-year volume of operations up to 12 million euros and share by volume only above
+it (Ley 12/2002 art. 15, Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625 of record DP200026, element 17,
+position 152, length 5, "3 enteros y 2 decimales").
+Boxes per aeat-dr-200 (corpus aeat_official/disenos_registro/modelo_200; 2024 design 16-200-ejercicio-2024-...xls.extracted.md, 2025 design
+01-200-ejercicio-2025-...xls.extracted.md, same captions in both): 00550 "B.I. antes de la compensación de bases imponibles negativas"
+(2024 :1471; 2025 :1470), 00547 "Compensación de bases imponibles negativas períodos anteriores" (:1477; :1476), 00552 "Base imponible"
+(:1480; :1479), 00558 "Tipo de gravamen" (:1496; :1495), 00562 "Cuota íntegra" (:1509; :1508), 00592 "Cuota líquida" (:1557; :1561),
+00599 "Cuota del ejercicio a ingresar o a devolver - Estado" (:1577; :1581), 00601/00603/00605 pagos fraccionados - Estado
+(:1579-1583; :1583-1587), 00611 "Cuota diferencial - Estado" (:1585; :1589), 00625 "Admón.del Estado" (:4445; :4560).
+Roles are Modelo 200 registry semantic_roles of pages DP200014, DP200014B and DP200026, resolved to each edition's casilla:
+base imponible previa 00550, base imponible 00552, cuota íntegra 00562, cuota líquida 00592, pagos fraccionados 00601/00603/00605,
+cuota diferencial 00611, porcentaje Estado 00625.
 """
-legal_ref = ["ley-27-2014:art-10", "ley-27-2014:art-26", "ley-27-2014:art-40", "ley-27-2014:art-29-2023"]
+legal_ref = ["ley-27-2014:art-10", "ley-27-2014:art-26", "ley-27-2014:art-40", "ley-12-2002:art-15", "ley-28-1990:art-19", "ley-27-2014:art-29-2023"]
 grounding = "verified"
 
 [[values]]
@@ -256,22 +313,43 @@ modelo = "200"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-27-2014:dt-44"
-roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "1911.00", "is_cuota_liquida" = "1911.00", "is_liquidacion_iv_cuota_diferencial" = "1911.00" }
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "1911.00", "is_cuota_liquida" = "1911.00", "is_liquidacion_iv_cuota_diferencial" = "1911.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
 derivation = """
-Base imponible previa 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
+Cuota íntegra, LIS DT 44.1.a (Ley 7/2024; corpus normatives/html/ley-27-2014-dt-44.html.extracted.md:3-6), periodos starting within
+2025: an entity whose INCN of the prior periodo is below 1 millón de euros pays 21 % on the base between 0 and 50000.00 and 22 % on the
+rest (manual práctico de Sociedades 2025 source.pdf.extracted.md:14980-14983). The whole base 9100.00 lies in the first band:
+9100.00 x 21 % = 1911.00. The manual's own worked example applies the same scale (2025 :14492 and :14532-14534: base 142410,
+"Tipo impositivo 21% (BI hasta 50.000) 22% (Resto BI)", cuota íntegra 30830 = 50000 x 21 % + 92410 x 22 %).
+00558 is a double rate in the 2025 design, encoded "2122" (2025 design :1530-1534, Nota 1: "En caso de tipo de gravamen doble se
+rellenarán los dos primeros dígitos con el primer tipo, y los dos últimos con el segundo"), so it is not asserted here as a number.
+DT 44.2 sets 19 % / 21 % for periodos starting within 2026; this value does not hold for that year, but ley-27-2014:dt-44 is declared
+open-ended in the legal register, so a horizon above 2026 needs a 2026-bounded provision before it can be keyed.
+Base imponible previa 00550 = 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
 (no amortización, no retribución de administradores, no periodificación, as that source states). The company compensates its whole pending
 base imponible negativa, 16300.00 (casilla 00671 of the prior return, persona.toml [[attested_prior_values]]), within LIS art. 26.1
-(70 % x 25400.00 = 17780.00, and in any case 1000000.00): base imponible = 25400.00 - 16300.00 = 9100.00.
+(70 % x 25400.00 = 17780.00, and in any case 1000000.00); 00547 is its elective work input and is not asserted back. No reserva de
+capitalización (01032, LIS art. 25) or de nivelación (LIS art. 105) is applied: the persona dota neither. So
+00552 = 00550 - 01032 - 00547 = 25400.00 - 0 - 16300.00 = 9100.00 (manual Sociedades 2024 source.pdf.extracted.md:14021; 2025 :14097),
+and the base after the reserva de nivelación 01330 = 00552 = 9100.00 (manual 2024 :14609), on which 00562 = 01330 x 00558 / 100
+(manual 2024 :14654; 2025 :14952).
 Pagos fraccionados 00601/00603/00605 are 0.00: under art. 40.2 each is 18 % of a prior cuota of 0.00, and art. 40.3 was never elected
-(persona.toml [[attested_prior_values]]). No deducciones, bonificaciones, retenciones or ingresos a cuenta, and the State levies 100 %
-(00625), so cuota líquida and cuota diferencial (manual práctico de Sociedades: [00611] = [00599] - ([00601] + [00603] + [00605]))
-both equal the cuota íntegra.
-Cuota íntegra, LIS DT 44.1.a (Ley 7/2024), periodos starting within 2025: an entity whose INCN of the prior periodo is below
-1 millón de euros pays 21 % on the base between 0 and 50000.00 and 22 % on the rest; the whole base 9100.00 lies in the first band,
-9100.00 x 21 % = 1911.00.
-Roles are Modelo 200 registry semantic_roles of the liquidación pages DP200014 and DP200014B (aeat-dr-200), resolved to each edition's casilla:
-base imponible previa 00550, compensación 00547, base imponible 00552, cuota íntegra 00562, cuota líquida 00592, pagos fraccionados
-00601/00603/00605, cuota diferencial 00611.
+(persona.toml [[attested_prior_values]]). No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
+ingresos a cuenta (01766, 01784) and the State levies 100 % (00625), so 00599 = (00625 / 100) x (00592 - 01766 - 01784) = 00592
+(manual 2024 :20345; 2025 :20653). 00611 is "Cuota diferencial (Estado)" in both designs, the State share before retenciones are
+netted elsewhere: 00611 = 00599 - (00601 + 00603 + 00605) = cuota íntegra (manual 2024 :20582; 2025 :20895).
+Tributación conjunta: the domicilio fiscal is in Valladolid and the incn of the prior twelve months is 28500.00; the foral administrations
+levy an entity domiciled in their territory with a prior-year volume of operations up to 12 million euros and share by volume only above
+it (Ley 12/2002 art. 15, Ley 28/1990 art. 19). Neither applies, so the State levies 100 % (casilla 00625 of record DP200026, element 17,
+position 152, length 5, "3 enteros y 2 decimales").
+Boxes per aeat-dr-200 (corpus aeat_official/disenos_registro/modelo_200; 2024 design 16-200-ejercicio-2024-...xls.extracted.md, 2025 design
+01-200-ejercicio-2025-...xls.extracted.md, same captions in both): 00550 "B.I. antes de la compensación de bases imponibles negativas"
+(2024 :1471; 2025 :1470), 00547 "Compensación de bases imponibles negativas períodos anteriores" (:1477; :1476), 00552 "Base imponible"
+(:1480; :1479), 00558 "Tipo de gravamen" (:1496; :1495), 00562 "Cuota íntegra" (:1509; :1508), 00592 "Cuota líquida" (:1557; :1561),
+00599 "Cuota del ejercicio a ingresar o a devolver - Estado" (:1577; :1581), 00601/00603/00605 pagos fraccionados - Estado
+(:1579-1583; :1583-1587), 00611 "Cuota diferencial - Estado" (:1585; :1589), 00625 "Admón.del Estado" (:4445; :4560).
+Roles are Modelo 200 registry semantic_roles of pages DP200014, DP200014B and DP200026, resolved to each edition's casilla:
+base imponible previa 00550, base imponible 00552, cuota íntegra 00562, cuota líquida 00592, pagos fraccionados 00601/00603/00605,
+cuota diferencial 00611, porcentaje Estado 00625.
 """
-legal_ref = ["ley-27-2014:art-10", "ley-27-2014:art-26", "ley-27-2014:art-40", "ley-27-2014:dt-44"]
+legal_ref = ["ley-27-2014:art-10", "ley-27-2014:art-26", "ley-27-2014:art-40", "ley-12-2002:art-15", "ley-28-1990:art-19", "ley-27-2014:dt-44"]
 grounding = "verified"
