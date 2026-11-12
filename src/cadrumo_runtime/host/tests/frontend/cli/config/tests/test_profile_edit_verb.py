@@ -125,6 +125,33 @@ def test_a_complete_profile_still_refuses_to_lose_a_required_answer() -> None:
     assert "identity.tax_id" in profile_persisted_facts()
 
 
+def test_a_worker_refusal_reaches_the_envelope_with_the_condition_it_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A refusal the profile worker settles keeps its verdict in the CLI error envelope.
+
+    The command judges a patch locally before it submits, so the worker's own
+    judgement is reached here by setting that local preview aside, as a
+    command holding an older view of the profile would. Reproduction: the
+    worker recorded the stopping error with its verdict, but the command
+    rebuilt the refusal from the settled code alone, so the envelope named no
+    failed condition and no way forward.
+    """
+    assert _status(_edit(*COMPLETE_NATURAL_PERSON_FLAGS)) == "updated"
+    assert profile_cli("complete-setup").exit_code == 0
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.cli.config.operation_profile_patch.validate_profile_patch", lambda **_kwargs: ()
+    )
+
+    refused = _edit("--name", "")
+
+    assert refused.exit_code != 0, refused.output
+    assert "identity.name" in profile_persisted_facts()
+    error = json.loads(refused.stderr)["error"]
+    assert error["code"] == "REFUSED_WIZARD_MISSING_FLAG", error
+    assert error["context"]["terminal_condition"] == "refused", error
+    assert error["context"]["operation_id"], error
+    assert error["action"]["failed_condition_id"] == "wizard.filing_baseline.complete", error
+
+
 def test_a_blank_choice_flag_clears_the_language_preference_and_its_hint(tmp_path: Path) -> None:
     """A choice flag clears the same way a text flag does.
 

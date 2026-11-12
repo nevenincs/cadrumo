@@ -243,6 +243,8 @@ def inject_derived_estimation_modality_fact(
         if clave is None:
             raise ProfileBindingResolutionError(
                 f"the registry declares no casilla 0168 clave for the estimation regime {regime!r}",
+                translated_message="application.modelo.errors.registry_estimation_regime_clave_missing",
+                context={"estimation_regime": regime},
                 precondition_verdict=binding_contract_defect_verdict(
                     "estimation_regime_clave", {"estimation_regime": regime}
                 ),
@@ -299,6 +301,8 @@ def inject_derived_activity_tipo_clave_fact(fact_index: dict[str, UserProfileFac
     except ValueError as exc:
         raise ProfileBindingResolutionError(
             f"the profile declares tipo de actividad {tipo!r}, which is not a censal tipo de actividad",
+            translated_message="application.modelo.errors.profile_activity_tipo_not_censal",
+            context={"tipo": str(tipo)},
             precondition_verdict=profile_fact_value_refused_verdict("activity_tipo", {"tipo_actividad": tipo}),
         ) from exc
     fact_index[_ACTIVITY_TIPO_CLAVE_PATH] = clave.value
@@ -512,11 +516,15 @@ def renta_family_profile_from_facts(
         except (ValueError, TypeError) as exc:
             raise ProfileBindingResolutionError(
                 f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+                translated_message="application.modelo.errors.profile_descendant_birth_date_invalid",
+                context={"number": str(idx + 1)},
                 precondition_verdict=_descendant_birth_date_refused(idx),
             ) from exc
         if birth is None:
             raise ProfileBindingResolutionError(
                 f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+                translated_message="application.modelo.errors.profile_descendant_birth_date_invalid",
+                context={"number": str(idx + 1)},
                 precondition_verdict=_descendant_birth_date_refused(idx),
             )
         idx += 1
@@ -1192,6 +1200,7 @@ def inject_derived_state_attribution_facts(
     if scope is None:
         raise ProfileBindingResolutionError(
             "tax_residence.jurisdiction_scope is required; state attribution cannot default to common regime",
+            translated_message="application.modelo.errors.profile_jurisdiction_scope_required",
             precondition_verdict=profile_fact_absent_verdict("tax_residence.jurisdiction_scope"),
         )
     try:
@@ -1203,6 +1212,8 @@ def inject_derived_state_attribution_facts(
     except RegistryValidationError as exc:
         raise ProfileBindingResolutionError(
             f"unsupported tax_residence.jurisdiction_scope {scope!r}; state attribution is unresolved",
+            translated_message="application.modelo.errors.profile_jurisdiction_scope_unsupported",
+            context={"scope": str(scope)},
             precondition_verdict=profile_fact_value_refused_verdict(
                 "jurisdiction_scope", {"field": "tax_residence.jurisdiction_scope"}
             ),

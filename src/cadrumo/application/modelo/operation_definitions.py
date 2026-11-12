@@ -356,6 +356,8 @@ def _lifecycle_advisories(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references "
             f"missing work_unit_id={revision.work_unit_id!r}",
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": revision.work_unit_id},
         )
     return build_modelo_lifecycle_advisories(
         work_unit=unit, revision=revision, workflow_profile=workflow_profile, operation=operation

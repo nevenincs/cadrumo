@@ -177,7 +177,10 @@ def _phrase(language: OutputLanguage, name: str, /, **values: object) -> str:
     template = lookup_translation(key, locale=language.value)
     if template is None:
         raise CasillaHelpCatalogueError(
-            f"{key} has no {language.value} text", precondition_verdict=registry_defect_verdict("help_catalogue_text")
+            f"{key} has no {language.value} text",
+            translated_message="application.modelo.errors.catalogue_text_missing_for_language",
+            context={"text_id": key, "language": language.value},
+            precondition_verdict=registry_defect_verdict("help_catalogue_text"),
         )
     return template.format(**values) if values else template
 

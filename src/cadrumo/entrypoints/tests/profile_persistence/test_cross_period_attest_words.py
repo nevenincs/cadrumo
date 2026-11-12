@@ -2,8 +2,9 @@
 
 A first-quarter Modelo 130 reads the previous ejercicio's net income from a Modelo 100. While the
 application holds nothing of that return, inside or outside the support envelope, the operator may
-state the figure, so the served finding names that command beside the door it routes to. Once the
-source is held the declaration follows it and the words say nothing of a statement.
+state the figure, so the served finding says so beside the door it routes to. The words carry no
+command: a notice refuses command prose, and the door alone names the action. Once the source is
+held the declaration follows it and the words say nothing of a statement.
 
 Real behaviour throughout: an isolated encrypted profile, the bundled authority, the production
 verification, with every year taken from the published support envelope.
@@ -28,6 +29,7 @@ from ....application.modelo.verification_actions import verify_modelo_revision_w
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import lookup_translation
+from ....core.json_contract import Notice, NoticeSeverity
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -45,7 +47,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _BINDING = "irpf.previous_year_economic_activity_net_income"
 _PLAIN_KEY = "application.modelo.findings.cross_period_dependency_unclean"
 _ATTESTABLE_KEY = "application.modelo.findings.cross_period_dependency_unclean_attestable"
-_COMMAND = "attest-prior-value"
 _HELD = Decimal(500)
 
 
@@ -119,7 +120,10 @@ def test_an_absent_source_names_the_statement_whether_inside_or_outside_the_enve
         findings = _unclean(work)
 
     assert [finding.message_locale_key for finding in findings] == [_ATTESTABLE_KEY]
-    assert all(_COMMAND in text for text in _served_words(_ATTESTABLE_KEY))
+    plain = _served_words(_PLAIN_KEY)
+    for index, text in enumerate(_served_words(_ATTESTABLE_KEY)):
+        assert text != plain[index]
+        Notice(severity=NoticeSeverity.WARNING, code=_ATTESTABLE_KEY, message=text)
 
 
 def test_a_held_source_does_not_name_the_statement(tmp_path: Path) -> None:
@@ -131,4 +135,5 @@ def test_a_held_source_does_not_name_the_statement(tmp_path: Path) -> None:
         findings = _unclean(work, _HELD)
 
     assert [finding.message_locale_key for finding in findings] == [_PLAIN_KEY]
-    assert not any(_COMMAND in text for text in _served_words(_PLAIN_KEY))
+    for text in _served_words(_PLAIN_KEY):
+        Notice(severity=NoticeSeverity.WARNING, code=_PLAIN_KEY, message=text)

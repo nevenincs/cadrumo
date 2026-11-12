@@ -23,7 +23,14 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode, coerce_modelo_code
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
-from .lifecycle_view_refusal_doors import no_active_profile_verdict, work_list_verdict
+from .lifecycle_view_refusal_doors import no_active_profile_verdict, unit_status_verdict, work_list_verdict
+from .work_address_errors import (
+    ModeloWorkNoActiveBucketError,
+    ModeloWorkRevisionConflictError,
+    ModeloWorkSelectorContradictionError,
+    ModeloWorkUnitNotFoundError,
+    ModeloWorkVisibleTargetAmbiguousError,
+)
 
 _RevisionId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 _OperatorWorkUnitLookupId = Annotated[
@@ -179,8 +186,6 @@ def _validate_modelo_work_selection_request(
     mode: ModeloWorkSelectionMode,
 ) -> None:
     """Reject selector combinations that cannot describe one selection mode."""
-    from .work_addressing import ModeloWorkSelectorContradictionError
-
     if request.bucket_id is not None and request.bucket_id != bucket_id:
         raise ModeloWorkSelectorContradictionError(
             translated_message="errors.refused.modelo_work_selector_contradiction",
@@ -208,8 +213,6 @@ def _resolve_exact_work_unit_selection(
     bucket_id: str,
 ) -> ModeloWorkResolution:
     """Resolve a full work-unit id and assert any supplied coordinates."""
-    from .work_addressing import ModeloWorkUnitNotFoundError
-
     matches = tuple(
         sorted(
             (
@@ -238,12 +241,6 @@ def _resolve_operator_work_unit_selection(
     bucket_id: str,
 ) -> ModeloWorkResolution:
     """Resolve a twelve-character operator id, refusing absent or ambiguous matches."""
-    from .work_addressing import (
-        ModeloWorkSelectorContradictionError,
-        ModeloWorkUnitNotFoundError,
-        ModeloWorkVisibleTargetAmbiguousError,
-    )
-
     operator_id = request.operator_work_unit_id
     if operator_id is None or not re.fullmatch(HEX_PATTERN_12, operator_id):
         raise ModeloWorkSelectorContradictionError(
@@ -279,8 +276,6 @@ def _resolve_operator_work_unit_selection(
 def _select_natural_modelo_work_resolution(
     request: ModeloWorkSelectorRequest, *, bucket_id: str, matches: tuple[WorkUnit, ...]
 ) -> ModeloWorkResolution:
-    from .work_addressing import ModeloWorkRevisionConflictError, ModeloWorkVisibleTargetAmbiguousError
-
     if not matches:
         return ModeloWorkResolution(
             state=ModeloWorkSelectorState.ABSENT,
@@ -299,6 +294,7 @@ def _select_natural_modelo_work_resolution(
         raise ModeloWorkRevisionConflictError(
             requested_revision_id=request.revision_id,
             existing=ModeloWorkUnitCandidate.from_work_unit(work_unit),
+            precondition_verdict=unit_status_verdict("work_selector_revision_conflict", work_unit.work_unit_id),
         )
     return _resolved_modelo_work_resolution(work_unit, requested_revision_id=request.revision_id)
 
@@ -317,8 +313,6 @@ def _resolved_modelo_work_resolution(work_unit: WorkUnit, *, requested_revision_
 
 
 def _assert_exact_coordinates(work_unit: WorkUnit, request: ModeloWorkSelectorRequest, *, bucket_id: str) -> None:
-    from .work_addressing import ModeloWorkSelectorContradictionError
-
     for field_name, supplied, actual in (
         ("bucket_id", bucket_id, work_unit.bucket_id),
         ("modelo", request.modelo, work_unit.modelo),
@@ -340,8 +334,6 @@ def _assert_exact_coordinates(work_unit: WorkUnit, request: ModeloWorkSelectorRe
 
 def resolve_modelo_work_bucket(request: ModeloWorkSelectorRequest) -> str:
     """Capture the explicit or active bucket outside the pure selector."""
-    from .work_addressing import ModeloWorkNoActiveBucketError
-
     if request.bucket_id is not None:
         return request.bucket_id
     active_bucket_id = resolve_active_bucket_id()

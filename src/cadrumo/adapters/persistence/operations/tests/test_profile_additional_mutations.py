@@ -19,6 +19,7 @@ from cadrumo.adapters.persistence.operations.secure_references import (
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import OperationRegistry
@@ -31,10 +32,13 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
+    PROFILE_PATCH_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
     ProfileCompleteSetupOperationRequest,
     ProfileCompleteSetupOperationResult,
+    ProfilePatchOperationRequest,
+    ProfilePatchValue,
     ProfileRepeatableRowChangeOperationResult,
     ProfileRepeatableRowRemoveOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
@@ -289,3 +293,65 @@ def test_registered_complete_setup_requires_current_baseline_and_reports_noop(tm
                 )
                 assert unchanged.already_complete
                 assert unchanged.record_revision == result.record_revision
+
+
+def test_registered_patch_refusal_records_the_verdict_its_executor_raised(tmp_path: Path) -> None:
+    """A refused profile patch keeps its typed verdict in the error detail a frontend reads.
+
+    The receipt carries only the registered code; the verdict that names the
+    failed condition reaches another process only through the recorded detail.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        profile_id = _profile()
+        with bundled_indexed_authority().operation() as authority:
+            populated = upsert_test_profile_facts(
+                profile_id, complete_profile_facts(authority.profile_schema()), root=root
+            )
+            with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
+                assert isinstance(objects, SecureObjectRepository)
+                supervisor, operands = _supervisor(root, objects, authority)
+                completed = asyncio.run(
+                    _settle(
+                        supervisor,
+                        OperationRequest(
+                            definition_id=PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
+                            subject_ref=f"profile:{profile_id}",
+                            payload=ProfileCompleteSetupOperationRequest(
+                                profile_id=profile_id,
+                                expected_revision=populated.record_revision,
+                                expected_content_digest=populated.content_digest,
+                            ),
+                        ),
+                        "7" * 64,
+                    )
+                )
+                assert completed.terminal_condition is OperationTerminalCondition.SUCCEEDED
+                complete = _current(profile_id, authority)
+                assert complete.setup_state is ProfileSetupState.COMPLETE
+                refused = asyncio.run(
+                    _settle(
+                        supervisor,
+                        OperationRequest(
+                            definition_id=PROFILE_PATCH_OPERATION_DEFINITION_ID,
+                            subject_ref=f"profile:{profile_id}",
+                            payload=ProfilePatchOperationRequest(
+                                profile_id=profile_id,
+                                expected_revision=complete.record_revision,
+                                expected_content_digest=complete.content_digest,
+                                values=(ProfilePatchValue(question_id="name", value=""),),
+                            ),
+                        ),
+                        "8" * 64,
+                    )
+                )
+                assert refused.terminal_condition is OperationTerminalCondition.REFUSED
+                receipt = refused.terminal_receipt
+                assert receipt is not None
+                assert receipt.refusal_ref == "REFUSED_WIZARD_MISSING_FLAG"
+                assert receipt.error_detail_ref is not None
+                detail = asyncio.run(operands.resolve(receipt.error_detail_ref, OperationErrorDetailV1))
+                assert detail.error_code == "REFUSED_WIZARD_MISSING_FLAG"
+                verdict = detail.precondition_verdict()
+                assert verdict is not None
+                assert verdict.failed_condition_id == "wizard.filing_baseline.complete"
+                assert _current(profile_id, authority).content_digest == complete.content_digest

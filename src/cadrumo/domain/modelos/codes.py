@@ -13,7 +13,8 @@ from pydantic import Field, GetCoreSchemaHandler
 from pydantic_core import core_schema
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from .errors import ModeloValidationError
+from ...core.operator_action_enums import NoRecoveryOutcome
+from .errors import ModeloValidatedRecord, ModeloValidationError
 
 
 class ModeloCode(str):
@@ -27,7 +28,11 @@ class ModeloCode(str):
         """Build a code, refusing anything but three digits."""
         raw = str(value)
         if len(raw) != 3 or not raw.isdigit():
-            raise ModeloValidationError(f"modelo code must be a three-digit string, got {value!r}")
+            raise ModeloValidationError(
+                f"modelo code must be a three-digit string, got {value!r}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.MODELO_CODE,
+            )
         return str.__new__(cls, raw)
 
     @classmethod
@@ -47,7 +52,11 @@ def coerce_modelo_code(value: object) -> ModeloCode:
         return value
     if isinstance(value, str):
         return ModeloCode(value)
-    raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
+    raise ModeloValidationError(
+        f"expected ModeloCode or str, got {type(value).__name__}",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        record=ModeloValidatedRecord.MODELO_CODE,
+    )
 
 
 ModeloCodeText = Annotated[str, Field(pattern=r"^[0-9]{3}$")]

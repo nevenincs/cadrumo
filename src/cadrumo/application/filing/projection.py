@@ -134,6 +134,7 @@ def _validate_m303_projection_request(
     ):
         raise FilingExportValidationError(
             "M303 filing projection requires one complete Modelo 303 snapshot",
+            translated_message="application.filing.export.errors.m303_filing_facts_unsupplied",
             precondition_verdict=export_design_terminal(ExportRefusalReason.PROJECTION_FACTS_UNSUPPLIED),
         )
     if (
@@ -364,6 +365,7 @@ def _require_m303_projection_facts(producer_snapshot: FilingProducerSnapshot) ->
     if facts is None:
         raise FilingExportValidationError(
             "M303 projection record requires complete filing facts",
+            translated_message="application.filing.export.errors.m303_filing_facts_unsupplied",
             precondition_verdict=export_design_terminal(ExportRefusalReason.PROJECTION_FACTS_UNSUPPLIED),
         )
     return facts
@@ -547,6 +549,7 @@ def require_regimen_snapshot_matches_registry(
     if facts is None:
         raise FilingExportValidationError(
             "M303 projection requires complete filing facts",
+            translated_message="application.filing.export.errors.m303_filing_facts_unsupplied",
             precondition_verdict=export_design_terminal(ExportRefusalReason.PROJECTION_FACTS_UNSUPPLIED),
         )
     evidence = facts.regimen_simplificado.regimen_snapshot
