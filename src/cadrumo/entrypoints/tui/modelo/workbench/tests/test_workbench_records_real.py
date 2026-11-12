@@ -17,8 +17,10 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
+from ......adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from ......adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ......adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ......application.ledger.counterparty_establishment import record_counterparty_filing_name
 from ......application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -35,6 +37,8 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
+from ......domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ......domain.invoices.models import Invoice
 from ......domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from ......domain.invoices.tests.modelo_349_invoice_facts import (
     M349_EXPECTED_IMPORTE,
@@ -66,6 +70,23 @@ from ..screen import ModeloWorkbenchScreen
 pytestmark = [pytest.mark.hex_entrypoint]
 
 
+def _state_filing_names(bucket_id: str, invoices: tuple[Invoice, ...]) -> None:
+    """Declare each counterparty's filing name as the operator would: a record files only a stated name."""
+    repository = CounterpartyEstablishmentRepository(
+        bucket_id=bucket_id, objects=secure_object_repository_for_bucket(bucket_id)
+    )
+    for invoice in invoices:
+        assert invoice.counterparty_tax_id is not None
+        record_counterparty_filing_name(
+            bucket_id=bucket_id,
+            tax_identifier=invoice.counterparty_tax_id,
+            country_code=invoice.counterparty_country,
+            filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=invoice.counterparty_name),
+            asserted_by="operator:test",
+            repository=repository,
+        )
+
+
 @contextmanager
 def _seeded_m349(tmp_path: Path) -> Generator[SeededOperatorWork]:
     with seeded_operator_work(
@@ -83,6 +104,7 @@ def _seeded_m349(tmp_path: Path) -> Generator[SeededOperatorWork]:
             for number, country, tax_id, issued_at, base_total in M349_INVOICES
         )
         work.ports.invoice_repository.save(build_invoice_catalogue(invoices))
+        _state_filing_names(work.work_unit.bucket_id, invoices)
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work.work_unit_id, ports=work.ports, clock=SEEDED_AT
         )
