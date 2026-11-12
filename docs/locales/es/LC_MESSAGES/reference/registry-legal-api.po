@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 02:37+0100\n"
+"POT-Creation-Date: 2026-11-12 14:35+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -226,35 +226,40 @@ msgid ""
 "The descriptor format is `cadrumo-authority-descriptor-v1`; its exact "
 "members are `format`, `database`, `database_size`, `database_sha256`, and"
 " `logical_generation`. The database format is `cadrumo-authority-"
-"sqlite-v5`, which adds the snapshot-proof tables. Its manifest binds the "
-"logical generation and the complete component directory; it records "
+"sqlite-v6`, which carries the snapshot-proof tables. Its manifest binds "
+"the logical generation and the complete component directory; it records "
 "nothing about the compiler or the environment that built it. The proof "
-"tables record the validator closure digest and the fact-date window under"
-" which the published proofs hold. Runtime still admits the preceding "
-"`cadrumo-authority-sqlite-v4` as a database without proofs, which makes "
-"every snapshot take full validation, and refuses anything older rather "
-"than reading it. The physical database digest is both the descriptor's "
-"admission check and the content-addressed filename, so a changed or "
-"colliding payload is refused before runtime work begins."
+"tables record the validator closure digest under which the published "
+"proofs hold; no snapshot check reads the run date, so a proof holds "
+"whatever day the program runs. Runtime still admits the preceding "
+"`cadrumo-authority-sqlite-v5`, whose proofs were bound to a run-date "
+"window, as a database without proofs, which makes every snapshot take "
+"full validation, and refuses anything older rather than reading it. The "
+"physical database digest is both the descriptor's admission check and the"
+" content-addressed filename, so a changed or colliding payload is refused"
+" before runtime work begins."
 msgstr ""
 "El formato del descriptor es `cadrumo-authority-descriptor-v1`; sus "
 "miembros exactos son `format`, `database`, `database_size`, "
 "`database_sha256` y `logical_generation`. El formato de la base de datos "
-"es `cadrumo-authority-sqlite-v5`, que añade las tablas de pruebas de "
+"es `cadrumo-authority-sqlite-v6`, que contiene las tablas de pruebas de "
 "instantáneas. Su manifiesto vincula la generación lógica y el directorio "
 "completo de componentes; no registra nada sobre el compilador ni sobre el"
 " entorno que la generó. Las tablas de pruebas registran el resumen del "
-"cierre del validador y la ventana de fechas de hechos en la que valen las"
-" pruebas publicadas. El entorno de ejecución sigue admitiendo la versión "
-"anterior `cadrumo-authority-sqlite-v4` como una base de datos sin "
-"pruebas, lo que hace que toda instantánea pase por la validación "
-"completa, y rechaza cualquier formato más antiguo en lugar de leerlo. El "
-"resumen físico de la base de datos es a la vez la comprobación de "
-"admisión del descriptor y el nombre de fichero direccionado por "
-"contenido, de modo que una carga útil modificada o en colisión se rechaza"
-" antes de que empiece el trabajo del entorno de ejecución."
+"cierre del validador con el que valen las pruebas publicadas; ninguna "
+"comprobación de instantáneas lee la fecha de ejecución, así que una "
+"prueba vale sea cual sea el día en que se ejecuta el programa. El entorno"
+" de ejecución sigue admitiendo la versión anterior `cadrumo-authority-"
+"sqlite-v5`, cuyas pruebas estaban ligadas a una ventana de fechas de "
+"ejecución, como una base de datos sin pruebas, lo que hace que toda "
+"instantánea pase por la validación completa, y rechaza cualquier formato "
+"más antiguo en lugar de leerlo. El resumen físico de la base de datos es "
+"a la vez la comprobación de admisión del descriptor y el nombre de "
+"fichero direccionado por contenido, de modo que una carga útil modificada"
+" o en colisión se rechaza antes de que empiece el trabajo del entorno de "
+"ejecución."
 
-#: ../../reference/registry-legal-api.md:66
+#: ../../reference/registry-legal-api.md:67
 msgid ""
 "The development publication command is `python -m dev.registry.pipeline "
 "publish-authority`. It writes to the configured authority root, and "
@@ -273,7 +278,7 @@ msgstr ""
 "schema` explícito. El paquete del producto que lleva los comandos no "
 "tiene ningún comando que compile o repare esta publicación."
 
-#: ../../reference/registry-legal-api.md:75
+#: ../../reference/registry-legal-api.md:76
 msgid ""
 "The source receipt folds each registry and source-evidence file's root-"
 "relative path and content digest, and the profile schema. Registry files "
@@ -306,7 +311,7 @@ msgstr ""
 "intérprete nuevo que ejecuta el mismo módulo, y una copia nueva del "
 "repositorio con las mismas fuentes deriva la misma identidad."
 
-#: ../../reference/registry-legal-api.md:88
+#: ../../reference/registry-legal-api.md:89
 msgid ""
 "Each component payload is a compact canonical projection of one typed "
 "authority value. Required fields are always written; a field is omitted "
@@ -385,7 +390,7 @@ msgstr "Texto"
 msgid "The bare JSON string, for example `\"0.40\"`"
 msgstr "La cadena JSON sin etiqueta, por ejemplo `\"0.40\"`"
 
-#: ../../reference/registry-legal-api.md:106
+#: ../../reference/registry-legal-api.md:107
 msgid ""
 "Runtime decodes the payload under the same strict schema the development "
 "compiler uses. It refuses an unknown tag, a malformed or non-canonical "
@@ -398,7 +403,7 @@ msgstr ""
 "valor de hecho no textual sin etiqueta; nunca infiere un tipo a partir de"
 " la forma de una cadena."
 
-#: ../../reference/registry-legal-api.md:111
+#: ../../reference/registry-legal-api.md:112
 msgid ""
 "The compiler, not the product runtime, expands authoring deltas into "
 "complete canonical revisions. The database also carries typed runtime "
@@ -420,7 +425,7 @@ msgstr ""
 "cuando cualquier catálogo obligatorio del entorno de ejecución está "
 "vacío."
 
-#: ../../reference/registry-legal-api.md:118
+#: ../../reference/registry-legal-api.md:119
 msgid ""
 "Modelo and tax-domain types validate stable identifier syntax without "
 "loading the authored tree. The compiled authority owns membership and "
@@ -437,7 +442,7 @@ msgstr ""
 "`hard_ceiling` opcional) que se utiliza para admitir coordenadas "
 "compatibles."
 
-#: ../../reference/registry-legal-api.md:124
+#: ../../reference/registry-legal-api.md:125
 msgid ""
 "The `IndexedRegistryAuthority.operation()` path has no source "
 "compilation, raw authored-tree loader, repair path, eager JSON runtime "
@@ -462,7 +467,7 @@ msgstr ""
 " solo cuando una operación fijada los solicita; los valores correctos "
 "permanecen en una caché acotada al ámbito de la generación."
 
-#: ../../reference/registry-legal-api.md:134
+#: ../../reference/registry-legal-api.md:135
 msgid ""
 "The runtime contract is for ordinary filesystem-installed wheels, where "
 "the descriptor and SQLite database have stable physical paths. Direct "
@@ -476,7 +481,7 @@ msgstr ""
 "archivo ZIP: SQLite no puede abrir un miembro de archivo comprimido como "
 "su base de datos de solo lectura."
 
-#: ../../reference/registry-legal-api.md:139
+#: ../../reference/registry-legal-api.md:140
 msgid ""
 "`python -m dev.registry.conformance integrity` refuses a "
 "descriptor/database publication whose recorded identity digest differs "
@@ -493,11 +498,11 @@ msgstr ""
 "garantías de publicación, las comprobaciones de actualidad y la ruta de "
 "recuperación."
 
-#: ../../reference/registry-legal-api.md:146
+#: ../../reference/registry-legal-api.md:147
 msgid "Filing-input contract shapes"
 msgstr "Formas del contrato de entrada de la presentación"
 
-#: ../../reference/registry-legal-api.md:148
+#: ../../reference/registry-legal-api.md:149
 msgid ""
 "The validated registry snapshot is the read-model authority for one "
 "modelo, filing year, and period. It defines the casillas, formulas, "
@@ -566,7 +571,7 @@ msgstr "Operandos tipados y operación fundamentada en referencias del registro"
 msgid "A calculated casilla observation"
 msgstr "Una observación de casilla calculada"
 
-#: ../../reference/registry-legal-api.md:159
+#: ../../reference/registry-legal-api.md:160
 msgid ""
 "A binding is not an attachable data blob. It is the contract by which an "
 "enrolled source resolver projects an owned source record into one of "
@@ -583,7 +588,7 @@ msgstr ""
 "mediante el origen de vinculación `inventory`, que proyecta por actividad"
 " las casillas 0177, 0181 y 0182 del modelo 100 de 2025."
 
-#: ../../reference/registry-legal-api.md:166
+#: ../../reference/registry-legal-api.md:167
 #, python-brace-format
 msgid ""
 "Use the generated [application command reference](../cli/app.rst) to look"
@@ -596,11 +601,11 @@ msgstr ""
 "verificación y auditoría de los modelos. Usa el {doc}`glosario "
 "</_generated/glossary>` para las definiciones dirigidas a contribuyentes."
 
-#: ../../reference/registry-legal-api.md:170
+#: ../../reference/registry-legal-api.md:171
 msgid "Python public API lookup"
 msgstr "Consulta de la API pública de Python"
 
-#: ../../reference/registry-legal-api.md:172
+#: ../../reference/registry-legal-api.md:173
 msgid ""
 "The [Cadrumo Python API overview](../api/index.md) is the entry point for"
 " Python lookup. The `cadrumo` package and its subpackages export nothing."
@@ -614,7 +619,7 @@ msgstr ""
 " define. El árbol de paquetes generado enumera las superficies admitidas "
 "de adaptadores, aplicación, núcleo, dominio, punto de entrada y locales."
 
-#: ../../reference/registry-legal-api.md:177
+#: ../../reference/registry-legal-api.md:178
 msgid ""
 "There is no `aeat` Python import compatibility package. Names containing "
 "`aeat` inside the `cadrumo` package identify the external authority "

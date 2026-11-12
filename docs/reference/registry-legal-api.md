@@ -52,14 +52,15 @@ refusal naming the publication command, not an empty authority. See
 The descriptor format is `cadrumo-authority-descriptor-v1`; its exact members
 are `format`, `database`, `database_size`, `database_sha256`, and
 `logical_generation`. The database format is
-`cadrumo-authority-sqlite-v5`, which adds the snapshot-proof tables. Its
+`cadrumo-authority-sqlite-v6`, which carries the snapshot-proof tables. Its
 manifest binds the logical generation and the complete component directory; it
 records nothing about the compiler or the environment that built it. The proof
-tables record the validator closure digest and the fact-date window under which
-the published proofs hold. Runtime still admits the preceding
-`cadrumo-authority-sqlite-v4` as a database without proofs, which makes every
-snapshot take full validation, and refuses anything older rather than reading
-it. The physical database digest is both the
+tables record the validator closure digest under which the published proofs
+hold; no snapshot check reads the run date, so a proof holds whatever day the
+program runs. Runtime still admits the preceding
+`cadrumo-authority-sqlite-v5`, whose proofs were bound to a run-date window, as
+a database without proofs, which makes every snapshot take full validation, and
+refuses anything older rather than reading it. The physical database digest is both the
 descriptor's admission check and the content-addressed filename, so a changed
 or colliding payload is refused before runtime work begins.
 
