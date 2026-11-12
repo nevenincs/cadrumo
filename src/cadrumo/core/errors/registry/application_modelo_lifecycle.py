@@ -78,6 +78,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.household_row_fact_input.ModeloHouseholdRowFactInputRequiredError",
+        ErrorCode(
+            code="REFUSED_MODELO_HOUSEHOLD_ROW_FACT_INPUT_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_household_row_fact_unstated",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.inventory_purchase_claim_gate.ModeloInventoryPurchaseLedgerRowError",
         ErrorCode(
             code="REFUSED_MODELO_INVENTORY_PURCHASE_LEDGER_ROW",

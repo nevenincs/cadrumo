@@ -534,7 +534,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             action_id=f"operator.profile.{member}",
         )
         for member in ("ascendiente", "descendiente")
-        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+        for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
     # The command that states which ledger entry books an inventory purchase, or that none does.
     *(
