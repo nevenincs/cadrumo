@@ -102,6 +102,7 @@ export type BindingSourceKind =
   | "inventory"
   | "activity_asset_disposal"
   | "prorrata_regularizacion"
+  | "prorrata_register_activity"
   | "borrador"
   | "iva_wallet_decision"
   | "payable_invoice"

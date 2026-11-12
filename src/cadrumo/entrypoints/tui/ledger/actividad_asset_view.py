@@ -8,6 +8,7 @@ from textual.widgets import Button, Input, Static
 
 from ....core.i18n.render import tr
 from ..components.language import localized
+from ..refusal.panel import RefusalSlot
 
 #: The facts a new element states with typed fields; a field left empty states nothing, never zero.
 FACT_INPUT_LOCALE_KEYS = {
@@ -132,4 +133,4 @@ def compose_activity_asset() -> ComposeResult:
         "tui.ledger.activity_asset.form_options",
     )
     yield Static("", id="asset-result", markup=False)
-    yield Static("", id="asset-recovery", markup=False)
+    yield RefusalSlot(id="asset-recovery")

@@ -35,9 +35,10 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import EUMemberState, InvoiceKind, IvaCategory
-from ..enums import IvaRate, PaymentStatus
+from ..enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -168,3 +169,20 @@ def test_the_recorded_identification_governs_over_the_printed_number() -> None:
             counterparty_tax_id="DE123456789",
             counterparty_identification_state=EUMemberState.from_registry("es"),
         )
+
+
+def test_the_destination_member_state_is_decided_on_the_supplys_own_date() -> None:
+    """The devengo date, not the run date and not the issue date alone, selects the membership edition."""
+    envelope = filing_year_envelope()
+    for day in (date(envelope.floor, 1, 1), date(envelope.horizon, 12, 31)):
+        invoice = _invoice(issued_at=day)
+        assert invoice.counterparty_eu_member_state == EUMemberState.from_registry("de")
+
+    below_floor = date(envelope.floor - 1, 12, 20)
+    stated_devengo = _invoice(
+        issued_at=date(envelope.horizon, 1, 10),
+        operation_date=below_floor,
+        operation_date_role=InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"),
+    )
+    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+        _ = stated_devengo.counterparty_eu_member_state

@@ -10,6 +10,7 @@ import {
   useStoryStage,
 } from "@/dev/LedgerStage";
 import { translator } from "../../../shell/strings";
+import { LedgerSuggestions } from "../suggestions/SuggestionsProvider";
 import { usePagePause, WritePauseContext } from "../WritePause";
 import { WithholdingPane } from "./WithholdingPane";
 
@@ -34,19 +35,28 @@ function Register({ locale, shape }: Args) {
   });
   return (
     <WritePauseContext.Provider value={pause}>
-      <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-        <WithholdingPane
-          port={port}
-          reader={STORY_READER}
-          locale={locale}
-          rows={read.rows}
-          stage={stage.content}
-          onStage={onStage}
-          years={read.years}
-          fallbackYear={STORY_PERIOD.year}
-          period={STORY_PERIOD}
-        />
-      </div>
+      <LedgerSuggestions
+        port={port}
+        reader={STORY_READER}
+        rows={read.rows}
+        stage={stage.content}
+        applied={stage.applied}
+        locale={locale}
+      >
+        <div className="flex h-full min-h-0 flex-col overflow-y-auto">
+          <WithholdingPane
+            port={port}
+            reader={STORY_READER}
+            locale={locale}
+            rows={read.rows}
+            stage={stage.content}
+            onStage={onStage}
+            years={read.years}
+            fallbackYear={STORY_PERIOD.year}
+            period={STORY_PERIOD}
+          />
+        </div>
+      </LedgerSuggestions>
     </WritePauseContext.Provider>
   );
 }
@@ -68,6 +78,12 @@ type Story = StoryObj<Args>;
 
 const words = translator("en");
 const word = (key: string) => words(key);
+
+/** The words of a certificate figure, as the ledger serves their key. */
+const figureWord = (field: string) =>
+  word(
+    `application.ledger.entry_options.withholding_certificate_figure.${field}`,
+  );
 
 /** The register's controls are found by the words they carry. */
 const control = async (canvasElement: HTMLElement) => {
@@ -190,13 +206,15 @@ export const RefusedInServedWords: Story = {
       inside.getByLabelText(word("desktop.ledger.withholding.payer_tax_id")),
       "B00000281",
     );
-    const onAccount = inside.getByLabelText(
-      word("desktop.ledger.withholding.amount.ingreso_a_cuenta"),
+    const onAccount = await inside.findByLabelText(
+      figureWord("ingreso_a_cuenta"),
     );
     await userEvent.clear(onAccount);
     await userEvent.type(onAccount, "20");
+    for (const field of ["reducciones_aplicables", "gastos_deducibles"])
+      await userEvent.type(inside.getByLabelText(figureWord(field)), "0");
     const passedOn = inside.getByLabelText(
-      word("desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido"),
+      figureWord("ingreso_a_cuenta_repercutido"),
     );
     await userEvent.clear(passedOn);
     await userEvent.type(passedOn, "30");
@@ -267,6 +285,104 @@ export const AttestationRefusedAlreadyStated: Story = {
     await waitFor(() =>
       within(canvasElement).getByText(
         served.absence.already_attested.en.refusal_words,
+      ),
+    );
+  },
+};
+
+/** Opens the record form with a class chosen and returns the form. */
+const chooseClass = async (canvasElement: HTMLElement, incomeClass: string) => {
+  await openForm(canvasElement, "record");
+  const inside = within(
+    canvasElement.querySelector<HTMLElement>(".ledger-withholding-form")!,
+  );
+  const [choose] = inside.getAllByRole("combobox");
+  await userEvent.selectOptions(choose!, incomeClass);
+  return inside;
+};
+
+/** The labels of the money boxes the form draws, in order. */
+const figureLabels = (form: HTMLElement) =>
+  [...form.querySelectorAll<HTMLElement>("label")]
+    .map((label) => label.textContent ?? "")
+    .filter((text) =>
+      [
+        "importe_integro_dinerario",
+        "valoracion_especie",
+        "retencion",
+        "ingreso_a_cuenta",
+        "ingreso_a_cuenta_repercutido",
+        "reducciones_aplicables",
+        "gastos_deducibles",
+      ].some((field) => text.startsWith(figureWord(field))),
+    );
+
+/** A work-income certificate: the five payment figures and the two it alone
+ * states, as the ledger serves them for the class, in the served words. */
+export const TrabajoFigures: Story = {
+  name: "Work-income figures",
+  play: async ({ canvasElement }) => {
+    const inside = await chooseClass(canvasElement, "trabajo");
+    for (const field of [
+      "importe_integro_dinerario",
+      "retencion",
+      "reducciones_aplicables",
+      "gastos_deducibles",
+    ])
+      await expect(
+        await inside.findByLabelText(figureWord(field)),
+      ).toBeVisible();
+    await expect(
+      figureLabels(
+        canvasElement.querySelector<HTMLElement>(".ledger-withholding-form")!,
+      ),
+    ).toHaveLength(7);
+    // The two only work-income certificates state start blank.
+    await expect(
+      inside.getByLabelText(figureWord("gastos_deducibles")),
+    ).toHaveValue("");
+  },
+};
+
+/** Another class's certificate: the payment figures alone. */
+export const OtherClassFigures: Story = {
+  name: "Another class's figures",
+  play: async ({ canvasElement }) => {
+    const inside = await chooseClass(canvasElement, "capital_mobiliario");
+    await expect(
+      await inside.findByLabelText(figureWord("retencion")),
+    ).toBeVisible();
+    await expect(
+      inside.queryByLabelText(figureWord("reducciones_aplicables")),
+    ).toBeNull();
+    await expect(
+      figureLabels(
+        canvasElement.querySelector<HTMLElement>(".ledger-withholding-form")!,
+      ),
+    ).toHaveLength(5);
+  },
+};
+
+/** A work-income certificate sent without the two figures only it states:
+ * refused in the sentence the backend served. */
+export const TrabajoFiguresMissing: Story = {
+  name: "Work-income figures missing",
+  play: async ({ canvasElement }) => {
+    const inside = await chooseClass(canvasElement, "trabajo");
+    const [, origin] = inside.getAllByRole("combobox");
+    await userEvent.type(
+      inside.getByLabelText(word("desktop.ledger.withholding.payer_tax_id")),
+      "B00000281",
+    );
+    await userEvent.selectOptions(origin!, "operator_declaration");
+    await userEvent.click(
+      inside.getByRole("button", {
+        name: word("desktop.ledger.withholding.action.record"),
+      }),
+    );
+    await waitFor(() =>
+      within(canvasElement).getByText(
+        served.record.trabajo_certificate_figure_missing.en.refusal_words,
       ),
     );
   },

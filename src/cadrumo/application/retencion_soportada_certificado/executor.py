@@ -66,6 +66,7 @@ from .results import (
     RetencionSoportadaRefusalProjection,
     RetencionSoportadaRowProjection,
 )
+from .row_words import amount_columns
 
 _UNKNOWN_MIME_TYPE: Final = "application/octet-stream"
 
@@ -336,6 +337,8 @@ class RetencionSoportadaCertificadoExecutor:
                 profile_id=request.profile_id,
                 ejercicio=request.ejercicio,
                 rows=rows,
+                amount_columns=amount_columns(),
+                ejercicios=tuple(sorted(context.authority_operation.supported_filing_years().years)),
             )
             reference = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)

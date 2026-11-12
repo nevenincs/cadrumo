@@ -198,8 +198,11 @@ class WorkbenchEditorMixin:
     def _stage(self: ModeloWorkbenchScreen, entry: CasillaListEntry, decision: EditorDecision) -> StageRefusal | None:
         """Stage what the filer decided in a box's panel, then show the workbench with it or say why it was refused."""
         field = entry.field
+        form = self.form
         if decision.kind is WorkbenchChangeKind.SET:
             refusal = self._session.stage_value(field, decision.value, decision.display)
+        elif field.stated_absent is not None and form is not None:
+            refusal = self._session.withdraw_stated(form, field)
         elif decision.kind is WorkbenchChangeKind.CLEAR:
             refusal = self._session.stage_clear(field)
         else:

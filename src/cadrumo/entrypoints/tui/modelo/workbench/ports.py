@@ -69,6 +69,8 @@ class WorkbenchChangeKind(StrEnum):
     CLEAR = "clear"
     #: Stop replacing the source's value; the source wins again.
     RESTORE = "restore"
+    #: State, by a statement the form serves, that the box holds no amount.
+    STATE_ABSENT = "state_absent"
 
 
 @dataclass(frozen=True, slots=True)

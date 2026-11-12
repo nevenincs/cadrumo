@@ -84,6 +84,7 @@ const OPTION_FAMILIES: Record<string, readonly string[]> = {
     "opening_corrected",
     "movement_corrected",
     "movement_reversed",
+    "ledger_row_stated",
     "retired",
     "restored",
   ],
@@ -114,7 +115,12 @@ type Book = {
 };
 
 /** The scenario ledger's inventory answers. */
-export function inventoryOperations(tools: Tools) {
+export function inventoryOperations(
+  tools: Tools,
+  /** The active ledger transactions a purchase may name, with the currency
+   * each is kept in. */
+  transactions: () => readonly { id: string; currency: string }[] = () => [],
+) {
   const { profileId, hex64, events, now } = tools;
   const served = servedRefusal(tools.language);
   const books: Book[] = [
@@ -157,6 +163,8 @@ export function inventoryOperations(tools: Tools) {
           iva_rate: decimal("0.21"),
           iva_amount: null,
           deductible_iva_ratio: decimal("1"),
+          ledger_row: "unstated",
+          claimed_transaction_id: null,
           acquisition_cost: {
             consideration_excluding_iva: decimal("1000"),
             directly_attributable_cost_total: decimal("100.00"),
@@ -645,6 +653,8 @@ export function inventoryOperations(tools: Tools) {
       deductible_iva_ratio: decimal("1"),
       ...(acquisition !== null
         ? {
+            ledger_row: "unstated",
+            claimed_transaction_id: null,
             acquisition_cost: acquisition.summary,
             acquisition_detail: acquisition.detail,
           }
@@ -872,6 +882,81 @@ export function inventoryOperations(tools: Tools) {
           correction_reason: reason,
           superseded_movement: target,
         });
+      },
+    ),
+    "ledger.inventory.movement.claim": change(
+      ["movement_id", "ledger_row", "claimed_transaction_id"],
+      (book, request, id, shape) => {
+        const row = required(request.ledger_row);
+        if (!["unstated", "claimed", "none"].includes(row)) invalid();
+        const named =
+          request.claimed_transaction_id == null
+            ? null
+            : required(request.claimed_transaction_id);
+        // A transaction is named exactly when the purchase claims one.
+        if ((row === "claimed") !== (named !== null)) invalid();
+        const movementId = required(request.movement_id);
+        const facts = {
+          actividad_id: book.actividad_id,
+          year: book.year,
+          movement_id: movementId,
+        };
+        const target = book.movements.find(
+          (one) => one.movement_id === movementId,
+        );
+        if (!target)
+          return inventoryRefusal(
+            "REFUSED_INVENTORY_SERVICE_INPUT",
+            "movement_not_found",
+            facts,
+            shape,
+          );
+        if (target.kind !== "purchase")
+          return inventoryRefusal(
+            "REFUSED_INVENTORY_SERVICE_INPUT",
+            "ledger_row_not_purchase",
+            facts,
+            shape,
+          );
+        if (
+          (target.ledger_row ?? "unstated") === row &&
+          (target.claimed_transaction_id ?? null) === named
+        )
+          return inventoryRefusal(
+            "REFUSED_INVENTORY_SERVICE_INPUT",
+            "correction_changes_nothing",
+            facts,
+            shape,
+          );
+        if (named !== null) {
+          const found = transactions().find((one) => one.id === named);
+          const claimedElsewhere = books.some((other) =>
+            other.movements.some(
+              (one) => one !== target && one.claimed_transaction_id === named,
+            ),
+          );
+          const reason =
+            found === undefined
+              ? "claimed_transaction_missing"
+              : claimedElsewhere
+                ? "claimed_transaction_double_claim"
+                : found.currency !== "EUR"
+                  ? "claimed_transaction_not_eur"
+                  : null;
+          if (reason !== null)
+            return inventoryRefusal(
+              "REFUSED_INVENTORY_SERVICE_INPUT",
+              reason,
+              facts,
+              shape,
+            );
+        }
+        book.movements = book.movements.map((one) =>
+          one === target
+            ? { ...one, ledger_row: row, claimed_transaction_id: named }
+            : one,
+        );
+        return historyEntry(id, "ledger_row_stated");
       },
     ),
     "ledger.inventory.retire": change(

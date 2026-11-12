@@ -1,4 +1,4 @@
-"""The TUI reads a stopped operation's recorded detail and says the executor's own message."""
+"""The TUI reads a stopped operation's recorded detail under its own schema identity."""
 
 from __future__ import annotations
 
@@ -33,8 +33,6 @@ from .....application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from .....application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
-from .....core.errors.error_codes import resolve_error_message
-from .....core.errors.hierarchy import RecordedRegisteredError
 from .....core.operations import (
     OperationEffect,
     OperationFrontendProjection,
@@ -42,7 +40,6 @@ from .....core.operations import (
     OperationTerminalCondition,
 )
 from ..controller_port import OperationErrorDetailPort
-from ..refusal_explanation import operation_error_explanation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -164,29 +161,3 @@ def test_a_succeeded_operation_is_never_asked_for_error_detail() -> None:
 
     assert detail is None
     assert wire.reads == []
-
-
-def test_the_explanation_is_the_registered_message_with_its_recorded_context() -> None:
-    """The operator reads the same sentence the in-process refusal would have rendered."""
-    expected = resolve_error_message(
-        RecordedRegisteredError(
-            _REFUSAL_CODE,
-            context={"aggregator_label": "probe", "modelo": "111"},
-            translated_message=_MESSAGE_KEY,
-        )
-    )
-
-    assert operation_error_explanation(_detail()) == expected
-    assert operation_error_explanation(None) is None
-
-
-def test_a_record_fault_has_no_message_of_its_own() -> None:
-    """An internal record fault keeps the generic failure wording the modal already shows."""
-    fault = OperationErrorDetailV1(
-        kind=OperationErrorDetailKind.RECORD_VALIDATION,
-        error_code=None,
-        message_key=None,
-        context=(OperationErrorContextEntryV1(key="failing_record", value="BucketEvent"),),
-    )
-
-    assert operation_error_explanation(fault) is None

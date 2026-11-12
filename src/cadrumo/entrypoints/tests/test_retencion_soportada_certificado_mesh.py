@@ -44,6 +44,7 @@ from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
 from cadrumo.application.retencion_soportada_certificado.contracts import (
+    RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.retencion_soportada_certificado.executor import RetencionSoportadaCertificadoExecutor
@@ -51,7 +52,10 @@ from cadrumo.application.retencion_soportada_certificado.ports import (
     RetencionSoportadaCertificadoPorts,
     RetencionSoportadaCertificateCustody,
 )
-from cadrumo.application.retencion_soportada_certificado.requests import RetencionSoportadaRecordRequest
+from cadrumo.application.retencion_soportada_certificado.requests import (
+    RetencionSoportadaListRequest,
+    RetencionSoportadaRecordRequest,
+)
 from cadrumo.application.retencion_soportada_certificado.results import RetencionSoportadaOperationExecutionResult
 from cadrumo.application.tests.operation_host_fakes import RecordingEvents
 from cadrumo.core.config import override_settings
@@ -59,7 +63,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.core.period import Period
-from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+from cadrumo.core.retencion_soportada import RetencionSoportadaCantidad, RetencionSoportadaClase
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -811,3 +815,79 @@ def test_a_work_income_record_stores_and_reads_back_its_two_certificate_figures(
 
     assert not isinstance(outcome, OperationRefusalEvidence)
     assert (record.reducciones_aplicables, record.gastos_deducibles) == (Decimal("3060.00"), Decimal("610.00"))
+
+
+class _ReadOperands:
+    """A read stores its result outside any irreversible section."""
+
+    def __init__(self) -> None:
+        self.value: BaseModel | None = None
+
+    async def put(self, value: BaseModel, *, written_at: object) -> str:
+        del written_at
+        self.value = value
+        return "d" * 64
+
+
+def _listed(authority_operation: PinnedAuthorityOperation) -> RetencionSoportadaOperationExecutionResult:
+    context = _Context(authority_operation)
+    context.identity = OperationIdentity(
+        operation_id="c" * 64,
+        definition_id=RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(_PROFILE),
+    )
+    operands = _ReadOperands()
+    context.operands = cast(_Operands, operands)
+    executor = RetencionSoportadaCertificadoExecutor(
+        _ports_factory(), definition_id=RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID
+    )
+    request = OperationRequest(
+        definition_id=RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(_PROFILE),
+        payload=RetencionSoportadaListRequest(profile_id=UUID(_PROFILE), ejercicio=_EJERCICIO),
+    )
+    asyncio.run(executor.execute(cast(OperationRequest[BaseModel], request), cast(OperationExecutorContext, context)))
+    result = operands.value
+    assert isinstance(result, RetencionSoportadaOperationExecutionResult)
+    return result
+
+
+def test_the_list_serves_the_words_a_frontend_shows_and_the_ejercicios_it_may_ask_for(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with (
+        override_settings(cadrumo_output_language="es"),
+        isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_PROFILE),
+    ):
+        recorded = _run(
+            operation,
+            _request(_PAYER_A, retencion="5.00", origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION),
+        )
+        assert not isinstance(recorded, OperationRefusalEvidence)
+        listed = _listed(operation)
+
+        assert listed.ejercicios == tuple(sorted(operation.supported_filing_years().years))
+        assert listed.amount_columns is not None
+        row_fields = [column.field for column in listed.amount_columns]
+        assert row_fields == [
+            RetencionSoportadaCantidad.IMPORTE_INTEGRO_DINERARIO,
+            RetencionSoportadaCantidad.VALORACION_ESPECIE,
+            RetencionSoportadaCantidad.RETENCION,
+            RetencionSoportadaCantidad.INGRESO_A_CUENTA,
+            RetencionSoportadaCantidad.INGRESO_A_CUENTA_REPERCUTIDO,
+            RetencionSoportadaCantidad.REDUCCIONES_APLICABLES,
+            RetencionSoportadaCantidad.GASTOS_DEDUCIBLES,
+            RetencionSoportadaCantidad.PAGO_A_CUENTA,
+        ]
+        assert listed.rows is not None
+        (row,) = listed.rows
+        # Every column names a field the row carries, so a frontend lays out the row from the columns alone.
+        assert all(column.field.value in type(row).model_fields for column in listed.amount_columns)
+        labels = {column.field: column.label for column in listed.amount_columns}
+        assert labels[RetencionSoportadaCantidad.RETENCION] == tr(
+            "application.ledger.entry_options.withholding_certificate_figure.retencion"
+        )
+        assert labels[RetencionSoportadaCantidad.PAGO_A_CUENTA] == "Total de pagos a cuenta"
+        assert row.origin_label == "Tu propia declaración"
+        assert row.payer_legal_name is None
+        assert row.payer_display_name == "Pagador sin nombre indicado"

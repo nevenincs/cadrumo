@@ -24,7 +24,7 @@ Covers the testimonial personas required by the M210 IRNR engine contract:
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -35,20 +35,26 @@ __all__ = ["m210_snapshot"]
 
 from ....core.casilla_id import CasillaId
 from ....core.irnr import TipoRentaIrnr
+from ....core.time.clock import frozen_clock
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
+from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource, validating_governed_facts
 from ....domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
 from ....domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 from ..action_errors import ModeloApplicabilityFilterError
 from ..m210_convenio_facts import resolve_m210_convenio_override
 from ..m210_rate import resolve_m210_rate
+from ..refusal_door_verdicts import caller_defect_verdict
 from ..verification_predicates import (
     evaluate_applicability_filter,
     evaluate_predicate_expression,
@@ -439,7 +445,9 @@ def test_representante_predicate_holds_for_eea_resident_without_representante() 
     profile = _irnr_profile_without_representante("FR")
     assert profile.ue_eee_status is True
 
-    assert evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
+    assert (
+        evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile, fact_date=_DEVENGO_DATE) is True
+    )
 
 
 def test_representante_predicate_holds_for_eea_resident_with_representante() -> None:
@@ -448,7 +456,9 @@ def test_representante_predicate_holds_for_eea_resident_with_representante() -> 
     profile = _irnr_profile("FR")  # carries representante_fiscal_nif
     assert profile.ue_eee_status is True
 
-    assert evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
+    assert (
+        evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile, fact_date=_DEVENGO_DATE) is True
+    )
 
 
 def test_representante_predicate_violated_for_non_eea_resident_without_representante() -> None:
@@ -463,7 +473,10 @@ def test_representante_predicate_violated_for_non_eea_resident_without_represent
     )
     assert profile.ue_eee_status is False
 
-    assert evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is False
+    assert (
+        evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile, fact_date=_DEVENGO_DATE)
+        is False
+    )
 
 
 def test_representante_predicate_holds_for_non_eea_resident_with_representante() -> None:
@@ -473,7 +486,9 @@ def test_representante_predicate_holds_for_non_eea_resident_with_representante()
     assert profile.ue_eee_status is False
     assert profile.representante_fiscal_nif == "12345678Z"
 
-    assert evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
+    assert (
+        evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile, fact_date=_DEVENGO_DATE) is True
+    )
 
 
 def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
@@ -494,7 +509,7 @@ def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
         representante_fiscal_nif=None,
     )
 
-    findings = evaluate_verification_predicates((predicate,), {}, profile)
+    findings = evaluate_verification_predicates((predicate,), {}, profile, fact_date=_DEVENGO_DATE)
 
     assert len(findings) == 1
     finding = findings[0]
@@ -517,3 +532,53 @@ def test_applicability_filter_unknown_name_raises_value_error() -> None:
     profile = _irnr_profile("AR")
     with pytest.raises(ModeloApplicabilityFilterError, match="Unknown applicability filter"):
         evaluate_applicability_filter("non_resident_irnr_eea_only", profile)
+
+
+class _DateRecordingSource:
+    """Delegate every governed-fact read, keeping the date each one asked for."""
+
+    def __init__(self, inner: GovernedFactSource) -> None:
+        self._inner = inner
+        self.asked: list[date] = []
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        self.asked.append(query.effective_date)
+        return self._inner.resolve_governed_fact(query)
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        return self._inner.supported_filing_years()
+
+
+def _non_eea_irnr_profile_without_representante() -> TaxpayerProfile:
+    return TaxpayerProfile.model_construct(
+        tax_id="X0001500M",
+        iva_regime=_iva_regime(),
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
+        country_of_fiscal_residence="AR",
+        representante_fiscal_nif=None,
+    )
+
+
+def test_the_non_eea_filter_reads_residency_and_eu_eea_membership_at_the_fact_date_not_the_run_date() -> None:
+    """TRLIRNR art. 10 is judged on the regime and residence of the return's own date."""
+
+    profile = _non_eea_irnr_profile_without_representante()
+    run_date_years_after = datetime(_DEVENGO_DATE.year + 7, 6, 15, 12, tzinfo=UTC)
+    with bundled_indexed_authority().operation() as operation:
+        recorder = _DateRecordingSource(operation)
+        with frozen_clock(run_date_years_after), validating_governed_facts(recorder):
+            applies = evaluate_applicability_filter("non_resident_irnr_non_eea", profile, fact_date=_DEVENGO_DATE)
+
+    assert applies is True
+    assert recorder.asked
+    assert set(recorder.asked) == {_DEVENGO_DATE}
+
+
+def test_the_non_eea_filter_without_a_fact_date_is_refused() -> None:
+    profile = _non_eea_irnr_profile_without_representante()
+
+    with pytest.raises(ModeloError) as refused:
+        evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile)
+
+    assert refused.value.context == {"filter": "non_resident_irnr_non_eea"}
+    assert refused.value.terminal_precondition_verdict == caller_defect_verdict("applicability_filter_fact_date")

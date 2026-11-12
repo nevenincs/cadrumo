@@ -38,9 +38,10 @@ import {
   RestoreForm,
 } from "./StockBookForms";
 import { ClosingForm } from "./StockClosingForm";
+import { MovementClaimForm, CLAIM_ROW_KEYS } from "./StockClaimForm";
 import { MovementForm, MovementCorrectForm } from "./StockMovementForms";
 import { YearStepper } from "./YearStepper";
-import { bookName } from "./stockModel";
+import { bookName, claimOf } from "./stockModel";
 import {
   keyOf,
   useBookList,
@@ -103,7 +104,11 @@ type Task =
       book: BookKey;
     }
   | {
-      kind: "movement_correct" | "movement_reverse" | "purchase_facts";
+      kind:
+        | "movement_correct"
+        | "movement_reverse"
+        | "movement_claim"
+        | "purchase_facts";
       book: BookKey;
       target: InventoryMovement;
     };
@@ -467,6 +472,16 @@ export function StockPane({
             target={task.target}
           />
         );
+      case "movement_claim":
+        return (
+          <MovementClaimForm
+            key={`${key}|${task.target.movement_id}`}
+            {...common}
+            reader={reader}
+            locale={locale}
+            target={task.target}
+          />
+        );
       case "movement_reverse":
         return (
           <ReverseForm
@@ -589,6 +604,24 @@ export function StockPane({
                 },
               },
               {
+                key: "ledger_row",
+                label: t("desktop.ledger.stock.claim.column"),
+                sort: (movement) => claimOf(movement)?.row ?? "",
+                cell: (movement) => {
+                  if (!plays(catalogue.vocabulary, "purchase", movement.kind))
+                    return "—";
+                  const claim = claimOf(movement);
+                  // A statement the read did not serve is not said as any of
+                  // the three.
+                  if (claim === null) return "—";
+                  return claim.row === "claimed" && claim.transaction !== null
+                    ? t("desktop.ledger.stock.claim.state_claimed", {
+                        transaction: claim.transaction,
+                      })
+                    : t(CLAIM_ROW_KEYS[claim.row]);
+                },
+              },
+              {
                 key: "actions",
                 label: t("desktop.ledger.form.actions"),
                 hidden: true,
@@ -609,6 +642,28 @@ export function StockPane({
                       >
                         <Icon name="eye" />
                       </IconButton>
+                    )}
+                    {plays(catalogue.vocabulary, "purchase", movement.kind) && (
+                      <WriteHold>
+                        <IconButton
+                          label={t(
+                            "desktop.ledger.stock.action.movement_claim",
+                          )}
+                          hint={why}
+                          aria-disabled={stopped || undefined}
+                          className="ledger-stock-movement-claim"
+                          onClick={() =>
+                            !stopped &&
+                            open({
+                              kind: "movement_claim",
+                              book: bookKey,
+                              target: movement,
+                            })
+                          }
+                        >
+                          <Icon name="link" />
+                        </IconButton>
+                      </WriteHold>
                     )}
                     <WriteHold>
                       <IconButton

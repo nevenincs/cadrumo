@@ -16,6 +16,12 @@ it. Only a box whose value is the filer's own entry can be confirmed this way:
 a manual box, or a value the form asks for that no box prints. A box a source
 fills is never confirmed, because a value kept over a source replaces it.
 
+A statement the form serves -- that a family of boxes holds no amount -- is
+staged on every box it names, each as its own change, so it is reviewed and
+applied with the rest; its words are the form's own, never the workbench's.
+Only a family the form serves now can be staged, and only on boxes the form
+shows.
+
 When the declaration moves underneath the staged changes -- another
 calculation, new source data -- the changes are kept and re-based on what the
 declaration holds now: each is checked again against its field, a change that
@@ -30,12 +36,14 @@ from enum import StrEnum
 
 from .....application.modelo.edit_models import ModeloEditHeldChangeV1, ModeloEditHeldKind
 from .....application.modelo.work_form_field_vocabulary import (
+    ModeloFormBindingAddressV1,
     ModeloFormEditability,
     ModeloFormOrigin,
     ModeloFormScalar,
     address_key,
 )
 from .....application.modelo.work_form_models import (
+    ModeloFormCarryAttestation,
     ModeloFormField,
     ModeloWorkForm,
     confirmable,
@@ -73,6 +81,8 @@ class StagedChange:
     displaces: ModeloFormDisplacement
     #: The box read differently when the declaration was read again after the change was staged.
     before_changed: bool = False
+    #: The served statement a ``STATE_ABSENT`` change makes, whose words it shows; ``None`` for any other change.
+    statement: ModeloFormCarryAttestation | None = None
 
     @property
     def key(self) -> AddressKey:
@@ -118,10 +128,23 @@ class WorkbenchEditSession:
         """Whether anything is staged."""
         return bool(self._changes)
 
-    def refresh_language(self, language: OutputLanguage) -> None:
-        """Reformat retained changes without restaging, rebasing or changing their values."""
+    def refresh_language(
+        self, language: OutputLanguage, statements: tuple[ModeloFormCarryAttestation, ...] = ()
+    ) -> None:
+        """Reformat retained changes without restaging, rebasing or changing their values.
+
+        A staged statement takes the words of the same family among ``statements``, the form's in
+        ``language``; without them it keeps the words it was staged with.
+        """
         self._language = language
+        worded = {statement.family: statement for statement in statements}
         for key, change in tuple(self._changes.items()):
+            if change.statement is not None:
+                served = worded.get(change.statement.family, change.statement)
+                self._changes[key] = replace(
+                    change, text=served.action_words, previous_text=self._before(change.field), statement=served
+                )
+                continue
             if change.kind is WorkbenchChangeKind.CLEAR:
                 text = tr("workspace.modelo.staged.clear")
             elif change.kind is WorkbenchChangeKind.RESTORE:
@@ -221,6 +244,69 @@ class WorkbenchEditSession:
         )
         return None
 
+    def stage_statement(self, form: ModeloWorkForm, statement: ModeloFormCarryAttestation) -> bool:
+        """Stage ``statement`` on every box it names; ``False``, staging nothing, when one is not on the form.
+
+        The statement is staged only as ``form`` serves it now: a family it no
+        longer serves, or a box it no longer names, is not staged.
+        """
+        if statement not in form.carry_attestations:
+            return False
+        placed = statement_fields(form, statement)
+        if placed is None:
+            return False
+        for field in placed:
+            self._changes[address_key(field.address)] = StagedChange(
+                field=field,
+                kind=WorkbenchChangeKind.STATE_ABSENT,
+                value=None,
+                text=statement.action_words,
+                previous_text=self._before(field),
+                displaces=field_displacement(field),
+                statement=statement,
+            )
+        return True
+
+    def withdraw_statement(self, statement: ModeloFormCarryAttestation) -> bool:
+        """Drop every staged change making a statement of ``statement``'s family; ``False`` when none was staged."""
+        keys = [
+            key
+            for key, change in self._changes.items()
+            if change.statement is not None and change.statement.family is statement.family
+        ]
+        for key in keys:
+            del self._changes[key]
+        return bool(keys)
+
+    def withdraw_stated(self, form: ModeloWorkForm, field: ModeloFormField) -> StageRefusal | None:
+        """Stage withdrawing the statement ``field`` was stated by, on every box of its family at once.
+
+        A family is one statement: withdrawing one of its boxes withdraws them
+        all, so no state where only some of them stay stated is ever staged.
+        Each box takes whichever withdrawal the form allows it; when one box
+        allows none, nothing is staged and its refusal is returned.
+        """
+        family = field.stated_absent
+        if family is None:
+            return self.stage_clear(field)
+        members = [member for member in form.fields() if member.stated_absent is family]
+        staged = dict(self._changes)
+        for member in members:
+            refusal = self.stage_clear(member)
+            if refusal is not None:
+                refusal = self.stage_restore(member)
+            if refusal is not None:
+                self._changes = staged
+                return refusal
+        return None
+
+    def stages_statement(self, statement: ModeloFormCarryAttestation) -> bool:
+        """Whether a statement of ``statement``'s family is staged."""
+        return any(
+            change.statement is not None and change.statement.family is statement.family
+            for change in self._changes.values()
+        )
+
     def rebase(self, form: ModeloWorkForm) -> Rebase:
         """Check every staged change again against ``form``, keeping the ones that still apply."""
         fields = {address_key(field.address): field for field in form.fields()}
@@ -230,6 +316,10 @@ class WorkbenchEditSession:
         dropped: list[StagedChange] = []
         for key, change in staged.items():
             field = fields.get(key)
+            if change.statement is not None:
+                if not self._restate(form, change, key):
+                    dropped.append(change)
+                continue
             outcome = rebase_outcome(change.held, field)
             if (
                 field is None
@@ -254,6 +344,26 @@ class WorkbenchEditSession:
                 changed.append(self._changes[key])
         return Rebase(changed=tuple(changed), dropped=tuple(dropped))
 
+    def _restate(self, form: ModeloWorkForm, change: StagedChange, key: AddressKey) -> bool:
+        """Keep a staged statement on its box only while the form still serves its family naming that box."""
+        statement = change.statement
+        if statement is None:
+            return False
+        for served in form.carry_attestations:
+            if served.family is not statement.family:
+                continue
+            for field in statement_fields(form, served) or ():
+                if address_key(field.address) == key:
+                    self._changes[key] = replace(
+                        change,
+                        field=field,
+                        text=served.action_words,
+                        previous_text=self._before(field),
+                        statement=served,
+                    )
+                    return True
+        return False
+
     def _restage(self, change: StagedChange, field: ModeloFormField) -> StageRefusal | None:
         if change.kind is WorkbenchChangeKind.SET:
             return self.stage_value(field, change.value, change.text)
@@ -263,17 +373,7 @@ class WorkbenchEditSession:
 
     def acknowledge(self) -> None:
         """Take the marks off the changes the filer has looked at again."""
-        self._changes = {
-            key: StagedChange(
-                field=change.field,
-                kind=change.kind,
-                value=change.value,
-                text=change.text,
-                previous_text=change.previous_text,
-                displaces=change.displaces,
-            )
-            for key, change in self._changes.items()
-        }
+        self._changes = {key: replace(change, before_changed=False) for key, change in self._changes.items()}
 
     def revert(self, key: AddressKey) -> bool:
         """Drop the change staged on one address; ``False`` when there was none."""
@@ -288,4 +388,18 @@ class WorkbenchEditSession:
         return tuple(change.change for change in self._changes.values())
 
 
-__all__ = ["Rebase", "StageRefusal", "StagedChange", "WorkbenchEditSession"]
+def statement_fields(form: ModeloWorkForm, statement: ModeloFormCarryAttestation) -> tuple[ModeloFormField, ...] | None:
+    """The boxes ``statement`` names, in its order: each the field whose edit goes to a binding it names.
+
+    ``None`` when the form shows a named binding nowhere, so a statement is never staged on part of what it names.
+    """
+    by_binding: dict[str, ModeloFormField] = {}
+    for field in form.fields():
+        address = edit_address(field)
+        if isinstance(address, ModeloFormBindingAddressV1):
+            by_binding.setdefault(address.binding_id, field)
+    placed = [by_binding[binding_id] for binding_id in statement.binding_ids if binding_id in by_binding]
+    return tuple(placed) if len(placed) == len(statement.binding_ids) else None
+
+
+__all__ = ["Rebase", "StageRefusal", "StagedChange", "WorkbenchEditSession", "statement_fields"]

@@ -11,11 +11,16 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from hashlib import sha256
 
+from .....application.ledger.counterparty_establishment import declared_filing_name_from_parts
 from .....application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
+    CounterpartyFilingNameFinding,
+    CounterpartyFilingNameProjection,
+    CounterpartyFilingNameRendering,
     CounterpartyResolutionProjection,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,
+    served_kind_finding_words,
 )
 from .....application.ledger.llm_diagnostics_operation import (
     LedgerLlmConfidenceProviderSnapshot,
@@ -45,7 +50,9 @@ from .....domain.calculations.registry.tests.authored_editions import filing_yea
 
 _YEAR = filing_year_envelope().horizon
 _ASSERTED_AT = datetime(_YEAR, 3, 1, tzinfo=UTC)
+SYNTHETIC_ASSERTED_ON = _ASSERTED_AT.date().isoformat()
 SYNTHETIC_TAX_ID = "B00010082"
+_NATURAL_PERSON_FIRST_CHARACTERS = "0123456789KLMXYZ"
 SYNTHETIC_RATIO_CATEGORIES = ("suministros_vivienda", "vehiculo")
 
 
@@ -64,10 +71,70 @@ class MemoryCounterparties:
     """Confirmed establishment facts keyed by tax identifier."""
 
     facts: dict[str, CounterpartyFactProjection] = field(default_factory=dict)
+    filing_names: dict[str, CounterpartyFilingNameProjection] = field(default_factory=dict)
+
+    def _findings(
+        self, request_identifier: str, name: CounterpartyFilingNameProjection | None
+    ) -> tuple[CounterpartyFilingNameFinding, ...]:
+        """Flag a stated kind that differs from the form the identifier's first character shows."""
+        if name is None:
+            return ()
+        observed = "natural_person" if request_identifier[0] in _NATURAL_PERSON_FIRST_CHARACTERS else "entity"
+        if name.party_kind == observed:
+            return ()
+        words, language = served_kind_finding_words(declared_kind=name.party_kind, observed_form=observed)
+        return (
+            CounterpartyFilingNameFinding(
+                code="counterparty_filing_name_kind_contradicts_identifier_form",
+                declared_kind="natural_person" if name.party_kind == "natural_person" else "entity",
+                observed_form="natural_person" if observed == "natural_person" else "entity",
+                words=words,
+                words_language=language,
+            ),
+        )
+
+    def _state_filing_name(self, request: LedgerCounterpartyRequest) -> LedgerCounterpartyResult:
+        """Form the name with the operation's own parser, so a statement that forms none is refused as it is."""
+        stated = declared_filing_name_from_parts(
+            kind=request.party_kind or "",
+            primer_apellido=request.primer_apellido,
+            segundo_apellido=request.segundo_apellido,
+            no_second_surname=request.no_second_surname,
+            nombre=request.nombre,
+            razon_social=request.razon_social,
+            renderings=tuple((item.width, item.text) for item in request.renderings),
+        )
+        name = CounterpartyFilingNameProjection(
+            party_kind=stated.kind.value,
+            primer_apellido=stated.primer_apellido,
+            segundo_apellido=stated.segundo_apellido,
+            no_second_surname=stated.no_second_surname,
+            nombre=stated.nombre,
+            razon_social=stated.razon_social,
+            renderings=tuple(
+                CounterpartyFilingNameRendering(width=item.width, text=item.text) for item in stated.renderings
+            ),
+            asserted_by=request.asserted_by or "operator",
+            asserted_at=_ASSERTED_AT,
+        )
+        changed = self.filing_names.get(request.tax_identifier) != name
+        self.filing_names[request.tax_identifier] = name
+        return LedgerCounterpartyResult(
+            profile_id=request.profile_id,
+            action=request.action,
+            tax_identifier=request.tax_identifier,
+            country_code=request.country_code,
+            filing_name=name,
+            findings=self._findings(request.tax_identifier, name),
+            changed=changed,
+        )
 
     def act(self, request: LedgerCounterpartyRequest) -> LedgerCounterpartyResult:
+        if request.action == "filing_name":
+            return self._state_filing_name(request)
         if request.action == "view":
             fact = self.facts.get(request.tax_identifier)
+            name = self.filing_names.get(request.tax_identifier)
             return LedgerCounterpartyResult(
                 profile_id=request.profile_id,
                 action=request.action,
@@ -80,6 +147,8 @@ class MemoryCounterparties:
                     identification_state=None if fact is None else fact.identification_state,
                     identification_source=None if fact is None else "operator_confirmed",
                 ),
+                filing_name=name,
+                findings=self._findings(request.tax_identifier, name),
             )
         if request.action == "withdraw":
             withdrawn = self.facts.pop(request.tax_identifier, None) is not None
@@ -246,6 +315,7 @@ def diagnostics_report(
 
 
 __all__ = [
+    "SYNTHETIC_ASSERTED_ON",
     "SYNTHETIC_RATIO_CATEGORIES",
     "SYNTHETIC_TAX_ID",
     "MemoryCounterparties",

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from ...application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
+from ...application.inventory.registered_requests import INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID
 from ...application.inventory.registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
 from ...application.invoices.catalogue_read_operation import (
     INVOICE_LIST_OPERATION_DEFINITION_ID,
@@ -856,7 +857,12 @@ EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = expectations_own
                 "ledger.inventory.valuation.preview",
                 "ledger.inventory.closing-authority.record",
                 "ledger.inventory.inspect",
-                *INVENTORY_LEDGER_CHANGE_REQUEST_TYPES,
+                # The claim needs a seeded ledger transaction; the inventory facts family owns its scenario.
+                *(
+                    change_id
+                    for change_id in INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
+                    if change_id != INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID
+                ),
             )
         ),
         *(

@@ -2,11 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
 import { expect, userEvent, waitFor } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
-import {
-  RENTA_UNIT,
-  servedYears,
-  type ServedYear,
-} from "@/dev/servedRentaYears";
+import { RENTA_UNIT } from "@/dev/rentaUnit";
+import { servedYears, type ServedYear } from "@/dev/servedRentaYears";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
@@ -260,6 +257,18 @@ export const ProjectedYear: Story = {
       await choose(canvasElement, served);
       // The registry carries the newest edition forward to it.
       expect(served.projection.direction).toBe("forward");
+      // The form says so in the words it served, and only those.
+      const words = await waitFor(
+        () => one(canvasElement, "[data-year-projection]"),
+        { timeout: 30_000 },
+      );
+      expect(words.textContent).toBe(served.projection.words);
+    }
+    for (const served of years.filter(
+      (candidate) => candidate.projection.direction === "authored",
+    )) {
+      await choose(canvasElement, served);
+      expect(canvasElement.querySelector("[data-year-projection]")).toBeNull();
     }
   },
 };
@@ -275,7 +284,7 @@ function Offers({ locale }: { locale: OutputLanguage }) {
     void (async () => {
       const found = Object.entries(offers).flatMap(([path, load]) => {
         const state = new RegExp(
-          `settlement-100-0A-(y\\d+-[a-z]+)-${locale}\\.json$`,
+          `^settlement-100-0A-(y\\d+-[a-z]+)-${locale}$`,
         ).exec(path)?.[1];
         return state ? [{ state, load }] : [];
       });

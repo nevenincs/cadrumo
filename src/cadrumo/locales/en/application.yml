@@ -738,6 +738,14 @@ application:
       retired_book_leaves_year_unresolved: This inventory was retired but still holds
         entries, so the %{year} `Anexo D` stays unresolved. Restore it, or remove
         its entries.
+    effects:
+      purchase_ledger_row:
+        claimed: This purchase books the named ledger transaction; that row is left
+          out of the Modelo 100 expenses and the purchase carries its cost into the
+          inventory book instead.
+        none: You state that no ledger transaction books this purchase.
+        unstated: Nothing is stated yet about the ledger transaction that books this
+          purchase.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Cost check
@@ -785,6 +793,10 @@ application:
       physical_evidence_role:
         acquisition_price_valuation: Valuation at purchase price
         physical_count: Physical count
+      purchase_ledger_row:
+        claimed: Booked by a ledger transaction
+        none: Not in the ledger
+        unstated: Not stated yet
       retirement_reason:
         activity_ceased: Activity ceased
         created_in_error: Created in error

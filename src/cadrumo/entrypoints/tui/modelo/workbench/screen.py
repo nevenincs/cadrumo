@@ -14,7 +14,8 @@ keeping a value there moves the list on and refills the panel for the next
 box; on a terminal too short for both, the panel opens as a centred dialog
 instead. ``/`` searches every page, ``g`` goes to a box by number, and ``?``
 names the symbols on screen, then opens every symbol and key. ``b`` confirms the assumed values of the section
-under the cursor, or of the page, together; never the whole declaration at once.
+under the cursor, or of the page, together; never the whole declaration at once. ``a`` offers every statement
+the form serves, in its words, to stage several together for one review.
 
 A page that does not apply this period is dimmed, says so and asks nothing of
 the filer. A declaration recorded as filed says so wherever a box is explained,
@@ -102,6 +103,7 @@ from .screen_next_step import WorkbenchNextStepMixin
 from .screen_operation import WorkbenchOperationMixin
 from .screen_presentation import WorkbenchPresentationMixin
 from .screen_review import WorkbenchReviewMixin
+from .screen_statements import WorkbenchStatementsMixin
 from .screen_widgets import NoticeLine, SymbolsPanel
 from .search import WorkbenchSearchPanel
 from .session import StagedChange, WorkbenchEditSession
@@ -121,6 +123,7 @@ class ModeloWorkbenchScreen(
     WorkbenchNavigationMixin,
     WorkbenchEditorMixin,
     WorkbenchConfirmationMixin,
+    WorkbenchStatementsMixin,
     WorkbenchReviewMixin,
     WorkbenchNextStepMixin,
     WorkbenchOperationMixin,
@@ -369,6 +372,7 @@ class ModeloWorkbenchScreen(
         Binding("e", "export", "", show=False),
         Binding("i", "issues", "", show=False),
         Binding("b", "bulk_confirm", "", show=False),
+        Binding("a", "statements", "", show=False),
         Binding("slash", "search", "", show=False),
         Binding("g", "go_to", "", show=False),
         Binding("left", "fold(0)", "", show=False),
@@ -497,7 +501,8 @@ class ModeloWorkbenchScreen(
                     self._load = translated
                     self._pages = workbench_pages(presented_form(translated.form, recorded=self.recorded))
                     self._inapplicable = inapplicable_pages(translated.form)
-        self._session.refresh_language(self._language)
+        served = () if self._load is None else self._load.form.carry_attestations
+        self._session.refresh_language(self._language, served)
         self._help_generation += 1
         self._cards.clear()
         self._render_all()

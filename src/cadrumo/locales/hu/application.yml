@@ -780,6 +780,14 @@ application:
       retired_book_leaves_year_unresolved: Ez a készlet ki van vezetve, de még vannak
         tételei, ezért a %{year}. évi D melléklet megoldatlan marad. Állítsd vissza,
         vagy töröld a tételeit.
+    effects:
+      purchase_ledger_row:
+        claimed: Ez a vásárlás a megjelölt főkönyvi tranzakciót könyveli; az a sor
+          kimarad a 100-as modell költségeiből, a vásárlás pedig a költségét a készletnyilvántartásba
+          viszi.
+        none: Megadod, hogy egyetlen főkönyvi tranzakció sem könyveli ezt a vásárlást.
+        unstated: Még nincs megadva semmi arról a főkönyvi tranzakcióról, amely ezt
+          a vásárlást könyveli.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Költségellenőrzés
@@ -827,6 +835,10 @@ application:
       physical_evidence_role:
         acquisition_price_valuation: Értékelés beszerzési áron
         physical_count: Fizikai leltár
+      purchase_ledger_row:
+        claimed: Főkönyvi tranzakció könyveli
+        none: Nincs a főkönyvben
+        unstated: Még nincs megadva
       retirement_reason:
         activity_ceased: A tevékenység megszűnt
         created_in_error: Tévedésből létrehozva

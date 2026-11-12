@@ -23,6 +23,7 @@ from ...domain.contribuyente.inventory.records import (
     InventoryRetirementReason,
     MovementKind,
     MovementRecord,
+    PurchaseLedgerRow,
     ValuationMethod,
 )
 from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
@@ -122,6 +123,9 @@ class InventoryMovementProjection(BaseModel):
     acquisition_cost: InventoryAcquisitionCostProjection | None
     schema_version: str
     acquisition_detail: InventoryAcquisitionDetailProjection | None = None
+    #: What the purchase states about the ledger transaction booking it, and that transaction when it names one.
+    ledger_row: PurchaseLedgerRow = PurchaseLedgerRow.UNSTATED
+    claimed_transaction_id: str | None = None
 
     @classmethod
     def from_movement(
@@ -146,6 +150,8 @@ class InventoryMovementProjection(BaseModel):
             deductible_iva_ratio=_public(movement.deductible_iva_ratio),
             acquisition_cost=_acquisition_cost_projection(acquisition),
             schema_version=movement.schema_version,
+            ledger_row=movement.ledger_row,
+            claimed_transaction_id=movement.claimed_transaction_id,
             acquisition_detail=(
                 InventoryAcquisitionDetailProjection.from_acquisition(
                     acquisition, document_file_names=document_file_names or {}

@@ -712,3 +712,79 @@ export const FileCannotBeKept: Story = {
     );
   },
 };
+
+// ---- A purchase's statement about the ledger -------------------------------------
+
+const DRAWING_BOOK = "Venta en línea de material de dibujo";
+
+/** Opens the book of drawing material and the form that states which ledger
+ * transaction books its purchase. */
+async function openClaim(context: PlayContext) {
+  const t = wordsOf(context);
+  await readBook(context, DRAWING_BOOK);
+  await press(context, t("desktop.ledger.stock.action.movement_claim"));
+}
+
+/** Chooses one of the ledger transactions the form offers, by what its line
+ * says, else the first. */
+async function chooseTransaction(context: PlayContext, containing?: string) {
+  const t = wordsOf(context);
+  await userEvent.click(
+    await control(context, t("desktop.ledger.form.choose")),
+  );
+  const option = await waitFor(() => {
+    const found = within(document.body).queryAllByRole("option");
+    const wanted = containing
+      ? found.find((one) => one.textContent?.includes(containing))
+      : found[0];
+    if (!wanted) throw new Error("no transaction is offered yet");
+    return wanted;
+  });
+  await userEvent.click(option);
+}
+
+export const PurchaseStatementUnstated: Story = {
+  name: "A purchase that states nothing about the ledger yet",
+  play: (context) => readBook(context, DRAWING_BOOK),
+};
+
+export const ClaimForm: Story = {
+  name: "Stating which ledger transaction books a purchase",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openClaim(context);
+    await pick(context, t("desktop.ledger.stock.claim.row"), "claimed");
+  },
+};
+
+export const PurchaseClaimed: Story = {
+  name: "A purchase booked by a named ledger transaction",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openClaim(context);
+    await pick(context, t("desktop.ledger.stock.claim.row"), "claimed");
+    await chooseTransaction(context);
+    await press(context, t("desktop.ledger.stock.submit.movement_claim"));
+  },
+};
+
+export const PurchaseBookedByNone: Story = {
+  name: "A purchase that no ledger transaction books",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openClaim(context);
+    await pick(context, t("desktop.ledger.stock.claim.row"), "none");
+    await press(context, t("desktop.ledger.stock.submit.movement_claim"));
+  },
+};
+
+export const ClaimRefused: Story = {
+  name: "A statement refused: the transaction is not in euros",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openClaim(context);
+    await pick(context, t("desktop.ledger.stock.claim.row"), "claimed");
+    await chooseTransaction(context, "SWIFT");
+    await press(context, t("desktop.ledger.stock.submit.movement_claim"));
+  },
+};
