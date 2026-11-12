@@ -76,15 +76,15 @@ def test_no_new_refusal_hands_over_free_text(sites: list[Site]) -> None:
 
 _FIXTURE = """
 from cadrumo.application.filing.errors import ModeloApplicationError
-from cadrumo.application.modelo.action_errors import ModeloOperationSubjectNotWorkUnitError, WorkUnitNotFoundError
+from cadrumo.application.modelo.action_errors import ModeloOperationSubjectNotWorkUnitError, ModeloRecordNotFoundError
 
 
 class Holder:
     def doorless(self):
-        raise WorkUnitNotFoundError(translated_message="no.such.catalogue.key")
+        raise ModeloRecordNotFoundError(translated_message="no.such.catalogue.key")
 
     def doorless_again(self):
-        raise WorkUnitNotFoundError("english words only")
+        raise ModeloRecordNotFoundError("english words only")
 
     def doored(self, step):
         raise ModeloOperationSubjectNotWorkUnitError(next_step=step)
