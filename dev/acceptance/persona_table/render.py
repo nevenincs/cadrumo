@@ -7,6 +7,7 @@ from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from .rows import GREEN, VERDICT_MEANING, Stage, TableRow, Verdict
 
@@ -114,15 +115,45 @@ class CoverageGap:
         return f"{self.persona}|{self.modelo}|{self.year}|{self.period}"
 
 
-def load_coverage_gaps(path: Path) -> tuple[CoverageGap, ...]:
-    """The gaps of a coverage JSON (a ``gaps`` list of persona, modelo, year, period), refusing a malformed file."""
+@dataclass(frozen=True)
+class UndecidedObligation:
+    """A return the application's calendar can neither mark owed nor not owed, with the calendar's reason."""
+
+    obligation: CoverageGap
+    reason: str
+    in_table: bool
+
+
+def _coverage_list(path: Path, key: str) -> list[object]:
+    """One list of a coverage JSON, refusing an unreadable file or one whose ``key`` is not a list."""
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
         raise ValueError(f"coverage file {path} is unreadable: {error}") from error
-    if not isinstance(document, dict) or not isinstance(document.get("gaps"), list):
-        raise ValueError(f"coverage file {path} must be an object with a 'gaps' list")
-    return tuple(_coverage_gap(path, index, item) for index, item in enumerate(document["gaps"]))
+    items: object = document.get(key) if isinstance(document, dict) else None
+    if not isinstance(items, list):
+        raise ValueError(f"coverage file {path} must be an object with a '{key}' list")
+    return cast("list[object]", items)
+
+
+def load_coverage_gaps(path: Path) -> tuple[CoverageGap, ...]:
+    """The gaps of a coverage JSON (a ``gaps`` list of persona, modelo, year, period), refusing a malformed file."""
+    return tuple(_coverage_gap(path, index, item) for index, item in enumerate(_coverage_list(path, "gaps")))
+
+
+def load_coverage_undecided(path: Path) -> tuple[UndecidedObligation, ...]:
+    """The undecided obligations of a coverage JSON, each with the calendar's reason and whether the table runs it."""
+    return tuple(_undecided(path, index, item) for index, item in enumerate(_coverage_list(path, "undecided")))
+
+
+def _undecided(path: Path, index: int, item: object) -> UndecidedObligation:
+    """One undecided obligation, refusing an item without a text reason and a boolean ``in_table``."""
+    obligation = _coverage_gap(path, index, item)
+    fields = cast("dict[str, object]", item)
+    reason, in_table = fields.get("reason"), fields.get("in_table")
+    if not isinstance(reason, str) or not isinstance(in_table, bool):
+        raise ValueError(f"coverage file {path}: undecided {index} needs a text reason and a boolean in_table")
+    return UndecidedObligation(obligation, reason, in_table)
 
 
 def _coverage_gap(path: Path, index: int, item: object) -> CoverageGap:
@@ -158,6 +189,21 @@ def _gap_section(coverage_gaps: Sequence[CoverageGap] | None) -> list[str]:
     return [*lines, ""]
 
 
+def _undecided_section(undecided: Sequence[UndecidedObligation] | None) -> list[str]:
+    if undecided is None or len(undecided) == 0:
+        return []
+    lines = [
+        f"## Undecided obligations ({len(undecided)})",
+        "",
+        "The calendar can neither mark these returns owed nor not owed; they count in no expected figure.",
+        "",
+    ]
+    for item in sorted(undecided, key=lambda entry: entry.obligation.label):
+        where = "run in the table" if item.in_table else "not run"
+        lines.append(f"- {item.obligation.label}: {item.reason} ({where})")
+    return [*lines, ""]
+
+
 def _cell(text: object) -> str:
     return str(text).replace("|", "\\|").replace("\n", " ")
 
@@ -169,10 +215,12 @@ def render_table(
     lanes: Mapping[str, str] | None = None,
     provenance: Mapping[str, str] | None = None,
     coverage_gaps: Sequence[CoverageGap] | None = None,
+    undecided: Sequence[UndecidedObligation] | None = None,
 ) -> str:
     """The full table for ``head`` as Markdown, naming the run's tree and authority when ``provenance`` is given.
 
-    ``coverage_gaps`` is ``None`` when no coverage audit was supplied, which the rows line says.
+    ``coverage_gaps`` is ``None`` when no coverage audit was supplied, which the rows line says; ``undecided`` lists the
+    returns that audit could not decide.
     """
     ordered = sorted(rows, key=lambda row: row.key)
     lines = [f"# Persona table at {head}", ""]
@@ -190,6 +238,7 @@ def render_table(
         lines += [lane_line(ordered, lanes), ""]
     lines += _unchecked_section(ordered)
     lines += _gap_section(coverage_gaps)
+    lines += _undecided_section(undecided)
     lines += ["Verdicts:", ""]
     lines += [f"- `{verdict.value}`: {meaning}." for verdict, meaning in VERDICT_MEANING.items()]
     lines += [
@@ -226,10 +275,12 @@ def render_table(
 
 __all__ = [
     "CoverageGap",
+    "UndecidedObligation",
     "counts",
     "lane_counts",
     "lane_line",
     "load_coverage_gaps",
+    "load_coverage_undecided",
     "red_stage",
     "render_table",
     "row_label",

@@ -9,7 +9,16 @@ import pytest
 
 from ..__main__ import _envelope, main
 from ..diff import diff_tables, render_diff, row_id
-from ..render import CoverageGap, counts, load_coverage_gaps, render_table, summary_line, unchecked_causes
+from ..render import (
+    CoverageGap,
+    UndecidedObligation,
+    counts,
+    load_coverage_gaps,
+    load_coverage_undecided,
+    render_table,
+    summary_line,
+    unchecked_causes,
+)
 from ..rows import PlannedRow, Stage, TableRow, Verdict, write_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -211,3 +220,44 @@ def test_a_malformed_coverage_file_is_refused(tmp_path: Path, content: str) -> N
     path.write_text(content, encoding="utf-8")
     with pytest.raises(ValueError, match="coverage file"):
         load_coverage_gaps(path)
+
+
+def test_undecided_obligations_are_listed_with_their_reason_and_count_in_no_expected_figure() -> None:
+    undecided = (
+        UndecidedObligation(CoverageGap("sociedad", "232", _YEAR, "0A"), "incomplete: no related-party record", False),
+    )
+    text = render_table([_GREEN, _HISTORY], head="abc", coverage_gaps=(), undecided=undecided)
+    assert "Rows: expected 2 / run 2\n" in text
+    section = text.split("## Undecided obligations (1)", 1)[1].split("Verdicts:", 1)[0]
+    assert f"- sociedad|232|{_YEAR}|0A: incomplete: no related-party record (not run)" in section
+
+
+def test_no_undecided_obligation_adds_no_section() -> None:
+    assert "Undecided obligations" not in render_table([_GREEN], head="abc", coverage_gaps=(), undecided=())
+
+
+def test_undecided_obligations_load_from_the_coverage_file(tmp_path: Path) -> None:
+    path = tmp_path / "coverage.json"
+    path.write_text(
+        '{"gaps": [], "undecided": [{"persona": "p", "modelo": "232", "year": 7, "period": "0A", '
+        '"reason": "incomplete: x", "in_table": true}]}',
+        encoding="utf-8",
+    )
+    expected = UndecidedObligation(CoverageGap("p", "232", 7, "0A"), "incomplete: x", True)
+    assert load_coverage_undecided(path) == (expected,)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        '{"gaps": []}',
+        '{"undecided": [{"persona": "p", "modelo": "232", "year": 7, "period": "0A", "in_table": true}]}',
+        '{"undecided": [{"persona": "p", "modelo": "232", "year": 7, "period": "0A", '
+        '"reason": "r", "in_table": "no"}]}',
+    ],
+)
+def test_a_malformed_undecided_list_is_refused(tmp_path: Path, content: str) -> None:
+    path = tmp_path / "coverage.json"
+    path.write_text(content, encoding="utf-8")
+    with pytest.raises(ValueError, match="coverage file"):
+        load_coverage_undecided(path)

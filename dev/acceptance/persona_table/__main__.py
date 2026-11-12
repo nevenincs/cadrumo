@@ -49,7 +49,7 @@ from cadrumo.tests.personas import YearEnvelope, persona_ids
 from .coverage import OUT_ENV, PERSONAS_ENV, compare, read_observations, render_markdown
 from .diff import diff_tables, render_diff, row_id
 from .provenance import ProvenanceError, meta_path, prepare_authority, read_meta, write_meta
-from .render import render_table, summary_line
+from .render import load_coverage_gaps, load_coverage_undecided, render_table, summary_line
 from .rows import GREEN, TableRow, latest_rows, owed_rows, read_rows, with_unchecked
 from .unchecked import persona_at
 
@@ -146,7 +146,11 @@ def _render(args: argparse.Namespace) -> int:
     lanes = tomllib.loads(args.lanes.read_text(encoding="utf-8")) if args.lanes else None
     lane_of = {str(modelo): lane for lane, modelos in (lanes or {}).items() for modelo in modelos}
     meta = read_meta(args.meta or meta_path(args.rows[0]))
-    text = render_table(rows.values(), head=args.head, lanes=lane_of or None, provenance=meta)
+    gaps = None if args.coverage is None else load_coverage_gaps(args.coverage)
+    undecided = None if args.coverage is None else load_coverage_undecided(args.coverage)
+    text = render_table(
+        rows.values(), head=args.head, lanes=lane_of or None, provenance=meta, coverage_gaps=gaps, undecided=undecided
+    )
     if args.out is None:
         sys.stdout.write(text)
     else:
@@ -215,6 +219,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     render.add_argument("--out", type=Path)
     render.add_argument("--meta", type=Path, help="run provenance sidecar; defaults to the first rows file's")
     render.add_argument("--lanes", type=Path, help="TOML mapping each lane to its modelo codes")
+    render.add_argument("--coverage", type=Path, help="coverage JSON whose gaps and undecided returns the table lists")
     render.set_defaults(handler=_render)
 
     baseline = commands.add_parser("baseline", help="write the rows as the committed baseline, one file per persona")
