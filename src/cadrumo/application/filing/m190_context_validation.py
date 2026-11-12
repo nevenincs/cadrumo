@@ -201,6 +201,8 @@ def _require_m190_incapacity_context(
     if occupied and scoped_casilla is not None and not clave_scope.admits(scoped_casilla, key, subkey):
         raise FilingExportValidationError(
             f"modelo 190 {scoped_casilla} amount is outside the keys it applies to",
+            translated_message="application.filing.export.errors.m190_amount_outside_keys",
+            context={"casilla": str(scoped_casilla)},
             precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
         )
 
@@ -228,11 +230,13 @@ def _require_m190_reintegro_context(
     if magnitude == "0" * len(magnitude):
         raise FilingExportValidationError(
             "modelo 190 negative reintegro requires a nonzero magnitude",
+            translated_message="application.filing.export.errors.m190_reintegro_magnitude_zero",
             precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
         )
     if not _m190_prior_year_is_valid(filing_year, devengo_year) or retention != "0" * len(retention):
         raise FilingExportValidationError(
             "modelo 190 reintegro requires an earlier devengo year and zero associated withholding",
+            translated_message="application.filing.export.errors.m190_reintegro_year_or_withholding",
             precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
         )
 
@@ -254,11 +258,14 @@ def require_m190_signed_reintegro_context(
     if len(wire) != max(_span(field)[1] - 1 for field in record.fields):
         raise FilingExportValidationError(
             "modelo 190 signed perceptor record is incomplete",
+            translated_message="application.filing.export.errors.record_incomplete",
+            context={"modelo": "190"},
             precondition_verdict=export_design_terminal(ExportRefusalReason.RECORD_INCOMPLETE),
         )
     if clave_scope is None:
         raise FilingExportValidationError(
             "modelo 190 signed perceptor record needs its clave scope",
+            translated_message="application.filing.export.errors.m190_clave_scope_unsupplied",
             precondition_verdict=export_design_terminal(ExportRefusalReason.CONTEXT_UNSUPPLIED),
         )
     refs = tuple(map(str, signed.source_refs))
@@ -300,5 +307,7 @@ def _require_m190_signed_components(
     if devengo_year != "0" * len(devengo_year) and not _m190_prior_year_is_valid(filing_year, devengo_year):
         raise FilingExportValidationError(
             "modelo 190 devengo year must be earlier than the declaration year",
+            translated_message="application.filing.export.errors.devengo_year_not_earlier",
+            context={"modelo": "190"},
             precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
         )

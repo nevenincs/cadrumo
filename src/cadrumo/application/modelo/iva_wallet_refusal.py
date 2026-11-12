@@ -88,6 +88,7 @@ class ModeloIvaWalletReconciliationBlockedError(OperationNextStepErrorMixin, Mod
         if failure is None:
             raise ModeloError(
                 "IVA-wallet reconciliation refusal was raised without its precondition verdict",
+                translated_message="application.modelo.errors.iva_wallet_refusal_without_verdict",
                 precondition_verdict=caller_defect_verdict("iva_wallet_refusal_verdict"),
             )
         return failure

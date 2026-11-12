@@ -123,6 +123,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "threshold": FindingFactKind.NUMBER,
         "iva_rate_percent": FindingFactKind.NUMBER,
         "weighted_count": FindingFactKind.NUMBER,
+        # A prior-period figure the filer stated.
+        "value": FindingFactKind.NUMBER,
         # Counts.
         "own_missing_count": FindingFactKind.COUNT,
         "sibling_missing_count": FindingFactKind.COUNT,

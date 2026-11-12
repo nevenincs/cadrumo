@@ -208,6 +208,7 @@ def _require_identity_absent_without_prefix(product_software_identity: AeatProdu
     if product_software_identity is not None:
         raise FilingExportValidationError(
             "product/software identity is only admitted for a layout that renders an envelope prefix",
+            translated_message="application.filing.export.errors.product_identity_not_admitted",
             precondition_verdict=export_design_terminal(ExportRefusalReason.ENVELOPE_OPTION_UNADMITTED),
         )
 
@@ -224,6 +225,7 @@ def _validate_envelope_prefix_options(
     if dictionary_values is not None:
         raise FilingExportValidationError(
             "an envelope-prefix export does not admit XML dictionary values",
+            translated_message="application.filing.export.errors.dictionary_values_not_admitted",
             precondition_verdict=export_design_terminal(ExportRefusalReason.ENVELOPE_OPTION_UNADMITTED),
         )
     if (
@@ -232,6 +234,8 @@ def _validate_envelope_prefix_options(
     ):
         raise FilingExportValidationError(
             f"Modelo {modelo.value} export requires an explicit prior-domiciliation election",
+            translated_message="application.filing.export.errors.prior_domiciliation_election_required",
+            context={"modelo": modelo.value},
             precondition_verdict=export_input_decision(ExportRefusalReason.PRIOR_DOMICILIATION_ELECTION_UNSTATED),
         )
 
@@ -243,11 +247,13 @@ def _validate_envelope_identity_option(
     if requires_product_identity and product_software_identity is None:
         raise FilingExportValidationError(
             "an envelope-prefix export requires explicit product/software identity authority",
+            translated_message="application.filing.export.errors.product_identity_required",
             precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCT_IDENTITY_UNSUPPLIED),
         )
     if not requires_product_identity and product_software_identity is not None:
         raise FilingExportValidationError(
             "this envelope source declares no product/software identity slot",
+            translated_message="application.filing.export.errors.product_identity_not_admitted",
             precondition_verdict=export_design_terminal(ExportRefusalReason.ENVELOPE_OPTION_UNADMITTED),
         )
 
@@ -816,6 +822,7 @@ def render_filing_layout(
     ):
         raise FilingExportValidationError(
             "M303 prior-domiciliation election must match the immutable producer snapshot election",
+            translated_message="application.filing.export.errors.prior_domiciliation_election_differs",
             precondition_verdict=export_design_terminal(ExportRefusalReason.PRIOR_DOMICILIATION_ELECTION_DIFFERS),
         )
     occurrences = _render_layout_occurrences(
@@ -832,6 +839,7 @@ def render_filing_layout(
     if product_software_identity is None:
         raise FilingExportValidationError(
             "an auxiliary-envelope-header export requires explicit product/software identity authority",
+            translated_message="application.filing.export.errors.product_identity_required",
             precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCT_IDENTITY_UNSUPPLIED),
         )
     prefix = render_declared_prefix(

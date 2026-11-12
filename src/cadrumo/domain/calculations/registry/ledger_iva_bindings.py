@@ -48,6 +48,7 @@ from ...iva.schema import (
 )
 from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
+from .field_absence import later_absent_when_none
 from .ids import BindingId
 from .iva_cash_accounting_vocabulary import require_iva_cash_accounting_treatment
 from .iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
@@ -400,7 +401,9 @@ class LedgerIvaProvider(BaseModel):
     binding. Only a deducible flow carries a deduction kind, so the axis is
     refused on any other flow rather than left to match nothing.
     """
-    excluded_art_104_tres_exclusions: tuple[Art104TresExclusion, ...] | None = Field(default=None, min_length=1)
+    excluded_art_104_tres_exclusions: tuple[Art104TresExclusion, ...] | None = Field(
+        default=None, min_length=1, exclude_if=later_absent_when_none
+    )
     """Art. 104.Tres exclusion tokens whose rows this binding leaves out, when the box asks for that.
 
     ``None`` -- the default -- reads every row the other axes admit, declared

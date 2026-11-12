@@ -77,6 +77,7 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "oss_no_live_source"
     | "withholding_detail_absent"
     | "m347_declarado_provincia_unrecorded"
+    | "declared_party_name_unresolved"
     | "m347_metalico_unrecorded"
     | "missing_transaction_evidence"
     | "administrador_retencion_rate_mismatch"
@@ -90,6 +91,7 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "credit_resolution_stale"
     | "credit_resolution_applied"
     | "m349_clave_inferred_from_category"
+    | "m349_operation_unclassified"
     | "unconverted_foreign_currency"
     | "unclassified_declarant_role_fact"
     | "unsettled_legal_reading"
@@ -115,6 +117,7 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "precedence_tier_divergence"
     | "precedence_tier_divergence_advisory"
     | "register_owned_capital_acquisition"
+    | "inventory_book_claimed_purchase"
     | "m193_settled_row_amounts_unresolved_authority"
     | "ledger_amortization_row_unregistered"
     | "activity_asset_foral_territory"
@@ -129,7 +132,8 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "activity_asset_disposal_finding"
     | "activity_asset_agrarian_excluded"
     | "activity_asset_activity_undeclared"
-    | "household_rows_incomplete";
+    | "household_rows_incomplete"
+    | "household_row_fact_unstated";
   source_kind: string;
   binding_source: BindingSourceKind | null;
   message: string;
@@ -733,6 +737,62 @@ export type ModeloTaxationComparisonRequest = {
 };
 
 /**
+ * The externally filed return an amendment corrects.
+ *
+ * An amendment is only meaningful against a specific filed baseline, so the
+ * request names that record rather than a work unit: the baseline supplies the
+ * full casilla map, and the overrides replace only what changed.
+ */
+export type ModeloWorkAmendBaseline = {
+  from_filing_record_id: string;
+};
+
+/**
+ * One corrected casilla and the value that replaces it.
+ *
+ * The value crosses as an exact decimal STRING rather than a number. A public
+ * operation schema must validate and serialize to the same shape, and a bare
+ * Decimal does not: it accepts number-or-string and emits string. Carrying the
+ * digits avoids that asymmetry and any float coercion on the way.
+ */
+export type ModeloWorkAmendOverride = {
+  casilla_id: string;
+  value: string;
+};
+
+/**
+ * The writer's complete local record and its amendment handoff facts.
+ */
+export type ModeloWorkAmendPublicResultV2 = {
+  result_version: 2;
+  record: ModeloFilingRecordSnapshot;
+  source_filing_record_id: FilingRecordId;
+  amended_from_filing_record_id: FilingRecordId;
+  amendment_kind: FilingDeclarationKind;
+  corrected_casilla_count: number;
+  m303_rectificativa_motive: M303RectificativaMotive | null;
+  handoff_required: true;
+};
+
+/**
+ * One amendment: which baseline, which corrections, and why.
+ *
+ * `reason` is required because an amendment is a declaration to the tax
+ * authority that a previously filed figure was wrong; a correction with no
+ * stated reason is not something the operator should be able to file.
+ */
+export type ModeloWorkAmendRequest = {
+  baseline: ModeloWorkAmendBaseline;
+  amendment_kind: FilingDeclarationKind;
+  overrides: ModeloWorkAmendOverride[];
+  reason: string;
+  m303_rectificativa_motive?: M303RectificativaMotive | null;
+  detail_rows?: ModeloDetailRowWireV1[] | null;
+  binding_overrides?: ModeloCalculationOverride[];
+  actor: string;
+};
+
+/**
  * Where one calculation's caller-supplied inputs come from.
  */
 export type ModeloWorkCalculateCallerContext = "replay_head" | "explicit";
@@ -794,57 +854,6 @@ export type ModeloWorkCalculateRequest = {
   caller_context?: ModeloWorkCalculateCallerContext;
   inputs?: ModeloCalculationInputFieldsV1;
   detail_rows?: ModeloDetailRowWireV1[];
-};
-
-/**
- * Explicit public fields released only by the terminal projector.
- */
-export type ModeloWorkCreateProjection = {
-  result_version: 1;
-  profile_id: string;
-  period: PublicPeriod;
-  outcome: ModeloWorkCreateSuccess | ModeloWorkCreateRefusal;
-};
-
-/**
- * Only the canonical applicability reason crosses the refusal detail door.
- */
-export type ModeloWorkCreateRefusal = {
-  kind: "refused";
-  modelo: string;
-  reason: string;
-};
-
-/**
- * Private, bounded work target and operator intent for one profile.
- *
- * `actor` is recorded as sent for a person's session. An automation's session
- * is recorded under its own session label, whatever the request carries.
- *
- * `allow_not_applicable` creates the work although the profile's facts say the
- * model does not apply to it; the result then says the check was bypassed.
- */
-export type ModeloWorkCreateRequest = {
-  profile_id: string;
-  modelo: string;
-  period: PublicPeriod;
-  revision_id?: string | null;
-  name?: string | null;
-  actor: string;
-  causante_ccaa?: string | null;
-  allow_not_applicable?: boolean;
-};
-
-/**
- * Canonical writer return plus locale-neutral advisory identities.
- */
-export type ModeloWorkCreateSuccess = {
-  kind: "success";
-  unit: ModeloWorkMetadataSnapshot;
-  reused: boolean;
-  name_applied: string | null;
-  applicability_guard_bypassed: boolean;
-  advisory_keys: string[];
 };
 
 /**

@@ -91,9 +91,17 @@ export type ModeloEditBindingAddressV1 = {
  * `ATTEST_NO_AMOUNT` records the operator's statement that a carry from an
  * earlier filing holds no amount: an override of zero the operator layer marks
  * attested, kept apart from a zero typed. Either other intent withdraws it.
+ * `ATTEST_PRIOR_VALUE` records the operator's statement of a carry's value
+ * where no supported earlier filing can supply it, because the earlier
+ * filing's year lies outside the support envelope: the value stays the
+ * override and the operator layer names the earlier filing it stands in for.
+ * Any other intent on the binding withdraws it.
  */
 export type ModeloEditBindingIntentKind =
-  "set_override_value" | "remove_override" | "attest_no_amount";
+  | "set_override_value"
+  | "remove_override"
+  | "attest_no_amount"
+  | "attest_prior_value";
 
 /**
  * One offered choice: the stored code, never translated, and the catalogue id

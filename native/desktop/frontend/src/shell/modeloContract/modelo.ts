@@ -68,6 +68,16 @@ export type AeatConfirmationState =
 export type AeatSoftwareIdentityGrade = "reviewed" | "development_mock";
 
 /**
+ * One further recovery action of a verdict, in the order it is offered.
+ */
+export type AlternativeActionSnapshot = {
+  action_id: string;
+  argument_bindings: ActionArgumentSnapshot[];
+  missing_argument_names: string[];
+  conditionality: ActionConditionality;
+};
+
+/**
  * The closed set of source kinds a casilla binding or source-mesh decision
  * draws from.
  */
@@ -274,6 +284,7 @@ export type BucketEventType =
   | "ledger.inventory.corrected"
   | "ledger.inventory.movement_corrected"
   | "ledger.inventory.movement_reversed"
+  | "ledger.inventory.movement_ledger_row_stated"
   | "ledger.inventory.retired"
   | "ledger.inventory.restored"
   | "modelo.audit.verified"
@@ -339,6 +350,8 @@ export type CalculationNoteSentence =
   | "row_unregistered_undated"
   | "register_owned_acquisition"
   | "register_owned_acquisition_undated"
+  | "book_claimed_purchase"
+  | "book_claimed_purchase_undated"
   | "possibly_durable_expense"
   | "register_row_missing"
   | "register_cost_exceeds_paid"
@@ -367,11 +380,14 @@ export type CalculationNoteSentence =
   | "advisory_value_proven_zero"
   | "retencion_soportada_evidence_required"
   | "retencion_soportada_absence_contradicted"
+  | "retencion_soportada_income_record_required"
+  | "retencion_soportada_record_figure_missing"
   | "credit_source_disagreement"
   | "credit_cross_check_absent"
   | "credit_resolution_stale"
   | "credit_resolution_applied"
   | "household_rows_incomplete"
+  | "household_row_fact_unstated"
   | "profile_fact_unrecorded"
   | "prior_filing_unrecorded"
   | "withholding_invoice_kind_undeclared"
@@ -382,9 +398,15 @@ export type CalculationNoteSentence =
   | "withholding_invoice_incomplete"
   | "m347_provincia_unrecorded"
   | "m347_provincia_unstated"
+  | "declared_party_name_missing"
+  | "declared_party_name_single_surname"
+  | "declared_party_name_too_wide"
+  | "m349_operation_unclassified"
   | "unrouted_iva_base"
   | "unrouted_iva_cuota"
-  | "unrouted_iva_recargo";
+  | "unrouted_iva_recargo"
+  | "inventory_purchase_ledger_row_unstated"
+  | "inventory_purchase_claim_refused";
 
 export type CalculationRevisionId = string;
 
@@ -723,6 +745,7 @@ export type ModeloFicheroBoePublicReceipt = {
   official_evidence_message: string;
   domiciliation_cutoff_unverified: boolean;
   completeness_unverified: boolean;
+  trabajo_deductions_not_computed: boolean;
   software_identity_grade: AeatSoftwareIdentityGrade | null;
   calculation_notes: RecordedCalculationNote[];
 };
@@ -896,6 +919,7 @@ export type ModeloVerificationReportSnapshot = {
   run_at: string;
   verified_by: string;
   granted_verificado_completo: boolean;
+  source_transactions_digest: string | null;
 };
 
 /**
@@ -963,6 +987,9 @@ export type PaymentElection = "ingreso" | "domiciliacion" | "cuenta_corriente";
 
 /**
  * Typed action evidence needed by the existing CLI action resolver.
+ *
+ * `alternative_actions` is left out of the serialized snapshot when empty, so
+ * a verdict without alternatives keeps the bytes it was stored with.
  */
 export type PreconditionVerdictSnapshot = {
   failed_condition_id: string;
@@ -972,6 +999,7 @@ export type PreconditionVerdictSnapshot = {
   missing_argument_names: string[];
   conditionality: ActionConditionality;
   no_recovery_outcome: NoRecoveryOutcome | null;
+  alternative_actions: AlternativeActionSnapshot[];
 };
 
 /**

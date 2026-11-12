@@ -1545,6 +1545,7 @@
         "cadrumo.application.modelo.withholding_detail_gate",
         "cadrumo.application.modelo.wizard_attempt_operation",
         "cadrumo.application.modelo.wizard_context_operation",
+        "cadrumo.application.modelo.work_address_errors",
         "cadrumo.application.modelo.work_addressing",
         "cadrumo.application.modelo.work_amend_contracts",
         "cadrumo.application.modelo.work_amend_correction",

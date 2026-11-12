@@ -132,6 +132,35 @@ def test_ascendants_are_added_listed_and_removed_with_a_stated_empty_state(tmp_p
         assert not any(path.startswith("renta_family.ascendiente.") for path in facts)
 
 
+def test_a_refusal_the_worker_settles_keeps_its_own_code_in_the_envelope(tmp_path: Path) -> None:
+    """The household worker's validation refusal reaches the envelope as the error it raised.
+
+    Reproduction: the worker recorded the stopping error's public detail, but
+    the command rebuilt the refusal from the settled code alone, so the
+    envelope reported a generic boundary refusal with no failed condition.
+    """
+    label = "Ascendant refusal operator"
+    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        register_cli_profile(label=label, log_in=False)
+        passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+        with native_profile_view_server(root):
+            refused = _household_cli(
+                "ascendiente",
+                "add",
+                "--ascendiente",
+                f"NACIMIENTO=1948-03-04,NIF={_REFUSED_NIF}",
+                label=label,
+                passphrase=passphrase,
+            )
+
+    assert refused.exit_code != 0, refused.output
+    assert _REFUSED_NIF not in refused.output
+    error = json.loads(refused.stderr)["error"]
+    assert error["code"] == "REFUSED_USER_PROFILE_VALIDATION", error
+    assert error["context"]["terminal_condition"] == "refused", error
+    assert error["context"]["operation_id"], error
+
+
 def _assert_descendants_stated_empty_then_closed_by_a_row(run: Callable[..., Any]) -> None:
     assert unwrap_schema_envelope(run("list").output)["state"] == "unknown"
 

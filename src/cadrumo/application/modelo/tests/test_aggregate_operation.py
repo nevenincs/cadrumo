@@ -21,7 +21,9 @@ from cadrumo.core.aggregation import (
     RetencionClave,
     RetencionScheme,
 )
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
@@ -69,6 +71,7 @@ from ...aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
+from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
@@ -943,3 +946,32 @@ def test_the_modelo_111_report_holds_an_slps_fee_back_as_its_calculation_does(
     assert [item.message.rsplit(": ", 1)[-1] for item in calculation.diagnostics] == [
         ReceivedInvoiceWithholdingFindingKind.ENTITY_PROFESSIONAL_FEE.value
     ]
+
+
+def test_a_provider_that_changes_between_preflight_and_selection_is_a_terminal_invariant(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    ports = _ports()
+    executor = ModeloAggregateExecutor(cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kw: ports)))
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id", lambda: str(_PROFILE)
+    )
+
+    def aggregate_with_another_provider(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
+        result = aggregate_per_modelo(command, operation=operation)
+        other = next(item for item in PerModeloAggregationContributor if item is not result.provider)
+        return result.model_copy(update={"provider": other})
+
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.aggregate_per_modelo", aggregate_with_another_provider
+    )
+
+    with pytest.raises(InternalInvariantError) as refused:
+        executor._prepare(_request().payload, str(_PROFILE), authority_operation)
+
+    verdict = nested_terminal_precondition_verdict(refused.value)
+    assert verdict is not None
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
+    assert refused.value.translated_message == "application.modelo.errors.aggregate_preflight_provider_changed"

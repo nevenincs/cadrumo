@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import (
@@ -45,6 +46,7 @@ from .operation_run_error_context import operation_run_error_context
 from .operation_settlement import (
     PinnedConnection,
     read_settled_result_bytes,
+    settled_registered_error_detail,
     start_and_await_terminal,
     submit_operation,
 )
@@ -95,7 +97,12 @@ class ProfileMutationCompletion:
 
 
 class ProfileMutationRunError(CadrumoError):
-    """Retain the submitted ID and only observed settlement facts on failure."""
+    """Retain the submitted ID and only observed settlement facts on failure.
+
+    A refused or failed operation also keeps the public detail the worker
+    recorded for the error that stopped it, so a frontend can rebuild that
+    error with its typed verdict instead of only its registered code.
+    """
 
     def __init__(
         self,
@@ -104,12 +111,14 @@ class ProfileMutationRunError(CadrumoError):
         code: str,
         terminal_condition: OperationTerminalCondition | None = None,
         effect: OperationEffect | None = None,
+        detail: OperationErrorDetailV1 | None = None,
     ) -> None:
         """Keep unknown effect explicit when the runtime could not be observed."""
         self.operation_id = operation_id
         self.reason = code
         self._terminal_condition = terminal_condition
         self._effect = effect
+        self._detail = detail
         super().__init__(
             code,
             context=operation_run_error_context(
@@ -126,6 +135,11 @@ class ProfileMutationRunError(CadrumoError):
     def effect(self) -> OperationEffect | None:
         """Keep unobserved effects distinct from the serialized unknown marker."""
         return self._effect
+
+    @property
+    def detail(self) -> OperationErrorDetailV1 | None:
+        """Return the worker's recorded public detail of the stopping error, when one was read."""
+        return self._detail
 
 
 @cache
@@ -202,6 +216,14 @@ def run_profile_mutation(
                 or (condition.value if condition is not None else "unknown"),
                 terminal_condition=condition,
                 effect=effect,
+                detail=settled_registered_error_detail(
+                    client,
+                    operation_id=operation_id,
+                    terminal_revision=projection.revision,
+                    contract=contract,
+                    condition=condition,
+                    deadline=deadline,
+                ),
             )
         encoded = read_settled_result_bytes(client, operation_id, projection, contract, deadline=deadline)
         accepted = _validated_profile_mutation_projection(encoded, registration, contract, request, profile_id)

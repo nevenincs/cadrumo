@@ -73,6 +73,7 @@ class ModeloCalculationRevisionSelectorAmbiguousError(ModeloCalculationRevisionS
         self.candidates = candidates
         super().__init__(
             "calculation revision selector is ambiguous; choose an explicit selector or revision id",
+            translated_message="errors.refused.modelo_calculation_revision_selector_ambiguous",
             precondition_verdict=precondition_verdict,
         )
 
