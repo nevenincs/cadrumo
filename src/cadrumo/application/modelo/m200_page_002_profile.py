@@ -334,20 +334,27 @@ def _row(
             row[field.key] = None
             continue
         value = _design_value(field.type, values.get(f"{prefix}{field.key}"))
-        width = field_widths.get((rule.projection_kind, field.key))
-        if value is not None and width is not None and len(value) > width:
-            raise _refusal(
-                M200Page002Refusal.VALUE_EXCEEDS_DESIGN,
-                f"{rule.section}.{field.key}",
-                at,
-                section=rule.section,
-                row=key,
-                field=field.key,
-                limit=width,
-                length=len(value),
-            )
+        _require_fits(rule, key, field.key, value, width=field_widths.get((rule.projection_kind, field.key)), at=at)
         row[field.key] = value
     return row
+
+
+def _require_fits(
+    rule: M200Page002FamilyRule, key: str, field_key: str, value: str | None, *, width: int | None, at: _Coordinates
+) -> None:
+    """Refuse a value wider than the design place that prints it, naming the place, never the value."""
+    if value is None or width is None or len(value) <= width:
+        return
+    raise _refusal(
+        M200Page002Refusal.VALUE_EXCEEDS_DESIGN,
+        f"{rule.section}.{field_key}",
+        at,
+        section=rule.section,
+        row=key,
+        field=field_key,
+        limit=width,
+        length=len(value),
+    )
 
 
 def _design_value(field_type: ProfileFieldType, stored: str | None) -> str | None:
