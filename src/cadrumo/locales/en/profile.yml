@@ -360,6 +360,123 @@ profile:
           label: SII enrolment
         voluntary_sii_enrolled:
           label: Voluntary SII enrolment
+      m200_administrador:
+        apellidos_nombre_razon_social:
+          label: Surnames and first name, or company name
+        codigo_provincia:
+          label: Province code
+        domicilio_fiscal:
+          label: Tax address of the representative in Spain
+        forma_juridica:
+          label: F/J (individual or legal entity)
+        nif:
+          label: NIF
+        representante:
+          label: Representative (RPTE.)
+      m200_entidad_menor_dependiente:
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Name or company name
+      m200_establecimiento_permanente:
+        beneficio_o_perdida:
+          label: Profit or loss
+        identificacion:
+          label: Identification
+        pais_residencia_fiscal:
+          label: Country of tax residence
+        suma_ajustes_resultado_contable:
+          label: Sum of adjustments to the accounting result
+        suma_deducciones_di_internacional_anteriores:
+          label: Sum of international double taxation deductions from earlier periods
+        volumen_operaciones:
+          label: Volume of operations
+      m200_participacion_directa:
+        ajuste_valor_razonable:
+          label: Fair value adjustment
+        capital:
+          label: Share capital
+        codigo_provincia_pais:
+          label: Province/country code
+        correccion_valor_perdidas_ganancias:
+          label: Value adjustment in profit and loss
+        efecto_correccion_valorativa_base_imponible:
+          label: Effect of the valuation adjustment on the taxable base
+        eliminacion_deterioro_contable:
+          label: Elimination of accounting impairment
+        eliminacion_deterioro_valores_participacion:
+          label: Elimination of impairment of securities representing the holding
+        ingresos_por_dividendos:
+          label: Dividend income
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Name or company name
+        otras_partidas_patrimonio_neto:
+          label: Other net equity items
+        porcentaje_participacion:
+          label: Percentage of participation
+        reservas_y_otras_partidas_fondos_propios:
+          label: Reserves and other equity items
+        resultado_ultimo_ejercicio:
+          label: Result of the last financial year
+        reversion_perdidas_deterioro_valores:
+          label: Reversal of impairment losses on securities
+        saldo_correcciones_fiscales_pendientes:
+          label: Balance of pending tax adjustments
+        valor_en_libros:
+          label: Carrying amount
+        valor_nominal_total:
+          label: Total nominal value
+      m200_participacion_socio:
+        apellidos_nombre_razon_social:
+          label: Surnames and first name, or company name
+        codigo_provincia_pais:
+          label: Province/country code
+        forma_juridica:
+          label: F/J/Other (legal form)
+        nif:
+          label: NIF
+        nominal:
+          label: Nominal value
+        porcentaje_participacion:
+          label: Percentage of participation
+        representante:
+          label: Representative (RPTE.)
+      m200_relaciones:
+        has_entidad_menor_dependiente:
+          label: Does your entity include dependent minor entities?
+        has_establecimiento_permanente:
+          label: Does your entity have permanent establishments abroad?
+        has_participacion_directa:
+          label: Does your entity hold direct interests in other entities?
+        has_participacion_socio:
+          label: Does your entity have partners or shareholders with a direct interest?
+        has_representante_legal:
+          label: Does your entity have attorneys-in-fact or legal representatives?
+        has_secretario_consejo:
+          label: Does your entity have a Secretary of the Board of Directors?
+        has_socio_sicav_disolucion:
+          label: Is your entity a partner of a dissolved SICAV?
+      m200_representante_legal:
+        apellidos_y_nombre:
+          label: Surnames and first name
+        fecha_poder:
+          label: Date of the power of attorney
+        nif:
+          label: NIF
+        notaria_otros:
+          label: Notary/other
+      m200_secretario_consejo:
+        apellidos_y_nombre:
+          label: Surnames and first name
+        nif:
+          label: NIF
+      m200_socio_sicav_disolucion:
+        nif_iic_reinversion:
+          label: NIF of the reinvestment collective investment scheme
+        nif_sociedad_disuelta:
+          label: NIF of the dissolved company
       maritime_worker:
         annual_salary:
           label: Annual salary
@@ -740,6 +857,41 @@ profile:
       iva:
         summary: Your IVA (VAT) regime and how often you file it.
         title: IVA profile
+      m200_administrador:
+        summary: The people who administer, manage or control the entity, one row
+          per person.
+        title: Directors and administrators
+      m200_entidad_menor_dependiente:
+        summary: The dependent minor entities you include in your return, one row
+          per entity.
+        title: Dependent minor entities
+      m200_establecimiento_permanente:
+        summary: The permanent establishments operating abroad, one row per establishment.
+        title: Permanent establishments
+      m200_participacion_directa:
+        summary: The entities in which you hold a direct interest at the end of the
+          period, one row per investee.
+        title: Direct holdings
+      m200_participacion_socio:
+        summary: The people and entities that hold a direct interest in your entity,
+          one row per partner.
+        title: Shareholders or partners
+      m200_relaciones:
+        summary: Whether your entity has rows in each optional section of page 2 of
+          Modelo 200.
+        title: Declared relationships
+      m200_representante_legal:
+        summary: The attorneys-in-fact or legal representatives of the entity, one
+          row per person.
+        title: Legal representative
+      m200_secretario_consejo:
+        summary: The Secretary of the Board of Directors, or whoever performs those
+          duties.
+        title: Secretary of the Board of Directors
+      m200_socio_sicav_disolucion:
+        summary: The dissolved SICAVs of which you are a partner and the institution
+          in which you reinvest the liquidation share.
+        title: Partners of dissolved SICAVs
       maritime_worker:
         summary: 'Only for seafarers: the classification that decides special deductions.'
         title: Maritime worker classification

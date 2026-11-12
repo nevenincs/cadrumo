@@ -360,6 +360,125 @@ profile:
           label: SII-regisztráció
         voluntary_sii_enrolled:
           label: Önkéntes SII-tagság
+      m200_administrador:
+        apellidos_nombre_razon_social:
+          label: Vezetéknév és keresztnév, illetve cégnév
+        codigo_provincia:
+          label: Tartománykód
+        domicilio_fiscal:
+          label: A képviselő spanyolországi adóügyi lakcíme
+        forma_juridica:
+          label: F/J (természetes vagy jogi személy)
+        nif:
+          label: NIF
+        representante:
+          label: Képviselő (RPTE.)
+      m200_entidad_menor_dependiente:
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Név vagy cégnév
+      m200_establecimiento_permanente:
+        beneficio_o_perdida:
+          label: Nyereség vagy veszteség
+        identificacion:
+          label: Azonosító
+        pais_residencia_fiscal:
+          label: Adóügyi illetőség szerinti ország
+        suma_ajustes_resultado_contable:
+          label: A számviteli eredmény korrekcióinak összege
+        suma_deducciones_di_internacional_anteriores:
+          label: A korábbi időszakok nemzetközi kettős adóztatás miatti levonásainak
+            összege
+        volumen_operaciones:
+          label: Ügyleti forgalom
+      m200_participacion_directa:
+        ajuste_valor_razonable:
+          label: Valós értékelési korrekció
+        capital:
+          label: Jegyzett tőke
+        codigo_provincia_pais:
+          label: Tartomány-/országkód
+        correccion_valor_perdidas_ganancias:
+          label: Értékkorrekció az eredménykimutatásban
+        efecto_correccion_valorativa_base_imponible:
+          label: Az értékelési korrekció hatása az adóalapra
+        eliminacion_deterioro_contable:
+          label: A számviteli értékvesztés kiszűrése
+        eliminacion_deterioro_valores_participacion:
+          label: A részesedést megtestesítő értékpapírok értékvesztésének kiszűrése
+        ingresos_por_dividendos:
+          label: Osztalékbevétel
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Név vagy cégnév
+        otras_partidas_patrimonio_neto:
+          label: Egyéb nettó vagyoni tételek
+        porcentaje_participacion:
+          label: Részesedési arány
+        reservas_y_otras_partidas_fondos_propios:
+          label: Tartalékok és egyéb saját tőke tételek
+        resultado_ultimo_ejercicio:
+          label: Az utolsó üzleti év eredménye
+        reversion_perdidas_deterioro_valores:
+          label: Értékpapírok értékvesztésének visszaírása
+        saldo_correcciones_fiscales_pendientes:
+          label: Függőben lévő adókorrekciók egyenlege
+        valor_en_libros:
+          label: Könyv szerinti érték
+        valor_nominal_total:
+          label: Teljes névérték
+      m200_participacion_socio:
+        apellidos_nombre_razon_social:
+          label: Vezetéknév és keresztnév, illetve cégnév
+        codigo_provincia_pais:
+          label: Tartomány-/országkód
+        forma_juridica:
+          label: F/J/Egyéb (jogi forma)
+        nif:
+          label: NIF
+        nominal:
+          label: Névérték
+        porcentaje_participacion:
+          label: Részesedési arány
+        representante:
+          label: Képviselő (RPTE.)
+      m200_relaciones:
+        has_entidad_menor_dependiente:
+          label: Beépít-e a társaságod függő kisebb szervezeteket?
+        has_establecimiento_permanente:
+          label: Vannak-e a társaságodnak külföldi állandó telephelyei?
+        has_participacion_directa:
+          label: Rendelkezik-e a társaságod közvetlen részesedéssel más szervezetekben?
+        has_participacion_socio:
+          label: Vannak-e a társaságodnak közvetlen részesedéssel rendelkező tagjai
+            vagy részvényesei?
+        has_representante_legal:
+          label: Vannak-e a társaságodnak meghatalmazottai vagy törvényes képviselői?
+        has_secretario_consejo:
+          label: Van-e a társaságodnak igazgatótanácsi titkára?
+        has_socio_sicav_disolucion:
+          label: Tagja-e a társaságod egy megszűnt SICAV-nak?
+      m200_representante_legal:
+        apellidos_y_nombre:
+          label: Vezetéknév és keresztnév
+        fecha_poder:
+          label: A meghatalmazás kelte
+        nif:
+          label: NIF
+        notaria_otros:
+          label: Közjegyző/egyéb
+      m200_secretario_consejo:
+        apellidos_y_nombre:
+          label: Vezetéknév és keresztnév
+        nif:
+          label: NIF
+      m200_socio_sicav_disolucion:
+        nif_iic_reinversion:
+          label: Az újrabefektetés tárgyát képező kollektív befektetési forma NIF-je
+        nif_sociedad_disuelta:
+          label: A megszűnt társaság NIF-je
       maritime_worker:
         annual_salary:
           label: Éves munkabér
@@ -744,6 +863,40 @@ profile:
       iva:
         summary: Az áfa (IVA) rendszere, és milyen gyakran nyújtja be a bevallását.
         title: IVA-profil
+      m200_administrador:
+        summary: Azok a személyek, akik a társaságot igazgatják, vezetik vagy ellenőrzik,
+          személyenként egy sor.
+        title: Ügyvezetők és igazgatók
+      m200_entidad_menor_dependiente:
+        summary: A bevallásodba beépített függő kisebb szervezetek, szervezetenként
+          egy sor.
+        title: Függő kisebb szervezetek
+      m200_establecimiento_permanente:
+        summary: A külföldön működő állandó telephelyek, telephelyenként egy sor.
+        title: Állandó telephelyek
+      m200_participacion_directa:
+        summary: Azok a szervezetek, amelyekben az időszak végén közvetlen részesedéssel
+          rendelkezel, részesedésenként egy sor.
+        title: Közvetlen részesedések
+      m200_participacion_socio:
+        summary: Azok a személyek és szervezetek, amelyek közvetlen részesedéssel
+          rendelkeznek a társaságodban, tagonként egy sor.
+        title: Tagok és részvényesek jegyzéke
+      m200_relaciones:
+        summary: Hogy a társaságodnak van-e sora a 200-as modell 2. oldalának minden
+          választható szakaszában.
+        title: Bejelentett kapcsolatok
+      m200_representante_legal:
+        summary: A társaság meghatalmazottai vagy törvényes képviselői, személyenként
+          egy sor.
+        title: Törvényes képviselő
+      m200_secretario_consejo:
+        summary: Az igazgatótanács titkára, illetve aki ennek feladatait ellátja.
+        title: Az igazgatótanács titkára
+      m200_socio_sicav_disolucion:
+        summary: A megszűnt SICAV-ok, amelyeknek tagja vagy, és az intézmény, amelybe
+          a felszámolási részt újra befekteted.
+        title: Megszűnt SICAV-ok tagjai
       maritime_worker:
         summary: 'Csak tengerészeknek: a különleges kedvezményeket meghatározó besorolás.'
         title: Tengerészeti dolgozó
