@@ -9685,9 +9685,6 @@ modelo:
           is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
             label: Settlement I - Profit and loss account result - Adjustments for
               corporate income tax - Decreases [00302]
-          is-liquidacion-i-importe:
-            label: Settlement I - Profit and loss account result - Profit and loss
-              account result before Corporate Income Tax and Complementary Tax [00501]
           is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Free depreciation of research and development expenditure (art.
@@ -9714,9 +9711,6 @@ modelo:
               Transitional Provision 28 LIS) - decreases [00314]'
           is-liquidacion-iii-base-imponible:
             label: Settlement III - Taxable base - Taxable base [00552]
-          is-liquidacion-iii-base-imponible-postnivelacion:
-            label: Settlement III - Taxable base - Tax base after the equalization
-              reserve [01330]
           is-liquidacion-iii-base-imponible-previa:
             label: Settlement III - Taxable base - Taxable base before offset of negative
               taxable bases [00550]
@@ -12166,6 +12160,12 @@ modelo:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Other cases of free depreciation (art. 12.3 a) and d) and
                 Additional Provisions 16 and 17 LIS) - Decreases [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Settlement I - Profit and loss account result - Profit and loss
+                account result before Corporate Income Tax [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Settlement III - Taxable base - Reduced-size entities - Tax base
+                after the equalization reserve - Decreases [01330]
             x-8h834c1g60ojgehg60pj2d8:
               label: Deductions to incentivise certain activities - 2023 Centenary
                 of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Deduction
@@ -12794,6 +12794,12 @@ modelo:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Other cases of free depreciation (art. 12.3 a) and d), Additional
                 Provisions 16 and 17 LIS) - Decreases [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Settlement I - Profit and loss account result - Profit and loss
+                account result before Corporate Income Tax and Complementary Tax [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Settlement III - Taxable base - Tax base after the equalization
+                reserve [01330]
           field:
             label: Modelo 200, tax year 2024
         2025-y-siguientes:
@@ -15696,6 +15702,12 @@ modelo:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Other cases of free depreciation (art. 12.3 a) and d), Additional
                 Provisions 16 and 17 LIS) - Decreases [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Settlement I - Profit and loss account result - Profit and loss
+                account result before Corporate Income Tax and Complementary Tax [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Settlement III - Taxable base - Tax base after the equalization
+                reserve [01330]
             x-8h834c1g60ojgghq60o36c9l:
               label: Deductions for foreign film productions (art. 36.2 LIS) - 2025(*)
                 - Deduction carried forward/generated [00315]

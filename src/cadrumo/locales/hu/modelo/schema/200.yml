@@ -9654,9 +9654,6 @@ modelo:
           is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
             label: Elszámolás I - Eredménykimutatás eredménye - Társasági adó miatti
               korrekciók - Csökkentések [00302]
-          is-liquidacion-i-importe:
-            label: Elszámolás I - Eredménykimutatás eredménye - Az eredménykimutatás
-              eredménye a társasági adó és a kiegészítő adó előtt [00501]
           is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
             label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Kutatási és fejlesztési ráfordítások szabad értékcsökkenése
@@ -9683,9 +9680,6 @@ modelo:
               cikk és DT 28. cikk) - csökkenések [00314]'
           is-liquidacion-iii-base-imponible:
             label: Elszámolás III - adóalap - Adóalap [00552]
-          is-liquidacion-iii-base-imponible-postnivelacion:
-            label: Elszámolás III - Adóalap - Adóalap a kiegyenlítési tartalék után
-              [01330]
           is-liquidacion-iii-base-imponible-previa:
             label: Elszámolás III - adóalap - Adóalap a negatív adóalapok kompenzációja
               előtt [00550]
@@ -12146,6 +12140,12 @@ modelo:
               label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
                 és d) cikk, valamint DA 16. és 17. cikk) - Csökkentések [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Elszámolás I - Eredménykimutatás eredménye - Az eredménykimutatás
+                eredménye a társasági adó előtt [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Elszámolás III - Adóalap - Kis méretű vállalkozások - Adóalap
+                a kiegyenlítési tartalék után - Csökkentések [01330]
             x-8h834c1g60ojgehg60pj2d8:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2023 A
                 spanyol rögbi és az Unió Esportiva Santboiana centenáriuma (CRE) -
@@ -12782,6 +12782,12 @@ modelo:
               label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
                 és d) cikk; DA 16. és 17. cikk) - Csökkentések [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Elszámolás I - Eredménykimutatás eredménye - Az eredménykimutatás
+                eredménye a társasági adó és a kiegészítő adó előtt [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Elszámolás III - Adóalap - Adóalap a kiegyenlítési tartalék után
+                [01330]
           field:
             label: 200-es modelo, 2024. adóév
         2025-y-siguientes:
@@ -15636,6 +15642,12 @@ modelo:
               label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
                 és d) cikk; DA 16. és 17. cikk) - Csökkentések [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Elszámolás I - Eredménykimutatás eredménye - Az eredménykimutatás
+                eredménye a társasági adó és a kiegészítő adó előtt [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Elszámolás III - Adóalap - Adóalap a kiegyenlítési tartalék után
+                [01330]
             x-8h834c1g60ojgghq60o36c9l:
               label: Külföldi filmgyártási produkciók levonásai (LIS 36.2. cikk) -
                 2025(*) - Függőben lévő/keletkezett levonás [00315]

@@ -9574,10 +9574,6 @@ modelo:
           is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
             label: Liquidació I - Resultat del compte de pèrdues i guanys - Correccions
               per l’impost sobre societats - Disminucions [00302]
-          is-liquidacion-i-importe:
-            label: Liquidació I - Resultat del compte de pèrdues i guanys - Resultat
-              compte pèrdues i guanys abans de l'Impost sobre Societats i l'Impost
-              Complementari [00501]
           is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
             label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
               - Llibertat d’amortització de despeses de recerca i desenvolupament
@@ -9604,9 +9600,6 @@ modelo:
               i DT 28a LIS) - disminucions [00314]'
           is-liquidacion-iii-base-imponible:
             label: Liquidació III - base imposable - Base imposable [00552]
-          is-liquidacion-iii-base-imponible-postnivelacion:
-            label: Liquidació III - Base imposable - Base imposable després de la
-              reserva de nivellació [01330]
           is-liquidacion-iii-base-imponible-previa:
             label: Liquidació III - base imposable - Base imposable abans de la compensació
               de bases imposables negatives [00550]
@@ -11990,6 +11983,13 @@ modelo:
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d) i
                 DA 16a i 17a LIS) - Disminucions [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Liquidació I - Resultat del compte de pèrdues i guanys - Resultat
+                compte pèrdues i guanys abans de l'Impost sobre Societats [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Liquidació III - Base imposable - Entitats de dimensió reduïda
+                - Base imposable després de la reserva de nivellació - Disminucions
+                [01330]
             x-8h834c1g60ojgehg60pj2d8:
               label: Deduccions per incentivar determ. activitats - 2023 Centenari
                 del Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Deducció
@@ -12594,6 +12594,13 @@ modelo:
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d),
                 DA 16a i 17a LIS) - Disminucions [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Liquidació I - Resultat del compte de pèrdues i guanys - Resultat
+                compte pèrdues i guanys abans de l'Impost sobre Societats i l'Impost
+                Complementari [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Liquidació III - Base imposable - Base imposable després de la
+                reserva de nivellació [01330]
           field:
             label: Model 200, exercici 2024
         2025-y-siguientes:
@@ -15388,6 +15395,13 @@ modelo:
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d),
                 DA 16a i 17a LIS) - Disminucions [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Liquidació I - Resultat del compte de pèrdues i guanys - Resultat
+                compte pèrdues i guanys abans de l'Impost sobre Societats i l'Impost
+                Complementari [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Liquidació III - Base imposable - Base imposable després de la
+                reserva de nivellació [01330]
             x-8h834c1g60ojgghq60o36c9l:
               label: Deduccions per produccions cinematogràfiques estrangeres (art.
                 36.2 LIS) - 2025(*) - Deducció pendent/generada [00315]

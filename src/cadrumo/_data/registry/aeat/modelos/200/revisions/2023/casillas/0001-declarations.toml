@@ -4,9 +4,9 @@
 # 2024 edition's row stands for. The comment above each row cites the design line
 # in 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md.
 #
-# NOT DECLARED HERE, recorded as debt rather than guessed: 665 rows of the 2024
+# NOT DECLARED HERE, recorded as debt rather than guessed: 663 rows of the 2024
 # edition -- 361 whose 2023 caption names another year,
-# 236 whose box the 2023 design prints with another caption,
+# 234 whose box the 2023 design prints with another caption,
 # 40 whose box the 2023 design does not print,
 # 19 whose own 2024 field is not identified among the fields printing their number,
 # 5 citing a provision catalogued as effective only after 2023,
@@ -20,9 +20,16 @@
 # other row is inherited from it.
 #
 # Rows carry the 2024 row's continuidad_id: the identical caption on the same box in
-# both designs grounds the identity. No formula or binding is stated: this edition is
-# applicability grade. Labels resolve from the continuity tier, or from this
-# edition's own keys where the 2024 label is edition-specific.
+# both designs grounds the identity. Two rows the cuota chain needs are declared
+# although their 2024 caption is reworded -- DP200012:00501 (2024 adds "e Impuesto
+# Complementario") and DP200014:01330 (2023 heads it "Entidades Reducida dimension"
+# and "Disminuciones") -- because both designs print them as the same field of the
+# same record and the Manual practico de Sociedades 2023 uses them in the same
+# operations; the 2024 edition records each rewording as a label evolution. The
+# calculation surface (formulas, bindings, computed and bound rows) is stated in
+# this edition's family fragments and manifest overrides. Labels resolve from the
+# continuity tier, or from this edition's own keys where the 2024 label is
+# edition-specific.
 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:63 DP200001 33|172|1|Num
@@ -2876,6 +2883,8 @@ section = ["liquidacion_iii", "base_imponible"]
 semantic_role = "is_liquidacion_iii_base_imponible_previa"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Liquidación III base imponible previa (antes de compensación BIN) is the single cuota-chain pre-compensación base in the DP200014 segment; no sibling casilla shares this role within the modelo revision."
+input_kind = "computed"
+formula = "modelo-200-base-imponible-previa"
 legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-11", "ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1424 DP200014 15|166|17|N
@@ -2890,6 +2899,8 @@ section = ["liquidacion_iii", "base_imponible"]
 semantic_role = "is_liquidacion_iii_base_imponible"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Liquidación III base imponible is the single cuota-chain base; no sibling casilla shares this role within the modelo revision."
+input_kind = "computed"
+formula = "modelo-200-base-imponible"
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1485 DP200014B 6|13|17|Num
@@ -3038,4 +3049,63 @@ number = "00592"
 segmento = "DP200014B"
 section = ["liquidacion", "cuota_liquida"]
 semantic_role = "is_cuota_liquida"
+input_kind = "computed"
+formula = "modelo-200-cuota-liquida"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1199 DP200012 9|64|17|N
+[[revisions."2023".casillas]]
+id = "DP200012:00501"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1199 (DP200012 field 9, offset 64, width 17): Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades [00501]. aeat-dr-200-2022 prints the identical field at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1184 (DP200012 field 9, offset 64), but the 2022 edition does not declare the row."
+continuidad_id = "is-liquidacion-i-importe"
+number = "00501"
+segmento = "DP200012"
+section = ["liquidacion_i", "resultado_de_la_cuenta_de_perdidas_y_ganancias"]
+semantic_role = "is_liquidacion_i_importe"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 200 Liquidacion I result-before-IS row 00501; official manual uses it as the base-determination starting point."
+required = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1427 DP200014 18|217|17|N
+[[revisions."2023".casillas]]
+id = "DP200014:01330"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1427 (DP200014 field 18, offset 217, width 17): Liquidación III - Base Imponible - Entidades Reducida dimensión - Base imponible después de la reserva de nivelación - Disminuciones [01330]; the Manual práctico de Sociedades 2023 computes it as casilla [01330] = [00552] + [01033] - [01034]. aeat-dr-200-2022 prints the field with the identical caption at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1407 (DP200014 field 6), but the 2022 edition does not declare the row."
+continuidad_id = "is-liquidacion-iii-base-imponible-postnivelacion"
+number = "01330"
+segmento = "DP200014"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_liquidacion_iii_base_imponible_postnivelacion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Liquidación III base imponible después de la reserva de nivelación is the single cuota-chain post-nivelación base casilla; no sibling casilla shares this role within the modelo revision."
+input_kind = "computed"
+formula = "modelo-200-base-imponible-despues-reserva-nivelacion"
+legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41"]
+
+# Internal computed ceiling: the MAXIMUM bases imponibles negativas that may
+# be compensated this period under LIS art. 26.1 — min(BIN stock held,
+# max(EUR 1.000.000, 70% of base imponible previa)). This is NOT an AEAT form
+# box (no export_refs): it is an app-internal derived ceiling consumed by the
+# BLOCKING verification predicate that bounds the operator-elective applied
+# amount (DP200014:00547). Compensation is a RIGHT bounded by this ceiling, not
+# a mandate — 00547 stays operator-elective and the gate only refuses
+# OVER-application (00547 > this máxima), never forcing 00547 to the ceiling
+# (art. 26.1: las BIN "PODRÁN ser compensadas ... CON EL LÍMITE del 70 % ...
+# En todo caso ... hasta el importe de 1 millón de euros").
+[[revisions."2023".casillas]]
+id = "DP200014:bin-aplicada-maxima"
+continuidad_id = "is-liquidacion-iii-compensacion-bin-maxima"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-200-2023 and aeat-dr-200-2022 carry no field numbered [DP200014:bin-aplicada-maxima]; it is a computation-only member of the edition, not a box of the form."
+number = "DP200014:bin-aplicada-maxima"
+segmento = "DP200014"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_liquidacion_iii_compensacion_bin_maxima"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The art. 26.1 BIN compensation ceiling is the single internal cap bounding the elective applied amount (DP200014:00547) in the DP200014 segment."
+input_kind = "computed"
+formula = "modelo-200-bin-aplicada-maxima"
+internal_only = true
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]

@@ -9669,10 +9669,6 @@ modelo:
           is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
             label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
               - Correcciones por Impuesto Sociedades - Disminuciones [00302]
-          is-liquidacion-i-importe:
-            label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
-              - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades
-              e Impuesto Complementario [00501]
           is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Libertad de amortización de gastos de investigación y desarrollo
@@ -9699,9 +9695,6 @@ modelo:
               (art. 103 LIS y DT 28ª LIS) - disminuciones [00314]'
           is-liquidacion-iii-base-imponible:
             label: Liquidación III - Base imponible - Base imponible [00552]
-          is-liquidacion-iii-base-imponible-postnivelacion:
-            label: Liquidación III - Base Imponible - Base imponible después de la
-              reserva de nivelación [01330]
           is-liquidacion-iii-base-imponible-previa:
             label: Liquidación III - Base imponible - Base imponible antes de la compensación
               de bases imponibles negativas [00550]
@@ -12159,6 +12152,14 @@ modelo:
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Otros supuestos de libertad de amortización (art. 12.3
                 a) y d) y DA 16ª y 17ª LIS) - Disminuciones [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
+                - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades
+                [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Liquidación III - Base Imponible - Entidades Reducida dimensión
+                - Base imponible después de la reserva de nivelación - Disminuciones
+                [01330]
             x-8h834c1g60ojgehg60pj2d8:
               label: Deducc. para incentivar determ.actividades - 2023 Centenario
                 del Rugby en España y de la Unió Esportiva Santboiana (CRE) - Deducción
@@ -12797,6 +12798,13 @@ modelo:
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Otros supuestos de libertad de amortización (art. 12.3
                 a) y d) DA 16ª y 17ª LIS) - Disminuciones [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
+                - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades
+                e Impuesto Complementario [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Liquidación III - Base Imponible - Base imponible después de
+                la reserva de nivelación [01330]
           field:
             label: Modelo 200, ejercicio 2024
         2025-y-siguientes:
@@ -15600,6 +15608,13 @@ modelo:
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Otros supuestos de libertad de amortización (art. 12.3
                 a) y d) DA 16ª y 17ª LIS) - Disminuciones [00310]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
+                - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades
+                e Impuesto Complementario [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Liquidación III - Base Imponible - Base imponible después de
+                la reserva de nivelación [01330]
             x-8h834c1g60ojgghq60o36c9l:
               label: Deducciones por producciones cinematográficas extranjeras (art.
                 36.2 LIS) - 2025(*) - Deducción pendiente/generada [00315]

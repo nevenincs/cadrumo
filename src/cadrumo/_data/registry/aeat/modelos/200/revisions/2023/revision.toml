@@ -1,9 +1,13 @@
 [revisions."2023"]
 casilla_storage_baseline = "2022"
 casilla_source_refs = ["aeat-dr-200-2023"]
+binding_source_refs = ["aeat-modelo-200-manual-2023"]
+formula_source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"]
+parameter_source_refs = ["aeat-modelo-200-manual-2023"]
+dependency_classification_source_refs = ["aeat-modelo-200-manual-2023"]
 application_link_source_refs = ["boe-modelo-200-2023-form", "aeat-dr-200-2023"]
 filing_schedule_source_refs = ["boe-modelo-200-2023-form", "aeat-modelo-200-manual-2023"]
-authority_grade = "applicability"
+authority_grade = "calculation"
 # Modelo 200, declaracion del Impuesto sobre Sociedades y del IRNR (establecimientos
 # permanentes y entidades en regimen de atribucion de rentas constituidas en el
 # extranjero con presencia en territorio espanol), for periodos impositivos
@@ -23,9 +27,16 @@ authority_grade = "applicability"
 # prints with another caption, stay undeclared and are recorded as debt in
 # casillas/0001-declarations.toml.
 #
-# Grade: applicability. No formula, construct relation, binding or export layout
-# computes, checks or files these casillas, so the modelo is not calculated or
-# filed for this year; the 2024 edition's calculation authority does not reach it.
+# Grade: calculation. The Modelo 200 cuota chain (Liquidacion I-IV: base imponible
+# previa [00550], base imponible [00552], base tras reserva de nivelacion [01330],
+# tipo [00558], cuota integra [00562], cuota integra ajustada positiva [00582],
+# cuota liquida [00592], cuota del ejercicio [00599], cuota diferencial [00611])
+# is authored at this edition: every box it reads or writes is printed on the
+# same record and with the same box number by aeat-dr-200-2023 as by the 2024
+# design, and the Manual practico de Sociedades 2023 states the same operations.
+# The rates are those the manual's "Tipos de gravamen vigentes" table prints for
+# contribuyentes 2023. This edition carries no export layout for the 2023 design,
+# so it calculates but does not file: filing grade needs this year's own layout.
 valid_from = 2023-01-01
 valid_to = 2023-12-31
 period_selector = { year_from = 2023, year_to = 2023, periods = ["0A"] }
@@ -35,6 +46,30 @@ legal_refs = [
     "orden-hac-495-2024:art-6-1",
     "orden-hac-495-2024:art-3",
     "ley-27-2014:art-124",
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-10",
+    "ley-27-2014:art-11",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-36",
+    "ley-27-2014:art-100",
+    "ley-27-2014:art-101",
+    "ley-27-2014:art-12",
+    "rd-634-2015:art-3",
+    "ley-27-2014:art-15",
+    "ley-27-2014:art-21",
+    "ley-27-2014:art-22",
+    "ley-27-2014:art-31",
+    "ley-27-2014:art-32",
+    "ley-27-2014:art-13",
+    "ley-27-2014:art-16",
+    "ley-27-2014:art-25",
+    "ley-27-2014:art-26",
+    "ley-27-2014:art-105",
+    "ley-49-2002:art-10",
 ]
 source_refs = [
     "boe-modelo-200-2023-form",
@@ -1853,3 +1888,71 @@ source_refs = ["aeat-dr-200-2023"]
 legal_refs = ["orden-hac-495-2024:modelo-200"]
 continuidad_origin = "grounded"
 continuidad_evidence = "Canonical parser evidence: aeat-dr-200-2022 DP200054 row 58 field 53 offset 812 length 17 type N and aeat-dr-200-2023 DP200054 row 58 field 53 offset 812 length 17 type N both print [00315] with captions 'Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Saldo, final del ejercicio - Total [00315]' and 'Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Saldo, final del ejercicio - Total [00315]'. The revision-to-revision match is limited to this observed official sheet and field; type/width alone do not establish sign or scale. This supports continuity only across the observed supported edge 2022->2023; it makes no claim about introduction before the first observed supported design."
+
+# Calculation surface. The 2023 design prints every box the Modelo 200
+# formulas read and write on the same record and with the same caption as the
+# 2024 design (aeat-dr-200-2023 DP200012/DP200013/DP200014/DP200014B/DP200015/
+# DP200020D/DP200026), and the Manual práctico de Sociedades 2023 states the
+# same liquidation operations ([00582], [00592], [00599], [00611], [01330]), so
+# the cuota chain is authored here, at the earliest edition whose design
+# carries it; the 2024 edition keys only its own citations and layout.
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "00670" }
+fields = { binding = "modelo-200-bin-pendiente-ejercicios-anteriores", input_kind = "bound" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01494" }
+fields = { binding = "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores", input_kind = "bound" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01495" }
+fields = { binding = "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores", input_kind = "bound" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014:00558" }
+fields = { formula = "modelo-200-tipo-gravamen-por-forma-juridica", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014:00562" }
+fields = { formula = "modelo-200-cuota-integra", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014:00582" }
+fields = { formula = "modelo-200-cuota-integra-ajustada-positiva", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:00599" }
+fields = { formula = "modelo-200-cuota-ejercicio-a-ingresar-devolver", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:00611" }
+fields = { formula = "modelo-200-cuota-diferencial", input_kind = "computed" }
+removed_fields = []
+
+# Porcentaje de tributación a la Administración del Estado: aeat-dr-200-2023
+# DP200026 field 17, offset 152, width 5, "3 enteros y 2 decimales". Bound to
+# the same profile percentage the cuota [00599] reads, so the return prints the
+# percentage the cuota applied; an absent profile value refuses the cuota.
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200026:00625" }
+fields = { binding = "modelo-200-profile-tributacion-estado-porcentaje", input_kind = "bound" }
+removed_fields = []
+
+[[revisions."2023".casilla_positions]]
+id = "DP200012:00501"
+position = 478
+
+[[revisions."2023".casilla_positions]]
+id = "DP200014:01330"
+position = 2674
+
+[[revisions."2023".casilla_positions]]
+id = "DP200014:bin-aplicada-maxima"
+position = 2675
