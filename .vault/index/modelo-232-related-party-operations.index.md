@@ -1,0 +1,27 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#modelo-232-related-party-operations'
+date: '2026-11-12'
+modified: '2026-11-12'
+body_schema: 'body-v2'
+body_hash: 'sha256:e7082ba1dd481cf93b72984274c4f3e815c9f9268b3486897c21a6ca1e76eb3d'
+related:
+  - '[[2026-11-12-modelo-232-related-party-operations-adr]]'
+  - '[[2026-11-12-modelo-232-related-party-operations-research]]'
+---
+
+# `modelo-232-related-party-operations` feature index
+
+Auto-generated index of all documents tagged with `#modelo-232-related-party-operations`.
+
+## Documents
+
+### adr
+
+- `2026-11-12-modelo-232-related-party-operations-adr` - `modelo-232-related-party-operations` adr: `Related-party operations fact for Modelo 232` | (**status:** `proposed`)
+
+### research
+
+- `2026-11-12-modelo-232-related-party-operations-research` - `modelo-232-related-party-operations` research: `Modelo 232 filing grounds and applicability`
