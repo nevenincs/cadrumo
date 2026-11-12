@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-12'
 body_schema: body-v2
-body_hash: 'sha256:2c0b345367536b608e5892f36e8c307eaec619f42e30c976cf90d37a9f187a39'
+body_hash: 'sha256:946230ec0ae3f539346ebd002b60047d22428f77cb6d01b9e82221d0a88d63e0'
 ---
 
 <!-- RETIRED: S44 -->
@@ -52,7 +52,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S11` - Settle from the official rule whether a Modelo 100 refund needs a stated account, and make the persona data or the refusal conform (lane CALC-RENTA, cause R5); `src/cadrumo/application/modelo, dev/fixtures/personas`.
 - [x] `P01.S12` - Assert Modelo 303 values on live calculations and make the export of every 303 quarter succeed, filed quarters included (lane CALC-IVA, cause I1); `src/cadrumo/_data/registry/aeat/modelos/303, src/cadrumo/application/filing/producer_snapshot.py`.
 - [x] `P01.S13` - Make every Modelo 390, 349 and 347 row pass, with a typed refusal when no Modelo 347 is due (lane CALC-IVA); `src/cadrumo/_data/registry/aeat/modelos/390, src/cadrumo/_data/registry/aeat/modelos/349, src/cadrumo/_data/registry/aeat/modelos/347, src/cadrumo/application/filing/record_renderer.py`.
-- [x] `P01.S14` - Make recargo de equivalencia and prorrata rows pass, with the recargo rate facts and the 303 election fields grounded in official text (lane CALC-IVA); `src/cadrumo/domain/iva, src/cadrumo/_data/registry/aeat/modelos/303`.
+- [x] `P01.S14` - Make recargo de equivalencia rows pass, with the recargo rate facts and the 303 election fields grounded in official text (lane CALC-IVA); `src/cadrumo/domain/iva, src/cadrumo/_data/registry/aeat/modelos/303`.
 - [ ] `P01.S15` - Make an export after a granted verification always end in a written file or a typed refusal (lane LIFECYCLE, cause L1); `src/cadrumo/application/modelo/export.py`.
 - [ ] `P01.S16` - Add a gate that fails when a modelo operation refusal or error code has no door or no served words, then fix what it finds (lane LIFECYCLE); `src/cadrumo/application/modelo, src/cadrumo/core/errors`.
 - [ ] `P01.S17` - Run the full Python gate set green on a head where the persona table is green (lane INTEGRATOR); `justfile`.
@@ -65,6 +65,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S49` - Source Modelo 100 work income, casillas 0003 to 0025, from the suffered-withholding payer record in every supported edition, where today no binding carries the certificate's importe integro and the asalariada and arrendador returns lack their main income (lane CALC-PAGOS, ADR first); `src/cadrumo/application/aggregation, src/cadrumo/_data/registry/aeat/modelos/100`.
 - [ ] `P01.S50` - Bind the Modelo 100 ascendant minimum, casilla 0515, in every edition, where today it has no binding or formula (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation`.
 - [x] `P01.S51` - Keep the intracomunitario-desarrollador reverse-charge purchases in Modelo 100 casillas 0218 and 0222, where today the settlement comparison drops them by comparing cash paid with an invoice total that includes the recipient's self-assessed cuota (lane CALC-RENTA); `src/cadrumo/application/aggregation`.
+- [ ] `P01.S54` - Add a persona that owes a prorrata Modelo 303 (general prorrata, with the annual regularisation in 4T) and make its rows pass, expectations keyed by role and cited, after the Modelo 200 re-key (lanes CALC-IVA and ACCEPTANCE); `src/cadrumo/domain/iva, src/cadrumo/_data/registry/aeat/modelos/303, dev/fixtures/personas`.
 
 ### Phase `P02` - Deferred backend scope
 

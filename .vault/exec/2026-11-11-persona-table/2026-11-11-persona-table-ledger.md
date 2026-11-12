@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:104c4d42dda80d09a4350b45f6f325e6e95cad745cb82da3f3e60e7c661ae859'
+body_hash: 'sha256:367f0f8c46b50e843ef8ce23fe958c515d3b14a7fc0f02d300119ad14a3bf0c4'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -106,3 +106,4 @@ related:
 - `S10` Modelo 100 2023-2025 verify passes for every persona, asalariada-familia's descendants included (0166 and names served)
 - `S13` 390 20/20, 349 16/16, 347 12/12 green; fontanero 347 4/4 expected-refusal `REFUSED_MODELO_EXPORT_VALUE_OVERFLOW` at export
 - `S14` No persona owes a prorrata 303; the prorrata part has no table row to assert.
+- `S14` PRIME order 04:2x: S14 closes for the recargo rows only; the prorrata part moved to its own open Step S54 (no persona owes a prorrata 303).
