@@ -10,7 +10,7 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Literal, Self
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason
 from cadrumo.application.modelo.row_source_fingerprint import (
@@ -321,6 +321,20 @@ class PublicPreconditionVerdict(BaseModel):
     missing_argument_names: tuple[str, ...]
     conditionality: ActionConditionality
     no_recovery_outcome: NoRecoveryOutcome | None
+    alternative_actions: tuple[PublicAlternativeRecoveryAction, ...] = Field(
+        default_factory=tuple, exclude_if=lambda value: not value
+    )
+
+
+class PublicAlternativeRecoveryAction(BaseModel):
+    """Typed local-human workbench view of AlternativeRecoveryAction."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action: ActionReference
+    argument_bindings: tuple[PublicActionArgumentBinding, ...] = Field(default_factory=tuple)
+    missing_argument_names: tuple[str, ...] = Field(default_factory=tuple)
+    conditionality: ActionConditionality
 
 
 class PublicConditionEvidence(BaseModel):
@@ -413,6 +427,7 @@ class PublicModeloWorkReview(BaseModel):
     calculation_revision_id: str | None
     lifecycle_state: CalculationRevisionState | None
     verification_outcome: VerificationCompletenessStatus | None
+    verification_sources_digest: str | None = None
     progress: ModeloWorkProgress
     casillas: tuple[PublicModeloWorkReviewCasilla, ...]
     findings: tuple[PublicModeloVerificationFinding, ...]
