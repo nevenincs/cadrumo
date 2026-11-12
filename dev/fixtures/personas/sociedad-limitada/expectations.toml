@@ -56,6 +56,15 @@ legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-40-3", "orden-hfp-227-2017:a
 grounding = "cited"
 
 [[obligations]]
+modelo = "232"
+periods = ["0A"]
+year = "horizon-1"
+applicable = "unknown"
+reason = "The Modelo 232 is owed only for operaciones vinculadas above the thresholds of RIS art. 13.4 (or any operation with a paraíso fiscal); the profile states no related-party operation and no fact that settles one, so the obligation stays undetermined. The unpaid administradora, its sole partner, is a vinculada person, but no operation with her is recorded."
+legal_ref = ["ley-27-2014:art-18", "rd-634-2015:art-13"]
+grounding = "cited"
+
+[[obligations]]
 modelo = "130"
 periods = ["1T", "2T", "3T", "4T"]
 year = "horizon-1"
