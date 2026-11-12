@@ -124,6 +124,7 @@ formula that ignores casilla 00619 entirely.
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -154,6 +155,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
     authored_revisions_where,
     manual_editions_printing,
@@ -301,6 +303,28 @@ _EJEMPLO1_EDITIONS = tuple(
 assert _EJEMPLO1_ORACLE.filing_year in _EJEMPLO1_EDITIONS
 
 
+def _in_exercise(casilla_id: CasillaId, filing_year: int) -> CasillaId:
+    """The oracle edition's casilla on the record the exercise's own design prints it on.
+
+    The oracle names its boxes by the record ids of the edition it cites; an earlier
+    design prints the same box on another record, so the counterpart is the one casilla
+    of the exercise's revision carrying the same ``continuidad_id``.
+    """
+    authority = published_authority_operation()
+
+    def casillas(year: int) -> Sequence[CasillaDefinition]:
+        return authority.snapshot(
+            _M200, filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        ).revision.casillas
+
+    (chain,) = (
+        casilla.continuidad_id for casilla in casillas(_EJEMPLO1_ORACLE.filing_year) if casilla.id == casilla_id
+    )
+    assert chain is not None, f"{casilla_id} carries no continuidad_id"
+    (counterpart,) = (casilla.id for casilla in casillas(filing_year) if casilla.continuidad_id == chain)
+    return counterpart
+
+
 def _profile_instant(filing_year: int) -> datetime:
     """The sociedad and its zero instalments are recorded in the January after the exercise."""
     return datetime(filing_year + 1, 1, 15, 9, 0, tzinfo=UTC)
@@ -415,11 +439,14 @@ def _calculate_m200(
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs={
-                **_oracle_declared_figures(_EJEMPLO1_ORACLE),
+                **{
+                    _in_exercise(casilla_id, filing_year): value
+                    for casilla_id, value in _oracle_declared_figures(_EJEMPLO1_ORACLE).items()
+                },
                 # Not declared: the cuota líquida mínima is what this scenario ASSERTS
                 # (casillas 00592 and 00611), so supplying it as a declared input would
                 # have the oracle check the figure it was handed.
-                _CASILLA_CUOTA_LIQUIDA_MINIMA: cuota_liquida_minima,
+                _in_exercise(_CASILLA_CUOTA_LIQUIDA_MINIMA, filing_year): cuota_liquida_minima,
             },
             ports=_calculation_ports_375,
             clock=_clock(filing_year, 10),
@@ -451,10 +478,13 @@ def test_m200_ejemplo1_con_tributacion_minima_manual_worked_example(
     )
     values = result.revision.casilla_values
 
-    assert values[_CASILLA_CUOTA_INTEGRA] == _CUOTA_INTEGRA_EXPECTED
-    assert values[_CASILLA_CUOTA_INTEGRA_AJUSTADA_POSITIVA] == _CUOTA_INTEGRA_AJUSTADA_POSITIVA_EXPECTED
-    assert values[_CASILLA_CUOTA_LIQUIDA] == _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED
-    assert values[_CASILLA_CUOTA_DIFERENCIAL] == _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED
+    assert values[_in_exercise(_CASILLA_CUOTA_INTEGRA, filing_year)] == _CUOTA_INTEGRA_EXPECTED
+    assert (
+        values[_in_exercise(_CASILLA_CUOTA_INTEGRA_AJUSTADA_POSITIVA, filing_year)]
+        == _CUOTA_INTEGRA_AJUSTADA_POSITIVA_EXPECTED
+    )
+    assert values[_in_exercise(_CASILLA_CUOTA_LIQUIDA, filing_year)] == _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED
+    assert values[_in_exercise(_CASILLA_CUOTA_DIFERENCIAL, filing_year)] == _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED
 
 
 @pytest.mark.parametrize("filing_year", _EJEMPLO1_EDITIONS)
@@ -474,8 +504,8 @@ def test_m200_ejemplo1_sin_tributacion_minima_manual_worked_example(
     )
     values = result.revision.casilla_values
 
-    assert values[_CASILLA_CUOTA_LIQUIDA] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
-    assert values[_CASILLA_CUOTA_DIFERENCIAL] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
+    assert values[_in_exercise(_CASILLA_CUOTA_LIQUIDA, filing_year)] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
+    assert values[_in_exercise(_CASILLA_CUOTA_DIFERENCIAL, filing_year)] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
 
 
 @pytest.mark.parametrize("filing_year", _EJEMPLO1_EDITIONS)
@@ -500,13 +530,13 @@ def test_casilla_00619_anti_tautology_floor_changes_cuota_liquida(
 
     delta = Decimal("300000.00") - Decimal("270000.00")
     assert (
-        con_minima.revision.casilla_values[_CASILLA_CUOTA_LIQUIDA]
-        - sin_minima.revision.casilla_values[_CASILLA_CUOTA_LIQUIDA]
+        con_minima.revision.casilla_values[_in_exercise(_CASILLA_CUOTA_LIQUIDA, filing_year)]
+        - sin_minima.revision.casilla_values[_in_exercise(_CASILLA_CUOTA_LIQUIDA, filing_year)]
         == delta
     )
     assert (
-        con_minima.revision.casilla_values[_CASILLA_CUOTA_DIFERENCIAL]
-        - sin_minima.revision.casilla_values[_CASILLA_CUOTA_DIFERENCIAL]
+        con_minima.revision.casilla_values[_in_exercise(_CASILLA_CUOTA_DIFERENCIAL, filing_year)]
+        - sin_minima.revision.casilla_values[_in_exercise(_CASILLA_CUOTA_DIFERENCIAL, filing_year)]
         == delta
     )
 

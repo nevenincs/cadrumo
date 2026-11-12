@@ -25,6 +25,7 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.operation_shared import resolve_active_workflow_profile
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.tests.filing_reach_authority import filing_reach_operation
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -239,11 +240,26 @@ def _import_clean_source_cohort(
 def test_m200_zero_prior_stock_still_checks_positive_applied_amount(
     tmp_path: Path,
     request: pytest.FixtureRequest,
+    applied_bin: Decimal,
+    expects_cap_finding: bool,
+) -> None:
+    """A clean prior filing with zero stock must not disable the target cap check.
+
+    The cap is a verification predicate, which runs only on a filing-grade
+    snapshot, so the target's edition is lifted to filing reach in the leased
+    operation alone; the registry's declared grade is unchanged.
+    """
+    with filing_reach_operation(modelo_id="200", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD) as operation:
+        _verify_zero_stock_target(tmp_path, request, operation, applied_bin, expects_cap_finding)
+
+
+def _verify_zero_stock_target(
+    tmp_path: Path,
+    request: pytest.FixtureRequest,
     authority_operation: PinnedAuthorityOperation,
     applied_bin: Decimal,
     expects_cap_finding: bool,
 ) -> None:
-    """A clean prior filing with zero stock must not disable the target cap check."""
     request.node.user_properties.extend(
         (
             ("authority_root", str(Path(os.environ["CADRUMO_AUTHORITY_ROOT"]).resolve())),

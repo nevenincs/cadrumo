@@ -14,11 +14,9 @@ import type {
   CasillaId,
   ModeloExportArtefact,
   ModeloFormDeadlineTone,
-  ModeloVerificationFindingKind,
-  ModeloVerificationFindingSeverity,
   OutputLanguage,
+  PreconditionVerdictSnapshot,
   PublicPeriod,
-  ResultDisposition,
   RevisionId,
   SourceRefId,
   TransactionId,
@@ -28,9 +26,11 @@ import type {
 import type {
   BindingId,
   ModeloEditApplyBaselineV1,
+  ModeloEditBindingIntentKind,
   ModeloEditRefusedV1,
   ModeloEditWireScalar,
   ModeloFormAddressV1,
+  ModeloFormBindingAddressV1,
   ModeloFormCasillaAddressV1,
 } from "./modeloEditWork";
 import type {
@@ -39,13 +39,14 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  PublicModeloFormSection,
+  PublicModeloFormValueSource,
+  PublicModeloVerificationFinding,
   PublicModeloWorkFormLoadV1,
-  PublicRefundEligibility,
   PublicScalarValueV1,
   PublicSpanishTaxIdFormat,
   ReconciliationSourceRequirementV1,
   RegistryAuthorityGrade,
-  SourceFamily,
   SourcePolicyV1,
   TemporalProjectionDirection,
 } from "./modeloWorkFormPart2";
@@ -55,7 +56,9 @@ import type {
  * nothing.
  */
 export type AbsenceAttestationFamily =
-  "renta_negative_general_bases_pending" | "renta_trabajo_income_not_stated";
+  | "renta_negative_general_bases_pending"
+  | "renta_trabajo_income_not_stated"
+  | "renta_capital_inmobiliario_gastos_pendientes";
 
 /**
  * What one reported row does in the declaration.
@@ -175,7 +178,7 @@ export type ModeloFormArtefactOption = {
  * How much a finding asks of the filer.
  */
 export type ModeloFormAttention =
-  "blocks" | "missing" | "confirm" | "check" | "info";
+  "blocks" | "missing" | "confirm" | "check" | "limitation" | "info";
 
 /**
  * One attention level with something in it, counted as the next step counts
@@ -208,6 +211,23 @@ export type ModeloFormBinding = {
 };
 
 /**
+ * One statement the edit admits on a single carry, worded for the form.
+ *
+ * `attest_no_amount` states the carry holds nothing; `attest_prior_value`
+ * states its figure for the earlier return `source_words` names, which the
+ * application does not hold. Applying it stages that one intent on
+ * `binding_id`; withdrawing it stages `remove_override` on the same binding.
+ */
+export type ModeloFormBindingStatement = {
+  intent: ModeloEditBindingIntentKind;
+  binding_id: BindingId;
+  action_words: string;
+  statement_words: string;
+  effect_words: string;
+  source_words: string | null;
+};
+
+/**
  * One verification finding that blocks the field.
  */
 export type ModeloFormBlocker = {
@@ -233,6 +253,10 @@ export type ModeloFormBlocker = {
  * this note, as its resolver worded it for the filer and the calculate result
  * carries it, in the form's language; `None` when it wrote none in that
  * language, or when only the note that persists with the calculation is known.
+ * `recovery` is the way out of the note where its reason and fact open one, as
+ * a refusal verdict carries it: the action and its ordered alternatives, each
+ * with its served words in the form's language and the registered operations
+ * it submits. It is left out of the serialized note when the note opens none.
  */
 export type ModeloFormCalculationNote = {
   reason: string;
@@ -245,6 +269,7 @@ export type ModeloFormCalculationNote = {
   fact: CalculationNoteFact | null;
   element_names: [string, string][];
   message: string | null;
+  recovery: PreconditionVerdictSnapshot | null;
 };
 
 /**
@@ -628,6 +653,26 @@ export type ModeloFormOutlineKind =
   "sections" | "working_figures" | "unplaced" | "answers";
 
 /**
+ * Why the form does not admit a figure stated for a carry's earlier returns.
+ */
+export type ModeloFormPriorValueRefusal = "source_held";
+
+/**
+ * The action that withdraws every figure the filer stated for one family's
+ * earlier returns.
+ *
+ * Applying it stages `remove_override` on each binding, in one review; each
+ * carry then holds no stated figure, as before the statement.
+ */
+export type ModeloFormPriorValueWithdrawal = {
+  family_id: string;
+  binding_ids: BindingId[];
+  intent: ModeloEditBindingIntentKind;
+  action_words: string;
+  effect_words: string;
+};
+
+/**
  * The unit a rate is stated in.
  */
 export type ModeloFormRateUnit = "fraction";
@@ -763,6 +808,16 @@ export type ModeloFormSourceState = "produced" | "none_found" | "not_yet";
 export type ModeloFormStanding = "needs_you" | "waiting" | "done";
 
 /**
+ * The mark of a carry holding a figure the filer stated for an earlier return
+ * the application does not hold.
+ */
+export type ModeloFormStatedPriorValue = {
+  source_words: string;
+  origin_words: string;
+  family_id: string | null;
+};
+
+/**
  * One displayed text and the honest account of where it came from.
  */
 export type ModeloFormText = {
@@ -826,14 +881,19 @@ export type ModeloFormVerdict = {
  * `authored_filing_year` is the year that edition authors and
  * `reachable_grade` the rung of authority the year reaches. The registry's
  * temporal resolver and grade rule supply all three; a surface renders them.
- * `words` says, for a carried year only, that the declaration calculates under
- * that edition's rules and cannot be checked for filing or exported: the same
- * sentence verification refuses it with, served before any check.
+ * `reachable_grade_words` names that rung. `words` is the sentence
+ * verification refuses a filing check with, served before any check: for a
+ * carried year, that the declaration calculates under that edition's rules and
+ * cannot be checked for filing or exported; for a year its own edition authors
+ * below filing grade, that those rules are not yet checked against the
+ * official sources closely enough to file. It is `None` when the year reaches
+ * filing grade.
  */
 export type ModeloFormYearProjection = {
   direction: TemporalProjectionDirection;
   authored_filing_year: number;
   reachable_grade: RegistryAuthorityGrade;
+  reachable_grade_words: string;
   words: string | null;
 };
 
@@ -1154,6 +1214,8 @@ export type PublicModeloFormField = {
   restorable: boolean;
   filers_own: boolean;
   stated_absent: AbsenceAttestationFamily | null;
+  stated_prior_value: ModeloFormStatedPriorValue | null;
+  statements: ModeloFormBindingStatement[];
   confirm_value: ModeloEditWireScalar;
   takes_typed_value: boolean;
   clearable: boolean;
@@ -1236,6 +1298,27 @@ export type PublicModeloFormPrintedRate = {
 };
 
 /**
+ * Typed local-human workbench view of ModeloFormPriorValueAttestation.
+ */
+export type PublicModeloFormPriorValueAttestation = {
+  binding_id: string;
+  edit_address: ModeloFormBindingAddressV1;
+  intent: ModeloEditBindingIntentKind;
+  family_id: string;
+  earlier_filings: PublicModeloFormEarlierFiling[];
+  source_words: string;
+  action_words: string;
+  statement_words: string;
+  effect_words: string;
+  stated: boolean;
+  admitted: boolean;
+  refusal_reason: ModeloFormPriorValueRefusal | null;
+  refusal_words: string | null;
+  refusal: PreconditionVerdictSnapshot | null;
+  withdrawal: ModeloFormPriorValueWithdrawal | null;
+};
+
+/**
  * Typed local-human workbench view of ModeloFormRate; the ratio keeps its
  * exact decimal text.
  */
@@ -1267,62 +1350,4 @@ export type PublicModeloFormRepeatingRow = {
   index: number;
   values: (PublicScalarValueV1 | null)[];
   value_texts: (string | null)[];
-};
-
-/**
- * Typed local-human workbench view of ModeloFormResult; the value keeps its
- * exact decimal text.
- */
-export type PublicModeloFormResult = {
-  casilla_id: CasillaId;
-  box: string | null;
-  value: string | null;
-  direction: ModeloFormResultDirection;
-  disposition: ResultDisposition | null;
-  election_may_change: boolean;
-  refund_eligibility: PublicRefundEligibility | null;
-};
-
-/**
- * Typed local-human workbench view of ModeloFormSection.
- */
-export type PublicModeloFormSection = {
-  id: string;
-  heading: ModeloFormText;
-  official_heading: string | null;
-  blocks: PublicModeloFormBlock[];
-  counts: ModeloFormCounts;
-  applies: boolean | null;
-};
-
-/**
- * Typed local-human workbench view of ModeloFormUnplacedField.
- */
-export type PublicModeloFormUnplacedField = {
-  field: PublicModeloFormField;
-  reason: FormUnplacedReason | null;
-};
-
-/**
- * Typed local-human workbench view of ModeloFormValueSource.
- */
-export type PublicModeloFormValueSource = {
-  family: SourceFamily;
-  binding_id: string | null;
-  source_kind: BindingSourceKind | null;
-  earlier_filings: PublicModeloFormEarlierFiling[];
-};
-
-/**
- * Typed local-human workbench view of ModeloVerificationFinding.
- */
-export type PublicModeloVerificationFinding = {
-  kind: ModeloVerificationFindingKind;
-  severity: ModeloVerificationFindingSeverity;
-  casilla_id: string | null;
-  expectation_id: string | null;
-  message_locale_key: string;
-  message_facts: PublicFactEntryV1[];
-  legal_refs: string[];
-  source_refs: string[];
 };

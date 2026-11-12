@@ -17,7 +17,11 @@ two.
 - Schema 10 adds the LIS art. 40.3 election of the Modelo 202 as an optional
   fact. It changes no stored value, so its transition clears nothing; a
   schema-9 record that already carries the field is refused.
-- Schema 11 retires the disability key stored on an ascendant row. The Modelo 100
+- Schema 11 adds the Modelo 200 page 002 relations: the administradores, the
+  participations in and of the entity, its representatives, its secretary, its
+  dependent entities, its permanent establishments abroad, its SICAV holdings
+  and whether it has any of each. It only adds fields, so it clears nothing.
+- Schema 12 retires the disability key stored on an ascendant row. The Modelo 100
   key is derived from the grade, the assistance and the judicial incapacity of
   the row, and a stored key 1 or 2 cannot be converted into a grade, so the
   migration clears every stored key and the operator is asked for the grade and
@@ -58,7 +62,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 11
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 12
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -147,7 +151,7 @@ no successor to read its value, so every stored value goes.
 
 
 RETIRED_ASCENDANT_DISABILITY_KEY_GROUP: Final[str] = "renta_family.ascendiente"
-"""The household group whose rows stored the disability key schema 11 retires."""
+"""The household group whose rows stored the disability key schema 12 retires."""
 RETIRED_ASCENDANT_DISABILITY_KEY_LEAF: Final[str] = "discapacidad_clave"
 """The row leaf that stored the official disability key of an ascendant."""
 _RETIRED_ASCENDANT_KEY_PATH: Final[re.Pattern[str]] = re.compile(
@@ -155,7 +159,7 @@ _RETIRED_ASCENDANT_KEY_PATH: Final[re.Pattern[str]] = re.compile(
 )
 
 _RETIRED_ROW_LEAVES_BY_TRANSITION: Final[Mapping[int, re.Pattern[str]]] = MappingProxyType(
-    {10: _RETIRED_ASCENDANT_KEY_PATH},
+    {11: _RETIRED_ASCENDANT_KEY_PATH},
 )
 """Row leaves the transition that LEAVES each version retires on every row of their group, by path pattern."""
 
@@ -166,7 +170,7 @@ _ASCENDANT_DISABILITY_LEAVES: Final[tuple[str, ...]] = (
 )
 """The row facts the retired key is derived from now, which a row whose key was cleared is asked for."""
 
-_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9})
+_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9, 10})
 """Versions whose outgoing transition only adds fields, so it clears no stored value."""
 
 
@@ -254,11 +258,80 @@ PATHS_INTRODUCED_IN_V9: Final[frozenset[str]] = frozenset(
 PATHS_INTRODUCED_IN_V10: Final[frozenset[str]] = frozenset({"taxpayer_type.pago_fraccionado_art_40_3_elected"})
 """Fields schema 9 did not declare: the LIS art. 40.3 election of the Modelo 202."""
 
+_M200_RELATION_LEAVES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {
+        "m200_administrador": (
+            "nif",
+            "apellidos_nombre_razon_social",
+            "forma_juridica",
+            "representante",
+            "domicilio_fiscal",
+            "codigo_provincia",
+        ),
+        "m200_participacion_socio": (
+            "nif",
+            "representante",
+            "forma_juridica",
+            "apellidos_nombre_razon_social",
+            "codigo_provincia_pais",
+            "nominal",
+            "porcentaje_participacion",
+        ),
+        "m200_representante_legal": ("apellidos_y_nombre", "nif", "fecha_poder", "notaria_otros"),
+        "m200_secretario_consejo": ("apellidos_y_nombre", "nif"),
+        "m200_participacion_directa": (
+            "nif",
+            "nombre_o_razon_social",
+            "codigo_provincia_pais",
+            "porcentaje_participacion",
+            "valor_nominal_total",
+            "valor_en_libros",
+            "ingresos_por_dividendos",
+            "correccion_valor_perdidas_ganancias",
+            "reversion_perdidas_deterioro_valores",
+            "eliminacion_deterioro_contable",
+            "eliminacion_deterioro_valores_participacion",
+            "ajuste_valor_razonable",
+            "efecto_correccion_valorativa_base_imponible",
+            "saldo_correcciones_fiscales_pendientes",
+            "capital",
+            "reservas_y_otras_partidas_fondos_propios",
+            "otras_partidas_patrimonio_neto",
+            "resultado_ultimo_ejercicio",
+        ),
+        "m200_entidad_menor_dependiente": ("nif", "nombre_o_razon_social"),
+        "m200_establecimiento_permanente": (
+            "identificacion",
+            "pais_residencia_fiscal",
+            "volumen_operaciones",
+            "beneficio_o_perdida",
+            "suma_ajustes_resultado_contable",
+            "suma_deducciones_di_internacional_anteriores",
+        ),
+        "m200_socio_sicav_disolucion": ("nif_sociedad_disuelta", "nif_iic_reinversion"),
+        "m200_relaciones": (
+            "has_participacion_socio",
+            "has_representante_legal",
+            "has_secretario_consejo",
+            "has_participacion_directa",
+            "has_entidad_menor_dependiente",
+            "has_establecimiento_permanente",
+            "has_socio_sicav_disolucion",
+        ),
+    },
+)
+
+PATHS_INTRODUCED_IN_V11: Final[frozenset[str]] = frozenset(
+    f"{section}.{leaf}" for section, leaves in _M200_RELATION_LEAVES.items() for leaf in leaves
+)
+"""Fields schema 10 did not declare: the Modelo 200 page 002 relations."""
+
 _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         7: PATHS_INTRODUCED_IN_V7,
         9: PATHS_INTRODUCED_IN_V9,
         10: PATHS_INTRODUCED_IN_V10,
+        11: PATHS_INTRODUCED_IN_V11,
     },
 )
 """Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
@@ -547,6 +620,7 @@ __all__ = [
     "PATHS_INTRODUCED_IN_V7",
     "PATHS_INTRODUCED_IN_V9",
     "PATHS_INTRODUCED_IN_V10",
+    "PATHS_INTRODUCED_IN_V11",
     "RETIRED_ASCENDANT_DISABILITY_KEY_GROUP",
     "RETIRED_ASCENDANT_DISABILITY_KEY_LEAF",
     "RETIRED_RENTAL_TIER_PATH",

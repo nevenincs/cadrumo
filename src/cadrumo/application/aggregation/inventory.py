@@ -114,6 +114,16 @@ class _DirectEstimationActivities:
     count: int
     regime_undeclared: bool
 
+    @property
+    def none_in_direct_estimation(self) -> bool:
+        """Whether the profile states a regime on every day an activity is in force and none is direct.
+
+        The Anexo D rows belong to the rendimiento of an activity in estimacion directa (LIRPF arts. 28
+        and 30, RIRPF art. 30); an activity in estimacion objetiva states its rendimiento by modulos and
+        keeps no existencias for the return, so such a filer has no book to keep.
+        """
+        return self.count == 0 and not self.regime_undeclared
+
 
 def _direct_estimation_activities(context: CalculationSourceContext) -> _DirectEstimationActivities | None:
     """Count the activities the ejercicio holds in the direct-estimation activity block.
@@ -433,23 +443,34 @@ def _ledgers_or_not_ready(
                 "valued at acquisition price, so the stock variation can be derived."
             ),
         )
-    # A missing book is an unanswered question, not a statement that the activity
-    # held no existencias: only a book closed at zero proves the zero rows.
-    if not ledgers:
-        return _ledger_not_ready(
-            binding_ids,
-            resolver_id,
-            owned_sources,
-            state="missing_activity_ledgers",
-            message=f"no complete {filing_year} inventory activity ledger is available",
-            remedy=(
-                "Open the inventory book of each activity in estimacion directa for the ejercicio and record "
-                "its closing value, the existencias finales valued at acquisition price. For an activity that "
-                "held no existencias, open the book with no stock and record its closing at zero, so the rows "
-                "read zero on that statement."
-            ),
-        )
     return ledgers
+
+
+def _missing_books_refusal(
+    binding_ids: tuple[str, ...],
+    *,
+    filing_year: int,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> CalculationSourceResolution:
+    """Refuse the rows of a filer who may hold an activity in estimacion directa and keeps no book.
+
+    A missing book is an unanswered question, not a statement that the activity held no existencias:
+    only a book closed at zero proves the zero rows.
+    """
+    return _ledger_not_ready(
+        binding_ids,
+        resolver_id,
+        owned_sources,
+        state="missing_activity_ledgers",
+        message=f"no complete {filing_year} inventory activity ledger is available",
+        remedy=(
+            "Open the inventory book of each activity in estimacion directa for the ejercicio and record "
+            "its closing value, the existencias finales valued at acquisition price. For an activity that "
+            "held no existencias, open the book with no stock and record its closing at zero, so the rows "
+            "read zero on that statement."
+        ),
+    )
 
 
 def _ledger_not_ready(
@@ -706,12 +727,7 @@ class InventorySourceResolver:
         if isinstance(template, CalculationSourceResolution):
             return template
         if _profile_declares_no_activity_income(context):
-            return CalculationSourceResolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                unresolved_binding_ids=binding_ids,
-                inapplicable_binding_ids=binding_ids,
-            )
+            return self._inapplicable(binding_ids)
         if self._inventory_repository is None:
             return self._storage_refusal(binding_ids)
         ledgers = _load_inventory_ledgers(
@@ -723,7 +739,10 @@ class InventorySourceResolver:
         )
         if isinstance(ledgers, CalculationSourceResolution):
             return ledgers
-        refusal = self._books_refusal(context, ledgers, binding_ids=binding_ids)
+        activities = _direct_estimation_activities(context)
+        if not ledgers:
+            return self._without_books(activities, binding_ids=binding_ids, filing_year=context.filing_year)
+        refusal = self._books_refusal(context, activities, ledgers, binding_ids=binding_ids)
         if refusal is not None:
             return refusal
         return _resolve_inventory_rows(
@@ -735,8 +754,34 @@ class InventorySourceResolver:
             owned_sources=self.owned_sources,
         )
 
+    def _without_books(
+        self,
+        activities: _DirectEstimationActivities | None,
+        *,
+        binding_ids: tuple[str, ...],
+        filing_year: int,
+    ) -> CalculationSourceResolution:
+        """Resolve the rows of a filer who keeps no inventory book.
+
+        Only an activity in estimacion directa keeps a book for the rows. A book kept for an
+        activity outside the block still reaches the count check and is refused.
+        """
+        if activities is not None and activities.none_in_direct_estimation:
+            return self._inapplicable(binding_ids)
+        return _missing_books_refusal(
+            binding_ids,
+            filing_year=filing_year,
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+        )
+
     def _books_refusal(
-        self, context: CalculationSourceContext, ledgers: tuple[InventoryLedger, ...], *, binding_ids: tuple[str, ...]
+        self,
+        context: CalculationSourceContext,
+        activities: _DirectEstimationActivities | None,
+        ledgers: tuple[InventoryLedger, ...],
+        *,
+        binding_ids: tuple[str, ...],
     ) -> CalculationSourceResolution | None:
         """Hold the rows back unless every declared activity keeps its book and each purchase's statement stands.
 
@@ -744,7 +789,6 @@ class InventorySourceResolver:
         an activity's only when every declared activity keeps its book. One book among several
         activities would otherwise read as the return's one activity.
         """
-        activities = _direct_estimation_activities(context)
         if activities is None or activities.regime_undeclared or activities.count != len(ledgers):
             return _activity_books_refusal(
                 activities,
@@ -784,6 +828,14 @@ class InventorySourceResolver:
                 )
                 for finding in findings
             ),
+        )
+
+    def _inapplicable(self, binding_ids: tuple[str, ...]) -> CalculationSourceResolution:
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            unresolved_binding_ids=binding_ids,
+            inapplicable_binding_ids=binding_ids,
         )
 
     def _storage_refusal(self, binding_ids: tuple[str, ...]) -> CalculationSourceResolution:

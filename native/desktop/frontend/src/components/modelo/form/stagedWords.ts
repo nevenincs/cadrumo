@@ -6,11 +6,13 @@ import type { StagedEdit } from "./session";
  * or as typed where the application said nothing; a confirmed value as the
  * form showed it; a yes or no as those words; a value taken out in the
  * words for where the box goes back to; a statement in the words the form
- * served for it, and its withdrawal as one. */
+ * served for it, and its withdrawal as one; a figure stated for earlier
+ * returns as the value read, beside the words the form served for it. */
 export function stagedText(t: Translate, edit: StagedEdit): string {
   switch (edit.intent.kind) {
     case "set_typed_value":
     case "set_override_value":
+    case "attest_prior_value":
       if (typeof edit.intent.value === "boolean")
         return t(
           edit.intent.value
@@ -28,7 +30,8 @@ export function stagedText(t: Translate, edit: StagedEdit): string {
       );
     case "remove_override":
       return t(
-        edit.intent.withdraws === undefined
+        edit.intent.withdraws === undefined &&
+          edit.intent.withdrawsPrior === undefined
           ? "workspace.modelo.staged.restore"
           : "desktop.modelo.statements.withdrawn",
       );

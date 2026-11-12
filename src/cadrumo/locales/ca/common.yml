@@ -4530,9 +4530,6 @@ desktop:
       confirm: Descartar
       lead: Surt de la teva llista de declaracions. Se'n conserva l'historial.
       reason: Per què (opcional)
-    export:
-      limitation:
-        title: El que aquest fitxer no inclou
     form:
       pages: Pàgines del formulari
     keys:
@@ -4550,6 +4547,11 @@ desktop:
       label: Esquema del formulari
       may_apply: Només si se t'aplica
       needs_you: 'Et necessita: {count}'
+    prior_values:
+      intro: Si aquí no consta la declaració anterior de la qual una casella arrossega
+        un import, pots indicar tu mateix aquest import. Els imports indicats per
+        a les mateixes declaracions anteriors es retiren junts.
+      title: Imports de declaracions anteriors
     rename:
       name: Nom
       save: Desar el nom
@@ -6997,6 +6999,38 @@ tui:
     unattended: Permet l'ús sense supervisió
     uncertain: Resultat desconegut; conserva l'ID de la sol·licitud
     waiting: S'està enviant la sol·licitud
+  censo:
+    action:
+      detail: Mostra els detalls
+      read: Llegeix de nou
+      record: Registra una declaració
+    column:
+      declared_on: Declarada el
+      kind: Tipus
+      recorded_at: Registrada el
+    detail:
+      id: Identificador
+      justificante: Referència del justificant
+      none: Sense indicar
+      note: Nota
+    local_note: 'Una declaració aquí és només un registre local: es desa en aquest
+      dispositiu i no s''envia res a l''administració tributària.'
+    prompt: Declaracions de canvis a les teves dades censals que vas presentar fora
+      d'aquesta aplicació i vas registrar aquí.
+    records:
+      title: Declaracions registrades
+    status:
+      choose_declaration: Tria primer una declaració de la llista.
+      empty: Encara no has registrat cap declaració.
+      read_failed: No s'han pogut llegir les declaracions. Res del que veus a sota
+        no és actual.
+      reading: Llegint les declaracions...
+      recorded: 'Registrada en local: {kind} declarada el {declared_on}. No s''ha
+        enviat res a l''administració tributària.'
+      unconfirmed: Aquest formulari no ha confirmat cap resultat. La llista de sota
+        s'ha llegit de nou i mostra el que hi ha desat; revisa-la abans de tornar
+        a registrar.
+    title: Canvis censals
   declarations:
     list:
       new:
@@ -7005,6 +7039,7 @@ tui:
       start_hint: Prem + per començar-ne una.
   destination:
     aeat_sync: Sincronització AEAT
+    censo: Canvis censals
     declarations: Declaracions
     home: Inici
     installation: Instal·lació
@@ -9093,6 +9128,9 @@ tui:
     legend:
       first_open: És la primera vegada? Prem ? per veure què vol dir cada símbol.
       meaning:
+        level:
+          limitation: Un límit del càlcul, indicat de manera expressa, o una xifra
+            que has indicat tu. No t'impedeix presentar.
         mark:
           collapsed: Prem → per obrir-la.
           expanded: Prem ← per tancar-la.
@@ -9176,12 +9214,26 @@ tui:
       none: Aquesta declaració no ofereix ara cap manifestació.
       not_placed: Una manifestació es refereix a una casella que aquesta pantalla
         no mostra, així que no s'ha deixat per revisar.
+      prior:
+        heading: Xifres que has indicat per a declaracions anteriors
+        partial: Escriu una xifra per a cada casella d'aquesta manifestació o deixa-les
+          totes buides. Es fa sencera o no es fa.
       stage: Deixar per revisar
       title: Manifestacions que pots fer
       withdraw: Retirar la manifestació
     taxation:
       key: Conjunta o individual
       reading: Calculant les dues opcions…
+    wallet:
+      code_label: Codi del període
+      key: Cartera d'IVA
+      no_lots: No hi ha cap lot de crèdit registrat per a aquest any.
+      not_sent: 'Revisa el que has indicat: no s''ha enviat res.'
+      outcome_unknown: Pot ser que el que has indicat s'hagi desat. Torna a llegir
+        el saldo abans d'indicar res més.
+      refused: S'ha rebutjat el que has indicat.
+      sending: Enviant el que has indicat...
+      year_label: Any del període
   operations:
     action:
       close: Tanca
@@ -9465,6 +9517,7 @@ tui:
       validate_ledger: Comprova els registres
     destination:
       aeat_sync: Obre Sincronització AEAT
+      censo: Obre Canvis censals
       declarations: Obre Declaracions
       home: Obre Inici
       installation: Obre Instal·lació
@@ -9476,6 +9529,8 @@ tui:
       withholding: Obre Retencions
     destination_help:
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
+      censo: 'Canvis censals: els canvis a les teves dades fiscals registrades que
+        has anotat aquí'
       declarations: Declaracions, càlculs anteriors, historial de presentacions i
         calendari
       home: Properes accions, declaracions i terminis d'un cop d'ull
@@ -10649,6 +10704,8 @@ workspace:
         incomplete: 'Comprovada: falten dades que la declaració necessita.'
       done: Fet. La declaració s'ha actualitzat.
       not_done: No s'ha completat; els teus canvis continuen aquí.
+      unknown: Pot ser que s'hagi aplicat. Torna a llegir la declaració abans d'aplicar
+        res més.
     origin:
       calculated: Calculada
       calculation_failed: No s'ha pogut calcular

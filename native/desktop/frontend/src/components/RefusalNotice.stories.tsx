@@ -37,13 +37,18 @@ function verdict(fields: Partial<ServedVerdict>): ServedVerdict {
     missing_argument_names: [],
     conditionality: "not_applicable",
     no_recovery_outcome: null,
+    no_recovery_words: null,
+    no_recovery_words_language: null,
+    action_words: null,
+    action_words_language: null,
+    target_operation_ids: [],
     ...fields,
   };
 }
 
 const primary = {
   action_id: "operator.fixture.create",
-  target_command_key: "modelo.work.create",
+  target_operation_ids: ["modelo.work.create"],
   argument_bindings: [bound("work_unit_id")],
   missing_argument_names: [],
   conditionality: "immediate",
@@ -86,7 +91,7 @@ export const PrimaryOnly: Story = {
     await expect(args.onAction).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: "follow",
-        target_command_key: "modelo.work.create",
+        target_operation_ids: ["modelo.work.create"],
         place: { page: "declarations", definition: "modelo.work.create" },
       }),
     );
@@ -102,7 +107,7 @@ export const PrimaryAndTwoAlternatives: Story = {
         alternative_actions: [
           {
             action_id: "operator.fixture.review",
-            target_command_key: "ledger.evidence.review.list",
+            target_operation_ids: ["ledger.evidence.review.list"],
             argument_bindings: [],
             missing_argument_names: [],
             conditionality: "immediate",
@@ -111,7 +116,10 @@ export const PrimaryAndTwoAlternatives: Story = {
           },
           {
             action_id: "operator.fixture.verify",
-            target_command_key: "modelo.work.verify",
+            target_operation_ids: [
+              "modelo.work.revision",
+              "modelo.work.verify",
+            ],
             argument_bindings: [bound("work_unit_id")],
             missing_argument_names: [],
             conditionality: "immediate",
@@ -181,7 +189,7 @@ export const UnroutableAction: Story = {
         alternative_actions: [
           {
             action_id: "operator.fixture.attest",
-            target_command_key: "modelo.work.attest_prior_value",
+            target_operation_ids: ["live.notifications.list"],
             argument_bindings: [],
             missing_argument_names: ["value"],
             conditionality: "requires_arguments",
@@ -213,6 +221,61 @@ export const NoWayOut: Story = {
         no_recovery_words_language: "en",
       }),
     ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.getByText("Fixture outcome: nothing in the app can change this."),
+    ).toBeInTheDocument();
+    await expect(canvas.queryByRole("button")).not.toBeInTheDocument();
+    await expect(
+      canvasElement.querySelector("[data-no-recovery='terminal']"),
+    ).not.toBeNull();
+  },
+};
+
+/** The served operations route the action: the first the window admits, in
+ * served order, names its place. */
+export const RoutedByServedOperations: Story = {
+  args: {
+    refusal: refused(
+      verdict({
+        ...primary,
+        target_operation_ids: ["live.notifications.list", "modelo.work.amend"],
+      }),
+    ),
+  },
+  play: async ({ canvasElement, args }) => {
+    const button = within(canvasElement).getByRole("button", {
+      name: "Create the earlier record",
+    });
+    await expect(button).toHaveAttribute(
+      "data-target-operation",
+      "modelo.work.amend",
+    );
+    button.click();
+    await expect(args.onAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        place: { page: "declarations", definition: "modelo.work.amend" },
+      }),
+    );
+  },
+};
+
+/** A place the host cannot open from here: the words stand, disabled, with
+ * the generic reason. */
+export const HostCannotOpen: Story = {
+  args: {
+    refusal: refused(verdict(primary)),
+    opens: () => false,
+  },
+  play: async ({ canvasElement, args }) => {
+    const button = within(canvasElement).getByRole("button", {
+      name: "Create the earlier record",
+    });
+    await expect(button).toHaveAttribute("aria-disabled", "true");
+    button.click();
+    await expect(args.onAction).not.toHaveBeenCalled();
   },
 };
 

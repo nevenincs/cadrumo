@@ -35,6 +35,7 @@ from .vocabulary import (
     CHECK_MARK,
     CONFIRM_MARK,
     INFO_MARK,
+    LIMITATION_MARK,
     MISSING_MARK,
     Attention,
     WorkbenchMark,
@@ -51,6 +52,7 @@ class IssueLevel(StrEnum):
     MISSING = "missing"
     CONFIRM = "confirm"
     CHECK = "check"
+    LIMITATION = "limitation"
     INFO = "info"
 
 
@@ -60,6 +62,7 @@ LEVEL_MARKS: Final[Mapping[IssueLevel, WorkbenchMark]] = MappingProxyType(
         IssueLevel.MISSING: MISSING_MARK,
         IssueLevel.CONFIRM: CONFIRM_MARK,
         IssueLevel.CHECK: CHECK_MARK,
+        IssueLevel.LIMITATION: LIMITATION_MARK,
         IssueLevel.INFO: INFO_MARK,
     }
 )
@@ -74,7 +77,7 @@ _ATTENTION_LEVELS: Final[Mapping[ModeloFormAttention, IssueLevel]] = MappingProx
         ModeloFormAttention.MISSING: IssueLevel.MISSING,
         ModeloFormAttention.CONFIRM: IssueLevel.CONFIRM,
         ModeloFormAttention.CHECK: IssueLevel.CHECK,
-        ModeloFormAttention.LIMITATION: IssueLevel.CHECK,
+        ModeloFormAttention.LIMITATION: IssueLevel.LIMITATION,
         ModeloFormAttention.INFO: IssueLevel.INFO,
     }
 )
@@ -198,6 +201,7 @@ _LEVEL_GLYPH_STYLES: Final[tuple[tuple[str, str], ...]] = (
     (r"(?:^|(?<=\s))" + re.escape(MISSING_MARK.glyph) + r"(?=\s)", _BLOCKS_STYLE),
     (r"(?:^|(?<=\s))" + re.escape(CONFIRM_MARK.glyph) + r"(?=\s)", "$warning"),
     (r"(?:^|(?<=\s))" + re.escape(CHECK_MARK.glyph) + r"(?=\s)", "$warning"),
+    (r"(?:^|(?<=\s))" + re.escape(LIMITATION_MARK.glyph) + r"(?=\s)", "$warning"),
     (r"^" + re.escape(INFO_MARK.glyph) + r"(?=\s)|(?<=\s)" + re.escape(INFO_MARK.glyph) + r"(?=\s\d)", "$secondary"),
 )
 

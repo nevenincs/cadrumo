@@ -75,6 +75,7 @@ class RegistryUnresolvedOutcomeReason(StrEnum):
     INCOME_FAMILY_CONTRADICTS_PROFILE = "income-family-contradicts-profile"
     AUTONOMIC_DEDUCTION_OTHER_COMUNIDAD = "autonomic-deduction-other-comunidad"
     AUTONOMIC_DEDUCTION_UNSUMMED_BOX = "autonomic-deduction-unsummed-box"
+    M200_TAX_REGIME_UNSUPPORTED = "m200-tax-regime-unsupported"
 
 
 class UnresolvedFormulaOutcomeError(RegistrySnapshotError):

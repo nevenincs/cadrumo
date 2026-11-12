@@ -10,13 +10,16 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
+from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.own_accounts import OwnAccountRepository
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -92,6 +95,7 @@ def persist_ledger(objects: SecureObjectRepository) -> None:
         TransactionCatalogue.from_transactions(rows)
     )
     InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=objects).save(InvoiceCatalogue())
+    InventoryLedgerRepository(objects=objects).save(InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),)))
 
 
 def verify_and_export(revision: CalculationRevision, objects: SecureObjectRepository, output: Path) -> bytes:

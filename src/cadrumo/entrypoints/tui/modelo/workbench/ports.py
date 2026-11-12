@@ -71,6 +71,8 @@ class WorkbenchChangeKind(StrEnum):
     RESTORE = "restore"
     #: State, by a statement the form serves, that the box holds no amount.
     STATE_ABSENT = "state_absent"
+    #: State, by a statement the form serves, the figure a carry stands at for earlier returns the application lacks.
+    STATE_PRIOR_VALUE = "state_prior_value"
 
 
 @dataclass(frozen=True, slots=True)

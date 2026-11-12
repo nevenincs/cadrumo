@@ -149,6 +149,8 @@ MISSING_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.NEEDS_INPUT]
 CONFIRM_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.DEFAULT_TO_CONFIRM]
 #: A warning that does not stop the filing.
 CHECK_MARK: Final[WorkbenchMark] = WorkbenchMark("◆", translation_key="workspace.modelo.level.check")
+#: A limit of the calculation the declaration discloses, or a value the filer stated, which is worth more than a check.
+LIMITATION_MARK: Final[WorkbenchMark] = WorkbenchMark("◈", translation_key="workspace.modelo.level.limitation")
 #: An explanation for the filer's information.
 INFO_MARK: Final[WorkbenchMark] = WorkbenchMark("i", translation_key="workspace.modelo.level.info")
 #: A value carried from an earlier declaration, in place of the imported glyph.
@@ -170,6 +172,7 @@ WORKBENCH_MARKS: Final[tuple[WorkbenchMark, ...]] = (
     *ORIGIN_MARKS.values(),
     *ATTENTION_MARKS.values(),
     CHECK_MARK,
+    LIMITATION_MARK,
     INFO_MARK,
     EARLIER_FILING_MARK,
     STATED_MARK,
@@ -364,6 +367,11 @@ EARLIER_FILING_GLYPH: Final[str] = EARLIER_FILING_MARK.glyph
 FORM_SET_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.INFORMATIONAL]
 
 
+def states_something(field: ModeloFormField) -> bool:
+    """Whether the filer stated this box: that it holds no amount, or its figure for earlier returns held nowhere."""
+    return field.stated_absent is not None or field.stated_prior_value is not None
+
+
 def origin_glyph(field: ModeloFormField) -> str:
     """The mark a field's origin shows; a value carried from an earlier declaration or set by the form is marked apart.
 
@@ -371,7 +379,7 @@ def origin_glyph(field: ModeloFormField) -> str:
     row and the sources view never draw it two ways. A box the filer stated
     holds no amount draws the stated mark, never the mark of a value typed.
     """
-    if field.stated_absent is not None:
+    if states_something(field):
         return STATED_MARK.glyph
     if set_by_form(field):
         return FORM_SET_MARK.glyph
@@ -461,6 +469,7 @@ __all__ = [
     "FORM_SET_MARK",
     "HERE_MARK",
     "INFO_MARK",
+    "LIMITATION_MARK",
     "MISSING_MARK",
     "NOT_CALCULATED_MARK",
     "NOT_IMPORTED_MARK",
@@ -479,4 +488,5 @@ __all__ = [
     "origin_glyph",
     "origin_text",
     "require_one_meaning_per_glyph",
+    "states_something",
 ]

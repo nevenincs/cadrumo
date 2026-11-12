@@ -19,6 +19,7 @@ export const ATTENTION_ICON: Record<ModeloFormAttention, IconName> = {
   missing: "alert",
   confirm: "pending",
   check: "eye",
+  limitation: "bookmark",
   info: "info",
 };
 
@@ -27,6 +28,7 @@ export const ATTENTION_TONE: Record<ModeloFormAttention, string> = {
   missing: "text-destructive group-aria-selected:text-destructive-ink",
   confirm: "text-warning",
   check: "text-muted-foreground",
+  limitation: "text-muted-foreground",
   info: "text-faint",
 };
 

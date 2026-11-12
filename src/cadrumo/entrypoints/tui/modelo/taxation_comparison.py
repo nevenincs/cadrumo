@@ -222,7 +222,7 @@ class ModeloTaxationComparisonScreen(ModalScreen[str | None]):
         }
         ModeloTaxationComparisonScreen #taxcmp-boxes {
             height: auto;
-            max-height: 12;
+            max-height: $cadrumo-log-max-height;
         }
         ModeloTaxationComparisonScreen #taxcmp-boxes-title {
             height: auto;

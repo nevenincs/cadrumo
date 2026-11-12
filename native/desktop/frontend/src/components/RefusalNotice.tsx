@@ -7,6 +7,7 @@ import {
   refusalSentences,
   type RefusalIntent,
   type ServedRefusal,
+  type WindowPlace,
 } from "../shell/refusal";
 import { routeAction } from "../shell/refusalRoute";
 import { useStrings } from "../shell/strings";
@@ -15,21 +16,32 @@ import { useStrings } from "../shell/strings";
  * One refusal, as served: the refusal words, then the primary way out as the
  * primary control and the further ways out after it in served order, or the
  * sentence saying there is none. An action the backend served no words for
- * gets no control. An action the window admits no place for is shown with its
- * words, disabled, beside one generic reason. The notice never submits: each
- * control hands `onAction` the intent to open its destination.
+ * gets no control. An action routed, in served order, by its served
+ * operations to no place the window admits, or to one this host cannot open
+ * (`opens`), is shown with its words, disabled, beside one generic reason. The
+ * notice never submits: each control hands `onAction` the intent to open its
+ * destination; without `onAction` no control is live.
  */
 export function RefusalNotice({
   refusal,
   onAction,
+  opens,
 }: {
   refusal: ServedRefusal;
-  onAction: (intent: RefusalIntent) => void;
+  onAction?: (intent: RefusalIntent) => void;
+  opens?: (place: WindowPlace) => boolean;
 }) {
   const t = useStrings();
   const reason = useId();
   const sentences = refusalSentences(refusal);
-  const controls = refusalControls(refusal.verdict, routeAction);
+  const controls = refusalControls(refusal.verdict, routeAction).map(
+    (control) =>
+      control.intent !== null &&
+      onAction !== undefined &&
+      (opens?.(control.intent.place) ?? true)
+        ? control
+        : { ...control, intent: null },
+  );
   const unroutable = controls.some((control) => control.intent === null);
   const outcome = refusal.verdict?.no_recovery_outcome ?? undefined;
   if (!sentences.refusal && !sentences.noRecovery && controls.length === 0)
@@ -66,7 +78,12 @@ export function RefusalNotice({
                 data-conditional={control.conditional || undefined}
                 aria-disabled={intent === null || undefined}
                 aria-describedby={intent === null ? reason : undefined}
-                onClick={intent === null ? undefined : () => onAction(intent)}
+                data-target-operation={intent?.place.definition}
+                onClick={
+                  intent === null || onAction === undefined
+                    ? undefined
+                    : () => onAction(intent)
+                }
               >
                 {control.words}
                 {control.conditional && <Icon name="more" />}
