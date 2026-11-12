@@ -428,6 +428,43 @@ profile:
           label: Érvényes ettől
         valid_to:
           label: Érvényes eddig
+      renta_arrendamiento:
+        arrendatario_entidad_finalidad:
+          choices:
+            otra: Egyéb
+            vivienda_asequible_o_social: Megfizethető vagy szociális lakás
+          label: A lakás célja a szervezet számára
+        arrendatario_entidad_tipo:
+          choices:
+            administracion_publica: Közigazgatási szerv
+            entidad_sin_fines_lucro: Nonprofit szervezet
+          label: A nem természetes személy bérlő típusa
+        arrendatario_pariente_art24:
+          label: A bérlő hozzátartozó (24. cikk)
+        fecha_contrato:
+          label: A szerződés dátuma
+        fecha_fin:
+          label: Záró dátum
+        fecha_inicio:
+          label: Kezdő dátum
+        incumple_lau_17_6:
+          label: Megsérti a LAU 17.6. cikkét (feszített zóna)
+        inmueble:
+          label: Bérbeadott ingatlan (sorkulcs)
+        inquilinos:
+          label: Bérlők
+        primer_arrendamiento_vivienda:
+          label: A lakás első bérbeadása
+        rehabilitacion_fecha:
+          label: A felújítás befejezésének dátuma
+        renta_inicial:
+          label: Kezdő bérleti díj
+        renta_ultima_contrato_anterior:
+          label: Az előző szerződés utolsó bérleti díja
+        uso_vivienda:
+          label: Lakásbérlet
+        zona_tensionada:
+          label: Feszített lakáspiaci övezet
       renta_family:
         anualidades_alimentos_euros:
           label: Bírósági határozat alapján fizetett gyermektartásdíj
@@ -466,14 +503,76 @@ profile:
       renta_filing:
         declaration_type:
           label: Bevallás típusa
-      renta_rental:
-        reduccion_art_23_2_tier_2024:
+      renta_inmueble:
+        adquisicion_titulo:
           choices:
-            tier-50: 50 %-os csökkentés
-            tier-60: 60 %-os csökkentés
-            tier-70: 70 %-os csökkentés
-            tier-90: 90 %-os csökkentés
-          label: Bérbeadási kedvezmény sávja (art. 23.2)
+            lucrativa: Ingyenes
+            onerosa: Visszterhes
+          label: Szerzés jogcíme
+        amortizacion_acumulada:
+          label: Igazolt halmozott értékcsökkenés
+        amortizacion_acumulada_desde:
+          label: A halmozott értékcsökkenés vonatkozási napja
+        direccion:
+          label: Az ingatlan címe
+        fecha_adquisicion:
+          label: Szerzés dátuma
+        fecha_transmision:
+          label: Átruházás dátuma
+        gastos_tributos_adquisicion:
+          label: Szerzési költségek és adók
+        importe_adquisicion:
+          label: Szerzési érték
+        importes_movimientos:
+          choices:
+            inmueble_completo: A teljes ingatlan összegei
+            parte_propia: Saját tulajdonrész
+          label: A kapcsolt főkönyvi tételek összegei
+        inmueble_principal:
+          label: Főingatlan (sorkulcs)
+        mejoras:
+          label: A főkönyv előtti felújítások
+        naturaleza:
+          choices:
+            rustica: Külterületi
+            urbana: Belterületi
+          label: Az ingatlan jellege
+        porcentaje_propiedad:
+          label: Tulajdoni hányad (%)
+        porcentaje_usufructo:
+          label: Haszonélvezeti hányad (%)
+        referencia_catastral:
+          label: Kataszteri hivatkozási szám
+        situacion:
+          choices:
+            '1': Kataszteri hivatkozási számmal, közös adóterületen
+            '2': Kataszteri hivatkozási számmal, a Baszkföldön
+            '3': Kataszteri hivatkozási számmal, Navarrában
+            '4': Spanyolországban, kataszteri hivatkozási szám nélkül
+            '5': Külföldön
+          label: Az ingatlan elhelyezkedése
+        titular:
+          choices:
+            comun: Mindkét házastárs közös
+            conyuge: Házastárs
+            hijo: Gyermek
+            primer_declarante: Első bevalló
+          label: Az ingatlan jogosultja
+        titular_hijo_ordinal:
+          label: A jogosult gyermek sorszáma
+        titularidad_regimen:
+          choices:
+            nuda_propiedad: Csupasz tulajdon
+            pleno_dominio: Teljes tulajdon
+            pleno_dominio_y_usufructo: Teljes tulajdon és haszonélvezet
+            usufructo: Haszonélvezet
+          label: Tulajdonosi jogcím
+        usos:
+          label: Bérbeadástól eltérő használatok
+        valor_suelo:
+          label: A telek értéke
+        valores_catastrales:
+          label: Kataszteri értékek IBI-évenként
       renta_spouse:
         birth_date:
           label: Házastárs születési dátuma
@@ -659,6 +758,10 @@ profile:
       provenance:
         summary: Honnan származnak a profil adatai, és mikortól érvényesek.
         title: Eredet és érvényesség
+      renta_arrendamiento:
+        summary: Az ingatlanaid bérleti szerződései, szerződésenként egy sor, az aláíráskor
+          rögzített adatokkal.
+        title: Bérleti szerződések
       renta_family:
         summary: Gyermekek és más hozzátartozók, akik után családi kedvezmény illetheti
           meg.
@@ -666,9 +769,10 @@ profile:
       renta_filing:
         summary: Hogyan nyújtja be az éves személyi jövedelemadó-bevallását (Renta).
         title: Bevallási környezet (Renta)
-      renta_rental:
-        summary: A bérbeadásból származó jövedelem háttéradatai az éves bevallásban.
-        title: Bérbeadási környezet (Renta)
+      renta_inmueble:
+        summary: A bérbe adott ingatlanaid, ingatlanonként egy sor. Ide kerülnek az
+          állandó adataik; az összegek a főkönyvből jönnek.
+        title: Bérbeadott ingatlanok
       renta_spouse:
         summary: A házastársad adatai, amelyekre a közös bevalláshoz van szükség.
         title: Házastárs (Renta)

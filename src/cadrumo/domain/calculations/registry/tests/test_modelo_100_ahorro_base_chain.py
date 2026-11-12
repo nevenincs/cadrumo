@@ -48,7 +48,11 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import RegistrySnapshot
 from .authored_editions import newest_authored_edition
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import (
+    M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_MARITIME_WORKER_BINDINGS,
+    M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
+)
 from .relation_fixture import resolve_relation_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -130,7 +134,8 @@ def _run_second_newest(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decim
         inputs=inputs,
         date_context={"filing_period": date(snapshot.filing_year, 12, 31)},
         enum_binding_values=_ENUM_BINDINGS,
-        binding_values=_BINDINGS,
+        binding_values={**_BINDINGS, **M100_NO_MARITIME_WORKER_BINDINGS},
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
         relation_values=_RELATION_VALUES,
         # Supply a representative birth date so that any age_at_year_end
         # formula in the mínimo personal chain can resolve.  The exact

@@ -3804,6 +3804,18 @@ application:
         The stored session of the profile it replaces could not be removed. Close
         any program using the profile store and try again.
       registration_label_blank: The profile name cannot be empty.
+      rental_lease_property_missing: The lease names property %{inmueble}, which is
+        not in your profile; add it first with “%{door}”.
+      rental_principal_missing: The principal property %{principal} is not another
+        property in your profile; add it first with “%{door}”.
+      rental_property_has_accessories: Property %{inmueble} is the principal of accessory
+        properties (%{accessories}); change or clear their principal first with “%{door}”.
+      rental_property_has_leases: Property %{inmueble} has leases (%{leases}); remove
+        them first with “%{door}”.
+      rental_row_invalid: The fact “%{leaf}” is not valid or contradicts other facts
+        of the record; nothing was stored. Correct it and repeat “%{door}”.
+      rental_tenant_id_invalid: A tenant's tax ID is not valid; check its letters
+        and digits or mark it as foreign, then repeat “%{door}”.
       repository_classification_mismatch: Secure-object namespace %{namespace} is
         registered for sensitivity %{expected}, but the stored record's classification
         is %{classification}.

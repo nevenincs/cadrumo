@@ -392,7 +392,6 @@ def test_declared_date_binding_resolves_on_the_date_channel_without_a_date_consu
         caller_binding_ids=frozenset(),
         formula_date_consumed=frozenset(),
         enum_bindings=frozenset(),
-        operation=authority_operation,
     )
 
     assert channels.date_values == {_BIRTH_DATE_BINDING: date(1980, 3, 4)}
@@ -414,7 +413,6 @@ def test_declared_boolean_binding_resolves_on_the_boolean_channel_without_a_cons
         caller_binding_ids=frozenset(),
         formula_date_consumed=frozenset(),
         enum_bindings=frozenset(),
-        operation=authority_operation,
     )
 
     assert channels.boolean_values == {_ANUALIDADES_BINDING: True}
@@ -440,7 +438,6 @@ def test_resolver_refuses_a_decimal_standing_in_for_a_boolean_contract(
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset(),
             enum_bindings=frozenset(),
-            operation=authority_operation,
         )
 
 
@@ -467,7 +464,6 @@ def test_resolver_refuses_a_truth_value_for_a_money_contract(
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset(),
             enum_bindings=frozenset(),
-            operation=authority_operation,
         )
 
 
@@ -493,7 +489,6 @@ def test_resolver_refuses_a_declaration_that_contradicts_its_consuming_formula(
             caller_binding_ids=frozenset(),
             formula_date_consumed=frozenset({_ANUALIDADES_BINDING}),
             enum_bindings=frozenset(),
-            operation=authority_operation,
         )
 
 

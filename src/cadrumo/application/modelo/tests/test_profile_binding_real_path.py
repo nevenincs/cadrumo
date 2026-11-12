@@ -57,6 +57,7 @@ from ...user_profile.projections import profile_fact_index
 from ..calculation_notes import note_fact_text
 from ..profile_binding import resolve_profile_binding_value, resolve_profile_sourced_bindings
 from ..profile_derived_facts import (
+    declared_profile_selectors,
     inject_derived_activity_tipo_clave_fact,
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
@@ -66,6 +67,7 @@ from ..profile_derived_facts import (
     inject_derived_minimo_descendientes_facts,
     inject_ordinary_work_maritime_facts,
 )
+from ..profile_rental_reduction import inject_derived_rental_reduction_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -94,14 +96,6 @@ def _profile_bindings() -> list[Any]:
 # ---------------------------------------------------------------------------
 # Full-population profile fixture
 # ---------------------------------------------------------------------------
-
-
-def _rental_tier_profile_key() -> str:
-    """The profile key the selected edition's art. 23.2 tier binding reads."""
-    binding = next(b for b in _profile_bindings() if b.id == "renta-rental-reduccion-art-23-2-tier")
-    key = binding.provider.profile_key
-    assert isinstance(key, str), binding.id
-    return key
 
 
 def _full_m100_profile() -> UserProfileRecord:
@@ -175,10 +169,15 @@ def _full_m100_profile() -> UserProfileRecord:
             # censal tipo de actividad under the direct-estimation regime)
             UserProfileFact(path="activities.0.description", value="Instalaciones de fontaneria"),
             UserProfileFact(path="activities.0.tipo_actividad", value="A03"),
-            # 0150 renta-rental-reduccion-art-23-2-tier: the edition inherits the art. 23.2 tier binding
-            UserProfileFact(path=_rental_tier_profile_key(), value="tier-50"),
             # 0169 renta-profile-activity-cash-criterion (derived from the dated criterion at bind time)
             *cash_criterion_facts(_YEAR),
+            # 0150 renta-rental-reduccion-art-23-2-aplicable / -tier (derived from the lease active in
+            # the ejercicio at bind time)
+            UserProfileFact(path="renta_arrendamiento.0.inmueble", value=0),
+            UserProfileFact(path="renta_arrendamiento.0.fecha_contrato", value=date(_YEAR, 1, 1)),
+            UserProfileFact(path="renta_arrendamiento.0.fecha_inicio", value=date(_YEAR, 1, 1)),
+            UserProfileFact(path="renta_arrendamiento.0.uso_vivienda", value=True),
+            UserProfileFact(path="renta_arrendamiento.0.zona_tensionada", value=False),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -285,6 +284,16 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     inject_derived_estimation_modality_fact(fact_index, operation=authority_operation)
     # Casilla 0166's tipo de actividad clave follows the regime and the activity's censal tipo.
     inject_derived_activity_tipo_clave_fact(fact_index)
+    # Casilla 0150's applicability and tier follow the lease the fixture records for the ejercicio.
+    rental_reduction = inject_derived_rental_reduction_facts(
+        fact_index,
+        snapshot,
+        declared_profile_selectors(snapshot.revision),
+        bucket_id=_BUCKET_ID,
+        resolver_id="profile",
+        operation=authority_operation,
+    )
+    assert rental_reduction.diagnostics == ()
 
     # Deliberately absent or calculate-path-derived bindings — tested separately.
     absent = {

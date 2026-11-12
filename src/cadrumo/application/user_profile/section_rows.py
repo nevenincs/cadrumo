@@ -28,14 +28,22 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from ...domain.contribuyente.inmueble_facts import rows_from_facts
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .completeness import profile_section_rows
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
+from .rental_records import (
+    RentalRowMutation,
+    admit_rental_row,
+    is_rental_section,
+    require_rental_row_removable,
+)
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.schema import ProfileSchemaDefinition, ProfileSectionDefinition
 
@@ -90,6 +98,16 @@ def _require_existing_row(section_key: str, row_key: str, current: UserProfileRe
             translated_message="application.user_profile.errors.row_not_found",
             context={"section": section_key, "row": row_key or "base"},
         )
+
+
+def _rental_row_number(section_key: str, row_key: str) -> int:
+    """Return the numeric row key of a rental row; these sections hold indexed rows only."""
+    if not row_key.isdecimal():
+        raise ProfileSchemaValidationError(
+            translated_message="application.user_profile.errors.row_not_found",
+            context={"section": section_key, "row": row_key or "base"},
+        )
+    return int(row_key)
 
 
 def validate_profile_repeatable_row_fields(
@@ -215,15 +233,17 @@ def add_profile_repeatable_section_row(
     expected_content_digest: str | None = None,
     schema: ProfileSchemaDefinition,
     profile_decode_context: ProfileDecodeContext,
+    authority: PinnedAuthorityOperation,
 ) -> ProfileRepeatableRowMutationOutcome:
     """Allocate and publish one complete repeatable profile row atomically.
 
     The schema selects the section, the current encrypted record determines the
     next stable index, and the shared profile-fact writer owns the one atomic
     publication and bucket event. A frontend must supply only the field-keyed
-    values it collected. ``schema`` must come from the enclosing pinned
-    authority operation; this operation does not consult bundled authoring
-    data.
+    values it collected. ``schema`` and ``authority`` must come from the
+    enclosing pinned authority operation; this operation does not consult
+    bundled authoring data. A section that carries record-level admission (the
+    rental sections) is judged here, once, for every door.
     """
     section = _repeatable_section(schema, section_key)
     # Two different mistakes, refused apart. section_row_facts deliberately
@@ -242,6 +262,15 @@ def add_profile_repeatable_section_row(
         expected_content_digest=expected_content_digest,
     )
     row_index = next_section_row_index(section.key, (fact.path for fact in current.facts))
+    if is_rental_section(section.key):
+        values = admit_rental_row(
+            section.key,
+            row_key=row_index,
+            row={key: value.strip() for key, value in values.items()},
+            path_values=record_to_path_values(current),
+            authority=authority,
+            mutation=RentalRowMutation.ADD,
+        )
     facts = section_row_facts(section, row_index=row_index, values=values)
     if not facts:
         raise ProfileSchemaValidationError(
@@ -269,8 +298,13 @@ def update_profile_repeatable_section_row(
     expected_content_digest: str | None = None,
     schema: ProfileSchemaDefinition,
     profile_decode_context: ProfileDecodeContext,
+    authority: PinnedAuthorityOperation,
 ) -> ProfileRepeatableRowChangeOutcome:
-    """Modify one stable row, retaining omissions and clearing only explicit fields."""
+    """Modify one stable row, retaining omissions and clearing only explicit fields.
+
+    A rental row is judged whole as the edit would leave it, and only the leaves
+    that differ from the stored row are written.
+    """
     section = _repeatable_section(schema, section_key)
     clears = validate_profile_repeatable_row_fields(section, values=values, clear_fields=clear_fields)
     if not values and not clears:
@@ -286,6 +320,14 @@ def update_profile_repeatable_section_row(
         expected_content_digest=expected_content_digest,
     )
     _require_existing_row(section.key, row_key, current)
+    if is_rental_section(section.key):
+        values, clears = _admitted_rental_edit(
+            section.key, row_key, values=values, clears=clears, current=current, authority=authority
+        )
+        if not values and not clears:
+            return ProfileRepeatableRowChangeOutcome(
+                record=current, section_key=section.key, row_key=row_key, changed=False
+            )
     changes = tuple(
         UserProfileFact(path=_row_path(section.key, row_key, field.key), value=values[field.key].strip())
         for field in section.fields
@@ -310,6 +352,38 @@ def update_profile_repeatable_section_row(
     )
 
 
+def _admitted_rental_edit(
+    section_key: str,
+    row_key: str,
+    *,
+    values: Mapping[str, str],
+    clears: Iterable[str],
+    current: UserProfileRecord,
+    authority: PinnedAuthorityOperation,
+) -> tuple[dict[str, str], tuple[str, ...]]:
+    """Judge the whole row an edit leaves; return the leaves to write and the leaves to clear."""
+    number = _rental_row_number(section_key, row_key)
+    path_values = record_to_path_values(current)
+    before = rows_from_facts(section_key, path_values).get(number, {})
+    cleared = set(clears)
+    merged = {
+        leaf: value
+        for leaf, value in {**before, **{leaf: value.strip() for leaf, value in values.items()}}.items()
+        if leaf not in cleared
+    }
+    after = admit_rental_row(
+        section_key,
+        row_key=number,
+        row=merged,
+        path_values=path_values,
+        authority=authority,
+        mutation=RentalRowMutation.EDIT,
+    )
+    written = {leaf: value for leaf, value in after.items() if before.get(leaf) != value}
+    removed = tuple(leaf for leaf in before if leaf not in after)
+    return written, removed
+
+
 def remove_profile_repeatable_section_row(
     *,
     profile_id: str,
@@ -320,7 +394,10 @@ def remove_profile_repeatable_section_row(
     schema: ProfileSchemaDefinition,
     profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRepeatableRowChangeOutcome:
-    """Remove one stable row by publishing explicit clear tombstones for its values."""
+    """Remove one stable row by publishing explicit clear tombstones for its values.
+
+    A rental property that a lease or an accessory still names is refused.
+    """
     section = _repeatable_section(schema, section_key)
     repository = ProfileRecordRepository.for_current_session(
         profile_id,
@@ -334,6 +411,8 @@ def remove_profile_repeatable_section_row(
     )
     _require_existing_row(section.key, row_key, current)
     present = record_to_path_values(current)
+    if is_rental_section(section.key):
+        require_rental_row_removable(section.key, row_key=_rental_row_number(section.key, row_key), path_values=present)
     changes = tuple(
         UserProfileFact(path=path, value=None)
         for field in section.fields

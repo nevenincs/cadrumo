@@ -158,6 +158,11 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("config.profile.create", ("config", "profile", "create"), "ConfigProfileCreateResult"),
     ActionTarget(
+        "config.profile.arrendamiento.list",
+        ("config", "profile", "arrendamiento", "list"),
+        "ConfigProfileArrendamientoListResult",
+    ),
+    ActionTarget(
         "config.profile.ascendiente.list",
         ("config", "profile", "ascendiente", "list"),
         "ConfigProfileAscendienteListResult",
