@@ -42,7 +42,6 @@ _STATUTORY_FACT_IDS = frozenset(
         "lirpf-art-81-maternity-annual-cap",
         "lirpf-art-81-maternity-post-birth-enrollment-increment",
         "lirpf-art-81-maternity-post-birth-enrollment-effective-year",
-        "lirpf-art-81-contribution-ceiling-retired-effective-year",
         "lirpf-art-58-descendant-ordinary-maximum-age",
         "lirpf-art-58-under-three-maximum-age",
         "lirpf-art-61-shared-custody-proration-factor",
@@ -77,13 +76,13 @@ def test_authored_statutory_facts_enroll_every_retired_declaration() -> None:
     facts = _catalogue().facts
     statutory_facts = {fact_id: facts[fact_id] for fact_id in _STATUTORY_FACT_IDS}
 
-    assert len(statutory_facts) == 30
+    assert len(statutory_facts) == 29
     assert "lirpf-art-81-maternity-post-birth-enrollment-annual-cap" not in facts
     assert {fact.family for fact in statutory_facts.values()} == {
         GovernedFactFamily.SCALAR,
         GovernedFactFamily.MAPPING,
     }
-    assert sum(fact.family is GovernedFactFamily.SCALAR for fact in statutory_facts.values()) == 29
+    assert sum(fact.family is GovernedFactFamily.SCALAR for fact in statutory_facts.values()) == 28
 
 
 #: The reduced multiple-payer limit as the authored table states it, oldest year first:

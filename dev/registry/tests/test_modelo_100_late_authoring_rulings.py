@@ -22,8 +22,6 @@ from functools import cache
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.facts.payloads import ScalarFactPayload
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.schema import (
     BindingDefinition,
@@ -36,7 +34,6 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
 
 from ..compiler.authority import compiled_bundled_authority
-from ..compiler.fact_loader import load_governed_facts
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -49,7 +46,8 @@ _MARRIAGE = {
 }
 _MATERNIDAD_FORMULA = "renta-deduccion-maternidad-0611"
 _MATERNIDAD_BINDING = "renta-profile-deduccion-maternidad"
-_CEILING_RETIRED_FACT = "lirpf-art-81-contribution-ceiling-retired-effective-year"
+_CEILING_RETIRING_LAW = "ley-31-2022:art-64"
+"""The legal reference that rewrote LIRPF art. 81 without the cotizaciones ceiling."""
 _GUARDERIA_CAP = "renta-guarderia-incremento-cap-anual"
 _RENOVABLES_PERIOD = (
     "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio",
@@ -93,13 +91,7 @@ def _supported_editions() -> tuple[tuple[int, ModeloRevision], ...]:
 
 @cache
 def _ceiling_retired_year() -> int:
-    fact = next(
-        f for f in load_governed_facts(bundled_path("registry", "aeat", "facts")) if f.fact_id == _CEILING_RETIRED_FACT
-    )
-    (variant,) = fact.variants
-    payload = variant.payload
-    assert isinstance(payload, ScalarFactPayload) and isinstance(payload.value, int | Decimal), payload
-    return int(payload.value)
+    return compiled_bundled_authority().catalogues.legal[_CEILING_RETIRING_LAW].effective_from.year
 
 
 def _casillas(revision: ModeloRevision) -> dict[str, CasillaDefinition]:
