@@ -59,6 +59,8 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             retencion=Decimal("1200.00"),
             ingreso_a_cuenta=Decimal("300.00"),
             ingreso_a_cuenta_repercutido=Decimal("300.00"),
+            reducciones_aplicables=Decimal("0.00"),
+            gastos_deducibles=Decimal("0.00"),
             origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
             evidence_fingerprint=ports.custody.ingest(
                 source_path=context.input_root / "certificate.pdf",

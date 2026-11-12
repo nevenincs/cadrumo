@@ -34,6 +34,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.formula_runtime_support import evaluate
 
@@ -64,6 +65,10 @@ def _revision(year: str):
 
 def _casilla(revision: ModeloRevision, casilla_id: str):
     return next((c for c in revision.casillas if c.id == casilla_id), None)
+
+
+def _parameters(revision: ModeloRevision) -> dict[str, ParameterDefinition]:
+    return {str(parameter.id): parameter for parameter in revision.parameters}
 
 
 def _formula_for_target(revision: ModeloRevision, target: str) -> FormulaDefinition:
@@ -99,10 +104,14 @@ def test_casilla_0019_auto_applies_the_2000_euro_otros_gastos() -> None:
     - rendimiento 0018 = 0 (no trabajo income)   -> otros gastos = 0.
     """
     for year in _IN_SCOPE_REVISIONS:
-        expression = _formula_for_target(_revision(year), "0019").expression
-        assert evaluate(expression, {"0018": Decimal("5000")}) == _ART_19_2F_OTROS_GASTOS_EUR, year
-        assert evaluate(expression, {"0018": Decimal("1200")}) == Decimal("1200"), year
-        assert evaluate(expression, {"0018": Decimal("0")}) == Decimal("0"), year
+        revision = _revision(year)
+        expression = _formula_for_target(revision, "0019").expression
+        parameters = _parameters(revision)
+        assert evaluate(expression, {"0018": Decimal("5000")}, parameters=parameters) == _ART_19_2F_OTROS_GASTOS_EUR, (
+            year
+        )
+        assert evaluate(expression, {"0018": Decimal("1200")}, parameters=parameters) == Decimal("1200"), year
+        assert evaluate(expression, {"0018": Decimal("0")}, parameters=parameters) == Decimal("0"), year
 
 
 def test_casilla_0022_clamps_net_and_enforces_letter_f_cap() -> None:
@@ -154,6 +163,24 @@ def test_otros_gastos_feeds_net_end_to_end() -> None:
         neto = _formula_for_target(revision, "0022").expression
 
         values: dict[CasillaId, Decimal] = {"0018": Decimal("5000"), "0020": Decimal("0"), "0021": Decimal("0")}
-        values["0019"] = evaluate(otros, values)
+        values["0019"] = evaluate(otros, values, parameters=_parameters(revision))
         assert values["0019"] == _ART_19_2F_OTROS_GASTOS_EUR, year
         assert evaluate(neto, values) == Decimal("3000"), year
+
+
+def _literals(expression: FormulaExpression) -> list[Decimal]:
+    found: list[Decimal] = [expression.literal] if expression.literal is not None else []
+    for argument in expression.args:
+        found.extend(_literals(argument))
+    return found
+
+
+def test_casilla_0019_reads_the_amount_from_a_cited_dated_parameter() -> None:
+    """The 2.000 euros is a dated registry parameter citing art. 19, not a literal in the formula."""
+    for year in _IN_SCOPE_REVISIONS:
+        revision = _revision(year)
+        expression = _formula_for_target(revision, "0019").expression
+        assert _ART_19_2F_OTROS_GASTOS_EUR not in _literals(expression), year
+        parameter = _parameters(revision)["renta-trabajo-otros-gastos-cuantia-general"]
+        assert "ley-35-2006:art-19" in parameter.legal_refs, year
+        assert [value.value for value in parameter.values] == [_ART_19_2F_OTROS_GASTOS_EUR], year

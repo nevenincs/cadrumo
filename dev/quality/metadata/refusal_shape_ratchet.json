@@ -75,8 +75,6 @@
   "src/cadrumo/application/filing/record_renderer.py::_guard_record_export::ERROR_FILING_EXPORT_VALIDATION::0",
   "src/cadrumo/application/filing/record_renderer.py::_require_populated_row_bindings::ERROR_FILING_EXPORT_VALIDATION::0",
   "src/cadrumo/application/modelo/aggregate_operation.py::ModeloAggregateExecutor._prepare::ERROR_AGGREGATION_CONFIG::0",
-  "src/cadrumo/application/modelo/art20_advisory.py::art20_reduccion_advisory_finding::ERROR_MODELOS::0",
-  "src/cadrumo/application/modelo/art20_advisory.py::art20_reduccion_advisory_finding::ERROR_MODELOS::1",
   "src/cadrumo/application/modelo/art52_advisory.py::art52_reduccion_advisory_finding::ERROR_MODELOS::0",
   "src/cadrumo/application/modelo/art52_advisory.py::art52_reduccion_advisory_finding::ERROR_MODELOS::1",
   "src/cadrumo/application/modelo/autonomic_deduccion_advisory.py::madrid_nacimiento_adopcion_eligibility_advisory_finding::ERROR_MODELOS::0",

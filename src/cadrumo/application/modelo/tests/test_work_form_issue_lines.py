@@ -460,7 +460,7 @@ def test_a_note_about_a_box_that_takes_no_typed_value_never_offers_to_type_one(
             _AT_SOURCE_KEY,
         ),
         (
-            "application.modelo.findings.art20_reduccion_possible",
+            "application.modelo.findings.dt12a_reduccion_possible",
             "application.modelo.work_form.finding_action.check_possible_reduction",
             _AT_SOURCE_IF_APPLIES_KEY,
         ),

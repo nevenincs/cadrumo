@@ -163,6 +163,7 @@ casilla_ids = [
     "0057",
     "0023",
     "0025",
+    "rentas-distintas-del-trabajo",
     "trabajo-mar-renta-exenta",
 ]
 formulas = [
@@ -173,6 +174,8 @@ formulas = [
     "renta-trabajo-rendimiento-neto",
     "renta-trabajo-rendimiento-neto-reducido",
     "renta-trabajo-otros-gastos",
+    "renta-trabajo-reduccion-gastos-generales",
+    "renta-trabajo-rentas-distintas-del-trabajo",
     "renta-maritime-exempt-income",
 ]
 [[revisions."2025".constructs]]

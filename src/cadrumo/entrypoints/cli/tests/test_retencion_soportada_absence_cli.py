@@ -146,6 +146,10 @@ def _record_trabajo_payer(profile: RegisteredCliProfile) -> None:
         "0.00",
         "--importe-integro",
         "20000.00",
+        "--reducciones-aplicables",
+        "0.00",
+        "--gastos-deducibles",
+        "0.00",
         "--payer-name",
         "Pagador Sintetico SL",
     )

@@ -291,6 +291,10 @@ aggregation:
         be újra mentés előtt.
       taxpayer_tax_id_unknown: A profilod nem tartalmaz adóazonosítót (NIF), ezért
         nem zárható ki, hogy a kifizető te vagy. Előbb add meg a NIF-ed a profilban.
+      trabajo_certificate_figure_missing: A munkából származó jövedelemről szóló igazolás
+        feltünteti a csökkentéseket és a levonható költségeket (--reducciones-aplicables,
+        --gastos-deducibles). Add meg mindkettőt, 0-val, ahol az igazolás nem tüntet
+        fel semmit; más jövedelemosztály nem fogadja el őket.
       validation: 'A levonási rekord nem lett mentve: ellenőrizd a kifizető NIF-jét,
         az összegeket (legfeljebb két tizedesjegy) és az igazolás ujjlenyomatát.'
     served:
@@ -321,6 +325,9 @@ aggregation:
         be újra, és próbáld meg ismét.
       taxpayer_tax_id_unknown: A profilodban még nincs adóazonosító (NIF), ezért nem
         zárható ki, hogy a kifizető te vagy. Előbb add meg a NIF-ed a profilban.
+      trabajo_certificate_figure_missing: A munkából származó jövedelemről szóló igazolás
+        feltünteti a kifizető által alkalmazott csökkentéseket és a levonható költségeket.
+        Add meg mindkettőt, 0-val, ahol az igazolás nem tüntet fel semmit.
       validation: A levonási rekord nem lett mentve. Ellenőrizd a kifizető adóazonosítóját,
         hogy az összegeknek legfeljebb két tizedesjegyük legyen, és az igazolást.
   retencion_soportada_absence:
