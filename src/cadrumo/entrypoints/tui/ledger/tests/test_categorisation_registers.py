@@ -49,7 +49,7 @@ def _ratios_screen(profile: MemoryCategorisationProfile) -> LedgerRatiosScreen:
 
 
 @pytest.mark.asyncio
-async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirmation() -> None:
+async def test_counterparty_confirm_and_view_offer_no_withdrawal() -> None:
     profile = MemoryCategorisationProfile()
     doors = profile.doors()
     door = doors.counterparty
@@ -87,20 +87,9 @@ async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirma
                 )
             )
 
-            await press(pilot, screen, "categorisation-counterparty-withdraw")
-            await press(pilot, screen, "categorisation-confirm")
-            pilot.app.screen.query_one("#btn-confirm-cancel", Button).press()
-            await settle(pilot)
+            assert not screen.query("#categorisation-counterparty-withdraw")
             assert SYNTHETIC_TAX_ID in profile.counterparties.facts
             assert [request.action for request in door.requests] == ["confirm", "view"]
-
-            await press(pilot, screen, "categorisation-confirm")
-            pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
-            await settle(pilot)
-            assert SYNTHETIC_TAX_ID not in profile.counterparties.facts
-            assert text(screen, "#categorisation-outcome") == tr(
-                "tui.ledger.categorisation.counterparty.withdrawn_everything", identifier=SYNTHETIC_TAX_ID
-            )
 
 
 @pytest.mark.asyncio

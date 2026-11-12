@@ -6,7 +6,7 @@ from typing import cast
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Button, Checkbox, Input, Select, Static
+from textual.widgets import Checkbox, Input, Select, Static
 
 from .....application.ledger.counterparty_operation import (
     CounterpartyFilingNameRendering,
@@ -20,7 +20,6 @@ from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from .....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
-from ...components.dialogs import ConfirmScreen
 from ...navigation import TuiScreenContextV1
 from ...refusal.panel import RefusalSlot
 from ...tests.settling import settle
@@ -178,37 +177,26 @@ async def test_a_malformed_rendering_is_refused_before_anything_is_staged() -> N
             )
 
 
-def _slot_line(width: int, state: str, edition: str) -> str:
-    return tr(
-        "tui.ledger.categorisation.counterparty.filing_slot",
-        width=width,
-        state=tr(f"tui.ledger.categorisation.counterparty.filing_slot_{state}"),
-        editions=edition,
-    )
+def _slot_line(width: int, edition: str, *, fits: bool, refusal: str | None, uses_rendering: bool) -> str:
+    return f"{edition}: width={width} fits={fits} refusal={refusal} uses_rendering={uses_rendering}"
 
 
 @pytest.mark.asyncio
-async def test_a_view_shows_every_served_slot_by_width_and_the_part_limits() -> None:
+async def test_a_view_shows_each_served_slot_state_as_served_and_offers_no_withdrawal() -> None:
     profile = MemoryCategorisationProfile()
     screen, _ = _screen(profile)
     wide, narrow = SYNTHETIC_SLOT_WIDTHS
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 70)) as pilot:
             await settle(pilot)
+            assert not screen.query("#categorisation-counterparty-withdraw")
             type_into(screen, "#categorisation-counterparty-identifier", SYNTHETIC_TAX_ID)
             await press(pilot, screen, "categorisation-counterparty-view")
             unstated = text(screen, "#categorisation-outcome")
             assert tr("tui.ledger.categorisation.counterparty.filing_slots_heading") in unstated
-            assert _slot_line(wide, "missing", SYNTHETIC_EDITION_WORDS[0]) in unstated
-            assert _slot_line(narrow, "missing", SYNTHETIC_EDITION_WORDS[1]) in unstated
-            assert (
-                tr(
-                    "tui.ledger.categorisation.counterparty.filing_part_limit",
-                    part=tr("tui.ledger.categorisation.counterparty.filing_razon"),
-                    count=40,
-                )
-                in unstated
-            )
+            for width, edition in zip((wide, narrow), SYNTHETIC_EDITION_WORDS, strict=True):
+                assert _slot_line(width, edition, fits=False, refusal="missing", uses_rendering=False) in unstated
+            assert "razon_social=40" in unstated
 
             # A company name wider than the narrow slot files whole in the wide one only.
             type_into(screen, "#categorisation-counterparty-asserted", "Operator")
@@ -217,40 +205,12 @@ async def test_a_view_shows_every_served_slot_by_width_and_the_part_limits() -> 
             await review_and_confirm(pilot, screen, "categorisation-counterparty-filing")
             await press(pilot, screen, "categorisation-counterparty-view")
             stated = text(screen, "#categorisation-outcome")
-            assert _slot_line(wide, "fits", SYNTHETIC_EDITION_WORDS[0]) in stated
-            assert _slot_line(narrow, "too_wide", SYNTHETIC_EDITION_WORDS[1]) in stated
-
-
-@pytest.mark.asyncio
-async def test_a_withdrawal_names_everything_it_removes_and_takes_the_filing_name_with_it() -> None:
-    profile = MemoryCategorisationProfile()
-    screen, door = _screen(profile)
-    app = WorkspaceHostApp(screen)
-    with override_settings(cadrumo_output_language="en"):
-        async with app.run_test(size=(120, 70)) as pilot:
-            await settle(pilot)
-            type_into(screen, "#categorisation-counterparty-identifier", SYNTHETIC_TAX_ID)
-            type_into(screen, "#categorisation-counterparty-asserted", "Operator")
-            await _choose_kind(pilot, screen, "entity")
-            type_into(screen, "#categorisation-filing-razon", "Delta SL")
-            await review_and_confirm(pilot, screen, "categorisation-counterparty-filing")
-            assert SYNTHETIC_TAX_ID in profile.counterparties.filing_names
-
-            await press(pilot, screen, "categorisation-counterparty-withdraw")
-            assert text(screen, "#categorisation-staged") == tr(
-                "tui.ledger.categorisation.counterparty.stage_withdraw_everything", identifier=SYNTHETIC_TAX_ID
+            assert _slot_line(wide, SYNTHETIC_EDITION_WORDS[0], fits=True, refusal=None, uses_rendering=False) in stated
+            assert (
+                _slot_line(narrow, SYNTHETIC_EDITION_WORDS[1], fits=False, refusal="too_wide", uses_rendering=False)
+                in stated
             )
-            await press(pilot, screen, "categorisation-confirm")
-            dialog = app.screen
-            assert isinstance(dialog, ConfirmScreen)
-            dialog.query_one("#btn-confirm-accept", Button).press()
-            await settle(pilot)
-
-            assert door.requests[-1].action == "withdraw"
-            assert profile.counterparties.filing_names == {}
-            assert text(screen, "#categorisation-outcome") == tr(
-                "tui.ledger.categorisation.counterparty.withdrawn_everything", identifier=SYNTHETIC_TAX_ID
-            )
+            assert "entity" in stated
 
 
 def _binding(name: str, value: str | None) -> ActionArgumentSnapshot:

@@ -204,19 +204,6 @@ class MemoryCounterparties:
                 filing_name_slots=_synthetic_slots(name),
                 filing_name_part_limits=SYNTHETIC_PART_LIMITS,
             )
-        if request.action == "withdraw":
-            # The record is withdrawn whole: the confirmation and the filing name with it.
-            had_fact = self.facts.pop(request.tax_identifier, None) is not None
-            had_name = self.filing_names.pop(request.tax_identifier, None) is not None
-            withdrawn = had_fact or had_name
-            return LedgerCounterpartyResult(
-                profile_id=request.profile_id,
-                action=request.action,
-                tax_identifier=request.tax_identifier,
-                country_code=request.country_code,
-                withdrawn=withdrawn,
-                changed=withdrawn,
-            )
         fact = CounterpartyFactProjection(
             counterparty_key=sha256(request.tax_identifier.encode()).hexdigest(),
             canonical_tax_identifier=request.tax_identifier,

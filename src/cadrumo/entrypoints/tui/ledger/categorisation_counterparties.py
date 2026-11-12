@@ -1,4 +1,4 @@
-"""Look up, confirm and withdraw what is known about one counterparty's establishment.
+"""Look up and confirm what is known about one counterparty's establishment.
 
 A lookup shows how the ladder settles the counterparty's territorial scope and
 identification state, and any contradiction it withholds, and the filing name
@@ -6,8 +6,8 @@ stated for it with who stated it. It also shows every export field the pinned
 authority files a party name into, by width and edition, with whether the
 stated name fills it, and the longest each part can be to fit whole. A
 confirmation records the operator's own assertion of one or both of those
-facts; a withdrawal removes the whole record, every answer stated for the
-counterparty, and asks once more before it is sent. A filing-name statement
+facts. Slot fits, refusals and part limits show as the view serves them,
+tokens and numbers unworded. A filing-name statement
 sends the kind, the name parts and any width-scoped shorter renderings through
 the registered operation; the operation's own words say what it refuses or
 flags.
@@ -51,23 +51,7 @@ from .categorisation_common import (
 from .categorisation_doors import LedgerCounterpartyDoorV1
 from .controller import LedgerWorkspaceController
 
-_KIND_LOCALE_KEYS: Final[dict[str, str]] = {
-    DeclaredPartyKind.NATURAL_PERSON.value: "tui.ledger.categorisation.counterparty.filing_kind_natural_person",
-    DeclaredPartyKind.ENTITY.value: "tui.ledger.categorisation.counterparty.filing_kind_entity",
-}
-_SLOT_STATE_LOCALE_KEYS: Final[dict[str, str]] = {
-    "fits": "tui.ledger.categorisation.counterparty.filing_slot_fits",
-    "uses_rendering": "tui.ledger.categorisation.counterparty.filing_slot_uses_rendering",
-    "missing": "tui.ledger.categorisation.counterparty.filing_slot_missing",
-    "single_surname": "tui.ledger.categorisation.counterparty.filing_slot_single_surname",
-    "too_wide": "tui.ledger.categorisation.counterparty.filing_slot_too_wide",
-}
-_PART_LOCALE_KEYS: Final[dict[str, str]] = {
-    "primer_apellido": "tui.ledger.categorisation.counterparty.filing_primer",
-    "segundo_apellido": "tui.ledger.categorisation.counterparty.filing_segundo",
-    "nombre": "tui.ledger.categorisation.counterparty.filing_nombre",
-    "razon_social": "tui.ledger.categorisation.counterparty.filing_razon",
-}
+_PARTY_KINDS: Final = (DeclaredPartyKind.NATURAL_PERSON.value, DeclaredPartyKind.ENTITY.value)
 _RENDERING_SEPARATOR: Final = ";"
 _RENDERING_ASSIGN: Final = "="
 _FILING_INPUTS: Final = (
@@ -90,8 +74,8 @@ def _bound(prefill: tuple[ActionArgumentSnapshot, ...], name: str) -> str | None
 
 
 def _kind_label(kind: str) -> str:
-    key = _KIND_LOCALE_KEYS.get(kind)
-    return kind if key is None else tr(key)
+    """The party kind as served; the backend serves no words for it."""
+    return kind
 
 
 def _name_parts_text(name: CounterpartyFilingNameProjection) -> str:
@@ -109,39 +93,17 @@ def _name_parts_text(name: CounterpartyFilingNameProjection) -> str:
     return " · ".join(parts)
 
 
-def _slot_state(slot: CounterpartyFilingNameSlot) -> str:
-    if slot.refusal is not None:
-        return slot.refusal
-    return "uses_rendering" if slot.uses_rendering else "fits"
-
-
 def _slot_lines(slots: tuple[CounterpartyFilingNameSlot, ...]) -> list[str]:
-    """One line per served width and outcome, naming each served edition once, in served order."""
-    groups: dict[tuple[int, str], list[str]] = {}
-    for slot in slots:
-        editions = groups.setdefault((slot.width, _slot_state(slot)), [])
-        if slot.edition_words not in editions:
-            editions.append(slot.edition_words)
+    """One line per served slot: its edition words, then each served field as the token or value itself."""
     return [
-        tr(
-            "tui.ledger.categorisation.counterparty.filing_slot",
-            width=width,
-            state=tr(_SLOT_STATE_LOCALE_KEYS[state]),
-            editions="; ".join(editions),
-        )
-        for (width, state), editions in groups.items()
+        f"{slot.edition_words}: width={slot.width} fits={slot.fits} refusal={slot.refusal} "
+        f"uses_rendering={slot.uses_rendering}"
+        for slot in slots
     ]
 
 
 def _part_limit_lines(limits: tuple[CounterpartyFilingNamePartLimit, ...]) -> list[str]:
-    return [
-        tr(
-            "tui.ledger.categorisation.counterparty.filing_part_limit",
-            part=tr(_PART_LOCALE_KEYS[limit.part]),
-            count=limit.max_length,
-        )
-        for limit in limits
-    ]
+    return [f"{limit.part}={limit.max_length}" for limit in limits]
 
 
 def _filing_name_text(result: LedgerCounterpartyResult) -> str:
@@ -228,13 +190,6 @@ def counterparty_outcome_text(result: LedgerCounterpartyResult) -> str:
             identifier=result.tax_identifier,
         )
         return "\n".join((done, _filing_name_text(result)))
-    if result.action == "withdraw":
-        return tr(
-            "tui.ledger.categorisation.counterparty.withdrawn_everything"
-            if result.withdrawn is True
-            else "tui.ledger.categorisation.counterparty.nothing_stated_to_withdraw",
-            identifier=result.tax_identifier,
-        )
     if result.conflict_context is not None:
         detail = ", ".join(f"{name}: {value}" for name, value in result.conflict_context)
         return tr("tui.ledger.categorisation.counterparty.conflict", identifier=result.tax_identifier, detail=detail)
@@ -242,7 +197,7 @@ def counterparty_outcome_text(result: LedgerCounterpartyResult) -> str:
 
 
 class LedgerCounterpartiesScreen(CategorisationScreen):
-    """Look up, confirm or withdraw the establishment facts of one counterparty."""
+    """Look up or confirm the establishment facts of one counterparty."""
 
     @override
     def banner(self) -> Static:
@@ -274,7 +229,6 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
         yield field("tui.ledger.categorisation.counterparty.evidenced", id="categorisation-counterparty-evidenced")
         yield action_row(
             action("tui.ledger.categorisation.counterparty.view", id="categorisation-counterparty-view"),
-            action("tui.ledger.categorisation.counterparty.review_withdraw", id="categorisation-counterparty-withdraw"),
         )
         yield heading("tui.ledger.categorisation.counterparty.confirm_heading")
         yield field("tui.ledger.categorisation.counterparty.territorial", id="categorisation-counterparty-scope")
@@ -290,7 +244,7 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
         )
         yield heading("tui.ledger.categorisation.counterparty.filing_heading")
         yield Select[str](
-            tuple((_kind_label(kind), kind) for kind in _KIND_LOCALE_KEYS),
+            tuple((_kind_label(kind), kind) for kind in _PARTY_KINDS),
             value=DeclaredPartyKind.NATURAL_PERSON.value,
             allow_blank=False,
             id="categorisation-filing-kind",
@@ -318,7 +272,7 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
             self.query_one("#categorisation-counterparty-identifier", Input).value = identifier
         if country is not None:
             self.query_one("#categorisation-counterparty-country", Input).value = country
-        if kind in _KIND_LOCALE_KEYS:
+        if kind in _PARTY_KINDS:
             self.query_one("#categorisation-filing-kind", Select).value = kind
         if identifier is not None:
             self.on_tool_button("categorisation-counterparty-view")
@@ -332,7 +286,7 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
         if not self.available:
             return
         kind = self.query_one("#categorisation-filing-kind", Select)
-        kind.set_options(tuple((_kind_label(item), item) for item in _KIND_LOCALE_KEYS))
+        kind.set_options(tuple((_kind_label(item), item) for item in _PARTY_KINDS))
         self.query_one("#categorisation-filing-no-second", Checkbox).label = tr(
             "tui.ledger.categorisation.counterparty.filing_no_second"
         )
@@ -348,7 +302,6 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
             "#categorisation-counterparty-country",
             "#categorisation-counterparty-evidenced",
             "#categorisation-counterparty-view",
-            "#categorisation-counterparty-withdraw",
             "#categorisation-counterparty-scope",
             "#categorisation-counterparty-state",
             "#categorisation-counterparty-note",
@@ -385,8 +338,6 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
                 self.refuse_error(error)
                 return
             self.run_read(lambda: self._view(request))
-        elif button_id == "categorisation-counterparty-withdraw":
-            self.stage_from(self._stage_withdraw)
         elif button_id == "categorisation-counterparty-confirm":
             self.stage_from(self._stage_confirm)
         elif button_id == "categorisation-counterparty-filing":
@@ -401,7 +352,7 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
         """Offer the stated name for editing; nothing is changed when none is stated."""
         if name is None:
             return
-        if name.party_kind in _KIND_LOCALE_KEYS:
+        if name.party_kind in _PARTY_KINDS:
             self.query_one("#categorisation-filing-kind", Select).value = name.party_kind
         shorter = f"{_RENDERING_SEPARATOR} ".join(
             f"{item.width}{_RENDERING_ASSIGN}{item.text}" for item in name.renderings
@@ -436,16 +387,6 @@ class LedgerCounterpartiesScreen(CategorisationScreen):
             return result.changed
 
         return write
-
-    def _stage_withdraw(self) -> StagedChangeV1:
-        request = LedgerCounterpartyRequest.model_validate({**self._identity(), "action": "withdraw"})
-        return StagedChangeV1(
-            summary=lambda: tr(
-                "tui.ledger.categorisation.counterparty.stage_withdraw_everything", identifier=request.tax_identifier
-            ),
-            write=self._writer(request),
-            destructive=True,
-        )
 
     def _stage_confirm(self) -> StagedChangeV1:
         state = self._value("#categorisation-counterparty-state")
