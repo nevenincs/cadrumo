@@ -10185,3 +10185,21 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
 family = "formulas"
 selector = {revision = "2023", id = "renta-base-liquidable-negativa-general-base-positiva-compensable"}
 restate_identity = true
+
+# Mínimo por ascendientes for the gravamen autonómico, Renta 2024 (Manual práctico de
+# Renta 2024, parte 1, cap. 14): Canarias sets its own art. 59 amounts with effect from
+# 1 January 2024 (DL 1/2009 art. 18 quater, added by Ley 5/2024). The other rows carry
+# over unchanged.
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-ascendientes-mayor-65-autonomico"}
+fields = {source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_additions = {keyed_brackets = [{key = "canarias", value = "1162", valid_from = 2024-01-01}], legal_refs = ["canarias-dl-1-2009:art-18-quater"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1.200 euros anuales por cada ascendiente de edad superior a 65 años o con discapacidad cualquiera que sea su edad", "1.199 euros anuales por cada ascendiente mayor de 65 años o con discapacidad cualquiera que sea su edad", "Mínimo por ascendientes • 1.234,26 euros anuales.", "Mínimo por ascendientes • 1.265 euros anuales.", "1.265 euros anuales por cada ascendiente de más de 65 años o con discapacidad", "Comunidad Autónoma de Canarias: Importe del mínimo del contribuyente, y por descendientes, ascendientes y discapacidad.", "Mínimo por ascendientes • 1.162 euros anuales.", "Comunidades Autónomas que no han ejercido tal competencia normativa, se les aplican los importes del"]}]}
+sequence_removals = {source_citations = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-ascendientes-mayor-75-autonomico"}
+fields = {source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_additions = {keyed_brackets = [{key = "canarias", value = "1414", valid_from = 2024-01-01}], legal_refs = ["canarias-dl-1-2009:art-18-quater"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Más 1.460 euros anuales por cada ascendiente mayor de 75 años", "Más 1.502,58 euros anuales por cada ascendiente mayor de 75 años", "Más 1.540 euros anuales por cada ascendiente mayor de 75 años", "Más 1.414 euros anuales por cada ascendiente mayor de 75 años", "Comunidades Autónomas que no han ejercido tal competencia normativa, se les aplican los importes del"]}]}
+sequence_removals = {source_citations = [0]}

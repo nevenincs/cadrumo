@@ -9617,3 +9617,21 @@ family = "bindings"
 selector = {revision = "2024", id = "renta-base-liquidable-negativa-general-em2-pendiente-inicio"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["pendientes de compensar al inicio del ejercicio", "remanente pendiente de aplicación en ejercicios futuros"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+# Mínimo por ascendientes for the gravamen autonómico, Renta 2025 (Manual práctico de
+# Renta 2025, parte 1, cap. 14): the Principado de Asturias sets its own art. 59 amounts
+# by Ley 3/2025, in force from 3 December 2025, so the 31 December 2025 devengo takes
+# them. The other rows carry over unchanged.
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-ascendientes-mayor-65-autonomico"}
+fields = {source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_additions = {keyed_brackets = [{key = "asturias", value = "1265", valid_from = 2025-12-03}], legal_refs = ["asturias-dl-2-2014:art-2-bis"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.200 euros anuales por cada ascendiente de edad superior a 65 años o con discapacidad cualquiera que sea su edad", "1.199 euros anuales por cada ascendiente mayor de 65 años o con discapacidad cualquiera que sea su edad", "Mínimo por ascendientes • 1.234,26 euros anuales.", "1.265 euros anuales por cada ascendiente de más de 65 años o con discapacidad", "Mínimo por ascendientes • 1.162 euros anuales.", "Comunidad Autónoma del Principado de Asturias: Importes del mínimo personal y familiar", "Mínimo por ascendientes • 1.265 euros anuales.", "Comunidades Autónomas que no han ejercido tal competencia normativa, se les aplican los importes del"]}]}
+sequence_removals = {source_citations = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-ascendientes-mayor-75-autonomico"}
+fields = {source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_additions = {keyed_brackets = [{key = "asturias", value = "1540", valid_from = 2025-12-03}], legal_refs = ["asturias-dl-2-2014:art-2-bis"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Más 1.460 euros anuales por cada ascendiente mayor de 75 años", "Más 1.502,58 euros anuales por cada ascendiente mayor de 75 años", "Más 1.540 euros anuales por cada ascendiente mayor de 75 años", "Más 1.414 euros anuales por cada ascendiente mayor de 75 años", "Comunidades Autónomas que no han ejercido tal competencia normativa, se les aplican los importes del"]}]}
+sequence_removals = {source_citations = [0]}

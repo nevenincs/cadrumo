@@ -9218,3 +9218,22 @@ family = "bindings"
 selector = {revision = "2022", id = "renta-base-liquidable-negativa-general-em2-pendiente-inicio"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["pendientes de compensar al inicio del ejercicio", "remanente pendiente de aplicación en ejercicios futuros"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+# Mínimo por ascendientes for the gravamen autonómico, Renta 2023 (Manual práctico de
+# Renta 2023, parte 1, cap. 14): Madrid's Ley 13/2023 replaces its 2022 figures with
+# effect from 1 January 2023, and the Illes Balears raise the art. 59 amounts by 10 per
+# cent from 26 November 2023 (Ley 11/2023 art. 1), so the 31 December 2023 devengo
+# takes them. Andalucía, Galicia and the Comunitat Valenciana keep their 2022 rows.
+[[revisions."2023".family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "renta-minimo-ascendientes-mayor-65-autonomico"}
+fields = {source_refs = ["aeat-renta-2023-manual-parte1"]}
+sequence_additions = {keyed_brackets = [{key = "madrid", value = "1234.26", valid_from = 2023-01-01}, {key = "baleares", value = "1265", valid_from = 2023-11-26}], legal_refs = ["baleares-dl-1-2014:art-2"], source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["1.200 euros anuales por cada ascendiente de edad superior a 65 años o con discapacidad cualquiera que sea su edad", "1.199 euros anuales por cada ascendiente mayor de 65 años o con discapacidad cualquiera que sea su edad", "Mínimo por ascendientes • 1.234,26 euros anuales.", "Mínimo por ascendientes • 1.265 euros anuales.", "Comunidad Autónoma de las Illes Balears: Importes de los mínimos del contribuyente, por descendientes y por discapacidad", "1.265 euros anuales por cada ascendiente de más de 65 años o con discapacidad", "Autónomas que no han ejercido tal competencia normativa, se les aplica los importes del mínimo personal y"]}]}
+sequence_removals = {keyed_brackets = [2], source_citations = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "renta-minimo-ascendientes-mayor-75-autonomico"}
+fields = {source_refs = ["aeat-renta-2023-manual-parte1"]}
+sequence_additions = {keyed_brackets = [{key = "madrid", value = "1502.58", valid_from = 2023-01-01}, {key = "baleares", value = "1540", valid_from = 2023-11-26}], legal_refs = ["baleares-dl-1-2014:art-2"], source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Más 1.460 euros anuales por cada ascendiente mayor de 75 años", "Más 1.502,58 euros anuales por cada ascendiente mayor de 75 años", "Más 1.540 euros anuales por cada ascendiente mayor de 75 años", "Autónomas que no han ejercido tal competencia normativa, se les aplica los importes del mínimo personal y"]}]}
+sequence_removals = {keyed_brackets = [2], source_citations = [0]}

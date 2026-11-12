@@ -41,6 +41,13 @@ description = "Parte estatal del minimo por ascendientes, calculada de los ascen
 legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
 
 [[derived_selectors]]
+pattern = "renta_family.ascendientes_minimos_aggregate_autonomico"
+derived_from = ["renta_family.ascendiente", "tax_residence.ccaa"]
+entry_surface = "aeat config profile ascendiente"
+description = "Parte autonomica del minimo por ascendientes, resuelta contra la CCAA de residencia."
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-59", "ley-35-2006:art-61"]
+
+[[derived_selectors]]
 pattern = "renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"

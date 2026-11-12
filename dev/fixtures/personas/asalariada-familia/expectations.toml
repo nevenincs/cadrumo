@@ -66,6 +66,22 @@ grounding = "verified"
 modelo = "100"
 period = "0A"
 year = "horizon-1"
+roles = { "irpf_minimo_ascendientes_autonomico" = "2736.84" }
+derivation = """
+Ascendiente, parte autonómica (LIRPF art. 56.3; Ley 22/2009 art. 46.1.a): the taxpayer resides in the Comunidad de Madrid,
+which sets its own art. 59 amounts in DL 1/2010 (redaction of Ley 13/2023, effect from 1 January 2023). Manual práctico de
+Renta 2025, parte 1, cap. 14, "Comunidad de Madrid: Importes del mínimo personal y familiar" (line 42890), "Mínimo por
+ascendientes": 1.234,26 euros anuales (line 42914), más 1.502,58 euros anuales por cada ascendiente mayor de 75 años (line 42915).
+The same mother as casilla 0515 (78 at year end, lives with the taxpayer, rentas 7200.00, no own return, sole descendant with
+right): 1234.26 + 1502.58 = 2736.84, role irpf_minimo_ascendientes_autonomico, casilla 0516.
+"""
+legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-59", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
+grounding = "verified"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
 casillas = { "0613" = "916.67" }
 concepts = { deduccion_maternidad = "1200.00", incremento_guarderia = "916.67", deduccion_maternidad_total = "2116.67" }
 derivation = """

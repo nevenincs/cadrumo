@@ -1,10 +1,18 @@
-"""Derive the mínimo por ascendientes (casilla 0515) from the stored ascendant rows.
+"""Derive the mínimo por ascendientes (casillas 0515 and 0516) from the stored ascendant rows.
 
 The rows live at ``renta_family.ascendiente.{n}.{leaf}``. The injector folds them
-into the year-free derived fact ``renta_family.ascendientes_minimos_aggregate``,
-which the registry binding projects onto the casilla, the same division of labour
-the mínimo por descendientes uses. It runs only where the selected revision declares
-a binding that consumes the fact, so coverage of an edition is registry work.
+into the year-free derived facts ``renta_family.ascendientes_minimos_aggregate``
+(parte estatal) and ``renta_family.ascendientes_minimos_aggregate_autonomico``
+(parte autonómica), which the registry bindings project onto the casillas, the same
+division of labour the mínimo por descendientes uses. It runs only where the
+selected revision declares a binding that consumes a fact, so coverage of an
+edition is registry work.
+
+Both parts apply the same eligibility, ages, ceilings and sharing (LIRPF arts. 59
+and 61). The autonomic part differs only in the art. 59.1 cuantía and the art. 59.2
+increment: LIRPF art. 56.3 applies the amounts the comunidad of residence approved,
+which the edition declares in keyed tables by comunidad token, and the state ones
+where the table lists no amount for that comunidad.
 
 A row whose share turns on a fact it does not state withholds the aggregate. The
 fact stays absent, never zero; the consuming binding is reported unresolved, and one
@@ -27,7 +35,7 @@ from typing import TYPE_CHECKING, Final
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.parsing.dates import parse_iso8601_date
-from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from ...domain.calculations.registry.formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ...domain.contribuyente.ascendant_minimum import (
     CONVIVIENTES_LEAF,
     DECLARACION_PROPIA_LEAF,
@@ -49,11 +57,13 @@ if TYPE_CHECKING:
 
 __all__ = [
     "MINIMO_ASCENDIENTES_AGGREGATE_KEY",
+    "MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY",
     "AscendantMinimumDerivation",
     "inject_derived_minimo_ascendientes_facts",
 ]
 
 MINIMO_ASCENDIENTES_AGGREGATE_KEY: Final = "renta_family.ascendientes_minimos_aggregate"
+MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY: Final = "renta_family.ascendientes_minimos_aggregate_autonomico"
 
 _ASCENDANT_GROUP: Final = "renta_family.ascendiente"
 _BIRTH_DATE_LEAF: Final = "birth_date"
@@ -68,6 +78,15 @@ _PARAMETER_IDS: Final = {
     "rentas_anuales_limite": "renta-minimo-ascendientes-rentas-anuales-limite",
     "declaracion_propia_rentas_limite": "renta-minimo-ascendientes-declaracion-propia-rentas-limite",
 }
+
+# The amounts a comunidad may set under Ley 22/2009 art. 46.1.a), keyed by its token.
+# The death cuantía, ages and ceilings are not among them and stay the state figures.
+_AUTONOMIC_PARAMETER_IDS: Final = {
+    "base": "renta-minimo-ascendientes-mayor-65-autonomico",
+    "increment_over_age": "renta-minimo-ascendientes-mayor-75-autonomico",
+}
+
+_TAX_RESIDENCE_CCAA_KEY: Final = "tax_residence.ccaa"
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,6 +109,29 @@ def _amounts(snapshot: RegistrySnapshot) -> AscendantMinimumAmounts | None:
             return None
         resolved[field] = resolve_parameter(parameter, date_context)
     return AscendantMinimumAmounts.model_validate(resolved)
+
+
+def _autonomic_amounts(
+    snapshot: RegistrySnapshot, state: AscendantMinimumAmounts, ccaa: str
+) -> AscendantMinimumAmounts:
+    """The amounts for ``ccaa``: its own where the edition's table lists one, else the state ones."""
+    declared = {parameter.id: parameter for parameter in snapshot.revision.parameters}
+    # A projected year reuses the authored edition's rows, as the state figures do.
+    year = snapshot_authored_year(snapshot)
+    own: dict[str, Decimal] = {}
+    for field, parameter_id in _AUTONOMIC_PARAMETER_IDS.items():
+        value = resolve_keyed_bracket(declared.get(parameter_id), key=ccaa, filing_year=year)
+        if value is not None:
+            own[field] = value
+    return state.model_copy(update=own)
+
+
+def _residence_ccaa(fact_index: Mapping[str, UserProfileFactValue]) -> str | None:
+    raw = fact_index.get(_TAX_RESIDENCE_CCAA_KEY)
+    if not isinstance(raw, str):
+        return None
+    token = raw.strip().lower()
+    return token or None
 
 
 def _refuse_stored(index: int, leaf: str) -> ProfileBindingResolutionError:
@@ -198,16 +240,24 @@ def inject_derived_minimo_ascendientes_facts(
     context: FamilyFactResolutionContext,
     bucket_id: str,
 ) -> AscendantMinimumDerivation:
-    """Write the art. 59 aggregate where a binding consumes it, or withhold it and say why.
+    """Write the art. 59 aggregates a binding consumes, or withhold them and say why.
 
-    Computes always where a consumer is declared: the path is derived, so a stored
-    value there can only be stale or hand-planted. Leaves the path absent without a
-    note when the edition lacks one of the figures, which the derived-binding
-    advisory then reports as a structural gap.
+    Computes always where a consumer is declared: the paths are derived, so a stored
+    value there can only be stale or hand-planted. Leaves the paths absent without a
+    note when the edition lacks one of the state figures, which the derived-binding
+    advisory then reports as a structural gap. A row that owes a fact withholds both
+    parts. The autonomic part is also withheld when an ascendant is entitled and the
+    profile states no comunidad of residence, since its amounts depend on it.
     """
-    if MINIMO_ASCENDIENTES_AGGREGATE_KEY not in declared_selectors:
+    consumed = tuple(
+        key
+        for key in (MINIMO_ASCENDIENTES_AGGREGATE_KEY, MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY)
+        if key in declared_selectors
+    )
+    if not consumed:
         return AscendantMinimumDerivation()
-    fact_index.pop(MINIMO_ASCENDIENTES_AGGREGATE_KEY, None)
+    for key in consumed:
+        fact_index.pop(key, None)
     amounts = _amounts(snapshot)
     if amounts is None:
         return AscendantMinimumDerivation()
@@ -229,11 +279,30 @@ def inject_derived_minimo_ascendientes_facts(
             owed.setdefault(leaf, []).append(positions[unstated.position - 1])
     if owed or result.total is None:
         return AscendantMinimumDerivation(
-            withheld_paths=frozenset({MINIMO_ASCENDIENTES_AGGREGATE_KEY}),
+            withheld_paths=frozenset(consumed),
             diagnostics=tuple(
                 _unstated_note(leaf, tuple(sorted(omitting)), len(rows), bucket_id=bucket_id)
                 for leaf, omitting in sorted(owed.items())
             ),
         )
-    fact_index[MINIMO_ASCENDIENTES_AGGREGATE_KEY] = result.total
+    if MINIMO_ASCENDIENTES_AGGREGATE_KEY in consumed:
+        fact_index[MINIMO_ASCENDIENTES_AGGREGATE_KEY] = result.total
+    if MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY not in consumed:
+        return AscendantMinimumDerivation()
+    if result.total == 0:
+        # No ascendant is entitled, so no comunidad's amounts can change the zero.
+        fact_index[MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY] = result.total
+        return AscendantMinimumDerivation()
+    ccaa = _residence_ccaa(fact_index)
+    if ccaa is None:
+        return AscendantMinimumDerivation(withheld_paths=frozenset({MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY}))
+    autonomico = minimo_ascendientes(
+        ascendants,
+        snapshot.filing_year,
+        amounts=_autonomic_amounts(snapshot, amounts, ccaa),
+        context=context,
+    )
+    if autonomico.total is None:
+        return AscendantMinimumDerivation(withheld_paths=frozenset({MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY}))
+    fact_index[MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY] = autonomico.total
     return AscendantMinimumDerivation()

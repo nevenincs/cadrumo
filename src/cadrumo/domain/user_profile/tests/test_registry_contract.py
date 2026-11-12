@@ -171,7 +171,7 @@ def test_anti_rot_gate_detects_a_pattern_that_matches_nothing() -> None:
 
 
 def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
-    """The patterns own the 30 derived selectors and neither operator input.
+    """The patterns own the 31 derived selectors and neither operator input.
 
     ``cotizaciones_ss_madre`` and ``rental_reduccion_art_23_2_tier`` are
     genuine taxpayer input that keep their declarations, so a pattern
@@ -188,9 +188,10 @@ def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
         if any(definition.matches(selector) for definition in schema.derived_selectors)
     }
 
-    assert len(covered) == 30, sorted(covered)
+    assert len(covered) == 31, sorted(covered)
     assert "tax_residence.state_attribution_ratio" in covered
     assert "renta_family.ascendientes_minimos_aggregate" in covered
+    assert "renta_family.ascendientes_minimos_aggregate_autonomico" in covered
     assert {
         "irpf.estimation_directa",
         "irpf.estimation_directa_normal",
