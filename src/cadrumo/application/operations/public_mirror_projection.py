@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import is_dataclass
 from datetime import date
 from decimal import Decimal
@@ -82,11 +82,16 @@ def _project_mapping(value: Mapping[object, object], public: object) -> object:
     raise TypeError("unsupported public-mirror mapping")
 
 
+type MirrorServing = Mapping[type[BaseModel], Callable[[BaseModel], BaseModel]]
+"""Per canonical model, the transport-time completion applied to each node of that model before it is mirrored."""
+
+
 def _project_tuple(
     value: tuple[object, ...],
     canonical: object,
     public: object,
     omissions: Mapping[type[BaseModel], frozenset[str]],
+    served: MirrorServing,
 ) -> tuple[object, ...]:
     canonical_args = get_args(canonical)
     public_args = get_args(public)
@@ -94,11 +99,11 @@ def _project_tuple(
         raise TypeError("public-mirror tuple changed its public shape")
     if len(public_args) == 2 and public_args[1] is Ellipsis:
         canonical_item = canonical_args[0] if canonical_args else object
-        return tuple(project_public_value(item, canonical_item, public_args[0], omissions) for item in value)
+        return tuple(project_public_value(item, canonical_item, public_args[0], omissions, served) for item in value)
     if len(value) != len(public_args):
         raise ValueError("public-mirror fixed tuple changed arity")
     return tuple(
-        project_public_value(item, canonical_args[index], public_args[index], omissions)
+        project_public_value(item, canonical_args[index], public_args[index], omissions, served)
         for index, item in enumerate(value)
     )
 
@@ -107,7 +112,10 @@ def _project_model(
     value: BaseModel | object,
     public: object,
     omissions: Mapping[type[BaseModel], frozenset[str]],
+    served: MirrorServing,
 ) -> object:
+    if isinstance(value, BaseModel) and (serve := served.get(type(value))) is not None:
+        value = serve(value)
     target = _public_model_type(public, value)
     if target is None:
         raise TypeError("public-mirror model arm is unavailable")
@@ -131,6 +139,7 @@ def _project_model(
                 source_annotations[name],
                 field.annotation,
                 omissions,
+                served,
             )
             for name, field in target_fields.items()
         }
@@ -142,6 +151,7 @@ def project_public_value(
     canonical: object,
     public: object,
     omissions: Mapping[type[BaseModel], frozenset[str]],
+    served: MirrorServing,
 ) -> object:
     """Project a canonical value onto its public mirror annotation, recursing through mappings, tuples and models."""
     canonical, public = public_mirror.bare_annotation(canonical), public_mirror.bare_annotation(public)
@@ -152,9 +162,9 @@ def project_public_value(
     if is_object_mapping(value):
         return _project_mapping(value, public)
     if is_object_tuple(value):
-        return _project_tuple(value, canonical, public, omissions)
+        return _project_tuple(value, canonical, public, omissions, served)
     if isinstance(value, BaseModel) or is_dataclass(value):
-        return _project_model(value, public, omissions)
+        return _project_model(value, public, omissions, served)
     if isinstance(value, Decimal):
         return str(value)
     if public is str and isinstance(value, str):

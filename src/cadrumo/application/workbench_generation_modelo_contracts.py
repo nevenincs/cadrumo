@@ -57,6 +57,7 @@ from cadrumo.core.operator_action_enums import (
     NoRecoveryOutcome,
     OperatorActionAxis,
 )
+from cadrumo.core.precondition_action_invariants import ServedActionWords, ServedNoRecoveryWords
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.schema_family_disposition import (
     RegistrySchemaFamilyDisposition,
@@ -309,8 +310,8 @@ class PublicProjectionModeloBindingRequirement(BaseModel):
     input_channel: str
 
 
-class PublicPreconditionVerdict(BaseModel):
-    """Typed local-human workbench view of PreconditionVerdict."""
+class PublicPreconditionVerdict(ServedActionWords, ServedNoRecoveryWords):
+    """Typed local-human workbench view of PreconditionVerdict, with its served action words."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -326,8 +327,8 @@ class PublicPreconditionVerdict(BaseModel):
     )
 
 
-class PublicAlternativeRecoveryAction(BaseModel):
-    """Typed local-human workbench view of AlternativeRecoveryAction."""
+class PublicAlternativeRecoveryAction(ServedActionWords):
+    """Typed local-human workbench view of AlternativeRecoveryAction, with its served action words."""
 
     model_config = STRICT_FROZEN_CONFIG
 
