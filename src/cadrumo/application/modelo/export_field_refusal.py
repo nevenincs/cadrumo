@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.filing.errors import (
     FilingExportCasillaValueRefusedError,
     FilingExportError,
@@ -15,6 +15,7 @@ from ...domain.filing.errors import (
     FilingExportUnrepresentableCharacterError,
 )
 from ...domain.modelos.errors import ModeloError
+from ..filing.errors import FilingPreconditionCondition, filing_no_recovery_verdict
 from ..filing.export_xml_value_limits import is_xml_value_refusal
 from ..filing.producer_profile_facts import (
     missing_producer_fact_names,
@@ -223,6 +224,28 @@ def export_taxpayer_name_missing_refusal() -> ModeloProfileReadinessError:
         },
         profile_precondition_verdict=missing_producer_fact_verdict(producer_key),
         next_step=open_profile_path_step(profile_facts_for_producer_key(producer_key)[0]),
+    )
+
+
+def export_operator_decision_refusal(
+    *, translated_message: str, reason: str, context: Mapping[str, object]
+) -> ModeloProfileReadinessError:
+    """Refuse an export that needs a fact the operator states, where no catalogued action states it.
+
+    The facts a filer declares outside the profile questions, such as a modelo 360
+    solicitud or the prorrata register, have no action the catalogue can name, so
+    the verdict records an operator decision and the served words name the
+    command that declares the fact. ``reason`` is a fixed description of the
+    gap, never a value of the filer.
+    """
+    return ModeloProfileReadinessError(
+        translated_message=translated_message,
+        context={**context, "reason": reason},
+        profile_precondition_verdict=filing_no_recovery_verdict(
+            FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+            facts={"reason": reason},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 
