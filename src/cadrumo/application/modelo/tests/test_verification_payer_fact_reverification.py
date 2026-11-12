@@ -52,15 +52,13 @@ from ..profile_readiness_gate import BLOCKING_APPLICABILITY_VERDICTS, modelo_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_WITHHOLDING_ANNUAL_PAIRS = (
-    (Modelo("190").value, Modelo("111").value),
-    (Modelo("180").value, Modelo("115").value),
-)
+_WITHHOLDING_ANNUAL_PAIRS = ((Modelo("180").value, Modelo("115").value),)
 """Annual summary and the periodic withholding filing it folds in.
 
-Both source modelos are gated by one of the cleared payer facts, which is
-exactly what makes them the pair worth asserting: the source is the filing a
-misread clearance would declare the taxpayer does not owe.
+The source modelo is gated by one of the cleared payer facts, which is exactly
+what makes the pair worth asserting: the source is the filing a misread
+clearance would declare the taxpayer does not owe. Modelo 190 is not such a
+pair: it totals its own type-2 records and declares no dependency on Modelo 111.
 """
 
 
@@ -189,3 +187,13 @@ def test_no_suppression_input_scopes_out_the_withholding_source(
             f"Modelo {annual} must keep its Modelo {source} dependency enforced; a cleared payer fact "
             "states nothing about whether that filing was owed"
         )
+
+
+@pytest.mark.parametrize("filing_year", filing_year_envelope().years)
+def test_modelo_190_declares_no_dependency_on_modelo_111(filing_year: int, operation: PinnedAuthorityOperation) -> None:
+    """The resumen totals its own records in every year, so no Modelo 111 leg can gate or be scoped out of it."""
+    snapshot = operation.snapshot(
+        Modelo("190").value, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
+
+    assert Modelo("111").value not in {row.source_modelo for row in snapshot.revision.dependency_classifications}
