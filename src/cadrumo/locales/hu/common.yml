@@ -6966,6 +6966,37 @@ tui:
     unattended: Felügyelet nélküli használat engedélyezése
     uncertain: Ismeretlen eredmény; őrizd meg a kérelem azonosítóját
     waiting: Kérelem beküldése folyamatban
+  censo:
+    action:
+      detail: Részletek megjelenítése
+      read: Olvasás újra
+      record: Bejelentés rögzítése
+    column:
+      declared_on: Bejelentés napja
+      kind: Fajta
+      recorded_at: Rögzítés napja
+    detail:
+      id: Azonosító
+      justificante: Igazolás hivatkozása
+      none: Nincs megadva
+      note: Megjegyzés
+    local_note: 'Az itteni bejelentés csak helyi nyilvántartás: ezen az eszközön tárolódik,
+      és semmit sem küld el az adóhatóságnak.'
+    prompt: Az adónyilvántartási adataidat érintő változások bejelentései, amelyeket
+      ezen az alkalmazáson kívül nyújtottál be, és itt rögzítettél.
+    records:
+      title: Rögzített bejelentések
+    status:
+      choose_declaration: Előbb válassz egy bejelentést a listából.
+      empty: Még nem rögzítettél bejelentést.
+      read_failed: A bejelentéseket nem sikerült beolvasni. Az alábbiak egyike sem
+        friss.
+      reading: A bejelentések olvasása...
+      recorded: 'Helyben rögzítve: {kind}, bejelentés napja: {declared_on}. Az adóhatóságnak
+        semmi sem lett elküldve.'
+      unconfirmed: Az az űrlap nem erősített meg eredményt. Az alábbi listát újraolvastuk,
+        és a tárolt állapotot mutatja; ellenőrizd, mielőtt újra rögzítesz.
+    title: Adónyilvántartási változások
   declarations:
     list:
       new:
@@ -6974,6 +7005,7 @@ tui:
       start_hint: Új bevallás indításához nyomd meg a + billentyűt.
   destination:
     aeat_sync: AEAT-szinkron
+    censo: Adónyilvántartási változások
     declarations: Bevallások
     home: Kezdőlap
     installation: Telepítés
@@ -9440,6 +9472,7 @@ tui:
       validate_ledger: Nyilvántartás ellenőrzése
     destination:
       aeat_sync: AEAT-szinkron megnyitása
+      censo: Adónyilvántartási változások megnyitása
       declarations: Bevallások megnyitása
       home: Kezdőlap megnyitása
       installation: Telepítés megnyitása
@@ -9451,6 +9484,8 @@ tui:
       withholding: Levonások megnyitása
     destination_help:
       aeat_sync: Amit az AEAT-tól már beolvastunk, és amit legközelebb be lehet olvasni
+      censo: 'Adónyilvántartási változások: a nyilvántartott adóadataid itt rögzített
+        változásai'
       declarations: Bevallások, korábbi számítások, benyújtási előzmények és naptár
       home: Következő teendők, bevallások és határidők egy pillantással
       installation: Tárhely, javítás, visszaállítás és a számítógépen lévő profilok

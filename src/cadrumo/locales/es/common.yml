@@ -7005,6 +7005,37 @@ tui:
     unattended: Permitir uso desatendido
     uncertain: Resultado desconocido; conserva el ID de solicitud
     waiting: Enviando solicitud
+  censo:
+    action:
+      detail: Ver detalles
+      read: Leer de nuevo
+      record: Registrar una declaración
+    column:
+      declared_on: Declarada el
+      kind: Tipo
+      recorded_at: Registrada el
+    detail:
+      id: Identificador
+      justificante: Referencia del justificante
+      none: Sin indicar
+      note: Nota
+    local_note: 'Una declaración aquí es solo un registro local: se guarda en este
+      dispositivo y no se envía nada a la administración tributaria.'
+    prompt: Declaraciones de cambios en tus datos censales que presentaste fuera de
+      esta aplicación y registraste aquí.
+    records:
+      title: Declaraciones registradas
+    status:
+      choose_declaration: Elige primero una declaración de la lista.
+      empty: Todavía no has registrado ninguna declaración.
+      read_failed: No se pudieron leer las declaraciones. Nada de lo que ves abajo
+        está actualizado.
+      reading: Leyendo las declaraciones...
+      recorded: 'Registrada en local: {kind} declarada el {declared_on}. No se envió
+        nada a la administración tributaria.'
+      unconfirmed: Ese formulario no confirmó ningún resultado. La lista de abajo
+        se leyó de nuevo y muestra lo guardado; revísala antes de volver a registrar.
+    title: Cambios censales
   declarations:
     list:
       new:
@@ -7013,6 +7044,7 @@ tui:
       start_hint: Pulsa + para empezar una.
   destination:
     aeat_sync: Sincronización AEAT
+    censo: Cambios censales
     declarations: Declaraciones
     home: Inicio
     installation: Instalación
@@ -9494,6 +9526,7 @@ tui:
       validate_ledger: Comprobar registros
     destination:
       aeat_sync: Abrir Sincronización AEAT
+      censo: Abrir Cambios censales
       declarations: Abrir Declaraciones
       home: Abrir Inicio
       installation: Abrir Instalación
@@ -9505,6 +9538,8 @@ tui:
       withholding: Abrir Retenciones
     destination_help:
       aeat_sync: Lo que se ha leído de la AEAT y lo que se puede leer a continuación
+      censo: 'Cambios censales: los cambios en tus datos fiscales registrados que
+        anotaste aquí'
       declarations: Declaraciones, cálculos anteriores, historial de presentaciones
         y calendario
       home: Próximas acciones, declaraciones y plazos de un vistazo

@@ -6851,6 +6851,36 @@ tui:
     unattended: Allow unattended use
     uncertain: Outcome unknown; retain request ID
     waiting: Submitting request
+  censo:
+    action:
+      detail: Show details
+      read: Read again
+      record: Record a declaration
+    column:
+      declared_on: Declared on
+      kind: Kind
+      recorded_at: Recorded on
+    detail:
+      id: Identifier
+      justificante: Receipt reference
+      none: Not stated
+      note: Note
+    local_note: 'A declaration here is a local record only: it is stored on this device
+      and nothing is sent to the tax authority.'
+    prompt: Declarations of changes to your census data that you filed outside this
+      application and recorded here.
+    records:
+      title: Recorded declarations
+    status:
+      choose_declaration: Choose a declaration in the list first.
+      empty: No declaration has been recorded yet.
+      read_failed: The declarations could not be read. Nothing below is current.
+      reading: Reading the declarations...
+      recorded: 'Recorded locally: {kind} declared on {declared_on}. Nothing was sent
+        to the tax authority.'
+      unconfirmed: That form confirmed no result. The list below was read again and
+        shows what is stored; check it before you record again.
+    title: Census changes
   declarations:
     list:
       new:
@@ -6859,6 +6889,7 @@ tui:
       start_hint: Press + to start one.
   destination:
     aeat_sync: AEAT Sync
+    censo: Census changes
     declarations: Declarations
     home: Home
     installation: Installation
@@ -9289,6 +9320,7 @@ tui:
       validate_ledger: Check records
     destination:
       aeat_sync: Open AEAT Sync
+      censo: Open Census changes
       declarations: Open Declarations
       home: Open Home
       installation: Open Installation
@@ -9300,6 +9332,8 @@ tui:
       withholding: Open Withholding
     destination_help:
       aeat_sync: What has been read from the AEAT and what can be read next
+      censo: 'Census changes: the changes to your registered tax data that you recorded
+        here'
       declarations: Declarations, earlier calculations, filing history and calendar
       home: Next actions, declarations and deadlines at a glance
       installation: Storage, repair, reset and the profiles on this computer

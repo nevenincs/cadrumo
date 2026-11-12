@@ -31,6 +31,7 @@ from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountSessionUnavailableError
 from cadrumo.entrypoints.tui.aeat_sync.routes import aeat_sync_screen_factory
+from cadrumo.entrypoints.tui.censo.screen import censo_screen_factory
 from cadrumo.entrypoints.tui.declarations.models import DeclarationsWorkspaceWiringV1
 from cadrumo.entrypoints.tui.declarations.routes import declarations_screen_factory
 from cadrumo.entrypoints.tui.declarations.saved_filing import SavedFilingScreen
@@ -54,6 +55,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.workbench_generation import read_workbench_generation
 
 from .aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
+from .modelo.runtime_censo import compose_runtime_censo_door
 from .modelo.runtime_disagreements import RuntimeModeloDisagreements
 from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
 from .modelo.runtime_wallet import RuntimeModeloIvaWallet
@@ -371,6 +373,16 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
             if withholding is None
             else _available("workbench.withholding")
         )
+        censo = compose_runtime_censo_door(self._client, profile_label=self._label)
+        admissions["workbench.censo"] = (
+            WorkbenchDestinationAdmission(
+                destination="workbench.censo",
+                state=WorkbenchDestinationAdmissionState.UNAVAILABLE,
+                reason_code="workbench.censo.runtime_unavailable",
+            )
+            if censo is None
+            else _available("workbench.censo")
+        )
 
         factories = self._base_factories(generation, profile_factory)
         factories["workbench.operations"] = self._operations
@@ -386,6 +398,8 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
             factories["workbench.aeat_sync"] = aeat_sync
         if withholding is not None:
             factories["workbench.withholding"] = withholding_screen_factory(withholding)
+        if censo is not None:
+            factories["workbench.censo"] = censo_screen_factory(censo)
         return build_destination_catalogue(admissions=admissions, factories=factories)
 
     @staticmethod

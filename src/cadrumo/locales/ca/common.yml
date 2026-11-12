@@ -6997,6 +6997,38 @@ tui:
     unattended: Permet l'ús sense supervisió
     uncertain: Resultat desconegut; conserva l'ID de la sol·licitud
     waiting: S'està enviant la sol·licitud
+  censo:
+    action:
+      detail: Mostra els detalls
+      read: Llegeix de nou
+      record: Registra una declaració
+    column:
+      declared_on: Declarada el
+      kind: Tipus
+      recorded_at: Registrada el
+    detail:
+      id: Identificador
+      justificante: Referència del justificant
+      none: Sense indicar
+      note: Nota
+    local_note: 'Una declaració aquí és només un registre local: es desa en aquest
+      dispositiu i no s''envia res a l''administració tributària.'
+    prompt: Declaracions de canvis a les teves dades censals que vas presentar fora
+      d'aquesta aplicació i vas registrar aquí.
+    records:
+      title: Declaracions registrades
+    status:
+      choose_declaration: Tria primer una declaració de la llista.
+      empty: Encara no has registrat cap declaració.
+      read_failed: No s'han pogut llegir les declaracions. Res del que veus a sota
+        no és actual.
+      reading: Llegint les declaracions...
+      recorded: 'Registrada en local: {kind} declarada el {declared_on}. No s''ha
+        enviat res a l''administració tributària.'
+      unconfirmed: Aquest formulari no ha confirmat cap resultat. La llista de sota
+        s'ha llegit de nou i mostra el que hi ha desat; revisa-la abans de tornar
+        a registrar.
+    title: Canvis censals
   declarations:
     list:
       new:
@@ -7005,6 +7037,7 @@ tui:
       start_hint: Prem + per començar-ne una.
   destination:
     aeat_sync: Sincronització AEAT
+    censo: Canvis censals
     declarations: Declaracions
     home: Inici
     installation: Instal·lació
@@ -9475,6 +9508,7 @@ tui:
       validate_ledger: Comprova els registres
     destination:
       aeat_sync: Obre Sincronització AEAT
+      censo: Obre Canvis censals
       declarations: Obre Declaracions
       home: Obre Inici
       installation: Obre Instal·lació
@@ -9486,6 +9520,8 @@ tui:
       withholding: Obre Retencions
     destination_help:
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
+      censo: 'Canvis censals: els canvis a les teves dades fiscals registrades que
+        has anotat aquí'
       declarations: Declaracions, càlculs anteriors, historial de presentacions i
         calendari
       home: Properes accions, declaracions i terminis d'un cop d'ull
