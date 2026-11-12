@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#modelo-202-obligation'
 date: '2026-11-11'
-modified: '2026-11-11'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:d2427c707def0c22c57640de52232953b90bbca780f61ee4aa63e502d28588ac'
+body_hash: 'sha256:4ac077c0f27d6bdea2794ce45ace616ce13093e847e3931030b0218007451d90'
 related:
   - '[[2026-11-11-modelo-202-obligation-adr]]'
   - '[[2026-11-11-modelo-202-obligation-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#modelo-202-obligation`.
 
 ### adr
 
-- `2026-11-11-modelo-202-obligation-adr` - `modelo-202-obligation` adr: `Modelo 202 filing obligation facts` | (**status:** `proposed`)
+- `2026-11-11-modelo-202-obligation-adr` - `modelo-202-obligation` adr: `Modelo 202 filing obligation facts` | (**status:** `accepted`)
 
 ### research
 

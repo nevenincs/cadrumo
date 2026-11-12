@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#informativa-party-name'
 date: '2026-11-11'
-modified: '2026-11-11'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:07cd872e96ba51de93663ac6d17e03cc16eaa754de365f9c8cab311eedf440d3'
+body_hash: 'sha256:bd499c0593d404cbd24e206cdfa8e8ed91cc694905adf80f6f72dcce4f3abea5'
 related:
   - '[[2026-11-11-informativa-party-name-adr]]'
   - '[[2026-11-11-informativa-party-name-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#informativa-party-name`.
 
 ### adr
 
-- `2026-11-11-informativa-party-name-adr` - `informativa-party-name` adr: `Operator-declared party names for informative-return name fields` | (**status:** `proposed`)
+- `2026-11-11-informativa-party-name-adr` - `informativa-party-name` adr: `Operator-declared party names for informative-return name fields` | (**status:** `accepted`)
 
 ### research
 
