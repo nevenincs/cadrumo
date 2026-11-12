@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -34,6 +35,7 @@ _ART52_APORTACIONES_TRABAJADOR_CON_CONTRIBUCION_EMPRESARIAL_ROLE = (
 )
 _ART52_CONTRIBUCIONES_EMPRESARIALES_ROLE = "irpf_red_prevision_social_contribuciones_empresariales_excepto_scd"
 _ART52_APORTACIONES_AUTONOMOS_EMPRESARIOS_ROLE = "irpf_red_prevision_social_aportaciones_autonomos_empresarios"
+_ART52_EXCESO_EJERCICIOS_ANTERIORES_ROLE = "irpf_red_prevision_social_exceso_ejercicios_anteriores"
 _ART52_INDIVIDUAL_SUBLIMIT_FACT_ID = "lirpf-art-52-individual-contribution-sublimit"
 
 
@@ -60,19 +62,63 @@ def _registry_art52_declaration(
     return resolved
 
 
+@dataclass(frozen=True, slots=True)
+class _Art52Casillas:
+    """The revision's casillas the advisory reads, each found by its semantic role."""
+
+    reduccion: CasillaId
+    trabajador_con_contribucion: CasillaId
+    empresarial: CasillaId
+    autonomos_empresarios: CasillaId
+    exceso_ejercicios_anteriores: CasillaId | None
+
+
+def _art52_casillas(revision: object, *, modelo: str) -> _Art52Casillas | None:
+    """Resolve the roles the advisory reads, or ``None`` when the revision lacks a required one.
+
+    A revision without an earlier-year excess box has no excess to set aside.
+    """
+    roles = (
+        _ART52_REDUCCION_TOTAL_ROLE,
+        _ART52_APORTACIONES_TRABAJADOR_CON_CONTRIBUCION_EMPRESARIAL_ROLE,
+        _ART52_CONTRIBUCIONES_EMPRESARIALES_ROLE,
+        _ART52_APORTACIONES_AUTONOMOS_EMPRESARIOS_ROLE,
+        _ART52_EXCESO_EJERCICIOS_ANTERIORES_ROLE,
+    )
+    try:
+        ids = tuple(casilla_id_for_unique_revision_semantic_role(revision, role, modelo_id=modelo) for role in roles)
+    except AmbiguousSemanticRoleCasillaError as exc:
+        raise ModeloError(
+            str(exc),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
+    reduccion, trabajador, empresarial, autonomos, exceso = ids
+    if reduccion is None or trabajador is None or empresarial is None or autonomos is None:
+        return None
+    return _Art52Casillas(reduccion, trabajador, empresarial, autonomos, exceso)
+
+
 def _individual_art52_sublimit_exceeded(
-    reduccion_value: Decimal,
-    trabajador_con_contribucion_value: Decimal,
-    empresarial_value: Decimal,
-    autonomos_empresarios_value: Decimal,
+    casillas: _Art52Casillas,
+    casilla_values: Mapping[CasillaId, Decimal],
     sublimit: Decimal,
 ) -> bool:
-    """Retain the individual sublimit and absence of other contribution channels."""
-    return (
-        reduccion_value > sublimit
-        and trabajador_con_contribucion_value == Decimal(0)
-        and empresarial_value == Decimal(0)
-        and autonomos_empresarios_value == Decimal(0)
+    """Whether the year's own amounts exceed the individual sublimit with no other contribution channel.
+
+    The excesses of earlier ejercicios reduce first against the whole art. 52.1.b limit whatever
+    their origin (RIRPF art. 51), so the part of the reduction they explain is not measured against
+    the individual sublimit.
+    """
+    reduccion_value = AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, casillas.reduccion)
+    exceso_id = casillas.exceso_ejercicios_anteriores
+    exceso_value = (
+        Decimal(0) if exceso_id is None else AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, exceso_id)
+    )
+    channels = (casillas.trabajador_con_contribucion, casillas.empresarial, casillas.autonomos_empresarios)
+    return reduccion_value - min(exceso_value, reduccion_value) > sublimit and all(
+        AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, channel) == Decimal(0) for channel in channels
     )
 
 
@@ -89,51 +135,9 @@ def art52_reduccion_advisory_finding(
     ``effective_date`` is the filing coordinate the caller resolves every other
     dated fact at, so the declaration follows the work's filing year.
     """
-    try:
-        reduccion_id = casilla_id_for_unique_revision_semantic_role(
-            revision,
-            _ART52_REDUCCION_TOTAL_ROLE,
-            modelo_id=modelo,
-        )
-        trabajador_con_contribucion_id = casilla_id_for_unique_revision_semantic_role(
-            revision,
-            _ART52_APORTACIONES_TRABAJADOR_CON_CONTRIBUCION_EMPRESARIAL_ROLE,
-            modelo_id=modelo,
-        )
-        empresarial_id = casilla_id_for_unique_revision_semantic_role(
-            revision,
-            _ART52_CONTRIBUCIONES_EMPRESARIALES_ROLE,
-            modelo_id=modelo,
-        )
-        autonomos_empresarios_id = casilla_id_for_unique_revision_semantic_role(
-            revision,
-            _ART52_APORTACIONES_AUTONOMOS_EMPRESARIOS_ROLE,
-            modelo_id=modelo,
-        )
-    except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(
-            str(exc),
-            translated_message="application.modelo.errors.semantic_role_ambiguous",
-            context=exc.ambiguity.context(),
-            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
-        ) from exc
-
-    if (
-        reduccion_id is None
-        or trabajador_con_contribucion_id is None
-        or empresarial_id is None
-        or autonomos_empresarios_id is None
-    ):
+    casillas = _art52_casillas(revision, modelo=modelo)
+    if casillas is None:
         return None
-
-    reduccion_value = AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, reduccion_id)
-    trabajador_con_contribucion_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(
-        casilla_values, trabajador_con_contribucion_id
-    )
-    empresarial_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, empresarial_id)
-    autonomos_empresarios_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(
-        casilla_values, autonomos_empresarios_id
-    )
     _registry_art52_declaration(
         revision,
         operation=operation,
@@ -154,9 +158,9 @@ def art52_reduccion_advisory_finding(
             context={"fact": _ART52_INDIVIDUAL_SUBLIMIT_FACT_ID},
             precondition_verdict=registry_defect_verdict("art52_sublimit_fact"),
         )
-    if _individual_art52_sublimit_exceeded(
-        reduccion_value, trabajador_con_contribucion_value, empresarial_value, autonomos_empresarios_value, sublimit
-    ):
+    if _individual_art52_sublimit_exceeded(casillas, casilla_values, sublimit):
+        reduccion_id = casillas.reduccion
+        reduccion_value = AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, reduccion_id)
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.ADVISORY,
             severity=ModeloVerificationFindingSeverity.WARNING,

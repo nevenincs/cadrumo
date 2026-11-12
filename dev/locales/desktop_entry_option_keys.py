@@ -78,13 +78,19 @@ ENTRY_OPTION_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         f"{ENTRY_OPTION_LABEL_PREFIX}deduction_fact_kind.": _ordered(_DEDUCTION_FACT, "kind.order", "kind.owner_only"),
         f"{ENTRY_OPTION_LABEL_PREFIX}m210_payer_mode.": _ordered(_M210_FACT, "m210.payer_mode_order"),
         f"{ENTRY_OPTION_LABEL_PREFIX}m210_income_concept.": _ordered(_M210_FACT, "m210.tipo_renta.order"),
-        f"{ENTRY_OPTION_LABEL_PREFIX}gasto_capital_inmobiliario.": _ordered(_GASTO_INMOBILIARIO_FACT, "concept_order"),
         f"{ENTRY_OPTION_LABEL_PREFIX}withholding_certificate_figure.": tuple(
             dict.fromkeys(
                 figure.value for income_class in RetencionSoportadaClase for figure in certificate_figures(income_class)
             )
         ),
     }
+)
+
+#: Entry option words the ledger entry read serves that no desktop surface renders yet: the
+#: rental expense concepts. They must exist in every locale, but they are not desktop chrome.
+SERVED_ONLY_ENTRY_OPTION_KEYS: Final[frozenset[str]] = frozenset(
+    f"{ENTRY_OPTION_LABEL_PREFIX}gasto_capital_inmobiliario.{member}"
+    for member in _ordered(_GASTO_INMOBILIARIO_FACT, "concept_order")
 )
 
 #: Every entry option key the desktop words, each family member spelled out.

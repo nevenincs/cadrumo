@@ -7688,7 +7688,7 @@ family = "constructs"
 selector = {revision = "2024", id = "renta-cuota-chain"}
 sequence_additions = {formulas = ["renta-base-liquidable-negativa-general-compensacion-total", "renta-minimo-contribuyente-autonomica"], legal_refs = ["asturias-dl-2-2014:art-2-bis", "ley-35-2006:art-48", "ley-35-2006:art-75"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-modelo-100-procedure", "aeat-renta-2025-manual-deducciones-autonomicas", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
 sequence_removals = {formulas = [1], legal_refs = [1, 2, 3, 5, 6, 8, 32], source_refs = [0, 1, 2]}
-sequence_order = {formulas = [11, 10, 18, 12, 13, 14, 15, 37, 16, 17, 30, 29, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 32, 31, 34, 36, 33, 35, 8, 6, 7, 5, 38, 0, 1, 2, 4, 3, 9], legal_refs = [32, 36, 33, 34, 35, 0, 37, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 38, 26, 27, 28, 29, 30, 31], source_refs = [1, 2, 3, 4, 5, 6, 0]}
+sequence_order = {formulas = [11, 10, 18, 12, 13, 14, 15, 37, 16, 17, 30, 29, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 32, 31, 34, 36, 33, 35, 8, 6, 7, 5, 38, 0, 1, 2, 4, 3, 9], legal_refs = [32, 37, 33, 34, 35, 0, 38, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 39, 26, 27, 28, 29, 30, 31, 36], source_refs = [1, 2, 3, 4, 5, 6, 0]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"

@@ -47,7 +47,6 @@ class TestTypoTwinWarning:
         reviewed_singletons = (
             _Singleton("100", casilla_id="2028", role="irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio"),
             _Singleton("100", casilla_id="2029", role="irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio"),
-            _Singleton("100", casilla_id="0463", role="irpf_red_prevision_social_exceso_2015_2019"),
             _Singleton("100", casilla_id="0437", role="irpf_red_prevision_social_exceso_2016_2020"),
             _Singleton("100", casilla_id="1757", role="irpf_anexo_c_exceso_sps_rg_aportaciones_periodo"),
             _Singleton("100", casilla_id="1758", role="irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado"),
@@ -307,7 +306,6 @@ class TestTypoTwinWarning:
         reviewed_roles = {
             "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio",
             "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_anio",
-            "irpf_red_prevision_social_exceso_2015_2019",
             "irpf_red_prevision_social_exceso_2016_2020",
             "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
             "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",

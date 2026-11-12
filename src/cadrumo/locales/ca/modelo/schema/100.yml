@@ -3522,10 +3522,6 @@ modelo:
           irpf-red-prevision-social-aportaciones-empresa-decision-trabajador:
             label: Aportacions efectuades per l'empresa que derivin d'una decisió
               del treballador
-          irpf-red-prevision-social-aportaciones-individuales:
-            label: Aportacions individuals i contribucions empresarials (excepte els
-              derivats de contribucions empresarials a assegurances col·lectius de
-              dependència (Emplenar l'annex C.3)
           irpf-red-prevision-social-aportaciones-trabajador:
             label: Aportacions del treballador, excepte les consignades a [0438] i
               [0426]
@@ -3541,6 +3537,10 @@ modelo:
             label: Contribucions a assegurances col·lectius de dependència
           irpf-red-prevision-social-empleador-nif-extranjero-flag:
             label: Si no té NIF, marqui amb una \"X\"
+          irpf-red-prevision-social-exceso-ejercicios-anteriores:
+            label: Aportacions individuals i contribucions empresarials (excepte els
+              derivats de contribucions empresarials a assegurances col·lectius de
+              dependència (Emplena l'annex C.3)
           irpf-red-prevision-social-exceso-scd:
             label: Excessos derivats de contribucions empresarials a assegurances
               col·lectius de dependència (Emplenar l'annex C.3)

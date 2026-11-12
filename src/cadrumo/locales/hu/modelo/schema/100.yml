@@ -3561,10 +3561,6 @@ modelo:
           irpf-red-prevision-social-aportaciones-empresa-decision-trabajador:
             label: A vállalat által teljesített befizetések, amelyek a munkavállaló
               döntéséből erednek
-          irpf-red-prevision-social-aportaciones-individuales:
-            label: Egyéni befizetések és munkáltatói hozzájárulások (kivéve a munkáltatói
-              kollektív ápolási biztosítási hozzájárulásokból eredőket (töltse ki
-              a C.3 mellékletet)
           irpf-red-prevision-social-aportaciones-trabajador:
             label: A munkavállaló hozzájárulásai, a [0438] és [0426] rovatban feltüntetettek
               kivételével
@@ -3580,6 +3576,10 @@ modelo:
             label: Csoportos gondozási-szükségleti biztosításokhoz fizetett hozzájárulások
           irpf-red-prevision-social-empleador-nif-extranjero-flag:
             label: Ha nincs adóazonosító száma, jelöld meg "X"-szel
+          irpf-red-prevision-social-exceso-ejercicios-anteriores:
+            label: Egyéni befizetések és munkáltatói hozzájárulások (kivéve a munkáltatói
+              kollektív ápolási biztosítási hozzájárulásokból eredőket (töltsd ki
+              a C.3 mellékletet)
           irpf-red-prevision-social-exceso-scd:
             label: A csoportos gondozási-szükségleti biztosításokhoz fizetett vállalati
               hozzájárulásokból eredő túllépések (Töltse ki a C.3 mellékletet)

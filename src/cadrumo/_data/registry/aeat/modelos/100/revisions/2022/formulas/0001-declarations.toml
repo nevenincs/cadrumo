@@ -529,16 +529,10 @@ target_casilla_id = "0468"
 #     contributions (0499), or the worker's contributions to the same instrument (0426, and the
 #     employer amounts deriving from the worker's decision, 0438) up to the employer contribution;
 #   - collective dependency insurance (0464 + 0466): its own 5.000.
-# The general excesses pending from earlier ejercicios (0463, Anexo C.3) are reduced first (RIRPF
-# art. 51: "se entenderán reducidas, en primer lugar, las aportaciones correspondientes a años
-# anteriores"), against the 1.500 + 8.500 pool taken whole, whatever the origin of the amounts
-# (RIRPF art. 51: the art. 52.1.b limit "operará por su importe total incrementado, con
-# independencia de la procedencia de las aportaciones"). The year's own contributions then reduce
-# within their own limits above and within what remains of that pool ("el límite máximo conjunto
-# restante"). The excess does not consume the 1.500 sub-limit of the year's own contributions: the
-# manual's worked example tests the own contributions against the 1.500 less only the year's own
-# personal contribution and reduces them in full under the 30% (2022 manual: 9.150 = 5.000 excesses
-# + 4.150 own), which a consumed sub-limit would cut to 9.000. The 30% stays the global limit.
+# The excesses pending from earlier ejercicios (0463) reduce first, against the 1.500 + 8.500 pool
+# taken whole; the year's own contributions then reduce within their own limits and what remains of
+# that pool (RIRPF art. 51). The excess does not consume the own contributions' 1.500 sub-limit, as
+# the manual's worked example shows. The 30% stays the global limit.
 # Capital, rental and imputed income never enter the 30% base, so rental income in 0432 does not
 # raise the limit.
 # A joint return holds one combined figure of each income box, while art. 52.1 limits each
@@ -589,7 +583,7 @@ expression = { op = "if_then_else", args = [
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-52-2022"]
+legal_refs = ["ley-35-2006:art-52-2022", "rd-439-2007:art-51"]
 source_refs = ["aeat-dr-100-2022-dictionary", "boe-modelo-100-2022-form", "aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".formulas.source_citations]]

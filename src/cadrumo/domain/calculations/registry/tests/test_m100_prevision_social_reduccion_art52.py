@@ -14,33 +14,24 @@ contributes.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from .....core.aggregation import BindingSourceKind
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import PinnedAuthorityOperation
-from ..bindings import resolve_available_bound_inputs_by_casilla_id
-from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ..renta_inmueble_bindings import renta_inmueble_totals
+from ..formula_runtime import RegistryCalculationResult
 from ..schema import RegistrySnapshot
-from .authored_editions import supported_exercises_with_projection
-from .modelo_100_registry_support import neutral_binding_values
+from .authored_editions import manual_edition_matches, manual_editions_printing, supported_exercises_with_projection
+from .prevision_social_calculation_support import ROLE_ALQUILER, calculate_m100_by_role, casilla_for_role
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _FORMULA_ID = "renta-reduccion-prevision-social-total"
-_FAMILIES = ("capital-mobiliario", "capital-inmobiliario", "ganancias-patrimoniales")
-_EXCLUDED_BINDING = "renta-profile-income-family-excluded-"
-_DECLARATION_TYPE = "renta-profile-declaration-type"
 _JOINT_REASON = "joint-return-member-income-unavailable"
 
 _ROLE_DINERARIO = "irpf_rendimiento_trabajo_importe_integro_dinerario"
 _ROLE_NETO_TRABAJO = "irpf_rendimiento_trabajo_rendimiento_neto"
-#: The let properties' reduced net yield, the rental income the general base reads.
-_ROLE_ALQUILER = "irpf_rendimiento_capital_inmobiliario_rendimiento_neto_reducido"
 _ROLE_SALDO_GENERAL = "irpf_saldo_neto_rdtos_base_imponible_general"
 _ROLE_EO_NETO = "irpf_rendimiento_act_eco_eo_resto_rdto_neto"
 _ROLE_REDUCCION = "irpf_reduccion_prevision_social_total"
@@ -49,10 +40,6 @@ _ROLE_TRABAJADOR_MISMO_INSTRUMENTO = "irpf_red_prevision_social_aportaciones_tra
 _ROLE_EMPRESARIAL = "irpf_red_prevision_social_contribuciones_empresariales_excepto_scd"
 _ROLE_AUTONOMO = "irpf_red_prevision_social_aportaciones_autonomos_empresarios"
 _ROLE_DEPENDENCIA = "irpf_red_prevision_social_contribuciones_scd"
-#: The 60.000 box of art. 52.1.b.1.º: it marks income up to 60.000 until the official design
-#: turned it round to mark income above 60.000.
-_ROLE_FLAG_UP_TO_60000 = "irpf_red_prevision_social_rendimientos_trabajo_igual_inferior_60000_flag"
-_ROLE_FLAG_ABOVE_60000 = "irpf_red_prevision_social_rendimientos_trabajo_superior_60000_flag"
 
 #: The art. 52 redaction of Ley 22/2021 (1.500 + 8.500, worker contributions up to the employer's)
 #: and the one of Ley 31/2022 (coefficient table, 4.250 autonomo increment).
@@ -77,68 +64,12 @@ def _snapshot(registry_snapshot: Callable[..., RegistrySnapshot], year: int) -> 
     return registry_snapshot("100", year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _casilla(snapshot: RegistrySnapshot, role: str) -> str:
-    matches = [str(casilla.id) for casilla in snapshot.revision.casillas if casilla.semantic_role == role]
-    assert len(matches) == 1, (role, matches)
-    return matches[0]
-
-
-def _calculate(
-    snapshot: RegistrySnapshot,
-    year: int,
-    figures: Mapping[str, Decimal],
-    *,
-    declaration_type: int = 1,
-    income_up_to_60000: bool = True,
-) -> RegistryCalculationResult:
-    """Calculate one return whose inputs are named by role; the profile states rental income only when given."""
-    bindings = tuple(
-        binding for binding in snapshot.revision.bindings if binding.source is not BindingSourceKind.RELATION_PREFILL
-    )
-    decimals, booleans, dates, enums = neutral_binding_values(bindings)
-    booleans["renta-modelo-100-estimacion-directa-es-normal"] = True
-    decimals |= {_DECLARATION_TYPE: Decimal(declaration_type)}
-    has_rent = _ROLE_ALQUILER in figures
-    for family in _FAMILIES:
-        booleans[_EXCLUDED_BINDING + family] = not (family == "capital-inmobiliario" and has_rent)
-    column_totals = {
-        str(provider.target_casilla_id): binding.id for binding, provider in renta_inmueble_totals(snapshot.revision)
-    }
-    inputs: dict[str, Decimal] = {}
-    for role, value in figures.items():
-        casilla = next(item for item in snapshot.revision.casillas if item.semantic_role == role)
-        if casilla.binding is not None:
-            decimals[casilla.binding] = value
-        elif str(casilla.id) in column_totals:
-            # A let property's column is held per row; the calculation reads its total over the rows.
-            decimals[column_totals[str(casilla.id)]] = value
-        else:
-            inputs[str(casilla.id)] = value
-    if any(casilla.semantic_role == _ROLE_FLAG_UP_TO_60000 for casilla in snapshot.revision.casillas):
-        inputs[_casilla(snapshot, _ROLE_FLAG_UP_TO_60000)] = Decimal(1 if income_up_to_60000 else 0)
-    if any(casilla.semantic_role == _ROLE_FLAG_ABOVE_60000 for casilla in snapshot.revision.casillas):
-        inputs[_casilla(snapshot, _ROLE_FLAG_ABOVE_60000)] = Decimal(0 if income_up_to_60000 else 1)
-    return calculate_registry_snapshot(
-        snapshot,
-        inputs={**inputs, **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, decimals)},
-        date_context={"filing_period": date(year, 12, 31)},
-        binding_values=decimals,
-        enum_binding_values=enums,
-        relation_values={
-            "renta-modelo-130-pagos-fraccionados": Decimal(0),
-            "renta-modelo-131-pagos-fraccionados": Decimal(0),
-        },
-        date_binding_values=dates,
-        boolean_binding_values=booleans,
-    )
-
-
 def _reduction(snapshot: RegistrySnapshot, result: RegistryCalculationResult) -> Decimal:
-    return result.values[_casilla(snapshot, _ROLE_REDUCCION)]
+    return result.values[casilla_for_role(snapshot, _ROLE_REDUCCION)]
 
 
 def _value(snapshot: RegistrySnapshot, result: RegistryCalculationResult, role: str) -> Decimal:
-    return result.values[_casilla(snapshot, role)]
+    return result.values[casilla_for_role(snapshot, role)]
 
 
 def test_the_formula_is_declared_from_the_ley_22_2021_redaction_and_absent_before(
@@ -155,6 +86,30 @@ def test_the_formula_is_declared_from_the_ley_22_2021_redaction_and_absent_befor
         assert declared is (year >= first), year
 
 
+_EXCESS_RULE = "rd-439-2007:art-51"
+_CUOTA_CHAIN = "renta-cuota-chain"
+
+
+def test_the_excess_rule_is_cited_once_and_appended_last_to_the_cuota_chain(
+    registry_snapshot: Callable[..., RegistrySnapshot],
+    registry_authority: PinnedAuthorityOperation,
+) -> None:
+    """RIRPF art. 51 grounds the formula and is appended to its construct, leaving the inherited order intact.
+
+    The chain's references are declared once and inherited by index, so the citation is the last
+    member in every exercise that calculates the box, and every reference of the formula is in it.
+    """
+    for year in _formula_years(registry_authority):
+        revision = _snapshot(registry_snapshot, year).revision
+        formula = next(formula for formula in revision.formulas if formula.id == _FORMULA_ID)
+        chain = next(construct for construct in revision.constructs if construct.id == _CUOTA_CHAIN)
+
+        assert _EXCESS_RULE in formula.legal_refs, year
+        assert set(formula.legal_refs) <= set(chain.legal_refs), year
+        assert chain.legal_refs.count(_EXCESS_RULE) == 1, year
+        assert chain.legal_refs[-1] == _EXCESS_RULE, year
+
+
 def test_rental_income_does_not_raise_the_percentage_limit(
     registry_snapshot: Callable[..., RegistrySnapshot],
     registry_authority: PinnedAuthorityOperation,
@@ -168,10 +123,10 @@ def test_rental_income_does_not_raise_the_percentage_limit(
     """
     for year in _formula_years(registry_authority):
         snapshot = _snapshot(registry_snapshot, year)
-        result = _calculate(
+        result = calculate_m100_by_role(
             snapshot,
             year,
-            {_ROLE_DINERARIO: Decimal("22000"), _ROLE_ALQUILER: Decimal("30000"), _ROLE_EMPRESARIAL: Decimal("8000")},
+            {_ROLE_DINERARIO: Decimal("22000"), ROLE_ALQUILER: Decimal("30000"), _ROLE_EMPRESARIAL: Decimal("8000")},
         )
 
         assert _value(snapshot, result, _ROLE_NETO_TRABAJO) == Decimal("20000.00"), year
@@ -190,7 +145,9 @@ def test_objective_estimation_activity_income_counts_toward_the_percentage_limit
     """
     for year in _formula_years(registry_authority):
         snapshot = _snapshot(registry_snapshot, year)
-        result = _calculate(snapshot, year, {_ROLE_EO_NETO: Decimal("10000"), _ROLE_EMPRESARIAL: Decimal("9000")})
+        result = calculate_m100_by_role(
+            snapshot, year, {_ROLE_EO_NETO: Decimal("10000"), _ROLE_EMPRESARIAL: Decimal("9000")}
+        )
 
         assert _reduction(snapshot, result) == Decimal("3000.00"), year
 
@@ -222,7 +179,7 @@ def test_each_absolute_limit_in_every_exercise(
     """Gross work 52.000 -> net 50.000 -> 30% = 15.000, which does not bind below 15.000."""
     for year in _formula_years(registry_authority):
         snapshot = _snapshot(registry_snapshot, year)
-        result = _calculate(snapshot, year, {_ROLE_DINERARIO: Decimal("52000"), **figures})
+        result = calculate_m100_by_role(snapshot, year, {_ROLE_DINERARIO: Decimal("52000"), **figures})
 
         assert _reduction(snapshot, result) == expected, year
 
@@ -240,7 +197,9 @@ def test_the_autonomo_increment_is_capped_at_4250_from_ley_31_2022(
     """
     for year in _formula_years(registry_authority):
         snapshot = _snapshot(registry_snapshot, year)
-        result = _calculate(snapshot, year, {_ROLE_DINERARIO: Decimal("52000"), _ROLE_AUTONOMO: Decimal("6000")})
+        result = calculate_m100_by_role(
+            snapshot, year, {_ROLE_DINERARIO: Decimal("52000"), _ROLE_AUTONOMO: Decimal("6000")}
+        )
 
         expected = Decimal("5750.00") if _coefficient_rule(year, registry_authority) else Decimal("6000.00")
         assert _reduction(snapshot, result) == expected, year
@@ -269,7 +228,7 @@ def test_worker_contributions_to_the_employer_instrument_follow_the_coefficient_
             _ROLE_TRABAJADOR_MISMO_INSTRUMENTO: Decimal("3000"),
         }
         up_to_60000 = employer_income == "up-to-60000"
-        result = _calculate(snapshot, year, figures, income_up_to_60000=up_to_60000)
+        result = calculate_m100_by_role(snapshot, year, figures, income_up_to_60000=up_to_60000)
 
         table = _coefficient_rule(year, registry_authority) and up_to_60000
         expected = Decimal("3875.00") if table else Decimal("3500.00")
@@ -293,7 +252,7 @@ def test_the_first_tramo_of_the_coefficient_table_multiplies_by_two_and_a_half(
             _ROLE_EMPRESARIAL: Decimal("400"),
             _ROLE_TRABAJADOR_MISMO_INSTRUMENTO: Decimal("3000"),
         }
-        result = _calculate(snapshot, year, figures)
+        result = calculate_m100_by_role(snapshot, year, figures)
 
         expected = Decimal("2900.00") if _coefficient_rule(year, registry_authority) else Decimal("2300.00")
         assert _reduction(snapshot, result) == expected, year
@@ -309,12 +268,12 @@ def test_a_joint_return_with_contributions_leaves_the_reduction_unresolved(
     """
     for year in _formula_years(registry_authority):
         snapshot = _snapshot(registry_snapshot, year)
-        target = _casilla(snapshot, _ROLE_REDUCCION)
+        target = casilla_for_role(snapshot, _ROLE_REDUCCION)
 
-        with_contribution = _calculate(
+        with_contribution = calculate_m100_by_role(
             snapshot, year, {_ROLE_DINERARIO: Decimal("52000"), _ROLE_TRABAJADOR: Decimal("1000")}, declaration_type=2
         )
-        without = _calculate(snapshot, year, {_ROLE_DINERARIO: Decimal("52000")}, declaration_type=2)
+        without = calculate_m100_by_role(snapshot, year, {_ROLE_DINERARIO: Decimal("52000")}, declaration_type=2)
 
         unresolved = {str(outcome.casilla_id): outcome for outcome in with_contribution.unresolved_outcomes}
         assert target in unresolved, year
@@ -323,9 +282,9 @@ def test_a_joint_return_with_contributions_leaves_the_reduction_unresolved(
         assert _reduction(snapshot, without) == Decimal("0.00"), year
 
 
-#: The general excesses pending from earlier ejercicios (Anexo C.3) and the collective dependency
-#: insurance ones; the registry's role name for the first predates its reading as an excess.
-_ROLE_EXCESO_GENERAL = "irpf_red_prevision_social_aportaciones_individuales"
+#: The excesses pending from earlier ejercicios (Anexo C.3) other than the collective dependency
+#: insurance ones, and those.
+_ROLE_EXCESO_GENERAL = "irpf_red_prevision_social_exceso_ejercicios_anteriores"
 _ROLE_EXCESO_DEPENDENCIA = "irpf_red_prevision_social_exceso_scd"
 _ROLE_EMPRESA_DECISION_TRABAJADOR = "irpf_red_prevision_social_aportaciones_empresa_decision_trabajador"
 _ROLE_BASE_LIQUIDABLE_GENERAL = "irpf_base_liquidable_general"
@@ -353,7 +312,9 @@ def test_earlier_excesses_reduce_against_the_whole_pool(
     """
     for year in _formula_years(registry_authority):
         snapshot = _snapshot(registry_snapshot, year)
-        result = _calculate(snapshot, year, {_ROLE_DINERARIO: Decimal("52000"), _ROLE_EXCESO_GENERAL: excess})
+        result = calculate_m100_by_role(
+            snapshot, year, {_ROLE_DINERARIO: Decimal("52000"), _ROLE_EXCESO_GENERAL: excess}
+        )
 
         assert _reduction(snapshot, result) == expected, year
 
@@ -375,45 +336,76 @@ def test_own_contributions_reduce_within_what_the_excess_leaves_of_the_pool(
             _ROLE_EXCESO_GENERAL: Decimal("9000"),
             _ROLE_TRABAJADOR: Decimal("3000"),
         }
-        result = _calculate(snapshot, year, figures)
+        result = calculate_m100_by_role(snapshot, year, figures)
 
         assert _reduction(snapshot, result) == Decimal("10000.00"), year
 
 
-def test_the_manual_worked_example_of_each_rule_period(
+#: The Manual practico de Renta example "aportaciones a sistemas de previsión social", in the
+#: normalised text of each edition. It captures, in order: the general and the dependency insurance
+#: excess pending from the previous ejercicio, the personal plan contribution, the employer
+#: contribution, the dependency insurance contribution, the flexible-pay worker amount, the net work
+#: income, and the summary line "base liquidable general (base - reduction) = result".
+_MANUAL_EXAMPLE = (
+    r"ejemplo: aportaciones a sistemas de prevision social .{0,900}?"
+    r"exceso pendiente que ascendia a ([\d.]+) euros por las aportaciones y contribuciones al plan de pensiones, "
+    r"y ([\d.]+) euros por la contribucion empresarial al seguro colectivo de dependencia\. .{0,200}?"
+    r"aportaciones al plan de pensiones privado por importe de ([\d.]+) euros\. .{0,120}?"
+    r"plan de pensiones de empleo de la misma por importe de ([\d.]+) euros "
+    r"y de ([\d.]+) al seguro colectivo de dependencia\. .{0,1200}?"
+    r"solicita que aporten ([\d.]+) euros .{0,400}?rendimientos netos del trabajo .{0,40}?ascienden a ([\d.]+) euros"
+    r".{0,9000}?base liquidable general \(([\d.]+) . ([\d.]+)\) = ([\d.]+)"
+)
+#: The fixed other expense of art. 19.2.f that turns the money gross into the net work income.
+_FIXED_WORK_EXPENSE = Decimal("2000")
+
+
+def _manual_amount(printed: str) -> Decimal:
+    return Decimal(printed.replace(".", ""))
+
+
+def test_the_manual_worked_example_of_every_exercise_with_a_manual(
     registry_snapshot: Callable[..., RegistrySnapshot],
     registry_authority: PinnedAuthorityOperation,
 ) -> None:
-    """The Manual practico de Renta example "aportaciones a sistemas de previsión social", per redaction.
+    """Each bundled manual edition's worked example, read from its text, through the real resolver.
 
-    Net work income and general base 30.500, so 30% = 9.150 (gross 32.500 less the fixed 2.000 of
-    art. 19.2.f; the manual's gross differs only by expenses that do not reach the limit). Pending
-    from the previous ejercicio: 3.500 general and 1.500 dependency insurance. Own contributions:
-    personal plan 500, dependency insurance 1.000, and under Ley 22/2021 employer 1.500 with a
-    flexible-pay worker amount of 2.500 (manual 2022); under Ley 31/2022 employer 1.400 with 2.300,
-    of which the coefficient table admits 1.475 in the increment (manuals 2023 to 2025).
+    Locators, ``corpus/manuals/renta/<edition>/part1/source.pdf.extracted.md``: 2022 lines
+    34393-34545, 2023 lines 40487-40660, 2024 lines 44817-44990, 2025 lines 40580-40753. Each states
+    net work income and general base 30.500, so 30% = 9.150; pending from the previous ejercicio
+    3.500 general and 1.500 dependency insurance; own contributions: personal plan 500, dependency
+    insurance 1.000, employer 1.500 with a flexible-pay worker amount of 2.500 (2022, Ley 22/2021)
+    or employer 1.400 with 2.300, of which the coefficient table admits 1.475 (2023 to 2025, Ley
+    31/2022). The money gross is the net plus the fixed 2.000 of art. 19.2.f; the 2023 to 2025
+    editions print a gross of 35.000, whose other expenses do not reach the limit.
 
-    In both the own amounts are within their limits with the 1.500 reduced only by the 500 personal
-    contribution, never by the excess; the excess 5.000 reduces first and the own amounts take the
-    4.150 the 30% leaves, so 0468 = 9.150 and the base liquidable general is 30.500 - 9.150 = 21.350.
-    A sub-limit consumed by the excess would cut the own general amounts to the increment alone and
-    give 9.000 (Ley 22/2021) or 8.875 (Ley 31/2022). The manual's summary line "Remanente de base
-    imponible (30.000 - 5.000) = 25.500" misprints the 30.500 base; 30.500 - 5.000 = 25.500 is used.
+    The excess 5.000 reduces first and the own amounts take the 4.150 the 30% leaves, with the
+    1.500 reduced only by the 500 personal contribution, never by the excess: 0468 = 9.150 and the
+    base liquidable general is 21.350. A sub-limit consumed by the excess would give 9.000 (Ley
+    22/2021) or 8.875 (Ley 31/2022). The summary line "Remanente de base imponible (30.000 - 5.000)
+    = 25.500" misprints the 30.500 base.
     """
-    for year in _formula_years(registry_authority):
+    examples = manual_edition_matches("renta", _MANUAL_EXAMPLE)
+    printed = set(manual_editions_printing("renta"))
+    exercises = [year for year in _formula_years(registry_authority) if year in printed]
+    assert exercises
+    assert set(exercises) <= set(examples), sorted(set(exercises) - set(examples))
+    for year in exercises:
+        (excess, excess_dependency, personal, employer, dependency, worker, net, base, reduction, liquidable) = (
+            _manual_amount(group) for group in examples[year].groups()
+        )
         snapshot = _snapshot(registry_snapshot, year)
-        coefficient_rule = _coefficient_rule(year, registry_authority)
         figures = {
-            _ROLE_DINERARIO: Decimal("32500"),
-            _ROLE_EXCESO_GENERAL: Decimal("3500"),
-            _ROLE_EXCESO_DEPENDENCIA: Decimal("1500"),
-            _ROLE_TRABAJADOR: Decimal("500"),
-            _ROLE_EMPRESARIAL: Decimal("1400") if coefficient_rule else Decimal("1500"),
-            _ROLE_EMPRESA_DECISION_TRABAJADOR: Decimal("2300") if coefficient_rule else Decimal("2500"),
-            _ROLE_DEPENDENCIA: Decimal("1000"),
+            _ROLE_DINERARIO: net + _FIXED_WORK_EXPENSE,
+            _ROLE_EXCESO_GENERAL: excess,
+            _ROLE_EXCESO_DEPENDENCIA: excess_dependency,
+            _ROLE_TRABAJADOR: personal,
+            _ROLE_EMPRESARIAL: employer,
+            _ROLE_EMPRESA_DECISION_TRABAJADOR: worker,
+            _ROLE_DEPENDENCIA: dependency,
         }
-        result = _calculate(snapshot, year, figures)
+        result = calculate_m100_by_role(snapshot, year, figures)
 
-        assert _value(snapshot, result, _ROLE_NETO_TRABAJO) == Decimal("30500.00"), year
-        assert _reduction(snapshot, result) == Decimal("9150.00"), year
-        assert _value(snapshot, result, _ROLE_BASE_LIQUIDABLE_GENERAL) == Decimal("21350.00"), year
+        assert _value(snapshot, result, _ROLE_NETO_TRABAJO) == net == base, year
+        assert _reduction(snapshot, result) == reduction, year
+        assert _value(snapshot, result, _ROLE_BASE_LIQUIDABLE_GENERAL) == liquidable, year

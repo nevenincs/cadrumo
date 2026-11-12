@@ -85,7 +85,7 @@ _CORRECT_DOOR: Final = (
     "Wait for this year's placement to be confirmed, or remove the record with aeat app ledger prevision-social "
     "remove and enter the box by hand with the modelo work edit action."
 )
-_NOT_CERTIFIED_WORDS: Final = "aggregation.prevision_social_contribution.served.not_certified"
+_NOT_CERTIFIED_LOCALE_KEY: Final = "aggregation.prevision_social_contribution.served.not_certified"
 
 
 def _catalogue_language() -> OutputLanguage:
@@ -265,7 +265,7 @@ class PrevisionSocialContributionSourceResolver:
             source_kind=_SOURCE_KIND.value,
             binding_source=_SOURCE_KIND,
             resolver_id=self.resolver_id,
-            message=tr(_NOT_CERTIFIED_WORDS),
+            message=tr(_NOT_CERTIFIED_LOCALE_KEY),
             message_language=_catalogue_language(),
             remedy=_RECORD_DOOR,
             fact=CalculationNoteFact.of(CalculationNoteSentence.PREVISION_SOCIAL_CONTRIBUTION_NOT_CERTIFIED),
