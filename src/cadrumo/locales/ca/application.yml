@@ -789,6 +789,14 @@ application:
       retired_book_leaves_year_unresolved: Aquest inventari està retirat però encara
         té apunts, de manera que l'Annex D de %{year} queda sense resoldre. Restaura'l
         o elimina'n els apunts.
+    effects:
+      purchase_ledger_row:
+        claimed: Aquesta compra registra la transacció del llibre que indiques; aquesta
+          fila queda fora de les despeses del Model 100 i la compra porta el seu cost
+          al llibre d'inventari.
+        none: Indiques que cap transacció del llibre registra aquesta compra.
+        unstated: Encara no s'ha indicat res sobre la transacció del llibre que registra
+          aquesta compra.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Comprovació del cost
@@ -836,6 +844,10 @@ application:
       physical_evidence_role:
         acquisition_price_valuation: Valoració a preu de compra
         physical_count: Recompte físic
+      purchase_ledger_row:
+        claimed: Registrada per una transacció del llibre
+        none: Sense transacció al llibre
+        unstated: Sense indicar
       retirement_reason:
         activity_ceased: Activitat cessada
         created_in_error: Creat per error

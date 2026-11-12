@@ -7,7 +7,7 @@ No schema here carries a payer tax identifier: a record is named by its keyed
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Literal
+from typing import Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -25,6 +25,7 @@ from .contracts import (
     RetencionSoportadaCertificadoRefusalReason,
     RetencionSoportadaOperationId,
 )
+from .row_words import RetencionSoportadaAmountColumnProjection, origin_label, payer_display_name
 
 
 def _optional_amount(amount: Decimal | None) -> PublicDecimal | None:
@@ -41,6 +42,8 @@ class RetencionSoportadaRowProjection(BaseModel):
     income_class_label: str
     payer_ref: Hex64Str
     payer_legal_name: str | None
+    #: The legal name, or words saying the record states none, so a frontend never names a payer itself.
+    payer_display_name: str
     importe_integro_dinerario: PublicDecimal
     valoracion_especie: PublicDecimal
     retencion: PublicDecimal
@@ -50,6 +53,7 @@ class RetencionSoportadaRowProjection(BaseModel):
     gastos_deducibles: PublicDecimal | None
     pago_a_cuenta: PublicDecimal
     origin: RetencionSoportadaOrigen
+    origin_label: str
     evidence_fingerprint: Hex64Str | None
     revision_id: str
 
@@ -62,6 +66,7 @@ class RetencionSoportadaRowProjection(BaseModel):
             income_class_label=retencion_soportada_clase_label(record.income_class),
             payer_ref=record.payer_ref,
             payer_legal_name=record.payer_legal_name,
+            payer_display_name=payer_display_name(record.payer_legal_name),
             importe_integro_dinerario=PublicDecimal(decimal=str(record.importe_integro_dinerario)),
             valoracion_especie=PublicDecimal(decimal=str(record.valoracion_especie)),
             retencion=PublicDecimal(decimal=str(record.retencion)),
@@ -71,6 +76,7 @@ class RetencionSoportadaRowProjection(BaseModel):
             gastos_deducibles=_optional_amount(record.gastos_deducibles),
             pago_a_cuenta=PublicDecimal(decimal=str(record.pago_a_cuenta)),
             origin=record.origin,
+            origin_label=origin_label(record.origin),
             evidence_fingerprint=record.evidence_fingerprint,
             revision_id=revision_id,
         )
@@ -104,6 +110,10 @@ class RetencionSoportadaListProjection(BaseModel):
     profile_id: UUID
     ejercicio: FilingYear
     rows: tuple[RetencionSoportadaRowProjection, ...]
+    #: The amount fields of a row, in row order, each with its words.
+    amount_columns: tuple[RetencionSoportadaAmountColumnProjection, ...]
+    #: Every ejercicio the pinned authority supports, oldest first, so a frontend holds no year list.
+    ejercicios: tuple[FilingYear, ...]
 
 
 class RetencionSoportadaMutationProjection(BaseModel):
@@ -133,6 +143,14 @@ class RetencionSoportadaMutationProjection(BaseModel):
         return self
 
 
+_COUNT_ONLY: Final = (False, False, False, False, True)
+_SUCCESS_ARMS: Final[dict[str, tuple[bool, bool, bool, bool, bool]]] = {
+    "list": (True, True, True, False, False),
+    "record": (False, False, False, True, True),
+}
+"""Which of rows, amount columns, ejercicios, row and count a successful result of each operation states."""
+
+
 class RetencionSoportadaOperationExecutionResult(BaseModel):
     """Private result held in operation operand custody until projection."""
 
@@ -143,6 +161,8 @@ class RetencionSoportadaOperationExecutionResult(BaseModel):
     profile_id: UUID
     ejercicio: FilingYear
     rows: tuple[RetencionSoportadaRowProjection, ...] | None = None
+    amount_columns: tuple[RetencionSoportadaAmountColumnProjection, ...] | None = None
+    ejercicios: tuple[FilingYear, ...] | None = None
     row: RetencionSoportadaRowProjection | None = None
     count: int | None = None
     refusal: RetencionSoportadaRefusalProjection | None = None
@@ -163,17 +183,24 @@ class RetencionSoportadaOperationExecutionResult(BaseModel):
         return (
             self.operation_id != "list"
             and self.rows is None
+            and self._list_words_absent()
             and self.row is None
             and self.count is None
             and self.refusal is not None
         )
 
+    def _list_words_absent(self) -> bool:
+        return self.amount_columns is None and self.ejercicios is None
+
     def _success_arm_is_closed(self) -> bool:
-        if self.operation_id == "list":
-            return self.rows is not None and self.row is None and self.count is None
-        if self.operation_id == "record":
-            return self.rows is None and self.row is not None and self.count is not None
-        return self.rows is None and self.row is None and self.count is not None
+        stated = (
+            self.rows is not None,
+            self.amount_columns is not None,
+            self.ejercicios is not None,
+            self.row is not None,
+            self.count is not None,
+        )
+        return stated == _SUCCESS_ARMS.get(self.operation_id, _COUNT_ONLY)
 
 
 __all__ = [

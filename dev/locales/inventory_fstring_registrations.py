@@ -8,9 +8,29 @@ if TYPE_CHECKING:
     from .fstring_registry import FStringKeyRegistration
 
 
+def _option_keys() -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """The word key of every inventory option, and of each effect sentence the options serve."""
+    from cadrumo.application.inventory.registered_options_operation import (
+        INVENTORY_EFFECT_FAMILIES,
+        INVENTORY_OPTION_FAMILIES,
+        inventory_option_effect_key,
+        inventory_option_label_key,
+    )
+
+    label_keys = tuple(
+        inventory_option_label_key(family, member) for family, enum in INVENTORY_OPTION_FAMILIES for member in enum
+    )
+    effect_keys = tuple(
+        inventory_option_effect_key(family, member)
+        for family, enum in INVENTORY_OPTION_FAMILIES
+        if family in INVENTORY_EFFECT_FAMILIES
+        for member in enum
+    )
+    return label_keys, effect_keys
+
+
 def inventory_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Register inventory keys from their domain and command-spec vocabularies."""
-    from cadrumo.application.inventory.registered_options_operation import INVENTORY_OPTION_FAMILIES
     from cadrumo.application.inventory.registered_projections import (
         InventoryAdvisoryProjection,
         InventoryLedgerChangeProjection,
@@ -19,11 +39,7 @@ def inventory_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
 
     from .fstring_registry import FStringKeyRegistration
 
-    label_keys = tuple(
-        f"application.inventory.labels.{family}.{member.value}"
-        for family, enum in INVENTORY_OPTION_FAMILIES
-        for member in enum
-    )
+    label_keys, effect_keys = _option_keys()
     advisory_keys = tuple(
         f"application.inventory.advisories.{code}"
         for code in get_args(InventoryAdvisoryProjection.model_fields["code"].annotation)
@@ -53,6 +69,11 @@ def inventory_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="application.inventory.advisories.* (closed inventory advisory codes)",
             key_factory=lambda key: key,
             values=advisory_keys,
+        ),
+        FStringKeyRegistration(
+            description="application.inventory.effects.* (the sentence stating what choosing an inventory option does)",
+            key_factory=lambda key: key,
+            values=effect_keys,
         ),
         FStringKeyRegistration(
             description="application.inventory.labels.* (closed inventory reason and history enums)",

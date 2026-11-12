@@ -258,6 +258,11 @@ aggregation:
       unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
         del Model 100 (p.ex. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: Vigent
+      withdrawn: Retirada
+    amount:
+      pago_a_cuenta: Total de pagaments a compte
     clase:
       actividad_economica: Rendiments d'activitats econòmiques
       arrendamiento_inmueble_urbano: 'Rendiments del capital immobiliari: arrendament
@@ -310,6 +315,10 @@ aggregation:
         res; cap altra classe de renda no els admet.
       validation: 'El registre de retenció no s''ha desat: revisa el NIF del pagador,
         els imports (com a màxim dos decimals) i l''empremta del certificat.'
+    origen:
+      operator_declaration: La teva pròpia declaració
+      payer_certificate: Certificat del pagador
+    payer_unnamed: Pagador sense nom indicat
     served:
       certificate_file_unreadable: No s'ha pogut llegir el fitxer del certificat.
         Comprova que encara existeix, que no està buit i que és un PDF, una imatge

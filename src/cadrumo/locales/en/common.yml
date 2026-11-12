@@ -243,6 +243,11 @@ aggregation:
       unsupported_period: Annual period is required for Modelo 100 income aggregation
         (e.g. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: In force
+      withdrawn: Withdrawn
+    amount:
+      pago_a_cuenta: Total payments on account
     clase:
       actividad_economica: Economic activity income
       arrendamiento_inmueble_urbano: 'Income from real estate capital: urban property
@@ -292,6 +297,10 @@ aggregation:
         takes them.
       validation: 'The withholding record was not saved: check the payer ID, the amounts
         (at most two decimals) and the certificate fingerprint.'
+    origen:
+      operator_declaration: Your own declaration
+      payer_certificate: Payer's certificate
+    payer_unnamed: Payer without a stated name
     served:
       certificate_file_unreadable: The certificate file could not be read. Check that
         it still exists, is not empty and is a PDF, an image or an XML document, then
