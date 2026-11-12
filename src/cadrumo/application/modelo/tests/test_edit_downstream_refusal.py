@@ -3,8 +3,10 @@
 When the recalculation reads a Modelo 200 revision whose published authority
 cannot satisfy a filing snapshot, the registry gate refuses. The edit carries
 that refusal's code, a key no value completes and its door with every value
-taken out, and settles as that refusal, never as "state the value again". Real
-registry gate, real published authority, real refusal translation.
+taken out, and settles as that refusal, never as "state the value again". A
+refusal whose sentence names only public registry coordinates keeps exactly
+those and is served finished; a sentence needing anything else names the code.
+Real registry gate, real published authority, real refusal translation.
 """
 
 from __future__ import annotations
@@ -12,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
@@ -27,9 +30,15 @@ from ....domain.calculations.registry.errors import (
 )
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
-from ..action_errors import modelo_edit_refusal_error
+from ...operations.error_detail import UNWORDED_REGISTERED_ERROR_LOCALE_KEY
+from ..action_errors import ModeloProfileReadinessError, modelo_edit_refusal_error
+from ..edit_downstream_refusal import downstream_refusal, downstream_refusal_error
 from ..edit_execution import pre_effect_refusal
-from ..edit_models import ModeloEditDomainRefusalV1
+from ..edit_models import (
+    ModeloEditDomainRefusalV1,
+    ModeloEditDownstreamContextEntryV1,
+    ModeloEditDownstreamRefusalV1,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -126,3 +135,112 @@ def test_a_door_keeps_its_action_and_argument_names_but_never_their_values() -> 
     assert "private exception" not in refusal.model_dump_json()
     for language in OutputLanguage:
         assert _PROFILE_LABEL not in resolve_error_message(error, locale=language.value)
+
+
+_BINDING_KEY = "errors.calc.bound_casilla_binding_value_missing"
+_BINDING = "prior-general-loss"
+#: Synthetic private values; none may reach the refusal record or its words.
+_AMOUNT = "4321.98"
+_NAME_AND_TAX_ID = "Ana Ejemplo 00000000T"
+_READINESS_KEY = "application.modelo.errors.profile_readiness_missing"
+
+
+def _binding_error(binding_id: str) -> RegistryValidationError:
+    return RegistryValidationError(
+        f"private exception sentence {_AMOUNT}",
+        translated_message=_BINDING_KEY,
+        context={"binding_id": binding_id, "amount": _AMOUNT},
+    )
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_a_sentence_naming_only_public_coordinates_is_served_finished(language: OutputLanguage) -> None:
+    refusal = downstream_refusal(_binding_error(_BINDING))
+
+    assert refusal.message_key == _BINDING_KEY
+    assert refusal.context == (ModeloEditDownstreamContextEntryV1(key="binding_id", value=_BINDING),)
+    words = resolve_error_message(downstream_refusal_error(refusal), locale=language.value)
+    assert words == tr(_BINDING_KEY, locale=language.value, binding_id=_BINDING)
+    assert _BINDING in words
+    assert not extract_placeholders(words)
+    assert _AMOUNT not in words
+    assert _AMOUNT not in refusal.model_dump_json()
+
+
+def test_a_sentence_needing_a_private_value_falls_back_to_the_code() -> None:
+    support = published_supported_filing_years()
+    assert support is not None
+    error = ModeloProfileReadinessError(
+        translated_message=_READINESS_KEY,
+        context={
+            "modelo": "130",
+            "filing_year": support.horizon,
+            "period": "1T",
+            "profile_requirements": _NAME_AND_TAX_ID,
+        },
+    )
+    refusal = downstream_refusal(error)
+
+    assert refusal.message_key is None
+    assert refusal.context == ()
+    dumped = refusal.model_dump_json()
+    assert _NAME_AND_TAX_ID not in dumped
+    assert "profile_requirements" not in dumped
+    settled = downstream_refusal_error(refusal)
+    for language in OutputLanguage:
+        words = resolve_error_message(settled, locale=language.value)
+        assert words == tr(UNWORDED_REGISTERED_ERROR_LOCALE_KEY, locale=language.value, error_code=refusal.error_code)
+        assert _NAME_AND_TAX_ID not in words
+
+
+@pytest.mark.parametrize("binding_id", [_NAME_AND_TAX_ID, _AMOUNT + " EUR", "x" * 200, "C:/private/path"])
+def test_a_public_key_whose_value_is_not_a_coordinate_is_dropped(binding_id: str) -> None:
+    refusal = downstream_refusal(_binding_error(binding_id))
+
+    assert refusal.message_key is None
+    assert refusal.context == ()
+    assert binding_id not in refusal.model_dump_json()
+    words = resolve_error_message(downstream_refusal_error(refusal), locale=OutputLanguage.EN.value)
+    assert binding_id not in words
+
+
+def test_a_record_written_before_the_context_still_validates_and_keeps_its_shape() -> None:
+    record = {"error_code": "ERROR_CALCULATIONS_REGISTRY_VALIDATION", "message_key": _BINDING_KEY}
+
+    refusal = ModeloEditDownstreamRefusalV1.model_validate(record)
+
+    assert refusal.context == ()
+    assert "context" not in refusal.model_dump(mode="json")
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("profile_requirements", "irpf.estimation_regime"),
+        ("amount", "100"),
+        ("binding_id", _NAME_AND_TAX_ID),
+        ("modelo", "13O"),
+        ("period", "first quarter"),
+        ("filing_year", "1T"),
+        ("casilla_ids", "0001,0002"),
+    ],
+)
+def test_the_contract_refuses_a_key_or_value_outside_the_public_context(key: str, value: str) -> None:
+    with pytest.raises(ValidationError) as raised:
+        ModeloEditDownstreamContextEntryV1(key=key, value=value)
+    assert value not in str(raised.value)
+
+
+def test_the_contract_carries_context_only_with_its_sentence_each_key_once_in_order() -> None:
+    modelo = ModeloEditDownstreamContextEntryV1(key="modelo", value="130")
+    period = ModeloEditDownstreamContextEntryV1(key="period", value="1T")
+    code = "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
+
+    with pytest.raises(ValidationError):
+        ModeloEditDownstreamRefusalV1(error_code=code, context=(modelo,))
+    with pytest.raises(ValidationError):
+        ModeloEditDownstreamRefusalV1(error_code=code, message_key=_BINDING_KEY, context=(period, modelo))
+    with pytest.raises(ValidationError):
+        ModeloEditDownstreamRefusalV1(error_code=code, message_key=_BINDING_KEY, context=(modelo, modelo))
+    kept = ModeloEditDownstreamRefusalV1(error_code=code, message_key=_BINDING_KEY, context=(modelo, period))
+    assert tuple(entry.key for entry in kept.context) == ("modelo", "period")
