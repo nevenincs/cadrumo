@@ -41,6 +41,19 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
+_M210_AGRUPACION_LOCALE_KEYS = {
+    "empty_group": "application.modelo.errors.m210_agrupacion_empty_group",
+    "duplicate_source_id": "application.modelo.errors.m210_agrupacion_duplicate_source_id",
+    "mixed_tipo_renta_code": "application.modelo.errors.m210_agrupacion_mixed_tipo_renta_code",
+    "annual_code_not_lease_or_sublease": "application.modelo.errors.m210_agrupacion_annual_code_not_lease_or_sublease",
+    "mixed_tipo_gravamen": "application.modelo.errors.m210_agrupacion_mixed_tipo_gravamen",
+    "missing_bien_derecho": "application.modelo.errors.m210_agrupacion_missing_bien_derecho",
+    "mixed_bien_derecho": "application.modelo.errors.m210_agrupacion_mixed_bien_derecho",
+    "payer_mode_not_declared": "application.modelo.errors.m210_agrupacion_payer_mode_not_declared",
+    "mixed_pagador": "application.modelo.errors.m210_agrupacion_mixed_pagador",
+}
+
+
 def validate_m210_agrupacion_renta_rows_for_calculation(
     *,
     work_unit: WorkUnit,
@@ -89,6 +102,9 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
     except Modelo210AgrupacionRentaRowsError as exc:
         raise ModeloError(
             str(exc),
+            translated_message=_M210_AGRUPACION_LOCALE_KEYS.get(
+                exc.reason, "application.modelo.errors.m210_agrupacion_rows_invalid"
+            ),
             context={"reason": exc.reason, "detail": exc.detail},
             precondition_verdict=operator_choice_verdict("m210_agrupacion_rows"),
         ) from exc

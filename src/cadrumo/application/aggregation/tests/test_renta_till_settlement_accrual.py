@@ -17,6 +17,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.casilla_id import validated_casilla_id
@@ -32,6 +33,8 @@ from .renta_income_aggregation_support import (
 )
 from .test_renta_gasto_linked_invoice import BUCKET, YEAR, criteria
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
@@ -43,7 +46,11 @@ def _settlement(name: str, on: date, amount: str, *, till: bool = True) -> Trans
         taxable_base=Decimal(amount),
         business_classification=BusinessClassification.BUSINESS,
     )
-    return row.model_copy(update={"iva_category": require_iva_category("recargo_equivalencia")}) if till else row
+    return (
+        row.model_copy(update={"iva_category": require_iva_category("recargo_equivalencia", effective_date=_ON_DATE)})
+        if till
+        else row
+    )
 
 
 def _first_quarter_income(*rows: Transaction) -> tuple[Decimal, list[str]]:

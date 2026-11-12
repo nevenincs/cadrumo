@@ -30,6 +30,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.iva_category_resolution import IvaCategoryOutcome
@@ -42,6 +43,8 @@ from ..classification_assembly import DeclaredFact, DeclaredFacts, assemble_clas
 from ..classification_category_resolution import declared_category_from_document_record, resolve_ingestion_iva_category
 from ..classifier_inputs import collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -119,7 +122,9 @@ def test_a_declared_code_is_read_into_a_fact_carrying_its_attribution() -> None:
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         fact = declared_category_from_document_record(
-            IvaCategory("domestic_reverse_charge").value, operation=_authority_operation_for_test
+            IvaCategory("domestic_reverse_charge").value,
+            operation=_authority_operation_for_test,
+            effective_date=_ON_DATE,
         )
 
         assert fact is not None
@@ -138,7 +143,12 @@ def test_an_absent_blank_or_unrecognised_code_establishes_nothing(printed: str |
     fully supports.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert declared_category_from_document_record(printed, operation=_authority_operation_for_test) is None
+        assert (
+            declared_category_from_document_record(
+                printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
+            is None
+        )
 
 
 # --------------------------------------------------------------------------

@@ -131,3 +131,31 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/0
 # now feeds [170], whose Tipo [169] admits "00050". This box stays operator-input
 # until the tabaco population is modelled -- an omission, not this mis-allocation.
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Working figures behind box [18]: the 4 % recargo and the transitional reducido recargo
+# are separate populations on one printed rung, so [18] sums them.
+[[revisions.2023.casillas]]
+id = "recargo.super-reducido"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2023 publica la casilla [18] (cuota del recargo de equivalencia, tipos 0 %, 0,5 % y 0,62 %). Esta fila es el acumulador de la cuota del recargo al 4 % que alimenta la casilla numerada [18] mediante modelo-303-dr303-18-projection; no es otra casilla impresa."
+number = "recargo.super-reducido"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_recargo_equivalencia_super_reducido"
+continuidad_id = "iva-recargo-equivalencia-super-reducido"
+input_kind = "bound"
+binding = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "recargo.reducido.transitorio"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2023 publica la casilla [18] (cuota del recargo de equivalencia, tipos 0 %, 0,5 % y 0,62 %). Esta fila es el acumulador de la cuota del recargo transitorio del tipo reducido que alimenta la casilla numerada [18] mediante modelo-303-dr303-18-projection; no es otra casilla impresa."
+number = "recargo.reducido.transitorio"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_recargo_equivalencia_reducido_transitorio"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The transitional reducido recargo (5pct, then 7,5pct) coexists with the 10pct reducido recargo of rung [19]-[21], so it is a genuine second reducido recargo carrier on rung [18], not a typo twin."
+continuidad_id = "iva-recargo-equivalencia-reducido-transitorio"
+input_kind = "bound"
+binding = "modelo-303-recargo-equivalencia-reducido-transitorio-cuota"
+legal_refs = ["ley-37-1992:art-161", "real-decreto-ley-20-2022:art-72", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

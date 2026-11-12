@@ -25,7 +25,7 @@ from ...application.modelo.revision_selection_operation import (
     ModeloWorkRevisionRequest,
 )
 from ...application.modelo.selectors import ModeloCalculationRevisionDefault, ModeloCalculationRevisionSelector
-from ...application.modelo.work_addressing import ModeloWorkAddressNotFoundError
+from ...application.modelo.work_address_errors import ModeloWorkAddressNotFoundError
 from ...application.modelo.work_filing_contracts import ModeloWorkFilePublicResultV2, ModeloWorkFileRequest
 from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.public_period import PublicPeriod

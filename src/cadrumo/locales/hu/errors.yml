@@ -175,6 +175,7 @@ errors:
     count: darabszám
     currency: pénznem
     detail: részlet
+    door: parancs
     ejercicio: adóév
     entry_count: bejegyzések száma
     expected: várt
@@ -200,6 +201,7 @@ errors:
     remedy: teendő
     revision: revízió
     row: sor
+    schema_version: sémaverzió
     section: szakasz
     state: állapot
     status: állapot
@@ -725,6 +727,32 @@ errors:
       a tartalmával; a manifeszt sérült vagy manipulált lehet.
     canonical_unsupported_manifest_version: A korpusz manifesztje nem támogatott verziót
       használ.
+    filing_approval_basis_version_stale: A bevallás jóváhagyása a(z) %{version} alapverziót
+      használja, a jelenlegi alapverzió viszont a(z) %{current_version}. Hagyd jóvá
+      újra a bevallást.
+    filing_binding_row_source_kind_differs: A bevallás egy sorértéke a mezője forrásától
+      eltérő sorszármazást nevez meg. A mentett bevallás sérült; építsd fel újra.
+    filing_binding_row_source_needs_row: A bevallás egy sorértéke megnevezi, honnan
+      származnak a sorai, de azt nem, hogy melyik sor. A mentett bevallás sérült;
+      építsd fel újra.
+    filing_draft_binding_claimed_twice: A bevallás ugyanahhoz a mezősorhoz több értéket
+      is megad (%{bindings}). Mezősoronként egy értéket hagyj meg.
+    filing_draft_casilla_claimed_twice: A bevallás ugyanahhoz a rovathoz több értéket
+      is megad (%{casillas}). Rovatonként egy értéket hagyj meg.
+    filing_draft_modelo_differs: A bevallás a(z) %{modelo} Modelóra szól, de a nyilvántartási
+      pillanatképe a(z) %{snapshot_modelo} Modelóra. Építsd fel újra a bevallást.
+    filing_draft_period_token_differs: A bevallás a(z) %{period} időszakra szól, de
+      a nyilvántartási pillanatképe a(z) %{snapshot_period} időszakra. Építsd fel
+      újra a bevallást.
+    filing_draft_period_year_differs: A bevallás a(z) %{filing_year}. évre szól, de
+      a nyilvántartási pillanatképe a(z) %{snapshot_year}. évre. Építsd fel újra a
+      bevallást.
+    filing_draft_schema_marker_differs: A bevallás a(z) %{schema_version} definícióverziót
+      rögzíti, de a nyilvántartási pillanatképe a(z) %{expected_schema_version} verziót
+      adja. Építsd fel újra a bevallást.
+    filing_draft_taxpayer_diverges: A bevallás két különböző adózót nevez meg, egyet
+      a profilhoz és egyet a benyújtás alanyához. Egy bevallás egyetlen adózóhoz tartozik;
+      építsd fel újra a megfelelő profilból.
     filing_export_boolean_in_text_slot: A(z) %{field} exportmező nem írhat logikai
       előállítói tényt egy %{length} bájtos szövegmezőbe. Az alkalmazás ezt a saját
       exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
@@ -998,6 +1026,12 @@ errors:
     filing_export_xsd_version_absent: A(z) %{source} XML-szótár XSD-forrása nem ad
       meg versionxsd értéket. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
+    filing_value_kind_contradicts_trace: 'A bevallás %{casilla_id} rovatának számítási
+      nyoma ellentmond a típusának (%{kind}): csak a számított rovat hordoz ilyet.
+      A mentett bevallás sérült; építsd fel újra.'
+    filing_value_kind_contradicts_value: 'A bevallás %{casilla_id} rovatának értéke
+      ellentmond a típusának (%{kind}): csak az üres rovatnak nincs értéke. A mentett
+      bevallás sérült; építsd fel újra.'
     integrity_active_profile_pointer: Az aktívprofil-mutató érvénytelen; javítsd a
       kiválasztott profilt a folytatás előtt.
     integrity_apoderado_configuration_identity: A tárolt meghatalmazotti beállítás
@@ -1094,6 +1128,10 @@ errors:
     integrity_storage_secure_object_unreadable: Egy tárolt biztonságos objektum nem
       fejthető vissza az aktuális főkulccsal.
     integrity_storage_validation: Egy tárolási paraméter nem ment át az érvényesítésen.
+    ledger_filing_evidence_diverges_from_snapshot: 'A(z) %{calculation_revision_id}
+      számítási változat főkönyvi bizonylata nem ugyanazokat a tranzakciókat fedi
+      le, mint az ujjlenyomata: %{missing_count} hiányzik, %{extra_count} felesleges.
+      A mentett változat sérült; számolj újra.'
     operator_layer_attestation_kinds_conflict: A mentett rekord a(z) %{binding_id}
       kötést egyszerre állítja összeg nélkülinek és megadott összegűnek. Az alkalmazás
       maga írta ezt a rekordot, ezért megváltozott vagy megsérült, és a számítás nem
@@ -1402,6 +1440,21 @@ errors:
       tartozik.
     modelo_workspace_manifest_capture_not_current: A mezőjegyzék olvasás közben megváltozott;
       rögzítsd újra.
+    pension_reduccion_contingencia_year_not_four_digits: A biztosítási esemény (contingencia)
+      évét négy számjeggyel kell írni; te %{value} értéket adtál meg.
+    pension_reduccion_early_contributions_exceed_total: A nyugdíjtervbe 2006. december
+      31-ig teljesített befizetések (%{value}) meghaladják az összes befizetést (%{aportaciones_totales}),
+      pedig az összeg részei. Javítsd a két összeg egyikét.
+    pension_reduccion_early_contributions_negative: A nyugdíjtervbe 2006. december
+      31-ig teljesített befizetések nem lehetnek negatívak; te %{value} értéket adtál
+      meg. Nulla vagy annál nagyobb összeget adj meg.
+    pension_reduccion_rescate_negative: A nyugdíjtervből kivett összeg nem lehet negatív;
+      te %{value} értéket adtál meg. Nulla vagy annál nagyobb összeget adj meg.
+    pension_reduccion_rescate_year_not_four_digits: A kivétel évét négy számjeggyel
+      kell írni; te %{value} értéket adtál meg.
+    pension_reduccion_total_contributions_not_positive: A nyugdíjterv összes befizetésének
+      nullánál nagyobbnak kell lennie; te %{value} értéket adtál meg. Add meg az összes
+      befizetés összegét.
     producer_capture_not_current: Egy termelői vetület megváltozott olvasás közben;
       rögzítsd újra.
     profile_access_administration_denied: A jelenlegi hozzáféréseddel a hozzáférési
@@ -1737,6 +1790,11 @@ errors:
       (114. mező) a választott számla tulajdonosának kell lennie.
     refused_modelo_360_solicitud_undeclared: '{filing_year} évre nincs megadott Modelo
       360 kérelem.'
+    refused_modelo_390_prorrata_apartado_unrendered: 'A Modelo 390 továbbra is elutasított:
+      a prorrata-nyilvántartásod tartalmaz sorokat erre az évre, de a használt nyomtatványkiadás
+      még nem tartalmazza a prorrata részt (12. apartado), ezért nem ellenőrizhető,
+      nem rögzíthető benyújtottként és nem exportálható úgy, hogy ez a rész üresen
+      maradjon.'
     refused_modelo_aggregation_input_conflict: Egy általad megadott adat ellentmond
       a nyilvántartásaidnak; javítsd a számítás előtt.
     refused_modelo_amendment_complementaria_liability_decrease: A kiegészítő bevallás
@@ -1978,6 +2036,13 @@ errors:
       elolvastad; olvasd be újra mentés előtt.
     retencion_soportada_write_refused: Ennek a kifizetőnek a levonási rekordja nem
       lett mentve.
+    sal_reserva_beneficio_negative: A különleges tartalékhoz használt nettó nyereség
+      nem lehet negatív; te %{value} értéket adtál meg. Nulla vagy annál nagyobb összeget
+      adj meg.
+    sal_reserva_capital_social_not_positive: A jegyzett tőkének nullánál nagyobbnak
+      kell lennie; te %{value} értéket adtál meg. Add meg a társaság jegyzett tőkéjét.
+    sal_reserva_dotada_negative: A már képzett tartalék nem lehet negatív; te %{value}
+      értéket adtál meg. Nulla vagy annál nagyobb összeget adj meg.
     submission_preflight_auth_describe_failed: A hitelesítési szolgáltató nem tudta
       leírni magát ({cause_type}).
     submission_preflight_auth_not_ready: A(z) {kind} hitelesítési szolgáltató nem

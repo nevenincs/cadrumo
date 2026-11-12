@@ -7,14 +7,10 @@ import time
 from dataclasses import dataclass
 
 from cadrumo.core.config import load_settings
-from cadrumo_client.contracts.deadline_budget import bounded_deadline_after
+from cadrumo_client.contracts.deadline_budget import MIN_SETTLED_OPERATION_READ_SECONDS, bounded_deadline_after
 
 #: Longest a command waits for an admitted operation to settle; each exchange keeps its own timeout.
 MAX_OPERATION_SETTLEMENT_SECONDS = 3600.0
-
-
-#: Below this much time left on the shared deadline, a settled operation's result read gets its own.
-MIN_SETTLED_OPERATION_READ_SECONDS = 0.25
 
 
 @dataclass(frozen=True, slots=True)

@@ -172,6 +172,7 @@ errors:
     count: recuento
     currency: moneda
     detail: detalle
+    door: orden
     ejercicio: ejercicio
     entry_count: número de entradas
     expected: esperado
@@ -197,6 +198,7 @@ errors:
     remedy: solución
     revision: revisión
     row: fila
+    schema_version: versión del esquema
     section: sección
     state: estado
     status: estado
@@ -769,6 +771,33 @@ errors:
       con su contenido; puede estar dañado o manipulado.
     canonical_unsupported_manifest_version: El manifiesto del corpus usa una versión
       no compatible.
+    filing_approval_basis_version_stale: La aprobación de la declaración usa la versión
+      de base %{version}, pero la versión de base vigente es %{current_version}. Vuelve
+      a aprobar la declaración.
+    filing_binding_row_source_kind_differs: Un valor de fila de la declaración indica
+      un origen de fila distinto de la fuente de su campo. La declaración guardada
+      está dañada; constrúyela de nuevo.
+    filing_binding_row_source_needs_row: Un valor de fila de la declaración indica
+      de dónde vienen sus filas, pero no qué fila es. La declaración guardada está
+      dañada; constrúyela de nuevo.
+    filing_draft_binding_claimed_twice: La declaración da más de un valor a la misma
+      fila de campo (%{bindings}). Deja un solo valor por fila de campo.
+    filing_draft_casilla_claimed_twice: La declaración da más de un valor a la misma
+      casilla (%{casillas}). Deja un solo valor por casilla.
+    filing_draft_modelo_differs: La declaración es del Modelo %{modelo}, pero su instantánea
+      del registro es del Modelo %{snapshot_modelo}. Construye la declaración de nuevo.
+    filing_draft_period_token_differs: La declaración es del periodo %{period}, pero
+      su instantánea del registro es del periodo %{snapshot_period}. Construye la
+      declaración de nuevo.
+    filing_draft_period_year_differs: La declaración es del ejercicio %{filing_year},
+      pero su instantánea del registro es del %{snapshot_year}. Construye la declaración
+      de nuevo.
+    filing_draft_schema_marker_differs: La declaración registra la versión de definición
+      %{schema_version}, pero su instantánea del registro indica %{expected_schema_version}.
+      Construye la declaración de nuevo.
+    filing_draft_taxpayer_diverges: La declaración nombra a dos contribuyentes distintos,
+      uno para el perfil y otro para el sujeto de la presentación. Una declaración
+      pertenece a un solo contribuyente; constrúyela de nuevo desde el perfil correcto.
     filing_export_boolean_in_text_slot: El campo de exportación %{field} no puede
       escribir un hecho de productor booleano en un espacio de texto de %{length}
       bytes. La aplicación lo deriva de su propio diseño de exportación, así que ningún
@@ -1058,6 +1087,12 @@ errors:
     filing_export_xsd_version_absent: El origen XSD del diccionario XML %{source}
       no declara valores de versionxsd. La aplicación lo deriva de su propio diseño
       de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_value_kind_contradicts_trace: 'La declaración tiene en la casilla %{casilla_id}
+      un rastro de cálculo que contradice su tipo (%{kind}): solo una casilla calculada
+      lo lleva. La declaración guardada está dañada; constrúyela de nuevo.'
+    filing_value_kind_contradicts_value: 'La declaración tiene en la casilla %{casilla_id}
+      un valor que contradice su tipo (%{kind}): solo una casilla vacía no tiene valor.
+      La declaración guardada está dañada; constrúyela de nuevo.'
     integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
       el perfil seleccionado antes de continuar.
     integrity_apoderado_configuration_identity: La configuración de apoderado almacenada
@@ -1161,6 +1196,10 @@ errors:
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
+    ledger_filing_evidence_diverges_from_snapshot: 'La evidencia del libro de la revisión
+      de cálculo %{calculation_revision_id} no cubre las mismas transacciones que
+      su huella: faltan %{missing_count} y sobran %{extra_count}. La revisión guardada
+      está dañada; calcula de nuevo.'
     operator_layer_attestation_kinds_conflict: El registro guardado declara el enlace
       %{binding_id} a la vez sin importe y con un importe declarado. La aplicación
       escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
@@ -1490,6 +1529,23 @@ errors:
       pertenece a otra revisión.
     modelo_workspace_manifest_capture_not_current: El manifiesto de campos cambió
       durante la lectura; vuelve a capturarlo.
+    pension_reduccion_contingencia_year_not_four_digits: El año de la contingencia
+      debe escribirse con cuatro cifras; has indicado %{value}.
+    pension_reduccion_early_contributions_exceed_total: Las aportaciones al plan de
+      pensiones hechas hasta el 31 de diciembre de 2006 (%{value}) superan las aportaciones
+      totales (%{aportaciones_totales}), aunque son una parte del total. Corrige uno
+      de los dos importes.
+    pension_reduccion_early_contributions_negative: Las aportaciones al plan de pensiones
+      hechas hasta el 31 de diciembre de 2006 no pueden ser negativas; has indicado
+      %{value}. Indica el importe como cero o más.
+    pension_reduccion_rescate_negative: El importe rescatado del plan de pensiones
+      no puede ser negativo; has indicado %{value}. Indica el importe como cero o
+      más.
+    pension_reduccion_rescate_year_not_four_digits: El año del rescate debe escribirse
+      con cuatro cifras; has indicado %{value}.
+    pension_reduccion_total_contributions_not_positive: Las aportaciones totales al
+      plan de pensiones deben ser mayores que cero; has indicado %{value}. Indica
+      el total de todas las aportaciones.
     producer_capture_not_current: Una proyección de productor cambió mientras se leía;
       vuelve a capturarla.
     profile_access_administration_denied: Tu acceso actual no permite gestionar los
@@ -1838,6 +1894,11 @@ errors:
       (campo 114) debe ser el titular de la cuenta que elegiste.
     refused_modelo_360_solicitud_undeclared: No hay ninguna solicitud del Modelo 360
       declarada para {filing_year}.
+    refused_modelo_390_prorrata_apartado_unrendered: 'El modelo 390 sigue rechazado:
+      tu registro de prorrata tiene filas para este ejercicio, pero la edición del
+      formulario en uso aún no incluye el apartado de prorratas (apartado 12), así
+      que no se puede verificar, registrar como presentado ni exportar sin dejar ese
+      apartado en blanco.'
     refused_modelo_aggregation_input_conflict: Un dato que has introducido contradice
       lo que dan tus registros; corrígelo antes de calcular.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementaria
@@ -2087,6 +2148,12 @@ errors:
       lo leíste; vuelve a leerlo antes de guardar.
     retencion_soportada_write_refused: No se guardó el registro de retención de este
       pagador.
+    sal_reserva_beneficio_negative: El beneficio neto que se usa para la reserva especial
+      no puede ser negativo; has indicado %{value}. Indícalo como cero o más.
+    sal_reserva_capital_social_not_positive: El capital social debe ser mayor que
+      cero; has indicado %{value}. Indica el capital social de la sociedad.
+    sal_reserva_dotada_negative: La reserva ya dotada no puede ser negativa; has indicado
+      %{value}. Indícala como cero o más.
     submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
       describirse ({cause_type}).
     submission_preflight_auth_not_ready: El proveedor de autenticación {kind} no está

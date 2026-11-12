@@ -27,8 +27,14 @@ from ....iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ..authority import PinnedAuthorityOperation
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
-from ..ledger_iva_bindings import IvaLedgerObservation, LedgerIvaProvider, resolve_ledger_iva_aggregation_binding_values
+from ..ledger_iva_bindings import (
+    IvaLedgerObservation,
+    LedgerIvaProvider,
+    ledger_iva_selector_vocabulary_failures,
+    resolve_ledger_iva_aggregation_binding_values,
+)
 from ..ledger_iva_screen_bindings import deducible_deduction_kind_overlaps, invoice_ledger_screen_binding_ids
 from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
@@ -153,15 +159,31 @@ def test_a_repeated_deduction_kind_is_refused() -> None:
         )
 
 
-def test_a_deduction_kind_on_a_flow_that_bears_no_deduction_is_refused() -> None:
-    """Only a deducible row carries a kind, so the axis on an output flow could never match."""
-    with pytest.raises(ValidationError, match="requires a deducible flow_direction"):
-        LedgerIvaProvider.model_validate(
-            _soportado_selector(
-                flow_direction=IvaFlowDirection.from_registry("repercutido"),
-                deduction_fact_kinds=("domestic_investment",),
-            ),
-        )
+def test_a_deduction_kind_on_a_flow_that_bears_no_deduction_is_refused(operation: PinnedAuthorityOperation) -> None:
+    """Only a deducible row carries a kind, so the axis on an output flow could never match.
+
+    Deducibility is a dated fact, so the refusal is the revision-level vocabulary
+    check's, read on the date the declaring revision takes effect.
+    """
+    selector = LedgerIvaProvider.model_validate(
+        _soportado_selector(
+            flow_direction=IvaFlowDirection.from_registry("repercutido"),
+            deduction_fact_kinds=("domestic_investment",),
+        ),
+    )
+
+    failures = ledger_iva_selector_vocabulary_failures(selector, effective_date=date(_YEAR, 6, 15), authority=operation)
+
+    assert any("requires a deducible flow_direction" in failure for failure in failures)
+
+
+def test_a_deduction_kind_on_a_deducible_flow_is_admitted(operation: PinnedAuthorityOperation) -> None:
+    """CONTROL: the refusal above is the flow, not the axis."""
+    selector = LedgerIvaProvider.model_validate(_soportado_selector(deduction_fact_kinds=("domestic_investment",)))
+
+    assert (
+        ledger_iva_selector_vocabulary_failures(selector, effective_date=date(_YEAR, 6, 15), authority=operation) == ()
+    )
 
 
 @pytest.mark.parametrize(("filing_year", "period"), _M303_COORDINATES)

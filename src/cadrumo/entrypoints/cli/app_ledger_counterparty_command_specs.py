@@ -200,7 +200,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                         "...application.ledger.counterparty_operation", "CounterpartyFilingNameRendering", __package__
                     ),
                     parser=DeferredTarget(
-                        ".ledger_counterparty_filing_name_commands", "parse_filing_name_rendering", __package__
+                        ".ledger_counterparty_rendering_parser", "parse_filing_name_rendering", __package__
                     ),
                 ),
                 default=ParameterDefault.value(()),

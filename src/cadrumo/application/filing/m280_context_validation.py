@@ -185,12 +185,15 @@ def _require_m280_wire(
     if len(wire) != max(_span(field)[1] - 1 for field in record.fields):
         raise FilingExportValidationError(
             "modelo 280 negative imputation record is incomplete",
+            translated_message="application.filing.export.errors.record_incomplete",
+            context={"modelo": "280"},
             precondition_verdict=export_design_terminal(ExportRefusalReason.RECORD_INCOMPLETE),
         )
     magnitude = _field_wire(wire, integer) + _field_wire(wire, fraction)
     if not _m280_wire_matches(_field_wire(wire, key), _field_wire(wire, sign), magnitude):
         raise FilingExportValidationError(
             "modelo 280 negative imputation requires key 2 and N or other-key zero fill",
+            translated_message="application.filing.export.errors.m280_negative_imputation_key_invalid",
             precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
         )
 

@@ -45,7 +45,7 @@ def _revision_id_for(year: int) -> str:
 
 def _rules(year: int, operation: PinnedAuthorityOperation) -> RentalReductionArt232Rules:
     return resolve_rental_reduction_art232_rules(
-        revision_id=_revision_id_for(year), devengo=date(year, 12, 31), operation=operation
+        modelo_id=_MODELO, revision_id=_revision_id_for(year), devengo=date(year, 12, 31), operation=operation
     )
 
 

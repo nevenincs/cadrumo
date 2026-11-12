@@ -278,7 +278,7 @@ def resolve_renta_inmueble_terms(
             operation=operation,
         ),
         reduction_rules=resolve_rental_reduction_art232_rules(
-            revision_id=revision_id, devengo=devengo, operation=operation
+            modelo_id=modelo, revision_id=revision_id, devengo=devengo, operation=operation
         ),
         reduction_rates=resolve_rental_reduction_art232_rates(
             revision_id=revision_id, devengo=devengo, operation=operation

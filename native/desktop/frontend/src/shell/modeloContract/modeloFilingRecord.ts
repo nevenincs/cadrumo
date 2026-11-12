@@ -62,11 +62,13 @@ import type {
  * zero. `unhandled_binding_source` is a declared source with no executable
  * route. `source_domain_not_ready` is a source store that could not be read
  * yet. `invoice_reverse_charge_cuota_not_derivable` is a reverse-charge
- * invoice whose IVA owed could not be derived. These block filing until a
- * recalculation clears them. `terminal_origin_mismatch` is a value that
- * reached the declaration by an undeclared route; it persists so a reopened
- * declaration still shows it, but withholds nothing, because the route it
- * reports may lack a terminal origin by design.
+ * invoice whose IVA owed could not be derived. `m349_operation_unclassified`
+ * is an invoice with a party in another member state and no cuota whose Modelo
+ * 349 operation no record states, so the recapitulativa leaves it out. These
+ * block filing until a recalculation clears them. `terminal_origin_mismatch`
+ * is a value that reached the declaration by an undeclared route; it persists
+ * so a reopened declaration still shows it, but withholds nothing, because the
+ * route it reports may lack a terminal origin by design.
  * `ledger_amortization_row_unregistered` is a ledger row in an amortization
  * category no registered element owns. `activity_asset_foral_territory` is a
  * period in a foral territory, whose amortization is determined under foral
@@ -95,14 +97,17 @@ import type {
  * the condition names no binding source kind. outcome.
  * `household_rows_incomplete` is a household group whose stated count is
  * larger than the rows the profile records: the recorded rows are used and the
- * group is not proven complete; it withholds nothing. `fact` states such a
- * note's own row, element, interval and amount. `binding_source` is `None`
- * only where the condition names no binding source kind.
- * `precedence_tier_divergence` is a filed figure for which a higher source
- * tier replaced a different value a lower tier held; `disagreement` states
- * every tier's value and which one the calculation used, and it withholds
- * filing until the sources agree. `disagreement` is carried by exactly the
- * reasons in `DISAGREEMENT_REASONS`.
+ * group is not proven complete; it withholds nothing.
+ * `household_row_fact_unstated` is a stored household row that omits a fact
+ * the official design requires of every row, such as an ascendant's NIF: it
+ * withholds checking, exporting and filing until the profile states the fact.
+ * `fact` states such a note's own row, element, interval and amount.
+ * `binding_source` is `None` only where the condition names no binding source
+ * kind. `precedence_tier_divergence` is a filed figure for which a higher
+ * source tier replaced a different value a lower tier held; `disagreement`
+ * states every tier's value and which one the calculation used, and it
+ * withholds filing until the sources agree. `disagreement` is carried by
+ * exactly the reasons in `DISAGREEMENT_REASONS`.
  */
 export type CalculationSourceIssue = {
   reason:
@@ -116,6 +121,7 @@ export type CalculationSourceIssue = {
     | "unhandled_binding_source"
     | "source_domain_not_ready"
     | "invoice_reverse_charge_cuota_not_derivable"
+    | "m349_operation_unclassified"
     | "ledger_amortization_row_unregistered"
     | "activity_asset_foral_territory"
     | "activity_asset_residence_unresolved"
@@ -129,8 +135,10 @@ export type CalculationSourceIssue = {
     | "register_acquisition_partly_accounted"
     | "register_acquisition_row_missing"
     | "register_owned_capital_acquisition"
+    | "inventory_book_claimed_purchase"
     | "ledger_expense_may_be_durable"
     | "household_rows_incomplete"
+    | "household_row_fact_unstated"
     | "advisory_binding_value"
     | "credit_source_disagreement"
     | "credit_cross_check_absent"
@@ -524,4 +532,5 @@ export type ModeloHistoricalUnresolvedProjection = {
 export type RegistryUnresolvedOutcomeReason =
   | "m210-baseline-tipo-deferred"
   | "m210-convenio-rate-missing"
-  | "waived-refund-result-unsupported";
+  | "waived-refund-result-unsupported"
+  | "income-family-contradicts-profile";

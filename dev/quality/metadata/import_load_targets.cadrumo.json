@@ -1397,6 +1397,7 @@
         "cadrumo.application.modelo.m349_ledger_guard",
         "cadrumo.application.modelo.m360_solicitud_input",
         "cadrumo.application.modelo.m360_solicitud_operation",
+        "cadrumo.application.modelo.m390_prorrata_apartado_gate",
         "cadrumo.application.modelo.m720_redeclaration_gate",
         "cadrumo.application.modelo.maritime_preview",
         "cadrumo.application.modelo.maritime_preview_operation",
@@ -1547,6 +1548,7 @@
         "cadrumo.application.modelo.withholding_detail_gate",
         "cadrumo.application.modelo.wizard_attempt_operation",
         "cadrumo.application.modelo.wizard_context_operation",
+        "cadrumo.application.modelo.work_address_errors",
         "cadrumo.application.modelo.work_addressing",
         "cadrumo.application.modelo.work_amend_contracts",
         "cadrumo.application.modelo.work_amend_correction",
@@ -3130,6 +3132,7 @@
         "cadrumo.entrypoints.cli.ledger_commands",
         "cadrumo.entrypoints.cli.ledger_counterparty_commands",
         "cadrumo.entrypoints.cli.ledger_counterparty_filing_name_commands",
+        "cadrumo.entrypoints.cli.ledger_counterparty_rendering_parser",
         "cadrumo.entrypoints.cli.ledger_counterparty_results",
         "cadrumo.entrypoints.cli.ledger_diagnostic_results",
         "cadrumo.entrypoints.cli.ledger_evidence_batch_commands",
@@ -3682,6 +3685,8 @@
         "cadrumo.entrypoints.tui.secret.passphrase",
         "cadrumo.entrypoints.tui.secret.registration",
         "cadrumo.entrypoints.tui.windows_input",
+        "cadrumo.entrypoints.tui.withholding",
+        "cadrumo.entrypoints.tui.withholding.screen",
         "cadrumo.entrypoints.workbench_generation_composition",
         "cadrumo.entrypoints.workflow_run_composition"
       ]

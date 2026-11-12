@@ -105,7 +105,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
 def _invoke(args: Sequence[str]) -> Result:
     """Run one verb against the registered profile, admitted by its password on the secret frame."""
     return cli_runner_invoke_cached_cli(
-        ("--profile", _PROFILE_LABEL, "--profile-secrets-stdin", "--format", "json", *args),
+        ("--language", "en", "--profile", _PROFILE_LABEL, "--profile-secrets-stdin", "--format", "json", *args),
         input=json.dumps({"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}),
     )
 

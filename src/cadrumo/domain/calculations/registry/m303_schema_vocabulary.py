@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from ....core.time.clock import today_madrid
 from ...deadlines.models import M303RegimeComposition, M303TaxTerritory
 from ...iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
 from .errors import RegistryValidationError
@@ -178,7 +179,7 @@ def resolve_m303_tax_territory_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> M303TaxTerritoryCatalogue:
     """Resolve the dated Modelo 303 territory vocabulary and semantics."""
-    entries = resolve_scoped_schema_entries(effective_date=effective_date, authority=authority)
+    entries = resolve_scoped_schema_entries(effective_date=effective_date or today_madrid(), authority=authority)
     definitions: list[M303TaxTerritoryDefinition] = []
     for raw_token in unique_mapping_tokens(
         entries, _TERRITORY_ORDER_KEY, subject=SCHEMA_VOCABULARY_SUBJECT, requirement=UNIQUE_TOKENS_REQUIREMENT
@@ -246,7 +247,7 @@ def resolve_m303_regime_composition_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> M303RegimeCompositionCatalogue:
     """Resolve the dated Modelo 303 regime-composition vocabulary."""
-    entries = resolve_scoped_schema_entries(effective_date=effective_date, authority=authority)
+    entries = resolve_scoped_schema_entries(effective_date=effective_date or today_madrid(), authority=authority)
     definitions: list[M303RegimeCompositionDefinition] = []
     for raw_token in unique_mapping_tokens(
         entries, _COMPOSITION_ORDER_KEY, subject=SCHEMA_VOCABULARY_SUBJECT, requirement=UNIQUE_TOKENS_REQUIREMENT

@@ -231,6 +231,11 @@ def _items(persona: MaterialisedPersona, language: str, *, secret: bool) -> list
     return [json.loads(item.model_dump_json()) for item in served]
 
 
+#: A leaf no household row takes, so its replacement is refused as unsupported; a leaf the rows
+#: gained later (as ``apellidos_nombre`` once was) would be stored instead.
+_UNSUPPORTED_LEAF = "apodo"
+
+
 def _refusal_value() -> str:
     """A NIF the catalogue keeps for refusal tests: its control letter does not match."""
     from cadrumo.tests.personas import identity_catalogue
@@ -265,7 +270,7 @@ def _ascendant_sets(persona: MaterialisedPersona) -> dict[str, tuple[ProfileAsce
         "ascendants_over_limit": tuple(person(born) for _ in range(5)),
         "ascendants_second_nif_invalid": (person(born), person({"nif": _refusal_value(), **born})),
         "ascendants_first_birth_date_missing": (person(_first(persona, "ascendants", "nif")),),
-        "ascendants_fact_unsupported": (person({**born, "apellidos_nombre": _first_name(persona, "ascendants")}),),
+        "ascendants_fact_unsupported": (person({**born, _UNSUPPORTED_LEAF: _first_name(persona, "ascendants")}),),
     }
 
 
@@ -282,7 +287,7 @@ def _descendant_sets(persona: MaterialisedPersona) -> dict[str, tuple[ProfileDes
         "descendants_over_limit": tuple(person(born) for _ in range(16)),
         "descendants_second_value_invalid": (person(born), person({**born, "convivencia": "perhaps"})),
         "descendants_first_birth_date_missing": (person({"convivencia": "true"}),),
-        "descendants_fact_unsupported": (person({**born, "apellidos_nombre": _first_name(persona, "descendants")}),),
+        "descendants_fact_unsupported": (person({**born, _UNSUPPORTED_LEAF: _first_name(persona, "descendants")}),),
     }
 
 

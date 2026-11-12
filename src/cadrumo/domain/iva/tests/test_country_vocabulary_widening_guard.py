@@ -47,12 +47,17 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..establishment import territorial_scope_for_country
 from ..schema import IvaTerritorialScope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -76,7 +81,7 @@ def test_a_widening_must_not_admit_this_code_as_a_third_country(code: str) -> No
     """The tripwire. Trivially satisfied today; loud the moment it is not."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            code, operation=_authority_operation_for_test
+            code, operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) != IvaTerritorialScope.from_registry("third_country")
 
 
@@ -92,7 +97,9 @@ def test_a_widening_must_not_admit_this_code_as_a_spanish_scope(code: str) -> No
     Spanish territories.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert territorial_scope_for_country(code, operation=_authority_operation_for_test) not in {
+        assert territorial_scope_for_country(
+            code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) not in {
             IvaTerritorialScope.from_registry("es_mainland"),
             IvaTerritorialScope.from_registry("es_canarias"),
             IvaTerritorialScope.from_registry("es_ceuta_melilla"),
@@ -109,5 +116,5 @@ def test_the_guard_would_notice_a_real_third_country() -> None:
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            "US", operation=_authority_operation_for_test
+            "US", operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("third_country")

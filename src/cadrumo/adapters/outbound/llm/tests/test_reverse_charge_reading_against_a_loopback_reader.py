@@ -34,6 +34,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
@@ -63,11 +64,14 @@ from cadrumo.domain.calculations.registry.iva_category_catalogue import (
     registry_category_projection,
     require_iva_category,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
 from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 
 from .model_run_support import ON_HOST_LANE, serving_agent
 from .text_layer_reader_support import text_layer_reader_ports
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 
 def _text_layer_ports_for_pages(pages: tuple[str, ...]) -> EvidenceTextLayerPorts:
@@ -226,7 +230,7 @@ def test_a_mention_with_no_repercutido_line_derives_the_reverse_charge(serve, re
         legends=registry_legends,
     )
     assert derivation.outcome is LegendDerivationOutcome.DERIVED
-    assert derivation.category == require_iva_category("domestic_reverse_charge")
+    assert derivation.category == require_iva_category("domestic_reverse_charge", effective_date=_ON_DATE)
     assert regime_contradiction_finding(draft, legends=registry_legends) is None
 
 
@@ -241,13 +245,13 @@ def test_the_reverse_charge_is_not_relieved_on_an_establishment_premise() -> Non
     relieved. Admitting reverse charge would withhold a treatment on a premise
     that does not apply to it.
     """
-    relief_categories = registry_category_projection("relief_on_establishment_premise")
-    assert require_iva_category("domestic_reverse_charge") not in relief_categories
+    relief_categories = registry_category_projection("relief_on_establishment_premise", effective_date=_ON_DATE)
+    assert require_iva_category("domestic_reverse_charge", effective_date=_ON_DATE) not in relief_categories
     # The membership assertion alone would pass against an empty set, which is
     # the shape that proves nothing about the distinction being drawn.
     assert {
-        require_iva_category("intra_community_supply"),
-        require_iva_category("export_third_country_zero_rated"),
+        require_iva_category("intra_community_supply", effective_date=_ON_DATE),
+        require_iva_category("export_third_country_zero_rated", effective_date=_ON_DATE),
     } == relief_categories
 
 

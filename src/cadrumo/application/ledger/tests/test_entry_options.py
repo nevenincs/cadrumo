@@ -15,6 +15,7 @@ import pytest
 import yaml
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
@@ -67,6 +68,8 @@ from ..manual_update import command_from_patch
 from ..models import ManualLedgerTransactionPatch
 from .transaction_row_support import outgoing_manual_row
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("31313131-3131-4131-8131-313131313131")
@@ -116,7 +119,7 @@ def _values(served: dict[str, tuple[tuple[str, str | None], ...]], family: str) 
 def test_iva_categories_are_the_registry_catalogue_in_its_order(
     served: dict[str, tuple[tuple[str, str | None], ...]], operation: PinnedAuthorityOperation
 ) -> None:
-    catalogue = resolve_iva_category_catalogue(authority=operation)
+    catalogue = resolve_iva_category_catalogue(authority=operation, effective_date=_ON_DATE)
 
     assert _values(served, "iva_category") == [str(token) for token in catalogue.all_categories]
     assert {"domestic_general", "intra_community_supply", "unknown"} <= set(_values(served, "iva_category"))

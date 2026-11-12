@@ -76,19 +76,19 @@ def _invoice_ledger_screen_rate_slots(effective_date: date) -> tuple[_InvoiceLed
         _InvoiceLedgerScreenShape(
             (general_category,),
             (general,),
-            issued_flow_direction(),
+            issued_flow_direction(effective_date=effective_date),
             LedgerIvaFact.IVA_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (reduced_category,),
             (reduced,),
-            issued_flow_direction(),
+            issued_flow_direction(effective_date=effective_date),
             LedgerIvaFact.IVA_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (super_reduced_category,),
             (super_reduced,),
-            issued_flow_direction(),
+            issued_flow_direction(effective_date=effective_date),
             LedgerIvaFact.IVA_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
@@ -98,25 +98,25 @@ def _invoice_ledger_screen_rate_slots(effective_date: date) -> tuple[_InvoiceLed
                 super_reduced_category,
             ),
             (general, reduced, super_reduced),
-            received_flow_direction(),
+            received_flow_direction(effective_date=effective_date),
             LedgerIvaFact.IVA_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (general_category,),
             (general,),
-            issued_flow_direction(),
+            issued_flow_direction(effective_date=effective_date),
             LedgerIvaFact.RECARGO_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (reduced_category,),
             (reduced,),
-            issued_flow_direction(),
+            issued_flow_direction(effective_date=effective_date),
             LedgerIvaFact.RECARGO_AMOUNT_SUM,
         ),
         _InvoiceLedgerScreenShape(
             (super_reduced_category,),
             (super_reduced,),
-            issued_flow_direction(),
+            issued_flow_direction(effective_date=effective_date),
             LedgerIvaFact.RECARGO_AMOUNT_SUM,
         ),
     )
@@ -145,7 +145,7 @@ def _is_invoice_ledger_screen_candidate(
     if not _is_conceptual_invoice_screen_rung(revision, binding, selector, modelo=modelo):
         return False
     rate_kinds = frozenset(resolve_iva_rate_kind_catalogue(effective_date=effective_date).positive_kinds)
-    if not _has_invoice_screen_selector_axes(selector, cash_accounting_treatments):
+    if not _has_invoice_screen_selector_axes(selector, cash_accounting_treatments, effective_date):
         return False
     return _invoice_screen_categories_match(selector, effective_date) and set(selector.rate_kinds).issubset(rate_kinds)
 
@@ -171,12 +171,13 @@ def _is_conceptual_invoice_screen_rung(
 def _has_invoice_screen_selector_axes(
     selector: LedgerIvaProvider,
     cash_accounting_treatments: tuple[str, ...] | None,
+    effective_date: date,
 ) -> bool:
     return (
         selector.exemption_articles is None
         and selector.observation_roles == _INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES
         and (cash_accounting_treatments is None or selector.cash_accounting_treatments == cash_accounting_treatments)
-        and is_standard_issued_or_received_flow(selector.flow_direction)
+        and is_standard_issued_or_received_flow(selector.flow_direction, effective_date=effective_date)
         and selector.fact in _INVOICE_LEDGER_SCREEN_FACTS
     )
 

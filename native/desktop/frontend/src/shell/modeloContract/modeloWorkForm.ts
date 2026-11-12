@@ -54,7 +54,8 @@ import type {
  * The closed families of earlier-filing carries a filer may state hold
  * nothing.
  */
-export type AbsenceAttestationFamily = "renta_negative_general_bases_pending";
+export type AbsenceAttestationFamily =
+  "renta_negative_general_bases_pending" | "renta_trabajo_income_not_stated";
 
 /**
  * What one reported row does in the declaration.

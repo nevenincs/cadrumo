@@ -43,10 +43,8 @@ import {
   type ModeloEditRenewalProjectionV1,
 } from "../shell/modeloContract/modeloEdit";
 import { type ModeloExportPublicResultV3 } from "../shell/modeloContract/modeloExport";
-import {
-  type CreditResolutionListProjection,
-  type ModeloWorkCreateProjection,
-} from "../shell/modeloContract/modeloWork";
+import { type CreditResolutionListProjection } from "../shell/modeloContract/modeloWork";
+import { type ModeloWorkCreateProjection } from "../shell/modeloContract/modeloWorkCreate";
 import { type ModeloCasillaHelpProjectionV1 } from "../shell/modeloContract/modeloWorkCasillaHelp";
 import {
   type ModeloFormIssueLine,

@@ -109,11 +109,8 @@ from .filing_import_refusals import external_import_refusal
 from .filing_repository import modelo_record_catalogue_repository
 from .justificante_repository import justificante_repository as resolve_justificante_repository
 from .registry_helpers import reject_unknown_import_casillas
-from .work_addressing import (
-    ModeloWorkRevisionConflictError,
-    ModeloWorkVisibleTargetAmbiguousError,
-    law_selected_revision_for_work_target,
-)
+from .work_address_errors import ModeloWorkRevisionConflictError, ModeloWorkVisibleTargetAmbiguousError
+from .work_addressing import law_selected_revision_for_work_target
 from .work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
 from .work_lifecycle_ports import WorkLifecyclePorts
 from .work_selection import (
