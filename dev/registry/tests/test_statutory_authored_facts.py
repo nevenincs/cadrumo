@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.payloads import GovernedFactFamily, MappingFactPayload
 from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
@@ -205,3 +206,27 @@ def test_spanish_tax_id_person_checks_remain_bound_to_official_algorithm_evidenc
         "X → 0 Y → 1 Z → 2",
         "se aplica el mismo algoritmo que para el NIF",
     )
+
+
+def test_art52_individual_sublimit_changes_at_the_second_dated_variant() -> None:
+    fact_id = "lirpf-art-52-individual-contribution-sublimit"
+    catalogue = _catalogue()
+    first, second = catalogue.facts[fact_id].variants
+
+    def _resolved(effective: date) -> Decimal:
+        fact = resolve_governed_fact(
+            catalogue,
+            ScalarFactQuery(fact_id=fact_id, date_axis=DateAxis.FILING_PERIOD, effective_date=effective),
+            authority_digest="d" * 64,
+            support=committed_supported_filing_years(),
+        )
+        assert isinstance(fact, ResolvedScalarFact)
+        return fact.payload.value
+
+    assert first.payload.value == Decimal("2000")
+    assert first.valid_to == second.valid_from - timedelta(days=1)
+    assert second.payload.value == Decimal("1500")
+    assert _resolved(second.valid_from) == Decimal("1500")
+    assert _resolved(date(filing_year_envelope().floor, 12, 31)) == Decimal("1500")
+    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+        _resolved(first.valid_from)

@@ -6,7 +6,25 @@ family = "scalar"
 variant_id = "lirpf-art-52-individual-contribution-sublimit:2021-01-01"
 date_axis = "filing_period"
 valid_from = 2021-01-01
+valid_to = 2021-12-31
 legal_refs = ["ley-35-2006:art-52-2021"]
+source_refs = ["aeat-renta-2021-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["2.000 euros por el conjunto de aportaciones y contribuciones"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "2000"
+unit = "eur"
+
+[[fact.variants]]
+variant_id = "lirpf-art-52-individual-contribution-sublimit:2022-01-01"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+legal_refs = ["ley-35-2006:art-52-2022"]
 source_refs = ["boe-lirpf-statutory-facts"]
 review_status = "agent_reviewed"
 ownership = "authored"

@@ -550,7 +550,7 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit(
     assert finding.kind == "advisory"
     assert finding.severity == "warning"
     assert finding.casilla_id == _ART52_REDUCCION_CASILLA
-    assert finding.legal_refs == ("ley-35-2006:art-52-2021",)
+    assert finding.legal_refs == ("ley-35-2006:art-52-2022",)
     assert finding.message_locale_key == "application.modelo.findings.art52_reduccion_individual_sublimit_possible"
     assert dict(finding.message_facts) == {
         "reduccion_id": str(_ART52_REDUCCION_CASILLA),
