@@ -26,6 +26,7 @@ from cadrumo.domain.contribuyente.inventory.records import (
     InventoryHistoryKind,
     InventoryRetirementReason,
     MovementKind,
+    PurchaseLedgerRow,
     ValuationMethod,
 )
 
@@ -53,6 +54,7 @@ _SERVED = {
     "history_kind": InventoryHistoryKind,
     "movement_kind": MovementKind,
     "physical_evidence_role": PhysicalClosingEvidenceRole,
+    "purchase_ledger_row": PurchaseLedgerRow,
     "retirement_reason": InventoryRetirementReason,
     "valuation_method": ValuationMethod,
 }

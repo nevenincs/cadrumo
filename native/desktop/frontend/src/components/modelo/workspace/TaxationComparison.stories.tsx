@@ -316,26 +316,46 @@ export const IndividualFilingLower: Story = {
   },
 };
 
+/** A household whose two results do not differ, drawn as served: `refund`
+ * says whether it is the one refunded the same amount in both modes or the
+ * one owing nothing in either. Each is its own story, as the window draws one
+ * comparison at a time. */
+function indifferentStory(state: string, refund: boolean): Story {
+  return {
+    render: (_, { globals }) => (
+      <Element state={state} locale={language(globals)} kind="answer" />
+    ),
+    play: async ({ canvasElement, globals }) => {
+      const locale = language(globals);
+      await checkAnswer(canvasElement, state, locale, null);
+      const projection = await served(state, locale);
+      // The household is the one it is named for: a refund is served
+      // negative in both modes, the other not.
+      expect(projection.conjunta_resultado.startsWith("-")).toBe(refund);
+      expect(projection.individual_resultado.startsWith("-")).toBe(refund);
+      // Each result is drawn with the sign it was served with: a negative
+      // result is not drawn as an amount to pay, nor a positive one as a
+      // refund.
+      const result = await resulted(canvasElement);
+      for (const mode of ["joint", "individual"]) {
+        const text = one(
+          one(result, `[data-comparison-mode=${mode}]`),
+          "[data-comparison-result-amount]",
+        ).textContent;
+        expect(/^[-−]/.test(text ?? "")).toBe(refund);
+      }
+    },
+  };
+}
+
 export const EitherModeAcceptable: Story = {
+  ...indifferentStory("married-small", false),
   name: "The two results do not differ: neither mode is marked, the result keeps its served sign",
-  render: (_, { globals }) => (
-    <Element state="married-small" locale={language(globals)} kind="answer" />
-  ),
-  play: async ({ canvasElement, globals }) => {
-    const locale = language(globals);
-    await checkAnswer(canvasElement, "married-small", locale, null);
-    // The result is drawn with the sign it was served with: a negative
-    // result is not drawn as an amount to pay, nor a positive one as a refund.
-    const result = await resulted(canvasElement);
-    const text = one(
-      one(result, "[data-comparison-mode=joint]"),
-      "[data-comparison-result-amount]",
-    ).textContent;
-    const projection = await served("married-small", locale);
-    expect(/^[-−]/.test(text ?? "")).toBe(
-      projection.conjunta_resultado.startsWith("-"),
-    );
-  },
+};
+
+export const EitherModeAcceptableRefund: Story = {
+  ...indifferentStory("married-small-refund", true),
+  name: "The two results do not differ and both are refunds: neither mode is marked, the refund keeps its negative sign",
 };
 
 export const CouldNotRead: Story = {

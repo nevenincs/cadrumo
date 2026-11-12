@@ -1191,9 +1191,9 @@ source_ref = "lirpf-cuota-chain-authority"
 required_text = ["siempre que no tengan rentas, excluidas las exentas, distintas de las del trabajo superiores a 6.500 euros", "el saldo resultante no podrá ser negativo"]
 
 # The other rentas, read from the boxes the bases themselves read: the net capital mobiliario of
-# both bases and the net capital inmobiliario with its imputed income, each before its reduction;
-# the net estimacion directa activity income before art. 32; the imputaciones of transparencia
-# fiscal, AIE and IIC in tax havens (the image-rights sum, box 0275, is outside the calculation
+# both bases and the let properties' net yield, totalled over their rows, with the imputed real
+# estate income, each before its reduction; the net estimacion directa activity income before
+# art. 32; the imputaciones of transparencia fiscal, AIE and IIC in tax havens (the image-rights sum, box 0275, is outside the calculation
 # completeness manifest, so it is not an operand); and the capital gains less losses of both
 # bases without compensation between them. A family the profile's stated categories exclude is a
 # proven zero; figures held for it anyway contradict the profile, so the sum stays unresolved.
@@ -1213,11 +1213,11 @@ expression = { op = "sum", args = [
     { op = "if_then_else", args = [
         { op = "equal", args = [{ binding = "renta-profile-income-family-excluded-capital-inmobiliario" }, { literal = "1" }] },
         { op = "if_then_else", args = [
-            { op = "equal", args = [{ op = "sum", args = [{ casilla_id = "0149" }, { casilla_id = "0155" }] }, { literal = "0" }] },
+            { op = "equal", args = [{ op = "sum", args = [{ binding = "renta-inmueble-total-rendimiento-neto-0149" }, { casilla_id = "0155" }] }, { literal = "0" }] },
             { literal = "0" },
             { op = "unresolved_outcome", args = [{ text_literal = "income-family-contradicts-profile" }] },
         ] },
-        { op = "sum", args = [{ casilla_id = "0149" }, { casilla_id = "0155" }] },
+        { op = "sum", args = [{ binding = "renta-inmueble-total-rendimiento-neto-0149" }, { casilla_id = "0155" }] },
     ] },
     { casilla_id = "0224" },
     { op = "if_then_else", args = [

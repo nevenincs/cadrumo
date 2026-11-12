@@ -62,6 +62,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
 )
 from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import (
     M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_LET_PROPERTY_BINDINGS,
 )
 from cadrumo.domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
@@ -126,6 +127,7 @@ def _bindings(revision_id: str) -> dict[str, Decimal]:
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
         "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        **M100_NO_LET_PROPERTY_BINDINGS,
         "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),

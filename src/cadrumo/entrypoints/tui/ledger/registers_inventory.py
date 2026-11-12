@@ -50,6 +50,7 @@ from ....application.inventory.registered_requests import (
     InventoryLedgerChangeRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementClaimRequest,
     InventoryMovementCorrectRequest,
     InventoryMovementReverseRequest,
     InventoryRestoreRequest,
@@ -62,6 +63,7 @@ from ....domain.contribuyente.inventory.records import (
     InventoryCorrectionReason,
     InventoryRetirementReason,
     MovementKind,
+    PurchaseLedgerRow,
     ValuationMethod,
 )
 from .controller import LedgerWorkspaceController
@@ -120,6 +122,7 @@ _ACTION_LOCALE_KEYS: Final[dict[str, str]] = {
     "correct": "application.inventory.workbench.action.correct",
     "movement_correct": "application.inventory.workbench.action.movement_correct",
     "movement_reverse": "application.inventory.workbench.action.movement_reverse",
+    "movement_claim": "tui.ledger.registers.inventory.action.movement_claim",
     "retire": "application.inventory.workbench.action.retire",
     "restore": "application.inventory.workbench.action.restore",
 }
@@ -132,6 +135,11 @@ _METHOD_LOCALE_KEYS: Final[dict[str, str]] = {
     "fifo": "tui.ledger.registers.inventory.method.fifo",
     "pmp": "tui.ledger.registers.inventory.method.pmp",
     "coste_medio": "tui.ledger.registers.inventory.method.coste_medio",
+}
+_LEDGER_ROW_LOCALE_KEYS: Final[dict[str, str]] = {
+    PurchaseLedgerRow.CLAIMED.value: "tui.ledger.registers.inventory.ledger_row.claimed",
+    PurchaseLedgerRow.NONE.value: "tui.ledger.registers.inventory.ledger_row.none",
+    PurchaseLedgerRow.UNSTATED.value: "tui.ledger.registers.inventory.ledger_row.unstated",
 }
 _KIND_LOCALE_KEYS: Final[dict[str, str]] = {
     "opening": "tui.ledger.registers.inventory.kind.opening",
@@ -179,6 +187,8 @@ _FIELDS: Final = (
     "inventory-authority-path",
     "inventory-closing-facts-path",
     "inventory-evidence-path",
+    "inventory-ledger-row",
+    "inventory-claimed-transaction",
     "inventory-target-movement",
     "inventory-correction-reason",
     "inventory-retirement-reason",
@@ -219,6 +229,7 @@ _ACTION_FIELDS: Final[dict[str, frozenset[str]]] = {
         "inventory-acquisition-path",
     },
     "movement_reverse": _SCOPE | {"inventory-target-movement", "inventory-correction-reason"},
+    "movement_claim": _SCOPE | {"inventory-movement-id", "inventory-ledger-row", "inventory-claimed-transaction"},
     "retire": _SCOPE | {"inventory-retirement-reason"},
     "restore": _SCOPE,
 }
@@ -478,6 +489,7 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
                 (tr(_METHOD_LOCALE_KEYS[method.value]), method.value) for method in ValuationMethod
             ),
             "inventory-movement-kind": tuple((tr(_KIND_LOCALE_KEYS[kind.value]), kind.value) for kind in MovementKind),
+            "inventory-ledger-row": tuple((tr(key), row) for row, key in _LEDGER_ROW_LOCALE_KEYS.items()),
             "inventory-correction-reason": tuple(
                 (tr(f"application.inventory.labels.correction_reason.{reason.value}"), reason.value)
                 for reason in InventoryCorrectionReason
@@ -518,6 +530,10 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
         yield from labelled_input(_FIELD_LOCALE_KEYS["authority_record"], "inventory-authority-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["facts"], "inventory-closing-facts-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["source_path"], "inventory-evidence-path")
+        yield from labelled_select(
+            _FIELD_LOCALE_KEYS["ledger_row"], "inventory-ledger-row", options["inventory-ledger-row"]
+        )
+        yield from labelled_input(_FIELD_LOCALE_KEYS["claimed_transaction_id"], "inventory-claimed-transaction")
         yield from labelled_input(_FIELD_LOCALE_KEYS["target_movement_id"], "inventory-target-movement")
         yield from labelled_select(
             _FIELD_LOCALE_KEYS["reason"], "inventory-correction-reason", options["inventory-correction-reason"]
@@ -600,7 +616,15 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
             return InventoryCreateRequest.model_validate(fields), None
         if action == "inspect":
             return InventoryInspectRequest(profile_id=profile_id, actividad_id=actividad, year=year), None
-        if action in {"describe", "correct", "movement_correct", "movement_reverse", "retire", "restore"}:
+        if action in {
+            "describe",
+            "correct",
+            "movement_correct",
+            "movement_reverse",
+            "movement_claim",
+            "retire",
+            "restore",
+        }:
             return await self._change_request(action, actividad=actividad, year=year)
         if action == "valuation_preview":
             return InventoryValuationPreviewRequest(profile_id=profile_id, actividad_id=actividad, year=year), None
@@ -667,6 +691,8 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
             return InventoryRetireRequest.model_validate({**scope, "reason": reason}), None
         if action == "restore":
             return InventoryRestoreRequest.model_validate(scope), None
+        if action == "movement_claim":
+            return self._claim_request(scope), None
         correction_reason = InventoryCorrectionReason(self.select_value("#inventory-correction-reason"))
         if action == "correct":
             method = self.select_value("#inventory-corrected-method")
@@ -718,11 +744,26 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
             path,
         )
 
+    def _claim_request(self, scope: dict[str, object]) -> InventoryMovementClaimRequest:
+        """State the transaction that books a purchase, that none does, or clear the statement."""
+        return InventoryMovementClaimRequest.model_validate(
+            {
+                **scope,
+                "movement_id": require_text(
+                    self.input_value("#inventory-movement-id"), field_key=_FIELD_LOCALE_KEYS["movement_id"]
+                ),
+                "ledger_row": PurchaseLedgerRow(self.select_value("#inventory-ledger-row")),
+                "claimed_transaction_id": blank_to_none(self.input_value("#inventory-claimed-transaction")),
+            }
+        )
+
     @override
     async def stage(self) -> tuple[BaseModel, str]:
         action = self.select_value("#inventory-action")
         request, source = (self._evidence_request(), None) if action == "evidence_add" else await self._request(action)
         lines = [tr(_ACTION_LOCALE_KEYS[action]), request_summary(request, field_keys=_FIELD_LOCALE_KEYS)]
+        if isinstance(request, InventoryMovementClaimRequest):
+            lines.append(tr(_LEDGER_ROW_LOCALE_KEYS[request.ledger_row.value]))
         if source is not None:
             lines.append(tr("tui.ledger.registers.inventory.source", path=source))
         return request, "\n".join(lines)

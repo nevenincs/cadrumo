@@ -122,6 +122,9 @@ _VERB_BASELINE_DECIMAL_BINDINGS: Mapping[str, Decimal] = {
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+    # The projection estimates the year from the Modelo 130 activity income and reads no let
+    # property's rows, so the net rental total the art. 20 limit weighs is the estimate's zero.
+    "renta-inmueble-total-rendimiento-neto-0149": Decimal("0"),
 }
 _VERB_BASELINE_BOOLEAN_BINDINGS: Mapping[str, bool] = {
     "renta-profile-marriage-full-year": False,

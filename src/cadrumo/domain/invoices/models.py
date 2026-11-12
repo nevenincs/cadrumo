@@ -1189,7 +1189,12 @@ class Invoice(BaseModel):
         registry-projected token without a per-call lowercase / membership
         check. It is anchored to the dated EU member-state fact 0131.
         """
-        if not is_eu_member_state_code(self.counterparty_country):
+        # The supply's own date selects the membership edition: the LIVA art. 75
+        # devengo when stated, else the issue date, as the OSS projection below does.
+        if not is_eu_member_state_code(
+            self.counterparty_country,
+            effective_date=self.operation_date or self.issued_at,
+        ):
             return None
         return require_eu_member_state(self.counterparty_country)
 

@@ -16,6 +16,11 @@ from cadrumo_client.commands.registered_operation_contracts import RegisteredOpe
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from ...application.inventory.registered_claim_candidates_operation import (
+    INVENTORY_CLAIM_CANDIDATES_OPERATION_DEFINITION_ID,
+    InventoryClaimCandidatesProjection,
+    InventoryClaimCandidatesRequest,
+)
 from ...application.inventory.registered_evidence_operation import (
     INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
     InventoryEvidenceAddProjection,
@@ -76,6 +81,7 @@ from ...domain.contribuyente.inventory.corrections import (
     inventory_refusal_key,
 )
 from .ledger_business_payloads import (
+    InventoryClaimCandidatesResult,
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
     InventoryEvidenceAddResult,
@@ -224,11 +230,7 @@ def read_inventory_catalogue(
         allow_refusal_detail=False,
     )
     projection = completed.projection
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code is not None
-    ):
+    if _receipt_invalid(completed, OperationEffect.NONE):
         raise invalid_completion_error(completed)
     payload = InventoryListResult.model_validate(
         {
@@ -275,9 +277,7 @@ def create_inventory_ledger(
     if (
         projection.outcome != "created"
         or ledger is None
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.UPDATED
-        or completed.refusal_code is not None
+        or _receipt_invalid(completed, OperationEffect.UPDATED)
         or len(projection.bucket_event_ids) != 1
         or not ledger.bucket_event_ids
     ):
@@ -308,9 +308,7 @@ def add_inventory_movement(
     if (
         projection.outcome != "added"
         or ledger is None
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.UPDATED
-        or completed.refusal_code is not None
+        or _receipt_invalid(completed, OperationEffect.UPDATED)
         or len(projection.bucket_event_ids) != 1
         or not ledger.bucket_event_ids
     ):
@@ -337,12 +335,7 @@ def inspect_inventory_ledger(
             raise invalid_completion_error(completed)
         _raise_registered_refusal(completed, projection.refusal)
     ledger = projection.ledger
-    if (
-        ledger is None
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code is not None
-    ):
+    if ledger is None or _receipt_invalid(completed, OperationEffect.NONE):
         raise invalid_completion_error(completed)
     return completed, InventoryInspectResult.model_validate_json(ledger_payload_json(ledger))
 
@@ -367,12 +360,7 @@ def apply_inventory_ledger_change(
         _raise_registered_refusal(completed, projection.refusal)
     ledger = projection.ledger
     expected_effect = projection.settled_effect
-    if (
-        ledger is None
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not expected_effect
-        or completed.refusal_code is not None
-    ):
+    if ledger is None or _receipt_invalid(completed, expected_effect):
         raise invalid_completion_error(completed)
     return completed, InventoryLedgerChangeResult.model_validate_json(
         ledger_payload_json(ledger, outcome=projection.outcome)
@@ -402,9 +390,7 @@ def preview_inventory_valuation(
         projection.outcome != "previewed"
         or preview is None
         or preview.profile_id != request.profile_id
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.UPDATED
-        or completed.refusal_code is not None
+        or _receipt_invalid(completed, OperationEffect.UPDATED)
         or len(preview.bucket_event_ids) != 1
     ):
         raise invalid_completion_error(completed)
@@ -439,13 +425,34 @@ def read_inventory_options(ctx: typer.Context, *, request: InventoryOptionsReque
         result_type=InventoryOptionsProjection,
         allow_refusal_detail=False,
     )
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code is not None
-    ):
+    if _receipt_invalid(completed, OperationEffect.NONE):
         raise invalid_completion_error(completed)
     return InventoryOptionsResult.model_validate(completed.projection.model_dump(mode="json", exclude={"profile_id"}))
+
+
+def read_inventory_claim_candidates(
+    ctx: typer.Context, *, request: InventoryClaimCandidatesRequest
+) -> InventoryClaimCandidatesResult:
+    """Read the ledger transactions one purchase may claim through the exact profile worker."""
+    completed = run(
+        ctx,
+        request,
+        definition_id=INVENTORY_CLAIM_CANDIDATES_OPERATION_DEFINITION_ID,
+        result_type=InventoryClaimCandidatesProjection,
+        allow_refusal_detail=True,
+    )
+    projection = completed.projection
+    if projection.outcome == "refused":
+        if projection.refusal is None:
+            raise invalid_completion_error(completed)
+        _raise_registered_refusal(completed, projection.refusal)
+    if projection.profile_id != request.profile_id or _receipt_invalid(completed, OperationEffect.NONE):
+        raise invalid_completion_error(completed)
+    return InventoryClaimCandidatesResult.model_validate(
+        _collapse_public_decimal_objects(
+            projection.model_dump(mode="json", exclude={"profile_id", "outcome", "refusal"})
+        )
+    )
 
 
 def add_inventory_evidence(ctx: typer.Context, *, request: InventoryEvidenceAddRequest) -> InventoryEvidenceAddResult:
@@ -463,9 +470,7 @@ def add_inventory_evidence(ctx: typer.Context, *, request: InventoryEvidenceAddR
     if (
         projection.reference is None
         or projection.content_digest is None
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.UPDATED
-        or completed.refusal_code is not None
+        or _receipt_invalid(completed, OperationEffect.UPDATED)
     ):
         raise invalid_completion_error(completed)
     return InventoryEvidenceAddResult(reference=projection.reference, content_digest=str(projection.content_digest))
@@ -510,7 +515,7 @@ def _record_closing(
         projection.outcome != "recorded"
         or record is None
         or record.profile_id != request.profile_id
-        or _inventory_authority_receipt_invalid(completed, expected_effect)
+        or _receipt_invalid(completed, expected_effect)
     ):
         raise invalid_completion_error(completed)
     return completed, InventoryClosingAuthorityRecordResult(
@@ -531,17 +536,18 @@ __all__ = [
     "inspect_inventory_ledger",
     "preview_inventory_valuation",
     "read_inventory_catalogue",
+    "read_inventory_claim_candidates",
     "read_inventory_options",
     "record_inventory_closing_authority",
     "record_inventory_closing_value",
 ]
 
 
-def _inventory_authority_receipt_invalid(
-    completed: RegisteredOperationCompletion[InventoryClosingAuthorityOperationProjection],
+def _receipt_invalid[ProjectionT: BaseModel](
+    completed: RegisteredOperationCompletion[ProjectionT],
     expected_effect: OperationEffect,
 ) -> bool:
-    """Require the expected inventory authority mutation effect and successful terminal receipt."""
+    """Whether a completion lacks the successful terminal receipt with the effect its operation promises."""
     return (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.effect is not expected_effect

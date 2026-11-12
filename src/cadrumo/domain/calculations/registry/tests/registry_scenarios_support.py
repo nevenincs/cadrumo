@@ -10,7 +10,7 @@ from functools import lru_cache
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ..ids import LegalRefId, SourceRefId
 from .authored_editions import newest_authored_edition, revision_covering
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, M100_NO_LET_PROPERTY_BINDINGS
 from .registry_tree import bundled_modelo_components
 from .scenarios import (
     RegistryCalculationScenario,
@@ -204,6 +204,7 @@ def normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -352,6 +353,7 @@ def simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
@@ -419,6 +421,7 @@ def negative_simplified_base_scenario() -> RegistryCalculationScenario:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
@@ -490,6 +493,7 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -609,6 +613,7 @@ def final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
             "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
