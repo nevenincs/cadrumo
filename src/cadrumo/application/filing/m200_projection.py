@@ -6,9 +6,13 @@ Modelo 200's generated layout carries repeated projection-kind fields.
 not export at all. It failed CLOSED -- refusing rather than emitting wrong bytes -- but it
 did not file, and nothing detected that.
 
-One occurrence is emitted per row a family actually carries. A family with no rows emits no
-occurrence, which is what AEAT expects of a page a filer has nothing to put on; whether
-that absence is admissible is the record's own ``required`` flag, checked by the caller.
+The design addresses a family's places as numbered slots inside one fixed page: every
+projection field names its kind, its slot and the row member it prints. A page is written
+once, with row ``i`` of each family in slot ``i``; the design does not repeat the page, so
+a family with more rows than its slots refuses rather than dropping the excess. A page
+none of whose families carries a row emits no occurrence, which is what AEAT expects of a
+page a filer has nothing to put on; whether that absence is admissible is the record's own
+``required`` flag, checked by the caller.
 
 These rows are operator-supplied through the typed producer snapshot, as are modelo 296's
 perceptor detail rows. No separate detail register feeds this projection; the builder
@@ -164,15 +168,26 @@ def _m200_record_depth(
     *,
     catalogue: _M200ProjectionCatalogue,
 ) -> int:
-    filled = max(
-        (len(_rows_for(profile, ref.projection_kind, catalogue=catalogue)) for ref in refs),
-        default=0,
-    )
-    slot_ceiling = max(
-        (address[0] for ref in refs if (address := _m200_address(ref)) is not None),
-        default=0,
-    )
-    return min(filled, slot_ceiling)
+    """Return how many occurrences of a slot-addressed page its families fill: one, or none.
+
+    Rows fill the page's numbered slots, not further pages, so a family with more rows
+    than the page has slots for it cannot be written and refuses.
+    """
+    slots_by_kind: dict[str, int] = {}
+    for ref in refs:
+        address = _m200_address(ref)
+        if address is not None:
+            slots_by_kind[ref.projection_kind] = max(slots_by_kind.get(ref.projection_kind, 0), address[0])
+    filled = False
+    for kind, slots in slots_by_kind.items():
+        rows = len(_rows_for(profile, kind, catalogue=catalogue))
+        if rows > slots:
+            raise InternalInvariantError(
+                f"Modelo 200 projection kind {kind!r} carries {rows} rows; its page has {slots} slots",
+                precondition_verdict=internal_invariant_verdict("m200_projection.rows_within_slots"),
+            )
+        filled = filled or rows > 0
+    return 1 if filled else 0
 
 
 def _m200_projection_values_for_occurrence(
