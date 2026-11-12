@@ -3764,6 +3764,10 @@ application:
       pattern: '{day} {month} {year}'
     work_form:
       additional_data_for_box: Dada addicional de la casella {box}
+      authority_grade:
+        applicability: Només terminis
+        calculation: Només càlcul i previsualització
+        filing: Càlcul, comprovació per presentar i exportació
       binding_statement:
         attest_no_amount:
           action: Declara que no hi ha import

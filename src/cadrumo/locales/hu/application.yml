@@ -3718,6 +3718,10 @@ application:
       pattern: '{year}. {month} {day}.'
     work_form:
       additional_data_for_box: Kiegészítő adat a(z) {box}. rovathoz
+      authority_grade:
+        applicability: Csak határidők
+        calculation: Csak számítás és előnézet
+        filing: Számítás, benyújtás előtti ellenőrzés és exportálás
       binding_statement:
         attest_no_amount:
           action: Jelezd, hogy nincs összeg

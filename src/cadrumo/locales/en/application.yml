@@ -3580,6 +3580,10 @@ application:
       pattern: '{month} {day}, {year}'
     work_form:
       additional_data_for_box: Additional data for box {box}
+      authority_grade:
+        applicability: Deadlines only
+        calculation: Calculation and preview only
+        filing: Calculation, filing check and export
       binding_statement:
         attest_no_amount:
           action: State there is no amount
