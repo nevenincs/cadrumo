@@ -466,6 +466,14 @@
         "path": []
       }
     },
+    "ledger.inventory.movement.claim": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.inventory.movement.correct": {
       "may_write": true,
       "review": false,
