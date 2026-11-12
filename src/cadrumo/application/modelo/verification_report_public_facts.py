@@ -26,6 +26,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.verification_report import (
+    BelowFilingGradeField,
     DisclosedLimitationFlag,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -103,6 +104,7 @@ class ModeloVerificationFindingProjection(BaseModel):
     ]
     source_refs: Annotated[tuple[SourceRefId, ...], Field(max_length=MAX_MODELO_VERIFICATION_REPORT_FINDING_REFS)] = ()
     disclosed_limitation: DisclosedLimitationFlag = False
+    below_filing_grade: BelowFilingGradeField = None
 
     @model_validator(mode="after")
     def _unique_refs(self) -> Self:
@@ -137,6 +139,7 @@ class ModeloVerificationFindingProjection(BaseModel):
             legal_refs=finding.legal_refs,
             source_refs=finding.source_refs,
             disclosed_limitation=finding.disclosed_limitation,
+            below_filing_grade=finding.below_filing_grade,
         )
 
     def to_finding(self) -> ModeloVerificationFinding:
@@ -152,6 +155,7 @@ class ModeloVerificationFindingProjection(BaseModel):
                 "legal_refs": self.legal_refs,
                 "source_refs": self.source_refs,
                 "disclosed_limitation": self.disclosed_limitation,
+                "below_filing_grade": self.below_filing_grade,
             }
         )
 

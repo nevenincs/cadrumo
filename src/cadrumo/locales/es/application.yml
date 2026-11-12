@@ -3433,6 +3433,9 @@ application:
         dónde sale. Añádela a tu perfil.
       attribution_received_unfolded: Tu perfil recoge %{total_base} EUR de renta atribuida
         en %{filing_year}, pero la casilla [%{casilla_id}] no la incluye.
+      checked_below_filing_grade: Esta comprobación usa reglas que aún no están contrastadas
+        con las fuentes oficiales lo suficiente para presentar, así que tómala como
+        una indicación para revisar, no como una comprobación para presentar.
       cross_casilla_invariant_violated: Dos o más casillas de este modelo no concuerdan
         entre sí como exigen las normas oficiales.
       cross_model_reconciliation_incomplete: 'La comparación entre el Modelo %{modelo}

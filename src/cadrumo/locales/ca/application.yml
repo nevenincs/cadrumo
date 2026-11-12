@@ -3425,6 +3425,9 @@ application:
         d'on surt. Afegeix-la al teu perfil.
       attribution_received_unfolded: El teu perfil recull %{total_base} EUR de renda
         atribuïda el %{filing_year}, però la casella [%{casilla_id}] no la inclou.
+      checked_below_filing_grade: Aquesta comprovació fa servir regles que encara
+        no estan prou contrastades amb les fonts oficials per presentar, així que
+        pren-la com una indicació per revisar, no com una comprovació per presentar.
       cross_casilla_invariant_violated: Dues o més caselles d'aquest model no concorden
         entre si com exigeixen les normes oficials.
       cross_model_reconciliation_incomplete: 'La comparació entre el Model %{modelo}

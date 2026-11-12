@@ -24,6 +24,7 @@ from ...domain.calculations.registry.ids import LegalRefId, ModeloId, RevisionId
 from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ...domain.modelos.filing_text import ModeloActorLabel
 from ...domain.modelos.verification_report import (
+    BelowFilingGradeField,
     DisclosedLimitationFlag,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -75,6 +76,7 @@ class ModeloFindingSnapshot(BaseModel):
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
     disclosed_limitation: DisclosedLimitationFlag = False
+    below_filing_grade: BelowFilingGradeField = None
 
     @classmethod
     def from_finding(cls, finding: ModeloVerificationFinding) -> Self:

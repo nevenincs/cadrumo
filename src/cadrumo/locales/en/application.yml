@@ -3259,6 +3259,9 @@ application:
         where it comes from. Add it to your profile.
       attribution_received_unfolded: Your profile records %{total_base} EUR of attributed
         income for %{filing_year}, but box [%{casilla_id}] does not include it.
+      checked_below_filing_grade: This check used rules that are not yet checked against
+        the official sources closely enough for filing, so treat it as a pointer to
+        review, not as a filing check.
       cross_casilla_invariant_violated: Two or more boxes on this form do not agree
         with each other as the official rules require.
       cross_model_reconciliation_incomplete: 'Comparison between Modelo %{modelo}

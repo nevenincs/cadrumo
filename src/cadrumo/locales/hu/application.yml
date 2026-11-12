@@ -3380,6 +3380,9 @@ application:
         honnan származik. Vedd fel a profilodba.
       attribution_received_unfolded: A profilod %{filing_year} évre %{total_base}
         EUR betudott jövedelmet tartalmaz, de a(z) [%{casilla_id}] rovat ezt nem tartalmazza.
+      checked_below_filing_grade: Ez az ellenőrzés olyan szabályokat használ, amelyek
+        még nincsenek kellően egyeztetve a hivatalos forrásokkal a benyújtáshoz, ezért
+        átnézendő jelzésként kezeld, ne benyújtási ellenőrzésként.
       cross_casilla_invariant_violated: A nyomtatvány két vagy több rovata nem egyezik
         egymással, ahogy azt a hivatalos szabályok megkövetelik.
       cross_model_reconciliation_incomplete: 'A(z) %{modelo} és %{sibling_modelo}

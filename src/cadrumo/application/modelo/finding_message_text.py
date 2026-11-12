@@ -358,6 +358,21 @@ def fact_text(
     return writer(value, language) if writer is not None else _figure_text(value, kind, language)
 
 
+BELOW_FILING_GRADE_NOTICE_LOCALE_KEY: Final = "application.modelo.findings.checked_below_filing_grade"
+"""Says a check ran against an edition below filing grade, served after the finding's own sentence."""
+
+
+def with_below_filing_grade_notice(message: str, finding: ModeloVerificationFinding, *, locale: str | None) -> str:
+    """Serve ``message`` followed by the below-filing-grade notice when the finding was checked below it.
+
+    A finding checked at filing grade keeps its sentence unchanged. ``locale``
+    ``None`` renders in the configured output language.
+    """
+    if finding.below_filing_grade is None:
+        return message
+    return f"{message} {tr(BELOW_FILING_GRADE_NOTICE_LOCALE_KEY, locale=locale)}"
+
+
 def finding_message_text(
     finding: ModeloVerificationFinding,
     language: OutputLanguage,
@@ -368,7 +383,8 @@ def finding_message_text(
 
     ``box_words`` names boxes by casilla id as the form shows them; a box it
     does not name reads as its printed number when its id is one, and
-    otherwise as a box without a number, never as its id.
+    otherwise as a box without a number, never as its id. A finding checked
+    against an edition below filing grade is followed by the words that say so.
     """
     words = box_words or {}
     own_box = None if finding.casilla_id is None else words.get(finding.casilla_id)
@@ -383,14 +399,18 @@ def finding_message_text(
         )
         if text is not None:
             facts[name] = text
-    return tr(finding.message_locale_key, locale=language.value, **facts)
+    return with_below_filing_grade_notice(
+        tr(finding.message_locale_key, locale=language.value, **facts), finding, locale=language.value
+    )
 
 
 __all__ = [
+    "BELOW_FILING_GRADE_NOTICE_LOCALE_KEY",
     "FINDING_FACT_KINDS",
     "NO_PERIODS_FACT",
     "PERIOD_LIST_SEPARATOR",
     "FindingFactKind",
     "fact_text",
     "finding_message_text",
+    "with_below_filing_grade_notice",
 ]

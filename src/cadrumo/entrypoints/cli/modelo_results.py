@@ -80,6 +80,7 @@ from ...domain.modelos.filing_record import (
 )
 from ...domain.modelos.filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 from ...domain.modelos.verification_report import (
+    BelowFilingGradeField,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -263,6 +264,11 @@ class FindingPayload(OutputSchema):
     action: ResolvedPreconditionAction | None = None
     legal_refs: LegalRefs
     source_refs: list[SourceRefId] = Field(default_factory=list)
+    below_filing_grade: BelowFilingGradeField = None
+    """The edition's own grade when the advisory was checked against an edition below filing grade.
+
+    Left out of the payload while absent, so a finding checked at filing grade keeps its shape.
+    """
 
 
 class CrossPeriodDependencyRequirementPayload(OutputSchema):
