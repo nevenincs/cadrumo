@@ -21,7 +21,7 @@ exactly one. Every refusal names the command that resolves it.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Protocol
 
@@ -64,10 +64,11 @@ _DOOR_FAMILY: Final = {INMUEBLE_SECTION: "inmueble", ARRENDAMIENTO_SECTION: "arr
 
 @dataclass(frozen=True, slots=True)
 class RentalLedgerReferences:
-    """The lease and property references the ledger rows of one profile carry, with how many rows carry each."""
+    """The lease, property and position references of one profile's ledger rows, with the row count of each."""
 
     leases: Mapping[str, int]
     properties: Mapping[str, int]
+    positions: Mapping[str, int] = field(default_factory=dict[str, int])
 
 
 class RentalLedgerReferenceReader(Protocol):

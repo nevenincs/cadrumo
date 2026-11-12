@@ -33,7 +33,7 @@ from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .completeness import profile_section_rows
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-from .posicion_records import admit_posicion_row, is_posicion_section
+from .posicion_records import admit_posicion_row, is_posicion_section, require_posicion_row_removable
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
 from .rental_records import (
@@ -421,9 +421,9 @@ def remove_profile_repeatable_section_row(
 ) -> ProfileRepeatableRowChangeOutcome:
     """Remove one stable row by publishing explicit clear tombstones for its values.
 
-    A rental property that a lease or an accessory still names, and a property or
-    lease that a ledger row still names, is refused. The ledger is read only for
-    a rental row, through ``rental_ledger_references``.
+    A rental property that a lease or an accessory still names, and a property,
+    lease or savings position that a ledger row still names, is refused. The ledger
+    is read only for a rental or position row, through ``rental_ledger_references``.
     """
     section = _repeatable_section(schema, section_key)
     repository = ProfileRecordRepository.for_current_session(
@@ -443,6 +443,11 @@ def remove_profile_repeatable_section_row(
             section.key,
             row_key=_record_row_number(section.key, row_key),
             path_values=present,
+            ledger_references=rental_ledger_references(profile_id=profile_id),
+        )
+    elif is_posicion_section(section.key):
+        require_posicion_row_removable(
+            row_key=_record_row_number(section.key, row_key),
             ledger_references=rental_ledger_references(profile_id=profile_id),
         )
     changes = tuple(

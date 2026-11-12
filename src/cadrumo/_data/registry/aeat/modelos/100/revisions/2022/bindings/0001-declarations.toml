@@ -800,6 +800,51 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd", "boe-model
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
 
+# A saver's interest and dividends, one occurrence per position and detail record
+# of the input design (RegistroB11 under 0027, RegistroB13 under 0029, each with
+# IMP1 ingresos integros, IMP2 retenciones and IMP3 gastos). The gross is the
+# taxpayer's share of the net cash the linked ledger rows credited plus the
+# payer's withholding, checked against the payer's certificate. Every edition from
+# this one on carries the same records, so later editions inherit these bindings.
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-intereses-0027"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB11", quantity = "gross" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-14", "ley-35-2006:art-25", "rd-439-2007:art-90"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["sin descontar la retención practicada sobre dicho rendimiento"]
+
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-dividendos-0029"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB13", quantity = "gross" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-14", "ley-35-2006:art-25", "rd-439-2007:art-90"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["sin descontar la retención practicada sobre dicho rendimiento"]
+
+# Only administration and custody of valores negociables is deductible (LIRPF art.
+# 26.1.a); the design states it per occurrence as IMP3 of each record, and 0037
+# totals them.
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-gastos-0037"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", quantity = "expenses" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["gastos de administración y depósito de valores negociables"]
+
 # A baja's figure from the activity-asset register. The box holds other facts of the
 # same kind too, so the filer's own entry stays admissible over it.
 [[revisions."2022".bindings]]

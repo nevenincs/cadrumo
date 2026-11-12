@@ -74,6 +74,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
                 BindingSourceKind.INVENTORY,
                 BindingSourceKind.RETENCION_SOPORTADA,
+                BindingSourceKind.CAPITAL_MOBILIARIO_POSITION,
             },
         ),
         disposition=CallerOverrideDisposition.LOCK,

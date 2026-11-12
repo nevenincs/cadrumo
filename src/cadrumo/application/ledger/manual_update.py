@@ -84,6 +84,7 @@ from .models import (
     ManualLedgerTransactionResult,
 )
 from .rental_link_admission import verify_rental_link_references
+from .savings_link_admission import verify_savings_link_references
 
 # Evidence catalogue and provenance are mutated ONLY through the attach authority
 # (`attach_manual_transaction_evidence`). The generic manual-field update door
@@ -470,6 +471,17 @@ def prepare_manual_transaction_update(
         inmueble_ref=command.inmueble_ref,
         stored_arrendamiento_ref=current.arrendamiento_ref,
         stored_inmueble_ref=current.inmueble_ref,
+        loader=ports.rental_profile_facts,
+    )
+    verify_savings_link_references(
+        posicion_ref=command.posicion_ref,
+        concepto=None if command.concepto_capital_mobiliario is None else str(command.concepto_capital_mobiliario),
+        stored_posicion_ref=current.posicion_ref,
+        stored_concepto=(
+            None if current.concepto_capital_mobiliario is None else str(current.concepto_capital_mobiliario)
+        ),
+        booked_date=command.booked_date,
+        operation=ports.operation,
         loader=ports.rental_profile_facts,
     )
     event_specs = _update_event_specs(

@@ -326,6 +326,13 @@ class BindingSourceKind(StrEnum):
     # boxes each Modelo 100 revision gives them. The boxes hold other facts of the
     # same kind too, so the filer's own entry stays admissible over the figure.
     ACTIVITY_ASSET_DISPOSAL = "activity_asset_disposal"
+    # Interest and dividends from a saver's positions: the profile position
+    # records joined to the ledger rows linked to them and to each payer's
+    # suffered-withholding record. Gross is rebuilt from linked net cash plus the
+    # payer's withholding and checked against the payer's own gross. Deliberately
+    # not a ledger aggregation kind: the rows are read only through their position
+    # link, and the activity aggregations exclude every linked row.
+    CAPITAL_MOBILIARIO_POSITION = "capital_mobiliario_position"
     # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
     # 104-105): the source that would materialise Modelo 303 casilla 44 / the
     # Modelo 390 annual regularización field from the provisional percentage

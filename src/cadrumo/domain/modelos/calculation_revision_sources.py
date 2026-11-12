@@ -190,6 +190,24 @@ class CalculationNoteSentence(StrEnum):
     """An absence attestation zeroes a credit but not the income of its class, which only a record states."""
     RETENCION_SOPORTADA_RECORD_FIGURE_MISSING = "retencion_soportada_record_figure_missing"
     """A stored payer record predates a figure an income casilla draws and does not state it."""
+    CAPITAL_MOBILIARIO_POSITION_NOT_HELD = "capital_mobiliario_position_not_held"
+    """Ledger rows name a savings position the profile does not hold on their date."""
+    CAPITAL_MOBILIARIO_ROW_NOT_READABLE = "capital_mobiliario_row_not_readable"
+    """Ledger rows of a savings position carry a concept, currency or sum the calculation cannot read."""
+    CAPITAL_MOBILIARIO_FOREIGN_SOURCE = "capital_mobiliario_foreign_source"
+    """A savings position's income comes from another state, whose double taxation is not computed."""
+    CAPITAL_MOBILIARIO_INCOME_IN_KIND = "capital_mobiliario_income_in_kind"
+    """A payer record states capital-mobiliario income in kind, which is not computed."""
+    CAPITAL_MOBILIARIO_PAYER_EVIDENCE_MISSING = "capital_mobiliario_payer_evidence_missing"
+    """A payer's linked rows have neither the payer's record nor an attestation that nothing was withheld."""
+    CAPITAL_MOBILIARIO_PAYER_CHECK_MISMATCH = "capital_mobiliario_payer_check_mismatch"
+    """The gross rebuilt from a payer's linked rows differs from the gross the payer's record states."""
+    CAPITAL_MOBILIARIO_WITHHOLDING_SUM_MISMATCH = "capital_mobiliario_withholding_sum_mismatch"
+    """The withholding rebuilt at the governed rate differs from the withholding the payer's record states."""
+    CAPITAL_MOBILIARIO_GOVERNED_RATE_NOT_APPLICABLE = "capital_mobiliario_governed_rate_not_applicable"
+    """A payer feeds several occurrences and the governed rate does not split its withholding."""
+    CAPITAL_MOBILIARIO_PAYER_WITHOUT_ROWS = "capital_mobiliario_payer_without_rows"
+    """A payer record states capital-mobiliario income that no linked ledger row shows."""
     CREDIT_SOURCE_DISAGREEMENT = "credit_source_disagreement"
     """A credit casilla's value and one of its declared cross-check sources state different amounts."""
     CREDIT_CROSS_CHECK_ABSENT = "credit_cross_check_absent"
@@ -478,6 +496,23 @@ class CalculationSourceIssue(BaseModel):
                 record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         return self
+
+
+CAPITAL_MOBILIARIO_POSITION_REF_PREFIX: Final = "capital-mobiliario-position:"
+"""Prefix of the source reference naming one savings occurrence: ``{position_ref}:{detail_record}``."""
+
+
+def capital_mobiliario_occurrence_refs(source_refs: Iterable[str]) -> tuple[str, ...]:
+    """Return the savings occurrences a calculation rested on, sorted, ignoring every other reference."""
+    return tuple(
+        sorted(
+            {
+                source_ref.removeprefix(CAPITAL_MOBILIARIO_POSITION_REF_PREFIX)
+                for source_ref in source_refs
+                if source_ref.startswith(CAPITAL_MOBILIARIO_POSITION_REF_PREFIX)
+            }
+        )
+    )
 
 
 ACTIVITY_ASSET_CLAIM_REF_PREFIX: Final = "activity-asset-claim:"

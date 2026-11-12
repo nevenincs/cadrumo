@@ -169,6 +169,7 @@ flows:
           atribucion_member: Miembro de atribución de rentas
           bienes_inversion_regularizacion: Regularización de bienes de inversión
           borrador: Borrador de la AEAT
+          capital_mobiliario_position: Intereses y dividendos del ahorro
           collectible_invoice: Facturas emitidas
           design_constant: Constante del diseño
           foreign_asset: Activo extranjero

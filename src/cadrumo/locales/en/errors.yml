@@ -1808,6 +1808,11 @@ errors:
     refused_modelo_export_required_record_absent: The official design requires at
       least one %{export_record_id} record, but this return has none, so there is
       nothing to write in this format and nothing was written.
+    refused_modelo_export_savings_detail_records_unwritable: 'Nothing was written:
+      the official design places a detail record for each savings position under the
+      interest and dividend boxes, and the export cannot write those records yet.
+      The calculated boxes and the verification are unaffected. Nothing you change
+      puts this right: the export stays refused until it writes the detail records.'
     refused_modelo_export_settlement: 'Nothing was written: the export cannot state
       how the return is paid or refunded.'
     refused_modelo_export_unrepresentable_character: 'Nothing was written: field %{field_id}
@@ -2079,11 +2084,16 @@ errors:
       List them with “{door}”.
     rental_link_category: A row linked to a lease or a property must carry the income
       category {category}; set it with “{door}” and --irpf-category.
-    savings_link_category: A row linked to a savings position must carry the income
-      category {category}; set it with “{door}” and --irpf-category.
-    savings_concept_unknown: 'Unrecognised --concepto-capital-mobiliario {value!r}. Accepted
-      concepts: {accepted}.'
     rental_property_unknown: The property {ref} is not one of the properties in your
       profile. List them with “{door}”.
+    savings_concept_kind: The concept {concepto} is admitted only on a {kind} position,
+      and position {ref} is of another kind. Choose another concept or position with
+      “{door}”.
+    savings_concept_unknown: 'Unrecognised --concepto-capital-mobiliario {value!r}.
+      Accepted concepts: {accepted}.'
+    savings_link_category: A row linked to a savings position must carry the income
+      category {category}; set it with “{door}” and --irpf-category.
+    savings_position_unknown: The savings position {ref} is not one of the positions
+      in your profile. List them with “{door}”.
     unknown_ledger_provider: 'Unknown ledger provider {provider!r}. Recognised providers:
       {providers}.'

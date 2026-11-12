@@ -1,7 +1,8 @@
-"""A ledger row names a savings position and its concept through the add, classify and CSV doors.
+"""A ledger row names a stored savings position and its concept through the add, classify and CSV doors.
 
 The profile is a real encrypted profile and the ledger ports are the production composition, so each
-case reads the row back from storage. The position's existence in the profile is not judged here.
+case reads the row back from storage. The admission reads the stored positions; the profile keeps a
+position a ledger row names from being removed.
 """
 
 from __future__ import annotations
@@ -35,23 +36,34 @@ from ...application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from ...application.ledger.rental_link_admission import rental_ledger_references
+from ...application.ledger.savings_link_admission import CONCEPT_DOOR, POSITION_LIST_DOOR
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.user_profile.login_session import authenticate_profile_for_invocation
 from ...application.user_profile.registration import register_profile_with_credentials
+from ...application.user_profile.section_rows import (
+    add_profile_repeatable_section_row,
+    remove_profile_repeatable_section_row,
+)
 from ...core.config import override_settings
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.capital_mobiliario_facts import resolve_capital_mobiliario_concept_vocabulary
 from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ...domain.contribuyente.posicion_facts import POSICION_SECTION
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.savings_link import SAVINGS_LINK_IRPF_CATEGORY
-from ..ledger_action_composition import compose_ledger_action_ports
+from ...domain.user_profile.errors import UserProfileValidationError
+from ..ledger_action_composition import compose_ledger_action_ports, load_ledger_rows_for_rental_references
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _YEAR = filing_year_envelope().horizon
-_POSITION = "deposito-1"
+_DEPOSIT = "0"
+_SECURITIES = "1"
+_POSITION = _DEPOSIT
+_PAYER = "B00000000"
 _REFUSED = (TransactionValidationError, ValidationError)
 _LINK_FIELDS = ("business_classification", "irpf_category", "posicion_ref", "concepto_capital_mobiliario")
 
@@ -59,6 +71,38 @@ _LINK_FIELDS = ("business_classification", "irpf_category", "posicion_ref", "con
 class _World(NamedTuple):
     profile_id: str
     operation: PinnedAuthorityOperation
+
+
+def _add_position(world: _World, *, tipo: str) -> str:
+    decode = world.operation.profile_decode_context()
+    outcome = add_profile_repeatable_section_row(
+        profile_id=world.profile_id,
+        section_key=POSICION_SECTION,
+        values={
+            "tipo": tipo,
+            "pagador_nif": _PAYER,
+            "pagador_nombre": "Banco Sintetico",
+            "pais_origen": "ES",
+            "porcentaje_titularidad": "100",
+            "fecha_inicio": date(_YEAR - 2, 3, 1).isoformat(),
+        },
+        schema=decode.schema,
+        profile_decode_context=decode,
+        authority=world.operation,
+    )
+    return str(outcome.row_index)
+
+
+def _remove_position(world: _World, row: str) -> None:
+    decode = world.operation.profile_decode_context()
+    remove_profile_repeatable_section_row(
+        profile_id=world.profile_id,
+        section_key=POSICION_SECTION,
+        row_key=row,
+        schema=decode.schema,
+        profile_decode_context=decode,
+        rental_ledger_references=rental_ledger_references(load_ledger_rows_for_rental_references),
+    )
 
 
 def _row(world: _World, ports: LedgerActionPorts, **fields: object) -> Transaction:
@@ -125,7 +169,10 @@ def world(tmp_path: Path) -> Iterator[_World]:
             profile_decode_context=operation.profile_decode_context(),
         )
         register_minimal_profile(profile_id=outcome.profile_id)
-        yield _World(outcome.profile_id, operation)
+        world = _World(outcome.profile_id, operation)
+        assert _add_position(world, tipo="deposito") == _DEPOSIT
+        assert _add_position(world, tipo="valores_negociables") == _SECURITIES
+        yield world
 
 
 @pytest.fixture
@@ -157,7 +204,7 @@ def test_every_declared_concept_can_be_linked_through_classification(world: _Wor
             LedgerClassifyPatch(
                 business_classification="BUSINESS",
                 irpf_category=SAVINGS_LINK_IRPF_CATEGORY,
-                posicion_ref=f"  {_POSITION}  ",
+                posicion_ref=f"  {_SECURITIES}  ",
                 concepto_capital_mobiliario=token,
             ),
             _LINK_FIELDS,
@@ -168,7 +215,7 @@ def test_every_declared_concept_can_be_linked_through_classification(world: _Wor
         updated = _update(world, ports, created, **patch)
 
         stored = _stored(ports, updated)
-        assert stored.posicion_ref == _POSITION
+        assert stored.posicion_ref == _SECURITIES
         assert str(stored.concepto_capital_mobiliario) == token
 
 
@@ -361,3 +408,102 @@ def test_a_settled_classification_is_correlated_with_the_savings_link(world: _Wo
     assert classification_selected_fields_match(patch=patch, fields=_LINK_FIELDS, m210=None, result=result)
     stale = patch.model_copy(update={"posicion_ref": "otra"})
     assert not classification_selected_fields_match(patch=stale, fields=_LINK_FIELDS, m210=None, result=result)
+
+
+def _link(world: _World, ports: LedgerActionPorts, position: str, token: str) -> Transaction:
+    created = _row(world, ports, description=f"{token} on {position}")
+    return _update(
+        world,
+        ports,
+        created,
+        business_classification=BusinessClassification.BUSINESS,
+        irpf_category=SAVINGS_LINK_IRPF_CATEGORY,
+        posicion_ref=position,
+        concepto_capital_mobiliario=_concept(world, ports, token),
+    )
+
+
+def test_a_position_the_profile_does_not_hold_is_refused_naming_the_listing_door(
+    world: _World, ports: LedgerActionPorts
+) -> None:
+    created = _row(world, ports)
+    concept = _concept(world, ports, "intereses")
+
+    with pytest.raises(TransactionValidationError) as refused:
+        _update(
+            world,
+            ports,
+            created,
+            business_classification=BusinessClassification.BUSINESS,
+            irpf_category=SAVINGS_LINK_IRPF_CATEGORY,
+            posicion_ref="9",
+            concepto_capital_mobiliario=concept,
+        )
+
+    assert refused.value.context == {"ref": "9", "door": POSITION_LIST_DOOR}
+    assert _stored(ports, created).posicion_ref is None
+
+
+def test_a_position_added_through_the_add_door_must_be_held(world: _World, ports: LedgerActionPorts) -> None:
+    with pytest.raises(TransactionValidationError) as refused:
+        _row(
+            world,
+            ports,
+            business_classification=BusinessClassification.BUSINESS,
+            irpf_category=SAVINGS_LINK_IRPF_CATEGORY,
+            posicion_ref="9",
+            concepto_capital_mobiliario=_concept(world, ports, "intereses"),
+        )
+
+    assert (refused.value.context or {})["door"] == POSITION_LIST_DOOR
+
+
+def test_a_concept_the_position_kind_cannot_carry_is_refused(world: _World, ports: LedgerActionPorts) -> None:
+    created = _row(world, ports)
+    concept = _concept(world, ports, "gasto_administracion_deposito")
+
+    with pytest.raises(TransactionValidationError) as refused:
+        _update(
+            world,
+            ports,
+            created,
+            business_classification=BusinessClassification.BUSINESS,
+            irpf_category=SAVINGS_LINK_IRPF_CATEGORY,
+            posicion_ref=_DEPOSIT,
+            concepto_capital_mobiliario=concept,
+        )
+
+    context = refused.value.context or {}
+    assert context["ref"] == _DEPOSIT
+    assert context["kind"] == "valores_negociables"
+    assert context["door"] == CONCEPT_DOOR
+    assert _stored(ports, created).posicion_ref is None
+
+
+def test_a_concept_the_position_kind_carries_is_accepted(world: _World, ports: LedgerActionPorts) -> None:
+    linked = _link(world, ports, _SECURITIES, "gasto_administracion_deposito")
+
+    assert _stored(ports, linked).posicion_ref == _SECURITIES
+
+
+def test_a_position_a_ledger_row_names_is_kept_until_the_link_is_cleared(
+    world: _World, ports: LedgerActionPorts
+) -> None:
+    linked = _link(world, ports, _DEPOSIT, "intereses")
+
+    with pytest.raises(UserProfileValidationError) as refused:
+        _remove_position(world, _DEPOSIT)
+    context = refused.value.context or {}
+    assert context["door"] == CONCEPT_DOOR
+    assert context["rows"] == 1
+
+    _remove_position(world, _SECURITIES)
+
+    cleared = resolve_classification_patch_values(
+        LedgerClassifyPatch(posicion_ref="", concepto_capital_mobiliario=""),
+        ("posicion_ref", "concepto_capital_mobiliario"),
+        current=linked,
+        operation=world.operation,
+    )
+    _update(world, ports, linked, **cleared)
+    _remove_position(world, _DEPOSIT)

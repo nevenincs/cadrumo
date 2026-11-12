@@ -32,6 +32,7 @@ from ....domain.calculations.registry.facts.resolution import (
     ResolvedGovernedFact,
     ResolvedMappingFact,
 )
+from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.irpf_income_categories import (
     irpf_income_categories_without_calculator,
     irpf_income_family_casilla_sections,
@@ -57,6 +58,7 @@ from ..income_family_not_computed import (
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..retencion_soportada_source import IRPF_INCOME_CATEGORIES_PROFILE_PATH
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
+from .capital_mobiliario_position_support import DEPOSIT_POSITION, SavingsPosition, position_facts
 from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository, cash_criterion_profile
 from .renta_income_aggregation_support import catalogue_read_ports, renta_income_aggregation_period
 
@@ -118,8 +120,10 @@ def _context(
     period_code: str = "0A",
     declared: str | None = None,
     entered: dict[str, str] | None = None,
+    positions: dict[str, SavingsPosition] | None = None,
 ) -> CalculationSourceContext:
     extra = () if declared is None else (UserProfileFact(path=IRPF_INCOME_CATEGORIES_PROFILE_PATH, value=declared),)
+    extra = (*extra, *position_facts(positions or {}))
     return CalculationSourceContext(
         bucket_id=_BUCKET,
         modelo=modelo,
@@ -298,7 +302,9 @@ def test_the_registry_fact_names_the_two_families_without_a_calculator(operation
 
 def _entered(*rows: Transaction, families: tuple[str, ...] = (_CAPITAL,)) -> dict[str, str]:
     """The entry digests an edit records for ``families`` when ``rows`` are the window's rows."""
-    return income_family_row_digests(rows, families)
+    authority = governed_facts_in_scope()
+    assert authority is not None
+    return income_family_row_digests(rows, families, effective_date=date(_YEAR, 12, 31), authority=authority)
 
 
 def test_figures_entered_against_the_rows_present_clear_the_finding() -> None:
@@ -458,3 +464,61 @@ def test_each_uncomputed_family_names_casillas_of_every_admitted_modelo_100_year
         assert all(casillas.values()), (year, casillas)
         assert not casillas[_CAPITAL] & casillas[_GAINS], year
     assert admitted
+
+
+# The capital-mobiliario family narrows to what the position resolver does not compute.
+
+
+def _linked(provider_id: str, concept: str = "intereses") -> Transaction:
+    return _row(provider_id, category=_CAPITAL).model_copy(
+        update={"posicion_ref": "0", "concepto_capital_mobiliario": concept}
+    )
+
+
+def _capital_findings(resolution: CalculationSourceResolution) -> list[CalculationSourceDiagnostic]:
+    return [item for item in _findings(resolution) if _family(item) == _CAPITAL]
+
+
+def test_a_row_linked_to_a_position_under_a_computed_concept_raises_nothing() -> None:
+    resolution = _resolve(_linked("interest-1"), context=_context(positions={"0": DEPOSIT_POSITION}))
+
+    assert _capital_findings(resolution) == []
+
+
+def test_an_unlinked_business_capital_row_still_raises_beside_a_linked_one() -> None:
+    resolution = _resolve(
+        _linked("interest-1"),
+        _row("interest-2", category=_CAPITAL),
+        context=_context(positions={"0": DEPOSIT_POSITION}),
+    )
+
+    (finding,) = _capital_findings(resolution)
+    assert "1 ledger row(s)" in finding.message
+
+
+def test_a_declared_capital_family_without_a_position_still_raises() -> None:
+    resolution = _resolve(context=_context(declared=_CAPITAL))
+
+    assert len(_capital_findings(resolution)) == 1
+
+
+def test_a_declared_capital_family_with_a_position_in_the_ejercicio_raises_nothing() -> None:
+    resolution = _resolve(context=_context(declared=_CAPITAL, positions={"0": DEPOSIT_POSITION}))
+
+    assert _capital_findings(resolution) == []
+
+
+def test_a_position_closed_before_the_ejercicio_does_not_answer_for_the_declared_family() -> None:
+    closed = SavingsPosition(
+        "deposito", "B00000001", "Banco Sintetico", since=date(_YEAR - 3, 1, 1), until=date(_YEAR - 1, 12, 31)
+    )
+
+    resolution = _resolve(context=_context(declared=_CAPITAL, positions={"0": closed}))
+
+    assert len(_capital_findings(resolution)) == 1
+
+
+def test_a_linked_row_leaves_the_entry_digest_of_the_capital_family_unchanged() -> None:
+    unlinked = _row("interest-1", category=_CAPITAL)
+
+    assert _entered(unlinked, _linked("interest-2")) == _entered(unlinked)

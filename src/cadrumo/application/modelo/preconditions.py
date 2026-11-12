@@ -822,6 +822,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.deductible_iva_evidence.present",
         "modelo.export.deductible_iva_evidence.missing",
     ),
+    # The export cannot yet write the detail records a savings occurrence fills;
+    # no operator action reaches that, so the refusal is terminal until it can.
+    _profile(
+        "modelo.export",
+        "modelo.export.savings_detail_records.writable",
+        "modelo.export.savings_detail_records.unwritable",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.registry_snapshot.available",

@@ -1999,6 +1999,32 @@ application:
         than as an expense.
       book_claimed_purchase_undated: A ledger entry is a purchase in your inventory,
         so it is declared as a purchase of stock rather than as an expense.
+      capital_mobiliario_foreign_source: '{payer}: this savings position''s income
+        comes from {country}, and income from another state is not computed yet. Enter
+        these boxes by hand.'
+      capital_mobiliario_governed_rate_not_applicable: '{payer}: this payer pays income
+        on several positions and the general withholding rate does not split its withholding
+        between them. Enter these boxes by hand.'
+      capital_mobiliario_income_in_kind: '{payer}: the payer record states income
+        in kind, which is not computed yet. Enter these boxes by hand.'
+      capital_mobiliario_payer_check_mismatch: '{payer}: your linked rows plus the
+        withholding come to {amount}, and the payer''s certificate states {compared_amount}.
+        Correct the record or the rows until they agree.'
+      capital_mobiliario_payer_evidence_missing: '{payer}: your ledger shows income
+        from this payer, but there is no payer record and no attestation that nothing
+        was withheld. Record the payer''s certificate, or attest that no payer withheld.'
+      capital_mobiliario_payer_without_rows: '{payer}: the payer record states capital
+        income that no ledger row linked to a savings position shows. Link the rows
+        to their position, or add the position.'
+      capital_mobiliario_position_not_held: '{payer}: {count} ledger rows are linked
+        to a savings position your profile does not hold on their date, so the interest
+        and dividend boxes stay open.'
+      capital_mobiliario_row_not_readable: '{payer}: {count} ledger rows linked to
+        this savings position have a concept, currency or total the calculation cannot
+        read, so the boxes they feed stay open.'
+      capital_mobiliario_withholding_sum_mismatch: '{payer}: at the withholding rate,
+        the withholding on your linked rows comes to {amount}, and the payer''s certificate
+        states {compared_amount}. Correct the record or the rows until they agree.'
       claim_gap_accrued: '{element}: no depreciation charge is recorded from {start}
         to {end}. {amount} accrued, and box {box} declares only what is recorded.'
       claim_gap_free_method: '{element}: no depreciation charge is recorded from {start}
@@ -2601,6 +2627,11 @@ application:
         which cannot be mapped to a filing period of the modelo.
       export_revision_state_refused: The saved calculation %{calculation_revision_id}
         is not checked and complete, or recorded as filed, and cannot be exported.
+      export_savings_detail_records_unwritable: 'Nothing was written: the official
+        design places a detail record for each savings position under the interest
+        and dividend boxes, and the export cannot write those records yet. The calculated
+        boxes and the verification are unaffected. Nothing you change puts this right:
+        the export stays refused until it writes the detail records.'
       export_settlement_unknown: The export cannot state how the return is settled
         because its result is not calculated. Calculate the declaration and export
         it again.
@@ -4110,6 +4141,8 @@ application:
         was not changed.
       posicion_country_unknown: The source state “%{pais}” is not a known two-letter
         country code; correct it and repeat “%{door}”.
+      posicion_has_ledger_rows: Savings position %{row} is named by %{rows} ledger
+        rows; change or clear their link first with “%{door}”.
       posicion_payer_id_invalid: The tax ID of a Spanish payer is not valid; check
         its letters and digits, then repeat “%{door}”.
       posicion_row_invalid: The fact “%{leaf}” is not valid or contradicts other facts

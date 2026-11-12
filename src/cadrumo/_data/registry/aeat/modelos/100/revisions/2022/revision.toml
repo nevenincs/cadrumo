@@ -168,7 +168,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0027" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:109 y aeat-dr-100-2022-dictionary:110: B11, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoCapitalMobiliario/RdtoCapitalMobiliarioAhorro/B11/@valor, tipo N102; identidad legal conservada en el mismo componente de renta; el diseno explicita cambios de redaccion o detalle del importe, declarados en las evoluciones, sin cambio de sujeto ni tipo.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { input_kind = "bound", binding = "renta-capital-mobiliario-intereses-0027", continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:109 y aeat-dr-100-2022-dictionary:110: B11, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoCapitalMobiliario/RdtoCapitalMobiliarioAhorro/B11/@valor, tipo N102; identidad legal conservada en el mismo componente de renta; el diseno explicita cambios de redaccion o detalle del importe, declarados en las evoluciones, sin cambio de sujeto ni tipo.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0028" }
@@ -176,7 +176,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0029" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:111 y aeat-dr-100-2022-dictionary:112: B13, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoCapitalMobiliario/RdtoCapitalMobiliarioAhorro/B13/@valor, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { input_kind = "bound", binding = "renta-capital-mobiliario-dividendos-0029", continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:111 y aeat-dr-100-2022-dictionary:112: B13, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoCapitalMobiliario/RdtoCapitalMobiliarioAhorro/B13/@valor, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0030" }
@@ -208,7 +208,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0037" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:119 y aeat-dr-100-2022-dictionary:120: B1GD, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoCapitalMobiliario/RdtoCapitalMobiliarioAhorro/B1GD, tipo P102; identidad legal conservada en el mismo componente de renta; el diseno explicita cambios de redaccion o detalle del importe, declarados en las evoluciones, sin cambio de sujeto ni tipo.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { input_kind = "bound", binding = "renta-capital-mobiliario-gastos-0037", continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:119 y aeat-dr-100-2022-dictionary:120: B1GD, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoCapitalMobiliario/RdtoCapitalMobiliarioAhorro/B1GD, tipo P102; identidad legal conservada en el mismo componente de renta; el diseno explicita cambios de redaccion o detalle del importe, declarados en las evoluciones, sin cambio de sujeto ni tipo.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0038" }

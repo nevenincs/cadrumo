@@ -101,6 +101,7 @@ def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
                 BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
                 BindingSourceKind.INVENTORY,
                 BindingSourceKind.RETENCION_SOPORTADA,
+                BindingSourceKind.CAPITAL_MOBILIARIO_POSITION,
             },
         )
         == BUCKET_AGGREGATION_LOCK_SOURCES

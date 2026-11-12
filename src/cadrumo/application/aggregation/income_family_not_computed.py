@@ -12,18 +12,29 @@ keeps, per family, the digest of the family's rows in the filing window at
 entry (:func:`income_family_row_digests`), and the finding stays cleared only
 while the rows still digest the same. Rows added, removed or reclassified since
 then raise the finding again, saying so, until the figures are entered anew.
+
+A family narrows as its calculators land. A ledger row linked to a savings
+position under a concept the position resolver computes is no longer a row of
+the capital-mobiliario family, and the profile's declaration of that family
+raises nothing while the profile holds a position in the ejercicio: the position
+resolver then answers for the family's figures, or blocks them itself.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
+from datetime import date
 from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import BindingSourceKind
+from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.hashing import content_hash_hex
+from ...domain.calculations.registry.capital_mobiliario_facts import resolve_capital_mobiliario_concept_vocabulary
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_categories_without_calculator
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.transactions.irpf_categories import normalize_irpf_category
+from ...domain.transactions.savings_link import SAVINGS_LINK_IRPF_CATEGORY, has_savings_link
+from .capital_mobiliario_position_source import profile_positions
 from .retencion_soportada_source import declared_irpf_income_categories
 from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic
 
@@ -45,11 +56,28 @@ _SOURCE_REF_PREFIX: Final = "income-family:"
 _DIGEST_DOMAIN: Final = "income_family_ledger_rows"
 
 
-def _family_row_ids(window_transactions: Iterable[Transaction], families: Iterable[str]) -> dict[str, list[str]]:
+def _computed_concepts(*, effective_date: date, authority: GovernedFactSource) -> frozenset[str]:
+    vocabulary = resolve_capital_mobiliario_concept_vocabulary(effective_date=effective_date, authority=authority)
+    return frozenset(concept.token for concept in vocabulary.concepts)
+
+
+def _computed_by_position(transaction: Transaction, computed_concepts: frozenset[str]) -> bool:
+    """Return whether the position resolver reads the row: linked, under a concept it computes."""
+    concept = transaction.concepto_capital_mobiliario
+    return (
+        has_savings_link(posicion_ref=transaction.posicion_ref)
+        and concept is not None
+        and str(concept) in computed_concepts
+    )
+
+
+def _family_row_ids(
+    window_transactions: Iterable[Transaction], families: Iterable[str], computed_concepts: frozenset[str]
+) -> dict[str, list[str]]:
     rows: dict[str, list[str]] = {family: [] for family in families}
     for transaction in window_transactions:
         category = normalize_irpf_category(transaction.irpf_category)
-        if category in rows:
+        if category in rows and not _computed_by_position(transaction, computed_concepts):
             rows[category].append(str(transaction.transaction_id))
     return rows
 
@@ -58,15 +86,50 @@ def _row_digest(row_ids: Iterable[str]) -> str:
     return content_hash_hex({"domain": _DIGEST_DOMAIN, "row_ids": sorted(row_ids)})
 
 
-def income_family_row_digests(window_transactions: Iterable[Transaction], families: Iterable[str]) -> dict[str, str]:
+def income_family_row_digests(
+    window_transactions: Iterable[Transaction],
+    families: Iterable[str],
+    *,
+    effective_date: date,
+    authority: GovernedFactSource,
+) -> dict[str, str]:
     """Digest, per family, the sorted ids of its ledger rows among the filing window's rows.
 
     The one digest the operator layer records when the operator enters a
     family's figures and the resolver compares against the rows it reads, so
     the two can never disagree on what "the same rows" means. A family with no
-    row digests the empty set.
+    row digests the empty set. A row the position resolver reads is no row of
+    its family; ``effective_date`` selects the concepts it computes.
     """
-    return {family: _row_digest(ids) for family, ids in sorted(_family_row_ids(window_transactions, families).items())}
+    computed = _computed_concepts(effective_date=effective_date, authority=authority)
+    return {
+        family: _row_digest(ids)
+        for family, ids in sorted(_family_row_ids(window_transactions, families, computed).items())
+    }
+
+
+def _holds_position_in(context: CalculationSourceContext) -> bool:
+    """Return whether the profile holds a savings position on some day of the ejercicio.
+
+    A position whose facts do not cohere answers no, so the declared family keeps
+    its finding rather than vanishing on unreadable facts.
+    """
+    try:
+        positions = profile_positions(context)
+    except ProfileAnswerTypeError:
+        return False
+    start, end = context.period.start_date, context.period.end_date
+    return any(
+        position.fecha_inicio <= end and (position.fecha_fin is None or start <= position.fecha_fin)
+        for position in positions
+    )
+
+
+def _declared_families(context: CalculationSourceContext) -> frozenset[str]:
+    declared = declared_irpf_income_categories(context) or frozenset[str]()
+    if SAVINGS_LINK_IRPF_CATEGORY in declared and _holds_position_in(context):
+        return declared - {SAVINGS_LINK_IRPF_CATEGORY}
+    return declared
 
 
 def _diagnostic(
@@ -118,10 +181,11 @@ def income_family_not_computed_diagnostics(
         return ()
     names = sorted(str(token) for token in uncomputed)
     window = tuple(window_transactions)
-    rows = _family_row_ids(window, names)
-    current = income_family_row_digests(window, names)
+    end = context.period.end_date
+    rows = _family_row_ids(window, names, _computed_concepts(effective_date=end, authority=authority))
+    current = income_family_row_digests(window, names, effective_date=end, authority=authority)
     entered = context.income_family_entry_digests
-    declared = declared_irpf_income_categories(context) or frozenset()
+    declared = _declared_families(context)
     return tuple(
         _diagnostic(
             family,

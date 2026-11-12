@@ -12,6 +12,7 @@ from ...domain.calculations.registry.binding_provider_registration import (
     RouteOwnership,
 )
 from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
+from ..aggregation.capital_mobiliario_position_source import CapitalMobiliarioPositionSourceResolver
 from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
 from ..aggregation.impatriado_income_bindings import LedgerImpatriadoIncomeAggregationSourceResolver
 from ..aggregation.inventory import InventorySourceResolver
@@ -129,6 +130,7 @@ _CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteResolverStage, type[Mode
     ("mesh", RetencionesAggregationSourceResolver),
     ("mesh", WithholdingSourceResolver),
     ("mesh", RetencionSoportadaSourceResolver),
+    ("mesh", CapitalMobiliarioPositionSourceResolver),
     ("mesh", InvoiceCatalogueSourceResolver),
     ("mesh", ForeignAssetsAggregationSourceResolver),
     ("mesh", AtribucionMemberSourceResolver),

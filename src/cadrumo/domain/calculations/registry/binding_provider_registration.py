@@ -58,6 +58,10 @@ from .binding_temporal import temporal_reach_diagnostic
 from .binding_terminal_origin import TerminalOriginClass
 from .binding_value_contract import BindingValueChannel
 from .bindings_previous_filing import PreviousFilingProvider, validate_previous_filing_binding
+from .capital_mobiliario_position_bindings import (
+    CapitalMobiliarioPositionProvider,
+    validate_capital_mobiliario_position_binding,
+)
 from .counterpart_bindings import validate_counterpart_binding
 from .design_constant_bindings import DesignConstantProvider, validate_design_constant_binding
 from .detail_record_bindings import (
@@ -635,6 +639,26 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         ),
         output="scalar",
         resolver_id="retencion_soportada",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.CAPITAL_MOBILIARIO_POSITION,
+        CapitalMobiliarioPositionProvider,
+        validate_capital_mobiliario_position_binding,
+        # A saver's interest and dividends: net cash from the ledger rows linked
+        # to a profile position, plus the withholding of the payer's certificate,
+        # or none under the operator's attestation that the payer withheld nothing.
+        channels=_MONEY_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}),
+        origins=frozenset(
+            {
+                TerminalOriginClass.LEDGER_AGGREGATE,
+                TerminalOriginClass.PAYER_CERTIFICATE,
+                TerminalOriginClass.OPERATOR_INPUT,
+            },
+        ),
+        output="scalar",
+        resolver_id="capital_mobiliario_position",
         stage="mesh",
     ),
     _filing_grade(

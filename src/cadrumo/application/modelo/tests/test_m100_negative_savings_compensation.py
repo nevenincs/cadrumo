@@ -57,8 +57,9 @@ def _box(token: str) -> CasillaId:
 
 _GAINS = _box("0392")
 _LOSSES = _box("0395")
-_DIVIDENDS = _box("0029")
-_DEDUCTIBLE_EXPENSES = _box("0037")
+# Interest, dividends and their expenses come only from linked ledger rows and payer records, so the
+# scenario states its negative movable-capital yield in other financial assets, a leaf no source binds.
+_OTHER_FINANCIAL_ASSETS = _box("0031")
 _SAVINGS_BASE = _box("0460")
 
 # Step 1: each kind's pending balance against its own positive balance, by origin year.
@@ -77,12 +78,11 @@ _GAINS_EM4 = "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio"
 _GAINS_EM3 = "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio"
 _CAPITAL_EM4 = "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio"
 
-#: The manual's current-year figures: gains 5 600, losses 1 600, movable-capital yield 1 000 - 1 800.
+#: The manual's current-year figures: gains 5 600, losses 1 600, a movable-capital yield of -800.
 _MANUAL_YEAR: Mapping[CasillaId, Decimal] = {
     _GAINS: Decimal("5600"),
     _LOSSES: Decimal("1600"),
-    _DIVIDENDS: Decimal("1000"),
-    _DEDUCTIBLE_EXPENSES: Decimal("1800"),
+    _OTHER_FINANCIAL_ASSETS: Decimal("-800"),
 }
 #: The manual's pending balances: gains and losses 700 and 2 100, movable capital 500.
 _MANUAL_PENDING: Mapping[str, Decimal] = {

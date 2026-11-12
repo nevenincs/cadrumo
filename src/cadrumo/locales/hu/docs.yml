@@ -7,6 +7,8 @@ docs:
       atribucion_member: az atribución de rentas tagjaiból
       bienes_inversion_regularizacion: a beruházási javak korrekciójából
       borrador: az AEAT-adatokból (borrador)
+      capital_mobiliario_position: a megtakarítási pozícióidhoz kapcsolt főkönyvi
+        tételekből és a kifizetőid igazolásaiból
       collectible_invoice: a kiállított számláiból
       design_constant: az AEAT rekordtervében rögzített állandóból
       foreign_asset: a külföldi vagyonelemeiből

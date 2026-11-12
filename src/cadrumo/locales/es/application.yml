@@ -2109,6 +2109,34 @@ application:
         como gasto.
       book_claimed_purchase_undated: Un movimiento es una compra de tu inventario,
         así que se declara como compra de existencias y no como gasto.
+      capital_mobiliario_foreign_source: '{payer}: los rendimientos de esta posición
+        de ahorro proceden de {country}, y los rendimientos de otro Estado aún no
+        se calculan. Introduce estas casillas a mano.'
+      capital_mobiliario_governed_rate_not_applicable: '{payer}: este pagador abona
+        rendimientos en varias posiciones y el tipo general de retención no reparte
+        su retención entre ellas. Introduce estas casillas a mano.'
+      capital_mobiliario_income_in_kind: '{payer}: el registro del pagador declara
+        rendimientos en especie, que aún no se calculan. Introduce estas casillas
+        a mano.'
+      capital_mobiliario_payer_check_mismatch: '{payer}: tus filas vinculadas más
+        la retención suman {amount}, y el certificado del pagador declara {compared_amount}.
+        Corrige el registro o las filas hasta que coincidan.'
+      capital_mobiliario_payer_evidence_missing: '{payer}: tu libro muestra rendimientos
+        de este pagador, pero no hay registro del pagador ni declaración de que no
+        se practicó retención. Registra el certificado del pagador o declara que ningún
+        pagador retuvo.'
+      capital_mobiliario_payer_without_rows: '{payer}: el registro del pagador declara
+        rendimientos del capital que ninguna fila del libro vinculada a una posición
+        de ahorro muestra. Vincula las filas a su posición o añade la posición.'
+      capital_mobiliario_position_not_held: '{payer}: {count} filas del libro están
+        vinculadas a una posición de ahorro que tu perfil no tiene en su fecha, así
+        que las casillas de intereses y dividendos quedan abiertas.'
+      capital_mobiliario_row_not_readable: '{payer}: {count} filas del libro vinculadas
+        a esta posición de ahorro tienen un concepto, una moneda o un total que el
+        cálculo no puede leer, así que las casillas que alimentan quedan abiertas.'
+      capital_mobiliario_withholding_sum_mismatch: '{payer}: al tipo de retención,
+        la retención de tus filas vinculadas suma {amount}, y el certificado del pagador
+        declara {compared_amount}. Corrige el registro o las filas hasta que coincidan.'
       claim_gap_accrued: '{element}: no hay dotación registrada de {start} a {end}.
         Se han devengado {amount}, y la casilla {box} solo declara lo registrado.'
       claim_gap_free_method: '{element}: no hay dotación registrada de {start} a {end}.
@@ -2735,6 +2763,12 @@ application:
       export_revision_state_refused: El cálculo guardado %{calculation_revision_id}
         no está comprobado y completo, ni registrado como presentado, y no se puede
         exportar.
+      export_savings_detail_records_unwritable: 'No se ha escrito nada: el diseño
+        oficial coloca un registro de detalle por cada posición de ahorro bajo las
+        casillas de intereses y dividendos, y la exportación aún no puede escribir
+        esos registros. Las casillas calculadas y la verificación no se ven afectadas.
+        Ningún cambio que hagas lo resuelve: la exportación queda rechazada hasta
+        que escriba los registros de detalle.'
       export_settlement_unknown: La exportación no puede indicar cómo se liquida la
         declaración porque su resultado no está calculado. Calcula la declaración
         y vuelve a exportarla.
@@ -4325,6 +4359,8 @@ application:
         no se ha cambiado.
       posicion_country_unknown: El Estado de origen «%{pais}» no es un código de país
         de dos letras conocido; corrígelo y repite «%{door}».
+      posicion_has_ledger_rows: La posición de ahorro %{row} está nombrada por %{rows}
+        filas del libro; cambia o borra antes su vínculo con «%{door}».
       posicion_payer_id_invalid: El NIF de un pagador español no es válido; revisa
         sus letras y cifras, y repite «%{door}».
       posicion_row_invalid: El dato «%{leaf}» no es válido o contradice otros datos

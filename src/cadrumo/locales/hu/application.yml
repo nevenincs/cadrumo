@@ -2066,6 +2066,36 @@ application:
         egyik vásárlása, ezért készletbeszerzésként szerepel, nem költségként.
       book_claimed_purchase_undated: Egy könyvelt tétel a készletnyilvántartásod egyik
         vásárlása, ezért készletbeszerzésként szerepel, nem költségként.
+      capital_mobiliario_foreign_source: '{payer}: a megtakarítási pozíció jövedelme
+        más államból ({country}) származik, és az ilyen jövedelmet a program még nem
+        számítja ki. Add meg ezeket a mezőket kézzel.'
+      capital_mobiliario_governed_rate_not_applicable: '{payer}: ez a kifizető több
+        pozíción fizet jövedelmet, és az általános levonási kulcs nem osztja meg közöttük
+        a levont adót. Add meg ezeket a mezőket kézzel.'
+      capital_mobiliario_income_in_kind: '{payer}: a kifizető nyilvántartása természetbeni
+        jövedelmet tartalmaz, amelyet a program még nem számít ki. Add meg ezeket
+        a mezőket kézzel.'
+      capital_mobiliario_payer_check_mismatch: '{payer}: a kapcsolt tételeid és a
+        levont adó együtt {amount}, a kifizető igazolása viszont {compared_amount}
+        összeget tartalmaz. Javítsd a nyilvántartást vagy a tételeket, amíg egyeznek.'
+      capital_mobiliario_payer_evidence_missing: '{payer}: a főkönyved jövedelmet
+        mutat ettől a kifizetőtől, de nincs kifizetői nyilvántartás, és nyilatkozat
+        sincs arról, hogy nem vontak le adót. Rögzítsd a kifizető igazolását, vagy
+        nyilatkozz arról, hogy egyetlen kifizető sem vont le adót.'
+      capital_mobiliario_payer_without_rows: '{payer}: a kifizető nyilvántartása olyan
+        tőkejövedelmet tartalmaz, amelyet egyetlen megtakarítási pozícióhoz kapcsolt
+        főkönyvi tétel sem mutat. Kapcsold a tételeket a pozíciójukhoz, vagy vedd
+        fel a pozíciót.'
+      capital_mobiliario_position_not_held: '{payer}: {count} főkönyvi tétel olyan
+        megtakarítási pozícióhoz kapcsolódik, amely a profilodban a tétel dátumán
+        nem szerepel, ezért a kamat- és osztalékmezők nyitva maradnak.'
+      capital_mobiliario_row_not_readable: '{payer}: a megtakarítási pozícióhoz kapcsolt
+        {count} főkönyvi tétel olyan jogcímet, pénznemet vagy összeget tartalmaz,
+        amelyet a számítás nem tud kiolvasni, ezért az általuk táplált mezők nyitva
+        maradnak.'
+      capital_mobiliario_withholding_sum_mismatch: '{payer}: a levonási kulccsal a
+        kapcsolt tételeid utáni levonás {amount}, a kifizető igazolása viszont {compared_amount}
+        összeget tartalmaz. Javítsd a nyilvántartást vagy a tételeket, amíg egyeznek.'
       claim_gap_accrued: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. {amount} halmozódott fel, a(z) {box} mező pedig csak a rögzítettet
         tartalmazza.'
@@ -2688,6 +2718,12 @@ application:
       export_revision_state_refused: A(z) %{calculation_revision_id} mentett számítás
         nincs ellenőrzött és teljes, illetve benyújtottként rögzített állapotban,
         ezért nem exportálható.
+      export_savings_detail_records_unwritable: 'Semmi sem íródott ki: a hivatalos
+        terv minden megtakarítási pozícióhoz részletező rekordot helyez a kamat- és
+        osztalékmezők alá, és az exportálás ezeket a rekordokat még nem tudja kiírni.
+        A kiszámított mezőket és az ellenőrzést ez nem érinti. Semmilyen módosításod
+        nem oldja meg: az exportálás addig elutasított marad, amíg ki nem írja a részletező
+        rekordokat.'
       export_settlement_unknown: Az exportálás nem tudja megadni, hogyan rendeződik
         a bevallás, mert az eredménye nincs kiszámítva. Számítsd ki a bevallást, és
         exportáld újra.
@@ -4261,6 +4297,8 @@ application:
       passphrase_current_rejected: A jelenlegi jelszó helytelen; a jelszó nem változott.
       posicion_country_unknown: 'A(z) „%{pais}” forrásállam nem ismert kétbetűs országkód;
         javítsd, és ismételd meg: «%{door}».'
+      posicion_has_ledger_rows: A(z) %{row} megtakarítási pozícióra %{rows} főkönyvi
+        sor hivatkozik; előbb módosítsd vagy töröld a kapcsolatukat az «%{door}» paranccsal.
       posicion_payer_id_invalid: 'Egy spanyol kifizető adóazonosítója érvénytelen;
         ellenőrizd a betűit és számjegyeit, majd ismételd meg: «%{door}».'
       posicion_row_invalid: 'A(z) „%{leaf}” adat érvénytelen, vagy ellentmond a pozíció

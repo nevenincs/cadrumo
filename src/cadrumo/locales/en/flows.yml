@@ -165,6 +165,7 @@ flows:
           atribucion_member: Income-attribution member
           bienes_inversion_regularizacion: Investment-goods adjustment
           borrador: AEAT draft
+          capital_mobiliario_position: Savings interest and dividends
           collectible_invoice: Sales invoices
           design_constant: Design constant
           foreign_asset: Foreign asset

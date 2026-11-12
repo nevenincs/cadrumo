@@ -97,8 +97,8 @@ _COMPARED_YEARS = supported_exercises_with_projection("100")
 """Every authored Modelo 100 exercise from the support floor up, then the first year projected from the newest edition."""
 _RESIDENCE: BindingId = "renta-profile-tax-residence-ccaa"
 _WORK_INCOME: CasillaId = "0003"
-_SAVINGS_INCOME: CasillaId = "0029"
-"""Dividend income (casilla 0029), keyed by the operator and integrated into the savings base through casillas 0041 and 0429."""
+_SAVINGS_INCOME: CasillaId = "0031"
+"""Income from other financial assets (casilla 0031), a leaf no source binds, integrated into the savings base through casillas 0041 and 0429."""
 _WORK_CREDIT: BindingId = "renta-retencion-soportada-trabajo"
 
 

@@ -65,6 +65,7 @@ from ...domain.renta.ledger_expenses import (
 )
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.savings_link import has_savings_link
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import UserProfileRecord
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
@@ -885,6 +886,9 @@ def _classified_renta_rows(
             # Operator reviewed and deliberately excluded this row from filing
             # (a final disposition): omit it silently, no observation and no
             # advisory-bearing issue.
+            continue
+        if has_savings_link(posicion_ref=transaction.posicion_ref):
+            # A savings-position expense belongs to the position's capital-mobiliario return.
             continue
         if criteria is not None and refund_left_to_correction_netting(transaction, invoices):
             continue

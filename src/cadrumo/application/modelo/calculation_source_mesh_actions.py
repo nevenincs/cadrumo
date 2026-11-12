@@ -597,6 +597,7 @@ def _resolve_observation_families(
 ) -> tuple[CalculationSourceResolution, ...]:
     """Resolve the OSS/IOSS, withholding, invoice, foreign-asset and member families."""
     from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
+    from ..aggregation.capital_mobiliario_position_source import CapitalMobiliarioPositionSourceResolver
     from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
     from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
     from ..aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
@@ -630,6 +631,12 @@ def _resolve_observation_families(
             )
         ),
         resolve_declared(RetencionSoportadaSourceResolver(ports=ports.retencion_soportada_ports)),
+        resolve_declared(
+            CapitalMobiliarioPositionSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+                retencion_soportada_ports=ports.retencion_soportada_ports,
+            )
+        ),
         resolve_declared(
             InvoiceCatalogueSourceResolver(
                 ports=ports.invoice_source_ports,

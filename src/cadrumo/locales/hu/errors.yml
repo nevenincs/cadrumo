@@ -1853,6 +1853,12 @@ errors:
     refused_modelo_export_required_record_absent: A hivatalos terv legalább egy %{export_record_id}
       rekordot ír elő, de ebben a bevallásban egy sincs, így ebben a formátumban nincs
       mit kiírni, és semmi sem íródott ki.
+    refused_modelo_export_savings_detail_records_unwritable: 'Semmi sem íródott ki:
+      a hivatalos terv minden megtakarítási pozícióhoz részletező rekordot helyez
+      a kamat- és osztalékmezők alá, és az exportálás ezeket a rekordokat még nem
+      tudja kiírni. A kiszámított mezőket és az ellenőrzést ez nem érinti. Semmilyen
+      módosításod nem oldja meg: az exportálás addig elutasított marad, amíg ki nem
+      írja a részletező rekordokat.'
     refused_modelo_export_settlement: 'Semmi sem íródott ki: az exportálás nem tudja
       megadni, hogyan kell befizetni vagy visszaigényelni a bevallás összegét.'
     refused_modelo_export_unrepresentable_character: 'Semmi sem íródott ki: a(z) %{field_id}
@@ -2133,12 +2139,17 @@ errors:
     rental_link_category: A bérleti szerződéshez vagy ingatlanhoz kapcsolt sornak
       a(z) {category} jövedelemkategóriát kell viselnie; add meg az «{door}» paranccsal
       és a --irpf-category kapcsolóval.
+    rental_property_unknown: A(z) {ref} ingatlan nem szerepel a profilodban. Az ingatlanokat
+      az «{door}» paranccsal listázhatod.
+    savings_concept_kind: A(z) {concepto} jogcím csak {kind} típusú pozíción engedélyezett,
+      a(z) {ref} pozíció pedig más típusú. Válassz másik jogcímet vagy pozíciót az
+      «{door}» paranccsal.
+    savings_concept_unknown: 'Ismeretlen --concepto-capital-mobiliario {value!r}.
+      Elfogadott fogalmak: {accepted}.'
     savings_link_category: A megtakarítási pozícióhoz kapcsolt sornak a(z) {category}
       jövedelemkategóriát kell viselnie; add meg az «{door}» paranccsal és a --irpf-category
       kapcsolóval.
-    savings_concept_unknown: 'Ismeretlen --concepto-capital-mobiliario {value!r}. Elfogadott
-      fogalmak: {accepted}.'
-    rental_property_unknown: A(z) {ref} ingatlan nem szerepel a profilodban. Az ingatlanokat
-      az «{door}» paranccsal listázhatod.
+    savings_position_unknown: A(z) {ref} megtakarítási pozíció nem szerepel a profilodban.
+      A pozíciókat az «{door}» paranccsal listázhatod.
     unknown_ledger_provider: 'Ismeretlen főkönyv-szolgáltató: {provider!r}. Elismert
       szolgáltatók: {providers}.'

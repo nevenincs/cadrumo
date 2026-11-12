@@ -10,6 +10,7 @@ import pytest
 
 from ..authority import PinnedAuthorityOperation
 from ..capital_mobiliario_facts import (
+    CapitalMobiliarioAmountRole,
     resolve_capital_mobiliario_concept_vocabulary,
     resolve_capital_mobiliario_withholding_rate,
 )
@@ -81,6 +82,28 @@ def test_the_published_vocabulary_names_each_concept_record_and_casilla_role(
             "valores_negociables",
         ),
     ]
+
+
+def test_the_published_vocabulary_says_which_amounts_are_income_and_which_are_expenses(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    catalogue = resolve_capital_mobiliario_concept_vocabulary(effective_date=_ON, authority=operation)
+
+    assert [item.amount_role for item in catalogue.concepts] == [
+        CapitalMobiliarioAmountRole.GROSS_INCOME,
+        CapitalMobiliarioAmountRole.GROSS_INCOME,
+        CapitalMobiliarioAmountRole.DEDUCTIBLE_EXPENSE,
+    ]
+
+
+def test_an_unknown_amount_role_is_refused(operation: PinnedAuthorityOperation) -> None:
+    changed = _with_entry(_vocabulary(operation), "concept.intereses.amount_role", "net_income")
+    authority = _FixedFact(changed, operation.supported_filing_years())
+
+    with pytest.raises(RegistryValidationError) as raised:
+        resolve_capital_mobiliario_concept_vocabulary(effective_date=_ON, authority=authority)
+
+    assert "concept.intereses.amount_role" in str(raised.value)
 
 
 def test_the_vocabulary_resolves_for_every_supported_filing_year(operation: PinnedAuthorityOperation) -> None:

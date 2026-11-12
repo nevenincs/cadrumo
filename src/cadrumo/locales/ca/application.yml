@@ -2100,6 +2100,35 @@ application:
         com a despesa.
       book_claimed_purchase_undated: Un moviment és una compra del teu inventari,
         de manera que es declara com a compra d'existències i no com a despesa.
+      capital_mobiliario_foreign_source: '{payer}: els rendiments d''aquesta posició
+        d''estalvi provenen de {country}, i els rendiments d''un altre Estat encara
+        no es calculen. Introdueix aquestes caselles a mà.'
+      capital_mobiliario_governed_rate_not_applicable: '{payer}: aquest pagador abona
+        rendiments en diverses posicions i el tipus general de retenció no en reparteix
+        la retenció entre elles. Introdueix aquestes caselles a mà.'
+      capital_mobiliario_income_in_kind: '{payer}: el registre del pagador declara
+        rendiments en espècie, que encara no es calculen. Introdueix aquestes caselles
+        a mà.'
+      capital_mobiliario_payer_check_mismatch: '{payer}: les teves files vinculades
+        més la retenció sumen {amount}, i el certificat del pagador declara {compared_amount}.
+        Corregeix el registre o les files fins que coincideixin.'
+      capital_mobiliario_payer_evidence_missing: '{payer}: el teu llibre mostra rendiments
+        d''aquest pagador, però no hi ha registre del pagador ni declaració que no
+        s''hi va practicar retenció. Registra el certificat del pagador o declara
+        que cap pagador no va retenir.'
+      capital_mobiliario_payer_without_rows: '{payer}: el registre del pagador declara
+        rendiments del capital que cap fila del llibre vinculada a una posició d''estalvi
+        no mostra. Vincula les files a la seva posició o afegeix la posició.'
+      capital_mobiliario_position_not_held: '{payer}: {count} files del llibre estan
+        vinculades a una posició d''estalvi que el teu perfil no té en la seva data,
+        així que les caselles d''interessos i dividends queden obertes.'
+      capital_mobiliario_row_not_readable: '{payer}: {count} files del llibre vinculades
+        a aquesta posició d''estalvi tenen un concepte, una moneda o un total que
+        el càlcul no pot llegir, així que les caselles que alimenten queden obertes.'
+      capital_mobiliario_withholding_sum_mismatch: '{payer}: al tipus de retenció,
+        la retenció de les teves files vinculades suma {amount}, i el certificat del
+        pagador declara {compared_amount}. Corregeix el registre o les files fins
+        que coincideixin.'
       claim_gap_accrued: '{element}: no hi ha dotació registrada de {start} a {end}.
         S''han meritat {amount}, i la casella {box} només declara el que està registrat.'
       claim_gap_free_method: '{element}: no hi ha dotació registrada de {start} a
@@ -2731,6 +2760,12 @@ application:
         que no es pot assignar a un període de presentació del model.
       export_revision_state_refused: El càlcul desat %{calculation_revision_id} no
         està comprovat i complet, ni registrat com a presentat, i no es pot exportar.
+      export_savings_detail_records_unwritable: 'No s''ha escrit res: el disseny oficial
+        col·loca un registre de detall per cada posició d''estalvi sota les caselles
+        d''interessos i dividends, i l''exportació encara no pot escriure aquests
+        registres. Les caselles calculades i la verificació no se''n veuen afectades.
+        Cap canvi que facis no ho resol: l''exportació queda rebutjada fins que escrigui
+        els registres de detall.'
       export_settlement_unknown: L'exportació no pot indicar com es liquida la declaració
         perquè el seu resultat no està calculat. Calcula la declaració i torna a exportar-la.
       export_settlement_unsupported: 'L''exportació no pot indicar com es liquida
@@ -4316,6 +4351,8 @@ application:
         no s'ha canviat.
       posicion_country_unknown: L'Estat d'origen «%{pais}» no és un codi de país de
         dues lletres conegut; corregeix-lo i repeteix «%{door}».
+      posicion_has_ledger_rows: La posició d'estalvi %{row} és anomenada per %{rows}
+        files del llibre; canvia o esborra'n abans el vincle amb «%{door}».
       posicion_payer_id_invalid: El NIF d'un pagador espanyol no és vàlid; revisa'n
         les lletres i xifres, i repeteix «%{door}».
       posicion_row_invalid: La dada «%{leaf}» no és vàlida o contradiu altres dades

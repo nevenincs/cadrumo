@@ -7,9 +7,11 @@ that income. Neither the tokens, the record names nor the rate is held in Python
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from typing import Final
 
 from ....core.concepto_capital_mobiliario import ConceptoCapitalMobiliario
@@ -44,6 +46,23 @@ _VOCABULARY_FACT = StringMappingFact(
 )
 
 
+class CapitalMobiliarioAmountRole(StrEnum):
+    """What a linked row's amount is on its detail record, as the vocabulary declares it."""
+
+    GROSS_INCOME = "gross_income"
+    """Net cash credited, from which the record's gross is rebuilt with the payer's withholding."""
+    DEDUCTIBLE_EXPENSE = "deductible_expense"
+    """An expense the record carries beside its gross and withholding."""
+
+
+def _amount_role(entries: Mapping[str, str], key: str) -> CapitalMobiliarioAmountRole:
+    raw = required_mapping_entry(entries, key, subject=_SUBJECT)
+    try:
+        return CapitalMobiliarioAmountRole(raw)
+    except ValueError as error:
+        raise RegistryValidationError(f"{_SUBJECT} entry {key!r} names an unknown amount role {raw!r}") from error
+
+
 @dataclass(frozen=True, slots=True)
 class CapitalMobiliarioConcept:
     """One ledger concept and the Modelo 100 detail record it feeds."""
@@ -53,6 +72,7 @@ class CapitalMobiliarioConcept:
     amount_element: str
     casilla_semantic_role: str
     requires_position_kind: str | None
+    amount_role: CapitalMobiliarioAmountRole
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,6 +117,7 @@ def resolve_capital_mobiliario_concept_vocabulary(
                     entries, f"{prefix}casilla_semantic_role", subject=_SUBJECT
                 ),
                 requires_position_kind=position_kind or None,
+                amount_role=_amount_role(entries, f"{prefix}amount_role"),
             ),
         )
     return CapitalMobiliarioConceptCatalogue(concepts=tuple(concepts))
@@ -137,6 +158,7 @@ def resolve_capital_mobiliario_withholding_rate(
 
 
 __all__ = [
+    "CapitalMobiliarioAmountRole",
     "CapitalMobiliarioConcept",
     "CapitalMobiliarioConceptCatalogue",
     "require_concepto_capital_mobiliario",

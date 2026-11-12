@@ -274,6 +274,16 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.export_contracts.ModeloExportSavingsDetailRecordsUnwritableError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_SAVINGS_DETAIL_RECORDS_UNWRITABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_export_savings_detail_records_unwritable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.export_contracts.ModeloExportSettlementRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_SETTLEMENT",

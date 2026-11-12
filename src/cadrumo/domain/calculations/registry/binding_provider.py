@@ -29,6 +29,7 @@ from .actividad_asset_disposal_bindings import ActivityAssetDisposalProvider
 from .afiliado_contribution_bindings import AfiliadoContributionProvider
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
 from .bindings_previous_filing import PreviousFilingProvider
+from .capital_mobiliario_position_bindings import CapitalMobiliarioPositionProvider
 from .design_constant_bindings import DesignConstantProvider
 from .detail_record_bindings import (
     AtribucionMemberProvider,
@@ -81,6 +82,7 @@ BindingProvider = Annotated[
     | LedgerRentaIncomeProvider
     | LedgerRentaGastosEstimacionDirectaProvider
     | ActivityAssetDisposalProvider
+    | CapitalMobiliarioPositionProvider
     | LedgerRentaGastosPagoFraccionadoProvider
     | LedgerImpatriadoIncomeProvider
     | LedgerIrnrIncomeProvider

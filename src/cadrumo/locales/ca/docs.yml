@@ -7,6 +7,8 @@ docs:
       atribucion_member: des dels membres en atribució de rendes
       bienes_inversion_regularizacion: des de la regularització de béns d'inversió
       borrador: des de les dades de l'AEAT (el borrador)
+      capital_mobiliario_position: des de les files del llibre vinculades a les teves
+        posicions d'estalvi i els certificats dels teus pagadors
       collectible_invoice: des de les factures emeses
       design_constant: des d'una constant fixada pel disseny de registre de l'AEAT
       foreign_asset: des dels teus béns a l'estranger

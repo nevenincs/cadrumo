@@ -16,6 +16,7 @@ from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction
+from ...domain.transactions.savings_link import has_savings_link
 from ..invoices.source_observations import is_rectificativa
 from . import renta_income_evidence, shared_issue_reasons
 from .business_proportion import business_proportion
@@ -121,9 +122,12 @@ def _income_transaction_is_out_of_scope(transaction: Transaction) -> bool:
     # disposition): omit it before the actividad-económica category override can
     # re-admit it. OUTGOING rows belong to the gasto pipeline and are skipped
     # rather than reported as income exclusions. So do a supplier's refunds, which
-    # take the expense back there rather than coming in as income here.
+    # take the expense back there rather than coming in as income here. A row
+    # linked to a savings position is capital-mobiliario income, read only by the
+    # position resolver, so it never counts as activity income too.
     return (
         transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED
+        or has_savings_link(posicion_ref=transaction.posicion_ref)
         or transaction.direction is not TransactionDirection.INCOMING
         or is_supplier_refund(transaction)
     )

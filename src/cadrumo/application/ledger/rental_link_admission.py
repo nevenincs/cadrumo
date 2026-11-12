@@ -89,15 +89,18 @@ def verify_rental_link_references(
 
 
 def rental_references_of(transactions: Iterable[Transaction]) -> RentalLedgerReferences:
-    """Count, for each lease and property reference, the ledger rows that carry it; every lifecycle state counts."""
+    """Count the ledger rows that carry each lease, property and position reference, in every lifecycle state."""
     leases: dict[str, int] = {}
     properties: dict[str, int] = {}
+    positions: dict[str, int] = {}
     for transaction in transactions:
         if transaction.arrendamiento_ref is not None:
             leases[transaction.arrendamiento_ref] = leases.get(transaction.arrendamiento_ref, 0) + 1
         if transaction.inmueble_ref is not None:
             properties[transaction.inmueble_ref] = properties.get(transaction.inmueble_ref, 0) + 1
-    return RentalLedgerReferences(leases=leases, properties=properties)
+        if transaction.posicion_ref is not None:
+            positions[transaction.posicion_ref] = positions.get(transaction.posicion_ref, 0) + 1
+    return RentalLedgerReferences(leases=leases, properties=properties, positions=positions)
 
 
 type TransactionRowsLoader = Callable[[str], Iterable[Transaction]]

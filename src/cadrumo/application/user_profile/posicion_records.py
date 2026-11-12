@@ -30,7 +30,7 @@ from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.contribuyente.posicion_facts import POSICION_SECTION, posicion_from_row, posicion_row_values
 from ...domain.iva.establishment import SPAIN_COUNTRY_CODE, catalogued_country_codes
 from ...domain.user_profile.errors import UserProfileValidationError
-from .rental_records import ProfileRecordRowMutation
+from .rental_records import ProfileRecordRowMutation, RentalLedgerReferences, canonical_rental_ref
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -39,6 +39,8 @@ if TYPE_CHECKING:
 _ROW_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.posicion_row_invalid"
 _COUNTRY_UNKNOWN_LOCALE_KEY: Final = "application.user_profile.errors.posicion_country_unknown"
 _PAYER_ID_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.posicion_payer_id_invalid"
+_HAS_LEDGER_ROWS_LOCALE_KEY: Final = "application.user_profile.errors.posicion_has_ledger_rows"
+_LEDGER_LINK_DOOR: Final = "aeat app ledger classify"
 
 
 def _door(mutation: ProfileRecordRowMutation) -> str:
@@ -90,4 +92,14 @@ def _require_spanish_payer_identifier(
         ) from error
 
 
-__all__ = ["admit_posicion_row", "is_posicion_section"]
+def require_posicion_row_removable(*, row_key: int, ledger_references: RentalLedgerReferences) -> None:
+    """Refuse removing a position that a ledger row of the profile still names."""
+    rows = ledger_references.positions.get(canonical_rental_ref(row_key), 0)
+    if rows:
+        raise UserProfileValidationError(
+            translated_message=_HAS_LEDGER_ROWS_LOCALE_KEY,
+            context={"row": row_key, "rows": rows, "door": _LEDGER_LINK_DOOR},
+        )
+
+
+__all__ = ["admit_posicion_row", "is_posicion_section", "require_posicion_row_removable"]

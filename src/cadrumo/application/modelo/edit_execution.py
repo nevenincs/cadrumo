@@ -419,7 +419,7 @@ def _income_family_entry_digests(
 
     def current(families: frozenset[str]) -> dict[str, str]:
         rows = transactions.partition_by_date_range(window.start_date, window.end_date).in_window.values()
-        return income_family_row_digests(rows, families)
+        return income_family_row_digests(rows, families, effective_date=window.end_date, authority=operation)
 
     return income_family_entry_digests_after_edit(
         state.income_family_entry_digests,

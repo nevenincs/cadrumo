@@ -43,8 +43,8 @@ FOREIGN_STATE = "DE"
 UNCATALOGUED_STATE = "QQ"
 
 
-def _ledger_never_read(*, profile_id: str) -> RentalLedgerReferences:
-    raise AssertionError(f"a position removal read the rental ledger references of {profile_id}")
+def _ledger_without_links(*, profile_id: str) -> RentalLedgerReferences:
+    return RentalLedgerReferences(leases={}, properties={})
 
 
 class _World:
@@ -90,7 +90,7 @@ class _World:
             row_key=str(row),
             schema=decode.schema,
             profile_decode_context=decode,
-            rental_ledger_references=_ledger_never_read,
+            rental_ledger_references=_ledger_without_links,
         )
 
     def stored(self, row: int) -> dict[str, str]:
