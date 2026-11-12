@@ -18,9 +18,20 @@ The checked-in ratchet lists the sites that predate the gate. Regenerate it with
 
     python -m dev.quality.refusal_shape --write
 
+A call ``Cls.factory(...)`` is also a construction site when ``Cls`` resolves to a
+registered error class and ``factory`` is a classmethod of it (or of a base) whose
+body returns ``cls(...)``. The site has a door when the call passes a door keyword,
+when the factory's own ``cls(...)`` passes one, or when the class carries a default
+door. It is free text when the call passes positional arguments, the factory's
+``cls(...)`` passes no ``translated_message`` and the code does not take its message
+from the registry; a factory whose source cannot be read counts as keyed. Any other
+attribute call, including a classmethod that does not return ``cls(...)``, is no site.
+
 Site identity is the repository-relative path, the enclosing qualified name, the
 registered code and the ordinal among that function's constructions of that code,
-never a line number, so unrelated edits leave the ratchet untouched.
+never a line number, so unrelated edits leave the ratchet untouched. Direct and
+factory constructions share one ordinal sequence per function and code, in source
+order, so a function without factory calls keeps the ordinals it always had.
 """
 
 from __future__ import annotations
@@ -30,6 +41,7 @@ import importlib
 import inspect
 import json
 import sys
+import textwrap
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -219,6 +231,48 @@ def _literal_translated_key(call: ast.Call) -> tuple[bool, str | None]:
     return False, None
 
 
+@dataclass(frozen=True)
+class _Factory:
+    """What a classmethod factory's body does with the ``cls(...)`` it returns."""
+
+    has_door: bool
+    passes_translated_message: bool
+
+
+def _factory_of(target: type, attribute: str) -> _Factory | None:
+    """Describe ``target.attribute`` when it is a classmethod returning ``cls(...)``, else ``None``."""
+    try:
+        member = inspect.getattr_static(target, attribute)
+    except AttributeError:
+        return None
+    if not isinstance(member, classmethod):
+        return None
+    try:
+        tree = ast.parse(textwrap.dedent(inspect.getsource(member.__func__)))
+    except (OSError, TypeError, SyntaxError):
+        return None
+    function = next(
+        (node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))), None
+    )
+    if function is None or not function.args.args:
+        return None
+    receiver = function.args.args[0].arg
+    built = [
+        node.value
+        for node in ast.walk(function)
+        if isinstance(node, ast.Return)
+        and isinstance(node.value, ast.Call)
+        and isinstance(node.value.func, ast.Name)
+        and node.value.func.id == receiver
+    ]
+    if not built:
+        return None
+    return _Factory(
+        has_door=any(_has_literal_door(call) for call in built),
+        passes_translated_message=any(_literal_translated_key(call)[0] for call in built),
+    )
+
+
 def scan_source(source: str, *, path: str, module: str, module_object: object | None = None) -> list[Site]:
     """Return every registered-error construction in ``source``, in source order."""
     from cadrumo.core.errors.error_codes import get_registered_error_code
@@ -234,14 +288,26 @@ def scan_source(source: str, *, path: str, module: str, module_object: object | 
     ordinals: dict[tuple[str, str], int] = defaultdict(int)
     sites: list[Site] = []
     for call in calls:
+        factory: _Factory | None = None
         target = _resolve(call.func, module_object, imports)
         if not (inspect.isclass(target) and issubclass(target, CadrumoError)):
-            continue
+            if not isinstance(call.func, ast.Attribute):
+                continue
+            target = _resolve(call.func.value, module_object, imports)
+            if not (inspect.isclass(target) and issubclass(target, CadrumoError)):
+                continue
+            factory = _factory_of(target, call.func.attr)
+            if factory is None:
+                continue
         code = get_registered_error_code(target)
         qualname = scopes.get(id(call), "<module>")
         ordinal = ordinals[(qualname, code.code)]
         ordinals[(qualname, code.code)] += 1
         passed, literal_key = _literal_translated_key(call)
+        door = _has_literal_door(call) or class_default_door(target)
+        if factory is not None:
+            door = door or factory.has_door
+            passed = passed or factory.passes_translated_message
         sites.append(
             Site(
                 path=path,
@@ -249,7 +315,7 @@ def scan_source(source: str, *, path: str, module: str, module_object: object | 
                 code=code.code,
                 ordinal=ordinal,
                 line=call.lineno,
-                has_door=_has_literal_door(call) or class_default_door(target),
+                has_door=door,
                 free_text=bool(call.args) and not passed and not code.public_message_from_registry,
                 message_key=code.message_key,
                 translated_keys=() if literal_key is None else (literal_key,),

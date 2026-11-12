@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.modelo.action_errors import ModeloOperationSubjectNotWorkUnitError, ModeloRecordNotFoundError
+from cadrumo.application.operations.next_step import OperationNextStepWording
 from dev.quality.refusal_shape import (
     GOVERNED_TREES,
     Site,
@@ -121,3 +123,65 @@ def test_site_identity_survives_unrelated_line_shifts() -> None:
     shifted = scan_source("\n\n\n" + _FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
     assert [site.site_id for site in first] == [site.site_id for site in shifted]
     assert [site.line + 3 for site in first] == [site.line for site in shifted]
+
+
+def _doored_factory(
+    cls: type[ModeloOperationSubjectNotWorkUnitError], *, step: OperationNextStepWording
+) -> ModeloOperationSubjectNotWorkUnitError:
+    return cls(next_step=step)
+
+
+def _doorless_factory(cls: type[ModeloRecordNotFoundError], reason: str) -> ModeloRecordNotFoundError:
+    return cls(reason)
+
+
+def _keyed_doorless_factory(cls: type[ModeloRecordNotFoundError]) -> ModeloRecordNotFoundError:
+    return cls(translated_message="no.such.catalogue.key")
+
+
+def _not_a_factory(cls: type[ModeloRecordNotFoundError]) -> str:
+    return cls.__name__
+
+
+_FACTORY_FIXTURE = """
+from cadrumo.application.modelo.action_errors import (
+    ModeloOperationSubjectNotWorkUnitError,
+    ModeloRecordNotFoundError,
+)
+
+
+def holder(step):
+    ModeloRecordNotFoundError.direct_first()
+    raise ModeloOperationSubjectNotWorkUnitError.doored(step=step)
+    raise ModeloRecordNotFoundError.doorless("words")
+    raise ModeloRecordNotFoundError.keyed()
+    raise ModeloRecordNotFoundError.doorless("words", next_step=step)
+    ModeloRecordNotFoundError.not_a_factory()
+    ModeloRecordNotFoundError.__name__.upper()
+    ModeloRecordNotFoundError.missing_attribute()
+    ModeloRecordNotFoundError("english words only")
+"""
+
+
+def test_the_gate_counts_classmethod_factory_calls_as_construction_sites(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A factory call is a site; its own body, the call or the class supplies the door."""
+    monkeypatch.setattr(ModeloOperationSubjectNotWorkUnitError, "doored", classmethod(_doored_factory), raising=False)
+    for name, function in (
+        ("doorless", _doorless_factory),
+        ("keyed", _keyed_doorless_factory),
+        ("not_a_factory", _not_a_factory),
+    ):
+        monkeypatch.setattr(ModeloRecordNotFoundError, name, classmethod(function), raising=False)
+    # A plain method is not a classmethod, so calling it on the class is no factory either.
+    monkeypatch.setattr(ModeloRecordNotFoundError, "direct_first", lambda: None, raising=False)
+
+    found = scan_source(_FACTORY_FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
+
+    # Source order, one ordinal sequence per code: the doored site is the only one of its code; the other
+    # four (doorless, keyed, call-door, direct) number 0 to 3.
+    assert [site.ordinal for site in found] == [0, 0, 1, 2, 3]
+    assert {site.qualname for site in found} == {"holder"}
+    assert [site.has_door for site in found] == [True, False, False, True, False]
+    assert doorless_site_ids(found) == sorted(found[index].site_id for index in (1, 2, 4))
+    # Free text: positional words with no key in the factory body, as a direct construction would be.
+    assert [site.free_text for site in found] == [False, True, False, True, True]
