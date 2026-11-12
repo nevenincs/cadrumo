@@ -3759,6 +3759,9 @@ modelo:
         renta-anexo-c-base-liquidable-negativa-general:
           field:
             title: Modelo 100 Annex C general net taxable base negative carry-forward
+        renta-anexo-c-saldos-negativos-ahorro:
+          field:
+            title: Modelo 100 Annex C savings base negative balances pending offset
         renta-cuota-chain:
           field:
             title: 'Modelo 100: IRPF tax-quota calculation chain'

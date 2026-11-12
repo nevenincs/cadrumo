@@ -3764,6 +3764,10 @@ modelo:
         renta-anexo-c-base-liquidable-negativa-general:
           field:
             title: Modelo 100 Annex C base liquidable general negativa carry-forward
+        renta-anexo-c-saldos-negativos-ahorro:
+          field:
+            title: Model 100 Annex C saldos negatius de la base de l'estalvi pendents
+              de compensar
         renta-cuota-chain:
           field:
             title: 'Model 100: cadena de càlcul de la quota de l''IRPF'

@@ -3802,6 +3802,10 @@ modelo:
           field:
             title: 'Modelo 100 nyomtatvány: C melléklet negatív általános nettó adóalap
               carry-forward'
+        renta-anexo-c-saldos-negativos-ahorro:
+          field:
+            title: 'Modelo 100 nyomtatvány: C melléklet megtakarítási adóalap kompenzálandó
+              negatív egyenlegei'
         renta-cuota-chain:
           field:
             title: 'Modelo 100 nyomtatvány: az IRPF-kvóta számítási lánca'
