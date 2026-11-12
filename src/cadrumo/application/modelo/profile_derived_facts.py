@@ -11,6 +11,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal
+from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -35,7 +36,13 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ..aggregation.renta_imputation import ActivityImputationCriterion, declared_imputation_criteria
+from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.completeness import profile_section_rows
+from .profile_binding_refusal_doors import (
+    binding_contract_defect_verdict,
+    profile_fact_absent_verdict,
+    profile_fact_value_refused_verdict,
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -44,8 +51,20 @@ if TYPE_CHECKING:
 _LAST_MONTH = 12
 
 
-class ProfileBindingResolutionError(ModeloError):
-    """Raised when a profile-sourced binding cannot be resolved for a calculation."""
+class ProfileBindingResolutionError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloError):
+    """Raised when a profile-sourced binding cannot be resolved for a calculation.
+
+    Each raise site carries the door of its cause: the profile questions for an
+    absent fact, the operator's decision for a stored value the binding refuses,
+    or a terminal verdict for authored data no operator action repairs.
+    """
+
+
+def _descendant_birth_date_refused(index: int) -> PreconditionVerdict:
+    """The operator's decision on a descendant whose stored birth date is not an ISO-8601 date."""
+    return profile_fact_value_refused_verdict(
+        "descendant_birth_date", {"field": "renta_family.descendiente.birth_date", "index": index}
+    )
 
 
 def married_status_codes() -> frozenset[str]:
@@ -200,6 +219,9 @@ def inject_derived_estimation_modality_fact(
         if clave is None:
             raise ProfileBindingResolutionError(
                 f"the registry declares no casilla 0168 clave for the estimation regime {regime!r}",
+                precondition_verdict=binding_contract_defect_verdict(
+                    "estimation_regime_clave", {"estimation_regime": regime}
+                ),
             )
         fact_index["irpf.estimation_directa_modalidad_clave"] = clave
     if regime:
@@ -253,6 +275,7 @@ def inject_derived_activity_tipo_clave_fact(fact_index: dict[str, UserProfileFac
     except ValueError as exc:
         raise ProfileBindingResolutionError(
             f"the profile declares tipo de actividad {tipo!r}, which is not a censal tipo de actividad",
+            precondition_verdict=profile_fact_value_refused_verdict("activity_tipo", {"tipo_actividad": tipo}),
         ) from exc
     fact_index[_ACTIVITY_TIPO_CLAVE_PATH] = clave.value
     return (_ACTIVITY_TIPO_CLAVE_PATH,)
@@ -465,10 +488,12 @@ def renta_family_profile_from_facts(
         except (ValueError, TypeError) as exc:
             raise ProfileBindingResolutionError(
                 f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+                precondition_verdict=_descendant_birth_date_refused(idx),
             ) from exc
         if birth is None:
             raise ProfileBindingResolutionError(
                 f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+                precondition_verdict=_descendant_birth_date_refused(idx),
             )
         idx += 1
     descendant_facts = {
@@ -1143,6 +1168,7 @@ def inject_derived_state_attribution_facts(
     if scope is None:
         raise ProfileBindingResolutionError(
             "tax_residence.jurisdiction_scope is required; state attribution cannot default to common regime",
+            precondition_verdict=profile_fact_absent_verdict("tax_residence.jurisdiction_scope"),
         )
     try:
         fact_index[synthetic_key] = m303_tax_territory_state_attribution_ratio(
@@ -1153,4 +1179,7 @@ def inject_derived_state_attribution_facts(
     except RegistryValidationError as exc:
         raise ProfileBindingResolutionError(
             f"unsupported tax_residence.jurisdiction_scope {scope!r}; state attribution is unresolved",
+            precondition_verdict=profile_fact_value_refused_verdict(
+                "jurisdiction_scope", {"field": "tax_residence.jurisdiction_scope"}
+            ),
         ) from exc

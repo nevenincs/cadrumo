@@ -32,6 +32,7 @@ from ..operations.next_step import (
     OperationOpenIvaWalletOpeningBalanceStepV1,
     OperationOpenIvaWalletStepV1,
 )
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .action_errors import ModeloPreconditionErrorMixin
 from .iva_wallet_prior_period import prior_compensation_source_period
 from .preconditions import (
@@ -234,11 +235,13 @@ def _opening_balance_period(
     if carry_period is None or carry_revision is None:
         raise InternalInvariantError(
             f"iva wallet refusal {reason_code} is settled by the opening balance of a period it did not name",
+            precondition_verdict=internal_invariant_verdict("iva_wallet_refusal.opening_balance_period_named"),
         )
     source_period = prior_compensation_source_period(carry_revision, carry_period)
     if source_period is None:
         raise InternalInvariantError(
             f"iva wallet refusal {reason_code} names a carry whose revision reads no single earlier period",
+            precondition_verdict=internal_invariant_verdict("iva_wallet_refusal.carry_reads_single_period"),
         )
     return source_period
 
@@ -269,6 +272,7 @@ def _wallet_action(
         if carry_period is None:
             raise InternalInvariantError(
                 f"iva wallet refusal {reason_code} is settled by an override of a period it did not name",
+                precondition_verdict=internal_invariant_verdict("iva_wallet_refusal.override_period_named"),
             )
         known: dict[str, str | int | bool | Decimal] = {
             "filing_year": carry_period.filing_year,

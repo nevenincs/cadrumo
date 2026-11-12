@@ -50,6 +50,7 @@ from .m303_regimen_simplificado_scope import (
     taxpayer_profile_for_work,
 )
 from .profile_readiness_gate import load_modelo_work_profile
+from .work_lifecycle_refusal_failures import mutation_stale_failure
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -77,7 +78,17 @@ class OrdinaryM303FilingEvidenceRequest(BaseModel):
     @model_validator(mode="after")
     def _period_matches_filing_year(self) -> OrdinaryM303FilingEvidenceRequest:
         if self.period.filing_year != self.filing_year:
-            raise M303FilingEvidenceError("ordinary M303 evidence period disagrees with filing year")
+            raise M303FilingEvidenceError(
+                "ordinary M303 evidence period disagrees with filing year",
+                precondition_failure=m303_filing_evidence_failure(
+                    "period_mismatch",
+                    {
+                        "request_filing_year": int(self.filing_year),
+                        "request_period": self.period.registry_token,
+                        "periods_match": False,
+                    },
+                ),
+            )
         return self
 
 
@@ -99,7 +110,10 @@ def author_ordinary_m303_filing_instance_evidence(
     _require_period_scoped_attestation(request, operation=operation)
     registry_snapshot = operation.snapshot("303", filing_year=request.filing_year, period=request.period.registry_token)
     if registry_snapshot.revision.id != work_unit.revision_id:
-        raise M303FilingEvidenceError("ordinary M303 evidence authority revision is stale for this work unit")
+        raise M303FilingEvidenceError(
+            "ordinary M303 evidence authority revision is stale for this work unit",
+            precondition_failure=mutation_stale_failure({"work_unit_id": work_unit.work_unit_id}),
+        )
     profile = _require_current_profile(work_unit=work_unit, operation=operation, profile=profile)
     taxpayer = taxpayer_profile_for_work(profile)
     _require_period_in_the_profile_filing_schedule(
@@ -107,7 +121,12 @@ def author_ordinary_m303_filing_instance_evidence(
     )
     scope = m303_regimen_simplificado_scope_for_profile(taxpayer)
     if not scope.is_not_claimed:
-        raise M303FilingEvidenceError("simplified-regime profile requires its unsupported evidence branch")
+        raise M303FilingEvidenceError(
+            "simplified-regime profile requires its unsupported evidence branch",
+            precondition_failure=m303_filing_evidence_failure(
+                "regimen_scope_profile_divergence", {"scope_decision_matches_censo_profile": False}
+            ),
+        )
     exonerado_390 = _modelo_390_exemption_evidence(
         work_unit=work_unit, request=request, operation=operation, attachment_store=attachment_store, profile=profile
     )
@@ -150,7 +169,12 @@ def author_ordinary_m303_filing_instance_evidence(
         profile=profile,
     )
     if validated is None:
-        raise M303FilingEvidenceError("Modelo 303 evidence validation produced no evidence")
+        raise M303FilingEvidenceError(
+            "Modelo 303 evidence validation produced no evidence",
+            precondition_failure=m303_filing_evidence_failure(
+                "unsupported_modelo", {"modelo": str(work_unit.modelo), "evidence_present": False}
+            ),
+        )
     return validated
 
 
@@ -277,7 +301,10 @@ def _require_ordinary_work_coordinate(
     ):
         raise M303FilingEvidenceError(
             "ordinary evidence authoring supports only a quarterly or monthly Modelo 303 work unit whose "
-            "selected record design declares the ordinary evidence header fields"
+            "selected record design declares the ordinary evidence header fields",
+            precondition_failure=m303_filing_evidence_failure(
+                "unsupported_modelo", {"modelo": str(work_unit.modelo), "ordinary_coordinate_supported": False}
+            ),
         )
 
 

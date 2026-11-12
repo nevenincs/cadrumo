@@ -51,6 +51,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .declaration_refusal_failures import declaration_refusal_failure
 from .declaration_refusal_profiles import DeclarationRefusalCause
@@ -244,7 +245,10 @@ def _account_choice(payload: Modelo360SolicitudRequest) -> Modelo360AccountChoic
 def _required[T](value: T | None, name: str) -> T:
     # The request validator already demanded the field for this action.
     if value is None:
-        raise InternalInvariantError(f"modelo 360 solicitud request reached its action without {name}")
+        raise InternalInvariantError(
+            f"modelo 360 solicitud request reached its action without {name}",
+            precondition_verdict=internal_invariant_verdict("m360_solicitud.request_field_present"),
+        )
     return value
 
 

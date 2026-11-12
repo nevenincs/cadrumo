@@ -29,6 +29,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision, Calculat
 from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..operator_actions.models import ActionReference
 from ..state_projection_models import ModeloReadinessRequest, ProjectionModeloReadiness
 from .stored_data_integrity import StoredDataIntegrityMixin
@@ -694,7 +695,8 @@ def resolve_graded_snapshot_result(
     review = review_capture.projection
     if review.work_unit_id != resolved_target.work_unit_id:
         raise InternalInvariantError(
-            "the bounded review resolved a different work unit than the graded admission it contributes to"
+            "the bounded review resolved a different work unit than the graded admission it contributes to",
+            precondition_verdict=internal_invariant_verdict("workspace_graded.review_work_unit_agrees"),
         )
     readiness_port = ModeloWorkspaceReadinessPortV1(
         requests=(

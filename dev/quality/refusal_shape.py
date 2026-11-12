@@ -130,14 +130,23 @@ def _resolve(expr: ast.expr, module_object: object | None, imports: Mapping[str,
     return None
 
 
+def _built(error_type: type, arguments: tuple[str, ...]) -> BaseException | None:
+    """Build ``error_type`` from ``arguments``, or ``None`` when it refuses them."""
+    try:
+        built = error_type(*arguments)
+    except Exception:
+        return None
+    return built if isinstance(built, BaseException) else None
+
+
 def _bare_instance(error_type: type) -> BaseException | None:
-    """Build ``error_type`` with no site arguments, or ``None`` when it cannot be built that way."""
+    """Build ``error_type`` with no site arguments, or ``None`` when it cannot be built that way.
+
+    A class whose initializer requires one reason token is tried with a single placeholder.
+    """
     for arguments in ((), ("x",)):
-        try:
-            built = error_type(*arguments)
-        except Exception:
-            return None
-        if isinstance(built, BaseException):
+        built = _built(error_type, arguments)
+        if built is not None:
             return built
     return None
 
