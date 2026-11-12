@@ -75,6 +75,15 @@ def _fact_value(issue: CalculationSourceIssue, name: str) -> str | None:
     return next((value for key, value in issue.fact.values if key == name), None)
 
 
+def _door_scenario(issue: CalculationSourceIssue, group: str, group_scenario: str) -> tuple[str, int | None]:
+    """The scenario that names the refusal's door, and the row it points at when the group has a row door."""
+    row = issue.fact.row_refs[0] if issue.fact is not None and issue.fact.row_refs else None
+    row_scenario = _ROW_DOORS.get(group)
+    if row is None or row_scenario is None:
+        return group_scenario, None
+    return f"{row_scenario}_unstated", int(row)
+
+
 def household_row_fact_refusal(
     revision: CalculationRevision,
     issues: Sequence[CalculationSourceIssue],
@@ -100,11 +109,7 @@ def household_row_fact_refusal(
     door = None if group is None else _GROUP_DOORS.get(group)
     if group is None or fact_leaf is None or omitting is None or recorded is None or door is None:
         return None
-    scenario, _ = door
-    row = first.fact.row_refs[0] if first.fact is not None and first.fact.row_refs else None
-    row_scenario = _ROW_DOORS.get(group)
-    if row is not None and row_scenario is not None:
-        scenario = f"{row_scenario}_unstated"
+    scenario, row = _door_scenario(first, group, door[0])
     return ModeloHouseholdRowFactUnstatedError(
         translated_message="errors.refused.refused_modelo_household_row_fact_unstated",
         context={
@@ -122,7 +127,7 @@ def household_row_fact_refusal(
             fact_leaf=fact_leaf,
             omitting=int(omitting),
             recorded=int(recorded),
-            row=int(row) if row is not None and row_scenario is not None else None,
+            row=row,
         ),
     )
 

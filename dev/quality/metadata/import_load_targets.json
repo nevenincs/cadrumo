@@ -1341,6 +1341,7 @@
         "cadrumo.application.modelo.iva_wallet_gate",
         "cadrumo.application.modelo.iva_wallet_mutation",
         "cadrumo.application.modelo.iva_wallet_override_operation",
+        "cadrumo.application.modelo.iva_wallet_preconditions",
         "cadrumo.application.modelo.iva_wallet_prior_period",
         "cadrumo.application.modelo.iva_wallet_refusal",
         "cadrumo.application.modelo.iva_wallet_seed",

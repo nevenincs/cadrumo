@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_absence import AbsentCasillaReading
 from ...domain.calculations.registry.autonomic_deduccion_enrolment import (
+    AutonomicDeduccionEnrolment,
     AutonomicIncomeLimit,
     AutonomicIncomeUnit,
     DescendantEntryWindowAxis,
@@ -96,6 +97,39 @@ def _advisory_legal_refs(snapshot: RegistrySnapshot, casilla_id: CasillaId) -> t
     return _require_formula_legal_refs(snapshot, formula.legal_refs, formula.id)
 
 
+def _unit_limited_window_enrolments(
+    snapshot: RegistrySnapshot,
+) -> list[tuple[DescendantEntryWindowAxis, AutonomicDeduccionEnrolment]]:
+    """The edition's window-axis enrolments whose income limit covers the whole unidad familiar."""
+    return [
+        (enrolment.eligibility, enrolment)
+        for _formula, enrolment in autonomic_deduccion_enrolments(snapshot.revision)
+        if isinstance(enrolment.eligibility, DescendantEntryWindowAxis)
+        and isinstance(enrolment.income_limit, AutonomicIncomeLimit)
+        and enrolment.income_limit.unit is AutonomicIncomeUnit.UNIDAD_FAMILIAR
+    ]
+
+
+def _zero_box(
+    snapshot: RegistrySnapshot, enrolment: AutonomicDeduccionEnrolment, casilla_values: Mapping[CasillaId, Decimal]
+) -> CasillaId | None:
+    """The enrolment's box when the calculation resolved it to zero, else ``None``."""
+    try:
+        casilla_id = casilla_id_for_unique_semantic_role(snapshot, enrolment.target_semantic_role)
+    except AmbiguousSemanticRoleCasillaError as exc:
+        raise ModeloError(
+            str(exc),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
+    if casilla_id is None:
+        return None
+    if AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, casilla_id) != Decimal(0):
+        return None
+    return casilla_id
+
+
 def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     snapshot: RegistrySnapshot,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -112,13 +146,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     joint return or a partnered filer) and whose window count is strictly positive.
     Returns ``None`` when no enrolment qualifies or the bucket has no profile.
     """
-    candidates = [
-        enrolment
-        for _formula, enrolment in autonomic_deduccion_enrolments(snapshot.revision)
-        if isinstance(enrolment.eligibility, DescendantEntryWindowAxis)
-        and isinstance(enrolment.income_limit, AutonomicIncomeLimit)
-        and enrolment.income_limit.unit is AutonomicIncomeUnit.UNIDAD_FAMILIAR
-    ]
+    candidates = _unit_limited_window_enrolments(snapshot)
     if not candidates:
         return None
     fact_index = load_fact_index(bucket_id, operation=operation, profile=profile)
@@ -126,24 +154,11 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
         return None
     coordinate = date(snapshot.filing_year, 12, 31)
     family_context = FamilyFactResolutionContext(authority=operation, filing_period=coordinate, devengo_date=coordinate)
-    for enrolment in candidates:
+    for eligibility, enrolment in candidates:
         if enrolment.ccaa != residence_ccaa(fact_index):
             continue
-        try:
-            casilla_id = casilla_id_for_unique_semantic_role(snapshot, enrolment.target_semantic_role)
-        except AmbiguousSemanticRoleCasillaError as exc:
-            raise ModeloError(
-                str(exc),
-                translated_message="application.modelo.errors.semantic_role_ambiguous",
-                context=exc.ambiguity.context(),
-                precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
-            ) from exc
+        casilla_id = _zero_box(snapshot, enrolment, casilla_values)
         if casilla_id is None:
-            continue
-        if AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, casilla_id) != Decimal(0):
-            continue
-        eligibility = enrolment.eligibility
-        if not isinstance(eligibility, DescendantEntryWindowAxis):
             continue
         weighted_count = descendant_entry_window_weighted_count(
             fact_index,

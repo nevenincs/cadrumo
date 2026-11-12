@@ -236,6 +236,15 @@ def _row_facts(row: ProfileAscendantRow, *, position: int, operation: PinnedAuth
         if death < birth:
             _refuse(_DEATH_BEFORE_BIRTH_LOCALE_KEY, row=position)
         stored[_DEATH_DATE_LEAF] = death.isoformat()
+    stored.update(_household_facts(supplied, position=position, operation=operation))
+    return stored
+
+
+def _household_facts(
+    supplied: Mapping[str, str], *, position: int, operation: PinnedAuthorityOperation
+) -> dict[str, str]:
+    """Validate the household and entitlement leaves the row supplies."""
+    stored: dict[str, str] = {}
     if _COHABITING_LEAF in supplied:
         stored[_COHABITING_LEAF] = _cohabiting(supplied[_COHABITING_LEAF], position=position, operation=operation)
     if RENTAS_ANUALES_LEAF in supplied:

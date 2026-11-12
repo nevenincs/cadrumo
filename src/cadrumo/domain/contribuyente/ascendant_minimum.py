@@ -117,6 +117,32 @@ class AscendantMinimumResult(BaseModel):
     unstated: tuple[AscendantFactUnstated, ...] = ()
 
 
+def _age_excludes(ascendant: AscendantInfo, filing_year: int, *, minimum_age: int, owed: list[str]) -> bool:
+    """Whether a stated zero grade excludes a row under the minimum age; ``owed`` gains an unstated grade."""
+    if ascendant.age_at_devengo(filing_year) >= minimum_age:
+        return False
+    if ascendant.discapacidad_grado is None:
+        owed.append(DISCAPACIDAD_LEAF)
+        return False
+    return ascendant.discapacidad_grado == 0
+
+
+def _rentas_exclude(ascendant: AscendantInfo, amounts: AscendantMinimumAmounts, *, owed: list[str]) -> bool:
+    """Whether the row's stated rentas or own return exclude it; ``owed`` gains the facts it omits."""
+    rentas = ascendant.rentas_anuales_euros
+    if rentas is None:
+        owed.append(RENTAS_ANUALES_LEAF)
+        return False
+    if rentas > amounts.rentas_anuales_limite:
+        return True
+    if rentas <= amounts.declaracion_propia_rentas_limite:
+        return False
+    if ascendant.presenta_declaracion_propia is None:
+        owed.append(DECLARACION_PROPIA_LEAF)
+        return False
+    return bool(ascendant.presenta_declaracion_propia)
+
+
 def _entitlement(
     ascendant: AscendantInfo,
     filing_year: int,
@@ -128,27 +154,14 @@ def _entitlement(
     if ascendant.died_before_period(filing_year):
         return 0
     owed: list[str] = []
-    excluded = False
-    if ascendant.age_at_devengo(filing_year) < minimum_age:
-        if ascendant.discapacidad_grado is None:
-            owed.append(DISCAPACIDAD_LEAF)
-        elif ascendant.discapacidad_grado == 0:
-            excluded = True
+    excluded = _age_excludes(ascendant, filing_year, minimum_age=minimum_age, owed=owed)
     divisor = ascendant.convivientes or 0
     if ascendant.convivientes is None:
         owed.append(CONVIVIENTES_LEAF)
     elif divisor == 0:
         excluded = True
-    rentas = ascendant.rentas_anuales_euros
-    if rentas is None:
-        owed.append(RENTAS_ANUALES_LEAF)
-    elif rentas > amounts.rentas_anuales_limite:
+    if _rentas_exclude(ascendant, amounts, owed=owed):
         excluded = True
-    elif rentas > amounts.declaracion_propia_rentas_limite:
-        if ascendant.presenta_declaracion_propia is None:
-            owed.append(DECLARACION_PROPIA_LEAF)
-        elif ascendant.presenta_declaracion_propia:
-            excluded = True
     if excluded:
         return 0
     if owed:

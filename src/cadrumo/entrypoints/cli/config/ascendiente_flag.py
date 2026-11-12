@@ -54,6 +54,18 @@ def parse_ascendiente_flag(raw: str) -> ProfileAscendantRow:
     )
 
 
+def _cleared_leaves(clears: list[str], replaced: dict[str, str]) -> tuple[str, ...]:
+    """The leaves ``clears`` names, refusing an unknown key or one already named in the edit."""
+    cleared: list[str] = []
+    for name in clears:
+        key = name.strip().upper()
+        leaf = _KEY_TO_LEAF.get(key)
+        if leaf is None or leaf in cleared or leaf in replaced:
+            raise _refuse_row(key if leaf is not None else None)
+        cleared.append(leaf)
+    return tuple(cleared)
+
+
 def parse_ascendiente_edit(
     values: list[str] | None, clears: list[str] | None
 ) -> tuple[dict[str, str], tuple[str, ...]]:
@@ -63,16 +75,10 @@ def parse_ascendiente_edit(
     wherever it repeats. Each ``--clear`` names one key.
     """
     replaced = _leaf_values(",".join(values)) if values is not None and len(values) > 0 else {}
-    cleared: list[str] = []
-    for name in clears or ():
-        key = name.strip().upper()
-        leaf = _KEY_TO_LEAF.get(key)
-        if leaf is None or leaf in cleared or leaf in replaced:
-            raise _refuse_row(key if leaf is not None else None)
-        cleared.append(leaf)
+    cleared = _cleared_leaves(clears or [], replaced)
     if not replaced and not cleared:
         raise CliRefusedBoundaryError(translated_message=_EDIT_EMPTY_LOCALE_KEY)
-    return replaced, tuple(cleared)
+    return replaced, cleared
 
 
 __all__ = ["parse_ascendiente_edit", "parse_ascendiente_flag"]

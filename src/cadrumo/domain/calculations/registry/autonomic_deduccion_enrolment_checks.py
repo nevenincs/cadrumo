@@ -30,8 +30,10 @@ from .autonomic_deduccion_enrolment import (
 from .runtime_graph import expression_binding_refs, expression_casilla_refs, expression_parameter_refs
 
 if TYPE_CHECKING:
+    from .ids import ParameterId
     from .reference_checker import IdReferenceChecker
     from .schema import FormulaDefinition, ModeloRevision
+    from .schema_formula import ParameterDefinition
 
 __all__ = ["autonomic_deduccion_enrolments", "check_autonomic_deduccion_enrolments"]
 
@@ -109,12 +111,7 @@ def _check_parameters(
     if enrolment is None:
         return
     read = set(expression_parameter_refs(formula.expression))
-    formula_terms = [enrolment.amount]
-    limit = enrolment.income_limit
-    if isinstance(limit, AutonomicIncomeLimit):
-        formula_terms.extend((limit.individual_limit, limit.joint_limit))
-        if limit.unidad_familiar_limit is not None:
-            formula_terms.append(limit.unidad_familiar_limit)
+    formula_terms = _formula_parameters(enrolment)
     for parameter_id in (*formula_terms, *_axis_parameters(enrolment)):
         checker.chk(f"{owner} parameter", parameter_id, checker.parameter_ids)
     for parameter_id in formula_terms:
@@ -123,12 +120,25 @@ def _check_parameters(
     declared = {parameter.id: parameter for parameter in revision.parameters}
     for parameter_id in _axis_parameters(enrolment):
         parameter = declared.get(parameter_id)
-        if parameter is None:
-            continue
-        if not parameter.values or any(dated.value != dated.value.to_integral_value() for dated in parameter.values):
+        if parameter is not None and not _is_dated_whole_number(parameter):
             checker.failures.append(
                 f"{checker.prefix}: {owner} axis parameter {parameter_id!r} is not a dated whole number"
             )
+
+
+def _formula_parameters(enrolment: AutonomicDeduccionEnrolment) -> list[ParameterId]:
+    """The amount and income-limit parameters the enrolment's formula must read."""
+    formula_terms = [enrolment.amount]
+    limit = enrolment.income_limit
+    if isinstance(limit, AutonomicIncomeLimit):
+        formula_terms.extend((limit.individual_limit, limit.joint_limit))
+        if limit.unidad_familiar_limit is not None:
+            formula_terms.append(limit.unidad_familiar_limit)
+    return formula_terms
+
+
+def _is_dated_whole_number(parameter: ParameterDefinition) -> bool:
+    return bool(parameter.values) and all(dated.value == dated.value.to_integral_value() for dated in parameter.values)
 
 
 def _check_income_base(

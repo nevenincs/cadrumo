@@ -25,12 +25,9 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ...operations.error_detail import build_operation_error_detail
 from ...operations.next_step import OperationOpenIvaWalletOpeningBalanceStepV1, error_next_step
 from ..iva_wallet_binding import apply_iva_compensation_decision_binding
+from ..iva_wallet_preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS, IVA_WALLET_OVERRIDE_SCENARIOS
 from ..iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
-from ..preconditions import (
-    IVA_WALLET_OPENING_BALANCE_SCENARIOS,
-    IVA_WALLET_OVERRIDE_SCENARIOS,
-    MODELO_PRECONDITION_PROFILES,
-)
+from ..preconditions import MODELO_PRECONDITION_PROFILES
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 

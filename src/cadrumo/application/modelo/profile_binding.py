@@ -39,7 +39,7 @@ out of the calculation source mesh.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from datetime import date
@@ -687,12 +687,11 @@ def resolve_profile_sourced_bindings(
     unanswered_text_bindings = _unanswered_text_comparison_bindings(
         snapshot, selection.bindings, enum_values, caller_binding_ids=caller_binding_ids
     )
-    withheld_bindings = tuple(
-        binding.id
-        for binding in selection.bindings
-        if binding.id not in caller_binding_ids
-        and binding not in unanswered_text_bindings
-        and facts.withheld_derived_paths.intersection(profile_binding_selectors(binding.provider))
+    withheld_bindings = _withheld_binding_ids(
+        selection.bindings,
+        facts.withheld_derived_paths,
+        caller_binding_ids=caller_binding_ids,
+        unanswered=unanswered_text_bindings,
     )
     date_values = channels.date_values
     boolean_values = channels.boolean_values
@@ -729,21 +728,44 @@ def resolve_profile_sourced_bindings(
             ),
             *rows.diagnostics,
         ),
-        provenance=tuple(
-            CalculationSourceProvenance(
-                resolver_id=_PROFILE_RESOLVER_ID,
-                resolved_binding_source=BindingSourceKind.PROFILE,
-                contributor_source_kind=BindingSourceKind.PROFILE.value,
-                contributor_binding_source=BindingSourceKind.PROFILE,
-                lineage_role=CalculationSourceLineageRole.PRIMARY,
-                source_ref=f"profile:{bucket_id}:binding:{binding_id}",
-                parent_source_ref=None,
-                terminal_origin=TerminalOriginClass.PROFILE_FIELD,
-                fingerprint=fingerprint,
-            )
-            for binding_id in sourced
+        provenance=_binding_provenance(sourced, bucket_id=bucket_id, fingerprint=fingerprint) + rows.provenance,
+    )
+
+
+def _withheld_binding_ids(
+    bindings: Sequence[BindingDefinition],
+    withheld_derived_paths: frozenset[str],
+    *,
+    caller_binding_ids: frozenset[BindingId],
+    unanswered: Sequence[BindingDefinition],
+) -> tuple[BindingId, ...]:
+    """The bindings a withheld derived fact leaves without a value, apart from caller-supplied and unanswered ones."""
+    return tuple(
+        binding.id
+        for binding in bindings
+        if binding.id not in caller_binding_ids
+        and binding not in unanswered
+        and withheld_derived_paths.intersection(profile_binding_selectors(binding.provider))
+    )
+
+
+def _binding_provenance(
+    sourced: Sequence[BindingId], *, bucket_id: str, fingerprint: str | None
+) -> tuple[CalculationSourceProvenance, ...]:
+    """One profile provenance row per binding the profile supplied a value for."""
+    return tuple(
+        CalculationSourceProvenance(
+            resolver_id=_PROFILE_RESOLVER_ID,
+            resolved_binding_source=BindingSourceKind.PROFILE,
+            contributor_source_kind=BindingSourceKind.PROFILE.value,
+            contributor_binding_source=BindingSourceKind.PROFILE,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=f"profile:{bucket_id}:binding:{binding_id}",
+            parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.PROFILE_FIELD,
+            fingerprint=fingerprint,
         )
-        + rows.provenance,
+        for binding_id in sourced
     )
 
 

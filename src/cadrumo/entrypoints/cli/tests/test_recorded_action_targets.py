@@ -18,11 +18,14 @@ from ....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from ....application.modelo.action_errors import ModeloProfileReadinessError
 from ....application.modelo.calculation_notes import note_record_verdict
 from ....application.modelo.calculation_preparation import ledger_preflight_precondition
+from ....application.modelo.iva_wallet_preconditions import (
+    IVA_WALLET_OPENING_BALANCE_SCENARIOS,
+    IVA_WALLET_OVERRIDE_SCENARIOS,
+)
 from ....application.modelo.iva_wallet_refusal import (
     ModeloIvaWalletReconciliationBlockedError,
     raise_iva_wallet_precondition,
 )
-from ....application.modelo.preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS, IVA_WALLET_OVERRIDE_SCENARIOS
 from ....application.modelo.profile_readiness_gate import require_existing_profile_baseline_ready_for_modelo_work
 from ....application.modelo.work_profile import ModeloWorkProfile
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry, lookup_action

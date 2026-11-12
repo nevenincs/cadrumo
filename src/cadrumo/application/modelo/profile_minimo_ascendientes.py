@@ -26,7 +26,7 @@ sending the filer to the ascendant edit door for the first such row.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -362,9 +362,24 @@ def inject_derived_minimo_ascendientes_facts(
         fact_index[MINIMO_ASCENDIENTES_AGGREGATE_KEY] = result.total
     if MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY not in consumed:
         return AscendantMinimumDerivation()
-    if result.total == 0:
+    return _inject_autonomic_part(
+        fact_index, snapshot, ascendants, amounts=amounts, state_total=result.total, context=context
+    )
+
+
+def _inject_autonomic_part(
+    fact_index: dict[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+    ascendants: Sequence[AscendantInfo],
+    *,
+    amounts: AscendantMinimumAmounts,
+    state_total: Decimal,
+    context: FamilyFactResolutionContext,
+) -> AscendantMinimumDerivation:
+    """Write the autonomic aggregate from the comunidad of residence's amounts, or withhold it."""
+    if state_total == 0:
         # No ascendant is entitled, so no comunidad's amounts can change the zero.
-        fact_index[MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY] = result.total
+        fact_index[MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY] = state_total
         return AscendantMinimumDerivation()
     ccaa = _residence_ccaa(fact_index)
     if ccaa is None:
