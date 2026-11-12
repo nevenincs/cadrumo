@@ -78,7 +78,7 @@ and nothing is left pending; tributos (IBI) ARR-IBI-1 412.00 (art. 23.1.a.2º); 
 (the Manual places the community quotas among the amounts accrued by third parties for personal services, art. 23.1.a.4º, which the registry prints at the comunidad casilla);
 primas de seguro ARR-SEG-1 186.00 (RIRPF art. 13); amortización del inmueble 3 % x 108000.00 = 3240.00 (RIRPF art. 14.1 and 14.2: 3 % of the greater of the acquisition cost
 of the construction and the valor catastral of the construction; the base is the persona's rental_properties.piso-arrendado
-amortization_base 108000.00 (persona.toml:64), which persona.toml:66 states is the construction share of the acquisition value by inheritance and exceeds the
+amortization_base 108000.00 (persona.toml:73), which persona.toml:75 states is the construction share of the acquisition value by inheritance and exceeds the
 construction share of the valor catastral, so it is the greater of the two that RIRPF art. 14.2 takes).
 Total gastos deducibles = 240.00 + 412.00 + 540.00 + 186.00 + 3240.00 = 4618.00 (no casilla prints the total, so it is not stated as a value).
 Absences: the ledger holds no suministros, gasto de servicios personales, formalización, defensa jurídica, saldo de dudoso cobro, financing interest or
@@ -87,7 +87,7 @@ Rendimiento neto = 11400.00 - 4618.00 = 6782.00 (LIRPF art. 22.2).
 Reducción 50 % (LIRPF art. 23.2 as worded by Ley 12/2023, applicable from 1 January 2024 to contracts concluded after 26 May 2023: Manual práctico de Renta 2024 and 2025, parte 1, cap. 4,
 "A. Contratos de arrendamiento de vivienda celebrados a partir del 26 de mayo de 2023 - Con carácter general, se fija una reducción del 50 por 100"; none of the 60, 70 or 90 % tiers applies:
 no zona de mercado residencial tensionado, no tenant aged 18 to 35, no rehabilitation).
-The contract date decides the rate: the persona's lease starts on 1 June of horizon-2 (persona.toml:61, contract_start). This plain value covers the
+The contract date decides the rate: the persona's lease starts on 1 June of horizon-2 (persona.toml:70, contract_start). This plain value covers the
 ejercicios 2024 and 2025, whose horizon-2 is 2023 and 2024, so the lease is concluded on 1 June 2023 or 1 June 2024, after 26 May 2023, and the
 Ley 12/2023 wording governs; a contract concluded before 26 May 2023 would keep 60 % in those years. Reducción = 6782.00 x 50 % = 3391.00; neto reducido = 6782.00 - 3391.00 = 3391.00 (LIRPF art. 23.2),
 which is also the sum of the netos reducidos of all properties (one property).
@@ -148,7 +148,7 @@ derivation = """
 Ingresos, gastos and neto as in the plain value (LIRPF arts. 22 and 23.1; RIRPF arts. 13 and 14): 11400.00 - 4618.00 = 6782.00, with the same absences.
 Reducción 60 % (LIRPF art. 23.2 as worded on 31 December 2021, a single rate for every dwelling lease: Manual práctico de Renta 2022 and 2023, parte 1, cap. 4,
 "Reducción 60 por 100 ... se reducirá en un 60 por 100, cualquiera que sea la edad del arrendatario"). The lease starts on 1 June of horizon-2
-(persona.toml:61): for the ejercicios 2022 and 2023 that is 1 June 2021 or 1 June 2022, before 26 May 2023, so the 2021 wording governs. Reducción = 6782.00 x 60 % = 4069.20; neto reducido = 6782.00 - 4069.20 = 2712.80,
+(persona.toml:70): for the ejercicios 2022 and 2023 that is 1 June 2021 or 1 June 2022, before 26 May 2023, so the 2021 wording governs. Reducción = 6782.00 x 60 % = 4069.20; neto reducido = 6782.00 - 4069.20 = 2712.80,
 which is also the sum of the netos reducidos of all properties (one property).
 Roles are Modelo 100 registry semantic_roles of the Inmueble section, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary):
 ingresos_integros 0102; reparación y conservación 0106; intereses y reparación aplicados 0107; comunidad 0109; primas de seguro 0114; tributos 0115; amortización 0131;
