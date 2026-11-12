@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:55ad19ad078049384d48011181dd46078927990e85efc953a82da7a1abd240f6'
+body_hash: 'sha256:2c1f17b8ec1b42701a16023426b4f5b2cc70de10c8922f271c0821616850d105'
 related:
   - "[[2026-11-11-renta-savings-income-source-adr]]"
   - "[[2026-11-01-export-parity-suffered-withholding-schemas-adr]]"
@@ -43,6 +43,11 @@ Modelo 100 has no source for the contributions behind the reduction for social-w
 - The clave/subclave to box mapping is registry data per edition, declared once at the earliest edition where the design holds, with deltas only where the official design changed. No box id or year appears in Python.
 - Condition of acceptance 3: the clave/subclave mapping is authored from each edition's official design and the manual's casilla list, declared once at the earliest edition where it holds. A clave or subclave the design does not place is refused at record time with served words, never mapped by analogy and never filed under another box.
 - Condition of acceptance 4: the oracles are the manual's worked examples for each rule period, wired as tests through the real resolver.
+- Clave map ruling of CADRUMO-PRIME 2026-11-12 15:27 (rulings log), on the evidence that no official text maps a Modelo 345 clave to a Modelo 100 casilla, so a row is admitted only where the 345 subclave wording and the Modelo 100 dictionary or manual capítulo 13 box wording name the same instrument and payer:
+  - Every admitted row cites both texts by locator. Filing grade holds only for years whose own texts are cited.
+  - Clave J subclave 01 goes to one box or another depending on whether the employer contributed to the same plan; that split is a stated and cited fact on the record, and a record that does not state it is refused.
+  - Refused rows (clave B without subclave, H, K and M, which match only indirectly; C.04, D, E.02, I and L.03, which no text places), and every clave for the 2020 and 2021 ejercicios, whose Modelo 345 designs are not bundled, carry served words and the door to enter the box as an operator value, and block under condition 1 until the value is entered or stated.
+  - Bundling the official 2020 and 2021 Modelo 345 designs is a later CALCULATORS item. Those years are never mapped from later designs.
 - Spouse contributions (art. 51.7) and contributions to a disabled person's system (art. 53) are refused at record time in this slice, with served words saying why. Their boxes stay operator inputs until a later slice.
 - Condition of acceptance 1: with no certificate recorded for an ejercicio, the reduction is disclosed as a limitation and does not block (ruling 09:00), unless a stored fact shows that a contribution exists for that ejercicio: an employer contribution imputed on the work-income record, a ledger row classified as a social-welfare contribution, or a typed contribution box. Then a blocking not-computed finding reaches the user with the record door.
 - Condition of acceptance 2: a typed contribution box beside certificate records for the same box is an aggregation conflict, resolved only through the existing override door with provenance. A record never silently overrides an operator entry, nor the reverse.
