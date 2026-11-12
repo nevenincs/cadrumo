@@ -670,8 +670,14 @@ def test_persisted_m190_row_bindings_export_optional_zero_filled_rows_with_contr
         modelo="190",
         scalar_bindings={
             "modelo-190-percepciones-anual": Decimal("2"),
-            "modelo-190-111-trabajo-dinerario-importe-anual": Decimal("600"),
-            "modelo-190-111-retenciones-anual": Decimal("110"),
+            "modelo-190-perceptor-rows-percepcion-dineraria-total": Decimal("600"),
+            "modelo-190-perceptor-rows-percepcion-especie-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-dineraria-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-especie-total": Decimal("0"),
+            "modelo-190-perceptor-rows-retencion-practicada-total": Decimal("110"),
+            "modelo-190-perceptor-rows-ingreso-a-cuenta-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-retencion-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total": Decimal("0"),
         },
         row_binding_values=rows,
         expected_values={

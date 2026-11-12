@@ -12,8 +12,10 @@ import pytest
 
 from .personas import (
     PERSONAS_ROOT,
+    IdentityRef,
     Persona,
     PersonaCatalogueError,
+    PersonaDate,
     ProvisionPeriods,
     YearEnvelope,
     YearToken,
@@ -1001,7 +1003,7 @@ def test_an_attested_prior_value_is_admitted_with_its_source_and_derivation() ->
     [
         ({"value": "12.846,30"}, "canonical decimal"),
         ({"value": 12846.3}, "canonical decimal"),
-        ({"period": "5T"}, "is not one of"),
+        ({"period": "5T"}, "is not a filing period"),
         ({"year": str(_ENVELOPE.floor)}, "not a year token"),
         ({"sources": [{"modelo": "100", "year": "horizon-2"}]}, "missing fields"),
         ({"sources": [{"modelo": "100", "year": "horizon-2", "period": "0A", "csv": "x"}]}, "unknown fields"),
@@ -1027,6 +1029,15 @@ def test_an_annual_return_may_attest_one_figure_for_the_instalments_of_its_own_y
     ).attested_prior_values
 
     assert [source.period for source in item.sources] == ["1P", "2P", "3P"]
+
+
+def test_an_instalment_may_attest_the_figure_its_base_reads_from_an_earlier_annual_return() -> None:
+    sources = [{"modelo": "200", "year": "horizon-2", "period": "0A"}]
+    (item,) = _parse(
+        _with_attested_prior_value(modelo="202", period="1P", year="horizon", binding="base", sources=sources)
+    ).attested_prior_values
+
+    assert (item.modelo, item.period, str(item.year)) == ("202", "1P", "horizon")
 
 
 @pytest.mark.parametrize(
@@ -1170,3 +1181,58 @@ def test_a_work_income_statement_for_an_ejercicio_without_a_work_income_certific
     assert document["work_income_none_statements"]
     with pytest.raises(PersonaCatalogueError, match="no work-income certificate for that ejercicio"):
         _parse(document)
+
+
+def _with_profile_row(**changes: object) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    row: dict[str, object] = {
+        "section": "some_section",
+        "values": {
+            "nif": {"identity": "asalariada.titular"},
+            "apellidos_y_nombre": {"identity": "asalariada.titular", "field": "full_name"},
+            "fecha_poder": {"year": "horizon-2", "month": 3, "day": 4},
+            "notaria_otros": "NOTARIA DE PRUEBA",
+            "representante": False,
+        },
+    }
+    document["profile_rows"] = [{**row, **changes}]
+    return document
+
+
+def test_a_profile_row_keeps_its_section_and_typed_values() -> None:
+    persona = _parse(_with_profile_row())
+    (row,) = persona.profile_rows
+    values = dict(row.values)
+
+    assert row.section == "some_section"
+    assert list(values) == sorted(values)
+    assert values["notaria_otros"] == "NOTARIA DE PRUEBA"
+    assert values["representante"] is False
+    assert isinstance(values["fecha_poder"], PersonaDate)
+    assert values["apellidos_y_nombre"] == IdentityRef(role="asalariada.titular", field="full_name")
+
+
+def test_a_profile_row_date_may_precede_the_floor_but_not_pass_the_horizon() -> None:
+    early = _with_profile_row(values={"fecha_poder": {"year": "floor-6", "month": 1, "day": 10}})
+    (row,) = _parse(early).profile_rows
+    (key, value), *_ = row.values
+    assert key == "fecha_poder"
+    assert isinstance(value, PersonaDate)
+    assert value.resolve(_ENVELOPE) == date(_ENVELOPE.floor - 6, 1, 10)
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(_with_profile_row(values={"fecha_poder": {"year": "horizon+1", "month": 1, "day": 10}}))
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"section": "activities"}, "has its own block"),
+        ({"values": {}}, "at least one field"),
+        ({"values": {"nif": {"identity": "fontanero.titular"}}}, "belongs to persona"),
+        ({"values": {"nif": {"identity": "asalariada.titular", "field": "cargo"}}}, "is not one of"),
+        ({"note": "x"}, "unknown fields"),
+    ],
+)
+def test_a_malformed_profile_row_is_refused(changes: dict[str, object], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_profile_row(**changes))

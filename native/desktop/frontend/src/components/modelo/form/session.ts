@@ -347,7 +347,7 @@ export function priorValueStatement(
   field: PublicModeloFormField,
 ): ModeloFormBindingStatement | null {
   return (
-    (field.statements as ModeloFormBindingStatement[] | undefined)?.find(
+    field.statements?.find(
       (statement) => statement.intent === "attest_prior_value",
     ) ?? null
   );

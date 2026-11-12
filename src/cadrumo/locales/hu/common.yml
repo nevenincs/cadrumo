@@ -2154,11 +2154,8 @@ desktop:
       country: Ország
       established: Székhely
       filing_name:
-        kind:
-          entity: Jogi személy
-          natural_person: Természetes személy
-        kind_contradicts: A megadott típus ({declared}) eltér az azonosító alakjától
-          ({observed}).
+        asked: Egy számítás egy partner bevallási nevét kéri. Írd be az adószámát,
+          és keresd meg, hogy megadhasd a nevet.
         kind_label: Típus
         no_second_surname: Nincs második vezetéknév
         nombre: Keresztnév
@@ -2172,6 +2169,7 @@ desktop:
           bele kell férnie.
         save: Bevallási név mentése
         segundo_apellido: Második vezetéknév
+        slots: Hová kerül a név
         stated_by: Megadta
         text: Szöveg
         title: Bevallási név
@@ -2202,10 +2200,6 @@ desktop:
       undetermined: Nem meghatározott
       vat_state: ÁFA-azonosítás helye
       view: Lekérdezés
-      withdraw: Visszavonás…
-      withdraw_confirm: Megerősítés visszavonása
-      withdraw_what: Visszavonja a megerősítésedet. Más források továbbra is megadhatják
-        ezeket az értékeket.
     density:
       comfortable: Tágas sorok
     describe:
@@ -4742,9 +4736,8 @@ desktop:
     entry_required: '* minden bejegyzésben kötelező'
     field_help: A mezőről
     household:
-      add: Személy hozzáadása
       blocked_hidden: Ennek a csoportnak néhány értéke rejtett, ezért a személyei
-        itt nem módosíthatók.
+        itt nem szerkeszthetők. Személyt továbbra is hozzáadhatsz vagy eltávolíthatsz.
       cap_reached: Ez a csoport megtelt, ezért nem adhatsz hozzá több személyt.
       declare_none: Nincs egy sem
       edit_person: '{number}. személy szerkesztése'
@@ -4757,10 +4750,8 @@ desktop:
         clear: Válasz visszavonása
         unknown_help: Még nem adtál meg semmit, és ez nem ugyanaz, mint a „nem”.
       reading: A családod beolvasása…
-      remove: Személy eltávolítása
       remove_help: Eltávolítod ezt a személyt a családodból? A létszám vele együtt
         frissül.
-      remove_person: '{number}. személy eltávolítása'
       retry: Próbáld újra
       saved: A család mentve.
       state:
@@ -7405,10 +7396,10 @@ tui:
           szerint %{evidenced}. %{detail}'
         country: Országkód (2 betű, nem kötelező)
         evidenced: Bizonylaton szereplő hatály a lekérdezéshez (nem kötelező)
+        filing_asked: Egy számítás egy partner bevallási nevét kéri. Írd be az adóazonosítóját,
+          és keresd meg, hogy megadhasd a nevet.
         filing_done: '%{identifier} bevallási neve megadva.'
         filing_heading: Bevallási név
-        filing_kind_entity: Jogi személy
-        filing_kind_natural_person: Természetes személy
         filing_no_second: Nincs második vezetéknév
         filing_nombre: Keresztnév
         filing_primer: Első vezetéknév
@@ -7421,6 +7412,7 @@ tui:
           el.
         filing_review: Bevallási név ellenőrzése
         filing_segundo: Második vezetéknév
+        filing_slots_heading: 'Hová kerül a név:'
         filing_stage: '%{identifier} bevallási nevének megadása mint %{kind}.'
         filing_stated: '%{identifier} bevallási neve: %{kind} · %{name}'
         filing_stated_by: 'Megadta: %{name}, ekkor: %{date}.'
@@ -7431,15 +7423,12 @@ tui:
         identifier_required: Előbb add meg a partner adóazonosítóját.
         note: Megjegyzés (nem kötelező)
         nothing_known: 'Semmit sem tudunk erről: %{identifier}.'
-        nothing_to_withdraw: '%{identifier} esetében nem volt visszavonható megerősítés.'
         prompt: Nézd meg, mit tudunk egy partner telephelyéről, erősítsd meg magad,
           vagy vond vissza a megerősítésedet.
         review_confirm: Megerősítés áttekintése
-        review_withdraw: Visszavonás áttekintése
         scope: '%{identifier}: területi hatály %{scope} (forrás: %{source})'
         stage_confirm: '%{identifier} megerősítése: területi hatály %{scope} · tagállam
           %{state}.'
-        stage_withdraw: '%{identifier} megerősítésének visszavonása.'
         state: 'Tagállam %{state} (forrás: %{source})'
         territorial: Területi hatály (kód)
         title: Partnerek
@@ -7447,7 +7436,6 @@ tui:
           · tagállam %{state}.'
         view: Lekérdezés
         who_heading: Melyik partner
-        withdrawn: '%{identifier} megerősítése visszavonva.'
       destructive_accept: Igen, mehet
       destructive_title: Erősítsd meg ezt a módosítást
       diagnostics:

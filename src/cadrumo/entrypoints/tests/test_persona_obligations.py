@@ -16,7 +16,13 @@ when its ``refusal_stage`` is verify or export, that the calculation completes
 (the persona table asserts the later stage's refusal); a casilla stated
 ``not_sourced`` asserts that the application does not yet carry the figure the
 law gives; an obligation that states a ``calendar_advice`` asserts that the
-calendar advises it instead of showing a window row.
+calendar advises it instead of showing a window row; a period values are
+stated for whose verdict turns on a figure stated on its own work unit (one an
+obligation states not applicable, or one whose prior figures are attested on it)
+is left to the persona table, which reads the calendar after calculating it. A modelo whose obligations
+of one year state different applicability for different periods has each
+period's verdict read from the calendar, suppressed obligations shown, since the
+explanation states one verdict per modelo.
 
 The stated periods run in chain order, quarters before the annual returns, and
 a quarter whose verification is granted is filed locally before the next one
@@ -84,13 +90,22 @@ from ...application.overview.read_result import OverviewReadProjection
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...tests.personas import ExpectedObligation, Persona, YearEnvelope, persona_ids, read_persona, values_in_force
+from ...tests.personas import (
+    ExpectedObligation,
+    Persona,
+    YearEnvelope,
+    per_period_modelos,
+    persona_ids,
+    read_persona,
+    values_in_force,
+)
 from .persona_materialisation import (
     PERSONA_ACTOR,
     MaterialisedPersona,
     PersonaMaterialisationError,
     PersonaWorld,
     ReplayScope,
+    attest_before_first_calculation,
     filing_key,
     materialised_persona,
     run_operation,
@@ -155,6 +170,34 @@ def _value_years(persona: Persona) -> set[int]:
     }
 
 
+def _asserted_after_calculation(persona: Persona) -> set[tuple[str, int, str]]:
+    """The returns ``(modelo, year, period)`` whose calendar verdict this pre-calculation read cannot assert.
+
+    Those are the returns values are stated for whose verdict turns on a figure stated on the return's own work unit:
+    one an obligation states not applicable, and one whose prior figures the persona attests on it while entering no
+    work input there (a Modelo 202 instalment whose base is the cuota of a Modelo 200 the profile does not hold). The
+    persona table calculates each of them with that figure stated and then reads the calendar, or files it.
+    """
+    envelope = _envelope()
+    stated = {
+        (value.modelo, year, value.period)
+        for year, value in values_in_force(persona.expectations.values, envelope)
+        if value.counterparty is None
+        and (value.casillas or value.roles or value.not_sourced or value.refusal is not None)
+    }
+    not_applicable = {
+        (item.modelo, item.year.resolve(envelope), period)
+        for item in persona.expectations.obligations
+        if item.applicable is False
+        for period in item.periods
+    }
+    entered = {(item.modelo, item.year.resolve(envelope), item.period) for item in persona.work_inputs}
+    attested_on_own_return = {
+        (entry.modelo, entry.year.resolve(envelope), entry.period) for entry in persona.attested_prior_values
+    } - entered
+    return stated & (not_applicable | attested_on_own_return)
+
+
 def _scope(persona: Persona) -> ReplayScope:
     """The history scope when the persona holds returns or observations of earlier years, else the full ledger."""
     return (
@@ -179,7 +222,14 @@ def _next_business_day(day: date) -> date:
 def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path: Path, case: _Case) -> None:
     persona = _personas()[case.persona_id]
     envelope = _envelope()
-    obligations = [item for year, item in _asserted_obligations(persona) if year == case.year]
+    stated_obligations = [item for year, item in _asserted_obligations(persona) if year == case.year]
+    # The persona table asserts these returns after it calculates them with their own stated figures.
+    asserted_later = _asserted_after_calculation(persona)
+    obligations = [
+        replace(item, periods=periods)
+        for item in stated_obligations
+        if (periods := tuple(p for p in item.periods if (item.modelo, case.year, p) not in asserted_later))
+    ]
     deadlines = [
         item
         for item in persona.expectations.deadlines
@@ -188,7 +238,9 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
 
     problems: list[str] = []
     entries: dict[tuple[str, str], OverviewCalendarEntrySnapshot] = {}
+    suppressed: dict[tuple[str, str], ApplicabilityVerdict] = {}
     advised: set[tuple[str, str]] = set()
+    per_period = per_period_modelos(stated_obligations)
     verdicts: dict[str, tuple[ApplicabilityVerdict, bool]] = {}
     with materialised_persona(case.persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
         world = materialised.world
@@ -201,6 +253,7 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
                     output_language=OutputLanguage.ES,
                     from_date=date(case.year, 1, 1),
                     to_date=date(case.year + 1, 12, 31),
+                    show_suppressed=True,
                 ),
             ).payload
         except PersonaMaterialisationError as error:
@@ -213,8 +266,16 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
                 for entry in calendar_read.calendar.entries
                 if entry.filing_year == case.year
             }
+            suppressed = {
+                (row.modelo, code): row.verdict
+                for row in calendar_read.calendar.suppressed_entries
+                for row_year, _, code in (row.period.rpartition(" "),)
+                if row_year == str(case.year)
+            }
             advised = {(item.modelo, item.reason.value) for item in calendar_read.calendar.coverage.advised}
         for item in obligations:
+            if item.modelo in per_period:
+                continue
             try:
                 explained = _read(
                     world,
@@ -240,6 +301,19 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
             if item.applicable
             else (ApplicabilityVerdict.NOT_APPLICABLE, False)
         )
+        calendar_read_refused = any("calendar read was refused" in each for each in problems)
+        if item.modelo in per_period and not calendar_read_refused:
+            for period in item.periods:
+                shown = (
+                    ApplicabilityVerdict.APPLICABLE
+                    if (item.modelo, period) in entries
+                    else suppressed.get((item.modelo, period))
+                )
+                if shown != expected_verdict[0]:
+                    problems.append(
+                        f"Modelo {item.modelo} {case.year} {period}: calendar shows {shown or 'nothing'}, "
+                        f"expected {expected_verdict[0]} ({item.legal_ref})"
+                    )
         if item.modelo in verdicts and verdicts[item.modelo] != expected_verdict:
             problems.append(
                 f"Modelo {item.modelo} {case.year}: explanation says {verdicts[item.modelo]}, "
@@ -365,6 +439,7 @@ def _calculated_casillas(materialised: MaterialisedPersona, modelo: str, year: i
                 # A year whose earlier return the profile does not hold takes the
                 # persona's statement of its pending carries before it calculates.
                 attest_prior_carries(materialised.persona, world, work_unit_id, year)
+            attest_before_first_calculation(world, modelo=modelo, year=year, period=period, work_unit_id=work_unit_id)
             calculated = run_operation(
                 world,
                 MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,

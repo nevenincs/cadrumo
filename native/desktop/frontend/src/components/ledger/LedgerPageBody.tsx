@@ -48,6 +48,7 @@ export function LedgerPageBody({
     section,
     setSection,
     rulesArea,
+    counterpartyAsk,
     openRatios,
     linkedMovement,
     linkedInvoice,
@@ -104,6 +105,7 @@ export function LedgerPageBody({
         onOpenRule={setRuleTarget}
         rulesVersion={rulesVersion}
         initialArea={rulesArea}
+        counterpartyAsk={counterpartyAsk}
       />
     );
   else if (section === "registers")

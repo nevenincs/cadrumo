@@ -49,7 +49,7 @@ def _ratios_screen(profile: MemoryCategorisationProfile) -> LedgerRatiosScreen:
 
 
 @pytest.mark.asyncio
-async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirmation() -> None:
+async def test_counterparty_confirm_and_view_offer_no_withdrawal() -> None:
     profile = MemoryCategorisationProfile()
     doors = profile.doors()
     door = doors.counterparty
@@ -73,7 +73,7 @@ async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirma
 
             await press(pilot, screen, "categorisation-counterparty-view")
             assert door.requests[-1].action == "view"
-            assert text(screen, "#categorisation-outcome") == "\n".join(
+            assert text(screen, "#categorisation-outcome").split("\n")[:4] == list(
                 (
                     tr(
                         "tui.ledger.categorisation.counterparty.scope",
@@ -83,23 +83,13 @@ async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirma
                     ),
                     tr("tui.ledger.categorisation.counterparty.state", state="-", source="operator_confirmed"),
                     tr("tui.ledger.categorisation.counterparty.filing_unstated", identifier=SYNTHETIC_TAX_ID),
+                    tr("tui.ledger.categorisation.counterparty.filing_slots_heading"),
                 )
             )
 
-            await press(pilot, screen, "categorisation-counterparty-withdraw")
-            await press(pilot, screen, "categorisation-confirm")
-            pilot.app.screen.query_one("#btn-confirm-cancel", Button).press()
-            await settle(pilot)
+            assert not screen.query("#categorisation-counterparty-withdraw")
             assert SYNTHETIC_TAX_ID in profile.counterparties.facts
             assert [request.action for request in door.requests] == ["confirm", "view"]
-
-            await press(pilot, screen, "categorisation-confirm")
-            pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
-            await settle(pilot)
-            assert SYNTHETIC_TAX_ID not in profile.counterparties.facts
-            assert text(screen, "#categorisation-outcome") == tr(
-                "tui.ledger.categorisation.counterparty.withdrawn", identifier=SYNTHETIC_TAX_ID
-            )
 
 
 @pytest.mark.asyncio

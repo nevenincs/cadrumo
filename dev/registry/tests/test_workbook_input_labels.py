@@ -84,7 +84,6 @@ def test_previously_unlabelled_dependencies_compile_real_revision(authority, mod
     (
         ("180", "modelo-180-115-base-anual"),
         ("190", "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total"),
-        ("190", "modelo-190-111-ganancias-dinerario-importe-anual"),
         ("193", "modelo-193-perceptor-rows-base-total"),
         ("200", "modelo-200-profile-new-entity-flag"),
         ("714", "m714-m100-base-imponible-general"),
@@ -97,18 +96,14 @@ def test_authored_dependency_families_have_real_translations(language, modelo, b
     assert (label is not None and label) and label.strip() and label not in (key, binding)
 
 
-def test_labels_preserve_specific_eligibility_and_forestry_meaning():
+def test_labels_preserve_specific_eligibility_and_withholding_meaning():
     eligibility = lookup_translation(
         binding_locale_key("200", "modelo-200-profile-new-entity-flag", "label"), locale="es"
-    )
-    forestry = lookup_translation(
-        binding_locale_key("190", "modelo-190-111-ganancias-dinerario-importe-anual", "label"), locale="es"
     )
     withholding_total = lookup_translation(
         binding_locale_key("193", "modelo-193-perceptor-rows-retenciones-total", "label"), locale="es"
     )
     assert (eligibility is not None and eligibility) and "dos primeros períodos con beneficios" in eligibility
-    assert (forestry is not None and forestry) and "forestales" in forestry
     assert (
         withholding_total is not None and withholding_total
     ) and "retenciones e ingresos a cuenta" in withholding_total

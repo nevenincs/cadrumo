@@ -127,9 +127,6 @@ async def _drive_counterparties(pilot: Pilot[None], screen: Screen[None]) -> Non
     await press(pilot, screen, "categorisation-counterparty-confirm")
     await press(pilot, screen, "categorisation-confirm")
     await press(pilot, screen, "categorisation-counterparty-view")
-    await press(pilot, screen, "categorisation-counterparty-withdraw")
-    await press(pilot, screen, "categorisation-confirm")
-    await _accept_dialog(pilot)
 
 
 async def _drive_split(pilot: Pilot[None], screen: Screen[None]) -> None:

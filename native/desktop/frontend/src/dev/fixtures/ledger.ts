@@ -568,6 +568,7 @@ export function fixtureLedger(
           : business && kind.iva === "reverse"
             ? money(Math.round(amountCents * 0.21))
             : null,
+      recargo_amount: null,
       iva_category: !business
         ? null
         : kind.iva === "general"

@@ -5,8 +5,9 @@
 // The request and result of every definition the desktop admits, and the
 // edit operator input the financial body carries, with field names, nullity
 // and closed vocabularies as the application serialises them. A result field
-// is always present; a field of what the window sends may be left out where
-// the model gives it a default.
+// is always present unless the model leaves it out while absent or empty, and
+// then the property is optional. A field of what the window sends may be left
+// out where the model gives it a default.
 
 import type {
   ActionArgumentSource,
@@ -29,9 +30,9 @@ import type { ModeloLifecycleAdvisories } from "./modeloWork";
  * with its served words.
  */
 export type ModeloAlternativeActionSnapshot = {
-  action_words: string | null;
-  action_words_language: OutputLanguage | null;
-  target_operation_ids: string[];
+  action_words?: string | null;
+  action_words_language?: OutputLanguage | null;
+  target_operation_ids?: string[];
   action: ActionReference;
   argument_bindings: ModeloArgumentSnapshot[];
   missing_argument_names: string[];
@@ -77,11 +78,11 @@ export type ModeloFindingPreconditionSnapshot = {
  * rule.
  */
 export type ModeloPreconditionSnapshot = {
-  no_recovery_words: string | null;
-  no_recovery_words_language: OutputLanguage | null;
-  action_words: string | null;
-  action_words_language: OutputLanguage | null;
-  target_operation_ids: string[];
+  no_recovery_words?: string | null;
+  no_recovery_words_language?: OutputLanguage | null;
+  action_words?: string | null;
+  action_words_language?: OutputLanguage | null;
+  target_operation_ids?: string[];
   subject_leaf_key: string;
   scenario_id: string;
   failed_condition_id: string;
@@ -91,7 +92,7 @@ export type ModeloPreconditionSnapshot = {
   missing_argument_names: string[];
   conditionality: ActionConditionality;
   no_recovery_outcome: NoRecoveryOutcome | null;
-  alternative_actions: ModeloAlternativeActionSnapshot[];
+  alternative_actions?: ModeloAlternativeActionSnapshot[];
 };
 
 /**

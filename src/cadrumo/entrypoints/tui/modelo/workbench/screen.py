@@ -65,8 +65,8 @@ from ...components.theme import toggle_appearance, tokenised
 from ...navigation import TuiNavigationTargetV1
 from ..disagreements import ModeloDisagreementsDoorV1
 from ..disagreements_workbench import WorkbenchDisagreementsMixin
-from ..wallet import ModeloIvaWalletDoorV1
-from ..wallet_workbench import WorkbenchWalletMixin
+from ..wallet import IvaWalletOpeningV1, ModeloIvaWalletDoorV1
+from ..wallet_workbench import WALLET_DOOR_ID, WorkbenchWalletMixin
 from .casilla_list import (
     CasillaList,
 )
@@ -423,6 +423,7 @@ class ModeloWorkbenchScreen(
         self._native_review = native_review
         self._disagreements = disagreements
         self._wallet = wallet
+        self._wallet_door: IvaWalletOpeningV1 | None = None
         self._operation_in_flight = False
         self._apply_prerequisite: WorkbenchApplyPrerequisite | None = None
         self._load: ModeloWorkFormLoadV1 | None = None
@@ -446,7 +447,11 @@ class ModeloWorkbenchScreen(
     # ── composition ─────────────────────────────────────────────────────
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Open native review consent for the retained calculation the operator is viewing."""
+        """Open the balance a refusal served as its door, or native review consent for the retained calculation."""
+        if event.button.id == WALLET_DOOR_ID:
+            event.stop()
+            self._take_wallet_door()
+            return
         if event.button.id != "wb-google-review" or self._native_review is None:
             return
         load = self._load

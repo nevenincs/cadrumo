@@ -3,7 +3,9 @@ import type {
   HouseholdFact,
   HouseholdGroup,
   HouseholdLeaf,
+  HouseholdPersonEdit,
   HouseholdQuestion,
+  HouseholdRowAction,
   ProfileCompanionPort,
   ProfileHousehold,
 } from "../shell/profileHousehold";
@@ -15,9 +17,12 @@ import type { ProfileChange } from "../shell/userProfile";
 // with. Regenerate with dev.desktop_household_fixture; never invent fields
 // here. The fixture assembles the stream the way the host does (groups
 // followed by their rows, a hidden value replaced by its mask, then the
-// questions the product asks of the household), keeps what a replacement or an
-// answer states and answers the next read with it, so a story or a scenario
-// sees a write land.
+// questions the product asks of the household), keeps what a replacement, an
+// added or removed person, or an answer states and answers the next read with
+// it, so a story or a scenario sees a write land. The add and remove controls
+// of a group are the ones the application served for the same group in any
+// state, offered as it offers them: the add while the group holds fewer people
+// than its design admits, the remove while a person is stored.
 
 export type HouseholdScenario = keyof typeof fixtures.reads;
 
@@ -122,6 +127,8 @@ function assemble(items: Item[]): Stored[] {
           incomplete_words: item.incomplete_words,
           max_rows: item.max_rows,
           leaves: item.leaves,
+          add_row_action: item.add_row_action,
+          remove_row_action: item.remove_row_action,
         },
         rows: [],
       });
@@ -131,6 +138,28 @@ function assemble(items: Item[]): Stored[] {
         .rows.push({ row_index: item.row_index, facts: item.facts });
   }
   return groups;
+}
+
+/** The add and remove controls the application served for a group in a
+ * language, from whichever state served each. */
+function servedActions(
+  key: string,
+  language: string,
+): {
+  add: HouseholdRowAction | null;
+  remove: HouseholdRowAction | null;
+} {
+  const served = HOUSEHOLD_SCENARIOS.flatMap((scenario) =>
+    assemble(itemsOf(scenario, language))
+      .filter((entry) => entry.group.group_key === key)
+      .map((entry) => entry.group),
+  );
+  return {
+    add: served.find((group) => group.add_row_action)?.add_row_action ?? null,
+    remove:
+      served.find((group) => group.remove_row_action)?.remove_row_action ??
+      null,
+  };
 }
 
 const refusalWords = (refusal: HouseholdRefusal, language: string): string => {
@@ -183,8 +212,14 @@ export function householdFixture(
     content_digest: digest(),
     groups: assemble(itemsOf(scenario, asked)).map(({ group }) => {
       const now = standing.get(group.group_key)!;
+      const actions = servedActions(group.group_key, asked);
       return {
         ...group,
+        add_row_action:
+          group.max_rows !== null && now.rows.length < group.max_rows
+            ? actions.add
+            : null,
+        remove_row_action: now.rows.length > 0 ? actions.remove : null,
         state: now.state,
         stated_count: now.stated_count,
         incomplete_words: now.incomplete_words,
@@ -259,15 +294,42 @@ export function householdFixture(
       const leaves = new Map<string, HouseholdLeaf>(
         group.leaves.map((leaf) => [leaf.leaf, leaf]),
       );
+      // As the product composes it: the whole set, or the people stored
+      // with one added or one removed. A stored person is kept with every
+      // fact it states, a hidden one too.
+      const stored = standing.get(key)!.rows;
+      const asStored = (row: (typeof stored)[number]) => ({
+        facts: row.facts,
+        person: null as HouseholdPersonEdit | null,
+      });
+      let people: {
+        facts: HouseholdFact[];
+        person: HouseholdPersonEdit | null;
+      }[];
+      if ("rows" in edit)
+        people = edit.rows.map((person) => ({ facts: [], person }));
+      else if ("add_row" in edit)
+        people = [...stored.map(asStored), { facts: [], person: edit.add_row }];
+      else {
+        const index = edit.remove_row_index;
+        // No person is stored at that index: the product refuses it and
+        // writes nothing.
+        if (!stored.some((row) => row.row_index === index))
+          throw { code: "refused" };
+        people = stored.filter((row) => row.row_index !== index).map(asStored);
+      }
+      const sent = people.flatMap((entry) =>
+        entry.person ? [entry.person] : [],
+      );
       // The sentences are the ones the application recorded for the same
       // two refusals of the group being replaced.
-      if (group.max_rows !== null && edit.rows.length > group.max_rows)
+      if (group.max_rows !== null && people.length > group.max_rows)
         throw {
           code: "refused",
           refusal_words: refusalWords(`${edit.kind}_over_limit`, language),
         };
       if (
-        edit.rows.some((row) =>
+        sent.some((row) =>
           row.facts.some((fact) => !leaves.has(fact.field_key)),
         )
       )
@@ -279,17 +341,22 @@ export function householdFixture(
           ),
         };
       standing.set(key, {
-        state: edit.rows.length > 0 ? "rows" : "none_declared",
-        stated_count: String(edit.rows.length),
+        state: people.length > 0 ? "rows" : "none_declared",
+        stated_count: String(people.length),
         incomplete_words: null,
-        rows: edit.rows.map((row, index) => ({
+        rows: people.map((entry, index) => ({
           row_index: String(index),
-          facts: row.facts.map((fact) => ({
-            leaf: fact.field_key,
-            path: `${key}.${index}.${fact.field_key}`,
-            value: fact.value,
-            masked: false,
-          })),
+          facts: entry.person
+            ? entry.person.facts.map((fact) => ({
+                leaf: fact.field_key,
+                path: `${key}.${index}.${fact.field_key}`,
+                value: fact.value,
+                masked: false,
+              }))
+            : entry.facts.map((fact) => ({
+                ...fact,
+                path: `${key}.${index}.${fact.leaf}`,
+              })),
         })),
       });
       revision += 1;

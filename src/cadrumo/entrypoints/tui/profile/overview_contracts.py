@@ -89,6 +89,12 @@ PLANTILLA_MEDIA_SECTION = PLANTILLA_MEDIA_PATH.split(".", 1)[0]
 
 PLANTILLA_MEDIA_BUTTON_ID = "manager-plantilla-media"
 
+HOUSEHOLD_SECTION = "renta_family"
+
+"""The section whose panel opens the household: its people are rows of this section's facts."""
+
+HOUSEHOLD_BUTTON_ID = "manager-household"
+
 CONTINUE_BUTTON_ID = "onboarding-continue"
 
 SETUP_TITLE_LOCALE_KEYS = {

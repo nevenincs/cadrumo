@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.form_codes import FormCodes, form_codes_in_scope, resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
@@ -113,6 +114,41 @@ def annual_withholding_composition(modelo: str) -> AnnualWithholdingComposition:
     )
 
 
+@dataclass(frozen=True, slots=True)
+class WithholdingTotalRoute:
+    """The two boxes through which an annual summary's withholding total is compared.
+
+    ``summary_casilla_id`` is the summary's own total of retenciones e ingresos a
+    cuenta, and ``periodic_casilla_id`` the box of each ``periodic_modelo`` return
+    that totals the same withholding for its period.
+    """
+
+    summary_casilla_id: CasillaId
+    periodic_modelo: Modelo
+    periodic_casilla_id: CasillaId
+
+
+def withholding_total_route(modelo: str) -> WithholdingTotalRoute | None:
+    """Return how ``modelo``'s withholding total meets its periodic returns, or ``None`` when no route is declared.
+
+    A summary that declares a total also names the periodic modelo it restates,
+    and that modelo declares its own total box; either missing is a registry
+    defect, refused rather than read as nothing to compare.
+    """
+    routing = _routing()
+    summary = routing.under("annual.retenciones_total").get(modelo)
+    if summary is None:
+        return None
+    periodic = routing.under("annual.periodic_percepciones").get(modelo) or routing.code(
+        f"annual.source_observations.{modelo}"
+    )
+    return WithholdingTotalRoute(
+        summary_casilla_id=validated_casilla_id(summary),
+        periodic_modelo=Modelo(periodic),
+        periodic_casilla_id=validated_casilla_id(routing.code(f"periodic.retenciones_total.{periodic}")),
+    )
+
+
 def annual_source_observations_modelo(modelo: str) -> str | None:
     """Return the periodic modelo whose annual observations ``modelo`` restates, if it declares one."""
     return _routing().under("annual.source_observations").get(modelo)
@@ -122,6 +158,7 @@ __all__ = [
     "INVOICE_EVIDENCED_INCOME_KINDS",
     "LEDGER_PAID_INCOME_KINDS",
     "AnnualWithholdingComposition",
+    "WithholdingTotalRoute",
     "annual_source_observations_modelo",
     "annual_withholding_composition",
     "invoice_evidence_modelos",
@@ -131,4 +168,5 @@ __all__ = [
     "periodic_withholding_modelos_in_scope",
     "refuses_ledger_payment_evidence",
     "require_invoice_evidence_modelo",
+    "withholding_total_route",
 ]

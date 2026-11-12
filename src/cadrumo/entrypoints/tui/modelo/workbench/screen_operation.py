@@ -248,6 +248,7 @@ class WorkbenchOperationMixin:
             slot.show(refusal)
         elif refusal is not None:
             self.query_one("#wb-status").mount(RefusalSlot(refusal, id="wb-operation-refusal"), after="#wb-notice")
+        self._show_wallet_door(refusal)
 
     def _settle_succeeded_operation(
         self: ModeloWorkbenchScreen, applies_changes: bool, outcome: OperationModalSettledOutcomeV1

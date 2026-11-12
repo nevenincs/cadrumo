@@ -53,7 +53,7 @@ _BUCKET_ID = "6e84e19e-58f8-4241-b2d1-6ab9bcc3dd7b"
 
 
 def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
-    snapshot = published_authority_operation().snapshot(
+    snapshot = published_authority_operation().reading_snapshot(
         modelo,
         filing_year=period.filing_year,
         period=period.registry_token,

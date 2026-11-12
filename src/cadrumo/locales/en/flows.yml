@@ -70,6 +70,18 @@ flows:
     field_unavailable: Unavailable profile field
     help:
       about: 'About this setting:'
+    household:
+      close: Close
+      full: This group is full, so no more people can be added.
+      read_again: Read again
+      read_failed: Your household could not be read. Read it again to try once more.
+      reading: Reading your household…
+      state_none_declared: You stated that there are none.
+      state_not_served: Your profile does not offer this group.
+      state_unknown: Nothing is recorded for this group. That is not the same as none.
+      title: Household
+      unknown_outcome: The change may have been saved, or not. Read your household
+        again before changing anything else.
     language:
       unavailable: This profile does not offer a language setting.
     namespace_detail: detail {number}

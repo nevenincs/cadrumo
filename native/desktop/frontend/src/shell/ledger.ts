@@ -732,6 +732,7 @@ export type LedgerTransaction = {
   taxable_base: string | null;
   iva_rate: string | null;
   iva_amount: string | null;
+  recargo_amount: string | null;
   iva_category: string | null;
   deduction_fact_kind: string | null;
   investment_asset_id: string | null;

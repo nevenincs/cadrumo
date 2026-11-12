@@ -5,8 +5,9 @@
 // The request and result of every definition the desktop admits, and the
 // edit operator input the financial body carries, with field names, nullity
 // and closed vocabularies as the application serialises them. A result field
-// is always present; a field of what the window sends may be left out where
-// the model gives it a default.
+// is always present unless the model leaves it out while absent or empty, and
+// then the property is optional. A field of what the window sends may be left
+// out where the model gives it a default.
 
 import type {
   BindingSourceKind,
@@ -269,7 +270,7 @@ export type ModeloFormCalculationNote = {
   fact: CalculationNoteFact | null;
   element_names: [string, string][];
   message: string | null;
-  recovery: PreconditionVerdictSnapshot | null;
+  recovery?: PreconditionVerdictSnapshot | null;
 };
 
 /**
@@ -542,6 +543,7 @@ export type ModeloFormIssueLine = {
   address: ModeloFormAddressV1 | null;
   in_records: boolean;
   surface: SourceSurface | null;
+  compared_surface: SourceSurface | null;
   from_calculation: boolean;
   recalculates: boolean;
   finding_id: string | null;
@@ -814,7 +816,7 @@ export type ModeloFormStanding = "needs_you" | "waiting" | "done";
 export type ModeloFormStatedPriorValue = {
   source_words: string;
   origin_words: string;
-  family_id: string | null;
+  family_id?: string | null;
 };
 
 /**
@@ -1214,8 +1216,8 @@ export type PublicModeloFormField = {
   restorable: boolean;
   filers_own: boolean;
   stated_absent: AbsenceAttestationFamily | null;
-  stated_prior_value: ModeloFormStatedPriorValue | null;
-  statements: ModeloFormBindingStatement[];
+  stated_prior_value?: ModeloFormStatedPriorValue | null;
+  statements?: ModeloFormBindingStatement[];
   confirm_value: ModeloEditWireScalar;
   takes_typed_value: boolean;
   clearable: boolean;

@@ -3544,6 +3544,12 @@ application:
         for modelo %{source_modelo} is empty, and you have not confirmed for every
         period that nothing was withheld. Enter the payments for each payee in this
         modelo''s detail, or confirm each period in your profile.'
+      withholding_total_differs_from_periodic_returns: 'The total of withholdings
+        and payments on account in modelo %{modelo} %{filing_year} (%{summary_total}
+        EUR) does not match the sum of the modelo %{source_modelo} returns for %{checked_periods}
+        (%{periodic_total} EUR): they differ by %{gap} EUR. The modelo %{modelo} total
+        is calculated from your withholding records; a complementary return or a record
+        present on only one side can explain the difference.'
       xml_required_content_missing: Box %{box} is required by the official schema
         and has no value, so the export would refuse this declaration.
       xml_return_not_rendered: The declaration file can't be built from this calculation,
@@ -3852,6 +3858,9 @@ application:
         check_stated_figure: Check the figure you stated against your earlier declaration.
         compare_figures: Compare the figures, correct the one that is wrong, then
           calculate again.
+        compare_withholding_with_periodic_returns: 'Check your withholding records
+          and the quarterly returns: correct the record that is missing or extra,
+          or file a complementary return for the quarter that does not match.'
         correct_and_recalculate: Correct what it describes, then calculate and check
           again.
         declare_asset_again: Declare that asset again in this declaration.

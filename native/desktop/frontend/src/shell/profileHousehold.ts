@@ -14,8 +14,18 @@ import type { CallPlan } from "./hostCall";
 export type HouseholdGroupState =
   "rows" | "incomplete" | "none_declared" | "unknown" | "not_served";
 
+/** One answer of another leaf of the same person. Exactly one of `equals` and
+ * `contains` is set: `equals` holds when that leaf's answer is the token,
+ * `contains` when the token is one of the comma-joined tokens of it. */
+export type HouseholdLeafCondition = {
+  leaf: string;
+  equals: string | null;
+  contains: string | null;
+};
+
 /** One fact a person can state: its stored key, its words and its answer
- * set. `field_type` is the product's closed type token. */
+ * set. `field_type` is the product's closed type token. The group's leaves
+ * are also the form of a new person. */
 export type HouseholdLeaf = {
   leaf: string;
   label: string;
@@ -23,6 +33,15 @@ export type HouseholdLeaf = {
   field_type: string;
   required: boolean;
   choices: { value: string; label: string }[];
+  /** The leaf is asked only while one of these holds; empty means always. */
+  shown_when: HouseholdLeafCondition[];
+};
+
+/** A control that changes a group's people: its words and the registered
+ * operation it submits. */
+export type HouseholdRowAction = {
+  action_words: string;
+  target_operation_ids: string[];
 };
 
 /** One stored fact of a person. A leaf the person does not state is absent,
@@ -40,11 +59,11 @@ export type HouseholdRow = {
   facts: HouseholdFact[];
 };
 
-/** One person of a whole-family replacement: the facts it states, each under
- * the `leaf` key its group serves. A leaf left out is not stated, and the
- * product validates every fact. The same shape replaces the descendants and
- * the ascendants; a person left out of the set is removed, and an empty set
- * states that the group has none. */
+/** One person as a household change states it: the facts it states, each
+ * under the `leaf` key its group serves. A leaf left out is not stated, and
+ * the product validates every fact. The same shape is the one person added
+ * and each person of a whole-family replacement, where a person left out of
+ * the set is removed and an empty set states that the group has none. */
 export type HouseholdPersonEdit = {
   facts: { field_key: string; value: string }[];
 };
@@ -63,6 +82,12 @@ export type HouseholdGroup = {
    * declares one. A group at it takes no more. */
   max_rows: number | null;
   leaves: HouseholdLeaf[];
+  /** Adds one person built from `leaves`; null while the group takes no
+   * more people. */
+  add_row_action: HouseholdRowAction | null;
+  /** Removes one served person, named by its `row_index`; null while no
+   * person is stored. */
+  remove_row_action: HouseholdRowAction | null;
   rows: HouseholdRow[];
 };
 

@@ -40,10 +40,16 @@ from cadrumo.entrypoints.tui.historical_export import HistoricalFilingExportScre
 from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.installation.destination import installation_screen_factory
 from cadrumo.entrypoints.tui.ledger.routes import ledger_screen_factory
+from cadrumo.entrypoints.tui.ledger.tools import tool_action_ids
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceRefreshV1
 from cadrumo.entrypoints.tui.modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 from cadrumo.entrypoints.tui.modelo.workbench.factory import compose_installed_modelo_workbench_factory
-from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1, TuiScreenFactoryV1, build_destination_catalogue
+from cadrumo.entrypoints.tui.navigation import (
+    TuiActionCandidateV1,
+    TuiScreenContextV1,
+    TuiScreenFactoryV1,
+    build_destination_catalogue,
+)
 from cadrumo.entrypoints.tui.operations.catalogue import OperationCatalogueSourceV1
 from cadrumo.entrypoints.tui.operations.destination import OperationsDestinationV1
 from cadrumo.entrypoints.tui.reconciliation_export import ReconciliationExportScreen
@@ -389,8 +395,15 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         factories["workbench.installation"] = installation_screen_factory
         factories["workbench.reference"] = reference_screen_factory
         ledger = self._ledger_factory(generation)
+        # The ways out a Ledger tool performs are admitted where the Ledger is,
+        # so a served way out opens that tool rather than showing disabled.
+        action_candidates: tuple[TuiActionCandidateV1, ...] = ()
         if ledger is not None:
-            factories["workbench.ledger"] = ledger
+            factories["workbench.ledger"], ledger_actions = ledger
+            action_candidates = tuple(
+                TuiActionCandidateV1(action_candidate_id=action_id, destination="workbench.ledger")
+                for action_id in ledger_actions
+            )
         if generation.declarations_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
             factories["workbench.declarations"] = _DeclarationDestination(self, generation).factory
         aeat_sync = self._aeat_sync_factory(generation)
@@ -400,7 +413,9 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
             factories["workbench.withholding"] = withholding_screen_factory(withholding)
         if censo is not None:
             factories["workbench.censo"] = censo_screen_factory(censo)
-        return build_destination_catalogue(admissions=admissions, factories=factories)
+        return build_destination_catalogue(
+            admissions=admissions, factories=factories, action_candidates=action_candidates
+        )
 
     @staticmethod
     def _base_factories(
@@ -413,7 +428,8 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
 
         return {"workbench.home": home, "workbench.profile": profile_factory}
 
-    def _ledger_factory(self, generation: WorkbenchGenerationV1) -> TuiScreenFactoryV1 | None:
+    def _ledger_factory(self, generation: WorkbenchGenerationV1) -> tuple[TuiScreenFactoryV1, tuple[str, ...]] | None:
+        """The Ledger's factory and the operator actions its tools perform, or ``None`` when it is not admitted."""
         if generation.ledger_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:
             return None
         if generation.ledger.projection is None:
@@ -480,7 +496,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 tools=tools,
             )(context)
 
-        return create
+        return create, tool_action_ids(tools)
 
     def _aeat_sync_factory(self, generation: WorkbenchGenerationV1) -> TuiScreenFactoryV1 | None:
         if generation.aeat_sync_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:

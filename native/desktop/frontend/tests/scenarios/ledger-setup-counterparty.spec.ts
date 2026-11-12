@@ -89,23 +89,11 @@ test("counterparty replies and drafts belong to the exact lookup identity", asyn
     .poll(() => target.evaluate(() => window.__counterpartyPending))
     .toBe(5);
   await reply(4);
-  await expect(
-    button(answer, "desktop.ledger.counterparty.withdraw"),
-  ).toBeVisible();
+  // Nothing offers to withdraw what is stated for the counterparty.
+  await expect(target.locator(".ledger-counterparty-withdraw")).toHaveCount(0);
   await expect(answer).not.toContainText(
     label("desktop.ledger.counterparty.not_confirmed"),
   );
-  await button(answer, "desktop.ledger.counterparty.withdraw").click();
-  await expect(
-    answer.getByText(label("desktop.ledger.counterparty.withdraw_what"), {
-      exact: false,
-    }),
-  ).toContainText("B12345678");
-  await target.locator(".ledger-counterparty-withdraw").click();
-  await expect
-    .poll(() => target.evaluate(() => window.__counterpartyPending))
-    .toBe(6);
-  await reply(5);
   const writes = await target.evaluate(() =>
     window.__counterpartyRequests!.filter(
       (request) => request.action !== "view",
@@ -118,12 +106,11 @@ test("counterparty replies and drafts belong to the exact lookup identity", asyn
       country_code: "ES",
       note: "This draft belongs to B in ES",
     },
-    { action: "withdraw", tax_identifier: "B12345678", country_code: "ES" },
   ]);
-  expect(writes[1]).not.toHaveProperty("note");
+  expect(writes).toHaveLength(1);
 });
 
-for (const action of ["confirm", "withdraw"] as const) {
+for (const action of ["confirm"] as const) {
   test(`an uncertain counterparty ${action} is not settled by a resolution-only lookup`, async ({
     page: target,
   }) => {
@@ -143,19 +130,13 @@ for (const action of ["confirm", "withdraw"] as const) {
     await target.evaluate(() =>
       window.__scenarioLedger!.nextWrites(["unknown"]),
     );
-    if (action === "confirm") {
-      await field(
-        answer,
-        "desktop.ledger.counterparty.scope_label",
-      ).selectOption("eu_member");
-      await field(answer, "desktop.ledger.counterparty.asserted_by").fill(
-        "Fixture operator",
-      );
-      await target.locator(".ledger-counterparty-confirm").click();
-    } else {
-      await button(answer, "desktop.ledger.counterparty.withdraw").click();
-      await target.locator(".ledger-counterparty-withdraw").click();
-    }
+    await field(answer, "desktop.ledger.counterparty.scope_label").selectOption(
+      "eu_member",
+    );
+    await field(answer, "desktop.ledger.counterparty.asserted_by").fill(
+      "Fixture operator",
+    );
+    await target.locator(".ledger-counterparty-confirm").click();
     const pause = target.locator(".ledger-paused");
     await expect(pause).toBeVisible();
     const before = await target.evaluate(

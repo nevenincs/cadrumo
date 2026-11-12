@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { CountryEditor } from "@/components/editors/CountryEditor";
 import { NotesEditor } from "@/components/editors/NotesEditor";
 import { TaxIdEditor } from "@/components/editors/TaxIdEditor";
@@ -9,6 +9,7 @@ import { Icon } from "@/components/ui/icon";
 import { facts, labelled } from "@/shell/compose";
 import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationSetup";
+import type { CounterpartyAsk } from "../../../shell/counterpartyAsk";
 import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
@@ -43,14 +44,12 @@ type Draft = {
   state: string;
   note: string;
   actor: string;
-  withdrawing: boolean;
 };
 const EMPTY_DRAFT: Draft = {
   scope: "",
   state: "",
   note: "",
   actor: "",
-  withdrawing: false,
 };
 const identityOf = (taxId: string, country: string) =>
   JSON.stringify([taxId.trim(), country || null]);
@@ -58,24 +57,29 @@ const identityOf = (taxId: string, country: string) =>
 /**
  * What the ledger answers for one counterparty, by its tax id: where it is
  * established and which State identifies it for VAT, and where each answer
- * comes from. The person confirms the facts or withdraws an earlier
- * confirmation; each is its own write.
+ * comes from, and the name it is filed under. The person confirms the facts or
+ * states the name; each is its own write. Opened from a way out (`ask`), it starts on the counterparty and kind
+ * the way out bound, and reads it at once where it names the counterparty.
  */
-export function CounterpartiesPane({ port, locale }: SetupProps) {
+export function CounterpartiesPane({
+  port,
+  locale,
+  ask = null,
+}: SetupProps & { ask?: CounterpartyAsk | null }) {
   const t = useStrings();
   const taxIdLimit = useTextLimit("counterparty_tax_id");
   const noteLimit = useTextLimit("counterparty_note");
   const actorLimit = useTextLimit("counterparty_asserted_by");
-  const [taxId, setTaxId] = useState("");
+  const [taxId, setTaxId] = useState(ask?.tax_identifier ?? "");
   const [viewed, setViewed] = useState<{
     identity: string;
     call: SetupCall<LedgerCounterpartyResult>;
   } | null>(null);
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState(ask?.country_code ?? "");
   const identity = identityOf(taxId, country);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const draft = drafts[identity] ?? EMPTY_DRAFT;
-  const { scope, state, note, actor, withdrawing } = draft;
+  const { scope, state, note, actor } = draft;
   const [conflict, setConflict] = useState<{
     identity: string;
     context: [string, string][];
@@ -94,7 +98,6 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
   const setScope = (scope: string) => setDraft({ scope });
   const setState = (state: string) => setDraft({ state });
   const setNote = (note: string) => setDraft({ note });
-  const setWithdrawing = (withdrawing: boolean) => setDraft({ withdrawing });
   const generation = useRef(0);
   const answerId = useId();
   useLayoutEffect(
@@ -144,6 +147,15 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
     );
     if (mine === generation.current) setViewed({ identity: requested, call });
   };
+  // A way out that names the counterparty opens on its answer.
+  const askedView = useRef(Boolean(ask?.tax_identifier));
+  const latestView = useRef(view);
+  latestView.current = view;
+  useEffect(() => {
+    if (!askedView.current) return;
+    askedView.current = false;
+    void latestView.current();
+  }, []);
   const call = viewed?.identity === identity ? viewed.call : null;
   const result = call?.kind === "done" ? call.result : null;
   // VIEW serves a resolution, not exact stored facts. An absent fact cannot
@@ -224,33 +236,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
       await view();
     }
   };
-  const withdraw = async () => {
-    if (!result || write.busy) return;
-    const mine = generation.current;
-    setWriteIdentity(identity);
-    setAttribution(null);
-    const done = await write.run(
-      () =>
-        setupCall(
-          port,
-          "ledger.counterparty",
-          {
-            action: "withdraw",
-            tax_identifier: result.tax_identifier,
-            country_code: country || null,
-          },
-          true,
-        ),
-      unknownLanding,
-    );
-    setWithdrawing(false);
-    if (done.kind === "done" && mine === generation.current) await view();
-  };
   const answer = result?.resolution;
-  const confirmed =
-    (result?.facts !== null && result?.facts !== undefined) ||
-    answer?.territorial_source === "operator_assertion" ||
-    answer?.identification_source === "operator_assertion";
   const targetWords =
     result &&
     facts(t, [
@@ -280,6 +266,15 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
 
   return (
     <Panel title={t("desktop.ledger.counterparty.title")}>
+      {ask && (
+        <Alert
+          icon={<Icon name="info" />}
+          className="ledger-counterparty-asked"
+          data-asked-kind={ask.kind ?? undefined}
+        >
+          {t("desktop.ledger.counterparty.filing_name.asked")}
+        </Alert>
+      )}
       <form
         className="flex flex-wrap items-end gap-2"
         onSubmit={(event) => {
@@ -451,49 +446,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
                 {t("desktop.ledger.counterparty.confirm")}
               </Button>
             </WriteHold>
-            {confirmed && (
-              <Button
-                size="sm"
-                variant="outline"
-                aria-expanded={withdrawing}
-                aria-describedby={answerId}
-                onClick={() => setWithdrawing(!withdrawing)}
-              >
-                {t("desktop.ledger.counterparty.withdraw")}
-              </Button>
-            )}
           </div>
-          {withdrawing && (
-            <Alert tone="warning" icon={<Icon name="alert" />}>
-              <span>
-                {facts(t, [
-                  targetWords,
-                  t("desktop.ledger.counterparty.withdraw_what"),
-                ])}
-              </span>
-              <span className="flex gap-2">
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  onClick={() => setWithdrawing(false)}
-                >
-                  {t("desktop.ledger.form.cancel")}
-                </Button>
-                <WriteHold>
-                  <Button
-                    size="xs"
-                    variant="destructive"
-                    className="ledger-counterparty-withdraw"
-                    aria-describedby={answerId}
-                    disabled={write.busy}
-                    onClick={() => void withdraw()}
-                  >
-                    {t("desktop.ledger.counterparty.withdraw_confirm")}
-                  </Button>
-                </WriteHold>
-              </span>
-            </Alert>
-          )}
           <CallLine
             call={writeIdentity === identity ? write.last : null}
             onReread={() => void view(result.tax_identifier)}
@@ -512,6 +465,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
             result={result}
             country={country}
             actor={actor}
+            initialKind={ask?.kind ?? null}
             onSaved={() => view(result.tax_identifier)}
           />
           {conflict?.identity === identity && (

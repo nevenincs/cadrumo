@@ -74,21 +74,10 @@ export type ProfileEdit =
     }
   | { kind: "remove_row"; section_key: string; row_key: string }
   | { kind: "complete" }
-  /** The whole stated family at once: every descendant and the count are
-   * replaced with exactly these people, so a person left out is removed.
-   * Each fact is under a key of the product's family vocabulary. */
-  | {
-      kind: "descendants";
-      rows: HouseholdPersonEdit[];
-    }
-  /** The whole stated set of ascendants at once, with the same replacement as
-   * the descendants: every ascendant and the count are replaced with exactly
-   * these people. The product refuses more rows than the declaration's design
-   * holds and serves the reason in the person's language. */
-  | {
-      kind: "ascendants";
-      rows: HouseholdPersonEdit[];
-    }
+  /** A change of the descendants (`descendants`) or the ascendants
+   * (`ascendants`) against the revision the household was read at. */
+  | ({ kind: "descendants" } & HouseholdChange)
+  | ({ kind: "ascendants" } & HouseholdChange)
   /** What one ejercicio's imputation election states. Each answer is the
    * token a served choice carries: an empty token clears the ejercicio's
    * statement and null leaves what the profile states. */
@@ -106,6 +95,19 @@ export type ProfileEdit =
       clave_movil_route: string | null;
       certificate: string | null;
     };
+/** What a household change states, exactly one of three. `rows` is the
+ * whole set: every person and the count are replaced with exactly these
+ * people, so a person left out is removed and an empty set states that the
+ * group has none. `add_row` is one person added to the people stored at the
+ * expected revision, and `remove_row_index` takes out the person the
+ * household read served at that index; neither resends the people left
+ * alone, which the product composes. The product refuses more people than the
+ * declaration's design holds, and an index with no stored person, and serves
+ * the reason in the person's language. */
+export type HouseholdChange =
+  | { rows: HouseholdPersonEdit[] }
+  | { add_row: HouseholdPersonEdit }
+  | { remove_row_index: string };
 export type ProfileChange = {
   profile_id: string;
   expected_revision: number;

@@ -24,7 +24,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.ids import RelationId
-from .....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
+from .....domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -45,8 +45,8 @@ _M202_MODALIDAD_BASE_PAGO_CASILLA: CasillaId = validated_casilla_id("34")
 
 @cache
 def _filing_year() -> int:
-    """Return the newest supported exercise whose Modelo 200 edition reaches filing grade."""
-    return filing_grade_exercises("200")[-1]
+    """Return the newest supported exercise an authored Modelo 200 edition governs; the fold reads at calculation grade."""
+    return supported_authored_exercises("200")[-1]
 
 
 def _m202_observation(

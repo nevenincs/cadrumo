@@ -34,6 +34,7 @@ from .verification_preconditions import (
 )
 from .verification_repository_ports import VerificationRepositoryBundle
 from .withholding_count_reconciliation import append_withholding_count_reconciliation_findings
+from .withholding_total_reconciliation import withholding_total_reconciliation_finding
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -105,6 +106,16 @@ def append_model_specific_findings(
     settled_row_finding = modelo_193_settled_row_verification_finding(work_unit, target)
     if settled_row_finding is not None:
         findings.append(settled_row_finding)
+    # A warning without a precondition failure: the summary keeps its records' sum, and a
+    # complementaria can leave the periodic returns legitimately apart from it.
+    withholding_total_finding = withholding_total_reconciliation_finding(
+        work_unit=work_unit,
+        target=target,
+        observation_repository=observation_repository,
+        operation=operation,
+    )
+    if withholding_total_finding is not None:
+        findings.append(withholding_total_finding)
 
 
 def append_readable_model_findings(

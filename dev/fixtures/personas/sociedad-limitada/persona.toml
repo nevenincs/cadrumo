@@ -56,6 +56,7 @@ as_of = { year = "horizon", month = 2, day = 16 }
 # Impuesto sobre Sociedades.
 [fields]
 "taxpayer_type.tributacion_estado_porcentaje" = "100"
+"taxpayer_type.pago_fraccionado_art_40_3_elected" = "false"
 
 [[activities]]
 description = "Desarrollo y mantenimiento de aplicaciones y plataformas web"
@@ -140,6 +141,19 @@ sources = [
 ]
 derivation = "Modalidad de base imponible del art. 40.3 LIS: la sociedad nunca la eligió en declaración censal y su INCN no supera 6000000.00, así que no aplica; ningún pago por esta modalidad en abril, octubre ni diciembre: 0.00."
 legal_ref = ["ley-27-2014:art-40-3"]
+
+# The April instalment of the current year (art. 40.2 LIS) is 18 % of the cuota of the last Modelo 200
+# whose deadline had passed on 1 April: that of horizon-2, whose cuota was 0.00 (history above). The company
+# never elected the art. 40.3 modality, stated as false in [fields].
+[[attested_prior_values]]
+modelo = "202"
+period = "1P"
+year = "horizon"
+binding = "modelo-202-cuota-base-ejercicio-anterior"
+value = "0.00"
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "La cuota del Modelo 200 de horizon-2 fue 0.00 al compensar toda la base con bases imponibles negativas, así que el pago fraccionado de abril (18 % de esa cuota, art. 40.2 LIS) es 0.00."
+legal_ref = ["ley-27-2014:art-40"]
 
 # At the clock every quarterly IVA return of the fiscal year is past its window,
 # so the company has filed each one. Every quarter was to pay, so no compensation was

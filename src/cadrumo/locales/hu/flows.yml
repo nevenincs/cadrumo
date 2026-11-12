@@ -71,6 +71,20 @@ flows:
     field_unavailable: Nem elérhető profilmező
     help:
       about: 'Erről a beállításról:'
+    household:
+      close: Bezárás
+      full: Ez a csoport megtelt, ezért nem adhatsz hozzá több személyt.
+      read_again: Újraolvasás
+      read_failed: A családodat nem sikerült beolvasni. Olvasd be újra, hogy még egyszer
+        megpróbáld.
+      reading: A családod beolvasása…
+      state_none_declared: Azt adtad meg, hogy nincs egy sem.
+      state_not_served: A profilod nem kínálja ezt a csoportot.
+      state_unknown: Ehhez a csoporthoz semmi sincs rögzítve. Ez nem azonos azzal,
+        hogy nincs egy sem.
+      title: Család
+      unknown_outcome: Lehet, hogy a módosítás mentésre került, de az is lehet, hogy
+        nem. Mielőtt bármi mást módosítasz, olvasd be újra a családodat.
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'

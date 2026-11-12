@@ -41,6 +41,7 @@ from typing import Annotated, NamedTuple
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core.aggregation import BindingSourceKind, InvoiceDevengoRank
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -996,11 +997,13 @@ def _layout_hydrated_revision(
         return context.revision
     # Membership verification also uses the authority's lightweight revision
     # projection. Hydrate its wire geometry through the same pinned snapshot,
-    # while requiring the binding declarations we already resolved to agree.
+    # while requiring the binding declarations we already resolved to agree. Calculation
+    # asks for the amount-computing rung; an edition without export layouts still reaches it.
     revision = operation.snapshot(
         context.modelo,
         filing_year=context.filing_year,
         period=context.period.registry_token,
+        grade=RegistryAuthorityGrade.CALCULATION,
     ).revision
     if revision.id != context.revision.id or revision.bindings != context.revision.bindings:
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))

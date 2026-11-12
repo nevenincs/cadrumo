@@ -391,6 +391,7 @@ export function entryOperations(
       taxable_base: text(request.taxable_base),
       iva_rate: text(request.iva_rate),
       iva_amount: text(request.iva_amount),
+      recargo_amount: null,
       iva_category: text(request.iva_category),
       deduction_fact_kind: text(request.deduction_fact_kind),
       investment_asset_id: text(request.investment_asset_id),
