@@ -19,6 +19,15 @@ test (the tool never runs git); with the generation and database digest it is wr
 to ``<out>.meta.json``, which ``render`` prints in the table header (``--meta`` names
 another sidecar). ``run`` appends to ``--out``; a filtered run writes only its rows. ``check``
 exits 1 when a row the baseline holds green is not green in the rows given.
+
+Audit which returns the application's calendar marks applicable that the table does not run,
+at the registry's own horizon only::
+
+    python -m dev.acceptance.persona_table coverage --out .tmp/table/coverage.json
+
+``coverage`` materialises each persona as the obligation tests do, reads its overview calendar with
+suppressed obligations shown for every envelope year, writes the comparison as JSON to ``--out``
+and prints a Markdown summary grouped by persona.
 """
 
 from __future__ import annotations
@@ -35,15 +44,18 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
-from cadrumo.tests.personas import YearEnvelope
+from cadrumo.tests.personas import YearEnvelope, persona_ids
 
+from .coverage import OUT_ENV, PERSONAS_ENV, compare, read_observations, render_markdown
 from .diff import diff_tables, render_diff, row_id
 from .provenance import ProvenanceError, meta_path, prepare_authority, read_meta, write_meta
 from .render import render_table, summary_line
-from .rows import GREEN, TableRow, latest_rows, read_rows, with_unchecked
+from .rows import GREEN, TableRow, latest_rows, owed_rows, read_rows, with_unchecked
+from .unchecked import persona_at
 
 BASELINE = Path(__file__).with_name("baseline")
 _SWEEP = Path(__file__).with_name("sweep.py")
+_CALENDAR_SWEEP = Path(__file__).with_name("calendar_sweep.py")
 
 
 @cache
@@ -99,6 +111,34 @@ def _run(args: argparse.Namespace) -> int:
         "no:cacheprovider",
     ]
     return int(pytest.main(command))
+
+
+def _coverage(args: argparse.Namespace) -> int:
+    out = args.out.resolve()
+    observed = out.with_name(out.name + ".calendar.jsonl")
+    observed.unlink(missing_ok=True)
+    os.environ.update({OUT_ENV: str(observed), PERSONAS_ENV: ",".join(args.persona)})
+    command = [str(_CALENDAR_SWEEP), "-m", "integration", "-n", str(args.workers), "--dist=load", "-q"]
+    status = int(pytest.main([*command, "-p", "no:cacheprovider"]))
+    if not observed.exists():
+        sys.stderr.write(f"coverage not compared: the calendar collector wrote nothing (pytest {status})\n")
+        return 2
+    envelope = _envelope()
+    horizon = envelope.horizon
+    wanted = [persona_id for persona_id in persona_ids() if not args.persona or persona_id in args.persona]
+    personas = {persona_id: persona_at(persona_id, horizon, envelope) for persona_id in wanted}
+    table = {
+        persona_id: [(row.modelo, row.year, row.period) for row in owed_rows(persona, horizon, envelope)]
+        for persona_id, persona in personas.items()
+    }
+    days = {persona_id: persona.as_of.resolve(envelope) for persona_id, persona in personas.items()}
+    observations, refusals = read_observations(observed)
+    report = compare(horizon, table, observations, days, refusals)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(report.to_json(), encoding="utf-8", newline="\n")
+    observed.unlink()
+    sys.stdout.write(render_markdown(report))
+    return 0 if status == 0 else 1
 
 
 def _render(args: argparse.Namespace) -> int:
@@ -160,6 +200,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     run.add_argument("--year", action="append", type=int, default=[])
     run.add_argument("--workers", default="auto")
     run.set_defaults(handler=_run)
+
+    coverage = commands.add_parser(
+        "coverage", help="compare the returns the calendar marks applicable with the rows the table runs"
+    )
+    coverage.add_argument("--out", type=Path, required=True)
+    coverage.add_argument("--persona", action="append", default=[])
+    coverage.add_argument("--workers", default="auto")
+    coverage.set_defaults(handler=_coverage)
 
     render = commands.add_parser("render", help="render rows as a Markdown table")
     render.add_argument("rows", type=Path, nargs="+")

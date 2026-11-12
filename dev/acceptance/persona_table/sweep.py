@@ -11,7 +11,6 @@ itself breaks; a red return is a row, not a failed case.
 
 from __future__ import annotations
 
-import dataclasses
 import os
 import re
 from collections.abc import Mapping
@@ -94,11 +93,10 @@ from .rows import (
     PlannedRow,
     Stage,
     TableRow,
-    ended,
     in_force,
     is_unsupported,
     not_run,
-    planned_rows,
+    owed_rows,
     replay_horizons,
     replayed,
     select,
@@ -164,9 +162,7 @@ def _sources(modelo: str) -> frozenset[str]:
 
 def _plan(persona_id: str, horizon: int) -> tuple[list[PlannedRow], frozenset[tuple[str, str, int, str]]]:
     """The rows the replay runs, in chain order, and the keys of the selected rows it writes."""
-    persona, envelope = _persona_at(persona_id, horizon), _envelope()
-    today = persona.as_of.resolve(dataclasses.replace(envelope, horizon=horizon))
-    rows = ended(planned_rows(persona, horizon, envelope), today)
+    rows = owed_rows(_persona_at(persona_id, horizon), horizon, _envelope())
     selected = select(rows, modelos=_listed(MODELOS_ENV), years=tuple(int(year) for year in _listed(YEARS_ENV)))
     return replayed(rows, selected, _sources), frozenset(row.key for row in selected)
 

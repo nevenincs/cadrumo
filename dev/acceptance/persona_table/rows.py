@@ -331,6 +331,12 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     ]
 
 
+def owed_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list[PlannedRow]:
+    """The rows the replay of ``persona`` under ``horizon`` runs: the planned ones whose period ended by its day."""
+    today = persona.as_of.resolve(dataclasses.replace(envelope, horizon=horizon))
+    return ended(planned_rows(persona, horizon, envelope), today)
+
+
 def unchecked_items(persona: Persona, envelope: YearEnvelope, key: tuple[str, int | None, str]) -> tuple[str, ...]:
     """The sorted items the persona states for return ``key`` (modelo, year, period) that are not compared.
 
@@ -575,6 +581,7 @@ __all__ = [
     "is_unsupported",
     "latest_rows",
     "not_run",
+    "owed_rows",
     "planned_rows",
     "read_rows",
     "replay_horizons",
