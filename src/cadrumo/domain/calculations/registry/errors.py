@@ -23,6 +23,7 @@ from typing import Self
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 from ....core.modelo import Modelo
+from ....core.text_fold import code_point_label
 from .ids import RevisionId
 
 
@@ -344,7 +345,7 @@ class FixedWidthUnrepresentableCharacterError(RegistryValidationError):
         prefix = "fixed-width value" if field_id is None else f"export field {field_id!r} value"
         super().__init__(
             f"{prefix} holds a character its record cannot write",
-            context={"code_point": f"U+{ord(character):04X}"},
+            context={"code_point": code_point_label(character)},
         )
 
 

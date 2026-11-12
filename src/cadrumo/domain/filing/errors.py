@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
+from ...core.text_fold import code_point_label
 
 
 class ModeloDraftError(CadrumoError):
@@ -238,7 +239,7 @@ class FilingExportUnrepresentableCharacterError(FilingExportValidationError):
         self.record_type: str | None = record_type
         super().__init__(
             f"export field {field_id!r} holds a character its record cannot write",
-            context={"field_id": field_id, "code_point": f"U+{ord(character):04X}"},
+            context={"field_id": field_id, "code_point": code_point_label(character)},
             precondition_verdict=precondition_verdict,
         )
 
