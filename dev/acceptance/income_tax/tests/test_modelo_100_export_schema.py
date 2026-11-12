@@ -15,6 +15,7 @@ import pytest
 from lxml import etree
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
@@ -22,9 +23,11 @@ from cadrumo.adapters.persistence.profile.tests.published_authority_support impo
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
 from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
 from cadrumo.application.filing.runtime import build_runtime_schema_provider
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
+from cadrumo.application.modelo.household_row_fact_gate import ModeloHouseholdRowFactUnstatedError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
@@ -34,9 +37,14 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
+from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from cadrumo.domain.modelos.errors import ModeloExportError
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
+from cadrumo.domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingSeverity,
+    VerificationReport,
+)
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.eligible_descendants_support import eligible_descendants
@@ -72,6 +80,7 @@ __all__ = ["secure_objects"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _ACTIVITY_KEY = "A05"
+_DESCENDANT_NAME_FACT = "renta_family.descendiente.apellidos_nombre"
 _ACTIVITY_BLOCK = "DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta"
 
 
@@ -148,6 +157,8 @@ def _seed_filer(*, criterion: str, family: tuple[UserProfileFact, ...] = ()) -> 
 def _calculate(objects: SecureObjectRepository, *, activity_key: str | None) -> CalculationRevision:
     # The filer's result is a refund, so the export's account page needs the designated account.
     register_refund_account(objects)
+    # The activity states it held no existencias, so the stock variation and purchase casillas read zero.
+    InventoryLedgerRepository(objects=objects).save(InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),)))
     persist_ledger(objects)
     seed_prior_year_m100(objects)
     for period, result in OFFICIAL_M130_C19.items():
@@ -242,8 +253,8 @@ class _CollectingPayloadConsumer:
         self.payloads.append(payload)
 
 
-def _refused_by_verification(revision: CalculationRevision) -> tuple[ModeloVerificationFinding, ...]:
-    """Verify on the real path and return the content findings of a report that must not grant."""
+def _verify(revision: CalculationRevision) -> VerificationReport:
+    """Verify on the real path."""
     report = verify_revision_for_test(
         revision.calculation_revision_id,
         actor="schema-acceptance",
@@ -251,12 +262,15 @@ def _refused_by_verification(revision: CalculationRevision) -> tuple[ModeloVerif
         settings=ready_clave_settings(TAX_ID),
         operator_scope_ports=OPERATOR_SCOPE_PORTS,
     )
+    assert isinstance(report, VerificationReport)
+    return report
+
+
+def _refused_by_verification(revision: CalculationRevision) -> tuple[ModeloVerificationFinding, ...]:
+    """Verify on the real path and return the content findings of a report that must not grant."""
+    report = _verify(revision)
     assert report.granted_verificado_completo is False
-    return tuple(
-        finding
-        for finding in report.findings
-        if isinstance(finding, ModeloVerificationFinding) and finding.message_locale_key == _REQUIRED_CONTENT_FINDING
-    )
+    return tuple(finding for finding in report.findings if finding.message_locale_key == _REQUIRED_CONTENT_FINDING)
 
 
 def _sealed(revision: CalculationRevision, objects: SecureObjectRepository) -> None:
@@ -357,13 +371,17 @@ def test_a_claimed_descendant_minimum_with_no_identifying_row_blocks_verificatio
     assert Decimal(revision.casilla_values[_box("MDES")]) > 0
     output = tmp_path / "modelo-100.xml"
 
-    (finding,) = _refused_by_verification(revision)
-    assert "Hijo" in str(finding.message_facts["box"])
+    # The design requires the surnames and name on every Hijo, so the unstated fact is refused with its own
+    # typed reason before any XML is built.
+    with pytest.raises(ModeloHouseholdRowFactUnstatedError) as unverified:
+        _verify(revision)
+    assert (unverified.value.context or {})["field"] == _DESCENDANT_NAME_FACT
+    assert (unverified.value.context or {})["action"] == "verify"
 
     _sealed(revision, secure_objects)
-    with pytest.raises(ModeloExportError) as refused:
+    with pytest.raises(ModeloHouseholdRowFactUnstatedError) as refused:
         _export(revision, secure_objects, output)
 
-    assert str(refused.value.translated_message).endswith("xml_value_required_missing")
-    assert (refused.value.context or {})["box"] == finding.message_facts["box"]
+    assert (refused.value.context or {})["field"] == _DESCENDANT_NAME_FACT
+    assert (refused.value.context or {})["action"] == "export"
     assert not output.exists()
