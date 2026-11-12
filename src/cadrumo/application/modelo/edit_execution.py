@@ -693,7 +693,11 @@ def _capture_edit_receipt(
 
 
 def _unresolved_binding_edit_refusal(
-    context: Mapping[str, object], revision: ModeloRevision, code: str
+    context: Mapping[str, object],
+    revision: ModeloRevision,
+    code: str,
+    *,
+    downstream: ModeloEditDownstreamRefusalV1 | None,
 ) -> ModeloEditExecutionNoEffectV1 | None:
     """Validate the closed missing-binding producer's context against the actual revision."""
     # Only this closed producer identifies an unresolved bound source.
@@ -716,6 +720,7 @@ def _unresolved_binding_edit_refusal(
             facts=(code, "calculation_source_unresolved"),
             evidence=binding_ids,
             condition="inspect the source required by this failed recalculation before resubmitting",
+            downstream=downstream,
         )
     return None
 
@@ -788,6 +793,17 @@ def _missing_required_binding_ids(
     return named[:_MAX_REFUSAL_BINDING_IDS]
 
 
+def _source_downstream(error: BaseException) -> ModeloEditDownstreamRefusalV1 | None:
+    """The refusal of a source the recalculation could not resolve, kept to settle as itself.
+
+    An unstated earlier-ejercicio carry keeps its own named settlement with the
+    door to state the carries.
+    """
+    if not isinstance(error, CadrumoError) or isinstance(error, ModeloPriorCarryAbsenceUnstatedError):
+        return None
+    return downstream_refusal(error)
+
+
 def pre_effect_refusal(
     error: BaseException, *, revision: ModeloRevision | None = None
 ) -> ModeloEditExecutionNoEffectV1:
@@ -798,7 +814,11 @@ def pre_effect_refusal(
     code = get_registered_error_code(error).code
     if revision is not None:
         context = _unresolved_source_context(error, revision)
-        refusal = None if context is None else _unresolved_binding_edit_refusal(context, revision, code)
+        refusal = (
+            None
+            if context is None
+            else _unresolved_binding_edit_refusal(context, revision, code, downstream=_source_downstream(error))
+        )
         if refusal is not None:
             return _with_prior_carry_door(refusal, error)
     if isinstance(error, ModeloPriorCarryAbsenceUnstatedError):
