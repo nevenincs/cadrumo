@@ -40,7 +40,8 @@ from ..applicability_modelo202 import (
     derive_modelo_202_modality,
     resolve_modelo_202_art_40_3_incn_threshold,
 )
-from ..formula_runtime import calculate_registry_snapshot
+from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from .modelo_200_casilla_ids import (
     M200_BIN_APLICADA_CASILLA,
     M200_BONIFICACIONES_CASILLA,
@@ -67,30 +68,34 @@ _FORM_BINDING = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
 _INCN_BINDING = "modelo-200-profile-incn-prior-12-months"
 _ESTADO_PCT_BINDING = "modelo-200-profile-tributacion-estado-porcentaje"
+_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_TIPO_GRAVAMEN_CASILLA")
+# Caracteres de la declaración (page 1): cooperativa protegida, and entidad acogida a la Ley 49/2002.
+_COOPERATIVA_PROTEGIDA: CasillaId = validated_casilla_id("00017", surface="_COOPERATIVA_PROTEGIDA")
+_REGIMEN_LEY_49_2002: CasillaId = validated_casilla_id("00001", surface="_REGIMEN_LEY_49_2002")
 _M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "DP200014B:00599",
     surface="_M200_CUOTA_EJERCICIO_CASILLA",
 )
 
 
-def _snapshot():
-    return published_snapshot(
-        "200", filing_year=_DT44_FIRST_TRANSITIONAL_EXERCISE, period="0A", grade=RegistryAuthorityGrade.CALCULATION
-    )
+def _snapshot(exercise: int = _DT44_FIRST_TRANSITIONAL_EXERCISE):
+    return published_snapshot("200", filing_year=exercise, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _cuota_for(
+def _result_for(
     *,
     base: Decimal,
     form: str,
     new_entity: Decimal,
     incn: Decimal,
     filing_period: date = _PERIOD_END_BEFORE_DT44,
-) -> Decimal:
-    result = calculate_registry_snapshot(
-        _snapshot(),
+    marked: tuple[CasillaId, ...] = (),
+) -> RegistryCalculationResult:
+    """Run the exercise the period closes with the revision that governs that exercise."""
+    return calculate_registry_snapshot(
+        _snapshot(filing_period.year),
         inputs={
-            # 00552 is computed: max(00550 - 01032 - 00547, 0); 00550 is
+            # 00552 is computed: 00550 - 01032 - 00547; 00550 is
             # computed: 00501 + DP200013:00417 - DP200013:00418. Supply the
             # leaf operator-input casillas (00501 resultado contable + zero
             # corrections + zero reserva + zero BIN aplicada) so the chain
@@ -104,6 +109,7 @@ def _cuota_for(
             M200_BONIFICACIONES_CASILLA: Decimal("0"),
             M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
             M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
+            **dict.fromkeys(marked, Decimal("1")),
         },
         enum_binding_values={_FORM_BINDING: form},
         binding_values={
@@ -122,7 +128,20 @@ def _cuota_for(
         },
         date_context={"filing_period": filing_period},
     )
-    return result.values[M200_CUOTA_INTEGRA_CASILLA]
+
+
+def _cuota_for(
+    *,
+    base: Decimal,
+    form: str,
+    new_entity: Decimal,
+    incn: Decimal,
+    filing_period: date = _PERIOD_END_BEFORE_DT44,
+    marked: tuple[CasillaId, ...] = (),
+) -> Decimal:
+    return _result_for(
+        base=base, form=form, new_entity=new_entity, incn=incn, filing_period=filing_period, marked=marked
+    ).values[M200_CUOTA_INTEGRA_CASILLA]
 
 
 # ---------------------------------------------------------------------
@@ -156,41 +175,43 @@ def test_general_entity_cuota_matches_aeat_manual_worked_example_page_401() -> N
     )
 
 
-def test_cooperativa_takes_the_lis_art_29_protected_rate() -> None:
-    """A cooperativa fiscalmente protegida is taxed at the LIS Art. 29 20% rate.
+def test_cooperativa_protegida_cuota_is_left_to_its_cooperative_split() -> None:
+    """A cooperativa fiscalmente protegida states 20 in 00558 but no single-rate cuota.
 
-    LIS Art. 29.2 (BOE-A-2014-12328) sets the rate for cooperativas
-    fiscalmente protegidas at 20% (and the general activities of these
-    cooperativas remain at 25% — out of scope here). The dispatch must
-    route a cooperativa profile to the protected-rate bracket; the
-    expected cuota for a 1.000.000 base is 200.000, derived from the
-    BOE-published LIS Art. 29.2 rate the registry encodes.
+    Its cuota íntegra is "[00562] = [00560] + [00210] - [00480] + [00408] -
+    [01037] - [00561]", built from the resultados cooperativos and
+    extracooperativos (manual práctico de Sociedades 2024, L26990), which the
+    registry does not author; the 20 of 00558 is stated "a los únicos efectos de
+    cumplimentar la casilla [00558]" (L14752-14755). So 00562 has no value
+    under a typed reason instead of 1.000.000 x 20 %.
     """
-    cuota = _cuota_for(
+    result = _result_for(
         base=Decimal("1000000"),
         form="cooperativa",
         new_entity=Decimal("0"),
         incn=Decimal("10000000"),
+        marked=(_COOPERATIVA_PROTEGIDA,),
     )
-    assert cuota == Decimal("200000.00"), (
-        "cuota íntegra at the LIS Art. 29.2 cooperativa protected 20% rate must equal 200.000 for a 1.000.000 base"
-    )
+    assert result.values[_TIPO_GRAVAMEN_CASILLA] == Decimal("20")
+    assert M200_CUOTA_INTEGRA_CASILLA not in result.values
+    assert {
+        outcome.reason for outcome in result.unresolved_outcomes if outcome.casilla_id == M200_CUOTA_INTEGRA_CASILLA
+    } == {RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED}
 
 
 def test_non_profit_takes_the_ley_49_2002_special_regime_rate() -> None:
-    """An entidad sin fines lucrativos is taxed at the Ley 49/2002 10% special rate.
+    """An entity under the Ley 49/2002 régimen (casilla 00001) is taxed at 10%.
 
-    LIS Art. 29.4 (BOE-A-2014-12328) plus the Ley 49/2002 régimen
-    fiscal especial sets the rate for entidades sin fines lucrativos
-    parcialmente exentas at 10%. The dispatch must route a non-profit
-    profile to that bracket; for a 1.000.000 base the cuota is 100.000
-    per the BOE-published 10% rate the registry encodes.
+    "Entidades a las que sea de aplicación el régimen fiscal establecido en la
+    Ley 49/2002 10 por 100" (manual práctico de Sociedades 2024, L14724); for a
+    1.000.000 base the cuota is 100.000.
     """
     cuota = _cuota_for(
         base=Decimal("1000000"),
         form="sin_fines_lucrativos",
         new_entity=Decimal("0"),
         incn=Decimal("10000000"),
+        marked=(_REGIMEN_LEY_49_2002,),
     )
     assert cuota == Decimal("100000.00")
 
@@ -330,9 +351,9 @@ def test_new_entity_override_applies_15_percent_regardless_of_subform() -> None:
 
     LIS Art. 29 par. 4 (BOE-A-2014-12328) sets a 15% rate for entities
     in their first two profit-making periods, regardless of sub-form
-    (a sociedad limitada, a cooperativa, or a non-profit alike). The
-    override layers on top of the sub-form lane via the if_then_else
-    predicate over ``new_entity_first_two_profit_periods``.
+    (a sociedad limitada or a sociedad anónima alike). The override
+    layers on top of the sub-form lane via the if_then_else predicate
+    over ``new_entity_first_two_profit_periods``.
 
     For a 1.000.000 base the override cuota is 150.000 — the AEAT
     published 15% rate applied to the post-nivelación base. Asserting
@@ -345,9 +366,9 @@ def test_new_entity_override_applies_15_percent_regardless_of_subform() -> None:
         new_entity=Decimal("1"),
         incn=Decimal("10000000"),
     )
-    coop_cuota = _cuota_for(
+    sa_cuota = _cuota_for(
         base=Decimal("1000000"),
-        form="cooperativa",
+        form="sa",
         new_entity=Decimal("1"),
         incn=Decimal("10000000"),
     )
@@ -355,8 +376,8 @@ def test_new_entity_override_applies_15_percent_regardless_of_subform() -> None:
         "new-entity override cuota must equal LIS Art. 29 par. 4 15% "
         "applied to the post-nivelación base (1.000.000 x 15% = 150.000)"
     )
-    assert sl_cuota == coop_cuota, (
-        "the new-entity override must bypass the sub-form dispatch — an SL and a cooperativa both reach the 15% rate"
+    assert sl_cuota == sa_cuota, (
+        "the new-entity override must bypass the sub-form dispatch — an SL and an SA both reach the 15% rate"
     )
 
 

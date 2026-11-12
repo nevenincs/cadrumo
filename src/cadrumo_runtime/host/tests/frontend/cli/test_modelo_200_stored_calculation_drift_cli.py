@@ -10,6 +10,8 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.tests.log_records import delivered_text
 
 from ...native_profile_facts import native_general_iva_facts
@@ -21,8 +23,17 @@ __all__ = ["isolated_cli_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+_FILING_AUTHORITY_CONDITION = "modelo.work.verify.registry_snapshot.filing_authority"
+
+
 def _invoke(arguments: list[str]):
     return invoke_cached_cli(["--format", "json", *arguments])
+
+
+def _reaches_filing_grade(modelo: str, *, filing_year: int, period: str) -> bool:
+    with bundled_indexed_authority().operation() as operation:
+        grade = operation.reachable_authority_grade(modelo, filing_year=filing_year, period=period)
+    return grade is RegistryAuthorityGrade.FILING
 
 
 @pytest.mark.windows_only
@@ -92,14 +103,25 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
         ],
     )  # fmt: skip
 
-    assert verification.exit_code == 0, verification.output
     assert "Traceback" not in verification.output
     assert "Traceback" not in delivered_text(caplog)
     response = json.loads(verification.output)
     report = response["result"]
     assert report["registry_snapshot_ref"]["revision_id"] == "2025-y-siguientes"
-    assert report["completeness_status"] == "complete"
-    assert report["granted_verificado_completo"] is True
-    assert report["findings"]
-    assert all(finding["kind"] == "advisory" for finding in report["findings"])
-    assert any("2026-01-01" in finding["message"] for finding in report["findings"])
+    findings = report["findings"]
+    assert any(finding["kind"] == "advisory" and "2026-01-01" in finding["message"] for finding in findings), (
+        "the activity-start change is not reported as a scoped advisory"
+    )
+    blocking = [finding for finding in findings if finding["kind"] != "advisory"]
+    if _reaches_filing_grade("200", filing_year=2026, period="0A"):
+        assert verification.exit_code == 0, verification.output
+        assert report["completeness_status"] == "complete"
+        assert report["granted_verificado_completo"] is True
+        assert blocking == []
+    else:
+        # Below filing grade the only blocker is the typed grade refusal; the
+        # drift itself still surfaces as advisories, never as a traceback.
+        assert verification.exit_code != 0, verification.output
+        assert report["completeness_status"] == "blocked"
+        assert report["granted_verificado_completo"] is False
+        assert [finding["action"]["failed_condition_id"] for finding in blocking] == [_FILING_AUTHORITY_CONDITION]

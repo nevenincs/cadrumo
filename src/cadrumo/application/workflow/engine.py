@@ -852,6 +852,7 @@ class WorkflowEngine:
             filing_year=obligation.period.filing_year,
             period=obligation.period,
             modelos=(obligation.modelo,),
+            operation=self._authority_operation,
         )
         return provider.get_subview(obligation.modelo).schema_version
 

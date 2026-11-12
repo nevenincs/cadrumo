@@ -23,42 +23,61 @@ from __future__ import annotations
 
 import re
 import shutil
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
+from contextlib import contextmanager
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
 import pytest
 
-from cadrumo.application.filing.draft_construction import build_draft
+from cadrumo.application.filing.draft_construction import (
+    build_draft,
+    draft_input_channels,
+    filing_period_date,
+    load_registry_snapshot,
+)
+from cadrumo.application.filing.errors import ModeloApplicationError
 from cadrumo.application.filing.export import export_draft
 from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
-from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from cadrumo.application.filing.runtime import ModeloOperatorProfile, schema_provider_from_authority
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.filing.protocols import ModeloInputs
+from cadrumo.domain.filing.protocols import CasillaSchemaProvider, ModeloInputs
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import modelo_fact_scope
 from ..compiler.record_design import extract_record_design
 from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS
 from ..edition_export_scenarios import m200_export_scenario
 from ..edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 from ..pipeline.semantic_map import SemanticMap, load_semantic_map
 from .authored_edition_support import authored_revisions
+from .filing_reach_support import with_filing_reach
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO = "200"
 _MAPPINGS = Path("dev/registry/mappings/modelo_200")
 _PRINTED_BOX = re.compile(r"\[([0-9]{3,6})\]")
+_TIPO_GRAVAMEN: CasillaId = validated_casilla_id("DP200014:00558", surface="M200 tipo de gravamen")
+# Caracteres de la declaración whose régimen this registry does not author, so a
+# declaration marking one has no tipo de gravamen and refuses: the 1 per cent
+# instituciones (00004) and the empresa emergente (00083).
+_REFUSED_REGIME_FLAGS = frozenset({"DP200001:00004", "DP200001:00083"})
 
 type Cell = tuple[str, str]
 """A mapped cell as (record sheet, casilla id it is mapped to)."""
@@ -142,16 +161,47 @@ def _signed_note_fields(revision: ModeloRevision):
     )
 
 
-def _filing_years() -> tuple[int, ...]:
-    authority = compiled_bundled_authority()
-    return tuple(
-        year
-        for year in _supported_years()
-        if authority.snapshot(
-            _MODELO, filing_year=year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
-        ).revision.authority_grade
-        is RegistryAuthorityGrade.FILING
+def _selected_revision(filing_year: int) -> ModeloRevision:
+    """The edition the registry selects for a year, read at the lowest grade so no grade gate decides it."""
+    return (
+        compiled_bundled_authority()
+        .snapshot(_MODELO, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY)
+        .revision
     )
+
+
+def _export_years() -> tuple[int, ...]:
+    """The supported years whose selected edition carries an export layout, whatever grade it declares."""
+    return tuple(year for year in _supported_years() if _selected_revision(year).export_layouts)
+
+
+_EXPORT_YEARS = _export_years()
+assert _EXPORT_YEARS, "no supported year selects an edition with an export layout, so the export checks prove nothing"
+
+
+@contextmanager
+def _writer_scope(period: Period) -> Iterator[tuple[ModeloRevision, CasillaSchemaProvider]]:
+    """Yield the edition selected for ``period`` and a schema provider the export writer accepts.
+
+    The writer serves filing-grade snapshots only, and no Modelo 200 edition
+    declares filing grade, so these checks of which box a value lands in lift the
+    selected edition to filing reach in an in-memory copy of the authority, for
+    the export alone. The registry's declared grade is neither read as earned
+    nor changed: a real export at this grade still refuses.
+    """
+    authority = compiled_bundled_authority()
+    revision_id = str(_selected_revision(period.filing_year).id)
+    staged = with_filing_reach(authority, _MODELO, revision_id)
+    with (
+        modelo_fact_scope(bundled_path("registry", "aeat", "modelos", _MODELO)),
+        validating_governed_facts(staged),
+    ):
+        revision = staged.snapshot(_MODELO, filing_year=period.filing_year, period=period.code).revision
+        assert str(revision.id) == revision_id
+        provider = schema_provider_from_authority(
+            staged, modelos=(_MODELO,), filing_year=period.filing_year, period=period
+        )
+        yield revision, provider
 
 
 def test_every_edition_with_an_export_layout_has_a_semantic_map() -> None:
@@ -203,7 +253,7 @@ def test_a_box_declared_for_its_own_sheet_is_where_that_sheet_maps(revision: Mod
 
 def test_a_cell_remapped_to_the_liquidacion_box_is_caught(tmp_path: Path) -> None:
     """Teeth: point one insurer equity cell back at the liquidación box in an isolated mapping copy."""
-    revision = compiled_bundled_authority().snapshot(_MODELO, filing_year=max(_filing_years()), period="0A").revision
+    revision = _selected_revision(max(_EXPORT_YEARS))
     epoch = str(_design_source(revision).record_design_epoch)
     copy = tmp_path / epoch
     shutil.copytree(_MAPPINGS / epoch, copy)
@@ -325,9 +375,9 @@ def _shared_number_slots(revision: ModeloRevision) -> dict[str, list[Slot]]:
     return groups
 
 
-@pytest.fixture(scope="module", params=_filing_years())
+@pytest.fixture(scope="module", params=_EXPORT_YEARS)
 def rendered_edition(request: pytest.FixtureRequest):
-    """Render the filing-grade edition twice, each time supplying one half of every same-number group.
+    """Render the exporting edition twice, each time supplying one half of every same-number group.
 
     Within a group the casillas alternate between the two renders, so in each
     render every absent cell shares its number with at least one supplied box,
@@ -335,8 +385,7 @@ def rendered_edition(request: pytest.FixtureRequest):
     """
     period = Period.from_year_and_code(request.param, "0A")
     scenario = m200_export_scenario(period)
-    with bundled_indexed_authority().operation() as operation:
-        revision = operation.snapshot(_MODELO, filing_year=period.filing_year, period=period.code).revision
+    with _writer_scope(period) as (revision, provider):
         groups = _shared_number_slots(revision)
         members = sorted({slot[3] for slots in groups.values() for slot in slots})
         values = {casilla: Decimal(100 + index) + Decimal("0.37") for index, casilla in enumerate(members)}
@@ -344,9 +393,6 @@ def rendered_edition(request: pytest.FixtureRequest):
         for slots in groups.values():
             for index, casilla in enumerate(sorted({slot[3] for slot in slots})):
                 halves[index % 2].add(casilla)
-        provider = build_runtime_schema_provider(
-            operation=operation, modelos=(_MODELO,), filing_year=period.filing_year, period=period
-        )
         identity = scenario.product_software_identity_factory
         assert identity is not None
 
@@ -614,7 +660,7 @@ def test_rectificativa_notes_preserve_signed_cents(revision: ModeloRevision) -> 
             assert field.length == source_field.length
 
 
-@pytest.mark.parametrize("filing_year", _filing_years())
+@pytest.mark.parametrize("filing_year", _EXPORT_YEARS)
 @pytest.mark.parametrize("supply_adjustments", [False, True])
 def test_entity_flags_and_tax_adjustments_export_independently(filing_year: int, supply_adjustments: bool) -> None:
     """A one-byte entity flag cannot populate an unrelated seventeen-byte adjustment."""
@@ -622,17 +668,17 @@ def test_entity_flags_and_tax_adjustments_export_independently(filing_year: int,
     scenario = m200_export_scenario(period)
     numbers = ("00004", "00005", "00006")
     adjustments = {f"DP200012:{number}": Decimal(123 + index) + Decimal("0.45") for index, number in enumerate(numbers)}
-    with bundled_indexed_authority().operation() as operation:
-        revision = operation.snapshot(_MODELO, filing_year=period.filing_year, period=period.code).revision
-        provider = build_runtime_schema_provider(
-            operation=operation, modelos=(_MODELO,), filing_year=period.filing_year, period=period
-        )
+    with _writer_scope(period) as (revision, provider):
+        marked = {f"DP200001:{number}" for number in numbers} - _REFUSED_REGIME_FLAGS
+        for flag_id in sorted({f"DP200001:{number}" for number in numbers} & _REFUSED_REGIME_FLAGS):
+            _assert_marked_regime_refuses(provider, period, scenario, flag_id)
+            _assert_flag_cell_stands_alone(revision, flag_id, f"DP200012:{flag_id.split(':')[1]}")
         inputs: ModeloInputs = {
             **scenario.inputs,
             **(
                 {key: value for key, value in adjustments.items()}
                 if supply_adjustments
-                else {f"DP200001:{number}": Decimal("1") for number in numbers}
+                else dict.fromkeys(marked, Decimal("1"))
             ),
         }
         draft = build_draft(
@@ -669,10 +715,94 @@ def test_entity_flags_and_tax_adjustments_export_independently(filing_year: int,
                     _wire(adjustments[cid], field.length)
                     if sheet == "DP200012" and supply_adjustments
                     else b"1"
-                    if sheet == "DP200001" and not supply_adjustments
+                    if cid in marked and not supply_adjustments
                     else b"0" * field.length
                 )
                 assert _slot(sink.payload, _record_tag(revision, sheet), field.offset, field.length) == expected
+
+
+def _export(
+    provider: CasillaSchemaProvider, period: Period, scenario: EditionExportScenario, inputs: ModeloInputs
+) -> bytes:
+    """Calculate a draft from ``inputs`` and return the payload its export writes."""
+    identity = scenario.product_software_identity_factory
+    assert identity is not None
+    draft = build_draft(
+        modelo=_MODELO,
+        period=period,
+        profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Modelo 200 reused box"),
+        inputs=inputs,
+        schema_provider=provider,
+    ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+    sink = _PayloadSink()
+    export_draft(
+        draft,
+        payload_consumer=sink,
+        producer_snapshot=scenario.producer_snapshot(),
+        prior_domiciliation_election=scenario.prior_domiciliation_election,
+        product_software_identity=identity(),
+        schema_provider=provider,
+    )
+    return sink.payload
+
+
+def _assert_marked_regime_refuses(
+    provider: CasillaSchemaProvider, period: Period, scenario: EditionExportScenario, flag_id: str
+) -> None:
+    """Marking an unauthored régimen leaves 00558 under its typed reason, and the export refuses."""
+    inputs: ModeloInputs = {**scenario.inputs, flag_id: Decimal("1")}
+    snapshot = load_registry_snapshot(modelo=_MODELO, period=period, schema_provider=provider)
+    channels = draft_input_channels(snapshot, inputs)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=channels.casilla_inputs,
+        date_context={"filing_period": filing_period_date(period)},
+        binding_values=channels.binding_inputs,
+        enum_binding_values=channels.enum_binding_inputs or None,
+        relation_values=channels.relation_inputs or None,
+        date_binding_values=channels.date_binding_inputs or None,
+        boolean_binding_values=channels.boolean_binding_inputs or None,
+        text_inputs=channels.text_casilla_inputs or None,
+    )
+    reasons = {outcome.casilla_id: outcome.reason for outcome in result.unresolved_outcomes}
+    assert reasons.get(_TIPO_GRAVAMEN) is RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED
+    with pytest.raises(ModeloApplicationError) as refused:
+        _export(provider, period, scenario, inputs)
+    assert refused.value.translated_message == "application.filing.export_parity.errors.required_casillas_omitted"
+    context = refused.value.context
+    assert context is not None
+    missing = {str(item["casilla_id"]) for item in context["missing_casillas"]}
+    assert str(_TIPO_GRAVAMEN) in missing
+
+
+def _layout_field_and_record(revision: ModeloRevision, casilla_id: str):
+    """Return the one export-layout field bound to ``casilla_id`` and the record that holds it."""
+    (found,) = [
+        (field, record)
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.kind is CasillaFieldKind.CASILLA and str(field.casilla_id) == casilla_id
+    ]
+    return found
+
+
+def _assert_flag_cell_stands_alone(revision: ModeloRevision, flag_id: str, amount_id: str) -> None:
+    """A marked flag writes its own cell; the amount sharing its printed number stays at its absent slot.
+
+    This proves the two concepts at the export-cell level for a régimen whose
+    full calculated export refuses: the cells sit in different records, the
+    flag renders the mark it is given and the amount, given nothing, renders
+    the zeros a full export writes for it.
+    """
+    flag_field, flag_record = _layout_field_and_record(revision, flag_id)
+    amount_field, amount_record = _layout_field_and_record(revision, amount_id)
+    assert flag_record.id != amount_record.id
+    assert flag_field.length is not None and amount_field.length is not None
+    flag = render_fixed_width_export_field(flag_field, Decimal("1"), record=flag_record).encode(flag_record.encoding)
+    amount = render_fixed_width_export_field(amount_field, None, record=amount_record).encode(amount_record.encoding)
+    assert flag == b"1".rjust(flag_field.length, b"0")
+    assert amount == b"0" * amount_field.length
 
 
 def _printed_box_design_fields(revision: ModeloRevision, number: str, money_label, flag_label):
@@ -750,14 +880,8 @@ def _assert_box_fields_match_the_design(
     )
 
 
-def _reused_box_renderer(operation, period: Period, scenario: EditionExportScenario, number: str):
+def _reused_box_renderer(provider: CasillaSchemaProvider, period: Period, scenario: EditionExportScenario, number: str):
     """Return a renderer that exports the scenario with only the given reused-box inputs supplied."""
-    provider = build_runtime_schema_provider(
-        operation=operation,
-        modelos=(_MODELO,),
-        filing_year=period.filing_year,
-        period=period,
-    )
     identity = scenario.product_software_identity_factory
     assert identity is not None
     target_ids = {f"DP200001:{number}", f"DP200014B:{number}"}
@@ -821,7 +945,7 @@ def _assert_money_and_flag_slots(
     )
 
 
-@pytest.mark.parametrize("filing_year", _filing_years())
+@pytest.mark.parametrize("filing_year", _EXPORT_YEARS)
 @pytest.mark.parametrize(
     ("number", "flag_label", "money_label", "money_type_code", "money_signed", "amount"),
     [
@@ -884,8 +1008,7 @@ def test_reused_flag_and_money_export_independently(
     """Each DP200001 integer character and DP200014B amount keeps its own cell and wire value."""
     period = Period.from_year_and_code(filing_year, "0A")
     scenario = m200_export_scenario(period)
-    with bundled_indexed_authority().operation() as operation:
-        revision = operation.snapshot(_MODELO, filing_year=period.filing_year, period=period.code).revision
+    with _writer_scope(period) as (revision, provider):
         money_design_field, flag_design_field = _printed_box_design_fields(revision, number, money_label, flag_label)
         money_field, flag_field = _layout_box_fields(revision, number)
         _assert_box_fields_match_the_design(
@@ -898,8 +1021,7 @@ def test_reused_flag_and_money_export_independently(
             money_type_code=money_type_code,
             money_signed=money_signed,
         )
-        render = _reused_box_renderer(operation, period, scenario, number)
-        flag_only = render((f"DP200001:{number}", Decimal("1")))
+        render = _reused_box_renderer(provider, period, scenario, number)
         amount_only = render((f"DP200014B:{number}", amount))
         expected_amount = (
             b"N" + _wire(abs(amount), money_design_field.length - 1)
@@ -908,14 +1030,19 @@ def test_reused_flag_and_money_export_independently(
         )
         zero_money = b"0" * money_design_field.length
         zero_flag = b"0" * flag_design_field.length
-        _assert_money_and_flag_slots(
-            flag_only,
-            revision,
-            money_design_field,
-            flag_design_field,
-            money=zero_money,
-            flag=b"1".rjust(flag_design_field.length, b"0"),
-        )
+        flag_id = f"DP200001:{number}"
+        if flag_id in _REFUSED_REGIME_FLAGS:
+            _assert_marked_regime_refuses(provider, period, scenario, flag_id)
+            _assert_flag_cell_stands_alone(revision, flag_id, f"DP200014B:{number}")
+        else:
+            _assert_money_and_flag_slots(
+                render((flag_id, Decimal("1"))),
+                revision,
+                money_design_field,
+                flag_design_field,
+                money=zero_money,
+                flag=b"1".rjust(flag_design_field.length, b"0"),
+            )
         _assert_money_and_flag_slots(
             amount_only,
             revision,

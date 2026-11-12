@@ -39,8 +39,8 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_selector_utils import selector_as_dict
-from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
+from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ..schema_formula import ParameterDefinition
 from .modelo_200_casilla_ids import (
     M200_BIN_APLICADA_CASILLA,
@@ -66,6 +66,9 @@ _DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44
 _PERIOD_END_BEFORE_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 1, 1) - timedelta(days=1)
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_M200_TIPO_GRAVAMEN_CASILLA")
+# Caracteres de la declaración (page 1): cooperativa protegida, and entidad acogida a la Ley 49/2002.
+_COOPERATIVA_PROTEGIDA: CasillaId = validated_casilla_id("00017", surface="_COOPERATIVA_PROTEGIDA")
+_REGIMEN_LEY_49_2002: CasillaId = validated_casilla_id("00001", surface="_REGIMEN_LEY_49_2002")
 
 
 # Both M202 pagos-fraccionados fold relations (modalidad 40.2 casilla 03 + 40.3 casilla 34)
@@ -97,11 +100,16 @@ def _calculate_tipo_gravamen(
     incn: str,
     new_entity: Decimal = Decimal("0"),
     exercise: int = _PERIOD_END_BEFORE_DT44.year,
+    marked: tuple[CasillaId, ...] = (),
 ):
-    """Run the M200 chain for one entity form, prior-12-month INCN and exercise, with no other adjustments."""
+    """Run the M200 chain for one entity form, prior-12-month INCN and exercise, with no other adjustments.
+
+    The exercise is calculated by the revision that governs it, and ``marked``
+    names the caracteres de la declaración (page 1) the entity marks.
+    """
     return calculate_registry_snapshot(
-        _snapshot(),
-        inputs=inputs,
+        _snapshot(exercise),
+        inputs={**inputs, **dict.fromkeys(marked, Decimal("1"))},
         enum_binding_values={_DISPATCH_BINDING: dispatch},
         binding_values={
             "modelo-200-profile-new-entity-flag": new_entity,
@@ -116,10 +124,12 @@ def _calculate_tipo_gravamen(
     )
 
 
-def _snapshot():
-    return published_snapshot(
-        "200", filing_year=_DT44_FIRST_TRANSITIONAL_EXERCISE, period="0A", grade=RegistryAuthorityGrade.CALCULATION
-    )
+def _snapshot(exercise: int = _DT44_FIRST_TRANSITIONAL_EXERCISE):
+    return published_snapshot("200", filing_year=exercise, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+
+
+def _unresolved_reason(result, casilla_id: CasillaId) -> RegistryUnresolvedOutcomeReason | None:
+    return next((outcome.reason for outcome in result.unresolved_outcomes if outcome.casilla_id == casilla_id), None)
 
 
 def _parameters() -> dict[str, ParameterDefinition]:
@@ -308,18 +318,20 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
     The ``modelo-200-tipo-gravamen-por-forma-juridica`` formula selects
     the scalar display casilla 00558 by the taxpayer's legal form:
     sociedades de capital (sl / sa) and sociedades civiles mercantiles
-    take the general 25 % rate, cooperativas fiscalmente protegidas the
-    20 % rate, and entidades sin fines lucrativos the 10 % rate. This
-    asserts dispatch mechanics on both paths: flipping the enum binding
-    selects a different scalar echo for 00558 and a different bracket
-    path for cuota íntegra 00562.
+    take the general 25 % rate, cooperativas fiscalmente protegidas
+    (casilla 00017) state the 20 % rate of their resultados cooperativos, and
+    entities under the Ley 49/2002 régimen (casilla 00001) the 10 % rate
+    (manual práctico de Sociedades 2024, L14704-14712, L14724, nota
+    L14752-14755). A cooperativa's cuota íntegra is built from its
+    cooperative split (L26990), which the registry does not author, so it has
+    no value.
     """
     base_inputs = _base_inputs(Decimal("1000000"))
 
-    def _cuota_for(form: str) -> tuple[Decimal, Decimal]:
-        result = calculate_registry_snapshot(
-            _snapshot(),
-            inputs=base_inputs,
+    def _result_for(form: str, marked: tuple[CasillaId, ...] = ()):
+        return calculate_registry_snapshot(
+            _snapshot(_PERIOD_END_BEFORE_DT44.year),
+            inputs={**base_inputs, **dict.fromkeys(marked, Decimal("1"))},
             enum_binding_values={_DISPATCH_BINDING: form},
             binding_values={
                 "modelo-200-profile-new-entity-flag": Decimal("0"),
@@ -332,85 +344,77 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
             relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
             date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
         )
-        return result.values[_M200_TIPO_GRAVAMEN_CASILLA], result.values[M200_CUOTA_INTEGRA_CASILLA]
 
-    sl_rate, sl_cuota = _cuota_for("sl")
-    sa_rate, _ = _cuota_for("sa")
-    coop_rate, coop_cuota = _cuota_for("cooperativa")
-    nonprofit_rate, nonprofit_cuota = _cuota_for("sin_fines_lucrativos")
+    sl = _result_for("sl").values
+    sa = _result_for("sa").values
+    coop = _result_for("cooperativa", (_COOPERATIVA_PROTEGIDA,))
+    nonprofit = _result_for("sin_fines_lucrativos", (_REGIMEN_LEY_49_2002,)).values
 
     # sl and sa are both sociedades de capital — same general rate.
-    assert sl_rate == sa_rate == Decimal("25")
-    assert coop_rate == Decimal("20")
-    assert nonprofit_rate == Decimal("10")
-
-    # The dispatch must produce three distinct cuotas for the same base.
-    assert sl_cuota != coop_cuota != nonprofit_cuota
-    assert sl_cuota > coop_cuota > nonprofit_cuota
+    assert sl[_M200_TIPO_GRAVAMEN_CASILLA] == sa[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25")
+    assert coop.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("20")
+    assert nonprofit[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("10")
 
     # The cuota íntegra applies the dispatched rate to the 1.000.000 base.
-    assert sl_cuota == Decimal("250000.00")
-    assert coop_cuota == Decimal("200000.00")
-    assert nonprofit_cuota == Decimal("100000.00")
+    assert sl[M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
+    assert nonprofit[M200_CUOTA_INTEGRA_CASILLA] == Decimal("100000.00")
+    assert M200_CUOTA_INTEGRA_CASILLA not in coop.values
+    assert (
+        _unresolved_reason(coop, M200_CUOTA_INTEGRA_CASILLA)
+        is RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED
+    )
 
 
 def test_nonprofit_special_regime_stays_at_10_percent_inside_erd_threshold() -> None:
-    """Ley 49/2002 entities keep the 10% special-regime rate below 1M INCN."""
-    result = _calculate_tipo_gravamen(_base_inputs(Decimal("1000000")), "sin_fines_lucrativos", incn="500000")
+    """Ley 49/2002 entities (casilla 00001) keep the 10% special-regime rate below 1M INCN."""
+    result = _calculate_tipo_gravamen(
+        _base_inputs(Decimal("1000000")), "sin_fines_lucrativos", incn="500000", marked=(_REGIMEN_LEY_49_2002,)
+    )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("10")
     assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("100000.00")
 
 
-def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() -> None:
-    """A cuota chain with no legal_entity_form binding fails loudly.
+@pytest.mark.parametrize("exercise", [_PERIOD_END_BEFORE_DT44.year, _DT44_FIRST_TRANSITIONAL_EXERCISE])
+def test_tipo_gravamen_and_cuota_stay_unresolved_when_legal_entity_form_is_unsupplied(exercise: int) -> None:
+    """With no declared legal form the rate and the cuota stay unknown, never a default.
 
-    The dispatch refuses to default a rate: an undeclared legal form
-    yields a ``RegistryValidationError`` rather than a silent guess —
-    the corporate-entity design's "a wrong tax is worse than an incomplete
-    answer" constraint enforced at the rate level.
+    An undeclared enum fact is an unresolved dependency: neither 00558 nor 00562
+    carries a value, and no other lane is taken in its place.
     """
-    with pytest.raises(RegistryValidationError, match="has no supplied value"):
-        calculate_registry_snapshot(
-            _snapshot(),
-            inputs=_base_inputs(Decimal("1000000")),
-            binding_values={
-                "modelo-200-profile-new-entity-flag": Decimal("0"),
-                "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
-                "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-                "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-                "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-                "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-            },
-            relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-            date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
-        )
+    result = calculate_registry_snapshot(
+        _snapshot(exercise),
+        inputs=_base_inputs(Decimal("1000000")),
+        binding_values={
+            "modelo-200-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
+        date_context={"filing_period": date(exercise, 12, 31)},
+    )
+
+    assert _M200_TIPO_GRAVAMEN_CASILLA not in result.values
+    assert M200_CUOTA_INTEGRA_CASILLA not in result.values
 
 
-def test_tipo_gravamen_dispatch_raises_on_unrecognised_legal_entity_form() -> None:
-    """A legal_entity_form value outside the dispatch table fails loudly.
+@pytest.mark.parametrize("exercise", [_PERIOD_END_BEFORE_DT44.year, _DT44_FIRST_TRANSITIONAL_EXERCISE])
+@pytest.mark.parametrize("incn", ["500000", "10000000"])
+def test_tipo_gravamen_refuses_a_legal_entity_form_outside_the_vocabulary(exercise: int, incn: str) -> None:
+    """A legal form the vocabulary does not declare is refused, not given the general rate.
 
-    The dispatch table maps the recognised legal forms only. A key that
-    is not in the table — including ``cooperativa`` typo'd, or a future
-    form not yet grounded — raises a missing-key error rather than
-    falling through to a default rate.
+    Below and above the one-million turnover threshold, an unrecognised form
+    leaves 00558 under the unsupported-regime reason and 00562 without a value.
     """
-    with pytest.raises(RegistryValidationError, match="missing key"):
-        calculate_registry_snapshot(
-            _snapshot(),
-            inputs=_base_inputs(Decimal("1000000")),
-            enum_binding_values={_DISPATCH_BINDING: "unknown_form"},
-            binding_values={
-                "modelo-200-profile-new-entity-flag": Decimal("0"),
-                "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
-                "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-                "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-                "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-                "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-            },
-            relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-            date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
-        )
+    result = _calculate_tipo_gravamen(_base_inputs(Decimal("100000")), "unknown_form", incn=incn, exercise=exercise)
+
+    assert _unresolved_reason(result, _M200_TIPO_GRAVAMEN_CASILLA) is (
+        RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED
+    )
+    assert M200_CUOTA_INTEGRA_CASILLA not in result.values
 
 
 def test_dispatch_binding_is_a_profile_sourced_enum_binding() -> None:
@@ -494,7 +498,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
     }
 
     result_sal = calculate_registry_snapshot(
-        _snapshot(),
+        _snapshot(_PERIOD_END_BEFORE_DT44.year),
         inputs=base_inputs,
         enum_binding_values={_DISPATCH_BINDING: "sal"},
         binding_values=common_bindings,
@@ -502,7 +506,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
     )
     result_sl = calculate_registry_snapshot(
-        _snapshot(),
+        _snapshot(_PERIOD_END_BEFORE_DT44.year),
         inputs=base_inputs,
         enum_binding_values={_DISPATCH_BINDING: "sl"},
         binding_values=common_bindings,
@@ -523,18 +527,22 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
 
 
 def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_display_rate_to_first_tranche() -> None:
-    """Persona repro: a DT 44ª first-year micro-company prints 21 while cuota is 10.500.
+    """A DT 44ª first-year micro-company pays 10.500 on 50.000 and states no single 00558 rate.
 
-    Dario's CLI run used an SL with INCN below 1M and a 50.000 base. The
-    cuota already followed LIS DT 44ª at 21 %, but 00558 incorrectly echoed
-    the legacy 23 %. The display scalar must follow the same filing-year
-    threshold as the bracket calculation.
+    The cuota follows LIS DT 44ª at 21 % on the first 50.000 euros. Casilla
+    00558 holds both rates of a double scale ("2122", aeat-dr-200-2025
+    DP200014 Nota 1), which a decimal rate cannot state, so it is left without
+    a value under its typed reason rather than echoing 21 or the legacy 23.
     """
     result = _calculate_tipo_gravamen(
         _base_inputs(Decimal("50000")), "sl", incn="450000", exercise=_DT44_FIRST_TRANSITIONAL_EXERCISE
     )
 
-    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
+    assert _M200_TIPO_GRAVAMEN_CASILLA not in result.values
+    assert (
+        _unresolved_reason(result, _M200_TIPO_GRAVAMEN_CASILLA)
+        is RegistryUnresolvedOutcomeReason.M200_TWO_RATE_TIPO_GRAVAMEN_UNREPRESENTED
+    )
     assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("10500.00")
 
 
@@ -544,7 +552,6 @@ def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_cuota_to_rest_tranc
         _base_inputs(Decimal("100000")), "sl", incn="450000", exercise=_DT44_FIRST_TRANSITIONAL_EXERCISE
     )
 
-    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
     assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("21500.00")
     assert result.values[M200_CUOTA_INTEGRA_CASILLA] != Decimal("23000.00")
 
@@ -614,12 +621,13 @@ def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
     """Cooperativa keeps 20 % even when INCN < 1.000.000 EUR.
 
     The ERD 23 % rate does not override the cooperative-protected special
-    regime. A cooperativa fiscalmente protegida with INCN 500k must still
-    pay 20 %, not 23 %.
+    regime. A cooperativa fiscalmente protegida (casilla 00017) with INCN
+    500k must still state 20 %, not 23 % (manual práctico de Sociedades 2024,
+    L14704-14712, nota L14752-14755).
     """
     base_inputs = _base_inputs(Decimal("1000000"))
 
-    result = _calculate_tipo_gravamen(base_inputs, "cooperativa", incn="500000")
+    result = _calculate_tipo_gravamen(base_inputs, "cooperativa", incn="500000", marked=(_COOPERATIVA_PROTEGIDA,))
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("20"), (
         "cooperativa with INCN 500k must retain 20 %, not ERD 23 %"
     )
