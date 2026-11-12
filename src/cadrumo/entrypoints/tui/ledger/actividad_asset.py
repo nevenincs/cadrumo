@@ -15,7 +15,7 @@ from ....application.actividad_asset.activity_asset_projections import (
     ActivityAssetPlanProjection,
 )
 from ....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
-from ....application.operator_actions.models import PreconditionVerdict
+from ....application.operations.error_detail import build_operation_error_detail
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.filing_year import FilingYear
@@ -29,6 +29,8 @@ from ....domain.renta.actividad_asset.register_records import ActivityAssetDescr
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
 from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
+from ..refusal.panel import RefusalSlot
+from ..refusal.served import served_refusal
 from .actividad_asset_inputs import (
     InputRefusedError,
     stated_choice,
@@ -126,7 +128,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         # running on the worker thread.  It has no accounting meaning and is
         # always replaced by either the operation result or a refusal below.
         self.query_one("#asset-result", Static).update(f"pending\t{event.button.id or 'unknown'}")
-        self.query_one("#asset-recovery", Static).update("")
+        self.query_one("#asset-recovery", RefusalSlot).show(None)
         self._busy = True
         self._named_asset_id = None
         # A worker rather than an await here: awaiting would hold this screen's
@@ -248,21 +250,16 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         ):
             self.query_one(selector, Input).value = ""
         self.query_one("#asset-current-revision-id", Static).update("")
-        self.query_one("#asset-recovery", Static).update("")
+        self.query_one("#asset-recovery", RefusalSlot).show(None)
 
-    def _show_recovery(self, exc: Exception) -> None:
-        """Name a refusal's recovery action and move focus to the correction it needs."""
-        if not isinstance(exc, ActividadAssetIncompleteError):
+    def _show_recovery(self, exc: CadrumoError) -> None:
+        """Show the refusal's served ways out; an incomplete asset also moves focus to its correction."""
+        refusal = served_refusal(build_operation_error_detail(exc))
+        if refusal is None or refusal.verdict is None:
             return
-        verdict: object = exc.terminal_precondition_verdict
-        if not isinstance(verdict, PreconditionVerdict) or verdict.action is None:
-            return
-        facts = verdict.evidence[0].values
-        self.query_one("#asset-recovery", Static).update(
-            f"recovery\t{verdict.action.action_id}\tasset\t{facts.get('asset_id', '')}"
-            f"\trevision\t{facts.get('revision_id', '')}",
-        )
-        self.query_one("#asset-correct", Button).focus()
+        self.query_one("#asset-recovery", RefusalSlot).show(refusal)
+        if isinstance(exc, ActividadAssetIncompleteError) and refusal.verdict.action_id is not None:
+            self.query_one("#asset-correct", Button).focus()
 
     def _dispatch(self, button_id: str | None) -> _ActivityAssetScreenResult:
         """Delegate one public action, retaining no screen-local tax arithmetic."""

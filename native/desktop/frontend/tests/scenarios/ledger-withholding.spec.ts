@@ -47,6 +47,10 @@ async function openWithholding(target: Page, shape?: string, language = "en") {
   ).toBeVisible();
 }
 
+/** The served key of a certificate figure's words. */
+const FIGURE =
+  "application.ledger.entry_options.withholding_certificate_figure.";
+
 const withholdingForm = (target: Page) =>
   target.locator(".ledger-withholding-form");
 
@@ -111,23 +115,22 @@ test("a certificate is recorded, and the payer's tax ID is nowhere in the window
   await button(target, "desktop.ledger.withholding.action.record").click();
   const form = withholdingForm(target);
   const submit = button(form, "desktop.ledger.withholding.action.record");
-  // Nothing is chosen for the person, and the figures start at zero.
+  // Nothing is chosen for the person, and no figure is asked until a class
+  // says which its certificate states; those every certificate states start
+  // at zero.
   await expect(submit).toHaveAttribute("aria-disabled", "true");
-  await expect(
-    field(form, "desktop.ledger.withholding.amount.retencion"),
-  ).toHaveValue("0.00");
+  await expect(field(form, FIGURE + "retencion")).toHaveCount(0);
   await field(form, "desktop.ledger.withholding.income_class").selectOption(
     "capital_mobiliario",
   );
+  await expect(field(form, FIGURE + "retencion")).toHaveValue("0.00");
   await field(form, "desktop.ledger.withholding.payer_tax_id").fill(
     PAYER_TAX_ID,
   );
   await field(form, "desktop.ledger.withholding.payer_legal_name").fill(
     "Banco de Ejemplo SA",
   );
-  await field(form, "desktop.ledger.withholding.amount.retencion").fill(
-    "150.00",
-  );
+  await field(form, FIGURE + "retencion").fill("150.00");
   await field(form, "desktop.ledger.withholding.origin_label").selectOption(
     "operator_declaration",
   );
@@ -181,12 +184,10 @@ for (const language of WITHHOLDING_LANGUAGES) {
     await labelled("desktop.ledger.withholding.payer_tax_id").fill(
       PAYER_TAX_ID,
     );
-    await labelled("desktop.ledger.withholding.amount.ingreso_a_cuenta").fill(
-      "20",
-    );
-    await labelled(
-      "desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido",
-    ).fill("30");
+    await labelled(FIGURE + "ingreso_a_cuenta").fill("20");
+    await labelled(FIGURE + "reducciones_aplicables").fill("0");
+    await labelled(FIGURE + "gastos_deducibles").fill("0");
+    await labelled(FIGURE + "ingreso_a_cuenta_repercutido").fill("30");
     await labelled("desktop.ledger.withholding.origin_label").selectOption(
       "operator_declaration",
     );
@@ -204,9 +205,7 @@ for (const language of WITHHOLDING_LANGUAGES) {
     await expect(
       labelled("desktop.ledger.withholding.payer_tax_id"),
     ).toHaveValue(PAYER_TAX_ID);
-    await labelled(
-      "desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido",
-    ).fill("0");
+    await labelled(FIGURE + "ingreso_a_cuenta_repercutido").fill("0");
     await labelled("desktop.ledger.withholding.origin_label").selectOption(
       "payer_certificate",
     );
@@ -218,6 +217,49 @@ for (const language of WITHHOLDING_LANGUAGES) {
     await expect(form).toBeVisible();
   });
 }
+
+test("the figures of a certificate are the ones the ledger serves for its class, and a work-income one sent without its own two is refused in the served words", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  await button(target, "desktop.ledger.withholding.action.record").click();
+  const form = withholdingForm(target);
+  const incomeClass = field(form, "desktop.ledger.withholding.income_class");
+  await incomeClass.selectOption("trabajo");
+  for (const served of [
+    "importe_integro_dinerario",
+    "valoracion_especie",
+    "retencion",
+    "ingreso_a_cuenta",
+    "ingreso_a_cuenta_repercutido",
+    "reducciones_aplicables",
+    "gastos_deducibles",
+  ])
+    await expect(field(form, FIGURE + served)).toBeVisible();
+  // The two only work-income certificates state start blank, not at zero.
+  await expect(field(form, FIGURE + "reducciones_aplicables")).toHaveValue("");
+  await incomeClass.selectOption("capital_mobiliario");
+  await expect(field(form, FIGURE + "retencion")).toBeVisible();
+  await expect(field(form, FIGURE + "reducciones_aplicables")).toHaveCount(0);
+  await expect(field(form, FIGURE + "gastos_deducibles")).toHaveCount(0);
+  await incomeClass.selectOption("trabajo");
+  await field(form, "desktop.ledger.withholding.payer_tax_id").fill(
+    PAYER_TAX_ID,
+  );
+  await field(form, "desktop.ledger.withholding.origin_label").selectOption(
+    "operator_declaration",
+  );
+  await recordButton(form).click();
+  const line = target.locator(".setup-call-line");
+  await expect(line).toHaveText(
+    servedWords("record", "trabajo_certificate_figure_missing"),
+  );
+  await expect(form).toBeVisible();
+  await field(form, FIGURE + "reducciones_aplicables").fill("1200");
+  await field(form, FIGURE + "gastos_deducibles").fill("0");
+  await recordButton(form).click();
+  await expect(form).toBeHidden();
+});
 
 test("a withholding record refused with no words served says only that it was not saved, and keeps the form", async ({
   page: target,

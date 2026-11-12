@@ -4300,12 +4300,6 @@ desktop:
       action:
         attest: Nincs levonás jelzése
         record: Igazolás rögzítése
-      amount:
-        importe_integro_dinerario: Bruttó pénzbeli összeg
-        ingreso_a_cuenta: Előlegbefizetés
-        ingreso_a_cuenta_repercutido: Áthárított előlegbefizetés
-        retencion: Levonás
-        valoracion_especie: Természetbeni érték
       attested_on: 'Jelezve: {date}'
       changes: A(z) {ejercicio} évi igazolások módosításai
       column:
@@ -4486,7 +4480,6 @@ desktop:
         írod be őket. Ha módosítani akarsz egyet, javítsd a levonási nyilvántartásaidban,
         majd számolj újra.
       list: Levonások
-      show: Megjelenítés az űrlapon
       show_box: A(z) {box} rovat megjelenítése az űrlapon
     details:
       close: Részletek bezárása
@@ -7216,8 +7209,6 @@ tui:
         active: Aktív
         id: Azonosító
         label: Név
-    result:
-      remedy: 'Javasolt következő lépés: {action}'
     status:
       completed: Kész.
       effect_unknown: A kapcsolat megszakadt, mielőtt válasz érkezett volna ({code}).
@@ -9173,8 +9164,6 @@ tui:
       unavailable: A regisztrált műveleteket nem sikerült beolvasni.
     stopped:
       code: Kód
-      remedy: Mi kell a folytatáshoz
-      remedy_command: 'Megoldó parancs: {command}'
     title: Műveletek
   reference:
     action:

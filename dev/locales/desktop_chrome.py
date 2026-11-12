@@ -760,13 +760,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         ),
         "desktop.ledger.registers.area.": ("accounts", "prorrata", "capital", "withholding"),
         "desktop.ledger.withholding.action.": ("record", "attest"),
-        "desktop.ledger.withholding.amount.": (
-            "importe_integro_dinerario",
-            "valoracion_especie",
-            "retencion",
-            "ingreso_a_cuenta",
-            "ingreso_a_cuenta_repercutido",
-        ),
         "desktop.ledger.withholding.column.": (
             "integro",
             "especie",

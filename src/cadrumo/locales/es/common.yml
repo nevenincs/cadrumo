@@ -4336,12 +4336,6 @@ desktop:
       action:
         attest: Indicar sin retenciones
         record: Anotar certificado
-      amount:
-        importe_integro_dinerario: Importe íntegro dinerario
-        ingreso_a_cuenta: Ingreso a cuenta
-        ingreso_a_cuenta_repercutido: Ingreso a cuenta repercutido
-        retencion: Retención
-        valoracion_especie: Valoración en especie
       attested_on: Indicado el {date}
       changes: Cambios en los certificados de {ejercicio}
       column:
@@ -4525,7 +4519,6 @@ desktop:
         escriben aquí. Para cambiar una, corrígela en tus registros de retenciones
         y vuelve a calcular.
       list: Retenciones
-      show: Ver en el formulario
       show_box: Ver la casilla {box} en el formulario
     details:
       close: Cerrar detalles
@@ -7257,8 +7250,6 @@ tui:
         active: Activo
         id: Identificador
         label: Nombre
-    result:
-      remedy: 'Siguiente paso sugerido: {action}'
     status:
       completed: Hecho.
       effect_unknown: La conexión terminó antes de que llegara una respuesta ({code}).
@@ -9229,8 +9220,6 @@ tui:
       unavailable: No se han podido leer las operaciones registradas.
     stopped:
       code: Código
-      remedy: Qué permitiría continuar
-      remedy_command: 'Comando que lo resuelve: {command}'
     title: Operaciones
   reference:
     action:

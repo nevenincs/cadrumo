@@ -1,3 +1,4 @@
+import { seededUnit } from "@/dev/seededUnits";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
@@ -14,7 +15,7 @@ import { WorkspaceScreen } from "./WorkspaceScreen";
 // says it takes; accepting it with a reason, revoking the acceptance and the
 // refusals are answered as the application answered them.
 
-const UNIT = "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3";
+const UNIT = seededUnit("130");
 
 const language = (globals: Record<string, unknown>) =>
   String(globals.locale ?? "en") as OutputLanguage;
