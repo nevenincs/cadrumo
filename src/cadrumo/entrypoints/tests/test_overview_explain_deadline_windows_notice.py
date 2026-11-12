@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import NoReturn, override
 from uuid import UUID
 
@@ -15,8 +16,10 @@ from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from ...domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.errors import NoDeadlineWindowsError
+from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, create_user_profile_record
 from ..overview_read_composition import _OverviewReadPorts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -24,6 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _MODELO = "100"
 _YEAR = newest_authored_edition(_MODELO)
 _NOTICE_CODE = "deadline.windows_unavailable.explain"
+_CLOCK = datetime.fromtimestamp(0, tz=UTC)
 
 
 class _Windowless(DeadlineEngine):
@@ -33,6 +37,17 @@ class _Windowless(DeadlineEngine):
             translated_message="application.overview.calendar.shift.modelo_exception",
             context={"filing_year": year},
         )
+
+
+def _profile_record() -> UserProfileRecord:
+    return create_user_profile_record(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id="11111111-1111-4111-8111-111111111111",
+        facts=(),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+        context=leased_profile_create_context(),
+    )
 
 
 def _explain_notices() -> tuple[tuple[str, str | None], ...]:
@@ -50,7 +65,7 @@ def _explain_notices() -> tuple[tuple[str, str | None], ...]:
             ledger_payer_facts_for_year=lambda _year: {},
         )
         read = _OverviewReadPorts(bucket_id=str(UUID(int=1)))._explain(
-            request, operation=operation, record=None, taxpayer=taxpayer, evidence=evidence
+            request, operation=operation, record=_profile_record(), taxpayer=taxpayer, evidence=evidence
         )
     return tuple((notice.code, notice.action_id) for notice in read.notices)
 

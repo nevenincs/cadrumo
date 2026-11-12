@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
@@ -1016,7 +1016,7 @@ def test_exact_pair_capture_is_exclusive_with_the_rectangle(tmp_path: Path, scop
                 pairs=_ragged_grid(),
                 output_root=tmp_path,
                 dry_run=True,
-                **cast(dict, scope),
+                **cast(dict[str, Any], scope),
             )
         )
     assert register.opened == 0
@@ -1039,6 +1039,10 @@ def test_exact_pair_capture_refuses_duplicate_or_empty_pairs(tmp_path: Path) -> 
     assert register.opened == 0
 
 
+# A dry run with injected discovery never opens a session, scope or remote read port.
+_UNREACHED_PORT: object = object()
+
+
 def test_pull_filed_history_walks_only_what_discovery_nominated(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1058,12 +1062,12 @@ def test_pull_filed_history_walks_only_what_discovery_nominated(
 
     run = asyncio.run(
         pull_filed_history(
-            certificate_secret_backend_factory=cast(CertificateSecretBackendFactory, None),
-            browser_session_factory=cast(BrowserSessionFactoryPort, None),
-            operator_scope_ports=cast(OperatorScopePorts, None),
+            certificate_secret_backend_factory=cast(CertificateSecretBackendFactory, _UNREACHED_PORT),
+            browser_session_factory=cast(BrowserSessionFactoryPort, _UNREACHED_PORT),
+            operator_scope_ports=cast(OperatorScopePorts, _UNREACHED_PORT),
             filed_data_port=cast(FiledDataCapturePort, register),
-            iva_remote_state_port=cast(IvaRemoteStatePort, None),
-            notifications_ports=cast(NotificationsPorts, None),
+            iva_remote_state_port=cast(IvaRemoteStatePort, _UNREACHED_PORT),
+            notifications_ports=cast(NotificationsPorts, _UNREACHED_PORT),
             ports=in_memory_filed_observation_test_bundle().ports,
             output_root=tmp_path,
             dry_run=True,
