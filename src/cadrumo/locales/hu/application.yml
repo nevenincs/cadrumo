@@ -3657,6 +3657,12 @@ application:
         meg minden időszakra, hogy nem történt levonás. Rögzítsd a kedvezményezettenkénti
         kifizetéseket a nyomtatvány részletezésében, vagy erősítsd meg az egyes időszakokat
         a profilodban.'
+      withholding_total_differs_from_periodic_returns: 'A Modelo %{modelo} (%{filing_year})
+        forrásadó-levonásainak és előlegeinek összesítője (%{summary_total} EUR) nem
+        egyezik a Modelo %{source_modelo} bevallások összegével a következő időszakokra:
+        %{checked_periods} (%{periodic_total} EUR); az eltérés %{gap} EUR. A Modelo
+        %{modelo} összesítője a forrásadó-nyilvántartásodból számolódik; egy kiegészítő
+        bevallás vagy egy csak az egyik oldalon szereplő tétel magyarázhatja az eltérést.'
       xml_required_content_missing: A hivatalos séma megköveteli a(z) %{box} rovatot,
         de nincs értéke, ezért az exportálás elutasítaná ezt a bevallást.
       xml_return_not_rendered: Ebből a számításból nem készíthető el a bevallás fájlja,
@@ -3965,6 +3971,9 @@ application:
         check_stated_figure: Ellenőrizd az általad megadott összeget a korábbi bevallásoddal.
         compare_figures: Hasonlítsd össze a számokat, javítsd ki a hibásat, majd számolj
           újra.
+        compare_withholding_with_periodic_returns: 'Nézd át a forrásadó-nyilvántartásodat
+          és a negyedéves bevallásokat: javítsd a hiányzó vagy fölösleges tételt,
+          vagy nyújts be kiegészítő bevallást arra a negyedévre, amelyik nem egyezik.'
         correct_and_recalculate: Javítsd ki, amit leír, majd számolj és ellenőrizz
           újra.
         declare_asset_again: Valld be újra ezt a vagyontárgyat ebben a bevallásban.

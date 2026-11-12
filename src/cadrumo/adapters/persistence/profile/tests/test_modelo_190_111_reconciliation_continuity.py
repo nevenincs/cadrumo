@@ -11,13 +11,20 @@ edition from the 2020 design onward and in the 2025 instrucciones for casillas
 - ``decl.percepciones-total`` = sum of the records' percepciones
 - ``decl.retenciones-total`` = sum of the records' retenciones e ingresos a cuenta
 
+The two declarations still state one year's withholding, so verification compares
+them: when the resumen's retenciones total and the sum of the four quarters'
+casilla 28 ("la suma de las retenciones e ingresos a cuenta que, por todos los
+conceptos", Modelo 111 instructions) differ, it reports a warning naming both
+figures, the quarters and the gap, and the resumen keeps its records' sum.
+
 This module drives the REAL backend (encrypted-SQLite observation store, the
 registry authority, the calculation engine and the relation resolver, no mocks).
 It files the four Modelo 111 quarters into the same store and proves that the
-Modelo 190 resolver takes no relation from them in any supported exercise, and
-that two distinct exercises total their own withholding records only. The 111
-quarterly amounts deliberately differ from the 190 record amounts, so a total
-drawn from Modelo 111 fails loudly.
+Modelo 190 resolver takes no relation from them in any supported exercise, that
+two distinct exercises total their own withholding records only, and that a
+disagreement between the two is the reconciliation warning in every supported
+exercise. The 111 quarterly amounts deliberately differ from the 190 record
+amounts, so a total drawn from Modelo 111 fails loudly.
 """
 
 from __future__ import annotations
@@ -33,6 +40,10 @@ from .....application.aggregation.retenciones import (
     aggregate_retenciones_111,
 )
 from .....application.calculations.relation_prefill import resolve_relations_from_local_store
+from .....application.modelo.withholding_total_reconciliation import (
+    WITHHOLDING_TOTAL_MISMATCH_KEY,
+    withholding_total_reconciliation_finding,
+)
 from .....core.aggregation import (
     BindingSourceKind,
     RetencionScheme,
@@ -46,6 +57,7 @@ from .....domain.calculations.registry.bindings import (
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -55,6 +67,17 @@ from .....domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
+from .....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from .....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from .published_authority_support import published_authority_operation
@@ -419,3 +442,136 @@ def test_modelo_190_resumen_totals_each_exercise_own_withholding_records(tmp_pat
     assert result_n1.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == _RECORD_PERCEPCION * year_n1_records
     assert result_n1.values[_M190_RETENCIONES_TOTAL_CASILLA] == _RECORD_RETENCION * year_n1_records
     assert result_n1.values[_M190_PERCEPCIONES_TOTAL_CASILLA] != filed_111_n1
+
+
+_BUCKET_ID = "19019019-0190-4190-8190-000000001111"
+
+#: Four quarters whose casilla 28 each equals one 190 record's retencion, so the year agrees.
+_AGREEING_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
+    period: {
+        _M111_TRABAJO_DINERARIO_PERCEPTORES_CASILLA: Decimal("1"),
+        _M111_TRABAJO_DINERARIO_IMPORTE_CASILLA: _RECORD_PERCEPCION,
+        _M111_TRABAJO_DINERARIO_RETENCIONES_CASILLA: _RECORD_RETENCION,
+    }
+    for period in _YEAR_N_QUARTERS
+}
+
+
+def _quarters_retenciones(quarters: dict[str, dict[CasillaId, Decimal]]) -> Decimal:
+    """The year's withholding the quarters declare: only trabajo dinerario carries any."""
+    return sum((inputs[_M111_TRABAJO_DINERARIO_RETENCIONES_CASILLA] for inputs in quarters.values()), Decimal("0"))
+
+
+def _summary_target(
+    filing_year: int, result: RegistryCalculationResult, operation: PinnedAuthorityOperation
+) -> tuple[WorkUnit, CalculationRevision]:
+    """The Modelo 190 work unit and the calculation revision holding the engine's withholding total."""
+    period = Period.from_year_and_code(filing_year, "0A")
+    totals = {_M190_RETENCIONES_TOTAL_CASILLA: result.values[_M190_RETENCIONES_TOTAL_CASILLA]}
+    grounded = registry_grounded_modelo_observation(
+        modelo=_MODELO_190, filing_year=filing_year, period="0A", casilla_values=totals
+    )
+    revision_id = operation.snapshot(_MODELO_190, filing_year=filing_year, period="0A").revision.id
+    work_unit_id = derive_work_unit_id(
+        bucket_id=_BUCKET_ID, modelo=_MODELO_190, filing_year=filing_year, period=period, revision_id=revision_id
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=_BUCKET_ID,
+        modelo=_MODELO_190,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name="190-synthetic",
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+    target = CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=work_unit_id,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            casilla_values=totals,
+            source_transaction_ids=(),
+            source_issues=(),
+            source_provenance=(),
+            filing_instance_evidence=None,
+        ),
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=_MODELO_190, revision_id=revision_id, modelo_year=filing_year, period="0A"
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id={},
+        casilla_values=totals,
+        observations=grounded.observations,
+        source_provenance=(),
+        filing_instance_evidence=None,
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+    return work_unit, target
+
+
+def _reconcile(
+    tmp_path: Path, exercise: int, quarters: dict[str, dict[CasillaId, Decimal]]
+) -> tuple[RegistryCalculationResult, ModeloVerificationFinding | None]:
+    """File ``quarters`` of Modelo 111, calculate the year's Modelo 190 from its records and compare them."""
+    with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
+        obs_repo = CalculationObservationRepository()
+        _file_111_quarters(quarters, filing_year=exercise, obs_repo=obs_repo, operation=operation)
+        records = tuple(
+            _withholding_obs(f"y-{index}", "00001500M", "A", filing_year=exercise) for index in range(len(quarters))
+        )
+        result = _calculate_190(filing_year=exercise, withholding_observations=records)
+        work_unit, target = _summary_target(exercise, result, operation)
+        finding = withholding_total_reconciliation_finding(
+            work_unit=work_unit, target=target, observation_repository=obs_repo, operation=operation
+        )
+    return result, finding
+
+
+@pytest.mark.parametrize("exercise", filing_year_envelope().years)
+def test_a_190_total_apart_from_its_111_quarters_is_a_warning_naming_both_figures(
+    tmp_path: Path, exercise: int
+) -> None:
+    """The resumen keeps its records' sum, and the check names it, the quarters' sum and the gap."""
+    result, finding = _reconcile(tmp_path, exercise, _YEAR_N_QUARTERS)
+
+    summary_total = _RECORD_RETENCION * len(_YEAR_N_QUARTERS)
+    periodic_total = _quarters_retenciones(_YEAR_N_QUARTERS)
+    assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == summary_total
+    assert finding is not None
+    assert finding.message_locale_key == WITHHOLDING_TOTAL_MISMATCH_KEY
+    assert finding.kind is ModeloVerificationFindingKind.RECONCILIATION_MISMATCH
+    assert finding.severity is ModeloVerificationFindingSeverity.WARNING
+    assert finding.casilla_id == _M190_RETENCIONES_TOTAL_CASILLA
+    assert dict(finding.message_facts) == {
+        "modelo": _MODELO_190,
+        "filing_year": exercise,
+        "source_modelo": _MODELO_111,
+        "checked_periods": "|".join(_YEAR_N_QUARTERS),
+        "summary_total": summary_total,
+        "periodic_total": periodic_total,
+        "gap": periodic_total - summary_total,
+    }
+    assert finding.legal_refs
+
+
+@pytest.mark.parametrize("exercise", filing_year_envelope().years[-1:])
+def test_a_190_total_equal_to_its_111_quarters_raises_nothing(tmp_path: Path, exercise: int) -> None:
+    """Four quarters whose casilla 28 sum to the resumen's own total agree with it."""
+    result, finding = _reconcile(tmp_path, exercise, _AGREEING_QUARTERS)
+
+    assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == _quarters_retenciones(_AGREEING_QUARTERS)
+    assert finding is None
+
+
+@pytest.mark.parametrize("exercise", filing_year_envelope().years[-1:])
+def test_a_year_with_an_unobserved_111_quarter_is_not_compared(tmp_path: Path, exercise: int) -> None:
+    """Three filed quarters say nothing about the year's withholding, so no gap is reported."""
+    three_quarters = dict(list(_YEAR_N_QUARTERS.items())[:-1])
+
+    _, finding = _reconcile(tmp_path, exercise, three_quarters)
+
+    assert finding is None

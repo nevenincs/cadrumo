@@ -27,19 +27,25 @@ from cadrumo.application.modelo.verification_model_findings import append_readab
 from cadrumo.application.modelo.withholding_count_reconciliation import (
     append_withholding_count_reconciliation_findings,
 )
+from cadrumo.application.modelo.withholding_total_reconciliation import WITHHOLDING_TOTAL_MISMATCH_KEY
 from cadrumo.core.aggregation import AggregationCaptureKind, RetencionClave
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
+from cadrumo.domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_verification_repository_bundle,
@@ -363,3 +369,54 @@ def test_verification_reaches_the_comparison_through_its_real_repository_bundle(
     assert [finding.message_facts["period"] for finding in excess] == ["3T"]
     assert excess[0].severity is ModeloVerificationFindingSeverity.BLOCKING
     assert id(excess[0]) in failures
+
+
+def test_verification_warns_when_the_summary_withholding_differs_from_its_quarters(
+    stores: _Stores,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Through the composed bundle, a summary total apart from the four quarters' casilla 28 is a warning only."""
+    for period, total in (("1T", "150.00"), ("2T", "150.00"), ("3T", "150.00"), ("4T", "200.00")):
+        _declare_counts(stores, authority_operation, period, {"28": total})
+    work_unit = _summary_work_unit(authority_operation)
+    snapshot = authority_operation.snapshot("190", filing_year=_YEAR, period="0A")
+    totals = {validated_casilla_id("decl.retenciones-total"): Decimal("600.00")}
+    grounded = registry_grounded_modelo_observation(modelo="190", filing_year=_YEAR, period="0A", casilla_values=totals)
+    target = CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=work_unit.work_unit_id,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            casilla_values=totals,
+            source_transaction_ids=(),
+            source_issues=(),
+            source_provenance=(),
+            filing_instance_evidence=None,
+        ),
+        work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="190", revision_id=snapshot.revision.id, modelo_year=_YEAR, period="0A"
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id={},
+        casilla_values=totals,
+        observations=grounded.observations,
+        source_provenance=(),
+        filing_instance_evidence=None,
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    findings: list[ModeloVerificationFinding] = []
+    failures: dict[int, ModeloPreconditionFailure] = {}
+
+    append_readable_model_findings(
+        findings, failures, work_unit, target, build_test_verification_repository_bundle(), authority_operation
+    )
+
+    (mismatch,) = [finding for finding in findings if finding.message_locale_key == WITHHOLDING_TOTAL_MISMATCH_KEY]
+    assert mismatch.kind is ModeloVerificationFindingKind.RECONCILIATION_MISMATCH
+    assert mismatch.severity is ModeloVerificationFindingSeverity.WARNING
+    assert mismatch.message_facts["summary_total"] == Decimal("600.00")
+    assert mismatch.message_facts["periodic_total"] == Decimal("650.00")
+    assert mismatch.message_facts["gap"] == Decimal("50.00")
+    assert id(mismatch) not in failures

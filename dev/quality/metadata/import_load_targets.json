@@ -1557,6 +1557,7 @@
         "cadrumo.application.modelo.verify_selector",
         "cadrumo.application.modelo.withholding_count_reconciliation",
         "cadrumo.application.modelo.withholding_detail_gate",
+        "cadrumo.application.modelo.withholding_total_reconciliation",
         "cadrumo.application.modelo.wizard_attempt_operation",
         "cadrumo.application.modelo.wizard_context_operation",
         "cadrumo.application.modelo.work_address_errors",

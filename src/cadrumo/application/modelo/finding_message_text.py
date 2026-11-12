@@ -107,6 +107,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "ingreso_value": FindingFactKind.MONEY,
         "m303_total": FindingFactKind.MONEY,
         "m349_total": FindingFactKind.MONEY,
+        "summary_total": FindingFactKind.MONEY,
+        "periodic_total": FindingFactKind.MONEY,
         "prior_value_eur": FindingFactKind.MONEY,
         "printed_sum": FindingFactKind.MONEY,
         "redeclaration_increase_threshold_eur": FindingFactKind.MONEY,
