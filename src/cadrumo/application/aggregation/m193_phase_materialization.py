@@ -25,10 +25,9 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role, form_role_validator, resolve_form_codes
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ...domain.calculations.registry.withholding_party_rows import PENDING_PERCEPTOR_NAME, PENDING_PERCEPTOR_NIF
 from .retenciones import Modelo193CapitalDetail, RetencionObservation
 
-_PENDING_PERCEPTOR_NIF = "999999999"
-_PENDING_PERCEPTOR_NAME = "VALORES PENDIENTE DE ABONO"
 _PENDING_FLAG_ROLE = "payee_pendiente_flag"
 _ANNUAL_PERIOD = "0A"
 
@@ -155,9 +154,9 @@ def _validate_pending_phase_row(row: Modelo193PhaseRow) -> None:
     if row.filing_year != row.original_accrual_year:
         raise ValueError("Modelo 193 pending disclosure belongs to the accrual year")
     if (
-        detail.perceptor_tax_id != _PENDING_PERCEPTOR_NIF
-        or detail.representative_tax_id != _PENDING_PERCEPTOR_NIF
-        or detail.perceptor_legal_name != _PENDING_PERCEPTOR_NAME
+        detail.perceptor_tax_id != PENDING_PERCEPTOR_NIF
+        or detail.representative_tax_id != PENDING_PERCEPTOR_NIF
+        or detail.perceptor_legal_name != PENDING_PERCEPTOR_NAME
         or detail.pendiente_flag != _pending_flag()
         or detail.accrual_year is not None
     ):
@@ -308,9 +307,9 @@ def _pending_row(
     actual = capital.pending_payment.actual_recipient_detail
     detail = actual.model_copy(
         update={
-            "perceptor_tax_id": _PENDING_PERCEPTOR_NIF,
-            "representative_tax_id": _PENDING_PERCEPTOR_NIF,
-            "perceptor_legal_name": _PENDING_PERCEPTOR_NAME,
+            "perceptor_tax_id": PENDING_PERCEPTOR_NIF,
+            "representative_tax_id": PENDING_PERCEPTOR_NIF,
+            "perceptor_legal_name": PENDING_PERCEPTOR_NAME,
             "country_code": None,
             "province_code": None,
             "perceptor_mediador_flag": None,

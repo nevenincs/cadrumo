@@ -20,6 +20,7 @@ from .cli_contracts import (
     RetencionesCliJourneyEvidence,
     RetencionesInstalledCliError,
 )
+from .cli_invoice_capture import declare_perceptor_filing_names
 from .cli_layout_selection import selected_annual_layouts, selected_layouts
 from .cli_periodic import is_full_campaign, run_periodic_slice, select_slices
 from .cli_preflight import fresh_directory, require_nonempty_identity, sha256_file
@@ -145,6 +146,7 @@ def run_retenciones_annual_cli_journey(
     )
     try:
         create_withholding_profile(cli, year=year)
+        declare_perceptor_filing_names(cli, (capture for slice_ in slices for capture in slice_.captures))
         evidence = tuple(
             run_annual_slice(cli=cli, slice_=slice_, layouts=layouts, year=year, output_dir=outputs)
             for slice_ in slices

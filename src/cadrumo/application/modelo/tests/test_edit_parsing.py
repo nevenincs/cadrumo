@@ -424,3 +424,82 @@ def test_the_typed_half_refuses_what_the_engine_would_refuse(
 
     assert isinstance(outcome, ModeloEditParseRefusalV1)
     assert outcome.reason == reason
+
+
+_THREE_DIGIT_MONEY = _MONEY.model_copy(update={"max_fraction_digits": 3})
+
+
+def _parse_against(
+    grammar: ModeloEditValueGrammarV1, lexeme: str, locale: OutputLanguage
+) -> ModeloEditParsedValueV1 | ModeloEditRefusedV1:
+    base = baseline()
+    entry = ModeloEditWritableScalarSurfaceEntryV1(
+        casilla_id="11",
+        data_type=CasillaDataType(grammar.data_type),
+        allowed_intents=(ModeloEditScalarIntentKind.SET_TYPED_VALUE,),
+        grammar=grammar,
+    )
+    return parse_modelo_edit_lexeme(
+        ModeloEditParseRequestV1(
+            address=ModeloEditScalarAddressV1(casilla_id="11"), entry_locale=locale, lexeme=lexeme
+        ),
+        baseline=base.model_copy(update={"permitted_surface": (*base.permitted_surface, entry)}),
+        tax_id_format=None,
+    )
+
+
+@pytest.mark.parametrize("casilla_id", ["01", "04"])
+@pytest.mark.parametrize(
+    ("locale", "lexeme", "as_thousands", "as_decimal"),
+    [
+        (OutputLanguage.EN, "1.000", "1000", "1.000"),
+        (OutputLanguage.ES, "1,000", "1000", "1,000"),
+        (OutputLanguage.HU, "1,000", "1000", "1,000"),
+        (OutputLanguage.EN, "-1.000", "-1000", "-1.000"),
+        (OutputLanguage.EN, "12.345", "12345", "12.345"),
+    ],
+)
+def test_a_lone_decimal_mark_before_three_digits_is_two_way_readable_on_a_short_address(
+    casilla_id: str, locale: OutputLanguage, lexeme: str, as_thousands: str, as_decimal: str
+) -> None:
+    result = _parse(casilla_id, lexeme, locale)
+
+    assert isinstance(result, ModeloEditRefusedV1)
+    assert isinstance(result.refusal, ModeloEditParseRefusalV1)
+    assert result.refusal.reason is ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS
+    assert result.refusal.message_arguments == (as_thousands, as_decimal)
+
+
+def test_three_typed_fraction_digits_are_read_where_the_address_takes_them() -> None:
+    result = _parse_against(_THREE_DIGIT_MONEY, "1.000", OutputLanguage.EN)
+
+    assert _value(result) == Decimal("1.000")
+
+
+def test_typed_trailing_zeros_within_the_address_scale_stay_accepted() -> None:
+    assert _value(_parse("01", "1.50", OutputLanguage.EN)) == Decimal("1.5")
+
+
+@pytest.mark.parametrize(
+    ("lexeme", "limit"),
+    [("1.5000", "2"), ("1234.000", "2"), ("1.2500", "2")],
+)
+def test_more_typed_fraction_digits_than_the_address_takes_are_refused_though_equal(lexeme: str, limit: str) -> None:
+    result = _parse("01", lexeme, OutputLanguage.EN)
+
+    assert _reason(result) is ModeloEditParseReason.TOO_MANY_DECIMALS
+    assert isinstance(result, ModeloEditRefusedV1)
+    assert isinstance(result.refusal, ModeloEditParseRefusalV1)
+    assert result.refusal.message_arguments == (limit,)
+
+
+def test_a_typed_wire_decimal_is_not_a_lexeme_and_is_not_ambiguous() -> None:
+    outcome = validate_modelo_edit_value(
+        Decimal("1.000"),
+        address=ModeloEditScalarAddressV1(casilla_id="01"),
+        grammar=_MONEY,
+        tax_id_format=None,
+    )
+
+    assert isinstance(outcome, ModeloEditParsedValueV1)
+    assert outcome.value == Decimal("1.000")

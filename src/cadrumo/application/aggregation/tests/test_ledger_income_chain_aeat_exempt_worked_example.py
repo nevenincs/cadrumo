@@ -162,7 +162,7 @@ _GASTO_INPUTS: dict[CasillaId, Decimal] = {
     validated_casilla_id("0217", surface="0217"): Decimal("2300.00"),
 }
 
-# Eight of those gasto boxes are casillas the registry declares
+# Nine of those gasto boxes are casillas the registry declares
 # ``input_kind = "bound"``, to the ledger-expense aggregation. Supplying them
 # hand-types values the engine is meant to produce, which is a deliberate
 # scoping choice here and not an oversight: this module exists to drive the
@@ -179,6 +179,7 @@ _GASTO_LEG_REASON = (
 _HAND_TYPED_BOUND_CASILLAS: dict[CasillaId, str] = {
     casilla_id: _GASTO_LEG_REASON
     for casilla_id in (
+        validated_casilla_id("0181", surface="0181"),
         validated_casilla_id("0186", surface="0186"),
         validated_casilla_id("0193", surface="0193"),
         validated_casilla_id("0194", surface="0194"),
@@ -189,6 +190,10 @@ _HAND_TYPED_BOUND_CASILLAS: dict[CasillaId, str] = {
         validated_casilla_id("0217", surface="0217"),
     )
 }
+_HAND_TYPED_BOUND_CASILLAS[validated_casilla_id("0177", surface="0177")] = (
+    "variacion de existencias supplied from the manual's own printed figure; this scenario "
+    "drives the INCOME leg through its ledger binding and makes no claim about the inventory aggregation"
+)
 
 # The two ingresos the manual states outside the invoiced lines. They are not
 # bank movements, so the ledger chain never produces them; they enter the

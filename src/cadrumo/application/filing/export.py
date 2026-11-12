@@ -133,8 +133,8 @@ class _PreparedExportDraft:
 
 def _require_current_export_schema(draft: ModeloDraft, subview: RegistryModeloSubview) -> None:
     if draft.schema_version != subview.schema_version:
-        raise FilingExportError(
-            translated_message="application.filing.export.errors.draft_snapshot_stale",
+        raise FilingExportIntegrityError(
+            translated_message="errors.integrity.filing_export_draft_schema_mismatch",
             context={
                 "modelo": draft.modelo,
                 "draft_schema_version": draft.schema_version,
@@ -145,8 +145,8 @@ def _require_current_export_schema(draft: ModeloDraft, subview: RegistryModeloSu
 
 def _require_approved_export_draft(draft: ModeloDraft) -> None:
     if draft.status is not ModeloDraftStatus.APROBADO:
-        raise FilingExportError(
-            translated_message="application.filing.export.errors.draft_not_approved",
+        raise FilingExportIntegrityError(
+            translated_message="errors.integrity.filing_export_draft_unapproved",
             context={
                 "modelo": draft.modelo,
                 "draft_status": draft.status.value,

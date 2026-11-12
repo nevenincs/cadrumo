@@ -519,13 +519,20 @@ application:
         %{operation} (%{adapter_error}).
     export:
       errors:
-        draft_not_approved: L'exportació requereix un esborrany aprovat.
-        draft_snapshot_stale: L'exportació requereix un esborrany construït amb les
-          definicions del model en ús.
+        block_anchor_unstated: 'No s''ha escrit res: la casella %{field_casilla_id}
+          té un valor, però la casella %{casilla_id}, que obre el seu bloc, no en
+          té cap. Omple la casella %{casilla_id}, o buida la casella %{field_casilla_id},
+          i torna a exportar.'
+        box_not_stated_by_rows: 'No s''ha escrit res: la casella %{casilla_id} té
+          un valor que les files de %{element_path} no sumen. Corregeix la casella
+          o les files perquè cada fila indiqui les seves pròpies xifres, i torna a
+          exportar.'
         layout_not_renderable: Aquest model no pot produir un fitxer local d'exportació
           de la declaració.
         post_write_verification_refused: La comprovació posterior a l'escriptura ha
           rebutjat el fitxer de declaració exportat.
+        producer_fact_required: 'No s''ha escrit res: l''exportació necessita %{fact},
+          que no està indicat. Indica''l i torna a exportar.'
         receipt_artefact_unreadable: El rebut d'exportació anomena un fitxer que no
           es pot llegir.
         receipt_byte_size_mismatch: La mida del fitxer exportat no coincideix amb
@@ -2569,6 +2576,15 @@ application:
         consta en aquest perfil, així que no pot donar suport al model 303 del període
         %{period} de %{filing_year}. No s'ha calculat res. Registra una atestació
         nova per a aquest període i fes servir els valors que t'indiqui.
+      export_amended_filing_evidence_missing: 'No s''ha escrit res: la presentació
+        que rectifica aquesta declaració no té registrat cap justificant atestat per
+        l''AEAT. Importa''n la prova per a la unitat de treball de la declaració i
+        torna a exportar.'
+      export_amended_filing_justificante_unresolved: 'No s''ha escrit res: el justificant
+        registrat per a la presentació que rectifica aquesta declaració no pot donar
+        suport a la rectificació. Falta, apareix més d''una vegada o no coincideix
+        amb el model, el període i el contribuent de la declaració. Decideix tu quin
+        registre és erroni: revisa la presentació registrada i el seu justificant.'
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió

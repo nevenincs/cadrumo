@@ -56,6 +56,7 @@ from ...domain.filing.errors import (
     FilingExportValidationError,
 )
 from ...domain.filing.schema import ModeloBindingValue, ModeloDraft
+from .errors import casilla_value_refusal
 from .export_xml_dictionary_modelo100 import (
     modelo_100_sign_branch_value,
     modelo_100_unfiled_comunidad_paths,
@@ -898,6 +899,12 @@ def _require_value_stated_by_rows(
         accounted = stated == Decimal(rendered)
     else:
         accounted = rendered in tokens
+    if not accounted and entry.casilla_id is not None:
+        raise casilla_value_refusal(
+            entry.casilla_id,
+            translated_message="application.filing.export.errors.box_not_stated_by_rows",
+            context={"element_path": rows.element_path},
+        )
     if not accounted:
         raise FilingExportValidationError(
             f"box {entry.casilla_id} holds {rendered}, which the rows of {rows.element_path} do not add up to. "

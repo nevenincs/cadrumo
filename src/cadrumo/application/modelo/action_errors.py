@@ -182,7 +182,7 @@ class AmendmentEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
 
 def amendment_evidence_missing_precondition(
     *,
-    subject_leaf_key: Literal["modelo.work.amend", "modelo.work.amend_wizard"],
+    subject_leaf_key: Literal["modelo.work.amend", "modelo.work.amend_wizard", "modelo.export"],
     work_unit_id: str,
     filing_record_id: str,
 ) -> ModeloPreconditionFailure:

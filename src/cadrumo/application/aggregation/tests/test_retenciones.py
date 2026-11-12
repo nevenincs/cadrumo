@@ -9,6 +9,12 @@ import pytest
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_row_values
+from ....domain.calculations.registry.tests.authored_editions import revision_covering
+from ....domain.calculations.registry.withholding_party_rows import DeclaredWithholdingParty
+from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ....domain.filing.declared_party_name_filing import PartyNameRefusals
+from ....domain.filing.errors import FilingExportDeclaredPartyNameMissingError
 from ..retenciones import (
     Modelo180PropertyEvidence,
     Modelo180StructuredAddress,
@@ -562,3 +568,59 @@ class TestModelo180ProvinceAndPostcodeShape:
             Modelo180PropertyEvidence.model_validate(
                 {**_property("p1", "1234567AB1234C0001DE").model_dump(), "recipient_province_code": province}
             )
+
+
+class TestModelo180PerceptorName:
+    """The Modelo 180 perceptor record files the declared filing name, never the name the source printed."""
+
+    _NAME_BINDING = "modelo-180-perceptor-row-name"
+
+    def _aggregation(self, operation: PinnedAuthorityOperation, *, nif: str = "L1") -> RetencionesAggregation:
+        return aggregate_retenciones_180(
+            (
+                _obs(
+                    nif=nif,
+                    scheme=RetencionScheme("arrendamiento_urbano"),
+                    base="1900",
+                    retencion="361",
+                    source_id="r1",
+                    name="NOMBRE IMPRESO SL",
+                    property_detail=_property("office-a", "1234567VK4713S0001AA"),
+                ),
+            ),
+            period=_P_2025_ANNUAL,
+            operation=operation,
+        )
+
+    def _name_cells(
+        self,
+        operation: PinnedAuthorityOperation,
+        parties: tuple[DeclaredWithholdingParty, ...],
+        refusals: PartyNameRefusals | None = None,
+    ) -> dict[int, object]:
+        revision = operation.revision_with_export_layouts(
+            "180", str(revision_covering("180", _P_2025_ANNUAL.filing_year).id)
+        )
+        rows = resolve_retenciones_aggregation_binding_row_values(
+            revision, self._aggregation(operation), parties=parties, party_name_refusals=refusals
+        )
+        return {index: value for (binding, index), value in rows.items() if binding == self._NAME_BINDING}
+
+    def test_the_landlord_row_files_its_declared_razon_social(self, operation: PinnedAuthorityOperation) -> None:
+        entity = DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="INMUEBLES OLMO SL")
+        party = DeclaredWithholdingParty(
+            country_code="", party_tax_id="L1", party_handle="a1b2c3d4e5f6", party_filing_name=entity
+        )
+
+        assert self._name_cells(operation, (party,)) == {1: "INMUEBLES OLMO SL"}
+
+    def test_a_landlord_with_no_declared_name_is_refused_not_filed_under_the_printed_name(
+        self, operation: PinnedAuthorityOperation
+    ) -> None:
+        refusals = PartyNameRefusals(modelo="180")
+        party = DeclaredWithholdingParty(
+            country_code="", party_tax_id="L1", party_handle="a1b2c3d4e5f6", party_filing_name=None
+        )
+
+        assert self._name_cells(operation, (party,), refusals) == {}
+        assert [type(item) for item in refusals.refusals] == [FilingExportDeclaredPartyNameMissingError]

@@ -773,13 +773,28 @@ errors:
       escribir un hecho de productor booleano en un espacio de texto de %{length}
       bytes. La aplicación lo deriva de su propio diseño de exportación, así que ningún
       cambio en tus datos lo corrige.
+    filing_export_draft_schema_mismatch: Se entregó a la exportación un borrador construido
+      con definiciones del modelo distintas de las que usa para escribirlo. La aplicación
+      construye y aprueba este borrador por sí misma, así que ningún cambio en tus
+      datos lo corrige.
+    filing_export_draft_unapproved: Se entregó a la exportación un borrador que no
+      está aprobado. La aplicación construye y aprueba este borrador por sí misma,
+      así que ningún cambio en tus datos lo corrige.
     filing_export_envelope_closer_extent: El cierre del sobre de la presentación no
       se genera con la extensión declarada de %{extent} bytes. La aplicación lo deriva
       de su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_envelope_declarant_tax_id_absent: Se pidió al sobre de presentación
+      escribir el NIF del declarante sin el sujeto de la presentación. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
     filing_export_envelope_election_unresolved: El sobre de la presentación se iba
       a escribir sin una elección de domiciliación previa resuelta. La aplicación
       lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
       lo corrige.
+    filing_export_envelope_language_casilla_absent: Se pidió al sobre de presentación
+      escribir el idioma de la declaración sin el valor de su casilla declarada. La
+      aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
     filing_export_envelope_layout_absent: Falta la declaración del diseño del sobre
       de la presentación. La aplicación lo deriva de su propio diseño de exportación,
       así que ningún cambio en tus datos lo corrige.
@@ -982,6 +997,9 @@ errors:
       de archivo que no es un valor SHA-256 hexadecimal en minúsculas. La aplicación
       lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
       lo corrige.
+    filing_export_sepa_marker_selection_unsupported: La marca SEPA recibió una selección
+      de cuenta para la que no tiene regla. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
     filing_export_shared_resolver_not_exhaustive: El resolvedor compartido de productores
       de la presentación no cubre todas las claves que le pertenecen. La aplicación
       lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
@@ -1581,6 +1599,9 @@ errors:
       está soportado.
     refused_filing_calculate: El cálculo o resumen de la declaración no superó sus
       invariantes.
+    refused_filing_export_casilla_value: 'No se ha escrito nada: una casilla que indicas
+      tiene un valor que la exportación no puede escribir tal como lo sitúa el diseño
+      oficial. Vuelve a indicar esa casilla y vuelve a exportar.'
     refused_filing_export_declared_party_name: 'No se ha escrito nada: el campo %{export_field_id}
       nombra a una parte sin un nombre de declaración que el diseño de registro de
       la AEAT admita ahí. Indica el nombre de declaración de la parte y vuelve a exportar.'
@@ -1598,6 +1619,8 @@ errors:
       campo %{export_field_id} tiene %{field_length}. El diseño de registro no permite
       abreviarlo, así que indica una versión del nombre de %{field_length} caracteres
       y vuelve a exportar.'
+    refused_filing_export_profile_fact_missing: 'No se ha escrito nada: la exportación
+      necesita un dato tuyo que tu perfil no indica. Indícalo y vuelve a exportar.'
     refused_financial_aggregation_category_coverage: Una transacción no tiene cobertura
       de categoría o de perfil. Clasifica la transacción antes de agregar.
     refused_financial_aggregation_missing_classification: Aún hay transacciones del
@@ -1777,6 +1800,9 @@ errors:
       ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) porque la ventana de presentación
       no fija ninguna; el {export_on} solo puedes pagar el resultado de otra forma.
     refused_modelo_edit_parse: No se ha podido leer este dato.
+    refused_modelo_export_casilla_value: 'No se ha escrito nada: una casilla que indicas
+      tiene un valor que la exportación no puede escribir tal como lo sitúa el diseño
+      oficial. Vuelve a indicar esa casilla y vuelve a exportar.'
     refused_modelo_export_declared_party_name: 'No se ha escrito nada: el campo %{export_field_id},
       de %{field_length} posiciones, nombra a una parte sin un nombre de declaración
       que el diseño de registro de la AEAT admita. Indica o corrige el nombre de declaración
@@ -1792,6 +1818,8 @@ errors:
     refused_modelo_export_required_record_absent: El diseño oficial exige al menos
       un registro %{export_record_id}, pero esta declaración no tiene ninguno, así
       que no hay nada que escribir en este formato y no se ha escrito nada.
+    refused_modelo_export_settlement: 'No se ha escrito nada: la exportación no puede
+      indicar cómo se paga o se devuelve la declaración.'
     refused_modelo_export_unrepresentable_character: 'No se ha escrito nada: el campo
       %{field_id} contiene el carácter «%{character}» (%{code_point}), que el diseño
       de registro de la AEAT no permite escribir. Quitarlo o sustituirlo declararía

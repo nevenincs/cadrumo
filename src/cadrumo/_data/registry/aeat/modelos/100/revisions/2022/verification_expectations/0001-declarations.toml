@@ -52,6 +52,29 @@ discrepancy_causes = [
 legal_refs = ["ley-35-2006:art-84", "ley-35-2006:art-50"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
+# Reconcile-when-present enrolment of the Ley 35/2006 figures that an edition
+# computes from descendant and rental facts: the rental-yield reduction 0150
+# (art. 23.2), the maternity deducción 0611 (art. 81) and its childcare
+# increment 0613 (art. 81.2). Each
+# is reconciled when a filing prints it and stays out of the coverage
+# denominator (min_coverage = 0), so a return without a rental or a child keeps
+# its verdict.
+[[revisions."2022".verification_expectations]]
+id = "modelo-100-art-23-2-art-81-2-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["0150", "0611", "0613"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-81", "ley-35-2006:art-81-2"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
 # Anexo C.3 applied and carry-forward rows of the negative savings balances
 # pending from earlier ejercicios, and the internal step 1/2 maxima that fix
 # 0439-0455 (art. 49.2). A filing prints the rows only when such a balance is

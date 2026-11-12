@@ -389,7 +389,10 @@ def _envelope_prefix_identity_value(
         return product_software_identity.developer_tax_id
     if role is FilingEnvelopePrefixRole.DECLARANT_TAX_ID:
         if declarant_tax_id is None:
-            raise FilingExportValidationError("declarant tax ID requires the approved filing subject")
+            raise FilingExportDesignIntegrityError(
+                "declarant tax ID requires the approved filing subject",
+                translated_message="errors.integrity.filing_export_envelope_declarant_tax_id_absent",
+            )
         return declarant_tax_id
     return None
 
@@ -403,7 +406,10 @@ def _envelope_prefix_language_value(
     if role is not FilingEnvelopePrefixRole.LANGUAGE:
         return None
     if casilla_id != "decl.idioma" or casilla_values is None:
-        raise FilingExportValidationError("envelope language requires its declared casilla value")
+        raise FilingExportDesignIntegrityError(
+            "envelope language requires its declared casilla value",
+            translated_message="errors.integrity.filing_export_envelope_language_casilla_absent",
+        )
     value = casilla_values.get(casilla_id)
     if not isinstance(value, str) or value not in {member.value for member in DeclaracionIdioma}:
         raise FilingExportValidationError("envelope language must be source-listed E, C, G, or V")

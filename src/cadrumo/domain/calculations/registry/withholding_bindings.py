@@ -21,6 +21,7 @@ from ....core.filing_year import FourDigitYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
+from ...filing.declared_party_name_filing import PartyNameRefusals
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     optional_uppercase_alpha_code,
@@ -30,6 +31,9 @@ from .errors import RegistryValidationError
 from .form_codes import exceeds_form_bound, require_form_fit, require_form_width
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
+from .invoice_row_materialization import invoice_party_reference
+from .party_name_rows import RowValues, file_party_names
+from .retencion_clave_catalogue import resolve_retencion_clave
 from .schema_exports import ExportFieldDataType
 from .tax_id_format import require_spanish_tax_id_width
 from .withholding_observation_codes import (
@@ -38,6 +42,12 @@ from .withholding_observation_codes import (
     validate_financial_asset_conditions,
     validate_observation_form_codes,
 )
+from .withholding_party_rows import (
+    PARTY_FILING_NAME_ROW_FIELD,
+    PENDING_PERCEPTOR_NAME,
+    DeclaredWithholdingParty,
+    is_prescribed_pending_record,
+)
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
@@ -45,7 +55,6 @@ if TYPE_CHECKING:
 __all__ = [
     "WithholdingObservation",
     "WithholdingProvider",
-    "resolve_retencion_clave",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
@@ -55,6 +64,7 @@ __all__ = [
 # provider remains generic so adding a governed row field does not require a
 # second catalogue in this mechanics module.
 _WithholdingRowField = str
+
 WithholdingGrouping = Literal[
     "per_perceptor", "per_perceptor_clave", "per_perceptor_clave_devengo", "per_source_allocation"
 ]
@@ -130,103 +140,6 @@ _WITHHOLDING_FACTS: Final[frozenset[_WithholdingFactKind]] = frozenset(_Withhold
 The selector field's comment below says this set and that type mirror each other. They
 did, by hand, as two lists of six tokens on adjacent lines -- so the mirror held only
 while someone maintained both. It is now one declaration and two views of it."""
-
-
-_RETENCION_CLAVE_FACT_ID: Final[str] = "m111-m115-m123-withholding-scheme-catalogue"
-
-
-def retencion_clave_declarations(
-    effective_date: date,
-    *,
-    authority: GovernedFactSource | None = None,
-) -> dict[str, str]:
-    """Resolve the complete clave vocabulary and projections from the catalogue."""
-    from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-    from .schema_base import DateAxis
-
-    selected_authority = require_governed_fact_authority(authority, subject="retencion clave catalogue")
-    resolved = selected_authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_RETENCION_CLAVE_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("retencion clave catalogue must resolve as a mapping fact")
-    declarations: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("retencion clave catalogue entries must be string mappings")
-        if entry.key in declarations:
-            raise RegistryValidationError(f"duplicate retencion clave declaration {entry.key!r}")
-        declarations[entry.key] = entry.value
-    return declarations
-
-
-def resolve_retencion_clave(
-    value: str,
-    effective_date: date,
-    *,
-    modelo: str | None = None,
-    authority: GovernedFactSource | None = None,
-) -> RetencionClave:
-    """Project one raw clave through the selected registry vocabulary.
-
-    Membership, canonical value, and model applicability are all authored in
-    the withholding catalogue.  The projection intentionally fails closed when
-    any declaration is missing or inconsistent; it never turns an unknown raw
-    token into a core value.
-    """
-    if not isinstance(value, str) or not value:
-        raise RegistryValidationError("retencion clave must be a non-empty string")
-    if not isinstance(effective_date, date):
-        raise RegistryValidationError("retencion clave requires a filing-period date")
-
-    declarations = retencion_clave_declarations(effective_date, authority=authority)
-    order = _retencion_clave_order(declarations)
-    if value not in order:
-        raise RegistryValidationError(f"retencion clave {value!r} is not declared by the selected catalogue")
-    applicable_models = _retencion_clave_models_for_order(value, order, declarations)
-    if modelo is not None and modelo not in applicable_models:
-        raise RegistryValidationError(
-            f"retencion clave {value!r} is not applicable to Modelo {modelo!r}",
-        )
-    return RetencionClave.from_registry(value)
-
-
-def _retencion_clave_order(declarations: Mapping[str, str]) -> tuple[str, ...]:
-    order_text = declarations.get("clave_order")
-    if order_text is None:
-        raise RegistryValidationError("retencion clave catalogue is missing clave_order")
-    order = tuple(token.strip() for token in order_text.split(",") if token.strip())
-    if not order or len(order) != len(set(order)):
-        raise RegistryValidationError("retencion clave catalogue has an invalid clave_order")
-    return order
-
-
-def _retencion_clave_models_for_order(
-    selected_value: str,
-    order: tuple[str, ...],
-    declarations: Mapping[str, str],
-) -> tuple[str, ...]:
-    applicable_models: tuple[str, ...] = ()
-    for token in order:
-        models = _retencion_clave_declared_models(token, declarations)
-        if token == selected_value:
-            applicable_models = models
-    return applicable_models
-
-
-def _retencion_clave_declared_models(token: str, declarations: Mapping[str, str]) -> tuple[str, ...]:
-    declared_value = declarations.get(f"clave.{token}.value")
-    if declared_value != token:
-        raise RegistryValidationError(f"retencion clave {token!r} has no matching canonical value declaration")
-    model_text = declarations.get(f"clave.{token}.modelos")
-    models = tuple(item.strip() for item in (model_text or "").split(",") if item.strip())
-    if not models or len(models) != len(set(models)):
-        raise RegistryValidationError(f"retencion clave {token!r} has invalid model applicability")
-    return models
 
 
 class WithholdingObservation(BaseModel):
@@ -1198,9 +1111,69 @@ def _grouped_row_sum(
     return total
 
 
+def _party_name_bindings(revision: ModeloRevision) -> frozenset[BindingId]:
+    """Return the withholding bindings whose rows file a perceptor's name."""
+    return frozenset(
+        binding.id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.WITHHOLDING
+        and _validated_withholding_selector(binding).row_field == PARTY_FILING_NAME_ROW_FIELD
+    )
+
+
+def _party_reference(row_observations: tuple[WithholdingObservation, ...]) -> str:
+    """Return the reference one annual row carries in its name cell until the name is composed."""
+    country = _resolve_withholding_row_field(row_observations, row_field="country_code")
+    tax_id = _resolve_withholding_row_field(row_observations, row_field="perceptor_tax_id")
+    return invoice_party_reference("" if country is None else str(country), str(tax_id))
+
+
+def _binding_row_field(binding: BindingDefinition, selector: WithholdingProvider) -> str:
+    """Return the row field a withholding row binding projects."""
+    if selector.row_field is None:  # pragma: no cover - protected by selector validation
+        raise RegistryValidationError(f"binding {binding.id!r} row field is missing its source field")
+    return selector.row_field
+
+
+def _stage_party_name_cells(
+    binding_id: BindingId,
+    rows: tuple[tuple[WithholdingObservation, ...], ...],
+    resolved: dict[tuple[BindingId, int], Decimal | str | int | bool],
+    party_references: RowValues,
+) -> None:
+    """Fix the prescribed pending record's name; leave every other row's name to be composed."""
+    for row_index, row_observations in enumerate(rows, start=1):
+        if is_prescribed_pending_record(row_observations):
+            # The design fixes this record's name to a literal that names no party.
+            resolved[(binding_id, row_index)] = PENDING_PERCEPTOR_NAME
+        else:
+            party_references[(binding_id, row_index)] = _party_reference(row_observations)
+
+
+def _resolve_plain_row_cells(
+    binding: BindingDefinition,
+    row_field: str,
+    rows: tuple[tuple[WithholdingObservation, ...], ...],
+    resolved: dict[tuple[BindingId, int], Decimal | str | int | bool],
+) -> None:
+    """Project one observation field into each annual row, leaving unset facts absent."""
+    if row_field not in WithholdingObservation.model_fields:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} row_field {row_field!r} not produced for withholding rows",
+        )
+    for row_index, row_observations in enumerate(rows, start=1):
+        value = _resolve_withholding_row_field(row_observations, row_field=row_field)
+        if value is None or _withholding_row_value_is_absent(value):
+            continue
+        resolved[(binding.id, row_index)] = value
+
+
 def resolve_withholding_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
+    *,
+    parties: Iterable[DeclaredWithholdingParty] = (),
+    party_name_refusals: PartyNameRefusals | None = None,
 ) -> dict[tuple[BindingId, int], Decimal | str | int | bool]:
     """Resolve withholding row bindings through their declared annual grouping.
 
@@ -1214,26 +1187,35 @@ def resolve_withholding_binding_row_values(
     Unset facts remain absent.  Conflicting non-additive facts refuse before an
     export can choose a first or last observation arbitrarily.
 
+    A ``party_filing_name`` cell holds the name declared for the row's perceptor
+    among ``parties``, composed by the rule and width of the layout field that
+    files it; a perceptor with no such name leaves the cell absent, never blank
+    and never a name a source printed. ``party_name_refusals`` receives each
+    cell left without content.
+
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     available = tuple(observations)
     resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
+    party_references: RowValues = {}
     for (grouping, _claves), members in _withholding_row_cohorts(revision).items():
         _sample_binding, sample_selector = members[0]
         scoped = tuple(_filter_withholding_observations(available, sample_selector))
         rows = _group_withholding_observations(grouping, scoped)
         for binding, selector in members:
-            row_field = selector.row_field
-            if row_field is None:  # pragma: no cover - protected by selector validation
-                raise RegistryValidationError(f"binding {binding.id!r} row field is missing its source field")
-            if row_field not in WithholdingObservation.model_fields:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {row_field!r} not produced for withholding rows",
-                )
-            for row_index, row_observations in enumerate(rows, start=1):
-                value = _resolve_withholding_row_field(row_observations, row_field=row_field)
-                if value is None or _withholding_row_value_is_absent(value):
-                    continue
-                resolved[(binding.id, row_index)] = value
+            row_field = _binding_row_field(binding, selector)
+            if row_field == PARTY_FILING_NAME_ROW_FIELD:
+                _stage_party_name_cells(binding.id, rows, resolved, party_references)
+            else:
+                _resolve_plain_row_cells(binding, row_field, rows, resolved)
+    resolved.update(
+        file_party_names(
+            revision,
+            party_references,
+            tuple(parties),
+            name_bindings=_party_name_bindings(revision),
+            refusals=party_name_refusals,
+        ),
+    )
     return resolved
