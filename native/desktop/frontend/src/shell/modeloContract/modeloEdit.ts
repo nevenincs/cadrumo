@@ -132,12 +132,13 @@ export type ModeloEditApplyPrerequisiteV1 = {
  *
  * Only the id: the full receipt is the domain record of truth, addressable
  * through the ModeloEditReceiptRepositoryPort capability, and this result
- * exists to confirm which one a submission produced.
+ * exists to confirm which one a submission produced. `calculation_revision_id`
+ * is `None` when the edit withdrew the work unit's calculation.
  */
 export type ModeloEditApplyPublicResultV1 = {
   result_version: number;
   receipt_id: string;
-  calculation_revision_id: string;
+  calculation_revision_id: string | null;
 };
 
 /**

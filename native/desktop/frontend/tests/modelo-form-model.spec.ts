@@ -11,11 +11,13 @@ import {
   fieldKey,
   placedFields,
   noteMoved,
+  priorWithdrawal,
   rebasedEdits,
   rebasedOf,
   removeIntent,
   restaged,
   restoreIntent,
+  servedPriorWithdrawal,
   statementEdits,
   statementOf,
   wholeStatements,
@@ -33,6 +35,7 @@ import type {
   ModeloFormCarryAttestation,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
+  PublicModeloFormPriorValueAttestation,
 } from "../src/shell/modeloContract/modeloWorkForm";
 
 // The form's working state over the envelopes the application read for a
@@ -292,6 +295,166 @@ test("a stated box withdraws its statement from every box it stands on, or from 
   expect(restaged(held, { ...first, stated_absent: null })).toBeNull();
 });
 
+// The same carries, as one family of earlier returns the application holds
+// none of, in placeholder words shaped as the form serves them.
+const PRIOR = {
+  family: "synthetic-earlier-returns",
+  words: "served withdrawal",
+  effect: "served withdrawal effect",
+};
+const carryIds = served.binding_ids;
+const priorServed = (
+  stated: boolean,
+): PublicModeloFormPriorValueAttestation[] =>
+  carryIds.map((bindingId) => ({
+    binding_id: bindingId,
+    edit_address: { kind: "binding", binding_id: bindingId },
+    intent: "attest_prior_value",
+    family_id: PRIOR.family,
+    earlier_filings: [],
+    source_words: "served earlier returns",
+    action_words: "served action",
+    statement_words: "served statement",
+    effect_words: "served effect",
+    stated,
+    admitted: true,
+    refusal_reason: null,
+    refusal_words: null,
+    refusal: null,
+    withdrawal: stated
+      ? {
+          family_id: PRIOR.family,
+          binding_ids: [...carryIds].sort(),
+          intent: "remove_override",
+          action_words: PRIOR.words,
+          effect_words: PRIOR.effect,
+        }
+      : null,
+  }));
+const statedPrior = (field: PublicModeloFormField): PublicModeloFormField =>
+  carries.some((placed) => placed.field === field)
+    ? {
+        ...field,
+        stated_prior_value: {
+          source_words: "served earlier returns",
+          origin_words: "served origin",
+          family_id: PRIOR.family,
+        },
+        clearable: true,
+      }
+    : field;
+
+test("a figure stated for earlier returns is sent as the statement with its value", () => {
+  const carry = carries[0]!.field;
+  const offered: PublicModeloFormField = {
+    ...carry,
+    takes_typed_value: true,
+    statements: [
+      {
+        intent: "attest_prior_value",
+        binding_id: carryIds[0]!,
+        action_words: "served action",
+        statement_words: "served statement",
+        effect_words: "served effect",
+        source_words: "served earlier returns",
+      },
+    ],
+  };
+  const intent = {
+    kind: "attest_prior_value",
+    change: "set",
+    value: "1234.00",
+    comparable: "1234.00",
+    family: PRIOR.family,
+    words: "served action",
+    effect: "served effect",
+  } as const;
+  const edit = staged(offered, intent);
+  expect(
+    editSubmission(m100.admitted_baseline!, [edit], "en").submission
+      .binding_intents,
+  ).toEqual([
+    {
+      address: editAddress(offered),
+      kind: "attest_prior_value",
+      value: "1234.00",
+    },
+  ]);
+  // A figure stands alone: it is no statement staged with other boxes.
+  expect(statementOf(intent)).toBeNull();
+  expect(restaged(edit, offered)).toEqual(intent);
+  // A carry that offers the statement no more, as when its earlier return is
+  // now held, drops the figure.
+  expect(restaged(edit, { ...offered, statements: [] })).toBeNull();
+});
+
+test("the figures stated for one family are withdrawn together, or not at all", () => {
+  const placed = placedFields(m100.form.form).map((each) => ({
+    ...each,
+    field: statedPrior(each.field),
+  }));
+  const withdrawalServed = servedPriorWithdrawal(
+    priorServed(true),
+    PRIOR.family,
+  );
+  expect(withdrawalServed).not.toBeNull();
+  expect(servedPriorWithdrawal(priorServed(false), PRIOR.family)).toBeNull();
+  const offer = priorWithdrawal(placed, withdrawalServed!, () => true);
+  expect(offer.kind).toBe("offered");
+  if (offer.kind !== "offered") return;
+  expect(offer.edits.map((edit) => editKey(edit.field))).toEqual(
+    [...carryIds].sort().map((id) => `b:${id}`),
+  );
+  for (const edit of offer.edits) {
+    expect(edit.intent).toEqual({
+      kind: "remove_override",
+      change: "clear",
+      withdrawsPrior: PRIOR,
+    });
+    expect(statementOf(edit.intent)).toBe(`withdraw-prior:${PRIOR.family}`);
+  }
+  // One carry the baseline does not let be taken out keeps the whole family.
+  const kept = offer.edits.at(-1)!.field;
+  expect(
+    priorWithdrawal(placed, withdrawalServed!, (field) => field !== kept),
+  ).toEqual({
+    kind: "refused",
+    bindingId: [...carryIds].sort().at(-1),
+    field: kept,
+  });
+  // A carry the form draws nowhere keeps it too.
+  expect(
+    priorWithdrawal(
+      placed,
+      { ...withdrawalServed!, binding_ids: ["not-on-the-form"] },
+      () => true,
+    ),
+  ).toEqual({ kind: "refused", bindingId: "not-on-the-form", field: null });
+  // Staged on only some of its carries, or served no more, it goes whole.
+  const all = new Map(
+    offer.edits.map((edit) => {
+      const made = staged(edit.field, edit.intent);
+      return [made.key, made] as const;
+    }),
+  );
+  expect(wholeStatements(all, placed, [], priorServed(true)).dropped).toEqual(
+    [],
+  );
+  expect(wholeStatements(all, placed, [], []).next.size).toBe(0);
+  const part = new Map([...all].slice(1));
+  expect(wholeStatements(part, placed, [], priorServed(true)).next.size).toBe(
+    0,
+  );
+  // A withdrawal is kept only while the carry still holds the figure.
+  const held = staged(kept, offer.edits.at(-1)!.intent);
+  expect(restaged(held, kept)).toEqual(offer.edits.at(-1)!.intent);
+  expect(restaged(held, { ...kept, stated_prior_value: null })).toBeNull();
+  // The staged withdrawal is said as one.
+  expect(stagedText(((key: string) => key) as Translate, held)).toBe(
+    "desktop.modelo.statements.withdrawn",
+  );
+});
+
 test("an entry is read by a preflight carrying only what was typed", () => {
   const baseline = m130.admitted_baseline!;
   const input = entrySubmission(baseline, box(m130, "06"), "1.234,56", "es");
@@ -467,6 +630,7 @@ test("what a report moved is kept by the box's own address, which a restage neve
   expect(restagedEdit?.address).toEqual({
     kind: "binding",
     binding_id: "synthetic.08",
+    row_identity: null,
   });
   expect(first.found).toEqual([[fieldKey(own), "changed"]]);
   // A second report names the edit at its new address; the box is the same.
@@ -474,7 +638,11 @@ test("what a report moved is kept by the box's own address, which a restage neve
     first.next,
     [
       {
-        address: { kind: "binding", binding_id: "synthetic.08" },
+        address: {
+          kind: "binding",
+          binding_id: "synthetic.08",
+          row_identity: null,
+        },
         kind: "set",
         outcome: "changed",
       },

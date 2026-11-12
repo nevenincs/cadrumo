@@ -245,30 +245,40 @@ export const EstimateOnlyWhereTheEditionAllowsIt: Story = {
 };
 
 export const ProjectedYear: Story = {
-  name: "A year after the newest authored edition: the form is projected from that edition and says so",
+  name: "Every supported year: the form names the grade its year reaches, and a projected year says it is projected",
   render: (_, { globals }) => <ByYear locale={language(globals)} view="form" />,
   play: async ({ canvasElement, globals }) => {
     const years = await servedYears(language(globals));
-    const projected = years.filter(
-      (served) => served.projection.direction !== "authored",
-    );
-    expect(projected.length).toBeGreaterThan(0);
-    for (const served of projected) {
+    expect(
+      years.filter((served) => served.projection.direction !== "authored")
+        .length,
+    ).toBeGreaterThan(0);
+    for (const served of years) {
       await choose(canvasElement, served);
-      // The registry carries the newest edition forward to it.
-      expect(served.projection.direction).toBe("forward");
-      // The form says so in the words it served, and only those.
-      const words = await waitFor(
+      // A year past the newest authored edition is carried forward from it.
+      if (served.projection.direction !== "authored")
+        expect(served.projection.direction).toBe("forward");
+      const line = await waitFor(
         () => one(canvasElement, "[data-year-projection]"),
         { timeout: 30_000 },
       );
-      expect(words.textContent).toBe(served.projection.words);
-    }
-    for (const served of years.filter(
-      (candidate) => candidate.projection.direction === "authored",
-    )) {
-      await choose(canvasElement, served);
-      expect(canvasElement.querySelector("[data-year-projection]")).toBeNull();
+      expect(line).toHaveAttribute(
+        "data-year-projection",
+        served.projection.direction,
+      );
+      expect(line).toHaveAttribute(
+        "data-reachable-grade",
+        served.projection.reachable_grade,
+      );
+      // The grade in the words it served, and only those.
+      expect(one(line, "[data-year-projection-grade]").textContent).toBe(
+        served.projection.reachable_grade_words,
+      );
+      // The sentence is drawn exactly when served: for a projected year, and
+      // for a year whose own edition is below filing grade.
+      const words = line.querySelector("[data-year-projection-words]");
+      if (served.projection.words === null) expect(words).toBeNull();
+      else expect(words?.textContent).toBe(served.projection.words);
     }
   },
 };

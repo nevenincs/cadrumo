@@ -42,6 +42,7 @@ export type ModeloVerificationFindingProjection = {
   message_facts: ModeloVerificationFactProjection[];
   legal_refs: LegalRefId[];
   source_refs: SourceRefId[];
+  disclosed_limitation: boolean;
 };
 
 /**
