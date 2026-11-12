@@ -243,15 +243,6 @@ class ModeloExportCasillaValueRefusedError(ModeloPreconditionErrorMixin, ModeloE
     """
 
 
-class ModeloExportSavingsDetailRecordsUnwritableError(ModeloPreconditionErrorMixin, ModeloExportError):
-    """Refused: the return rests on savings occurrences whose detail records the export cannot write yet.
-
-    Nothing is written. The calculated boxes and the verification stand; no
-    operator action puts it right, so the refusal is terminal until the export
-    writes the per-position detail records.
-    """
-
-
 class ModeloExportSettlementRefusedError(ModeloPreconditionErrorMixin, ModeloExportError):
     """Refused: the export cannot state how the return is paid or refunded.
 

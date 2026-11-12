@@ -648,8 +648,10 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         # A saver's interest and dividends: net cash from the ledger rows linked
         # to a profile position, plus the withholding of the payer's certificate,
         # or none under the operator's attestation that the payer withheld nothing.
-        channels=_MONEY_CHANNELS,
-        ops=frozenset({BindingAggregationOp.SUM}),
+        # Each occurrence also states its own row of the record the design repeats,
+        # so both shapes belong to this registration.
+        channels=_MONEY_CHANNELS | _ROW_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}) | _ROW_OPS,
         origins=frozenset(
             {
                 TerminalOriginClass.LEDGER_AGGREGATE,
@@ -657,7 +659,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
                 TerminalOriginClass.OPERATOR_INPUT,
             },
         ),
-        output="scalar",
+        output="scalar_and_rows",
         resolver_id="capital_mobiliario_position",
         stage="mesh",
     ),

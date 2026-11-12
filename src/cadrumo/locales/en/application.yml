@@ -2640,11 +2640,6 @@ application:
         which cannot be mapped to a filing period of the modelo.
       export_revision_state_refused: The saved calculation %{calculation_revision_id}
         is not checked and complete, or recorded as filed, and cannot be exported.
-      export_savings_detail_records_unwritable: 'Nothing was written: the official
-        design places a detail record for each savings position under the interest
-        and dividend boxes, and the export cannot write those records yet. The calculated
-        boxes and the verification are unaffected. Nothing you change puts this right:
-        the export stays refused until it writes the detail records.'
       export_settlement_unknown: The export cannot state how the return is settled
         because its result is not calculated. Calculate the declaration and export
         it again.

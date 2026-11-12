@@ -8651,13 +8651,13 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
 [[revisions."2024".family_overrides]]
 family = "export_layouts"
 selector = {revision = "2023", id = "modelo-100-xml-dictionary"}
-fields = {dictionary_source_ref = "aeat-dr-100-2024-dictionary"}
+fields = {dictionary_source_ref = "aeat-dr-100-2024-dictionary", input_dictionary_source_ref = "aeat-dr-100-2024-input-dictionary"}
 # AEAT's 2024 dictionary places EXTRA at /OtraDeclaracion/EXTRA, an element its own
 # 2024 XSD does not declare. That XSD declares it inside DatosExtra, under
 # CalculoImpuestoRes, and the 2025 dictionary places it there, so only this edition
 # carries the correction.
-sequence_additions = {source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd"], dictionary_path_overrides = [{field_id = "EXTRA", path = "/DatosEconomicos/Resultados/CalculoImpuestoRes/DatosExtra/EXTRA", reason = "The 2024 dictionary declares /OtraDeclaracion/EXTRA, which the 2024 XSD does not declare; that XSD declares <xs:element name=\"EXTRA\" type=\"tipo_logico\"/> in DatosExtra under CalculoImpuestoRes, where the 2025 dictionary places the same row."}]}
-sequence_removals = {source_refs = [0, 1]}
+sequence_additions = {source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-dr-100-2024-input-dictionary"], dictionary_path_overrides = [{field_id = "EXTRA", path = "/DatosEconomicos/Resultados/CalculoImpuestoRes/DatosExtra/EXTRA", reason = "The 2024 dictionary declares /OtraDeclaracion/EXTRA, which the 2024 XSD does not declare; that XSD declares <xs:element name=\"EXTRA\" type=\"tipo_logico\"/> in DatosExtra under CalculoImpuestoRes, where the 2025 dictionary places the same row."}]}
+sequence_removals = {source_refs = [0, 1, 2]}
 
 [[revisions."2024".family_overrides]]
 family = "workbook_parity_refs"

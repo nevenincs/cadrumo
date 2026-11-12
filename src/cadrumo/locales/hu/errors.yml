@@ -842,6 +842,23 @@ errors:
     filing_export_field_projection_ref_undeclared: A(z) %{field} exportmező nem ad
       meg vetületi hivatkozást. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
+    filing_export_input_dictionary_field_undeclared: 'A(z) %{layout} exportálási terv
+      nem tudja elhelyezni a(z) %{field} mezőt: egyik szótára sem deklarálja. Az alkalmazás
+      ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása nem
+      javítja ki.'
+    filing_export_input_dictionary_not_repeated: 'A(z) %{layout} exportálási terv
+      nem tudja a bemeneti szótár %{field} mezőjét a(z) %{path} helyre tenni: a hivatalos
+      XSD egyetlen ismétlődő eleme sem tartalmazza. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.'
+    filing_export_input_dictionary_outside_xsd: 'A(z) %{layout} exportálási terv nem
+      tudja a bemeneti szótár %{field} mezőjét a(z) %{path} helyre tenni: a hivatalos
+      XSD nem deklarál ilyen elemet. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.'
+    filing_export_input_dictionary_path_conflict: 'A(z) %{layout} exportálási terv
+      nem tudja a bemeneti szótár %{field} mezőjét a(z) %{path} helyre tenni: a bevallási
+      szótár ezt a rekordot vagy útvonalat már %{declared_field} néven definiálja.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.'
     filing_export_layout_not_owned_by_snapshot: Az exportálási terv nem a kiválasztott
       nyilvántartási pillanatképhez tartozik. Az alkalmazás ezt a saját exportálási
       tervéből származtatja, ezért az adataid módosítása nem javítja ki.
@@ -1008,6 +1025,9 @@ errors:
     filing_export_xml_row_column_undeclared: A(z) %{binding} kötés sorokat hordoz,
       de nem ad meg oszlopot a sorokhoz. Az alkalmazás ezt a saját exportálási tervéből
       származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_xml_row_total_box_unresolved: A(z) %{binding} kötés soroszlopokat
+      összegez, de nem tölt ki egyetlen mezőt sem. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
     filing_export_xml_serialiser_not_bytes: Az XML-szerializáló %{type} értéket adott
       vissza bájtok helyett. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
@@ -1853,12 +1873,6 @@ errors:
     refused_modelo_export_required_record_absent: A hivatalos terv legalább egy %{export_record_id}
       rekordot ír elő, de ebben a bevallásban egy sincs, így ebben a formátumban nincs
       mit kiírni, és semmi sem íródott ki.
-    refused_modelo_export_savings_detail_records_unwritable: 'Semmi sem íródott ki:
-      a hivatalos terv minden megtakarítási pozícióhoz részletező rekordot helyez
-      a kamat- és osztalékmezők alá, és az exportálás ezeket a rekordokat még nem
-      tudja kiírni. A kiszámított mezőket és az ellenőrzést ez nem érinti. Semmilyen
-      módosításod nem oldja meg: az exportálás addig elutasított marad, amíg ki nem
-      írja a részletező rekordokat.'
     refused_modelo_export_settlement: 'Semmi sem íródott ki: az exportálás nem tudja
       megadni, hogyan kell befizetni vagy visszaigényelni a bevallás összegét.'
     refused_modelo_export_unrepresentable_character: 'Semmi sem íródott ki: a(z) %{field_id}

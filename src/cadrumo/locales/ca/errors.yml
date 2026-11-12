@@ -910,6 +910,23 @@ errors:
     filing_export_field_projection_ref_undeclared: El camp d'exportació %{field} no
       declara referència de projecció. L'aplicació ho deriva del seu propi disseny
       d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_input_dictionary_field_undeclared: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field}: cap dels seus diccionaris no el declara.
+      L''aplicació ho deriva del seu propi disseny d''exportació, així que cap canvi
+      a les teves dades ho corregeix.'
+    filing_export_input_dictionary_not_repeated: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field} del diccionari d''entrada a %{path}: cap element
+      que l''XSD oficial repeteix no el conté. L''aplicació ho deriva del seu propi
+      disseny d''exportació, així que cap canvi a les teves dades ho corregeix.'
+    filing_export_input_dictionary_outside_xsd: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field} del diccionari d''entrada a %{path}: l''XSD
+      oficial no declara aquest element. L''aplicació ho deriva del seu propi disseny
+      d''exportació, així que cap canvi a les teves dades ho corregeix.'
+    filing_export_input_dictionary_path_conflict: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field} del diccionari d''entrada a %{path}: el diccionari
+      de la declaració ja defineix aquest registre o aquesta ruta com a %{declared_field}.
+      L''aplicació ho deriva del seu propi disseny d''exportació, així que cap canvi
+      a les teves dades ho corregeix.'
     filing_export_layout_not_owned_by_snapshot: El disseny d'exportació no pertany
       a la instantània del registre seleccionada. L'aplicació ho deriva del seu propi
       disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
@@ -1086,6 +1103,9 @@ errors:
     filing_export_xml_row_column_undeclared: L'enllaç %{binding} porta files però
       no declara cap columna de fila. L'aplicació ho deriva del seu propi disseny
       d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_row_total_box_unresolved: L'enllaç %{binding} totalitza columnes
+      de fila però no omple una sola casella. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
     filing_export_xml_serialiser_not_bytes: El serialitzador XML ha retornat %{type}
       i no bytes. L'aplicació ho deriva del seu propi disseny d'exportació, així que
       cap canvi a les teves dades ho corregeix.
@@ -1978,12 +1998,6 @@ errors:
     refused_modelo_export_required_record_absent: El disseny oficial exigeix almenys
       un registre %{export_record_id}, però aquesta declaració no en té cap, així
       que no hi ha res a escriure en aquest format i no s'ha escrit res.
-    refused_modelo_export_savings_detail_records_unwritable: 'No s''ha escrit res:
-      el disseny oficial col·loca un registre de detall per cada posició d''estalvi
-      sota les caselles d''interessos i dividends, i l''exportació encara no pot escriure
-      aquests registres. Les caselles calculades i la verificació no se''n veuen afectades.
-      Cap canvi que facis no ho resol: l''exportació queda rebutjada fins que escrigui
-      els registres de detall.'
     refused_modelo_export_settlement: 'No s''ha escrit res: l''exportació no pot indicar
       com es paga o es retorna la declaració.'
     refused_modelo_export_unrepresentable_character: 'No s''ha escrit res: el camp

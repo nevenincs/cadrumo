@@ -169,5 +169,6 @@ def savings_boxes(resolution: CalculationSourceResolution, year: int = YEAR) -> 
     revision = m100_revision(year)
     return {
         str(sole_bound_casilla(revision, binding.id)): resolution.binding_values.get(binding.id)
-        for binding, _ in capital_mobiliario_position_bindings(revision)
+        for binding, provider in capital_mobiliario_position_bindings(revision)
+        if provider.dictionary_field is None
     }

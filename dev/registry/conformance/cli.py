@@ -96,6 +96,7 @@ from .manager import (
 from .render import render_coverage, render_report, vacuity_warning
 from .stamp import StampableReviewStatus, bundled_registry_root, stamp_revision
 from .stamp_toml import StampError
+from .xml_input_dictionary import verify_xml_input_dictionary_layouts
 
 if TYPE_CHECKING:
     from .closure import RegistryClosureReport
@@ -116,13 +117,15 @@ def validate_registry(
 
     Beyond compilation this proves the legal catalogue's corpus quotations and
     that every year the supported filing years' deadline windows reach has a
-    complete holiday calendar.
+    complete holiday calendar, and that every XML export layout admits its
+    input-dictionary rows against the edition's official dictionaries and XSD.
     """
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
     resolved_source_root = source_root or bundled_path()
     authority = compile_validated_authority(resolved_registry_root, resolved_source_root)
     verify_legal_catalogue_grounding(authority.catalogues.legal, source_root=resolved_source_root)
     verify_holiday_calendar_coverage(authority.modelos, authority.catalogues)
+    verify_xml_input_dictionary_layouts(authority, source_root=resolved_source_root)
     return authority
 
 

@@ -827,6 +827,22 @@ errors:
     filing_export_field_projection_ref_undeclared: The export field %{field} declares
       no projection reference. The application derives this from its own export design,
       so no change to your data repairs it.
+    filing_export_input_dictionary_field_undeclared: 'The export layout %{layout}
+      cannot place the field %{field}: neither of its dictionaries declares it. The
+      application derives this from its own export design, so no change to your data
+      repairs it.'
+    filing_export_input_dictionary_not_repeated: 'The export layout %{layout} cannot
+      place the input-dictionary field %{field} at %{path}: no element the official
+      XSD repeats encloses it. The application derives this from its own export design,
+      so no change to your data repairs it.'
+    filing_export_input_dictionary_outside_xsd: 'The export layout %{layout} cannot
+      place the input-dictionary field %{field} at %{path}: the official XSD declares
+      no such element. The application derives this from its own export design, so
+      no change to your data repairs it.'
+    filing_export_input_dictionary_path_conflict: 'The export layout %{layout} cannot
+      place the input-dictionary field %{field} at %{path}: the declaration dictionary
+      already defines that record or path as %{declared_field}. The application derives
+      this from its own export design, so no change to your data repairs it.'
     filing_export_layout_not_owned_by_snapshot: The export layout is not owned by
       the selected registry snapshot. The application derives this from its own export
       design, so no change to your data repairs it.
@@ -984,6 +1000,9 @@ errors:
     filing_export_xml_row_column_undeclared: The binding %{binding} carries rows but
       declares no row column. The application derives this from its own export design,
       so no change to your data repairs it.
+    filing_export_xml_row_total_box_unresolved: The binding %{binding} totals row
+      columns but fills no single box. The application derives this from its own export
+      design, so no change to your data repairs it.
     filing_export_xml_serialiser_not_bytes: The XML serialiser returned %{type}, not
       bytes. The application derives this from its own export design, so no change
       to your data repairs it.
@@ -1808,11 +1827,6 @@ errors:
     refused_modelo_export_required_record_absent: The official design requires at
       least one %{export_record_id} record, but this return has none, so there is
       nothing to write in this format and nothing was written.
-    refused_modelo_export_savings_detail_records_unwritable: 'Nothing was written:
-      the official design places a detail record for each savings position under the
-      interest and dividend boxes, and the export cannot write those records yet.
-      The calculated boxes and the verification are unaffected. Nothing you change
-      puts this right: the export stays refused until it writes the detail records.'
     refused_modelo_export_settlement: 'Nothing was written: the export cannot state
       how the return is paid or refunded.'
     refused_modelo_export_unrepresentable_character: 'Nothing was written: field %{field_id}

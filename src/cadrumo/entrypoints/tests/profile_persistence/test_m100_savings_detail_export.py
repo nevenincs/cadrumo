@@ -1,9 +1,10 @@
-"""A saver's return calculates and verifies, and its export is refused until the detail records can be written.
+"""A saver's return calculates, verifies and exports with one detail record per savings occurrence.
 
 The official design writes each savings occurrence as a per-position detail record
-under the interest and dividend boxes, and the export cannot write those records
-yet. The refusal reads the calculation's own recorded occurrences, never a box
-value, so a return with no savings occurrence exports as before.
+under the interest and dividend boxes. The record, its fields and its place come
+from the edition's input dictionary and XSD, read through the registry, and the
+figures are the ones the calculation stated; a return with no savings occurrence
+exports as before, with no detail record.
 
 Real encrypted store, real registered operations, real calculate, verify and export.
 """
@@ -15,19 +16,28 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from defusedxml import ElementTree
 
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.modelo.export_contracts import (
-    ModeloExportCommand,
-    ModeloExportSavingsDetailRecordsUnwritableError,
+from cadrumo.application.filing.export_xml_dictionary_xsd import (
+    xml_dictionary_repeating_element_paths,
+    xml_dictionary_xsd_source,
 )
+from cadrumo.application.filing.export_xml_input_dictionary import xml_dictionary_layout_entries
+from cadrumo.application.filing.export_xml_row_columns import nearest_repeating_element_path
+from cadrumo.application.filing.runtime import build_runtime_schema_provider
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.capital_mobiliario_position_bindings import (
+    CapitalMobiliarioQuantity,
+    capital_mobiliario_position_bindings,
+)
 from cadrumo.domain.contribuyente.inmueble_facts import facts_for_row
 from cadrumo.domain.contribuyente.posicion_facts import POSICION_SECTION
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -150,7 +160,39 @@ def _export(revision: CalculationRevision, persona: Persona, objects: SecureObje
     assert receipt.byte_size == len(output.read_bytes())
 
 
-def test_a_saver_calculates_and_verifies_and_the_export_is_refused_with_nothing_written(
+def _detail_records(operation: PinnedAuthorityOperation, payload: bytes) -> dict[str, list[dict[str, str]]]:
+    """Read each written occurrence of every detail record the savings row columns fill, by quantity."""
+    provider = build_runtime_schema_provider(
+        filing_year=YEAR, period=Period.from_year_and_code(YEAR, "0A"), modelos=("100",), operation=operation
+    )
+    revision = provider.get_snapshot("100").revision
+    layout = revision.export_layouts[0]
+    _declared, admitted = xml_dictionary_layout_entries(
+        layout, bindings=revision.bindings, sources=provider.sources, source_payloads=provider.source_payloads
+    )
+    repeating = xml_dictionary_repeating_element_paths(
+        xml_dictionary_xsd_source(layout, provider.sources), source_payloads=provider.source_payloads
+    )
+    paths = {entry.field_id: entry.path for entry in admitted}
+    document = ElementTree.fromstring(payload)
+    written: dict[str, list[dict[str, str]]] = {}
+    for _binding, selector in capital_mobiliario_position_bindings(revision):
+        if selector.dictionary_field is None or selector.detail_record is None:
+            continue
+        path = paths[selector.dictionary_field]
+        element = nearest_repeating_element_path(path, repeating)
+        assert element is not None
+        occurrences = written.setdefault(selector.detail_record, [])
+        for index, node in enumerate(document.findall(element.strip("/"))):
+            if index == len(occurrences):
+                occurrences.append({})
+            text = node.findtext(path.removeprefix(f"{element}/"))
+            if text is not None:
+                occurrences[index][selector.quantity.value] = text
+    return written
+
+
+def test_a_saver_exports_one_detail_record_for_the_interest_occurrence(
     secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     revision = _calculate(_SAVER, secure_objects, tmp_path, operation)
@@ -158,13 +200,14 @@ def test_a_saver_calculates_and_verifies_and_the_export_is_refused_with_nothing_
     _verify(revision, _SAVER)
     output = tmp_path / "modelo-100.xml"
 
-    with pytest.raises(ModeloExportSavingsDetailRecordsUnwritableError) as refused:
-        _export(revision, _SAVER, secure_objects, output)
+    _export(revision, _SAVER, secure_objects, output)
 
-    assert get_registered_error_code(refused.value).code == "REFUSED_MODELO_EXPORT_SAVINGS_DETAIL_RECORDS_UNWRITABLE"
-    assert refused.value.translated_message == "application.modelo.errors.export_savings_detail_records_unwritable"
-    assert (refused.value.context or {})["occurrence_count"] == 1
-    assert not output.exists()
+    records = {record: rows for record, rows in _detail_records(operation, output.read_bytes()).items() if rows}
+    # 324.00 of net interest plus the payer's 76.00 of withholding is the 400.00 the payer certifies;
+    # no expense was stated, and a zero is left off as the design's optional element.
+    assert list(records.values()) == [
+        [{CapitalMobiliarioQuantity.GROSS.value: "400.00", CapitalMobiliarioQuantity.WITHHOLDING.value: "76.00"}]
+    ], records
 
 
 def test_a_return_without_savings_occurrences_exports_as_before(
@@ -177,4 +220,4 @@ def test_a_return_without_savings_occurrences_exports_as_before(
 
     _export(revision, _SALARIED, secure_objects, output)
 
-    assert output.read_bytes()
+    assert all(not rows for rows in _detail_records(operation, output.read_bytes()).values())

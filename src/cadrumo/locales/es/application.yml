@@ -2776,12 +2776,6 @@ application:
       export_revision_state_refused: El cálculo guardado %{calculation_revision_id}
         no está comprobado y completo, ni registrado como presentado, y no se puede
         exportar.
-      export_savings_detail_records_unwritable: 'No se ha escrito nada: el diseño
-        oficial coloca un registro de detalle por cada posición de ahorro bajo las
-        casillas de intereses y dividendos, y la exportación aún no puede escribir
-        esos registros. Las casillas calculadas y la verificación no se ven afectadas.
-        Ningún cambio que hagas lo resuelve: la exportación queda rechazada hasta
-        que escriba los registros de detalle.'
       export_settlement_unknown: La exportación no puede indicar cómo se liquida la
         declaración porque su resultado no está calculado. Calcula la declaración
         y vuelve a exportarla.

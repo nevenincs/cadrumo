@@ -502,19 +502,6 @@ CAPITAL_MOBILIARIO_POSITION_REF_PREFIX: Final = "capital-mobiliario-position:"
 """Prefix of the source reference naming one savings occurrence: ``{position_ref}:{detail_record}``."""
 
 
-def capital_mobiliario_occurrence_refs(source_refs: Iterable[str]) -> tuple[str, ...]:
-    """Return the savings occurrences a calculation rested on, sorted, ignoring every other reference."""
-    return tuple(
-        sorted(
-            {
-                source_ref.removeprefix(CAPITAL_MOBILIARIO_POSITION_REF_PREFIX)
-                for source_ref in source_refs
-                if source_ref.startswith(CAPITAL_MOBILIARIO_POSITION_REF_PREFIX)
-            }
-        )
-    )
-
-
 ACTIVITY_ASSET_CLAIM_REF_PREFIX: Final = "activity-asset-claim:"
 """Prefix of the source reference naming one effective amortization claim."""
 

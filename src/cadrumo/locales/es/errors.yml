@@ -892,6 +892,23 @@ errors:
     filing_export_field_projection_ref_undeclared: El campo de exportación %{field}
       no declara referencia de proyección. La aplicación lo deriva de su propio diseño
       de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_input_dictionary_field_undeclared: 'El diseño de exportación %{layout}
+      no puede colocar el campo %{field}: ninguno de sus diccionarios lo declara.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.'
+    filing_export_input_dictionary_not_repeated: 'El diseño de exportación %{layout}
+      no puede colocar el campo %{field} del diccionario de entrada en %{path}: ningún
+      elemento que el XSD oficial repite lo contiene. La aplicación lo deriva de su
+      propio diseño de exportación, así que ningún cambio en tus datos lo corrige.'
+    filing_export_input_dictionary_outside_xsd: 'El diseño de exportación %{layout}
+      no puede colocar el campo %{field} del diccionario de entrada en %{path}: el
+      XSD oficial no declara ese elemento. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.'
+    filing_export_input_dictionary_path_conflict: 'El diseño de exportación %{layout}
+      no puede colocar el campo %{field} del diccionario de entrada en %{path}: el
+      diccionario de la declaración ya define ese registro o esa ruta como %{declared_field}.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.'
     filing_export_layout_not_owned_by_snapshot: El diseño de exportación no pertenece
       a la instantánea del registro seleccionada. La aplicación lo deriva de su propio
       diseño de exportación, así que ningún cambio en tus datos lo corrige.
@@ -1069,6 +1086,9 @@ errors:
     filing_export_xml_row_column_undeclared: El enlace %{binding} lleva filas pero
       no declara columna de fila. La aplicación lo deriva de su propio diseño de exportación,
       así que ningún cambio en tus datos lo corrige.
+    filing_export_xml_row_total_box_unresolved: El enlace %{binding} totaliza columnas
+      de fila pero no rellena una sola casilla. La aplicación lo deriva de su propio
+      diseño de exportación, así que ningún cambio en tus datos lo corrige.
     filing_export_xml_serialiser_not_bytes: El serializador XML devolvió %{type} y
       no bytes. La aplicación lo deriva de su propio diseño de exportación, así que
       ningún cambio en tus datos lo corrige.
@@ -1957,12 +1977,6 @@ errors:
     refused_modelo_export_required_record_absent: El diseño oficial exige al menos
       un registro %{export_record_id}, pero esta declaración no tiene ninguno, así
       que no hay nada que escribir en este formato y no se ha escrito nada.
-    refused_modelo_export_savings_detail_records_unwritable: 'No se ha escrito nada:
-      el diseño oficial coloca un registro de detalle por cada posición de ahorro
-      bajo las casillas de intereses y dividendos, y la exportación aún no puede escribir
-      esos registros. Las casillas calculadas y la verificación no se ven afectadas.
-      Ningún cambio que hagas lo resuelve: la exportación queda rechazada hasta que
-      escriba los registros de detalle.'
     refused_modelo_export_settlement: 'No se ha escrito nada: la exportación no puede
       indicar cómo se paga o se devuelve la declaración.'
     refused_modelo_export_unrepresentable_character: 'No se ha escrito nada: el campo

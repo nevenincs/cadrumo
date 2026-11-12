@@ -71,6 +71,7 @@ def test_every_supported_year_binds_interest_dividends_and_expenses(year: int) -
     bound = {
         str(sole_bound_casilla(revision, binding.id)): provider.quantity.value
         for binding, provider in capital_mobiliario_position_bindings(revision)
+        if provider.dictionary_field is None
     }
 
     assert bound == {INTEREST: "gross", DIVIDENDS: "gross", EXPENSES: "expenses"}

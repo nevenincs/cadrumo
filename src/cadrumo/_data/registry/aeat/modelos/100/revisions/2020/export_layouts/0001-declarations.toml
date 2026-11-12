@@ -2,6 +2,11 @@
 id = "modelo-100-xml-dictionary"
 format = "xml_dictionary"
 dictionary_source_ref = "aeat-dr-100-2020-dictionary"
+# The input dictionary names repeated detail records the declaration dictionary
+# leaves out although the XSD declares them (the savings RegistroB11/RegistroB13
+# among them). Only a row binding's field enters through it, checked against the
+# XSD; it never displaces a declaration-dictionary row.
+input_dictionary_source_ref = "aeat-dr-100-2020-input-dictionary"
 # AEAT declares the Aux block mandatory and first in every Modelo 100 XSD while no
 # bundled dictionary describes its rows, so its values are declared here. VERSION
 # is deliberately absent: no bundled source carries a genuine one, and a plausible
@@ -17,6 +22,7 @@ legal_refs = [
 source_refs = [
     "aeat-dr-100-2020-dictionary",
     "aeat-dr-100-2020-xsd",
+    "aeat-dr-100-2020-input-dictionary",
 ]
 
 # AEAT's own dictionary and its own XSD disagree about PH18, and the XSD is right.

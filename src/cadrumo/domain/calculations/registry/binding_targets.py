@@ -168,6 +168,7 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
     _record_relation_evidence_consumers(revision, record)
     _record_foreign_asset_row_consumers(revision, record)
     _record_activity_asset_disposal_row_consumers(revision, record)
+    _record_capital_mobiliario_row_consumers(revision, record)
     return {binding_id: tuple(refs) for binding_id, refs in consumers.items()}
 
 
@@ -193,6 +194,30 @@ def _record_activity_asset_disposal_row_consumers(
                 binding.id,
                 BindingConsumerKind.APPLICATION_ROW_VALUE,
                 f"activity_asset_disposal_row_values.{provider.row_field}",
+            )
+
+
+def _record_capital_mobiliario_row_consumers(
+    revision: ModeloRevision,
+    record: Callable[[BindingId, BindingConsumerKind, str], None],
+) -> None:
+    """Index the row columns the savings source resolver carries into calculation, one row per occurrence.
+
+    Only columns that name the dictionary field they fill earn this consumer; the
+    family's scalar totals keep their own casilla consumers.
+    """
+    from .binding_selector_utils import provider_member
+    from .capital_mobiliario_position_bindings import CapitalMobiliarioPositionProvider
+
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.CAPITAL_MOBILIARIO_POSITION:
+            continue
+        provider = provider_member(binding, CapitalMobiliarioPositionProvider)
+        if provider.dictionary_field is not None:
+            record(
+                binding.id,
+                BindingConsumerKind.APPLICATION_ROW_VALUE,
+                f"capital_mobiliario_row_values.{provider.dictionary_field}",
             )
 
 

@@ -11,7 +11,7 @@ from .errors import RegistryValidationError
 from .export_components import reconstruct_component_values
 from .export_parse_models import ParsedExportFieldValue, ParsedExportPayload
 from .export_value_policy import ParsedExportPolicyValue
-from .export_xml_dictionary import parse_xml_dictionary_payload
+from .export_xml_dictionary import XmlDictionaryEntry, parse_xml_dictionary_payload
 from .fixed_width_codec import render_empty_block_slot
 from .fixed_width_parser import parse_fixed_width_export_field
 from .schema_exports import (
@@ -29,9 +29,21 @@ def parse_export_payload(
     *,
     sources: Mapping[str, SourceReference] | None = None,
     source_payloads: Mapping[str, bytes] | None = None,
+    admitted_entries: tuple[XmlDictionaryEntry, ...] = (),
 ) -> ParsedExportPayload:
-    """Validate exported bytes, including blank filler and declared record terminators."""
-    return _parse_payload(layout, payload, sources=sources, source_payloads=source_payloads, filed=False)
+    """Validate exported bytes, including blank filler and declared record terminators.
+
+    ``admitted_entries`` are the input-dictionary rows an XML layout's repeated
+    records were written through; a fixed-width layout has none.
+    """
+    return _parse_payload(
+        layout,
+        payload,
+        sources=sources,
+        source_payloads=source_payloads,
+        filed=False,
+        admitted_entries=admitted_entries,
+    )
 
 
 def parse_filed_payload(
@@ -80,9 +92,16 @@ def _parse_payload(
     sources: Mapping[str, SourceReference] | None,
     source_payloads: Mapping[str, bytes] | None,
     filed: bool,
+    admitted_entries: tuple[XmlDictionaryEntry, ...] = (),
 ) -> ParsedExportPayload:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
-        return parse_xml_dictionary_payload(layout, payload, sources=sources, source_payloads=source_payloads)
+        return parse_xml_dictionary_payload(
+            layout,
+            payload,
+            sources=sources,
+            source_payloads=source_payloads,
+            admitted_entries=admitted_entries,
+        )
 
     compact = _compact_filing_payload(layout, payload, filed)
     cursor, payload = _payload_body(layout, payload)

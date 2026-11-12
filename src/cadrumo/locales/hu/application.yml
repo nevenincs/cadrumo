@@ -2731,12 +2731,6 @@ application:
       export_revision_state_refused: A(z) %{calculation_revision_id} mentett számítás
         nincs ellenőrzött és teljes, illetve benyújtottként rögzített állapotban,
         ezért nem exportálható.
-      export_savings_detail_records_unwritable: 'Semmi sem íródott ki: a hivatalos
-        terv minden megtakarítási pozícióhoz részletező rekordot helyez a kamat- és
-        osztalékmezők alá, és az exportálás ezeket a rekordokat még nem tudja kiírni.
-        A kiszámított mezőket és az ellenőrzést ez nem érinti. Semmilyen módosításod
-        nem oldja meg: az exportálás addig elutasított marad, amíg ki nem írja a részletező
-        rekordokat.'
       export_settlement_unknown: Az exportálás nem tudja megadni, hogyan rendeződik
         a bevallás, mert az eredménye nincs kiszámítva. Számítsd ki a bevallást, és
         exportáld újra.

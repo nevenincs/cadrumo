@@ -29,8 +29,11 @@ SINO_DICTIONARY_TYPE = "S_N"
 # Named as a set rather than matched by prefix so a future type code beginning
 # with the same letter is not silently read as a boolean.
 XML_DICTIONARY_BOOLEAN_TYPES = frozenset({LOGICAL_DICTIONARY_TYPE, SINO_DICTIONARY_TYPE})
+# The input dictionaries print an optional ``{group}`` heading between the casilla
+# and the label; no declaration dictionary carries one.
 _DICTIONARY_LINE_RE = re.compile(
-    r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]\[(?P<label>.*)\]$",
+    r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]"
+    r"(?:\{[^}]*\})?\[(?P<label>.*)\]$",
 )
 _DICTIONARY_NUMERIC_CASILLA_ID_RE = re.compile(r"^\d+$")
 _DICTIONARY_LETTER_CASILLA_ID_RE = re.compile(r"^[A-Z]$")
@@ -52,9 +55,15 @@ def parse_xml_dictionary_payload(
     *,
     sources: Mapping[str, SourceReference] | None,
     source_payloads: Mapping[str, bytes] | None,
+    admitted_entries: tuple[XmlDictionaryEntry, ...] = (),
 ) -> ParsedExportPayload:
-    """Parse the payload values named by the official dictionary and published overrides."""
-    entries = xml_dictionary_entries(layout, sources=sources, source_payloads=source_payloads)
+    """Parse the payload values named by the official dictionary and published overrides.
+
+    ``admitted_entries`` are the input-dictionary rows the caller admitted for the
+    layout's repeated records; they are read beside the declaration dictionary's
+    rows and never in place of one.
+    """
+    entries = (*xml_dictionary_entries(layout, sources=sources, source_payloads=source_payloads), *admitted_entries)
     try:
         root = ElementTree.fromstring(payload)
     except ElementTree.ParseError as exc:
@@ -82,18 +91,19 @@ def parse_xml_dictionary_payload(
 
 def _xml_dictionary_source(
     layout: ExportLayoutDefinition,
+    reference: str | None,
     *,
     sources: Mapping[str, SourceReference] | None,
     source_payloads: Mapping[str, bytes] | None,
 ) -> tuple[SourceReference, bytes]:
-    if layout.dictionary_source_ref is None:
+    if reference is None:
         raise RegistryValidationError(f"XML export layout {layout.id!r} has no dictionary source")
     if sources is None or source_payloads is None:
         raise RegistryValidationError(f"XML export layout {layout.id!r} requires published sources and source payloads")
-    source = sources.get(layout.dictionary_source_ref)
+    source = sources.get(reference)
     if source is None:
         raise RegistryValidationError(
-            f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}",
+            f"XML export layout {layout.id!r} has unresolved dictionary source {reference!r}",
         )
     try:
         return source, source_payloads[source.id]
@@ -135,7 +145,9 @@ def xml_dictionary_entries(
     source_payloads: Mapping[str, bytes] | None,
 ) -> tuple[XmlDictionaryEntry, ...]:
     """Resolve official AEAT XML dictionary :class:`XmlDictionaryEntry` rows for ``layout``."""
-    source, dictionary_payload = _xml_dictionary_source(layout, sources=sources, source_payloads=source_payloads)
+    source, dictionary_payload = _xml_dictionary_source(
+        layout, layout.dictionary_source_ref, sources=sources, source_payloads=source_payloads
+    )
     # Applied here rather than at either consumer: the renderer and
     # :func:`parse_export_payload` both resolve their rows from this call, so a
     # correction reaching only one of them would make an exported artefact
@@ -150,6 +162,34 @@ def xml_dictionary_entries(
         raise RegistryValidationError(f"XML export layout {layout.id!r} dictionary has no parseable entries")
     _assert_every_override_was_applied(layout, entries)
     return tuple(entries)
+
+
+def xml_input_dictionary_entries(
+    layout: ExportLayoutDefinition,
+    *,
+    sources: Mapping[str, SourceReference] | None,
+    source_payloads: Mapping[str, bytes] | None,
+) -> tuple[XmlDictionaryEntry, ...]:
+    """Read every :class:`XmlDictionaryEntry` row of the layout's input dictionary; none when it names none.
+
+    These rows are an offer, not a layout: the caller admits only those a
+    repeated record needs, after checking them against the edition's XSD and the
+    declaration dictionary. The declaration dictionary's path overrides do not
+    apply here, because they correct rows of that dictionary only.
+    """
+    if layout.input_dictionary_source_ref is None:
+        return ()
+    source, dictionary_payload = _xml_dictionary_source(
+        layout, layout.input_dictionary_source_ref, sources=sources, source_payloads=source_payloads
+    )
+    entries = tuple(
+        entry
+        for line in decode_dictionary_text(dictionary_payload).splitlines()
+        if (entry := _parse_xml_dictionary_line(line, source=source, overrides={})) is not None
+    )
+    if not entries:
+        raise RegistryValidationError(f"XML export layout {layout.id!r} input dictionary has no parseable entries")
+    return entries
 
 
 def _assert_every_override_was_applied(

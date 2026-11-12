@@ -8,7 +8,8 @@ checked against the payer's own gross, per payer and never per position.
 
 Each binding resolves to the sum of its quantity over its record's occurrences,
 or stays unresolved with a blocking note that names the payer or position and
-the door that settles it. Nothing is guessed: a payer whose figures disagree,
+the door that settles it. Each row column gives every occurrence of its record
+one row; a record a note leaves open gives none. Nothing is guessed: a payer whose figures disagree,
 rows with no payer evidence, a payer record that no linked row shows, income
 from another state and income in kind all leave the affected boxes open.
 
@@ -35,6 +36,7 @@ from ...domain.calculations.registry.capital_mobiliario_facts import (
 from ...domain.calculations.registry.capital_mobiliario_position_bindings import (
     capital_mobiliario_position_bindings,
     resolve_capital_mobiliario_position_binding_values,
+    resolve_capital_mobiliario_row_values,
     revision_declares_capital_mobiliario_position,
 )
 from ...domain.contribuyente.posicion_facts import posiciones_from_facts
@@ -248,8 +250,16 @@ def _compute(join: CapitalMobiliarioJoin, read: _PayerEvidenceRead, rate: Decima
     return _Computation(tuple(computed), tuple(findings), used)
 
 
+def _row_columns(revision: ModeloRevision) -> frozenset[BindingId]:
+    return frozenset(
+        binding.id
+        for binding, provider in capital_mobiliario_position_bindings(revision)
+        if provider.dictionary_field is not None
+    )
+
+
 def _open_bindings(revision: ModeloRevision, findings: Sequence[_Finding]) -> dict[BindingId, list[_Finding]]:
-    """Return, per family binding a finding leaves open, the findings that do."""
+    """Return, per family binding a finding leaves open, the findings that do; row columns included."""
     opened: dict[BindingId, list[_Finding]] = {}
     for binding, provider in capital_mobiliario_position_bindings(revision):
         for finding in findings:
@@ -314,14 +324,19 @@ class CapitalMobiliarioPositionSourceResolver:
         )
         computation = _compute(join, read, rate)
         opened = _open_bindings(context.revision, computation.findings)
+        row_columns = _row_columns(context.revision)
+        open_totals = {binding_id: found for binding_id, found in opened.items() if binding_id not in row_columns}
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_capital_mobiliario_position_binding_values(
                 context.revision, computation.computed, excluded=frozenset(opened)
             ),
-            unresolved_binding_ids=tuple(opened),
-            diagnostics=self._diagnostics(context.revision, opened),
+            row_binding_values=resolve_capital_mobiliario_row_values(
+                context.revision, computation.computed, excluded=frozenset(opened)
+            ),
+            unresolved_binding_ids=tuple(open_totals),
+            diagnostics=self._diagnostics(context.revision, open_totals),
             provenance=self._provenance(join, computation, read),
             source_transaction_ids=join.source_transaction_ids,
         )

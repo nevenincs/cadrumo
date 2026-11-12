@@ -181,7 +181,6 @@ from .required_binding_gate import (
     require_persisted_revision_required_bindings_resolved,
 )
 from .result_disposition_resolution import resolve_modelo_result_disposition
-from .savings_detail_export_gate import require_savings_detail_records_exportable
 from .trabajo_income_findings import trabajo_recorded
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 
@@ -1070,7 +1069,6 @@ def _prepare_modelo_export(
         operation=operation,
     )
     raise_if_ledger_export_evidence_missing(revision)
-    require_savings_detail_records_exportable(revision)
     _raise_if_deductible_iva_evidence_missing(revision, operation=operation)
     period, schema_provider = _prepare_modelo_export_schema(
         work_unit=work_unit,

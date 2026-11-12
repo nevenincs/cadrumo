@@ -2773,12 +2773,6 @@ application:
         que no es pot assignar a un període de presentació del model.
       export_revision_state_refused: El càlcul desat %{calculation_revision_id} no
         està comprovat i complet, ni registrat com a presentat, i no es pot exportar.
-      export_savings_detail_records_unwritable: 'No s''ha escrit res: el disseny oficial
-        col·loca un registre de detall per cada posició d''estalvi sota les caselles
-        d''interessos i dividends, i l''exportació encara no pot escriure aquests
-        registres. Les caselles calculades i la verificació no se''n veuen afectades.
-        Cap canvi que facis no ho resol: l''exportació queda rebutjada fins que escrigui
-        els registres de detall.'
       export_settlement_unknown: L'exportació no pot indicar com es liquida la declaració
         perquè el seu resultat no està calculat. Calcula la declaració i torna a exportar-la.
       export_settlement_unsupported: 'L''exportació no pot indicar com es liquida

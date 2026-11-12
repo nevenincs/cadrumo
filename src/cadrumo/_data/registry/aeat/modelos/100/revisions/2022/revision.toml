@@ -7539,9 +7539,9 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
 [[revisions."2022".family_overrides]]
 family = "export_layouts"
 selector = {revision = "2021", id = "modelo-100-xml-dictionary"}
-fields = {dictionary_source_ref = "aeat-dr-100-2022-dictionary"}
-sequence_additions = {source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"]}
-sequence_removals = {source_refs = [0, 1]}
+fields = {dictionary_source_ref = "aeat-dr-100-2022-dictionary", input_dictionary_source_ref = "aeat-dr-100-2022-input-dictionary"}
+sequence_additions = {source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd", "aeat-dr-100-2022-input-dictionary"]}
+sequence_removals = {source_refs = [0, 1, 2]}
 
 [[revisions."2022".family_overrides]]
 family = "workbook_parity_refs"
