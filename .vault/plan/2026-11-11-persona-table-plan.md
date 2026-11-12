@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-12'
 body_schema: body-v2
-body_hash: 'sha256:6c9267997565345d03c2db09aa96e158dd9b430b6164aa69f732dc3f304b3f77'
+body_hash: 'sha256:43df29e3141f67da21d7bd0b31805f907c2421271970cd365b650149b721dc0b'
 ---
 
 <!-- RETIRED: S44 -->
@@ -68,6 +68,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S54` - Add a persona that owes a prorrata Modelo 303 (general prorrata, with the annual regularisation in 4T) and make its rows pass, expectations keyed by role and cited, after the Modelo 200 re-key (lanes CALC-IVA and ACCEPTANCE); `src/cadrumo/domain/iva, src/cadrumo/_data/registry/aeat/modelos/303, dev/fixtures/personas`.
 - [ ] `P01.S55` - Source the prorrata persona's Modelo 130 rows from its ledger, after CALC-PAGOS's current causes; until then they show unchecked with the declared reason (lane CALC-PAGOS); `src/cadrumo/_data/registry/aeat/modelos/130, dev/fixtures/personas`.
 - [ ] `P01.S56` - Source the prorrata persona's Modelo 100 rows, after CALC-RENTA's current causes; until then they show unchecked with the declared reason (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, dev/fixtures/personas`.
+- [ ] `P01.S57` - Register Modelo 390 apartado 12 (prorratas, boxes 114 to 118), which no edition holds so a prorrata filer's 390 exports without its definitive percentage: first a blocking finding until it renders, then the boxes registered at the earliest edition and sourced from the ProrrataRegister; the S54 persona's 390 row stays unchecked on it until then (lane CALC-IVA); `src/cadrumo/_data/registry/aeat/modelos/390, src/cadrumo/application/prorrata_register, src/cadrumo/application/modelo`.
 
 ### Phase `P02` - Deferred backend scope
 
