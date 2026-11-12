@@ -102,8 +102,8 @@ cli:
         razon_social_help: Egy szervezet teljes cégneve (razón social vagy denominación),
           sosem kereskedelmi név.
         rendering_help: Egy rövidebb alak, amelyet egy keskenyebb mezőhöz adsz meg,
-          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak úgy
-          rövidül, ahogy megadod.
+          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak
+          úgy rövidül, ahogy megadod.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
         segundo_apellido_help: Egy természetes személy második vezetékneve. Csak a
           --no-second-surname kapcsolóval együtt hagyd el.
@@ -682,6 +682,9 @@ cli:
         evidence_sha256_help: Egy már a tárhelyeden lévő igazolás SHA-256 ujjlenyomata,
           vagy ellenőrzés a --certificate-file fájllal szemben. A payer_certificate
           esetén a kettő közül az egyik kötelező.
+        gastos_deducibles_help: A kifizető által a 19.2. cikk a), b) és c) pontja
+          szerint feltüntetett levonható költségek. `trabajo` esetén kötelező; írj
+          0-t, ha az igazolás nem tüntet fel semmit.
         group_help: Rögzítsd a kifizetőid igazolásai szerinti levonásokat.
         importe_integro_help: A kifizető által fizetett pénzbeli jövedelem a levonás
           előtt.
@@ -705,6 +708,9 @@ cli:
           cseréjéhez. Első rekordnál hagyd el.
         record_help: Rögzítsd vagy cseréld le egy kifizető igazolásának adatait egy
           adóévre és jövedelemosztályra.
+        reducciones_aplicables_help: A kifizető által a 18.2. és 18.3. cikk szerint
+          alkalmazott csökkentések, ahogy az igazolás feltünteti. `trabajo` esetén
+          kötelező; írj 0-t, ha az igazolás nem tüntet fel semmit.
         remove_expected_revision_help: A lista által a törlendő rekordhoz mutatott
           revízió.
         remove_help: Törölj egy kifizetői rekordot a lista által mutatott revízió

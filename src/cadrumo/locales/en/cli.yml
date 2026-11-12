@@ -646,6 +646,8 @@ cli:
         evidence_sha256_help: SHA-256 of a certificate already in your storage, or
           a check against --certificate-file. A payer_certificate needs one of the
           two.
+        gastos_deducibles_help: Deductible expenses the payer states under article
+          19.2 a), b) and c). Required for `trabajo`; write 0 if it states none.
         group_help: Record the withholding your payers' certificates report.
         importe_integro_help: Money income the payer paid, before withholding.
         income_class_help: Income class the payer withheld on, for example `trabajo`.
@@ -666,6 +668,9 @@ cli:
           record. Leave it out for a first record.
         record_help: Record or replace the figures one payer's certificate states
           for an ejercicio and income class.
+        reducciones_aplicables_help: Reductions the payer applied under articles 18.2
+          and 18.3, as the certificate states them. Required for `trabajo`; write
+          0 if it states none.
         remove_expected_revision_help: Revision the list showed for the record to
           remove.
         remove_help: Remove one stored payer record, guarded by the revision a list
