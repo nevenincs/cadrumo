@@ -50,6 +50,7 @@ from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
+from .draft_refusal_doors import draft_approval_decision_verdict, draft_registry_alignment_verdict
 from .draft_review_ports import DraftReviewPorts, DraftReviewProfileRepositoryProtocol
 
 
@@ -404,11 +405,13 @@ def approve_draft(
     if not normalized_approver:
         raise ModeloDraftError(
             translated_message="application.filing.review.errors.approved_by_blank",
+            precondition_verdict=draft_approval_decision_verdict("approver_stated"),
         )
 
     if derive_validation_status(draft.findings) is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
         raise ModeloDraftError(
             translated_message="application.filing.review.errors.draft_not_ready",
+            precondition_verdict=draft_approval_decision_verdict("draft_ready"),
         )
     _require_registry_review_alignment(draft, schema_provider=schema_provider)
 
@@ -646,6 +649,7 @@ def _require_registry_review_alignment(
             "finding_count": len(codes),
             "codes": codes,
         },
+        precondition_verdict=draft_registry_alignment_verdict("registry_review_alignment"),
     )
 
 

@@ -33,6 +33,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
+from .refusal_door_verdicts import registry_defect_verdict
 
 
 class SourceFamily(StrEnum):
@@ -168,7 +169,10 @@ def source_policy(kind: BindingSourceKind) -> SourcePolicyV1:
     try:
         family, surface = _FAMILY_AND_SURFACE[kind]
     except KeyError:
-        raise UnclassifiedSourceKindError(f"binding source kind {kind.value!r} has no declared family") from None
+        raise UnclassifiedSourceKindError(
+            f"binding source kind {kind.value!r} has no declared family",
+            precondition_verdict=registry_defect_verdict("source_kind_family"),
+        ) from None
     return SourcePolicyV1(source_kind=kind, family=family, override_policy=_override_policy(kind), surface=surface)
 
 

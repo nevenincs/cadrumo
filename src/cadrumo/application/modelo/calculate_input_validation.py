@@ -45,11 +45,20 @@ from ...domain.modelos.row_models import (
     validate_m349_nif_format,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ..operator_actions.models import PreconditionVerdict
 from .action_errors import ModeloPreconditionErrorMixin
+from .calculation_input_refusal_doors import (
+    calculate_binding_not_overridable_verdict,
+    calculate_casilla_reference_verdict,
+    calculate_decimal_input_verdict,
+    calculate_detail_rows_verdict,
+    calculate_relation_unknown_verdict,
+)
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .registry_input_refusals import RegistryInputCondition, casilla_value_arguments, registry_input_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -71,7 +80,11 @@ class ModeloCalculateDecimalInputError(ModeloPreconditionErrorMixin, ModeloCalcu
 
 
 class ModeloCalculateTextInputError(ModeloCalculateInputError):
-    """Raised when a ``--casilla`` override targets a text casilla with a value its type refuses."""
+    """Raised when a ``--casilla`` override targets a text casilla with a value its type refuses.
+
+    A value the operator can state again opens the value edit; a real value
+    this version does not yet file is the operator's decision.
+    """
 
 
 class ModeloCalculateCasillaInputError(ModeloPreconditionErrorMixin, ModeloCalculateInputError):
@@ -106,6 +119,7 @@ def validate_m349_detail_rows(
                 raise ModeloCalculateDetailRowsError(
                     context={"nif": row.nif_comunitario, "pais": row.codigo_pais},
                     translated_message="application.modelo.errors.calculate_m349_invalid_nif",
+                    precondition_verdict=calculate_detail_rows_verdict("m349_invalid_nif"),
                 )
             if isinstance(row, Modelo349OperadorRow):
                 validate_m349_country_prefix_context(
@@ -138,6 +152,7 @@ def validate_detail_rows(
                 raise ModeloCalculateDetailRowsError(
                     context={"days": str(days), "filing_year": str(work_unit.filing_year)},
                     translated_message="errors.calc.m184_days_past_the_year",
+                    precondition_verdict=calculate_detail_rows_verdict("m184_days_past_the_year"),
                 )
     try:
         validate_m184_member_share_sum(member_rows)
@@ -145,6 +160,7 @@ def validate_detail_rows(
         raise ModeloCalculateDetailRowsError(
             context={"total": str(exc.total), "count": str(exc.count)},
             translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
+            precondition_verdict=calculate_detail_rows_verdict("m184_share_sum_invalid"),
         ) from exc
 
     if str(work_unit.modelo) != form_for_role("iva.intracommunity_summary"):
@@ -170,6 +186,7 @@ def decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
         raise ModeloCalculateDecimalInputError(
             context={"flag": flag, "key": key, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
+            precondition_verdict=calculate_decimal_input_verdict(flag, key),
         )
     return parsed
 
@@ -187,8 +204,18 @@ def decimal_binding_value(raw_value: str, binding: BindingDefinition) -> Decimal
         raise ModeloCalculateDecimalInputError(
             context={"flag": "--binding", "key": binding.id, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
+            precondition_verdict=calculate_decimal_input_verdict("--binding", binding.id),
         )
     return parsed
+
+
+def refused_text_value_verdict(key: str) -> PreconditionVerdict:
+    """Open the value edit of the ``--casilla`` text casilla whose value its type refused."""
+    return registry_input_verdict(
+        RegistryInputCondition.CASILLA_VALUE_ADMITTED,
+        facts={"casilla_id": key, "admitted": False},
+        action_arguments=casilla_value_arguments((key,), None),
+    )
 
 
 def typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinition) -> str:
@@ -220,6 +247,7 @@ def typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinition
         raise ModeloCalculateTextInputError(
             context=context,
             translated_message="application.modelo.errors.calculate_typed_text_input_invalid",
+            precondition_verdict=refused_text_value_verdict(key),
         ) from exc
 
 
@@ -239,6 +267,7 @@ def text_value(raw_value: str, *, key: str) -> str:
         raise ModeloCalculateTextInputError(
             context={"key": key, "value": raw_value},
             translated_message="application.modelo.errors.calculate_text_input_empty",
+            precondition_verdict=refused_text_value_verdict(key),
         )
     return value
 
@@ -289,11 +318,16 @@ def validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str:
         raise ModeloCalculateTextInputError(
             context={"key": key, "value": value, "accepted": accepted},
             translated_message="application.modelo.errors.calculate_m210_tipo_renta_fetch_gated",
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.CASILLA_VALUE_SUPPORTED,
+                facts={"casilla_id": key, "supported": False},
+            ),
         )
     fetch_gated = ", ".join(sorted(fetch_gated_codes))
     raise ModeloCalculateTextInputError(
         context={"key": key, "value": value, "accepted": accepted, "fetch_gated": fetch_gated},
         translated_message="application.modelo.errors.calculate_m210_tipo_renta_unknown",
+        precondition_verdict=refused_text_value_verdict(key),
     )
 
 
@@ -402,6 +436,7 @@ def validated_binding_input_channel(
         raise ModeloCalculateBindingInputError(
             context={"key": key},
             translated_message="application.modelo.errors.calculate_binding_is_profile_derived",
+            precondition_verdict=calculate_binding_not_overridable_verdict(key, reason="profile_derived"),
         )
     return key, "enum" if key in enum_channel_ids else "decimal"
 
@@ -414,6 +449,7 @@ def validated_relation_id(key: str, known_relation_ids: set[RelationId]) -> Rela
     raise ModeloCalculateRelationInputError(
         context={"key": key, "accepted": accepted},
         translated_message="application.modelo.errors.calculate_relation_unknown",
+        precondition_verdict=calculate_relation_unknown_verdict(key),
     )
 
 
@@ -433,10 +469,12 @@ def validated_canonical_casilla_id(key: str, revision: ModeloRevision, *, work_u
             raise ModeloCalculateCasillaInputError(
                 context={"key": key, "accepted": accepted},
                 translated_message="application.modelo.errors.calculate_casilla_noncanonical_ambiguous",
+                precondition_verdict=calculate_casilla_reference_verdict(key, work_unit),
             )
         raise ModeloCalculateCasillaInputError(
             context={"key": key, "accepted": accepted},
             translated_message="application.modelo.errors.calculate_casilla_noncanonical_refused",
+            precondition_verdict=calculate_casilla_reference_verdict(key, work_unit),
         )
 
     shown = sorted(known_ids)[:_SHOWN_SAMPLE]

@@ -36,6 +36,7 @@ from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .iva_wallet_binding import M303_PRIOR_COMPENSATION_ORIGIN_IDS
 from .iva_wallet_prior_period import PriorModeloCalculations, prior_period_carry_evidence
 from .iva_wallet_refusal import ModeloIvaWalletAuthorityUnavailableError, raise_iva_wallet_precondition
@@ -286,11 +287,17 @@ def _source_periods(source: object) -> tuple[Period, ...]:
     if not raw_periods:
         return ()
     if not is_object_collection(raw_periods):
-        raise InternalInvariantError("iva wallet evidence source periods are not a collection")
+        raise InternalInvariantError(
+            "iva wallet evidence source periods are not a collection",
+            precondition_verdict=internal_invariant_verdict("iva_wallet_evidence.source_periods_collection"),
+        )
     periods: list[Period] = []
     for period in raw_periods:
         if not isinstance(period, Period):
-            raise InternalInvariantError("iva wallet evidence source names a non-canonical period")
+            raise InternalInvariantError(
+                "iva wallet evidence source names a non-canonical period",
+                precondition_verdict=internal_invariant_verdict("iva_wallet_evidence.source_period_canonical"),
+            )
         periods.append(period)
     return tuple(periods)
 

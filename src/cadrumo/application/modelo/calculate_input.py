@@ -93,6 +93,7 @@ from .calculate_input_validation import (
     decimal_binding_value,
     projected_m210_tipo_renta_code,
     refuse_row_field_casilla_override,
+    refused_text_value_verdict,
     text_value,
     typed_text_value,
     validate_detail_rows,
@@ -109,6 +110,12 @@ from .calculate_maternidad_advisory import (
     maternidad_meses_withheld_advisory,
 )
 from .calculation_action_ports import CalculationActionPorts
+from .calculation_input_refusal_doors import (
+    calculate_binding_not_overridable_verdict,
+    calculate_shortcut_group_verdict,
+    semantic_role_ambiguous_verdict,
+    semantic_role_missing_verdict,
+)
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
@@ -446,6 +453,7 @@ def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_de
     raise ModeloCalculateTextInputError(
         context={"key": key, "label": casilla_def.label, "data_type": casilla_def.data_type},
         translated_message="application.modelo.errors.calculate_text_casilla_numeric_value",
+        precondition_verdict=refused_text_value_verdict(key),
     )
 
 
@@ -485,7 +493,7 @@ def resolve_casilla_overrides(
             continue
         casilla_inputs[key] = decimal(raw_value, flag="--casilla", key=key)
     return (
-        validate_casilla_input_ids(revision, casilla_inputs),
+        validate_casilla_input_ids(revision, casilla_inputs, work_unit=work_unit),
         text_casilla_inputs,
         m210_official_tipo_renta_code,
     )
@@ -519,6 +527,7 @@ def resolve_binding_overrides(
             raise ModeloCalculateBindingInputError(
                 context={"key": raw_key},
                 translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
+                precondition_verdict=calculate_binding_not_overridable_verdict(raw_key, reason="date_sourced"),
             )
         key, channel = validated_binding_input_channel(
             raw_key,
@@ -778,7 +787,11 @@ def _supplied_option_group(
     if not supplied:
         return None
     if len(supplied) != len(values):
-        raise ModeloCalculateShortcutInputError(message, translated_message=translated_message)
+        raise ModeloCalculateShortcutInputError(
+            message,
+            translated_message=translated_message,
+            precondition_verdict=calculate_shortcut_group_verdict(),
+        )
     return supplied
 
 
@@ -1167,6 +1180,7 @@ def _semantic_role_casilla_id(
             str(exc),
             context=exc.ambiguity.context(),
             translated_message="application.modelo.errors.calculate_semantic_role_ambiguous",
+            precondition_verdict=semantic_role_ambiguous_verdict(semantic_role),
         ) from exc
     if casilla_id is not None:
         return casilla_id
@@ -1177,6 +1191,7 @@ def _semantic_role_casilla_id(
             "semantic_role": semantic_role,
         },
         translated_message="application.modelo.errors.calculate_semantic_role_missing",
+        precondition_verdict=semantic_role_missing_verdict(semantic_role, work_unit),
     )
 
 

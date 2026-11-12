@@ -8,6 +8,7 @@ from contextvars import ContextVar
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -50,7 +51,10 @@ def calculation_revision_catalogue_repository(
     try:
         factory = _BOUND_CALCULATION_REVISION_CATALOGUE_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise InternalInvariantError("calculation-revision catalogue persistence has not been composed") from error
+        raise InternalInvariantError(
+            "calculation-revision catalogue persistence has not been composed",
+            precondition_verdict=internal_invariant_verdict("calculation_revision_catalogue.composed"),
+        ) from error
     return factory(bucket_id=bucket_id, operation=operation)
 
 

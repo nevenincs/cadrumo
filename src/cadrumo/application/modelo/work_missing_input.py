@@ -21,6 +21,7 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ...domain.modelos.work_unit import WorkUnit
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
+from .calculation_input_refusal_doors import missing_input_listing_verdict
 from .edit_admission import permitted_binding_entry
 from .edit_models import ModeloEditBindingIntentKind, ModeloEditWritableBindingOverrideSurfaceEntryV1
 from .preconditions import build_modelo_precondition_failure_for_scenario
@@ -91,7 +92,9 @@ class ModeloWorkMissingInputError(OperationNextStepErrorMixin, RegistryValidatio
         return self._binding_id
 
     @classmethod
-    def from_registry_error(cls, source: RegistryValidationError) -> Self | None:
+    def from_registry_error(
+        cls, source: RegistryValidationError, *, precondition_verdict: object | None = None
+    ) -> Self | None:
         """Classify only supported engine tags with one canonical binding ID."""
         if isinstance(source, cls) or source.translated_message not in _MISSING_BINDING_MESSAGES:
             return None
@@ -100,10 +103,12 @@ class ModeloWorkMissingInputError(OperationNextStepErrorMixin, RegistryValidatio
             binding_id = _BINDING_ID_ADAPTER.validate_python(value, strict=True)
         except ValidationError:
             return None
-        return cls(source, binding_id=binding_id)
+        return cls(source, binding_id=binding_id, precondition_verdict=precondition_verdict)
 
     @classmethod
-    def from_unobserved_previous_filing(cls, source: RegistryValidationError) -> Self | None:
+    def from_unobserved_previous_filing(
+        cls, source: RegistryValidationError, *, precondition_verdict: object | None = None
+    ) -> Self | None:
         """Classify a stored earlier return that does not show the boxes a carry reads, by its first carry.
 
         The engine names every carry of that return it could not read; the
@@ -118,7 +123,7 @@ class ModeloWorkMissingInputError(OperationNextStepErrorMixin, RegistryValidatio
             binding_id = _BINDING_ID_ADAPTER.validate_python(sorted(raw.split(","))[0], strict=True)
         except ValidationError:
             return None
-        return cls(source, binding_id=binding_id)
+        return cls(source, binding_id=binding_id, precondition_verdict=precondition_verdict)
 
     @property
     def previous_filing_unobserved(self) -> bool:
@@ -536,7 +541,9 @@ def previous_filing_unobserved(
 
     ``snapshot`` is the :class:`RegistrySnapshot` it uses.
     """
-    unobserved = ModeloWorkMissingInputError.from_unobserved_previous_filing(error)
+    unobserved = ModeloWorkMissingInputError.from_unobserved_previous_filing(
+        error, precondition_verdict=missing_input_listing_verdict(work_unit)
+    )
     if unobserved is None or not override_admitted(
         snapshot, unobserved.binding_id, period=work_unit.period.registry_token, layout=layout
     ):

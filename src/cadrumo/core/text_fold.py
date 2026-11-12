@@ -23,6 +23,7 @@ import unicodedata
 __all__ = [
     "COMBINING_MARK_RANGES",
     "ascii_slug",
+    "code_point_label",
     "fold_diacritics",
     "fold_for_matching",
     "fold_printed_phrase",
@@ -541,3 +542,8 @@ def ascii_slug(text: str) -> str:
     """
     decomposed = fold_diacritics(text).encode("ascii", "ignore").decode("ascii").casefold()
     return _SLUG_RUN_RE.sub("-", decomposed).strip("-")
+
+
+def code_point_label(character: str) -> str:
+    """Return the ``U+XXXX`` label naming ``character``'s code point in diagnostics."""
+    return f"U+{ord(character):04x}".upper()

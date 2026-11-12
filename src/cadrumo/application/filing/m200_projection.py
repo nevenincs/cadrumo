@@ -30,6 +30,7 @@ from ...domain.calculations.registry.governed_fact_scope import GovernedFactSour
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .producer_snapshot import FilingProducerSnapshot
 from .producer_snapshot_m200 import Modelo200ProfileFacts
 from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
@@ -54,7 +55,10 @@ def _registry_m200_projection_catalogue(
     """Resolve row-family routes from the selected registry authority."""
     selected_authority = authority or governed_facts_in_scope()
     if selected_authority is None:
-        raise InternalInvariantError("Modelo 200 projection requires a generation-pinned authority operation")
+        raise InternalInvariantError(
+            "Modelo 200 projection requires a generation-pinned authority operation",
+            precondition_verdict=internal_invariant_verdict("m200_projection.authority_pinned"),
+        )
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m200-projection-family-catalogue",
@@ -115,10 +119,16 @@ def _rows_for(profile: object, kind: str, *, catalogue: _M200ProjectionCatalogue
         return ()
     family = catalogue.family_by_kind.get(kind)
     if family is None:
-        raise InternalInvariantError(f"Modelo 200 projection kind {kind!r} has no registry row-family declaration")
+        raise InternalInvariantError(
+            f"Modelo 200 projection kind {kind!r} has no registry row-family declaration",
+            precondition_verdict=internal_invariant_verdict("m200_projection.kind_declared"),
+        )
     rows: object = getattr(profile.projection_rows, family, None)
     if not is_object_tuple(rows):
-        raise InternalInvariantError(f"Modelo 200 projection row family {family!r} is not carried by the typed profile")
+        raise InternalInvariantError(
+            f"Modelo 200 projection row family {family!r} is not carried by the typed profile",
+            precondition_verdict=internal_invariant_verdict("m200_projection.family_carried"),
+        )
     return rows
 
 

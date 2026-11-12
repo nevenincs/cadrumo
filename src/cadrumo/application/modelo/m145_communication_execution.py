@@ -27,6 +27,7 @@ from ..operations.execution_actor import OperationExecutionCallerReader, executi
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
@@ -100,7 +101,10 @@ class _WriteGate:
         self._released.wait()
         if not self._allowed:
             self._loop.call_soon_threadsafe(self.finished.set)
-            raise InternalInvariantError("M145 repository mutation was not admitted by its operation fence")
+            raise InternalInvariantError(
+                "M145 repository mutation was not admitted by its operation fence",
+                precondition_verdict=internal_invariant_verdict("m145_communication.mutation_admitted"),
+            )
         try:
             result = commit()
         except BaseException:
@@ -187,7 +191,10 @@ class _TrackedM145EventRepository(BucketEventHistoryRepositoryProtocol):
     ) -> BucketEventHistoryCatalogue:
         repository = self._repository
         if not isinstance(repository, _RevisionGuardedM145EventAppender):
-            raise InternalInvariantError("M145 export requires a revision-guarded event-history repository")
+            raise InternalInvariantError(
+                "M145 export requires a revision-guarded event-history repository",
+                precondition_verdict=internal_invariant_verdict("m145_communication.guarded_history_repository"),
+            )
         return self._gate.enter(lambda: repository.append_guarded(appender, attempts=attempts))
 
     @override

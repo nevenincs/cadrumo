@@ -48,6 +48,7 @@ from ..operations.registry import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .recipient_encryption import RecipientEncryptedPackage
+from .refusal_door_verdicts import operator_choice_verdict
 from .review_package import ReviewPackageActor
 from .review_package_collab_audit import (
     emit_collab_feedback_countersign_attached_event,
@@ -282,21 +283,27 @@ def _signed(path: Path, ports: ReviewPackageExchangeOperationPorts) -> SignedRev
     try:
         return SignedReviewPackage.model_validate_json(ports.files.read_text(path))
     except ValueError as exc:
-        raise ReviewPackageSigningError(str(exc)) from exc
+        raise ReviewPackageSigningError(
+            str(exc), precondition_verdict=operator_choice_verdict("signature_file_unreadable")
+        ) from exc
 
 
 def _receipt(path: Path, ports: ReviewPackageExchangeOperationPorts) -> CounterSignedReceipt:
     try:
         return CounterSignedReceipt.model_validate_json(ports.files.read_text(path))
     except ValueError as exc:
-        raise ReviewPackageCounterSigningError(str(exc)) from exc
+        raise ReviewPackageCounterSigningError(
+            str(exc), precondition_verdict=operator_choice_verdict("receipt_file_unreadable")
+        ) from exc
 
 
 def _envelope(path: Path, ports: ReviewPackageExchangeOperationPorts) -> RecipientEncryptedPackage:
     try:
         return RecipientEncryptedPackage.model_validate_json(ports.files.read_text(path))
     except ValueError as exc:
-        raise RecipientEncryptionError(str(exc)) from exc
+        raise RecipientEncryptionError(
+            str(exc), precondition_verdict=operator_choice_verdict("envelope_file_unreadable")
+        ) from exc
 
 
 def _encrypt_for_recipient(

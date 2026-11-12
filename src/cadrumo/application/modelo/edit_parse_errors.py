@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Final
 
 from ...core.errors.hierarchy import CadrumoError
+from ..operator_actions.models import PreconditionVerdict
+from .action_errors import modelo_edit_value_refusal_verdict
 from .edit_models import ModeloEditParseReason
 
 _PARSE_REFUSED_KEY: Final[str] = "errors.refused.refused_modelo_edit_parse"
@@ -17,11 +19,16 @@ class ModeloEditParseRefusedError(CadrumoError):
     so a caller receives a refusal value, never this error.
     """
 
-    def __init__(self, reason: ModeloEditParseReason, *arguments: str) -> None:
-        """Carry the refusal's reason and its message arguments, never the refused text."""
+    def __init__(self, reason: ModeloEditParseReason = ModeloEditParseReason.NOT_A_NUMBER, *arguments: str) -> None:
+        """Carry the reason (an unreadable entry unless told) and message arguments, never the refused text."""
         super().__init__(translated_message=_PARSE_REFUSED_KEY, context={"reason": reason.value})
         self.reason = reason
         self.arguments = arguments
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the door of a refused edit value, as the edit boundary settles it."""
+        return modelo_edit_value_refusal_verdict()
 
 
 __all__ = ["ModeloEditParseRefusedError"]

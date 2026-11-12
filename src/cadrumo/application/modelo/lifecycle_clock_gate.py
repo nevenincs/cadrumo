@@ -26,6 +26,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision, Calculat
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordStatus
 from ...domain.modelos.work_unit import WorkUnit
+from .refusal_door_verdicts import safety_stop_verdict
 
 
 class ModeloLifecycleClockPrecedesError(ModeloError):
@@ -182,4 +183,5 @@ def require_lifecycle_clock_not_before(
                     "record_id": ordering.record_id,
                     "instant": ordering.instant.isoformat(),
                 },
+                precondition_verdict=safety_stop_verdict("lifecycle_clock_order"),
             )

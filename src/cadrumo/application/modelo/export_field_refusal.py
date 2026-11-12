@@ -6,6 +6,7 @@ from collections.abc import Mapping
 
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.text_fold import code_point_label
 from ...domain.filing.errors import (
     FilingExportCasillaValueRefusedError,
     FilingExportError,
@@ -128,7 +129,7 @@ def export_unrepresentable_character_refusal(
         "calculation_revision_id": command.calculation_revision_id,
         "field_id": exc.field_id,
         "character": exc.character,
-        "code_point": f"U+{ord(exc.character):04X}",
+        "code_point": code_point_label(exc.character),
         "field_value": exc.rendered,
     }
     if exc.record_type is not None:
@@ -141,7 +142,7 @@ def export_unrepresentable_character_refusal(
         evidence_values={
             "calculation_revision_id": command.calculation_revision_id,
             "field_id": exc.field_id,
-            "code_point": f"U+{ord(exc.character):04X}",
+            "code_point": code_point_label(exc.character),
         },
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
     )

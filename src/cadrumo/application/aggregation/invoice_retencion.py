@@ -60,8 +60,11 @@ from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr as render_tr
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.iva.components import category_components, registry_retencion_role_token, retencion_role_of_kind
+from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.preconditions import no_action_precondition_verdict
 from .retenciones import Modelo180PropertyEvidence, Modelo193PendingPaymentEvidence
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
 from .withholding_modelo_routing import modelo_for_income_kind
@@ -174,6 +177,16 @@ class InvoiceWithholdingEvidenceError(CadrumoError):
         """Build a refusal that carries only its stable reason token."""
         super().__init__(f"invoice withholding evidence refused: {refusal_code}")
         self.refusal_code = refusal_code
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """The filer's decision on evidence the capture refuses, named by its stable reason token."""
+        return no_action_precondition_verdict(
+            condition_id="invoice.withholding_evidence.admitted",
+            facts={"refusal_code": self.refusal_code, "admitted": False},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
 
 
 class InvoiceWithholdingDefectsError(InvoiceWithholdingEvidenceError):

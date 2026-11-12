@@ -32,6 +32,7 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 from .export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
     mismatched_xml_dictionary_repeated_casillas,
@@ -208,6 +209,7 @@ def assert_export_artifact_matches_receipt(receipt: DeclaracionExportResult, *, 
         raise FilingExportError(
             translated_message="application.filing.export.errors.receipt_artefact_unreadable",
             context={"artifact_path": str(artifact_path), "os_error_type": type(exc).__name__},
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECEIPT_ARTEFACT_UNREADABLE),
         ) from exc
     if byte_size != receipt.byte_size:
         raise FilingExportError(
@@ -217,6 +219,7 @@ def assert_export_artifact_matches_receipt(receipt: DeclaracionExportResult, *, 
                 "declared_byte_size": receipt.byte_size,
                 "observed_byte_size": byte_size,
             },
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECEIPT_ARTEFACT_DIFFERS),
         )
     if digest != receipt.file_sha256:
         raise FilingExportError(
@@ -226,6 +229,7 @@ def assert_export_artifact_matches_receipt(receipt: DeclaracionExportResult, *, 
                 "declared_sha256": receipt.file_sha256,
                 "observed_sha256": digest,
             },
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECEIPT_ARTEFACT_DIFFERS),
         )
 
 
@@ -261,6 +265,7 @@ def _require_current_verify_schema(draft: ModeloDraft, subview: RegistryModeloSu
                 "draft_schema_version": draft.schema_version,
                 "active_schema_version": subview.schema_version,
             },
+            precondition_verdict=export_input_decision(ExportRefusalReason.VERIFY_SNAPSHOT_STALE),
         )
 
 
@@ -366,6 +371,7 @@ def verify_written_export(draft: ModeloDraft, *, file_path: Path, schema_provide
             "mismatched_casilla_ids": tuple(verification.mismatched_casilla_ids),
             "mismatched_root_fields": tuple(verification.mismatched_root_fields),
         },
+        precondition_verdict=export_design_terminal(ExportRefusalReason.WRITTEN_FILE_REFUSED),
     )
 
 

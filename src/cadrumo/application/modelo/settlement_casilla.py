@@ -26,13 +26,14 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Protocol
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...domain.calculations.registry.result_casillas import (
     result_disposition_casilla_ids,
     settlement_casilla_role,
     settlement_remainder_casilla_ids,
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from .refusal_door_verdicts import registry_defect_verdict
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
@@ -75,7 +76,7 @@ only modelo it covers -- because that revision legitimately declares both.
 """
 
 
-class AmbiguousDeclarationResultError(CadrumoError):
+class AmbiguousDeclarationResultError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """A revision declares more than one final-result casilla."""
 
 
@@ -132,7 +133,8 @@ def declaration_result_casilla_id(revision: SettlementRevisionV1) -> CasillaId |
     if len(settling) > 1:
         raise AmbiguousDeclarationResultError(
             f"revision {revision.id!r} declares {len(settling)} final-result casillas "
-            f"({', '.join(sorted(settling))}); a declaration cannot have two results"
+            f"({', '.join(sorted(settling))}); a declaration cannot have two results",
+            precondition_verdict=registry_defect_verdict("declaration_result_unique"),
         )
     return settling[0]
 
@@ -184,7 +186,8 @@ def _computed_settlement_casilla(role: str, revision: ModeloRevision) -> Casilla
     ]
     if len(settling) > 1:
         raise AmbiguousDeclarationResultError(
-            f"revision {revision.id!r} computes {len(settling)} casillas of the settlement role {role!r}"
+            f"revision {revision.id!r} computes {len(settling)} casillas of the settlement role {role!r}",
+            precondition_verdict=registry_defect_verdict("settlement_role_unique"),
         )
     return settling[0] if settling else None
 

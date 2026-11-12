@@ -73,6 +73,8 @@ from ..user_profile.validation import (
     refuse_overlong_profile_text,
 )
 from .action_errors import ModeloProfileReadinessError
+from .lifecycle_view_refusal_doors import no_active_profile_verdict
+from .refusal_door_verdicts import operator_choice_verdict
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -468,6 +470,7 @@ def _require_not_pre_activity_period(
         message,
         context=context,
         translated_message="application.modelo.errors.profile_readiness_pre_activity",
+        profile_precondition_verdict=operator_choice_verdict("period_before_activity"),
     )
 
 
@@ -573,6 +576,7 @@ def _require_modelo_applicable_for_local_work(
         message,
         context=context,
         translated_message="application.modelo.errors.profile_readiness_not_applicable",
+        profile_precondition_verdict=operator_choice_verdict("modelo_not_applicable"),
     )
 
 
@@ -749,6 +753,7 @@ def _load_profile_for_modelo_work(
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_profile_missing",
             context={"bucket_id": bucket_id},
+            profile_precondition_verdict=no_active_profile_verdict("profile_readiness_profile"),
         )
     return loaded
 

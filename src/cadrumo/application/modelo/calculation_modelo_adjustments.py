@@ -73,6 +73,7 @@ from ...domain.modelos.row_models import (
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloAggregationInputConflictError, ModeloCrossPeriodCleanStateError
 from .preconditions import build_modelo_calculate_refusal_failure, build_modelo_precondition_failure
+from .refusal_door_verdicts import operator_choice_verdict
 from .work_form_wording import modelo_number
 
 if TYPE_CHECKING:
@@ -125,6 +126,7 @@ def require_detail_rows_declared_for_their_owning_modelo(
             continue
         raise ModeloError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=operator_choice_verdict("detail_rows_owning_modelo"),
             context={
                 "row_type": type(row).__name__,
                 "owning_modelo": owning_modelo,
