@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#informativa-party-name'
 date: '2026-11-11'
-modified: '2026-11-11'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:63ad93758b1a60909dd00ca0f3018da369634e6e7c10da602c5c82c0b34fa395'
+body_hash: 'sha256:4c2b773bd046b286ebdf295769984163873d6ed87ed60c86d9553ded70d3381a'
 related:
   - "[[2026-10-12-registry-header-requirements-adr]]"
   - "[[2026-10-03-modelo-347-fileability-adr]]"
@@ -82,7 +82,7 @@ We will add one operator-declared party filing name, one registry-declared compo
 - **Composition rule.** A registry-declared composition on party-name export fields: the component order and separator, plus a kind discriminator for natural person versus entity. It is generated from the reviewed semantic map like other layout properties and validated against the cited design text, and the renderer applies it before width checking. Hypothesis: it reuses the semantic-map requirement pattern (`source_ref`, `statement` quoted from the design) rather than a new review channel.
 - **Bindings that switch.** `modelo-347-contraparte-row-nombre`, `modelo-347-inmueble-row-arrendatario-nombre`, `iva-349-operador-row-apellidos`, `iva-349-rectificacion-row-apellidos`, `modelo-190-perceptor-row-name`, `modelo-193-perceptor-row-name`, `modelo-193-gasto-row-nombre`, `modelo-194-perceptor-row-nombre`, `modelo-180-perceptor-row-name`, `modelo-184-member-row-name`, `modelo-156-row-nombre`, `modelo-720.type_2.apellidos-y-nombre-razon-social-o-denominacion-del-declarado`, and the confirmed casilla and header fields. Each reads the declared filing name through the row's party identity instead of `party_legal_name` or `perceptor_legal_name`. The rows keep the free-text value as display and evidence.
 - **Refusal and door.** A new registered error code family under the filing domain carries the fields named under Constraints. The door is an operator-remedy catalogue action that opens the party's filing-name declaration through CLI, TUI and MCP. The surfaces render backend-served wording only.
-- **Migration.** Existing invoices, withholding observations and capture rows keep their free-text names unchanged as display only. Nothing is backfilled from them into a declaration. After the switch, an export of a period whose parties have no declared name refuses with the door, and the operator states each name once per party. The M193 placeholder name and the ledger-payment 256-character bound stop feeding exports.
+- **Migration.** Existing invoices, withholding observations and capture rows keep their free-text names unchanged as display only. Nothing is backfilled from them into a declaration. After the switch, an export of a period whose parties have no declared name refuses with the door, and the operator states each name once per party. The M193 placeholder name and the ledger-payment 256-character bound stop feeding exports. Amended 2026-11-12: the Modelo 193 pending-collection record is excepted. When the PENDIENTE field (position 117, claves A, B or D) is marked, the design itself fixes the record's NIF as 999 999 999 and its name as VALORES PENDIENTE DE ABONO (2024-and-later design extract lines 858-882; the earlier design prints the same). That record names no third party, so it keeps the prescribed text and does not pass through the declared-name door. Every other 193 perceptor and gasto row reads the declared filing name, and free-text placeholder names and the 256-character bound still stop feeding exports. Accepted in `2026-11-12-informativa-party-name-m193-pending-name-amendment-adr`.
 
 ## Rationale
 
