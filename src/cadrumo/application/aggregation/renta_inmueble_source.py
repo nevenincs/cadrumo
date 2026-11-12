@@ -306,6 +306,8 @@ def _property_findings(record: InmuebleRecord, occupancy: Occupancy | None) -> l
             causes.append(RentaInmuebleCause.REGIME_NOT_PLENO_DOMINIO)
         if titularidad.titular is not TitularRole.PRIMER_DECLARANTE:
             causes.append(RentaInmuebleCause.TITULAR_NOT_DECLARANT)
+    if record.fecha_adquisicion is None:
+        causes.append(RentaInmuebleCause.ACQUISITION_DATE_UNSTATED)
     if record.naturaleza is None:
         causes.append(RentaInmuebleCause.NATURALEZA_UNSTATED)
     if record.inmueble_principal is not None:

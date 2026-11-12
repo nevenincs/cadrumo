@@ -32,7 +32,7 @@ from ....domain.contribuyente.inmueble_record import (
     TitularRole,
 )
 from ....domain.transactions.enums import TransactionDirection
-from ..renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFindingKind
+from ..renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleDoor, RentaInmuebleFindingKind
 from ..renta_inmueble_net import RentaInmuebleTerms
 from ..renta_inmueble_resolver import resolve_renta_inmueble_terms
 from ..renta_inmueble_source import (
@@ -278,6 +278,7 @@ def test_each_unsettled_join_or_fact_refuses_the_occurrences() -> None:
     booked = date(year, 4, 1)
     cases: dict[RentaInmuebleCause, dict[str, object]] = {
         RentaInmuebleCause.TITULARIDAD_UNSTATED: {"inmueble_fields": {"titularidad": None}},
+        RentaInmuebleCause.ACQUISITION_DATE_UNSTATED: {"inmueble_fields": {"fecha_adquisicion": None}},
         RentaInmuebleCause.NATURALEZA_UNSTATED: {"inmueble_fields": {"naturaleza": None}},
         RentaInmuebleCause.LEASE_WITHOUT_INCOME: {"rows": ()},
         RentaInmuebleCause.RELATIVE_FACT_UNSTATED: {"lease_fields": {"arrendatario_pariente_art24": None}},
@@ -320,6 +321,35 @@ def test_each_unsettled_join_or_fact_refuses_the_occurrences() -> None:
     }
     for cause, changes in cases.items():
         assert cause in _refusal(year, **changes), cause
+
+
+def test_a_property_with_no_acquisition_date_is_refused_with_its_door_and_not_dropped_silently() -> None:
+    year = _year()
+    built = _build(
+        year,
+        [inmueble(ejercicio=year, fecha_adquisicion=None)],
+        [lease(start=date(year - 1, 9, 1))],
+        monthly_rent(year, amount=_RENT),
+    )
+
+    assert built.refused
+    assert [(finding.cause, finding.subject, finding.door) for finding in built.findings] == [
+        (RentaInmuebleCause.ACQUISITION_DATE_UNSTATED, "inmueble:0", RentaInmuebleDoor.INMUEBLE_EDIT)
+    ]
+    assert len(built.occurrences) == 1
+
+
+def test_the_same_property_with_its_acquisition_date_stated_computes_its_rent() -> None:
+    year = _year()
+    built = _build(
+        year,
+        [inmueble(ejercicio=year, fecha_adquisicion=date(year - 5, 6, 1))],
+        [lease(start=date(year - 1, 9, 1))],
+        monthly_rent(year, amount=_RENT),
+    )
+
+    assert RentaInmuebleCause.ACQUISITION_DATE_UNSTATED not in _causes(built)
+    assert _only(built).column(RentaInmuebleRowField.INGRESOS_INTEGROS) == _RENT * 12
 
 
 def test_a_lease_naming_no_held_property_refuses() -> None:
