@@ -31,7 +31,11 @@ from ..calculations.observations_repository import (
     PriorDomiciliationElectionProjection,
     require_observation_envelope_coordinates_current,
 )
-from .action_errors import ModeloPriorDomiciliationElectionRefusedError
+from .declaration_refusal_failures import (
+    prior_domiciliation_baseline_unevidenced_refusal,
+    prior_domiciliation_refusal,
+)
+from .declaration_refusal_profiles import DeclarationRefusalCause
 
 
 def _require_rectificativa_baseline_link(
@@ -45,13 +49,15 @@ def _require_rectificativa_baseline_link(
     coherent from a Modelo 303 rectificativa that says which return it amends.
     """
     if work_unit.modelo != form_for_role("iva.periodic"):
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_MODELO,
             "prior domiciliation cancellation/modification is supported only for Modelo 303",
             context={"modelo": str(work_unit.modelo)},
         )
     amendment_identity = revision.amendment_identity
     if amendment_identity is None or amendment_identity.kind is not FilingDeclarationKind.RECTIFICATIVA:
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_AMENDMENT,
             "prior domiciliation cancellation/modification requires a Modelo 303 rectificativa",
             context={"amendment_kind": amendment_identity.kind.value if amendment_identity is not None else ""},
         )
@@ -73,15 +79,17 @@ def _require_evidenced_baseline_filing(
     """
     baseline = filing_repository.load().get(baseline_id)
     if baseline is None:
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_baseline_unevidenced_refusal(
             "prior domiciliation cancellation/modification requires an externally evidenced baseline filing",
-            context={"baseline_filing_record_id": baseline_id},
+            work_unit_id=work_unit.work_unit_id,
+            baseline_filing_record_id=baseline_id,
         )
     baseline_evidence = baseline.external_evidence
     if baseline_evidence is None or not baseline.aeat_accepted:
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_baseline_unevidenced_refusal(
             "prior domiciliation cancellation/modification requires an externally evidenced baseline filing",
-            context={"baseline_filing_record_id": baseline_id},
+            work_unit_id=work_unit.work_unit_id,
+            baseline_filing_record_id=baseline_id,
         )
     if (
         baseline.bucket_id != work_unit.bucket_id
@@ -89,7 +97,8 @@ def _require_evidenced_baseline_filing(
         or baseline.filing_year != work_unit.filing_year
         or baseline.period != work_unit.period
     ):
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_BASELINE_TARGET,
             "prior domiciliation baseline does not match the rectificativa filing target",
             context={"baseline_filing_record_id": baseline_id},
         )
@@ -113,9 +122,15 @@ def _require_official_baseline_observation(
     """
     observation = observation_repository.load_observation(str(baseline.modelo), baseline.period)
     if observation is None or not observation.source_kind.is_official_aeat:
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_OBSERVATION,
             "prior domiciliation cancellation/modification requires an official baseline filed observation",
             context={"baseline_filing_record_id": baseline_id},
+            action_arguments={
+                "modelos": str(baseline.modelo),
+                "period": baseline.period.registry_token,
+                "year": baseline.filing_year,
+            },
         )
     require_observation_envelope_coordinates_current(observation, operation=operation)
     if (
@@ -123,7 +138,8 @@ def _require_official_baseline_observation(
         or observation.observation.period != baseline.period.registry_token
         or observation.source_metadata.get("aeat_justificante_csv") != baseline_evidence.reference_id
     ):
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_OBSERVATION_REFERENCE,
             "official baseline observation does not match the baseline evidence reference",
             context={"baseline_filing_record_id": baseline_id},
         )
@@ -148,7 +164,8 @@ def _require_submitted_file_domiciliacion_header(
     )
     declaration_type_headers = tuple(header for header in observation.source_headers if header.header_key == header_key)
     if len(declaration_type_headers) != 1:
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_HEADER_COUNT,
             "prior domiciliation cancellation/modification requires exactly one submitted-file "
             "baseline declaration type header",
             context={
@@ -159,7 +176,8 @@ def _require_submitted_file_domiciliacion_header(
         )
     declaration_type_header = declaration_type_headers[0]
     if declaration_type_header.value != ResultDisposition.DOMICILIACION.value:
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_HEADER_VALUE,
             "prior domiciliation cancellation/modification requires submitted-file baseline declaration type U",
             context={
                 "baseline_filing_record_id": baseline_id,
@@ -198,7 +216,8 @@ def resolveprior_domiciliation_election(
     itself, which is why a computed figure cannot stand in for the baseline.
     """
     if not isinstance(election, PriorDomiciliationElection):
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_TYPE,
             "prior domiciliation election must be a PriorDomiciliationElection value",
             context={"received_type": type(election).__name__},
         )
@@ -231,7 +250,8 @@ def resolveprior_domiciliation_election(
         or disposition.disposition is not ResultDisposition.DOMICILIACION
         or disposition.provenance_locator != declaration_type_header.source_locator
     ):
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_DISPOSITION,
             "prior domiciliation cancellation/modification requires a matching submitted-file "
             "baseline disposition U projection",
             context={"baseline_filing_record_id": baseline_id},

@@ -7934,151 +7934,151 @@ position = 1846
 
 [[revisions."2024".casilla_positions]]
 id = "ANOASDLG"
-position = 2099
-
-[[revisions."2024".casilla_positions]]
-id = "APENOMDLG"
-position = 2099
-
-[[revisions."2024".casilla_positions]]
-id = "APENOMDLG_ASC"
-position = 2099
-
-[[revisions."2024".casilla_positions]]
-id = "2144"
 position = 2100
 
 [[revisions."2024".casilla_positions]]
+id = "APENOMDLG"
+position = 2100
+
+[[revisions."2024".casilla_positions]]
+id = "APENOMDLG_ASC"
+position = 2100
+
+[[revisions."2024".casilla_positions]]
+id = "2144"
+position = 2101
+
+[[revisions."2024".casilla_positions]]
 id = "CONVASDLG"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "2145"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "DECFAL"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "DNIASDLG"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "DPFNAC_C"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "DPFNAC_D"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "DPGMIN_C"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "DPGMIN_D"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "DPNIF_C"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "DPNIF_D"
-position = 2101
-
-[[revisions."2024".casilla_positions]]
-id = "DP_APENOM_C"
 position = 2102
 
 [[revisions."2024".casilla_positions]]
+id = "2145"
+position = 2102
+
+[[revisions."2024".casilla_positions]]
+id = "DECFAL"
+position = 2102
+
+[[revisions."2024".casilla_positions]]
+id = "DNIASDLG"
+position = 2102
+
+[[revisions."2024".casilla_positions]]
+id = "DPFNAC_C"
+position = 2102
+
+[[revisions."2024".casilla_positions]]
+id = "DPFNAC_D"
+position = 2102
+
+[[revisions."2024".casilla_positions]]
+id = "DPGMIN_C"
+position = 2102
+
+[[revisions."2024".casilla_positions]]
+id = "DPGMIN_D"
+position = 2102
+
+[[revisions."2024".casilla_positions]]
+id = "DPNIF_C"
+position = 2102
+
+[[revisions."2024".casilla_positions]]
+id = "DPNIF_D"
+position = 2102
+
+[[revisions."2024".casilla_positions]]
+id = "DP_APENOM_C"
+position = 2103
+
+[[revisions."2024".casilla_positions]]
 id = "DP_APENOM_D"
-position = 2103
-
-[[revisions."2024".casilla_positions]]
-id = "2146"
-position = 2103
-
-[[revisions."2024".casilla_positions]]
-id = "ECIVIL"
-position = 2103
-
-[[revisions."2024".casilla_positions]]
-id = "2147"
-position = 2103
-
-[[revisions."2024".casilla_positions]]
-id = "FALLASDLG"
-position = 2103
-
-[[revisions."2024".casilla_positions]]
-id = "HIJOSUE"
-position = 2103
-
-[[revisions."2024".casilla_positions]]
-id = "FALLDLG"
-position = 2103
-
-[[revisions."2024".casilla_positions]]
-id = "J"
 position = 2104
 
 [[revisions."2024".casilla_positions]]
-id = "M"
+id = "2146"
+position = 2104
+
+[[revisions."2024".casilla_positions]]
+id = "ECIVIL"
+position = 2104
+
+[[revisions."2024".casilla_positions]]
+id = "2147"
+position = 2104
+
+[[revisions."2024".casilla_positions]]
+id = "FALLASDLG"
+position = 2104
+
+[[revisions."2024".casilla_positions]]
+id = "HIJOSUE"
+position = 2104
+
+[[revisions."2024".casilla_positions]]
+id = "FALLDLG"
+position = 2104
+
+[[revisions."2024".casilla_positions]]
+id = "J"
 position = 2105
+
+[[revisions."2024".casilla_positions]]
+id = "M"
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "FNACDLG"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "2148"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "MINUSDLG"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "NIFDLG"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "NORESIDENTE"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "PCTMINASDLG"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "PH18"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "RESIDENTEUE"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "SEXO_C"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "SEXO_D"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "TIPOTRIBUTACION"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "ZCCAD"
-position = 2105
+position = 2106
 
 [[revisions."2024".casilla_positions]]
 id = "ZRUE2"
-position = 2105
+position = 2106
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "renta-base-liquidable-general-sometida-a-gravamen"}

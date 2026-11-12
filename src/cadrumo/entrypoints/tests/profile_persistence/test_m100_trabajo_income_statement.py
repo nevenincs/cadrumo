@@ -113,7 +113,11 @@ def _findings(
     ).revision
     head: CalculationRevision = work.require_head()
     return trabajo_income_findings(
-        revision, head, profile_values=profile_values or {}, effective_date=date(unit.filing_year, 12, 31)
+        revision,
+        head,
+        profile_values=profile_values or {},
+        effective_date=date(unit.filing_year, 12, 31),
+        operation=work.operation,
     )
 
 

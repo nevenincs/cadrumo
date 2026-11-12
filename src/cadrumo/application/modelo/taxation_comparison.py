@@ -55,7 +55,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CoreError
+from ...core.errors.hierarchy import CoreError, TerminalPreconditionErrorMixin
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
@@ -156,15 +156,22 @@ _REFUSAL_LOCALE_KEYS: Final[Mapping[TaxationComparisonRefusal, str]] = MappingPr
 """The catalogue sentence of each refusal; every refusal has one."""
 
 
-class TaxationComparisonError(CoreError):
+class TaxationComparisonError(TerminalPreconditionErrorMixin[object], CoreError):
     """Raised when a conjunta-vs-individual comparison cannot be performed.
 
     ``refusal`` is the closed reason; ``casilla_ids`` names the unresolved
     boxes of an :attr:`TaxationComparisonRefusal.UNRESOLVED_BOXES` refusal.
-    The served words name the boxes and never an amount.
+    The served words name the boxes and never an amount. The refusal carries
+    the door of its cause, which :func:`taxation_comparison_refusal` attaches.
     """
 
-    def __init__(self, refusal: TaxationComparisonRefusal, *, casilla_ids: tuple[CasillaId, ...] = ()) -> None:
+    def __init__(
+        self,
+        refusal: TaxationComparisonRefusal,
+        *,
+        casilla_ids: tuple[CasillaId, ...] = (),
+        precondition_verdict: object | None = None,
+    ) -> None:
         """Carry the refusal token and, for unresolved boxes, the boxes it names."""
         self.refusal = refusal
         self.casilla_ids = casilla_ids
@@ -175,7 +182,41 @@ class TaxationComparisonError(CoreError):
             f"taxation comparison refused: {refusal.value}",
             translated_message=_REFUSAL_LOCALE_KEYS[refusal],
             context=context,
+            precondition_verdict=precondition_verdict,
         )
+
+
+def taxation_comparison_refusal(
+    refusal: TaxationComparisonRefusal,
+    *,
+    casilla_ids: tuple[CasillaId, ...] = (),
+    work_unit_id: str | None = None,
+) -> TaxationComparisonError:
+    """Return the refusal for ``refusal`` with the door of its cause.
+
+    ``work_unit_id`` binds the calculation door to the declaration a refusal
+    site holds; without it the operator names the declaration.
+    """
+    from .declaration_refusal_failures import declaration_refusal_failure
+    from .declaration_refusal_profiles import DeclarationRefusalCause
+
+    cause = {
+        TaxationComparisonRefusal.NOT_DECLARED: DeclarationRefusalCause.TAXATION_UNDECLARED,
+        TaxationComparisonRefusal.REVISION_OUTDATED: DeclarationRefusalCause.TAXATION_REVISION,
+        TaxationComparisonRefusal.NOT_CALCULATED: DeclarationRefusalCause.TAXATION_CALCULATION,
+        TaxationComparisonRefusal.ENTRIES_UNKNOWN: DeclarationRefusalCause.TAXATION_ENTRIES,
+        TaxationComparisonRefusal.SPOUSE_UNSTATED: DeclarationRefusalCause.TAXATION_SPOUSE,
+        TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED: DeclarationRefusalCause.TAXATION_FAMILY_SITUATION,
+        TaxationComparisonRefusal.NO_FAMILY_UNIT: DeclarationRefusalCause.TAXATION_FAMILY_UNIT,
+        TaxationComparisonRefusal.UNRESOLVED_BOXES: DeclarationRefusalCause.TAXATION_BOXES,
+    }[refusal]
+    return TaxationComparisonError(
+        refusal,
+        casilla_ids=casilla_ids,
+        precondition_verdict=declaration_refusal_failure(
+            cause, action_arguments=None if work_unit_id is None else {"work_unit_id": work_unit_id}
+        ).verdict,
+    )
 
 
 class TaxationComparisonResult(BaseModel):
@@ -313,7 +354,7 @@ def compare_taxation_results(
         casilla_id for casilla_id in basis.result_casillas if casilla_id not in conjunta or casilla_id not in individual
     )
     if missing:
-        raise TaxationComparisonError(TaxationComparisonRefusal.UNRESOLVED_BOXES, casilla_ids=missing)
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.UNRESOLVED_BOXES, casilla_ids=missing)
     delta = individual[basis.resultado_casilla] - conjunta[basis.resultado_casilla]
     if delta > MATERIALITY_THRESHOLD:
         recommendation = TaxationRecommendation.CONJUNTA
@@ -446,24 +487,24 @@ def _require_family_unit(
     facts = profile_fact_index(profile.record, profile.profile_decode_context.schema)
     situacion = facts.get(_SITUACION_FAMILIAR_PATH)
     if not isinstance(situacion, str) or not situacion.strip():
-        raise TaxationComparisonError(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)
     try:
         needs_children = situacion_familiar_monoparental_required(
             situacion.strip(), effective_date=filing_period, authority=operation
         )
     except RegistryValidationError as exc:
-        raise TaxationComparisonError(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED) from exc
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED) from exc
     if not needs_children:
         # The married unit (Art. 82.1.1ª) files jointly with the spouse it names.
         spouse = facts.get(_SPOUSE_TAX_ID_PATH)
         if not isinstance(spouse, str) or not spouse.strip():
-            raise TaxationComparisonError(TaxationComparisonRefusal.SPOUSE_UNSTATED)
+            raise taxation_comparison_refusal(TaxationComparisonRefusal.SPOUSE_UNSTATED)
         return
     children = facts.get(_MINOR_CHILDREN_IN_UNIT_PATH)
     if not isinstance(children, bool):
-        raise TaxationComparisonError(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)
     if not children:
-        raise TaxationComparisonError(TaxationComparisonRefusal.NO_FAMILY_UNIT)
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.NO_FAMILY_UNIT)
 
 
 def _without[Key, Value](mapping: Mapping[Key, Value], excluded: object) -> dict[Key, Value]:
@@ -511,7 +552,7 @@ def _evaluate_mode(
             ),
         )
     except ModeloWorkMissingInputError as exc:
-        raise TaxationComparisonError(
+        raise taxation_comparison_refusal(
             TaxationComparisonRefusal.UNRESOLVED_BOXES,
             casilla_ids=tuple(sorted(_boxes_reading_binding(revision, exc.binding_id))),
         ) from exc
@@ -534,7 +575,7 @@ def _require_settled_results(
             )
         )
     if named:
-        raise TaxationComparisonError(TaxationComparisonRefusal.UNRESOLVED_BOXES, casilla_ids=tuple(sorted(named)))
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.UNRESOLVED_BOXES, casilla_ids=tuple(sorted(named)))
 
 
 def _selected_work_unit(work_unit_id: str, *, bucket_id: str, ports: CalculationActionPorts) -> WorkUnit:
@@ -566,12 +607,12 @@ def _comparable_snapshot(
             str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period.registry_token
         )
     except (FileNotFoundError, RegistrySnapshotError) as exc:
-        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED) from exc
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.NOT_DECLARED) from exc
     basis = taxation_comparison_basis(snapshot)
     if basis is None:
-        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED)
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.NOT_DECLARED)
     if snapshot.revision.id != work_unit.revision_id:
-        raise TaxationComparisonError(TaxationComparisonRefusal.REVISION_OUTDATED)
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.REVISION_OUTDATED)
     return snapshot, basis
 
 
@@ -582,10 +623,12 @@ def _head_caller_context(work_unit: WorkUnit, *, ports: CalculationActionPorts) 
     head_id = work_unit.current_calculation_revision_id
     head = None if head_id is None else ports.calculation_repository.load(operation=ports.operation).get(head_id)
     if head is None:
-        raise TaxationComparisonError(TaxationComparisonRefusal.NOT_CALCULATED)
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.NOT_CALCULATED, work_unit_id=work_unit.work_unit_id)
     context = caller_context_of(head)
     if not context.operator_layer_known:
-        raise TaxationComparisonError(TaxationComparisonRefusal.ENTRIES_UNKNOWN)
+        raise taxation_comparison_refusal(
+            TaxationComparisonRefusal.ENTRIES_UNKNOWN, work_unit_id=work_unit.work_unit_id
+        )
     return context
 
 
@@ -615,7 +658,7 @@ def compare_taxation_for_work_unit(
     context = _head_caller_context(work_unit, ports=ports)
     profile = load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=operation.profile_decode_context())
     if profile is None:
-        raise TaxationComparisonError(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)
+        raise taxation_comparison_refusal(TaxationComparisonRefusal.FAMILY_SITUATION_UNSTATED)
     _require_family_unit(profile, filing_period=calculation_filing_date(work_unit.period), operation=operation)
     replay = caller_context_calculation_inputs(context, revision=snapshot.revision)
     conjunta, individual = (
@@ -648,5 +691,6 @@ __all__ = [
     "compare_taxation_results",
     "revision_compares_taxation",
     "taxation_comparison_basis",
+    "taxation_comparison_refusal",
     "unresolved_result_boxes",
 ]

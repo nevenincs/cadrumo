@@ -72,6 +72,7 @@ from ...domain.modelos.verification_report import (
 )
 from .reconcile_casilla import CasillaDivergence, detect_casilla_divergences
 from .reconcile_population import resolve_casilla_population_scope
+from .refusal_door_verdicts import stored_defect_verdict
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
@@ -109,7 +110,10 @@ def _pulled_filed_values(
     ):
         from ...domain.calculations.registry.errors import RegistrySnapshotError
 
-        raise RegistrySnapshotError("pulled filing does not belong to the selected work-unit registry coordinate")
+        raise RegistrySnapshotError(
+            "pulled filing does not belong to the selected work-unit registry coordinate",
+            precondition_verdict=stored_defect_verdict("pulled_filing_coordinate"),
+        )
     return dict(stored.observation.casilla_values)
 
 

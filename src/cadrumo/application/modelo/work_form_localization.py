@@ -18,6 +18,7 @@ from ...core.i18n.render import lookup_translation, tr
 from ...core.type_guards import is_object_tuple
 from ...domain.calculations.registry.modelo_localization import modelo_localization_source, resolve_modelo_localization
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .printed_boxes import printed_box_number
 from .work_form_field_vocabulary import (
     ModeloFormText,
@@ -117,7 +118,10 @@ def unnamed_casilla_label(language: OutputLanguage) -> ModeloFormText:
         _UNNAMED_LOCALE_KEY, locale=_SPANISH
     )
     if not (text is not None and text):
-        raise InternalInvariantError(f"the catalogue has no text for {_UNNAMED_LOCALE_KEY!r}")
+        raise InternalInvariantError(
+            f"the catalogue has no text for {_UNNAMED_LOCALE_KEY!r}",
+            precondition_verdict=internal_invariant_verdict("work_form_localization.unnamed_text_catalogued"),
+        )
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.UNNAMED)
 
 
@@ -136,7 +140,10 @@ def fed_box_label(binding_id: str, context: WorkFormContext) -> ModeloFormText |
     ):
         if bool(lookup_translation(_FEEDS_BOX_LOCALE_KEY, locale=locale)):
             return ModeloFormText(text=tr(_FEEDS_BOX_LOCALE_KEY, locale=locale, box=box), disclosure=disclosure)
-    raise InternalInvariantError(f"the catalogue has no text for {_FEEDS_BOX_LOCALE_KEY!r}")
+    raise InternalInvariantError(
+        f"the catalogue has no text for {_FEEDS_BOX_LOCALE_KEY!r}",
+        precondition_verdict=internal_invariant_verdict("work_form_localization.feeds_box_text_catalogued"),
+    )
 
 
 def casilla_help(casilla: CasillaDefinition, label: str, context: WorkFormContext) -> str | None:

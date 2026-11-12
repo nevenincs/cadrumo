@@ -36,21 +36,27 @@ class ModeloFactResolutionContext:
         """Resolve an integer-valued modelo governed fact."""
         value = self._scalar(fact_id)
         if type(value) is not int:
-            raise RegistryValidationError(f"modelo fact {fact_id!r} must resolve to an integer")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"modelo fact {fact_id!r} must resolve to an integer", declaration="modelo_fact"
+            )
         return value
 
     def decimal(self, fact_id: str) -> Decimal:
         """Resolve a Decimal-valued modelo governed fact."""
         value = self.resolved_decimal(fact_id).payload.value
         if not isinstance(value, Decimal):
-            raise RegistryValidationError(f"modelo fact {fact_id!r} must resolve to a Decimal")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"modelo fact {fact_id!r} must resolve to a Decimal", declaration="modelo_fact"
+            )
         return value
 
     def resolved_decimal(self, fact_id: str) -> ResolvedScalarFact:
         """Resolve a Decimal modelo fact while preserving its provenance."""
         resolved = self.resolved_scalar(fact_id)
         if not isinstance(resolved.payload.value, Decimal):
-            raise RegistryValidationError(f"modelo fact {fact_id!r} must resolve to a Decimal")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"modelo fact {fact_id!r} must resolve to a Decimal", declaration="modelo_fact"
+            )
         return resolved
 
     def resolved_scalar(self, fact_id: str) -> ResolvedScalarFact:
@@ -58,18 +64,24 @@ class ModeloFactResolutionContext:
         try:
             date_axis = _MODELO_FACT_DATE_AXES[fact_id]
         except KeyError as exc:
-            raise RegistryValidationError(f"unregistered modelo governed fact {fact_id!r}") from exc
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"unregistered modelo governed fact {fact_id!r}", declaration="modelo_fact"
+            ) from exc
         effective_date = self.filing_period if date_axis is DateAxis.FILING_PERIOD else self.devengo_date
         resolved = self.authority.resolve_governed_fact(
             ScalarFactQuery(fact_id=fact_id, date_axis=date_axis, effective_date=effective_date)
         )
         if not isinstance(resolved, ResolvedScalarFact):
-            raise RegistryValidationError(f"modelo fact {fact_id!r} must resolve to a scalar")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"modelo fact {fact_id!r} must resolve to a scalar", declaration="modelo_fact"
+            )
         return resolved
 
     def _scalar(self, fact_id: str) -> int | Decimal:
         resolved = self.resolved_scalar(fact_id)
         value = resolved.payload.value
         if type(value) is not int and not isinstance(value, Decimal):
-            raise RegistryValidationError(f"modelo fact {fact_id!r} must resolve to an integer or Decimal")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"modelo fact {fact_id!r} must resolve to an integer or Decimal", declaration="modelo_fact"
+            )
         return value

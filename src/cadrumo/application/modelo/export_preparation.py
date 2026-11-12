@@ -94,10 +94,11 @@ from ..filing.producer_snapshot import (
 from ..filing.runtime import RegistrySchemaAccessor, filing_profile_from_taxpayer
 from .action_errors import (
     M303FilingEvidenceError,
-    ModeloPriorDomiciliationElectionRefusedError,
     ModeloRevisionNotSealedError,
     export_period_unmappable_error,
 )
+from .declaration_refusal_failures import prior_domiciliation_refusal
+from .declaration_refusal_profiles import DeclarationRefusalCause
 from .export_contracts import (
     ModeloExportCommand,
     ModeloExportEvidenceMissingError,
@@ -106,6 +107,7 @@ from .export_contracts import (
 )
 from .export_field_refusal import export_operator_decision_refusal, export_taxpayer_name_missing_refusal
 from .export_sink import LocalFileExportSink
+from .lifecycle_view_refusal_doors import unit_calculate_verdict
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_profile,
@@ -114,6 +116,7 @@ from .profile_export_binding import (
     resolve_profile_export_values,
 )
 from .projection_next_steps import verify_work_step
+from .refusal_door_verdicts import operator_choice_verdict, stored_defect_verdict
 from .revision_replay_inputs import revision_filing_replay_inputs
 from .row_source_identity_replay import attach_revision_row_source_identities
 
@@ -209,6 +212,7 @@ def raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> No
         raise ModeloExportEvidenceMissingError(
             translated_message="application.modelo.errors.export_ledger_evidence_missing",
             context={"calculation_revision_id": revision.calculation_revision_id},
+            precondition_verdict=unit_calculate_verdict("export_ledger_evidence", revision.work_unit_id),
         )
     if not revision.source_transaction_ids:
         return
@@ -219,6 +223,7 @@ def raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> No
     raise ModeloExportEvidenceMissingError(
         translated_message="application.modelo.errors.export_ledger_evidence_missing",
         context={"calculation_revision_id": revision.calculation_revision_id},
+        precondition_verdict=unit_calculate_verdict("export_ledger_evidence", revision.work_unit_id),
     )
 
 
@@ -300,6 +305,7 @@ def raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider: 
     raise ModeloExportUnsupportedError(
         translated_message="application.modelo.errors.export_unsupported",
         context=context,
+        precondition_verdict=operator_choice_verdict("export_layout_unsupported"),
     )
 
 
@@ -321,7 +327,8 @@ def requireprior_domiciliation_marker_layout(
         for field in record.fields
     ):
         return
-    raise ModeloPriorDomiciliationElectionRefusedError(
+    raise prior_domiciliation_refusal(
+        DeclarationRefusalCause.ELECTION_MARKER_LAYOUT,
         translated_message="errors.refused.refused_modeloprior_domiciliation_election",
         context={
             "modelo": str(work_unit.modelo),
@@ -406,6 +413,7 @@ def approve_export_draft(
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_approval_failed",
             context={"calculation_revision_id": revision.calculation_revision_id},
+            precondition_verdict=stored_defect_verdict("export_draft_approval"),
         ) from exc
     return period, approved
 

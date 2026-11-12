@@ -134,6 +134,7 @@ def append_revision_advisory_findings(
             if work_profile is None
             else record_to_path_values(work_profile.record, as_of=fact_coordinate),
             effective_date=fact_coordinate,
+            operation=operation,
         )
     )
 

@@ -16,6 +16,7 @@ from typing import Final
 
 from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.modelos.errors import ModeloError
+from ..operator_actions.models import PreconditionVerdict
 from .edit_contract import ModeloEditMutationFamily
 from .edit_models import (
     ModeloBindingEditIntentV1,
@@ -24,6 +25,7 @@ from .edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditSubmissionV1,
 )
+from .refusal_door_verdicts import operator_choice_verdict
 from .work_form_models import ModeloFormCarryAttestation
 
 _WORDED_FAMILIES: Final[frozenset[AbsenceAttestationFamily]] = frozenset(
@@ -43,7 +45,14 @@ class ModeloAbsenceStatementNothingOpenError(ModeloError):
     statement, or the declaration reads none. Nothing was staged.
     """
 
-    def __init__(self, *, modelo: str, filing_year: int, family: AbsenceAttestationFamily) -> None:
+    def __init__(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        family: AbsenceAttestationFamily,
+        precondition_verdict: PreconditionVerdict,
+    ) -> None:
         """Name the declaration the filer asked about, in the words of the family."""
         super().__init__(
             translated_message=(
@@ -52,6 +61,7 @@ class ModeloAbsenceStatementNothingOpenError(ModeloError):
                 else "application.modelo.errors.prior_carries_nothing_open"
             ),
             context={"modelo": modelo, "filing_year": filing_year},
+            precondition_verdict=precondition_verdict,
         )
 
 
@@ -77,7 +87,14 @@ def absence_statement_submission(
     )
     if not binding_ids:
         raise ModeloAbsenceStatementNothingOpenError(
-            modelo=str(baseline.modelo), filing_year=baseline.filing_year, family=family
+            modelo=str(baseline.modelo),
+            filing_year=baseline.filing_year,
+            family=family,
+            precondition_verdict=operator_choice_verdict(
+                "work_income_nothing_open"
+                if family is AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED
+                else "prior_carry_nothing_open"
+            ),
         )
     return ModeloEditSubmissionV1(
         baseline=baseline,

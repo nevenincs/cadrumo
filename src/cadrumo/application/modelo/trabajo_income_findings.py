@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.casilla_id import CasillaId
 from ...core.retencion_soportada import RetencionSoportadaClase
-from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from ...domain.calculations.registry.trabajo_expense_limits import TrabajoExpenseLimits, trabajo_expense_limits
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -29,6 +29,7 @@ from ..aggregation.retencion_soportada_source import recorded_income_classes
 from .semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import ModeloRevision
     from ...domain.modelos.calculation_revision import CalculationRevision
 
@@ -51,20 +52,10 @@ TRABAJO_INCOME_STATEMENT_ROLES: Final[Mapping[str, str]] = {
 _TOTAL_INGRESOS_ROLE: Final[str] = f"{_ROLE_PREFIX}total_ingresos_integros"
 _DISABILITY_INCREASE_ROLE: Final[str] = f"{_ROLE_PREFIX}incremento_discapacitado_activo"
 _DISABILITY_PROFILE_PATH: Final[str] = "renta_taxpayer.disability_grade"
-_EXPENSE_LIMITS: Final[tuple[tuple[str, str, str, str], ...]] = (
-    # (casilla role, words suffix, limit parameter, legal reference)
-    (
-        f"{_ROLE_PREFIX}gasto_colegio_profesional",
-        "colegio_profesional",
-        "renta-trabajo-colegio-profesional-limite",
-        "rd-439-2007:art-10",
-    ),
-    (
-        f"{_ROLE_PREFIX}gasto_defensa_juridica",
-        "defensa_juridica",
-        "renta-trabajo-defensa-juridica-limite",
-        "ley-35-2006:art-19",
-    ),
+_EXPENSE_LIMITS: Final[tuple[tuple[str, str, str], ...]] = (
+    # (casilla role, words suffix, legal reference)
+    (f"{_ROLE_PREFIX}gasto_colegio_profesional", "colegio_profesional", "rd-439-2007:art-10"),
+    (f"{_ROLE_PREFIX}gasto_defensa_juridica", "defensa_juridica", "ley-35-2006:art-19"),
 )
 
 
@@ -131,16 +122,14 @@ def _disability_finding(
 
 
 def _limit_findings(
-    revision: ModeloRevision, target: CalculationRevision, effective_date: date
+    revision: ModeloRevision, target: CalculationRevision, limits: TrabajoExpenseLimits
 ) -> list[ModeloVerificationFinding]:
-    parameters = {parameter.id: parameter for parameter in revision.parameters}
     findings: list[ModeloVerificationFinding] = []
-    for role, suffix, parameter_id, legal_ref in _EXPENSE_LIMITS:
+    for role, suffix, legal_ref in _EXPENSE_LIMITS:
         casilla_id = _casilla(revision, role)
-        parameter = parameters.get(parameter_id)
-        if casilla_id is None or parameter is None:
+        limit = limits.colegio_profesional if suffix == "colegio_profesional" else limits.defensa_juridica
+        if casilla_id is None or limit is None:
             continue
-        limit = resolve_parameter(parameter, {"filing_period": effective_date})
         stated = target.casilla_values.get(casilla_id, Decimal(0))
         if stated > limit:
             findings.append(
@@ -166,6 +155,7 @@ def trabajo_income_findings(
     *,
     profile_values: Mapping[str, str],
     effective_date: date,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloVerificationFinding, ...]:
     """Return the work-income findings of ``target`` against the registry ``revision`` it was calculated on.
 
@@ -191,5 +181,6 @@ def trabajo_income_findings(
         disability = _disability_finding(revision, target, profile_values)
         if disability is not None:
             findings.append(disability)
-        findings.extend(_limit_findings(revision, target, effective_date))
+        limits = trabajo_expense_limits(revision, operation=operation, effective_date=effective_date)
+        findings.extend(_limit_findings(revision, target, limits))
     return tuple(findings)

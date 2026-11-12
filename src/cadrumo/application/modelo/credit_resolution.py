@@ -47,8 +47,10 @@ from .credit_resolution_repository import (
     CreditResolutionReader,
     CreditResolutionRefusedError,
     CreditResolutionRevokeRefusalReason,
+    credit_resolution_refusal,
     revoke_refusal_reason,
 )
+from .declaration_refusal_profiles import DeclarationRefusalCause
 from .disagreement_words import sources_facts, value_facts
 
 if TYPE_CHECKING:
@@ -153,14 +155,14 @@ def find_finding(revision: CalculationRevision, finding_id: str) -> CalculationS
     """
     token = finding_id.strip().lower()
     if len(token) != SOURCE_DISAGREEMENT_FINDING_ID_LENGTH or not set(token) <= _HEX_DIGITS:
-        raise CreditResolutionRefusedError("unknown_finding")
+        raise credit_resolution_refusal("unknown_finding", DeclarationRefusalCause.CREDIT_FINDING_NAMED)
     matches = {
         issue.disagreement.finding_key: issue
         for issue in revision.source_issues
         if issue.disagreement is not None and issue.disagreement.finding_key.startswith(token)
     }
     if len(matches) != 1:
-        raise CreditResolutionRefusedError("unknown_finding")
+        raise credit_resolution_refusal("unknown_finding", DeclarationRefusalCause.CREDIT_FINDING_NAMED)
     return next(iter(matches.values()))
 
 
@@ -172,7 +174,7 @@ def stored_resolution_for(records: Iterable[CreditResolutionRecord], finding_id:
     """
     matches = [record for record in records if record.finding_key.startswith(finding_id)]
     if len(matches) != 1:
-        raise CreditResolutionRefusedError("unknown_finding")
+        raise credit_resolution_refusal("unknown_finding", DeclarationRefusalCause.CREDIT_FINDING_NAMED)
     return matches[0]
 
 
@@ -197,7 +199,7 @@ def credit_resolution_for_finding(
     """Build the active resolution that accepts the value the calculation used for ``issue``'s disagreement."""
     fact = issue.disagreement
     if fact is None:
-        raise CreditResolutionRefusedError("unknown_finding")
+        raise credit_resolution_refusal("unknown_finding", DeclarationRefusalCause.CREDIT_FINDING_READABLE)
     return CreditResolutionRecord(
         disagreement=fact,
         accepted_role=fact.selected_role,

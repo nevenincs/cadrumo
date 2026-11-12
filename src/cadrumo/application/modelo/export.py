@@ -156,6 +156,7 @@ from .export_settlement import DeclaredSettlement, declared_settlement, settleme
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
+from .lifecycle_view_refusal_doors import no_active_profile_verdict
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_settled_row_amount_authority
 from .m303_regimen_simplificado_scope import (
@@ -167,6 +168,11 @@ from .preconditions import (
     build_modelo_precondition_failure_for_scenario,
 )
 from .prior_domiciliation import resolveprior_domiciliation_election
+from .refusal_door_verdicts import (
+    operator_choice_verdict,
+    safety_stop_verdict,
+    stored_defect_verdict,
+)
 from .required_binding_gate import (
     require_persisted_revision_required_bindings_resolved,
 )
@@ -640,13 +646,16 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
         **(exc.context or {}),
     }
     if isinstance(exc, FilingExportRequiredRecordAbsentError):
-        return ModeloExportRequiredRecordAbsentError(context=refusal_context)
+        return ModeloExportRequiredRecordAbsentError(
+            context=refusal_context, precondition_verdict=operator_choice_verdict("export_required_record_absent")
+        )
     field_refusal = export_field_level_refusal(command, exc)
     if field_refusal is not None:
         return field_refusal
     return ModeloExportError(
         translated_message="application.modelo.errors.export_draft_write_failed",
         context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
+        precondition_verdict=stored_defect_verdict("export_draft_write"),
     )
 
 
@@ -703,8 +712,11 @@ def _export_value_overflow_refusal(
         return ModeloExportValueOverflowError(
             translated_message="application.modelo.errors.export_text_value_overflow",
             context={**context, "field_value": exc.rendered},
+            precondition_verdict=operator_choice_verdict("export_value_overflow"),
         )
-    return ModeloExportValueOverflowError(context=context)
+    return ModeloExportValueOverflowError(
+        context=context, precondition_verdict=operator_choice_verdict("export_value_overflow")
+    )
 
 
 def _emit_export_event(
@@ -883,6 +895,7 @@ def load_exportable_revision_target(
         raise ModeloExportCrossBucketRefusedError(
             translated_message="application.modelo.errors.export_cross_bucket_refused",
             context={"work_unit_id": work_unit.work_unit_id},
+            precondition_verdict=safety_stop_verdict("export_cross_profile"),
         )
     return revision, work_unit
 
@@ -981,6 +994,7 @@ def _resolve_modelo_exportprior_domiciliation(
         raise ModeloExportPriorDomiciliationElectionRequiredError(
             "a Modelo 303 rectificativa stating the rectified amount requires an explicit prior-domiciliation election",
             context={"calculation_revision_id": command.calculation_revision_id, "modelo": str(work_unit.modelo)},
+            precondition_verdict=operator_choice_verdict("export_prior_domiciliation_election"),
         )
     prior_domiciliation_election = resolveprior_domiciliation_election(
         election=command.prior_domiciliation_election or PriorDomiciliationElection.KEEP,
@@ -1151,6 +1165,7 @@ def export_modelo_revision(
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
             translated_message="application.modelo.errors.export_no_active_bucket",
+            precondition_verdict=no_active_profile_verdict("export_bucket"),
         )
 
     # Validate the destination before touching the catalogue or writing any

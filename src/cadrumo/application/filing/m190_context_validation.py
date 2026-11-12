@@ -16,6 +16,7 @@ from ...domain.calculations.registry.export_value_policy import (
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 
 _M190_SIGNED_PAIRS = (
     (
@@ -198,7 +199,10 @@ def _require_m190_incapacity_context(
     clave_scope: PerceptorClaveScope,
 ) -> None:
     if occupied and scoped_casilla is not None and not clave_scope.admits(scoped_casilla, key, subkey):
-        raise FilingExportValidationError(f"modelo 190 {scoped_casilla} amount is outside the keys it applies to")
+        raise FilingExportValidationError(
+            f"modelo 190 {scoped_casilla} amount is outside the keys it applies to",
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
+        )
 
 
 def _m190_prior_year_is_valid(filing_year: str, devengo_year: str) -> bool:
@@ -222,10 +226,14 @@ def _require_m190_reintegro_context(
     if marker != _M190_NEGATIVE_SIGN:
         return
     if magnitude == "0" * len(magnitude):
-        raise FilingExportValidationError("modelo 190 negative reintegro requires a nonzero magnitude")
+        raise FilingExportValidationError(
+            "modelo 190 negative reintegro requires a nonzero magnitude",
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
+        )
     if not _m190_prior_year_is_valid(filing_year, devengo_year) or retention != "0" * len(retention):
         raise FilingExportValidationError(
-            "modelo 190 reintegro requires an earlier devengo year and zero associated withholding"
+            "modelo 190 reintegro requires an earlier devengo year and zero associated withholding",
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
         )
 
 
@@ -244,9 +252,15 @@ def require_m190_signed_reintegro_context(
     if signed is None or signed.value_policy is not ExportValuePolicy.SIGNED_COMPONENT_SIGN:
         return  # Superseded manually authored layouts do not claim this contract.
     if len(wire) != max(_span(field)[1] - 1 for field in record.fields):
-        raise FilingExportValidationError("modelo 190 signed perceptor record is incomplete")
+        raise FilingExportValidationError(
+            "modelo 190 signed perceptor record is incomplete",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.RECORD_INCOMPLETE),
+        )
     if clave_scope is None:
-        raise FilingExportValidationError("modelo 190 signed perceptor record needs its clave scope")
+        raise FilingExportValidationError(
+            "modelo 190 signed perceptor record needs its clave scope",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.CONTEXT_UNSUPPLIED),
+        )
     refs = tuple(map(str, signed.source_refs))
     source_ref = _m190_reviewed_source_ref(signed, source_digests)
     _require_m190_reviewed_context(by_id, refs)
@@ -284,4 +298,7 @@ def _require_m190_signed_components(
         )
     # The design fills the field only for atrasos or reintegros of earlier exercises, whatever the amount's sign.
     if devengo_year != "0" * len(devengo_year) and not _m190_prior_year_is_valid(filing_year, devengo_year):
-        raise FilingExportValidationError("modelo 190 devengo year must be earlier than the declaration year")
+        raise FilingExportValidationError(
+            "modelo 190 devengo year must be earlier than the declaration year",
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
+        )

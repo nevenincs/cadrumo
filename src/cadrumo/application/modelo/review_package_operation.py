@@ -62,6 +62,8 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .export import export_modelo_revision
 from .export_contracts import ModeloExportCommand, ModeloExportResult
 from .export_ports import ModeloExportPortsFactory
+from .lifecycle_view_refusal_doors import unit_status_verdict
+from .refusal_door_verdicts import caller_defect_verdict
 from .review_package import (
     ReviewPackageActor,
     ReviewPackageBuildResult,
@@ -243,6 +245,7 @@ class _DraftPayloadCollector:
                     "calculation_revision_id": exported.calculation_revision_id,
                     "detail": "exported draft bytes do not match the export receipt",
                 },
+                precondition_verdict=caller_defect_verdict("review_package_export_receipt"),
             )
         return self._payload
 
@@ -335,6 +338,7 @@ class ModeloReviewPackageBuildExecutor:
                             "calculation_revision_id": payload.calculation_revision_id,
                             "detail": "calculation or work unit changed during export",
                         },
+                        precondition_verdict=unit_status_verdict("review_package_export_view", unit.work_unit_id),
                     )
                 built = build_review_package(
                     revision=revision,
