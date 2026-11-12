@@ -54,7 +54,7 @@ type RetencionSoportadaIdentity = tuple[int, RetencionSoportadaClase, str]
 
 
 class RetencionSoportadaRecord(BaseModel):
-    """One payer's figures for one income class and ejercicio (payload schema v1)."""
+    """One payer's figures for one income class and ejercicio (payload schema v2)."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -70,6 +70,10 @@ class RetencionSoportadaRecord(BaseModel):
     retencion: _Importe
     ingreso_a_cuenta: _Importe
     ingreso_a_cuenta_repercutido: _Importe
+    reducciones_aplicables: _Importe | None = None
+    """The art. 18.2 and 18.3 reductions the payer applied; stated for class ``trabajo``, absent otherwise."""
+    gastos_deducibles: _Importe | None = None
+    """The art. 19.2 a), b) and c) deductible expenses the payer states; stated for ``trabajo``, absent otherwise."""
     origin: RetencionSoportadaOrigen
     evidence_fingerprint: ContentDigest | None = None
     """The sha256 of the certificate bytes; required for a payer certificate."""
@@ -91,6 +95,25 @@ class RetencionSoportadaRecord(BaseModel):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
+    def _work_figures_belong_to_work_income(self) -> Self:
+        """Refuse the two work-income figures on any other class, or one of them alone.
+
+        A payload written before they existed states neither, and reads back as
+        a ``trabajo`` record with both absent; :attr:`lacks_work_certificate_figures`
+        names that state so a writer can refuse to create it afresh.
+        """
+        stated = (self.reducciones_aplicables is not None, self.gastos_deducibles is not None)
+        if self.income_class is not RetencionSoportadaClase.TRABAJO:
+            if any(stated):
+                raise RentaValidationError("only a work-income record states reductions and deductible expenses")
+        elif stated[0] != stated[1]:
+            raise RentaValidationError(
+                "a work-income record states both reductions and deductible expenses, or neither"
+            )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _certificate_is_fingerprinted(self) -> Self:
         if self.origin is RetencionSoportadaOrigen.PAYER_CERTIFICATE and self.evidence_fingerprint is None:
             raise RentaValidationError("a payer-certificate record names no certificate fingerprint")
@@ -100,6 +123,21 @@ class RetencionSoportadaRecord(BaseModel):
     def identity(self) -> RetencionSoportadaIdentity:
         """Return the identity this record is stored under."""
         return (self.ejercicio, self.income_class, self.payer_ref)
+
+    @property
+    def lacks_work_certificate_figures(self) -> bool:
+        """Return whether this is a work-income record that states neither figure a v2 payload requires."""
+        return self.income_class is RetencionSoportadaClase.TRABAJO and self.reducciones_aplicables is None
+
+    def states(self, cantidad: RetencionSoportadaCantidad) -> bool:
+        """Return whether this record states the figure ``cantidad`` draws."""
+        match cantidad:
+            case RetencionSoportadaCantidad.REDUCCIONES_APLICABLES:
+                return self.reducciones_aplicables is not None
+            case RetencionSoportadaCantidad.GASTOS_DEDUCIBLES:
+                return self.gastos_deducibles is not None
+            case _:
+                return True
 
     @property
     def pago_a_cuenta(self) -> Decimal:
@@ -128,7 +166,11 @@ class RetencionSoportadaRecord(BaseModel):
         )
 
     def quantity(self, cantidad: RetencionSoportadaCantidad) -> Decimal:
-        """Return the amount of this record a binding drawing ``cantidad`` reads."""
+        """Return the amount of this record a binding drawing ``cantidad`` reads.
+
+        Raises:
+            RentaValidationError: The record does not state the figure (see :meth:`states`).
+        """
         match cantidad:
             case RetencionSoportadaCantidad.PAGO_A_CUENTA:
                 return self.pago_a_cuenta
@@ -140,3 +182,15 @@ class RetencionSoportadaRecord(BaseModel):
                 return self.ingreso_a_cuenta_repercutido
             case RetencionSoportadaCantidad.IMPORTE_INTEGRO:
                 return self.importe_integro
+            case RetencionSoportadaCantidad.IMPORTE_INTEGRO_DINERARIO:
+                return self.importe_integro_dinerario
+            case RetencionSoportadaCantidad.VALORACION_ESPECIE:
+                return self.valoracion_especie
+            case RetencionSoportadaCantidad.REDUCCIONES_APLICABLES:
+                if self.reducciones_aplicables is None:
+                    raise RentaValidationError("the record does not state the reductions the payer applied")
+                return self.reducciones_aplicables
+            case RetencionSoportadaCantidad.GASTOS_DEDUCIBLES:
+                if self.gastos_deducibles is None:
+                    raise RentaValidationError("the record does not state the deductible expenses")
+                return self.gastos_deducibles
