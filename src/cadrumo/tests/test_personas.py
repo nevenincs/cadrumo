@@ -1202,6 +1202,17 @@ def test_a_profile_row_keeps_its_section_and_typed_values() -> None:
     assert values["apellidos_y_nombre"] == IdentityRef(role="asalariada.titular", field="full_name")
 
 
+def test_a_profile_row_date_may_precede_the_floor_but_not_pass_the_horizon() -> None:
+    early = _with_profile_row(values={"fecha_poder": {"year": "floor-6", "month": 1, "day": 10}})
+    (row,) = _parse(early).profile_rows
+    (key, value), *_ = row.values
+    assert key == "fecha_poder"
+    assert isinstance(value, PersonaDate)
+    assert value.resolve(_ENVELOPE) == date(_ENVELOPE.floor - 6, 1, 10)
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(_with_profile_row(values={"fecha_poder": {"year": "horizon+1", "month": 1, "day": 10}}))
+
+
 @pytest.mark.parametrize(
     ("changes", "message"),
     [

@@ -303,7 +303,8 @@ class ProfileRow:
     """One row of a repeatable profile section, keyed by that section's field keys.
 
     A value is a string, a boolean, an identity reference or a date token, rendered as
-    ``[profile]`` values are; the repeatable-row mutation records the row.
+    ``[profile]`` values are; the repeatable-row mutation records the row. A date records a
+    past event, so, as a household row's dates, it may precede the envelope floor.
     """
 
     section: str
@@ -1233,9 +1234,16 @@ def _profile_row(table: _Table, where: str, roles: _Roles) -> ProfileRow:
     return ProfileRow(
         section=section,
         values=tuple(
-            (key, _profile_value(key, value, f"{where}.values.{key}", roles)) for key, value in sorted(values.items())
+            (key, _row_value(key, value, f"{where}.values.{key}", roles)) for key, value in sorted(values.items())
         ),
     )
+
+
+def _row_value(key: str, value: object, where: str, roles: _Roles) -> ProfileValue:
+    """A ``[[profile_rows]]`` value; its date records a past event (a deed, an appointment), so it may precede the floor."""
+    if isinstance(value, Mapping) and "identity" not in value:
+        return _date(value, where, biographical=True)
+    return _profile_value(key, value, where, roles)
 
 
 def _household(rows: object, where: str, leaves: frozenset[str], roles: _Roles) -> tuple[HouseholdMember, ...]:
@@ -2507,6 +2515,8 @@ def _dates(persona: Persona) -> list[PersonaDate]:
     found.extend(answer.value for answer in persona.profile if isinstance(answer.value, PersonaDate))
     for member in (*persona.descendants, *persona.ascendants):
         found.extend(value for _key, value in member.leaves if isinstance(value, PersonaDate))
+    for row in persona.profile_rows:
+        found.extend(value for _key, value in row.values if isinstance(value, PersonaDate))
     found.extend(rental.contract_start for rental in persona.rental_properties)
     found.extend(rental.fecha_adquisicion for rental in persona.rental_properties)
     found.extend(identity.birth_date for identity in persona.identities.identities if identity.birth_date is not None)
