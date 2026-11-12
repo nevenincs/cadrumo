@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:367f0f8c46b50e843ef8ce23fe958c515d3b14a7fc0f02d300119ad14a3bf0c4'
+body_hash: 'sha256:16324d86305e4591cfadff11700d6822c3a00981e6d83852cb89ade323d30e13'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -92,6 +92,42 @@ related:
 - `S31` `by:` `ACCEPTANCE`
 - `S51` `verify:` `persona_table run --tree ed243d5bd7 (t32b, 266/278): intracomunitario-desarrollador 100 2022-2025 green on 0218/0222 since t30b` -> `pass`
 - `S51` `by:` `ACCEPTANCE`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/bindings/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/casillas/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/constructs/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/dependency_classifications/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/form_layouts/0001-form-layout.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/form_layouts/0001-form-layout.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/revision.toml`
+- `S43` `D` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/bindings/0001-declarations.toml`
+- `S43` `D` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/dependency_classifications/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/revision.toml`
+- `S43` `M` `.vault/adr/2026-06-19-m202-first-period-attestation-adr.md`
+- `S43` `M` `src/cadrumo/adapters/persistence/profile/tests/test_cross_period_clean_state.py`
+- `S43` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_200_202_pagos_fraccionados_fold.py`
+- `S43` `M` `src/cadrumo/application/calculations/cross_period_clean_state.py`
+- `S43` `A` `src/cadrumo/application/calculations/modelo_202_base_source.py`
+- `S43` `M` `src/cadrumo/application/calculations/relation_prefill.py`
+- `S43` `M` `src/cadrumo/application/calculations/tests/test_cross_period_first_year_fractional.py`
+- `S43` `M` `src/cadrumo/application/calculations/tests/test_first_year_modalidad_cuota_no_wizard_catalogue.py`
+- `S43` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_first_year_cuota_e2e.py`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/facts/0101-modelo-202-applicability-catalogue.toml`
+- `S43` `A` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_202_instalment_facts.py`
+- `S43` `M` `src/cadrumo/application/overview/applicability_evidence.py`
+- `S43` `M` `src/cadrumo/application/overview/calendar.py`
+- `S43` `M` `src/cadrumo/application/overview/calendar_models.py`
+- `S43` `A` `src/cadrumo/application/overview/modelo202_instalment.py`
+- `S43` `A` `src/cadrumo/application/overview/modelo202_instalment_evidence.py`
+- `S43` `M` `src/cadrumo/application/overview/read_calendar_item_projection.py`
+- `S43` `A` `src/cadrumo/application/overview/tests/test_calendar_modelo_202_instalment.py`
+- `S43` `M` `src/cadrumo/domain/calculations/registry/applicability_modelo202.py`
+- `S43` `M` `src/cadrumo/entrypoints/cli/overview_rendering.py`
+- `S43` `M` `src/cadrumo/entrypoints/cli/overview_results.py`
+- `S43` `A` `src/cadrumo/entrypoints/cli/tests/test_overview_modelo_202_instalment_doors.py`
+- `S43` `M` `src/cadrumo/entrypoints/overview_read_composition.py`
+- `S43` `verify:` `pytest test_calendar_modelo_202_instalment test_modelo_202_instalment_facts test_overview_modelo_202_instalment_doors test_calendar_legal_entity test_cross_period_clean_state test_cross_period_first_year_fractional` -> `pass`
+- `S43` `verify:` `lint-imports --config .importlinter` -> `pass`
+- `S43` `by:` `implementation-engineer`
 
 ## Notes
 
