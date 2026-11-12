@@ -927,7 +927,7 @@ def _require_value_stated_by_rows(
         raise casilla_value_refusal(
             entry.casilla_id,
             translated_message="application.filing.export.errors.box_not_stated_by_rows",
-            context={"element_path": rows.element_path},
+            context={"element_path": rows.element_path, "value": rendered},
         )
     if not accounted:
         raise FilingExportValidationError(

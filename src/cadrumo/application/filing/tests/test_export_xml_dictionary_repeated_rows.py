@@ -248,7 +248,7 @@ def test_a_box_total_the_rows_do_not_add_up_to_refuses(operation: PinnedAuthorit
         _render(provider, _draft(provider, 2025, inputs))
     assert refused.value.casilla_id == "1654"
     assert refused.value.translated_message == "application.filing.export.errors.box_not_stated_by_rows"
-    assert refused.value.context == {"element_path": f"/{_ELEMENT_PATH}", "casilla_id": "1654"}
+    assert refused.value.context == {"element_path": f"/{_ELEMENT_PATH}", "casilla_id": "1654", "value": "1.00"}
     for locale in ("es", "ca", "en", "hu"):
         message = resolve_error_message(refused.value, locale=locale)
         assert "1654" in message
