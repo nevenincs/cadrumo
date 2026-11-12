@@ -276,6 +276,24 @@ _EXEMPT: Final[Mapping[str, str]] = {
         "the field is exempted here. It is identity-class rather than secret for the same "
         "reason the tax identifier is: it names a party rather than authenticating one."
     ),
+    "m200_secretario_consejo.apellidos_y_nombre": (
+        "Matches on 'secret' only through 'secretario': the Modelo 200 page 002 secretario del "
+        "consejo de administracion is a party the return names, not authentication material. "
+        "It is identity-class, held in encrypted custody like the administrador and "
+        "representante rows."
+    ),
+    "m200_secretario_consejo.nif": (
+        "Matches on 'secret' only through 'secretario': the Modelo 200 page 002 secretario del "
+        "consejo de administracion is a party the return names, not authentication material. "
+        "It is identity-class, held in encrypted custody like the administrador and "
+        "representante rows."
+    ),
+    "m200_relaciones.has_secretario_consejo": (
+        "Matches on 'secret' only through 'secretario': the Modelo 200 page 002 secretario del "
+        "consejo de administracion is a party the return names, not authentication material. "
+        "It is identity-class, held in encrypted custody like the administrador and "
+        "representante rows. The field only states whether the entity has one."
+    ),
 }
 """Fields whose credential-shaped wording is a false positive.
 

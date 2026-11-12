@@ -315,10 +315,13 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
         ],
     )
     assert one_p.exit_code == 0, one_p.output
-    # The first installment has no earlier installment to relate to; only the
-    # taxpayer's prior-twelve-month turnover, an input every year requires, is missing.
-    assert "binding_count\t1" in one_p.output
+    # The first installment has no earlier installment to relate to. What is missing
+    # is the taxpayer's prior-twelve-month turnover, an input every year requires, and
+    # the art. 40.2 base, which reads the Modelo 200 of an earlier periodo impositivo
+    # rather than an earlier installment.
+    assert "binding_count\t2" in one_p.output
     assert "modelo-202-incn-prior-12-months" in one_p.output
+    assert "relation_input\tmodelo-202-cuota-base-ejercicio-anterior\t" in one_p.output
     assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
 
     two_p = invoke_cached_cli(
@@ -365,8 +368,16 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
 
     two_p_snapshot = published_snapshot("202", filing_year=2024, period="2P")
     three_p_snapshot = published_snapshot("202", filing_year=2024, period="3P")
-    ((_, two_p_provider),) = relation_prefill_bindings_for_period(two_p_snapshot.revision, period="2P")
-    ((_, three_p_provider),) = relation_prefill_bindings_for_period(three_p_snapshot.revision, period="3P")
+    (two_p_provider,) = (
+        provider
+        for binding, provider in relation_prefill_bindings_for_period(two_p_snapshot.revision, period="2P")
+        if binding.id == "modelo-202-pagos-fraccionados-anteriores"
+    )
+    (three_p_provider,) = (
+        provider
+        for binding, provider in relation_prefill_bindings_for_period(three_p_snapshot.revision, period="3P")
+        if binding.id == "modelo-202-pagos-fraccionados-anteriores"
+    )
     assert two_p_provider.required_period_anchors_for_target("2P") == ((0, "1P"),)
     assert three_p_provider.required_period_anchors_for_target("3P") == ((0, "1P"), (0, "2P"))
 

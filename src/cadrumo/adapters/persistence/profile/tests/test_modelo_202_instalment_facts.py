@@ -25,6 +25,7 @@ from .....application.overview.modelo202_instalment_evidence import (
     Modelo202InstalmentStores,
     bind_modelo_202_instalment_facts,
 )
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.applicability_modelo202 import Modelo202BaseBasis, Modelo202InstalmentOutcome
@@ -64,6 +65,9 @@ def _save_modelo_200(
         filing_year=filing_year,
         period=_MODELO_200_ANNUAL,
         casilla_values={_CUOTA_BASE_CASILLA: cuota},
+        # A presented return's figures are evidence however far the registry grades
+        # the edition, so the record is grounded at the grade every edition reaches.
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
     repository.save(
         repository.prepare_observation_envelope(

@@ -22,6 +22,7 @@ _PROFILE_ID = UUID("41414141-4141-4141-8141-414141414141")
 _EXPECTED = {
     "taxpayer_type.country_of_fiscal_residence": "countries",
     "attribution_entity_socios.country_of_residence": "countries",
+    "m200_establecimiento_permanente.pais_residencia_fiscal": "countries",
     "renta_spouse.eu_eea_country": "eu_eea_countries",
 }
 
