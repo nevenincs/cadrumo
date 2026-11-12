@@ -27,20 +27,23 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.aggregation.retenciones import RetencionObservation
-from cadrumo.application.modelo.calculation_note_gate import blocking_calculation_issues
+from cadrumo.application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
+from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError, blocking_calculation_issues
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 
-from .m130_m100_annual_support import BUCKET_ID, import_official_m130_result_observation, seed_prior_year_m100
+from .m130_m100_annual_support import BUCKET_ID, YEAR, import_official_m130_result_observation, seed_prior_year_m100
 from .renta_persona_support import (
     ACTIVITY_KEY,
     ACTIVITY_KEY_CASILLA,
@@ -73,14 +76,6 @@ def _box(revision: CalculationRevision, casilla: str) -> Decimal:
     return Decimal(revision.casilla_values[validated_casilla_id(casilla)])
 
 
-_SALARY: dict[CasillaId, Decimal] = {
-    # Cash pay of both employers: 24.000,00 + 6.000,00.
-    validated_casilla_id("0003"): Decimal("30000.00"),
-    # Retribucion en especie of employer B: valuation 1.000,00, ingreso a cuenta 200,00 passed on in full.
-    validated_casilla_id("0004"): Decimal("1000.00"),
-    validated_casilla_id("0005"): Decimal("200.00"),
-    validated_casilla_id("0006"): Decimal("200.00"),
-}
 _EMPLOYEE = Persona(categories="trabajo,capital_mobiliario")
 
 
@@ -106,7 +101,7 @@ def _record_employers(operation: PinnedAuthorityOperation, directory: Path) -> N
     )
 
 
-def test_employee_credits_the_certified_retention_and_files_a_verified_export(
+def test_employee_credits_the_certified_retention_and_cannot_export_an_undisclosed_capital_income(
     secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     seed_profile(_EMPLOYEE)
@@ -115,7 +110,7 @@ def test_employee_credits_the_certified_retention_and_files_a_verified_export(
     attest_no_withholding(operation, RetencionSoportadaClase.CAPITAL_MOBILIARIO)
     register_refund_account(secure_objects)
 
-    annual = calculate_annual(secure_objects, casilla_inputs=_SALARY)
+    annual = calculate_annual(secure_objects, casilla_inputs={})
 
     # oracle: Ley 35/2006 arts. 79.e and 99.6 with Reglamento del IRPF art. 108.3: 3.120,00 + 600,00 + 200,00.
     assert _box(annual, "0596") == Decimal("3920.00")
@@ -126,8 +121,14 @@ def test_employee_credits_the_certified_retention_and_files_a_verified_export(
     # oracle: Modelo 100 casilla 0007 = 0004 + 0005 - 0006 = 1.000,00 + 200,00 - 200,00.
     assert _box(annual, "0007") == Decimal("1000.00")
 
-    payload = verify_and_export(annual, secure_objects, tmp_path / "modelo-100-employee.xml", _EMPLOYEE)
-    assert payload
+    # The persona declares movable-capital income but holds no savings position, so that income is unknown
+    # and is never read as zero: verifying, and so exporting, is refused for the undisclosed family.
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        verify_and_export(annual, secure_objects, tmp_path / "modelo-100-employee.xml", _EMPLOYEE)
+    assert refused.value.context is not None
+    assert refused.value.context["reason"] == "income_family_not_computed"
+    assert refused.value.context["source_ref"] == "income-family:capital_mobiliario"
+    assert not (tmp_path / "modelo-100-employee.xml").exists()
 
 
 def test_the_unattested_movable_capital_credit_stays_unresolved(
@@ -138,7 +139,7 @@ def test_the_unattested_movable_capital_credit_stays_unresolved(
     seed_prior_year_m100(secure_objects)
     _record_employers(operation, tmp_path)
 
-    annual = calculate_annual(secure_objects, casilla_inputs=_SALARY)
+    annual = calculate_annual(secure_objects, casilla_inputs={})
 
     assert _box(annual, "0596") == Decimal("3920.00")
     assert validated_casilla_id("0597") not in annual.casilla_values
@@ -293,10 +294,17 @@ def _record_employer(operation: PinnedAuthorityOperation, directory: Path) -> No
     )
 
 
+def _seed_inventory_book(secure_objects: SecureObjectRepository) -> None:
+    """Open the activity's inventory book with no stock held, which the Anexo D inventory rows read."""
+    InventoryLedgerRepository(objects=secure_objects).save(
+        InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),))
+    )
+
+
 def _calculate_autonomo_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
     return calculate_annual(
         secure_objects,
-        casilla_inputs={validated_casilla_id("0003"): _D("24000.00")},
+        casilla_inputs={},
         text_casilla_inputs=_ACTIVITY_INPUTS,
     )
 
@@ -307,6 +315,7 @@ def test_employee_autonomo_files_credits_equal_to_their_oracles_and_the_fourth_q
     seed_profile(_AUTONOMO)
     seed_prior_year_m100(secure_objects)
     seed_activity_ledger(secure_objects, _INVOICES, _EXPENSES)
+    _seed_inventory_book(secure_objects)
     _record_employer(operation, tmp_path)
     _import_filed_quarters(secure_objects, fourth_quarter_retenciones=_D("1440.00"))
     register_refund_account(secure_objects)
@@ -333,6 +342,22 @@ def test_employee_autonomo_files_credits_equal_to_their_oracles_and_the_fourth_q
 
     payload = verify_and_export(annual, secure_objects, tmp_path / "modelo-100-autonomo.xml", _AUTONOMO)
     assert payload
+
+
+def test_without_an_inventory_book_the_activity_net_income_stays_unresolved(
+    secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The same taxpayer with no inventory book has no casilla 0224: the book's rows are unread, not zero."""
+    seed_profile(_AUTONOMO)
+    seed_prior_year_m100(secure_objects)
+    seed_activity_ledger(secure_objects, _INVOICES, _EXPENSES)
+    _record_employer(operation, tmp_path)
+    _import_filed_quarters(secure_objects, fourth_quarter_retenciones=_D("1440.00"))
+    register_refund_account(secure_objects)
+
+    annual = _calculate_autonomo_annual(secure_objects)
+
+    assert validated_casilla_id("0224") not in annual.casilla_values
 
 
 def test_a_fourth_quarter_that_states_another_retention_withholds_the_filing(
@@ -470,6 +495,7 @@ def test_a_payer_persona_keeps_every_credit_and_still_verifies_and_exports(
     seed_profile(_AUTONOMO)
     seed_prior_year_m100(secure_objects)
     seed_activity_ledger(secure_objects, _INVOICES, _EXPENSES)
+    _seed_inventory_book(secure_objects)
     _record_employer(operation, tmp_path)
     _import_filed_quarters(secure_objects, fourth_quarter_retenciones=_D("1440.00"))
     _seed_payer_side_store(secure_objects)

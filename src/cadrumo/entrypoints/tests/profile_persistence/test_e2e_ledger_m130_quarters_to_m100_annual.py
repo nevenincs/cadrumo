@@ -89,10 +89,13 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 )
 from cadrumo.tests.env_scope import ready_clave_settings
 
+from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
+from ....application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from ....core.retencion_soportada import RetencionSoportadaClase
+from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .m130_m100_annual_support import (
@@ -214,8 +217,17 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 # without any synthetic M131 filings.
 
 
-def persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> None:
-    """Persist Autonoma-shaped annual activity income plus deductible expenses."""
+def persist_autonoma_style_ledger(secure_objects: SecureObjectRepository, *, inventory_book: bool = True) -> None:
+    """Persist Autonoma-shaped annual activity income plus deductible expenses.
+
+    ``inventory_book`` also saves the activity's empty inventory book, which the
+    Anexo D inventory rows of the activity expenses read: no stock was held, so no
+    purchase books a ledger row twice.
+    """
+    if inventory_book:
+        InventoryLedgerRepository(objects=secure_objects).save(
+            InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),))
+        )
     tx_repo = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     transactions = tuple(income_transaction(period) for period in _QUARTER_ORDER) + tuple(
         expense_transaction(transaction_id, value_date=value_date, category=category, taxable_base=taxable_base)
@@ -394,6 +406,24 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     assert casilla_0604 == Decimal("1824.00"), casilla_0604
 
 
+def test_without_an_inventory_book_the_activity_expenses_and_net_income_stay_unresolved(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """With the same ledger but no inventory book, 0218 and 0224 have no value.
+
+    The activity expenses sum the Anexo D inventory rows, so an unread inventory
+    book leaves 0218 unknown rather than reading as zero, and 0224 with it.
+    """
+    _seed_taxpayer_profile()
+    persist_autonoma_style_ledger(secure_objects, inventory_book=False)
+    seed_prior_year_m100(secure_objects)
+
+    annual = calculate_m100_annual(secure_objects)
+
+    assert _M100_EXPENSES_PREVIOUS_SUM_CASILLA not in annual.casilla_values
+    assert M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA not in annual.casilla_values
+
+
 def test_a_locally_filed_quarter_records_the_kind_its_revision_states(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -489,7 +519,6 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
 
     annual = calculate_m100_annual(
         secure_objects,
-        casilla_inputs={validated_casilla_id("0003"): _AUTONOMA_SALARY_GROSS},
         text_casilla_inputs={M100_ACTIVITY_KEY_CASILLA: M100_ACTIVITY_KEY},
     )
 
