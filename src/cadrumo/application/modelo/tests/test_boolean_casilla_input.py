@@ -70,6 +70,7 @@ _YEAR = authored_revisions_where("100", _computes_the_reduccion)[-1].valid_from.
 _CLOCK = datetime(_YEAR, 5, 21, 10, 0, 0, tzinfo=UTC)
 """A record timestamp inside that edition's ejercicio; the value decides nothing."""
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
+_RESIDENCE_BINDING = "renta-profile-tax-residence-ccaa"
 
 
 def _snapshot() -> RegistrySnapshot:
@@ -125,7 +126,9 @@ def _calculate(
     one fact -- what the CASILLA inputs do -- instead of silently depending on
     which bindings the revision happens to declare this year. The lease-derived
     reduction bindings are the exception: they come only from ``profile``, the
-    real profile resolver's answer, and stay unresolved where it gives none.
+    real profile resolver's answer, and stay unresolved where it gives none. The
+    residence fills its text channel alone, because the autonomic deduction sum
+    compares it as text and refuses a binding that two channels answer.
     """
     revision = snapshot.revision
     derived = _rental_reduction_binding_ids(revision)
@@ -135,11 +138,15 @@ def _calculate(
         inputs=inputs,
         date_context={"filing_year_end": date(_YEAR, 12, 31)},
         binding_values={
-            **{binding.id: Decimal(0) for binding in revision.bindings if binding.id not in derived},
+            **{
+                binding.id: Decimal(0)
+                for binding in revision.bindings
+                if binding.id not in derived and binding.id != _RESIDENCE_BINDING
+            },
             **{binding_id: value for binding_id, value in profile.binding_values.items() if binding_id in derived},
         },
         enum_binding_values={
-            "renta-profile-tax-residence-ccaa": "madrid",
+            _RESIDENCE_BINDING: "madrid",
             **{binding_id: value for binding_id, value in profile.enum_binding_values.items() if binding_id in derived},
         },
         boolean_binding_values={
@@ -147,7 +154,9 @@ def _calculate(
         },
         unresolved_binding_ids=tuple(sorted(derived - supplied)),
         relation_values={binding.id: Decimal(0) for binding, _ in relation_prefill_bindings_for_period(revision)},
-        date_binding_values={binding.id: date(1980, 1, 2) for binding in revision.bindings},
+        date_binding_values={
+            binding.id: date(1980, 1, 2) for binding in revision.bindings if binding.id != _RESIDENCE_BINDING
+        },
         text_inputs={},
     )
     values: dict[CasillaId, Decimal] = {}
