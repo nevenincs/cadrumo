@@ -49,9 +49,12 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from dev.paths import REPO_ROOT, UTF_8
+
+if TYPE_CHECKING:
+    from cadrumo.core.errors.error_codes import ErrorCode
 
 __all__ = [
     "GOVERNED_TREES",
@@ -196,6 +199,11 @@ def class_default_door(error_type: type) -> bool:
             door = _carries_step(instance)
     _DEFAULT_DOOR_CACHE[error_type] = door
     return door
+
+
+def _registry_words_win(code: ErrorCode) -> bool:
+    """Whether the renderer serves the registered key whatever the site passes, as ``resolve_error_message`` does."""
+    return code.public_message_from_registry or ".canonical_" in code.message_key
 
 
 _CLASS_KEY_CACHE: dict[type, bool] = {}
@@ -359,7 +367,7 @@ def scan_source(source: str, *, path: str, module: str, module_object: object | 
                 has_door=door,
                 free_text=bool(call.args)
                 and not passed
-                and not code.public_message_from_registry
+                and not _registry_words_win(code)
                 and not class_keys_its_words(target),
                 message_key=code.message_key,
                 translated_keys=() if literal_key is None else (literal_key,),

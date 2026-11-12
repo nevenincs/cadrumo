@@ -137,6 +137,22 @@ def test_a_positional_reason_to_a_class_that_words_itself_is_not_free_text() -> 
     assert not site.free_text
 
 
+_CANONICAL_KEY_FIXTURE = """
+from cadrumo.core.errors.hierarchy import InternalInvariantError
+
+
+def broken():
+    raise InternalInvariantError("diagnostic english the renderer never serves")
+"""
+
+
+def test_positional_text_to_a_code_whose_registered_words_always_win_is_not_free_text() -> None:
+    """A canonical message key is served whatever the site passes, as the error renderer does."""
+    (site,) = scan_source(_CANONICAL_KEY_FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
+    assert ".canonical_" in site.message_key
+    assert not site.free_text
+
+
 def test_site_identity_survives_unrelated_line_shifts() -> None:
     """The ratchet key carries no line number, so blank lines above change nothing."""
     first = scan_source(_FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
