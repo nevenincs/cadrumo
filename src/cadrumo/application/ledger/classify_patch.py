@@ -109,6 +109,24 @@ def _resolve_manual_authority_value(
         return _manual_spending_category(value, operation)
     if field_name == "irpf_category":
         return require_ledger_irpf_category(value, authority=operation) if value.strip() else None
+    if field_name in _MANUAL_IVA_FIELDS:
+        return _resolve_manual_iva_value(field_name, value, current=current, operation=operation)
+    return _resolve_rental_link_value(field_name, value, operation=operation)
+
+
+_MANUAL_IVA_FIELDS = frozenset(
+    {"iva_category", "exemption_article", "deduction_fact_kind", "iva_vehicle_use", "counterparty_identification_state"}
+)
+
+
+def _resolve_manual_iva_value(
+    field_name: str,
+    value: str,
+    *,
+    current: Transaction,
+    operation: PinnedAuthorityOperation,
+) -> object:
+    """Resolve an IVA classification field against the pinned authority's vocabulary."""
     if field_name == "iva_category":
         return require_iva_category(value, effective_date=current.raw.booked_date, authority=operation)
     if field_name == "exemption_article":
@@ -119,9 +137,7 @@ def _resolve_manual_authority_value(
         return require_iva_deduction_fact_kind(value, authority=operation)
     if field_name == "iva_vehicle_use":
         return require_iva_vehicle_use(value)
-    if field_name == "counterparty_identification_state":
-        return require_eu_member_state(value, authority=operation)
-    return _resolve_rental_link_value(field_name, value, operation=operation)
+    return require_eu_member_state(value, authority=operation)
 
 
 def _resolve_rental_link_value(field_name: str, value: str, *, operation: PinnedAuthorityOperation) -> object:
