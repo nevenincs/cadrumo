@@ -21,6 +21,7 @@ from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
+from ...calculations.registry.schema_formula import BracketKind, bracket_kind_is_default
 from ..calculation_revision_rendering import CalculationRenderingSnapshot, retain_registry_schema_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -72,6 +73,30 @@ def test_complete_schema_retains_conditional_fields_and_authored_predecessors() 
     }
     assert original.model_dump(mode="json") == presentation
     assert "presentation" in presentation
+
+
+class _LaterBracketKind(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    bracket_kind: BracketKind = Field(default=BracketKind.PROGRESSIVE, exclude_if=bracket_kind_is_default)
+
+
+@pytest.mark.parametrize(
+    ("kind", "expected"),
+    ((BracketKind.PROGRESSIVE, {}), (BracketKind.PHASE_OUT, {"bracket_kind": "phase_out"})),
+)
+def test_complete_schema_leaves_a_default_bracket_kind_out_as_earlier_snapshots_did(
+    kind: BracketKind, expected: dict[str, str]
+) -> None:
+    # Snapshots saved before the bracket kind existed carry none, so the complete dump behind
+    # their digests must not gain one for the default kind.
+    adapter = TypeAdapter(_LaterBracketKind)
+    adapter.rebuild()
+    schema = deepcopy(adapter.core_schema)
+    retain_registry_schema_fields(schema)
+    serializer = SchemaSerializer(schema, _use_prebuilt=False)
+
+    assert serializer.to_python(_LaterBracketKind(bracket_kind=kind), mode="json") == expected
 
 
 @pytest.mark.parametrize(
