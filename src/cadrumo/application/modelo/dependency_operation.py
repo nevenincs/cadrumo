@@ -25,6 +25,7 @@ from ..calculations.cross_period_clean_state import (
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
 )
+from ..calculations.cross_period_models import operator_value_attestations
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
@@ -46,7 +47,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
 from .dependency_read_ports import DependencyReadPorts, DependencyReadPortsFactory
-from .verification_cross_period import cross_period_expected_member_sets_from_profile, operator_value_attestations
+from .verification_cross_period import cross_period_expected_member_sets_from_profile
 
 MODELO_DEPENDENCY_OPERATION_DEFINITION_ID = "modelo.work.dependencies"
 
