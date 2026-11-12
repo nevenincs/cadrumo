@@ -475,10 +475,11 @@ def test_no_lifecycle_step_takes_a_withdrawn_verified_calculation_as_the_declara
         _assert_names_calculating(_refused_filing(renta.operation, renta.work_unit_id, withdrawn_id))
 
         # The default export choice, which falls back to a lone verified revision when one is current.
-        with pytest.raises(ModeloCalculationRevisionSelectorNotFoundError):
+        with pytest.raises(ModeloCalculationRevisionSelectorNotFoundError) as default_export_refused:
             select_exportable_revision(
                 unit, calculation_repository=renta.ports.calculation_repository, operation=renta.operation
             )
+        _assert_names_calculating(default_export_refused.value)
 
         # Exporting it by its exact id.
         with pytest.raises(ModeloCalculationRevisionSelectorNotFoundError) as export_refused:

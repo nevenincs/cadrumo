@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -188,7 +188,6 @@ def _seed_verified_revision_without_inputs(
         created_at=now,
         updated_at=now,
     )
-    WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
     screen_stamp = _calculated_screen_stamp(modelo=modelo, filing_year=filing_year, period=period, operation=operation)
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -199,6 +198,9 @@ def _seed_verified_revision_without_inputs(
         source_provenance=(),
         screen_stamp=screen_stamp,
     )
+    # The seeded revision stands in for a calculation, which makes it the work unit's current one.
+    work_unit = work_unit.model_copy(update={"current_calculation_revision_id": calculation_revision_id})
+    WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
@@ -237,6 +239,7 @@ _M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 exp
 _M202_CASILLA_01: CasillaId = validated_casilla_id("01", surface="modelo 202 export test casilla")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 _M202_INCN_PRIOR_12_MONTHS_BINDING = "modelo-202-incn-prior-12-months"
+_M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
 # The last exercise of the Modelo 202 revision the registry authors right before the
 # first one that declares the B2 tramo casilla 67; the exportable fixture revision
 # below is seeded for its first period.
@@ -272,10 +275,16 @@ def _set_export_profile_name() -> None:
     )
 
 
-def _set_emilio_legal_entity_export_profile() -> None:
+def _set_emilio_legal_entity_export_profile(*, activity_start_date: date | None = None) -> None:
+    activity_start = (
+        (UserProfileFact(path="censo.activity_start_date", value=activity_start_date.isoformat()),)
+        if activity_start_date is not None
+        else ()
+    )
     set_active_test_profile_facts(
         persona_facts_beneath(
             (
+                *activity_start,
                 UserProfileFact(path="identity.tax_id", value="B00015016"),
                 UserProfileFact(path="identity.name", value="Emilio"),
                 UserProfileFact(path="identity.surnames", value="Corporate Persona"),
@@ -413,9 +422,13 @@ def _seed_exportable_modelo_202_pre_b2_revision(*, operation: PinnedAuthorityOpe
         revision_id=revision_id,
     )
     inputs = {_M202_CASILLA_01: "0"}
-    # Every supported year requires the prior-twelve-month turnover; the recorded value
-    # is the one the Emilio export profile declares.
-    binding_overrides = {_M202_2023_2024_PRIOR_PAYMENTS_BINDING: "0", _M202_INCN_PRIOR_12_MONTHS_BINDING: "500000"}
+    # Every supported year requires the prior-twelve-month turnover, recorded as the Emilio
+    # export profile declares it, and the art. 40.2 base, recorded as the zero instalment's.
+    binding_overrides = {
+        _M202_2023_2024_PRIOR_PAYMENTS_BINDING: "0",
+        _M202_INCN_PRIOR_12_MONTHS_BINDING: "500000",
+        _M202_CUOTA_BASE_BINDING: "0",
+    }
     casilla_values = {_M202_CASILLA_01: Decimal("0")}
     screen_stamp = _calculated_screen_stamp(
         modelo="202", filing_year=_PRE_B2_LAST_EXERCISE, period="1P", operation=operation
@@ -667,7 +680,9 @@ def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomple
     export must stop before any byte is written rather than render blanks.
     """
 
-    _set_emilio_legal_entity_export_profile()
+    # The company started after the periodo impositivo the 1P art. 40.2 base reads, so that
+    # instalment has no earlier Modelo 200 to take a base from and the export reaches the producer.
+    _set_emilio_legal_entity_export_profile(activity_start_date=date(_PRE_B2_LAST_EXERCISE - 1, 1, 1))
     _, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
     out = tmp_path / f"modelo-202-{_PRE_B2_LAST_EXERCISE}-1P.boe"
 
@@ -972,18 +987,18 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
     assert out.exists()
 
 
-def test_export_refuses_ambiguous_verified_revisions_without_pointer(
+def test_export_refuses_a_work_unit_with_no_current_calculation_despite_stored_verified_revisions(
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Natural-key export refuses multiple verified candidates without a pointer."""
+    """A withdrawn calculation stays stored but is no longer the declaration's: export opens calculate."""
 
     _seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.VERIFICADO_COMPLETO),
         operation=operation,
     )
-    out = tmp_path / "modelo-111-ambiguous.txt"
+    out = tmp_path / "modelo-111-withdrawn.txt"
 
     result = _invoke(
         [
@@ -1004,7 +1019,7 @@ def test_export_refuses_ambiguous_verified_revisions_without_pointer(
     )
 
     assert result.exit_code != 0, result.output
-    assert "ambiguous" in result.output.lower() or "more than one" in result.output.lower()
+    assert '"action_id":"operator.modelo.work.calculate"' in result.output, result.output
     assert not out.exists()
 
 
