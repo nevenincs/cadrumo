@@ -9358,8 +9358,6 @@ tui:
         reconciliation_resolved: Resolta
         revision_current: Vigent
         revision_superseded: Substituïda
-workspace:
-  declarations:
   withholding:
     absence:
       state:
@@ -9392,6 +9390,8 @@ workspace:
       read_failed: No s'han pogut llegir els registres.
       read_first: Llegeix primer un exercici.
       reading: S'està llegint…
+workspace:
+  declarations:
     availability:
       available: Disponible
       locked: Bloquejat
