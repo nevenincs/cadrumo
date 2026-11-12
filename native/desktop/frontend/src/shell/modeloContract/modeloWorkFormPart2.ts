@@ -81,6 +81,7 @@ export type PublicModeloWorkForm = {
   compares_taxation: boolean;
   compares_borrador: boolean;
   offers_iva_wallet: boolean;
+  verification_out_of_date: boolean;
   filing: ModeloFormFiling | null;
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;

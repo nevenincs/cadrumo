@@ -13,6 +13,7 @@ import type {
   PublicDecimal,
   PublicPeriod,
 } from "./ledger";
+import type { PurchaseLedgerRow } from "./ledgerContract";
 
 // ---- Inventory -----------------------------------------------------------
 
@@ -231,6 +232,10 @@ export type InventoryMovementAddRequest = {
   /** What a purchase cost, and what proves it. Only a purchase states it,
    * and a purchase states no unit cost or taxable base beside it. */
   acquisition_cost?: InventoryAcquisitionCostRequest | null;
+  /** What the purchase states about the ledger transaction that books it. */
+  ledger_row?: PurchaseLedgerRow;
+  /** The transaction a claimed purchase books, named exactly when claimed. */
+  claimed_transaction_id?: string | null;
 };
 
 /** A named piece of proof: a fingerprint of the file the person attached,
@@ -557,6 +562,14 @@ export type InventoryMovementCorrectRequest = InventoryChangeRequest & {
 export type InventoryMovementReverseRequest = InventoryChangeRequest & {
   target_movement_id: string;
   reason: string;
+};
+
+/** States which ledger transaction books one purchase, that none does, or
+ * clears the statement; a transaction is named exactly when it is claimed. */
+export type InventoryMovementClaimRequest = InventoryChangeRequest & {
+  movement_id: string;
+  ledger_row: PurchaseLedgerRow;
+  claimed_transaction_id?: string | null;
 };
 
 export type InventoryRetireRequest = InventoryChangeRequest & {

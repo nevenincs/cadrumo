@@ -9358,6 +9358,38 @@ tui:
         reconciliation_resolved: Resolta
         revision_current: Vigent
         revision_superseded: Substituïda
+  withholding:
+    absence:
+      state:
+        active: Activa
+        withdrawn: Retirada
+    absences:
+      title: Declaracions d'absència de retencions
+    action:
+      attest_absence: Declara que no hi va haver retencions
+      read: Llegeix
+      record: Afegeix o substitueix un registre
+      remove: Elimina el registre seleccionat
+      withdraw_absence: Retira la declaració seleccionada
+    column:
+      attested_on: Declarada el
+      income: Rendiment
+      note: Nota
+      payer: Pagador
+      state: Estat
+    ejercicio: Exercici
+    prompt: Escriu un exercici i llegeix-lo per veure'n els registres de pagadors
+      i les declaracions d'absència de retencions.
+    records:
+      title: Registres de pagadors
+    status:
+      choose_active_absence: Selecciona primer una declaració activa.
+      choose_record: Selecciona primer un registre de pagador.
+      ejercicio_invalid: Escriu l'exercici amb quatre xifres.
+      empty: No hi ha res registrat per a %{ejercicio}.
+      read_failed: No s'han pogut llegir els registres.
+      read_first: Llegeix primer un exercici.
+      reading: S'està llegint…
 workspace:
   declarations:
     availability:

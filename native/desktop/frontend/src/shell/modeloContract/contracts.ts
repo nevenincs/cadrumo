@@ -158,10 +158,10 @@ import type {
   ModeloMaritimePreviewRequest,
   ModeloTaxationComparisonProjection,
   ModeloTaxationComparisonRequest,
+  ModeloWorkAmendPublicResultV2,
+  ModeloWorkAmendRequest,
   ModeloWorkCalculatePublicResultV3,
   ModeloWorkCalculateRequest,
-  ModeloWorkCreateProjection,
-  ModeloWorkCreateRequest,
   ModeloWorkDiscardPublicResultV2,
   ModeloWorkDiscardRequest,
   ModeloWorkFilingRecordProjection,
@@ -188,10 +188,6 @@ import type {
   ModeloWorkWizardContextRequest,
 } from "./modeloWork";
 import type {
-  ModeloWorkAmendPublicResultV2,
-  ModeloWorkAmendRequest,
-} from "./modeloWorkAmend";
-import type {
   ModeloWorkAmendmentContextProjection,
   ModeloWorkAmendmentContextRequest,
 } from "./modeloWorkAmendmentContext";
@@ -199,6 +195,10 @@ import type {
   ModeloCasillaHelpProjectionV1,
   ModeloCasillaHelpRequest,
 } from "./modeloWorkCasillaHelp";
+import type {
+  ModeloWorkCreateProjection,
+  ModeloWorkCreateRequest,
+} from "./modeloWorkCreate";
 import type {
   ModeloDependencyProjection,
   ModeloDependencyRequest,
