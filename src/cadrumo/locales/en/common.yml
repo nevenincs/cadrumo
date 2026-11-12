@@ -7205,6 +7205,26 @@ tui:
           shows %{evidenced}. %{detail}'
         country: Country code (2 letters, optional)
         evidenced: Scope a document shows, for the lookup (optional)
+        filing_done: The filing name of %{identifier} was stated.
+        filing_heading: Filing name
+        filing_kind_entity: Entity
+        filing_kind_natural_person: Natural person
+        filing_no_second: No second surname
+        filing_nombre: Given name
+        filing_primer: First surname
+        filing_razon: Company name
+        filing_rendering: 'For %{width} characters: %{text}'
+        filing_renderings: Shorter renderings, as width=text; width=text (optional)
+        filing_renderings_malformed: Write each shorter rendering as a width, an equals
+          sign and its text, for example 20=Short name, and separate several with
+          a semicolon.
+        filing_review: Review filing name
+        filing_segundo: Second surname
+        filing_stage: State the filing name of %{identifier} as %{kind}.
+        filing_stated: 'Filing name of %{identifier}: %{kind} · %{name}'
+        filing_stated_by: Stated by %{name} on %{date}.
+        filing_unchanged: '%{identifier} already had this filing name.'
+        filing_unstated: No filing name is stated for %{identifier}.
         identification: EU member state of its VAT number (2 letters)
         identifier: Tax identifier
         identifier_required: Type the counterparty's tax identifier first.
@@ -8555,6 +8575,7 @@ tui:
           create: Create an inventory
           evidence_add: Store a purchase document
           movement_add: Add a movement
+          movement_claim: State the ledger entry of a purchase
           valuation_preview: Preview the valuation
         column:
           actividad: Activity
@@ -8594,6 +8615,10 @@ tui:
           count: Count
           opening: Opening
           purchase: Purchase
+        ledger_row:
+          claimed: A ledger entry books this purchase
+          none: No ledger entry books this purchase
+          unstated: Clear the statement (unstated)
         list: Inventories
         method:
           coste_medio: Average cost
