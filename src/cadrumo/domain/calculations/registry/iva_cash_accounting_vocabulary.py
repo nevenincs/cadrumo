@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
+from ....core.time.clock import today_madrid
 from ...iva.schema import IvaCashAccountingTreatment
 from .errors import RegistryValidationError
 from .facts.resolution import (
@@ -77,7 +78,9 @@ def resolve_iva_cash_accounting_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatmentCatalogue:
     """Resolve the dated IVA cash-accounting vocabulary from governed facts."""
-    projections = resolve_scoped_schema_projections(effective_date=effective_date, authority=authority)
+    projections = resolve_scoped_schema_projections(
+        effective_date=effective_date or today_madrid(), authority=authority
+    )
     if projections.cash_accounting:
         return projections.cash_accounting[0]
     entries = projections.entries
