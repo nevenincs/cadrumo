@@ -8943,6 +8943,9 @@ tui:
     legend:
       first_open: New here? Press ? to see what each symbol means.
       meaning:
+        level:
+          limitation: A limit of the calculation, stated openly, or a figure you stated
+            yourself. It does not stop you from filing.
         mark:
           collapsed: Press → to open it.
           expanded: Press ← to close it.
@@ -9024,6 +9027,8 @@ tui:
       none: This declaration offers no statement to make now.
       not_placed: A statement names a box this screen does not show, so it was not
         staged.
+      prior:
+        heading: Figures you stated for earlier returns
       stage: Stage for review
       title: Statements you can make
       withdraw: Withdraw the statement

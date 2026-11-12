@@ -9143,6 +9143,9 @@ tui:
     legend:
       first_open: ¿Es tu primera vez? Pulsa ? para ver qué significa cada símbolo.
       meaning:
+        level:
+          limitation: Un límite del cálculo, indicado de forma expresa, o una cifra
+            que indicaste tú. No te impide presentar.
         mark:
           collapsed: Pulsa → para abrirla.
           expanded: Pulsa ← para cerrarla.
@@ -9226,6 +9229,8 @@ tui:
       none: Esta declaración no ofrece ahora ninguna manifestación.
       not_placed: Una manifestación se refiere a una casilla que esta pantalla no
         muestra, así que no se ha dejado para revisar.
+      prior:
+        heading: Cifras que indicaste para declaraciones anteriores
       stage: Dejar para revisar
       title: Manifestaciones que puedes hacer
       withdraw: Retirar la manifestación

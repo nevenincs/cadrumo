@@ -9089,6 +9089,9 @@ tui:
       first_open: Először jársz itt? Nyomd meg a ? billentyűt, és megtudod, mit jelentenek
         a jelek.
       meaning:
+        level:
+          limitation: A számítás kifejezetten jelzett korlátja, vagy egy általad megadott
+            érték. Nem akadályozza a benyújtást.
         mark:
           collapsed: Nyomd meg a → billentyűt a megnyitásához.
           expanded: Nyomd meg a ← billentyűt a bezárásához.
@@ -9174,6 +9177,8 @@ tui:
       none: Ez a bevallás most nem kínál nyilatkozatot.
       not_placed: Egy nyilatkozat olyan rovatra vonatkozik, amelyet ez a képernyő
         nem mutat, ezért nem került átnézésre.
+      prior:
+        heading: A korábbi bevallásokhoz általad megadott értékek
       stage: Megtartás átnézésre
       title: Tehető nyilatkozatok
       withdraw: Nyilatkozat visszavonása

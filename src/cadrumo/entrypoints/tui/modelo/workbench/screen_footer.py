@@ -212,7 +212,7 @@ class WorkbenchFooterMixin:
     def _hidden_keys(self: ModeloWorkbenchScreen) -> frozenset[str]:
         """Hide field actions without a selected field; read-only content keeps its scroll cue."""
         hidden: set[str] = set(CHANGE_KEYS) if self.recorded else set()
-        if not self._served_statements():
+        if not self.offers_statements():
             hidden.add("a")
         if not self._offers_taxation_comparison():
             hidden.add("t")

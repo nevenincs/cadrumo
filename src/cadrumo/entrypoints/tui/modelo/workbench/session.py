@@ -49,6 +49,7 @@ from .....application.modelo.work_form_models import (
     confirmable,
     edit_address,
 )
+from .....application.modelo.work_form_prior_value_models import ModeloFormPriorValueAttestation
 from .....application.modelo.work_form_rebase import ModeloFormRebaseOutcome, held_change, rebase_outcome
 from .....application.modelo.work_form_scalar_values import comparable_entry
 from .....application.modelo.work_form_typing_effect import ModeloFormDisplacement, field_displacement
@@ -288,7 +289,7 @@ class WorkbenchEditSession:
         """
         family = field.stated_absent
         if family is None:
-            return self.stage_clear(field)
+            return self._withdraw_stated_prior(form, field)
         members = [member for member in form.fields() if member.stated_absent is family]
         staged = dict(self._changes)
         for member in members:
@@ -299,6 +300,62 @@ class WorkbenchEditSession:
                 self._changes = staged
                 return refusal
         return None
+
+    def _withdraw_stated_prior(self, form: ModeloWorkForm, field: ModeloFormField) -> StageRefusal | None:
+        """Withdraw the figure stated on ``field`` for earlier returns: its whole family as the form serves it."""
+        stated = field.stated_prior_value
+        if stated is None or stated.family_id is None:
+            refusal = self.stage_clear(field)
+            return refusal if refusal is None else self.stage_restore(field)
+        for attestation in form.prior_value_attestations:
+            if attestation.family_id == stated.family_id and attestation.withdrawal is not None:
+                return self.stage_prior_withdrawal(form, attestation)
+        return StageRefusal.NOT_EDITABLE
+
+    def stage_prior_withdrawal(
+        self, form: ModeloWorkForm, attestation: ModeloFormPriorValueAttestation
+    ) -> StageRefusal | None:
+        """Stage the withdrawal the form serves for ``attestation``'s family, on every carry of it at once.
+
+        A family of stated figures is one statement: it is withdrawn whole or not at all. Each carry
+        takes whichever withdrawal the form allows it; when one allows none, nothing is staged.
+        """
+        withdrawal = attestation.withdrawal
+        if withdrawal is None or attestation not in form.prior_value_attestations:
+            return StageRefusal.NOT_EDITABLE
+        placed = binding_fields(form, withdrawal.binding_ids)
+        if placed is None:
+            return StageRefusal.NOT_EDITABLE
+        staged = dict(self._changes)
+        for member in placed:
+            refusal = self.stage_clear(member)
+            if refusal is not None:
+                refusal = self.stage_restore(member)
+            if refusal is not None:
+                self._changes = staged
+                return refusal
+        return None
+
+    def stages_prior_withdrawal(self, attestation: ModeloFormPriorValueAttestation) -> bool:
+        """Whether a withdrawal of ``attestation``'s family is staged."""
+        return bool(self._prior_withdrawal_keys(attestation))
+
+    def unstage_prior_withdrawal(self, attestation: ModeloFormPriorValueAttestation) -> bool:
+        """Drop every staged change withdrawing ``attestation``'s family; ``False`` when none was staged."""
+        keys = self._prior_withdrawal_keys(attestation)
+        for key in keys:
+            del self._changes[key]
+        return bool(keys)
+
+    def _prior_withdrawal_keys(self, attestation: ModeloFormPriorValueAttestation) -> list[AddressKey]:
+        withdrawn = (WorkbenchChangeKind.CLEAR, WorkbenchChangeKind.RESTORE)
+        return [
+            key
+            for key, change in self._changes.items()
+            if change.kind in withdrawn
+            and change.field.stated_prior_value is not None
+            and change.field.stated_prior_value.family_id == attestation.family_id
+        ]
 
     def stages_statement(self, statement: ModeloFormCarryAttestation) -> bool:
         """Whether a statement of ``statement``'s family is staged."""
@@ -393,13 +450,18 @@ def statement_fields(form: ModeloWorkForm, statement: ModeloFormCarryAttestation
 
     ``None`` when the form shows a named binding nowhere, so a statement is never staged on part of what it names.
     """
+    return binding_fields(form, statement.binding_ids)
+
+
+def binding_fields(form: ModeloWorkForm, binding_ids: tuple[str, ...]) -> tuple[ModeloFormField, ...] | None:
+    """The boxes whose edit goes to each of ``binding_ids``, in that order; ``None`` when the form shows one nowhere."""
     by_binding: dict[str, ModeloFormField] = {}
     for field in form.fields():
         address = edit_address(field)
         if isinstance(address, ModeloFormBindingAddressV1):
             by_binding.setdefault(address.binding_id, field)
-    placed = [by_binding[binding_id] for binding_id in statement.binding_ids if binding_id in by_binding]
-    return tuple(placed) if len(placed) == len(statement.binding_ids) else None
+    placed = [by_binding[binding_id] for binding_id in binding_ids if binding_id in by_binding]
+    return tuple(placed) if len(placed) == len(binding_ids) else None
 
 
-__all__ = ["Rebase", "StageRefusal", "StagedChange", "WorkbenchEditSession", "statement_fields"]
+__all__ = ["Rebase", "StageRefusal", "StagedChange", "WorkbenchEditSession", "binding_fields", "statement_fields"]

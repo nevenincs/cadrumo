@@ -265,6 +265,55 @@ def test_the_limits_the_backend_served_are_warned_in_its_words_and_never_twice(t
     assert [warning.message for warning in warnings].count(words) == 1
 
 
+def _two_served_limits() -> ModeloExportDisclosure:
+    return ModeloExportDisclosure(
+        lead_words="Synthetic lead: the file carries these limits as they are.",
+        limitations=(
+            ModeloExportDisclosedLimitation(
+                message_locale_key="synthetic.limit.first", casilla_id="01", words="Synthetic first limit."
+            ),
+            ModeloExportDisclosedLimitation(
+                message_locale_key="synthetic.limit.second", words="Synthetic second limit."
+            ),
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_served_disclosure_is_shown_verbatim_lead_first_then_each_limit_in_served_order(tmp_path: Path) -> None:
+    """The lead sentence and every limit read as the backend worded them; the screen words and sorts none."""
+    receipt = _filing_file_receipt(tmp_path, completeness_unverified=False, software_identity_grade=None)
+    served = ModeloExportSettledResult(fichero_boe=receipt.fichero_boe, disclosure=_two_served_limits())
+    app = App[None]()
+    async with app.run_test() as pilot:
+        await app.push_screen(ModeloExportResultScreen(_publicly_projected(served)))
+        await settle(pilot)
+
+        shown = [str(item.content) for item in app.screen.query_one("#modelo-export-result-warnings").query(Static)]
+
+    lead = next(index for index, line in enumerate(shown) if "Synthetic lead: the file carries" in line)
+    assert shown[lead + 1].endswith("Synthetic first limit.")
+    assert shown[lead + 2].endswith("Synthetic second limit.")
+
+
+@pytest.mark.asyncio
+async def test_an_export_with_no_disclosure_shows_no_lead_and_no_limit(tmp_path: Path) -> None:
+    """A result that serves no disclosure states none; the ordinary warnings stay."""
+    result = _publicly_projected(
+        _filing_file_receipt(tmp_path, completeness_unverified=False, software_identity_grade=None)
+    )
+    assert result.disclosure is None
+    app = App[None]()
+    async with app.run_test() as pilot:
+        await app.push_screen(ModeloExportResultScreen(result))
+        await settle(pilot)
+
+        warnings = _warnings(app)
+
+    assert "Synthetic" not in warnings
+    assert tr("tui.modelo.export.result.warning.not_official") in warnings
+
+
 @pytest.mark.asyncio
 async def test_a_development_identity_is_warned_and_a_verified_file_raises_no_completeness_warning(
     tmp_path: Path,

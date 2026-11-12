@@ -9126,6 +9126,9 @@ tui:
     legend:
       first_open: És la primera vegada? Prem ? per veure què vol dir cada símbol.
       meaning:
+        level:
+          limitation: Un límit del càlcul, indicat de manera expressa, o una xifra
+            que has indicat tu. No t'impedeix presentar.
         mark:
           collapsed: Prem → per obrir-la.
           expanded: Prem ← per tancar-la.
@@ -9209,6 +9212,8 @@ tui:
       none: Aquesta declaració no ofereix ara cap manifestació.
       not_placed: Una manifestació es refereix a una casella que aquesta pantalla
         no mostra, així que no s'ha deixat per revisar.
+      prior:
+        heading: Xifres que has indicat per a declaracions anteriors
       stage: Deixar per revisar
       title: Manifestacions que pots fer
       withdraw: Retirar la manifestació

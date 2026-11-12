@@ -24,6 +24,7 @@ from .screen_constants import (
     NONE_TO_CONFIRM_LOCALE_KEYS,
 )
 from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSourcesScreen, surface_target
+from .vocabulary import states_something
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen
@@ -133,7 +134,7 @@ class WorkbenchConfirmationMixin:
         """Stage removing the value the filer declared on the casilla under the cursor."""
         field = message.entry.field
         form = self.form
-        if field.stated_absent is not None and form is not None:
+        if states_something(field) and form is not None:
             self._after_stage(self._session.withdraw_stated(form, field))
             return
         self._after_stage(self._session.stage_clear(field))
