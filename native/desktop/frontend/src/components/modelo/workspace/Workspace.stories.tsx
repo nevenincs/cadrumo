@@ -1,3 +1,5 @@
+import { seededUnit } from "@/dev/seededUnits";
+import { RENTA_UNIT } from "@/dev/rentaUnit";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { userEvent, waitFor } from "storybook/test";
@@ -16,11 +18,11 @@ const noop = () => undefined;
 
 /** The synthetic taxpayer's declarations, by the work unit the list read. */
 const UNITS = {
-  "130": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-  "303": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
-  "347": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
+  "130": seededUnit("130"),
+  "303": seededUnit("303"),
+  "347": seededUnit("347"),
   "rules-incomplete": rulesIncomplete.work_unit_id,
-  "100": "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4",
+  "100": RENTA_UNIT,
 } as const;
 
 const language = (globals: Record<string, unknown>) =>

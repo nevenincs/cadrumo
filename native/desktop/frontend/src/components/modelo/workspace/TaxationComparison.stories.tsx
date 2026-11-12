@@ -1,3 +1,5 @@
+import { seededUnit } from "@/dev/seededUnits";
+import { RENTA_UNIT } from "@/dev/rentaUnit";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
@@ -26,11 +28,10 @@ import { byName } from "@/dev/globByName";
 // envelopes. Every sentence and amount is the application's; none is written
 // here.
 
-const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
+const UNIT = RENTA_UNIT;
 /** A declaration whose form asks for no comparison: the first quarter's
  * Modelo 130. */
-const QUARTERLY_UNIT =
-  "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3";
+const QUARTERLY_UNIT = seededUnit("130");
 
 const projections = byName(
   import.meta.glob<ModeloTaxationComparisonProjection>(
@@ -316,20 +317,24 @@ export const IndividualFilingLower: Story = {
 };
 
 export const EitherModeAcceptable: Story = {
-  name: "The two results do not differ: neither mode is marked, a refund stays a refund",
+  name: "The two results do not differ: neither mode is marked, the result keeps its served sign",
   render: (_, { globals }) => (
     <Element state="married-small" locale={language(globals)} kind="answer" />
   ),
   play: async ({ canvasElement, globals }) => {
     const locale = language(globals);
     await checkAnswer(canvasElement, "married-small", locale, null);
-    // A negative result is drawn with its sign, not as an amount to pay.
+    // The result is drawn with the sign it was served with: a negative
+    // result is not drawn as an amount to pay, nor a positive one as a refund.
     const result = await resulted(canvasElement);
     const text = one(
       one(result, "[data-comparison-mode=joint]"),
       "[data-comparison-result-amount]",
     ).textContent;
-    expect(text).toMatch(/^[-−]/);
+    const projection = await served("married-small", locale);
+    expect(/^[-−]/.test(text ?? "")).toBe(
+      projection.conjunta_resultado.startsWith("-"),
+    );
   },
 };
 
