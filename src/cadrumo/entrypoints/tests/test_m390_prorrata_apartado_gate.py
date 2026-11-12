@@ -1,9 +1,12 @@
-"""A Modelo 390 whose prorrata register applies is blocked while its edition does not render apartado 12.
+"""A Modelo 390 whose prorrata register applies is blocked only while its edition does not export apartado 12.
 
-The annual summary prints each activity's prorrata in apartado 12. An edition whose
-registry registers no casilla for those boxes would export the record blank, so
-verification reports a blocking finding and local filing and export refuse with one
-typed reason. The detection reads the register for the work unit's ejercicio and the
+The annual summary prints each activity's prorrata in apartado 12. Every supported
+edition exports boxes 114 to 118 from the register, so a register that applies
+blocks nothing. An edition whose registry carried no exported casilla for those
+boxes would leave the record blank; that edition is reproduced here by withholding
+the apartado's export references from the pinned revision, and verification then
+reports a blocking finding while local filing and export refuse with one typed
+reason. The detection reads the register for the work unit's ejercicio and the
 pinned revision's own casillas, so no year or flag lifts it. Real encrypted store,
 calculation, verification, filing and export services over the published authority.
 """
@@ -53,7 +56,18 @@ from cadrumo.core.identity.hex_ids import CalculationRevisionId
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataActivityRowType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority_artifact import (
+    AuthorityComponentQuery,
+    AuthorityComponentReader,
+    AuthorityGenerationPin,
+    ModeloRevisionComponentQuery,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.prorrata_register_activity_bindings import (
+    ProrrataActivityField,
+    ProrrataRegisterActivityProvider,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -152,6 +166,61 @@ def _register(bucket: _Bucket) -> ProrrataRegisterRepository:
     return ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=bucket.objects)
 
 
+def _revision_id(bucket: _Bucket, operation: PinnedAuthorityOperation) -> str:
+    return law_selected_revision_for_work_target(
+        modelo="390", filing_year=bucket.ejercicio, period=bucket.work_unit.period, operation=operation
+    )
+
+
+def _apartado_fact(revision: ModeloRevision, casilla_binding: str | None) -> ProrrataActivityField | None:
+    """The register fact a casilla prints, or ``None`` for a casilla outside apartado 12."""
+    for binding in revision.bindings:
+        if binding.id == casilla_binding and isinstance(binding.provider, ProrrataRegisterActivityProvider):
+            return binding.provider.field
+    return None
+
+
+def _without_apartado_exports(revision: ModeloRevision) -> ModeloRevision:
+    """The revision as an edition that declares the apartado's casillas but exports none of them."""
+    return revision.model_copy(
+        update={
+            "casillas": tuple(
+                casilla.model_copy(update={"export_refs": ()})
+                if _apartado_fact(revision, casilla.binding) is not None
+                else casilla
+                for casilla in revision.casillas
+            )
+        }
+    )
+
+
+class _ApartadoWithheldReader:
+    """The published reader, serving one Modelo 390 revision without the apartado's export references."""
+
+    def __init__(self, reader: AuthorityComponentReader, revision_id: str) -> None:
+        self._reader = reader
+        self._query = ModeloRevisionComponentQuery("390", revision_id)
+
+    def pin(self) -> AuthorityGenerationPin:
+        return self._reader.pin()
+
+    def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
+        value = self._reader.load(query, pin=pin)
+        if query == self._query and isinstance(value, ModeloRevision):
+            return _without_apartado_exports(value)
+        return value
+
+    def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
+        return self._reader.component_queries()
+
+
+def _apartado_withheld(operation: PinnedAuthorityOperation, revision_id: str) -> PinnedAuthorityOperation:
+    """The same leased generation, read as an edition that does not export apartado 12."""
+    return PinnedAuthorityOperation(
+        reader=_ApartadoWithheldReader(operation.reader, revision_id), generation=operation.generation
+    )
+
+
 def _calculate(bucket: _Bucket) -> CalculationRevisionId:
     """Calculate the 390 with its three 303 reconciliation bindings answered by the operator, so none is left unknown."""
     with calculation_ports_for_test(
@@ -207,13 +276,38 @@ def _apartado_findings(findings: list[ModeloVerificationFinding]) -> list[Modelo
     return [finding for finding in findings if finding.message_locale_key == _FINDING_KEY]
 
 
-def test_verification_blocks_a_390_whose_register_applies_and_points_at_the_register_listing(
+def test_verification_reports_nothing_once_the_edition_exports_the_apartado(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A register that applies blocks nothing: the pinned edition prints apartado 12 from that register."""
+    with _m390_bucket(tmp_path, operation=operation) as bucket:
+        upsert_activity_row(_register(bucket), _activity_row(bucket.ejercicio))
+        assert registry_renders_prorrata_apartado(
+            operation.revision("390", _revision_id(bucket, operation)), operation=operation
+        )
+        findings, _ = _collected_findings(_calculate(bucket), bucket, operation=operation)
+
+    assert _apartado_findings(findings) == []
+
+
+@pytest.mark.parametrize("year", filing_year_envelope().years)
+def test_every_supported_edition_exports_the_apartado(year: int, *, operation: PinnedAuthorityOperation) -> None:
+    """Each year of the support envelope selects an edition that exports boxes 114 to 118."""
+    period = Period.from_year_and_code(year, _ANNUAL)
+    revision_id = law_selected_revision_for_work_target(
+        modelo="390", filing_year=year, period=period, operation=operation
+    )
+    assert registry_renders_prorrata_apartado(operation.revision("390", revision_id), operation=operation)
+
+
+def test_verification_blocks_a_390_whose_edition_does_not_export_the_apartado(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The finding is blocking, carries the register door, and makes the check blocked."""
     with _m390_bucket(tmp_path, operation=operation) as bucket:
         upsert_activity_row(_register(bucket), _activity_row(bucket.ejercicio))
-        findings, failures = _collected_findings(_calculate(bucket), bucket, operation=operation)
+        withheld = _apartado_withheld(operation, _revision_id(bucket, operation))
+        findings, failures = _collected_findings(_calculate(bucket), bucket, operation=withheld)
 
     (finding,) = _apartado_findings(findings)
     assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
@@ -259,11 +353,12 @@ def test_verification_ignores_a_register_that_belongs_to_another_ejercicio(
 def test_filing_and_export_refuse_with_the_typed_code_and_write_nothing(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """Local filing and export refuse the revision, name the register door, and leave no file or record."""
+    """Against an edition not exporting the apartado, filing and export refuse, name the door and write nothing."""
     export_path = tmp_path / "modelo-390.txt"
     with _m390_bucket(tmp_path, operation=operation) as bucket:
         upsert_activity_row(_register(bucket), _activity_row(bucket.ejercicio))
         revision_id = _calculate(bucket)
+        operation = _apartado_withheld(operation, _revision_id(bucket, operation))
 
         with pytest.raises(Modelo390ProrrataApartadoUnrenderedError) as file_info:
             # No granting verification exists; the refusal precedes every lifecycle check.
@@ -302,6 +397,22 @@ def test_filing_and_export_refuse_with_the_typed_code_and_write_nothing(
     assert not export_path.exists()
 
 
+def test_the_gate_stands_aside_where_the_edition_exports_the_apartado(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A register that applies: every stage passes, because the pinned edition prints its rows."""
+    with _m390_bucket(tmp_path, operation=operation) as bucket:
+        upsert_activity_row(_register(bucket), _activity_row(bucket.ejercicio))
+        for stage in Modelo390ProrrataApartadoStage:
+            require_modelo_390_prorrata_apartado_rendered(
+                bucket.work_unit,
+                registry_revision_id=_revision_id(bucket, operation),
+                prorrata_register_repository=_register(bucket),
+                operation=operation,
+                stage=stage,
+            )
+
+
 def test_the_gate_stands_aside_without_a_register(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """No register for the ejercicio: the gate raises nothing at any stage."""
     with _m390_bucket(tmp_path, operation=operation) as bucket:
@@ -334,7 +445,7 @@ def test_the_finding_follows_the_revision_casillas_not_the_year(
             operation=operation,
         )
         registry_revision = operation.revision("390", revision_id)
-        renders = registry_renders_prorrata_apartado(registry_revision)
+        renders = registry_renders_prorrata_apartado(registry_revision, operation=operation)
         refused = False
         try:
             require_modelo_390_prorrata_apartado_rendered(
@@ -348,17 +459,26 @@ def test_the_finding_follows_the_revision_casillas_not_the_year(
             refused = True
 
     assert refused is not renders
-    # The pure reading of a revision: its own casillas with the apartado's boxes removed, then renumbered copies added.
-    boxes = ("114", "115", "116", "117", "118")
-    without = tuple(casilla for casilla in registry_revision.casillas if casilla.number not in boxes)
-    template = without[0]
-    added = tuple(template.model_copy(update={"id": f"{template.id}.apartado-{box}", "number": box}) for box in boxes)
+    # The pure reading of a revision: the apartado counts only when every box reaches the record.
+    apartado = tuple(
+        casilla
+        for casilla in registry_revision.casillas
+        if _apartado_fact(registry_revision, casilla.binding) is not None
+    )
+    without = tuple(casilla for casilla in registry_revision.casillas if casilla not in apartado)
+    missing_percentages = tuple(
+        casilla
+        for casilla in apartado
+        if _apartado_fact(registry_revision, casilla.binding) is not ProrrataActivityField.PORCENTAJE
+    )
     bare = registry_revision.model_copy(update={"casillas": without})
-    lifted = registry_revision.model_copy(update={"casillas": (*without, *added)})
-    partial = registry_revision.model_copy(update={"casillas": (*without, *added[:4])})
-    assert registry_renders_prorrata_apartado(bare) is False
-    assert registry_renders_prorrata_apartado(partial) is False
-    assert registry_renders_prorrata_apartado(lifted) is True
+    partial = registry_revision.model_copy(update={"casillas": (*without, *missing_percentages)})
+    assert registry_renders_prorrata_apartado(bare, operation=operation) is False
+    assert registry_renders_prorrata_apartado(partial, operation=operation) is False
+    assert (
+        registry_renders_prorrata_apartado(_without_apartado_exports(registry_revision), operation=operation) is False
+    )
+    assert registry_renders_prorrata_apartado(registry_revision, operation=operation) is True
 
 
 @pytest.mark.parametrize("locale", _LOCALES)

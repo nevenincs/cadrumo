@@ -106,6 +106,10 @@ from .m303_regimen_simplificado_annual_summary_bindings import (
 )
 from .manual_input_selector import ManualInputProvider, validate_manual_input_binding
 from .profile_bindings import ProfileProvider, validate_profile_binding
+from .prorrata_register_activity_bindings import (
+    ProrrataRegisterActivityProvider,
+    validate_prorrata_register_activity_binding,
+)
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider, validate_prorrata_regularizacion_binding
 from .relation_prefill_bindings import RelationPrefillProvider, validate_relation_prefill_binding
 from .relations import validate_relation_prefill_fold_arity
@@ -532,6 +536,17 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         output="scalar",
         resolver_id="prorrata_regularizacion",
         stage="post_mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.PRORRATA_REGISTER_ACTIVITY,
+        ProrrataRegisterActivityProvider,
+        validate_prorrata_register_activity_binding,
+        channels=frozenset({BindingValueChannel.DECIMAL, BindingValueChannel.TEXT}),
+        ops=_FOLD_OPS,
+        origins=frozenset({TerminalOriginClass.DETAIL_RECORD}),
+        output="scalar",
+        resolver_id="prorrata_register_activity",
+        stage="mesh",
     ),
     _filing_grade(
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION,

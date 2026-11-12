@@ -144,7 +144,7 @@ FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
 # deterministically and without a repr.
 #
 # The non-writable facts the IVA resolvers also read (the criterio de caja
-# fields, ``exemption_article``, ``rectifies_ledger_id``) stay out until a write
+# fields, ``rectifies_ledger_id``) stay out until a write
 # path can change them; the write-path coverage test fails the moment one can,
 # which forces the next version rather than a silent gap.
 FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
@@ -185,6 +185,14 @@ FINGERPRINT_FIELDS_V7: tuple[tuple[str, str], ...] = (
     ("accrual_date", "accrual_date"),
 )
 
+# V8 adds ``exemption_article``: the operator-stated LIVA art. 20.Uno exemption
+# decides whether a DOMESTIC_EXEMPT row enters the prorrata volume as an operation
+# without the right to deduct (art. 104.Dos), without moving any amount V7 watches.
+FINGERPRINT_FIELDS_V8: tuple[tuple[str, str], ...] = (
+    *FINGERPRINT_FIELDS_V7,
+    ("exemption_article", "exemption_article"),
+)
+
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: FINGERPRINT_FIELDS_V1,
     2: FINGERPRINT_FIELDS_V2,
@@ -192,10 +200,11 @@ _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     5: FINGERPRINT_FIELDS_V5,
     6: FINGERPRINT_FIELDS_V6,
     7: FINGERPRINT_FIELDS_V7,
+    8: FINGERPRINT_FIELDS_V8,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 7
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 8
 
 #: The first version whose hash sees a row's operation date.
 OPERATION_DATE_FIELD_SET_VERSION: Final = 5
@@ -393,6 +402,7 @@ def _evidence_row(
         counterparty_country=transaction.counterparty_country,
         investment_asset_id=transaction.investment_asset_id,
         iva_vehicle_use=_enum_value(transaction.iva_vehicle_use),
+        exemption_article=_enum_value(transaction.exemption_article),
         counterparty_identification_state=_enum_value(transaction.counterparty_identification_state),
         fx_rate=transaction.fx_rate,
         value_in_eur=transaction.value_in_eur,

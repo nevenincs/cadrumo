@@ -194,7 +194,11 @@ def test_390_prorrata_keeps_each_description_with_its_five_live_fields(year: int
         description, grid = section.blocks[2 * index : 2 * index + 2]
         assert description.kind == "field" and description.binding_id is not None
         assert grid.kind == "grid"
-        bindings = [description.binding_id, *(cell.binding_id for cell in grid.rows[0].cells)]
+        assert all(cell.casilla_id is not None for cell in grid.rows[0].cells)
+        cells = [
+            layout.binding_cells[description.binding_id],
+            *(layout.address_for(cell.casilla_id) for cell in grid.rows[0].cells if cell.casilla_id is not None),
+        ]
         values = (
             f"Actividad ficticia {index + 1}",
             f"0{index + 11}",
@@ -204,9 +208,7 @@ def test_390_prorrata_keeps_each_description_with_its_five_live_fields(year: int
             None if index == 4 else Decimal(50),
         )
         addresses = []
-        for binding, value in zip(bindings, values, strict=True):
-            assert binding is not None
-            address = layout.binding_cells[binding]
+        for address, value in zip(cells, values, strict=True):
             seeded[address] = value
             addresses.append(address)
         groups.append(addresses)

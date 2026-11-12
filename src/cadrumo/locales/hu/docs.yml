@@ -33,6 +33,7 @@ docs:
       payable_invoice: a beérkezett számláiból
       previous_filing: a korábbi bevallásából
       profile: az adózói profiljából
+      prorrata_register_activity: az arányosítási nyilvántartásod tevékenységeiből
       prorrata_regularizacion: az arányosítás korrekciójából
       purchase_invoice_evidence: a beérkezett számlák bizonylataiból
       relation_prefill: egy kapcsolódó nyomtatvány eredményéből

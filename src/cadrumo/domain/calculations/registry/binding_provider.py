@@ -55,6 +55,7 @@ from .ledger_renta_income_bindings import LedgerRentaIncomeProvider
 from .m303_regimen_simplificado_annual_summary_bindings import M303RegimenSimplificadoAnnualSummaryProvider
 from .manual_input_selector import ManualInputProvider
 from .profile_bindings import ProfileProvider
+from .prorrata_register_activity_bindings import ProrrataRegisterActivityProvider
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
 from .relation_prefill_bindings import RelationPrefillProvider
 from .renta_inmueble_bindings import RentaInmuebleProvider
@@ -76,6 +77,7 @@ BindingProvider = Annotated[
     | IvaCompensationAnnualPartitionProvider
     | M303RegimenSimplificadoAnnualSummaryProvider
     | ProrrataRegularizacionProvider
+    | ProrrataRegisterActivityProvider
     | BienesInversionRegularizacionProvider
     | LedgerIvaProvider
     | LedgerOssProvider

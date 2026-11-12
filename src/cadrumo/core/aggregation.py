@@ -338,6 +338,11 @@ class BindingSourceKind(StrEnum):
     # Registry-declared live mesh source once the provisional-carry store and Q4
     # regularisation path are proven end to end.
     PRORRATA_REGULARIZACION = "prorrata_regularizacion"
+    # One fact of one fixed activity row of the profile's prorrata register (LIVA
+    # arts. 101-104): the CNAE code, the volumes, the kind of prorrata and its
+    # definitive percentage that Modelo 390 apartado 12 prints per activity. The
+    # register is the rows' only owner; no operator input channel duplicates them.
+    PRORRATA_REGISTER_ACTIVITY = "prorrata_register_activity"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `BindingDefinition.source`:
     # `borrador` materialises the Modelo 100 borrador prefill

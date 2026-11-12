@@ -99,6 +99,7 @@ SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset(
     {
         "accrual_date",
         "arrendamiento_ref",
+        "exemption_article",
         "gasto_capital_inmobiliario",
         "inmueble_ref",
         "investment_asset_id",
@@ -547,6 +548,7 @@ def transaction_from_command(
         ),
         "notes": command.notes,
         "iva_category": command.iva_category,
+        "exemption_article": command.exemption_article,
         "deduction_fact_kind": command.deduction_fact_kind,
         "deduction_provenance": _invoice_evidence_provenance(command, evidence_records=evidence_records),
         "investment_asset_id": command.investment_asset_id,

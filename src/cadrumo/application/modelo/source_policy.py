@@ -120,6 +120,7 @@ _FAMILY_AND_SURFACE: Final[Mapping[BindingSourceKind, tuple[SourceFamily, Source
         BindingSourceKind.RENTA_INMUEBLE: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.PRORRATA_REGULARIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),
+        BindingSourceKind.PRORRATA_REGISTER_ACTIVITY: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.FOREIGN_ASSET: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.ATRIBUCION_MEMBER: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.GASTO193_CONTRIBUTOR: (SourceFamily.REGISTERS, SourceSurface.NONE),

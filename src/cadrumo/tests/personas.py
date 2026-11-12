@@ -528,6 +528,31 @@ class AttestedPriorValue:
 
 
 @dataclass(frozen=True, slots=True)
+class WorkInput:
+    """Values the operator enters on one return because no record the application holds produces them.
+
+    ``roles`` names each value by a registry identity (a casilla's
+    ``continuidad_id`` or ``semantic_role``), which the materialiser resolves
+    in the edition the law selects for the return, so no page-qualified casilla
+    id of one edition is frozen here. The replay submits the resolved casillas
+    through the registered declaration edit, before the return is first
+    calculated, as an operator would type them; the application's own refusal
+    of a value stands. ``sources`` states, per role, where the figure comes
+    from, and ``reason`` why it is entered by hand; the edit operation receives
+    neither. Only a casilla the edition leaves to the operator may be given,
+    and a given value is never asserted back as an expected value of the same
+    return.
+    """
+
+    modelo: str
+    year: YearToken
+    period: str
+    roles: tuple[tuple[str, str], ...]
+    sources: tuple[tuple[str, str], ...]
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
 class LeasedPremises:
     """Premises the taxpayer rents for the activity from a landlord on whose rent he withholds.
 
@@ -712,6 +737,7 @@ type BelowFloorBlock = Literal[
     "local_observations",
     "aeat_filings",
     "attested_prior_values",
+    "work_inputs",
     "prior_carries",
     "expectations.obligations",
     "expectations.deadlines",
@@ -796,6 +822,8 @@ class Persona:
     """The dated records a read under a lowered horizon left out, their year lying below the envelope floor."""
     attested_prior_values: tuple[AttestedPriorValue, ...] = ()
     """The figures the taxpayer states for earlier returns the application does not hold."""
+    work_inputs: tuple[WorkInput, ...] = ()
+    """The casilla values the operator enters on a return because no record the application holds produces them."""
     work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = ()
     """The ejercicios whose Modelo 100 the taxpayer states holds no income of the work-income boxes no payer certificate fills."""
 
@@ -1098,6 +1126,7 @@ _PERSONA_TABLES = frozenset(
         "local_observations",
         "aeat_filings",
         "attested_prior_values",
+        "work_inputs",
         "leased_premises",
         "inventory",
     }
@@ -1534,6 +1563,35 @@ def _attested_prior_value(table: _Table, where: str) -> AttestedPriorValue:
         ),
         derivation=_string(table, "derivation", where),
         legal_ref=legal_ref,
+    )
+
+
+def _work_input(table: _Table, where: str) -> WorkInput:
+    _keys(table, where, required=frozenset({"modelo", "year", "period", "roles", "sources", "reason"}))
+    roles = _table(table["roles"], f"{where}.roles")
+    if not roles:
+        raise _fail(where, "roles must name at least one role")
+    values: list[tuple[str, str]] = []
+    for role, value in sorted(roles.items()):
+        _amount(value, f"{where}.roles.{role}")
+        values.append((role, cast(str, value)))
+    sources = _table(table["sources"], f"{where}.sources")
+    missing = sorted(set(roles) - set(sources))
+    if missing:
+        raise _fail(where, f"sources must state where each role's value comes from; none for {missing}")
+    extra = sorted(set(sources) - set(roles))
+    if extra:
+        raise _fail(where, f"sources name roles the block does not give: {extra}")
+    for role, text in sources.items():
+        if not isinstance(text, str) or not text.strip():
+            raise _fail(where, f"sources.{role} must be a non-empty string")
+    return WorkInput(
+        modelo=_string(table, "modelo", where),
+        year=YearToken.parse(table["year"], where=f"{where}.year"),
+        period=_choice(_string(table, "period", where), _FILED_PERIODS, where),
+        roles=tuple(values),
+        sources=tuple((role, cast(str, sources[role])) for role, _ in values),
+        reason=_string(table, "reason", where),
     )
 
 
@@ -2115,6 +2173,10 @@ def parse_persona(
             _attested_prior_value(table, f"{where} attested_prior_values[{index}]")
             for index, table in enumerate(_tables(persona_document.get("attested_prior_values"), where))
         ),
+        work_inputs=tuple(
+            _work_input(table, f"{where} work_inputs[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("work_inputs"), where))
+        ),
         leased_premises=tuple(
             _leased_premises(table, f"{where} leased_premises[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("leased_premises"), where))
@@ -2145,6 +2207,7 @@ def parse_persona(
     _check_years(persona, envelope)
     _check_aeat_filings(persona, envelope)
     _check_attested_prior_values(persona, envelope)
+    _check_work_inputs(persona, envelope)
     _check_prior_carries(persona, envelope)
     return persona
 
@@ -2155,6 +2218,7 @@ type _DatedRecord = (
     | LocalObservation
     | AeatFiling
     | AttestedPriorValue
+    | WorkInput
     | ExpectedObligation
     | ExpectedDeadline
     | ExpectedValue
@@ -2234,6 +2298,7 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
         local_observations=kept("local_observations", persona.local_observations),
         aeat_filings=kept("aeat_filings", persona.aeat_filings),
         attested_prior_values=kept("attested_prior_values", persona.attested_prior_values),
+        work_inputs=kept("work_inputs", persona.work_inputs),
         expectations=Expectations(
             obligations=kept("expectations.obligations", expectations.obligations),
             deadlines=kept("expectations.deadlines", expectations.deadlines),
@@ -2318,6 +2383,33 @@ def _check_attested_prior_values(persona: Persona, envelope: YearEnvelope) -> No
             )
 
 
+def _check_work_inputs(persona: Persona, envelope: YearEnvelope) -> None:
+    """Refuse two blocks for one return, and a given role an expectation of that return asserts back by name.
+
+    A role an expectation names under ``roles`` is checked here; whether a given
+    role and an expected casilla id are the same casilla resolves only through
+    the registry, so the materialiser checks that against the return's edition.
+    """
+    seen: set[tuple[str, int, str]] = set()
+    for item in persona.work_inputs:
+        year = item.year.resolve(envelope)
+        key = (item.modelo, year, item.period)
+        if key in seen:
+            raise _fail(persona.id, f"Modelo {item.modelo} {item.year} {item.period} has two work_inputs blocks")
+        seen.add(key)
+        given = {role for role, _ in item.roles}
+        for value in persona.expectations.values:
+            if (value.modelo, value.year.resolve(envelope), value.period) != key:
+                continue
+            asserted = given & {role for role, _ in value.roles}
+            if asserted:
+                raise _fail(
+                    persona.id,
+                    f"Modelo {item.modelo} {item.year} {item.period} gives {sorted(asserted)} as a work input "
+                    "and asserts it back as an expected value",
+                )
+
+
 def _check_prior_carries(persona: Persona, envelope: YearEnvelope) -> None:
     """Refuse two statements of the pending carries for one Modelo 100 year."""
     years = [statement.year.resolve(envelope) for statement in persona.prior_carries]
@@ -2358,6 +2450,7 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         *(observation.year for observation in persona.local_observations),
         *(filing.year for filing in persona.aeat_filings),
         *(item.year for item in persona.attested_prior_values),
+        *(item.year for item in persona.work_inputs),
         *(book.year for book in persona.inventory),
         *(row.year for row in persona.ledger),
         *(item.year for item in persona.expectations.obligations),
@@ -2450,6 +2543,7 @@ __all__ = [
     "RentalLedgerLink",
     "RentalProperty",
     "WithholdingCertificate",
+    "WorkInput",
     "YearEnvelope",
     "YearToken",
     "cadastral_control_characters",

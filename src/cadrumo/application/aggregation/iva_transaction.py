@@ -1112,6 +1112,7 @@ def _project_iva_transaction(
         deduction_provenance=transaction.deduction_provenance,
         investment_asset_id=transaction.investment_asset_id,
         rectifies_ledger_id=transaction.rectifies_ledger_id,
+        art_104_tres_exclusion=transaction.art_104_tres_exclusion,
         operation=operation,
     )
     return _IvaTransactionOutcome(

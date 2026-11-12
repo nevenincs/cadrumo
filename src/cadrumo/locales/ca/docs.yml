@@ -33,6 +33,7 @@ docs:
       payable_invoice: des de les factures rebudes
       previous_filing: des de la teva declaració anterior
       profile: des del teu perfil de contribuent
+      prorrata_register_activity: des de les activitats del teu registre de prorrata
       prorrata_regularizacion: des de la regularització de prorrata
       purchase_invoice_evidence: des dels justificants de les teves factures rebudes
       relation_prefill: des del resultat d'un model relacionat

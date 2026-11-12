@@ -10314,8 +10314,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-240-prorratas-1-codigo-cnae'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-1-codigo-cnae'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-1.codigo-cnae'
 legal_refs = [
     'ley-37-1992:art-101',
     'orden-eha-3111-2009:art-1',
@@ -10332,8 +10332,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-243-prorratas-1-importe-de-operaciones'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-1-importe-de-operaciones'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-1.importe-operaciones'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -10350,8 +10350,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-260-prorratas-1-importe-de-operaciones-con-derecho-a-ded'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-1-importe-de-operaciones-con-derecho-a-deduccion'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-1.importe-con-derecho'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -10369,8 +10369,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-277-prorratas-1-tipo-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-1-tipo-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-1.tipo'
 legal_refs = [
     'ley-37-1992:art-103',
     'orden-eha-3111-2009:art-1',
@@ -10387,8 +10387,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-278-prorratas-1-porcentaje-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-1-porcentaje-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-1.porcentaje'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',
@@ -10424,8 +10424,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-323-prorratas-2-codigo-cnae'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-2-codigo-cnae'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-2.codigo-cnae'
 legal_refs = [
     'ley-37-1992:art-101',
     'orden-eha-3111-2009:art-1',
@@ -10442,8 +10442,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-326-prorratas-2-importe-de-operaciones'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-2-importe-de-operaciones'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-2.importe-operaciones'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -10460,8 +10460,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-343-prorratas-2-importe-de-operaciones-con-derecho-a-ded'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-2-importe-de-operaciones-con-derecho-a-deduccion'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-2.importe-con-derecho'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -10479,8 +10479,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-360-prorratas-2-tipo-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-2-tipo-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-2.tipo'
 legal_refs = [
     'ley-37-1992:art-103',
     'orden-eha-3111-2009:art-1',
@@ -10497,8 +10497,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-361-prorratas-2-porcentaje-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-2-porcentaje-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-2.porcentaje'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',
@@ -10534,8 +10534,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-406-prorratas-3-codigo-cnae'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-3-codigo-cnae'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-3.codigo-cnae'
 legal_refs = [
     'ley-37-1992:art-101',
     'orden-eha-3111-2009:art-1',
@@ -10552,8 +10552,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-409-prorratas-3-importe-de-operaciones'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-3-importe-de-operaciones'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-3.importe-operaciones'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -10570,8 +10570,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-426-prorratas-3-importe-de-operaciones-con-derecho-a-ded'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-3-importe-de-operaciones-con-derecho-a-deduccion'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-3.importe-con-derecho'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -10589,8 +10589,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-443-prorratas-3-tipo-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-3-tipo-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-3.tipo'
 legal_refs = [
     'ley-37-1992:art-103',
     'orden-eha-3111-2009:art-1',
@@ -10607,8 +10607,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-444-prorratas-3-porcentaje-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-3-porcentaje-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-3.porcentaje'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',
@@ -10644,8 +10644,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-489-prorratas-4-codigo-cnae'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-4-codigo-cnae'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-4.codigo-cnae'
 legal_refs = [
     'ley-37-1992:art-101',
     'orden-eha-3111-2009:art-1',
@@ -10662,8 +10662,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-492-prorratas-4-importe-de-operaciones'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-4-importe-de-operaciones'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-4.importe-operaciones'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -10680,8 +10680,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-509-prorratas-4-importe-de-operaciones-con-derecho-a-ded'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-4-importe-de-operaciones-con-derecho-a-deduccion'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-4.importe-con-derecho'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -10699,8 +10699,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-526-prorratas-4-tipo-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-4-tipo-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-4.tipo'
 legal_refs = [
     'ley-37-1992:art-103',
     'orden-eha-3111-2009:art-1',
@@ -10717,8 +10717,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-527-prorratas-4-porcentaje-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-4-porcentaje-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-4.porcentaje'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',
@@ -10754,8 +10754,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-572-prorratas-5-codigo-cnae'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-5-codigo-cnae'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-5.codigo-cnae'
 legal_refs = [
     'ley-37-1992:art-101',
     'orden-eha-3111-2009:art-1',
@@ -10772,8 +10772,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-575-prorratas-5-importe-de-operaciones'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-5-importe-de-operaciones'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-5.importe-operaciones'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -10790,8 +10790,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-592-prorratas-5-importe-de-operaciones-con-derecho-a-ded'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-5-importe-de-operaciones-con-derecho-a-deduccion'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-5.importe-con-derecho'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -10809,8 +10809,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-609-prorratas-5-tipo-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-5-tipo-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-5.tipo'
 legal_refs = [
     'ley-37-1992:art-103',
     'orden-eha-3111-2009:art-1',
@@ -10827,8 +10827,8 @@ record_identity = 'Pág. 7'
 
 [[entries]]
 export_field_id = 'modelo-390-page-07-610-prorratas-5-porcentaje-de-prorrata'
-kind = 'binding'
-binding = 'modelo-390.page_7.prorratas-5-porcentaje-de-prorrata'
+kind = 'casilla'
+casilla_id = 'iva.anual.prorrata.actividad-5.porcentaje'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',

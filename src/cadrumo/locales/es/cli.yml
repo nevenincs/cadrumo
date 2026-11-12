@@ -1054,6 +1054,7 @@ cli:
         period_help: 'Código de periodo: 0A anual, 1T-4T trimestres, 01-12 meses;
           para modelos censales (036) usa alta, modificacion o baja.'
         readiness:
+          actividades_prorrata: actividades del registro de prorrata
           activo_extranjero: activo extranjero
           afiliado_cotizacion: afiliado de la relación de cotizaciones
           borrador_aeat: borrador de la AEAT
@@ -3570,6 +3571,10 @@ cli:
         la taxonomía no se infiere.
       derive_non_derivable: '{category} no tiene un tipo español simple que derivar:
         {note} Indica --taxable-base, --iva-rate e --iva-amount a mano para esta categoría.'
+      exemption_article_help: La exención del art. 20.Uno LIVA en la que encaja una
+        fila `domestic_exempt`, como token del vocabulario de artículos de exención
+        que el registro declara para la fecha de la fila. Decide si la fila cuenta
+        en el volumen de la prorrata como operación sin derecho a deducción.
       file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
       file_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,

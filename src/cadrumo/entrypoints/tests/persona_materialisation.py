@@ -254,6 +254,7 @@ from ...tests.personas import (
     ProvisionPeriods,
     WithholdingCertificate,
     WorkIncomeNoneStatement,
+    WorkInput,
     YearEnvelope,
     filed_period_order,
     governed_provisions,
@@ -269,6 +270,7 @@ from .persona_own_accounts import replay_own_accounts
 from .persona_prior_values import PriorValueAttestationError, attest_prior_values
 from .persona_rental_replay import replay_rentals
 from .persona_work_income_statements import state_work_income_none
+from .persona_work_inputs import WorkInputError, check_work_inputs, enter_work_inputs
 
 PERSONA_ACTOR = "operator:persona"
 """The actor every replayed operation is submitted under."""
@@ -339,6 +341,8 @@ class PersonaWorld:
     operation: PinnedAuthorityOperation
     attested_prior_values: tuple[AttestedPriorValue, ...] = ()
     """The persona's stated figures for earlier returns; :func:`run_operation` submits them after a calculation."""
+    work_inputs: tuple[WorkInput, ...] = ()
+    """The values the persona's operator enters on a return; :func:`run_operation` enters them before its first calculation."""
     work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = ()
     """The ejercicios whose unevidenced work income the persona states is none; submitted after a calculation."""
 
@@ -437,12 +441,14 @@ def _operations_over(
     as_of: datetime,
     envelope: YearEnvelope | None = None,
     attested_prior_values: tuple[AttestedPriorValue, ...] = (),
+    work_inputs: tuple[WorkInput, ...] = (),
     work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = (),
 ) -> Generator[PersonaWorld]:
     """Compose a production supervisor over the profile already resumed in the isolated ``root``.
 
     ``envelope`` is the year envelope the persona was read under; the registry's own when omitted.
-    ``attested_prior_values`` are the persona's stated figures for earlier returns and
+    ``attested_prior_values`` are the persona's stated figures for earlier returns,
+    ``work_inputs`` the values its operator enters on a return, and
     ``work_income_none_statements`` the ejercicios whose unevidenced work income it states is none.
     """
     with (
@@ -482,6 +488,7 @@ def _operations_over(
                 registry=registry,
                 operation=operation,
                 attested_prior_values=attested_prior_values,
+                work_inputs=work_inputs,
                 work_income_none_statements=work_income_none_statements,
             )
         finally:
@@ -508,6 +515,7 @@ def persona_world(
                     as_of=as_of,
                     envelope=envelope,
                     attested_prior_values=persona.attested_prior_values,
+                    work_inputs=persona.work_inputs,
                     work_income_none_statements=persona.work_income_none_statements,
                 ) as opened:
                     yield opened
@@ -645,10 +653,14 @@ def run_operation[Projection: BaseModel](
 ) -> Projection:
     """Settle one registered operation and return its public result as ``projection``.
 
+    A calculation of a return the persona gives values for is preceded, on its first
+    calculation, by their entry through the declaration edit, as an operator enters them.
     A calculation of a return the persona states a prior value for is followed by the
     attestation of that value, where the application offers it, and calculated again so
     the result reads the stated figure.
     """
+    if isinstance(payload, ModeloWorkCalculateRequest) and world.work_inputs:
+        _enter_work_inputs(world, payload.work_unit_id)
     result = settle_operation(world, definition_id, payload, subject=subject)
     if not isinstance(result, projection):
         raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
@@ -657,6 +669,25 @@ def run_operation[Projection: BaseModel](
         if not isinstance(result, projection):
             raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
     return result
+
+
+def _enter_work_inputs(world: PersonaWorld, work_unit_id: str) -> None:
+    """Enter the values the persona gives for the work unit's return, before its first calculation."""
+
+    def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
+        return settle_operation(world, definition_id, payload, subject=subject)
+
+    try:
+        enter_work_inputs(
+            world.work_inputs,
+            envelope=world.envelope,
+            operation=world.operation,
+            profile_id=world.profile_id,
+            work_unit_id=work_unit_id,
+            settle=settle,
+        )
+    except WorkInputError as error:
+        raise PersonaMaterialisationError(str(error)) from error
 
 
 def _with_attested_prior_values(
@@ -1670,7 +1701,9 @@ def _replay_history(persona: Persona, world: PersonaWorld) -> tuple[dict[str, st
     filed return is created, calculated, verified and filed locally, and each
     calculated return created and calculated, in the order their windows close.
     Each figure comes from the persona's replayed ledger, profile and recorded
-    observations; nothing is entered at calculation. A filed return that
+    observations, and from the values the persona's operator enters on it
+    (``work_inputs``), entered through the declaration edit before its first
+    calculation; nothing else is entered at calculation. A filed return that
     cannot verify or file from that data is refused with the operation's own
     reason, never overridden. Local filing records a PRESENTADO revision whose
     AEAT status stays pending; no receipt is made.
@@ -1840,6 +1873,10 @@ def materialise_persona(
     the setup complete; without it the profile stays in setup, the state the
     onboarding review opens.
     """
+    try:
+        check_work_inputs(persona, world.envelope, world.operation)
+    except WorkInputError as error:
+        raise PersonaMaterialisationError(str(error)) from error
     transactions: dict[str, str] = {}
     invoices: dict[str, str] = {}
     evidence: dict[str, str] = {}
@@ -1917,6 +1954,7 @@ def _sealed_replay(
                 as_of=as_of,
                 envelope=envelope,
                 attested_prior_values=persona.attested_prior_values,
+                work_inputs=persona.work_inputs,
                 work_income_none_statements=persona.work_income_none_statements,
             ) as world,
         ):
@@ -1978,6 +2016,7 @@ def _reused_persona_world(
                     as_of=as_of,
                     envelope=envelope,
                     attested_prior_values=persona.attested_prior_values,
+                    work_inputs=persona.work_inputs,
                     work_income_none_statements=persona.work_income_none_statements,
                 ) as world:
                     yield MaterialisedPersona(

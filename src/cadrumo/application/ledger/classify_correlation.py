@@ -17,6 +17,7 @@ _RESULT_ONLY_FIELDS = frozenset(
     {
         "arrendamiento_ref",
         "deduction_fact_kind",
+        "exemption_article",
         "gasto_capital_inmobiliario",
         "inmueble_ref",
         "investment_asset_id",

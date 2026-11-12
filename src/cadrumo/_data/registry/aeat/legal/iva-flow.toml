@@ -279,6 +279,235 @@ required_text = [
     "quedará subordinada, en todo caso, a la subsistencia de las condiciones y requisitos",
 ]
 
+[legal."ley-37-1992:art-20-uno-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.1"
+section = "servicio-postal-universal"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 1.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.1.º: Servicio postal universal y entregas accesorias realizadas por el operador u operadores que se comprometen a prestarlo. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir."
+required_text = [
+    "1.º Las prestaciones de servicios y las entregas de bienes accesorias a ellas que constituyan el servicio postal universal",
+]
+
+[legal."ley-37-1992:art-20-uno-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.12"
+section = "entidades-sin-fin-lucrativo"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 12.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.12.º: Servicios y entregas accesorias prestados directamente a sus miembros por organismos o entidades sin finalidad lucrativa de naturaleza política, sindical, religiosa, patriótica, filantrópica o cívica, a cambio de cotización estatutaria. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir."
+required_text = [
+    "12.º Las prestaciones de servicios y las entregas de bienes accesorias a las mismas efectuadas directamente a sus miembros por organismos o entidades legalmente reconocidos que no tengan finalidad lucrativa",
+]
+
+[legal."ley-37-1992:art-20-uno-16"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.16"
+section = "seguros"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 16.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.16.º: Operaciones de seguro, reaseguro y capitalización y servicios de mediación relacionados. El art. 94.Uno.3.º concede el derecho a deducir cuando el destinatario está establecido fuera de la Comunidad o la operación se vincula a exportaciones, por lo que el derecho depende del destinatario."
+required_text = [
+    "16.º Las operaciones de seguro, reaseguro y capitalización.",
+]
+
+[legal."ley-37-1992:art-20-uno-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.18"
+section = "operaciones-financieras"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 18.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.18.º: Operaciones financieras enumeradas en el número 18.º: depósitos, créditos y préstamos, transferencias, valores y gestión de fondos, entre otras. El art. 94.Uno.3.º concede el derecho a deducir cuando el destinatario está establecido fuera de la Comunidad o la operación se vincula a exportaciones, por lo que el derecho depende del destinatario."
+required_text = [
+    "18.º Las siguientes operaciones financieras:",
+]
+
+[legal."ley-37-1992:art-20-uno-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.22"
+section = "segundas-entregas-edificaciones"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 22.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.22.º: Segundas y ulteriores entregas de edificaciones y sus terrenos tras terminar su construcción o rehabilitación; renunciable según el apartado Dos. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir; tras la renuncia del apartado Dos la operación queda sujeta y no exenta."
+required_text = [
+    "22.ºA) Las segundas y ulteriores entregas de edificaciones, incluidos los terrenos en que se hallen enclavadas, cuando tengan lugar después de terminada su construcción o rehabilitación.",
+]
+
+[legal."ley-37-1992:art-20-uno-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.23"
+section = "arrendamientos-vivienda-terrenos"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 23.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.23.º: Arrendamientos y derechos reales de goce y disfrute sobre terrenos y edificios destinados exclusivamente a vivienda, con las exclusiones del número 23.º. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir."
+required_text = [
+    "23.º Los arrendamientos que tengan la consideración de servicios con arreglo a lo dispuesto en el artículo 11 de esta Ley y la constitución y transmisión de derechos reales de goce y disfrute",
+]
+
+[legal."ley-37-1992:art-20-uno-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.3"
+section = "asistencia-medica-sanitaria"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 3.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.3.º: La asistencia a personas físicas por profesionales médicos o sanitarios: médicos y demás profesionales sanitarios del ordenamiento, psicólogos, logopedas y ópticos. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir."
+required_text = [
+    "3.º La asistencia a personas físicas por profesionales médicos o sanitarios, cualquiera que sea la persona destinataria de dichos servicios.",
+    "tendrán la condición de profesionales médicos o sanitarios los considerados como tales en el ordenamiento jurídico y los psicólogos, logopedas y ópticos",
+]
+
+[legal."ley-37-1992:art-20-uno-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.5"
+section = "odontologia-protesis-dental"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 5.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.5.º: Servicios de estomatólogos, odontólogos, mecánicos dentistas y protésicos dentales, y la entrega, reparación y colocación de prótesis dentales y ortopedias maxilares que realicen. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir."
+required_text = [
+    "5.º Las prestaciones de servicios realizadas en el ámbito de sus respectivas profesiones por estomatólogos, odontólogos, mecánicos dentistas y protésicos dentales",
+]
+
+[legal."ley-37-1992:art-20-uno-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.8"
+section = "asistencia-social"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 8.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.8.º: Prestaciones de servicios de asistencia social enumeradas en el número 8.º, efectuadas por entidades de Derecho Público o entidades o establecimientos privados de carácter social. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir."
+required_text = [
+    "8.º Las prestaciones de servicios de asistencia social que se indican a continuación efectuadas por entidades de Derecho Público o entidades o establecimientos privados de carácter social:",
+]
+
+[legal."ley-37-1992:art-20-uno-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.9"
+section = "educacion-ensenanza"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 9.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.9.º: Educación de la infancia y de la juventud, guarda y custodia de niños, enseñanza escolar, universitaria y de postgrado, de idiomas y formación profesional, por entidades de Derecho público o entidades privadas autorizadas. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir."
+required_text = [
+    "9.º La educación de la infancia y de la juventud, la guarda y custodia de niños",
+]
+
+[legal."ley-37-1992:art-20-uno-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.10"
+section = "clases-particulares"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 10.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.10.º: Clases a título particular prestadas por personas físicas sobre materias de los planes de estudios del sistema educativo. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir."
+required_text = [
+    "10.º Las clases a título particular prestadas por personas físicas sobre materias incluidas en los planes de estudios de cualquiera de los niveles y grados del sistema educativo.",
+]
+
+[legal."ley-37-1992:art-20-uno-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20.Uno.14"
+section = "servicios-culturales"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from bundled ley-37-1992-art-20.html#a20 apartado Uno número 14.º; operator to re-stamp"
+notes = "LIVA art. 20.Uno.14.º: Servicios culturales (bibliotecas, archivos, museos y monumentos, representaciones, exposiciones) de entidades de Derecho público o establecimientos culturales privados de carácter social. Exención limitada: el art. 94.Uno no la incluye entre las operaciones que originan el derecho a deducir."
+required_text = [
+    "14.º Las prestaciones de servicios que a continuación se relacionan efectuadas por entidades de Derecho público o por entidades o establecimientos culturales privados de carácter social:",
+]
+
 [legal."ley-37-1992:art-22"]
 evidence_tier = "legal_authority"
 authority = "boe"
