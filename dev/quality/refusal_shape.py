@@ -27,6 +27,9 @@ door. It is free text when the call passes positional arguments, the factory's
 from the registry; a factory whose source cannot be read counts as keyed. Any other
 attribute call, including a classmethod that does not return ``cls(...)``, is no site.
 
+A site whose class defines an initializer that always hands its base a
+``translated_message`` is never free text: the class words every construction.
+
 Site identity is the repository-relative path, the enclosing qualified name, the
 registered code and the ordinal among that function's constructions of that code,
 never a line number, so unrelated edits leave the ratchet untouched. Direct and
@@ -55,6 +58,7 @@ __all__ = [
     "LOCALES",
     "RATCHET_PATH",
     "Site",
+    "class_keys_its_words",
     "doorless_site_ids",
     "free_text_site_ids",
     "main",
@@ -194,6 +198,43 @@ def class_default_door(error_type: type) -> bool:
     return door
 
 
+_CLASS_KEY_CACHE: dict[type, bool] = {}
+
+
+def class_keys_its_words(error_type: type) -> bool:
+    """Whether an initializer the class defines always hands its base a catalogue key.
+
+    Such a class words every construction itself, so positional arguments at a
+    site are reasons or facts, not free text handed to the renderer.
+    """
+    cached = _CLASS_KEY_CACHE.get(error_type)
+    if cached is not None:
+        return cached
+    keyed = False
+    for klass in error_type.__mro__:
+        initializer = klass.__dict__.get("__init__")
+        if initializer is None or klass.__module__.startswith("cadrumo.core.errors.hierarchy"):
+            continue
+        try:
+            source = textwrap.dedent(inspect.getsource(initializer))
+        except (OSError, TypeError):
+            break
+        keyed = any(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "__init__"
+            and any(
+                keyword.arg == "translated_message"
+                and not (isinstance(keyword.value, ast.Constant) and keyword.value.value is None)
+                for keyword in node.keywords
+            )
+            for node in ast.walk(ast.parse(source))
+        )
+        break
+    _CLASS_KEY_CACHE[error_type] = keyed
+    return keyed
+
+
 def _scope_names(tree: ast.AST) -> dict[int, str]:
     """Map each node id to the qualified name of its enclosing class and function chain."""
     scopes: dict[int, str] = {}
@@ -316,7 +357,10 @@ def scan_source(source: str, *, path: str, module: str, module_object: object | 
                 ordinal=ordinal,
                 line=call.lineno,
                 has_door=door,
-                free_text=bool(call.args) and not passed and not code.public_message_from_registry,
+                free_text=bool(call.args)
+                and not passed
+                and not code.public_message_from_registry
+                and not class_keys_its_words(target),
                 message_key=code.message_key,
                 translated_keys=() if literal_key is None else (literal_key,),
             )

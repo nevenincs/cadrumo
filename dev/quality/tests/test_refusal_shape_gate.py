@@ -16,10 +16,12 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.modelo.action_errors import ModeloOperationSubjectNotWorkUnitError, ModeloRecordNotFoundError
+from cadrumo.application.modelo.credit_resolution_repository import CreditResolutionRefusedError
 from cadrumo.application.operations.next_step import OperationNextStepWording
 from dev.quality.refusal_shape import (
     GOVERNED_TREES,
     Site,
+    class_keys_its_words,
     doorless_site_ids,
     free_text_site_ids,
     missing_words,
@@ -115,6 +117,24 @@ def test_the_gate_detects_a_doorless_site_a_free_text_site_and_an_unknown_key() 
     missing = missing_words(found)
     assert {entry.split(":", 1)[1] for entry in missing} == {"no.such.catalogue.key"}
     assert len(missing) == 4
+
+
+_KEYED_INITIALIZER_FIXTURE = """
+from cadrumo.application.modelo.credit_resolution_repository import CreditResolutionRefusedError
+
+
+def refuse(reason):
+    raise CreditResolutionRefusedError(reason)
+"""
+
+
+def test_a_positional_reason_to_a_class_that_words_itself_is_not_free_text() -> None:
+    """A class whose initializer always keys its words is never handed free text by a site."""
+    assert class_keys_its_words(CreditResolutionRefusedError)
+    assert not class_keys_its_words(ModeloRecordNotFoundError)
+
+    (site,) = scan_source(_KEYED_INITIALIZER_FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
+    assert not site.free_text
 
 
 def test_site_identity_survives_unrelated_line_shifts() -> None:
