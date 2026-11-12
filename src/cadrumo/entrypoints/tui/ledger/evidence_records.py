@@ -15,6 +15,7 @@ from ....domain.iva.schema import InvoiceKind
 from ..account import AccountSessionExpiredError
 from ..operations.outcome import OperationOutcomeUnknownError
 from .evidence_draft import draft_lines
+from .evidence_page import page_lines
 from .models import (
     LedgerEvidenceConfirmationV1,
     LedgerEvidenceDraftV1,
@@ -98,6 +99,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         record = next(item for item in self._records or () if item.evidence_id == evidence_id)
         if evidence_id != self.selected_record_id:
             self._clear_review()
+            self.query_one("#ledger-evidence-page", Static).update("")
         self.selected_record_id = evidence_id
         self.query_one("#ledger-evidence-record-detail", Static).update(
             tr(
@@ -109,6 +111,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             )
         )
         self.query_one("#ledger-evidence-extract", Button).disabled = False
+        self.query_one("#ledger-evidence-view", Button).disabled = False
         self.query_one("#ledger-evidence-confirm", Button).disabled = self._reviewed_evidence_id != evidence_id
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -118,6 +121,8 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
                 self._add()
             case "ledger-evidence-extract" if self.selected_record_id is not None:
                 self._start(self._extract(self.selected_record_id), tr("tui.ledger.evidence.reading"))
+            case "ledger-evidence-view" if self.selected_record_id is not None:
+                self._start(self._view(self.selected_record_id), tr("tui.ledger.evidence.page.loading"))
             case "ledger-evidence-confirm" if self.selected_record_id is not None:
                 if (
                     self._reviewed_evidence_id != self.selected_record_id
@@ -165,6 +170,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         self._clear_review()
         self._records = None
         self.selected_record_id = None
+        self.query_one("#ledger-evidence-page", Static).update("")
         self.query_one("#ledger-evidence-records", DataTable).clear()
         self.query_one("#ledger-evidence-record-detail", Static).update("")
         self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
@@ -184,6 +190,24 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             status.update(tr("tui.ledger.evidence.read_done"))
             if self.selected_record_id == evidence_id and draft.evidence_id == evidence_id:
                 self._show_extracted_draft(evidence_id, draft)
+        finally:
+            self.reading = False
+
+    async def _view(self, evidence_id: str) -> None:
+        status = self.query_one("#ledger-flow-status", Static)
+        self.query_one("#ledger-evidence-page", Static).update("")
+        try:
+            page = await self.controller.view_evidence_page(evidence_id)
+        except AccountSessionExpiredError as error:
+            status.update(tr("tui.ledger.evidence.page.failed"))
+            self._handle_expired_session(error)
+        except (CadrumoError, ValidationError) as error:
+            status.update(tr("tui.ledger.evidence.page.failed"))
+            self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+        else:
+            status.update("")
+            if self.selected_record_id == evidence_id and page.evidence_id == evidence_id:
+                self.query_one("#ledger-evidence-page", Static).update("\n".join(page_lines(page)))
         finally:
             self.reading = False
 

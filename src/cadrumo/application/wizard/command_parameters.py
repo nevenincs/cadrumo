@@ -343,6 +343,10 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         "--new-entity-first-two-profit-periods/--no-new-entity-first-two-profit-periods",
         help=tr("wizard.setup.flags.new-entity-first-two-profit-periods.help"),
     ),
+    "pago-fraccionado-art-40-3-elected": typer.Option(
+        "--pago-fraccionado-art-40-3-elected/--no-pago-fraccionado-art-40-3-elected",
+        help=tr("wizard.setup.flags.pago-fraccionado-art-40-3-elected.help"),
+    ),
     "irpf-estimation-regime": typer.Option(
         "--irpf-estimation-regime",
         parser=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),

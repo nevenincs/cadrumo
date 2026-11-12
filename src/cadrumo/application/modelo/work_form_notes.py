@@ -17,6 +17,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, element_names_of
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH, gate_refuses
 from .calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
@@ -24,6 +25,7 @@ from .calculation_notes import (
     FILED_BEFORE_GRADE_CAP_REASON,
     durable_binding_source,
     note_attention,
+    note_record_verdict,
 )
 from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
 from .work_form_field_vocabulary import ModeloFormCasillaAddressV1
@@ -188,6 +190,14 @@ def _resolution_answer(finding_key: str | None, context: WorkFormContext) -> Mod
     )
 
 
+def note_recovery(
+    reason: str, fact: CalculationNoteFact | None, language: OutputLanguage
+) -> PreconditionVerdictSnapshot | None:
+    """The way out a note opens, served in ``language`` through the verdict snapshot a refusal crosses with."""
+    verdict = note_record_verdict(reason, fact)
+    return None if verdict is None else PreconditionVerdictSnapshot.from_verdict(verdict, language)
+
+
 def _projected_note(
     source: NoteSource, message: str | None, context: WorkFormContext, boxes: dict[CasillaId, str | None]
 ) -> ModeloFormCalculationNote:
@@ -207,6 +217,7 @@ def _projected_note(
         fact=fact,
         element_names=element_names_of(fact, context.element_names),
         message=message,
+        recovery=note_recovery(reason, fact, context.language),
     )
 
 

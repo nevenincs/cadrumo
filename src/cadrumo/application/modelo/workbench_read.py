@@ -36,6 +36,7 @@ from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.period import calculation_filing_date
 from ...domain.user_profile.labels import profile_field_label
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -482,7 +483,7 @@ def read_modelo_casilla_help(
         snapshot=snapshot,
         operation=operation,
         language=language,
-        on=unit.period.end_date,
+        on=calculation_filing_date(unit.period, authority=operation),
         observation=observation,
     )
 

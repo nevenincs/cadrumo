@@ -150,6 +150,13 @@ _PRIOR_CARRY_MESSAGE_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] 
 _ROW_CARRY_DOORS: Final[Mapping[AbsenceAttestationFamily, RentaInmuebleDoor]] = {
     AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES: RentaInmuebleDoor.ATTEST_NO_AMOUNT,
 }
+CALCULATION_REFUSING_ABSENCE_FAMILIES: Final[frozenset[AbsenceAttestationFamily]] = frozenset(
+    _PRIOR_CARRY_MESSAGE_LOCALE_KEYS
+)
+"""The statement-of-absence families whose unstated carries refuse the calculation before publication.
+
+A family outside this set leaves an unstated member to verification instead.
+"""
 
 
 class ModeloPriorCarryAbsenceUnstatedError(ModeloWorkMissingInputError):
@@ -584,6 +591,7 @@ def previous_filing_unobserved(
 
 
 __all__ = [
+    "CALCULATION_REFUSING_ABSENCE_FAMILIES",
     "ModeloPriorCarryAbsenceUnstatedError",
     "ModeloPriorPeriodUnfiledError",
     "ModeloWorkMissingInputError",

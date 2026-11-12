@@ -22,7 +22,7 @@ from dataclasses import is_dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import cache
-from types import GenericAlias, UnionType
+from types import GenericAlias, MappingProxyType, UnionType
 from typing import Annotated, Literal, Self, TypeAliasType, Union, get_args, get_origin
 
 from pydantic import BaseModel, model_validator
@@ -252,15 +252,19 @@ def project_public_mirror(
     public: object,
     *,
     omitted: Mapping[type[BaseModel], frozenset[str]] | None = None,
+    served: Mapping[type[BaseModel], Callable[[BaseModel], BaseModel]] | None = None,
 ) -> object:
     """Project a canonical value while checking the mirror's exact field inventory.
 
     ``omitted`` names, per public mirror, canonical fields it deliberately does
-    not carry; every other field must exist on both sides.
+    not carry; every other field must exist on both sides. ``served`` names,
+    per canonical model, the completion a transport serves on each node of that
+    model before it is mirrored, such as words in the projecting process's
+    language; restoration keeps what was served.
     """
     from .public_mirror_projection import project_public_value
 
-    return project_public_value(value, canonical, public, omitted or {})
+    return project_public_value(value, canonical, public, omitted or {}, served or MappingProxyType({}))
 
 
 def restore_public_mirror(

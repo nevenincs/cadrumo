@@ -14,8 +14,9 @@ two.
   reduction is derived from the facts of each lease, and a stored tier cannot be
   converted into those facts, so the migration clears whatever value is stored
   and the operator is asked to record the leases.
-- Schema 10 adds a field and changes no stored value, so its transition clears
-  nothing.
+- Schema 10 adds the LIS art. 40.3 election of the Modelo 202 as an optional
+  fact. It changes no stored value, so its transition clears nothing; a
+  schema-9 record that already carries the field is refused.
 - Schema 11 retires the disability key stored on an ascendant row. The Modelo 100
   key is derived from the grade, the assistance and the judicial incapacity of
   the row, and a stored key 1 or 2 cannot be converted into a grade, so the
@@ -250,10 +251,14 @@ PATHS_INTRODUCED_IN_V9: Final[frozenset[str]] = frozenset(
 )
 """Fields schema 8 did not declare: the property and lease records."""
 
+PATHS_INTRODUCED_IN_V10: Final[frozenset[str]] = frozenset({"taxpayer_type.pago_fraccionado_art_40_3_elected"})
+"""Fields schema 9 did not declare: the LIS art. 40.3 election of the Modelo 202."""
+
 _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         7: PATHS_INTRODUCED_IN_V7,
         9: PATHS_INTRODUCED_IN_V9,
+        10: PATHS_INTRODUCED_IN_V10,
     },
 )
 """Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
@@ -541,6 +546,7 @@ __all__ = [
     "MIGRATED_PROFILE_SCHEMA_VERSION",
     "PATHS_INTRODUCED_IN_V7",
     "PATHS_INTRODUCED_IN_V9",
+    "PATHS_INTRODUCED_IN_V10",
     "RETIRED_ASCENDANT_DISABILITY_KEY_GROUP",
     "RETIRED_ASCENDANT_DISABILITY_KEY_LEAF",
     "RETIRED_RENTAL_TIER_PATH",

@@ -426,6 +426,11 @@ wizard:
           érvényes.
       output-language:
         help: CLI kimeneti nyelv ehhez a profilhoz
+      pago-fraccionado-art-40-3-elected:
+        help: Megadja, hogy a társaság a cégbejelentésében (declaración censal) élt-e
+          az LIS 40.3. cikkely szerinti választással (részletfizetés az első 3, 9
+          vagy 11 hónap adóalapja után); a tagadó alak azt rögzíti, hogy nem élt vele,
+          vagy lemondott róla. Opcionális; megadás nélkül egyik válasz sem feltételezett.
       patrimonio-declaration-threshold-met:
         help: Az Impuesto sobre el Patrimonio szerinti adód fizetendő, vagy ha nem,
           a vagyonod és jogaid értéke meghaladja a 2 000 000 eurót
@@ -999,6 +1004,13 @@ wizard:
           kedvezményes adókulcs szerint adózik az adott két időszakban.
         prompt: Ez egy újonnan létrehozott jogi személy az első két nyereséges adóidőszakának
           egyikében?
+      pago-fraccionado-art-40-3-elected:
+        help: 'Csak jogi személyekre vonatkozik. Ha a nettó árbevétel a 40.3. cikkely
+          küszöbértéke alatt van, ettől a választástól függ, hogy a Modelo 202 egyes
+          részletei után keletkezik-e befizetés. Ha nem tudod, hagyd megválaszolatlanul:
+          egyik válasz sem feltételezett.'
+        prompt: Élt-e a társaság a cégbejelentésében (declaración censal) az LIS 40.3.
+          cikkely szerinti választással a részletfizetésre?
       title: Adózói típus
     title: Beállítási varázsló
     verifier:

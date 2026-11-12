@@ -23,6 +23,11 @@ snapshot -- and applies the submitted intents to it:
   the source tiers win again;
 * an address the submission does not name keeps its operator value.
 
+A withdrawal that leaves a calculation-refusing carry unstated does not
+recalculate: :mod:`.edit_carry_withdrawal` returns the work unit to no current
+calculation, or refuses when that would discard other values or touch a
+declaration recorded as filed.
+
 The resulting calculation records the new operator layer, so the next edit or
 recalculation starts from it. Every value, channel and precondition failure
 returns a typed no-effect refusal; none escapes as a raw exception.
@@ -36,11 +41,11 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
@@ -66,14 +71,21 @@ from ...domain.modelos.calculation_revision_operator_layer import (
 )
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
-from ...domain.modelos.work_unit import WorkUnitCatalogue
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..calculations.cross_period_clean_state import attestable_carry_sources
 from ..calculations.cross_period_models import CrossPeriodDependencyRequirement
+from ..operator_actions.models import ActionReference
 from .action_errors import ModeloClearedCasillaSourceFedError
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_bucket_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .caller_context import CalculationCallerContext, caller_context_calculation_inputs, caller_context_of
+from .edit_carry_withdrawal import (
+    calculation_refusing_carry_bindings,
+    carry_withdrawal_block,
+    is_carry_withdrawal,
+    withdraw_current_calculation,
+)
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from .edit_models import (
     ModeloBindingEditIntentV1,
@@ -130,6 +142,9 @@ _ROW_UNSUPPORTED_REASON: dict[ModeloEditRowIntentKind, ModeloEditUnsupportedInte
 #: as a raw failure. One raised once the commit is being written stays raised,
 #: because its effect is no longer known.
 _PRE_EFFECT_REFUSALS: tuple[type[BaseException], ...] = (CadrumoError,)
+
+#: The door an edit refused for an unstated earlier-ejercicio carry offers: state the carries.
+PRIOR_CARRIES_ACTION: Final[ActionReference] = ActionReference(action_id="operator.modelo.work.attest_prior_carries")
 
 
 def _unsupported_intent_refusal(
@@ -583,7 +598,7 @@ def reconstruct_detail_rows(
 
 
 def _capture_edit_receipt(
-    calculation_revision_id: str,
+    calculation_revision_id: str | None,
     bucket_event_id: str | None,
     *,
     request: ModeloEditApplyRequestV1,
@@ -684,6 +699,22 @@ def _unresolved_source_context(error: BaseException, revision: ModeloRevision) -
     return None
 
 
+def _with_prior_carry_door(
+    outcome: ModeloEditExecutionNoEffectV1, error: BaseException
+) -> ModeloEditExecutionNoEffectV1:
+    """Name the family and the statement door on an edit refused for an unstated carry; others pass unchanged."""
+    refusal = outcome.refusal
+    if not isinstance(error, ModeloPriorCarryAbsenceUnstatedError) or not isinstance(
+        refusal, ModeloEditDomainRefusalV1
+    ):
+        return outcome
+    return ModeloEditExecutionNoEffectV1(
+        refusal=refusal.model_copy(
+            update={"facts": (*refusal.facts, error.family.value), "recovery_action": PRIOR_CARRIES_ACTION}
+        )
+    )
+
+
 def pre_effect_refusal(
     error: BaseException, *, revision: ModeloRevision | None = None
 ) -> ModeloEditExecutionNoEffectV1:
@@ -696,7 +727,16 @@ def pre_effect_refusal(
         context = _unresolved_source_context(error, revision)
         refusal = None if context is None else _unresolved_binding_edit_refusal(context, revision, code)
         if refusal is not None:
-            return refusal
+            return _with_prior_carry_door(refusal, error)
+    if isinstance(error, ModeloPriorCarryAbsenceUnstatedError):
+        return _with_prior_carry_door(
+            _domain_refusal(
+                ModeloEditRefusalCode.VALIDATION_FAILED,
+                facts=(code,),
+                condition="state the carries from earlier ejercicios before the declaration is calculated",
+            ),
+            error,
+        )
     if isinstance(error, ModeloClearedCasillaSourceFedError):
         return _domain_refusal(
             ModeloEditRefusalCode.DISALLOWED_INTENT,
@@ -719,6 +759,57 @@ class _PreparedEdit:
     cleared_casilla_ids: tuple[CasillaId, ...]
     detail_rows: tuple[ModeloDetailRow, ...]
     revision: ModeloRevision
+    head: CalculationRevision | None
+    work_unit: WorkUnit | None
+
+
+def _withdraw_carry_statement(
+    submission: ModeloEditSubmissionV1,
+    *,
+    prepared: _PreparedEdit,
+    ports: CalculationActionPorts,
+    now: datetime,
+    co_commit: Callable[[], tuple[SecureObjectWrite, ...]],
+) -> ModeloEditExecutionNoEffectV1 | None:
+    """Settle a withdrawal that left a calculation-refusing carry unstated, returning its refusal if refused.
+
+    ``None`` when the work unit returned to no current calculation, which
+    ``co_commit`` recorded, or when the edit is no such withdrawal.
+
+    It is one when the submission only withdraws statements, withdraws one of
+    such a carry, and the head holds such a statement. The work unit then
+    returns to no current calculation, or the withdrawal is refused when the
+    declaration is recorded as filed or the head holds other values of the
+    filer's.
+    """
+    head, work_unit = prepared.head, prepared.work_unit
+    carry_bindings = calculation_refusing_carry_bindings(prepared.revision)
+    if (
+        head is None
+        or work_unit is None
+        or not is_carry_withdrawal(submission, carry_bindings)
+        or head.operator_layer is None
+        or not set(head.operator_layer.attested_binding_ids) & carry_bindings
+    ):
+        return None
+    block = carry_withdrawal_block(head, work_unit, carry_bindings)
+    if block is not None:
+        return _domain_refusal(
+            ModeloEditRefusalCode.DISALLOWED_INTENT,
+            facts=(block.value,),
+            condition="replace the statement with the carried figures, or amend a declaration recorded as filed",
+        )
+    stale = withdraw_current_calculation(
+        submission.baseline,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
+        operation=ports.operation,
+        now=now,
+        co_commit=co_commit,
+    )
+    if stale is not None:
+        return ModeloEditExecutionNoEffectV1(refusal=stale)
+    return None
 
 
 def _execute_modelo_edit(
@@ -734,7 +825,9 @@ def _execute_modelo_edit(
     submission = request.submission
     captured_receipt: list[ModeloEditMutationResultReceiptV1] = []
 
-    def _co_commit_receipt(calculation_revision_id: str, bucket_event_id: str | None) -> tuple[SecureObjectWrite, ...]:
+    def _co_commit_receipt(
+        calculation_revision_id: str | None, bucket_event_id: str | None
+    ) -> tuple[SecureObjectWrite, ...]:
         return _capture_edit_receipt(
             calculation_revision_id,
             bucket_event_id,
@@ -783,6 +876,18 @@ def _execute_modelo_edit(
     except _PRE_EFFECT_REFUSALS as refused:
         if captured_receipt:
             raise
+        if isinstance(refused, ModeloPriorCarryAbsenceUnstatedError):
+            withdrawn = _withdraw_carry_statement(
+                submission,
+                prepared=prepared,
+                ports=ports,
+                now=now,
+                co_commit=lambda: _co_commit_receipt(None, None),
+            )
+            if withdrawn is not None:
+                return withdrawn
+            if captured_receipt:
+                return ModeloEditExecutionUpdatedV1(receipt=captured_receipt[0])
         return pre_effect_refusal(refused, revision=prepared.revision)
     if not captured_receipt:
         raise ModeloError(
@@ -853,6 +958,8 @@ def _prepare_edit(
         cleared_casilla_ids=tuple(sorted(state.cleared_casilla_ids)),
         detail_rows=detail_rows,
         revision=snapshot.revision,
+        head=head,
+        work_unit=work_catalogue.get(baseline.work_unit_id),
     )
 
 

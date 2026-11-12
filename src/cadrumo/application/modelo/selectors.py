@@ -31,7 +31,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ..operator_actions.models import PreconditionVerdict
 from .action_errors import ModeloPreconditionErrorMixin
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
-from .lifecycle_view_refusal_doors import unit_revisions_verdict, unit_verify_verdict
+from .lifecycle_view_refusal_doors import unit_calculate_verdict, unit_revisions_verdict, unit_verify_verdict
 from .refusal_door_verdicts import operator_choice_verdict
 
 if TYPE_CHECKING:
@@ -368,7 +368,32 @@ def _verified_exportable_fallback(
             tuple(ModeloCalculationRevisionCandidate.from_revision(revision) for revision in verified),
             precondition_verdict=operator_choice_verdict("revision_selector_ambiguous"),
         )
+    raise _exportable_revision_absent(work_unit)
+
+
+def require_work_unit_holds_a_calculation(work_unit: WorkUnit) -> None:
+    """Refuse a lifecycle step on a work unit with no current calculation; the door is calculating it.
+
+    A calculation withdrawn from the work unit stays stored for audit, but it is
+    no longer the declaration's, so neither verification nor filing reads it.
+    """
+    if work_unit.current_calculation_revision_id is not None:
+        return
     raise ModeloCalculationRevisionSelectorNotFoundError(
+        translated_message="errors.error.modelo_calculation_revision_pointer_not_found",
+        context={
+            "selection": "pointer",
+            "pointer_name": "current_calculation_revision_id",
+            "work_unit_id": work_unit.work_unit_id,
+            "modelo": str(work_unit.modelo),
+        },
+        precondition_verdict=unit_calculate_verdict("current_calculation_absent", work_unit.work_unit_id),
+    )
+
+
+def _exportable_revision_absent(work_unit: WorkUnit) -> ModeloCalculationRevisionSelectorNotFoundError:
+    """The refusal of an export with no revision to export: verify the declaration first."""
+    return ModeloCalculationRevisionSelectorNotFoundError(
         translated_message="errors.error.modelo_calculation_revision_selector_not_found",
         context={"selection": "exportable", "exportable_revision_present": False},
         precondition_verdict=unit_verify_verdict("revision_selector_exportable_absent", work_unit.work_unit_id),
@@ -388,6 +413,9 @@ def select_exportable_revision(
     1. current filed pointer, when it points to a current filed revision;
     2. current calculation pointer, when it is verified-complete;
     3. one unambiguous verified-complete revision, only when no current draft conflicts.
+
+    A work unit with no current calculation exports nothing: a calculation
+    withdrawn from it stays stored but is no longer the declaration's.
     """
     catalogue = (
         calculation_catalogue if calculation_catalogue is not None else calculation_repository.load(operation=operation)
@@ -414,6 +442,8 @@ def select_exportable_revision(
     current_selection = _current_exportable_revision(work_unit, current_revision, operation=operation)
     if current_selection is not None:
         return current_selection
+    if work_unit.current_calculation_revision_id is None:
+        raise _exportable_revision_absent(work_unit)
     return _verified_exportable_fallback(
         work_unit,
         catalogue=catalogue,
@@ -527,6 +557,7 @@ __all__ = [
     "ModeloCalculationRevisionSelectorError",
     "ModeloCalculationRevisionSelectorNotFoundError",
     "ModeloCalculationRevisionSelectorStateError",
+    "require_work_unit_holds_a_calculation",
     "resolve_modelo_calculation_revision_pick",
     "select_current_verified_revision",
     "select_exportable_revision",

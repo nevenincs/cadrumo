@@ -15,6 +15,7 @@ export type Served = {
   value: string;
   label_key: string;
   role?: string | null;
+  effect_key?: string | null;
 };
 /** The choices served, by the family they belong to. */
 export type Offers = Readonly<Record<string, readonly Served[]>>;
@@ -124,6 +125,22 @@ export function wordFrom(
 export function servedWord(t: (key: string) => string, served: Served): string {
   const said = t(served.label_key);
   return said === served.label_key ? t("desktop.ledger.stock.unnamed") : said;
+}
+
+/** The sentence the backend serves for what choosing a value does; null
+ * where none is served or its words are missing. */
+export function effectWord(
+  t: (key: string) => string,
+  offers: Offers,
+  family: string,
+  token: string,
+): string | null {
+  const key = (offers[family] ?? []).find(
+    (found) => found.value === token,
+  )?.effect_key;
+  if (!key) return null;
+  const said = t(key);
+  return said === key ? null : said;
 }
 
 export type ProofSlotKey = "price" | "cost_check" | "iva_check";

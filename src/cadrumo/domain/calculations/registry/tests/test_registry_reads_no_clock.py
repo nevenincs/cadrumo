@@ -33,15 +33,8 @@ _CLOCK_METHODS: Final = frozenset(
 _CORE_CLOCK_MODULE_SUFFIX: Final = "core.time.clock"
 
 _BASELINE: Final[dict[str, int]] = {
-    "applicability_models.py": 1,
-    "authority.py": 3,
     "iva_regime_vocabulary.py": 2,
     "m303_schema_vocabulary.py": 2,
-    "modelo_obligation_scope.py": 1,
-    "modelo_pending_orden.py": 1,
-    "modelo_rendering.py": 1,
-    "setup_profile_bindings.py": 1,
-    "snapshot_proof.py": 1,
     "tax_id_format.py": 2,
     "tax_identity_admission.py": 1,
 }

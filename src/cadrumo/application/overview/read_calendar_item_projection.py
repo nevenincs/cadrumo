@@ -311,16 +311,27 @@ class OverviewSuppressedEntrySnapshot(BaseModel):
     period: str
     verdict: ApplicabilityVerdict
     reason: str
+    actions: tuple[PipelineNextActionSnapshot, ...] = ()
 
     @classmethod
     def from_entry(cls, value: SuppressedCalendarEntry) -> Self:
-        """Copy the registry-derived suppression verdict."""
-        return cls(modelo=value.modelo, period=str(value.period), verdict=value.verdict, reason=value.reason)
+        """Copy the registry-derived suppression verdict and its doors."""
+        return cls(
+            modelo=value.modelo,
+            period=str(value.period),
+            verdict=value.verdict,
+            reason=value.reason,
+            actions=tuple(PipelineNextActionSnapshot.from_action(action) for action in value.actions),
+        )
 
     def to_entry(self) -> SuppressedCalendarEntry:
         """Revalidate the canonical suppressed obligation."""
         return SuppressedCalendarEntry(
-            modelo=self.modelo, period=_period(self.period), verdict=self.verdict, reason=self.reason
+            modelo=self.modelo,
+            period=_period(self.period),
+            verdict=self.verdict,
+            reason=self.reason,
+            actions=tuple(action.to_action() for action in self.actions),
         )
 
 

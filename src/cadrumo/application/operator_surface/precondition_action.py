@@ -54,7 +54,14 @@ def resolve_precondition_action(
     projection, so neither path can reconstruct recovery prose or disagree
     about missing bindings. Each alternative action is resolved and checked
     against its own target exactly as the primary one, and keeps its order.
+    Each offered action carries the words and target operations served for it,
+    and a refusal with no way out carries its served sentence, in this
+    process's language.
     """
+    from ..operations.error_detail import served_words_language
+    from ..operator_actions.served_actions import serve_precondition_verdict
+
+    verdict = serve_precondition_verdict(verdict, served_words_language())
     return ResolvedPreconditionAction(
         failed_condition_id=verdict.failed_condition_id,
         evidence=tuple(
@@ -81,9 +88,17 @@ def resolve_precondition_action(
                 argument_bindings=_resolved_arguments(item.argument_bindings),
                 missing_argument_names=item.missing_argument_names,
                 conditionality=item.conditionality,
+                action_words=item.action_words,
+                action_words_language=item.action_words_language,
+                target_operation_ids=item.target_operation_ids,
             )
             for item in verdict.alternative_actions
         ),
+        action_words=verdict.action_words,
+        action_words_language=verdict.action_words_language,
+        target_operation_ids=verdict.target_operation_ids,
+        no_recovery_words=verdict.no_recovery_words,
+        no_recovery_words_language=verdict.no_recovery_words_language,
     )
 
 

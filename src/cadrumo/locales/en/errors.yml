@@ -1370,6 +1370,13 @@ errors:
     modelo_compare_need_two_years: Comparison requires two different filing years.
     modelo_edit_baseline_stale: The declaration changed since it was opened, so the
       edit was not applied. Reopen it and edit again.
+    modelo_edit_carry_withdrawal_filed: This declaration is recorded as filed, so
+      the statement about amounts carried from earlier years cannot be withdrawn.
+      Nothing was changed. Correct it with an amendment.
+    modelo_edit_carry_withdrawal_keeps_entries: Withdrawing the statement about amounts
+      carried from earlier years would leave the declaration without a calculation
+      and discard the other values you entered on it. Nothing was changed. Enter the
+      carried amounts instead of withdrawing the statement.
     modelo_edit_contract_incompatible: The edit was prepared in a format this version
       does not accept, so nothing was changed. Reopen the declaration and edit again.
     modelo_edit_intent_unsupported: This kind of edit is not available yet, so nothing
@@ -1924,6 +1931,9 @@ errors:
       this profile.
     refused_profile_schema_validation: The profile data violates the schema contract.
       Correct the values shown.
+    refused_renta_date_required: This exemption depends on the rules in force in the
+      tax year of the income, so the calculation does not use today's date. Supply
+      the filing year.
     refused_renta_maritime_exemption_inactive: 'DA 41 LIRPF exemption is inactive:
       EU state-aid clearance has not been granted as of 2024/2025. AEAT confirms non-applicability
       in official 2024 guidance. Activate only after EU clearance is granted (Ley

@@ -52,7 +52,7 @@ from ..binding_selector_utils import selector_as_dict
 from ..binding_temporal import BindingTemporalKind
 from ..bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import resolve_previous_filing_binding_values
-from ..errors import FilingYearOutsideSupportEnvelopeError
+from ..errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relation_dependency import RelationDependencyRole, RelationKind
 from ..relations import RegistryFoldRequirement, relation_prefill_bindings_for_period, relation_source_requirements
@@ -396,6 +396,7 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
                     filing_year=filing_year,
                     period=period,
                     relation_ids=relation_ids,
+                    floor=supported_years.floor,
                     scope=f"{modelo.id}/{revision.id}/{filing_year}/{period}",
                 )
     assert exercised, "no relation-bearing revision reached a supported filing year"
@@ -431,16 +432,34 @@ def _assert_relations_resolve_from_observations(
     filing_year: int,
     period: str,
     relation_ids: set[str],
+    floor: int,
     scope: str,
 ) -> None:
-    """Drive the relation-source -> observation -> resolution roundtrip and assert closure."""
+    """Drive the relation-source -> observation -> resolution roundtrip and assert closure.
+
+    A source filing whose year lies below the support floor cannot be held, so
+    it is never observed, and resolution refuses on the relation it feeds rather
+    than resolving it below the floor; that relation stays for the filer to state.
+    """
     requirements = relation_source_requirements(revision, filing_year=filing_year, period=period)
+    held = tuple(requirement for requirement in requirements if requirement.filing_year >= floor)
+    below_floor = {
+        str(binding_id)
+        for requirement in requirements
+        if requirement.filing_year < floor
+        for binding_id in requirement.target_bindings
+    }
     observations = observations_from_requirements(
-        requirements,
+        held,
         lambda _requirement, period_index: Decimal(period_index + 1),
         target_modelo=target_modelo,
         fallback_revision=revision,
     )
+    if below_floor:
+        with pytest.raises(RegistryValidationError) as refusal:
+            resolve_relation_values_from_observations(revision, observations, filing_year=filing_year, period=period)
+        assert any(binding_id in str(refusal.value) for binding_id in below_floor), scope
+        return
     resolved = resolve_relation_values_from_observations(revision, observations, filing_year=filing_year, period=period)
     assert set(resolved) == relation_ids, scope
 

@@ -4132,6 +4132,11 @@ cli:
         your virtual currencies held abroad exceed the reporting threshold.
       oss_unset: Your profile does not yet record whether you are registered for the
         one-stop-shop VAT regime.
+      pago_fraccionado_art_40_3_unset: Your profile does not yet record whether the
+        entity elected, in its census declaration, the Art. 40.3 LIS option (instalments
+        on the taxable base of the first 3, 9 or 11 months). Below that article's
+        threshold, the election decides whether each Modelo 202 instalment yields
+        a payment and therefore whether you have to file it.
       patrimonio_umbral_unset: Your profile does not yet say whether your Impuesto
         sobre el Patrimonio tax is payable or your assets and rights exceed 2,000,000
         euros.

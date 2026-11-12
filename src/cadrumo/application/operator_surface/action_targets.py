@@ -271,6 +271,7 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         ("app", "modelo", "verification-report", "list"),
         "VerificationReportListResult",
     ),
+    ActionTarget("modelo.work.amend", ("app", "modelo", "work", "amend"), "WorkAmendResult", profile_bound_write=True),
     ActionTarget(
         "modelo.work.attest_m303_exonerado_390",
         ("app", "modelo", "work", "attest-m303-exonerado-390"),

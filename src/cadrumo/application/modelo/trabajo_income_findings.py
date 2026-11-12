@@ -177,6 +177,7 @@ def trabajo_income_findings(
                 casilla_id=total_id,
                 message_locale_key="application.modelo.findings.trabajo_deduction_not_computed",
                 legal_refs=("ley-35-2006:art-19",),
+                disclosed_limitation=True,
             ),
         )
         disability = _disability_finding(revision, target, profile_values)

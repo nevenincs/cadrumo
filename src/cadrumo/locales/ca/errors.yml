@@ -1508,6 +1508,14 @@ errors:
     modelo_compare_need_two_years: La comparació requereix dos exercicis fiscals diferents.
     modelo_edit_baseline_stale: La declaració ha canviat des que es va obrir, de manera
       que no s'ha aplicat l'edició. Torna-la a obrir i edita-la de nou.
+    modelo_edit_carry_withdrawal_filed: Aquesta declaració consta com a presentada,
+      de manera que no es pot retirar la declaració sobre els imports pendents d'exercicis
+      anteriors. No s'ha canviat res. Corregeix-la amb una declaració complementària
+      o rectificativa.
+    modelo_edit_carry_withdrawal_keeps_entries: Retirar la declaració sobre els imports
+      pendents d'exercicis anteriors deixaria la declaració sense càlcul i descartaria
+      els altres valors que hi has introduït. No s'ha canviat res. Indica els imports
+      pendents en lloc de retirar la declaració.
     modelo_edit_contract_incompatible: L'edició es va preparar en un format que aquesta
       versió no accepta, de manera que no s'ha canviat res. Torna a obrir la declaració
       i edita-la de nou.
@@ -2100,6 +2108,9 @@ errors:
       autenticar aquest perfil.
     refused_profile_schema_validation: Les dades del perfil infringeixen el contracte
       de l'esquema. Corregeix els valors indicats.
+    refused_renta_date_required: Aquesta exempció depèn del que és vigent en l'exercici
+      de la renda, així que el càlcul no fa servir la data d'avui. Indica l'exercici
+      de presentació.
     refused_renta_maritime_exemption_inactive: 'L''exempció DA 41 LIRPF (flota tonyinaire)
       està inactiva: no s''ha concedit l''autorització d''ajuts d''Estat de la UE
       per al 2024/2025. L''AEAT confirma la seva no aplicabilitat en la guia oficial

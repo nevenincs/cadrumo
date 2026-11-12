@@ -2,7 +2,7 @@
 
 The companion unit tests
 (``cadrumo.application.calculations.tests.test_modelo_200_202_pagos_fraccionados_fold``)
-prove the IS-3 fix at the resolver boundary: with ``modelo_202_first_year_cuota``
+prove the IS-3 fix at the resolver boundary: with ``modelo_202_no_base_instalments``
 set, ``resolve_relations_from_local_store`` resolves an otherwise-unresolved M202
 fold-in relation to ``Decimal(0)`` instead of ``None`` (the value that crashed the
 cuota-diferencial formula). But the landing commit claimed "verified end-to-end:
@@ -13,7 +13,7 @@ followed by ``verify_modelo_revision_with_preconditions`` (verify), with the fir
 the production way - from the persisted profile, NOT passed in by the test.
 
 Setup that triggers the live first-year flag
-(:func:`_first_year_modalidad_cuota_no_m202`):
+(:func:`_modelo_202_no_base_instalments`):
   - a legal-entity profile whose ``incn_prior_12_months`` (500.000) is at or below
     the LIS art. 40.3 INCN threshold (6.000.000), so the derived modality is
     ``ART_40_2_OPTIONAL`` (modalidad cuota); and
@@ -119,7 +119,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
 
     Mirrors the standard M200 six-binding sociedad scaffold, plus
     ``censo.activity_start_date`` in the filing year so
-    :func:`_first_year_modalidad_cuota_no_m202` sees a first-ejercicio
+    :func:`_modelo_202_no_base_instalments` sees a first-ejercicio
     modalidad-cuota filer. ``incn_prior_12_months`` 500.000 <= the
     6.000.000 LIS art. 40.3 threshold -> ART_40_2_OPTIONAL (modalidad cuota).
     """

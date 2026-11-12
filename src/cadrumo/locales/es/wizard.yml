@@ -410,6 +410,12 @@ wizard:
           tipo reducido.
       output-language:
         help: Idioma de salida de la CLI para este perfil
+      pago-fraccionado-art-40-3-elected:
+        help: Indica si la entidad ejerció en su declaración censal la opción del
+          artículo 40.3 de la LIS (pago fraccionado sobre la base imponible de los
+          3, 9 u 11 primeros meses); la forma negativa registra que no la ejerció
+          o que la renunció. Opcional; sin indicarlo no se presume ninguna de las
+          dos.
       patrimonio-declaration-threshold-met:
         help: Tu cuota del Impuesto sobre el Patrimonio resulta a ingresar o, si no,
           tus bienes y derechos valen más de 2.000.000 euros
@@ -988,6 +994,13 @@ wizard:
           tipo reducido del 15 por ciento durante esos dos periodos.
         prompt: ¿Es una entidad de nueva creación en uno de sus dos primeros periodos
           impositivos con beneficios?
+      pago-fraccionado-art-40-3-elected:
+        help: 'Aplica solo a personas jurídicas. Con un importe neto de la cifra de
+          negocios por debajo del umbral del artículo 40.3, de esta opción depende
+          si cada pago fraccionado del Modelo 202 da ingreso. Si no lo sabes, déjalo
+          sin responder: no se presume ninguna respuesta.'
+        prompt: ¿Ejerció la entidad en su declaración censal la opción del artículo
+          40.3 de la LIS para el pago fraccionado?
       title: Tipo de contribuyente
     title: Asistente de configuración
     verifier:

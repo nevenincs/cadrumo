@@ -8,3 +8,12 @@ binding_refs = [
 ]
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-modelo-202-instructions-2018-2022"]
+
+[[revisions.2019-2022.dependency_classifications]]
+id = "modelo-202-dep-200-cuota-base"
+source_modelo = "200"
+treatment = "factual_evidence"
+target_constructs = ["modelo-202-foundation"]
+binding_refs = ["modelo-202-cuota-base-ejercicio-anterior"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022"]

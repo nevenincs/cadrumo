@@ -36,6 +36,7 @@ from ....core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
+    NoRecoveryOutcome,
 )
 from ....core.optional_extras import MissingOptionalExtraError, OptionalExtra
 from ....core.redaction.rules import redact_for_log
@@ -43,6 +44,7 @@ from ..common import CliPolicyRefusalProjection, attach_cli_policy_refusal_proje
 from ..errors import command_error_boundary
 from .cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from .corrupt_pointer_expectation import corrupt_pointer_action
+from .served_action_expectation import served_action_words, served_no_recovery_words
 
 __all__ = ["english_locale_fixture"]
 
@@ -138,7 +140,7 @@ def test_corrupt_active_profile_pointer_projects_the_canonical_repair_action(tmp
         "pointer_corrupt": "true",
         "root_fallback_refused": "true",
     }
-    assert error["action"] == corrupt_pointer_action(pointer_file)
+    assert error["action"] == corrupt_pointer_action(pointer_file, error["action"]["action_words_language"])
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
@@ -283,7 +285,10 @@ def test_real_root_refusal_projects_exact_leaf_and_action_to_json(tmp_path: Path
     document = json.loads(result.stderr)
     assert document["command"] == "ledger.list"
     error = document["error"]
+    language = error["action"]["action_words_language"]
     assert error["action"] == {
+        **served_action_words("operator.profile.create", language),
+        "target_operation_ids": ["user-profile.patch", "user-profile.view"],
         "failed_condition_id": "profile.active.available",
         "evidence": [
             {
@@ -404,6 +409,7 @@ def test_auth_acquisition_conflict_projects_factual_no_recovery_to_json(tmp_path
     document = json.loads(result.stderr)
     action = document["error"]["action"]
     assert action == {
+        **served_no_recovery_words(NoRecoveryOutcome.OPERATOR_DECISION, action["no_recovery_words_language"]),
         "failed_condition_id": "auth.acquisition_lock.available",
         "evidence": [
             {

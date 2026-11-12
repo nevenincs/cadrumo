@@ -18,6 +18,7 @@ the refused text is never echoed or kept.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -48,6 +49,7 @@ from .....application.modelo.edit_review_wording import (
     operator_entries_unknown,
     review_findings,
 )
+from .....application.modelo.taxation_comparison_operation import ModeloTaxationComparisonProjection
 from .....application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from .....application.modelo.work_form_localization import same_work_form_facts
 from .....application.modelo.work_form_models import (
@@ -62,8 +64,11 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .....core.identity.documents import SpanishTaxIdFormat
 from ...declarations.models import ModeloWorkspaceScreenFactoryV1
+from ..amendment import ModeloAmendmentAnswerV1, parse_correction_entry
+from ..disagreements import ModeloDisagreementsDoorV1
 from ..lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 from ..m303_evidence import OrdinaryM303FilingEvidenceSubmission
+from ..taxation_comparison import ModeloTaxationComparisonSourceV1
 from .ports import (
     WorkbenchApplyPrerequisite,
     WorkbenchCalculationEvidence,
@@ -82,6 +87,10 @@ from .screen import ModeloWorkbenchScreen
 if TYPE_CHECKING:
     from .....application.export.calculation_review_xlsx_operation import CalculationReviewXlsxResult
     from .....application.modelo.export_projection import ModeloExportPublicResultV3
+    from .....application.modelo.work_amend_correction import (
+        ModeloAmendmentCorrectionContextV1,
+        ModeloAmendmentCorrectionRowV1,
+    )
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
     from ...ledger.own_accounts import LedgerOwnAccountDoorV1
     from ...operations.controller_port import OperationControllerPort
@@ -110,6 +119,7 @@ type LifecycleDoorFactory = Callable[[ModeloWorkbenchFormReadV1 | None], ModeloW
 """Build the declaration's lifecycle door on what the latest read found, or before any read."""
 
 _EDIT_UNAVAILABLE_KEY: Final[str] = "application.modelo.lifecycle.refusal.edit_unavailable"
+_COMPARISON_UNAVAILABLE_KEY: Final[str] = "desktop.modelo.compare.failed"
 _SCALAR_KINDS: Final[Mapping[WorkbenchChangeKind, ModeloEditScalarIntentKind]] = MappingProxyType(
     {
         WorkbenchChangeKind.SET: ModeloEditScalarIntentKind.SET_TYPED_VALUE,
@@ -406,6 +416,42 @@ class InstalledModeloWorkbench:
         """Resolve one settled export's facts."""
         return await self._door().settled_export_result(projection)
 
+    async def compare_taxation(self) -> ModeloTaxationComparisonProjection:
+        """Read the comparison of joint and individual filing for the declaration, off the event loop."""
+        source = self._source
+        if not isinstance(source, ModeloTaxationComparisonSourceV1):
+            raise ModeloLifecycleActionUnavailableError(translated_message=_COMPARISON_UNAVAILABLE_KEY)
+        return await asyncio.to_thread(source.compare_taxation)
+
+    # -- correction ----------------------------------------------------------
+
+    async def amendment_context(self, language: OutputLanguage) -> ModeloAmendmentCorrectionContextV1:
+        """Read what correcting the declaration recorded as filed offers, worded in ``language``."""
+        return await self._door().amendment_context(language)
+
+    def parse_correction(
+        self, row: ModeloAmendmentCorrectionRowV1, lexeme: str, language: OutputLanguage
+    ) -> WorkbenchParseOutcome:
+        """Read one corrected figure through its box's served correction grammar, against the admitted baseline."""
+        state = self._state
+        return parse_correction_entry(
+            row,
+            lexeme,
+            language,
+            baseline=None if state is None else state.baseline,
+            tax_id_format=None if state is None else state.tax_id_format,
+        )
+
+    async def amend(self, filing_record_id: str, answer: ModeloAmendmentAnswerV1) -> OperationControllerPort:
+        """Record the correction of the filing locally, through the supervised operation."""
+        return await self._door().amend(
+            filing_record_id=filing_record_id,
+            amendment_kind=answer.kind,
+            overrides=answer.overrides,
+            reason=answer.reason,
+            m303_rectificativa_motive=answer.motive,
+        )
+
     def refresh_product(self) -> None:
         """Capture a new product generation, so Declarations and search show what the operation changed."""
         refresh = self._door().refresh_after_success
@@ -461,6 +507,7 @@ def compose_installed_modelo_workbench_factory(
     door: DeclarationDoorFactory,
     own_accounts: LedgerOwnAccountDoorV1 | None = None,
     native_review: Callable[[str], Screen[None]] | None = None,
+    disagreements: Callable[[DeclarationsWorkspaceDeclarationRefV1], ModeloDisagreementsDoorV1] | None = None,
 ) -> ModeloWorkspaceScreenFactoryV1:
     """Open a workbench for exactly the declarations this generation admitted.
 
@@ -484,7 +531,12 @@ def compose_installed_modelo_workbench_factory(
             door=lambda read: door(declaration, read),
             own_accounts=own_accounts,
         )
-        return ModeloWorkbenchScreen(workbench, actions=workbench, native_review=native_review)
+        return ModeloWorkbenchScreen(
+            workbench,
+            actions=workbench,
+            native_review=native_review,
+            disagreements=None if disagreements is None else disagreements(declaration),
+        )
 
     return create
 
