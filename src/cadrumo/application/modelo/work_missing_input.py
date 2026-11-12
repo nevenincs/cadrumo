@@ -141,6 +141,13 @@ _PRIOR_CARRY_MESSAGE_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] 
         "application.modelo.errors.prior_carries_unstated.renta_negative_general_bases_pending"
     ),
 }
+CALCULATION_REFUSING_ABSENCE_FAMILIES: Final[frozenset[AbsenceAttestationFamily]] = frozenset(
+    _PRIOR_CARRY_MESSAGE_LOCALE_KEYS
+)
+"""The statement-of-absence families whose unstated carries refuse the calculation before publication.
+
+A family outside this set leaves an unstated member to verification instead.
+"""
 
 
 class ModeloPriorCarryAbsenceUnstatedError(ModeloWorkMissingInputError):
@@ -552,6 +559,7 @@ def previous_filing_unobserved(
 
 
 __all__ = [
+    "CALCULATION_REFUSING_ABSENCE_FAMILIES",
     "ModeloPriorCarryAbsenceUnstatedError",
     "ModeloPriorPeriodUnfiledError",
     "ModeloWorkMissingInputError",

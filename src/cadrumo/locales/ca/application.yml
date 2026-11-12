@@ -2634,6 +2634,9 @@ application:
       detail_row_identity_conflict: Una fila de detall que has introduït no coincideix
         amb la que donen els teus registres per al mateix declarat; corregeix-la o
         treu-la abans de calcular.
+      edit_prior_carries_unstated: Aquest canvi deixa sense indicar els imports pendents
+        d'exercicis anteriors, de manera que la declaració no es pot calcular. No
+        s'ha canviat res. Indica primer aquests imports.
       edit_revision_id_unresolved: El càlcul de l'edició no ha indicat quina revisió
         ha creat, així que no s'ha pogut conservar el rebut de l'edició. És una incoherència
         del programa i res del que has introduït l'ha causada. Llista les revisions
@@ -3892,6 +3895,7 @@ application:
         modelo_iva_wallet_override: Corregeix el saldo d'IVA a compensar
         modelo_iva_wallet_seed: Indica el saldo inicial d'IVA a compensar
         modelo_verification_report_list: Revisa els informes de verificació
+        modelo_work_amend: Corregeix la declaració presentada
         modelo_work_attest_m303_exonerado_390: Confirma que estàs exonerat del model
           390
         modelo_work_attest_prior_carries: Indica els imports pendents d'exercicis

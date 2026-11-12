@@ -76,6 +76,7 @@ ACTION_WORDS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "operator.modelo.verification_report.list": (
             "application.operator_actions.served.action.modelo_verification_report_list"
         ),
+        "operator.modelo.work.amend": "application.operator_actions.served.action.modelo_work_amend",
         "operator.modelo.work.attest_m303_exonerado_390": (
             "application.operator_actions.served.action.modelo_work_attest_m303_exonerado_390"
         ),

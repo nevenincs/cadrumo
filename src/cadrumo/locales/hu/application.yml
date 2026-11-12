@@ -2593,6 +2593,9 @@ application:
       detail_row_identity_conflict: Egy általad megadott részletező sor nem egyezik
         a nyilvántartásaid szerinti sorral ugyanarra a nyilatkozóra; javítsd vagy
         töröld a számítás előtt.
+      edit_prior_carries_unstated: Ez a módosítás megadatlanul hagyja a korábbi évekből
+        áthozott összegeket, ezért a bevallás nem számolható ki. Semmi sem változott.
+        Először add meg ezeket az összegeket.
       edit_revision_id_unresolved: A szerkesztés mögötti számítás nem jelezte, melyik
         változatot hozta létre, ezért a szerkesztés nyugtáját nem lehetett megőrizni.
         Ez programhiba, és semmi, amit megadtál, nem okozta. Újabb szerkesztés előtt
@@ -3849,6 +3852,7 @@ application:
         modelo_iva_wallet_override: Javítsd a továbbvihető IVA-egyenleget
         modelo_iva_wallet_seed: Add meg a továbbvihető IVA nyitóegyenlegét
         modelo_verification_report_list: Nézd át az ellenőrzési jelentéseket
+        modelo_work_amend: Javítsd a benyújtott bevallást
         modelo_work_attest_m303_exonerado_390: Erősítsd meg, hogy mentesülsz a 390-es
           modelo alól
         modelo_work_attest_prior_carries: Add meg a korábbi évekből áthozott összegeket
