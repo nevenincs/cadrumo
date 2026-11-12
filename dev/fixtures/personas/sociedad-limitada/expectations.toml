@@ -39,10 +39,19 @@ grounding = "cited"
 
 [[obligations]]
 modelo = "202"
-periods = ["1P", "2P", "3P"]
+periods = ["1P"]
+year = "horizon"
+applicable = false
+reason = "The art. 40.2 base of the April instalment is the cuota of the horizon-2 Modelo 200, attested as 0.00 (all its base compensated with bases imponibles negativas); the art. 40.3 modality was never elected and the INCN of 28500.00 is below 6 000 000, so no ingreso results and Orden HFP/227/2017 art. 1.3 does not oblige filing."
+legal_ref = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "202"
+periods = ["2P", "3P"]
 year = "horizon"
 applicable = "unknown"
-reason = "The declared INCN of the prior twelve months, 28500.00, does not exceed the 6 000 000 euros of LIS art. 40.3, so Orden HFP/227/2017 art. 1.3 obliges filing only in a period with an ingreso. Under the art. 40.2 cuota method that turns on the cuota of the last return whose deadline has passed, net of deductions, retenciones and ingresos a cuenta, and under an art. 40.3 election on the base of the first 3, 9 or 11 months; the scenario states neither the base nor an election, so the obligation stays undetermined."
+reason = "The art. 40.2 base of the October and December instalments is the cuota of the horizon-1 Modelo 200, which at the clock (16 February) is not yet presented, its window being July; until it is, whether an ingreso results stays undetermined."
 legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-40-3", "orden-hfp-227-2017:art-1"]
 grounding = "cited"
 
