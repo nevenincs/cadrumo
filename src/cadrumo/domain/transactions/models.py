@@ -605,6 +605,9 @@ class Transaction(BaseModel):
     raw: RawTransaction
     own_account_id: OwnAccountId | None = None
     transaction_id: TransactionId = Field(default_factory=_derive_transaction_id_from_validated_data)
+    # Declared beside the raw movement it is dated from, so a refusal of a later
+    # field never also reports this default as uncomputed.
+    cash_accounting_treatment: IvaCashAccountingTreatment = Field(default_factory=_default_cash_accounting_treatment)
     direction: TransactionDirection
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED
     business_pct: Decimal | None = None
@@ -652,7 +655,6 @@ class Transaction(BaseModel):
     exemption_article: IvaExemptionArticle | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
-    cash_accounting_treatment: IvaCashAccountingTreatment = Field(default_factory=_default_cash_accounting_treatment)
     operation_date: date | None = None
     accrual_date: date | None = None
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = ()
