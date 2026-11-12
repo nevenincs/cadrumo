@@ -94,14 +94,38 @@ _ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PE
 
 @cache_governed_projection(maxsize=512)
 def _scoped_catalogue(effective_date: date | None) -> EuMemberStateCatalogue:
-    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None)
-    raw_order = unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)
-    raw_aliases = unique_mapping_tokens(entries, _ALIASES_KEY, subject=_ENTRY_SUBJECT)
+    if effective_date is None:
+        raw_order, raw_aliases = _support_envelope_tokens()
+    else:
+        entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None)
+        raw_order = unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)
+        raw_aliases = unique_mapping_tokens(entries, _ALIASES_KEY, subject=_ENTRY_SUBJECT)
     aliases, aliases_by_token = _member_state_aliases(raw_aliases)
     definitions = _member_state_definitions(raw_order, aliases_by_token)
     catalogue = EuMemberStateCatalogue(definitions=definitions, aliases=MappingProxyType(aliases))
     _validate_member_state_catalogue(catalogue, raw_order)
     return catalogue
+
+
+def _support_envelope_tokens() -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Merge every envelope edition's member states and aliases token by token.
+
+    A dateless read admits every state any edition inside the supported filing
+    years declares, so a state a later edition withdraws stays admitted; the
+    dated read deciding a supply refuses it on a date its edition does not
+    carry. The newest edition's order leads and earlier-only states follow in
+    their own order. An alias keeps the newest edition's target.
+    """
+    scope = require_governed_fact_authority(None, subject=_ENTRY_SUBJECT)
+    editions = _ENTRIES_FACT.resolve_support_envelope_edition_entries(scope)
+    order: dict[str, None] = {}
+    targets: dict[str, str] = {}
+    for entries in reversed(editions):
+        order.update(dict.fromkeys(unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)))
+        for raw_alias in unique_mapping_tokens(entries, _ALIASES_KEY, subject=_ENTRY_SUBJECT):
+            alias = raw_alias.partition("=")[0]
+            targets.setdefault(alias.strip().upper(), raw_alias)
+    return tuple(order), tuple(targets.values())
 
 
 def _member_state_aliases(
