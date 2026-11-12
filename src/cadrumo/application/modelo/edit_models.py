@@ -26,9 +26,11 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
+from ...core.identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.field_absence import absent_when_none
@@ -666,8 +668,64 @@ class ModeloEditStaleBaselineRefusalV1(EditModel):
         return value
 
 
+MODELO_EDIT_MESSAGE_KEY_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+$"
+"""The shape of a catalogue key an edit refusal may name; a sentence of free text never matches it."""
+
+
+class ModeloEditDownstreamRefusalV1(EditModel):
+    """The registered refusal a stage after value admission raised, kept as itself and nothing more.
+
+    It holds the refusal's registered code, a catalogue key whose sentence
+    needs no value to be finished (none when the refusal has no such key, and
+    the code's unworded sentence then names the code), and its door with
+    every value taken out: the failed condition, then either the action that
+    clears it and the names of that action's arguments, or the closed outcome
+    when no action does. No context, evidence value or argument value travels,
+    so neither a filer's value nor a name or tax ID can reach operation
+    persistence or a rendered message.
+    """
+
+    error_code: Annotated[str, Field(min_length=3, max_length=128, pattern=r"^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$")]
+    message_key: Annotated[str, Field(min_length=3, max_length=256, pattern=MODELO_EDIT_MESSAGE_KEY_PATTERN)] | None = (
+        None
+    )
+    failed_condition_id: NamespacedId | None = None
+    recovery_action: ActionReference | None = None
+    argument_names: Annotated[
+        tuple[Annotated[str, Field(min_length=1, max_length=128, pattern=FIELD_KEY_PATTERN)], ...],
+        Field(max_length=_MAX_EVIDENCE_REFERENCES),
+    ] = ()
+    no_recovery_outcome: NoRecoveryOutcome | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _one_door_shape(self) -> ModeloEditDownstreamRefusalV1:
+        """A door names its condition and exactly one way out; no door names neither."""
+        if self.failed_condition_id is None:
+            if self.recovery_action is not None or self.no_recovery_outcome is not None or self.argument_names:
+                raise ValueError("a downstream refusal door names the condition that failed")
+            return self
+        if (self.recovery_action is None) == (self.no_recovery_outcome is None):
+            raise ValueError("a downstream refusal door is either an action or a closed outcome")
+        if self.recovery_action is None and self.argument_names:
+            raise ValueError("a closed outcome takes no action arguments")
+        if len(set(self.argument_names)) != len(self.argument_names):
+            raise ValueError("a downstream refusal door names each argument once")
+        return self
+
+
+def _is_absent(value: object) -> bool:
+    """Whether an optional member is missing, so the serialized record leaves it out."""
+    return value is None
+
+
 class ModeloEditDomainRefusalV1(EditModel):
-    """Typed post-admission refusal without a partial projection or raw exception."""
+    """Typed post-admission refusal without a partial projection or raw exception.
+
+    ``downstream`` is set only when the edit's values were admitted and a later
+    stage, such as the recalculation, refused under its own registered code;
+    a refusal of the value itself never carries it.
+    """
 
     kind: Literal["domain"] = "domain"
     edit_contract_version: Literal[1] = 1
@@ -678,6 +736,7 @@ class ModeloEditDomainRefusalV1(EditModel):
     responsible_owner: _BoundedCode
     reconsideration_condition: _BoundedText
     recovery_action: ActionReference | None = None
+    downstream: ModeloEditDownstreamRefusalV1 | None = Field(default=None, exclude_if=_is_absent)
 
     @model_validator(mode="after")
     def _reject_untyped_stale_baseline(self) -> ModeloEditDomainRefusalV1:
@@ -1078,6 +1137,7 @@ type ModeloEditExecutionResultV1 = Annotated[
 
 __all__ = [
     "MAX_EDIT_LEXEME_LENGTH",
+    "MODELO_EDIT_MESSAGE_KEY_PATTERN",
     "ModeloBindingEditIntentV1",
     "ModeloDetailRowEditIntentV1",
     "ModeloEditAddressV1",
@@ -1093,6 +1153,7 @@ __all__ = [
     "ModeloEditDetailRowAddressV1",
     "ModeloEditDetailRowIntentKind",
     "ModeloEditDomainRefusalV1",
+    "ModeloEditDownstreamRefusalV1",
     "ModeloEditExecutionNoEffectV1",
     "ModeloEditExecutionResultV1",
     "ModeloEditExecutionUpdatedV1",
