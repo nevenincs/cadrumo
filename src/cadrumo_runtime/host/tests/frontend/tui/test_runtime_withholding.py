@@ -124,7 +124,9 @@ def _door(client: _DescribingClient) -> RuntimeWithholdingTuiDoorV1:
 
 
 def _records(ejercicio: int = _YEAR) -> RetencionSoportadaListProjection:
-    return RetencionSoportadaListProjection(profile_id=PROFILE_ID, ejercicio=ejercicio, rows=())
+    return RetencionSoportadaListProjection(
+        profile_id=PROFILE_ID, ejercicio=ejercicio, rows=(), amount_columns=(), ejercicios=(ejercicio,)
+    )
 
 
 def test_the_door_is_admitted_only_with_every_operation_described_and_builds_forms_from_the_served_schema(
