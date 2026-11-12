@@ -23,7 +23,7 @@ from .facts.string_mapping import (
 )
 from .formula_runtime_ops import read_parameter
 from .governed_fact_scope import GovernedFactSource
-from .ids import RevisionId
+from .ids import ModeloId, RevisionId
 from .schema_base import DateAxis
 
 if TYPE_CHECKING:
@@ -134,14 +134,15 @@ def _whole_years(value: Decimal) -> int:
 
 def resolve_rental_reduction_art232_rules(
     *,
+    modelo_id: ModeloId,
     revision_id: RevisionId,
     devengo: date,
     operation: PinnedAuthorityOperation,
 ) -> RentalReductionArt232Rules:
     """Resolve the dated regime fact and the two tier thresholds at a devengo date.
 
-    ``revision_id`` is the Modelo 100 edition whose parameters the calculation
-    pins; the regime fact is read on the filing-period axis at ``devengo``.
+    ``modelo_id`` and ``revision_id`` name the annual return edition whose parameters the
+    calculation pins; the regime fact is read on the filing-period axis at ``devengo``.
     """
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(fact_id=_REGIME_FACT_ID, date_axis=DateAxis.FILING_PERIOD, effective_date=devengo),
@@ -155,7 +156,7 @@ def resolve_rental_reduction_art232_rules(
         contract_cut_off=_regime_date(entries, "contract_cut_off"),
         legacy_tier=RentalReductionArt232Tier(_regime_text(entries, "legacy_tier")),
         rebaja_threshold=read_parameter(
-            "100",
+            modelo_id,
             revision_id,
             "renta-rental-prior-rent-rebaja-threshold",
             date_context=date_context,
@@ -163,7 +164,11 @@ def resolve_rental_reduction_art232_rules(
         ),
         rehabilitation_lookback_years=_whole_years(
             read_parameter(
-                "100", revision_id, "renta-rental-rehab-lookback-years", date_context=date_context, operation=operation
+                modelo_id,
+                revision_id,
+                "renta-rental-rehab-lookback-years",
+                date_context=date_context,
+                operation=operation,
             )
         ),
     )

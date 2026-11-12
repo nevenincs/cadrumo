@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { userEvent, waitFor } from "storybook/test";
+import rulesIncomplete from "@fixtures/modelo/scenario-rules-incomplete.json" with { type: "json" };
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
@@ -18,7 +19,7 @@ const UNITS = {
   "130": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
   "303": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
   "347": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-  "390": "af66ad3c64bd5b1a6d6670a20a645c9966136f578c4209d2eab1e83d69f16aa3",
+  "rules-incomplete": rulesIncomplete.work_unit_id,
   "100": "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4",
 } as const;
 
@@ -89,10 +90,10 @@ export const Modelo347: Story = {
   ),
 };
 
-export const Modelo390: Story = {
-  name: "390 · rules not complete",
+export const RulesIncomplete: Story = {
+  name: "Rules not complete",
   render: (_, { globals }) => (
-    <Screen modelo="390" locale={language(globals)} />
+    <Screen modelo="rules-incomplete" locale={language(globals)} />
   ),
 };
 

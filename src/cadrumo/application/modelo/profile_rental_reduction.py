@@ -36,6 +36,7 @@ from ...domain.renta.rental_reduction_derivation import (
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.values import UserProfileFactValue
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from .semantic_role_resolution import casilla_id_for_unique_semantic_role
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -52,7 +53,7 @@ RENTAL_REDUCTION_TIER_PATH: Final = "renta_capital_inmobiliario.reduccion_art_23
 _DERIVED_PATHS: Final = (RENTAL_REDUCTION_APLICABLE_PATH, RENTAL_REDUCTION_TIER_PATH)
 _INCOME_CATEGORIES_PATH: Final = "taxpayer_type.irpf_income_categories"
 _RENTAL_INCOME_CATEGORY: Final = "capital_inmobiliario"
-_REDUCTION_CASILLA: Final = "0150"
+_REDUCTION_ROLE: Final = "irpf_rendimiento_capital_inmobiliario_reduccion_arrendamiento_vivienda"
 _LEASE_DOOR: Final = "aeat config profile arrendamiento edit"
 _LEASE_ADD_DOOR: Final = "aeat config profile arrendamiento add"
 
@@ -120,7 +121,7 @@ def _refusal_diagnostic(
         source_kind=BindingSourceKind.PROFILE.value,
         resolver_id=resolver_id,
         binding_id=binding_id,
-        casilla_id=_REDUCTION_CASILLA,
+        casilla_id=casilla_id_for_unique_semantic_role(snapshot, _REDUCTION_ROLE),
         source_ref=f"profile:{bucket_id}:binding:{binding_id or RENTAL_REDUCTION_TIER_PATH}",
         message=message,
         remedy=_LEASE_ADD_DOOR if refusal is RentalReductionRefusal.NO_LEASE else _LEASE_DOOR,
@@ -142,6 +143,7 @@ def _derive(
     if not active and not _declares_rental_income(fact_index):
         return None
     rules = resolve_rental_reduction_art232_rules(
+        modelo_id=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
         devengo=devengo,
         operation=operation,

@@ -9322,6 +9322,38 @@ tui:
         revision_superseded: Felváltva
 workspace:
   declarations:
+  withholding:
+    absence:
+      state:
+        active: Érvényes
+        withdrawn: Visszavont
+    absences:
+      title: Nyilatkozatok a levonás hiányáról
+    action:
+      attest_absence: Nyilatkozat, hogy nem volt levonás
+      read: Beolvasás
+      record: Nyilvántartás hozzáadása vagy cseréje
+      remove: A kijelölt nyilvántartás törlése
+      withdraw_absence: A kijelölt nyilatkozat visszavonása
+    column:
+      attested_on: Nyilatkozat napja
+      income: Jövedelem
+      note: Megjegyzés
+      payer: Kifizető
+      state: Állapot
+    ejercicio: Év
+    prompt: Írj be egy évet, és olvasd be, hogy lásd a kifizetői nyilvántartásait
+      és a levonás hiányáról szóló nyilatkozatait.
+    records:
+      title: Kifizetői nyilvántartások
+    status:
+      choose_active_absence: Előbb jelölj ki egy érvényes nyilatkozatot.
+      choose_record: Előbb jelölj ki egy kifizetői nyilvántartást.
+      ejercicio_invalid: Az évet négy számjeggyel írd be.
+      empty: '%{ejercicio} évre nincs semmi rögzítve.'
+      read_failed: A nyilvántartásokat nem sikerült beolvasni.
+      read_first: Előbb olvass be egy évet.
+      reading: Beolvasás…
     availability:
       available: Elérhető
       locked: Zárolva

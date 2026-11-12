@@ -172,6 +172,7 @@ errors:
     count: recuento
     currency: moneda
     detail: detalle
+    door: orden
     ejercicio: ejercicio
     entry_count: número de entradas
     expected: esperado

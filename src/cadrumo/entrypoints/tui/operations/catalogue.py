@@ -108,6 +108,28 @@ def _summary(schema: Mapping[str, object]) -> str:
     return " ".join(description.split()) if isinstance(description, str) else ""
 
 
+def served_operation_entry(
+    contract: OperationPublicDefinitionContractV1,
+    request_json_schema: Mapping[str, object],
+    *,
+    request_type: type[BaseModel],
+    result_type: type[BaseModel],
+) -> OperationCatalogueEntryV1:
+    """Return the entry of one operation whose contract and request schema the runtime served.
+
+    The form a person fills is the schema the runtime describes, not one this
+    process composes; ``request_type`` validates it as the runtime will.
+    """
+    return OperationCatalogueEntryV1(
+        contract=contract,
+        summary=_summary(request_json_schema),
+        input_type=request_type,
+        input_json_schema=request_json_schema,
+        result_type=result_type,
+        typed_operator_input=False,
+    )
+
+
 def build_operation_catalogue(registry: OperationRegistry) -> OperationCatalogueV1:
     """Project every public contract of ``registry`` onto one catalogue entry."""
     entries: list[OperationCatalogueEntryV1] = []
@@ -169,4 +191,5 @@ __all__ = [
     "OperationCatalogueSourceV1",
     "OperationCatalogueV1",
     "build_operation_catalogue",
+    "served_operation_entry",
 ]

@@ -57,6 +57,7 @@ from pydantic.json_schema import models_json_schema
 
 from cadrumo.application.modelo.amendment_context_operation import ModeloWorkAmendmentContextProjection
 from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import OperationEffect
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
@@ -89,9 +90,13 @@ DECLARATIONS: tuple[tuple[str, str, bool], ...] = (
     ("347", "0A", True),
     ("390", "0A", False),
 )
-#: The declaration the scenarios open with registry rules that stop short of calculation grade, so it opens read only.
-#: It is read for the newest supported year whose rules do so, not the declarations' year, whose rules may be complete.
-RULES_INCOMPLETE_MODELO = "390"
+#: The declarations, in the order tried, the scenarios open with registry rules that stop short of calculation grade, so
+#: the first one the persona can open and some supported year's rules leave short opens read only. It is read for the
+#: newest supported year whose rules do so, not the declarations' year, whose rules may be complete. Which of them
+#: serves is read from the registry at produce time and named in ``RULES_INCOMPLETE_MANIFEST``, never by the window.
+RULES_INCOMPLETE_CANDIDATES: tuple[tuple[str, str], ...] = (("200", "0A"), ("296", "0A"), ("309", "0A"))
+#: The envelope that names the declaration serving the rules-incomplete scenario, by its role.
+RULES_INCOMPLETE_MANIFEST = "scenario-rules-incomplete"
 LANGUAGES = ("en", "es", "ca", "hu")
 #: The operator the desktop names on requests that take an actor, as src/shell/modelo.ts states it.
 ACTOR = "operator:desktop-modelo"
@@ -185,8 +190,6 @@ RENTA_ANSWERS: tuple[tuple[str, str], ...] = (
     ("renta-base-liquidable-negativa-general-em3-pendiente-inicio", "0"),
     ("renta-base-liquidable-negativa-general-em2-pendiente-inicio", "0"),
 )
-#: The boxes a salaried filer states: the cash remuneration and the Social Security contributions, as typed.
-RENTA_SALARY_BOXES: tuple[str, str] = ("0003", "0013")
 #: The quarter whose calculated Modelo 130 a projected filer holds.
 RENTA_QUARTER = "1T"
 #: A day within the Renta's filing period, which closes on 30 June of the year after.
@@ -220,8 +223,8 @@ def declarations_year() -> int:
     return int(persona.fiscal_year.resolve(envelope))
 
 
-def _rules_incomplete_year(operation: Any, modelo: str, period_code: str) -> int:
-    """The newest supported filing year whose registry rules for ``modelo`` stop short of calculation grade."""
+def _rules_incomplete_year(operation: Any, modelo: str, period_code: str) -> int | None:
+    """The newest supported filing year whose registry rules for ``modelo`` stop short of calculation grade, if any."""
     from cadrumo.core.authority_grade import RegistryAuthorityGrade
     from cadrumo.core.period import Period
 
@@ -229,10 +232,34 @@ def _rules_incomplete_year(operation: Any, modelo: str, period_code: str) -> int
     support = operation.supported_filing_years()
     for year in range(support.horizon, support.floor - 1, -1):
         period = Period.from_year_and_code(year, period_code)
-        grade = operation.reachable_authority_grade(modelo, filing_year=year, period=period.registry_token)
+        try:
+            grade = operation.reachable_authority_grade(modelo, filing_year=year, period=period.registry_token)
+        except CadrumoError:
+            continue
         if ladder.index(grade) < ladder.index(RegistryAuthorityGrade.CALCULATION):
             return year
-    raise SystemExit(f"no supported year's Modelo {modelo} rules stop short of calculation grade")
+    return None
+
+
+def _rules_incomplete_declaration(first: Any) -> tuple[str, str, Any]:
+    """The first candidate the persona can open whose rules stop short of calculation grade: modelo, period, work.
+
+    Raises:
+        SystemExit: When no candidate is both short of calculation grade in a supported year and open to the persona.
+    """
+    for modelo, period_code in RULES_INCOMPLETE_CANDIDATES:
+        year = _rules_incomplete_year(first.operation, modelo, period_code)
+        if year is None:
+            continue
+        try:
+            return modelo, period_code, _other_declaration(first, modelo, period_code, filing_year=year)
+        except CadrumoError:
+            continue
+    named = ", ".join(f"{modelo} {period_code}" for modelo, period_code in RULES_INCOMPLETE_CANDIDATES)
+    raise SystemExit(
+        f"none of the candidate declarations ({named}) has registry rules short of calculation grade in a supported "
+        "year and can be opened for the activity persona"
+    )
 
 
 def _taxpayer_tax_id(persona_id: str) -> str:
@@ -896,6 +923,9 @@ def _read_ports(bucket_id: str, operation: Any) -> Any:
         reconciliation_sources=lambda unit, snapshot: calculation_reconciliation_source_needs(
             unit, snapshot, ports=ports
         ),
+        # The captured filings show which carries the application holds no source for, so the form's baseline
+        # offers a stated figure for exactly those, as the registered read and renewal admit it.
+        observations=ports.observation_repository,
     )
 
 
@@ -1598,15 +1628,14 @@ class RentaFiler:
     envelope: str
     #: The IRPF income categories the profile declares, comma separated as the setup answer states them.
     categories: str
-    #: Whether the cash remuneration and Social Security contributions the salaried persona's employer certificate
-    #: declares are typed into the form; the figures are the persona's, never restated here.
-    salary: bool = False
     #: Whether the register holds the persona's own declared certificate, replayed with the persona in full. A
     #: salaried filer without it starts from the persona's profile and household alone.
     persona_certificate: bool = False
     #: The withholding of a certificate the scenario states in place of the persona's, over the persona's own
-    #: remuneration: a result to pay needs less withheld than the persona's certificate states. The certificate is
-    #: recorded through the register's operation for the filer's year.
+    #: remuneration, reductions and deductible expenses: a result to pay needs less withheld than the persona's
+    #: certificate states. The certificate is recorded through the register's operation for the filer's year. The
+    #: work-income boxes read the register alone, so a filer with neither this nor ``persona_certificate`` has no
+    #: work income stated.
     withheld: Decimal | None = None
     #: Whether the profile also holds the year's calculated first-quarter Modelo 130, which the projection of the
     #: annual return from the quarters reads; the projection is read for the filer only then.
@@ -1638,74 +1667,70 @@ class RentaFiler:
 PAYING_WITHHOLDING = Decimal("2000.00")
 
 RENTA_FILERS: tuple[RentaFiler, ...] = (
-    # Salaried, with income from savings and a capital gain declared, and no certificate in the register:
-    # the three withholding credits and the totals that read them stay unresolved. The filer's sex is not
+    # Salaried, with income from savings and a capital gain declared, and no certificate in the register: the work
+    # income, the three withholding credits and the totals that read them stay unresolved. The filer's sex is not
     # answered, so one line of the check leads to the profile.
     RentaFiler(
         "",
         "trabajo,capital_mobiliario,ganancias_patrimoniales",
-        salary=True,
         compared=True,
         unanswered=("renta_taxpayer.sex",),
     ),
     # Salaried, one certificate in the register that withholds less than the tax: the result is to pay, read after
     # the filing period, so the result can no longer be paid in two instalments.
-    RentaFiler("pay", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, read_on=RENTA_AFTER_FILING_PERIOD_DAY),
+    RentaFiler("pay", "trabajo", withheld=PAYING_WITHHOLDING, read_on=RENTA_AFTER_FILING_PERIOD_DAY),
     # The persona's own certificate, which withholds more than the tax: the result is to refund.
-    RentaFiler("refund", "trabajo", salary=True, persona_certificate=True),
+    RentaFiler("refund", "trabajo", persona_certificate=True),
     # Self-employed, with the activity persona's year of income in the ledger.
     RentaFiler("activity", "actividad_economica"),
     # Salaried and self-employed, the year's first quarter calculated, and no certificate in the register: the
-    # projection from the quarter names the employment credit and the totals that read it as unresolved.
-    RentaFiler("projected", "trabajo,actividad_economica", salary=True, quarter_130=True),
+    # projection from the quarter names the work income, the employment credit and the totals that read them as
+    # unresolved.
+    RentaFiler("projected", "trabajo,actividad_economica", quarter_130=True),
     # The same filer with a certificate in the register, and the attestation that no payer withheld on the rental
     # activity the register would otherwise leave unresolved: the projection resolves every credit.
     RentaFiler(
         "credited",
         "trabajo,actividad_economica",
-        salary=True,
         withheld=PAYING_WITHHOLDING,
         quarter_130=True,
         attested_none=("arrendamiento_inmueble_urbano_actividad",),
     ),
     # The salaried filer with a certificate that leaves a result to pay, read within the filing period: the
     # result may be paid at once or in two instalments, and the split states both amounts as advisory.
-    RentaFiler("instalment", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, read_on=RENTA_FILING_PERIOD_DAY),
+    RentaFiler("instalment", "trabajo", withheld=PAYING_WITHHOLDING, read_on=RENTA_FILING_PERIOD_DAY),
     # A married couple whose profile states the spouse, one certificate in the register: the filing modes can be
     # compared, and joint filing comes out lower.
     RentaFiler(
         "married",
         "trabajo",
-        salary=True,
         withheld=PAYING_WITHHOLDING,
         household="married",
         compared=True,
         compared_states=True,
     ),
-    # The same couple with no certificate in the register: the credits the results read have no value, so the
-    # comparison names those boxes instead of comparing.
-    RentaFiler("uncredited", "trabajo", salary=True, household="married", compared=True),
+    # The same couple with no certificate in the register: the work income and the credits the results read have no
+    # value, so the comparison names those boxes instead of comparing.
+    RentaFiler("uncredited", "trabajo", household="married", compared=True),
     # A married filer whose profile does not state the spouse.
     RentaFiler(
         "spouseless",
         "trabajo",
-        salary=True,
         withheld=PAYING_WITHHOLDING,
         household="married-no-spouse",
         compared=True,
     ),
     # A single filer with no child in the household, who has no family unit to file jointly.
-    RentaFiler("alone", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, household="alone", compared=True),
+    RentaFiler("alone", "trabajo", withheld=PAYING_WITHHOLDING, household="alone", compared=True),
     # A married couple whose return was never calculated.
     RentaFiler("uncalculated", "trabajo", household="married", calculated=False, compared=True),
     # A single parent who has not said whether they live with the child's other parent: the joint reduction
     # depends on it, so the comparison names the box it leaves without a value.
-    RentaFiler("parent", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, household="parent", compared=True),
+    RentaFiler("parent", "trabajo", withheld=PAYING_WITHHOLDING, household="parent", compared=True),
     # The same parent stating that they do not live with the child's other parent: the comparison is made.
     RentaFiler(
         "parentapart",
         "trabajo",
-        salary=True,
         withheld=PAYING_WITHHOLDING,
         household="parent-apart",
         compared=True,
@@ -1734,7 +1759,6 @@ def renta_year_filer(year: int) -> RentaFiler:
     return RentaFiler(
         f"y{year}",
         "trabajo",
-        salary=True,
         withheld=PAYING_WITHHOLDING,
         household="married",
         compared=True,
@@ -1810,9 +1834,17 @@ def _filer_persona(filer: RentaFiler) -> str:
 
 
 def _salaried_certificate() -> WithholdingCertificate:
-    """The employer certificate the salaried persona declares: the figures every salaried filer's form states."""
-    persona, _ = _catalogue_persona(SALARIED_PERSONA)
-    (certificate,) = (item for item in persona.withholding_certificates if item.payer == RENTA_PAYER)
+    """The salaried persona's employer certificate for ``RENTA_YEAR``: the figures every salaried filer's form states.
+
+    The persona declares one certificate per year it was employed; the scenarios open ``RENTA_YEAR``'s Renta, so its
+    certificate is the one their figures come from.
+    """
+    persona, envelope = _catalogue_persona(SALARIED_PERSONA)
+    (certificate,) = (
+        item
+        for item in persona.withholding_certificates
+        if item.payer == RENTA_PAYER and item.ejercicio.resolve(envelope) == RENTA_YEAR
+    )
     return certificate
 
 
@@ -1824,17 +1856,25 @@ def _salaried_contributions() -> Decimal:
     return contributions
 
 
-def _typed_salary(filer: RentaFiler, *, small: bool = False) -> tuple[str, str] | None:
-    """The cash remuneration and contributions the filer types, or ``None`` where it types none.
+@dataclass(frozen=True, slots=True)
+class CertificateFigures:
+    """What a recorded work-income certificate states besides its payer and the withholding."""
 
-    ``small`` takes the figures of a household too small for either filing mode to owe tax on.
-    """
-    if small:
-        return RENTA_SMALL_SALARY
-    if not filer.salary:
-        return None
+    importe_integro: Decimal
+    reducciones_aplicables: Decimal
+    gastos_deducibles: Decimal
+
+
+def _persona_certificate_figures() -> CertificateFigures:
+    """The salaried persona's own certificate figures, as the persona file states them; never restated here."""
     certificate = _salaried_certificate()
-    return str(certificate.importe_integro), str(_salaried_contributions())
+    if certificate.reducciones_aplicables is None or certificate.gastos_deducibles is None:
+        raise SystemExit("the salaried persona's certificate states no reductions or deductible expenses")
+    return CertificateFigures(
+        importe_integro=certificate.importe_integro,
+        reducciones_aplicables=certificate.reducciones_aplicables,
+        gastos_deducibles=certificate.gastos_deducibles,
+    )
 
 
 @contextmanager
@@ -1853,11 +1893,12 @@ def _renta_seeded(tmp: Path, filer: RentaFiler, *, read_on: datetime | None = No
         yield persona, _declaration(persona, "100", filer.year, RENTA_PERIOD)
 
 
-def _record_certificate(persona: Any, filer: RentaFiler) -> None:
+def _record_certificate(persona: Any, filer: RentaFiler, *, figures: CertificateFigures | None = None) -> None:
     """Record the certificate the scenario states and the filer's attestations through the register's operations.
 
-    The certificate has the salaried persona's own remuneration, the payer's identity and the withheld amount the
-    scenario states; the persona's own certificate is replayed with the persona, not recorded here.
+    The certificate has the salaried persona's own remuneration, reductions and deductible expenses, or ``figures``
+    where given, the payer's identity and the withheld amount the scenario states; the persona's own certificate is
+    replayed with the persona, not recorded here. The work-income boxes read these figures from the register.
     """
     from cadrumo.application.operations.public_scalar import PublicDecimal
     from cadrumo.application.retencion_soportada_absence.contracts import (
@@ -1891,7 +1932,7 @@ def _record_certificate(persona: Any, filer: RentaFiler) -> None:
             raise SystemExit(f"the attestation of {token} published nothing")
     if filer.withheld is None:
         return
-    certificate = _salaried_certificate()
+    stated = _persona_certificate_figures() if figures is None else figures
     payer = persona.persona.identities.role(RENTA_PAYER)
     zero = PublicDecimal(decimal="0.00")
     recorded = run_operation(
@@ -1903,11 +1944,13 @@ def _record_certificate(persona: Any, filer: RentaFiler) -> None:
             income_class=RetencionSoportadaClase.TRABAJO,
             payer_tax_id=payer.value,
             payer_legal_name=payer.legal_name,
-            importe_integro_dinerario=PublicDecimal(decimal=str(certificate.importe_integro)),
+            importe_integro_dinerario=PublicDecimal(decimal=str(stated.importe_integro)),
             valoracion_especie=zero,
             retencion=PublicDecimal(decimal=str(filer.withheld)),
             ingreso_a_cuenta=zero,
             ingreso_a_cuenta_repercutido=zero,
+            reducciones_aplicables=PublicDecimal(decimal=str(stated.reducciones_aplicables)),
+            gastos_deducibles=PublicDecimal(decimal=str(stated.gastos_deducibles)),
             origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION,
         ),
         RetencionSoportadaMutationProjection,
@@ -1916,25 +1959,21 @@ def _record_certificate(persona: Any, filer: RentaFiler) -> None:
         raise SystemExit(f"the payer's certificate was refused: {recorded.refusal}")
 
 
-def _calculate_renta(
-    work: Any, filer: RentaFiler, *, borrador_snapshot_id: str | None = None, small_salary: bool = False
-) -> None:
+def _calculate_renta(work: Any, *, borrador_snapshot_id: str | None = None) -> None:
     """Calculate the filer's declaration through the registered calculation, with the answers it refuses without.
 
     The filer starts from the answers the latest design asks. Another year's design asks others, which the
     calculation names one at a time as the binding it refuses without; the filer answers each as none, the way
     an operator answers a question the calculation puts, and the calculation is asked again.
-    A draft imported earlier is replayed into the calculation when ``borrador_snapshot_id`` names it. With
-    ``small_salary`` the filer types the figures of a household too small to owe tax on.
+    A draft imported earlier is replayed into the calculation when ``borrador_snapshot_id`` names it. Nothing is
+    typed into a box: the work income comes from the certificates in the register, which no caller may override.
     """
     from cadrumo.application.modelo.work_missing_input import ModeloWorkMissingInputError
 
     answers = list(RENTA_ANSWERS)
     while True:
         try:
-            _calculate_renta_with(
-                work, filer, tuple(answers), borrador_snapshot_id=borrador_snapshot_id, small_salary=small_salary
-            )
+            _calculate_renta_with(work, tuple(answers), borrador_snapshot_id=borrador_snapshot_id)
         except ModeloWorkMissingInputError as missing:
             if any(missing.binding_id == key for key, _ in answers):
                 raise
@@ -1943,14 +1982,7 @@ def _calculate_renta(
             return
 
 
-def _calculate_renta_with(
-    work: Any,
-    filer: RentaFiler,
-    answers: tuple[tuple[str, str], ...],
-    *,
-    borrador_snapshot_id: str | None,
-    small_salary: bool,
-) -> None:
+def _calculate_renta_with(work: Any, answers: tuple[tuple[str, str], ...], *, borrador_snapshot_id: str | None) -> None:
     """Calculate the filer's declaration once, answering the bindings in ``answers``."""
     from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
     from cadrumo.application.modelo.calculation_request_fields import (
@@ -1969,8 +2001,6 @@ def _calculate_renta_with(
         calculation_action_ports_factory=lambda **_: work.ports,
         attachment_store_factory=build_attachment_store,
     )
-    salary = _typed_salary(filer, small=small_salary)
-    stated = zip(RENTA_SALARY_BOXES, salary, strict=True) if salary is not None else ()
     request = OperationRequest(
         definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         subject_ref=work.work_unit_id,
@@ -1980,7 +2010,6 @@ def _calculate_renta_with(
             caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
             inputs=ModeloCalculationInputFieldsV1(
                 binding_overrides=tuple(ModeloCalculationOverride(key=key, value=value) for key, value in answers),
-                casilla_overrides=tuple(ModeloCalculationOverride(key=box, value=value) for box, value in stated),
                 borrador_snapshot_id=borrador_snapshot_id,
             ),
         ),
@@ -2020,13 +2049,21 @@ def _answer_quarter(work: Any) -> None:
 def _write_projection(directory: Path, work: Any, name: str) -> None:
     """Read the projection of the filer's annual return from the quarters, as the application words it in each language.
 
-    The application words the projection in the language it is run in, so each is run in its own.
+    The application words the projection in the language it is run in, so each is run in its own. A profile whose
+    projection the application refuses, as one with no work income stated leaves the result without a figure, has
+    that refusal recorded under ``refusal-{name}`` instead.
     """
+    from cadrumo.application.modelo.projection import ModeloProjectResultUnresolvedError
     from cadrumo.application.modelo.projection_operation import ModeloProjectOperationRequest
     from cadrumo.core.config import override_settings
 
     bucket_id = work.work_unit.bucket_id
     request = ModeloProjectOperationRequest(profile_id=UUID(bucket_id), year=RENTA_YEAR)
+    try:
+        _operate(work, "modelo.project", request, subject_ref=_profile_subject(work))
+    except ModeloProjectResultUnresolvedError:
+        _write_projection_refusal(directory, work, name)
+        return
     for language in LANGUAGES:
         with override_settings(cadrumo_output_language=language):
             projected = _operate(work, "modelo.project", request, subject_ref=_profile_subject(work))
@@ -2082,8 +2119,13 @@ def _write_taxation_comparison(directory: Path, work: Any, name: str) -> None:
                 _write(directory, f"compare-{name}-{language}.json", compared)
 
 
-#: The salary and contributions of a household too small for either filing mode to owe tax on.
-RENTA_SMALL_SALARY: tuple[str, str] = ("5000", "300")
+#: The certificate of a household too small for either filing mode to owe tax on: the remuneration, no reduction,
+#: and the Social Security contributions as its deductible expenses. Nothing is withheld on it.
+RENTA_SMALL_CERTIFICATE = CertificateFigures(
+    importe_integro=Decimal("5000.00"),
+    reducciones_aplicables=Decimal("0.00"),
+    gastos_deducibles=Decimal("300.00"),
+)
 #: What a comparison that recommends individual filing states, as amounts in euros: the joint result, the individual
 #: one, and the cuota resultante of each. No household of these synthetic filers reaches it.
 INDIVIDUAL_LOWER = ("2400.00", "2100.00", "3000.00", "2700.00")
@@ -2116,13 +2158,29 @@ def _write_unreached_comparison_refusals(directory: Path) -> None:
             _write(directory, f"refusal-compare-100-{RENTA_PERIOD}-{refusal.replace('_', '-')}-{language}.json", detail)
 
 
-def _write_comparison_states(directory: Path, work: Any, filer: RentaFiler) -> None:
-    """Record the comparison states the filer's own income does not reach, in each language.
+def _write_small_comparison(directory: Path, filer: RentaFiler) -> None:
+    """Record the comparison of the filer's household on an income too small for either mode to owe tax on.
 
-    The same household is calculated again on an income too small for either mode to owe tax on, so the results do
-    not differ, and read through the registered comparison. A comparison that recommends individual filing cannot be
-    reached by the single-earner household the application models, so the real projection and its served words
-    state one built from amounts: the application's own result, projected and worded as any comparison is.
+    The household is seeded as a profile of its own with one certificate in the register of that income, nothing
+    withheld on it, so the results do not differ; it is calculated and read through the registered comparison.
+    """
+    from dataclasses import replace
+
+    small = replace(filer, withheld=Decimal("0.00"))
+    with (
+        scratch_tree() as tmp,
+        _renta_seeded(Path(tmp), small, read_on=small.read_on) as (persona, work),
+    ):
+        _record_certificate(persona, small, figures=RENTA_SMALL_CERTIFICATE)
+        _calculate_renta(work)
+        _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}-{filer.envelope}-small")
+
+
+def _write_individual_comparison(directory: Path, work: Any, filer: RentaFiler) -> None:
+    """Record a comparison that recommends individual filing over the filer's own ``work``, in each language.
+
+    No single-earner household the application models reaches it, so the real projection and its served words state
+    one built from amounts: the application's own result, projected and worded as any comparison is.
     """
     from cadrumo.application.modelo.taxation_comparison import (
         TaxationComparisonResult,
@@ -2132,8 +2190,6 @@ def _write_comparison_states(directory: Path, work: Any, filer: RentaFiler) -> N
     from cadrumo.application.modelo.taxation_comparison_operation import ModeloTaxationComparisonProjection
     from cadrumo.core.config import override_settings
 
-    _calculate_renta(work, filer, small_salary=True)
-    _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}-{filer.envelope}-small")
     conjunta, individual, conjunta_cuota, individual_cuota = (Decimal(amount) for amount in INDIVIDUAL_LOWER)
     built = TaxationComparisonResult(
         filing_year=RENTA_YEAR,
@@ -2220,13 +2276,13 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
         if filer.quarter_130:
             _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
         if filer.calculated:
-            _calculate_renta(work, filer)
+            _calculate_renta(work)
         suffix = f"-{filer.envelope}" if filer.envelope else ""
         _write_form(directory, work, f"modelo-100-{RENTA_PERIOD}{suffix}", with_help=first)
         if filer.compared:
             _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}{suffix}")
         if filer.compared_states:
-            _write_comparison_states(directory, work, filer)
+            _write_individual_comparison(directory, work, filer)
         if filer.quarter_130:
             _write_projection(directory, work, f"project-100-{RENTA_PERIOD}{suffix}")
         if first:
@@ -2235,22 +2291,25 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
             _write_settlement_states(directory, work, SETTLEMENT_STATES)
         elif filer.year != RENTA_YEAR:
             _write_settlement_states(directory, work, SETTLEMENT_STATES[:1], prefix=f"{filer.envelope}-")
+    # The small household is a profile of its own, seeded once the filer's is closed.
+    if filer.compared_states:
+        _write_small_comparison(directory, filer)
 
 
 #: The filer whose profile holds the Borrador drafts: a salaried filer with one certificate in the register.
-BORRADOR_FILER = RentaFiler("borrador", "trabajo", salary=True, withheld=PAYING_WITHHOLDING)
+BORRADOR_FILER = RentaFiler("borrador", "trabajo", withheld=PAYING_WITHHOLDING)
 #: The boxes an AEAT draft prints as results, which no binding owns: they are kept only to be compared. The draft
 #: prints what the calculation works out for each, except the last, which it prints a euro and a quarter higher.
 BORRADOR_PRINTED_RESULTS: tuple[str, ...] = ("0505", "0545", "0546", "0585", "0586")
 BORRADOR_PRINTED_OFF = ("0585", Decimal("1.25"))
-#: How much lower than the filer typed the draft prints the cash remuneration.
+#: How much lower than the recorded certificate states the draft prints the cash remuneration.
 BORRADOR_PRINTED_REMUNERATION_SHORT = Decimal("500.00")
 
 
 def _borrador_printed_extra() -> tuple[tuple[str, Decimal], ...]:
     """Boxes the draft prints that its import does not read, from the salaried persona's certificate.
 
-    The cash remuneration is stated lower than the filer typed, and the Social Security contributions as typed.
+    The cash remuneration is stated lower than the recorded certificate, and the Social Security contributions as it.
     """
     certificate = _salaried_certificate()
     return (
@@ -2395,7 +2454,7 @@ def _borrador_chain(directory: Path | None, results: Mapping[str, Decimal]) -> d
         issued_to = _taxpayer_tax_id(_filer_persona(BORRADOR_FILER))
         first = _import_borrador(work, Path(tmp), tax_id=issued_to, captured_at=BORRADOR_FIRST_AT, results=results)
         _write_borrador_comparison(directory, work, "no-calculation")
-        _calculate_renta(work, BORRADOR_FILER, borrador_snapshot_id=first)
+        _calculate_renta(work, borrador_snapshot_id=first)
         _write_borrador_comparison(directory, work, "compared")
         compared = json.loads(_borrador_comparison(work, LANGUAGES[0]).model_dump_json())
         _import_borrador(
@@ -3694,19 +3753,21 @@ def _write_scenarios(directory: Path) -> None:
     ):
         works = {DECLARATIONS[0][0]: first}
         for modelo, period_code, _ in DECLARATIONS[1:]:
-            works[modelo] = _other_declaration(
-                first,
-                modelo,
-                period_code,
-                filing_year=_rules_incomplete_year(first.operation, modelo, period_code)
-                if modelo == RULES_INCOMPLETE_MODELO
-                else None,
-            )
+            works[modelo] = _other_declaration(first, modelo, period_code)
+        incomplete_modelo, incomplete_period, incomplete = _rules_incomplete_declaration(first)
         for modelo, _, calculated in DECLARATIONS:
             if calculated:
                 works[modelo].recalculate()
         for modelo, period_code, _ in DECLARATIONS:
             _write_form(directory, works[modelo], f"modelo-{modelo}-{period_code}", with_help=True)
+        _write_form(directory, incomplete, f"modelo-{incomplete_modelo}-{incomplete_period}", with_help=True)
+        (directory / f"{RULES_INCOMPLETE_MANIFEST}.json").write_text(
+            _compact(
+                {"modelo": incomplete_modelo, "period_code": incomplete_period, "work_unit_id": incomplete.work_unit_id}
+            ),
+            "utf-8",
+            newline="\n",
+        )
         _observe_at_aeat(first)
         _write_list(directory, first, "declarations")
         _write_main_edits(directory, first)

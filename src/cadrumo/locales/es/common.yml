@@ -9381,6 +9381,38 @@ tui:
         revision_superseded: Sustituida
 workspace:
   declarations:
+  withholding:
+    absence:
+      state:
+        active: Activa
+        withdrawn: Retirada
+    absences:
+      title: Declaraciones de ausencia de retenciones
+    action:
+      attest_absence: Declarar que no hubo retenciones
+      read: Leer
+      record: Añadir o sustituir un registro
+      remove: Eliminar el registro seleccionado
+      withdraw_absence: Retirar la declaración seleccionada
+    column:
+      attested_on: Declarada el
+      income: Rendimiento
+      note: Nota
+      payer: Pagador
+      state: Estado
+    ejercicio: Ejercicio
+    prompt: Escribe un ejercicio y léelo para ver sus registros de pagadores y sus
+      declaraciones de ausencia de retenciones.
+    records:
+      title: Registros de pagadores
+    status:
+      choose_active_absence: Selecciona primero una declaración activa.
+      choose_record: Selecciona primero un registro de pagador.
+      ejercicio_invalid: Escribe el ejercicio con cuatro cifras.
+      empty: No hay nada registrado para %{ejercicio}.
+      read_failed: No se han podido leer los registros.
+      read_first: Lee primero un ejercicio.
+      reading: Leyendo…
     availability:
       available: Disponible
       locked: Bloqueado

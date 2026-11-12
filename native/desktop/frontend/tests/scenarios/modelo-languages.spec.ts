@@ -11,6 +11,7 @@ import {
   openFromDialog,
   openList,
   rawOnScreen,
+  rulesIncomplete,
 } from "../support/scenarioModelo";
 import { calls } from "../support/scenarioModeloWrites";
 
@@ -100,10 +101,10 @@ for (const language of LANGUAGES) {
       );
     });
 
-  test(`modelo 390 speaks ${language} in every view and shows nothing raw`, async ({
+  test(`a modelo whose rules are incomplete speaks ${language} in every view and shows nothing raw`, async ({
     page: target,
   }) => {
-    await openFromDialog(target, "390", language);
+    await openFromDialog(target, rulesIncomplete.modelo, language);
     await expect(
       target
         .getByText(

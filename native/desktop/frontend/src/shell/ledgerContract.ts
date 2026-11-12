@@ -135,6 +135,12 @@ export type WithholdingOrigin = (typeof WITHHOLDING_ORIGINS)[number];
 export const isWithholdingOrigin = (id: string): id is WithholdingOrigin =>
   (WITHHOLDING_ORIGINS as readonly string[]).includes(id);
 
+/** What a stock purchase states about the ledger transaction that books it; unstated is its own state. */
+export const PURCHASE_LEDGER_ROWS = ["unstated", "claimed", "none"] as const;
+export type PurchaseLedgerRow = (typeof PURCHASE_LEDGER_ROWS)[number];
+export const isPurchaseLedgerRow = (id: string): id is PurchaseLedgerRow =>
+  (PURCHASE_LEDGER_ROWS as readonly string[]).includes(id);
+
 /** The classifications that decide a movement; the others are dispositions. */
 export const DECIDED_CLASSIFICATIONS = [
   "BUSINESS",

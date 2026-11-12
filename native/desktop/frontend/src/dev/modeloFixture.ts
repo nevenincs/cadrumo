@@ -43,10 +43,8 @@ import {
   type ModeloEditRenewalProjectionV1,
 } from "../shell/modeloContract/modeloEdit";
 import { type ModeloExportPublicResultV3 } from "../shell/modeloContract/modeloExport";
-import {
-  type CreditResolutionListProjection,
-  type ModeloWorkCreateProjection,
-} from "../shell/modeloContract/modeloWork";
+import { type CreditResolutionListProjection } from "../shell/modeloContract/modeloWork";
+import { type ModeloWorkCreateProjection } from "../shell/modeloContract/modeloWorkCreate";
 import { type ModeloCasillaHelpProjectionV1 } from "../shell/modeloContract/modeloWorkCasillaHelp";
 import {
   type ModeloFormIssueLine,
@@ -945,8 +943,12 @@ export function modeloFixture(options: Options): ModeloPort {
         definition === "modelo.project" &&
         !catalogue[`project-${rentaForm(shape)}-${spoken}`]
       )
+        // The filer's own recorded refusal where the application refused its
+        // profile's estimate, else the one for the quarter's stage.
         return (await refusedWith(
-          PROJECT_REFUSAL[quarter],
+          catalogue[`refusal-project-${rentaForm(shape)}-${spoken}`]
+            ? `project-${rentaForm(shape)}`
+            : PROJECT_REFUSAL[quarter],
           spoken,
         )) as LedgerOutcome<ModeloResult<typeof definition>>;
       if (
