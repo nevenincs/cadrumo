@@ -513,6 +513,22 @@ def _require_classification_business_pct(
         raise bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
 
 
+def _ledger_link_patch_values(
+    ctx: typer.Context,
+    rental: tuple[str | None, str | None, str | None],
+    savings: tuple[str | None, str | None],
+) -> dict[str, object]:
+    """Return the explicitly given rental and savings link fields of a classify patch."""
+    arrendamiento, inmueble, gasto_inmobiliario = rental
+    posicion, concepto_capital_mobiliario = savings
+    return {
+        **rental_link_patch_values(
+            ctx, arrendamiento=arrendamiento, inmueble=inmueble, gasto_inmobiliario=gasto_inmobiliario
+        ),
+        **savings_link_patch_values(ctx, posicion=posicion, concepto_capital_mobiliario=concepto_capital_mobiliario),
+    }
+
+
 def ledger_classify(
     ctx: typer.Context,
     transaction_id: str | None = None,
@@ -621,14 +637,11 @@ def ledger_classify(
             iva_vehicle_use=iva_vehicle_use,
             counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
-            explicit={
-                **rental_link_patch_values(
-                    ctx, arrendamiento=arrendamiento, inmueble=inmueble, gasto_inmobiliario=gasto_inmobiliario
-                ),
-                **savings_link_patch_values(
-                    ctx, posicion=posicion, concepto_capital_mobiliario=concepto_capital_mobiliario
-                ),
-            },
+            explicit=_ledger_link_patch_values(
+                ctx,
+                (arrendamiento, inmueble, gasto_inmobiliario),
+                (posicion, concepto_capital_mobiliario),
+            ),
             notes=reason,
         )
         parsed_m210_gross_income_amount = parse_decimal_option(

@@ -99,7 +99,7 @@ def test_each_required_fact_is_required(leaf: str) -> None:
         ("porcentaje_titularidad", "100.01"),
         ("porcentaje_titularidad", "33.333"),
         ("porcentaje_titularidad", "medio"),
-        ("fecha_inicio", "01/02/2020"),
+        ("fecha_inicio", date(YEAR - 3, 2, 1).strftime("%d/%m/%Y")),
         ("identificador", " "),
     ],
 )

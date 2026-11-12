@@ -55,12 +55,12 @@ def _classify_refusal_receipt_matches(receipt: OperationTerminalReceipt) -> bool
     )
 
 
-def classification_result_from_action(
+def _require_exact_identity(
     profile_id: UUID,
     result: ManualLedgerTransactionResult,
-) -> LedgerClassifyOperationResult:
-    """Validate exact identity, project canonical output, and enforce its byte bound."""
-    canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
+    canonical: LedgerTransactionResultPayload,
+) -> None:
+    """Refuse a result whose profile or transaction identity is not the one asked for."""
     if (
         canonical.bucket_id != str(profile_id)
         or result.ref.bucket_id != canonical.bucket_id
@@ -68,6 +68,20 @@ def classification_result_from_action(
         or result.ref.transaction_id != result.transaction.transaction_id
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
+def _optional_token_text(token: object | None) -> str | None:
+    """Return a registry token's wire text, or ``None`` when the row carries none."""
+    return None if token is None else str(token)
+
+
+def classification_result_from_action(
+    profile_id: UUID,
+    result: ManualLedgerTransactionResult,
+) -> LedgerClassifyOperationResult:
+    """Validate exact identity, project canonical output, and enforce its byte bound."""
+    canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
+    _require_exact_identity(profile_id, result, canonical)
     projected = LedgerClassifyOperationResult(
         outcome="classified",
         profile_id=profile_id,
@@ -83,17 +97,9 @@ def classification_result_from_action(
         ),
         arrendamiento_ref=result.transaction.arrendamiento_ref,
         inmueble_ref=result.transaction.inmueble_ref,
-        gasto_capital_inmobiliario=(
-            str(result.transaction.gasto_capital_inmobiliario)
-            if result.transaction.gasto_capital_inmobiliario is not None
-            else None
-        ),
+        gasto_capital_inmobiliario=_optional_token_text(result.transaction.gasto_capital_inmobiliario),
         posicion_ref=result.transaction.posicion_ref,
-        concepto_capital_mobiliario=(
-            str(result.transaction.concepto_capital_mobiliario)
-            if result.transaction.concepto_capital_mobiliario is not None
-            else None
-        ),
+        concepto_capital_mobiliario=_optional_token_text(result.transaction.concepto_capital_mobiliario),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
     )
