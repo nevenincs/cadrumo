@@ -1196,7 +1196,9 @@ def _letting_document(**changes: object) -> dict[str, Any]:
 
 
 def test_a_rental_property_states_its_letting_start_or_leaves_it_unstated() -> None:
-    assert _parse_letting(_letting_document()).rental_properties[0].arrendado_desde is None
+    unstated = _letting_document()
+    del unstated["rental_properties"][0]["arrendado_desde"]
+    assert _parse_letting(unstated).rental_properties[0].arrendado_desde is None
 
     stated = _parse_letting(_letting_document(arrendado_desde={"year": "horizon-2", "month": 6, "day": 1}))
 
