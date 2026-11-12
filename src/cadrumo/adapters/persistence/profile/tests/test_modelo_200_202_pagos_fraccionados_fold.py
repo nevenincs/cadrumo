@@ -112,7 +112,7 @@ def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None
 def _all_m202_relation_values(
     repository: CalculationObservationRepository,
     *,
-    first_year_cuota: bool,
+    no_base_periods: tuple[str, ...],
 ) -> dict[RelationId, Decimal | None]:
     snapshot = published_authority_operation().snapshot(
         "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
@@ -122,7 +122,7 @@ def _all_m202_relation_values(
             snapshot,
             operation=operation,
             repository=repository,
-            modelo_202_first_year_cuota=first_year_cuota,
+            modelo_202_no_base_instalments=frozenset((2025, period) for period in no_base_periods),
         )
     return {rv.relation: rv.value for rv in relation_vals.values}
 
@@ -133,7 +133,7 @@ def test_is3_first_year_cuota_resolves_unfiled_m202_relations_to_zero(tmp_path: 
     crash) rather than refusing on an unsupplied relation."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()  # no M202 observations persisted
-        values = _all_m202_relation_values(repository, first_year_cuota=True)
+        values = _all_m202_relation_values(repository, no_base_periods=("1P", "2P", "3P"))
         assert values.get(_REL_40_3) == Decimal("0")
         assert values.get(_REL_40_2) == Decimal("0")
 
@@ -143,7 +143,7 @@ def test_is3_flag_off_leaves_unfiled_m202_relations_unresolved(tmp_path: Path) -
     (the pre-IS-3 behaviour is unchanged for every non-first-year-cuota path)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        values = _all_m202_relation_values(repository, first_year_cuota=False)
+        values = _all_m202_relation_values(repository, no_base_periods=())
         assert values.get(_REL_40_3) is None
         assert values.get(_REL_40_2) is None
 
@@ -165,7 +165,31 @@ def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) 
                     ),
                 )
             )
-        values = _all_m202_relation_values(repository, first_year_cuota=True)
+        values = _all_m202_relation_values(repository, no_base_periods=("1P", "2P", "3P"))
         # filed value preserved (the sum of the quarterly casilla-03 inputs), NOT zeroed
         assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))
         assert values.get(_REL_40_3) == Decimal("0")  # casilla 34 = 0 each quarter (genuinely 0)
+
+
+def test_second_year_first_instalment_without_base_folds_the_filed_later_instalments(tmp_path: Path) -> None:
+    """The second IS year owes no 1P under modalidad cuota, so 2P and 3P fold without a 1P filing.
+
+    The 1P instalment's art. 40.2 base would come from a periodo impositivo before
+    the activity start, so no 1P was filed. Scoping it out lets the relation fold
+    the filed 2P and 3P instead of staying unresolved for a filing never owed.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        amounts = {"2P": Decimal("410.00"), "3P": Decimal("90.00")}
+        repository = CalculationObservationRepository()
+        for period, amount in amounts.items():
+            observation = _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0"))
+            repository.save(
+                repository.prepare_observation_envelope(
+                    observation,
+                    source_kind="app_filing",
+                    stamped_revision_id=revision_id_for_observation(observation),
+                )
+            )
+        assert _all_m202_relation_values(repository, no_base_periods=()).get(_REL_40_2) is None
+        values = _all_m202_relation_values(repository, no_base_periods=("1P",))
+        assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))

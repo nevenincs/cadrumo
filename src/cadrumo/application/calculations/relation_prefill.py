@@ -114,6 +114,7 @@ from .m111_no_retenciones import (
     is_m111_no_retenciones_period,
     m111_no_retenciones_periods_for_bucket,
 )
+from .modelo_202_base_source import is_modelo_202, modelo_202_form, modelo_202_instalment_has_no_prior_return
 from .observations_repository import CalculationObservationRepositoryProtocol
 from .relation_prefill_diagnostics import (
     absent_bound_carry_diagnostics,
@@ -145,6 +146,7 @@ def _gather_observations_for_snapshot(
     repository: CalculationObservationRepositoryProtocol,
     activity_start_date: date | None = None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]] = frozenset[tuple[int, str]](),
 ) -> _GatheredObservations:
     """Collect every observation a relation in ``snapshot.revision`` could need.
 
@@ -168,6 +170,7 @@ def _gather_observations_for_snapshot(
         activity_start_date,
         operation=operation,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
+        modelo_202_no_base_instalments=modelo_202_no_base_instalments,
     )
     for requirement in requirements:
         for period in requirement.periods:
@@ -409,46 +412,66 @@ def _entity_type_from_token(raw: str | None) -> EntityType | None:
         return None
 
 
-def _first_year_modalidad_cuota_no_m202(
+def _modelo_202_no_base_instalments(
+    snapshot: RegistrySnapshot,
     bucket_id: str,
     *,
-    filing_year: int,
+    activity_start_date: date | None,
+    operation: PinnedAuthorityOperation,
     profile_path_values_reader: ProfilePathValuesReadPort,
-) -> bool:
-    """Engine-side counterpart of the clean-state first-year-fractional suppression (IS-3).
+) -> frozenset[tuple[int, str]]:
+    """Return the Modelo 202 instalments the target reads that owe no modalidad-cuota payment.
 
-    Reads the modality inputs (entity type, INCN) and the activity-start date off
-    the WIZARD-FREE profile projection supplied by
-    :class:`~application.user_profile.profile_read_ports.ProfilePathValuesReadPort`
-    and applies the SINGLE modality definition
-    (:func:`modelo_202_modality_from_inputs`) — no duplicated INCN/threshold
-    logic, and NO dependency on the wizard ``SETUP_FLOW`` catalogue (so a non-CLI
-    calc context resolves the first-year relaxation correctly instead of silently
-    failing closed). Fail-closed: a missing profile, an unparsable entity type, a
-    missing activity-start date, or any modality other than ``ART_40_2_OPTIONAL``
-    (i.e. ``ART_40_3_MANDATORY`` / ``INCOMPLETE``) returns ``False`` — the Modelo
-    202 relation stays unresolved and the gate keeps blocking, never a silent
-    under-declaration.
+    Engine-side counterpart of the clean-state suppression: under modalidad cuota
+    (LIS art. 40.2) an instalment whose base binding reads only periods that
+    ended before the declared activity start has no earlier return to take a
+    base from, so no pago fraccionado and no Modelo 202 was owed for it. That is
+    every instalment of the first IS year and the first instalment of the
+    second. The modality comes from the WIZARD-FREE profile projection through
+    the single modality definition (:func:`modelo_202_modality_from_inputs`).
+    Fail-closed: a missing profile, an unparsable entity type, a missing
+    activity-start date or any modality other than ``ART_40_2_OPTIONAL`` names
+    no instalment, so the relation keeps demanding the filings.
     """
     from ...domain.calculations.registry.applicability_modelo202 import (
         Modelo202Modality,
         modelo_202_modality_from_inputs,
     )
 
+    if activity_start_date is None:
+        return frozenset[tuple[int, str]]()
+    instalments = tuple(
+        Period.from_year_and_code(requirement.filing_year, token)
+        for requirement in relation_source_requirements(
+            snapshot.revision,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+        )
+        if is_modelo_202(requirement.source_modelo, operation=operation)
+        for token in requirement.periods
+    )
+    if not instalments:
+        return frozenset[tuple[int, str]]()
     values = profile_path_values_reader.load_path_values(bucket_id=bucket_id)
     if values is None:
-        return False
+        return frozenset[tuple[int, str]]()
     modality = modelo_202_modality_from_inputs(
         entity_type=_entity_type_from_token(values.get("taxpayer_type.entity_type")),
         incn_prior_12_months=_parse_canonical_decimal(values.get("taxpayer_type.incn_prior_12_months")),
-        effective_date=date(filing_year, 12, 31),
+        effective_date=date(snapshot.filing_year, 12, 31),
+        authority=operation,
     ).modality
     if modality is not Modelo202Modality.ART_40_2_OPTIONAL:
-        return False
-    activity_start_date = _parse_canonical_iso_date(values.get("censo.activity_start_date"))
-    if activity_start_date is None:
-        return False
-    return activity_start_date.year >= filing_year
+        return frozenset[tuple[int, str]]()
+    return frozenset(
+        (instalment.filing_year, instalment.registry_token)
+        for instalment in instalments
+        if modelo_202_instalment_has_no_prior_return(
+            instalment,
+            activity_start_date=activity_start_date,
+            operation=operation,
+        )
+    )
 
 
 def activity_start_date_for_bucket(
@@ -480,6 +503,7 @@ def scoped_relation_source_requirements(
     *,
     operation: PinnedAuthorityOperation,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]] = frozenset[tuple[int, str]](),
 ) -> tuple[RegistryFoldRequirement, ...]:
     """Return ``relation_source_requirements`` with no-obligation periods scoped out.
 
@@ -498,7 +522,9 @@ def scoped_relation_source_requirements(
     case). Explicit M111 no-retenciones period attestations also scope out only
     the named source periods: AEAT instructions say no M111 should be presented
     when no subject rents were paid, so M190 can fold the remaining filed
-    quarters without requiring a nonexistent blank M111.
+    quarters without requiring a nonexistent blank M111. Modelo 202 instalments
+    named in ``modelo_202_no_base_instalments`` owed no modalidad-cuota payment,
+    so they are scoped out of a Modelo 202 fold the same way.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
@@ -509,7 +535,7 @@ def scoped_relation_source_requirements(
         period=snapshot.period,
     )
     attested_m111_periods = m111_no_retenciones_periods or frozenset()
-    if activity_start_date is None and not attested_m111_periods:
+    if activity_start_date is None and not attested_m111_periods and not modelo_202_no_base_instalments:
         return requirements
 
     scoped: list[RegistryFoldRequirement] = []
@@ -518,6 +544,7 @@ def scoped_relation_source_requirements(
             requirement,
             activity_start_date=activity_start_date,
             m111_no_retenciones_periods=attested_m111_periods,
+            modelo_202_no_base_instalments=modelo_202_no_base_instalments,
             operation=operation,
         )
         if scoped_requirement is not None:
@@ -530,12 +557,14 @@ def _scope_relation_requirement(
     *,
     activity_start_date: date | None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]],
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]],
     operation: PinnedAuthorityOperation,
 ) -> RegistryFoldRequirement | None:
     kept = _kept_relation_periods(
         requirement,
         activity_start_date=activity_start_date,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
+        modelo_202_no_base_instalments=modelo_202_no_base_instalments,
         operation=operation,
     )
     if len(kept) == len(requirement.periods):
@@ -555,6 +584,7 @@ def _kept_relation_periods(
     activity_start_date: date | None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]],
     operation: PinnedAuthorityOperation,
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]] = frozenset[tuple[int, str]](),
 ) -> tuple[str, ...]:
     return tuple(
         token
@@ -565,6 +595,7 @@ def _kept_relation_periods(
             token,
             activity_start_date=activity_start_date,
             m111_no_retenciones_periods=m111_no_retenciones_periods,
+            modelo_202_no_base_instalments=modelo_202_no_base_instalments,
             operation=operation,
         )
     )
@@ -577,9 +608,14 @@ def _relation_period_scoped_out(
     *,
     activity_start_date: date | None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]],
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]],
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether a relation source period is absent by explicit no-obligation evidence."""
+    if (filing_year, period_token) in modelo_202_no_base_instalments and is_modelo_202(
+        source_modelo, operation=operation
+    ):
+        return True
     if is_m111_no_retenciones_period(
         source_modelo=source_modelo,
         filing_year=filing_year,
@@ -666,9 +702,11 @@ def _unresolved_relation_value(
     target_year: int,
     source_periods: tuple[str, ...],
     resolved_at: datetime,
-    modelo_202_first_year_cuota: bool,
+    source_modelo: str,
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]],
     not_applicable_source_modelos: frozenset[str],
     pre_activity_requirement: RegistryFoldRequirement | None,
+    operation: PinnedAuthorityOperation,
 ) -> RelationValue:
     if requirement is None and pre_activity_requirement is not None:
         return RelationValue(
@@ -684,7 +722,12 @@ def _unresolved_relation_value(
                 "period precedes the activity start; relation resolved to 0 without a synthetic filing"
             ),
         )
-    if modelo_202_first_year_cuota and requirement is not None and requirement.source_modelo == str(Modelo("202")):
+    if (
+        requirement is None
+        and source_periods
+        and all((target_year, token) in modelo_202_no_base_instalments for token in source_periods)
+        and is_modelo_202(source_modelo, operation=operation)
+    ):
         return RelationValue(
             relation=binding.id,
             value=Decimal("0"),
@@ -694,8 +737,8 @@ def _unresolved_relation_value(
             **grounding,
             resolved_at=resolved_at,
             note=(
-                "first-year IS filer under modalidad cuota (LIS art. 40.2): no Modelo 202 "
-                "pago-fraccionado obligation; relation resolved to 0 (see verify advisory)"
+                "modalidad cuota (LIS art. 40.2) with no earlier return to take a base from: no Modelo 202 "
+                "pago-fraccionado obligation in any instalment; relation resolved to 0 (see verify advisory)"
             ),
         )
     if requirement is not None and requirement.source_modelo in not_applicable_source_modelos:
@@ -722,10 +765,11 @@ def _relation_value_for_relation(
     requirements_by_relation: Mapping[BindingId, RegistryFoldRequirement],
     resolved_map: Mapping[BindingId, _ResolvedRelation],
     resolved_at: datetime,
-    modelo_202_first_year_cuota: bool,
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]],
     not_applicable_source_modelos: frozenset[str],
     pre_activity_requirements: Mapping[RelationId, RegistryFoldRequirement],
     filing_year: int,
+    operation: PinnedAuthorityOperation,
 ) -> RelationValue:
     requirement = requirements_by_relation.get(binding.id)
     pre_activity_requirement = pre_activity_requirements.get(binding.id) if requirement is None else None
@@ -742,9 +786,11 @@ def _relation_value_for_relation(
             target_year=target_year,
             source_periods=source_periods,
             resolved_at=resolved_at,
-            modelo_202_first_year_cuota=modelo_202_first_year_cuota,
+            source_modelo=provider.source_modelo,
+            modelo_202_no_base_instalments=modelo_202_no_base_instalments,
             not_applicable_source_modelos=not_applicable_source_modelos,
             pre_activity_requirement=pre_activity_requirement,
+            operation=operation,
         )
     return RelationValue(
         relation=binding.id,
@@ -779,9 +825,10 @@ def _relation_values_for_snapshot(
     requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
     resolved_map: Mapping[RelationId, _ResolvedRelation],
     resolved_at: datetime,
-    modelo_202_first_year_cuota: bool,
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]],
     not_applicable_source_modelos: frozenset[str],
     pre_activity_requirements: Mapping[RelationId, RegistryFoldRequirement],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[RelationValue, ...]:
     return tuple(
         _relation_value_for_relation(
@@ -790,10 +837,11 @@ def _relation_values_for_snapshot(
             requirements_by_relation=requirements_by_relation,
             resolved_map=resolved_map,
             resolved_at=resolved_at,
-            modelo_202_first_year_cuota=modelo_202_first_year_cuota,
+            modelo_202_no_base_instalments=modelo_202_no_base_instalments,
             not_applicable_source_modelos=not_applicable_source_modelos,
             pre_activity_requirements=pre_activity_requirements,
             filing_year=snapshot.filing_year,
+            operation=operation,
         )
         for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
     )
@@ -805,7 +853,7 @@ def resolve_relations_from_local_store(
     operation: PinnedAuthorityOperation,
     repository: CalculationObservationRepositoryProtocol,
     captured_at: datetime | None = None,
-    modelo_202_first_year_cuota: bool = False,
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]] = frozenset[tuple[int, str]](),
     activity_start_date: date | None = None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
     not_applicable_source_modelos: frozenset[str] | None = None,
@@ -820,12 +868,12 @@ def resolve_relations_from_local_store(
         repository: The composed observation repository capability.
         captured_at: Optional timestamp for relation provenance. Defaults to
             the current clock.
-        modelo_202_first_year_cuota: When ``True`` (IS-3), an otherwise-unresolved
-            Modelo 202 (``source_modelo == "202"``) fold-in relation resolves to
-            ``0`` instead of ``None`` — a first-year IS filer under modalidad cuota
-            (LIS art. 40.2) has no pago-fraccionado obligation. The caller derives
-            this fail-closed (only for a Modelo 200 target); a resolved M202 value
-            is never overridden.
+        modelo_202_no_base_instalments: Modelo 202 ``(year, period)``
+            instalments that owed no modalidad-cuota payment because their
+            art. 40.2 base reads only periods before the activity start. They
+            are scoped out of a Modelo 202 fold; when every instalment a
+            relation reads is named, the otherwise-unresolved relation
+            resolves to ``0``. A resolved value is never overridden.
         activity_start_date: When set (IRPF-1), source periods strictly before the
             operator's activity start are scoped out of every relation requirement,
             so a mid-year-start filer folds only the quarters it actually had an
@@ -860,12 +908,19 @@ def resolve_relations_from_local_store(
         snapshot,
         not_applicable_source_modelos,
     )
+    # A filed instalment is folded whatever the profile says: only an absent one is scoped out.
+    modelo_202_no_base_instalments = frozenset(
+        (year, token)
+        for year, token in modelo_202_no_base_instalments
+        if repo.load_observation(modelo_202_form(operation=operation), Period.from_year_and_code(year, token)) is None
+    )
     gathered = _gather_observations_for_snapshot(
         snapshot,
         operation=operation,
         repository=repo,
         activity_start_date=activity_start_date,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
+        modelo_202_no_base_instalments=modelo_202_no_base_instalments,
     )
     requirements_by_relation = relation_requirement_index(
         scoped_relation_source_requirements(
@@ -873,6 +928,7 @@ def resolve_relations_from_local_store(
             activity_start_date,
             operation=operation,
             m111_no_retenciones_periods=m111_no_retenciones_periods,
+            modelo_202_no_base_instalments=modelo_202_no_base_instalments,
         ),
     )
     resolved_map = _resolve_available_relation_values(
@@ -884,13 +940,14 @@ def resolve_relations_from_local_store(
         requirements_by_relation=requirements_by_relation,
         resolved_map=resolved_map,
         resolved_at=when,
-        modelo_202_first_year_cuota=modelo_202_first_year_cuota,
+        modelo_202_no_base_instalments=modelo_202_no_base_instalments,
         not_applicable_source_modelos=not_applicable_source_modelos,
         pre_activity_requirements=_pre_activity_requirements_by_relation(
             snapshot,
             activity_start_date,
             operation=operation,
         ),
+        operation=operation,
     )
     return RelationValues(values=values)
 
@@ -943,7 +1000,7 @@ class _RelationPrefillContextInputs(NamedTuple):
     activity_start_date: date | None
     m111_no_retenciones_periods: frozenset[tuple[int, str]]
     not_applicable_source_modelos: frozenset[str]
-    modelo_202_first_year_cuota: bool
+    modelo_202_no_base_instalments: frozenset[tuple[int, str]]
 
 
 def _snapshot_for_context(
@@ -969,11 +1026,12 @@ def _relation_prefill_context_inputs(
     profile_path_values_reader: ProfilePathValuesReadPort,
 ) -> _RelationPrefillContextInputs:
     bucket_id = context.bucket_id
+    activity_start_date = activity_start_date_for_bucket(
+        bucket_id,
+        profile_path_values_reader=profile_path_values_reader,
+    )
     return _RelationPrefillContextInputs(
-        activity_start_date=activity_start_date_for_bucket(
-            bucket_id,
-            profile_path_values_reader=profile_path_values_reader,
-        ),
+        activity_start_date=activity_start_date,
         m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(
             bucket_id,
             profile_path_values_reader=profile_path_values_reader,
@@ -984,13 +1042,12 @@ def _relation_prefill_context_inputs(
             profile_path_values_reader=profile_path_values_reader,
         )
         | _registry_not_applicable_source_modelos(snapshot, context, operation=operation),
-        modelo_202_first_year_cuota=(
-            context.modelo == str(Modelo("200"))
-            and _first_year_modalidad_cuota_no_m202(
-                bucket_id,
-                filing_year=context.filing_year,
-                profile_path_values_reader=profile_path_values_reader,
-            )
+        modelo_202_no_base_instalments=_modelo_202_no_base_instalments(
+            snapshot,
+            bucket_id,
+            activity_start_date=activity_start_date,
+            operation=operation,
+            profile_path_values_reader=profile_path_values_reader,
         ),
     )
 
@@ -1009,7 +1066,7 @@ def _resolve_context_relation_values(
         operation=operation,
         repository=repository,
         captured_at=captured_at or context.calculated_at,
-        modelo_202_first_year_cuota=inputs.modelo_202_first_year_cuota,
+        modelo_202_no_base_instalments=inputs.modelo_202_no_base_instalments,
         activity_start_date=inputs.activity_start_date,
         m111_no_retenciones_periods=inputs.m111_no_retenciones_periods,
         not_applicable_source_modelos=inputs.not_applicable_source_modelos,

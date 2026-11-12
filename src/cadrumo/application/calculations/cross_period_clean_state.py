@@ -63,6 +63,7 @@ from .cross_period_models import (
     period_strictly_before_activity_start,
 )
 from .m111_no_retenciones import is_m111_no_retenciones_period
+from .modelo_202_base_source import modelo_202_instalment_has_no_prior_return
 from .observations_repository import (
     CalculationObservationRepositoryProtocol,
 )
@@ -387,30 +388,34 @@ def qualifies_for_first_year_fractional_suppression(
     *,
     modelo_202_modality: Modelo202Modality | None,
     activity_start_date: date | None,
-    target_filing_year: int,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Return whether ``requirement`` is a first-year Modelo 202 modalidad-cuota obligation to scope out.
+    """Return whether ``requirement`` is a Modelo 202 instalment with no art. 40.2 base to scope out.
 
     A requirement qualifies IFF ALL hold (fail-closed — any unmet condition
     keeps the requirement in scope):
 
-    * the cross-period source is Modelo 202 (``source_modelo == "202"``);
+    * the cross-period source is the Impuesto sobre Sociedades instalment
+      (Modelo 202);
     * the derived Modelo 202 modality is ``ART_40_2_OPTIONAL`` (modalidad cuota,
       INCN ≤ 6.000.000 €) — under ``ART_40_3_MANDATORY`` (base imponible) the pago
       fraccionado IS owed in the first year, and ``INCOMPLETE`` / ``None`` means the
       modality could not be derived, so neither is suppressed;
-    * an ``activity_start_date`` is recorded AND its year is on or after the target
-      filing year (``activity_start_date.year >= target_filing_year``) — the target
-      year is the taxpayer's first IS year, so no prior IS return provides the
-      art. 40.2 cuota basis.
+    * an ``activity_start_date`` is recorded AND every earlier period the
+      instalment's art. 40.2 base binding reads, by its declared per-instalment
+      offsets, ended before it. That covers every instalment of the first IS
+      year and the first instalment of the second, whose window opens before the
+      first year's Modelo 200 deadline has passed.
     """
     if requirement.source_modelo != form_for_role("sociedades.instalment"):
         return False
     if modelo_202_modality is not Modelo202Modality.ART_40_2_OPTIONAL:
         return False
-    if activity_start_date is None:
-        return False
-    return activity_start_date.year >= target_filing_year
+    return modelo_202_instalment_has_no_prior_return(
+        requirement.period,
+        activity_start_date=activity_start_date,
+        operation=operation,
+    )
 
 
 def cross_period_clean_state_non_filer_modelos(
@@ -486,7 +491,7 @@ def _first_year_fractional_requirements(
     *,
     modelo_202_modality: Modelo202Modality | None,
     activity_start_date: date | None,
-    target_filing_year: int,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CrossPeriodDependencyRequirement, ...]:
     return tuple(
         requirement
@@ -495,7 +500,7 @@ def _first_year_fractional_requirements(
             requirement,
             modelo_202_modality=modelo_202_modality,
             activity_start_date=activity_start_date,
-            target_filing_year=target_filing_year,
+            operation=operation,
         )
     )
 
@@ -772,7 +777,7 @@ def _clean_state_requirement_scope(
             partition.in_scope,
             modelo_202_modality=modelo_202_modality,
             activity_start_date=activity_start_date,
-            target_filing_year=snapshot.filing_year,
+            operation=operation,
         ),
         zero_value_previous_filing=tuple(
             requirement
