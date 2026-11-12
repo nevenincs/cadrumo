@@ -424,9 +424,13 @@ def _resolve_review_active_tax_id(
     """Return the reviewed bucket's tax id through the composed profile port."""
     try:
         values = repository.load_path_values(bucket_id=bucket_id)
-    except (CadrumoError, OSError, ValueError):
-        _LOGGER.debug("review adapters could not resolve profile tax id", exc_info=True)
-        return None
+    except (CadrumoError, ValidationError, OSError, ValueError) as exc:
+        # An unreadable profile must not look like a profile with nothing to review.
+        raise ReviewSourceLoadError(
+            message="failed to load profile from secure backend",
+            translated_message="review.adapters.errors.profile_load_failed",
+            context=_load_failure_context(exc),
+        ) from exc
     tax_id = (values or {}).get("identity.tax_id")
     return tax_id if isinstance(tax_id, str) and tax_id else None
 

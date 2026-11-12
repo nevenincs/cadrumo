@@ -728,12 +728,26 @@ errors:
     filing_export_boolean_in_text_slot: A(z) %{field} exportmező nem írhat logikai
       előállítói tényt egy %{length} bájtos szövegmezőbe. Az alkalmazás ezt a saját
       exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_draft_schema_mismatch: Az exportálás olyan tervezetet kapott, amely
+      más modelldefiníciókból készült, mint amelyekkel kiírja. A tervezetet az alkalmazás
+      maga készíti és hagyja jóvá, ezért az adataid módosítása nem javítja ki.
+    filing_export_draft_unapproved: Az exportálás jóvá nem hagyott tervezetet kapott.
+      A tervezetet az alkalmazás maga készíti és hagyja jóvá, ezért az adataid módosítása
+      nem javítja ki.
     filing_export_envelope_closer_extent: A beadási boríték záró eleme nem a megadott
       %{extent} bájt hosszúságú. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
+    filing_export_envelope_declarant_tax_id_absent: A beadási borítékot a nyilatkozó
+      adóazonosítójának kiírására kérték a beadás alanya nélkül. Az alkalmazás ezt
+      a saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
+      ki.
     filing_export_envelope_election_unresolved: A beadási boríték egy feloldott korábbi
       csoportos beszedési választás nélkül készült megíródni. Az alkalmazás ezt a
       saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
+      ki.
+    filing_export_envelope_language_casilla_absent: A beadási borítékot a bevallás
+      nyelvének kiírására kérték a megadott rovat értéke nélkül. Az alkalmazás ezt
+      a saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
       ki.
     filing_export_envelope_layout_absent: A beadási boríték tervének megadása hiányzik.
       Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
@@ -924,6 +938,9 @@ errors:
       ki.
     filing_export_result_digest_malformed: Egy exporteredmény fájlkivonata nem kisbetűs
       hexadecimális SHA-256 érték. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_sepa_marker_selection_unsupported: A SEPA-jelölés olyan számlakijelölést
+      kapott, amelyre nincs szabálya. Az alkalmazás ezt a saját exportálási tervéből
       származtatja, ezért az adataid módosítása nem javítja ki.
     filing_export_shared_resolver_not_exhaustive: A közös beadási előállító-feloldó
       nem fedi le az összes hozzá tartozó kulcsot. Az alkalmazás ezt a saját exportálási
@@ -1485,6 +1502,9 @@ errors:
     refused_export_format: A kért exportálási sorosítási formátum nem támogatott.
     refused_filing_calculate: A benyújtás-számítás vagy összefoglalás nem ment át
       az invariáns-ellenőrzésen.
+    refused_filing_export_casilla_value: 'Semmi sem íródott ki: egy általad megadott
+      mező olyan értéket tartalmaz, amelyet az exportálás nem tud a hivatalos terv
+      szerinti helyre írni. Add meg újra a mezőt, és exportálj újra.'
     refused_filing_export_declared_party_name: 'Semmi sem íródott ki: a(z) %{export_field_id}
       mező olyan partnert nevez meg, akinek nincs olyan bevallási neve, amelyet az
       AEAT nyilvántartási mintája ott elfogad. Add meg a partner bevallási nevét,
@@ -1503,6 +1523,9 @@ errors:
       mező pedig %{field_length} karakteres. A nyilvántartási minta nem engedi a rövidítést,
       ezért adj meg a névnek egy %{field_length} karakteres változatát, és exportálj
       újra.'
+    refused_filing_export_profile_fact_missing: 'Semmi sem íródott ki: az exportáláshoz
+      szükség van egy rád vonatkozó adatra, amelyet a profilod nem tartalmaz. Add
+      meg, és exportálj újra.'
     refused_financial_aggregation_category_coverage: Egy tranzakcióhoz hiányzik a
       kategória- vagy profil-lefedettség. Osztályozd a tranzakciót az összesítés előtt.
     refused_financial_aggregation_missing_classification: Néhány időszaki tranzakció
@@ -1674,6 +1697,9 @@ errors:
       időszak nem rögzít napot; {export_on} napon az eredményt csak más módon fizetheted
       meg.
     refused_modelo_edit_parse: Ez a bejegyzés nem olvasható.
+    refused_modelo_export_casilla_value: 'Semmi sem íródott ki: egy általad megadott
+      mező olyan értéket tartalmaz, amelyet az exportálás nem tud a hivatalos terv
+      szerinti helyre írni. Add meg újra a mezőt, és exportálj újra.'
     refused_modelo_export_declared_party_name: 'Semmi sem íródott ki: a(z) %{field_length}
       pozíció hosszú %{export_field_id} mező olyan partnert nevez meg, akinek nincs
       olyan bevallási neve, amelyet az AEAT nyilvántartási mintája elfogad. Add meg
@@ -1689,6 +1715,8 @@ errors:
     refused_modelo_export_required_record_absent: A hivatalos terv legalább egy %{export_record_id}
       rekordot ír elő, de ebben a bevallásban egy sincs, így ebben a formátumban nincs
       mit kiírni, és semmi sem íródott ki.
+    refused_modelo_export_settlement: 'Semmi sem íródott ki: az exportálás nem tudja
+      megadni, hogyan kell befizetni vagy visszaigényelni a bevallás összegét.'
     refused_modelo_export_unrepresentable_character: 'Semmi sem íródott ki: a(z) %{field_id}
       mező a(z) „%{character}” (%{code_point}) karaktert tartalmazza, amelyet az AEAT
       rekordterve nem enged leírni. Elhagyása vagy cseréje más adatot vallana be.
