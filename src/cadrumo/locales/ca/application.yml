@@ -524,9 +524,9 @@ application:
           té cap. Omple la casella %{casilla_id}, o buida la casella %{field_casilla_id},
           i torna a exportar.'
         box_not_stated_by_rows: 'No s''ha escrit res: la casella %{casilla_id} té
-          un valor que les files de %{element_path} no sumen. Corregeix la casella
-          o les files perquè cada fila indiqui les seves pròpies xifres, i torna a
-          exportar.'
+          el valor %{value}, que les files de %{element_path} no sumen. Corregeix
+          la casella o les files perquè cada fila indiqui les seves pròpies xifres,
+          i torna a exportar.'
         counterparty_rows_unattributable: 'No s''ha escrit res: el registre %{record_id}
           té %{row_count} files de contrapart, i les caselles de valor únic %{casillas}
           no es poden atribuir a una d''elles. Indica aquestes xifres a les files
@@ -3236,6 +3236,9 @@ application:
         sigui oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+    export_disclosure:
+      lead: Aquest càlcul indica límits i l'exportació els porta tal qual. Llegeix-los
+        abans de refiar-te'n.
     finding_fact:
       box_unnumbered: sense número
       date_unknown: una data no registrada

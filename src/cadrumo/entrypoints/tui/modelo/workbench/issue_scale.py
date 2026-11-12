@@ -74,6 +74,7 @@ _ATTENTION_LEVELS: Final[Mapping[ModeloFormAttention, IssueLevel]] = MappingProx
         ModeloFormAttention.MISSING: IssueLevel.MISSING,
         ModeloFormAttention.CONFIRM: IssueLevel.CONFIRM,
         ModeloFormAttention.CHECK: IssueLevel.CHECK,
+        ModeloFormAttention.LIMITATION: IssueLevel.CHECK,
         ModeloFormAttention.INFO: IssueLevel.INFO,
     }
 )

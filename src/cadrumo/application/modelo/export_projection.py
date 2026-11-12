@@ -28,6 +28,7 @@ from ..calculations.observations_repository import PriorDomiciliationElectionPro
 from ..operations.public_period import PublicPeriod
 from .calculation_report_export import ModeloCalculationReportResult
 from .export_contracts import ModeloExportAccountReference, ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from .export_disclosure import ModeloExportDisclosure
 
 
 class ModeloPriorDomiciliationPublicProvenance(BaseModel):
@@ -363,6 +364,9 @@ class ModeloExportPublicResultV3(BaseModel):
     fichero_boe: ModeloFicheroBoePublicReceipt | None = None
     calculation_report: ModeloCalculationReportPublicReceipt | None = None
     handoff_required: bool = True
+    #: The limits the exported calculation's verification disclosed, worded in the request's language; ``None`` when
+    #: it states none. A frontend renders these sentences and authors none of its own.
+    disclosure: ModeloExportDisclosure | None = None
 
     @model_validator(mode="after")
     def _receipt_matches_artefact(self) -> Self:

@@ -10123,6 +10123,7 @@ workspace:
         blocks: 'impedeixen presentar: {count}'
         check: 'per revisar: {count}'
         confirm: 'per confirmar: {count}'
+        limitation: 'límits indicats: {count}'
         missing: 'falten: {count}'
       deadline: 'Termini fins al {date} · dies restants: {days}'
       deadline_passed: 'El termini va acabar el {date}: presentar ara és fora de termini'
@@ -10400,6 +10401,7 @@ workspace:
       check: Convé revisar-ho
       confirm: Per confirmar
       info: Per a la teva informació
+      limitation: Límit indicat
       missing: Falta
     loading: Carregant la declaració…
     modelo_number: Modelo {modelo}

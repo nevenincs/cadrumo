@@ -31,6 +31,8 @@ class ModeloFormAttention(StrEnum):
     CONFIRM = "confirm"
     #: A warning worth checking; it does not stop the filing.
     CHECK = "check"
+    #: A figure the calculation leaves out and says so; nothing to resolve, but the filer must know it.
+    LIMITATION = "limitation"
     #: An explanation of what the calculation did; nothing to act on.
     INFO = "info"
 
@@ -70,13 +72,18 @@ def finding_attention(finding: ModeloVerificationFinding) -> ModeloFormAttention
 
     A required value that is missing sits with the other missing values, since
     giving it is all it asks. Any other blocking finding blocks. A warning is
-    worth checking, unless it is an advisory the verification emits to explain
-    an admitted or scoped-out dependency, which is for information only.
+    worth checking, unless it discloses a limitation of the calculation, which
+    has its own level, or is an advisory the verification emits to explain an
+    admitted or scoped-out dependency, which is for information only. The
+    finding's own marker decides the limitation level; the finding model
+    already refuses a blocking limitation.
     """
     if finding.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA:
         return ModeloFormAttention.MISSING
     if finding.severity is ModeloVerificationFindingSeverity.BLOCKING:
         return ModeloFormAttention.BLOCKS
+    if finding.disclosed_limitation:
+        return ModeloFormAttention.LIMITATION
     if (
         finding.kind is ModeloVerificationFindingKind.ADVISORY
         and finding.message_locale_key in EXPLANATORY_FINDING_MESSAGE_KEYS

@@ -72,6 +72,10 @@ _CAMEL_JOIN: Final[re.Pattern[str]] = re.compile(r"[a-z][A-Z]")
 _LONGEST_PLAIN_WORD: Final[int] = 11
 _DIMMED: Final[str] = "dim"
 _MIN_ROOM: Final[int] = 4
+_CHECKED_ATTENTIONS: Final[frozenset[ModeloFormAttention]] = frozenset(
+    {ModeloFormAttention.CHECK, ModeloFormAttention.LIMITATION}
+)
+"""The levels whose findings a page counts as warnings on their box; a limitation still reads as one here."""
 
 
 def looks_like_identifier(text: str) -> bool:
@@ -191,7 +195,7 @@ def checked_boxes(form: ModeloWorkForm) -> dict[str, int]:
     """How many of the last check's warnings name each box."""
     counts: dict[str, int] = {}
     for issue in form.issues:
-        if issue.attention is ModeloFormAttention.CHECK and issue.box is not None:
+        if issue.attention in _CHECKED_ATTENTIONS and issue.box is not None:
             counts[issue.box] = counts.get(issue.box, 0) + 1
     return counts
 

@@ -487,9 +487,10 @@ application:
         block_anchor_unstated: 'Nothing was written: box %{field_casilla_id} has a
           value, but box %{casilla_id}, which opens its block, has none. Enter box
           %{casilla_id}, or clear box %{field_casilla_id}, and export again.'
-        box_not_stated_by_rows: 'Nothing was written: box %{casilla_id} holds a value
-          the rows of %{element_path} do not add up to. Correct the box or the rows
-          so that each row states its own figures, and export again.'
+        box_not_stated_by_rows: 'Nothing was written: box %{casilla_id} holds the
+          value %{value}, which the rows of %{element_path} do not add up to. Correct
+          the box or the rows so that each row states its own figures, and export
+          again.'
         counterparty_rows_unattributable: 'Nothing was written: record %{record_id}
           has %{row_count} counterparty rows, and the single-valued boxes %{casillas}
           cannot be attributed to one of them. Enter those figures on the rows and
@@ -3073,6 +3074,9 @@ application:
         as filed, for when the obligation window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+    export_disclosure:
+      lead: This calculation states limits, and the export carries them as they are.
+        Read them before you rely on it.
     finding_fact:
       box_unnumbered: without a number
       date_unknown: a date not recorded

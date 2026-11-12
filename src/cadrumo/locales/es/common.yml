@@ -10142,6 +10142,7 @@ workspace:
         blocks: 'impiden presentar: {count}'
         check: 'para revisar: {count}'
         confirm: 'por confirmar: {count}'
+        limitation: 'límites indicados: {count}'
         missing: 'faltan: {count}'
       deadline: 'Plazo hasta el {date} · días restantes: {days}'
       deadline_passed: 'El plazo terminó el {date}: presentar ahora es fuera de plazo'
@@ -10414,6 +10415,7 @@ workspace:
       check: Conviene revisarlo
       confirm: Por confirmar
       info: Para tu información
+      limitation: Límite indicado
       missing: Falta
     loading: Cargando la declaración…
     modelo_number: Modelo {modelo}

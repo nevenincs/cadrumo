@@ -1295,6 +1295,7 @@
         "cadrumo.application.modelo.export_amendment_evidence",
         "cadrumo.application.modelo.export_content_findings",
         "cadrumo.application.modelo.export_contracts",
+        "cadrumo.application.modelo.export_disclosure",
         "cadrumo.application.modelo.export_field_refusal",
         "cadrumo.application.modelo.export_operation",
         "cadrumo.application.modelo.export_ports",

@@ -526,8 +526,9 @@ application:
           ninguno. Rellena la casilla %{casilla_id}, o vacía la casilla %{field_casilla_id},
           y vuelve a exportar.'
         box_not_stated_by_rows: 'No se ha escrito nada: la casilla %{casilla_id} tiene
-          un valor que las filas de %{element_path} no suman. Corrige la casilla o
-          las filas para que cada fila indique sus propias cifras, y vuelve a exportar.'
+          el valor %{value}, que las filas de %{element_path} no suman. Corrige la
+          casilla o las filas para que cada fila indique sus propias cifras, y vuelve
+          a exportar.'
         counterparty_rows_unattributable: 'No se ha escrito nada: el registro %{record_id}
           tiene %{row_count} filas de contraparte, y las casillas de valor único %{casillas}
           no se pueden atribuir a una de ellas. Indica esas cifras en las filas y
@@ -3244,6 +3245,9 @@ application:
         la ventana de obligación esté abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+    export_disclosure:
+      lead: Este cálculo indica límites y la exportación los lleva tal cual. Léelos
+        antes de fiarte de ella.
     finding_fact:
       box_unnumbered: sin número
       date_unknown: una fecha no registrada

@@ -21,6 +21,7 @@ from ....application.modelo.edit_models import (
 from ....application.modelo.trabajo_income_findings import trabajo_income_findings
 from ....application.modelo.verification_projection import ModeloFindingSnapshot
 from ....application.modelo.verification_report_public_facts import ModeloVerificationFindingProjection
+from ....application.modelo.work_form_findings import ModeloFormAttention, finding_attention
 from ....application.modelo.work_review_contracts import ModeloWorkReviewFindingSnapshot
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.retencion_soportada import RetencionSoportadaClase
@@ -94,6 +95,21 @@ def test_the_uncomputed_deduction_is_marked_and_nothing_else_is(tmp_path: Path) 
     blocking = [f for f in findings if f.severity is ModeloVerificationFindingSeverity.BLOCKING]
     assert blocking
     assert all(not f.disclosed_limitation for f in findings if f not in limitations)
+
+
+def test_the_marker_places_the_deduction_on_its_own_attention_level_and_the_rest_unchanged(tmp_path: Path) -> None:
+    findings = _findings(tmp_path)
+
+    levels = {f.message_locale_key: finding_attention(f) for f in findings}
+
+    (limitation,) = [f for f in findings if f.message_locale_key.endswith(_LIMITATION_SUFFIX)]
+    assert levels[limitation.message_locale_key] is ModeloFormAttention.LIMITATION
+    assert all(
+        finding_attention(f) is ModeloFormAttention.BLOCKS
+        for f in findings
+        if f.severity is ModeloVerificationFindingSeverity.BLOCKING
+    )
+    assert ModeloFormAttention.LIMITATION not in {finding_attention(f) for f in findings if not f.disclosed_limitation}
 
 
 def test_every_served_mirror_carries_the_marker(tmp_path: Path) -> None:

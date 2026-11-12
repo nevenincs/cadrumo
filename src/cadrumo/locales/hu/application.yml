@@ -519,9 +519,9 @@ application:
           a(z) %{casilla_id} mezőt, vagy ürítsd ki a(z) %{field_casilla_id} mezőt,
           és exportálj újra.'
         box_not_stated_by_rows: 'Semmi sem íródott ki: a(z) %{casilla_id} mező értéke
-          nem egyezik a(z) %{element_path} sorainak összegével. Javítsd a mezőt vagy
-          a sorokat úgy, hogy minden sor a saját összegeit adja meg, és exportálj
-          újra.'
+          %{value}, ami nem egyezik a(z) %{element_path} sorainak összegével. Javítsd
+          a mezőt vagy a sorokat úgy, hogy minden sor a saját összegeit adja meg,
+          és exportálj újra.'
         counterparty_rows_unattributable: 'Semmi sem íródott ki: a(z) %{record_id}
           rekord %{row_count} ellenfélsort tartalmaz, és az egyértékű %{casillas}
           rovatok nem rendelhetők egyikhez sem. Add meg ezeket az összegeket a sorokban,
@@ -3190,6 +3190,9 @@ application:
         ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+    export_disclosure:
+      lead: Ez a számítás korlátokat jelez, és az export változatlanul tartalmazza
+        őket. Olvasd el őket, mielőtt támaszkodsz rá.
     finding_fact:
       box_unnumbered: számozatlan
       date_unknown: nem rögzített
