@@ -74,6 +74,7 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
     year_envelope,
 )
 from cadrumo.entrypoints.tests.persona_prior_carries import attest_prior_carries
+from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rental_carries
 from cadrumo.tests.personas import (
     ExpectedValue,
     Persona,
@@ -350,15 +351,27 @@ def _calculate(
         evidence = _m303_evidence(
             world, work_unit_id=work_unit_id, year=plan.year, period=plan.period, last_period=last_period
         )
-    return run_operation(
+    request = ModeloWorkCalculateRequest(
+        work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
+    )
+    calculated = run_operation(
         world,
         MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-        ModeloWorkCalculateRequest(
-            work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
-        ),
+        request,
         ModeloWorkCalculatePublicResultV3,
         subject=work_unit_id,
     )
+    # A let property's row stands with its net yield withheld until its pending carry is stated; the statement
+    # is kept on the revision, so calculating again reads it.
+    if plan.modelo == "100" and attest_pending_rental_carries(materialised.persona, world, work_unit_id, plan.year):
+        calculated = run_operation(
+            world,
+            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+            request,
+            ModeloWorkCalculatePublicResultV3,
+            subject=work_unit_id,
+        )
+    return calculated
 
 
 def _compare(

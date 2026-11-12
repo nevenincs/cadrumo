@@ -415,6 +415,8 @@ class RentalProperty:
     arrendatario_pariente_art24: bool
     incumple_lau_17_6: bool
     ledger_links: tuple[RentalLedgerLink, ...]
+    pendiente_intereses_reparacion: Decimal | None
+    """What earlier years left pending of the interest and repairs that exceeded the rents; ``None`` when unstated."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -1327,7 +1329,7 @@ def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
                 "ledger_links",
             }
         ),
-        optional=frozenset({"amortization_base_note"}),
+        optional=frozenset({"amortization_base_note", "pendiente_intereses_reparacion"}),
     )
     contract_start = _date(table["contract_start"], f"{where}.contract_start", biographical=True)
     fecha_contrato = _date(table["fecha_contrato"], f"{where}.fecha_contrato", biographical=True)
@@ -1362,6 +1364,11 @@ def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
         arrendatario_pariente_art24=_bool(table, "arrendatario_pariente_art24", where),
         incumple_lau_17_6=_bool(table, "incumple_lau_17_6", where),
         ledger_links=_ledger_links(table["ledger_links"], f"{where}.ledger_links"),
+        pendiente_intereses_reparacion=(
+            _amount(table["pendiente_intereses_reparacion"], f"{where}.pendiente_intereses_reparacion")
+            if "pendiente_intereses_reparacion" in table
+            else None
+        ),
     )
 
 

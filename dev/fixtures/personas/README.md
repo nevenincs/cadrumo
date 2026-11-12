@@ -321,6 +321,10 @@ The tenant's age band is derived at the contract date from the tenant identity's
 expectation inputs and reach no record: the rent comes from the ledger rows and the amortisation from the stored
 acquisition and cadastral values.
 
+`pendiente_intereses_reparacion` states what earlier years left pending of the dwelling's interest and
+repairs under LIRPF art. 23.1.a.1; the table runner makes that statement on the property's row after the first
+calculation, as the operator does, and a persona that omits it states nothing.
+
 `ledger_links` names the ledger rows of the dwelling by reference prefix. A row linked to the lease
 (`target = "arrendamiento"`) or to the property (`target = "inmueble"` with a registry `gasto` concept) is
 classified through `ledger classify` as a rental row of the `capital_inmobiliario` category.

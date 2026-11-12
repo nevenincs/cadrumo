@@ -102,6 +102,10 @@ ledger_links = [
   { ref_prefix = "ARR-SEG-", target = "inmueble", gasto = "primas_seguro" },
   { ref_prefix = "ARR-REP-", target = "inmueble", gasto = "reparacion_conservacion" },
 ]
+# Synthetic: nothing is pending under LIRPF art. 23.1.a.1 (the four-year carry of interest plus repairs that
+# exceed the rents). The dwelling carries no financing interest, its repairs (240.00) are far below its rents
+# (11400.00) in every year of the lease, and it was not let before contract_start.
+pendiente_intereses_reparacion = "0.00"
 # rehabilitacion_fecha is omitted: no rehabilitation. The tenant's age band at signing is derived from
 # the tenant identity's synthetic birth date.
 

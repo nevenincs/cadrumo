@@ -85,6 +85,7 @@ from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.rental_link import has_rental_link
 from ...domain.transactions.tipo_actividad_partitions import agrarian_instalment_activity_codes
 from ...domain.user_profile.values import UserProfileRecord
 from . import shared_issue_reasons
@@ -531,6 +532,9 @@ def _classified_gasto_rows(
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
         if transaction.tipo_actividad in agrarian:
+            continue
+        if has_rental_link(arrendamiento_ref=transaction.arrendamiento_ref, inmueble_ref=transaction.inmueble_ref):
+            # The rental resolver owns a row linked to a lease or a property.
             continue
         outcome = classify_gasto_transaction(
             transaction,
