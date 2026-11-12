@@ -38,10 +38,12 @@ from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
+from ....application.modelo.household_row_fact_input import ModeloHouseholdRowFactInputRequiredError
 from ....application.modelo.profile_derived_facts import guarderia_cap_anual
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_lifecycle import create_work_unit
-from ....application.modelo.work_missing_input import ModeloWorkMissingInputError
+from ....application.operator_actions.catalogue import lookup_action
+from ....application.operator_actions.models import PreconditionVerdict
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -375,20 +377,38 @@ def test_a_childless_filer_calculates_without_the_cotizaciones_before_the_reform
     assert revision.casilla_values[validated_casilla_id(target)] == Decimal("0")
 
 
+def _stated_cotizaciones_leaf_and_group() -> tuple[str, str]:
+    """The row fact the real descendant serializer writes for a stated figure, and the household group it sits in."""
+    stated = _nursery_child(_supported_years()[0], months=1, monthly_spend=Decimal("1"), cotizaciones=Decimal("1"))
+    paths = [path for path, value in descendant_facts_from_list((stated,)) if value == "1" and "cotizaciones" in path]
+    assert len(paths) == 1, paths
+    row_path, leaf = paths[0].rsplit(".", 1)
+    return row_path.rsplit(".", 1)[0], leaf
+
+
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())
 def test_a_mother_owed_the_increment_is_refused_until_she_states_her_cotizaciones(
     tmp_path: Path, filing_year: int
 ) -> None:
+    """The refusal is the household row fact it waits on: the descendant row, with the door that states it."""
     monthly_spend = Decimal("50")
     assert _expected_incremento(months=_CALENDAR_MONTHS, monthly_spend=monthly_spend) > 0
     mother = _mother_facts(filing_year, months=_CALENDAR_MONTHS, monthly_spend=monthly_spend)
+    group, leaf = _stated_cotizaciones_leaf_and_group()
 
-    with _profile(tmp_path, filing_year, mother), pytest.raises(ModeloWorkMissingInputError) as refused:
+    with _profile(tmp_path, filing_year, mother), pytest.raises(ModeloHouseholdRowFactInputRequiredError) as refused:
         _calculate(filing_year)
 
     limited = _cotizaciones_bindings(_snapshot(filing_year))
     assert _INCREMENTO_BINDING in limited
     assert refused.value.binding_id in limited
+    assert (refused.value.group, refused.value.fact_leaf) == (group, leaf)
+    assert refused.value.rows == (0,)
+    verdict = refused.value.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    assert verdict.action is not None
+    door = lookup_action(verdict.action.action_id)
+    assert door.target_command_key.startswith(f"config.profile.{group.rsplit('.', 1)[1]}.")
 
 
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())

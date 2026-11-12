@@ -1325,6 +1325,7 @@
         "cadrumo.application.modelo.history_ports",
         "cadrumo.application.modelo.history_timeline_operation",
         "cadrumo.application.modelo.household_row_fact_gate",
+        "cadrumo.application.modelo.household_row_fact_input",
         "cadrumo.application.modelo.imputation_filings",
         "cadrumo.application.modelo.inventory_purchase_claim_gate",
         "cadrumo.application.modelo.invoice_drift_gate",

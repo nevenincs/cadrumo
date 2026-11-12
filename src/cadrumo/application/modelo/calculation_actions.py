@@ -124,12 +124,15 @@ from .credit_resolution import (
     load_credit_resolutions,
     stale_resolution_issues,
 )
+from .household_row_fact_input import household_row_fact_input_required
 from .imputation_filings import imputation_filings_from_repositories
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import m303_general_regime_claimed
 from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
+from .profile_maternidad_meses import COTIZACIONES_ROW_FACT_LEAF, descendant_rows_lacking_cotizaciones
+from .profile_readiness_gate import load_modelo_work_profile
 from .reconciliation_sources import ReconciliationSourceNeed, reconciliation_source_needs, source_period_needs
 from .revision_persistence import persist_calculation_revision
 from .work_missing_input import (
@@ -839,12 +842,42 @@ def _refused_missing_input(
     )
     if unfiled is not None:
         return unfiled
+    unstated_row_fact = _household_row_fact_refusal(missing, work_unit=work_unit, snapshot=snapshot, ports=ports)
+    if unstated_row_fact is not None:
+        return unstated_row_fact
     return input_required(
         missing,
         work_unit=work_unit,
         snapshot=snapshot,
         boxes=boxes,
         overridable=_override_admitted(missing, work_unit=work_unit, snapshot=snapshot, ports=ports),
+    )
+
+
+def _household_row_fact_refusal(
+    missing: ModeloWorkMissingInputError,
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+) -> ModeloWorkMissingInputError | None:
+    """The refusal naming the descendant rows whose cotizaciones the filer never stated, if ``missing`` waits on them.
+
+    The household row fact gate words it and serves the profile door for the descendant
+    rows; ``None`` when the binding does not wait on a household row fact.
+    """
+    profile = load_modelo_work_profile(
+        bucket_id=work_unit.bucket_id, profile_decode_context=ports.operation.profile_decode_context()
+    )
+    if profile is None:
+        return None
+    rows = descendant_rows_lacking_cotizaciones(profile.record, snapshot, missing.binding_id, operation=ports.operation)
+    return household_row_fact_input_required(
+        missing,
+        work_unit=work_unit,
+        group="renta_family.descendiente",
+        fact_leaf=COTIZACIONES_ROW_FACT_LEAF,
+        rows=rows,
     )
 
 
