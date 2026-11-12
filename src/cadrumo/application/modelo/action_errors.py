@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Literal, override
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -694,26 +694,73 @@ class WorkUnitRevisionDivergenceError(ModeloError):
     """
 
 
-class ModeloEditRefusedError(ModeloError):
+class ModeloEditRefusedError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when an admitted modelo edit is refused at its commit point and nothing changed.
 
     Covers the domain refusals: a disallowed intent, a value that failed
     validation or parsing, or a conflict with the current declaration. The
     typed refusal stays with the caller that produced it; only the registered
-    code travels with the operation.
+    code travels with the operation, with the door of its refusal family. The
+    door leaves the work unit and the value to the operator, because the
+    refusal deliberately carries neither.
     """
+
+    edit_condition: ClassVar[str] = "value"
+    edit_scenario: ClassVar[str] = "refused"
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_failure: ModeloPreconditionFailure | None = None,
+    ) -> None:
+        """Carry the caller's verdict, or the declared door of this refusal family."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_failure=precondition_failure or _edit_refusal_failure(type(self)),
+        )
 
 
 class ModeloEditBaselineStaleError(ModeloEditRefusedError):
     """Raised when the declaration changed after the edit's baseline was captured."""
 
+    edit_condition: ClassVar[str] = "baseline"
+    edit_scenario: ClassVar[str] = "stale"
+
 
 class ModeloEditIntentUnsupportedError(ModeloEditRefusedError):
     """Raised when an admitted edit asks for a kind of change that cannot be applied yet."""
 
+    edit_condition: ClassVar[str] = "intent"
+    edit_scenario: ClassVar[str] = "unsupported"
+
 
 class ModeloEditContractIncompatibleError(ModeloEditRefusedError):
     """Raised when an edit was prepared under an edit contract this version does not accept."""
+
+    edit_condition: ClassVar[str] = "contract"
+    edit_scenario: ClassVar[str] = "incompatible"
+
+
+_EDIT_MISSING_ACTION_ARGUMENTS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {"value": ("work_unit_id", "casilla_id", "value"), "baseline": ("work_unit_id",)}
+)
+
+
+def _edit_refusal_failure(error_type: type[ModeloEditRefusedError]) -> ModeloPreconditionFailure:
+    condition = error_type.edit_condition
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.set_value",
+        scenario_id=f"modelo.work.edit.{condition}.{error_type.edit_scenario}",
+        evidence_id=f"modelo.work.edit.{condition}",
+        evidence_values={"admitted": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        missing_action_arguments=_EDIT_MISSING_ACTION_ARGUMENTS.get(condition, ()),
+    )
 
 
 def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> ModeloEditRefusedError:

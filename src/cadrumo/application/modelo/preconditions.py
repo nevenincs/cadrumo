@@ -24,6 +24,7 @@ from ..operator_actions.models import (
     PreconditionVerdict,
 )
 from ..operator_surface.models import ManifestActionProfile
+from .edit_refusal_profiles import EDIT_REFUSAL_PROFILES
 from .precondition_action_bindings import (
     AlternativeActionArguments,
     action_argument_bindings,
@@ -352,6 +353,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.casilla_value.refused",
         action_id="operator.modelo.work.set_value",
     ),
+    *EDIT_REFUSAL_PROFILES,
     # The refusals below are real but no catalogued action repairs them: the
     # registry has not adjudicated cells the stated boxes share, the schema
     # refuses a field that is no box of the declaration, the return suspends or
