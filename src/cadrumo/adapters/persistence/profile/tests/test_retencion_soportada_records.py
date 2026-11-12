@@ -11,8 +11,10 @@ import hashlib
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
+from sqlalchemy import select
 
 from .....application.aggregation.retencion_soportada_repository import (
     PinnedRetencionSoportadaWriteAuthority,
@@ -43,9 +45,17 @@ from .....domain.calculations.registry.tests.published_authority import leased_p
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...storage.attachment import AttachmentStore
+from ...storage.crypto.encrypted_columns import secure_object_key_digest
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
-from ...storage.secure_object_namespaces import ATTACHMENT_BLOB_NAMESPACE
-from ...storage.tests.secure_sql import isolated_runtime_profile
+from ...storage.secure_object_namespaces import (
+    ATTACHMENT_BLOB_NAMESPACE,
+    RETENCION_SOPORTADA_RECORDS_NAMESPACE,
+    SECURE_OBJECT_SCHEMA_VERSION_V2,
+)
+from ...storage.sql.engine import get_engine
+from ...storage.sql.session import session_scope
+from ...storage.sql.tables import secure_objects_table
+from ...storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
 from .retencion_soportada_seed import active_bucket_custody, keep_certificate
 
@@ -104,7 +114,11 @@ def _record(
     fingerprint: str | None = None,
     replaces: str | None = None,
     ejercicio: int = _EJERCICIO,
+    reducciones: str | None = None,
+    gastos: str | None = None,
 ) -> RetencionSoportadaRecord:
+    """Build a record; a work-income record states zero reductions and expenses unless it says otherwise."""
+    states_work_figures = income_class is RetencionSoportadaClase.TRABAJO
     return RetencionSoportadaRecord(
         ejercicio=ejercicio,
         payer_tax_id=payer,
@@ -116,6 +130,8 @@ def _record(
         retencion=Decimal(retencion),
         ingreso_a_cuenta=Decimal(ingreso_a_cuenta),
         ingreso_a_cuenta_repercutido=Decimal(repercutido),
+        reducciones_aplicables=Decimal(reducciones or "0.00") if states_work_figures else None,
+        gastos_deducibles=Decimal(gastos or "0.00") if states_work_figures else None,
         origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
         evidence_fingerprint=fingerprint or _certificate("one"),
         replaces_evidence_fingerprint=replaces,
@@ -545,3 +561,74 @@ def test_kept_certificate_bytes_round_trip_and_are_never_plaintext_on_disk(tmp_p
         on_disk = b"".join(path.read_bytes() for path in profile.storage_root.rglob("*") if path.is_file())
         assert certificate not in on_disk
         assert b"synthetic payer certificate" not in on_disk
+
+
+def _row_statement(key: str):
+    return select(secure_objects_table).where(
+        secure_objects_table.c.namespace == RETENCION_SOPORTADA_RECORDS_NAMESPACE.namespace,
+        secure_objects_table.c.object_key == secure_object_key_digest(key),
+    )
+
+
+def test_a_work_income_record_is_stored_at_schema_two_with_its_two_certificate_figures(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = _repository()
+        record = _record(repository, reducciones="3060.00", gastos="610.00")
+        _write(repository, record, operation)
+        statement = _row_statement(retencion_soportada_record_key(record.identity))
+
+        with session_scope(get_engine(profile.settings)) as session:
+            row = session.execute(statement).one()
+        stored, _revision = repository.load_revisioned(record.identity)
+
+    assert RETENCION_SOPORTADA_RECORDS_NAMESPACE.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V2
+    assert row.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V2
+    assert stored == record
+    assert (record.reducciones_aplicables, record.gastos_deducibles) == (Decimal("3060.00"), Decimal("610.00"))
+
+
+def test_a_payload_written_before_the_two_figures_existed_reads_back_with_both_absent(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = _repository()
+        record = _record(repository, reducciones="3060.00", gastos="610.00")
+        _write(repository, record, operation)
+        statement = _row_statement(retencion_soportada_record_key(record.identity))
+
+        def as_first_payload(document: dict[str, Any]) -> None:
+            del document["payload"]["reducciones_aplicables"]
+            del document["payload"]["gastos_deducibles"]
+
+        mutate_encrypted_secure_object_json(
+            get_engine(profile.settings), row_statement=statement, mutate=as_first_payload
+        )
+
+        (legacy,) = repository.load_records(_EJERCICIO)
+        loaded, _revision = repository.load_revisioned(record.identity)
+
+    assert loaded == legacy
+    assert (legacy.reducciones_aplicables, legacy.gastos_deducibles) == (None, None)
+    assert legacy.lacks_work_certificate_figures
+    # Every other figure, the credit and the identity are unchanged by the missing pair.
+    restated = legacy.model_copy(
+        update={"reducciones_aplicables": Decimal("3060.00"), "gastos_deducibles": Decimal("610.00")}
+    )
+    assert restated == record
+    assert legacy.pago_a_cuenta == record.pago_a_cuenta
+    assert legacy.identity == record.identity
+
+
+def test_the_write_port_refuses_a_work_income_record_that_states_neither_figure(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = _repository()
+        record = _record(repository).model_copy(update={"reducciones_aplicables": None, "gastos_deducibles": None})
+        with pytest.raises(RetencionSoportadaWriteRefusedError) as refused:
+            _write(repository, record, operation)
+
+        assert refused.value.reason == "trabajo_certificate_figure_missing"
+        assert repository.load_records(_EJERCICIO) == ()

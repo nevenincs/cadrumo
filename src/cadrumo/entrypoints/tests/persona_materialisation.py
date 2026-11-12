@@ -1031,6 +1031,10 @@ def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
                 retencion=PublicDecimal(decimal=str(certificate.retencion)),
                 ingreso_a_cuenta=zero,
                 ingreso_a_cuenta_repercutido=zero,
+                # The persona schema states neither figure yet; a work-income record must state both, so the
+                # replay states none.
+                reducciones_aplicables=zero if certificate.income_class == RetencionSoportadaClase.TRABAJO else None,
+                gastos_deducibles=zero if certificate.income_class == RetencionSoportadaClase.TRABAJO else None,
                 origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION,
             ),
             RetencionSoportadaMutationProjection,

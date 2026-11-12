@@ -86,6 +86,8 @@ def seed_payer_certificate(
         retencion=retencion,
         ingreso_a_cuenta=ingreso_a_cuenta,
         ingreso_a_cuenta_repercutido=ingreso_a_cuenta_repercutido,
+        reducciones_aplicables=Decimal("0.00") if income_class is RetencionSoportadaClase.TRABAJO else None,
+        gastos_deducibles=Decimal("0.00") if income_class is RetencionSoportadaClase.TRABAJO else None,
         origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
         # The sha256 of a synthetic certificate's bytes, kept in custody: one certificate per payer, class and ejercicio.
         evidence_fingerprint=keep_certificate(
