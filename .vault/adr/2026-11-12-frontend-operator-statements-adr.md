@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:65c1356f0391da05f982c6fd89db71949c405d0fc3ff58b7eb1775c3d907534b'
+body_hash: 'sha256:8cf02e678e2bc2e7730ade12d859e178ce01ae2ef85266e68d6bc61a0e3b92e5'
 related:
   - "[[2026-11-12-frontend-refusal-ways-out-adr]]"
   - "[[2026-11-03-backend-served-surface-adr]]"
@@ -17,7 +17,7 @@ related:
   - '[[2026-11-11-cross-period-filing-clean-state-out-of-envelope-attestation-adr]]'
 ---
 
-# `frontend-operator-statements` adr: `One statement pattern per frontend for attest-no-amount, attest-prior-value and absence by family` | (**status:** `proposed`)
+# `frontend-operator-statements` adr: `One statement pattern per frontend for attest-no-amount, attest-prior-value and absence by family` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -44,6 +44,8 @@ The backend now takes operator statements as first-class edit intents: `attest_n
 - Families are iterated, never switched on: no frontend type, branch or key names a family. A row-scoped family renders on its row.
 - Statements stage as edit intents and apply through the existing review; withdrawal stages `remove_override` on the same address and is offered on every stated field, labelled by a generic chrome key.
 - Statement-based figures that verification or export disclose (`cross_period_dependency_operator_attested`, the export disclosures) render as served limitations, never as blockers; the refusal component of `2026-11-12-frontend-refusal-ways-out-adr` renders any refusal of a statement.
+
+- Acceptance conditions (PRIME, 2026-11-12 10:05): the offer presents several families at once and stages them in one review, exactly as served and never a subset the frontend chooses; the three field states differ by more than colour in window and TUI; a stated prior value shows the figure and the return it stands in for, entered by the served grammar; the one-family banner is removed only in the commit that renders that family through the new pattern; per-binding statements stay un-offered until their words are served.
 
 ## Implementation
 
