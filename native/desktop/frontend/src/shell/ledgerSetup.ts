@@ -326,7 +326,14 @@ export type InventoryOptionsResult = {
   profile_id: string;
   families: {
     family: string;
-    options: { value: string; label_key: string; role?: string | null }[];
+    options: {
+      value: string;
+      label_key: string;
+      role?: string | null;
+      /** The key of the sentence saying what choosing the value does, served
+       * for the families that have one. */
+      effect_key?: string | null;
+    }[];
   }[];
 };
 
