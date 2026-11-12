@@ -145,6 +145,7 @@ export function CheckView({
   onAnswer = null,
   onOpenInvoice = null,
   answers,
+  recoveries,
 }: {
   verdict: ModeloFormVerdict;
   lines: ModeloFormIssueLine[];
@@ -165,6 +166,8 @@ export function CheckView({
   /** The answers given to the declaration's disagreements, drawn under the
    * lines. */
   answers?: ReactNode;
+  /** The ways out the calculation's notes serve, drawn under the lines. */
+  recoveries?: ReactNode;
 }) {
   const t = useStrings();
   // The read model lists the lines most urgent first; the sections follow
@@ -221,6 +224,7 @@ export function CheckView({
           </section>
         );
       })}
+      {recoveries}
       {answers}
     </div>
   );
