@@ -7,7 +7,7 @@ No schema here carries a payer tax identifier: a record is named by its keyed
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Literal
+from typing import Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -143,6 +143,14 @@ class RetencionSoportadaMutationProjection(BaseModel):
         return self
 
 
+_COUNT_ONLY: Final = (False, False, False, False, True)
+_SUCCESS_ARMS: Final[dict[str, tuple[bool, bool, bool, bool, bool]]] = {
+    "list": (True, True, True, False, False),
+    "record": (False, False, False, True, True),
+}
+"""Which of rows, amount columns, ejercicios, row and count a successful result of each operation states."""
+
+
 class RetencionSoportadaOperationExecutionResult(BaseModel):
     """Private result held in operation operand custody until projection."""
 
@@ -185,17 +193,14 @@ class RetencionSoportadaOperationExecutionResult(BaseModel):
         return self.amount_columns is None and self.ejercicios is None
 
     def _success_arm_is_closed(self) -> bool:
-        if self.operation_id == "list":
-            return (
-                self.rows is not None
-                and self.amount_columns is not None
-                and self.ejercicios is not None
-                and self.row is None
-                and self.count is None
-            )
-        if self.operation_id == "record":
-            return self.rows is None and self._list_words_absent() and self.row is not None and self.count is not None
-        return self.rows is None and self._list_words_absent() and self.row is None and self.count is not None
+        stated = (
+            self.rows is not None,
+            self.amount_columns is not None,
+            self.ejercicios is not None,
+            self.row is not None,
+            self.count is not None,
+        )
+        return stated == _SUCCESS_ARMS.get(self.operation_id, _COUNT_ONLY)
 
 
 __all__ = [
