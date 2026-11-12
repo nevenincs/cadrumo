@@ -282,7 +282,14 @@ def prepare_calculation(
     )
     channels = _with_required_profile_bindings(work_unit, snapshot, checked_profile, channels)
     _require_calculation_binding_resolution(
-        work_unit, snapshot, channels, caller_binding_values, unresolved_relation_ids, unresolved_binding_ids
+        work_unit,
+        snapshot,
+        channels,
+        caller_binding_values,
+        unresolved_relation_ids,
+        unresolved_binding_ids,
+        profile=checked_profile,
+        operation=operation,
     )
     return PreparedCalculation(
         work_units=work_units,
@@ -304,6 +311,9 @@ def _require_calculation_binding_resolution(
     caller_binding_values: Mapping[BindingId, Decimal],
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
+    *,
+    profile: ModeloWorkProfile,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     require_modelo_required_bindings_resolved(
         work_unit=work_unit,
@@ -316,6 +326,8 @@ def _require_calculation_binding_resolution(
             unresolved_binding_ids=unresolved_binding_ids,
         ),
         action="calculate",
+        profile=profile,
+        operation=operation,
     )
 
 

@@ -58,11 +58,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
+from typing import ClassVar, Final, NamedTuple, TypedDict
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
-from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_iso8601_date
@@ -126,9 +125,6 @@ from .relation_prefill_m202 import (
 )
 from .revision_carry_gate import revision_carry_outcome
 from .source_filing_kind import source_filing_kind_evidence
-
-if TYPE_CHECKING:
-    from ...domain.contribuyente.entity_type import EntityType
 
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
 _log = get_logger(__name__)
@@ -384,34 +380,6 @@ def _parse_canonical_iso_date(raw: str | None) -> date | None:
     return parse_iso8601_date(raw)
 
 
-def _parse_canonical_decimal(raw: str | None) -> Decimal | None:
-    """Parse a canonical decimal projection value, or ``None`` when absent / malformed.
-
-    "Canonical" is now enforced rather than asserted: the projection value is
-    judged by :func:`~core.decimal.grammar.try_parse_canonical_decimal`, so a stored
-    token carrying scientific notation, a leading ``+``, a comma decimal, or
-    ``NaN``/``Infinity`` resolves to ``None`` (absent) instead of a value whose
-    numeric meaning is not what it appears. Fractional digits stay uncapped: a
-    projection value may legitimately carry sub-cent precision.
-    """
-    if not (raw is not None and raw):
-        return None
-    return try_parse_canonical_decimal(raw)
-
-
-def _entity_type_from_token(raw: str | None) -> EntityType | None:
-    """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
-    if not (raw is not None and raw):
-        return None
-    from ...domain.calculations.registry.entity_type import require_entity_type
-    from ...domain.calculations.registry.errors import RegistryValidationError
-
-    try:
-        return require_entity_type(raw)
-    except RegistryValidationError:
-        return None
-
-
 def _modelo_202_no_base_instalments(
     snapshot: RegistrySnapshot,
     bucket_id: str,
@@ -428,14 +396,15 @@ def _modelo_202_no_base_instalments(
     base from, so no pago fraccionado and no Modelo 202 was owed for it. That is
     every instalment of the first IS year and the first instalment of the
     second. The modality comes from the WIZARD-FREE profile projection through
-    the single modality definition (:func:`modelo_202_modality_from_inputs`).
+    the single modality definition
+    (:func:`~cadrumo.domain.calculations.registry.applicability_modelo202.modelo_202_modality_from_path_values`).
     Fail-closed: a missing profile, an unparsable entity type, a missing
     activity-start date or any modality other than ``ART_40_2_OPTIONAL`` names
     no instalment, so the relation keeps demanding the filings.
     """
     from ...domain.calculations.registry.applicability_modelo202 import (
         Modelo202Modality,
-        modelo_202_modality_from_inputs,
+        modelo_202_modality_from_path_values,
     )
 
     if activity_start_date is None:
@@ -455,12 +424,7 @@ def _modelo_202_no_base_instalments(
     values = profile_path_values_reader.load_path_values(bucket_id=bucket_id)
     if values is None:
         return frozenset[tuple[int, str]]()
-    modality = modelo_202_modality_from_inputs(
-        entity_type=_entity_type_from_token(values.get("taxpayer_type.entity_type")),
-        incn_prior_12_months=_parse_canonical_decimal(values.get("taxpayer_type.incn_prior_12_months")),
-        effective_date=date(snapshot.filing_year, 12, 31),
-        authority=operation,
-    ).modality
+    modality = modelo_202_modality_from_path_values(values, filing_year=snapshot.filing_year, authority=operation)
     if modality is not Modelo202Modality.ART_40_2_OPTIONAL:
         return frozenset[tuple[int, str]]()
     return frozenset(

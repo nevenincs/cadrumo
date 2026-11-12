@@ -659,14 +659,14 @@ def _require_filing_preconditions(
         error_type=ModeloFilingEvidenceMissingError,
         operation=operation,
     )
-    require_profile_ready_for_work_unit(
+    checked_profile = require_profile_ready_for_work_unit(
         work_unit,
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
         profile=profile,
     )
     require_persisted_revision_required_bindings_resolved(
-        work_unit=work_unit, revision=target, action="file", operation=operation
+        work_unit=work_unit, revision=target, action="file", operation=operation, profile=checked_profile
     )
     require_work_unit_calculation_unblocked(
         work_unit=work_unit,
