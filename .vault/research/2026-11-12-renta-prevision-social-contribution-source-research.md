@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:be36b8a337126af4de2c71e6b5ebd0150db1d2b20f80253ba33b45e1deaa3cdb'
+body_hash: 'sha256:d504b5587cec950aeb938c58bf86fc8014c196252a6f36cd48214fd2e597c635'
 related: []
 ---
 
@@ -59,6 +59,11 @@ Manual paths below abbreviate `X:/code/cadrumo-wt-calculators/src/cadrumo/_data/
 - Section 6.2 of the manual names no casilla for 2020-2021, and never names 0463, 0464, 0467, 0468 or 0469. The registry (`X:/code/cadrumo-wt-calculators/src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/casillas/0001-declarations.toml:3196-3241`) assigns 0463 excess 2015-2019, 0464 SCD excess, 0465 worker, 0466 SCD, 0467 sum of amounts with right to reduce, 0468 total reduction, 0469 spouse reduction. 0426/0427 enter in 2021 (`.../2021/casillas/0001-declarations.toml:153,162`) and 0438/0499 in 2022 (`.../2022/casillas/0001-declarations.toml:49,56`). These are registry claims, not verified against the official design here.
 - 0492/0493 are not pension casillas in the manual: it cites them as the 2015 state and regional tramo of a deduction (M2025:53516-53518). 0488/0489 are the deportista mutualidad excess (M2025:41546-41548).
 - Anexo C rows 1284-1315: not found in the manual; unconfirmed.
+
+### The 2021 employer-contribution excess block and its entry into 2022
+
+- Only the 2021 design keeps employer-contribution excesses apart: block ContribucionesSistPrevisionSocialRTRes, rows 1741 to 1755 (origin years 2016 to 2020), beside the personal block ExcesosSistemasPrevisionSocialRTRes, rows 1284 to 1298, and the 2021 split rows 1756 to 1763 (`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/05-100-diccionario-declaracion-individual-ejercicio-2021-actualizado-18-03-2022-330-kb-otros-fi.properties:1824-1846` and `:1863-1877`). The 2020 and 2022 to 2025 dictionaries hold only the single RT block (files 04-100, 06-100, 07-100, 08-100, 01-100).
+- The 2022 manual applies the 2017 to 2021 excesses, "incluidas las realizadas por el promotor o por la empresa que les hubiesen sido imputadas", in 2022 (M2022:34306-34313), removes the proportional application between aportaciones and contribuciones and applies the increased limit 1.500 + 8.500 whatever the origin (M2022:34317-34327, 34338-34343), and states that later application need not distinguish aportaciones from contribuciones, only collective dependency insurance keeping its own limit (M2022:34525-34527). So a 2022 opening row for an origin year is the 2021 personal closing plus the 2021 employer closing for that year.
 
 ## Rule x year
 
