@@ -36,6 +36,11 @@ _EXERCISE = source_exercise(published_source_reference("aeat-renta-2025-manual-p
 _REVISION = str(revision_covering("100", _EXERCISE).id)
 
 _C0003 = validated_casilla_id("0003", surface="test_renta_chain_behaviour casilla id")
+_TYPED_WORK_INCOME_0003 = (
+    "the scenario carries no payer work-income record, so the gross work income the record binding reads is "
+    "typed here to exercise the base and reductions downstream; the record binding is covered by its own "
+    "resolver tests"
+)
 _C0426 = validated_casilla_id("0426", surface="test_renta_chain_behaviour casilla id")
 _C0427 = validated_casilla_id("0427", surface="test_renta_chain_behaviour casilla id")
 _C0432 = validated_casilla_id("0432", surface="test_renta_chain_behaviour casilla id")
@@ -196,8 +201,12 @@ def _scenario_2025(
         filing_year=_EXERCISE,
         period="0A",
         inputs=inputs,
+        hand_typed_bound_casillas={_C0003: _TYPED_WORK_INCOME_0003},
         binding_values={
             "renta-profile-has-economic-activity": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             # declaration_type = 1 (individual) → 0461 = 0 by default in all base scenarios
             "renta-profile-declaration-type": Decimal("1"),
@@ -260,29 +269,32 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
     0519 = 5550.
 
     0505 is computed as max(0, 0500 - 0527). Casilla 0019 ("otros gastos", art.
-    19.2.f LIRPF) deducts min(2.000, rendimiento íntegro) before 0432, so
-    0003 (rendimientos trabajo) = 3000 nets to 0432 = 3000 - 2000 = 1000 with
-    all reductions and anualidades at 0, producing 0505 = 1000.
-    With 0505 = 1000 < 0519 = 5550, 0521 must clip to 0505 = 1000.
+    19.2.f LIRPF) deducts min(2.000, rendimiento íntegro) and casilla 0023 (art.
+    20 LIRPF) reduces a net work income of 14.852 or less by 7.302 (Manual
+    práctico de Renta 2024: "14.852 euros o menos 7.302 euros", unchanged in the
+    2025 edition), so 0003 (rendimientos trabajo) = 12000 nets to
+    0025 = 12000 - 2000 - 7302 = 2698 with the other reductions and anualidades at
+    0, producing 0505 = 2698. With 0505 = 2698 < 0519 = 5550, 0521 must clip to
+    0505 = 2698.
     """
     expected_minimo = Decimal("5550.00")
     scenario = _scenario_2025(
         "minimo-clip-to-base-liquidable",
-        # 0003 = 3000 → 0019 (otros gastos) = min(2000, 3000) = 2000
-        # → 0025 → 0432 = 3000 - 2000 = 1000 → 0435 = 1000 → 0500 = 1000 (no reductions)
-        # → 0505 = max(0, 1000 - 0) = 1000  (0527 anualidades alimentos = 0)
-        overrides={_C0003: Decimal("3000.00")},
+        # 0003 = 12000 → 0019 (otros gastos) = 2000, 0023 (art. 20) = 7302
+        # → 0025 = 12000 - 2000 - 7302 = 2698 → 0432 = 0435 = 0500 = 2698 (no other reductions)
+        # → 0505 = max(0, 2698 - 0) = 2698  (0527 anualidades alimentos = 0)
+        overrides={_C0003: Decimal("12000.00")},
         expected=(
-            _expected_output(target_casilla_id=_C0500, value=Decimal("1000.00")),
-            _expected_output(target_casilla_id=_C0505, value=Decimal("1000.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("2698.00")),
+            _expected_output(target_casilla_id=_C0505, value=Decimal("2698.00")),
             _expected_output(target_casilla_id=_C0519, value=expected_minimo),
             _expected_output(
                 target_casilla_id=_C0521,
-                value=Decimal("1000.00"),
+                value=Decimal("2698.00"),
                 operand_refs=(_C0505, _C0519),
                 operand_casilla_refs=(_C0505, _C0519),
             ),
-            # 0522 = min(0519 - 0521, 0510) = min(5550 - 1000, 0) = 0 (0510 default 0)
+            # 0522 = min(0519 - 0521, 0510) = min(5550 - 2698, 0) = 0 (0510 default 0)
             _expected_output(target_casilla_id=_C0522, value=Decimal("0.00")),
         ),
     )
@@ -351,8 +363,12 @@ def test_base_liquidable_general_applies_reductions() -> None:
         filing_year=_EXERCISE,
         period="0A",
         inputs=base_inputs,
+        hand_typed_bound_casillas={_C0003: _TYPED_WORK_INCOME_0003},
         binding_values={
             "renta-profile-has-economic-activity": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             # declaration_type = 2 (conjunta) + situacion casado → 0461 = 3400
             "renta-profile-declaration-type": Decimal("2"),

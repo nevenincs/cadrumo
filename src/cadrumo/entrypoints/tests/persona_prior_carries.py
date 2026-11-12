@@ -36,7 +36,7 @@ from ...application.modelo.workbench_operations import (
 from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.ids import BindingId
 from ...tests.personas import Persona, PriorCarries
@@ -52,17 +52,18 @@ def statement_families(persona: Persona) -> dict[tuple[str, str], AbsenceAttesta
     """Each statement's family token as the registry's family member, refusing a token that is not one.
 
     The persona loader cannot import the domain, so this is where the tokens it
-    read are checked against the members :class:`AbsenceAttestationFamily` has.
+    read are checked against the carry families of :data:`PRIOR_CARRY_FAMILIES`; another
+    absence family, such as the work-income statement, is no earlier-ejercicio carry.
     """
+    known = {member.value: member for member in AbsenceAttestationFamily if member in PRIOR_CARRY_FAMILIES}
     families: dict[tuple[str, str], AbsenceAttestationFamily] = {}
     for item in persona.prior_carries:
-        try:
-            families[(str(item.year), item.family)] = AbsenceAttestationFamily(item.family)
-        except ValueError:
-            known = [member.value for member in AbsenceAttestationFamily]
+        family = known.get(item.family)
+        if family is None:
             raise PersonaMaterialisationError(
-                f"{persona.id}: prior_carries family {item.family!r} is not one of {known}"
-            ) from None
+                f"{persona.id}: prior_carries family {item.family!r} is not one of {sorted(known)}"
+            )
+        families[(str(item.year), item.family)] = family
     return families
 
 

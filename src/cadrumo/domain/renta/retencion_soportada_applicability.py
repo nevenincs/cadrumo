@@ -43,6 +43,7 @@ __all__ = [
     "RETENCION_SOPORTADA_INCOME_CATEGORIES",
     "RetencionSoportadaApplicability",
     "arrendamiento_actividad_applicability",
+    "declared_categories_exclude_class",
     "retencion_soportada_applicability",
 ]
 
@@ -141,6 +142,22 @@ def arrendamiento_actividad_applicability(
     ]
 
 
+def declared_categories_exclude_class(
+    income_class: RetencionSoportadaClase,
+    declared_categories: frozenset[str] | None,
+) -> bool:
+    """Whether a stated, non-empty category declaration contains none of the categories ``income_class`` is withheld on.
+
+    This is the category half of the applicability rule, shared with every reader that asks whether a
+    family of income is positively excluded by the profile. A class no category identifies, and an
+    empty or unanswered declaration, exclude nothing.
+    """
+    categories = RETENCION_SOPORTADA_INCOME_CATEGORIES[income_class]
+    if categories is None or declared_categories is None or not declared_categories:
+        return False
+    return not categories & declared_categories
+
+
 def retencion_soportada_applicability(
     income_class: RetencionSoportadaClase,
     declared_categories: frozenset[str] | None,
@@ -160,7 +177,7 @@ def retencion_soportada_applicability(
     categories = RETENCION_SOPORTADA_INCOME_CATEGORIES[income_class]
     if categories is None or declared_categories is None or not bool(declared_categories):
         return RetencionSoportadaApplicability.UNKNOWN
-    if not categories & declared_categories:
+    if declared_categories_exclude_class(income_class, declared_categories):
         return RetencionSoportadaApplicability.DECLARED_ABSENT
     if income_class is RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD:
         return arrendamiento_actividad_applicability(

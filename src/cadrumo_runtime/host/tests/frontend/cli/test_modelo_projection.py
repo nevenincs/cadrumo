@@ -232,6 +232,9 @@ _ORACLE_TYPED_PROFILE_BINDINGS = frozenset(
         "renta-profile-marriage-full-year",
         "renta-maritime-path-rebeca",
         "renta-profile-has-economic-activity",
+        "renta-profile-income-family-excluded-capital-mobiliario",
+        "renta-profile-income-family-excluded-capital-inmobiliario",
+        "renta-profile-income-family-excluded-ganancias-patrimoniales",
         "renta-profile-estimacion-directa",
     }
 )
@@ -674,6 +677,9 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
                 "renta-maritime-path-rebeca": False,
                 # The seeded profile records the actividad_economica income category.
                 "renta-profile-has-economic-activity": True,
+                "renta-profile-income-family-excluded-capital-mobiliario": False,
+                "renta-profile-income-family-excluded-capital-inmobiliario": False,
+                "renta-profile-income-family-excluded-ganancias-patrimoniales": False,
                 # ...and its regime is a direct estimation.
                 "renta-profile-estimacion-directa": True,
             }.items()

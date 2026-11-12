@@ -238,7 +238,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.carry_attestation_submission.ModeloPriorCarryNothingOpenError",
+        "cadrumo.application.modelo.absence_statement_submission.ModeloAbsenceStatementNothingOpenError",
         ErrorCode(
             code="REFUSED_MODELO_PRIOR_CARRY_NOTHING_OPEN",
             category=ErrorCategory.REFUSED,

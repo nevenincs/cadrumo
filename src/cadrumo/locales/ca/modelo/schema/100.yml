@@ -3739,6 +3739,8 @@ modelo:
           irpf-tipo-medio-gravamen-general-autonomico:
             label: 'Tipus mitjans de gravamen ( [0534] = [0532] X 100 / [0505] );
               ( [0535] = [0533] X 100 / [0505] ): Part autonòmica'
+          irpf-trabajo-rentas-distintas-del-trabajo:
+            label: Rendes diferents de les del treball (límit de l'art. 20) [interna]
           irpf-transparencia-fiscal-internacional-contribuyente:
             label: Contribuent que ha d'efectuar l'imputació
           irpf-vehiculo-electrico-instalador-nif:

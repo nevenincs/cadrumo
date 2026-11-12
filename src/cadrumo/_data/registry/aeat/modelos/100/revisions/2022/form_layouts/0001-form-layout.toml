@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "3c349ee7c3be11a084354bbc0d3aba8a0c040ad750eca5681cef1b9410005934"
+source_state_digest = "8b5a516afffbdb2f6f5867b42800a853ae59979be90b97cd3f67a60060495424"
 design_sources = [
     { source_ref = "aeat-dr-100-2022-dictionary", sha256 = "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc" },
     { source_ref = "aeat-dr-100-2022-input-dictionary", sha256 = "78dec12e9028fe009d65f56188fedf74f7b5187378a67fe2b35ae0e1a4e54a36" },
@@ -1902,6 +1902,7 @@ placements = [
     { casilla_id = "base-liq-neg-general-em3-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "base-liq-neg-general-em4-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "rentas-distintas-del-trabajo", kind = "working_figure" },
     { casilla_id = "saldo-neg-gyp-ahorro-em1-paso1-maxima", kind = "working_figure" },
     { casilla_id = "saldo-neg-gyp-ahorro-em1-paso2-maxima", kind = "working_figure" },
     { casilla_id = "saldo-neg-gyp-ahorro-em1-resto-paso1", kind = "working_figure" },

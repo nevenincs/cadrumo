@@ -3734,6 +3734,8 @@ modelo:
           irpf-tipo-medio-gravamen-general-autonomico:
             label: 'Average tax rates ( [0534] = [0532] x 100 / [0505] ); ( [0535]
               = [0533] x 100 / [0505] ): Autonomous-community part'
+          irpf-trabajo-rentas-distintas-del-trabajo:
+            label: Other income that is not work income (art. 20 limit) [internal]
           irpf-transparencia-fiscal-internacional-contribuyente:
             label: Taxpayer who must carry out the imputation
           irpf-vehiculo-electrico-instalador-nif:

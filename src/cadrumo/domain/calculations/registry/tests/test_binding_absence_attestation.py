@@ -15,7 +15,7 @@ from pydantic import ValidationError
 
 from .....core.aggregation import BindingSourceKind
 from .....core.authority_grade import RegistryAuthorityGrade
-from ..binding_absence_attestation import AbsenceAttestationFamily
+from ..binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ..binding_value_contract import BindingValueChannel
 from ..errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from ..schema import BindingDefinition
@@ -65,11 +65,11 @@ def test_the_pending_negative_bases_and_balances_declare_their_statement_and_val
         binding = bindings[binding_id]
         assert binding.absence_attestation is family
         assert BindingDefinition.model_validate(binding.model_dump()).absence_attestation is family
-    # Only those carries declare it: every other binding of the revision takes no statement.
+    # Only those carries declare a carry family; the work-income statement is a separate family.
     declared = {
         binding.id: binding.absence_attestation
         for binding in bindings.values()
-        if binding.absence_attestation is not None
+        if binding.absence_attestation in PRIOR_CARRY_FAMILIES
     }
     assert declared == _DECLARED
 

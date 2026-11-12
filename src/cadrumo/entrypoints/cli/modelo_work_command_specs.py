@@ -311,6 +311,18 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "WorkAttestPriorCarriesResult",
     ),
     _leaf(
+        "attest-work-income",
+        ".modelo_work_income_attestation_cli",
+        (
+            a("work_unit_id", required=True),
+            o("confirmed", "--yes", FLAG_VALUE, help_name="attest_work_income_yes", flag=True),
+            _LANG,
+        ),
+        _CALC_WRITE,
+        ".modelo_work_income_attestation_payloads",
+        "WorkAttestWorkIncomeResult",
+    ),
+    _leaf(
         "set-value",
         ".modelo_work_manual_entry_cli",
         (

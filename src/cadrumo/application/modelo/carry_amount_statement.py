@@ -18,7 +18,7 @@ from typing import Final
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.errors import ModeloError
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
-from .carry_attestation_submission import prior_carry_attestation_submission
+from .absence_statement_submission import prior_carry_absence_submission
 from .carry_family_selection import open_declaration_step
 from .edit_models import (
     ModeloBindingEditIntentV1,
@@ -134,7 +134,7 @@ def prior_carry_statement_submission(
     amounts: Mapping[BindingId, Decimal],
 ) -> ModeloEditSubmissionV1:
     """One edit that states each carry as nothing pending, or as its amount where one was given."""
-    absence = prior_carry_attestation_submission(baseline, statements)
+    absence = prior_carry_absence_submission(baseline, statements)
     intents = tuple(
         ModeloBindingEditIntentV1(
             address=ModeloEditBindingAddressV1(binding_id=intent.address.binding_id),

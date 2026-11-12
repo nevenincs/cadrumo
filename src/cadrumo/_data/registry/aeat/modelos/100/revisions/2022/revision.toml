@@ -55,6 +55,17 @@ source_refs = [
     "boe-modelo-100-2022-form",
 ]
 
+[[revisions."2022".family_overrides]]
+family = "formulas"
+selector = { revision = "2021", id = "renta-trabajo-otros-gastos" }
+sequence_additions = {"expression.args" = [{parameter = "renta-trabajo-otros-gastos-cuantia-general"}]}
+sequence_removals = {"expression.args" = [0]}
+
+[[revisions."2022".family_overrides]]
+family = "constructs"
+selector = {revision = "2021", id = "renta-mini-model-trabajo"}
+sequence_additions = {formulas = ["renta-trabajo-reduccion-gastos-generales", "renta-trabajo-rentas-distintas-del-trabajo"]}
+
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0001" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:84 y aeat-dr-100-2022-dictionary:84: campo TITA, tipo TIT, atributo titular de TomaDatosAmpliada; el mismo titular de los rendimientos del trabajo en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
@@ -65,19 +76,19 @@ fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0003" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPDIN; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPDIN; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-retencion-soportada-trabajo-importe-integro-dinerario" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0004" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPVA; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPVA; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-retencion-soportada-trabajo-valoracion-especie" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0005" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPIC; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPIC; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-retencion-soportada-trabajo-ingreso-a-cuenta" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0006" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPICR; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPICR; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-retencion-soportada-trabajo-ingreso-a-cuenta-repercutido" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0007" }
@@ -85,19 +96,19 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0008" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPPP; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPPP; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-trabajo-contribucion-empresarial-prevision" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0009" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:92 y aeat-dr-100-2022-dictionary:93: TPPRIMA, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoTrabajo/TPPRIMA, tipo P102; identidad legal conservada en el mismo componente de renta; el diseno explicita cambios de redaccion o detalle del importe, declarados en las evoluciones, sin cambio de sujeto ni tipo.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:92 y aeat-dr-100-2022-dictionary:93: TPPRIMA, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoTrabajo/TPPRIMA, tipo P102; identidad legal conservada en el mismo componente de renta; el diseno explicita cambios de redaccion o detalle del importe, declarados en las evoluciones, sin cambio de sujeto ni tipo.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-trabajo-contribucion-empresarial-seguro-dependencia" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0010" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPPPD; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPPPD; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-trabajo-aportacion-patrimonio-protegido" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0011" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:94 y aeat-dr-100-2022-dictionary:95: TPRI, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoTrabajo/TPRI, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:94 y aeat-dr-100-2022-dictionary:95: TPRI, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoTrabajo/TPRI, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-retencion-soportada-trabajo-reducciones-aplicables" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0012" }
@@ -105,7 +116,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0013" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPGSS; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary y aeat-dr-100-2022-dictionary: campo TPGSS; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-retencion-soportada-trabajo-gastos-deducibles" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0014" }
@@ -145,7 +156,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0023" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:106 y aeat-dr-100-2022-dictionary:107: TPRRT, ruta /DatosEconomicos/Resultados/RdtoTrabajoRes/TPRRT, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:106 y aeat-dr-100-2022-dictionary:107: TPRRT, ruta /DatosEconomicos/Resultados/RdtoTrabajoRes/TPRRT, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "computed", formula = "renta-trabajo-reduccion-gastos-generales" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0025" }

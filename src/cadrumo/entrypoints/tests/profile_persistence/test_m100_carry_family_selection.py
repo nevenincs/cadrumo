@@ -20,16 +20,16 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....application.modelo.absence_statement_submission import (
+    ModeloAbsenceStatementNothingOpenError,
+    prior_carry_absence_submission,
+)
 from ....application.modelo.carry_amount_statement import (
     ModeloPriorCarryAmountDuplicateError,
     ModeloPriorCarryAmountInvalidError,
     ModeloPriorCarryAmountNotACarryError,
     prior_carry_statement_submission,
     resolve_prior_carry_amounts,
-)
-from ....application.modelo.carry_attestation_submission import (
-    ModeloPriorCarryNothingOpenError,
-    prior_carry_attestation_submission,
 )
 from ....application.modelo.carry_family_selection import (
     ModeloPriorCarryFamilyChoiceRequiredError,
@@ -60,7 +60,7 @@ from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
-from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ....domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
@@ -73,7 +73,7 @@ from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_w
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _FACTS = (UserProfileFact(path="tax_residence.ccaa", value="madrid"), *RENTA_UNMARRIED_TAXPAYER_FACTS)
-_FAMILIES = tuple(AbsenceAttestationFamily)
+_FAMILIES = tuple(family for family in AbsenceAttestationFamily if family in PRIOR_CARRY_FAMILIES)
 _SORTED_FAMILIES = tuple(sorted(_FAMILIES, key=lambda each: each.value))
 _GENERAL, _CAPITAL, _GAINS = (
     AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING,
@@ -116,7 +116,7 @@ def _form(work: SeededOperatorWork) -> ModeloWorkForm:
 
 
 def _open_families(work: SeededOperatorWork) -> set[AbsenceAttestationFamily]:
-    return {item.family for item in _form(work).carry_attestations}
+    return {item.family for item in _form(work).carry_attestations if item.family in PRIOR_CARRY_FAMILIES}
 
 
 def _choose(
@@ -147,7 +147,7 @@ def _apply(work: SeededOperatorWork, submission: ModeloEditSubmissionV1) -> Cadr
 
 def _settles(work: SeededOperatorWork, statements: tuple[ModeloFormCarryAttestation, ...]) -> None:
     """Apply ``statements``, then let the refused declaration calculate past every carry."""
-    assert _apply(work, prior_carry_attestation_submission(work.baseline(), statements)) is None
+    assert _apply(work, prior_carry_absence_submission(work.baseline(), statements)) is None
     assert _open_families(work) == set()
     head = work.recalculate()
     assert head.operator_layer is not None
@@ -165,7 +165,7 @@ def test_a_choice_that_leaves_an_open_family_out_is_refused_before_staging_namin
         seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
     ):
         before = _form(renta).carry_attestations
-        assert {item.family for item in before} == set(_FAMILIES)
+        assert {item.family for item in before if item.family in PRIOR_CARRY_FAMILIES} == set(_FAMILIES)
         work_unit_id = str(renta.work_unit_id)
         refusals: list[ModeloPriorCarryFamilyChoiceRequiredError] = []
         for choice in _PARTIAL_CHOICES:
@@ -214,7 +214,7 @@ def test_the_preflight_blocks_a_partial_statement_and_passes_a_complete_one(tmp_
         others = {binding_id for item in offered if item.family is not _GENERAL for binding_id in item.binding_ids}
 
         def findings(statements: tuple[ModeloFormCarryAttestation, ...]) -> list[ModeloEditFindingV1]:
-            submission = prior_carry_attestation_submission(renta.baseline(), statements)
+            submission = prior_carry_absence_submission(renta.baseline(), statements)
             review = preflight_modelo_edit(
                 submission,
                 work_catalogue=renta.ports.work_unit_repository.load(),
@@ -246,7 +246,7 @@ def test_with_one_open_family_and_no_option_the_review_and_receipt_name_that_fam
         general_only = tuple(item for item in _form(renta).carry_attestations if item.family is _GENERAL)
         chosen = _choose(renta, offered=general_only)
         assert chosen == general_only
-        submission = prior_carry_attestation_submission(renta.baseline(), chosen)
+        submission = prior_carry_absence_submission(renta.baseline(), chosen)
         result = attest_prior_carries_result(submission, chosen, [], {}, None)
         selection = "".join(f" --family {item.family.value}" for item in chosen)
         lines = attest_prior_carries_lines(result, str(renta.work_unit_id), selection)
@@ -272,8 +272,8 @@ def test_exactly_one_open_family_is_stated_without_a_flag_and_a_closed_family_is
         assert _choose(renta, families=(_GENERAL,), offered=general_only) == general_only
         # A declaration that offers no statement at all is left to the submission builder's own refusal.
         assert _choose(renta, offered=()) == ()
-        with pytest.raises(ModeloPriorCarryNothingOpenError):
-            prior_carry_attestation_submission(renta.baseline(), ())
+        with pytest.raises(ModeloAbsenceStatementNothingOpenError):
+            prior_carry_absence_submission(renta.baseline(), ())
         # A family that is not open has nothing to state.
         with pytest.raises(ModeloPriorCarryFamilyNothingOpenError) as closed:
             _choose(renta, families=(_CAPITAL,), offered=general_only)
@@ -284,6 +284,34 @@ def test_exactly_one_open_family_is_stated_without_a_flag_and_a_closed_family_is
         message = resolve_error_message(closed.value, locale=locale)
         assert "%{" not in message
         assert _CAPITAL.value in message
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_a_family_outside_the_carries_is_refused_by_the_family_door_before_staging(tmp_path: Path, year: int) -> None:
+    """The work-income statement is its own door: naming it here states no carry, even beside the carries."""
+    work_income = AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED
+    assert work_income not in PRIOR_CARRY_FAMILIES
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
+    ):
+        before = _form(renta).carry_attestations
+        refusals: list[ModeloPriorCarryFamilyNothingOpenError] = []
+        for choice in ((work_income,), (*_FAMILIES, work_income)):
+            with pytest.raises(ModeloPriorCarryFamilyNothingOpenError) as refused:
+                _choose(renta, families=choice)
+            refusals.append(refused.value)
+            # Nothing was staged: no calculation, no statement, the form still offers what it offered.
+            assert renta.head() is None
+            assert _form(renta).carry_attestations == before
+
+    for error in refusals:
+        assert get_registered_error_code(error).code == "REFUSED_MODELO_PRIOR_CARRY_FAMILY_NOTHING_OPEN"
+        assert isinstance(error_next_step(error, OutputLanguage.EN), OperationOpenWorkStepV1)
+        for locale in ("es", "en", "ca", "hu"):
+            message = resolve_error_message(error, locale=locale)
+            assert "%{" not in message
+            assert work_income.value in message
 
 
 def _first_box(work: SeededOperatorWork, binding_id: str) -> str:

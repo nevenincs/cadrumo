@@ -4,6 +4,8 @@ continuidad_id = "irpf-rendimiento-trabajo-aportacion-empresa-decision-trabajado
 number = "0024"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
 semantic_role = "irpf_rendimiento_trabajo_aportacion_empresa_decision_trabajador"
+input_kind = "bound"
+binding = "renta-trabajo-aportacion-empresa-decision-trabajador"
 legal_refs = ["ley-35-2006:art-17"]
 additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
 [[revisions."2022".casillas]]
@@ -2195,3 +2197,24 @@ formula = "renta-maritime-exempt-income"
 internal_only = true
 legal_refs = ["ley-35-2006:art-7", "ley-19-1994:art-75"]
 source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2022-manual-parte1"]
+
+# The rentas other than work income that LIRPF art. 20 weighs against its 6.500 euros limit. The
+# Manual practico defines them as the algebraic sum of the net capital, activity, imputed and
+# capital-gain income, before reductions and without integration or compensation. No box of the
+# return holds that sum, so it is an internal node.
+[[revisions."2022".casillas]]
+id = "rentas-distintas-del-trabajo"
+continuidad_id = "irpf-trabajo-rentas-distintas-del-trabajo"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "No AEAT design prints this row: aeat-dr-100-2022-dictionary and aeat-dr-100-2021-dictionary carry no field numbered [rentas-distintas-del-trabajo]; it is a computation-only member of the edition, not a box of the form."
+number = "rentas-distintas-del-trabajo"
+section = ["resultados", "rdto_trabajo_res"]
+semantic_role = "irpf_trabajo_rentas_distintas_del_trabajo"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Internal operand of the art. 20 LIRPF other-income limit; the AEAT record design has no box for it, so it files nowhere."
+input_kind = "computed"
+formula = "renta-trabajo-rentas-distintas-del-trabajo"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["lirpf-cuota-chain-authority"]

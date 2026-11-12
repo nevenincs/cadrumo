@@ -92,6 +92,7 @@ type RetencionSoportadaRefusalReason = Literal[
     "family_not_declared",
     "identity_mismatch",
     "certificate_not_in_custody",
+    "trabajo_certificate_figure_missing",
 ]
 """Why a write was refused before it reached storage."""
 
@@ -211,6 +212,8 @@ def _require_admitted(
         raise RetencionSoportadaWriteRefusedError("ejercicio_unsupported", ejercicio=record.ejercicio)
     if not authority.declares_family(record.ejercicio):
         raise RetencionSoportadaWriteRefusedError("family_not_declared", ejercicio=record.ejercicio)
+    if record.lacks_work_certificate_figures:
+        raise RetencionSoportadaWriteRefusedError("trabajo_certificate_figure_missing", ejercicio=record.ejercicio)
 
 
 def _require_identity(record: RetencionSoportadaRecord, stored: RetencionSoportadaRecord | None) -> None:

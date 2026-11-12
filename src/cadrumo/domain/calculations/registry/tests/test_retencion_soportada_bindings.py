@@ -22,6 +22,7 @@ from ..binding_terminal_origin import TerminalOriginClass
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from ..retencion_soportada_bindings import (
     RETENCION_SOPORTADA_CREDIT_ROLES,
+    RETENCION_SOPORTADA_INCOME_ROLES,
     RetencionSoportadaProvider,
     credit_casilla_ids,
     retencion_soportada_revision_failures,
@@ -208,10 +209,145 @@ def test_a_binding_on_a_computed_casilla_is_refused() -> None:
     assert any("computed casilla '0596'" in failure for failure in failures), failures
 
 
-@pytest.mark.parametrize(
-    "quantity",
-    ["retencion", "ingreso_a_cuenta", "ingreso_a_cuenta_repercutido", "importe_integro"],
-)
-def test_a_quantity_other_than_the_credit_is_refused_on_every_casilla(quantity: str) -> None:
+@pytest.mark.parametrize("quantity", ["retencion", "importe_integro"])
+def test_a_quantity_outside_the_income_table_is_refused_on_every_casilla(quantity: str) -> None:
     failures = retencion_soportada_revision_failures(_revision(binding=_binding(quantity=quantity)))
-    assert any(f"quantity {quantity!r}" in failure for failure in failures), failures
+    assert any(f"quantity {quantity!r}" in failure and "no casilla role" in failure for failure in failures), failures
+
+
+@pytest.mark.parametrize("quantity", ["ingreso_a_cuenta", "ingreso_a_cuenta_repercutido"])
+def test_an_income_quantity_on_the_credit_casilla_is_refused_for_its_role(quantity: str) -> None:
+    failures = retencion_soportada_revision_failures(_revision(binding=_binding(quantity=quantity)))
+    assert any("casilla '0596' has role 'irpf_retencion_trabajo'" in failure for failure in failures), failures
+
+
+_INCOME_PAIRS = {
+    "importe_integro_dinerario": ("0003", "irpf_rendimiento_trabajo_importe_integro_dinerario"),
+    "valoracion_especie": ("0004", "irpf_rendimiento_trabajo_especie_valoracion"),
+    "ingreso_a_cuenta": ("0005", "irpf_rendimiento_trabajo_especie_ingreso_cuenta"),
+    "ingreso_a_cuenta_repercutido": ("0006", "irpf_rendimiento_trabajo_especie_ingreso_cuenta_repercutido"),
+    "reducciones_aplicables": ("0011", "irpf_rendimiento_trabajo_reduccion"),
+    "gastos_deducibles": ("0013", "irpf_rendimiento_trabajo_gasto_ss_mutualidad"),
+}
+
+
+def _income_binding_id(quantity: str) -> str:
+    return f"income-{quantity.replace('_', '-')}"
+
+
+def _income_binding(quantity: str, *, income_class: str = "trabajo", **update: object) -> BindingDefinition:
+    return _binding(income_class=income_class, quantity=quantity).model_copy(
+        update={"id": _income_binding_id(quantity), **update},
+    )
+
+
+def _income_revision(
+    *,
+    bindings: dict[str, BindingDefinition] | None = None,
+    casilla_updates: dict[str, dict[str, object]] | None = None,
+    formulas: tuple[FormulaDefinition, ...] = (),
+):
+    """A clean revision: the credit set plus the six income casillas, each bound to its own family binding."""
+    base = _revision(binding=_binding())
+    declared = bindings or {quantity: _income_binding(quantity) for quantity in _INCOME_PAIRS}
+    casillas = list(base.casillas)
+    for quantity, (number, role) in _INCOME_PAIRS.items():
+        update: dict[str, object] = {"input_kind": InputKind.BOUND, "binding": _income_binding_id(quantity)}
+        update.update((casilla_updates or {}).get(number, {}))
+        casillas.append(_casilla(number, role).model_copy(update=update))
+    return base.model_copy(
+        update={
+            "casillas": tuple(casillas),
+            "bindings": (*base.bindings, *declared.values()),
+            "formulas": (*base.formulas, *formulas),
+        },
+    )
+
+
+def test_a_clean_income_revision_earns_no_failure_and_the_table_is_the_six_trabajo_pairs() -> None:
+    assert retencion_soportada_revision_failures(_income_revision()) == ()
+    assert set(RETENCION_SOPORTADA_INCOME_ROLES) == {
+        (RetencionSoportadaClase.TRABAJO, RetencionSoportadaCantidad(quantity)) for quantity in _INCOME_PAIRS
+    }
+    assert {role for _, role in _INCOME_PAIRS.values()} == set(RETENCION_SOPORTADA_INCOME_ROLES.values())
+
+
+def test_a_second_source_on_an_income_casilla_is_refused() -> None:
+    other = _income_binding("importe_integro_dinerario").model_copy(update={"id": "second-source"})
+    revision = _income_revision(casilla_updates={"0003": {"alternate_bindings": ("second-source",)}})
+    revision = revision.model_copy(update={"bindings": (*revision.bindings, other)})
+    failures = retencion_soportada_revision_failures(revision)
+    assert any("alternate binding of casilla '0003'" in failure for failure in failures), failures
+    assert any("exactly its family binding" in failure and "'0003'" in failure for failure in failures), failures
+
+
+def test_the_combined_importe_integro_bound_to_an_income_casilla_is_refused() -> None:
+    declared = {quantity: _income_binding(quantity) for quantity in _INCOME_PAIRS}
+    declared["importe_integro_dinerario"] = _income_binding("importe_integro_dinerario").model_copy(
+        update={"provider": _binding(quantity="importe_integro").provider},
+    )
+    failures = retencion_soportada_revision_failures(_income_revision(bindings=declared))
+    assert any("quantity 'importe_integro'" in f and "no casilla role" in f for f in failures), failures
+    assert any("exactly its family binding" in f and "'0003'" in f for f in failures), failures
+
+
+@pytest.mark.parametrize("income_class", [c.value for c in RetencionSoportadaClase if c.value != "trabajo"])
+def test_an_income_quantity_on_another_class_is_refused(income_class: str) -> None:
+    declared = {quantity: _income_binding(quantity) for quantity in _INCOME_PAIRS}
+    declared["gastos_deducibles"] = _income_binding("gastos_deducibles", income_class=income_class)
+    failures = retencion_soportada_revision_failures(_income_revision(bindings=declared))
+    assert any(f"income class {income_class!r} is admitted on no casilla role" in f for f in failures), failures
+
+
+def test_an_income_binding_on_a_casilla_of_another_role_is_refused() -> None:
+    revision = _income_revision()
+    casillas = tuple(
+        casilla.model_copy(update={"semantic_role": "irpf_rendimiento_trabajo_reduccion"})
+        if casilla.id == validated_casilla_id("0013")
+        else casilla
+        for casilla in revision.casillas
+    )
+    failures = retencion_soportada_revision_failures(revision.model_copy(update={"casillas": casillas}))
+    assert any("'0013' has role 'irpf_rendimiento_trabajo_reduccion'" in f for f in failures), failures
+
+
+def test_an_income_binding_read_only_as_a_formula_operand_is_refused() -> None:
+    operand = FormulaDefinition(
+        id="test.operand",
+        target_casilla_id=validated_casilla_id("0007"),
+        expression=FormulaExpression(binding=_income_binding_id("importe_integro_dinerario")),
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    revision = _income_revision(
+        casilla_updates={"0003": {"input_kind": InputKind.MANUAL, "binding": None}},
+        formulas=(operand,),
+    )
+    failures = retencion_soportada_revision_failures(revision)
+    assert any("cannot be a formula operand" in failure for failure in failures), failures
+    assert any("no casilla binds it" in failure for failure in failures), failures
+
+
+def test_an_income_binding_with_aeat_prefilled_is_refused() -> None:
+    declared = {quantity: _income_binding(quantity) for quantity in _INCOME_PAIRS}
+    declared["valoracion_especie"] = _income_binding("valoracion_especie", aeat_prefilled=True)
+    failures = retencion_soportada_revision_failures(_income_revision(bindings=declared))
+    assert any("cannot be aeat_prefilled" in failure for failure in failures), failures
+
+
+def test_declaring_one_income_binding_requires_every_income_role_to_take_its_family_binding() -> None:
+    only_one = {"importe_integro_dinerario": _income_binding("importe_integro_dinerario")}
+    failures = retencion_soportada_revision_failures(_income_revision(bindings=only_one))
+    assert len([f for f in failures if "exactly its family binding" in f]) == 5, failures
+
+
+def test_an_income_role_casilla_with_a_foreign_binding_is_refused_once_the_family_declares_income() -> None:
+    revision = _income_revision(casilla_updates={"0013": {"input_kind": InputKind.MANUAL, "binding": None}})
+    failures = retencion_soportada_revision_failures(revision)
+    assert any("'0013'" in f and "exactly its family binding" in f for f in failures), failures
+
+
+def test_a_revision_declaring_only_credits_leaves_income_role_casillas_alone() -> None:
+    revision = _revision(binding=_binding())
+    casillas = (*revision.casillas, _casilla("0003", "irpf_rendimiento_trabajo_importe_integro_dinerario"))
+    assert retencion_soportada_revision_failures(revision.model_copy(update={"casillas": casillas})) == ()

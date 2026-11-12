@@ -29,7 +29,7 @@ from ...application.modelo.work_create_operation import (
 )
 from ...application.operations.public_period import PublicPeriod
 from ...application.operations.public_scalar import restore_scalar
-from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES
+from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ...tests.personas import GENERAL_BASES_CARRY_FAMILY, PRIOR_CARRY_BOXES, Persona, PriorCarries, YearToken
 from .persona_materialisation import (
     PERSONA_ACTOR,
@@ -205,6 +205,19 @@ def test_every_carry_family_is_accepted_as_a_statement_token(renta_world: Materi
     for member in sorted(PRIOR_CARRY_FAMILIES):
         persona = _stating(renta_world.persona, "floor", family=member.value, only=True)
         assert set(statement_families(persona).values()) == {member}
+
+
+def test_an_absence_family_that_is_no_carry_is_refused_as_a_statement_token(renta_world: MaterialisedPersona) -> None:
+    work_income = AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED
+    assert work_income not in PRIOR_CARRY_FAMILIES
+    persona = _stating(renta_world.persona, "floor", family=work_income.value, only=True)
+
+    with pytest.raises(PersonaMaterialisationError) as refused:
+        statement_families(persona)
+    message = str(refused.value)
+    assert f"prior_carries family {work_income.value!r} is not one of" in message
+    for member in PRIOR_CARRY_FAMILIES:
+        assert member.value in message
 
 
 def test_an_unknown_family_token_is_refused_before_anything_is_staged(renta_world: MaterialisedPersona) -> None:

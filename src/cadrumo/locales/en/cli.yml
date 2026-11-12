@@ -646,6 +646,8 @@ cli:
         evidence_sha256_help: SHA-256 of a certificate already in your storage, or
           a check against --certificate-file. A payer_certificate needs one of the
           two.
+        gastos_deducibles_help: Deductible expenses the payer states under article
+          19.2 a), b) and c). Required for `trabajo`; write 0 if it states none.
         group_help: Record the withholding your payers' certificates report.
         importe_integro_help: Money income the payer paid, before withholding.
         income_class_help: Income class the payer withheld on, for example `trabajo`.
@@ -666,6 +668,9 @@ cli:
           record. Leave it out for a first record.
         record_help: Record or replace the figures one payer's certificate states
           for an ejercicio and income class.
+        reducciones_aplicables_help: Reductions the payer applied under articles 18.2
+          and 18.3, as the certificate states them. Required for `trabajo`; write
+          0 if it states none.
         remove_expected_revision_help: Revision the list showed for the record to
           remove.
         remove_help: Remove one stored payer record, guarded by the revision a list
@@ -1634,6 +1639,16 @@ cli:
           it records the figure as one you stated for that return, apart from a figure
           you typed. Refused when the earlier return is held, because the declaration
           then follows it.
+        attest_work_income_confirm: Nothing was stated yet. Run `aeat app modelo work
+          attest-work-income %{work_unit_id} --yes` to state it.
+        attest_work_income_help: State that the work-income boxes no payer certificate
+          fills (employer contributions to pension plans and welfare mutuals, to dependency
+          insurance, protected-estate contributions and contributions made at your
+          decision) hold nothing, for every box the form of a return resting on a
+          payer record offers the statement for. Shows the statement and the check
+          of the change; with --yes it records each box as a 0 you stated, apart from
+          a figure you typed.
+        attest_work_income_yes_help: Confirm the statement and record it on the declaration
         autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply
           (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties
           converted to the rental estate. The assistant automatically applies 21%
