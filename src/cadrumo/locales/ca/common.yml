@@ -10724,6 +10724,13 @@ workspace:
         set_nothing: valor nou
         set_source: substitueix el valor del seu origen
       finding:
+        calculation_withdrawn: El càlcul es retira. Torna a calcular quan indiquis
+          els imports pendents d'exercicis anteriors.
+        carry_withdrawal_filed: Aquesta declaració consta com a presentada. Corregeix-la
+          amb una declaració complementària o rectificativa.
+        carry_withdrawal_keeps_entries: Retirar aquesta declaració descartaria els
+          altres valors que has introduït en aquesta declaració. Indica els imports
+          pendents en lloc d'això.
         clear_of_source_fed_casilla: Un origen emplena aquesta casella, així que no
           es pot buidar. Torna-la al seu origen en lloc d'això.
         intent_not_admitted: Aquesta casella no es pot canviar d'aquesta manera.

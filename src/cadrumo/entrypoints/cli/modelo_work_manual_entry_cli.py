@@ -165,7 +165,10 @@ def _lines(result: WorkManualEntryResult, *, command: str, command_words: str) -
     ]
     if result.applied:
         lines.extend(
-            (f"receipt_id	{result.receipt_id}", f"calculation_revision_id	{result.calculation_revision_id}")
+            (
+                f"receipt_id	{result.receipt_id}",
+                f"calculation_revision_id	{result.calculation_revision_id or '-'}",
+            )
         )
     else:
         lines.append(tr("cli.app.modelo.work.entry_confirm", command=command_words))

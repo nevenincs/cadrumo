@@ -267,6 +267,22 @@ def build_activity_section(
                 visible_when=_entity_legal,
                 answer_type=bool,
             ),
+            WizardQuestion(
+                # Optional LIS Art. 40.3 election of the Modelo 202, stated in
+                # the censal declaration. Below the Art. 40.3 threshold it
+                # decides how each instalment is computed and so whether an
+                # ingreso results. Three-state with no default: an unanswered
+                # question persists nothing and leaves each instalment
+                # undecided rather than guessing a modality.
+                id="pago-fraccionado-art-40-3-elected",
+                profile_key="taxpayer_type.pago_fraccionado_art_40_3_elected",
+                widget=WizardWidget.CONFIRM,
+                prompt=tr("wizard.setup.taxpayer-type.pago-fraccionado-art-40-3-elected.prompt"),
+                help=tr("wizard.setup.taxpayer-type.pago-fraccionado-art-40-3-elected.help"),
+                required=False,
+                visible_when=_entity_legal,
+                answer_type=bool,
+            ),
         ),
     )
 

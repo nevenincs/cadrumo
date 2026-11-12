@@ -3,7 +3,9 @@
 An edit refused at its commit point changed nothing: a refused value is stated
 again, a form that changed since it was read is read again, an edit kind not
 yet applied is the operator's decision, and an edit made under a contract this
-version does not accept is beyond the operator.
+version does not accept is beyond the operator. A carry statement whose
+withdrawal cannot leave the declaration uncalculated is replaced by the
+carried figures, or, on a declaration recorded as filed, amended.
 
 A binding value the preview call carried and the pinned contract refuses is
 stated again in that call, which no catalogued action takes, so it is the
@@ -45,6 +47,18 @@ EDIT_REFUSAL_PROFILES: Final[tuple[ManifestActionProfile, ...]] = (
     _edit_profile("baseline", "current", "stale", "operator.modelo.work.status", NoRecoveryOutcome.OPERATOR_DECISION),
     _edit_profile("intent", "supported", "unsupported", None, NoRecoveryOutcome.OPERATOR_DECISION),
     _edit_profile("contract", "compatible", "incompatible", None, NoRecoveryOutcome.TERMINAL),
+    # A carry statement whose withdrawal would discard the filer's other values is replaced by the
+    # carried figures; one on a declaration recorded as filed is corrected by amendment.
+    _edit_profile(
+        "carry_withdrawal",
+        "admitted",
+        "keeps_entries",
+        "operator.modelo.work.attest_prior_value",
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    _edit_profile(
+        "carry_withdrawal", "admitted", "filed", "operator.modelo.work.amend", NoRecoveryOutcome.OPERATOR_DECISION
+    ),
     ManifestActionProfile(
         subject_leaf_key=_BINDING_LEAF,
         condition_id="modelo.bindings.value.admitted",

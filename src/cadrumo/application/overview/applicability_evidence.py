@@ -45,6 +45,7 @@ from ..invoices.source_resolver_ports import (
     InvoiceSourceResolverPorts,
 )
 from ..user_profile.projections import projection_for_taxpayer
+from .modelo202_instalment import Modelo202InstalmentFactsReader
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -66,10 +67,14 @@ class FilingYearApplicabilityEvidence:
         ledger_payer_facts_for_year: The ledger derivations of payer facts for
             a filing year, keyed by payer fact token; a fact with no
             derivation is absent.
+        modelo_202_instalment_facts: What the read's stores know about one
+            Modelo 202 instalment's ingreso; ``None`` when the read is bound to
+            no such stores, so the instalment stays undecided.
     """
 
     profile_for_year: Callable[[int], TaxpayerProfile]
     ledger_payer_facts_for_year: Callable[[int], Mapping[str, LedgerPayerFactDerivation]]
+    modelo_202_instalment_facts: Modelo202InstalmentFactsReader | None = None
 
 
 class _CatalogueReadOnce:
@@ -139,6 +144,7 @@ def bind_filing_year_applicability_evidence(
     invoice_source_ports: InvoiceSourceResolverPorts,
     operation: PinnedAuthorityOperation,
     today: date,
+    modelo_202_instalment_facts: Modelo202InstalmentFactsReader | None = None,
 ) -> FilingYearApplicabilityEvidence:
     """Bind the per-year profile projection and ledger derivation to one read's stores.
 
@@ -151,6 +157,8 @@ def bind_filing_year_applicability_evidence(
         operation: The read's generation-pinned authority operation.
         today: The read's reference date; a year not yet ended is never
             complete.
+        modelo_202_instalment_facts: The Modelo 202 instalment reader bound to
+            the same read's stores, if any.
 
     Returns:
         Evidence that derives each year on first use.
@@ -177,6 +185,7 @@ def bind_filing_year_applicability_evidence(
     return FilingYearApplicabilityEvidence(
         profile_for_year=_memoized(profile_for_year),
         ledger_payer_facts_for_year=_memoized(ledger_for_year),
+        modelo_202_instalment_facts=modelo_202_instalment_facts,
     )
 
 

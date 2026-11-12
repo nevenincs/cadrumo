@@ -111,6 +111,7 @@ from .required_binding_gate import (
     require_persisted_revision_required_bindings_resolved,
 )
 from .result_disposition_resolution import resolve_modelo_result_disposition
+from .selectors import require_work_unit_holds_a_calculation
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from .workflow_gate import build_revision_workflow_engine, run_revision_workflow_gate
@@ -221,6 +222,7 @@ def _load_filing_context(
         calculation_revision_id=calculation_revision_id,
         operation=RevisionParentOperation.FILE,
     )
+    require_work_unit_holds_a_calculation(work_unit)
     # Before the idempotent re-file no-op: a revision verified before evidence
     # was captured, or one carrying a Modelo 193 settled prior-accrual row,
     # must not be returned as the filed answer.

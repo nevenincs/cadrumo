@@ -4,10 +4,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .served_action_expectation import served_action_words
 
-def corrupt_pointer_action(pointer_file: Path) -> dict[str, object]:
-    """Return the serialized action the error boundary projects for a corrupt pointer at ``pointer_file``."""
+
+def corrupt_pointer_action(pointer_file: Path, language: str) -> dict[str, object]:
+    """Return the serialized action the error boundary projects for a corrupt pointer at ``pointer_file``.
+
+    ``language`` is the language the projection served its action words in; the
+    repair command submits no registered operation, so no target operation is named.
+    """
     return {
+        **served_action_words("operator.profile.repair_active_pointer", language),
         "failed_condition_id": "profile.active.pointer.valid",
         "evidence": [
             {

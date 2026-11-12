@@ -125,7 +125,7 @@ def test_a_perceptor_with_no_declared_name_is_named_once_with_its_door_and_its_s
     (diagnostic,) = [item for item in resolution.diagnostics if item.reason == "declared_party_name_unresolved"]
     assert (diagnostic.source_ref or "").startswith("party-name:missing:")
     assert "IMPRESO" in diagnostic.message or _UNNAMED in diagnostic.message
-    verdict = note_record_verdict(diagnostic)
+    verdict = note_record_verdict(diagnostic.reason, diagnostic.fact)
     assert verdict is not None
     assert verdict.action is not None
     assert verdict.action.action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID

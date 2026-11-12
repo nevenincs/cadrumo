@@ -26,12 +26,12 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
 from ..work_review_contracts import (
     MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID,
-    ModeloWorkReviewFact,
     ModeloWorkReviewProgressSnapshot,
     ModeloWorkReviewProjection,
     ModeloWorkReviewRequest,
     ModeloWorkReviewSnapshot,
 )
+from ..work_review_facts import ModeloWorkReviewFact
 from ..work_review_operation import (
     ModeloWorkReviewExecutor,
     build_modelo_work_review_definition,

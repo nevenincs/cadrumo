@@ -10735,6 +10735,13 @@ workspace:
         set_nothing: valor nuevo
         set_source: sustituye el valor de su origen
       finding:
+        calculation_withdrawn: El cálculo se retira. Vuelve a calcular cuando indiques
+          los importes pendientes de ejercicios anteriores.
+        carry_withdrawal_filed: Esta declaración consta como presentada. Corrígela
+          con una declaración complementaria o rectificativa.
+        carry_withdrawal_keeps_entries: Retirar esta declaración descartaría los demás
+          valores que has introducido en esta declaración. Indica los importes pendientes
+          en su lugar.
         clear_of_source_fed_casilla: Un origen rellena esta casilla, así que no se
           puede vaciar. Devuélvela a su origen en su lugar.
         intent_not_admitted: Esta casilla no se puede cambiar de esa forma.

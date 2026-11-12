@@ -804,25 +804,48 @@ def test_incomplete_modality_keeps_m202_dependency_in_scope_through_evaluator(tm
             assert verdict.clean is False
 
 
-def test_non_first_year_keeps_m202_dependency_in_scope_through_evaluator(tmp_path: Path) -> None:
-    """An activity-start year before the target year keeps the M202 dependency in scope.
+def test_third_year_keeps_m202_dependency_in_scope_through_evaluator(tmp_path: Path) -> None:
+    """An activity start two years before the target keeps every M202 dependency in scope.
 
-    With activity start in 2025 (a prior IS year exists to provide the cuota
-    basis), the modalidad-cuota M202 dependency is NOT suppressed and blocks on
-    missing evidence — an operator cannot scope away a real prior obligation by
-    declaring modalidad cuota.
+    Every instalment of the target year then takes its art. 40.2 base from a
+    periodo impositivo the entity had, so the modalidad-cuota M202 dependency is
+    NOT suppressed and blocks on missing evidence: an operator cannot scope away
+    a real prior obligation by declaring modalidad cuota.
     """
+    target_year = _snapshot_202().filing_year
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         verdict = evaluate_clean_state(
             _snapshot_202(),
             taxpayer_tax_id="B00015016",
-            activity_start_date=date(2025, 6, 1),
+            activity_start_date=date(target_year - 2, 6, 1),
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
         )
 
     assert suppressed_first_year_fractional(verdict) == ()
     assert has_first_year_fractional_suppression(verdict) is False
     assert verdict.clean is False
+
+
+def test_second_year_suppresses_only_the_first_instalment_through_evaluator(tmp_path: Path) -> None:
+    """In the second year only the April instalment reads a periodo impositivo before the activity start.
+
+    LIS art. 40.2 takes the April base from the Modelo 200 two years back, which
+    the entity never had, so that instalment owed no payment and its dependency
+    is scoped out; the later instalments read the first year's return and stay
+    in scope.
+    """
+    target_year = _snapshot_202().filing_year
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
+        verdict = evaluate_clean_state(
+            _snapshot_202(),
+            taxpayer_tax_id="B00015016",
+            activity_start_date=date(target_year - 1, 6, 1),
+            modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
+        )
+
+    suppressed = {e.requirement.period.registry_token for e in suppressed_first_year_fractional(verdict)}
+    assert suppressed == {"1P"}
+    assert has_first_year_fractional_suppression(verdict) is True
 
 
 def test_partition_keeps_non_calendar_anchors_in_scope(tmp_path: Path) -> None:

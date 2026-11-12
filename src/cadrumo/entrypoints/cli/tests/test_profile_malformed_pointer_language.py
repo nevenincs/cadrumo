@@ -94,4 +94,6 @@ def test_malformed_active_pointer_projects_the_canonical_repair_action_to_json(
         "pointer_corrupt": "true",
         "root_fallback_refused": "true",
     }
-    assert error["action"] == corrupt_pointer_action(pointer_file), error["action"]
+    assert error["action"] == corrupt_pointer_action(pointer_file, error["action"]["action_words_language"]), error[
+        "action"
+    ]

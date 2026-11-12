@@ -385,6 +385,11 @@ def test_precondition_projection_remains_available_only_for_failure_envelopes() 
 def test_resolved_precondition_action_schema_pins_the_actionable_and_closed_refusal_grammar() -> None:
     """A field or enum drift changes the operator's executable refusal contract."""
     assert tuple(ResolvedPreconditionAction.model_fields) == (
+        "no_recovery_words",
+        "no_recovery_words_language",
+        "action_words",
+        "action_words_language",
+        "target_operation_ids",
         "failed_condition_id",
         "evidence",
         "action",
@@ -395,6 +400,9 @@ def test_resolved_precondition_action_schema_pins_the_actionable_and_closed_refu
         "alternative_actions",
     )
     assert tuple(ResolvedAlternativeAction.model_fields) == (
+        "action_words",
+        "action_words_language",
+        "target_operation_ids",
         "action",
         "argument_bindings",
         "missing_argument_names",

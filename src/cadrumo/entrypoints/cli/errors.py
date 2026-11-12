@@ -46,6 +46,7 @@ from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.commands import errors
 from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
+from cadrumo_client.commands.output import SERVED_PRECONDITION_FIELDS, served_action_lines
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions.models import PreconditionVerdict
@@ -458,12 +459,15 @@ def _render_precondition_action_text(
     recovery labels, and nested values use deterministic JSON so condition
     evidence and binding provenance cannot be flattened into ambiguous prose.
     The ordered alternative actions add one line after the primary action's
-    lines, only when the verdict offers any.
+    lines, only when the verdict offers any. Served words and target
+    operations add their lines only when served, and each offered action's
+    served words come first, in offered order.
 
     """
     lines = [text.rstrip("\n")]
     if command is not None:
         lines.append(f"  command: {command}")
+    lines.extend(f"  {line}" for line in served_action_lines(action))
     action_document = action.model_dump(mode="json")
     field_names = (
         "failed_condition_id",
@@ -476,6 +480,7 @@ def _render_precondition_action_text(
     )
     if action.alternative_actions:
         field_names = (*field_names, "alternative_actions")
+    field_names = (*field_names, *(name for name in SERVED_PRECONDITION_FIELDS if name in action_document))
     for field_name in field_names:
         value = json.dumps(
             action_document[field_name],
