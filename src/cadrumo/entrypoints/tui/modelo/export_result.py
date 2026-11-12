@@ -133,8 +133,9 @@ def export_result_warnings(
     """Return every limit the result states on the file, most fundamental first.
 
     No export is official AEAT evidence, so that warning is always present. The
-    development identity and an unverified completeness are added only when the
-    result states them.
+    development identity, an unverified cutoff, work-income deductions left
+    uncomputed and an unverified completeness are added only when the result
+    states them.
     """
     if result is None:
         return (NoticePresentation(severity="warning", message=tr("tui.modelo.export.result.unavailable")),)
@@ -162,6 +163,13 @@ def export_result_warnings(
     if receipt is not None and receipt.domiciliation_cutoff_unverified:
         warnings.append(
             NoticePresentation(severity="warning", message=tr("tui.modelo.export.result.warning.cutoff_unverified"))
+        )
+    if receipt is not None and receipt.trabajo_deductions_not_computed:
+        # The backend's own finding words, as the CLI shows them for the same flag.
+        warnings.append(
+            NoticePresentation(
+                severity="warning", message=tr("application.modelo.findings.trabajo_deduction_not_computed")
+            )
         )
     if result.completeness is ModeloExportCompleteness.UNVERIFIED:
         warnings.append(
