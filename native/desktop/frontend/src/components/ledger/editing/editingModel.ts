@@ -994,6 +994,7 @@ export function draftRow(draft: Draft): LedgerRow {
       taxable_base: fields.taxable_base ?? null,
       iva_rate: fields.iva_rate ?? null,
       iva_amount: fields.iva_amount ?? null,
+      recargo_amount: null,
       iva_category: fields.iva_category ?? null,
       deduction_fact_kind: null,
       investment_asset_id: null,

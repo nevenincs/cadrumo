@@ -36,6 +36,7 @@ export function movement(
     taxable_base: null,
     iva_rate: null,
     iva_amount: null,
+    recargo_amount: null,
     iva_category: null,
     deduction_fact_kind: null,
     investment_asset_id: null,
