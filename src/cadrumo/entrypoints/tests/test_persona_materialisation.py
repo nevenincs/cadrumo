@@ -51,6 +51,7 @@ from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.contribuyente.inventory.records import MovementKind
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecordStatus
 from ...domain.user_profile.values import ProfileSetupState
@@ -197,19 +198,24 @@ def test_a_persona_replays_through_production_operations(
         for certificate in persona.withholding_certificates
     }
     assert set(materialised.evidence) == {document.id for document in persona.documents}
-    # Each book opens at its stated stock, records no movement and holds the closing recorded on its movements.
+    # Each book opens at its stated stock, records one purchase for each ledger row it names, under that row's
+    # ref, and holds the closing recorded on its movements.
     assert {
         activity: (
             None
             if ledger is None
             else (
                 Decimal(ledger.opening_stock.decimal),
-                ledger.period_movements,
+                sorted(
+                    movement.movement_id
+                    for movement in ledger.period_movements
+                    if movement.kind is MovementKind.PURCHASE
+                ),
                 ledger.closing_authority_fingerprints is not None,
             )
         )
         for activity, ledger in books.items()
-    } == {book.activity: (book.opening_stock, (), True) for book in persona.inventory}
+    } == {book.activity: (book.opening_stock, sorted(book.purchases), True) for book in persona.inventory}
     assert {item.block for item in materialised.not_loaded} == _NOT_LOADED[persona_id]
     # Every run registers the persona at the same identity, so what is read of it names the same profile.
     assert world.profile_id == persona_profile_id(persona_id)
