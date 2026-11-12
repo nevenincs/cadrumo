@@ -1879,7 +1879,10 @@ def _replay_attested_returns(persona: Persona, world: PersonaWorld) -> dict[str,
             )
         if attested.applied is None:
             raise PersonaMaterialisationError(f"{where}: the attestation was not applied")
-        calculations[filing_key(modelo, year, period)] = attested.applied.calculation_revision_id
+        revision_id = attested.applied.calculation_revision_id
+        if revision_id is None:
+            raise PersonaMaterialisationError(f"{where}: the attesting edit published no calculation")
+        calculations[filing_key(modelo, year, period)] = revision_id
     return calculations
 
 
