@@ -32,7 +32,11 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.form_codes import form_for_role, resolve_form_codes
+from ...domain.calculations.registry.prorrata_register_activity_bindings import (
+    ProrrataActivityField,
+    ProrrataRegisterActivityProvider,
+)
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -52,8 +56,8 @@ if TYPE_CHECKING:
 
 _ANNUAL_SUMMARY_ROLE: Final = "iva.annual_summary"
 
-_APARTADO_BOXES: Final[tuple[str, ...]] = ("114", "115", "116", "117", "118")
-"""The record-design boxes of apartado 12, one per fact each activity row prints."""
+_ACTIVITY_SLOTS_CODE: Final = "m303.prorrata.activity_slots"
+"""The form-row code naming how many activity rows the prorrata apartado prints."""
 
 _PRORRATA_APARTADO_LEGAL_REFS: Final[tuple[str, ...]] = (
     "ley-37-1992:art-101",
@@ -73,14 +77,33 @@ class Modelo390ProrrataApartadoUnrenderedError(ModeloPreconditionErrorMixin, Mod
     """Raised when a Modelo 390 must print a prorrata apartado its registry edition does not render."""
 
 
-def registry_renders_prorrata_apartado(revision: ModeloRevision) -> bool:
-    """Whether ``revision`` registers a casilla for every box of apartado 12.
+def registry_renders_prorrata_apartado(revision: ModeloRevision, *, operation: PinnedAuthorityOperation) -> bool:
+    """Whether ``revision`` exports every fact of every activity row of apartado 12.
+
+    The apartado is the register's activity rows: each declared row slot prints
+    each :class:`ProrrataActivityField`. A fact counts when a casilla bound to
+    that row's register fact reaches the export record; a casilla the record
+    design does not carry would still leave the record positions blank. The
+    row count comes from the registry's form-row codes, so no box or row number
+    is restated here.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    registered = {casilla.number for casilla in revision.casillas}
-    return all(box in registered for box in _APARTADO_BOXES)
+    providers = {
+        binding.id: binding.provider
+        for binding in revision.bindings
+        if isinstance(binding.provider, ProrrataRegisterActivityProvider)
+    }
+    exported = {
+        (provider.slot, provider.field)
+        for casilla in revision.casillas
+        if casilla.export_refs
+        and casilla.binding is not None
+        and (provider := providers.get(casilla.binding)) is not None
+    }
+    slots = resolve_form_codes("form-row-codes", authority=operation).integer(_ACTIVITY_SLOTS_CODE)
+    return all((slot, field) in exported for slot in range(1, slots + 1) for field in ProrrataActivityField)
 
 
 def register_applies_to_ejercicio(register: ProrrataRegister, ejercicio: int) -> bool:
@@ -102,7 +125,9 @@ def _unrendered_activity_rows(
     """The activity rows the apartado would print, or ``None`` where this gate does not apply."""
     if work_unit.modelo != form_for_role(_ANNUAL_SUMMARY_ROLE):
         return None
-    if registry_renders_prorrata_apartado(operation.revision(work_unit.modelo, registry_revision_id)):
+    if registry_renders_prorrata_apartado(
+        operation.revision(work_unit.modelo, registry_revision_id), operation=operation
+    ):
         return None
     register = require_prorrata_register_coordinates_current(prorrata_register_repository.load(), operation=operation)
     if not register_applies_to_ejercicio(register, work_unit.filing_year):

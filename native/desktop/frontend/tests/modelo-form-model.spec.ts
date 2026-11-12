@@ -34,14 +34,19 @@ import type {
 // synthetic taxpayer: where each box is drawn, the address an edit of it
 // takes, and the submission the staged edits make. No page is opened.
 
-const envelope = (name: string) =>
+const envelope = <Read = ModeloWorkbenchFormProjectionV1>(name: string) =>
   JSON.parse(
     readFileSync(new URL(`${name}.json`, MODELO_FIXTURES), "utf8"),
-  ) as ModeloWorkbenchFormProjectionV1;
+  ) as Read;
 
 const m130 = envelope("modelo-130-1T-en");
 const m303 = envelope("modelo-303-1T-en");
-const m390 = envelope("modelo-390-0A-en");
+const rulesIncomplete = envelope<{ modelo: string; period_code: string }>(
+  "scenario-rules-incomplete",
+);
+const incomplete = envelope(
+  `modelo-${rulesIncomplete.modelo}-${rulesIncomplete.period_code}-en`,
+);
 
 const box = (e: ModeloWorkbenchFormProjectionV1, number: string) => {
   const found = placedFields(e.form.form).find(
@@ -198,8 +203,8 @@ test("an entry is read by a preflight carrying only what was typed", () => {
 
 test("a declaration whose edits were refused takes none", () => {
   expect(editsAdmitted(m130)).toBe(true);
-  expect(m390.admitted_baseline).toBeNull();
-  expect(editsAdmitted(m390)).toBe(false);
+  expect(incomplete.admitted_baseline).toBeNull();
+  expect(editsAdmitted(incomplete)).toBe(false);
 });
 
 test("a preflight's report keeps a set value only where the box still takes it as a change", () => {

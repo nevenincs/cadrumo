@@ -93,14 +93,14 @@ def _payer(row: RetencionSoportadaRowProjection) -> str:
     return row.payer_legal_name or row.payer_ref[:_PAYER_REF_SHOWN]
 
 
-_ABSENCE_STATE_KEYS: Final[Mapping[RetencionSoportadaAbsenceState, str]] = {
+_ABSENCE_STATE_LOCALE_KEYS: Final[Mapping[RetencionSoportadaAbsenceState, str]] = {
     RetencionSoportadaAbsenceState.ACTIVE: "tui.withholding.absence.state.active",
     RetencionSoportadaAbsenceState.WITHDRAWN: "tui.withholding.absence.state.withdrawn",
 }
 
 
 def _absence_state(state: RetencionSoportadaAbsenceState) -> str:
-    return tr(_ABSENCE_STATE_KEYS[state])
+    return tr(_ABSENCE_STATE_LOCALE_KEYS[state])
 
 
 def mutation_refusal_words(result: BaseModel | None) -> str | None:

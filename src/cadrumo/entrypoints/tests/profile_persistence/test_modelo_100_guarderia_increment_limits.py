@@ -58,13 +58,15 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, c
 from ...adapter_composition_work_ports import build_work_lifecycle_ports
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
+from .work_income_support import record_work_income
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _MODELO = "100"
 _PERIOD = "0A"
 _PROFILE_ID = "10010000-0000-4100-8100-000000000613"
-_WORK_INCOME = validated_casilla_id("0003")
+_WORK_INCOME = Decimal("40000.00")
+_TAXPAYER_TAX_ID = "12345678Z"
 _CLOCK = datetime.now(UTC).replace(microsecond=0)
 """The run's own instant: storage refuses a record stamped after the moment it is written."""
 _INCREMENTO_FORMULA = "renta-incremento-guarderia-0613"
@@ -184,7 +186,7 @@ def _seed_profile(filing_year: int, stated: tuple[UserProfileFact, ...]) -> None
         profile_id=_PROFILE_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.tax_id", value=_TAXPAYER_TAX_ID),
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
@@ -230,6 +232,9 @@ def _calculate(filing_year: int) -> CalculationRevision:
     snapshot = _snapshot(filing_year)
     binding_values, relation_values = _operator_answers(snapshot)
     with bundled_indexed_authority().operation() as operation:
+        record_work_income(
+            operation=operation, taxpayer_tax_id=_TAXPAYER_TAX_ID, filing_year=filing_year, gross=_WORK_INCOME
+        )
         work_unit_id = create_work_unit(
             bucket_id=_PROFILE_ID,
             modelo=_MODELO,
@@ -251,7 +256,6 @@ def _calculate(filing_year: int) -> CalculationRevision:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             actor=_PROFILE_ID,
-            casilla_inputs={_WORK_INCOME: Decimal("40000.00")},
             binding_values=binding_values,
             relation_values=relation_values,
             ports=ports,

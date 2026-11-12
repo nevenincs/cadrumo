@@ -8,6 +8,16 @@ date_axis = "filing_period"
 valid_from = 1993-01-01
 legal_refs = [
   "ley-37-1992:art-94",
+  "ley-37-1992:art-20-uno-1",
+  "ley-37-1992:art-20-uno-3",
+  "ley-37-1992:art-20-uno-5",
+  "ley-37-1992:art-20-uno-8",
+  "ley-37-1992:art-20-uno-9",
+  "ley-37-1992:art-20-uno-10",
+  "ley-37-1992:art-20-uno-12",
+  "ley-37-1992:art-20-uno-14",
+  "ley-37-1992:art-20-uno-22",
+  "ley-37-1992:art-20-uno-23",
   "ley-37-1992:art-103",
   "ley-37-1992:art-104",
   "ley-37-1992:art-106",
@@ -39,7 +49,7 @@ kind = "mapping"
 entries = [
   { key = "prorrata.volume.con_derecho_categories", value = "domestic_general,domestic_reduced,domestic_super_reduced,domestic_zero,domestic_reverse_charge,intra_community_supply,export_third_country_zero_rated,export_assimilated_zero_rated" },
   { key = "prorrata.volume.sin_derecho_categories", value = "domestic_exempt" },
-  { key = "prorrata.volume.sin_derecho_exemption_articles", value = "art_20_uno_8,art_20_uno_14" },
+  { key = "prorrata.volume.sin_derecho_exemption_articles", value = "art_20_uno_1,art_20_uno_3,art_20_uno_5,art_20_uno_8,art_20_uno_9,art_20_uno_10,art_20_uno_12,art_20_uno_14,art_20_uno_22,art_20_uno_23" },
   { key = "exempt_regime.deduction_ratio", value = "0" },
   { key = "percentage.unit_divisor", value = "100" },
   { key = "prorrata_especial_mandatory.legal_ref", value = "ley-37-1992:art-103" },

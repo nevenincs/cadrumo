@@ -35,6 +35,7 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import CONTENT_DIGEST_PREFIX, content_hash_hex
 from ...core.period import Period
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id, sole_bound_casilla
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
     resolve_bound_casilla_binding_value,
@@ -742,6 +743,7 @@ def resolve_calculation_inputs(
     casilla_inputs: Mapping[CasillaId, Decimal],
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     profile_text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    resolved_text_bindings: Mapping[BindingId, str] | None = None,
 ) -> ResolvedCalculationInputs:
     """Build the canonical casilla input maps for engine execution.
 
@@ -763,7 +765,9 @@ def resolve_calculation_inputs(
     profile answers, resolved by
     :func:`~application.modelo.profile_export_binding.resolve_profile_text_casilla_inputs`;
     they rank below a bound value on the binding channel and below the caller's
-    own text.
+    own text. ``resolved_text_bindings`` are the source-resolved values of
+    text-channel bindings; a bound text casilla takes its binding's text
+    verbatim, so a code keeps its leading zeros.
 
     The two channels are returned together, and never merged, because the
     registry assigns each casilla to exactly one of them by declared
@@ -795,6 +799,7 @@ def resolve_calculation_inputs(
                     **declaration.text_casilla_inputs,
                     **dict(profile_text_casilla_inputs or {}),
                     **_bound_text_casilla_inputs(revision, resolved_bindings),
+                    **_bound_text_channel_casilla_inputs(revision, resolved_text_bindings or {}),
                     **dict(text_casilla_inputs or {}),
                 }.items(),
             ),
@@ -824,6 +829,31 @@ def _bound_text_casilla_inputs(
         if value is not None:
             projected[casilla.id] = canonical_decimal_string(value)
     return projected
+
+
+def _bound_text_channel_casilla_inputs(
+    revision: ModeloRevision,
+    resolved_text_bindings: Mapping[BindingId, str],
+) -> dict[CasillaId, str]:
+    """Project text-channel binding values onto the text casillas bound to them.
+
+    Only a binding declared on the ``text`` channel is read, so an enum token
+    meant for a typed consumer never lands in a casilla as free text. A casilla
+    whose binding resolved to nothing stays absent.
+    """
+    if not resolved_text_bindings:
+        return {}
+    text_casilla_ids = text_family_casilla_ids(revision.casillas)
+    text_bindings = {binding.id for binding in revision.bindings if binding.value.channel is BindingValueChannel.TEXT}
+    return {
+        casilla.id: resolved_text_bindings[casilla.binding]
+        for casilla in revision.casillas
+        if casilla.input_kind == InputKind.BOUND
+        and casilla.id in text_casilla_ids
+        and casilla.binding is not None
+        and casilla.binding in text_bindings
+        and casilla.binding in resolved_text_bindings
+    }
 
 
 def _binding_replay_overrides(

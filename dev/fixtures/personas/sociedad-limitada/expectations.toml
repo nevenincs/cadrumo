@@ -175,7 +175,7 @@ servicio exterior.
 """
 legal_ref = ["ley-27-2014:art-124"]
 grounding = "unverified"
-reason = "The accounting result needs closing entries (amortisation, accruals, officer costs) the bank ledger lacks, so these casillas stay not sourced until Sociedades sources them."
+reason = "The cuenta de pérdidas y ganancias lines need closing entries (amortisation, accruals, officer costs) the bank ledger lacks, so these casillas stay not sourced until Sociedades sources them. The accounting result itself (role is-liquidacion-i-importe, casilla 00501 of the liquidación page) is a given the company enters (persona.toml [[work_inputs]]), so it is not asserted here."
 
 [[values]]
 modelo = "200"
