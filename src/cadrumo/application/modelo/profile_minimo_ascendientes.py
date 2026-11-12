@@ -1,0 +1,239 @@
+"""Derive the mínimo por ascendientes (casilla 0515) from the stored ascendant rows.
+
+The rows live at ``renta_family.ascendiente.{n}.{leaf}``. The injector folds them
+into the year-free derived fact ``renta_family.ascendientes_minimos_aggregate``,
+which the registry binding projects onto the casilla, the same division of labour
+the mínimo por descendientes uses. It runs only where the selected revision declares
+a binding that consumes the fact, so coverage of an edition is registry work.
+
+A row whose share turns on a fact it does not state withholds the aggregate. The
+fact stays absent, never zero; the consuming binding is reported unresolved, and one
+``household_row_fact_unstated`` note per missing leaf names the rows that omit it by
+their 0-based position. That note is what stops checking, local filing and export,
+sending the filer to the ascendant edit door for the first such row.
+
+:class:`RegistrySnapshot` is the pinned registry snapshot.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
+from typing import TYPE_CHECKING, Final
+
+from ...core.aggregation import BindingSourceKind
+from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.parsing.dates import parse_iso8601_date
+from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from ...domain.contribuyente.ascendant_minimum import (
+    CONVIVIENTES_LEAF,
+    DECLARACION_PROPIA_LEAF,
+    DISCAPACIDAD_LEAF,
+    RENTAS_ANUALES_LEAF,
+    AscendantInfo,
+    AscendantMinimumAmounts,
+    minimo_ascendientes,
+)
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..user_profile.ascendant_rows import ASCENDANT_ROW_LEAVES
+from .profile_derived_facts import ProfileBindingResolutionError, snapshot_authored_year
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
+    from ...domain.user_profile.values import UserProfileFactValue
+
+__all__ = [
+    "MINIMO_ASCENDIENTES_AGGREGATE_KEY",
+    "AscendantMinimumDerivation",
+    "inject_derived_minimo_ascendientes_facts",
+]
+
+MINIMO_ASCENDIENTES_AGGREGATE_KEY: Final = "renta_family.ascendientes_minimos_aggregate"
+
+_ASCENDANT_GROUP: Final = "renta_family.ascendiente"
+_BIRTH_DATE_LEAF: Final = "birth_date"
+_DEATH_DATE_LEAF: Final = "fallecimiento"
+_ROW_LEAF: Final = re.compile(rf"^{re.escape(_ASCENDANT_GROUP)}\.(\d+)\.([a-z0-9_]+)$")
+_YES_NO: Final = {"true": True, "false": False}
+
+_PARAMETER_IDS: Final = {
+    "base": "renta-minimo-ascendientes-mayor-65",
+    "increment_over_age": "renta-minimo-ascendientes-mayor-75",
+    "fallecimiento": "renta-minimo-ascendientes-fallecimiento",
+    "rentas_anuales_limite": "renta-minimo-ascendientes-rentas-anuales-limite",
+    "declaracion_propia_rentas_limite": "renta-minimo-ascendientes-declaracion-propia-rentas-limite",
+}
+
+
+@dataclass(frozen=True, slots=True)
+class AscendantMinimumDerivation:
+    """The derived paths withheld for unstated facts, and the notes that name those facts."""
+
+    withheld_paths: frozenset[str] = frozenset()
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+
+
+def _amounts(snapshot: RegistrySnapshot) -> AscendantMinimumAmounts | None:
+    """The edition's art. 59/61 figures, or ``None`` when it does not declare all of them."""
+    # A projected year reuses the authored edition's dated parameter values.
+    date_context = {"filing_period": date(snapshot_authored_year(snapshot), 12, 31)}
+    declared = {parameter.id: parameter for parameter in snapshot.revision.parameters}
+    resolved: dict[str, Decimal] = {}
+    for field, parameter_id in _PARAMETER_IDS.items():
+        parameter = declared.get(parameter_id)
+        if parameter is None:
+            return None
+        resolved[field] = resolve_parameter(parameter, date_context)
+    return AscendantMinimumAmounts.model_validate(resolved)
+
+
+def _refuse_stored(index: int, leaf: str) -> ProfileBindingResolutionError:
+    return ProfileBindingResolutionError(f"{_ASCENDANT_GROUP}.{index}.{leaf} holds a value the ascendant row cannot")
+
+
+def _stored_date(row: Mapping[str, str], index: int, leaf: str) -> date | None:
+    raw = row.get(leaf)
+    if raw is None:
+        return None
+    try:
+        parsed = parse_iso8601_date(raw)
+    except (TypeError, ValueError) as exc:
+        raise _refuse_stored(index, leaf) from exc
+    if parsed is None:
+        raise _refuse_stored(index, leaf)
+    return parsed
+
+
+def _stored_count(row: Mapping[str, str], index: int, leaf: str) -> int | None:
+    raw = row.get(leaf)
+    if raw is None:
+        return None
+    if not (raw.isascii() and raw.isdigit()):
+        raise _refuse_stored(index, leaf)
+    return int(raw)
+
+
+def _stored_amount(row: Mapping[str, str], index: int) -> Decimal | None:
+    raw = row.get(RENTAS_ANUALES_LEAF)
+    if raw is None:
+        return None
+    value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
+    if value is None or value < 0:
+        raise _refuse_stored(index, RENTAS_ANUALES_LEAF)
+    return value
+
+
+def _stored_answer(row: Mapping[str, str], index: int) -> bool | None:
+    raw = row.get(DECLARACION_PROPIA_LEAF)
+    if raw is None:
+        return None
+    answer = _YES_NO.get(raw.lower())
+    if answer is None:
+        raise _refuse_stored(index, DECLARACION_PROPIA_LEAF)
+    return answer
+
+
+def _stored_rows(fact_index: Mapping[str, UserProfileFactValue]) -> dict[int, dict[str, str]]:
+    rows: dict[int, dict[str, str]] = {}
+    for path, value in fact_index.items():
+        match = _ROW_LEAF.match(path)
+        # Only the leaves the edit door reads make a row, so a position here is the door's index.
+        if match is None or value is None or match.group(2) not in ASCENDANT_ROW_LEAVES:
+            continue
+        text = value.isoformat() if isinstance(value, date) else str(value).strip()
+        if text:
+            rows.setdefault(int(match.group(1)), {})[match.group(2)] = text
+    return dict(sorted(rows.items()))
+
+
+def _ascendant(index: int, row: Mapping[str, str]) -> AscendantInfo | None:
+    """One stored row, or ``None`` when it has no birth date, which the door always requires."""
+    birth = _stored_date(row, index, _BIRTH_DATE_LEAF)
+    if birth is None:
+        return None
+    return AscendantInfo(
+        birth_date=birth,
+        death_date=_stored_date(row, index, _DEATH_DATE_LEAF),
+        convivientes=_stored_count(row, index, CONVIVIENTES_LEAF),
+        rentas_anuales_euros=_stored_amount(row, index),
+        presenta_declaracion_propia=_stored_answer(row, index),
+        discapacidad_grado=_stored_count(row, index, DISCAPACIDAD_LEAF),
+    )
+
+
+def _unstated_note(leaf: str, rows: tuple[int, ...], recorded: int, *, bucket_id: str) -> CalculationSourceDiagnostic:
+    """One note for ``leaf``, naming by 0-based position each row that omits it, as the edit door takes it."""
+    omitting = len(rows)
+    return CalculationSourceDiagnostic(
+        reason="household_row_fact_unstated",
+        source_kind=BindingSourceKind.PROFILE.value,
+        binding_source=BindingSourceKind.PROFILE,
+        message=(
+            f"profile object {_ASCENDANT_GROUP!r} records {recorded} rows, {omitting} of them without "
+            f"{leaf!r}, which the mínimo por ascendientes needs; the aggregate is withheld"
+        ),
+        resolver_id="profile",
+        source_ref=f"profile:{bucket_id}:rows:{_ASCENDANT_GROUP}.{leaf}",
+        fact=CalculationNoteFact.of(
+            CalculationNoteSentence.HOUSEHOLD_ROW_FACT_UNSTATED,
+            rows=tuple(str(row) for row in rows),
+            group=_ASCENDANT_GROUP,
+            leaf=leaf,
+            omitting=omitting,
+            recorded=recorded,
+        ),
+    )
+
+
+def inject_derived_minimo_ascendientes_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+    declared_selectors: frozenset[str],
+    *,
+    context: FamilyFactResolutionContext,
+    bucket_id: str,
+) -> AscendantMinimumDerivation:
+    """Write the art. 59 aggregate where a binding consumes it, or withhold it and say why.
+
+    Computes always where a consumer is declared: the path is derived, so a stored
+    value there can only be stale or hand-planted. Leaves the path absent without a
+    note when the edition lacks one of the figures, which the derived-binding
+    advisory then reports as a structural gap.
+    """
+    if MINIMO_ASCENDIENTES_AGGREGATE_KEY not in declared_selectors:
+        return AscendantMinimumDerivation()
+    fact_index.pop(MINIMO_ASCENDIENTES_AGGREGATE_KEY, None)
+    amounts = _amounts(snapshot)
+    if amounts is None:
+        return AscendantMinimumDerivation()
+    rows = _stored_rows(fact_index)
+    ascendants: list[AscendantInfo] = []
+    # The position of each read ascendant in the stored order, which is the edit door's index.
+    positions: list[int] = []
+    owed: dict[str, list[int]] = {}
+    for position, (index, row) in enumerate(rows.items()):
+        ascendant = _ascendant(index, row)
+        if ascendant is None:
+            owed.setdefault(_BIRTH_DATE_LEAF, []).append(position)
+        else:
+            ascendants.append(ascendant)
+            positions.append(position)
+    result = minimo_ascendientes(ascendants, snapshot.filing_year, amounts=amounts, context=context)
+    for unstated in result.unstated:
+        for leaf in unstated.leaves:
+            owed.setdefault(leaf, []).append(positions[unstated.position - 1])
+    if owed or result.total is None:
+        return AscendantMinimumDerivation(
+            withheld_paths=frozenset({MINIMO_ASCENDIENTES_AGGREGATE_KEY}),
+            diagnostics=tuple(
+                _unstated_note(leaf, tuple(sorted(omitting)), len(rows), bucket_id=bucket_id)
+                for leaf, omitting in sorted(owed.items())
+            ),
+        )
+    fact_index[MINIMO_ASCENDIENTES_AGGREGATE_KEY] = result.total
+    return AscendantMinimumDerivation()

@@ -34,6 +34,13 @@ description = "Parte autonomica del minimo por descendientes, resuelta contra la
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
 
 [[derived_selectors]]
+pattern = "renta_family.ascendientes_minimos_aggregate"
+derived_from = ["renta_family.ascendiente"]
+entry_surface = "aeat config profile ascendiente"
+description = "Parte estatal del minimo por ascendientes, calculada de los ascendientes declarados."
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
+
+[[derived_selectors]]
 pattern = "renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
@@ -1787,8 +1794,8 @@ type = "object"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Details of each ascendant who gives entitlement to the ascendant minimum, stored as renta_family.ascendiente.{n}: NIF, surnames and name, birth date, official disability code, number of descendants the ascendant lives with and date of death."
-legal_refs = ["ley-35-2006:art-59"]
+description = "Details of each ascendant who gives entitlement to the ascendant minimum, stored as renta_family.ascendiente.{n}: NIF, surnames and name, birth date, official disability code, statutory disability grade, number of descendants the ascendant lives with, date of death, annual income excluding exempt income and whether the ascendant files their own return."
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
 
 [[sections.fields]]
 key = "ascendientes_count"

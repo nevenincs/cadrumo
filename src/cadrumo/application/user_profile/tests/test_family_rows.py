@@ -9,6 +9,7 @@ import pytest
 
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ....domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_adoption_token
 from ....domain.calculations.registry.tests.modelo_100_profile_binding_tables import FAMILY_ROW_BINDINGS
 from ....domain.contribuyente.descendant import DescendantInfo
@@ -65,6 +66,8 @@ def test_every_stored_descendant_leaf_but_one_has_served_wording() -> None:
 
 _ASCENDANT_OBJECT = "renta_family.ascendiente"
 _ASCENDANT_COUNT = "renta_family.ascendientes_count"
+# Read by the mínimo por ascendientes aggregate rather than by a form binding of the row.
+_MINIMO_ASCENDIENTES_LEAVES = frozenset({"rentas_anuales", "declaracion_propia", "discapacidad"})
 # The Modelo 100 bindings read this leaf from the object, but nothing can store it yet.
 _BOUND_WITHOUT_STORED_LEAF = frozenset({"discapacidad_clave"})
 
@@ -89,7 +92,7 @@ def test_ascendant_leaves_are_those_the_form_reads_from_the_object_that_a_row_ca
     counts = {count for obj, _leaf, count in FAMILY_ROW_BINDINGS.values() if obj == _ASCENDANT_OBJECT}
     served = {leaf.leaf for leaf in group.leaves}
     assert bound - served == _BOUND_WITHOUT_STORED_LEAF
-    assert served <= bound
+    assert served - bound == _MINIMO_ASCENDIENTES_LEAVES
     assert counts == {_ASCENDANT_COUNT}
     by_leaf = {leaf.leaf: leaf for leaf in group.leaves}
     assert by_leaf["birth_date"].field_type is ProfileFieldType.DATE and by_leaf["birth_date"].required
@@ -98,7 +101,13 @@ def test_ascendant_leaves_are_those_the_form_reads_from_the_object_that_a_row_ca
     assert by_leaf["nif"].field_type is ProfileFieldType.STRING
     assert by_leaf["apellidos_nombre"].field_type is ProfileFieldType.STRING
     assert not by_leaf["apellidos_nombre"].required
-    assert all(leaf.label and not leaf.choices for leaf in group.leaves)
+    assert by_leaf["rentas_anuales"].field_type is ProfileFieldType.DECIMAL
+    assert [choice.value for choice in by_leaf["declaracion_propia"].choices] == ["true", "false"]
+    with bundled_indexed_authority().operation() as authority:
+        grades = sorted(accepted_descendant_disability_grades(authority=authority))
+    assert [choice.value for choice in by_leaf["discapacidad"].choices] == [str(grade) for grade in grades]
+    assert all(leaf.label for leaf in group.leaves)
+    assert not [leaf.leaf for leaf in group.leaves if leaf.choices and leaf.leaf not in _MINIMO_ASCENDIENTES_LEAVES]
 
 
 def test_an_unstated_ascendant_household_is_unknown_and_a_stated_zero_is_declared_none() -> None:
@@ -121,6 +130,9 @@ def test_stored_ascendants_are_rows_holding_only_the_leaves_they_state() -> None
             f"{_ASCENDANT_OBJECT}.0.apellidos_nombre": "Ibáñez Roca Carmen",
             f"{_ASCENDANT_OBJECT}.0.birth_date": "1950-02-03",
             f"{_ASCENDANT_OBJECT}.0.convivientes": "2",
+            f"{_ASCENDANT_OBJECT}.0.rentas_anuales": "7200.00",
+            f"{_ASCENDANT_OBJECT}.0.declaracion_propia": "false",
+            f"{_ASCENDANT_OBJECT}.0.discapacidad": "33",
             f"{_ASCENDANT_OBJECT}.1.birth_date": "1948-07-09",
             f"{_ASCENDANT_OBJECT}.1.fallecimiento": "  ",
             # A leaf nothing stores, and a descendant row, are not ascendant facts.
@@ -137,6 +149,9 @@ def test_stored_ascendants_are_rows_holding_only_the_leaves_they_state() -> None
         ("apellidos_nombre", "Ibáñez Roca Carmen"),
         ("birth_date", "1950-02-03"),
         ("convivientes", "2"),
+        ("rentas_anuales", "7200.00"),
+        ("declaracion_propia", "false"),
+        ("discapacidad", "33"),
     ]
     assert all(fact.path == f"{_ASCENDANT_OBJECT}.0.{fact.leaf}" and not fact.masked for fact in first.facts)
     assert [(fact.leaf, fact.value) for fact in second.facts] == [("birth_date", "1948-07-09")]

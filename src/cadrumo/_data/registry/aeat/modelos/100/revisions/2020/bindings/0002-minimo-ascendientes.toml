@@ -1,0 +1,18 @@
+# Art. 59/61 LIRPF mínimo por ascendientes, parte estatal. The derived-fact injector
+# folds every stored ascendant row (renta_family.ascendiente.{n}) into one aggregate:
+# the art. 59.1 cuantía from the minimum age or a disability, the art. 59.2 increment
+# from the increment age, the art. 61 norma 4ª flat cuantía for a death in the period,
+# divided by the descendants the ascendant lives with (art. 61 normas 1ª and 5ª). A row
+# that leaves a deciding fact unstated withholds the aggregate. The selector carries no
+# year: every edition inherits this one declaration.
+[[revisions."2020".bindings]]
+id = "renta-profile-minimo-ascendientes-estatal"
+provider = { kind = "profile", profile_key = "renta_family.ascendientes_minimos_aggregate" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["El mínimo por ascendientes será de 1.150 euros anuales"]

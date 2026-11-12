@@ -57,6 +57,8 @@ from ...user_profile.projections import profile_fact_index
 from ..calculation_notes import note_fact_text
 from ..profile_binding import resolve_profile_binding_value, resolve_profile_sourced_bindings
 from ..profile_derived_facts import (
+    declared_profile_selectors,
+    family_fact_context,
     inject_derived_activity_tipo_clave_fact,
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
@@ -66,6 +68,7 @@ from ..profile_derived_facts import (
     inject_derived_minimo_descendientes_facts,
     inject_ordinary_work_maritime_facts,
 )
+from ..profile_minimo_ascendientes import inject_derived_minimo_ascendientes_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -266,6 +269,13 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     inject_ordinary_work_maritime_facts(fact_index)
     inject_derived_anualidades_eligibility_facts(fact_index, snapshot, operation=authority_operation)
     inject_derived_minimo_descendientes_facts(fact_index, snapshot, operation=authority_operation)
+    inject_derived_minimo_ascendientes_facts(
+        fact_index,
+        snapshot,
+        declared_profile_selectors(snapshot.revision),
+        context=family_fact_context(snapshot, operation=authority_operation),
+        bucket_id=_BUCKET_ID,
+    )
     # Casilla 0169's election is stated only for a direct-estimation taxpayer whose
     # dated criterion is declared for the ejercicio; the fixture declares it.
     inject_derived_cash_election_fact(fact_index, record, _YEAR, operation=authority_operation)

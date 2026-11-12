@@ -2034,7 +2034,11 @@ application:
       household_leaf:
         apellidos_nombre: surnames and name
         birth_date: date of birth
+        convivientes: the number of descendants they live with
+        declaracion_propia: whether they file their own return
+        discapacidad: disability grade
         nif: tax ID (NIF)
+        rentas_anuales: annual income
       income_class:
         actividad_economica: economic activities
         arrendamiento_inmueble_urbano: urban property rental
@@ -3705,6 +3709,8 @@ application:
         its letters and digits.
       ascendant_rows_over_limit: A declaration lists at most %{limit} ascendants,
         and %{count} were given.
+      ascendant_value_invalid: Ascendant %{row} states a value the declaration cannot
+        hold; check its income amount, disability grade and yes-or-no answer.
       censal_read_identity_absent: The tax registration read contained no tax identity,
         so it cannot be confirmed to belong to this profile.
       censal_read_identity_cleared: This profile's tax ID was cleared, so a tax registration
@@ -3793,11 +3799,23 @@ application:
           label: Date of birth
         convivientes:
           label: Number of descendants this ascendant lives with
+        declaracion_propia:
+          help: 'Asked when the income is above the figure the law sets: an own return
+            then removes the minimum.'
+          label: Does this ascendant file their own income tax return?
+        discapacidad:
+          help: Asked for an ascendant under the minimum age, who gives the minimum
+            only with a disability.
+          label: This ascendant's disability grade
         fallecimiento:
           help: Leave blank if this ascendant has not died.
           label: Date of death
         nif:
           label: Ascendant's NIF/NIE (leave blank if none)
+        rentas_anuales:
+          help: Income above the limit the law sets for the year means the ascendant
+            does not give the minimum for ascendants.
+          label: This ascendant's annual income, excluding exempt income (euros)
       incomplete: '{stated} stated, {recorded} recorded'
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge

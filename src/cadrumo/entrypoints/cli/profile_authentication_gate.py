@@ -323,6 +323,7 @@ PROFILE_CONNECTION_KEYS = frozenset(
         "app_modelo_work_disagreements",
         "app_modelo_work_file",
         "config_profile_ascendiente_add",
+        "config_profile_ascendiente_edit",
         "config_profile_ascendiente_list",
         "config_profile_ascendiente_remove",
         "config_profile_descendiente",

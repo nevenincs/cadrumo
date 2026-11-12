@@ -1,0 +1,54 @@
+# Art. 61 norma 4ª: an ascendant who dies in the period takes this flat cuantía, with no
+# art. 59.2 increment. Its own parameter: it coincides with the art. 59.1 figure but is a
+# separate provision.
+[[revisions."2020".parameters]]
+id = "renta-minimo-ascendientes-fallecimiento"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-4"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["1.150 euros anuales por ese descendiente o ascendiente"]
+
+[[revisions."2020".parameters.values]]
+value = "1150"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+
+# Art. 59.1: the ascendant must not have annual rentas, excluding exempt income, above
+# this figure. A separate provision from the art. 58.1 descendant ceiling.
+[[revisions."2020".parameters]]
+id = "renta-minimo-ascendientes-rentas-anuales-limite"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-59"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["que conviva con el contribuyente y no tenga rentas anuales, excluidas las exentas, superiores a 8.000 euros"]
+
+[[revisions."2020".parameters.values]]
+value = "8000"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+
+# Art. 61 norma 2ª: an ascendant who files their own return with rentas above this
+# figure generates no mínimo.
+[[revisions."2020".parameters]]
+id = "renta-minimo-ascendientes-declaracion-propia-rentas-limite"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["presenten declaración por este Impuesto con rentas superiores a 1.800 euros"]
+
+[[revisions."2020".parameters.values]]
+value = "1800"
+date_axis = "filing_period"
+valid_from = 2020-01-01

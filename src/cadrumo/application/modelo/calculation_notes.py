@@ -310,9 +310,16 @@ _HOUSEHOLD_LEAF_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "nif": "application.modelo.calc_diagnostic_words.household_leaf.nif",
         "apellidos_nombre": "application.modelo.calc_diagnostic_words.household_leaf.apellidos_nombre",
         "birth_date": "application.modelo.calc_diagnostic_words.household_leaf.birth_date",
+        "convivientes": "application.modelo.calc_diagnostic_words.household_leaf.convivientes",
+        "rentas_anuales": "application.modelo.calc_diagnostic_words.household_leaf.rentas_anuales",
+        "declaracion_propia": "application.modelo.calc_diagnostic_words.household_leaf.declaracion_propia",
+        "discapacidad": "application.modelo.calc_diagnostic_words.household_leaf.discapacidad",
     }
 )
-"""The words of each household row fact the design requires, by the leaf token the profile stores."""
+"""The words of each household row fact a note can name, by the leaf token the profile stores.
+
+The design requires the identity leaves on every row; the mínimo por ascendientes needs the others.
+"""
 _PROFILE_FIELD_VALUE: Final[str] = "field"
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(

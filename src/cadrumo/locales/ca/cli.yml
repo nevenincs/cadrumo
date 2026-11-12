@@ -2656,17 +2656,31 @@ cli:
       ascendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,APELLIDOS_NOMBRE=<cognoms
           i nom>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<nombre de descendents
-          amb qui conviu l'ascendent>]. Repetible; NACIMIENTO és obligatori a cada
-          fila.
+          amb qui conviu l'ascendent>][,RENTAS=<rendes anuals excloses les exemptes,
+          en euros>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65]. Repetible;
+          NACIMIENTO és obligatori a cada fila.
         add_help: Afegeix un o més ascendents al perfil actiu, o declara amb --none
           que no n'hi ha cap.
+        edit_clear_help: Una clau la dada declarada de la qual vols treure de l'ascendent,
+          com FALLECIMIENTO. Repetible; NACIMIENTO no es pot treure.
+        edit_empty: Indica almenys una dada per canviar amb --ascendiente CLAU=VALOR
+          o per treure amb --clear CLAU.
+        edit_flag_help: 'Parells CLAU=VALOR que se substitueixen, amb les claus d''add:
+          NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, RENTAS,
+          DECLARACION_PROPIA i DISCAPACIDAD. Repetible; cada clau com a màxim una
+          vegada.'
+        edit_help: Canvia les dades declarades d'un ascendent del perfil actiu per
+          índex (base 0); les dades que no indiquis es queden com estan.
+        edit_index_help: Índex (base 0) de l'ascendent que vols canviar, tal com el
+          mostra list.
         help: Declara els ascendents del contribuent per a la secció de família del
           model 100.
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} ascendent(s).
         invalid_row: No s'ha pogut llegir la fila de --ascendiente. Fes servir parells
-          CLAU=VALOR amb les claus NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO
-          i CONVIVIENTES, cadascuna com a màxim una vegada i amb valor; el context
-          de l'error indica la clau quan es pot identificar.
+          CLAU=VALOR amb les claus NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO,
+          CONVIVIENTES, RENTAS, DECLARACION_PROPIA i DISCAPACIDAD, cadascuna com a
+          màxim una vegada i amb valor; el context de l'error indica la clau quan
+          es pot identificar.
         list_help: Llista els ascendents declarats al perfil actiu i si el perfil
           declara que no n'hi ha cap.
         remove_help: Elimina un ascendent per índex (base 0) del perfil actiu.

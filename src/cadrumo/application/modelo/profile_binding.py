@@ -95,6 +95,7 @@ from .profile_derived_facts import (
     snapshot_authored_year,
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
+from .profile_minimo_ascendientes import inject_derived_minimo_ascendientes_facts
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
@@ -348,6 +349,10 @@ class _ProfileFacts:
     fingerprint: str | None
     decided_derived_paths: frozenset[str] = frozenset()
     """Derived paths an injector decided, including those it decided to leave absent."""
+    withheld_derived_paths: frozenset[str] = frozenset()
+    """Derived paths withheld because a household row leaves a deciding fact unstated."""
+    derived_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    """The notes naming the unstated facts behind each withheld path."""
 
 
 def _is_calculation_only_profile_binding(binding: BindingDefinition) -> bool:
@@ -471,6 +476,13 @@ def _load_profile_facts(
         context=family_context,
         operation=operation,
     )
+    ascendientes = inject_derived_minimo_ascendientes_facts(
+        fact_index,
+        snapshot,
+        declared_selectors,
+        context=family_context,
+        bucket_id=bucket_id,
+    )
     inject_derived_incremento_guarderia_facts(
         fact_index,
         snapshot,
@@ -489,7 +501,9 @@ def _load_profile_facts(
     return _ProfileFacts(
         fact_index=fact_index,
         fingerprint=profile_record_fingerprint,
-        decided_derived_paths=decided_derived_paths,
+        decided_derived_paths=decided_derived_paths | ascendientes.withheld_paths,
+        withheld_derived_paths=ascendientes.withheld_paths,
+        derived_diagnostics=ascendientes.diagnostics,
     )
 
 
@@ -642,6 +656,13 @@ def resolve_profile_sourced_bindings(
     unanswered_text_bindings = _unanswered_text_comparison_bindings(
         snapshot, selection.bindings, enum_values, caller_binding_ids=caller_binding_ids
     )
+    withheld_bindings = tuple(
+        binding.id
+        for binding in selection.bindings
+        if binding.id not in caller_binding_ids
+        and binding not in unanswered_text_bindings
+        and facts.withheld_derived_paths.intersection(profile_binding_selectors(binding.provider))
+    )
     date_values = channels.date_values
     boolean_values = channels.boolean_values
     sourced = tuple(
@@ -664,9 +685,10 @@ def resolve_profile_sourced_bindings(
         date_binding_values=date_values,
         boolean_binding_values=boolean_values,
         row_binding_values=rows.row_binding_values,
-        unresolved_binding_ids=tuple(binding.id for binding in unanswered_text_bindings),
+        unresolved_binding_ids=(*(binding.id for binding in unanswered_text_bindings), *withheld_bindings),
         diagnostics=(
             *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
+            *facts.derived_diagnostics,
             *derived_binding_diagnostics(
                 selection.bindings,
                 facts.fact_index,

@@ -357,6 +357,10 @@ def test_an_ascendant_without_a_nif_blocks_filing_and_leads_to_the_profile_in_ev
         UserProfileFact(path="renta_family.ascendientes_count", value="1"),
         UserProfileFact(path="renta_family.ascendiente.0.birth_date", value="1950-02-03"),
         UserProfileFact(path="renta_family.ascendiente.0.apellidos_nombre", value="Navarro Gil Carmen"),
+        # The facts the mínimo por ascendientes reads, so the NIF is the one row fact left unstated.
+        UserProfileFact(path="renta_family.ascendiente.0.convivientes", value="1"),
+        UserProfileFact(path="renta_family.ascendiente.0.rentas_anuales", value="7200.00"),
+        UserProfileFact(path="renta_family.ascendiente.0.declaracion_propia", value="false"),
     )
     revision = _calculated(operation, record)
 
@@ -434,3 +438,31 @@ def test_a_descendant_without_a_birth_date_names_the_fact_in_every_language(
         assert line.level is ModeloFormAttention.BLOCKS, language
     assert len({lines[0].message for lines in words.values()}) == len(OutputLanguage)
     assert words[OutputLanguage.EN][0].message == "Descendant: 1 recorded, 1 without date of birth."
+
+
+def test_an_ascendant_without_its_income_names_the_fact_and_the_row_edit_in_every_language(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    record = _record(
+        UserProfileFact(path="renta_family.ascendientes_count", value="1"),
+        UserProfileFact(path="renta_family.ascendiente.0.birth_date", value="1950-02-03"),
+        UserProfileFact(path="renta_family.ascendiente.0.apellidos_nombre", value="Navarro Gil Carmen"),
+        UserProfileFact(path="renta_family.ascendiente.0.nif", value="00000001R"),
+        UserProfileFact(path="renta_family.ascendiente.0.convivientes", value="1"),
+    )
+    revision = _calculated(operation, record)
+
+    for language in OutputLanguage:
+        (line,) = (
+            line
+            for line in form_issue_lines(_form(operation, revision, language), language)
+            if "household_row_fact_unstated" in line.technical
+        )
+        assert line.level is ModeloFormAttention.BLOCKS, language
+        assert line.surface is SourceSurface.PROFILE, language
+    (english,) = (
+        line
+        for line in form_issue_lines(_form(operation, revision, OutputLanguage.EN), OutputLanguage.EN)
+        if "household_row_fact_unstated" in line.technical
+    )
+    assert english.message == "Ascendant: 1 recorded, 1 without annual income."

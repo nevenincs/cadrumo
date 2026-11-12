@@ -2139,7 +2139,11 @@ application:
       household_leaf:
         apellidos_nombre: cognoms i nom
         birth_date: data de naixement
+        convivientes: nombre de descendents amb qui conviu
+        declaracion_propia: si presenta declaració pròpia
+        discapacidad: grau de discapacitat
         nif: NIF
+        rentas_anuales: rendes anuals
       income_class:
         actividad_economica: activitats econòmiques
         arrendamiento_inmueble_urbano: arrendament d'immoble urbà
@@ -3889,6 +3893,9 @@ application:
         les lletres i xifres.
       ascendant_rows_over_limit: Una declaració inclou com a màxim %{limit} ascendents
         i se n'han indicat %{count}.
+      ascendant_value_invalid: L'ascendent %{row} indica un valor que la declaració
+        no admet; revisa'n l'import de rendes, el grau de discapacitat i la resposta
+        de sí o no.
       censal_read_identity_absent: La lectura censal no inclou cap NIF, de manera
         que no es pot confirmar que correspongui a aquest perfil.
       censal_read_identity_cleared: El NIF d'aquest perfil s'ha buidat, de manera
@@ -3980,11 +3987,23 @@ application:
           label: Data de naixement
         convivientes:
           label: Nombre de descendents amb els quals conviu aquest ascendent
+        declaracion_propia:
+          help: 'Es pregunta quan les seves rendes superen la xifra que fixa la llei:
+            aleshores presentar la seva pròpia declaració treu el mínim.'
+          label: Aquest ascendent presenta la seva pròpia declaració de l'IRPF?
+        discapacidad:
+          help: Es pregunta per a un ascendent per sota de l'edat mínima, que dona
+            dret al mínim només amb discapacitat.
+          label: Grau de discapacitat d'aquest ascendent
         fallecimiento:
           help: Deixa-ho en blanc si aquest ascendent no ha mort.
           label: Data de defunció
         nif:
           label: NIF/NIE de l'ascendent (deixa'l en blanc si no en té)
+        rentas_anuales:
+          help: Si les seves rendes superen el límit que fixa la llei per a l'any,
+            l'ascendent no dona dret al mínim per ascendents.
+          label: Rendes anuals d'aquest ascendent, excloses les exemptes (euros)
       incomplete: '{stated} indicades, {recorded} registrades'
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara

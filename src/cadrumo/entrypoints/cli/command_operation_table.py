@@ -368,6 +368,8 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("config", "profile", "archive", "reconcile"), "profile.archive.reconcile"),
     (("config", "profile", "ascendiente", "add"), "user-profile.ascendants"),
     (("config", "profile", "ascendiente", "add"), "user-profile.view"),
+    (("config", "profile", "ascendiente", "edit"), "user-profile.ascendants"),
+    (("config", "profile", "ascendiente", "edit"), "user-profile.view"),
     (("config", "profile", "ascendiente", "list"), "user-profile.view"),
     (("config", "profile", "ascendiente", "remove"), "user-profile.ascendants"),
     (("config", "profile", "ascendiente", "remove"), "user-profile.view"),

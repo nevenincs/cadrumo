@@ -2143,7 +2143,11 @@ application:
       household_leaf:
         apellidos_nombre: apellidos y nombre
         birth_date: fecha de nacimiento
+        convivientes: número de descendientes con quienes convive
+        declaracion_propia: si presenta declaración propia
+        discapacidad: grado de discapacidad
         nif: NIF
+        rentas_anuales: rentas anuales
       income_class:
         actividad_economica: actividades económicas
         arrendamiento_inmueble_urbano: arrendamiento de inmueble urbano
@@ -3892,6 +3896,9 @@ application:
         sus letras y cifras.
       ascendant_rows_over_limit: Una declaración incluye como máximo %{limit} ascendientes
         y se han indicado %{count}.
+      ascendant_value_invalid: El ascendiente %{row} indica un valor que la declaración
+        no admite; revisa su importe de rentas, su grado de discapacidad y su respuesta
+        de sí o no.
       censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
         que no puede confirmarse que corresponda a este perfil.
       censal_read_identity_cleared: El NIF de este perfil se ha vaciado, por lo que
@@ -3982,11 +3989,23 @@ application:
           label: Fecha de nacimiento
         convivientes:
           label: Número de descendientes con los que convive este ascendiente
+        declaracion_propia:
+          help: 'Se pregunta cuando sus rentas superan la cifra que fija la ley: entonces
+            presentar su propia declaración quita el mínimo.'
+          label: ¿Presenta este ascendiente su propia declaración del IRPF?
+        discapacidad:
+          help: Se pregunta para un ascendiente por debajo de la edad mínima, que
+            da derecho al mínimo solo con discapacidad.
+          label: Grado de discapacidad de este ascendiente
         fallecimiento:
           help: Déjalo en blanco si este ascendiente no ha fallecido.
           label: Fecha de fallecimiento
         nif:
           label: NIF/NIE del ascendiente (déjalo en blanco si no tiene)
+        rentas_anuales:
+          help: Si sus rentas superan el límite que fija la ley para el año, el ascendiente
+            no da derecho al mínimo por ascendientes.
+          label: Rentas anuales de este ascendiente, excluidas las exentas (euros)
       incomplete: '{stated} indicadas, {recorded} registradas'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
