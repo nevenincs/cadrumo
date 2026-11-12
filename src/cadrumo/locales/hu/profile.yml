@@ -131,8 +131,6 @@ profile:
         sajátos adókulccsal adózik?
       fecha_constitucion: Mikor alapították a társaságot?
       fiscal_residency: Adóügyi illetőségi kategória
-      incn_periodo_impositivo_anterior: Mekkora volt a társaság nettó árbevétele az
-        előző adómegállapítási időszakban?
       incn_prior_12_months: Mi volt a nettó árbevétele az elmúlt 12 hónapban? (euróban,
         opcionális)
       irpf_income_categories: IRPF jövedelemkategóriák
@@ -690,8 +688,6 @@ profile:
             non_resident_irnr: Nem spanyolországi illetőségű (IRNR)
             resident_irpf: Spanyolországi illetőségű (IRPF)
           label: Adóügyi illetőség
-        incn_periodo_impositivo_anterior:
-          label: Az előző adómegállapítási időszak nettó árbevétele
         incn_prior_12_months:
           label: Előző 12 hónap nettó árbevétele
         irpf_income_categories:

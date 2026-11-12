@@ -132,6 +132,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
                 UserProfileFact(path="identity.legal_name", value="First Year Cuota Test SL"),
                 UserProfileFact(path="activities.description", value="software consultancy"),
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
+                UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
                 # First IS ejercicio: activity starts in the filing year, so a pago
                 # fraccionado under modalidad cuota (art. 40.2) has no prior IS return.
                 UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),

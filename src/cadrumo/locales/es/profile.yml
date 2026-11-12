@@ -134,8 +134,6 @@ profile:
         al tipo específico del art. 101 LIS?
       fecha_constitucion: ¿Cuál es la fecha de constitución de la entidad?
       fiscal_residency: Categoría de residencia fiscal
-      incn_periodo_impositivo_anterior: ¿Cuál fue el importe neto de la cifra de negocios
-        de la entidad en el período impositivo anterior?
       incn_prior_12_months: ¿Cuál fue su importe neto de la cifra de negocios en los
         últimos 12 meses? (en euros, opcional)
       irpf_income_categories: Categorías de renta IRPF
@@ -691,8 +689,6 @@ profile:
             non_resident_irnr: No residente (IRNR)
             resident_irpf: Residente en España (IRPF)
           label: Residencia fiscal
-        incn_periodo_impositivo_anterior:
-          label: Importe neto de la cifra de negocios del período impositivo anterior
         incn_prior_12_months:
           label: INCN de los 12 meses anteriores
         irpf_income_categories:

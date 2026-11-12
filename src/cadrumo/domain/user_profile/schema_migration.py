@@ -241,7 +241,6 @@ PATHS_INTRODUCED_IN_V11: Final[frozenset[str]] = frozenset(
         "erd_tipo_gravamen_especifico",
         "cooperativa_fiscalmente_protegida",
         "marca_instrumental",
-        "incn_periodo_impositivo_anterior",
         "fecha_constitucion",
         "cierre_ejercicio_dia",
         "cierre_ejercicio_mes",

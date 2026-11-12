@@ -80,6 +80,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
+            UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
             UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
             UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
         ),

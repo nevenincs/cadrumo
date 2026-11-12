@@ -644,17 +644,6 @@ legal_refs = ["orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
-key = "incn_periodo_impositivo_anterior"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Importe neto de la cifra de negocios del período impositivo inmediato anterior, que decide la escala del art. 29.1 LIS y la marca del Modelo 202 (diseño 2025 posición 130) frente al umbral de 1 millón de euros. Solo se pide cuando ese período no duró doce meses: si los duró, es el INCN de los doce meses anteriores al inicio del período impositivo (incn_prior_12_months). Sin valor, cuando se pide, la exportación se rechaza."
-model_selectors = ["taxpayer.incn_periodo_impositivo_anterior"]
-legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
-
-[[sections.fields]]
 key = "tributacion_estado_porcentaje"
 type = "decimal"
 required = false

@@ -133,8 +133,6 @@ profile:
         rate under art. 101 LIS?
       fecha_constitucion: When was the entity constituted?
       fiscal_residency: Fiscal residency category
-      incn_periodo_impositivo_anterior: What was the entity's net turnover in the
-        previous período impositivo?
       incn_prior_12_months: What was your net turnover over the past 12 months? (in
         euros, optional)
       irpf_income_categories: IRPF income categories
@@ -691,8 +689,6 @@ profile:
             non_resident_irnr: Non-resident (IRNR)
             resident_irpf: Resident in Spain (IRPF)
           label: Fiscal residency
-        incn_periodo_impositivo_anterior:
-          label: Net turnover in the previous período impositivo
         incn_prior_12_months:
           label: Net turnover of the prior 12 months
         irpf_income_categories:

@@ -74,7 +74,7 @@ _PROFILE_EDIT_ACTION = "operator.profile.edit"
 _CNAE_PATH = "taxpayer_type.principal_cnae"
 _CLASSIFICATION_PATH = "taxpayer_type.principal_cnae_classification"
 _INCN_PATH = "taxpayer_type.incn_prior_12_months"
-_INCN_PERIODO_ANTERIOR_PATH = "taxpayer_type.incn_periodo_impositivo_anterior"
+_PRIOR_PERIODO_TURNOVER_KEY = "application.filing.export.errors.m202_prior_periodo_turnover_unreadable"
 _COOPERATIVA_PATH = "taxpayer_type.cooperativa_fiscalmente_protegida"
 _ERD_PATH = "taxpayer_type.erd_tipo_gravamen_especifico"
 _TIPO_FACT = "tipo_gravamen_impuesto_sociedades"
@@ -512,7 +512,7 @@ def test_a_first_periodo_has_no_preceding_turnover_so_it_is_no_microempresa(
             assert rendered[_K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL][1] == " "
 
 
-def test_a_shorter_preceding_periodo_reads_its_own_turnover_and_refuses_without_it(
+def test_a_shorter_preceding_periodo_refuses_because_its_turnover_is_read_from_its_modelo_200(
     operation: PinnedAuthorityOperation,
     page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
     rate_years: tuple[int, ...],
@@ -524,15 +524,30 @@ def test_a_shorter_preceding_periodo_reads_its_own_turnover_and_refuses_without_
         assert periodo.prior_start == date(year - 1, 7, 1)
         assert not periodo.prior_lasted_twelve_months
 
+        # The stated twelve-month turnover is not that período's, so it never selects the scale.
         with pytest.raises(FilingProducerSnapshotError) as refused:
-            _resolve(records, year, _STATED, operation=operation, turnover=_TURNOVER, periodo=periodo)
-        assert refused.value.context is not None
-        assert refused.value.context["profile_path"] == _INCN_PERIODO_ANTERIOR_PATH
+            _resolve(records, year, _STATED, operation=operation, turnover=_MICRO_TURNOVER, periodo=periodo)
+        cause = refused.value
+        assert cause.translated_message == _PRIOR_PERIODO_TURNOVER_KEY, year
+        assert cause.context is not None
+        assert "profile_path" not in cause.context
 
-        # The twelve-month turnover is not that período's: only its own stated turnover selects the scale.
-        values = {**_STATED, _INCN_PERIODO_ANTERIOR_PATH: str(_MICRO_TURNOVER)}
-        rendered = _render(operation, records, year, values, turnover=_TURNOVER, periodo=periodo)
-        assert _tipo(rendered) == "/".join(_micro_scale(operation, year)), year
+        failure = _producer_facts_refusal(
+            ModeloExportCommand(calculation_revision_id="a" * 64, output_path=Path("unused.txt"), actor="operator"),
+            cause,
+        )
+        assert isinstance(failure, ModeloProfileReadinessError)
+        verdict = nested_terminal_precondition_verdict(failure)
+        assert verdict is not None
+        assert verdict.action is None
+        assert error_next_step(failure, OutputLanguage.EN) is None
+        english = resolve_error_message(failure, locale="en")
+        assert "less than twelve months" in english
+        assert "Modelo 200" in english
+        for locale in _LOCALES:
+            message = resolve_error_message(failure, locale=locale)
+            assert "200" in message, locale
+            assert "%{" not in message, locale
 
 
 @pytest.mark.parametrize("year", _YEARS)

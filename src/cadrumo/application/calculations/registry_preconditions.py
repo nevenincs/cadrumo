@@ -25,7 +25,11 @@ from ..operator_actions.models import ActionArgumentBinding, ActionReference, Co
 from ..operator_actions.preconditions import conditionality_for_binding, no_action_precondition_verdict
 
 _PROFILE_EDIT_CONDITIONS = frozenset(
-    {RegistryFailureCondition.TAXPAYER_MODEL_DECLARED, RegistryFailureCondition.MODELO_202_INCN_DECLARED}
+    {
+        RegistryFailureCondition.TAXPAYER_MODEL_DECLARED,
+        RegistryFailureCondition.MODELO_202_INCN_DECLARED,
+        RegistryFailureCondition.MODELO_202_NAVIERAS_DECLARED,
+    }
 )
 _REGISTRY_RECORD_SAFETY_CONDITIONS = frozenset(
     {

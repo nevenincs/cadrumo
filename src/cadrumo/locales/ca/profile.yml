@@ -132,8 +132,6 @@ profile:
         tipus específic de l'art. 101 LIS?
       fecha_constitucion: Quina és la data de constitució de l'entitat?
       fiscal_residency: Categoria de residència fiscal
-      incn_periodo_impositivo_anterior: Quin va ser l'import net de la xifra de negocis
-        de l'entitat en el període impositiu anterior?
       incn_prior_12_months: Quin va ser el teu import net de la xifra de negocis durant
         els darrers 12 mesos? (en euros, opcional)
       irpf_income_categories: Categories de renda IRPF
@@ -689,8 +687,6 @@ profile:
             non_resident_irnr: No resident (IRNR)
             resident_irpf: Resident a Espanya (IRPF)
           label: Residència fiscal del contribuent
-        incn_periodo_impositivo_anterior:
-          label: Import net de la xifra de negocis del període impositiu anterior
         incn_prior_12_months:
           label: INCN dels 12 mesos anteriors
         irpf_income_categories:

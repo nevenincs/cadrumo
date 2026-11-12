@@ -24,6 +24,7 @@ from typing import TypedDict
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_date
+from ...core.parsing.utils import parse_bool
 from ...core.period import Period
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.irpf_income_categories import (
@@ -213,6 +214,7 @@ class _ProfileActivityFields(TypedDict):
     activity_start_date: date | None
     activity_end_date: date | None
     incn_prior_12_months: Decimal | None
+    regimen_entidades_navieras_tonelaje: bool | None
 
 
 class _ProfileEstablishmentFields(TypedDict):
@@ -378,11 +380,14 @@ def _resolve_profile_relationship_fields(
 
 
 def _resolve_profile_activity_fields(canonical: Mapping[str, str]) -> _ProfileActivityFields:
-    """Resolve activity dates and the prior-year INCN amount."""
+    """Resolve activity dates, the prior-year INCN amount and the navieras tonelaje regime."""
     return {
         "activity_start_date": profiles_parse_date(canonical.get("censo.activity_start_date")),
         "activity_end_date": profiles_parse_date(canonical.get("censo.activity_end_date")),
         "incn_prior_12_months": _parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
+        "regimen_entidades_navieras_tonelaje": parse_bool(
+            canonical.get("taxpayer_type.regimen_entidades_navieras_tonelaje"),
+        ),
     }
 
 

@@ -28,8 +28,11 @@ design derives from a stated fact:
   are law, not choices: they are derived from the governed LIS art. 29 rates the
   stated régimen marks select (see ``export_m202_tipo_gravamen``).
 - The immediately preceding período's turnover is the twelve-month turnover when
-  that período lasted twelve months; otherwise it is stated on its own. An
-  entity in its first período has no preceding one, so the mark stays blank.
+  that período lasted twelve months. A shorter preceding período's turnover is
+  that período's own, read from its Modelo 200, which the application cannot
+  read yet, so such an instalment is refused rather than exported on another
+  turnover. An entity in its first período has no preceding one, so the mark
+  stays blank.
 
 Only the facts the selected edition's layout cites are asked for, so a fact a
 year's design has no position for never blocks that year's export.
@@ -41,7 +44,7 @@ import re
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Final
 
 from ...core.filing_producer_key import FilingProducerKey
@@ -56,6 +59,7 @@ from ...domain.calculations.registry.cnae_classification import (
     required_cnae_classification,
 )
 from ...domain.deadlines.models import TaxpayerProfile
+from ..filing.errors import FilingPreconditionCondition, filing_no_recovery_verdict
 from ..filing.producer_snapshot import FilingProducerSnapshotError, Modelo202ProducerProfile
 from ..operator_actions.preconditions import profile_required_facts_missing_verdict
 from ..user_profile.completeness import pinned_registry_scope
@@ -74,7 +78,6 @@ _K = FilingProducerKey
 PRINCIPAL_CNAE_PATH: Final = "taxpayer_type.principal_cnae"
 PRINCIPAL_CNAE_CLASSIFICATION_PATH: Final = "taxpayer_type.principal_cnae_classification"
 INCN_PRIOR_12_MONTHS_PATH: Final = "taxpayer_type.incn_prior_12_months"
-INCN_PERIODO_ANTERIOR_PATH: Final = "taxpayer_type.incn_periodo_impositivo_anterior"
 NEW_ENTITY_PATH: Final = "taxpayer_type.new_entity_first_two_profit_periods"
 LEY_49_2002_PATH: Final = "taxpayer_type.regimen_ley_49_2002"
 SOCIMI_PATH: Final = "taxpayer_type.regimen_socimi"
@@ -136,6 +139,9 @@ _COMBINED_NO_CONSTA: Final = "0"
 #: The served words of the refusal: the export needs a fact which is not stated.
 _PRODUCER_FACT_REQUIRED_MESSAGE: Final = "application.filing.export.errors.producer_fact_required"
 _REFUSAL_REASON: Final = "m202_profile_facts_missing"
+#: The served words of the refusal: a shorter preceding período's turnover cannot be read yet.
+_PRIOR_PERIODO_TURNOVER_MESSAGE: Final = "application.filing.export.errors.m202_prior_periodo_turnover_unreadable"
+_PRIOR_PERIODO_TURNOVER_REASON: Final = "m202_prior_periodo_turnover_unreadable"
 
 
 class _Reader:
@@ -189,13 +195,6 @@ class _Reader:
             return None
         return stated
 
-    def amount(self, path: str) -> Decimal | None:
-        try:
-            stated = Decimal((self._values.get(path) or "").strip())
-        except InvalidOperation:
-            stated = None
-        return self.stated(path, stated if stated is not None and stated.is_finite() else None)
-
     def stated(self, path: str, value: Decimal | None) -> Decimal | None:
         if value is None:
             self._absent(path)
@@ -246,6 +245,8 @@ def modelo_202_producer_profile(
         FilingProducerSnapshotError: A cited fact is unstated, or the principal CNAE
             is not four digits; the refusal opens the first such profile fact.
             A régimen or ejercicio whose rates are not published refuses terminally.
+            A preceding período shorter than twelve months refuses with no door:
+            its turnover is read from its Modelo 200, which cannot be read yet.
     """
     cited = frozenset(cited_producer_keys)
     reader = _Reader(profile_values)
@@ -313,7 +314,13 @@ def _principal_cnae(reader: _Reader, *, effective_date: date, operation: PinnedA
 def _read_rate_inputs(
     reader: _Reader, *, workflow_profile: TaxpayerProfile, periodo: PeriodoImpositivo
 ) -> _RateInputs | None:
-    """Read the régimen marks and the preceding período's turnover, or ``None`` when one is unstated."""
+    """Read the régimen marks and the preceding período's turnover, or ``None`` when one is unstated.
+
+    Raises:
+        FilingProducerSnapshotError: The preceding período lasted less than
+            twelve months, so its turnover is that período's own and cannot be
+            read yet.
+    """
     ley_49_2002 = reader.mark(LEY_49_2002_PATH)
     socimi = reader.mark(SOCIMI_PATH)
     navieras = reader.mark(NAVIERAS_PATH)
@@ -323,7 +330,7 @@ def _read_rate_inputs(
     if periodo.prior_lasted_twelve_months:
         prior_incn = reader.stated(INCN_PRIOR_12_MONTHS_PATH, workflow_profile.incn_prior_12_months)
     elif periodo.prior_start is not None:
-        prior_incn = reader.amount(INCN_PERIODO_ANTERIOR_PATH)
+        raise _prior_periodo_turnover_unreadable(periodo.prior_start)
     if ley_49_2002 is None or socimi is None or navieras is None or erd is None or cooperativa is None:
         return None
     if periodo.prior_start is not None and prior_incn is None:
@@ -402,6 +409,26 @@ def _turnover_band(incn: Decimal) -> str:
     return next((band for lower, band in _TURNOVER_BANDS if incn >= lower), _TURNOVER_BAND_NONE)
 
 
+def _prior_periodo_turnover_unreadable(prior_start: date) -> FilingProducerSnapshotError:
+    """Refuse an instalment whose shorter preceding período's turnover only its Modelo 200 holds.
+
+    LIS art. 29.1 reads the turnover of the "período impositivo inmediato
+    anterior"; when that período lasted less than twelve months it is not the
+    twelve-month turnover the profile states but the one that período's
+    Modelo 200 declares. Nothing the filer can state replaces it, so the
+    refusal opens no door.
+    """
+    return FilingProducerSnapshotError(
+        f"the Modelo 202 rates read the turnover of the shorter período starting {prior_start.isoformat()}",
+        translated_message=_PRIOR_PERIODO_TURNOVER_MESSAGE,
+        context={"reason": _PRIOR_PERIODO_TURNOVER_REASON},
+        precondition_verdict=filing_no_recovery_verdict(
+            FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+            facts={"reason": _PRIOR_PERIODO_TURNOVER_REASON},
+        ),
+    )
+
+
 def _profile_facts_missing(paths: tuple[str, ...], qualifiers: Mapping[str, str]) -> FilingProducerSnapshotError:
     listed = ", ".join(paths)
     named = ", ".join(f"{path} ({qualifiers[path]})" if path in qualifiers else path for path in paths)
@@ -421,7 +448,6 @@ def _profile_facts_missing(paths: tuple[str, ...], qualifiers: Mapping[str, str]
 
 __all__ = [
     "COOPERATIVA_PATH",
-    "INCN_PERIODO_ANTERIOR_PATH",
     "INCN_PRIOR_12_MONTHS_PATH",
     "MARK_FACT_BY_PRODUCER_KEY",
     "NEW_ENTITY_PATH",
