@@ -641,8 +641,13 @@ class ModeloResultDispositionUncodifiedError(ModeloError):
     """
 
 
-class ModeloPriorDomiciliationElectionRefusedError(ModeloError):
-    """Raised when a prior-direct-debit election lacks legal, registry, or U-proof authority."""
+class ModeloPriorDomiciliationElectionRefusedError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when a prior-direct-debit election lacks legal, registry, or U-proof authority.
+
+    Each raise site carries the door of its cause: importing the baseline's
+    justificante, capturing its filed observation, the operator's decision, or
+    a terminal fault of the stored baseline or the registry layout.
+    """
 
 
 class ModeloRefundAccountMissingError(ModeloPreconditionErrorMixin, ModeloError):

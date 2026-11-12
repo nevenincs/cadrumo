@@ -16,7 +16,11 @@ from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..domain.filing.errors import FilingExportIntegrityError, FilingValidationError
-from ..domain.modelos.errors import CalculationRevisionIntegrityError, ModeloOperatorLayerIntegrityError
+from ..domain.modelos.errors import (
+    CalculationRevisionIntegrityError,
+    ModeloOperatorLayerIntegrityError,
+    PensionReduccionError,
+)
 from .operator_actions.models import PreconditionVerdict
 
 if TYPE_CHECKING:
@@ -41,6 +45,9 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
     registry_verdict = _calculation_registry_verdict(current)
     if registry_verdict is not None:
         return registry_verdict
+    decision_verdict = _operator_decision_verdict(current)
+    if decision_verdict is not None:
+        return decision_verdict
     for integrity_class, (precondition, record) in _TERMINAL_INTEGRITY_RECORDS.items():
         if isinstance(current, integrity_class):
             return cli_exception_no_recovery_verdict(
@@ -57,6 +64,32 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
             CliExceptionPrecondition.EXTERNAL_CONSTANTS_SECTION_VALID,
             facts={"section": "aeat.pre303", "valid": False},
         )
+    return None
+
+
+def _operator_decision_verdict(current: BaseException) -> PreconditionVerdict | None:
+    """Return the operator-decision verdict of an input the filer stated that a domain rule refuses.
+
+    The filer stated the refused values in the request, and no catalogued action
+    takes them again, so the refusal asks for the filer's decision and names no
+    command.
+    """
+    from ..domain.modelos.row_models import Modelo210AgrupacionRentaRowsError
+
+    records: dict[type[Exception], tuple[CliExceptionPrecondition, str]] = {
+        PensionReduccionError: (CliExceptionPrecondition.PENSION_REDUCCION_INPUTS_VALID, "pension_reduccion_inputs"),
+        Modelo210AgrupacionRentaRowsError: (
+            CliExceptionPrecondition.M210_AGRUPACION_ROWS_VALID,
+            "m210_agrupacion_rows",
+        ),
+    }
+    for refused_class, (precondition, record) in records.items():
+        if isinstance(current, refused_class):
+            return cli_exception_no_recovery_verdict(
+                precondition,
+                facts={"record": record, "valid": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            )
     return None
 
 
@@ -196,6 +229,8 @@ class CliExceptionPrecondition(StrEnum):
     LEDGER_TRANSACTION_VALID = "cli.ledger.transaction.valid"
     LEDGER_INVOICE_VALID = "cli.ledger.invoice.valid"
     EXTERNAL_CONSTANTS_SECTION_VALID = "cli.external_constants.section_valid"
+    PENSION_REDUCCION_INPUTS_VALID = "cli.modelo.pension_reduccion_inputs.valid"
+    M210_AGRUPACION_ROWS_VALID = "cli.modelo.m210_agrupacion_rows.valid"
 
 
 #: Integrity errors no filer action repairs, with the condition and record their terminal verdict names.

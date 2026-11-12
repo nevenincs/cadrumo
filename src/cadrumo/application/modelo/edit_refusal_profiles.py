@@ -18,6 +18,7 @@ from typing import Final
 from ...core.operator_action_enums import NoRecoveryOutcome
 from ..operator_actions.models import ActionReference
 from ..operator_surface.models import ManifestActionProfile
+from .declaration_refusal_profiles import DECLARATION_REFUSAL_PROFILES
 from .work_lifecycle_refusal_profiles import WORK_LIFECYCLE_REFUSAL_PROFILES
 
 _EDIT_LEAF: Final[str] = "modelo.work.set_value"
@@ -57,6 +58,7 @@ EDIT_REFUSAL_PROFILES: Final[tuple[ManifestActionProfile, ...]] = (
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
     *WORK_LIFECYCLE_REFUSAL_PROFILES,
+    *DECLARATION_REFUSAL_PROFILES,
 )
 """The edit refusal families' declarations, enrolled in the Modelo precondition profiles."""
 

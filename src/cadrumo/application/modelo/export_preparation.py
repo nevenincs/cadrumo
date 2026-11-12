@@ -94,10 +94,11 @@ from ..filing.producer_snapshot import (
 from ..filing.runtime import RegistrySchemaAccessor, filing_profile_from_taxpayer
 from .action_errors import (
     M303FilingEvidenceError,
-    ModeloPriorDomiciliationElectionRefusedError,
     ModeloRevisionNotSealedError,
     export_period_unmappable_error,
 )
+from .declaration_refusal_failures import prior_domiciliation_refusal
+from .declaration_refusal_profiles import DeclarationRefusalCause
 from .export_contracts import (
     ModeloExportCommand,
     ModeloExportEvidenceMissingError,
@@ -321,7 +322,8 @@ def requireprior_domiciliation_marker_layout(
         for field in record.fields
     ):
         return
-    raise ModeloPriorDomiciliationElectionRefusedError(
+    raise prior_domiciliation_refusal(
+        DeclarationRefusalCause.ELECTION_MARKER_LAYOUT,
         translated_message="errors.refused.refused_modeloprior_domiciliation_election",
         context={
             "modelo": str(work_unit.modelo),

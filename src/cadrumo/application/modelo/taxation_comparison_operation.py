@@ -43,12 +43,12 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPortsFactory
 from .taxation_comparison import (
-    TaxationComparisonError,
     TaxationComparisonRefusal,
     TaxationComparisonResult,
     TaxationRecommendation,
     TaxationRecommendationReason,
     compare_taxation_for_work_unit,
+    taxation_comparison_refusal,
 )
 from .taxation_comparison_ports import TaxationComparisonPortsFactory
 from .taxation_comparison_words import individual_branch_caveat_words, recommendation_reason_words
@@ -137,7 +137,7 @@ class ModeloTaxationComparisonProjection(BaseModel):
             comparison.modelo != form_for_role("renta.annual")
             or comparison.individual_branch_single_earner_only is not True
         ):
-            raise TaxationComparisonError(TaxationComparisonRefusal.NOT_DECLARED)
+            raise taxation_comparison_refusal(TaxationComparisonRefusal.NOT_DECLARED)
         language = OutputLanguage(output_language())
         return cls(
             profile_id=profile_id,
