@@ -10,7 +10,7 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 
 from __future__ import annotations
 
-from ...core.errors.hierarchy import CadrumoError, CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 from .abort import WorkflowAbortReason
 
 
@@ -93,7 +93,7 @@ class ProfileLabelAmbiguousError(WorkflowError):
     """
 
 
-class WorkflowInputMismatchError(CoreValidationError):
+class WorkflowInputMismatchError(TerminalPreconditionErrorMixin[object], CoreValidationError):
     """Raised when a workflow input request does not match the expected contract.
 
     Used both by the engine's ``run_for_period`` gate (malformed

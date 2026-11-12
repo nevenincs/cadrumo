@@ -21,6 +21,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from .m210_convenio_facts import resolve_m210_convenio_override
+from .registry_input_refusals import registry_integrity_verdict
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
@@ -152,7 +153,10 @@ def _treaty_rate(
             return None, []
         return min(baseline_rate, override.rate), []
     if not override.delegates_to_domestic_tariff:
-        raise RegistryValidationError(f"unsupported convenio override kind {override.kind.value!r}")
+        raise RegistryValidationError(
+            f"unsupported convenio override kind {override.kind.value!r}",
+            precondition_verdict=registry_integrity_verdict("m210_convenio_override"),
+        )
     # Base-dependent treaty branches remain owned by the registry formula runtime.
     return None, []
 

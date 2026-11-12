@@ -4000,6 +4000,18 @@ application:
         qualsevol programa que estigui utilitzant el magatzem de perfils i torna-ho
         a provar.
       registration_label_blank: El nom del perfil no pot estar buit.
+      rental_lease_property_missing: L'arrendament anomena l'immoble %{inmueble},
+        que no és al teu perfil; afegeix-lo abans amb «%{door}».
+      rental_principal_missing: L'immoble principal %{principal} no és un altre immoble
+        del teu perfil; afegeix-lo abans amb «%{door}».
+      rental_property_has_accessories: L'immoble %{inmueble} és el principal d'annexos
+        (%{accessories}); canvia o esborra'n el principal abans amb «%{door}».
+      rental_property_has_leases: L'immoble %{inmueble} té arrendaments (%{leases});
+        elimina'ls abans amb «%{door}».
+      rental_row_invalid: La dada «%{leaf}» no és vàlida o contradiu altres dades
+        del registre; no s'ha desat res. Corregeix-la i repeteix «%{door}».
+      rental_tenant_id_invalid: El NIF d'un arrendatari no és vàlid; revisa'n les
+        lletres i xifres o marca'l com a estranger, i repeteix «%{door}».
       repository_classification_mismatch: L'espai de noms d'objecte segur %{namespace}
         està registrat amb sensibilitat %{expected}, però la classificació del registre
         emmagatzemat és %{classification}.

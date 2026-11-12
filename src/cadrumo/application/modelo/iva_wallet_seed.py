@@ -31,7 +31,7 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
@@ -45,9 +45,12 @@ from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliat
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
 from ...domain.modelos.errors import ModeloError
 from ..calculations.iva_compensation_history import correct_iva_compensation_period, seed_iva_compensation_period
+from ..operator_actions.models import PreconditionVerdict
 from .iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
 from .iva_wallet_values import taxpayer_nif_for_bucket
+from .lifecycle_view_refusal_doors import iva_wallet_seed_verdict, unit_status_verdict
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .refusal_door_verdicts import operator_choice_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -62,20 +65,23 @@ class ModeloIvaWalletSeedError(ModeloError):
         translated_message: str,
         context: dict[str, object] | None = None,
         precondition_failure: ModeloPreconditionFailure | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
         """Initialize the error with its translated message and optional precondition failure."""
         super().__init__(
             translated_message,
             translated_message=translated_message,
             context=context,
+            precondition_verdict=precondition_verdict,
         )
         self._precondition_failure = precondition_failure
 
     @property
+    @override
     def terminal_precondition_verdict(self):
         """Expose the application-owned refusal without adding CLI recovery prose."""
         failure = self._precondition_failure
-        return None if failure is None else failure.verdict
+        return super().terminal_precondition_verdict if failure is None else failure.verdict
 
 
 class ModeloIvaWalletSeedNoTaxpayerError(ModeloIvaWalletSeedError):
@@ -157,6 +163,7 @@ def _require_non_negative_wallet_amount(amount: Decimal) -> None:
         raise ModeloIvaWalletSeedNegativeAmountError(
             translated_message="application.modelo.iva_wallet.seed_negative_amount",
             context={"amount": str(amount)},
+            precondition_verdict=operator_choice_verdict("iva_wallet_negative_amount"),
         )
 
 
@@ -300,6 +307,7 @@ def correct_iva_compensation_period_for_bucket(
         raise ModeloIvaWalletCorrectionNoRecordError(
             translated_message="application.modelo.iva_wallet.correct_no_record",
             context={"filing_year": period.filing_year, "period": period.registry_token},
+            precondition_verdict=iva_wallet_seed_verdict(),
         )
 
     blocker = _sealed_modelo_303_blocker_for_period(
@@ -320,6 +328,7 @@ def correct_iva_compensation_period_for_bucket(
                 "blocking_filing_year": blocker_year,
                 "blocking_period": blocker_period,
             },
+            precondition_verdict=unit_status_verdict("iva_wallet_correction_sealed", work_unit_id),
         )
 
     state = correct_iva_compensation_period(
@@ -416,6 +425,7 @@ def _require_no_fresh_wallet(existing: IvaCompensationReconciliationDecision | N
                 "filing_year": period.filing_year,
                 "period": period.registry_token,
             },
+            precondition_verdict=operator_choice_verdict("iva_wallet_override_fresh_wallet"),
         )
 
 
@@ -501,6 +511,7 @@ def record_iva_compensation_override_for_bucket(
                 "blocking_filing_year": blocker_year,
                 "blocking_period": blocker_period,
             },
+            precondition_verdict=unit_status_verdict("iva_wallet_override_sealed", work_unit_id),
         )
 
     from ..calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation

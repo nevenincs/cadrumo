@@ -6,6 +6,7 @@ Core types:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Protocol
 
 from ...core.modelo import Modelo
@@ -13,6 +14,7 @@ from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
@@ -25,6 +27,7 @@ from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     M303RectificativaMotive,
 )
+from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.filing_record import (
     FilingDeclarationKind,
     ModeloRecord,
@@ -39,7 +42,9 @@ from .action_errors import amendment_evidence_missing_precondition
 from .amendment_kind_resolution import assert_amendment_kind_permitted
 from .export_contracts import ModeloExportDesignIntegrityError, ModeloExportEvidenceMissingError
 from .export_field_refusal import export_design_fault_refusal
+from .lifecycle_view_refusal_doors import profile_facts_verdict
 from .preconditions import build_modelo_precondition_failure_for_scenario
+from .refusal_door_verdicts import operator_choice_verdict
 
 
 class AmendmentExportCommand(Protocol):
@@ -119,6 +124,29 @@ def resolve_persisted_amendment_export_evidence(
 def _fault(command: AmendmentExportCommand, cause: str) -> ModeloExportDesignIntegrityError:
     """Refuse a guard only a caller or design fault reaches, as the terminal integrity refusal."""
     return export_design_fault_refusal(cause=cause, calculation_revision_id=command.calculation_revision_id)
+
+
+def _aggregate_refusal(
+    error: ModeloValidationError, *, tax_id: SubjectTaxId | None, receipt_matches: Callable[[SubjectTaxId], bool]
+) -> ModeloValidationError:
+    """Give the operator-correctable causes of the aggregate refusal the door of their cause.
+
+    An unstated taxpayer tax id is put right by the profile questions; a
+    justificante that names another taxpayer or filing coordinate is the
+    operator's decision, because no catalogued action replaces the stored
+    receipt. Any other refusal of the aggregate is returned unchanged.
+    """
+    if tax_id is None:
+        return ModeloValidationError(
+            "M303 rectificativa aggregate requires the authoritative taxpayer tax id",
+            precondition_verdict=profile_facts_verdict(("identity.tax_id",)),
+        )
+    if not receipt_matches(tax_id):
+        return ModeloValidationError(
+            "M303 rectificativa justificante disagrees with the taxpayer or filing coordinate",
+            precondition_verdict=operator_choice_verdict("m303_rectificativa_justificante_coordinates"),
+        )
+    return error
 
 
 def _evidence_missing(
@@ -253,22 +281,34 @@ def _evidence(
         raise _fault(command, "persisted justificante has no AEAT presentation receipt")
     if identity.kind is not FilingDeclarationKind.RECTIFICATIVA or work_unit.modelo != form_for_role("iva.periodic"):
         return identity.m303_rectificativa_motive, receipt_number
-    validated = validate_calculation_revision_aggregate(
-        revision,
-        context=CalculationRevisionAggregateContext(
-            work_units=work_unit_repository.load(),
-            filing_records=records,
-            justificantes=justificantes,
-            registry_snapshots={
-                work_unit.work_unit_id: operation.snapshot(
-                    Modelo("303").value,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period.registry_token,
-                )
-            },
-            expected_taxpayer_tax_id=workflow_profile.tax_id,
-        ),
-    )
+    try:
+        validated = validate_calculation_revision_aggregate(
+            revision,
+            context=CalculationRevisionAggregateContext(
+                work_units=work_unit_repository.load(),
+                filing_records=records,
+                justificantes=justificantes,
+                registry_snapshots={
+                    work_unit.work_unit_id: operation.snapshot(
+                        Modelo("303").value,
+                        filing_year=work_unit.filing_year,
+                        period=work_unit.period.registry_token,
+                    )
+                },
+                expected_taxpayer_tax_id=workflow_profile.tax_id,
+            ),
+        )
+    except ModeloValidationError as error:
+        raise _aggregate_refusal(
+            error,
+            tax_id=workflow_profile.tax_id,
+            receipt_matches=lambda tax_id: receipt.matches_filing_target(
+                modelo=Modelo("303").value,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period,
+                tax_id=tax_id,
+            ),
+        ) from error
     if validated is None:
         raise _fault(command, "M303 rectificativa aggregate did not resolve persisted evidence")
     return validated.motive, validated.original_aeat_receipt

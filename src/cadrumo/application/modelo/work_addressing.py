@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.filing_year import FilingYear
@@ -52,6 +52,7 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
+from ..operator_actions.models import PreconditionVerdict
 from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError, ModeloPreconditionErrorMixin
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .preconditions import (
@@ -75,6 +76,7 @@ from .work_lifecycle import (
     require_revision_parent_active,
 )
 from .work_lifecycle_ports import WorkLifecyclePorts
+from .work_lifecycle_refusal_failures import selector_contradiction_failure, selector_incoherent_failure
 from .work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectionMode,
@@ -101,8 +103,20 @@ class ModeloWorkUnitNotFoundError(ModeloWorkSelectorError):
     """Raised when an exact work identifier resolves no all-state unit."""
 
 
-class ModeloWorkSelectorContradictionError(ModeloWorkSelectorError):
-    """Raised when an exact selector contradicts supplied coordinates."""
+class ModeloWorkSelectorContradictionError(ModeloPreconditionErrorMixin, ModeloWorkSelectorError):
+    """Raised when an exact selector contradicts supplied coordinates.
+
+    The work list shows the coordinates each unit holds, from which the
+    operator states a consistent selector. A raise site that finds the
+    application's own resolution incoherent carries its own terminal failure.
+    """
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the carried verdict, or the work list door of a contradictory selector."""
+        failure = self.precondition_failure
+        return (failure or selector_contradiction_failure()).verdict
 
 
 class ModeloWorkVisibleTargetAmbiguousError(ModeloWorkSelectorError):
@@ -596,6 +610,7 @@ def _addressed_obligation(address: ModeloWorkAddress) -> tuple[ModeloCode, Filin
         raise ModeloWorkSelectorContradictionError(
             "natural work address passed the addressed screen without a complete "
             "modelo/ejercicio/period coordinate set",
+            precondition_failure=selector_incoherent_failure(),
         )
     return ModeloCode(address.modelo), address.filing_year, address.period
 
@@ -609,6 +624,7 @@ def _selected_work_unit(resolution: ModeloWorkResolution) -> WorkUnit:
     if resolution.work_unit is None:
         raise ModeloWorkSelectorContradictionError(
             "work selection resolved without naming a work unit",
+            precondition_failure=selector_incoherent_failure(),
         )
     return resolution.work_unit
 

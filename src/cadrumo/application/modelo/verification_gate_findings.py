@@ -18,7 +18,7 @@ from cadrumo.application.calculations.observations_repository import (
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
-from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.binding_selector_utils import provider_member
@@ -40,7 +40,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
 )
-from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -851,6 +851,8 @@ def iva_wallet_error_verification_finding(
     if casilla_def is None or not casilla_def.legal_refs or not casilla_def.source_refs:
         raise ModeloValidationError(
             "IVA wallet finding requires the compensation casilla's legal_refs/source_refs provenance",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
         )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,

@@ -15,13 +15,14 @@ from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.period import Period
 from ...core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.form_codes import exceeds_form_bound, form_fit_validator
 from ..calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 from ..filing_evidence import FilingEvidenceReference
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 
 
 class M303InsolvencyFilingSubtype(StrEnum):
@@ -116,29 +117,53 @@ def _validate_m303_exonerado_endpoint_ids(
 ) -> None:
     endpoint_ids = tuple(endpoint.casilla_id for endpoint in endpoints)
     if len(set(endpoint_ids)) != len(endpoint_ids):
-        raise ModeloValidationError("M303 exonerado-390 evidence contains duplicate endpoint casillas")
+        raise ModeloValidationError(
+            "M303 exonerado-390 evidence contains duplicate endpoint casillas",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
 
 
 def _validate_applicable_m303_exonerado_evidence(evidence: M303Exonerado390FilingEvidence) -> None:
     if not evidence.endpoints:
-        raise ModeloValidationError("applicable M303 exonerado-390 evidence requires endpoint facts")
+        raise ModeloValidationError(
+            "applicable M303 exonerado-390 evidence requires endpoint facts",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if not evidence.activity_rows:
-        raise ModeloValidationError("applicable M303 exonerado-390 evidence requires activity rows")
+        raise ModeloValidationError(
+            "applicable M303 exonerado-390 evidence requires activity rows",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     row_slots = tuple(row.slot for row in evidence.activity_rows)
     if row_slots != tuple(range(1, len(row_slots) + 1)):
         raise ModeloValidationError(
             "M303 exonerado-390 activity rows must use contiguous ordered slots from 1",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
     if evidence.operaciones_terceros_declarables is None or evidence.operaciones_terceros_reference is None:
-        raise ModeloValidationError("applicable M303 exonerado-390 evidence requires the Modelo 347 decision")
+        raise ModeloValidationError(
+            "applicable M303 exonerado-390 evidence requires the Modelo 347 decision",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
 
 
 def _validate_non_applicable_m303_exonerado_evidence(evidence: M303Exonerado390FilingEvidence) -> None:
     if evidence.endpoints or evidence.activity_rows:
-        raise ModeloValidationError("non-applicable M303 exonerado-390 evidence must not carry annual facts")
+        raise ModeloValidationError(
+            "non-applicable M303 exonerado-390 evidence must not carry annual facts",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if evidence.operaciones_terceros_declarables is not None or evidence.operaciones_terceros_reference is not None:
         raise ModeloValidationError(
             "non-applicable M303 exonerado-390 evidence must not carry a Modelo 347 decision",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
 
 
@@ -181,7 +206,11 @@ class M303DANAReductionResult(BaseModel):
     @pydantic_validation_boundary
     def _ineligible_reduction_is_zero(self) -> M303DANAReductionResult:
         if not self.eligible and self.amount != Decimal("0"):
-            raise ModeloValidationError("an ineligible DANA reduction must be zero")
+            raise ModeloValidationError(
+                "an ineligible DANA reduction must be zero",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
 
@@ -220,17 +249,33 @@ class M303RegimenSimplificadoActivityCalculationResult(BaseModel):
     def _amounts_form_one_closed_activity_result(self) -> M303RegimenSimplificadoActivityCalculationResult:
         module_ids = tuple(item.module_identity for item in self.module_results)
         if len(set(module_ids)) != len(module_ids):
-            raise ModeloValidationError("M303 simplified calculation result contains duplicate modules")
+            raise ModeloValidationError(
+                "M303 simplified calculation result contains duplicate modules",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         reduction = self.dana_reduction.amount if self.dana_reduction is not None else Decimal("0")
         if self.cuota_devengada_tras_dana != self.cuota_devengada_operaciones_corrientes - reduction:
-            raise ModeloValidationError("M303 simplified activity result has an incoherent DANA annual cuota")
+            raise ModeloValidationError(
+                "M303 simplified activity result has an incoherent DANA annual cuota",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         if self.cuota_devengada_tras_reducciones != self.cuota_devengada_tras_dana - self.lorca_reduction_amount:
-            raise ModeloValidationError("M303 simplified activity result has an incoherent Lorca reduction")
+            raise ModeloValidationError(
+                "M303 simplified activity result has an incoherent Lorca reduction",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         if self.cuota_resultante != max(
             self.cuota_devengada_tras_reducciones - self.deduccion_dificil_justificacion,
             self.cuota_minima,
         ):
-            raise ModeloValidationError("M303 simplified activity result has an incoherent annual cuota")
+            raise ModeloValidationError(
+                "M303 simplified activity result has an incoherent annual cuota",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
 
@@ -300,14 +345,24 @@ class M303RegimenSimplificadoCalculationResult(BaseModel):
     @pydantic_validation_boundary
     def _is_content_addressed_and_period_scoped(self) -> M303RegimenSimplificadoCalculationResult:
         if self.period.filing_year != self.ejercicio:
-            raise ModeloValidationError("M303 simplified calculation result period must use its annual Orden year")
+            raise ModeloValidationError(
+                "M303 simplified calculation result period must use its annual Orden year",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         activity_ids = tuple(item.activity_id for item in self.activities)
         if len(set(activity_ids)) != len(activity_ids):
-            raise ModeloValidationError("M303 simplified calculation result contains duplicate activities")
+            raise ModeloValidationError(
+                "M303 simplified calculation result contains duplicate activities",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         expected_digest = _m303_regimen_simplificado_result_digest(self)
         if self.digest != expected_digest:
             raise ModeloValidationError(
                 "M303 simplified calculation result digest does not match its immutable payload",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         return self
 

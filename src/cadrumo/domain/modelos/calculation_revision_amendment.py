@@ -10,6 +10,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.time.clock import today_madrid
 from ..calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..calculations.registry.errors import GovernedFactNotApplicableError
@@ -18,7 +19,7 @@ from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import SourceReference
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .filing_record import FilingDeclarationKind
 
 AMENDMENT_DECLARATION_KINDS: Final[tuple[FilingDeclarationKind, ...]] = tuple(
@@ -60,14 +61,20 @@ class CalculationRevisionAmendmentIdentity(BaseModel):
         if self.kind not in AMENDMENT_DECLARATION_KINDS:
             raise ModeloValidationError(
                 f"an amendment cannot be filed as declaration kind {self.kind.value}; "
-                "a revision without an amendment identity is the original"
+                "a revision without an amendment identity is the original",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         return self
 
     @model_validator(mode="after")
     def _motive_requires_rectificativa_kind(self) -> CalculationRevisionAmendmentIdentity:
         if self.m303_rectificativa_motive is not None and self.kind is not FilingDeclarationKind.RECTIFICATIVA:
-            raise ModeloValidationError("an M303 rectificativa motive is valid only for amendment kind rectificativa")
+            raise ModeloValidationError(
+                "an M303 rectificativa motive is valid only for amendment kind rectificativa",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
 
@@ -110,7 +117,11 @@ def _registry_m303_rectificativa_declarations(
     except GovernedFactNotApplicableError:
         return dict[str, str]()
     if not isinstance(resolved, ResolvedMappingFact):
-        raise ModeloValidationError("M303 rectificativa declarations must resolve as a mapping fact")
+        raise ModeloValidationError(
+            "M303 rectificativa declarations must resolve as a mapping fact",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
+        )
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
@@ -118,7 +129,11 @@ def _required_registry_declaration(declarations: Mapping[str, str], key: str) ->
     try:
         return declarations[key]
     except KeyError as exc:
-        raise ModeloValidationError(f"M303 rectificativa registry declaration is missing: {key}") from exc
+        raise ModeloValidationError(
+            f"M303 rectificativa registry declaration is missing: {key}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
+        ) from exc
 
 
 def m303_rectificativa_motive_is_applicable(
@@ -178,7 +193,11 @@ def m303_rectificativa_record_design_from_snapshot(
         )
     )
     if len(candidates) > 1:
-        raise ModeloValidationError("M303 revision owns more than one admitted rectificativa record design")
+        raise ModeloValidationError(
+            "M303 revision owns more than one admitted rectificativa record design",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.REGISTRY_DECLARATION,
+        )
     return candidates[0] if candidates else None
 
 

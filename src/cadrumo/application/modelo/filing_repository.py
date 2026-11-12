@@ -8,6 +8,7 @@ from contextvars import ContextVar
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 
 if TYPE_CHECKING:
     from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
@@ -43,7 +44,10 @@ def modelo_record_catalogue_repository(*, bucket_id: str) -> ModeloRecordCatalog
     try:
         factory = _BOUND_MODELO_RECORD_CATALOGUE_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise InternalInvariantError("modelo filing-record catalogue persistence has not been composed") from error
+        raise InternalInvariantError(
+            "modelo filing-record catalogue persistence has not been composed",
+            precondition_verdict=internal_invariant_verdict("filing_record_catalogue.composed"),
+        ) from error
     return factory(bucket_id=bucket_id)
 
 

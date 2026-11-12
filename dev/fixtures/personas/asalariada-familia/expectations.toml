@@ -87,6 +87,32 @@ Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla
 legal_ref = ["ley-35-2006:art-81"]
 grounding = "verified"
 
+# The daughter's birth year: she is born on 21 March of horizon-2, so the deduction runs from the month of birth.
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-2"
+casillas = { "0613" = "750.00" }
+roles = { "irpf_deduccion_maternidad" = "1000.00" }
+derivation = """
+Art. 81: the deduction is proportional to the months after the requirements are met, the children being determined by their
+situation on the last day of each month, so the month of birth counts in full (Manual práctico de Renta 2024 lines 58715 to
+58723 and 58747 to 58750; 2025 lines 54684 to 54692 and 54712 to 54715). Born on 21 March, the daughter gives March to December: 10 x 100.00
+= 1000.00. The additional 150.00 of the month the mother completes 30 days of cotización (2024 line 58740, 2025 line 54705) does not arise:
+she is in alta all year, before the birth.
+Guardería increment: the month in which the requirements are met counts, and only months whose fee is paid for the whole
+month (2024 lines 58882 to 58899, 2025 lines 54862 to 54874). The fees of January and February precede the birth and do not
+count; March to December less August gives 9 months: 1000.00 / 12 x 9 = 750.00, below the 1980.00 spent in those months
+and the cap of 1000.00.
+Total 1000.00 + 750.00 = 1750.00. Until ejercicio 2022 the deduction and increment were also limited, for each child, by the
+cotizaciones devengadas after the birth (2022 manual lines 62690 to 62700); the mother's 194.40 a month from March to
+December give 1944.00, above 1750.00, so the limit does not bind in that year either.
+Roles are Modelo 100 registry semantic_roles (LIRPF art. 81): irpf_deduccion_maternidad, casilla 0611; the increment is
+casilla 0613, asserted as a casilla.
+"""
+legal_ref = ["ley-35-2006:art-81"]
+grounding = "verified"
+
 # The Madrid scale and mínimos and the Madrid deductions this return takes are identical in the 2023, 2024
 # and 2025 editions (Ley 13/2023, with effect 1 January 2023), and the state side is the same in every year
 # from the floor. The 2022 return differs: Ley 8/2022 set a lower Madrid scale and mínimos and the art. 7 bis
@@ -121,12 +147,13 @@ Role: continuidad_id resultado-ingresar-o-devolver-irpf, casilla 0700 RESINGDEV 
 legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-63", "ley-35-2006:art-74", "ley-35-2006:art-77", "ley-35-2006:art-79", "ley-35-2006:art-81", "ley-35-2006:art-97", "madrid-dl-1-2010:art-2", "madrid-dl-1-2010:art-18"]
 grounding = "verified"
 
-# The same result for the edition before: the scales, mínimos and deductions above are unchanged there.
+# The edition before: the scales, mínimos and deductions above are unchanged there; only the maternity deduction
+# differs, horizon-2 being the daughter's birth year.
 [[values]]
 modelo = "100"
 period = "0A"
 year = "horizon-2"
-roles = { "resultado-ingresar-o-devolver-irpf" = "-3095.05" }
+roles = { "resultado-ingresar-o-devolver-irpf" = "-2728.38" }
 parameters = { madrid_minimo_contribuyente = "5956.65", madrid_minimo_descendiente_primero = "2575.85", madrid_minimo_descendiente_segundo = "2897.83", madrid_minimo_descendiente_menor_tres = "3005.16", madrid_minimo_ascendiente = "1234.26", madrid_minimo_ascendiente_mayor_75 = "1502.58", madrid_deduccion_cuidado_ascendientes = "515.50", madrid_limite_base_nacimiento_individual = "30930.00" }
 derivation = """
 Base liquidable general = 31667.20 (the work-income value above; no other income, no reduction of the base).
@@ -144,7 +171,8 @@ mínimo por ascendientes to the taxpayer alone, with no base limit (2023 manual 
 ciclo de Educación Infantil its base excludes fees paid as public or administration-authorised prices and its limit counts
 the spouse's base (2025 parte 2 lines 16486 and 16510); the persona states neither fact.
 Cuota líquida = 2688.08 + 2261.04 - 515.50 = 4433.62. Cuota diferencial (art. 79) = 4433.62 - 5412.00 = -978.38.
-Deducción por maternidad (art. 81, value above) 1200.00 + 916.67 = 2116.67 reduces it: -3095.05, a devolver. No advance
+Deducción por maternidad (art. 81) of the birth year, 1000.00 + 750.00 = 1750.00 (horizon-2 value above), reduces it:
+-2728.38, a devolver. No advance
 payment of the maternity deduction, spouse compensation or refund waiver is stated, so casilla 0700 equals 0670.
 Role: continuidad_id resultado-ingresar-o-devolver-irpf, casilla 0700 RESINGDEV of the 2024 edition (LIRPF art. 97).
 """

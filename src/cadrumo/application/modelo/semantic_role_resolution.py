@@ -27,6 +27,7 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.errors import ModeloError
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
 
 
 @runtime_checkable
@@ -72,7 +73,7 @@ class AmbiguousSemanticRoleCasillaError(ModeloError):
     of selecting one candidate, preserving the canonical ``casilla.id`` contract.
     """
 
-    def __init__(self, ambiguity: SemanticRoleCasillaAmbiguity) -> None:
+    def __init__(self, ambiguity: SemanticRoleCasillaAmbiguity, *, precondition_verdict: object | None = None) -> None:
         """Initialize the error from the ambiguous semantic-role resolution."""
         self.ambiguity = ambiguity
         scope: list[str] = []
@@ -86,7 +87,7 @@ class AmbiguousSemanticRoleCasillaError(ModeloError):
             f"to multiple casillas {ambiguity.casilla_ids!r}; a semantic-role "
             "casilla reference must resolve to exactly one canonical casilla.id"
         )
-        super().__init__(message, context=ambiguity.context())
+        super().__init__(message, context=ambiguity.context(), precondition_verdict=precondition_verdict)
 
 
 def casilla_id_for_unique_semantic_role(snapshot: RegistrySnapshot, semantic_role: str) -> CasillaId | None:
@@ -132,6 +133,7 @@ def casilla_id_for_unique_revision_semantic_role(
                 revision_id=revision_id,
                 casilla_ids=casilla_ids,
             ),
+            precondition_verdict=semantic_role_ambiguous_verdict(semantic_role),
         )
     return None
 

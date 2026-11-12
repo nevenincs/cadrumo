@@ -50,6 +50,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
 from .m210_convenio_facts import resolve_m210_convenio_override
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
@@ -86,7 +87,11 @@ def m210_convenio_lob_advisory_finding(
     try:
         tipo_renta_id = casilla_id_for_unique_semantic_role(snapshot, _IRNR_TIPO_RENTA_ROLE)
     except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+        raise ModeloError(
+            str(exc),
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
 
     if tipo_renta_id is None:
         return None

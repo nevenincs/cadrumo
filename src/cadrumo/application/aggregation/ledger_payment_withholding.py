@@ -65,8 +65,10 @@ from ...core.hashing import content_hash_hex
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
+from ..operator_actions.preconditions import no_action_precondition_verdict
 from .retenciones import Modelo193PendingPaymentEvidence
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
 from .withholding_modelo_routing import LEDGER_PAID_INCOME_KINDS, modelo_for_income_kind
@@ -90,15 +92,31 @@ from .withholding_recognition import (
 
 if TYPE_CHECKING:
     from ...domain.transactions.models import Transaction, TransactionCatalogue
+    from ..operator_actions.models import PreconditionVerdict
 
 
 class LedgerPaymentWithholdingEvidenceError(CadrumoError):
-    """Payload-free refusal while making a ledger payment capture-ready."""
+    """Payload-free refusal while making a ledger payment capture-ready.
+
+    No catalogued action restates the payment's evidence, so every refusal is
+    the operator's decision: the request is made again with evidence the ledger
+    payment admits.
+    """
 
     def __init__(self, refusal_code: str) -> None:
         """Build a refusal that carries only its stable reason token."""
         super().__init__(f"ledger payment withholding evidence refused: {refusal_code}")
         self.refusal_code = refusal_code
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the operator's decision on the refused payment evidence."""
+        return no_action_precondition_verdict(
+            condition_id="ledger.payment_withholding.evidence.admitted",
+            facts={"refusal": self.refusal_code, "admitted": False},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
 
 
 class LedgerPaymentWithholdingEvidenceRequest(BaseModel):

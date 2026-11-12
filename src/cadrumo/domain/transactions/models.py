@@ -23,6 +23,7 @@ from ...core.concepto_ingreso import ConceptoIngreso
 from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
+from ...core.gasto_capital_inmobiliario import GastoCapitalInmobiliario
 from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.transaction_ids import TransactionId
@@ -41,6 +42,7 @@ from ..calculations.registry.eu_member_state_catalogue import (
     resolve_eu_member_state_catalogue,
 )
 from ..calculations.registry.facts.resolution import reading_dated_facts_below_support
+from ..calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
 from ..calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
@@ -282,6 +284,19 @@ def _coerce_input_classification_field(value: object, info: core_schema.Validati
     return _translate_registry_enum_error(lambda: require_input_classification(value, effective_date=effective_date))
 
 
+def _coerce_gasto_capital_inmobiliario_field(value: object, info: core_schema.ValidationInfo) -> object:
+    if value is None or isinstance(value, GastoCapitalInmobiliario):
+        return value
+    effective_date = _effective_date_for_enum_projection(info)
+    if effective_date is None:
+        raise TransactionValidationError(
+            "gasto_capital_inmobiliario requires the transaction's effective date for registry resolution",
+        )
+    return _translate_registry_enum_error(
+        lambda: require_gasto_capital_inmobiliario(value, effective_date=effective_date),
+    )
+
+
 def _coerce_counterparty_identification_state_field(value: object, info: core_schema.ValidationInfo) -> object:
     if value is None or isinstance(value, EUMemberState):
         return value
@@ -295,6 +310,7 @@ _REGISTRY_TOKEN_PROJECTION_BY_FIELD: Mapping[str, Callable[[object, core_schema.
             "concepto_ingreso": _coerce_concepto_ingreso_field,
             "deduction_fact_kind": _coerce_deduction_fact_kind_field,
             "input_classification": _coerce_input_classification_field,
+            "gasto_capital_inmobiliario": _coerce_gasto_capital_inmobiliario_field,
             "counterparty_identification_state": _coerce_counterparty_identification_state_field,
         },
     )
@@ -384,6 +400,15 @@ class Transaction(BaseModel):
             especial; the regime-aware aggregation routes the deducible cuota by
             this classification. ``None`` for rows that are not under especial or
             carry no per-input use declaration.
+        arrendamiento_ref: Optional reference to the lease an income row belongs to;
+            through the lease it reaches one property. Mutually exclusive with
+            ``inmueble_ref``.
+        inmueble_ref: Optional reference to the property an expense row belongs
+            to. Mutually exclusive with ``arrendamiento_ref``.
+        gasto_capital_inmobiliario: Registry-declared rental-expense concept
+            (:class:`~core.gasto_capital_inmobiliario.GastoCapitalInmobiliario`)
+            routing an expense row to a casilla of its property. Requires
+            ``inmueble_ref``; ``None`` for every row that is not a rental expense.
         concepto_ingreso: Operator-declared income concept
             (:class:`~core.concepto_ingreso.ConceptoIngreso`) for base-inclusion purposes. RD
             439/2007 art. 110.1.c) fixes the agrarian pago fraccionado on the
@@ -596,6 +621,9 @@ class Transaction(BaseModel):
     input_classification: InputClassification | None = None
     tipo_actividad: TipoActividad | None = None
     concepto_ingreso: ConceptoIngreso | None = None
+    arrendamiento_ref: str | None = None
+    inmueble_ref: str | None = None
+    gasto_capital_inmobiliario: GastoCapitalInmobiliario | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
@@ -661,6 +689,7 @@ class Transaction(BaseModel):
         "counterparty_identification_state",
         "input_classification",
         "concepto_ingreso",
+        "gasto_capital_inmobiliario",
         mode="before",
     )
     @classmethod
@@ -713,6 +742,8 @@ class Transaction(BaseModel):
         "created_by",
         "source_command",
         "created_event_id",
+        "arrendamiento_ref",
+        "inmueble_ref",
     )
     @classmethod
     @pydantic_validation_boundary
@@ -864,6 +895,7 @@ class Transaction(BaseModel):
         self._enforce_cash_accounting_axis()
         self._enforce_fx_coupling()
         self._enforce_gross_equals_base_plus_iva_plus_recargo()
+        self._enforce_rental_link()
         return self
 
     def _enforce_derived_transaction_id(self) -> Self:
@@ -948,6 +980,22 @@ class Transaction(BaseModel):
                 recargo_amount=self.recargo_amount,
                 direction=self.direction,
             )
+        return self
+
+    def _enforce_rental_link(self) -> Self:
+        """Keep the rental link single and the expense concept attached to a property.
+
+        An income row links to one lease and an expense row to one property, so a
+        row carrying both references would belong to two rental subjects. The
+        expense concept routes a row to a casilla of the property it is linked to,
+        so it is meaningless without that reference.
+        """
+        if self.arrendamiento_ref is not None and self.inmueble_ref is not None:
+            raise TransactionValidationError(
+                "arrendamiento_ref and inmueble_ref are mutually exclusive: a row links to one lease or one property",
+            )
+        if self.gasto_capital_inmobiliario is not None and self.inmueble_ref is None:
+            raise TransactionValidationError("gasto_capital_inmobiliario requires inmueble_ref")
         return self
 
     def _enforce_fx_coupling(self) -> Self:

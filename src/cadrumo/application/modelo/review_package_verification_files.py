@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ...core.external_constants import UTF_8_ENCODING
+from .refusal_door_verdicts import operator_choice_verdict
 from .review_package_counter_sign import (
     CounterSignedReceipt,
     ReviewPackageCounterSigningError,
@@ -58,7 +59,11 @@ def verify_review_package_signature_file(
     try:
         signed = SignedReviewPackage.model_validate_json(signature.read_text(encoding=UTF_8_ENCODING))
     except ValueError as exc:
-        raise ReviewPackageSigningError(str(exc), context={"detail": str(exc)}) from exc
+        raise ReviewPackageSigningError(
+            str(exc),
+            context={"detail": str(exc)},
+            precondition_verdict=operator_choice_verdict("signature_file_unreadable"),
+        ) from exc
     signer_public_key_hex = _normalise_public_key_hex(public_key)
     return ReviewPackageSignatureVerdict(
         signer_public_key_hex=signer_public_key_hex,
@@ -78,7 +83,11 @@ def verify_review_package_receipt_file(
     try:
         decoded = CounterSignedReceipt.model_validate_json(receipt.read_text(encoding=UTF_8_ENCODING))
     except ValueError as exc:
-        raise ReviewPackageCounterSigningError(str(exc), context={"detail": str(exc)}) from exc
+        raise ReviewPackageCounterSigningError(
+            str(exc),
+            context={"detail": str(exc)},
+            precondition_verdict=operator_choice_verdict("receipt_file_unreadable"),
+        ) from exc
     operator_key = _normalise_public_key_hex(operator_public_key)
     counter_key = _normalise_public_key_hex(counter_signer_public_key)
     return ReviewPackageReceiptVerdict(

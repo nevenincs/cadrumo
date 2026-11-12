@@ -503,10 +503,14 @@ def test_a_second_quarter_carries_the_filed_first_quarter_payment_into_box_05(
     assert result.revision.casilla_values["05"] == first_quarter_payment
 
 
-def test_filing_a_quarter_whose_earlier_source_the_registry_refuses_names_no_door(
+def test_filing_a_quarter_whose_earlier_source_the_registry_refuses_offers_only_the_attestation(
     objects: SecureObjectRepository, operation: PinnedAuthorityOperation
 ) -> None:
-    """At the support floor the prior-year Modelo 100 the 2T reads lies outside the envelope, so no create is offered."""
+    """At the support floor the prior-year Modelo 100 the 2T reads lies outside the envelope.
+
+    No create or capture can bring that return in, so the only door is the filer's
+    attestation of the prior value, which the cross-period gate admits outside the envelope.
+    """
     year = operation.supported_filing_years().floor
     _seed_profile(year, "actividad_economica")
     second_quarter = _create_m130_quarter(objects, operation, year=year, period_code="2T")
@@ -529,7 +533,10 @@ def test_filing_a_quarter_whose_earlier_source_the_registry_refuses_names_no_doo
     verdict = refused.value.terminal_precondition_verdict
     assert isinstance(verdict, PreconditionVerdict)
     assert verdict.failed_condition_id == "modelo.work.file.cross_period_dependency.clean"
-    assert verdict.action is None
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.work.attest_prior_value"
+    assert verdict.missing_argument_names == ("value",)
+    assert verdict.alternative_actions == ()
     (evidence,) = verdict.evidence
     assert evidence.values["source_modelo"] == "100"
     assert evidence.values["year"] == year - 1

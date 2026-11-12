@@ -122,6 +122,7 @@ def test_registered_row_update_and_remove_publish_exact_row_and_safe_projection(
                 expected_content_digest=baseline.content_digest,
                 schema=authority.profile_schema(),
                 profile_decode_context=authority.profile_decode_context(),
+                authority=authority,
             )
             row_key = str(added.row_index)
             with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:

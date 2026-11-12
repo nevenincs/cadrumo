@@ -66,6 +66,7 @@ from .work_create_policy import (
     modelo_work_create_refusal_locale_key,
 )
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory, WorkLifecyclePorts
+from .work_lifecycle_refusal_failures import ceded_modelo_failure
 from .work_profile import ModeloWorkProfile
 
 MODELO_WORK_CREATE_OPERATION_DEFINITION_ID = "modelo.work.create"
@@ -281,7 +282,11 @@ class ModeloWorkCreateExecutor:
         ]:
             locale_key = modelo_work_create_refusal_locale_key(payload.modelo)
             if locale_key is not None:
-                raise WorkUnitMutationRefusedError(translated_message=locale_key, context={"modelo": payload.modelo})
+                raise WorkUnitMutationRefusedError(
+                    translated_message=locale_key,
+                    context={"modelo": payload.modelo},
+                    precondition_failure=ceded_modelo_failure(payload.modelo),
+                )
             ports = _bound_ports(self._factory, profile_id)
             profile = load_modelo_work_profile(
                 bucket_id=profile_id, profile_decode_context=operation.profile_decode_context()

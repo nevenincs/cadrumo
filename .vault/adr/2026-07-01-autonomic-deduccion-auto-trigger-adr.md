@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-07-01'
-modified: '2026-11-04'
-body_hash: 'sha256:71f0844e0822559c4140ba1418c32790c3b8156beed6c44e7d205e65f69858ff'
+modified: '2026-11-12'
+body_hash: 'sha256:7b6697f83bf43391d53781fc59c0f39a2f3c3cecc42f55b5ed82831ee881f2f6'
 related:
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-research]]"
   - "[[2026-06-19-m100-dependent-modelo-applicability-adr]]"
@@ -75,3 +75,7 @@ Option A is the only mechanism that reuses the enrolled canonical pipeline (rese
 ## Codification candidates
 
 Deferred to review: if the Python-injector-plus-registry-formula split proves the durable pattern for autonomic deducciones across a second CCAA enrollment, a rule (e.g. `autonomic-deduccion-splits-derived-count-from-registry-amount`) may be promoted. Not codified on first encounter, per `vaultspec-codify`.
+
+## Amendment 2026-11-12: decision D4 superseded
+
+Decision D4 is superseded by `2026-07-04-autonomic-deduccion-framework-adr` as amended and accepted 2026-11-12 (CADRUMO-PRIME, under the operator's delegation). The deducción is computed and carried when its eligibility facts are stated, and refused with a typed refusal and its door when one is unstated or indeterminate; no advisory Notice stands in for either. The Madrid nacimiento and adopción slice moves onto the framework's shared dispatch in one relocation; its unit-income refusal takes effect only once the operator can state the spouse's base, or that the unit has no second taxpayer, through a door, and until then the slice keeps its present behaviour.

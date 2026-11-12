@@ -57,7 +57,7 @@ from ...core.ed25519_signing import (
     ed25519_public_key_from_hex,
     sign_digest_hex,
 )
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.hex import HEX_PATTERN_64, HEX_PATTERN_128
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId
@@ -75,7 +75,7 @@ if TYPE_CHECKING:
 _SIGNATURE_ENVELOPE_VERSION = 1
 
 
-class ReviewPackageSigningError(CadrumoError):
+class ReviewPackageSigningError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error for review-package signing/verification failures."""
 
 

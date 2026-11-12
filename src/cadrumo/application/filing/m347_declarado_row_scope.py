@@ -10,6 +10,7 @@ from ...core.decimal.coercion import coerce_decimal
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ...domain.filing.errors import FilingExportValidationError
+from .export_refusal_doors import ExportRefusalReason, export_input_decision
 from .record_types import RecordRenderRow
 
 _M347_DECLARADO_RECORD_ID = "m347-declarado"
@@ -45,6 +46,7 @@ def require_m347_declarado_casillas_have_one_row(
             f"export record {record.id!r} has {len(rows)} counterparty rows but single-valued casillas "
             f"{', '.join(populated)} cannot be attributed to one of them",
             context={"record_id": record.id, "row_count": len(rows), "casilla_ids": tuple(populated)},
+            precondition_verdict=export_input_decision(ExportRefusalReason.COUNTERPARTY_ROWS_UNATTRIBUTABLE),
         )
 
 

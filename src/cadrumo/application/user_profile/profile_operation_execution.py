@@ -396,6 +396,7 @@ class ProfileRepeatableRowMutationOperationExecutor:
                     expected_content_digest=payload.expected_content_digest,
                     schema=context.authority_operation.profile_schema(),
                     profile_decode_context=context.authority_operation.profile_decode_context(),
+                    authority=context.authority_operation,
                 ),
                 task_name="profile-repeatable-row-mutation",
             )
@@ -439,6 +440,7 @@ class ProfileRepeatableRowUpdateOperationExecutor:
                     expected_content_digest=payload.expected_content_digest,
                     schema=context.authority_operation.profile_schema(),
                     profile_decode_context=context.authority_operation.profile_decode_context(),
+                    authority=context.authority_operation,
                 ),
                 task_name="profile-repeatable-row-update",
             )

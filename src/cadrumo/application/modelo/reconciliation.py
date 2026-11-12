@@ -91,6 +91,7 @@ from .reconciliation_records import (
     ModeloReconciliationVerdict,
     modelo_reconciliation_persistence,
 )
+from .reconciliation_refusal_doors import reconciliation_evidence_decision_verdict
 from .work_addressing import ModeloWorkUnitNotFoundError
 from .work_selection import (
     ModeloWorkSelectorRequest,
@@ -117,6 +118,7 @@ if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
     from ..live.filed_observation_ports import FiledObservationProtocol
+    from ..operator_actions.models import PreconditionVerdict
 
 DECLARATION_RECONCILE_ROLE = "filed_declaration_reconciliation.modelos"
 """Modelos enrolled in casilla-level filed-declaration reconciliation.
@@ -287,8 +289,15 @@ class ReconciliationEvidenceInvalidError(CadrumoError):
 
     Raised for malformed justificantes. The CLI surfaces it as a refusal
     with the canonical recovery hint; downstream consumers branch on it
-    without string-matching the message.
+    without string-matching the message. Every refusal of evidence the
+    comparison cannot use is the operator's decision, so the class carries
+    that verdict.
     """
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the operator's decision on the unusable evidence."""
+        return reconciliation_evidence_decision_verdict()
 
 
 def _evidence_invalid_refusal(

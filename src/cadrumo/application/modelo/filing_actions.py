@@ -412,9 +412,11 @@ def _check_filing_preconditions(
 
 def _require_prior_election(prior_domiciliation_election: object) -> PriorDomiciliationElection:
     if not isinstance(prior_domiciliation_election, PriorDomiciliationElection):
-        from .action_errors import ModeloPriorDomiciliationElectionRefusedError
+        from .declaration_refusal_failures import prior_domiciliation_refusal
+        from .declaration_refusal_profiles import DeclarationRefusalCause
 
-        raise ModeloPriorDomiciliationElectionRefusedError(
+        raise prior_domiciliation_refusal(
+            DeclarationRefusalCause.ELECTION_TYPE,
             translated_message="errors.refused.refused_modeloprior_domiciliation_election",
             context={"received_type": type(prior_domiciliation_election).__name__},
         )

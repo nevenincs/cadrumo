@@ -8,6 +8,7 @@ from contextvars import ContextVar
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 
 if TYPE_CHECKING:
     from ...domain.justificante.protocols import JustificanteRepositoryProtocol
@@ -43,7 +44,10 @@ def justificante_repository(*, bucket_id: str) -> JustificanteRepositoryProtocol
     try:
         factory = _BOUND_JUSTIFICANTE_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise InternalInvariantError("justificante persistence has not been composed") from error
+        raise InternalInvariantError(
+            "justificante persistence has not been composed",
+            precondition_verdict=internal_invariant_verdict("justificante_persistence.composed"),
+        ) from error
     return factory(bucket_id=bucket_id)
 
 

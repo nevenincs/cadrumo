@@ -1511,6 +1511,86 @@ errors:
       mentre es llegia; torna a capturar-lo.
     producer_capture_not_current: Una projecció de productor ha canviat mentre es
       llegia; torna a capturar-la.
+    profile_access_administration_denied: El teu accés actual no permet gestionar
+      els ajustos d'accés, per això s'ha rebutjat la sol·licitud.
+    profile_access_authentication_required: No has iniciat la sessió. Inicia la sessió
+      i torna-ho a provar.
+    profile_access_authority_unavailable: Les normes publicades que necessita aquesta
+      operació no són disponibles ara mateix. Torna-ho a provar més tard.
+    profile_access_automation_suspended: L'accés automàtic a aquest perfil està suspès.
+      Aprova'l de nou en persona abans de tornar-ho a provar.
+    profile_access_backend_unavailable: El servei que atén aquesta sol·licitud no
+      és disponible ara mateix. Torna-ho a provar d'aquí a una estona.
+    profile_access_client_mismatch: Aquesta sol·licitud ha arribat des d'un client
+      diferent de l'admès, per això s'ha rebutjat.
+    profile_access_clock_invalid: El rellotge de l'ordinador no és prou fiable per
+      comprovar aquest accés, per això s'ha rebutjat. Corregeix l'hora del sistema
+      i torna-ho a provar.
+    profile_access_connection_mismatch: Aquesta sol·licitud ha arribat per una connexió
+      diferent de l'admesa, per això s'ha rebutjat.
+    profile_access_custody_changed: La custòdia protegida del perfil ha canviat des
+      que vas iniciar la sessió. Torna a iniciar la sessió.
+    profile_access_custody_recovering: Es va perdre el procés de treball del perfil,
+      per això la teva sessió està suspesa mentre es recupera. Torna a iniciar la
+      sessió per reprendre-la.
+    profile_access_custody_unavailable: La custòdia protegida del perfil no és disponible
+      ara mateix. Torna-ho a provar d'aquí a una estona.
+    profile_access_disclosure_denied: El teu accés actual no permet mostrar aquestes
+      dades, per això s'ha rebutjat la sol·licitud.
+    profile_access_fresh_password_required: Aquesta operació necessita la teva contrasenya
+      de nou. Torna a iniciar la sessió amb la contrasenya.
+    profile_access_frontend_denied: Aquesta operació no està permesa des d'aquesta
+      interfície, per això s'ha rebutjat.
+    profile_access_grant_expired: L'autorització d'accés d'aquesta sol·licitud ha
+      caducat. Concedeix l'accés de nou en persona i torna-ho a provar.
+    profile_access_grant_inactive: L'autorització d'accés d'aquesta sol·licitud no
+      és activa. Concedeix l'accés de nou en persona i torna-ho a provar.
+    profile_access_human_authority_required: Aquesta operació l'ha de fer una persona,
+      no una automatització. Fes-la tu i torna-ho a provar.
+    profile_access_key_expired: La clau d'accés d'aquesta sol·licitud ha caducat.
+      Emet una clau nova en persona i torna-ho a provar.
+    profile_access_key_inactive: La clau d'accés d'aquesta sol·licitud no és activa.
+      Emet una clau nova en persona i torna-ho a provar.
+    profile_access_operation_denied: Aquesta operació no està permesa amb el teu accés
+      actual, per això s'ha rebutjat.
+    profile_access_operation_unavailable: Aquesta operació no és disponible ara mateix.
+      Torna-ho a provar més tard.
+    profile_access_os_locked: L'ordinador està bloquejat. Desbloqueja'l i torna-ho
+      a provar.
+    profile_access_os_session_unavailable: La sessió d'usuari de l'ordinador no és
+      disponible, per això no es pot comprovar l'accés. Entra al teu compte de l'ordinador
+      i torna-ho a provar.
+    profile_access_parent_invalid: L'accés del qual es va delegar aquesta sol·licitud
+      ja no és vàlid, per això s'ha rebutjat.
+    profile_access_period_denied: El teu accés actual no cobreix aquest període, per
+      això s'ha rebutjat la sol·licitud.
+    profile_access_person_act_required: 'Aquest acte és només teu: iniciar la sessió,
+      les sessions, les claus, els secrets i la feina fora del perfil no es poden
+      delegar. Fes-ho en persona.'
+    profile_access_privilege_expansion: Aquesta sol·licitud demana més accés del concedit,
+      per això s'ha rebutjat.
+    profile_access_profile_locked: El perfil està bloquejat. Torna a iniciar la sessió
+      per desbloquejar-lo.
+    profile_access_profile_mismatch: Aquesta sol·licitud no pertany al perfil amb
+      el qual has iniciat la sessió, per això s'ha rebutjat.
+    profile_access_provider_required: Aquesta operació necessita un proveïdor que
+      no està configurat. Configura'n un i torna-ho a provar.
+    profile_access_response_authority_required: Respondre la pregunta d'aquesta operació
+      requereix una autoritat que aquesta sol·licitud no té, per això s'ha rebutjat.
+      Respon des de la finestra que va iniciar l'operació.
+    profile_access_runtime_changed: El servei en segon pla s'ha reiniciat des que
+      vas iniciar la sessió. Torna a iniciar la sessió.
+    profile_access_session_expired: La teva sessió ha caducat. Torna a iniciar la
+      sessió.
+    profile_access_session_inactive: La teva sessió ja no és activa. Torna a iniciar
+      la sessió.
+    profile_access_storage_unavailable: L'emmagatzematge del perfil no és disponible
+      ara mateix. Torna-ho a provar d'aquí a una estona.
+    profile_access_subject_busy: Una operació anterior sobre el mateix element no
+      ha acabat. Espera que acabi i torna-ho a provar.
+    profile_access_transaction_authority_required: Confirmar aquest canvi requereix
+      una autoritat que aquesta sol·licitud no té, per això s'ha rebutjat. Confirma'l
+      en persona.
     profile_capsule_archive: No s'ha pogut escriure o llegir l'arxiu de còpia del
       perfil
     profile_capsule_source: L'origen indicat no és una càpsula de perfil llegible
@@ -1974,6 +2054,9 @@ errors:
       58/2003, LGT art. 66 i 70). La data més primerenca d''esborrament segur és %{earliest_safe_erase_date}.
       Espera fins aleshores o torna a executar amb --override-retention i --reason
       per forçar-ho.'
+    refused_review_drafts_unattributed: El teu perfil no té NIF, així que cap dels
+      %{draft_count} esborranys desats no es pot mostrar com a teu. Afegeix el teu
+      NIF al perfil i torna a revisar.
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
       Comprova la sintaxi del filtre indicat.
     refused_runtime_custody_recovering: S'està restablint l'accés a aquest perfil.

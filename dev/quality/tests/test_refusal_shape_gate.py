@@ -15,9 +15,13 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.modelo.action_errors import ModeloOperationSubjectNotWorkUnitError, ModeloRecordNotFoundError
+from cadrumo.application.modelo.credit_resolution_repository import CreditResolutionRefusedError
+from cadrumo.application.operations.next_step import OperationNextStepWording
 from dev.quality.refusal_shape import (
     GOVERNED_TREES,
     Site,
+    class_keys_its_words,
     doorless_site_ids,
     free_text_site_ids,
     missing_words,
@@ -76,15 +80,15 @@ def test_no_new_refusal_hands_over_free_text(sites: list[Site]) -> None:
 
 _FIXTURE = """
 from cadrumo.application.filing.errors import ModeloApplicationError
-from cadrumo.application.modelo.action_errors import ModeloOperationSubjectNotWorkUnitError, WorkUnitNotFoundError
+from cadrumo.application.modelo.action_errors import ModeloOperationSubjectNotWorkUnitError, ModeloRecordNotFoundError
 
 
 class Holder:
     def doorless(self):
-        raise WorkUnitNotFoundError(translated_message="no.such.catalogue.key")
+        raise ModeloRecordNotFoundError(translated_message="no.such.catalogue.key")
 
     def doorless_again(self):
-        raise WorkUnitNotFoundError("english words only")
+        raise ModeloRecordNotFoundError("english words only")
 
     def doored(self, step):
         raise ModeloOperationSubjectNotWorkUnitError(next_step=step)
@@ -115,9 +119,105 @@ def test_the_gate_detects_a_doorless_site_a_free_text_site_and_an_unknown_key() 
     assert len(missing) == 4
 
 
+_KEYED_INITIALIZER_FIXTURE = """
+from cadrumo.application.modelo.credit_resolution_repository import CreditResolutionRefusedError
+
+
+def refuse(reason):
+    raise CreditResolutionRefusedError(reason)
+"""
+
+
+def test_a_positional_reason_to_a_class_that_words_itself_is_not_free_text() -> None:
+    """A class whose initializer always keys its words is never handed free text by a site."""
+    assert class_keys_its_words(CreditResolutionRefusedError)
+    assert not class_keys_its_words(ModeloRecordNotFoundError)
+
+    (site,) = scan_source(_KEYED_INITIALIZER_FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
+    assert not site.free_text
+
+
+_CANONICAL_KEY_FIXTURE = """
+from cadrumo.core.errors.hierarchy import InternalInvariantError
+
+
+def broken():
+    raise InternalInvariantError("diagnostic english the renderer never serves")
+"""
+
+
+def test_positional_text_to_a_code_whose_registered_words_always_win_is_not_free_text() -> None:
+    """A canonical message key is served whatever the site passes, as the error renderer does."""
+    (site,) = scan_source(_CANONICAL_KEY_FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
+    assert ".canonical_" in site.message_key
+    assert not site.free_text
+
+
 def test_site_identity_survives_unrelated_line_shifts() -> None:
     """The ratchet key carries no line number, so blank lines above change nothing."""
     first = scan_source(_FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
     shifted = scan_source("\n\n\n" + _FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
     assert [site.site_id for site in first] == [site.site_id for site in shifted]
     assert [site.line + 3 for site in first] == [site.line for site in shifted]
+
+
+def _doored_factory(
+    cls: type[ModeloOperationSubjectNotWorkUnitError], *, step: OperationNextStepWording
+) -> ModeloOperationSubjectNotWorkUnitError:
+    return cls(next_step=step)
+
+
+def _doorless_factory(cls: type[ModeloRecordNotFoundError], reason: str) -> ModeloRecordNotFoundError:
+    return cls(reason)
+
+
+def _keyed_doorless_factory(cls: type[ModeloRecordNotFoundError]) -> ModeloRecordNotFoundError:
+    return cls(translated_message="no.such.catalogue.key")
+
+
+def _not_a_factory(cls: type[ModeloRecordNotFoundError]) -> str:
+    return cls.__name__
+
+
+_FACTORY_FIXTURE = """
+from cadrumo.application.modelo.action_errors import (
+    ModeloOperationSubjectNotWorkUnitError,
+    ModeloRecordNotFoundError,
+)
+
+
+def holder(step):
+    ModeloRecordNotFoundError.direct_first()
+    raise ModeloOperationSubjectNotWorkUnitError.doored(step=step)
+    raise ModeloRecordNotFoundError.doorless("words")
+    raise ModeloRecordNotFoundError.keyed()
+    raise ModeloRecordNotFoundError.doorless("words", next_step=step)
+    ModeloRecordNotFoundError.not_a_factory()
+    ModeloRecordNotFoundError.__name__.upper()
+    ModeloRecordNotFoundError.missing_attribute()
+    ModeloRecordNotFoundError("english words only")
+"""
+
+
+def test_the_gate_counts_classmethod_factory_calls_as_construction_sites(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A factory call is a site; its own body, the call or the class supplies the door."""
+    monkeypatch.setattr(ModeloOperationSubjectNotWorkUnitError, "doored", classmethod(_doored_factory), raising=False)
+    for name, function in (
+        ("doorless", _doorless_factory),
+        ("keyed", _keyed_doorless_factory),
+        ("not_a_factory", _not_a_factory),
+    ):
+        monkeypatch.setattr(ModeloRecordNotFoundError, name, classmethod(function), raising=False)
+    # A plain method is not a classmethod, so calling it on the class is no factory either.
+    monkeypatch.setattr(ModeloRecordNotFoundError, "direct_first", lambda: None, raising=False)
+
+    found = scan_source(_FACTORY_FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
+
+    # Source order, one ordinal sequence per code: the doored site is the only one of its code; the other
+    # four (doorless, keyed, call-door, direct) number 0 to 3.
+    assert [site.ordinal for site in found] == [0, 0, 1, 2, 3]
+    assert {site.qualname for site in found} == {"holder"}
+    assert [site.has_door for site in found] == [True, False, False, True, False]
+    assert doorless_site_ids(found) == sorted(found[index].site_id for index in (1, 2, 4))
+    # Free text: positional words with no key in the factory body, as a direct construction would be.
+    assert [site.free_text for site in found] == [False, True, False, True, True]
