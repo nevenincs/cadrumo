@@ -164,6 +164,9 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             _M100_BIRTH_DATE_BINDING: "1975-06-15",
             _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: "1",
             "renta-profile-has-economic-activity": "1",
+            "renta-profile-income-family-excluded-capital-mobiliario": "0",
+            "renta-profile-income-family-excluded-capital-inmobiliario": "0",
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": "0",
             "renta-profile-estimacion-directa": "1",
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": False,
@@ -185,6 +188,12 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-modelo-130-pagos-fraccionados": Decimal("0"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0"),
+            # No maritime work: the art. 7.p) and Ley 19/1994 art. 75 path is answered
+            # in the negative, with its numeric facts at zero.
+            "renta-maritime-path-rebeca": False,
+            "renta-maritime-gross-navigation-income": Decimal("0"),
+            "renta-maritime-annual-salary": Decimal("0"),
+            "renta-maritime-qualifying-days": Decimal("0"),
         },
         schema_provider=build_runtime_schema_provider(modelos=("100",), filing_year=2024, period=period),
     )

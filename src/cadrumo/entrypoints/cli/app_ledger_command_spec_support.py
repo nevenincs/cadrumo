@@ -417,6 +417,15 @@ OPTIONAL_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
     hidden=False,
 )
 
+LEDGER_RENTAL_LINK_OPTIONS: Final[tuple[OptionSpec, ...]] = (
+    optional_text_option("arrendamiento", ("--arrendamiento",), "cli.ledger.classify.arrendamiento_help"),
+    optional_text_option("inmueble", ("--inmueble",), "cli.ledger.classify.inmueble_help"),
+    optional_text_option(
+        "gasto_inmobiliario", ("--gasto-inmobiliario",), "cli.ledger.classify.gasto_inmobiliario_help"
+    ),
+)
+"""The rental links of a ledger row, declared once for the doors that take them."""
+
 __all__ = [
     "ARCHIVE_REASON_OPTION",
     "EVIDENCE_ACTOR_OPTION",
@@ -425,6 +434,7 @@ __all__ = [
     "LEAF_INVOCATION",
     "LEDGER_ACTOR_OPTION",
     "LEDGER_ADD_CATEGORY_ID_OPTION",
+    "LEDGER_RENTAL_LINK_OPTIONS",
     "LEDGER_USAGE_RATIO_ID_OPTION",
     "MERGE_REASON_OPTION",
     "NO_RESULT_SCHEMA",

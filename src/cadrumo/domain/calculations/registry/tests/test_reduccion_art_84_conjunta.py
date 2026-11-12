@@ -61,6 +61,9 @@ _ZERO_RELATIONS = {
 
 _PRIOR_EDITION_BINDINGS = {
     "renta-profile-has-economic-activity": Decimal("1"),
+    "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+    "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+    "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
     "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
@@ -80,6 +83,9 @@ _PRIOR_EDITION_BINDINGS = {
 
 _REVIEWED_EDITION_BINDINGS = {
     "renta-profile-has-economic-activity": Decimal("1"),
+    "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+    "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+    "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
     "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)

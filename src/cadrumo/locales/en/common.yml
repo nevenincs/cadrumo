@@ -286,6 +286,10 @@ aggregation:
         before saving.
       taxpayer_tax_id_unknown: Your profile declares no tax ID (NIF), so a payer that
         is yourself cannot be ruled out. Add your NIF to the profile first.
+      trabajo_certificate_figure_missing: A work-income certificate states the reductions
+        and the deductible expenses (--reducciones-aplicables, --gastos-deducibles).
+        Give both, with 0 where the certificate states none; no other income class
+        takes them.
       validation: 'The withholding record was not saved: check the payer ID, the amounts
         (at most two decimals) and the certificate fingerprint.'
     served:
@@ -314,6 +318,9 @@ aggregation:
         and retry.
       taxpayer_tax_id_unknown: Your profile has no tax ID (NIF) yet, so a payer that
         is yourself cannot be ruled out. Add your NIF to your profile first.
+      trabajo_certificate_figure_missing: A work-income certificate states the reductions
+        the payer applied and the deductible expenses. Enter both, with 0 where the
+        certificate states none.
       validation: The withholding record was not saved. Check the payer's tax ID,
         that the amounts have at most two decimals, and the certificate.
   retencion_soportada_absence:
@@ -3459,6 +3466,7 @@ desktop:
       actividad_economica: Economic activity
       arrendamiento_local: Rent of business premises
       arrendamiento_vivienda_afecto: Rent of home used for business
+      capital_inmobiliario: Rental of property
       trabajo: Employment
     issue:
       next: Next readiness issue

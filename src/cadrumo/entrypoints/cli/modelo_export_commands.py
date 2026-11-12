@@ -52,6 +52,19 @@ def _completeness_advisory_notice(result: ModeloExportResult) -> Notice:
     )
 
 
+def _trabajo_limitation_notice(result: ModeloExportResult) -> Notice:
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.export.trabajo_deduction_not_computed",
+        message=tr("application.modelo.findings.trabajo_deduction_not_computed"),
+        context={
+            "modelo": str(result.modelo),
+            "filing_year": str(result.filing_year),
+            "period": result.period.registry_token,
+        },
+    )
+
+
 def _cutoff_unverified_notice(result: ModeloExportResult) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -88,6 +101,8 @@ def export_notices(result: ModeloExportResult) -> list[Notice]:
         notices.append(_cutoff_unverified_notice(result))
     if result.completeness_unverified:
         notices.append(_completeness_advisory_notice(result))
+    if result.trabajo_deductions_not_computed:
+        notices.append(_trabajo_limitation_notice(result))
     notices.extend(recorded_note_notices(result.calculation_notes, code="modelo.calculation_note")[0])
     return notices
 

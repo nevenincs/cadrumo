@@ -45,6 +45,10 @@ class RetencionSoportadaRecordRequest(RetencionSoportadaProfileRequest):
     reads and keeps in encrypted attachment custody, or by ``evidence_fingerprint``
     alone for bytes custody already holds. Given with a file, the fingerprint is
     only an integrity cross-check against the bytes read.
+
+    ``reducciones_aplicables`` and ``gastos_deducibles`` are the two figures a
+    work-income certificate states beyond the payment: the operation refuses a
+    ``trabajo`` request without them and a request of any other class with them.
     """
 
     ejercicio: FilingYear
@@ -56,6 +60,8 @@ class RetencionSoportadaRecordRequest(RetencionSoportadaProfileRequest):
     retencion: PublicDecimal
     ingreso_a_cuenta: PublicDecimal
     ingreso_a_cuenta_repercutido: PublicDecimal
+    reducciones_aplicables: PublicDecimal | None = None
+    gastos_deducibles: PublicDecimal | None = None
     origin: RetencionSoportadaOrigen
     evidence_fingerprint: ContentDigest | None = None
     source_path: _Path | None = None

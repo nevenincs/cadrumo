@@ -86,7 +86,6 @@ _KEY_PREFIXES = ("application.modelo.errors.", "errors.refused.", "errors.integr
 _PLACEHOLDER = re.compile(r"%\{(\w+)\}")
 _WORDED_MODULES = (
     "aggregate_operation.py",
-    "art20_advisory.py",
     "art52_advisory.py",
     "autonomic_deduccion_advisory.py",
     "binding_resolution.py",

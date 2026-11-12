@@ -72,6 +72,7 @@ class RegistryUnresolvedOutcomeReason(StrEnum):
     M210_BASELINE_TIPO_DEFERRED = "m210-baseline-tipo-deferred"
     M210_CONVENIO_RATE_MISSING = "m210-convenio-rate-missing"
     WAIVED_REFUND_RESULT_UNSUPPORTED = "waived-refund-result-unsupported"
+    INCOME_FAMILY_CONTRADICTS_PROFILE = "income-family-contradicts-profile"
 
 
 class UnresolvedFormulaOutcomeError(RegistrySnapshotError):

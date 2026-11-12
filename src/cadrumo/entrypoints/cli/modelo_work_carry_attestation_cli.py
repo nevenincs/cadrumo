@@ -18,8 +18,8 @@ import typer
 from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 
+from ...application.modelo.absence_statement_submission import absence_statement_submission
 from ...application.modelo.action_errors import ModeloEditRefusedError, modelo_edit_refusal_error
-from ...application.modelo.carry_attestation_submission import prior_carry_attestation_submission
 from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1
 from ...application.modelo.edit_models import ModeloEditRefusedV1, ModeloEditSubmissionV1
 from ...application.modelo.work_form_models import ModeloFormCarryAttestation
@@ -27,6 +27,7 @@ from ...application.modelo.workbench_operations import ModeloEditPreflightProjec
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from .common import emit_envelope
 from .modelo_cli_support import resolve_explicit_or_active_bucket_id
 from .modelo_work_carry_attestation_payloads import PriorCarryStatementPayload, WorkAttestPriorCarriesResult
@@ -104,8 +105,16 @@ def work_attest_prior_carries(
         raise modelo_edit_refusal_error(form.admission_refusal.refusal)
     if form.admitted_baseline is None:
         raise ModeloEditRefusedError()
-    attestations = form.form.form.carry_attestations
-    submission = prior_carry_attestation_submission(form.admitted_baseline.to_baseline(), attestations)
+    attestations = tuple(
+        attestation
+        for attestation in form.form.form.carry_attestations
+        if attestation.family is AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
+    )
+    submission = absence_statement_submission(
+        form.admitted_baseline.to_baseline(),
+        attestations,
+        family=AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING,
+    )
     review = preflight_modelo_edit_for_cli(client, submission, language=language)
     findings = _checked(review)
     applied: ModeloEditApplyPublicResultV1 | None = None

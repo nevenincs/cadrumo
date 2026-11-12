@@ -304,6 +304,10 @@ aggregation:
         torna a llegir-lo abans de desar.
       taxpayer_tax_id_unknown: El teu perfil no declara NIF, així que no es pot descartar
         que el pagador siguis tu. Afegeix primer el teu NIF al perfil.
+      trabajo_certificate_figure_missing: Un certificat de rendiments del treball
+        indica les reduccions i les despeses deduïbles (--reducciones-aplicables,
+        --gastos-deducibles). Indica'ls tots dos, amb 0 allà on el certificat no indiqui
+        res; cap altra classe de renda no els admet.
       validation: 'El registre de retenció no s''ha desat: revisa el NIF del pagador,
         els imports (com a màxim dos decimals) i l''empremta del certificat.'
     served:
@@ -334,6 +338,9 @@ aggregation:
         Torna a llegir-lo i reintenta-ho.
       taxpayer_tax_id_unknown: El teu perfil encara no té NIF, així que no es pot
         descartar que el pagador siguis tu. Afegeix primer el teu NIF al perfil.
+      trabajo_certificate_figure_missing: Un certificat de rendiments del treball
+        indica les reduccions que va aplicar el pagador i les despeses deduïbles.
+        Introdueix-los tots dos, amb 0 allà on el certificat no indiqui res.
       validation: El registre de retenció no s'ha desat. Revisa el NIF del pagador,
         que els imports tinguin com a màxim dos decimals i el certificat.
   retencion_soportada_absence:
@@ -3521,6 +3528,7 @@ desktop:
       actividad_economica: Activitat econòmica
       arrendamiento_local: Arrendament de local
       arrendamiento_vivienda_afecto: Arrendament d'habitatge afecte
+      capital_inmobiliario: Lloguer d'immobles
       trabajo: Treball
     issue:
       next: Següent problema de preparació
