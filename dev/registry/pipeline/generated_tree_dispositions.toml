@@ -68,14 +68,3 @@ reason = """
 The correction amount's type column reads Num, and general note 1 glosses Num as unsigned. Notes 3 and 4 of the same sheet say Num admits a leading '-', and their worked examples write -15,37 as -0000000000001537. The form settles negative corrections from this slot, so the amount is declared signed, with the minus displacing the leading digit.
 """
 reconsideration_condition = "Remove this row if a later edition of the design gives the amount a type that states its sign, or withdraws notes 3 and 4."
-
-[[dispositions]]
-kind = "record_drift"
-modelo = "303"
-revision = "2026-y-siguientes"
-source_ref = "aeat-dr-303-2026"
-source_sha256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
-remedy = "republish"
-differing_records = 1
-reason = "Tipo % slot 169 (DP30301 f054) carries two implied decimals and admits Nota 7's foral 00000, which the generator now derives; the shipped tree still holds the unscaled integer slot, which refuses 0,5 %. Republication is blocked because 2026-hasta-01-y-1t inherits this export and its authored form layout's source_state_digest covers the slot's type, and the publisher reconciles only the target's own form."
-reconsideration_condition = "Retire once this tree and the inheriting authored form of 2026-hasta-01-y-1t are republished together."

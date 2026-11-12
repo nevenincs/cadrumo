@@ -93,8 +93,8 @@ modelo = "303"
 period = "1T"
 year = "horizon-1"
 casillas = { "07" = "7000.00", "09" = "1470.00", "27" = "1470.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1186.50", "66" = "1186.50", "71" = "1186.50" }
-concepts = { resultado_regimen_general = "1186.50" }
-derivation = "07 = SOC-VTA-1 5200.00 + SOC-VTA-2 1800.00; 09 = 21 %. 28/29 = SOC-ALQ-1 1350.00 / 283.50. Resultado = 1470.00 - 283.50."
+roles = { "iva-resultado-regimen-general" = "1186.50" }
+derivation = "07 = SOC-VTA-1 5200.00 + SOC-VTA-2 1800.00; 09 = 21 %. 28/29 = SOC-ALQ-1 1350.00 / 283.50. Resultado = 1470.00 - 283.50. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -103,8 +103,8 @@ modelo = "303"
 period = "2T"
 year = "horizon-1"
 casillas = { "07" = "8200.00", "09" = "1722.00", "27" = "1722.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1438.50", "66" = "1438.50", "71" = "1438.50" }
-concepts = { resultado_regimen_general = "1438.50" }
-derivation = "07 = SOC-VTA-3 6400.00 + SOC-VTA-4 1800.00; 28/29 = SOC-ALQ-2. Resultado = 1722.00 - 283.50."
+roles = { "iva-resultado-regimen-general" = "1438.50" }
+derivation = "07 = SOC-VTA-3 6400.00 + SOC-VTA-4 1800.00; 28/29 = SOC-ALQ-2. Resultado = 1722.00 - 283.50. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -113,8 +113,8 @@ modelo = "303"
 period = "3T"
 year = "horizon-1"
 casillas = { "07" = "6500.00", "09" = "1365.00", "27" = "1365.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1081.50", "66" = "1081.50", "71" = "1081.50" }
-concepts = { resultado_regimen_general = "1081.50" }
-derivation = "07 = SOC-VTA-5 4700.00 + SOC-VTA-6 1800.00; 28/29 = SOC-ALQ-3. Resultado = 1365.00 - 283.50."
+roles = { "iva-resultado-regimen-general" = "1081.50" }
+derivation = "07 = SOC-VTA-5 4700.00 + SOC-VTA-6 1800.00; 28/29 = SOC-ALQ-3. Resultado = 1365.00 - 283.50. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 
@@ -123,8 +123,8 @@ modelo = "303"
 period = "4T"
 year = "horizon-1"
 casillas = { "07" = "9100.00", "09" = "1911.00", "27" = "1911.00", "28" = "1350.00", "29" = "283.50", "45" = "283.50", "64" = "1627.50", "66" = "1627.50", "71" = "1627.50" }
-concepts = { resultado_regimen_general = "1627.50" }
-derivation = "07 = SOC-VTA-7 7300.00 + SOC-VTA-8 1800.00; 28/29 = SOC-ALQ-4. Resultado = 1911.00 - 283.50."
+roles = { "iva-resultado-regimen-general" = "1627.50" }
+derivation = "07 = SOC-VTA-7 7300.00 + SOC-VTA-8 1800.00; 28/29 = SOC-ALQ-4. Resultado = 1911.00 - 283.50. role iva-resultado-regimen-general is the DR303 box [46] 'Resultado régimen general (27 - 45)' printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition."
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
 

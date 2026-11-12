@@ -19,6 +19,7 @@ moved a category between families.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -30,6 +31,7 @@ from ...calculations.registry.iva_deduction_catalogue import (
     resolve_iva_deduction_catalogue,
 )
 from ...calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..deduction_facts import (
     IvaDeductionClassificationProvenance,
     admits_iva_deduction_classification,
@@ -39,6 +41,8 @@ from ..deduction_facts import (
 from ..errors import IvaValidationError
 from ..flow import IvaFlowDirection, issued_flow_direction, received_flow_direction
 from ..schema import IvaCategory, IvaRateKind
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -63,6 +67,7 @@ def test_a_taxable_domestic_purchase_bears_a_deduction_to_classify(category: str
     assert admits_iva_deduction_classification(
         category=IvaCategory(category),
         flow_direction=received_flow_direction(),
+        effective_date=_ON_DATE,
     )
 
 
@@ -75,6 +80,7 @@ def test_a_purchase_that_raised_no_cuota_bears_none(category: str) -> None:
     assert not admits_iva_deduction_classification(
         category=IvaCategory(category),
         flow_direction=received_flow_direction(),
+        effective_date=_ON_DATE,
     )
 
 
@@ -89,6 +95,7 @@ def test_the_reagp_compensation_keeps_its_deduction() -> None:
     assert admits_iva_deduction_classification(
         category=IvaCategory("reagp_compensation"),
         flow_direction=received_flow_direction(),
+        effective_date=_ON_DATE,
     )
 
 
@@ -97,6 +104,7 @@ def test_an_output_row_bears_no_deduction() -> None:
     assert not admits_iva_deduction_classification(
         category=IvaCategory("domestic_general"),
         flow_direction=issued_flow_direction(),
+        effective_date=_ON_DATE,
     )
 
 
@@ -118,7 +126,7 @@ def _kind_validates(
     family might pin. What remains to fail is the category/flow pairing alone.
     """
     provenance = IvaDeductionClassificationProvenance(
-        authority=required_deduction_evidence_authority(kind),
+        authority=required_deduction_evidence_authority(kind, effective_date=_ON_DATE),
         source_locator=f"evidence:{kind.value}",
         evidence_digest=_EVIDENCE_DIGEST,
     )
@@ -139,6 +147,7 @@ def _kind_validates(
                 iva_amount=Decimal("21.00"),
                 investment_asset_id=investment_asset_id,
                 rectifies_ledger_id=None,
+                effective_date=_ON_DATE,
             )
         except IvaValidationError:
             continue
@@ -167,7 +176,7 @@ def test_the_predicate_and_the_validator_answer_the_same_registry() -> None:
         (category.value, flow.value)
         for category in categories
         for flow in flows
-        if admits_iva_deduction_classification(category=category, flow_direction=flow)
+        if admits_iva_deduction_classification(category=category, flow_direction=flow, effective_date=_ON_DATE)
         != any(_kind_validates(kind, category=category, flow_direction=flow) for kind in kinds)
     ]
 

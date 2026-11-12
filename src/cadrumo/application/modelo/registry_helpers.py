@@ -641,6 +641,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
             f"calculation revision {revision.calculation_revision_id!r} content-address mismatch: "
             f"stored id does not match re-derived hash of its payload; "
             f"the record may have been tampered with or corrupted",
+            context={"work_unit_id": revision.work_unit_id},
         )
 
     for obs in revision.observations:
@@ -652,6 +653,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
                 f"calculation revision {revision.calculation_revision_id!r} provenance drift: "
                 f"observation for casilla {obs.casilla_id!r} is present but neither casilla_values nor "
                 f"input_values_by_casilla_id has an entry for it; the provenance envelope may have been tampered with",
+                context={"work_unit_id": revision.work_unit_id},
             )
         if obs.value != stored:
             raise StoredCalculationDriftError(
@@ -659,6 +661,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
                 f"observation value for casilla {obs.casilla_id!r} is {obs.value!r} "
                 f"but casilla_values holds {stored!r}; "
                 f"the record may have been tampered with or corrupted",
+                context={"work_unit_id": revision.work_unit_id},
             )
 
 

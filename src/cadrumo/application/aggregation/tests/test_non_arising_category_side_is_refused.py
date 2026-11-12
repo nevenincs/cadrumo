@@ -47,6 +47,7 @@ import pytest
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.components import IvaKindApplicability, registry_component_catalogue
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind, IvaCategory
@@ -57,6 +58,8 @@ from ..invoice_kind import invoice_kind_for_direction
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .iva_ledger_row_support import aggregate_row
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -166,7 +169,7 @@ def _non_arising_pairs() -> list[tuple[IvaCategory, InvoiceKind]]:
     """Every pair the table declares impossible, read at runtime."""
     return [
         (category, kind)
-        for (category, kind), row in registry_component_catalogue().items()
+        for (category, kind), row in registry_component_catalogue(effective_date=_ON_DATE).items()
         if row.applicability == IvaKindApplicability.from_registry("does_not_arise")
     ]
 
@@ -304,7 +307,9 @@ def test_the_refusal_names_the_counterpart_the_operator_probably_meant() -> None
     catalogue = TransactionCatalogue.model_validate({"transactions": {transaction.transaction_id: transaction}})
     detail = aggregate_iva_ledger_observations(catalogue, period=_PERIOD).issues[0].detail
 
-    note = registry_component_catalogue()[(IvaCategory("intra_community_supply"), InvoiceKind.RECEIVED)].retencion_note
+    note = registry_component_catalogue(effective_date=_ON_DATE)[
+        (IvaCategory("intra_community_supply"), InvoiceKind.RECEIVED)
+    ].retencion_note
     assert IvaCategory("intra_community_acquisition_reverse_charge").value in note, (
         "the table's note no longer names the counterpart, so the refusal below cannot carry it"
     )

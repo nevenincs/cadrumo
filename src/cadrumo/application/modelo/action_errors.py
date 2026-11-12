@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Literal, override
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -279,8 +279,43 @@ class AmendmentComplementariaLiabilityDecreaseError(ModeloError):
     """
 
 
-class StoredCalculationDriftError(ModeloError):
-    """Raised when a persisted calculation revision has drifted from its content-addressed id."""
+class StoredCalculationDriftError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when a persisted calculation revision has drifted from its content-addressed id.
+
+    The stored revision can no longer be trusted, and calculating the work unit
+    again writes a fresh revision from its sources, so that is its door. The
+    work unit is bound when the raise site states it in ``context``.
+    """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_failure: ModeloPreconditionFailure | None = None,
+    ) -> None:
+        """Carry the caller's verdict, or the recalculation door of the drifted work unit."""
+        work_unit_id = None if context is None else context.get("work_unit_id")
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_failure=precondition_failure
+            or _stored_drift_failure(work_unit_id if isinstance(work_unit_id, str) else None),
+        )
+
+
+def _stored_drift_failure(work_unit_id: str | None) -> ModeloPreconditionFailure:
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.calculate",
+        scenario_id="modelo.work.calculate.stored_revision.drifted",
+        evidence_id="modelo.work.calculate.stored_revision",
+        evidence_values={"intact": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values=None if work_unit_id is None else {"work_unit_id": work_unit_id},
+        missing_action_arguments=() if work_unit_id is not None else ("work_unit_id",),
+    )
 
 
 class StoredRowFieldScalarInputError(ModeloError):
@@ -309,11 +344,11 @@ class LedgerEvidenceRecaptureRefusedError(ModeloError):
     """
 
 
-class ExternalModeloImportError(ModeloError):
+class ExternalModeloImportError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when the external-filing import path cannot persist an imported baseline."""
 
 
-class ModeloLocalObservationError(ModeloError):
+class ModeloLocalObservationError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when an operator-supplied local observation cannot be persisted."""
 
 
@@ -694,26 +729,73 @@ class WorkUnitRevisionDivergenceError(ModeloError):
     """
 
 
-class ModeloEditRefusedError(ModeloError):
+class ModeloEditRefusedError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when an admitted modelo edit is refused at its commit point and nothing changed.
 
     Covers the domain refusals: a disallowed intent, a value that failed
     validation or parsing, or a conflict with the current declaration. The
     typed refusal stays with the caller that produced it; only the registered
-    code travels with the operation.
+    code travels with the operation, with the door of its refusal family. The
+    door leaves the work unit and the value to the operator, because the
+    refusal deliberately carries neither.
     """
+
+    edit_condition: ClassVar[str] = "value"
+    edit_scenario: ClassVar[str] = "refused"
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_failure: ModeloPreconditionFailure | None = None,
+    ) -> None:
+        """Carry the caller's verdict, or the declared door of this refusal family."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_failure=precondition_failure or _edit_refusal_failure(type(self)),
+        )
 
 
 class ModeloEditBaselineStaleError(ModeloEditRefusedError):
     """Raised when the declaration changed after the edit's baseline was captured."""
 
+    edit_condition: ClassVar[str] = "baseline"
+    edit_scenario: ClassVar[str] = "stale"
+
 
 class ModeloEditIntentUnsupportedError(ModeloEditRefusedError):
     """Raised when an admitted edit asks for a kind of change that cannot be applied yet."""
 
+    edit_condition: ClassVar[str] = "intent"
+    edit_scenario: ClassVar[str] = "unsupported"
+
 
 class ModeloEditContractIncompatibleError(ModeloEditRefusedError):
     """Raised when an edit was prepared under an edit contract this version does not accept."""
+
+    edit_condition: ClassVar[str] = "contract"
+    edit_scenario: ClassVar[str] = "incompatible"
+
+
+_EDIT_MISSING_ACTION_ARGUMENTS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {"value": ("work_unit_id", "casilla_id", "value"), "baseline": ("work_unit_id",)}
+)
+
+
+def _edit_refusal_failure(error_type: type[ModeloEditRefusedError]) -> ModeloPreconditionFailure:
+    condition = error_type.edit_condition
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.set_value",
+        scenario_id=f"modelo.work.edit.{condition}.{error_type.edit_scenario}",
+        evidence_id=f"modelo.work.edit.{condition}",
+        evidence_values={"admitted": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        missing_action_arguments=_EDIT_MISSING_ACTION_ARGUMENTS.get(condition, ()),
+    )
 
 
 def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> ModeloEditRefusedError:

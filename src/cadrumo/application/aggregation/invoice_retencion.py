@@ -430,18 +430,8 @@ def invoice_retencion_liability_defects(invoice: Invoice) -> tuple[InvoiceRetenc
     a local ``kind is RECEIVED`` test would be a second, unvalidated copy of
     the same fact, free to drift from the table the rest of the engine reads.
     """
-    defects: list[InvoiceRetencionProjectionDefect] = []
-    # An undeclared category still has a kind, and every row of that kind that
-    # admits a retención may agree on its role; only a disagreement is undeclared.
-    role = (
-        retencion_role_of_kind(invoice.kind)
-        if invoice.iva_category is None
-        else category_components(invoice.iva_category, invoice.kind).retencion_role
-    )
-    if role is None:
-        defects.append(InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED)
-    elif role != registry_retencion_role_token("taxpayer_liability"):
-        defects.append(InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY)
+    role_defect = _retencion_role_defect(invoice)
+    defects: list[InvoiceRetencionProjectionDefect] = [] if role_defect is None else [role_defect]
     if invoice.retention_amount is None or invoice.retention_amount == Decimal("0"):
         defects.append(InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED)
     if invoice.counterparty_country != _SPANISH_COUNTRY_CODE:
@@ -451,6 +441,23 @@ def invoice_retencion_liability_defects(invoice: Invoice) -> tuple[InvoiceRetenc
     if invoice.counterparty_tax_id is None:
         defects.append(InvoiceRetencionProjectionDefect.MISSING_COUNTERPARTY_TAX_ID)
     return tuple(defects)
+
+
+def _retencion_role_defect(invoice: Invoice) -> InvoiceRetencionProjectionDefect | None:
+    """Judge whose money the retención is, on the invoice's devengo date."""
+    # An undeclared category still has a kind, and every row of that kind that
+    # admits a retención may agree on its role; only a disagreement is undeclared.
+    devengo_date = invoice.operation_date or invoice.issued_at
+    role = (
+        retencion_role_of_kind(invoice.kind, effective_date=devengo_date)
+        if invoice.iva_category is None
+        else category_components(invoice.iva_category, invoice.kind, effective_date=devengo_date).retencion_role
+    )
+    if role is None:
+        return InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED
+    if role != registry_retencion_role_token("taxpayer_liability", effective_date=devengo_date):
+        return InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY
+    return None
 
 
 __all__ = [

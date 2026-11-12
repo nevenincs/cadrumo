@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ..domain.filing.errors import FilingExportIntegrityError
+from ..domain.filing.errors import FilingExportIntegrityError, FilingValidationError
 from ..domain.modelos.errors import CalculationRevisionIntegrityError, ModeloOperatorLayerIntegrityError
 from .operator_actions.models import PreconditionVerdict
 
@@ -203,6 +203,7 @@ _TERMINAL_INTEGRITY_RECORDS: Final[dict[type[Exception], tuple[CliExceptionPreco
     ModeloOperatorLayerIntegrityError: (CliExceptionPrecondition.STORED_DATA_VALID, "calculation_operator_layer"),
     CalculationRevisionIntegrityError: (CliExceptionPrecondition.STORED_DATA_VALID, "calculation_revision"),
     FilingExportIntegrityError: (CliExceptionPrecondition.EXPORT_DESIGN_CONSISTENT, "filing_export_design"),
+    FilingValidationError: (CliExceptionPrecondition.STORED_DATA_VALID, "filing_draft"),
 }
 
 
