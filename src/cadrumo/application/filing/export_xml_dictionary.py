@@ -57,6 +57,7 @@ from ...domain.filing.errors import (
 )
 from ...domain.filing.schema import ModeloBindingValue, ModeloDraft
 from .errors import casilla_value_refusal
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 from .export_xml_dictionary_modelo100 import (
     modelo_100_sign_branch_value,
     modelo_100_unfiled_comunidad_paths,
@@ -434,10 +435,14 @@ def read_xml_dictionary_root_identity(payload: bytes) -> Mapping[str, str]:
     try:
         root = DefusedElementTree.fromstring(payload)
     except DefusedElementTree.ParseError as exc:
-        raise FilingExportValidationError("XML dictionary payload could not be parsed") from exc
+        raise FilingExportValidationError(
+            "XML dictionary payload could not be parsed",
+            precondition_verdict=export_input_decision(ExportRefusalReason.PAYLOAD_NOT_READABLE),
+        ) from exc
     if root.tag != XML_DICTIONARY_ROOT_TAG:
         raise FilingExportValidationError(
             f"XML dictionary payload root is {root.tag!r}, expected {XML_DICTIONARY_ROOT_TAG!r}",
+            precondition_verdict=export_input_decision(ExportRefusalReason.PAYLOAD_NOT_READABLE),
         )
     return dict(root.attrib)
 
@@ -603,7 +608,10 @@ def _apply_xml_dictionary_value_converter(
             )
         return converted
     except ValueError as exc:
-        raise FilingExportValidationError(str(exc)) from exc
+        raise FilingExportValidationError(
+            str(exc),
+            precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_NOT_CONVERTIBLE),
+        ) from exc
 
 
 def _xml_dictionary_rendered_value(
@@ -708,7 +716,8 @@ class XmlDictionaryRepeatedRows:
             return self
         if not all(self.takes_box(path) for path in tokens):
             raise FilingExportValidationError(
-                f"boxes {sorted(tokens)} have no single occurrence of {self.element_path} to take them"
+                f"boxes {sorted(tokens)} have no single occurrence of {self.element_path} to take them",
+                precondition_verdict=export_design_terminal(ExportRefusalReason.BOX_HAS_NO_SINGLE_OCCURRENCE),
             )
         return XmlDictionaryRepeatedRows(
             element_path=self.element_path,
@@ -855,7 +864,10 @@ def _render_bound_row_value(binding: BindingDefinition, entry: XmlDictionaryEntr
         try:
             value = date.fromisoformat(value)
         except ValueError as error:
-            raise FilingExportValidationError(f"date row binding {binding.id!r} carries an invalid date") from error
+            raise FilingExportValidationError(
+                f"date row binding {binding.id!r} carries an invalid date",
+                precondition_verdict=export_input_decision(ExportRefusalReason.ROW_VALUE_INVALID),
+            ) from error
     return format_xml_dictionary_value(entry.data_type, value)
 
 
@@ -870,6 +882,7 @@ def _bounded_repeated_rows(
     if limit is not None and len(rows) > limit:
         raise FilingExportValidationError(
             f"{len(rows)} rows do not fit {element}, which the official schema admits {limit} times",
+            precondition_verdict=export_input_decision(ExportRefusalReason.ROWS_EXCEED_SCHEMA),
         )
     return XmlDictionaryRepeatedRows(
         element_path=element,
@@ -909,6 +922,7 @@ def _require_value_stated_by_rows(
         raise FilingExportValidationError(
             f"box {entry.casilla_id} holds {rendered}, which the rows of {rows.element_path} do not add up to. "
             "Correct the box or the rows so that each sale states its own figures.",
+            precondition_verdict=export_input_decision(ExportRefusalReason.VALUE_NOT_STATED_BY_ROWS),
         )
 
 

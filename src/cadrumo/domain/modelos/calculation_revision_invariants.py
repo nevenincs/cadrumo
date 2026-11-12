@@ -18,11 +18,12 @@ from typing import TYPE_CHECKING
 from pydantic import TypeAdapter
 
 from ...core.identity.hex_ids import CalculationRevisionId
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ..calculations.record_row_membership import validate_closed_record_row_sets
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ..calculations.row_source_identity import RowBindingKey
 from .calculation_revision_identity import outputs_for_hash_from_mapping, outputs_for_hash_from_observations
-from .errors import CalculationRevisionIntegrityError, ModeloValidationError
+from .errors import CalculationRevisionIntegrityError, ModeloValidatedRecord, ModeloValidationError
 from .filing_record import FilingDeclarationKind
 
 if TYPE_CHECKING:
@@ -94,6 +95,8 @@ def _validate_replay_channel_overlap(
         raise ModeloValidationError(
             "calculation revision replay ids must be channel-unique; "
             f"ids appear in both {left_name} and {right_name}: {overlapping_ids!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
 
 

@@ -18,7 +18,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.package_version import PACKAGE_VERSION
 from ..calculations.registry.form_codes import form_codes_in_scope, form_width_validator, resolve_form_codes
-from .errors import FilingExportValidationError
+from .errors import FilingExportDesignIntegrityError
 
 _PACKAGE_VERSION_AEAT_AUX_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$", re.ASCII)
 
@@ -33,14 +33,17 @@ def aeat_aux_version() -> str:
     do not have an AEAT wire representation under this contract.
     """
     if _PACKAGE_VERSION_AEAT_AUX_PATTERN.fullmatch(PACKAGE_VERSION) is None:
-        raise FilingExportValidationError(
-            "PACKAGE_VERSION must contain exactly three ASCII decimal components for AEAT Aux/VERSION",
+        raise FilingExportDesignIntegrityError(
+            context={
+                "reason": "package_version_not_three_components",
+                "package_version": PACKAGE_VERSION,
+            },
         )
     aux_version = PACKAGE_VERSION.replace(".", "")
     limit = int(resolve_form_codes("form-row-codes").code("aeat.aux.version_width"))
     if len(aux_version) > limit:
-        raise FilingExportValidationError(
-            f"PACKAGE_VERSION exceeds AEAT Aux/VERSION's {limit}-character limit after removing dots",
+        raise FilingExportDesignIntegrityError(
+            context={"reason": "package_version_exceeds_aux_width", "package_version": PACKAGE_VERSION, "limit": limit},
         )
     return aux_version
 

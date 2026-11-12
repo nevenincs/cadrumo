@@ -33,8 +33,9 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.time.utc import UtcInstant
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .source_disagreement import SourceDisagreementFact, SourceDisagreementRole
 
 __all__ = [
@@ -85,14 +86,30 @@ class CreditResolutionRecord(BaseModel):
     @pydantic_validation_boundary
     def _coherent(self) -> Self:
         if self.accepted_role is not self.disagreement.selected_role:
-            raise ModeloValidationError("a resolution accepts the role the calculation selected and no other")
+            raise ModeloValidationError(
+                "a resolution accepts the role the calculation selected and no other",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CREDIT_RESOLUTION,
+            )
         if not self.reason.strip():
-            raise ModeloValidationError("a resolution needs a non-blank operator reason")
+            raise ModeloValidationError(
+                "a resolution needs a non-blank operator reason",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CREDIT_RESOLUTION,
+            )
         revoked = self.state is CreditResolutionState.REVOKED
         if revoked != (self.revoked_at is not None) or revoked != (self.revoked_by_session is not None):
-            raise ModeloValidationError("a resolution carries its revocation exactly when it is revoked")
+            raise ModeloValidationError(
+                "a resolution carries its revocation exactly when it is revoked",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CREDIT_RESOLUTION,
+            )
         if self.revoked_at is not None and self.revoked_at < self.resolved_at:
-            raise ModeloValidationError("a resolution cannot be revoked before it was made")
+            raise ModeloValidationError(
+                "a resolution cannot be revoked before it was made",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CREDIT_RESOLUTION,
+            )
         return self
 
     @property

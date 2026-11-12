@@ -31,7 +31,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -44,6 +44,7 @@ from .calculation_report import (
     ModeloCalculationReport,
     ModeloCalculationReportRow,
 )
+from .refusal_door_verdicts import registry_defect_verdict
 from .value_presentation import group_decimal_text
 
 TITLE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.title"
@@ -126,7 +127,7 @@ _SECTION_SEPARATOR: Final[str] = " \u203a "
 _REVISION_PREFIX_LENGTH: Final[int] = 16
 
 
-class CalculationSummaryChromeUnavailableError(CadrumoError):
+class CalculationSummaryChromeUnavailableError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """The catalogue carries no text for a string the summary must show.
 
     Refused rather than rendered with a humanised key: a summary whose notice,
@@ -221,6 +222,7 @@ class _Chrome:
             raise CalculationSummaryChromeUnavailableError(
                 translated_message="application.modelo.errors.calculation_summary_chrome_unavailable",
                 context={"report_language": self._language.value, "translation_key": translation_key},
+                precondition_verdict=registry_defect_verdict("calculation_summary_chrome_text"),
             )
         return value
 

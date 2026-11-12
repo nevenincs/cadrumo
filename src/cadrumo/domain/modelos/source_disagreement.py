@@ -36,7 +36,8 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.models import STRICT_FROZEN_CONFIG
-from .errors import ModeloValidationError
+from ...core.operator_action_enums import NoRecoveryOutcome
+from .errors import ModeloValidatedRecord, ModeloValidationError
 
 __all__ = [
     "DisagreementBooleanValue",
@@ -100,7 +101,11 @@ class _DisagreementAmountBase(_DisagreementValueBase):
     @pydantic_validation_boundary
     def _amount_is_canonical_decimal(cls, value: str) -> str:
         if not _is_machine_decimal_text(value):
-            raise ModeloValidationError("a disagreement amount must be canonical decimal text")
+            raise ModeloValidationError(
+                "a disagreement amount must be canonical decimal text",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.SOURCE_DISAGREEMENT,
+            )
         return value
 
     @classmethod
@@ -288,7 +293,11 @@ class SourceDisagreementFact(BaseModel):
     @pydantic_validation_boundary
     def _finding_key_matches_content(self) -> Self:
         if self.selected_role not in {source.role for source in self.sources}:
-            raise ModeloValidationError("a disagreement's selected role must be the role of one of its sources")
+            raise ModeloValidationError(
+                "a disagreement's selected role must be the role of one of its sources",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.SOURCE_DISAGREEMENT,
+            )
         if self.finding_key != _finding_key(
             _identifying_form(
                 modelo=self.modelo,
@@ -304,7 +313,11 @@ class SourceDisagreementFact(BaseModel):
                 differing_row_indices=self.differing_row_indices,
             )
         ):
-            raise ModeloValidationError("a disagreement's finding key does not match its content")
+            raise ModeloValidationError(
+                "a disagreement's finding key does not match its content",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.SOURCE_DISAGREEMENT,
+            )
         return self
 
 

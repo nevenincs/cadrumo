@@ -59,6 +59,7 @@ from ..operations.registry import (
 )
 from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .review_package_collab_audit import (
     emit_collab_recipient_registered_event,
@@ -253,7 +254,10 @@ class ReviewPackageRecipientAddExecutor:
         # canonical parser remains the owning X25519 boundary before mutation.
         canonical_key = public_key_hex_from_raw_bytes(bytes.fromhex(payload.public_key_hex))
         if canonical_key != payload.public_key_hex:
-            raise InternalInvariantError("recipient request passed a noncanonical public key")
+            raise InternalInvariantError(
+                "recipient request passed a noncanonical public key",
+                precondition_verdict=internal_invariant_verdict("review_package_recipient.public_key_canonical"),
+            )
         registry_ports = self._ports.registry_factory(bucket_id=bucket_id)
         event_repository = self._ports.event_repository_factory(bucket_id=bucket_id)
 
@@ -277,7 +281,10 @@ class ReviewPackageRecipientAddExecutor:
                 await context.events.effect(OperationEffect.PARTIAL)
                 matching = tuple(row for row in updated.records if row.recipient_id == payload.recipient_id)
                 if len(matching) != 1 or matching[0].public_key_hex != canonical_key:
-                    raise InternalInvariantError("recipient add did not return its committed canonical record")
+                    raise InternalInvariantError(
+                        "recipient add did not return its committed canonical record",
+                        precondition_verdict=internal_invariant_verdict("review_package_recipient.add_returns_record"),
+                    )
                 record = matching[0]
                 await context.events.effect(OperationEffect.UNKNOWN)
                 try:
@@ -394,7 +401,10 @@ class ReviewPackageRecipientRemoveExecutor:
                     raise
                 await context.events.effect(OperationEffect.PARTIAL)
                 if any(row.recipient_id == payload.recipient_id for row in updated.records):
-                    raise InternalInvariantError("recipient removal retained its committed canonical record")
+                    raise InternalInvariantError(
+                        "recipient removal retained its committed canonical record",
+                        precondition_verdict=internal_invariant_verdict("review_package_recipient.remove_drops_record"),
+                    )
                 await context.events.effect(OperationEffect.UNKNOWN)
                 try:
                     await asyncio.to_thread(

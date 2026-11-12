@@ -54,7 +54,9 @@ class ClaveScopeToken:
         """Parse ``CLAVE`` or ``CLAVE.SUBCLAVE``; refuse any other shape."""
         clave, separator, subclave = raw.strip().partition(".")
         if not clave or (separator and not (str(len(subclave)) in _subclave_widths() and subclave.isdigit())):
-            raise RegistryValidationError(f"perceptor clave scope token {raw!r} is not CLAVE or CLAVE.NN")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"perceptor clave scope token {raw!r} is not CLAVE or CLAVE.NN", declaration="perceptor_clave_scope"
+            )
         return cls(clave=clave, subclave=subclave if separator else None)
 
     def admits(self, clave: str, subclave: str | None) -> bool:
@@ -111,7 +113,9 @@ def resolve_perceptor_clave_scope(
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("perceptor clave scope must resolve as a mapping fact")
+        raise RegistryValidationError.for_inconsistent_declaration(
+            "perceptor clave scope must resolve as a mapping fact", declaration="perceptor_clave_scope"
+        )
     entries = _scope_entries(resolved)
     casillas = _casilla_scopes(entries)
     return PerceptorClaveScope(
@@ -127,9 +131,13 @@ def _scope_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
         if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("perceptor clave scope entries must be string-to-string")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                "perceptor clave scope entries must be string-to-string", declaration="perceptor_clave_scope"
+            )
         if entry.key in entries:
-            raise RegistryValidationError(f"duplicate perceptor clave scope key {entry.key!r}")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"duplicate perceptor clave scope key {entry.key!r}", declaration="perceptor_clave_scope"
+            )
         entries[entry.key] = entry.value.strip()
     return entries
 
@@ -137,7 +145,9 @@ def _scope_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
 def _required_scope_entry(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)
     if not (value is not None and value):
-        raise RegistryValidationError(f"perceptor clave scope is missing {key!r}")
+        raise RegistryValidationError.for_inconsistent_declaration(
+            f"perceptor clave scope is missing {key!r}", declaration="perceptor_clave_scope"
+        )
     return value
 
 
@@ -147,14 +157,20 @@ def _casilla_scopes(entries: Mapping[str, str]) -> dict[CasillaId, tuple[ClaveSc
         if key in _RESERVED_KEYS:
             continue
         if not key.startswith(_CASILLA_KEY_PREFIX):
-            raise RegistryValidationError(f"perceptor clave scope key {key!r} is not a casilla declaration")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"perceptor clave scope key {key!r} is not a casilla declaration", declaration="perceptor_clave_scope"
+            )
         casilla_id = validated_casilla_id(key.removeprefix(_CASILLA_KEY_PREFIX), surface="perceptor clave scope")
         tokens = tuple(ClaveScopeToken.parse(token) for token in value.split(",") if token.strip())
         if not tokens or len(tokens) != len(set(tokens)):
-            raise RegistryValidationError(f"perceptor clave scope for {casilla_id!r} has no unique tokens")
+            raise RegistryValidationError.for_inconsistent_declaration(
+                f"perceptor clave scope for {casilla_id!r} has no unique tokens", declaration="perceptor_clave_scope"
+            )
         casillas[casilla_id] = tokens
     if not casillas:
-        raise RegistryValidationError("perceptor clave scope declares no casilla")
+        raise RegistryValidationError.for_inconsistent_declaration(
+            "perceptor clave scope declares no casilla", declaration="perceptor_clave_scope"
+        )
     return casillas
 
 

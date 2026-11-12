@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from ...domain.filing.errors import ModeloDraftError
 from ...domain.filing.schema import ModeloDraft
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from .draft_refusal_doors import draft_registry_alignment_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -33,6 +34,7 @@ def require_modelo_draft_coordinates_current(
                 "stored_revision": draft.snapshot_ref.revision_id,
                 "law_revision": outcome.selected_revision_id or "unresolvable",
             },
+            precondition_verdict=draft_registry_alignment_verdict("draft_registry_coordinate"),
         )
     return draft
 

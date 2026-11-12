@@ -18,6 +18,8 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
+from .refusal_door_verdicts import registry_defect_verdict
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 if TYPE_CHECKING:
@@ -109,7 +111,11 @@ def art52_reduccion_advisory_finding(
             modelo_id=modelo,
         )
     except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+        raise ModeloError(
+            str(exc),
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
 
     if (
         reduccion_id is None
@@ -141,7 +147,10 @@ def art52_reduccion_advisory_finding(
     resolved_sublimit = context.resolved_decimal(_ART52_INDIVIDUAL_SUBLIMIT_FACT_ID)
     sublimit = resolved_sublimit.payload.value
     if not isinstance(sublimit, Decimal):
-        raise ModeloError("Art. 52 individual sublimit fact must resolve to a Decimal")
+        raise ModeloError(
+            "Art. 52 individual sublimit fact must resolve to a Decimal",
+            precondition_verdict=registry_defect_verdict("art52_sublimit_fact"),
+        )
     if _individual_art52_sublimit_exceeded(
         reduccion_value, trabajador_con_contribucion_value, empresarial_value, autonomos_empresarios_value, sublimit
     ):

@@ -38,8 +38,10 @@ from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...cli_exception_preconditions import nested_terminal_precondition_verdict
+from ...operator_actions.preconditions import PROFILE_FIELD_EDIT_ACTION_ID
 from ..enums import ReviewSeverity
-from ..errors import ReviewSourceLoadError
+from ..errors import ReviewDraftsUnattributedError, ReviewSourceLoadError
 from ..models import FindingReviewItem, InvoiceReviewItem, TransactionReviewItem
 from ..source_adapters import drafts_pending, invoices_pending, transactions_pending
 from .draft_review_test_support import draft_review_ports
@@ -427,12 +429,30 @@ def test_drafts_pending_profile_load_failure_raises_without_raw_error(
     assert "disk-secret" not in str(exc_info.value)
 
 
-def test_drafts_pending_profile_without_tax_id_lists_nothing(
+def test_drafts_pending_profile_without_tax_id_refuses_with_the_profile_fact_door(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
     settings = build_settings(tmp_path)
     ports = draft_review_ports(drafts=(adapters_draft(status=ModeloDraftStatus.BORRADOR),), profile_values={})
+    with pytest.raises(ReviewDraftsUnattributedError) as exc_info:
+        drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation)
+
+    assert exc_info.value.context == {"draft_count": 1}
+    verdict = nested_terminal_precondition_verdict(exc_info.value)
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == PROFILE_FIELD_EDIT_ACTION_ID
+    assert verdict.evidence[0].values["missing_fields"] == "identity.tax_id"
+    assert "00000000T" not in str(exc_info.value)
+
+
+def test_drafts_pending_profile_without_tax_id_and_no_drafts_is_empty(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    settings = build_settings(tmp_path)
+    ports = draft_review_ports(drafts=(), profile_values={})
     assert drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation) == ()
 
 

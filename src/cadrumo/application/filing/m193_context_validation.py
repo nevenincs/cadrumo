@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 
 _M193_PERCEPTOR_RECORD_ID = "modelo-193-perceptor"
 _M193_FILING_YEAR_ID = "modelo-193-perc-year"
@@ -37,7 +38,10 @@ def _context_wires(record: ExportRecordDefinition, wire: str) -> tuple[str, str,
             _M193_CHANGED, translated_message="errors.integrity.filing_export_m193_declaration_changed"
         )
     if len(wire) != max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields):
-        raise FilingExportValidationError("modelo 193 perceptor record is incomplete")
+        raise FilingExportValidationError(
+            "modelo 193 perceptor record is incomplete",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.RECORD_INCOMPLETE),
+        )
     filing_year, clave, pendiente, devengo = (
         _field_wire(wire, by_id[identifier]) for identifier in _M193_CONTEXT_FIELD_IDS
     )
@@ -46,7 +50,10 @@ def _context_wires(record: ExportRecordDefinition, wire: str) -> tuple[str, str,
 
 def _require_devengo_year_before_filing(devengo: str, filing_year: str) -> None:
     if not (_is_year(devengo) and _is_year(filing_year) and int(devengo) < int(filing_year)):
-        raise FilingExportValidationError("modelo 193 devengo year must be earlier than the declaration year")
+        raise FilingExportValidationError(
+            "modelo 193 devengo year must be earlier than the declaration year",
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
+        )
 
 
 def require_m193_perceptor_devengo_context(record: ExportRecordDefinition, wire: str) -> None:
@@ -55,12 +62,21 @@ def require_m193_perceptor_devengo_context(record: ExportRecordDefinition, wire:
         return
     filing_year, clave, pendiente, devengo = _context_wires(record, wire)
     if pendiente not in {" ", _M193_PENDING_MARK}:
-        raise FilingExportValidationError("modelo 193 pending mark must be blank or X")
+        raise FilingExportValidationError(
+            "modelo 193 pending mark must be blank or X",
+            precondition_verdict=export_design_terminal(ExportRefusalReason.MARK_UNREPRESENTABLE),
+        )
     pending = pendiente == _M193_PENDING_MARK
     devengo_filled = devengo != "0" * len(devengo)
     if (pending or devengo_filled) and clave not in _M193_DEVENGO_CLAVES:
-        raise FilingExportValidationError("modelo 193 pending mark and devengo year apply only to keys A, B and D")
+        raise FilingExportValidationError(
+            "modelo 193 pending mark and devengo year apply only to keys A, B and D",
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
+        )
     if pending and devengo_filled:
-        raise FilingExportValidationError("modelo 193 pending row has no devengo year")
+        raise FilingExportValidationError(
+            "modelo 193 pending row has no devengo year",
+            precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
+        )
     if devengo_filled:
         _require_devengo_year_before_filing(devengo, filing_year)

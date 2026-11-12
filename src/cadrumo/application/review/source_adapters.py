@@ -35,7 +35,7 @@ from ..filing.draft_review import ModeloApprovalStaleReason
 from ..filing.draft_review_ports import DraftReviewPorts, DraftReviewProfileRepositoryProtocol
 from ..filing.draft_revision_gate import require_modelo_draft_coordinates_current
 from .enums import ReviewSeverity
-from .errors import ReviewSourceLoadError
+from .errors import ReviewDraftsUnattributedError, ReviewSourceLoadError
 from .models import (
     FindingReviewItem,
     InvoiceReviewItem,
@@ -273,12 +273,16 @@ def drafts_pending(
 
     A draft whose ``profile_tax_id`` does not match the active
     profile's tax id is not the active profile's data and is skipped.
-    Callers see only drafts owned by the active profile.
+    Callers see only drafts owned by the active profile. A profile that
+    declares no tax id owns none of them, which is refused rather than shown
+    as an empty queue while drafts are stored.
     """
     if drafts is None:
         drafts = load_drafts(ports=ports, operation=operation)
     active_tax_id = _resolve_review_active_tax_id(ports.profile_repository, bucket_id=bucket_id)
     if active_tax_id is None:
+        if drafts:
+            raise ReviewDraftsUnattributedError(draft_count=len(drafts))
         return ()
     items: list[FindingReviewItem] = []
     seen: set[tuple[str, str, str]] = set()

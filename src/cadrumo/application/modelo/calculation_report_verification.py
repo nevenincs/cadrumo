@@ -73,6 +73,7 @@ from .calculation_summary_presentation import (
     CalculationSummaryPresentation,
     build_calculation_summary_presentation,
 )
+from .refusal_door_verdicts import safety_stop_verdict
 from .review_package_signing import ReviewPackageSigningError, ReviewPackageSigningKeypair
 
 if TYPE_CHECKING:
@@ -532,6 +533,7 @@ class ExistingSigningKeypairCapability:
         if canonical_bucket_id(bucket_id) != self.keypair.bucket_id:
             raise ReviewPackageSigningError(
                 "review-package signing capability is bound to a different bucket",
+                precondition_verdict=safety_stop_verdict("signing_capability_bucket"),
             )
         return self.keypair
 
