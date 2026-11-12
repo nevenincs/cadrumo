@@ -3562,8 +3562,8 @@ application:
         %{period} was calculated (%{changed_count} facts it used changed). Calculate
         it again before verifying.
       profile_read_fingerprint_absent: This modelo %{modelo} %{filing_year}, %{period}
-        calculation predates profile tracking, so Cadrumo cannot say whether the profile
-        facts it used have changed since. Calculate it again to start tracking them.
+        calculation predates profile tracking, so whether the profile facts it used
+        have changed since cannot be told. Calculate it again to start tracking them.
       profile_read_superseded_filed: Modelo %{modelo} %{filing_year}, %{period} is
         recorded as filed, but %{changed_count} profile facts it used have changed
         since. The filed return stays as filed; if the change affects it, file an

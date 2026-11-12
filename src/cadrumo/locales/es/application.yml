@@ -3753,9 +3753,9 @@ application:
         %{filing_year}, %{period} (%{changed_count} datos que usó han cambiado). Vuelve
         a calcularlo antes de verificarlo.
       profile_read_fingerprint_absent: Este cálculo del modelo %{modelo} %{filing_year},
-        %{period} es anterior al seguimiento del perfil, así que Cadrumo no puede
-        saber si los datos del perfil que usó han cambiado desde entonces. Vuelve
-        a calcularlo para empezar a seguirlos.
+        %{period} es anterior al seguimiento del perfil, así que no se puede saber
+        si los datos del perfil que usó han cambiado desde entonces. Vuelve a calcularlo
+        para empezar a seguirlos.
       profile_read_superseded_filed: El modelo %{modelo} %{filing_year}, %{period}
         consta como presentado, pero %{changed_count} datos del perfil que usó han
         cambiado desde entonces. La declaración presentada sigue tal como se presentó;

@@ -3695,9 +3695,8 @@ application:
         kiszámítása után (%{changed_count} felhasznált adat módosult). Számítsd ki
         újra az ellenőrzés előtt.
       profile_read_fingerprint_absent: Ez a(z) %{modelo} %{filing_year}, %{period}
-        számítás a profilkövetés előtt készült, ezért a Cadrumo nem tudja megmondani,
-        változtak-e azóta az általa használt profiladatok. Számítsd ki újra a követés
-        elindításához.
+        számítás a profilkövetés előtt készült, ezért nem állapítható meg, változtak-e
+        azóta az általa használt profiladatok. Számítsd ki újra a követés elindításához.
       profile_read_superseded_filed: A(z) %{modelo} %{filing_year}, %{period} benyújtottként
         szerepel, de az általa használt profiladatok közül %{changed_count} azóta
         módosult. A benyújtott bevallás változatlan marad; ha a módosítás érinti,
