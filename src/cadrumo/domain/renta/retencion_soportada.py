@@ -54,7 +54,7 @@ type RetencionSoportadaIdentity = tuple[int, RetencionSoportadaClase, str]
 
 
 class RetencionSoportadaRecord(BaseModel):
-    """One payer's figures for one income class and ejercicio (payload schema v2)."""
+    """One payer's figures for one income class and ejercicio (payload schema v1; the two work-income figures are additive and optional)."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -126,7 +126,7 @@ class RetencionSoportadaRecord(BaseModel):
 
     @property
     def lacks_work_certificate_figures(self) -> bool:
-        """Return whether this is a work-income record that states neither figure a v2 payload requires."""
+        """Return whether this is a work-income record that states neither figure a new record must state."""
         return self.income_class is RetencionSoportadaClase.TRABAJO and self.reducciones_aplicables is None
 
     def states(self, cantidad: RetencionSoportadaCantidad) -> bool:

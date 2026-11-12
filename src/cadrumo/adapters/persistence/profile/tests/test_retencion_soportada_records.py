@@ -35,13 +35,14 @@ from .....application.user_profile.section_rows import next_section_row_index, s
 from .....core.aggregation import BindingSourceKind
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.period import Period
-from .....core.retencion_soportada import RetencionSoportadaClase
+from .....core.retencion_soportada import RetencionSoportadaCantidad, RetencionSoportadaClase
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from .....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from .....domain.calculations.registry.schema_references import PeriodSelector
 from .....domain.calculations.registry.tests.published_authority import leased_profile_create_context
+from .....domain.renta.errors import RentaValidationError
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...storage.attachment import AttachmentStore
@@ -50,14 +51,17 @@ from ...storage.runtime_repository import secure_object_repository_for_active_bu
 from ...storage.secure_object_namespaces import (
     ATTACHMENT_BLOB_NAMESPACE,
     RETENCION_SOPORTADA_RECORDS_NAMESPACE,
-    SECURE_OBJECT_SCHEMA_VERSION_V2,
+    SECURE_OBJECT_SCHEMA_VERSION_V1,
 )
 from ...storage.sql.engine import get_engine
 from ...storage.sql.session import session_scope
 from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ..retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
-from .retencion_soportada_seed import active_bucket_custody, keep_certificate
+from ..retencion_soportada_records import (
+    RetencionSoportadaAbsenceRepositoryAdapter,
+    RetencionSoportadaRecordRepositoryAdapter,
+)
+from .retencion_soportada_seed import active_bucket_custody, keep_certificate, seed_absence_attestation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -570,7 +574,7 @@ def _row_statement(key: str):
     )
 
 
-def test_a_work_income_record_is_stored_at_schema_two_with_its_two_certificate_figures(
+def test_a_work_income_record_keeps_the_namespace_schema_and_stores_its_two_certificate_figures(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -583,8 +587,8 @@ def test_a_work_income_record_is_stored_at_schema_two_with_its_two_certificate_f
             row = session.execute(statement).one()
         stored, _revision = repository.load_revisioned(record.identity)
 
-    assert RETENCION_SOPORTADA_RECORDS_NAMESPACE.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V2
-    assert row.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V2
+    assert RETENCION_SOPORTADA_RECORDS_NAMESPACE.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V1
+    assert row.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V1
     assert stored == record
     assert (record.reducciones_aplicables, record.gastos_deducibles) == (Decimal("3060.00"), Decimal("610.00"))
 
@@ -606,12 +610,27 @@ def test_a_payload_written_before_the_two_figures_existed_reads_back_with_both_a
             get_engine(profile.settings), row_statement=statement, mutate=as_first_payload
         )
 
+        seed_absence_attestation(
+            operation=operation,
+            ejercicio=_EJERCICIO,
+            income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+        )
+
         (legacy,) = repository.load_records(_EJERCICIO)
         loaded, _revision = repository.load_revisioned(record.identity)
+        (attestation,) = RetencionSoportadaAbsenceRepositoryAdapter(
+            objects=secure_object_repository_for_active_bucket()
+        ).load_attestations(_EJERCICIO)
 
     assert loaded == legacy
     assert (legacy.reducciones_aplicables, legacy.gastos_deducibles) == (None, None)
     assert legacy.lacks_work_certificate_figures
+    assert not legacy.states(RetencionSoportadaCantidad.REDUCCIONES_APLICABLES)
+    assert not legacy.states(RetencionSoportadaCantidad.GASTOS_DEDUCIBLES)
+    for missing in (RetencionSoportadaCantidad.REDUCCIONES_APLICABLES, RetencionSoportadaCantidad.GASTOS_DEDUCIBLES):
+        with pytest.raises(RentaValidationError):
+            legacy.quantity(missing)
+    assert attestation.income_class is RetencionSoportadaClase.CAPITAL_MOBILIARIO
     # Every other figure, the credit and the identity are unchanged by the missing pair.
     restated = legacy.model_copy(
         update={"reducciones_aplicables": Decimal("3060.00"), "gastos_deducibles": Decimal("610.00")}
@@ -632,3 +651,28 @@ def test_the_write_port_refuses_a_work_income_record_that_states_neither_figure(
 
         assert refused.value.reason == "trabajo_certificate_figure_missing"
         assert repository.load_records(_EJERCICIO) == ()
+
+
+def test_a_record_stored_before_the_two_figures_existed_still_yields_its_credit(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = _repository()
+        record = _record(repository, reducciones="3060.00", gastos="610.00")
+        _write(repository, record, operation)
+        statement = _row_statement(retencion_soportada_record_key(record.identity))
+
+        def as_first_payload(document: dict[str, Any]) -> None:
+            del document["payload"]["reducciones_aplicables"]
+            del document["payload"]["gastos_deducibles"]
+
+        mutate_encrypted_secure_object_json(
+            get_engine(profile.settings), row_statement=statement, mutate=as_first_payload
+        )
+        (legacy,) = repository.load_records(_EJERCICIO)
+        resolution = _resolve(repository, _revision(_binding(_TRABAJO_BINDING, "trabajo")))
+
+    # 1.200,00 retención + 300,00 ingreso a cuenta (repercutido, still credited), as before the change.
+    assert legacy.quantity(RetencionSoportadaCantidad.RETENCION) == Decimal("1200.00")
+    assert legacy.quantity(RetencionSoportadaCantidad.PAGO_A_CUENTA) == Decimal("1500.00")
+    assert resolution.binding_values == {_TRABAJO_BINDING: Decimal("1500.00")}
