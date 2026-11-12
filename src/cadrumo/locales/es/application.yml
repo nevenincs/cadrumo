@@ -4792,6 +4792,9 @@ application:
         Cambia la contraseña para reforzarla; puedes volver a introducir la misma.
     record_groups:
       door:
+        prevision_social_contribution:
+          edit: Corrige este certificado
+          remove: Elimina este certificado
         renta_arrendamiento:
           edit: Editar arrendamiento
           remove: Eliminar arrendamiento
@@ -4800,15 +4803,27 @@ application:
           remove: Eliminar inmueble
       kind:
         ledger_row: Movimiento
+        pension_contribution: Certificados de aportaciones a previsión social de un
+          ejercicio
+        prevision_social_contribution: Certificado de aportaciones a previsión social
         renta_arrendamiento: Arrendamiento
         renta_inmueble: Inmueble
         rental_property: Inmueble arrendado
+      prevision_social_contribution:
+        group_summary: 'Certificados de aportaciones a previsión social del ejercicio
+          {ejercicio}: {count}'
+        holder_unnamed: Emisor sin nombre
+        summary_placed: '{holder}: {amount} EUR, clave {clave}, llega a la casilla
+          {box}'
+        summary_unplaced: '{holder}: {amount} EUR, clave {clave}, no llega a ninguna
+          casilla; ese importe lo introduces tú'
       refusal:
         item_too_large: Una entrada de esta lista es demasiado grande para mostrarla
           en una página.
         stale_revision: El perfil o sus movimientos han cambiado después de leer esta
           lista. Vuelve a leer la lista.
       relation:
+        prevision_social_contribution: Certificado del ejercicio
         renta_arrendamiento:
           inmueble: Arrendamiento de este inmueble
         renta_inmueble:

@@ -4782,6 +4782,9 @@ application:
         a introduir la mateixa.
     record_groups:
       door:
+        prevision_social_contribution:
+          edit: Corregeix aquest certificat
+          remove: Elimina aquest certificat
         renta_arrendamiento:
           edit: Edita l'arrendament
           remove: Elimina l'arrendament
@@ -4790,15 +4793,26 @@ application:
           remove: Elimina l'immoble
       kind:
         ledger_row: Moviment
+        pension_contribution: Certificats d'aportacions a previsió social d'un exercici
+        prevision_social_contribution: Certificat d'aportacions a previsió social
         renta_arrendamiento: Arrendament
         renta_inmueble: Immoble
         rental_property: Immoble arrendat
+      prevision_social_contribution:
+        group_summary: 'Certificats d''aportacions a previsió social de l''exercici
+          {ejercicio}: {count}'
+        holder_unnamed: Emissor sense nom
+        summary_placed: '{holder}: {amount} EUR, clau {clave}, arriba a la casella
+          {box}'
+        summary_unplaced: '{holder}: {amount} EUR, clau {clave}, no arriba a cap casella;
+          aquest import l''introdueixes tu'
       refusal:
         item_too_large: Una entrada d'aquesta llista és massa gran per mostrar-la
           en una pàgina.
         stale_revision: El perfil o els seus moviments han canviat després de llegir
           aquesta llista. Torna a llegir la llista.
       relation:
+        prevision_social_contribution: Certificat de l'exercici
         renta_arrendamiento:
           inmueble: Arrendament d'aquest immoble
         renta_inmueble:

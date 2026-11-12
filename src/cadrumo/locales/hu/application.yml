@@ -4720,6 +4720,9 @@ application:
         újra.
     record_groups:
       door:
+        prevision_social_contribution:
+          edit: Javítsd ezt az igazolást
+          remove: Töröld ezt az igazolást
         renta_arrendamiento:
           edit: Bérlet szerkesztése
           remove: Bérlet törlése
@@ -4728,14 +4731,25 @@ application:
           remove: Ingatlan törlése
       kind:
         ledger_row: Tétel
+        pension_contribution: Egy év nyugdíjcélú befizetési igazolásai
+        prevision_social_contribution: Nyugdíjcélú befizetési igazolás
         renta_arrendamiento: Bérlet
         renta_inmueble: Ingatlan
         rental_property: Bérbe adott ingatlan
+      prevision_social_contribution:
+        group_summary: 'Nyugdíjcélú befizetési igazolások a(z) {ejercicio}. évre:
+          {count}'
+        holder_unnamed: Névtelen kibocsátó
+        summary_placed: '{holder}: {amount} EUR, {clave} kulcs, a(z) {box} rovatba
+          kerül'
+        summary_unplaced: '{holder}: {amount} EUR, {clave} kulcs, nem kerül egyetlen
+          rovatba sem; ezt az összeget te adod meg'
       refusal:
         item_too_large: A lista egyik eleme túl nagy ahhoz, hogy egy oldalon megjelenjen.
         stale_revision: A profil vagy a tételei megváltoztak a lista beolvasása óta.
           Olvasd be újra a listát.
       relation:
+        prevision_social_contribution: Az év igazolása
         renta_arrendamiento:
           inmueble: Az ingatlan bérlete
         renta_inmueble:

@@ -18,6 +18,7 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..prevision_social_contribution.ports import PrevisionSocialPortsFactory
 from .profile_operation_access import resolve_profile_view_access
 from .record_group_contracts import (
     PROFILE_RECORD_GROUPS_OPERATION_DEFINITION_ID,
@@ -33,9 +34,10 @@ from .record_groups import LedgerRowsLoader, read_profile_record_groups
 class ProfileRecordGroupsExecutor:
     """Read the record groups through the canonical encrypted record owner and the profile's ledger."""
 
-    def __init__(self, ledger_rows: LedgerRowsLoader) -> None:
-        """Bind the read of the profile's ledger rows the groups join."""
+    def __init__(self, ledger_rows: LedgerRowsLoader, contribution_ports: PrevisionSocialPortsFactory) -> None:
+        """Bind the read of the profile's ledger rows the groups join and of its pension certificates."""
         self._ledger_rows = ledger_rows
+        self._contribution_ports = contribution_ports
 
     async def execute(
         self,
@@ -55,6 +57,7 @@ class ProfileRecordGroupsExecutor:
                 request.payload,
                 authority_operation=context.authority_operation,
                 ledger_rows=self._ledger_rows,
+                contribution_ports=self._contribution_ports,
             ),
             task_name="profile-record-groups-read",
         )
@@ -64,8 +67,10 @@ class ProfileRecordGroupsExecutor:
         return result_ref
 
 
-def build_record_groups_definition(ledger_rows: LedgerRowsLoader) -> OperationDefinition:
-    """Declare the exact-profile read of the record groups over ``ledger_rows``."""
+def build_record_groups_definition(
+    ledger_rows: LedgerRowsLoader, contribution_ports: PrevisionSocialPortsFactory
+) -> OperationDefinition:
+    """Declare the exact-profile read of the record groups over ``ledger_rows`` and ``contribution_ports``."""
     return OperationDefinition(
         definition_id=PROFILE_RECORD_GROUPS_OPERATION_DEFINITION_ID,
         request_type=ProfileRecordGroupsRequest,
@@ -74,7 +79,7 @@ def build_record_groups_definition(ledger_rows: LedgerRowsLoader) -> OperationDe
         executor_factory=OperationExecutorFactory(
             request_type=ProfileRecordGroupsRequest,
             executor_type=ProfileRecordGroupsExecutor,
-            build=lambda: ProfileRecordGroupsExecutor(ledger_rows),
+            build=lambda: ProfileRecordGroupsExecutor(ledger_rows, contribution_ports),
         ),
         phase_codes=PROFILE_RECORD_GROUPS_PHASES,
         interaction_kinds=frozenset[OperationInteractionKind](),

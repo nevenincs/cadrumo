@@ -2,7 +2,10 @@
 
 A record group is one row of a repeatable profile section together with every row
 that names it through a schema-declared row reference, and the ledger rows that
-name any of them. The read serves the relation, the row identities and the words
+name any of them. The pension contribution kind groups the taxpayer's stored
+contribution certificates by ejercicio instead: the certificates live in their own
+encrypted store, a group is one year, and each certificate is a member of its year.
+The read serves the relation, the row identities and the words
 of every row, so a surface iterates the stream by item kind and joins nothing.
 
 The stream is paged. A continuation names the profile revision and the digest of
@@ -26,9 +29,12 @@ from ...core.operations import profile_operation_subject
 from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from ..operations.models import CredentialFreeOperationRequest, OperationTerminalReceipt
 from ..operations.public_scalar import PublicDecimal
+from ..prevision_social_contribution.results import PrevisionSocialRowProjection
 
 PROFILE_RECORD_GROUPS_OPERATION_DEFINITION_ID: Final = "user-profile.record-groups"
 PROFILE_RECORD_GROUPS_PHASES: Final = ("user-profile.record-groups.read", "user-profile.record-groups.project")
+PENSION_CONTRIBUTION_SECTION_KEY: Final = "prevision_social_contribution"
+"""The section key the pension contribution certificates are served under; they are not a profile section."""
 PROFILE_RECORD_GROUPS_MAX_ITEMS: Final = 128
 # The result is nested in a settled-operation response and then a runtime frame;
 # keep generous space beneath that frame's 64 KiB ceiling for both envelopes.
@@ -39,6 +45,7 @@ class ProfileRecordGroupKind(StrEnum):
     """Which rows head the groups: the payload kind a surface renders without a branch."""
 
     RENTAL_PROPERTY = "rental_property"
+    PENSION_CONTRIBUTION = "pension_contribution"
 
 
 class ProfileRecordDoor(StrEnum):
@@ -134,6 +141,9 @@ class ProfileRecordMemberItem(BaseModel):
     kind_words_language: OutputLanguage
     #: The doors of this member's own row.
     actions: tuple[ProfileRecordAction, ...]
+    #: The stored certificate, with the revision its correct and remove doors submit, for a pension member.
+    #: It carries keyed references and names, never a tax identifier.
+    contribution: PrevisionSocialRowProjection | None = None
 
 
 class ProfileRecordLedgerRowItem(BaseModel):
@@ -258,6 +268,7 @@ def project_record_groups_result(result: BaseModel, receipt: OperationTerminalRe
 
 
 __all__ = [
+    "PENSION_CONTRIBUTION_SECTION_KEY",
     "PROFILE_RECORD_GROUPS_MAX_ITEMS",
     "PROFILE_RECORD_GROUPS_MAX_RESULT_BYTES",
     "PROFILE_RECORD_GROUPS_OPERATION_DEFINITION_ID",

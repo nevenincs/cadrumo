@@ -4556,6 +4556,9 @@ application:
         password again.
     record_groups:
       door:
+        prevision_social_contribution:
+          edit: Correct this certificate
+          remove: Remove this certificate
         renta_arrendamiento:
           edit: Edit lease
           remove: Remove lease
@@ -4564,14 +4567,23 @@ application:
           remove: Remove property
       kind:
         ledger_row: Ledger entry
+        pension_contribution: Pension contribution certificates of one year
+        prevision_social_contribution: Pension contribution certificate
         renta_arrendamiento: Lease
         renta_inmueble: Property
         rental_property: Rental property
+      prevision_social_contribution:
+        group_summary: 'Pension contribution certificates for {ejercicio}: {count}'
+        holder_unnamed: Unnamed issuer
+        summary_placed: '{holder}: {amount} EUR, clave {clave}, reaches box {box}'
+        summary_unplaced: '{holder}: {amount} EUR, clave {clave}, reaches no box;
+          you enter that amount yourself'
       refusal:
         item_too_large: One item of this list is too large to show on a page.
         stale_revision: The profile or its ledger entries changed after this list
           was read. Read the list again.
       relation:
+        prevision_social_contribution: Certificate of the year
         renta_arrendamiento:
           inmueble: Lease of this property
         renta_inmueble:

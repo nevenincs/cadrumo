@@ -17,11 +17,16 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.i18n.render import tr
 from ...domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, INMUEBLE_SECTION
+from ..prevision_social_contribution.contracts import (
+    PREVISION_SOCIAL_RECORD_OPERATION_DEFINITION_ID,
+    PREVISION_SOCIAL_REMOVE_OPERATION_DEFINITION_ID,
+)
 from .profile_operation_contracts import (
     PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
 )
 from .record_group_contracts import (
+    PENSION_CONTRIBUTION_SECTION_KEY,
     ProfileRecordAction,
     ProfileRecordDoor,
     ProfileRecordGroupKind,
@@ -35,6 +40,7 @@ if TYPE_CHECKING:
 GROUP_KIND_WORDS_LOCALE_KEYS: Final[Mapping[ProfileRecordGroupKind, str]] = MappingProxyType(
     {
         ProfileRecordGroupKind.RENTAL_PROPERTY: "application.user_profile.record_groups.kind.rental_property",
+        ProfileRecordGroupKind.PENSION_CONTRIBUTION: "application.user_profile.record_groups.kind.pension_contribution",
     }
 )
 """What each kind of group is."""
@@ -43,6 +49,7 @@ SECTION_KIND_WORDS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         INMUEBLE_SECTION: "application.user_profile.record_groups.kind.renta_inmueble",
         ARRENDAMIENTO_SECTION: "application.user_profile.record_groups.kind.renta_arrendamiento",
+        PENSION_CONTRIBUTION_SECTION_KEY: "application.user_profile.record_groups.kind.prevision_social_contribution",
     }
 )
 """What a member row of each listed section is."""
@@ -54,6 +61,9 @@ EDIT_DOOR_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         INMUEBLE_SECTION: "application.user_profile.record_groups.door.renta_inmueble.edit",
         ARRENDAMIENTO_SECTION: "application.user_profile.record_groups.door.renta_arrendamiento.edit",
+        PENSION_CONTRIBUTION_SECTION_KEY: (
+            "application.user_profile.record_groups.door.prevision_social_contribution.edit"
+        ),
     }
 )
 """The short label of the edit door of a row of each listed section."""
@@ -62,6 +72,9 @@ REMOVE_DOOR_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         INMUEBLE_SECTION: "application.user_profile.record_groups.door.renta_inmueble.remove",
         ARRENDAMIENTO_SECTION: "application.user_profile.record_groups.door.renta_arrendamiento.remove",
+        PENSION_CONTRIBUTION_SECTION_KEY: (
+            "application.user_profile.record_groups.door.prevision_social_contribution.remove"
+        ),
     }
 )
 """The short label of the remove door of a row of each listed section."""
@@ -74,11 +87,36 @@ REFUSAL_WORDS_LOCALE_KEYS: Final[Mapping[ProfileRecordGroupsRefusalCode, str]] =
 )
 """Why a page was refused and what the operator does next."""
 
-_DOORS: Final[tuple[tuple[ProfileRecordDoor, str, Mapping[str, str]], ...]] = (
-    (ProfileRecordDoor.EDIT, PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID, EDIT_DOOR_LABEL_LOCALE_KEYS),
-    (ProfileRecordDoor.REMOVE, PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID, REMOVE_DOOR_LABEL_LOCALE_KEYS),
+_PROFILE_ROW_SECTIONS: Final = (INMUEBLE_SECTION, ARRENDAMIENTO_SECTION)
+
+
+def _door_operations(profile_row_operation: str, pension_operation: str) -> Mapping[str, str]:
+    """Map each served section to the registered operation its door submits."""
+    return MappingProxyType(
+        {
+            **dict.fromkeys(_PROFILE_ROW_SECTIONS, profile_row_operation),
+            PENSION_CONTRIBUTION_SECTION_KEY: pension_operation,
+        }
+    )
+
+
+_DOORS: Final[tuple[tuple[ProfileRecordDoor, Mapping[str, str], Mapping[str, str]], ...]] = (
+    (
+        ProfileRecordDoor.EDIT,
+        _door_operations(
+            PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID, PREVISION_SOCIAL_RECORD_OPERATION_DEFINITION_ID
+        ),
+        EDIT_DOOR_LABEL_LOCALE_KEYS,
+    ),
+    (
+        ProfileRecordDoor.REMOVE,
+        _door_operations(
+            PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID, PREVISION_SOCIAL_REMOVE_OPERATION_DEFINITION_ID
+        ),
+        REMOVE_DOOR_LABEL_LOCALE_KEYS,
+    ),
 )
-"""Each door, the registered operation it submits, and its labels by section, in the order a surface shows them."""
+"""Each door, the registered operation it submits and its labels, by section, in the order a surface shows them."""
 
 
 def group_kind_words(kind: ProfileRecordGroupKind) -> str:
@@ -106,25 +144,25 @@ def row_actions(section_key: str, language: OutputLanguage) -> tuple[ProfileReco
     return tuple(
         ProfileRecordAction(
             door=door,
-            operation_definition_id=operation_id,
+            operation_definition_id=operations[section_key],
             label_words=tr(labels[section_key]),
             label_words_language=language,
         )
-        for door, operation_id, labels in _DOORS
+        for door, operations, labels in _DOORS
     )
 
 
 def _require_total_tables() -> None:
-    sections = summarised_sections()
+    sections = summarised_sections() | {PENSION_CONTRIBUTION_SECTION_KEY}
     if set(SECTION_KIND_WORDS_LOCALE_KEYS) != sections:
         raise ValueError("every listed record section needs its kind words")
-    if any(set(labels) != sections for _door, _operation, labels in _DOORS):
-        raise ValueError("every door of every listed record section needs its label")
+    if any(set(labels) != sections or set(operations) != sections for _door, operations, labels in _DOORS):
+        raise ValueError("every door of every listed record section needs its operation and label")
     if set(GROUP_KIND_WORDS_LOCALE_KEYS) != set(ProfileRecordGroupKind):
         raise ValueError("every record group kind needs its kind words")
     if set(REFUSAL_WORDS_LOCALE_KEYS) != set(ProfileRecordGroupsRefusalCode):
         raise ValueError("every record group refusal needs its words")
-    if {door for door, _operation, _labels in _DOORS} != set(ProfileRecordDoor):
+    if {door for door, _operations, _labels in _DOORS} != set(ProfileRecordDoor):
         raise ValueError("every record door needs its registered operation")
 
 

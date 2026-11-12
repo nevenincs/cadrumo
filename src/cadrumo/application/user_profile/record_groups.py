@@ -11,6 +11,10 @@ Ledger rows join the group whose row they name, through the ledger field that
 carries a reference to that section. Every ledger row is read, in any lifecycle
 state, because a row in any state keeps the rental row it names from removal.
 
+The pension contribution kind is read from its own encrypted store and grouped by
+ejercicio (see ``record_group_pension``). Its pin digest covers the served
+certificates, so a continuation is refused once any certificate or its revision moves.
+
 Facts read here are private; nothing in this module logs them.
 """
 
@@ -41,6 +45,7 @@ from .record_group_contracts import (
     ProfileRecordLedgerRowItem,
     ProfileRecordMemberItem,
 )
+from .record_group_pension import read_pension_group_items
 from .record_group_words import group_kind_words, ledger_row_kind_words, member_kind_words, refusal_words, row_actions
 from .record_row_words import record_relation_words, record_row_summary_words, summarised_sections
 
@@ -49,6 +54,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.transactions.models import Transaction
     from ...domain.user_profile.schema import ProfileSchemaDefinition
+    from ..prevision_social_contribution.ports import PrevisionSocialPortsFactory
 
 type LedgerRowsLoader = Callable[[str], Iterable[Transaction]]
 """Read every ledger row of one profile, in any lifecycle state, without writing it."""
@@ -244,10 +250,15 @@ def record_group_items(
 
 
 def ledger_rows_digest(items: Iterable[ProfileRecordGroupStreamItem]) -> str:
-    """Fingerprint the ledger rows a stream serves, so a continuation can tell they moved."""
+    """Fingerprint the rows a stream serves from outside the profile record, so a continuation can tell they moved.
+
+    Those are the ledger rows of a rental group and the stored certificates of a pension group.
+    """
     digest = hashlib.sha256()
     for item in items:
-        if isinstance(item, ProfileRecordLedgerRowItem):
+        if isinstance(item, ProfileRecordLedgerRowItem) or (
+            isinstance(item, ProfileRecordMemberItem) and item.contribution is not None
+        ):
             digest.update(json.dumps(item.model_dump(mode="json"), sort_keys=True).encode("utf-8"))
             digest.update(b"\n")
     return digest.hexdigest()
@@ -309,23 +320,50 @@ def _page(
     return page_for(low)
 
 
+def _stream(
+    request: ProfileRecordGroupsRequest,
+    path_values: Mapping[str, str],
+    *,
+    authority_operation: PinnedAuthorityOperation,
+    ledger_rows: LedgerRowsLoader,
+    contribution_ports: PrevisionSocialPortsFactory,
+) -> tuple[ProfileRecordGroupStreamItem, ...]:
+    """Serve the groups of the kind asked for, from the store that kind lives in."""
+    profile_id = str(request.profile_id)
+    if request.group_kind is ProfileRecordGroupKind.PENSION_CONTRIBUTION:
+        return read_pension_group_items(
+            profile_id,
+            authority_operation=authority_operation,
+            ports_factory=contribution_ports,
+            language=served_words_language(),
+        )
+    return record_group_items(
+        path_values,
+        schema=authority_operation.profile_decode_context().schema,
+        kind=request.group_kind,
+        ledger_rows=ledger_rows(profile_id),
+        language=served_words_language(),
+    )
+
+
 def read_profile_record_groups(
     request: ProfileRecordGroupsRequest,
     *,
     authority_operation: PinnedAuthorityOperation,
     ledger_rows: LedgerRowsLoader,
+    contribution_ports: PrevisionSocialPortsFactory,
 ) -> ProfileRecordGroupsResult:
-    """Build one bounded page of the groups from the exact current encrypted record and its ledger."""
+    """Build one bounded page of the groups from the exact current encrypted record, its ledger and certificates."""
     profile_id = str(request.profile_id)
     decode = authority_operation.profile_decode_context()
     record = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode).load(profile_id)
     with override_settings(cadrumo_output_language=request.output_language.value):
-        stream = record_group_items(
+        stream = _stream(
+            request,
             record_to_path_values(record),
-            schema=decode.schema,
-            kind=request.group_kind,
-            ledger_rows=ledger_rows(profile_id),
-            language=served_words_language(),
+            authority_operation=authority_operation,
+            ledger_rows=ledger_rows,
+            contribution_ports=contribution_ports,
         )
         common: dict[str, object] = {
             "profile_id": request.profile_id,

@@ -8,7 +8,7 @@ entry options read draws its rental choices through the production profile read.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import NamedTuple
@@ -22,6 +22,9 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ...application.aggregation.prevision_social_contribution_repository import (
+    record_prevision_social_contribution,
+)
 from ...application.ledger.action_ports import LedgerActionPorts
 from ...application.ledger.entry_options_operation import ledger_entry_options
 from ...application.ledger.models import ManualLedgerTransactionCommand
@@ -29,6 +32,11 @@ from ...application.ledger.tests.manual_transaction_support import create_manual
 from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...application.operations.models import OperationRequest
 from ...application.operations.registry import OperationRegistry
+from ...application.prevision_social_contribution.contracts import (
+    PREVISION_SOCIAL_RECORD_OPERATION_DEFINITION_ID,
+    PREVISION_SOCIAL_REMOVE_OPERATION_DEFINITION_ID,
+)
+from ...application.prevision_social_contribution.ports import PrevisionSocialPorts
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.login_session import authenticate_profile_for_invocation
 from ...application.user_profile.profile_operation_contracts import (
@@ -36,6 +44,7 @@ from ...application.user_profile.profile_operation_contracts import (
     PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
 )
 from ...application.user_profile.record_group_contracts import (
+    PENSION_CONTRIBUTION_SECTION_KEY,
     PROFILE_RECORD_GROUPS_OPERATION_DEFINITION_ID,
     ProfileRecordDoor,
     ProfileRecordGroupItem,
@@ -71,10 +80,13 @@ from ...core.config import override_settings
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.operations import OperationFrontendProjection, profile_operation_subject
+from ...core.prevision_social import PrevisionSocialBeneficiario, PrevisionSocialClave, PrevisionSocialSubclave
+from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
 from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, INMUEBLE_SECTION
+from ...domain.renta.prevision_social_contribution import PrevisionSocialContribution
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.rental_link import RENTAL_LINK_IRPF_CATEGORY
@@ -83,6 +95,7 @@ from ..ledger_action_composition import (
     load_entry_option_profile_facts,
     load_ledger_rows_for_rental_references,
 )
+from ..prevision_social_contribution_composition import build_prevision_social_contribution_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -197,6 +210,7 @@ def _read(world: _World, **request: object) -> ProfileRecordGroupsResult:
         ),
         authority_operation=world.operation,
         ledger_rows=load_ledger_rows_for_rental_references,
+        contribution_ports=build_prevision_social_contribution_ports,
     )
 
 
@@ -454,7 +468,9 @@ def test_the_profile_field_view_marks_each_field_that_names_another_sections_row
 
 
 def _access(context_profile: UUID, payload_profile: UUID, subject_profile: UUID) -> object:
-    definition = build_record_groups_definition(load_ledger_rows_for_rental_references)
+    definition = build_record_groups_definition(
+        load_ledger_rows_for_rental_references, build_prevision_social_contribution_ports
+    )
     registration = build_record_groups_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     return resolve_operation_access(
@@ -488,3 +504,144 @@ def test_the_read_is_admitted_for_its_own_profile_only() -> None:
         with pytest.raises(ProfileAccessRefusedError) as refused:
             _access(context_profile, payload_profile, subject_profile)
         assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+_ISSUER = "V00010082"
+_PLAN = "V00010090"
+_CERTIFICATE = b"%PDF-1.4 synthetic pension contribution certificate"
+
+
+def _contribution(
+    ports: PrevisionSocialPorts, ejercicio: int, *, amount: str, plan: str | None
+) -> PrevisionSocialContribution:
+    repository = ports.repository
+    captured_at = datetime.now(UTC)
+    record = PrevisionSocialContribution(
+        ejercicio=ejercicio,
+        issuer_tax_id=_ISSUER,
+        issuer_legal_name="Gestora Sintetica SA",
+        issuer_ref=repository.issuer_reference(_ISSUER),
+        plan_tax_id=plan,
+        plan_name=None if plan is None else "Plan Sintetico",
+        plan_ref=None if plan is None else repository.plan_reference(plan),
+        clave=PrevisionSocialClave.CLAVE_A,
+        subclave=PrevisionSocialSubclave.SUBCLAVE_01,
+        amount=Decimal(amount),
+        beneficiary=PrevisionSocialBeneficiario.TAXPAYER,
+        evidence_fingerprint=ports.custody.ingest(
+            source_path=Path("certificate.pdf"), data=_CERTIFICATE, mime_type="application/pdf", captured_at=captured_at
+        ),
+        captured_at=captured_at,
+    )
+    record_prevision_social_contribution(
+        record,
+        repository=repository,
+        authority=ports.authority,
+        custody=ports.custody,
+        expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+    )
+    return record
+
+
+class _Pension(NamedTuple):
+    first: PrevisionSocialContribution
+    second: PrevisionSocialContribution
+    third: PrevisionSocialContribution
+    ports: PrevisionSocialPorts
+
+
+@pytest.fixture
+def pension(world: _World) -> _Pension:
+    ports = build_prevision_social_contribution_ports(profile_id=UUID(world.profile_id), operation=world.operation)
+    older, newer = sorted(filing_year_envelope().years)[-2:]
+    return _Pension(
+        _contribution(ports, newer, amount="1000.00", plan=_PLAN),
+        _contribution(ports, newer, amount="250.50", plan=None),
+        _contribution(ports, older, amount="400.00", plan=_PLAN),
+        ports,
+    )
+
+
+def _read_pension(world: _World, **request: object) -> ProfileRecordGroupsResult:
+    return _read(world, group_kind=ProfileRecordGroupKind.PENSION_CONTRIBUTION, **request)
+
+
+def test_pension_certificates_are_served_one_group_per_ejercicio_with_their_doors_and_no_tax_identifier(
+    world: _World, pension: _Pension
+) -> None:
+    page = _read_pension(world, output_language=OutputLanguage.EN)
+
+    older, newer = pension.third.ejercicio, pension.first.ejercicio
+    assert page.outcome == "page" and page.next_cursor is None and page.total_items == 5
+    older_head, older_member, newer_head, *newer_members = page.items
+    assert isinstance(older_head, ProfileRecordGroupItem) and isinstance(newer_head, ProfileRecordGroupItem)
+    assert [
+        (head.row_key, head.member_count, head.ledger_row_count, head.actions) for head in (older_head, newer_head)
+    ] == [(str(older), 1, 0, ()), (str(newer), 2, 0, ())]
+    assert older_head.payload_kind is ProfileRecordGroupKind.PENSION_CONTRIBUTION
+    assert str(newer) in newer_head.summary_words
+    members = [older_member, *newer_members]
+    assert all(isinstance(member, ProfileRecordMemberItem) for member in members)
+    for member in members:
+        assert isinstance(member, ProfileRecordMemberItem) and member.contribution is not None
+        row = member.contribution
+        stored, revision_id = pension.ports.repository.load_revisioned(
+            (row.ejercicio, row.issuer_ref, row.plan_ref, row.clave, row.subclave)
+        )
+        assert stored is not None and row.revision_id == revision_id
+        assert member.parent_ref == f"{PENSION_CONTRIBUTION_SECTION_KEY}.{row.ejercicio}"
+        assert [(action.door, action.operation_definition_id) for action in member.actions] == [
+            (ProfileRecordDoor.EDIT, PREVISION_SOCIAL_RECORD_OPERATION_DEFINITION_ID),
+            (ProfileRecordDoor.REMOVE, PREVISION_SOCIAL_REMOVE_OPERATION_DEFINITION_ID),
+        ]
+        assert member.kind_words == _words(
+            SECTION_KIND_WORDS_LOCALE_KEYS[PENSION_CONTRIBUTION_SECTION_KEY], OutputLanguage.EN
+        )
+        assert str(stored.amount) in member.summary_words
+        placed = pension.ports.authority.placement(stored)
+        box = getattr(placed, "casilla_id", None)
+        assert row.casilla_id == box
+        assert (box is not None) == (str(box) in member.summary_words)
+    served = page.model_dump_json()
+    assert _ISSUER not in served and _PLAN not in served
+
+
+def test_pension_certificates_are_worded_in_every_language_and_pinned_to_their_revisions(
+    world: _World, pension: _Pension
+) -> None:
+    summaries = set()
+    for language in OutputLanguage:
+        page = _read_pension(world, output_language=language)
+        for item in page.items:
+            if isinstance(item, ProfileRecordGroupItem | ProfileRecordMemberItem):
+                assert (item.kind_words_language, item.summary_words_language) == (language, language)
+                assert "record_groups" not in item.summary_words and "record_groups" not in item.kind_words
+        members = [item for item in page.items if isinstance(item, ProfileRecordMemberItem)]
+        assert {action.label_words for member in members for action in member.actions} == {
+            _words(EDIT_DOOR_LABEL_LOCALE_KEYS[PENSION_CONTRIBUTION_SECTION_KEY], language),
+            _words(REMOVE_DOOR_LABEL_LOCALE_KEYS[PENSION_CONTRIBUTION_SECTION_KEY], language),
+        }
+        summaries.add(tuple(member.summary_words for member in members))
+    assert len(summaries) == len(OutputLanguage)
+
+    first = _read_pension(world, limit=2)
+    assert first.outcome == "page" and first.next_cursor == 2
+    pin = {
+        "expected_revision": first.record_revision,
+        "expected_content_digest": first.content_digest,
+        "expected_ledger_digest": first.ledger_digest,
+    }
+    second = _read_pension(world, cursor=2, limit=2, **pin)
+    assert second.outcome == "page" and len(second.items) == 2 and second.next_cursor == 4
+
+    repository = pension.ports.repository
+    repository.delete_revisioned(
+        pension.second.identity, expected_revision_id=repository.load_revisioned(pension.second.identity)[1]
+    )
+    stale = _read_pension(world, cursor=2, limit=2, **pin)
+    assert stale.outcome == "refused" and stale.refusal_code is ProfileRecordGroupsRefusalCode.STALE_REVISION
+
+
+def test_a_profile_without_certificates_serves_no_pension_group(world: _World) -> None:
+    page = _read_pension(world)
+    assert page.outcome == "page" and page.items == () and page.total_items == 0

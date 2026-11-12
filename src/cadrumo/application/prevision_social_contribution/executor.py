@@ -15,7 +15,6 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
 from ...core.identity.documents import IdentityError
 from ...core.operations import OperationEffect
@@ -28,7 +27,6 @@ from ...domain.renta.prevision_social_contribution import (
     PrevisionSocialContribution,
     PrevisionSocialContributionIdentity,
 )
-from ...domain.renta.prevision_social_contribution_placement import ContributionPlacement
 from ..aggregation.prevision_social_contribution_repository import (
     PrevisionSocialContributionRevisionConflictError,
     PrevisionSocialContributionWriteRefusedError,
@@ -64,6 +62,7 @@ from .results import (
     PrevisionSocialRefusalProjection,
     PrevisionSocialRowProjection,
 )
+from .rows import contribution_row, contribution_rows
 
 _UNKNOWN_MIME_TYPE: Final = "application/octet-stream"
 
@@ -195,14 +194,6 @@ def _prepare_record(
     return certificate, record
 
 
-def _row(
-    ports: PrevisionSocialPorts, record: PrevisionSocialContribution, revision_id: str
-) -> PrevisionSocialRowProjection:
-    placed = ports.authority.placement(record)
-    casilla_id: CasillaId | None = placed.casilla_id if isinstance(placed, ContributionPlacement) else None
-    return PrevisionSocialRowProjection.from_record(record, revision_id=revision_id, casilla_id=casilla_id)
-
-
 def _stored_projection(
     record: PrevisionSocialContribution, ports: PrevisionSocialPorts
 ) -> tuple[PrevisionSocialRowProjection, int]:
@@ -210,7 +201,7 @@ def _stored_projection(
     stored, revision_id = ports.repository.load_revisioned(record.identity)
     if stored is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return _row(ports, stored, revision_id), len(ports.repository.list_revisioned(record.ejercicio))
+    return contribution_row(ports, stored, revision_id), len(ports.repository.list_revisioned(record.ejercicio))
 
 
 def _keep_certificate(certificate: _CertificateFile, ports: PrevisionSocialPorts) -> None:
@@ -321,11 +312,7 @@ class PrevisionSocialContributionExecutor:
         self, context: OperationExecutorContext, request: PrevisionSocialListRequest
     ) -> tuple[PrevisionSocialRowProjection, ...]:
         ports = self._ports(context, request.profile_id)
-        with validating_governed_facts(context.authority_operation):
-            return tuple(
-                _row(ports, record, revision_id)
-                for record, revision_id in ports.repository.list_revisioned(request.ejercicio)
-            )
+        return contribution_rows(ports, request.ejercicio, operation=context.authority_operation)
 
     async def _list(self, context: OperationExecutorContext, request: PrevisionSocialListRequest) -> str:
         async def read() -> str:
