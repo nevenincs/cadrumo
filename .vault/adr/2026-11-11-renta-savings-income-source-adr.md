@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#renta-savings-income-source'
 date: '2026-11-11'
-modified: '2026-11-11'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:a50d74844c1d10fcda62bbbc67bf38c1be7766c869a01abfcdf3f864dc0fae23'
+body_hash: 'sha256:2950b04ea5c60e45510eb8b2c06d8e4d57ba4562a9bce269cd512e2a64aff932'
 related:
   - "[[2026-11-01-export-parity-suffered-withholding-schemas-adr]]"
   - "[[2026-11-08-prior-carry-attestation-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
+  - '[[2026-11-12-renta-savings-income-source-reference]]'
 ---
 # `renta-savings-income-source` adr: `savings income source for Modelo 100 capital mobiliario rows` | (**status:** `accepted`)
 
