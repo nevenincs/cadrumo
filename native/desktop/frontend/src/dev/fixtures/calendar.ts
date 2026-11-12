@@ -265,3 +265,24 @@ export const ADVICE_ONLY_CALENDAR: FilingCalendar = {
   ...EMPTY_CALENDAR,
   coverage: { ...ADVISED_CALENDAR.coverage, surfaced: [] },
 };
+
+// SYNTHETIC: built by hand from the served shape (code "deadline.windows_unavailable.<year>"
+// and the sentence of its locale key), not seeded from a host. Replace on the next reseed.
+const WINDOWS_UNAVAILABLE_WARNING = {
+  code: `deadline.windows_unavailable.${FIXTURE_YEAR}`,
+  message:
+    "The registry has no deadline windows for part of this range, so nothing is known about the obligations that fall in it. Check the overview status; an empty list here does not mean nothing is due.",
+  affected_modelos: [],
+};
+
+/** A year with no deadline windows and so no rows: unknown, not nothing due. */
+export const UNKNOWN_YEAR_EMPTY_CALENDAR: FilingCalendar = {
+  ...EMPTY_CALENDAR,
+  warnings: [WINDOWS_UNAVAILABLE_WARNING],
+};
+
+/** One year resolved and another not: the rows are shown, the gap is said. */
+export const UNKNOWN_YEAR_CALENDAR: FilingCalendar = {
+  ...FIXTURE_CALENDAR,
+  warnings: [WINDOWS_UNAVAILABLE_WARNING],
+};

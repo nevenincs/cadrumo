@@ -3703,6 +3703,7 @@ desktop:
       previous: Előző időszak
       year_next: Következő év
       year_previous: Előző év
+      years_supported: Évek, amelyeket megnézhetsz
       years_with_movements: Évek tételekkel
     position: '{row}. sor / {count}'
     prorrata:
@@ -4101,11 +4102,6 @@ desktop:
         note: Add meg, melyik naplótranzakció könyveli ezt a vásárlást, hogy egyik
           sem, vagy töröld a korábban megadottat.
         row: A napló könyveli ezt a vásárlást
-        row_claimed: Egy naplótranzakció könyveli
-        row_none: Egyetlen naplótranzakció sem könyveli
-        row_unstated: Nincs megadva
-        row_unstated_hint: Ez törli a korábban megadottat.
-        state_claimed: 'Könyveli: {transaction}'
         transaction: Naplótranzakció
       closing:
         authority: Hogyan döntesz az értékről
@@ -4309,21 +4305,16 @@ desktop:
       action:
         attest: Nincs levonás jelzése
         record: Igazolás rögzítése
-      attested_on: 'Jelezve: {date}'
       changes: A(z) {ejercicio} évi igazolások módosításai
       column:
         class: Jövedelemosztály
         document: Dokumentum
-        especie: Természetbeni
-        ingreso: Előleg
-        integro: Bruttó pénzbeli
         note: Megjegyzés
         origin: Forrás
-        pago: Jóváírás
         payer: Kifizető
-        repercutido: Áthárított
-        retencion: Levonás
         state: Állapot
+        stated_on: Nyilatkozat dátuma
+        withdrawn_on: Visszavonás dátuma
       correct_hint: Egy igazolás javításához távolítsd el, és rögzítsd újra.
       document: Az igazolás dokumentuma (nem kötelező)
       document_hint: A Dokumentumokban tárolt dokumentum. A rögzítést elutasítjuk,
@@ -4351,7 +4342,6 @@ desktop:
         payer_certificate: A kifizető igazolása
       origin_label: A számok forrása
       payer_legal_name: A kifizető neve (nem kötelező)
-      payer_ref: '{ref} kifizető'
       payer_tax_id: A kifizető adóazonosítója
       payer_tax_id_hint: A rögzítéssel együtt kerül elküldésre a kifizető azonosításához.
         Nem jelenik meg újra.
@@ -4364,7 +4354,6 @@ desktop:
         igazolása mutatja, vagy jelezd, hogy egy jövedelemosztályban nem volt levonás.
       withdraw: Visszavonás
       withdraw_of: A(z) {class} jelzésének visszavonása
-      withdrawn_on: 'Visszavonva: {date}'
   logs:
     all_loggers: Minden naplózó
     all_origins: Minden forrás
@@ -7987,6 +7976,16 @@ tui:
       empty: Nincs ellenőrzésre váró bizonylat.
       extract: Dokumentum beolvasása
       loading: A dokumentumok beolvasása…
+      page:
+        document: '{file} ({media}) - {page}. oldal, összesen {count}'
+        empty: A dokumentum nem állít semmit, amit meg lehetne jeleníteni.
+        fact: '{label}: {value}'
+        failed: A dokumentumot nem sikerült megjeleníteni.
+        line: '{position}. {facts}'
+        loading: A tárolt dokumentum beolvasása...
+        not_drawn: A terminál nem rajzol oldalakat. Nyisd meg a dokumentumot az ablakban,
+          hogy lásd.
+        view: Dokumentum megtekintése
       path_placeholder: Írd be a fájl elérési útját
       pending: Függőben
       printed_total_disagrees: A dokumentumon szereplő végösszeg eltér a rögzítettől.
@@ -8717,6 +8716,11 @@ tui:
           movement_add: Mozgás hozzáadása
           movement_claim: Egy beszerzés főkönyvi tételének megadása
           valuation_preview: Értékelés előnézete
+        claim:
+          load: Mutasd a tranzakciókat, amelyeket ez a vásárlás igényelhet
+          none_offered: Ez a vásárlás nem igényelhet egyetlen főkönyvi tranzakciót
+            sem.
+          prompt: Válassz egy tranzakciót
         column:
           actividad: Tevékenység
           method: Módszer
@@ -8755,10 +8759,6 @@ tui:
           count: Leltár
           opening: Nyitás
           purchase: Vásárlás
-        ledger_row:
-          claimed: Egy főkönyvi tétel rögzíti ezt a beszerzést
-          none: Egy főkönyvi tétel sem rögzíti ezt a beszerzést
-          unstated: A megadás törlése (nincs megadva)
         list: Készletek
         method:
           coste_medio: Átlagköltség
@@ -9421,10 +9421,6 @@ tui:
         revision_current: Aktuális
         revision_superseded: Felváltva
   withholding:
-    absence:
-      state:
-        active: Érvényes
-        withdrawn: Visszavont
     absences:
       title: Nyilatkozatok a levonás hiányáról
     action:
@@ -9437,6 +9433,7 @@ tui:
       attested_on: Nyilatkozat napja
       income: Jövedelem
       note: Megjegyzés
+      origin: Megadta
       payer: Kifizető
       state: Állapot
     ejercicio: Év
@@ -9476,6 +9473,16 @@ workspace:
         declaration: Bevallás
         legal: Jogi állapot
         local: Helyi állapot
+      coverage:
+        applicability_undetermined: 'Nem ismert, hogy be kell-e nyújtanod: {modelos}.
+          Ellenőrizd a kötelezettségeidet.'
+        applicable_window_missing: 'Ezek a modellek érvényesek rád, de nincs hozzájuk
+          nyilvántartott benyújtási határidő: {modelos}. Nézd meg a hivatalos naptárat.'
+        no_dates: Ehhez az időszakhoz nincs elérhető benyújtási dátum. Ez nem jelenti
+          azt, hogy nincs esedékes teendő.
+        registry_unmodeled: 'Ezekhez nincsenek nyilvántartott alkalmazhatósági szabályok
+          vagy határidők: {modelos}. Nézd meg a kötelezettségeidre vonatkozó hivatalos
+          útmutatót.'
       detail:
         action: 'Enter művelete: {action}'
         axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · AEAT-igazolás: {receipt}

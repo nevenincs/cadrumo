@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MoneyEditor } from "@/components/editors/MoneyEditor";
 import { TaxIdEditor } from "@/components/editors/TaxIdEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
@@ -6,7 +6,11 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
-import { servedRefusalWords, type PickedFile } from "../../../shell/ledger";
+import {
+  servedRefusalWords,
+  type PickedFile,
+  type PublicDecimal,
+} from "../../../shell/ledger";
 import {
   WITHHOLDING_INCOME_CLASSES,
   WITHHOLDING_ORIGINS,
@@ -15,6 +19,7 @@ import {
 } from "../../../shell/ledgerContract";
 import type {
   WithholdingAbsence,
+  WithholdingAmountColumn,
   WithholdingMutationResult,
   WithholdingRow,
 } from "../../../shell/ledgerRegisterOperations";
@@ -53,6 +58,8 @@ import {
 const ACTIONS = ["record", "attest"] as const;
 type Action = (typeof ACTIONS)[number];
 
+const NO_COLUMNS: readonly WithholdingAmountColumn[] = [];
+
 /** The characters of a fingerprint or reference the table shows. */
 const SHOWN_HEX = 12;
 
@@ -62,9 +69,20 @@ const SHOWN_HEX = 12;
  * statement that a class has none. The figures a certificate states, and
  * their words, are those the ledger serves for the chosen class; every one is
  * typed in and sent, and the backend checks, stores and counts them. A payer's tax identifier is sent
- * once, with the record, and is never read back: a row names its payer by the
- * backend's reference and legal name.
+ * once, with the record, and is never read back: a row names its payer in the
+ * words the backend serves. The list's columns, their words and the ejercicios
+ * it can be read for are the backend's too.
  */
+/** The amount a row holds under the field a served column names; the
+ * backend names the fields, so the window does not list them. */
+const servedAmount = (
+  found: WithholdingRow,
+  column: WithholdingAmountColumn,
+): PublicDecimal | null | undefined =>
+  (found as unknown as Record<string, PublicDecimal | null | undefined>)[
+    column.field
+  ];
+
 export function WithholdingPane({
   port,
   reader,
@@ -134,10 +152,14 @@ export function WithholdingPane({
   );
   const active = listed.filter((found) => found.state === "active");
   const withdrawn = listed.filter((found) => found.state === "withdrawn");
-  const groups = WITHHOLDING_INCOME_CLASSES.map((value) => ({
-    value,
-    rows: rows.filter((row) => row.income_class === value),
-  })).filter((group) => group.rows.length > 0);
+  const amountColumns =
+    read?.kind === "done" ? read.result.amount_columns : NO_COLUMNS;
+  // The ejercicios the list was last served with: kept while another is
+  // being read, and when a read of one is refused.
+  const [ejercicios, setEjercicios] = useState<readonly number[] | null>(null);
+  useEffect(() => {
+    if (read?.kind === "done") setEjercicios(read.result.ejercicios);
+  }, [read]);
   /** A class in words: as the backend served it with a payer's row or a
    * listed attestation, else its token. */
   const classWords = (value: WithholdingIncomeClass): string =>
@@ -377,13 +399,11 @@ export function WithholdingPane({
       ? refusalIn(write.last.result)
       : null;
 
-  const payerName = (found: WithholdingRow) =>
-    found.payer_legal_name ??
-    t("desktop.ledger.withholding.payer_ref", {
-      ref: found.payer_ref.slice(0, 8),
-    });
-  const amount = (value: { decimal: string }) =>
-    formatAmount(locale, value.decimal);
+  /** An amount as the record states it; blank where it states none. */
+  const amountOf = (found: WithholdingRow, column: WithholdingAmountColumn) => {
+    const value = servedAmount(found, column);
+    return value ? formatAmount(locale, value.decimal) : "";
+  };
   const originWords = (value: WithholdingOrigin) =>
     t(`desktop.ledger.withholding.origin.${value}`);
   const classChoices = WITHHOLDING_INCOME_CLASSES.map((value) => ({
@@ -393,34 +413,31 @@ export function WithholdingPane({
 
   const columns: Column<WithholdingRow>[] = [
     {
+      key: "class",
+      label: t("desktop.ledger.withholding.column.class"),
+      sort: (found) => found.income_class_label,
+      cell: (found) => found.income_class_label,
+    },
+    {
       key: "payer",
       label: t("desktop.ledger.withholding.column.payer"),
-      sort: (found) => payerName(found),
-      cell: (found) => payerName(found),
+      sort: (found) => found.payer_display_name,
+      cell: (found) => found.payer_display_name,
     },
-    ...(
-      [
-        ["importe_integro_dinerario", "integro"],
-        ["valoracion_especie", "especie"],
-        ["retencion", "retencion"],
-        ["ingreso_a_cuenta", "ingreso"],
-        ["ingreso_a_cuenta_repercutido", "repercutido"],
-        ["pago_a_cuenta", "pago"],
-      ] as const
-    ).map(([field, column]): Column<WithholdingRow> => ({
-      key: column,
-      label: t(`desktop.ledger.withholding.column.${column}`),
-      numeric: true,
-      sort: (found) => rankDecimal(found[field].decimal),
-      cell: (found) => amount(found[field]),
-    })),
     {
       key: "origin",
       label: t("desktop.ledger.withholding.column.origin"),
       keepWords: true,
-      sort: (found) => originWords(found.origin),
-      cell: (found) => originWords(found.origin),
+      sort: (found) => found.origin_label,
+      cell: (found) => found.origin_label,
     },
+    ...amountColumns.map((column): Column<WithholdingRow> => ({
+      key: column.field,
+      label: column.label,
+      numeric: true,
+      sort: (found) => rankDecimal(servedAmount(found, column)?.decimal),
+      cell: (found) => amountOf(found, column),
+    })),
     {
       key: "document",
       label: t("desktop.ledger.withholding.column.document"),
@@ -445,7 +462,7 @@ export function WithholdingPane({
           variant="outline"
           className="ledger-withholding-remove"
           aria-label={t("desktop.ledger.withholding.remove_of", {
-            payer: payerName(found),
+            payer: found.payer_display_name,
           })}
           onClick={() => {
             write.clear();
@@ -459,8 +476,8 @@ export function WithholdingPane({
   ];
 
   const absenceColumns = (
-    state: (found: WithholdingAbsence) => string,
     withWithdraw: boolean,
+    withdrawn: boolean,
   ): Column<WithholdingAbsence>[] => [
     {
       key: "class",
@@ -469,15 +486,36 @@ export function WithholdingPane({
       cell: (found) => classWords(found.income_class),
     },
     {
-      key: "note",
-      label: t("desktop.ledger.withholding.column.note"),
-      cell: (found) => found.note,
-    },
-    {
       key: "state",
       label: t("desktop.ledger.withholding.column.state"),
       keepWords: true,
-      cell: state,
+      cell: (found) => found.state_label ?? "—",
+    },
+    {
+      key: "stated_on",
+      label: t("desktop.ledger.withholding.column.stated_on"),
+      keepWords: true,
+      sort: (found) => found.attested_at,
+      cell: (found) => formatInstantDay(locale, found.attested_at),
+    },
+    ...(withdrawn
+      ? [
+          {
+            key: "withdrawn_on",
+            label: t("desktop.ledger.withholding.column.withdrawn_on"),
+            keepWords: true,
+            sort: (found: WithholdingAbsence) => found.withdrawn_at ?? "",
+            cell: (found: WithholdingAbsence) =>
+              found.withdrawn_at
+                ? formatInstantDay(locale, found.withdrawn_at)
+                : "—",
+          },
+        ]
+      : []),
+    {
+      key: "note",
+      label: t("desktop.ledger.withholding.column.note"),
+      cell: (found) => found.note,
     },
     ...(withWithdraw
       ? [
@@ -508,19 +546,8 @@ export function WithholdingPane({
         ]
       : []),
   ];
-  const attestedOn = (found: WithholdingAbsence) =>
-    t("desktop.ledger.withholding.attested_on", {
-      date: formatInstantDay(locale, found.attested_at),
-    });
-  const withdrawnOn = (found: WithholdingAbsence) =>
-    t("desktop.ledger.withholding.withdrawn_on", {
-      date: formatInstantDay(locale, found.withdrawn_at ?? found.attested_at),
-    });
-  const activeColumns = absenceColumns(attestedOn, true);
-  const historyColumns = absenceColumns(
-    (found) => facts(t, [attestedOn(found), withdrawnOn(found)]),
-    false,
-  );
+  const activeColumns = absenceColumns(true, false);
+  const historyColumns = absenceColumns(false, true);
 
   return (
     <Panel
@@ -531,7 +558,10 @@ export function WithholdingPane({
           year={ejercicio}
           onYear={setEjercicio}
           label={t("desktop.ledger.withholding.ejercicio")}
-          years={years}
+          years={ejercicios ?? years}
+          yearsKey={
+            ejercicios ? "desktop.ledger.period.years_supported" : undefined
+          }
           locale={locale}
           fallbackYear={fallbackYear}
         />
@@ -544,26 +574,20 @@ export function WithholdingPane({
         <Reading label={t("desktop.ledger.form.reading")} />
       ) : read.kind !== "done" ? (
         <CallLine call={read} />
-      ) : groups.length === 0 ? (
+      ) : rows.length === 0 ? (
         <p className="ledger-withholding-empty text-sm text-muted-foreground">
           {t("desktop.ledger.withholding.empty", { ejercicio })}
         </p>
       ) : (
-        groups.map((group) => (
-          <section
-            key={group.value}
-            className="ledger-withholding-class flex flex-col gap-2"
-          >
-            <h4 className="font-medium">{classWords(group.value)}</h4>
-            <SetupTable
-              label={classWords(group.value)}
-              rows={group.rows}
-              rowKey={(found) => `${found.income_class}:${found.payer_ref}`}
-              columns={columns}
-              className="ledger-withholding-table"
-            />
-          </section>
-        ))
+        <section className="ledger-withholding-class flex flex-col gap-2">
+          <SetupTable
+            label={t("desktop.ledger.withholding.title")}
+            rows={rows}
+            rowKey={(found) => `${found.income_class}:${found.payer_ref}`}
+            columns={columns}
+            className="ledger-withholding-table"
+          />
+        </section>
       )}
       {removing && (
         <Alert
@@ -573,7 +597,7 @@ export function WithholdingPane({
         >
           <span>
             {t("desktop.ledger.withholding.remove_what", {
-              payer: payerName(removing),
+              payer: removing.payer_display_name,
               class: classWords(removing.income_class),
             })}{" "}
             {t("desktop.ledger.withholding.correct_hint")}

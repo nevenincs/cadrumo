@@ -10,6 +10,7 @@ from typing import Final
 
 from pydantic import BaseModel
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.retencion_soportada import RetencionSoportadaCantidad
@@ -27,7 +28,7 @@ _ORIGIN_LOCALE_KEYS: Final[dict[RetencionSoportadaOrigen, str]] = {
     RetencionSoportadaOrigen.OPERATOR_DECLARATION: "aggregation.retencion_soportada.origen.operator_declaration",
 }
 if set(_ORIGIN_LOCALE_KEYS) != set(RetencionSoportadaOrigen):
-    raise RuntimeError("every suffered-withholding origin needs its word")
+    raise InternalInvariantError("every suffered-withholding origin needs its word")
 
 _UNNAMED_PAYER_LOCALE_KEY: Final = "aggregation.retencion_soportada.payer_unnamed"
 

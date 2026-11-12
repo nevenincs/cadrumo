@@ -5,7 +5,6 @@ import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
-import { PURCHASE_LEDGER_ROWS } from "../../../shell/ledgerContract";
 import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
@@ -18,26 +17,23 @@ import { EditorField } from "../setup/EditorField";
 import { StockChangeForm } from "./StockChangeForm";
 import { mint } from "./stockDraftState";
 import { bookName, claimOf, claimRequest } from "./stockModel";
-import { movementLine } from "./stockWords";
-
-/** The words of the three things a purchase can state. */
-export const CLAIM_ROW_KEYS = {
-  unstated: "desktop.ledger.stock.claim.row_unstated",
-  claimed: "desktop.ledger.stock.claim.row_claimed",
-  none: "desktop.ledger.stock.claim.row_none",
-} as const;
+import { effectWord } from "./stockVocabulary";
+import type { OfferState } from "./stockReads";
+import { choicesOf, movementLine } from "./stockWords";
 
 /**
  * States, for one purchase, which ledger transaction books it, that none
  * does, or clears the statement. The three are chosen apart; a transaction is
- * named exactly when one is claimed. Whether a claim stands is the backend's
- * to say, and its refusal is shown in the words it serves.
+ * named exactly when one is claimed. The three statements and what each does
+ * are worded by the backend, and whether a claim stands is its to say, with
+ * its refusal shown in the words it serves.
  */
 export function MovementClaimForm({
   port,
   reader,
   locale,
   book,
+  catalogue,
   target,
   onClose,
   onWritten,
@@ -46,6 +42,7 @@ export function MovementClaimForm({
   reader: string | null;
   locale: string;
   book: InventoryBookRow;
+  catalogue: OfferState;
   target: InventoryMovement;
   onClose(): void;
   onWritten(): void;
@@ -131,9 +128,8 @@ export function MovementClaimForm({
         }}
         placeholder={t("desktop.ledger.form.choose")}
         hint={
-          row === "unstated"
-            ? t("desktop.ledger.stock.claim.row_unstated_hint")
-            : undefined
+          effectWord(t, catalogue.offers, "purchase_ledger_row", row) ??
+          undefined
         }
         required
         error={
@@ -141,10 +137,16 @@ export function MovementClaimForm({
             ? t("desktop.ledger.form.fill_to_continue")
             : null
         }
-        options={PURCHASE_LEDGER_ROWS.map((value) => ({
-          value,
-          label: t(CLAIM_ROW_KEYS[value]),
-        }))}
+        unserved={
+          catalogue.offers.purchase_ledger_row === undefined
+            ? t(
+                catalogue.state === "loading"
+                  ? "desktop.ledger.form.reading"
+                  : "desktop.ledger.form.failed",
+              )
+            : null
+        }
+        options={choicesOf(t, catalogue.offers, "purchase_ledger_row")}
       />
       {row === "claimed" && (
         <EditorField

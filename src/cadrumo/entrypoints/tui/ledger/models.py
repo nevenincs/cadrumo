@@ -16,6 +16,7 @@ from ....application.invoices.catalogue_read_projection import CatalogueInvoiceS
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.classify_requests import LedgerClassifyPatch
+from ....application.ledger.evidence_page_contracts import LedgerEvidencePageProjection
 from ....application.ledger.invoice_draft_records import LabelReadingFallback
 from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from ....application.ledger.models import (
@@ -539,6 +540,10 @@ class LedgerEvidenceDoorV1(Protocol):
 
     async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         """Re-read the document and record it as an invoice through the sole writer."""
+        ...
+
+    async def page(self, evidence_id: str) -> LedgerEvidencePageProjection:
+        """Read what the runtime serves of one stored document's first page; nothing is recorded."""
         ...
 
 

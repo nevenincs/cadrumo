@@ -3828,6 +3828,10 @@ application:
       pattern: '{day} {month} {year}'
     work_form:
       additional_data_for_box: Dato adicional de la casilla {box}
+      authority_grade:
+        applicability: Solo plazos
+        calculation: Solo cálculo y vista previa
+        filing: Cálculo, comprobación para presentar y exportación
       binding_statement:
         attest_no_amount:
           action: Declara que no hay importe

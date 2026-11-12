@@ -16,6 +16,7 @@ from .....application.modelo.declarations_calendar import (
     DeclarationsCalendarSource,
 )
 from .....application.operator_actions.preconditions import profile_setup_incomplete_verdict
+from .....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from .....application.overview.next_actions import declare_next_action
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
@@ -467,3 +468,42 @@ async def test_unavailable_holiday_calendar_is_visible_in_words_not_tokens() -> 
     assert "Ajuste: Calendario no disponible" in detail
     assert "Festivos: calendario de festivos no disponible; el plazo original no se ha comprobado" in detail
     assert "calendar_unavailable" not in detail
+
+
+@pytest.mark.asyncio
+async def test_an_agenda_with_unscoped_obligations_says_they_are_unknown_not_that_nothing_is_due() -> None:
+    advised = ObligationCoverageReport(
+        advised=(
+            AdvisedObligation(modelo="347", reason=CoverageAdviceReason.APPLICABILITY_UNDETERMINED),
+            AdvisedObligation(modelo="190", reason=CoverageAdviceReason.APPLICABLE_WINDOW_MISSING),
+        ),
+    )
+    projection = calendar_projection().model_copy(update={"entries": (), "coverage": advised})
+    screen = DeclarationsCalendarScreen(calendar_controller(projection))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
+        coverage = str(screen.query_one("#declarations-calendar-coverage", Static).render())
+
+    assert notice == tr("workspace.declarations.calendar.coverage.no_dates")
+    assert notice != tr("workspace.declarations.calendar.empty.known")
+    assert coverage.splitlines() == [
+        tr("workspace.declarations.calendar.coverage.applicable_window_missing", modelos="190"),
+        tr("workspace.declarations.calendar.coverage.applicability_undetermined", modelos="347"),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_a_positively_known_empty_agenda_stays_distinct_from_an_unknown_one() -> None:
+    known = ObligationCoverageReport(surfaced=("303",), out_of_scope=("720",))
+    projection = calendar_projection().model_copy(update={"entries": (), "coverage": known})
+    screen = DeclarationsCalendarScreen(calendar_controller(projection))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
+        coverage = str(screen.query_one("#declarations-calendar-coverage", Static).render())
+
+    assert notice == tr("workspace.declarations.calendar.empty.known")
+    assert coverage == ""

@@ -27,6 +27,11 @@ from cadrumo.application.bienes_inversion.registered_result_contracts import (
     BienesInversionDeclareProjection,
     BienesInversionListProjection,
 )
+from cadrumo.application.inventory.registered_claim_candidates_operation import (
+    INVENTORY_CLAIM_CANDIDATES_OPERATION_DEFINITION_ID,
+    InventoryClaimCandidatesProjection,
+    InventoryClaimCandidatesRequest,
+)
 from cadrumo.application.inventory.registered_evidence_operation import (
     INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
     InventoryEvidenceAddProjection,
@@ -389,6 +394,36 @@ class RuntimeInventoryTuiDoorV1:
             request,
             definition_id=INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
             result_type=InventoryInspectProjection,
+            matches=matches,
+            refusal_detail=True,
+        )
+
+    async def claim_candidates(self, request: InventoryClaimCandidatesRequest) -> InventoryClaimCandidatesProjection:
+        """Read the transactions one purchase may claim and correlate the purchase it names."""
+
+        def matches(
+            result: InventoryClaimCandidatesProjection,
+            condition: OperationTerminalCondition,
+            terminal: OperationPublicProjectionV1,
+        ) -> bool:
+            refusal = result.refusal
+            return (
+                result.profile_id == request.profile_id
+                and result.actividad_id == request.actividad_id
+                and result.year == request.year
+                and result.movement_id == request.movement_id
+                and _outcome_matches(
+                    refusal_code=None if refusal is None else refusal.code,
+                    condition=condition,
+                    terminal=terminal,
+                    success_effect=OperationEffect.NONE,
+                )
+            )
+
+        return await self._session.run(
+            request,
+            definition_id=INVENTORY_CLAIM_CANDIDATES_OPERATION_DEFINITION_ID,
+            result_type=InventoryClaimCandidatesProjection,
             matches=matches,
             refusal_detail=True,
         )
