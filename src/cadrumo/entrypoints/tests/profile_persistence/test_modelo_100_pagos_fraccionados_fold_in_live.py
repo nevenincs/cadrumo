@@ -48,6 +48,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -56,6 +57,7 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -71,6 +73,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
+from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id_from_revision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
@@ -223,7 +226,9 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="activities.description", value="economic activity"),
                 # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
                 UserProfileFact(path="activities.iae_epigraph", value="844"),
+                UserProfileFact(path="activities.tipo_actividad", value="A03"),
                 UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
                 *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
             )
         ),
@@ -281,6 +286,10 @@ def _calculate_m100_annual(
     """
     _seed_taxpayer_unit_profile(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
+    # The persona held no existencias: its activity's book opens with no stock and closes at zero.
+    InventoryLedgerRepository(objects=secure_objects).save(
+        InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(_YEAR),))
+    )
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
