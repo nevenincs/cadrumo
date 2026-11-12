@@ -463,6 +463,7 @@ def _iva_deduction_source(
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
         exempt_ratio=exempt_ratio,
+        effective_date=date(ejercicio, 12, 31),
     )
     if profile_exempt_ratio is not None:
         return _IvaDeductionSource(percentage_divisor=percentage_divisor, exempt_ratio=profile_exempt_ratio)
@@ -480,6 +481,7 @@ def _profile_exempt_iva_ratio(
     profile_record: UserProfileRecord | None,
     profile_decode_context: ProfileDecodeContext,
     exempt_ratio: Decimal,
+    effective_date: date,
 ) -> Decimal | None:
     record = profile_record
     if record is None:
@@ -493,8 +495,11 @@ def _profile_exempt_iva_ratio(
     raw_regime = fact_value(record, "iva.regime")
     if raw_regime is None:
         return None
-    regime = require_iva_regime(raw_regime.strip().upper())
-    if regime in (iva_regime_exento_token(), iva_regime_recargo_equivalencia_token()):
+    regime = require_iva_regime(raw_regime.strip().upper(), effective_date=effective_date)
+    if regime in (
+        iva_regime_exento_token(effective_date=effective_date),
+        iva_regime_recargo_equivalencia_token(effective_date=effective_date),
+    ):
         # LIVA art. 154.Dos: the retailer in the recargo de equivalencia deducts none of the IVA she bears.
         return exempt_ratio
     return None

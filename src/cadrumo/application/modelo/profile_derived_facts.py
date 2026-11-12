@@ -1120,7 +1120,7 @@ def inject_derived_incremento_guarderia_facts(
 def inject_derived_state_attribution_facts(
     fact_index: dict[str, UserProfileFactValue],
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Inject the M303 state-attribution ratio derived from jurisdiction_scope.
