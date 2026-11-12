@@ -505,7 +505,8 @@ def _clave_was_inferred_as_entrega(invoice: Invoice) -> bool:
     return (
         invoice.operation_type is None
         and invoice.kind is InvoiceKind.ISSUED
-        and invoice.iva_category == require_iva_category("intra_community_supply")
+        and invoice.iva_category
+        == require_iva_category("intra_community_supply", effective_date=invoice.operation_date or invoice.issued_at)
     )
 
 
@@ -543,7 +544,11 @@ def _m349_inferred_clave_diagnostics(
     # Read across the whole bucket, not the declared set: an importation is a
     # RECEIVED record that produces no Modelo 349 row of its own, so it is absent
     # from ``declared`` by construction and invisible to a scan of it.
-    if not any(invoice.iva_category == require_iva_category("import_third_country") for invoice in bucket_invoices):
+    if not any(
+        invoice.iva_category
+        == require_iva_category("import_third_country", effective_date=invoice.operation_date or invoice.issued_at)
+        for invoice in bucket_invoices
+    ):
         return ()
     numbers = ", ".join(sorted(invoice.invoice_number for invoice in inferred))
     return (

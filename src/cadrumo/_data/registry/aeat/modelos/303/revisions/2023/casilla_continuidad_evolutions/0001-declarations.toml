@@ -1,0 +1,11 @@
+# Box [18] keeps its rung and its recargo cuota identity. The 2023 design prints the
+# rung's Tipo as 0 %, 0,5 % and 0,62 % under RDL 20/2022 art. 72, so the box is the sum of
+# the 4 % recargo and the transitional reducido recargo working figures, not one binding.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "dr303-18-2022-2023-legal-refs-evolved"
+continuidad_id = "dr303-18"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "real-decreto-ley-20-2022:art-72", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2022", "aeat-dr-303-2023"]

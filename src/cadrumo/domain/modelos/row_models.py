@@ -50,6 +50,7 @@ from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import is_four_digit_year
 from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import PinnedAuthorityOperation
@@ -455,8 +456,14 @@ class Modelo349CountryPrefixContextError(CadrumoError):
         filing_year: int,
         period: str,
         reason: str,
+        no_recovery_outcome: Literal[NoRecoveryOutcome.OPERATOR_DECISION],
     ) -> None:
-        """Record the prefix, the operation and the period that made it invalid."""
+        """Record the prefix, the operation and the period that made it invalid.
+
+        The filer stated the row, and a different prefix or operation key would be admitted,
+        so the refusal asks for the filer's decision; ``no_recovery_outcome`` states that.
+        """
+        self.no_recovery_outcome = no_recovery_outcome
         self.country_code = country_code
         self.clave_operacion = clave_operacion
         self.filing_year = filing_year
@@ -688,6 +695,7 @@ def _refuse_m349_country_prefix_context(
         filing_year=filing_year,
         period=period,
         reason=reason,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
@@ -1056,8 +1064,15 @@ ModeloDetailRow = (
 class Modelo184ShareSumError(CadrumoError):
     """Modelo 184 member share percentages do not sum to exactly 100%."""
 
-    def __init__(self, *, total: Decimal, count: int) -> None:
-        """Record the share total the miembro rows reached, and over how many rows."""
+    def __init__(
+        self, *, total: Decimal, count: int, no_recovery_outcome: Literal[NoRecoveryOutcome.OPERATOR_DECISION]
+    ) -> None:
+        """Record the share total the miembro rows reached, and over how many rows.
+
+        The filer stated the shares and a set that totals 100 would be admitted, so the
+        refusal asks for the filer's decision; ``no_recovery_outcome`` states that.
+        """
+        self.no_recovery_outcome = no_recovery_outcome
         self.total = total
         self.count = count
         super().__init__(
@@ -1077,7 +1092,9 @@ def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
         return
     total = sum((row.porcentaje for row in rows), Decimal("0"))
     if total != Decimal("100"):
-        raise Modelo184ShareSumError(total=total, count=len(rows))
+        raise Modelo184ShareSumError(
+            total=total, count=len(rows), no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION
+        )
 
 
 __all__ = [

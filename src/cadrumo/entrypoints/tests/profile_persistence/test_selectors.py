@@ -25,12 +25,14 @@ from cadrumo.application.modelo.selectors import (
     select_exportable_revision,
     select_modelo_calculation_revision,
 )
-from cadrumo.application.modelo.work_addressing import (
-    ModeloRevisionPick,
-    ModeloWorkAddress,
+from cadrumo.application.modelo.work_address_errors import (
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
     ModeloWorkVisibleTargetAmbiguousError,
+)
+from cadrumo.application.modelo.work_addressing import (
+    ModeloRevisionPick,
+    ModeloWorkAddress,
     resolve_modelo_revision_pick,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit

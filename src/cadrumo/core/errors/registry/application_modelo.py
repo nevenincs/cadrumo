@@ -208,7 +208,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkSelectorError",
+        "cadrumo.application.modelo.work_address_errors.ModeloWorkSelectorError",
         ErrorCode(
             code="ERROR_MODELO_WORK_SELECTOR",
             category=ErrorCategory.ERROR,

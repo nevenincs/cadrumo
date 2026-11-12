@@ -222,6 +222,7 @@ def ledger_evidence_row_missing_deductible_iva_evidence(
         iva_amount=row.iva_amount,
         has_deduction_evidence=_row_has_linked_evidence(row),
         revision_claims_ledger_iva=revision_claims_ledger_iva,
+        effective_date=effective_date,
     )
 
 

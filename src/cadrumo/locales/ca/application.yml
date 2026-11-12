@@ -527,18 +527,53 @@ application:
           un valor que les files de %{element_path} no sumen. Corregeix la casella
           o les files perquè cada fila indiqui les seves pròpies xifres, i torna a
           exportar.'
+        counterparty_rows_unattributable: 'No s''ha escrit res: el registre %{record_id}
+          té %{row_count} files de contrapart, i les caselles de valor únic %{casillas}
+          no es poden atribuir a una d''elles. Indica aquestes xifres a les files
+          i torna a exportar.'
+        devengo_year_not_earlier: 'No s''ha escrit res: l''exercici de meritació del
+          Modelo %{modelo} ha de ser anterior al de la declaració. Corregeix-lo i
+          torna a exportar.'
+        dictionary_values_not_admitted: 'No s''ha escrit res: una exportació amb prefix
+          de sobre no pot rebre a més valors per a un fitxer de declaració XML.'
         layout_not_renderable: Aquest model no pot produir un fitxer local d'exportació
           de la declaració.
         m111_colegio_concertado_undeclared: 'No s''ha escrit res: el model 111 necessita
           saber si ets un col·legi concertat i el teu perfil no ho indica. Indica-ho
           al teu perfil i torna a exportar.'
+        m190_amount_outside_keys: 'No s''ha escrit res: l''import de la casella %{casilla}
+          del Modelo 190 no correspon a la clau i subclau d''aquest perceptor. Treu
+          l''import o corregeix la clau i torna a exportar.'
+        m190_clave_scope_unsupplied: 'No s''ha escrit res: l''exportació del Modelo
+          190 no coneix les claus a les quals s''aplica cada import, així que no pot
+          comprovar el registre del perceptor.'
+        m190_reintegro_magnitude_zero: 'No s''ha escrit res: un reintegrament negatiu
+          al Modelo 190 necessita un import diferent de zero. Indica l''import o treu
+          el signe negatiu, i torna a exportar.'
+        m190_reintegro_year_or_withholding: 'No s''ha escrit res: un reintegrament
+          al Modelo 190 necessita un exercici de meritació anterior al de la declaració
+          i cap retenció associada. Corregeix-los i torna a exportar.'
+        m193_pending_mark_invalid: 'No s''ha escrit res: la marca de pendent del Modelo
+          193 ha d''estar en blanc o ser X. Corregeix-la i torna a exportar.'
+        m193_pending_requires_key: 'No s''ha escrit res: al Modelo 193 la marca de
+          pendent i l''exercici de meritació només s''apliquen a les claus A, B i
+          D. Corregeix la clau o treu-los, i torna a exportar.'
+        m193_pending_row_has_devengo: 'No s''ha escrit res: una fila pendent del Modelo
+          193 no pot tenir a més exercici de meritació. Treu-ne un dels dos i torna
+          a exportar.'
         m202_producer_facts_unsupported: 'No s''ha escrit res: el model 202 necessita
           dades que aquesta exportació encara no pot prendre del teu perfil (%{missing_fact_ids}).
           Exporta''l quan s''admetin.'
+        m280_negative_imputation_key_invalid: 'No s''ha escrit res: una imputació
+          negativa del Modelo 280 necessita la clau 2 amb el signe negatiu N, o farciment
+          amb zeros sota qualsevol altra clau. Corregeix el registre i torna a exportar.'
         m303_definitive_prorrata_missing: 'No s''ha escrit res: la regularització
           de béns d''inversió del model 303 necessita el percentatge definitiu de
           prorrata i el teu registre de prorrata no el té per a l''any. Liquida''l
           al registre i torna a exportar.'
+        m303_filing_facts_unsupplied: 'No s''ha escrit res: l''exportació del Modelo
+          303 necessita un conjunt complet de fets de presentació per a aquesta declaració,
+          i no n''hi ha cap de disponible.'
         m303_sector_apportionment_missing: 'No s''ha escrit res: el teu registre de
           prorrata té sectors diferenciats, però el teu llibre no dona cap prorrateig
           per a aquests en aquest període. Revisa el sector de l''IVA suportat al
@@ -549,14 +584,31 @@ application:
           a exportar.'
         post_write_verification_refused: La comprovació posterior a l'escriptura ha
           rebutjat el fitxer de declaració exportat.
+        prior_domiciliation_election_differs: 'No s''ha escrit res: l''elecció de
+          domiciliació prèvia indicada per a l''exportació difereix de la registrada
+          en els fets de presentació del Modelo 303.'
+        prior_domiciliation_election_required: 'No s''ha escrit res: l''exportació
+          del Modelo %{modelo} necessita la teva elecció sobre la domiciliació prèvia,
+          que no està indicada. Indica-la i torna a exportar.'
         producer_fact_required: 'No s''ha escrit res: l''exportació necessita %{fact},
           que no està indicat. Indica''l i torna a exportar.'
+        product_identity_not_admitted: 'No s''ha escrit res: aquesta exportació no
+          té lloc per a la identitat del producte o del programari, així que no se''n
+          pot indicar cap.'
+        product_identity_required: 'No s''ha escrit res: l''exportació necessita la
+          identitat del producte i del programari, i no se n''ha facilitat cap.'
         receipt_artefact_unreadable: El rebut d'exportació anomena un fitxer que no
           es pot llegir.
         receipt_byte_size_mismatch: La mida del fitxer exportat no coincideix amb
           el rebut d'exportació.
         receipt_digest_mismatch: El resum del fitxer exportat no coincideix amb el
           rebut d'exportació.
+        record_binding_row_omits_fields: 'No s''ha escrit res: la fila %{row} omet
+          els camps obligatoris %{fields}. Indica''ls i torna a exportar.'
+        record_incomplete: 'No s''ha escrit res: un registre del Modelo %{modelo}
+          no té la longitud que fixa el disseny oficial, així que no es pot escriure.'
+        record_requires_positive_casilla: 'No s''ha escrit res: el registre %{record_id}
+          exigeix que la casella %{casilla} sigui més gran que zero, i no ho és.'
         rendered_payload_empty: El disseny d'exportació ha produït un contingut de
           declaració buit.
         shared_casilla_cells_unadjudicated: 'No s''ha generat el fitxer de la declaració:
@@ -565,6 +617,29 @@ application:
           el mateix. Escriure''l portaria aquestes xifres a conceptes que no els corresponen.'
         verify_draft_snapshot_stale: La comprovació requereix un esborrany construït
           amb les definicions del model en ús.
+        xml_amount_unreadable: 'No s''ha escrit res: un import d''una fila %{data_type}
+          no s''ha pogut llegir. Escriu-lo amb punt com a separador decimal, amb %{scale}
+          decimals com a màxim i sense separador de milers, per exemple 1234.56. Un
+          import com 1.000 es rebutja perquè es llegeix tant com un com mil.'
+        xml_boxes_without_single_row: 'No s''ha escrit res: els valors de %{paths}
+          no es poden col·locar, perquè %{element_path} no apareix exactament una
+          vegada per rebre''ls.'
+        xml_comunidad_ambiguous: 'No s''ha escrit res: les deduccions autonòmiques
+          estan emplenades per a més d''una comunitat (%{comunidades}), i una declaració
+          només en pot portar una. Deixa''n una i torna a exportar.'
+        xml_date_form_refused: 'No s''ha escrit res: una data d''una fila %{data_type}
+          no té la forma que accepta l''AEAT, que és d/m/aaaa amb l''any de quatre
+          xifres, per exemple 2/1/1980. Corregeix-la i torna a exportar.'
+        xml_holder_code_invalid: 'No s''ha escrit res: el titular d''una fila %{data_type}
+          ha de ser un de %{allowed}. Corregeix-ho i torna a exportar.'
+        xml_payload_root_differs: El fitxer de declaració comença per l'element %{found},
+          però el format de diccionari espera %{expected}.
+        xml_payload_unreadable: El fitxer de declaració no s'ha pogut llegir com a
+          XML, així que no s'ha comprovat.
+        xml_row_date_invalid: 'No s''ha escrit res: la data desada per a %{binding}
+          no és una data vàlida. Corregeix-la i torna a exportar.'
+        xml_rows_exceed_schema: 'No s''ha escrit res: %{rows} files no caben a %{element_path},
+          que l''esquema oficial admet %{limit} vegades. Treu files i torna a exportar.'
         xml_schema_unreadable: No s'ha pogut aplicar l'esquema oficial d'aquest exercici
           per comprovar els valors de la declaració.
         xml_value_above_maximum: La casella %{box} té un import superior a %{limit},
@@ -575,8 +650,14 @@ application:
           que l'esquema oficial no admet.
         xml_value_not_a_number: La casella %{box} ha de contenir un nombre segons
           l'esquema oficial.
+        xml_value_not_convertible: 'No s''ha escrit res: un valor no s''ha pogut convertir
+          a la forma que exigeix el fitxer de declaració (conversió %{converter}).
+          Corregeix el valor i torna a exportar.'
         xml_value_not_listed: La casella %{box} conté un valor fora de les opcions
           que enumera l'esquema oficial.
+        xml_value_not_stated_by_rows: 'No s''ha escrit res: el camp %{path} conté
+          un valor que les files de %{element_path} no sumen. Corregeix el camp o
+          les files perquè cada fila indiqui les seves pròpies xifres, i torna a exportar.'
         xml_value_required_missing: L'esquema oficial exigeix la casella %{box} i
           no té valor. Indica-la abans d'exportar; no s'ha escrit res.
         xml_value_too_long: La casella %{box} té %{observed} caràcters; l'esquema
@@ -2410,6 +2491,12 @@ application:
         '51': Ceuta
         '52': Melilla
     errors:
+      advisory_limit_not_numeric: El límit inclòs %{fact}, que serveix per comprovar
+        aquesta declaració, no és un número. Les dades incloses són incoherents i
+        res del que has introduït ho causa.
+      aggregate_preflight_provider_changed: 'El càlcul no ha pogut començar: la font
+        de les xifres d''aquest Modelo ha canviat mentre es preparava. És una incoherència
+        del programa i res del que has introduït l''ha causada. Torna a executar l''ordre.'
       amendment_complementaria_liability_decrease: Una complementària per al model
         {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat
         declarat de {baseline_result} a {corrected_result}. Abans de la unificació
@@ -2434,6 +2521,12 @@ application:
         identificadors de casella requerits al mapa corregit.'
       amendment_verification_refused_no_snapshot: Les definicions dels models no tenen
         res per al model, any i període sol·licitats.
+      applicability_filter_unknown: Una regla de verificació de les dades incloses
+        cita el filtre d'aplicabilitat %{filter}, que el programa no coneix. Les dades
+        incloses són incoherents i res del que has introduït ho causa.
+      binding_source_kind_unclassified: Les regles incloses no assignen cap família
+        al tipus de font %{source_kind}, així que no es pot explicar el seu origen.
+        Les dades incloses són incompletes i res del que has introduït ho causa.
       calculate_binding_is_date_sourced: --binding %{key} és un valor de tipus data
         que es pren del teu perfil actiu (una dada de data teva, com la data de naixement);
         no es pot aportar mitjançant --binding, que només admet valors decimals i
@@ -2512,6 +2605,9 @@ application:
       caller_casilla_source_binding_conflict: 'Els valors que introdueixes a les caselles
         no poden sobreescriure caselles el valor de les quals prové dels teus registres:
         %{casillas}.'
+      catalogue_text_missing_for_language: El text %{text_id} no té redacció en l'idioma
+        %{language}. Els textos inclosos són incomplets i res del que has introduït
+        ho causa. Tria un altre idioma de sortida.
       computed_casilla_binding_conflict: 'Els valors presos dels teus registres apunten
         a caselles calculades i no es poden sobreescriure amb un valor extern. Caselles
         afectades: %{computed}.'
@@ -2529,6 +2625,10 @@ application:
       detail_row_identity_conflict: Una fila de detall que has introduït no coincideix
         amb la que donen els teus registres per al mateix declarat; corregeix-la o
         treu-la abans de calcular.
+      edit_revision_id_unresolved: El càlcul de l'edició no ha indicat quina revisió
+        ha creat, així que no s'ha pogut conservar el rebut de l'edició. És una incoherència
+        del programa i res del que has introduït l'ha causada. Llista les revisions
+        de la declaració abans de tornar a editar.
       exonerado_390_attestation_applicable_unsupported: Aquí només es pot registrar
         la declaració que el model 390 no és aplicable. Un model 390 que sí és aplicable
         en el període %{period} de %{filing_year} no es registra per aquesta via.
@@ -2726,6 +2826,9 @@ application:
       iva_wallet_not_seeded: El càlcul del Model 303 requereix un historial de compensació
         IVA inicialitzat. Per a la primera declaració d'un perfil nou, inicialitza
         amb import zero el saldo d'obertura de la compensació IVA del període i confirma'l.
+      iva_wallet_refusal_without_verdict: La negativa de la conciliació de la cartera
+        de compensació d'IVA no indica cap pas següent. És una incoherència del programa
+        i res del que has introduït l'ha causada.
       iva_wallet_registry_snapshot_unavailable: 'La conciliació de la cartera de compensació
         d''IVA està bloquejada per al Model 303: no s''han pogut resoldre les definicions
         del model per a aquest exercici i període, de manera que no es pot provar
@@ -2806,10 +2909,46 @@ application:
         el motiu.
       local_observation_spreadsheet_malformed_rows: 'El full de càlcul té %{malformed_row_count}
         files inutilitzables: %{malformed_rows}'
+      m036_declaration_after_baja: 'No s''ha registrat res de la declaració del Modelo
+        036 %{declaration_id}: l''última declaració registrada, %{prior_declaration_id},
+        és una baixa (baja), que tanca el registre, i una %{requested_event_kind}
+        no pot seguir-la. Registra primer una nova alta per obrir un registre.'
       m036_declaration_profile_bucket_mismatch: La declaració del model 036 indica
         un perfil diferent del bucket on es registraria
+      m036_declaration_without_alta: 'No s''ha registrat res de la declaració del
+        Modelo 036 %{declaration_id}: no hi ha cap alta registrada, així que una %{requested_event_kind}
+        no té cap registre que canviar. Registra primer l''alta.'
       m200_accounting_result_required: El Model 200 necessita el resultat comptable
         de l'exercici abans de calcular-se a partir del llibre.
+      m210_agrupacion_annual_code_not_lease_or_sublease: El Modelo 210 anual (període
+        0A) agrupa només rendes d'arrendament i subarrendament, però les files usen
+        un altre codi de renda. Corregeix el codi de renda de les files.
+      m210_agrupacion_duplicate_source_id: Dues files de renda agrupada del Modelo
+        210 anual porten el mateix identificador d'origen. Dona a cada fila el seu
+        propi identificador i calcula de nou.
+      m210_agrupacion_empty_group: El Modelo 210 anual (període 0A) necessita almenys
+        una fila de renda agrupada i no n'hi ha cap. Afegeix les files de la renda
+        i calcula de nou.
+      m210_agrupacion_missing_bien_derecho: Les files agrupades d'arrendament o subarrendament
+        del Modelo 210 anual no indiquen el bé o dret del qual procedeixen. Indica'l
+        a cada fila.
+      m210_agrupacion_mixed_bien_derecho: Les files agrupades del Modelo 210 anual
+        procedeixen de més d'un bé o dret. Un grup anual admet files d'un de sol.
+        Separa les files i calcula de nou.
+      m210_agrupacion_mixed_pagador: Les files agrupades del Modelo 210 anual anomenen
+        més d'un pagador i aquest codi de renda no admet diversos pagadors en un grup.
+        Usa un sol pagador per grup.
+      m210_agrupacion_mixed_tipo_gravamen: Les files de renda agrupada del Modelo
+        210 anual usen més d'un tipus de gravamen. Un grup anual admet files amb el
+        mateix tipus. Corregeix els tipus i calcula de nou.
+      m210_agrupacion_mixed_tipo_renta_code: Les files de renda agrupada del Modelo
+        210 anual usen més d'un codi oficial de renda. Un grup anual admet files d'un
+        sol codi. Separa les files i calcula de nou.
+      m210_agrupacion_payer_mode_not_declared: La disposició de pagadors de les files
+        agrupades del Modelo 210 anual no coincideix amb el que permet la definició
+        oficial per a aquest codi de renda. Revisa les dades del pagador de les files.
+      m210_agrupacion_rows_invalid: Les files de renda agrupada del Modelo 210 anual
+        no són vàlides. Revisa les files i calcula de nou.
       m210_ledger_manual_agrupacion_rows: El Model 210 en mode registres deriva les
         files anuals d'agrupació de rendes de les classificacions dels teus registres;
         no aportis files manuals d'agrupació de rendes.
@@ -2831,6 +2970,13 @@ application:
         model 303 no ha superat la validació.
       m349_operator_rows_required: El llibre d'aquest període té operacions intracomunitàries
         sense les seves files d'operador del Model 349; afegeix-les abans de calcular.
+      m390_attestation_attachment_digest_differs: El document adjunt a l'atestació
+        d'aplicabilitat del Modelo 390 s'identifica amb un valor diferent del resum
+        del seu contingut. Adjunta el document de nou perquè s'identifiqui amb el
+        seu propi resum.
+      m390_attestation_period_year_differs: El període de l'atestació d'aplicabilitat
+        del Modelo 390 pertany a l'any %{period_year}, però l'atestació és de l'exercici
+        de presentació %{filing_year}. Usa un període d'aquest exercici.
       novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
@@ -2862,6 +3008,19 @@ application:
         %{filing_year}: arrossega imports de la declaració de %{unfiled_period}, que
         no està presentada. Presenta primer %{unfiled_period} i torna a calcular.
         No s''ha desat res.'
+      profile_activity_tipo_not_censal: El tipus d'activitat %{tipo} del teu perfil
+        no és un tipus d'activitat censal. Corregeix el tipus de l'activitat al teu
+        perfil i calcula de nou.
+      profile_descendant_birth_date_invalid: La data de naixement del descendent número
+        %{number} del teu perfil no és una data vàlida (any-mes-dia). Corregeix-la
+        al teu perfil i calcula de nou.
+      profile_jurisdiction_scope_required: El teu perfil no indica el teu territori
+        tributari i la part del resultat que correspon a l'Estat no pot suposar el
+        territori comú. Indica el territori tributari al teu perfil i calcula de nou.
+      profile_jurisdiction_scope_unsupported: El territori tributari %{scope} del
+        teu perfil no és un per al qual es pugui calcular la part del resultat que
+        correspon a l'Estat. Corregeix el territori tributari al teu perfil i calcula
+        de nou.
       profile_readiness_missing: 'El perfil és incomplet per al model %{modelo} %{period}
         %{filing_year}; completa abans aquestes dades de perfil: %{profile_requirements}.'
       profile_readiness_not_applicable: 'El model %{modelo} no és aplicable al perfil
@@ -2911,31 +3070,88 @@ application:
         %{filing_year}, però la devolució només està disponible en l'últim període
         de declaració de l'any. Arrossega el crèdit (compensar) o tria la devolució
         en l'últim període.
+      registry_estimation_regime_clave_missing: La definició inclosa de la declaració
+        no declara cap codi per a la casella 0168 en el règim d'estimació %{estimation_regime}.
+        Les dades incloses són incompletes i res del que has introduït ho causa.
+      registry_modelo_revisions_unreadable: El registre no pot llistar les revisions
+        del Modelo %{modelo}. Comprova el número de model.
+      registry_period_not_declared: 'El període %{period} no està declarat per al
+        Modelo %{modelo}, revisió %{revision_id}. Els períodes disponibles són: %{available}.
+        Tria''n un.'
+      registry_revision_not_declared: 'La revisió %{revision_id} no està declarada
+        per al Modelo %{modelo}. Les revisions disponibles són: %{available}. Tria''n
+        una.'
+      registry_revision_unreadable: El registre no pot llegir la revisió %{revision_id}
+        del Modelo %{modelo}. Comprova el número de model i la revisió.
+      review_package_envelope_file_unreadable: El fitxer no és un sobre xifrat llegible
+        d'un paquet de revisió. Comprova que has indicat el fitxer de sobre que es
+        va generar en xifrar el paquet.
       review_package_generic: S'ha produït un error en construir el paquet de revisió.
       review_package_integrity: 'El paquet de revisió %{package_path} no ha superat
         la comprovació de la suma de verificació: %{detail}.'
+      review_package_receipt_file_unreadable: El fitxer no és un rebut contrasignat
+        llegible d'un paquet de revisió. Comprova que has indicat el fitxer de rebut
+        que es va retornar per al paquet.
       review_package_revision_state: 'La revisió de càlcul %{calculation_revision_id}
         és en estat %{state} i no es pot empaquetar per a revisió; estats admesos:
         %{eligible_states}.'
+      review_package_signature_file_unreadable: El fitxer no és un sobre de signatura
+        llegible d'un paquet de revisió. Comprova que has indicat el fitxer de signatura
+        que es va generar en signar el paquet.
       revision_pick_explicit_id_required: La selecció explícita de revisió requereix
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id només és
         vàlid amb el selector de revisió explícita.
+      semantic_role_ambiguous: La definició inclosa d'aquest Modelo assigna el paper
+        %{semantic_role} a més d'una casella (%{casilla_list}), així que la comprovació
+        no pot saber quina llegir. Les dades incloses són incoherents i res del que
+        has introduït ho causa.
+      signing_capability_other_profile: 'No s''ha signat res: la clau de signatura
+        disponible per a aquesta acció pertany a un altre perfil. Tria el perfil que
+        posseeix la clau i signa de nou.'
       source_owned_binding_override: Has introduït un valor en una casella que s'obté
         dels teus registres; treu-lo o corregeix el registre del qual prové.
       trabajo_income_nothing_open: 'El Model %{modelo} de %{filing_year} no té cap
         casella de rendiments del treball pendent de declarar com a inexistent: cadascuna
         ja té una xifra o la teva declaració, o la declaració no té rendiments del
         treball d''un registre de pagador. No s''ha canviat res.'
+      value_presentation_data_type_undeclared: No s'ha declarat com mostrar els valors
+        del tipus de dada %{data_type}, així que la xifra no es mostra. Les dades
+        incloses són incompletes i res del que has introduït ho causa.
       verification_report_not_found: No s'ha trobat cap informe de comprovació amb
         id=%{verification_report_id}.
+      withholding_order_number_above_form_ceiling: El número d'ordre %{order_number}
+        supera el màxim que admet el formulari. Usa un número més baix.
       work_create_not_applicable: 'El model %{modelo} no et correspon segons el teu
         perfil: %{reason} No s''ha creat la declaració.'
+      work_form_layout_binding_undefined: El disseny del formulari d'aquest Modelo
+        col·loca el camp %{binding_id}, que la revisió no defineix. El disseny inclòs
+        és incoherent i res del que has introduït ho causa.
+      work_form_layout_casilla_not_shown: El disseny del formulari d'aquest Modelo
+        col·loca la casella %{casilla_id} al formulari, però cap pàgina la mostra.
+        El disseny inclòs és incoherent i res del que has introduït ho causa.
+      work_form_layout_casilla_off_form: El disseny del formulari d'aquest Modelo
+        posa la casella %{casilla_id} en una pàgina sense donar-li un lloc al formulari.
+        El disseny inclòs és incoherent i res del que has introduït ho causa.
+      work_form_layout_casilla_repeated: El disseny del formulari d'aquest Modelo
+        col·loca la casella %{casilla_id} més d'una vegada. El disseny inclòs és incoherent
+        i res del que has introduït ho causa.
+      work_form_layout_casilla_undefined: El disseny del formulari d'aquest Modelo
+        col·loca la casella %{casilla_id}, que la revisió no defineix. El disseny
+        inclòs és incoherent i res del que has introduït ho causa.
+      work_form_layout_casillas_unplaced: El disseny del formulari d'aquest Modelo
+        no dona lloc a les cases %{casillas}. El disseny inclòs és incomplet i res
+        del que has introduït ho causa.
       work_period_token_invalid: '--period ''%{token}'' no és un token de període
         vàlid per al model %{modelo}. Indica --year %{year} per separat i usa un de:
         %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' no es reconeix. Indica --year
         %{year} per separat i usa un token de període com 0A, 1T o 01.
+      work_registry_revision_not_law_selected: La revisió del registre %{requested_revision}
+        que demanes no és la revisió que la llei determina per a aquesta declaració,
+        que és %{law_revision}. L'associació entre període i revisió la fixa la llei,
+        així que no es pot substituir. Crea de nou la unitat de treball sense --revision
+        per usar la revisió determinada per la llei.
       work_unit_already_discarded: La declaració ja està descartada.
       work_unit_create_discarded: Aquest objectiu de declaració es va descartar. Tornar
         a crear-lo retorna la mateixa declaració descartada, de manera que no es pot
@@ -3036,8 +3252,7 @@ application:
       cross_period_dependency_unclean_attestable: Aquesta declaració fa servir xifres
         del model %{source_modelo} de %{source_filing_year}, període %{source_period},
         i aquesta declaració encara té incidències obertes. Resol-les allà primer
-        o, si no vas a registrar aquesta declaració aquí, indica'n la xifra amb `aeat
-        app modelo work attest-prior-value <unitat de treball> <binding> <valor>`.
+        o, si no vas a registrar aquesta declaració aquí, indica'n tu mateix la xifra.
       cross_period_first_year_fractional_suppression: El model %{source_modelo} de
         %{source_filing_year}, període %{source_period}, no et correspon perquè la
         teva activitat va començar el %{activity_start_date}.
@@ -3157,6 +3372,11 @@ application:
       m303_m349_intracom_reconciliation_mismatch: En el període %{period_code} de
         %{filing_year}, el total intracomunitari del model 303 (%{m303_total} EUR)
         i el total del model 349 (%{m349_total} EUR) difereixen en %{gap} EUR.
+      m390_prorrata_apartado_unrendered: 'El model 390 de %{filing_year}: el teu registre
+        de prorrata s''aplica a aquest exercici (%{registered_activity_rows} fila(es)
+        d''activitat), però l''edició del formulari encara no inclou l''apartat de
+        prorrates (apartat 12), de manera que s''exportaria amb aquest apartat en
+        blanc. Encara no pots verificar-lo ni exportar-lo.'
       madrid_nacimiento_adopcion_eligibility_advisory: La casella [%{casilla_id}],
         amb un recompte ponderat de %{weighted_count}, et pot donar dret a la deducció
         de la Comunitat de Madrid per naixement o adopció.
@@ -4050,14 +4270,20 @@ application:
         qualsevol programa que estigui utilitzant el magatzem de perfils i torna-ho
         a provar.
       registration_label_blank: El nom del perfil no pot estar buit.
+      rental_lease_has_ledger_rows: L'arrendament %{row} és anomenat per %{rows} files
+        del llibre; canvia o esborra'n abans el vincle amb «%{door}».
       rental_lease_property_missing: L'arrendament anomena l'immoble %{inmueble},
         que no és al teu perfil; afegeix-lo abans amb «%{door}».
+      rental_ledger_unreadable: No s'ha pogut llegir el llibre del perfil, de manera
+        que no s'ha fet l'eliminació. No s'ha canviat res.
       rental_principal_missing: L'immoble principal %{principal} no és un altre immoble
         del teu perfil; afegeix-lo abans amb «%{door}».
       rental_property_has_accessories: L'immoble %{inmueble} és el principal d'annexos
         (%{accessories}); canvia o esborra'n el principal abans amb «%{door}».
       rental_property_has_leases: L'immoble %{inmueble} té arrendaments (%{leases});
         elimina'ls abans amb «%{door}».
+      rental_property_has_ledger_rows: L'immoble %{row} és anomenat per %{rows} files
+        del llibre; canvia o esborra'n abans el vincle amb «%{door}».
       rental_row_invalid: La dada «%{leaf}» no és vàlida o contradiu altres dades
         del registre; no s'ha desat res. Corregeix-la i repeteix «%{door}».
       rental_tenant_id_invalid: El NIF d'un arrendatari no és vàlid; revisa'n les

@@ -339,6 +339,10 @@ modelo:
             label: Annual turnover giving deduction rights
           iva-prorrata-volumen-total:
             label: Total annual turnover
+          iva-recargo-equivalencia-reducido-transitorio:
+            label: Transitional equivalence surcharge on the reduced rate - Tax amount
+          iva-recargo-equivalencia-super-reducido:
+            label: Equivalence surcharge on the super-reduced 4% rate - Tax amount
           iva-rectificacion-deducciones-importaciones-base:
             label: Adjustment of deductions on imports - Base (part of official box
               40)

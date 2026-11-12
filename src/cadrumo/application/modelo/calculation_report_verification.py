@@ -533,6 +533,7 @@ class ExistingSigningKeypairCapability:
         if canonical_bucket_id(bucket_id) != self.keypair.bucket_id:
             raise ReviewPackageSigningError(
                 "review-package signing capability is bound to a different bucket",
+                translated_message="application.modelo.errors.signing_capability_other_profile",
                 precondition_verdict=safety_stop_verdict("signing_capability_bucket"),
             )
         return self.keypair

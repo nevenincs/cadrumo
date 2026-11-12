@@ -39,6 +39,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -55,6 +56,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.establishment import country_code_for_stated_country_code, territorial_scope_for_country
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
@@ -69,6 +71,8 @@ from ....adapters.persistence.profile.tests.evidence_test_support import (
 )
 from ....adapters.persistence.profile.tests.evidence_test_support import runtime_profile as runtime_profile
 from ....domain.iva.schema import InvoiceKind, IvaTerritorialScope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects"]
@@ -746,7 +750,7 @@ class TestTheOverseasAddressIsRead:
             # The same answer reached from the country alone, so the case reads
             # as a statement about the ladder's source rather than about France.
             assert territorial_scope_for_country(
-                "FR", operation=_authority_operation_for_test
+                "FR", operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("eu_member")
 
     def test_the_envelope_names_the_overseas_block_it_was_read_from(

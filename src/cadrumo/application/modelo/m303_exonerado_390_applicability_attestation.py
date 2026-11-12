@@ -64,6 +64,8 @@ class M303Exonerado390ApplicabilityAttestationRequest(BaseModel):
         if self.period.filing_year != self.filing_year:
             raise AttachmentValidationError(
                 "Modelo 390 applicability request period disagrees with filing year",
+                translated_message="application.modelo.errors.m390_attestation_period_year_differs",
+                context={"filing_year": str(self.filing_year), "period_year": str(self.period.filing_year)},
                 precondition_verdict=operator_choice_verdict("m390_attestation_period"),
             )
         return self
@@ -82,6 +84,7 @@ class M303Exonerado390ApplicabilityAttestationAdmission(BaseModel):
         if self.attachment_id != self.sha256:
             raise AttachmentValidationError(
                 "Modelo 390 applicability attachment identity does not match its digest",
+                translated_message="application.modelo.errors.m390_attestation_attachment_digest_differs",
                 precondition_verdict=caller_defect_verdict("m390_attestation_digest"),
             )
         return self

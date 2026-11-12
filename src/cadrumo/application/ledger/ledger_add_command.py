@@ -18,6 +18,7 @@ from ...core.parsing.dates import require_iso8601_date
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
 from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
@@ -115,6 +116,13 @@ def prepare_ledger_add_command(
         ),
         counterparty_country=payload.counterparty_country,
         counterparty_identification_state=registry_facts.identification_state,
+        arrendamiento_ref=payload.arrendamiento_ref,
+        inmueble_ref=payload.inmueble_ref,
+        gasto_capital_inmobiliario=(
+            require_gasto_capital_inmobiliario(payload.gasto_capital_inmobiliario, authority=operation)
+            if payload.gasto_capital_inmobiliario is not None and payload.gasto_capital_inmobiliario.strip()
+            else None
+        ),
         recargo_amount=recargo_amount,
         irpf_category=resolve_ledger_add_irpf_category(payload, operation=operation),
         usage_ratio_id=payload.usage_ratio_id,

@@ -199,6 +199,7 @@ errors:
     remedy: solució
     revision: revisió
     row: fila
+    schema_version: versió de l'esquema
     section: secció
     state: estat
     status: estat
@@ -785,6 +786,34 @@ errors:
       amb el seu contingut; pot estar malmès o manipulat.
     canonical_unsupported_manifest_version: El manifest del corpus fa servir una versió
       no compatible.
+    filing_approval_basis_version_stale: L'aprovació de la declaració usa la versió
+      de base %{version}, però la versió de base vigent és %{current_version}. Torna
+      a aprovar la declaració.
+    filing_binding_row_source_kind_differs: Un valor de fila de la declaració indica
+      un origen de fila diferent de la font del seu camp. La declaració desada està
+      malmesa; construeix-la de nou.
+    filing_binding_row_source_needs_row: Un valor de fila de la declaració indica
+      d'on vénen les seves files, però no quina fila és. La declaració desada està
+      malmesa; construeix-la de nou.
+    filing_draft_binding_claimed_twice: La declaració dona més d'un valor a la mateixa
+      fila de camp (%{bindings}). Deixa un sol valor per fila de camp.
+    filing_draft_casilla_claimed_twice: La declaració dona més d'un valor a la mateixa
+      casella (%{casillas}). Deixa un sol valor per casella.
+    filing_draft_modelo_differs: La declaració és del Modelo %{modelo}, però la seva
+      instantània del registre és del Modelo %{snapshot_modelo}. Construeix la declaració
+      de nou.
+    filing_draft_period_token_differs: La declaració és del període %{period}, però
+      la seva instantània del registre és del període %{snapshot_period}. Construeix
+      la declaració de nou.
+    filing_draft_period_year_differs: La declaració és de l'exercici %{filing_year},
+      però la seva instantània del registre és del %{snapshot_year}. Construeix la
+      declaració de nou.
+    filing_draft_schema_marker_differs: La declaració registra la versió de definició
+      %{schema_version}, però la seva instantània del registre indica %{expected_schema_version}.
+      Construeix la declaració de nou.
+    filing_draft_taxpayer_diverges: La declaració anomena dos contribuents diferents,
+      un per al perfil i un altre per al subjecte de la presentació. Una declaració
+      pertany a un sol contribuent; construeix-la de nou des del perfil correcte.
     filing_export_boolean_in_text_slot: El camp d'exportació %{field} no pot escriure
       un fet de productor booleà en un espai de text de %{length} bytes. L'aplicació
       ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
@@ -1074,6 +1103,12 @@ errors:
     filing_export_xsd_version_absent: L'origen XSD del diccionari XML %{source} no
       declara cap valor de versionxsd. L'aplicació ho deriva del seu propi disseny
       d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_value_kind_contradicts_trace: 'La declaració té a la casella %{casilla_id}
+      un rastre de càlcul que contradiu el seu tipus (%{kind}): només una casella
+      calculada en porta. La declaració desada està malmesa; construeix-la de nou.'
+    filing_value_kind_contradicts_value: 'La declaració té a la casella %{casilla_id}
+      un valor que contradiu el seu tipus (%{kind}): només una casella buida no té
+      valor. La declaració desada està malmesa; construeix-la de nou.'
     integrity_active_profile_pointer: El punter de perfil actiu no és vàlid; repara
       el perfil seleccionat abans de continuar.
     integrity_apoderado_configuration_identity: La configuració d'apoderat emmagatzemada
@@ -1180,6 +1215,10 @@ errors:
     integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
       pogut desxifrar amb la clau mestra actual.
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
+    ledger_filing_evidence_diverges_from_snapshot: 'L''evidència del llibre de la
+      revisió de càlcul %{calculation_revision_id} no cobreix les mateixes transaccions
+      que la seva empremta: en manquen %{missing_count} i en sobren %{extra_count}.
+      La revisió desada està danyada; calcula de nou.'
     operator_layer_attestation_kinds_conflict: El registre desat declara l'enllaç
       %{binding_id} alhora sense import i amb un import declarat. L'aplicació va escriure
       aquest registre ella mateixa, així que s'ha alterat o malmès i el càlcul no
@@ -1509,6 +1548,22 @@ errors:
       pertany a una altra revisió.
     modelo_workspace_manifest_capture_not_current: El manifest de camps ha canviat
       mentre es llegia; torna a capturar-lo.
+    pension_reduccion_contingencia_year_not_four_digits: L'any de la contingència
+      s'ha d'escriure amb quatre xifres; has indicat %{value}.
+    pension_reduccion_early_contributions_exceed_total: Les aportacions al pla de
+      pensions fetes fins al 31 de desembre de 2006 (%{value}) superen les aportacions
+      totals (%{aportaciones_totales}), tot i que són una part del total. Corregeix
+      un dels dos imports.
+    pension_reduccion_early_contributions_negative: Les aportacions al pla de pensions
+      fetes fins al 31 de desembre de 2006 no poden ser negatives; has indicat %{value}.
+      Indica l'import com a zero o més.
+    pension_reduccion_rescate_negative: L'import rescatat del pla de pensions no pot
+      ser negatiu; has indicat %{value}. Indica l'import com a zero o més.
+    pension_reduccion_rescate_year_not_four_digits: L'any del rescat s'ha d'escriure
+      amb quatre xifres; has indicat %{value}.
+    pension_reduccion_total_contributions_not_positive: Les aportacions totals al
+      pla de pensions han de ser superiors a zero; has indicat %{value}. Indica el
+      total de totes les aportacions.
     producer_capture_not_current: Una projecció de productor ha canviat mentre es
       llegia; torna a capturar-la.
     profile_access_administration_denied: El teu accés actual no permet gestionar
@@ -1859,6 +1914,11 @@ errors:
       (camp 114) ha de ser el titular del compte que has triat.
     refused_modelo_360_solicitud_undeclared: No hi ha cap sol·licitud del Model 360
       declarada per a {filing_year}.
+    refused_modelo_390_prorrata_apartado_unrendered: 'El model 390 continua rebutjat:
+      el teu registre de prorrata té files per a aquest exercici, però l''edició del
+      formulari en ús encara no inclou l''apartat de prorrates (apartat 12), de manera
+      que no es pot verificar, registrar com a presentat ni exportar sense deixar
+      aquest apartat en blanc.'
     refused_modelo_aggregation_input_conflict: Una dada que has introduït contradiu
       el que donen els teus registres; corregeix-la abans de calcular.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementària
@@ -2106,6 +2166,12 @@ errors:
       que el vas llegir; torna a llegir-lo abans de desar.
     retencion_soportada_write_refused: No s'ha desat el registre de retenció d'aquest
       pagador.
+    sal_reserva_beneficio_negative: El benefici net que s'usa per a la reserva especial
+      no pot ser negatiu; has indicat %{value}. Indica'l com a zero o més.
+    sal_reserva_capital_social_not_positive: El capital social ha de ser superior
+      a zero; has indicat %{value}. Indica el capital social de la societat.
+    sal_reserva_dotada_negative: La reserva ja dotada no pot ser negativa; has indicat
+      %{value}. Indica-la com a zero o més.
     submission_preflight_auth_describe_failed: El proveïdor d'autenticació no s'ha
       pogut descriure ({cause_type}).
     submission_preflight_auth_not_ready: El proveïdor d'autenticació {kind} no està
@@ -2186,5 +2252,11 @@ errors:
       perfil actiu, llevat del mode de prova.
     own_account_unknown: El compte propi {own_account_id} no és cap dels teus comptes
       bancaris propis registrats.
+    rental_lease_unknown: L'arrendament {ref} no és cap dels arrendaments del teu
+      perfil. Consulta'ls amb «{door}».
+    rental_link_category: Una fila vinculada a un arrendament o a un immoble ha de
+      portar la categoria de renda {category}; indica-la amb «{door}» i --irpf-category.
+    rental_property_unknown: L'immoble {ref} no és cap dels immobles del teu perfil.
+      Consulta'ls amb «{door}».
     unknown_ledger_provider: 'Proveïdor de llibre {provider!r} desconegut. Proveïdors
       reconeguts: {providers}.'

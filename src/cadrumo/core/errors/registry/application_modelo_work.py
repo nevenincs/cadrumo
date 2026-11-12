@@ -14,7 +14,7 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkNoActiveBucketError",
+        "cadrumo.application.modelo.work_address_errors.ModeloWorkNoActiveBucketError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -24,7 +24,7 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkUnitNotFoundError",
+        "cadrumo.application.modelo.work_address_errors.ModeloWorkUnitNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_SELECTOR_UNIT_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -34,7 +34,7 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkSelectorContradictionError",
+        "cadrumo.application.modelo.work_address_errors.ModeloWorkSelectorContradictionError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_CONTRADICTION",
             category=ErrorCategory.REFUSED,
@@ -44,7 +44,7 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkVisibleTargetAmbiguousError",
+        "cadrumo.application.modelo.work_address_errors.ModeloWorkVisibleTargetAmbiguousError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -54,7 +54,7 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkRevisionConflictError",
+        "cadrumo.application.modelo.work_address_errors.ModeloWorkRevisionConflictError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_REVISION_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -104,7 +104,7 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkAddressNotFoundError",
+        "cadrumo.application.modelo.work_address_errors.ModeloWorkAddressNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_ADDRESS_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -114,7 +114,7 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkRegistryYearMismatchError",
+        "cadrumo.application.modelo.work_address_errors.ModeloWorkRegistryYearMismatchError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_REGISTRY_YEAR_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -124,7 +124,7 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkPeriodTokenError",
+        "cadrumo.application.modelo.work_address_errors.ModeloWorkPeriodTokenError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_PERIOD_TOKEN",
             category=ErrorCategory.REFUSED,
@@ -134,7 +134,7 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_addressing.ModeloRevisionPickError",
+        "cadrumo.application.modelo.work_address_errors.ModeloRevisionPickError",
         ErrorCode(
             code="REFUSED_MODELO_REVISION_PICK",
             category=ErrorCategory.REFUSED,
@@ -229,6 +229,16 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_CALCULATE_SEMANTIC_ROLE",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_calculate_semantic_role",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.m390_prorrata_apartado_gate.Modelo390ProrrataApartadoUnrenderedError",
+        ErrorCode(
+            code="REFUSED_MODELO_390_PRORRATA_APARTADO_UNRENDERED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_390_prorrata_apartado_unrendered",
             retryable=False,
             runbook_id=None,
         ),

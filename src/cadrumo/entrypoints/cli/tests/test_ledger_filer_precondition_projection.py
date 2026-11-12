@@ -15,9 +15,12 @@ break it.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -29,6 +32,8 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..common import cli_policy_refusal_projection
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -44,7 +49,9 @@ def test_filer_setup_refusal_reaches_the_shared_cli_projection_intact() -> None:
         )
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            resolve_filer_territorial_scope(profile_record=profile, operation=_authority_operation_for_test)
+            resolve_filer_territorial_scope(
+                profile_record=profile, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
         projection = cli_policy_refusal_projection(raised.value)
         assert projection is not None

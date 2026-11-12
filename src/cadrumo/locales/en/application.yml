@@ -490,18 +490,51 @@ application:
         box_not_stated_by_rows: 'Nothing was written: box %{casilla_id} holds a value
           the rows of %{element_path} do not add up to. Correct the box or the rows
           so that each row states its own figures, and export again.'
+        counterparty_rows_unattributable: 'Nothing was written: record %{record_id}
+          has %{row_count} counterparty rows, and the single-valued boxes %{casillas}
+          cannot be attributed to one of them. Enter those figures on the rows and
+          export again.'
+        devengo_year_not_earlier: 'Nothing was written: the accrual year in Modelo
+          %{modelo} must be earlier than the declaration year. Correct it and export
+          again.'
+        dictionary_values_not_admitted: 'Nothing was written: an export with an envelope
+          prefix cannot also take values for an XML declaration file.'
         layout_not_renderable: This modelo cannot produce a local declaration export
           file.
         m111_colegio_concertado_undeclared: 'Nothing was written: Modelo 111 needs
           to know whether you are a colegio concertado, and your profile does not
           say. State it in your profile and export again.'
+        m190_amount_outside_keys: 'Nothing was written: the amount in box %{casilla}
+          of Modelo 190 does not apply to the key and subkey of this recipient. Clear
+          the amount or correct the key and export again.'
+        m190_clave_scope_unsupplied: 'Nothing was written: the export of Modelo 190
+          does not know which keys each amount applies to, so it cannot check the
+          recipient''s record.'
+        m190_reintegro_magnitude_zero: 'Nothing was written: a negative reintegro
+          in Modelo 190 needs an amount other than zero. Enter the amount or remove
+          the negative sign, and export again.'
+        m190_reintegro_year_or_withholding: 'Nothing was written: a reintegro in Modelo
+          190 needs an accrual year earlier than the declaration year and no withholding
+          attached to it. Correct them and export again.'
+        m193_pending_mark_invalid: 'Nothing was written: the pending mark in Modelo
+          193 must be blank or X. Correct it and export again.'
+        m193_pending_requires_key: 'Nothing was written: in Modelo 193 the pending
+          mark and the accrual year apply only to keys A, B and D. Correct the key
+          or clear them, and export again.'
+        m193_pending_row_has_devengo: 'Nothing was written: a pending row in Modelo
+          193 cannot also have an accrual year. Clear one of them and export again.'
         m202_producer_facts_unsupported: 'Nothing was written: Modelo 202 needs facts
           this export cannot take from your profile yet (%{missing_fact_ids}). Export
           it once they are supported.'
+        m280_negative_imputation_key_invalid: 'Nothing was written: a negative imputation
+          in Modelo 280 needs key 2 with the negative sign N, or zero fill under any
+          other key. Correct the record and export again.'
         m303_definitive_prorrata_missing: 'Nothing was written: the Modelo 303 regularisation
           of capital goods needs the definitive prorrata percentage, and your prorrata
           register does not hold it for the year. Settle it in your register and export
           again.'
+        m303_filing_facts_unsupplied: 'Nothing was written: the Modelo 303 export
+          needs one complete set of filing facts for this return, and none is available.'
         m303_sector_apportionment_missing: 'Nothing was written: your prorrata register
           has differentiated sectors, but your ledger yields no apportionment for
           them in this period. Check the sector of the input VAT in your ledger and
@@ -511,14 +544,30 @@ application:
           them with `aeat app modelo m360 declare` and export again.'
         post_write_verification_refused: The check after writing rejected the exported
           declaration file.
+        prior_domiciliation_election_differs: 'Nothing was written: the prior-domiciliation
+          election given for the export differs from the one recorded in the Modelo
+          303 filing facts.'
+        prior_domiciliation_election_required: 'Nothing was written: the export of
+          Modelo %{modelo} needs your election on prior domiciliation, and it is not
+          stated. State it and export again.'
         producer_fact_required: 'Nothing was written: the export needs %{fact}, which
           is not stated. State it and export again.'
+        product_identity_not_admitted: 'Nothing was written: this export has no slot
+          for a product or software identity, so none can be given for it.'
+        product_identity_required: 'Nothing was written: the export needs the product
+          and software identity, and none was supplied.'
         receipt_artefact_unreadable: The export receipt names a file that cannot be
           read.
         receipt_byte_size_mismatch: The exported file's size does not match the export
           receipt.
         receipt_digest_mismatch: The exported file's digest does not match the export
           receipt.
+        record_binding_row_omits_fields: 'Nothing was written: row %{row} omits the
+          required fields %{fields}. Enter them and export again.'
+        record_incomplete: 'Nothing was written: a record of Modelo %{modelo} does
+          not have the length the official layout sets, so it cannot be written.'
+        record_requires_positive_casilla: 'Nothing was written: record %{record_id}
+          requires box %{casilla} to be greater than zero, and it is not.'
         rendered_payload_empty: The export layout produced an empty declaration payload.
         shared_casilla_cells_unadjudicated: 'The declaration file was not generated:
           boxes %{casilla_ids} hold a value the official design would write into several
@@ -526,6 +575,31 @@ application:
           it would put these figures in concepts they do not belong to.'
         verify_draft_snapshot_stale: The check requires a draft built from the modelo
           definitions currently in use.
+        xml_amount_unreadable: 'Nothing was written: an amount in a %{data_type} row
+          could not be read. Write it with a dot as the decimal separator, at most
+          %{scale} decimal digit(s) and no thousands separator, for example 1234.56.
+          An amount such as 1.000 is refused because it reads as both one and one
+          thousand.'
+        xml_boxes_without_single_row: 'Nothing was written: the values for %{paths}
+          cannot be placed, because %{element_path} does not occur exactly once to
+          take them.'
+        xml_comunidad_ambiguous: 'Nothing was written: the deductions are filled in
+          for more than one autonomous community (%{comunidades}), and a declaration
+          may carry only one. Keep one and export again.'
+        xml_date_form_refused: 'Nothing was written: a date in a %{data_type} row
+          is not in the form AEAT accepts, which is d/m/yyyy with a four-digit year,
+          for example 2/1/1980. Correct it and export again.'
+        xml_holder_code_invalid: 'Nothing was written: the holder in a %{data_type}
+          row must be one of %{allowed}. Correct it and export again.'
+        xml_payload_root_differs: The declaration file starts with the element %{found},
+          but the dictionary format expects %{expected}.
+        xml_payload_unreadable: The declaration file could not be read as XML, so
+          it was not checked.
+        xml_row_date_invalid: 'Nothing was written: the date held for %{binding} is
+          not a valid date. Correct it and export again.'
+        xml_rows_exceed_schema: 'Nothing was written: %{rows} rows do not fit %{element_path},
+          which the official schema admits %{limit} times. Remove rows and export
+          again.'
         xml_schema_unreadable: The official schema for this year could not be applied
           to check the declaration's values.
         xml_value_above_maximum: Box %{box} holds an amount above %{limit}, the most
@@ -535,8 +609,14 @@ application:
         xml_value_illegal_characters: Box %{box} holds text in a form the official
           schema does not admit.
         xml_value_not_a_number: Box %{box} must hold a number under the official schema.
+        xml_value_not_convertible: 'Nothing was written: a value could not be converted
+          into the form the declaration file requires (conversion %{converter}). Correct
+          the value and export again.'
         xml_value_not_listed: Box %{box} holds a value outside the options the official
           schema lists.
+        xml_value_not_stated_by_rows: 'Nothing was written: the field %{path} holds
+          a value the rows of %{element_path} do not add up to. Correct the field
+          or the rows so that each row states its own figures, and export again.'
         xml_value_required_missing: Box %{box} is required by the official schema
           and has no value. Enter it before exporting; nothing was written.
         xml_value_too_long: Box %{box} holds %{observed} characters; the official
@@ -2294,6 +2374,13 @@ application:
         '51': Ceuta
         '52': Melilla
     errors:
+      advisory_limit_not_numeric: The bundled limit %{fact}, used to check this declaration,
+        is not a number. The bundled data is inconsistent, and nothing you entered
+        caused it.
+      aggregate_preflight_provider_changed: 'The calculation could not start: the
+        source of the figures for this Modelo changed while it was being prepared.
+        This is a program inconsistency, and nothing you entered caused it. Run the
+        command again.'
       amendment_complementaria_liability_decrease: A complementaria for modelo {modelo}
         filing year {filing_year} period {period} would lower the declared result
         from {baseline_result} to {corrected_result}. Before the autoliquidación rectificativa
@@ -2317,6 +2404,12 @@ application:
         required casilla ids are missing from the corrected map.'
       amendment_verification_refused_no_snapshot: The modelo definitions have nothing
         for the requested modelo, year and period.
+      applicability_filter_unknown: A verification rule in the bundled data cites
+        the applicability filter %{filter}, which the program does not know. The bundled
+        data is inconsistent, and nothing you entered caused it.
+      binding_source_kind_unclassified: The bundled rules give the source kind %{source_kind}
+        no family, so its origin cannot be explained. The bundled data is incomplete,
+        and nothing you entered caused it.
       calculate_binding_is_date_sourced: --binding %{key} is a date value taken from
         your active profile (a date about you such as the birth date); it cannot be
         supplied through --binding, which carries only decimal and enum values. Save
@@ -2391,6 +2484,9 @@ application:
       calculation_summary_pdf_unreadable: The file is not a readable PDF ({error_type}).
       caller_casilla_source_binding_conflict: 'Values you enter for boxes cannot override
         boxes whose values come from your records: %{casillas}.'
+      catalogue_text_missing_for_language: The text %{text_id} has no wording in the
+        language %{language}. The bundled texts are incomplete, and nothing you entered
+        caused it. Choose another output language.
       computed_casilla_binding_conflict: 'Values taken from your records target calculated
         boxes and cannot be overridden by an external value. Affected boxes: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
@@ -2404,6 +2500,10 @@ application:
         entry has no invoice, so the draft is still open and picks the document up.'
       detail_row_identity_conflict: A detail row you entered does not match the row
         your records give for the same declarant; correct or remove it before calculating.
+      edit_revision_id_unresolved: The calculation behind the edit did not report
+        which revision it created, so the receipt of the edit could not be kept. This
+        is a program inconsistency, and nothing you entered caused it. List the revisions
+        of the declaration before you edit again.
       exonerado_390_attestation_applicable_unsupported: Only the statement that the
         Modelo 390 does not apply can be recorded here. A Modelo 390 that does apply
         for period %{period} of %{filing_year} is not recorded on this path. Nothing
@@ -2589,6 +2689,9 @@ application:
       iva_wallet_not_seeded: Modelo 303 calculation requires a seeded IVA compensation
         history. For the first M303 filing of a fresh profile, seed the IVA compensation
         opening balance for the filing period with an amount of zero and confirm it.
+      iva_wallet_refusal_without_verdict: The refusal of the IVA compensation wallet
+        reconciliation carries no next step. This is a program inconsistency, and
+        nothing you entered caused it.
       iva_wallet_registry_snapshot_unavailable: 'IVA wallet reconciliation is blocked
         for Modelo 303: the modelo definitions for this filing year and period could
         not be resolved, so a first-period zero cannot be proven. Confirm the modelo,
@@ -2669,10 +2772,46 @@ application:
         reason for it.
       local_observation_spreadsheet_malformed_rows: 'The spreadsheet has %{malformed_row_count}
         unusable rows: %{malformed_rows}'
+      m036_declaration_after_baja: 'Nothing was recorded for the Modelo 036 declaration
+        %{declaration_id}: the latest declaration on record, %{prior_declaration_id},
+        is a baja, which closes the registration, and a %{requested_event_kind} cannot
+        follow it. Record a new alta first to open a registration.'
       m036_declaration_profile_bucket_mismatch: The M036 declaration names a different
         profile than the bucket it would be recorded in
+      m036_declaration_without_alta: 'Nothing was recorded for the Modelo 036 declaration
+        %{declaration_id}: no alta is on record, so a %{requested_event_kind} has
+        no registration to change. Record the alta first.'
       m200_accounting_result_required: Modelo 200 needs the year's accounting result
         before it can be calculated from the ledger.
+      m210_agrupacion_annual_code_not_lease_or_sublease: The annual Modelo 210 (period
+        0A) groups only lease and sublease income, but the rows use another income
+        code. Correct the income code of the rows.
+      m210_agrupacion_duplicate_source_id: Two grouped income rows of the annual Modelo
+        210 carry the same source identifier. Give each row its own identifier and
+        calculate again.
+      m210_agrupacion_empty_group: The annual Modelo 210 (period 0A) needs at least
+        one grouped income row, and there is none. Add the rows of the income and
+        calculate again.
+      m210_agrupacion_missing_bien_derecho: The grouped lease or sublease rows of
+        the annual Modelo 210 do not name the property or right they come from. Name
+        it on every row.
+      m210_agrupacion_mixed_bien_derecho: The grouped rows of the annual Modelo 210
+        come from more than one property or right. One annual group takes rows of
+        a single one. Split the rows and calculate again.
+      m210_agrupacion_mixed_pagador: The grouped rows of the annual Modelo 210 name
+        more than one payer, and this income code does not allow several payers in
+        one group. Use one payer per group.
+      m210_agrupacion_mixed_tipo_gravamen: The grouped income rows of the annual Modelo
+        210 use more than one tax rate. One annual group takes rows with the same
+        rate. Correct the rates and calculate again.
+      m210_agrupacion_mixed_tipo_renta_code: The grouped income rows of the annual
+        Modelo 210 use more than one official income code. One annual group takes
+        rows of a single code. Split the rows and calculate again.
+      m210_agrupacion_payer_mode_not_declared: The payer arrangement of the grouped
+        rows of the annual Modelo 210 does not match what the official definition
+        allows for this income code. Check the payer data of the rows.
+      m210_agrupacion_rows_invalid: The grouped income rows of the annual Modelo 210
+        are not valid. Check the rows and calculate again.
       m210_ledger_manual_agrupacion_rows: Modelo 210 in records mode derives the annual
         grouped-renta rows from the classifications in your records; do not provide
         manual agrupacion-renta rows.
@@ -2691,6 +2830,13 @@ application:
       m303_filing_evidence_invalid: Modelo 303 filing-instance evidence failed validation.
       m349_operator_rows_required: This period's ledger has intra-community operations
         without their Modelo 349 operator rows; add them before calculating.
+      m390_attestation_attachment_digest_differs: The document attached to the Modelo
+        390 applicability attestation is identified by a value that differs from the
+        digest of its content. Attach the document again so that it is identified
+        by its own digest.
+      m390_attestation_period_year_differs: The period of the Modelo 390 applicability
+        attestation belongs to the year %{period_year}, but the attestation is for
+        the filing year %{filing_year}. Use a period of the filing year.
       novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before
@@ -2720,6 +2866,18 @@ application:
         yet: it carries figures from the return for %{unfiled_period}, which has not
         been filed. File %{unfiled_period} first, then calculate again. Nothing was
         saved.'
+      profile_activity_tipo_not_censal: The activity type %{tipo} in your profile
+        is not a census activity type. Correct the activity type of the activity in
+        your profile and calculate again.
+      profile_descendant_birth_date_invalid: The birth date of descendant number %{number}
+        in your profile is not a valid date (year-month-day). Correct it in your profile
+        and calculate again.
+      profile_jurisdiction_scope_required: Your profile does not state your tax territory,
+        and the share of the result that goes to the State cannot assume the common
+        territory. Set the tax territory in your profile and calculate again.
+      profile_jurisdiction_scope_unsupported: The tax territory %{scope} in your profile
+        is not one for which the share of the result going to the State can be worked
+        out. Correct the tax territory in your profile and calculate again.
       profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{period}
         %{filing_year}; complete these profile facts first: %{profile_requirements}.'
       profile_readiness_not_applicable: 'Modelo %{modelo} is not applicable to the
@@ -2761,26 +2919,83 @@ application:
       refund_election_not_eligible: Refund was elected for Modelo %{modelo} %{period}
         %{filing_year}, but a refund is only available in the year's last filing period.
         Carry the credit forward, or make the election in the last period.
+      registry_estimation_regime_clave_missing: The bundled definition of the return
+        declares no code for box 0168 for the estimation regime %{estimation_regime}.
+        The bundled data is incomplete, and nothing you entered caused it.
+      registry_modelo_revisions_unreadable: The registry cannot list the revisions
+        of Modelo %{modelo}. Check the model number.
+      registry_period_not_declared: 'Period %{period} is not declared for Modelo %{modelo}
+        revision %{revision_id}. The available periods are: %{available}. Choose one
+        of them.'
+      registry_revision_not_declared: 'Revision %{revision_id} is not declared for
+        Modelo %{modelo}. The available revisions are: %{available}. Choose one of
+        them.'
+      registry_revision_unreadable: The registry cannot read revision %{revision_id}
+        of Modelo %{modelo}. Check the model number and the revision.
+      review_package_envelope_file_unreadable: The file is not a readable encrypted
+        envelope of a review package. Check that you passed the envelope file that
+        was produced when the package was encrypted.
       review_package_generic: An error occurred while building the review package.
       review_package_integrity: 'Review package %{package_path} failed the checksum
         check: %{detail}.'
+      review_package_receipt_file_unreadable: The file is not a readable counter-signed
+        receipt of a review package. Check that you passed the receipt file that was
+        returned for the package.
       review_package_revision_state: 'Calculation revision %{calculation_revision_id}
         is in state %{state} and cannot be packaged for review; eligible states: %{eligible_states}.'
+      review_package_signature_file_unreadable: The file is not a readable signature
+        envelope of a review package. Check that you passed the signature file that
+        was produced when the package was signed.
       revision_pick_explicit_id_required: Explicit revision picks require calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id is only
         valid with the explicit revision selector.
+      semantic_role_ambiguous: The bundled definition of this Modelo gives more than
+        one box the role %{semantic_role} (%{casilla_list}), so the check cannot tell
+        which box to read. The bundled data is inconsistent, and nothing you entered
+        caused it.
+      signing_capability_other_profile: 'Nothing was signed: the signing key held
+        for this action belongs to a different profile. Select the profile that owns
+        the key and sign again.'
       source_owned_binding_override: You entered a value in a box that comes from
         your records; remove it or correct the record it comes from.
       trabajo_income_nothing_open: 'Modelo %{modelo} for %{filing_year} has no work-income
         box left to state as none: each one already holds a figure or your statement,
         or the declaration has no work income from a payer record. Nothing was changed.'
+      value_presentation_data_type_undeclared: No way to show values of the data type
+        %{data_type} is declared, so the figure is not shown. The bundled data is
+        incomplete, and nothing you entered caused it.
       verification_report_not_found: No check report found with id=%{verification_report_id}.
+      withholding_order_number_above_form_ceiling: The order number %{order_number}
+        is above the highest order number the form allows. Use a lower number.
       work_create_not_applicable: 'Modelo %{modelo} does not apply to you according
         to your profile: %{reason} No declaration was created.'
+      work_form_layout_binding_undefined: The form layout of this Modelo places the
+        field %{binding_id}, which the revision does not define. The bundled layout
+        is inconsistent, and nothing you entered caused it.
+      work_form_layout_casilla_not_shown: The form layout of this Modelo puts box
+        %{casilla_id} on the form, but no page shows it. The bundled layout is inconsistent,
+        and nothing you entered caused it.
+      work_form_layout_casilla_off_form: The form layout of this Modelo puts box %{casilla_id}
+        on a page without giving it a place on the form. The bundled layout is inconsistent,
+        and nothing you entered caused it.
+      work_form_layout_casilla_repeated: The form layout of this Modelo places box
+        %{casilla_id} more than once. The bundled layout is inconsistent, and nothing
+        you entered caused it.
+      work_form_layout_casilla_undefined: The form layout of this Modelo places box
+        %{casilla_id}, which the revision does not define. The bundled layout is inconsistent,
+        and nothing you entered caused it.
+      work_form_layout_casillas_unplaced: The form layout of this Modelo gives no
+        place to the boxes %{casillas}. The bundled layout is incomplete, and nothing
+        you entered caused it.
       work_period_token_invalid: '--period ''%{token}'' is not a valid period token
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' is not recognised. Pass
         --year %{year} separately and use a period token such as 0A, 1T, or 01.
+      work_registry_revision_not_law_selected: The registry revision %{requested_revision}
+        you asked for is not the law-determined revision for this filing target, which
+        is %{law_revision}. The period-to-revision binding is fixed by law, so it
+        cannot be overridden. Create the work unit again without --revision to use
+        the law-determined revision.
       work_unit_already_discarded: The declaration is already discarded.
       work_unit_create_discarded: This filing target was discarded. Creating it again
         resolves to the same discarded declaration, so the target cannot be resumed.
@@ -2878,8 +3093,7 @@ application:
       cross_period_dependency_unclean_attestable: This declaration uses figures from
         modelo %{source_modelo} for %{source_filing_year}, period %{source_period},
         and that declaration still has open issues. Resolve them there first or, if
-        you will not record that return here, state its figure with `aeat app modelo
-        work attest-prior-value <work unit> <binding> <value>`.
+        you will not record that return here, state its figure yourself.
       cross_period_first_year_fractional_suppression: Modelo %{source_modelo} for
         %{source_filing_year}, period %{source_period}, does not apply to you because
         your activity started on %{activity_start_date}.
@@ -2989,6 +3203,11 @@ application:
       m303_m349_intracom_reconciliation_mismatch: For period %{period_code} %{filing_year},
         the intra-community total in modelo 303 (%{m303_total} EUR) and the total
         in modelo 349 (%{m349_total} EUR) differ by %{gap} EUR.
+      m390_prorrata_apartado_unrendered: 'Modelo 390 for %{filing_year}: your prorrata
+        register applies to this year (%{registered_activity_rows} activity row(s)),
+        but the form edition does not yet include the prorrata section (apartado 12),
+        so it would be exported with that section blank. You cannot verify or export
+        it yet.'
       madrid_nacimiento_adopcion_eligibility_advisory: Box [%{casilla_id}], with a
         weighted count of %{weighted_count}, may entitle you to the Madrid deduction
         for birth or adoption.
@@ -3852,14 +4071,20 @@ application:
         The stored session of the profile it replaces could not be removed. Close
         any program using the profile store and try again.
       registration_label_blank: The profile name cannot be empty.
+      rental_lease_has_ledger_rows: Lease %{row} is named by %{rows} ledger rows;
+        change or clear their link first with “%{door}”.
       rental_lease_property_missing: The lease names property %{inmueble}, which is
         not in your profile; add it first with “%{door}”.
+      rental_ledger_unreadable: The ledger of the profile could not be read, so the
+        removal was not made. Nothing was changed.
       rental_principal_missing: The principal property %{principal} is not another
         property in your profile; add it first with “%{door}”.
       rental_property_has_accessories: Property %{inmueble} is the principal of accessory
         properties (%{accessories}); change or clear their principal first with “%{door}”.
       rental_property_has_leases: Property %{inmueble} has leases (%{leases}); remove
         them first with “%{door}”.
+      rental_property_has_ledger_rows: Property %{row} is named by %{rows} ledger
+        rows; change or clear their link first with “%{door}”.
       rental_row_invalid: The fact “%{leaf}” is not valid or contradicts other facts
         of the record; nothing was stored. Correct it and repeat “%{door}”.
       rental_tenant_id_invalid: A tenant's tax ID is not valid; check its letters

@@ -110,11 +110,15 @@ class ModeloValue(BaseModel):
             raise FilingValidationError(
                 f"casilla {self.casilla_id!r}: value is None only for kind EMPTY; "
                 f"got kind={self.kind.value!r} with value={self.value!r}",
+                translated_message="errors.integrity.filing_value_kind_contradicts_value",
+                context={"casilla_id": str(self.casilla_id), "kind": self.kind.value},
             )
         if (self.formula_trace_casilla_ids is not None) is not (self.kind is ModeloValueKind.COMPUTED):
             raise FilingValidationError(
                 f"casilla {self.casilla_id!r}: formula_trace_casilla_ids is carried only for kind "
                 f"COMPUTED; got kind={self.kind.value!r} with trace={self.formula_trace_casilla_ids!r}",
+                translated_message="errors.integrity.filing_value_kind_contradicts_trace",
+                context={"casilla_id": str(self.casilla_id), "kind": self.kind.value},
             )
         return self
 
@@ -159,9 +163,15 @@ class ModeloBindingValue(BaseModel):
         if identity is None:
             return self
         if self.row_index is None:
-            raise FilingValidationError("binding row source identity requires a row index")
+            raise FilingValidationError(
+                "binding row source identity requires a row index",
+                translated_message="errors.integrity.filing_binding_row_source_needs_row",
+            )
         if identity.source_kind is not self.source:
-            raise FilingValidationError("binding row source identity must match the binding source kind")
+            raise FilingValidationError(
+                "binding row source identity must match the binding source kind",
+                translated_message="errors.integrity.filing_binding_row_source_kind_differs",
+            )
         return self
 
     @model_serializer(mode="wrap")
@@ -282,6 +292,8 @@ class ModeloApprovalBasis(BaseModel):
         if value != APPROVAL_BASIS_VERSION:
             raise FilingValidationError(
                 f"approval basis version {value!r} is not the current basis layout {APPROVAL_BASIS_VERSION!r}",
+                translated_message="errors.integrity.filing_approval_basis_version_stale",
+                context={"version": value, "current_version": APPROVAL_BASIS_VERSION},
             )
         return value
 
@@ -305,7 +317,11 @@ def _require_unique_casilla_coordinates(values: tuple[ModeloValue, ...]) -> None
     duplicate_casillas = sorted({key for key in casilla_ids if casilla_ids.count(key) > 1})
     if duplicate_casillas:
         listed = ", ".join(repr(key) for key in duplicate_casillas)
-        raise FilingValidationError(f"draft values claim a casilla more than once: {listed}")
+        raise FilingValidationError(
+            f"draft values claim a casilla more than once: {listed}",
+            translated_message="errors.integrity.filing_draft_casilla_claimed_twice",
+            context={"casillas": ", ".join(duplicate_casillas)},
+        )
 
 
 def _require_unique_binding_coordinates(binding_values: tuple[ModeloBindingValue, ...]) -> None:
@@ -314,7 +330,13 @@ def _require_unique_binding_coordinates(binding_values: tuple[ModeloBindingValue
     duplicate_bindings = sorted({key for key in binding_keys if binding_keys.count(key) > 1})
     if duplicate_bindings:
         listed = ", ".join(f"{binding_id!r} row {row_index!r}" for binding_id, row_index in duplicate_bindings)
-        raise FilingValidationError(f"draft binding_values claim a coordinate more than once: {listed}")
+        raise FilingValidationError(
+            f"draft binding_values claim a coordinate more than once: {listed}",
+            translated_message="errors.integrity.filing_draft_binding_claimed_twice",
+            context={
+                "bindings": ", ".join(f"{binding_id} (row {row_index})" for binding_id, row_index in duplicate_bindings)
+            },
+        )
 
 
 class ModeloDraft(BaseModel):
@@ -386,10 +408,13 @@ class ModeloDraft(BaseModel):
             raise FilingValidationError(
                 f"draft taxpayer identity diverges: profile_tax_id {self.profile_tax_id!r} "
                 f"and subject_tax_id {self.subject_tax_id!r} must name one taxpayer",
+                translated_message="errors.integrity.filing_draft_taxpayer_diverges",
             )
         if self.modelo != self.snapshot_ref.modelo:
             raise FilingValidationError(
                 f"draft modelo {self.modelo!r} does not match its snapshot_ref modelo {self.snapshot_ref.modelo!r}",
+                translated_message="errors.integrity.filing_draft_modelo_differs",
+                context={"modelo": str(self.modelo), "snapshot_modelo": str(self.snapshot_ref.modelo)},
             )
         expected_schema_version = registry_schema_version(
             modelo=self.snapshot_ref.modelo,
@@ -400,6 +425,8 @@ class ModeloDraft(BaseModel):
                 f"draft schema_version {self.schema_version!r} does not match the registry marker "
                 f"{expected_schema_version!r} derived from snapshot_ref "
                 f"(modelo={self.snapshot_ref.modelo!r}, revision={self.snapshot_ref.revision_id!r})",
+                translated_message="errors.integrity.filing_draft_schema_marker_differs",
+                context={"schema_version": self.schema_version, "expected_schema_version": expected_schema_version},
             )
         self._enforce_snapshot_period_coherence()
         self._enforce_collection_coordinate_uniqueness()
@@ -426,11 +453,18 @@ class ModeloDraft(BaseModel):
             raise FilingValidationError(
                 f"draft period filing year {self.period.filing_year!r} does not match its "
                 f"snapshot_ref modelo_year {self.snapshot_ref.modelo_year!r}",
+                translated_message="errors.integrity.filing_draft_period_year_differs",
+                context={
+                    "filing_year": str(self.period.filing_year),
+                    "snapshot_year": str(self.snapshot_ref.modelo_year),
+                },
             )
         if self.snapshot_ref.period != self.period.registry_token:
             raise FilingValidationError(
                 f"draft period token {self.period.registry_token!r} does not match its "
                 f"snapshot_ref period {self.snapshot_ref.period!r}",
+                translated_message="errors.integrity.filing_draft_period_token_differs",
+                context={"period": str(self.period.registry_token), "snapshot_period": str(self.snapshot_ref.period)},
             )
 
     def _enforce_collection_coordinate_uniqueness(self) -> None:

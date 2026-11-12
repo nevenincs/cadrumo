@@ -20,6 +20,8 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
@@ -30,6 +32,8 @@ from ....domain.iva.classification import (
 )
 from ....domain.iva.schema import IvaCategory
 from ..source_observations import iva_category_for_operation_type
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -70,7 +74,7 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
         rules = _classification_rules()
         declaring = _classifiable_categories(rules, consuming=PartyFact.IVA_IDENTIFICATION_STATE)
         mintable = _classifiable_categories(rules)
-        catalogue = resolve_iva_category_catalogue(authority=operation)
+        catalogue = resolve_iva_category_catalogue(authority=operation, effective_date=_ON_DATE)
         reported = {
             category
             for operation_key in (
@@ -82,6 +86,7 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
             for category in (
                 iva_category_for_operation_type(
                     IntracomOperationType(catalogue.operation_type(operation_key)),
+                    effective_date=_ON_DATE,
                 ),
             )
             if category is not None

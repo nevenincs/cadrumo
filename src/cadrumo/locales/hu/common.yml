@@ -3502,6 +3502,7 @@ desktop:
       actividad_economica: Gazdasági tevékenység
       arrendamiento_local: Üzlethelyiség bérlete
       arrendamiento_vivienda_afecto: Üzleti célú lakás bérlete
+      capital_inmobiliario: Ingatlan bérbeadása
       trabajo: Munkaviszony
     issue:
       next: Következő készültségi hiba

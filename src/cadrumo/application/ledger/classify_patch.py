@@ -13,6 +13,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ...domain.calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
@@ -41,7 +42,19 @@ from .recargo_regime import require_recargo_regime_for_purchase
 # The CSV columns that carry a value single classification also takes; the rest of the
 # columns are the row's identity, its classification and the usage ratio.
 _BULK_WIRE_COLUMNS = frozenset(
-    {"business_pct", "category_id", "taxable_base", "iva_rate", "iva_amount", "iva_category", "irpf_category", "notes"}
+    {
+        "business_pct",
+        "category_id",
+        "taxable_base",
+        "iva_rate",
+        "iva_amount",
+        "iva_category",
+        "irpf_category",
+        "arrendamiento_ref",
+        "inmueble_ref",
+        "gasto_capital_inmobiliario",
+        "notes",
+    }
 )
 
 
@@ -103,7 +116,17 @@ def _resolve_manual_authority_value(
         return require_iva_vehicle_use(value)
     if field_name == "counterparty_identification_state":
         return require_eu_member_state(value, authority=operation)
-    return value
+    return _resolve_rental_link_value(field_name, value, operation=operation)
+
+
+def _resolve_rental_link_value(field_name: str, value: str, *, operation: PinnedAuthorityOperation) -> object:
+    """Resolve a rental link field: a reference is trimmed, the expense concept is the registry's; blank clears."""
+    stated = value.strip()
+    if not stated:
+        return None
+    if field_name == "gasto_capital_inmobiliario":
+        return require_gasto_capital_inmobiliario(stated, authority=operation)
+    return stated if field_name in {"arrendamiento_ref", "inmueble_ref"} else value
 
 
 def _manual_spending_category(value: str, operation: PinnedAuthorityOperation) -> str | None:

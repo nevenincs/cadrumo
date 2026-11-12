@@ -16,7 +16,7 @@ from ..action_errors import (
     WorkUnitNotFoundError,
 )
 from ..preconditions import ModeloPreconditionFailure
-from ..work_addressing import ModeloWorkSelectorContradictionError
+from ..work_address_errors import ModeloWorkSelectorContradictionError
 from ..work_lifecycle_refusal_failures import (
     amendment_duplicate_failure,
     amendment_unchanged_failure,

@@ -171,6 +171,8 @@ def source_policy(kind: BindingSourceKind) -> SourcePolicyV1:
     except KeyError:
         raise UnclassifiedSourceKindError(
             f"binding source kind {kind.value!r} has no declared family",
+            translated_message="application.modelo.errors.binding_source_kind_unclassified",
+            context={"source_kind": kind.value},
             precondition_verdict=registry_defect_verdict("source_kind_family"),
         ) from None
     return SourcePolicyV1(source_kind=kind, family=family, override_policy=_override_policy(kind), surface=surface)

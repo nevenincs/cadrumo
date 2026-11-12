@@ -9,7 +9,6 @@ from threading import Lock
 from typing import TYPE_CHECKING, Final
 from weakref import ReferenceType, ref
 
-from ....core.time.clock import today_madrid
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .facts.string_mapping import (
     MappingValueWhitespace,
@@ -116,7 +115,7 @@ def _resolve_projections_uncached(
 
 def resolve_scoped_schema_projections(
     *,
-    effective_date: date | None,
+    effective_date: date,
     authority: GovernedFactSource | None,
 ) -> SchemaVocabularyProjections:
     """Resolve the shared schema-vocabulary projections from the explicit authority or the scope.
@@ -124,14 +123,14 @@ def resolve_scoped_schema_projections(
     Raises:
         InternalInvariantError: When no authority is supplied and no validation scope is active.
     """
-    selected_date = effective_date or today_madrid()
+    selected_date = effective_date
     selected = require_governed_fact_authority(authority, subject=SCHEMA_VOCABULARY_SUBJECT)
     return _resolve_projections(effective_date=selected_date, authority=selected)
 
 
 def resolve_scoped_schema_entries(
     *,
-    effective_date: date | None,
+    effective_date: date,
     authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
     """Return the shared schema-vocabulary entries, resolved as the projections are."""

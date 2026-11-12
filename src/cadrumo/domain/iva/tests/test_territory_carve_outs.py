@@ -37,9 +37,12 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..establishment import (
     StatedCountryCodeStatus,
@@ -48,6 +51,8 @@ from ..establishment import (
 )
 from ..schema import IvaTerritorialScope
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
@@ -55,7 +60,7 @@ def test_monaco_is_not_a_third_country() -> None:
     """The defect the table exists to prevent, asserted on the side where it exempts."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            "MC", operation=_authority_operation_for_test
+            "MC", operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) != IvaTerritorialScope.from_registry("third_country")
 
 
@@ -67,8 +72,8 @@ def test_monaco_resolves_exactly_as_france_does() -> None:
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            "MC", operation=_authority_operation_for_test
-        ) == territorial_scope_for_country("FR", operation=_authority_operation_for_test)
+            "MC", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == territorial_scope_for_country("FR", operation=_authority_operation_for_test, effective_date=_ON_DATE)
 
 
 def test_the_isle_of_man_resolves_exactly_as_the_united_kingdom_does() -> None:
@@ -80,8 +85,8 @@ def test_the_isle_of_man_resolves_exactly_as_the_united_kingdom_does() -> None:
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            "IM", operation=_authority_operation_for_test
-        ) == territorial_scope_for_country("GB", operation=_authority_operation_for_test)
+            "IM", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == territorial_scope_for_country("GB", operation=_authority_operation_for_test, effective_date=_ON_DATE)
 
 
 @pytest.mark.parametrize("code", ["AX", "GP", "MQ", "GF", "RE", "YT", "JE", "GG"])
@@ -93,7 +98,7 @@ def test_an_excluded_territory_is_a_third_territory(code: str) -> None:
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            code, operation=_authority_operation_for_test
+            code, operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("third_country")
 
 
@@ -108,7 +113,7 @@ def test_an_excluded_territory_does_not_inherit_its_member_state(code: str) -> N
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            code, operation=_authority_operation_for_test
+            code, operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) != IvaTerritorialScope.from_registry("eu_member")
 
 
@@ -127,7 +132,10 @@ def test_a_spanish_territory_code_establishes_nothing_and_is_not_a_gap(code: str
     "fix" the data. They are a decision, and now they say so.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert territorial_scope_for_country(code, operation=_authority_operation_for_test) is None
+        assert (
+            territorial_scope_for_country(code, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+            is None
+        )
         assert (
             stated_country_code_status(code, operation=_authority_operation_for_test)
             is StatedCountryCodeStatus.CATALOGUED
@@ -144,7 +152,9 @@ def test_a_spanish_territory_code_never_yields_a_spanish_scope(code: str) -> Non
     second authority on the Spanish territories.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert territorial_scope_for_country(code, operation=_authority_operation_for_test) not in {
+        assert territorial_scope_for_country(
+            code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) not in {
             IvaTerritorialScope.from_registry("es_mainland"),
             IvaTerritorialScope.from_registry("es_canarias"),
             IvaTerritorialScope.from_registry("es_ceuta_melilla"),
@@ -160,12 +170,15 @@ def test_the_carve_outs_do_not_disturb_the_ordinary_answers() -> None:
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
-            "FR", operation=_authority_operation_for_test
+            "FR", operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("eu_member")
         assert territorial_scope_for_country(
-            "FI", operation=_authority_operation_for_test
+            "FI", operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("eu_member")
         assert territorial_scope_for_country(
-            "US", operation=_authority_operation_for_test
+            "US", operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) == IvaTerritorialScope.from_registry("third_country")
-        assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
+        assert (
+            territorial_scope_for_country("ES", operation=_authority_operation_for_test, effective_date=_ON_DATE)
+            is None
+        )

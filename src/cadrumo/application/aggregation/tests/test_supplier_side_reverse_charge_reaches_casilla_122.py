@@ -30,6 +30,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.components import IvaComponentPresence, IvaKindApplicability
 from cadrumo.domain.iva.schema import IvaCategory
@@ -41,6 +42,8 @@ from ....domain.iva.components import (
 from ....domain.iva.flow import derive_flow_for_classification, is_deducible_flow
 from ....domain.iva.schema import InvoiceKind
 from .invoice_screen_resolution_support import resolved_for
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,8 +75,10 @@ def test_every_declared_category_base_only_flow_stays_outside_deduction_authorit
         and row.applicability == IvaKindApplicability.from_registry("arises")
         and row.base == IvaComponentPresence.from_registry("required")
         and row.cuota == IvaComponentPresence.from_registry("zero_by_law")
-        for flow in (derive_flow_for_classification(category=category, invoice_direction=kind),)
-        if is_deducible_flow(flow)
+        for flow in (
+            derive_flow_for_classification(category=category, invoice_direction=kind, effective_date=_ON_DATE),
+        )
+        if is_deducible_flow(flow, effective_date=_ON_DATE)
     }
 
     assert not wrongly_deducible

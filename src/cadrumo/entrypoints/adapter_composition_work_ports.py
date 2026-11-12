@@ -657,6 +657,7 @@ def build_verification_repository_bundle(
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+    from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
     from ..adapters.persistence.storage.attachment import AttachmentStore
@@ -708,6 +709,7 @@ def build_verification_repository_bundle(
             bucket_id=normalized_bucket_id, transaction_repository=transaction_repository, objects=objects
         ),
         credit_resolution=CreditResolutionRepositoryAdapter(objects=objects),
+        prorrata_register=ProrrataRegisterRepository(bucket_id=normalized_bucket_id, objects=objects),
         attachment=AttachmentStore(objects=objects),
     )
 

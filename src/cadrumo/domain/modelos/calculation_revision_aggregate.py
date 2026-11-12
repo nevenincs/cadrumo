@@ -80,14 +80,22 @@ def validate_calculation_revision_aggregate(
     motive = _require_rectificativa_motive(identity, work_unit, record_design)
     receipt = _require_target_receipt(identity, context, work_unit)
     if context.expected_taxpayer_tax_id is None:
-        raise ModeloValidationError("M303 rectificativa aggregate requires the authoritative taxpayer tax id")
+        raise ModeloValidationError(
+            "M303 rectificativa aggregate requires the authoritative taxpayer tax id",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if not receipt.matches_filing_target(
         modelo=Modelo("303").value,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         tax_id=context.expected_taxpayer_tax_id,
     ):
-        raise ModeloValidationError("M303 rectificativa justificante disagrees with the taxpayer or filing coordinate")
+        raise ModeloValidationError(
+            "M303 rectificativa justificante disagrees with the taxpayer or filing coordinate",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if receipt.presentation_id is None:
         raise ModeloValidationError(
             "M303 rectificativa justificante requires the original AEAT receipt number",

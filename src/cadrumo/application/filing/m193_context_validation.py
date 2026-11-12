@@ -40,6 +40,8 @@ def _context_wires(record: ExportRecordDefinition, wire: str) -> tuple[str, str,
     if len(wire) != max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields):
         raise FilingExportValidationError(
             "modelo 193 perceptor record is incomplete",
+            translated_message="application.filing.export.errors.record_incomplete",
+            context={"modelo": "193"},
             precondition_verdict=export_design_terminal(ExportRefusalReason.RECORD_INCOMPLETE),
         )
     filing_year, clave, pendiente, devengo = (
@@ -52,6 +54,8 @@ def _require_devengo_year_before_filing(devengo: str, filing_year: str) -> None:
     if not (_is_year(devengo) and _is_year(filing_year) and int(devengo) < int(filing_year)):
         raise FilingExportValidationError(
             "modelo 193 devengo year must be earlier than the declaration year",
+            translated_message="application.filing.export.errors.devengo_year_not_earlier",
+            context={"modelo": "193"},
             precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
         )
 
@@ -64,6 +68,7 @@ def require_m193_perceptor_devengo_context(record: ExportRecordDefinition, wire:
     if pendiente not in {" ", _M193_PENDING_MARK}:
         raise FilingExportValidationError(
             "modelo 193 pending mark must be blank or X",
+            translated_message="application.filing.export.errors.m193_pending_mark_invalid",
             precondition_verdict=export_design_terminal(ExportRefusalReason.MARK_UNREPRESENTABLE),
         )
     pending = pendiente == _M193_PENDING_MARK
@@ -71,11 +76,13 @@ def require_m193_perceptor_devengo_context(record: ExportRecordDefinition, wire:
     if (pending or devengo_filled) and clave not in _M193_DEVENGO_CLAVES:
         raise FilingExportValidationError(
             "modelo 193 pending mark and devengo year apply only to keys A, B and D",
+            translated_message="application.filing.export.errors.m193_pending_requires_key",
             precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
         )
     if pending and devengo_filled:
         raise FilingExportValidationError(
             "modelo 193 pending row has no devengo year",
+            translated_message="application.filing.export.errors.m193_pending_row_has_devengo",
             precondition_verdict=export_input_decision(ExportRefusalReason.RECORD_CONTEXT_CONTRADICTED),
         )
     if devengo_filled:
