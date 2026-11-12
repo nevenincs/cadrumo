@@ -20,6 +20,8 @@ from typing import Final
 from cadrumo.application.ledger.actions_import import LedgerProviderID
 from cadrumo.application.ledger.entry_options_operation import ENTRY_OPTION_LABEL_PREFIX
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+from cadrumo.domain.renta.retencion_soportada import certificate_figures
 
 _DEDUCTION_FACT: Final[str] = "0085-iva-deduction-applicability-catalogue.toml"
 _M210_FACT: Final[str] = "0080-detail-m349-m210-catalogues.toml"
@@ -75,6 +77,11 @@ ENTRY_OPTION_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         f"{ENTRY_OPTION_LABEL_PREFIX}deduction_fact_kind.": _ordered(_DEDUCTION_FACT, "kind.order", "kind.owner_only"),
         f"{ENTRY_OPTION_LABEL_PREFIX}m210_payer_mode.": _ordered(_M210_FACT, "m210.payer_mode_order"),
         f"{ENTRY_OPTION_LABEL_PREFIX}m210_income_concept.": _ordered(_M210_FACT, "m210.tipo_renta.order"),
+        f"{ENTRY_OPTION_LABEL_PREFIX}withholding_certificate_figure.": tuple(
+            dict.fromkeys(
+                figure.value for income_class in RetencionSoportadaClase for figure in certificate_figures(income_class)
+            )
+        ),
     }
 )
 

@@ -1303,6 +1303,14 @@ application:
       m210_payer_mode:
         multiple_payers_code_35: Varios pagadores (código 35)
         single_payer: Un pagador
+      withholding_certificate_figure:
+        gastos_deducibles: Gastos deducibles
+        importe_integro_dinerario: Importe íntegro dinerario
+        ingreso_a_cuenta: Ingreso a cuenta
+        ingreso_a_cuenta_repercutido: Ingreso a cuenta repercutido
+        reducciones_aplicables: Reducciones aplicables
+        retencion: Retención
+        valoracion_especie: Valoración en especie
     errors:
       evidence_attachment_requires_ids: Adjuntar un justificante a tus registros requiere
         evidencia de compra o identificadores de adjunto.
