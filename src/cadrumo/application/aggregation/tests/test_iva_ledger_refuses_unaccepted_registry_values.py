@@ -350,7 +350,15 @@ def test_an_undeclared_art_104_tres_exclusion_is_refused_not_dropped_from_the_vo
     accepted = _aggregate(admitted)
     assert accepted.issues == ()
     assert accepted.art_104_tres_excluded_ledger_ids == (admitted.transaction_id,)
-    assert accepted.observations == _aggregate(_row("excluded-admitted")).observations
+    # The admitted tag changes no amount; it rides on each observation so a box
+    # the law measures without such operations can leave the row out.
+    exclusion = Art104TresExclusion("foreign_permanent_establishment")
+    assert accepted.observations
+    assert all(observation.art_104_tres_exclusion == exclusion for observation in accepted.observations)
+    assert accepted.observations == tuple(
+        observation.model_copy(update={"art_104_tres_exclusion": exclusion})
+        for observation in _aggregate(_row("excluded-admitted")).observations
+    )
 
     stale = _stale(admitted, art_104_tres_exclusion=Art104TresExclusion("retired_exclusion"))
     refused = _aggregate(stale)

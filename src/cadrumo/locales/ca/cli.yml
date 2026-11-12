@@ -1040,6 +1040,7 @@ cli:
         period_help: 'Codi de període: 0A anual, 1T-4T trimestres, 01-12 mesos; per
           a models censals (036) usa alta, modificacion o baja.'
         readiness:
+          actividades_prorrata: activitats del registre de prorrata
           activo_extranjero: actiu estranger
           afiliado_cotizacion: afiliat de la relació de cotitzacions
           borrador_aeat: esborrany de l’AEAT

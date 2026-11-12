@@ -1028,6 +1028,7 @@ cli:
         period_help: 'Időszakkód: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási
           nyomtatványokhoz (036) használd: alta, modificacion vagy baja.'
         readiness:
+          actividades_prorrata: arányosítási nyilvántartás tevékenységei
           activo_extranjero: külföldi eszköz
           afiliado_cotizacion: járulék-kimutatás biztosítottja
           borrador_aeat: AEAT-tervezet

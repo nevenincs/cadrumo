@@ -1049,6 +1049,7 @@ cli:
         period_help: 'Código de periodo: 0A anual, 1T-4T trimestres, 01-12 meses;
           para modelos censales (036) usa alta, modificacion o baja.'
         readiness:
+          actividades_prorrata: actividades del registro de prorrata
           activo_extranjero: activo extranjero
           afiliado_cotizacion: afiliado de la relación de cotizaciones
           borrador_aeat: borrador de la AEAT
