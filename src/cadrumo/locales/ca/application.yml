@@ -2921,6 +2921,44 @@ application:
       m036_declaration_without_alta: 'No s''ha registrat res de la declaració del
         Modelo 036 %{declaration_id}: no hi ha cap alta registrada, així que una %{requested_event_kind}
         no té cap registre que canviar. Registra primer l''alta.'
+      m145_application_surfaces_mismatch: 'Els vincles d''aplicació que el registre
+        declara per al model 145 no coincideixen amb el contracte de la comunicació
+        al pagador, així que el registre de comunicació no es pot fer servir. És un
+        defecte del registre: res del que facis no el repara.'
+      m145_delivery_blocked_by_validation: El registre de comunicació del model 145
+        té %{issue_count} incidència(es) de validació, així que no es pot marcar com
+        a lliurat al pagador. Indica de nou el registre amb els valors corregits.
+      m145_export_blocked_by_validation: El registre de comunicació del model 145
+        té %{issue_count} incidència(es) de validació, així que no es pot exportar.
+        Indica de nou el registre amb els valors corregits.
+      m145_export_layout_format_unsupported: 'El disseny d''exportació %{export_layout_id}
+        declarat per al model 145 fa servir el format %{format}, que l''exportació
+        de la comunicació no pot escriure. És un defecte del registre: res del que
+        facis no el repara.'
+      m145_export_layout_mixed_encodings: 'El disseny d''exportació %{export_layout_id}
+        declarat per al model 145 barreja codificacions de caràcters entre els seus
+        registres, així que la comunicació no es pot exportar. És un defecte del registre:
+        res del que facis no el repara.'
+      m145_export_layout_shared_cells: 'El disseny d''exportació %{export_layout_id}
+        declarat per al model 145 escriuria una mateixa casella en cel·les sense relació,
+        així que la comunicació no es pot exportar. És un defecte del registre: res
+        del que facis no el repara.'
+      m145_export_layout_without_records: 'El disseny d''exportació %{export_layout_id}
+        declarat per al model 145 no declara cap registre, així que la comunicació
+        no es pot exportar. És un defecte del registre: res del que facis no el repara.'
+      m145_export_record_not_encodable: El registre d'exportació %{export_record_id}
+        de la comunicació no es pot escriure en el disseny oficial amb els valors
+        indicats. Indica de nou el registre amb valors que el disseny admeti.
+      m145_record_not_delivered: El registre de comunicació del model 145 és en l'estat
+        %{state}. Marca'l com a lliurat al pagador abans de marcar-lo com a completat
+        localment.
+      m145_record_registry_coordinate_not_current: El registre de comunicació del
+        model 145 es va desar amb una revisió del registre que ja no es pot confirmar
+        com a vigent, així que no es pot fer servir. Indica de nou el registre amb
+        el registre vigent.
+      m145_record_undeclared_casillas: El registre de comunicació anomena %{unknown_casilla_count}
+        casella(es) que la revisió del model 145 no declara. Indica de nou el registre
+        només amb caselles declarades.
       m200_accounting_result_required: El Model 200 necessita el resultat comptable
         de l'exercici abans de calcular-se a partir del llibre.
       m210_agrupacion_annual_code_not_lease_or_sublease: El Modelo 210 anual (període
@@ -3067,8 +3105,21 @@ application:
         declaració encara no està habilitada per a aquest model; reconcilia un justificant
         descarregat amb aeat app modelo reconcile import, o espera que aquest model
         estigui habilitat.
+      reconcile_divergence_casilla_undeclared: 'La comparació ha trobat una diferència
+        a la casella %{casilla_id}, que la revisió del registre no declara, així que
+        la diferència no té cap font legal on recolzar-se. És un defecte de la revisió
+        o del programa: res del que facis no el repara.'
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una declaració.
+      reconcile_observation_no_numeric_fields: La declaració capturada no conté cap
+        casella numèrica per comparar, així que no es pot conciliar. Tria una altra
+        prova.
+      reconcile_observation_not_comparable: La declaració capturada no conté caselles
+        comparables o no conté la identitat del contribuent, així que no es pot conciliar.
+        Tria una altra prova.
+      reconcile_observation_registry_not_current: La declaració capturada es va llegir
+        amb unes coordenades del registre que ja no són vigents, així que no es pot
+        conciliar. Tria una altra prova.
       refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{period}
         %{filing_year}, però la devolució només està disponible en l'últim període
         de declaració de l'any. Arrossega el crèdit (compensar) o tria la devolució

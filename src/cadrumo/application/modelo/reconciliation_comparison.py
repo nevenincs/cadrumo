@@ -11,8 +11,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.errors.hierarchy import CadrumoError
+from ...domain.modelos.errors import ModeloError
 from .reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
 from .reconciliation_records import ModeloReconciliationAdvisory, ModeloReconciliationDiff, ModeloReconciliationDiffKind
+from .reconciliation_refusal_doors import reconciliation_undeclared_difference_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -25,13 +27,15 @@ if TYPE_CHECKING:
     from .reconciliation_parsing import ReconciliationDeclaracionObservation
 
 
-class ReconciliationDeclaracionSourceUnsupportedError(CadrumoError):
+class ReconciliationDeclaracionSourceUnsupportedError(ModeloError):
     """Raised when a declaración reconcile targets a modelo not yet enrolled.
 
     Casilla-level declaración reconciliation is enrolled one modelo at a time
     through the registry role
     :data:`cadrumo.application.modelo.reconciliation.DECLARATION_RECONCILE_ROLE`; an unenrolled modelo
     refuses cleanly rather than silently degrading to a header-only compare.
+    Each raise site states its door: an unenrolled source is the operator's
+    decision, a difference in a box the revision does not declare is terminal.
     """
 
 
@@ -385,11 +389,12 @@ def _casilla_divergence_diff(
     casilla = revision_casillas.get(divergence.casilla_id)
     if casilla is None:
         raise ReconciliationDeclaracionSourceUnsupportedError(
-            translated_message="errors.refused.reconciliation_declaration_source_unsupported",
+            translated_message="application.modelo.errors.reconcile_divergence_casilla_undeclared",
             context={
                 "casilla_id": divergence.casilla_id,
                 "declared_by_revision": False,
             },
+            precondition_verdict=reconciliation_undeclared_difference_verdict(divergence.casilla_id),
         )
     legal_refs = tuple(casilla.legal_refs)
     source_refs = tuple(casilla.source_refs)

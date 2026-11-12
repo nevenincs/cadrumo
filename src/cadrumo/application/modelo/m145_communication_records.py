@@ -448,6 +448,7 @@ def snapshot_for_scope(
         raise M145CommunicationRecordValidationError(
             f"Modelo 145 communication record expected surfaces {expected!r}; got {got!r}",
             context={"expected_surfaces": expected, "declared_surfaces": got},
+            translated_message="application.modelo.errors.m145_application_surfaces_mismatch",
             precondition_verdict=m145_registry_defect_verdict(
                 "application_surfaces",
                 {"expected_surfaces": ", ".join(expected), "declared_surfaces": ", ".join(got)},
@@ -467,6 +468,7 @@ def _require_m145_record_coordinates_current(
         raise M145CommunicationRecordValidationError(
             "Modelo 145 record registry coordinate cannot be re-confirmed: "
             f"{record.registry_snapshot_ref.revision_id}: {outcome.detail}",
+            translated_message="application.modelo.errors.m145_record_registry_coordinate_not_current",
             precondition_verdict=m145_record_decision_verdict(
                 "record_registry_coordinate", {"revision_id": str(record.registry_snapshot_ref.revision_id)}
             ),
@@ -836,6 +838,7 @@ def _render_m145_export_record(
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export record {record_definition.id!r} could not be rendered: {exc}",
             context={"export_record_id": record_definition.id, "reason": "canonical_fixed_width_encoder"},
+            translated_message="application.modelo.errors.m145_export_record_not_encodable",
             precondition_verdict=m145_record_decision_verdict(
                 "record_encodable", {"export_record_id": str(record_definition.id)}
             ),
@@ -878,6 +881,7 @@ def export_m145_communication_record(
                 "issue_count": validation.issue_count,
                 "issue_kinds": tuple(issue.kind.value for issue in validation.issues),
             },
+            translated_message="application.modelo.errors.m145_export_blocked_by_validation",
             precondition_verdict=m145_record_decision_verdict(
                 "record_valid",
                 {"issue_count": validation.issue_count, "issue_kinds": _validation_issue_summary(validation)},
@@ -900,6 +904,7 @@ def export_m145_communication_record(
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export layout {layout.id!r} uses unsupported format {layout.format!r}",
             context={"export_layout_id": layout.id, "format": layout.format, "reason": "unsupported_format"},
+            translated_message="application.modelo.errors.m145_export_layout_format_unsupported",
             precondition_verdict=m145_registry_defect_verdict(
                 "export_layout_format", {"export_layout_id": str(layout.id), "format": str(layout.format)}
             ),
@@ -909,6 +914,7 @@ def export_m145_communication_record(
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export layout {layout.id!r} declares no records",
             context={"export_layout_id": layout.id, "reason": "no_records"},
+            translated_message="application.modelo.errors.m145_export_layout_without_records",
             precondition_verdict=m145_registry_defect_verdict(
                 "export_layout_records", {"export_layout_id": str(layout.id)}
             ),
@@ -918,6 +924,7 @@ def export_m145_communication_record(
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export layout {layout.id!r} declares mixed encodings: {sorted(encodings)!r}",
             context={"export_layout_id": layout.id, "encodings": tuple(sorted(encodings)), "reason": "encodings"},
+            translated_message="application.modelo.errors.m145_export_layout_mixed_encodings",
             precondition_verdict=m145_registry_defect_verdict(
                 "export_layout_encoding", {"export_layout_id": str(layout.id)}
             ),
@@ -928,6 +935,7 @@ def export_m145_communication_record(
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export layout {layout.id!r} would write one box into unrelated cells",
             context={"export_layout_id": layout.id, "reason": "shared_casilla_cells_unadjudicated"},
+            translated_message="application.modelo.errors.m145_export_layout_shared_cells",
             precondition_verdict=m145_registry_defect_verdict(
                 "shared_casilla_cells", {"export_layout_id": str(layout.id)}
             ),
@@ -1025,6 +1033,7 @@ def mark_m145_communication_record_delivered_to_payer(
                 "issue_count": validation.issue_count,
                 "issue_kinds": tuple(issue.kind.value for issue in validation.issues),
             },
+            translated_message="application.modelo.errors.m145_delivery_blocked_by_validation",
             precondition_verdict=m145_record_decision_verdict(
                 "record_valid",
                 {"issue_count": validation.issue_count, "issue_kinds": _validation_issue_summary(validation)},
@@ -1085,6 +1094,8 @@ def mark_m145_communication_record_locally_completed(
         raise M145CommunicationRecordTransitionError(
             "Modelo 145 communication record must be delivered to payer before local completion",
             context={"communication_record_id": record.communication_record_id, "state": record.state.value},
+            translated_message="application.modelo.errors.m145_record_not_delivered",
+            precondition_verdict=m145_record_decision_verdict("record_delivered", {"state": record.state.value}),
         )
     transitioned_at = now()
     transitioned = _m145_communication_record_with_updates(
@@ -1137,6 +1148,7 @@ def create_m145_communication_record(
         raise M145CommunicationRecordValidationError(
             f"Modelo 145 communication record contains undeclared casilla ids: {unknown!r}",
             context={"unknown_casilla_count": len(unknown), "unknown_casillas": unknown},
+            translated_message="application.modelo.errors.m145_record_undeclared_casillas",
             precondition_verdict=m145_record_decision_verdict(
                 "record_casillas", {"unknown_casilla_count": len(unknown)}
             ),
