@@ -71,6 +71,20 @@ flows:
     field_unavailable: Camp de perfil no disponible
     help:
       about: 'Sobre aquest ajust:'
+    household:
+      close: Tanca
+      full: Aquest grup és ple, així que no es poden afegir més persones.
+      read_again: Torna a llegir
+      read_failed: No s'ha pogut llegir la teva família. Torna-la a llegir per provar-ho
+        de nou.
+      reading: Llegint la teva família…
+      state_none_declared: Has indicat que no n'hi ha cap.
+      state_not_served: El teu perfil no ofereix aquest grup.
+      state_unknown: No hi ha res registrat per a aquest grup. Això no és el mateix
+        que cap.
+      title: Família
+      unknown_outcome: Pot ser que el canvi s'hagi desat, o no. Torna a llegir la
+        teva família abans de canviar res més.
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}
