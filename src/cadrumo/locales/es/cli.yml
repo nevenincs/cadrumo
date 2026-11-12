@@ -3583,6 +3583,10 @@ cli:
         o totalmente privada; quita --business-pct o pasa --classification MIXED.
       classification_help: Estado de clasificación profesional del movimiento
       classification_required: --classification es obligatorio cuando no se usa --file.
+      concepto_capital_mobiliario_help: Qué es la fila dentro de su posición de ahorro,
+        uno de los conceptos que declara el registro; un valor desconocido se rechaza
+        con los admitidos. Necesita una posición vinculada (--posicion). Un texto
+        en blanco lo quita.
       counterparty_country_help: País de establecimiento de la contraparte (ISO 3166-1
         alfa-2, p. ej. US, DE). Solo establecimiento; para la identificación a efectos
         de IVA usa --counterparty-identification-state.
@@ -3666,6 +3670,9 @@ cli:
       mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
         profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
         como BUSINESS o PERSONAL.
+      posicion_help: Clave de fila de la posición de ahorro guardada a la que pertenece
+        esta fila. No junto con --arrendamiento ni --inmueble. Un texto en blanco
+        quita el vínculo. Una fila vinculada lleva la categoría de renta capital_mobiliario.
       read_evidence_help: Lee en local la evidencia adjunta de la transacción y la
         pasa al clasificador.
       reaffirm_help: Reafirmar la clasificación de una transacción ya clasificada.

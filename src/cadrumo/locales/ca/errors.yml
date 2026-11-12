@@ -2260,6 +2260,10 @@ errors:
       perfil. Consulta'ls amb «{door}».
     rental_link_category: Una fila vinculada a un arrendament o a un immoble ha de
       portar la categoria de renda {category}; indica-la amb «{door}» i --irpf-category.
+    savings_link_category: Una fila vinculada a una posició d'estalvi ha de portar
+      la categoria de renda {category}; indica-la amb «{door}» i --irpf-category.
+    savings_concept_unknown: '--concepto-capital-mobiliario {value!r} no reconegut. Conceptes
+      admesos: {accepted}.'
     rental_property_unknown: L'immoble {ref} no és cap dels immobles del teu perfil.
       Consulta'ls amb «{door}».
     unknown_ledger_provider: 'Proveïdor de llibre {provider!r} desconegut. Proveïdors

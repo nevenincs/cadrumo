@@ -99,12 +99,14 @@ SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset(
     {
         "accrual_date",
         "arrendamiento_ref",
+        "concepto_capital_mobiliario",
         "gasto_capital_inmobiliario",
         "inmueble_ref",
         "investment_asset_id",
         "iva_vehicle_use",
         "operation_date",
         "own_account_id",
+        "posicion_ref",
     }
 )
 
@@ -554,6 +556,8 @@ def transaction_from_command(
         "arrendamiento_ref": command.arrendamiento_ref,
         "inmueble_ref": command.inmueble_ref,
         "gasto_capital_inmobiliario": command.gasto_capital_inmobiliario,
+        "posicion_ref": command.posicion_ref,
+        "concepto_capital_mobiliario": command.concepto_capital_mobiliario,
         "counterparty_country": command.counterparty_country,
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,

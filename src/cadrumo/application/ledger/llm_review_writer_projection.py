@@ -132,6 +132,12 @@ def project_ledger_llm_writer_result(
                 if result.transaction.gasto_capital_inmobiliario is not None
                 else None
             ),
+            posicion_ref=result.transaction.posicion_ref,
+            concepto_capital_mobiliario=(
+                str(result.transaction.concepto_capital_mobiliario)
+                if result.transaction.concepto_capital_mobiliario is not None
+                else None
+            ),
             review_status=payload.review_status,
             bucket_event_ids=result.bucket_event_ids,
         )

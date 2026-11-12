@@ -2078,6 +2078,10 @@ errors:
       List them with “{door}”.
     rental_link_category: A row linked to a lease or a property must carry the income
       category {category}; set it with “{door}” and --irpf-category.
+    savings_link_category: A row linked to a savings position must carry the income
+      category {category}; set it with “{door}” and --irpf-category.
+    savings_concept_unknown: 'Unrecognised --concepto-capital-mobiliario {value!r}. Accepted
+      concepts: {accepted}.'
     rental_property_unknown: The property {ref} is not one of the properties in your
       profile. List them with “{door}”.
     unknown_ledger_provider: 'Unknown ledger provider {provider!r}. Recognised providers:

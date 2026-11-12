@@ -12,6 +12,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.capital_mobiliario_facts import require_concepto_capital_mobiliario
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...domain.calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -53,6 +54,8 @@ _BULK_WIRE_COLUMNS = frozenset(
         "arrendamiento_ref",
         "inmueble_ref",
         "gasto_capital_inmobiliario",
+        "posicion_ref",
+        "concepto_capital_mobiliario",
         "notes",
     }
 )
@@ -116,6 +119,13 @@ def _resolve_manual_authority_value(
         return require_iva_vehicle_use(value)
     if field_name == "counterparty_identification_state":
         return require_eu_member_state(value, authority=operation)
+    if field_name == "concepto_capital_mobiliario":
+        stated = value.strip()
+        return (
+            require_concepto_capital_mobiliario(stated, effective_date=current.raw.booked_date, authority=operation)
+            if stated
+            else None
+        )
     return _resolve_rental_link_value(field_name, value, operation=operation)
 
 
@@ -126,7 +136,7 @@ def _resolve_rental_link_value(field_name: str, value: str, *, operation: Pinned
         return None
     if field_name == "gasto_capital_inmobiliario":
         return require_gasto_capital_inmobiliario(stated, authority=operation)
-    return stated if field_name in {"arrendamiento_ref", "inmueble_ref"} else value
+    return stated if field_name in {"arrendamiento_ref", "inmueble_ref", "posicion_ref"} else value
 
 
 def _manual_spending_category(value: str, operation: PinnedAuthorityOperation) -> str | None:

@@ -3556,6 +3556,10 @@ cli:
         privada; treu --business-pct o passa --classification MIXED.
       classification_help: Estat de classificació professional del moviment
       classification_required: --classification és obligatori quan no s'usa --file.
+      concepto_capital_mobiliario_help: Què és la fila dins de la seva posició d'estalvi,
+        un dels conceptes que declara el registre; un valor desconegut es rebutja
+        amb els admesos. Necessita una posició vinculada (--posicion). Un text en
+        blanc el treu.
       counterparty_country_help: País d'establiment de la contrapart (ISO 3166-1 alfa-2,
         p. ex. US, DE). Només establiment; per a la identificació a efectes d'IVA
         fes servir --counterparty-identification-state.
@@ -3641,6 +3645,9 @@ cli:
       mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
         professional. Passa --business-pct amb un valor de 0 a 1, o classifica la
         fila com a BUSINESS o PERSONAL.
+      posicion_help: Clau de fila de la posició d'estalvi desada a la qual pertany
+        aquesta fila. No juntament amb --arrendamiento ni --inmueble. Un text en blanc
+        treu el vincle. Una fila vinculada porta la categoria de renda capital_mobiliario.
       read_evidence_help: Llegeix en local l'evidència adjunta de la transacció i
         la passa al classificador.
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.

@@ -28,6 +28,7 @@ from .app_ledger_command_spec_policies import (
 )
 from .app_ledger_command_spec_support import (
     LEDGER_RENTAL_LINK_OPTIONS,
+    LEDGER_SAVINGS_LINK_OPTIONS,
     boolean_flag_option,
     irpf_category_option,
     option_from_application_contract,
@@ -151,6 +152,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "cli.ledger.classify.counterparty_identification_state_help",
             ),
             *LEDGER_RENTAL_LINK_OPTIONS,
+            *LEDGER_SAVINGS_LINK_OPTIONS,
             optional_text_option("actor", ("--actor",), "cli.ledger.add.actor_help"),
             boolean_flag_option("reaffirm", ("--reaffirm",), "cli.ledger.classify.reaffirm_help"),
             boolean_flag_option("llm", ("--llm",), "cli.ledger.classify.llm_help"),

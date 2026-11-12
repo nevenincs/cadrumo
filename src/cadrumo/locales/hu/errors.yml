@@ -2132,6 +2132,11 @@ errors:
     rental_link_category: A bérleti szerződéshez vagy ingatlanhoz kapcsolt sornak
       a(z) {category} jövedelemkategóriát kell viselnie; add meg az «{door}» paranccsal
       és a --irpf-category kapcsolóval.
+    savings_link_category: A megtakarítási pozícióhoz kapcsolt sornak a(z) {category}
+      jövedelemkategóriát kell viselnie; add meg az «{door}» paranccsal és a --irpf-category
+      kapcsolóval.
+    savings_concept_unknown: 'Ismeretlen --concepto-capital-mobiliario {value!r}. Elfogadott
+      fogalmak: {accepted}.'
     rental_property_unknown: A(z) {ref} ingatlan nem szerepel a profilodban. Az ingatlanokat
       az «{door}» paranccsal listázhatod.
     unknown_ledger_provider: 'Ismeretlen főkönyv-szolgáltató: {provider!r}. Elismert

@@ -39,6 +39,8 @@ LedgerClassifyPatchField = Literal[
     "arrendamiento_ref",
     "inmueble_ref",
     "gasto_capital_inmobiliario",
+    "posicion_ref",
+    "concepto_capital_mobiliario",
     "notes",
 ]
 
@@ -62,6 +64,8 @@ CLASSIFY_FIELD_NAMES = frozenset(
         "arrendamiento_ref",
         "inmueble_ref",
         "gasto_capital_inmobiliario",
+        "posicion_ref",
+        "concepto_capital_mobiliario",
         "notes",
     },
 )
@@ -69,7 +73,7 @@ CLASSIFY_FIELD_NAMES = frozenset(
 CLASSIFY_UNCLEARABLE_FIELD_NAMES = frozenset({"business_classification", "notes"})
 """Selected fields a classification can replace but never blank: the writer requires a value for each."""
 
-_ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=19)]
+_ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_length=1, max_length=21)]
 
 LedgerClassifyDecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 
@@ -110,6 +114,8 @@ class LedgerClassifyPatch(BaseModel):
     arrendamiento_ref: LedgerClassifyShortText | None = None
     inmueble_ref: LedgerClassifyShortText | None = None
     gasto_capital_inmobiliario: LedgerClassifyShortText | None = None
+    posicion_ref: LedgerClassifyShortText | None = None
+    concepto_capital_mobiliario: LedgerClassifyShortText | None = None
     notes: LedgerClassifyLongText | None = None
 
     @field_validator("business_classification")

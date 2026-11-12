@@ -48,6 +48,8 @@ CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "arrendamiento_ref",
     "inmueble_ref",
     "gasto_capital_inmobiliario",
+    "posicion_ref",
+    "concepto_capital_mobiliario",
     "art_104_tres_exclusion",
     "input_classification",
     "prorrata_sector_id",

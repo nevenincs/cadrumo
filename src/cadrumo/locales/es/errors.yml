@@ -2240,6 +2240,10 @@ errors:
       tu perfil. Consúltalos con «{door}».
     rental_link_category: Una fila vinculada a un arrendamiento o a un inmueble debe
       llevar la categoría de renta {category}; indícala con «{door}» y --irpf-category.
+    savings_link_category: Una fila vinculada a una posición de ahorro debe llevar
+      la categoría de renta {category}; indícala con «{door}» y --irpf-category.
+    savings_concept_unknown: '--concepto-capital-mobiliario {value!r} no reconocido. Conceptos
+      admitidos: {accepted}.'
     rental_property_unknown: El inmueble {ref} no es uno de los inmuebles de tu perfil.
       Consúltalos con «{door}».
     unknown_ledger_provider: 'Proveedor de libro {provider!r} desconocido. Proveedores

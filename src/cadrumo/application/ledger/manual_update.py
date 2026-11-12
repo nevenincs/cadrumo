@@ -770,6 +770,10 @@ def command_from_patch(
     gasto_capital_inmobiliario = optional_patched(
         patch, patch_fields, "gasto_capital_inmobiliario", current.gasto_capital_inmobiliario
     )
+    posicion_ref = optional_patched(patch, patch_fields, "posicion_ref", current.posicion_ref)
+    concepto_capital_mobiliario = optional_patched(
+        patch, patch_fields, "concepto_capital_mobiliario", current.concepto_capital_mobiliario
+    )
     counterparty_country = optional_patched(patch, patch_fields, "counterparty_country", current.counterparty_country)
     counterparty_identification_state = optional_patched(
         patch, patch_fields, "counterparty_identification_state", current.counterparty_identification_state
@@ -818,6 +822,8 @@ def command_from_patch(
         arrendamiento_ref=arrendamiento_ref,
         inmueble_ref=inmueble_ref,
         gasto_capital_inmobiliario=gasto_capital_inmobiliario,
+        posicion_ref=posicion_ref,
+        concepto_capital_mobiliario=concepto_capital_mobiliario,
         counterparty_country=counterparty_country,
         counterparty_identification_state=counterparty_identification_state,
         source_jurisdiction=(

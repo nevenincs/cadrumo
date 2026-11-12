@@ -18,6 +18,7 @@ from ...core.parsing.dates import require_iso8601_date
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.capital_mobiliario_facts import require_concepto_capital_mobiliario
 from ...domain.calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
@@ -121,6 +122,14 @@ def prepare_ledger_add_command(
         gasto_capital_inmobiliario=(
             require_gasto_capital_inmobiliario(payload.gasto_capital_inmobiliario, authority=operation)
             if payload.gasto_capital_inmobiliario is not None and payload.gasto_capital_inmobiliario.strip()
+            else None
+        ),
+        posicion_ref=payload.posicion_ref,
+        concepto_capital_mobiliario=(
+            require_concepto_capital_mobiliario(
+                payload.concepto_capital_mobiliario, effective_date=booked_date, authority=operation
+            )
+            if payload.concepto_capital_mobiliario is not None and payload.concepto_capital_mobiliario.strip()
             else None
         ),
         recargo_amount=recargo_amount,

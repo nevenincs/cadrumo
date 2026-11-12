@@ -3526,6 +3526,10 @@ cli:
       classification_help: A tranzakció üzleti besorolási állapota.
       classification_required: A --classification megadása kötelező, ha a --file nincs
         megadva.
+      concepto_capital_mobiliario_help: Mi a sor a megtakarítási pozíción belül, a
+        nyilvántartás által deklarált fogalmak egyike; ismeretlen értéket az elfogadottak
+        felsorolásával utasít el. Pozíciókapcsolat (--posicion) szükséges hozzá. Üres
+        szöveg törli.
       counterparty_country_help: Az ügyfél letelepedési országa (ISO 3166-1 alfa-2,
         például US, DE). Csak letelepedés; az áfa-azonosításhoz használd a --counterparty-identification-state
         kapcsolót.
@@ -3607,6 +3611,10 @@ cli:
       mixed_requires_business_pct: Elutasítva. A --classification MIXED értékhez üzleti
         arány szükséges. Adj meg --business-pct értéket 0 és 1 között, vagy sorold
         be a sort BUSINESS vagy PERSONAL kategóriába.
+      posicion_help: A tárolt megtakarítási pozíció sorkulcsa, amelyhez ez a sor tartozik.
+        Nem használható a --arrendamiento vagy az --inmueble kapcsolóval együtt. Üres
+        szöveg törli a kapcsolatot. A kapcsolt sor a capital_mobiliario jövedelemkategóriát
+        viseli.
       read_evidence_help: Olvasd be helyben a tranzakció csatolt bizonyítékát, és
         add át az osztályozónak.
       reaffirm_help: Egy már besorolt tranzakció besorolásának megerősítése.

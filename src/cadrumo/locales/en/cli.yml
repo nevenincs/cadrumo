@@ -3324,6 +3324,10 @@ cli:
         drop --business-pct, or pass --classification MIXED.
       classification_help: Business classification state for the transaction
       classification_required: --classification is required when --file is not provided.
+      concepto_capital_mobiliario_help: What the row is within its savings position,
+        one of the concepts the registry declares; an unknown value is refused with
+        the accepted ones. Needs a position link (--posicion). Blank text removes
+        it.
       counterparty_country_help: Country where the counterparty is established (ISO
         3166-1 alpha-2, e.g. US, DE). Establishment only; use --counterparty-identification-state
         for VAT identification.
@@ -3401,6 +3405,9 @@ cli:
       mixed_requires_business_pct: Refused. --classification MIXED needs a business
         share. Pass --business-pct with a value from 0 to 1, or classify the row as
         BUSINESS or PERSONAL instead.
+      posicion_help: Row key of the stored savings position this row belongs to. Not
+        together with --arrendamiento or --inmueble. Blank text removes the link.
+        A linked row carries the income category capital_mobiliario.
       read_evidence_help: Read the transaction's attached evidence on-host and feed
         it to the classifier.
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
