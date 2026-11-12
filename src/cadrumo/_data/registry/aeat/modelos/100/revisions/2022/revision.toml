@@ -55,6 +55,17 @@ source_refs = [
     "boe-modelo-100-2022-form",
 ]
 
+[[revisions."2022".family_overrides]]
+family = "formulas"
+selector = { revision = "2021", id = "renta-trabajo-otros-gastos" }
+sequence_additions = {"expression.args" = [{parameter = "renta-trabajo-otros-gastos-cuantia-general"}]}
+sequence_removals = {"expression.args" = [0]}
+
+[[revisions."2022".family_overrides]]
+family = "constructs"
+selector = {revision = "2021", id = "renta-mini-model-trabajo"}
+sequence_additions = {formulas = ["renta-trabajo-reduccion-gastos-generales", "renta-trabajo-rentas-distintas-del-trabajo"]}
+
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0001" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:84 y aeat-dr-100-2022-dictionary:84: campo TITA, tipo TIT, atributo titular de TomaDatosAmpliada; el mismo titular de los rendimientos del trabajo en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
@@ -145,7 +156,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0023" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:106 y aeat-dr-100-2022-dictionary:107: TPRRT, ruta /DatosEconomicos/Resultados/RdtoTrabajoRes/TPRRT, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:106 y aeat-dr-100-2022-dictionary:107: TPRRT, ruta /DatosEconomicos/Resultados/RdtoTrabajoRes/TPRRT, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "computed", formula = "renta-trabajo-reduccion-gastos-generales" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0025" }

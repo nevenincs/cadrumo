@@ -25,7 +25,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, BracketKind, ParameterDefinition
 from cadrumo.domain.calculations.registry.temporal import select_revision_for_year
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
@@ -51,7 +51,11 @@ def _edition_for(year: int) -> ModeloRevision:
 
 
 def _scales(revision: ModeloRevision) -> Iterable[ParameterDefinition]:
-    return (parameter for parameter in revision.parameters if parameter.data_type == "bracket_table")
+    return (
+        parameter
+        for parameter in revision.parameters
+        if parameter.data_type == "bracket_table" and parameter.bracket_kind is BracketKind.PROGRESSIVE
+    )
 
 
 def _in_force(parameter: ParameterDefinition, on: date) -> tuple[BracketEntry, ...]:

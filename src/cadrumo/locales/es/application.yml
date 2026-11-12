@@ -3348,6 +3348,10 @@ application:
         complete_profile_setup: Declara completa la configuración del perfil
         open_profile_field: Rellena %{field}
     projection_words:
+        income_family_contradicts_profile: Esta casilla compara tus demás rentas con
+          el límite, pero las categorías de renta que indicaste excluyen un tipo de
+          renta del que tienes importes. Corrige las categorías o retira los importes
+          y vuelve a proyectar. Nunca se muestra como cero.
       binding_unresolved: No se ha podido sacar ningún valor para esta cifra a partir
         de tus registros, así que queda sin resolver en lugar de contar como cero.
         Registra la evidencia que falta y vuelve a proyectar.

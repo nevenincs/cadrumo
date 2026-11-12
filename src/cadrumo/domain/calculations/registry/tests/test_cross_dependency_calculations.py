@@ -714,6 +714,9 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             # Production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),
@@ -815,6 +818,9 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
             # Production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),
@@ -912,6 +918,9 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             # Production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),

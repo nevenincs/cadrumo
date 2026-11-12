@@ -1001,6 +1001,9 @@ class TestWorkflowInputMismatchError:
 
     def _make_provider(
         self,
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
         operation: PinnedAuthorityOperation,
         modelo: str = "100",
         period: str = "0A",

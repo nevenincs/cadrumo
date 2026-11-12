@@ -3175,6 +3175,10 @@ application:
         complete_profile_setup: Declare the profile setup complete
         open_profile_field: Fill in %{field}
     projection_words:
+        income_family_contradicts_profile: This box compares your other income with
+          the limit, but the income categories you stated exclude a kind of income
+          that you have figures for. Correct the categories or remove the figures,
+          then project again. It is never shown as zero.
       binding_unresolved: No value could be worked out for this figure from your records,
         so it stays unresolved instead of counting as zero. Record the missing evidence,
         then project again.

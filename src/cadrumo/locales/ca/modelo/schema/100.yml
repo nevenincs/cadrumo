@@ -8302,6 +8302,8 @@ modelo:
                 en aquest únic període impositiu (base sobre la qual s'aplica la reducció
                 del 30 per 100 de l'article 32.1 de la Llei de l'Impost; import declarat
                 per l'operador - vegeu la casella [1554])
+            rentas-distintas-del-trabajo:
+              label: Rendes diferents de les del treball (límit de l'art. 20) [interna]
           construct:
             renta-dependent-modelos:
               field:

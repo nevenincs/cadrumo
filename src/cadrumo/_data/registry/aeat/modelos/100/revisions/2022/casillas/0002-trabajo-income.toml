@@ -1,0 +1,17 @@
+# The rentas other than work income that LIRPF art. 20 weighs against its 6.500 euros limit. The
+# Manual practico defines them as the algebraic sum of the net capital, activity, imputed and
+# capital-gain income, before reductions and without integration or compensation. No box of the
+# return holds that sum, so it is an internal node.
+[[revisions."2022".casillas]]
+id = "rentas-distintas-del-trabajo"
+number = "rentas-distintas-del-trabajo"
+section = ["resultados", "rdto_trabajo_res"]
+semantic_role = "irpf_trabajo_rentas_distintas_del_trabajo"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Internal operand of the art. 20 LIRPF other-income limit; the AEAT record design has no box for it, so it files nowhere."
+input_kind = "computed"
+formula = "renta-trabajo-rentas-distintas-del-trabajo"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["lirpf-cuota-chain-authority"]

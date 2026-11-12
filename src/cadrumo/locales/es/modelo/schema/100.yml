@@ -8413,6 +8413,8 @@ modelo:
                 en este único período impositivo (base sobre la que se aplica la reducción
                 del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
                 por el operador - véase la casilla [1554])
+            rentas-distintas-del-trabajo:
+              label: Rentas distintas de las del trabajo (límite del art. 20) [interna]
           construct:
             renta-dependent-modelos:
               field:

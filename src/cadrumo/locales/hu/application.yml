@@ -3304,6 +3304,10 @@ application:
         complete_profile_setup: Nyilvánítsd befejezettnek a profil beállítását
         open_profile_field: 'Töltsd ki: %{field}'
     projection_words:
+        income_family_contradicts_profile: Ez a rovat a többi jövedelmedet veti össze
+          a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
+          amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
+          összegeket, majd vetíts újra. Soha nem jelenik meg nullaként.
       binding_unresolved: Ehhez az értékhez a nyilvántartásaidból nem sikerült értéket
         kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó
         igazolást, majd vetíts újra.

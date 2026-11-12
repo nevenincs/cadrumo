@@ -212,6 +212,9 @@ _BASE_BINDINGS: dict[str, Decimal] = {
     "renta-profile-declaration-type": Decimal("1"),
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
     "renta-profile-has-economic-activity": Decimal("1"),
+    "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+    "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+    "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
     "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
 }

@@ -200,6 +200,9 @@ def _scenario_2025(
         inputs=inputs,
         binding_values={
             "renta-profile-has-economic-activity": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             # declaration_type = 1 (individual) → 0461 = 0 by default in all base scenarios
             "renta-profile-declaration-type": Decimal("1"),
@@ -347,6 +350,9 @@ def test_base_liquidable_general_applies_reductions() -> None:
         inputs=base_inputs,
         binding_values={
             "renta-profile-has-economic-activity": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             # declaration_type = 2 (conjunta) + situacion casado → 0461 = 3400
             "renta-profile-declaration-type": Decimal("2"),

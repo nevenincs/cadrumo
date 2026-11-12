@@ -3345,6 +3345,10 @@ application:
         complete_profile_setup: Declara completa la configuració del perfil
         open_profile_field: Omple %{field}
     projection_words:
+        income_family_contradicts_profile: Aquesta casella compara les teves altres
+          rendes amb el límit, però les categories de renda que has indicat exclouen
+          un tipus de renda del qual tens imports. Corregeix les categories o retira
+          els imports i torna a projectar. Mai es mostra com a zero.
       binding_unresolved: No s'ha pogut treure cap valor per a aquesta xifra a partir
         dels teus registres, així que queda sense resoldre en lloc de comptar com
         a zero. Registra l'evidència que falta i torna a projectar.

@@ -7947,6 +7947,12 @@ sequence_removals = {source_refs = [0, 1, 2]}
 
 [[revisions."2023".family_overrides]]
 family = "parameters"
+selector = {revision = "2022", id = "renta-trabajo-reduccion-art-20"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "14047.5", fixed_addition = "6498", marginal_rate = "0", valid_from = 2023-01-01}, {lower_bound = "14047.5", upper_bound = "19747.5", fixed_addition = "6498", marginal_rate = "-1.14", valid_from = 2023-01-01}, {lower_bound = "19747.5", fixed_addition = "0", marginal_rate = "0", valid_from = 2023-01-01}], source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["14.047,5 euros o menos 6.498 euros", "Entre 14.047,5 y 19.747,5 euros"]}], source_refs = ["aeat-renta-2023-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2], source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "parameters"
 selector = {revision = "2022", id = "renta-escala-autonomica-andalucia-base-general"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Comunidad Autónoma de Andalucía", "escala autonómica"]}], source_refs = ["aeat-renta-2023-manual-parte1"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}

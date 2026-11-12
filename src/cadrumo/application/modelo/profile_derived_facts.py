@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.form_codes import resolve_form_codes
@@ -32,6 +33,7 @@ from ...domain.contribuyente.family_types import MinimoDescendientesThresholds
 from ...domain.contribuyente.marriage_facts import marriage_full_year, marriage_month_start
 from ...domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus
 from ...domain.modelos.errors import ModeloError
+from ...domain.renta.retencion_soportada_applicability import declared_categories_exclude_class
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ..aggregation.renta_imputation import ActivityImputationCriterion, declared_imputation_criteria
@@ -163,6 +165,31 @@ def profile_declares_economic_activity(fact_index: Mapping[str, UserProfileFactV
     raw_categories = str(fact_index.get("taxpayer_type.irpf_income_categories", ""))
     categories = {token.strip() for token in raw_categories.split(",") if token.strip()}
     return _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories
+
+
+INCOME_FAMILY_EXCLUDED_BINDING_PREFIX = "renta-profile-income-family-excluded-"
+"""The binding ids that ask whether the profile positively excludes one family of income."""
+
+_EXCLUDABLE_INCOME_FAMILY_CLASSES: Mapping[str, RetencionSoportadaClase] = {
+    "capital-mobiliario": RetencionSoportadaClase.CAPITAL_MOBILIARIO,
+    "capital-inmobiliario": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO,
+    "ganancias-patrimoniales": RetencionSoportadaClase.GANANCIA_PATRIMONIAL,
+}
+
+
+def profile_excludes_income_family(fact_index: Mapping[str, UserProfileFactValue], family: str) -> bool:
+    """Whether the stated income categories positively exclude ``family``.
+
+    The same category rule as the suffered-withholding classes, which is where it lives: a stated,
+    non-empty list lacking every category of the family excludes it, and an unstated list excludes
+    nothing.
+    """
+    income_class = _EXCLUDABLE_INCOME_FAMILY_CLASSES.get(family)
+    if income_class is None:
+        raise ProfileBindingResolutionError(f"the registry names no excludable income family {family!r}")
+    raw_categories = fact_index.get("taxpayer_type.irpf_income_categories")
+    declared = frozenset(token.strip() for token in str(raw_categories or "").split(",") if token.strip())
+    return declared_categories_exclude_class(income_class, declared or None)
 
 
 def inject_derived_estimation_modality_fact(

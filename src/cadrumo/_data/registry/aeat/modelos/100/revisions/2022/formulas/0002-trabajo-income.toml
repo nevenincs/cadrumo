@@ -1,0 +1,82 @@
+# Casilla 0023, the art. 20 LIRPF reduction. It measures the rendimiento neto del trabajo before the
+# art. 19.2.f expenses, which is the box 0018, and is lost when the other rentas exceed the limit.
+# The second term of the minimum keeps the balance after the reduction from going negative.
+[[revisions."2022".formulas]]
+id = "renta-trabajo-reduccion-gastos-generales"
+target_casilla_id = "0023"
+expression = { op = "if_then_else", args = [
+    { op = "less_equal", args = [{ casilla_id = "0018" }, { literal = "0" }] },
+    { literal = "0" },
+    { op = "if_then_else", args = [
+        { op = "greater_than", args = [
+            { casilla_id = "rentas-distintas-del-trabajo" },
+            { parameter = "renta-trabajo-reduccion-otras-rentas-limite" },
+        ] },
+        { literal = "0" },
+        { op = "min", args = [
+            { op = "lookup_bracket", args = [
+                { casilla_id = "0018" },
+                { parameter = "renta-trabajo-reduccion-art-20" },
+            ] },
+            { op = "max", args = [{ literal = "0" }, { casilla_id = "0022" }] },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["siempre que no tengan rentas, excluidas las exentas, distintas de las del trabajo superiores a 6.500 euros", "el saldo resultante no podrá ser negativo"]
+
+# The other rentas, read from the boxes the bases themselves read: the net capital mobiliario of
+# both bases and the net capital inmobiliario with its imputed income, each before its reduction;
+# the net estimacion directa activity income before art. 32; the imputaciones of transparencia
+# fiscal, AIE and IIC in tax havens (the image-rights sum, box 0275, is outside the calculation
+# completeness manifest, so it is not an operand); and the capital gains less losses of both
+# bases without compensation between them. A family the profile's stated categories exclude is a
+# proven zero; figures held for it anyway contradict the profile, so the sum stays unresolved.
+[[revisions."2022".formulas]]
+id = "renta-trabajo-rentas-distintas-del-trabajo"
+target_casilla_id = "rentas-distintas-del-trabajo"
+expression = { op = "sum", args = [
+    { op = "if_then_else", args = [
+        { op = "equal", args = [{ binding = "renta-profile-income-family-excluded-capital-mobiliario" }, { literal = "1" }] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [{ casilla_id = "0038" }, { casilla_id = "0054" }] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "income-family-contradicts-profile" }] },
+        ] },
+        { op = "sum", args = [{ casilla_id = "0038" }, { casilla_id = "0054" }] },
+    ] },
+    { op = "if_then_else", args = [
+        { op = "equal", args = [{ binding = "renta-profile-income-family-excluded-capital-inmobiliario" }, { literal = "1" }] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [{ casilla_id = "0149" }, { casilla_id = "0155" }] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "income-family-contradicts-profile" }] },
+        ] },
+        { op = "sum", args = [{ casilla_id = "0149" }, { casilla_id = "0155" }] },
+    ] },
+    { casilla_id = "0224" },
+    { op = "if_then_else", args = [
+        { op = "equal", args = [{ binding = "renta-profile-income-family-excluded-ganancias-patrimoniales" }, { literal = "1" }] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [{ op = "sum", args = [{ casilla_id = "0418" }, { op = "negate", args = [{ casilla_id = "0419" }] }, { casilla_id = "0422" }, { op = "negate", args = [{ casilla_id = "0423" }] }] }, { literal = "0" }] },
+            { literal = "0" },
+            { op = "unresolved_outcome", args = [{ text_literal = "income-family-contradicts-profile" }] },
+        ] },
+        { op = "sum", args = [{ casilla_id = "0418" }, { op = "negate", args = [{ casilla_id = "0419" }] }, { casilla_id = "0422" }, { op = "negate", args = [{ casilla_id = "0423" }] }] },
+    ] },
+    { casilla_id = "0265" },
+    { casilla_id = "0270" },
+    { casilla_id = "0280" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["siempre que no tengan rentas, excluidas las exentas, distintas de las del trabajo superiores a 6.500 euros"]

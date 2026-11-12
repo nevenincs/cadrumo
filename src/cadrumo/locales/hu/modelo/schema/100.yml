@@ -8371,6 +8371,9 @@ modelo:
                 ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
                 32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
                 által bevallott összeg - lásd az [1554] rovatot)
+            rentas-distintas-del-trabajo:
+              label: A munkából származó jövedelemtől eltérő jövedelmek (a 20. cikk
+                szerinti határ) [belső]
           construct:
             renta-dependent-modelos:
               field:
