@@ -25,11 +25,6 @@ import pytest
 from textual.pilot import Pilot
 
 from ......application.calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH
-from ......application.modelo.edit_models import (
-    ModeloBindingEditIntentV1,
-    ModeloEditBindingAddressV1,
-    ModeloEditBindingIntentKind,
-)
 from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
@@ -84,26 +79,15 @@ def _declaration(tmp_path: Path, *, attested: bool) -> Generator[tuple[SeededOpe
     ) as work:
         installed = application_workbench(work.work_unit, operation=work.operation)
         work.recalculate()
-        # No Modelo 111 is filed in this storage, so the annual totals the declaration
-        # takes from them are answers the filer must give. The form asks for each; the
-        # filer gives them, so the only open matter left is the empty detail the check decides.
+        # The resumen's totals are the sums of its own type-2 records, so an empty detail
+        # store leaves the form nothing to ask: the only open matter is the empty detail
+        # the check decides.
         asked = [
             field.address.binding_id
             for field in installed.load(OutputLanguage.EN).form.answers
             if isinstance(field.address, ModeloFormBindingAddressV1) and field.origin is ModeloFormOrigin.NEEDS_INPUT
         ]
-        assert asked, "the declaration asks for its 111 annual totals, so there is something to give"
-        applied = work.apply(
-            binding=tuple(
-                ModeloBindingEditIntentV1(
-                    address=ModeloEditBindingAddressV1(binding_id=binding_id),
-                    kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
-                    value="0.00",
-                )
-                for binding_id in asked
-            )
-        )
-        assert applied.refusal is None
+        assert asked == [], "the declaration takes its totals from its own records, not from answers"
         yield work, installed
 
 
