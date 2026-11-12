@@ -1969,6 +1969,9 @@ errors:
       58/2003, LGT art. 66 i 70). La data més primerenca d''esborrament segur és %{earliest_safe_erase_date}.
       Espera fins aleshores o torna a executar amb --override-retention i --reason
       per forçar-ho.'
+    refused_review_drafts_unattributed: El teu perfil no té NIF, així que cap dels
+      %{draft_count} esborranys desats no es pot mostrar com a teu. Afegeix el teu
+      NIF al perfil i torna a revisar.
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
       Comprova la sintaxi del filtre indicat.
     refused_runtime_custody_recovering: S'està restablint l'accés a aquest perfil.

@@ -1846,6 +1846,9 @@ errors:
       66. és 70. cikk). A legkorábbi biztonságos törlési dátum: %{earliest_safe_erase_date}.
       Várj eddig, vagy futtasd újra a --override-retention és --reason kapcsolóval
       a felülbíráláshoz.'
+    refused_review_drafts_unattributed: A profilodban nincs adóazonosító, ezért a(z)
+      %{draft_count} mentett tervezet egyike sem jeleníthető meg a tiédként. Add meg
+      az adóazonosítódat a profilodban, és nézd át újra.
     refused_review_filter_parse: A `--filter KULCS=ÉRTÉK` paramétert nem sikerült
       elemezni. Ellenőrizd a megadott szűrő szintaxisát.
     refused_runtime_custody_recovering: A profilhoz való hozzáférés helyreállítása

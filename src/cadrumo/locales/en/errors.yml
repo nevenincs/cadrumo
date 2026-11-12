@@ -1802,6 +1802,9 @@ errors:
       are still within the legal retention period (Ley 58/2003, LGT art. 66 and 70).
       The earliest safe erase date is %{earliest_safe_erase_date}. Wait until then,
       or re-run with --override-retention and --reason to override.'
+    refused_review_drafts_unattributed: Your profile has no tax ID, so none of the
+      %{draft_count} stored drafts can be shown as yours. Add your tax ID to your
+      profile and review again.
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
       the syntax of the filter provided.'
     refused_runtime_custody_recovering: Access to this profile is being restored.
