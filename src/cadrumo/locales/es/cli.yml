@@ -2711,18 +2711,31 @@ cli:
       ascendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,APELLIDOS_NOMBRE=<apellidos
           y nombre>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<número de descendientes
-          con los que convive el ascendiente>]. Repetible; NACIMIENTO es obligatorio
-          en cada fila.
+          con los que convive el ascendiente>][,RENTAS=<rentas anuales excluidas las
+          exentas, en euros>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65].
+          Repetible; NACIMIENTO es obligatorio en cada fila.
         add_help: Añade uno o varios ascendientes al perfil activo, o declara con
           --none que no hay ninguno.
+        edit_clear_help: Una clave cuyo dato declarado quieres quitar del ascendiente,
+          como FALLECIMIENTO. Repetible; NACIMIENTO no se puede quitar.
+        edit_empty: Indica al menos un dato que cambiar con --ascendiente CLAVE=VALOR
+          o que quitar con --clear CLAVE.
+        edit_flag_help: 'Pares CLAVE=VALOR que se sustituyen, con las claves de add:
+          NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, RENTAS,
+          DECLARACION_PROPIA y DISCAPACIDAD. Repetible; cada clave como máximo una
+          vez.'
+        edit_help: Cambia los datos declarados de un ascendiente del perfil activo
+          por índice (base 0); los datos que no indiques se quedan como están.
+        edit_index_help: Índice (base 0) del ascendiente que quieres cambiar, tal
+          como lo muestra list.
         help: Declara los ascendientes del contribuyente para la sección de familia
           del modelo 100.
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
           ascendiente(s).
         invalid_row: No se ha podido leer la fila de --ascendiente. Usa pares CLAVE=VALOR
-          con las claves NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO y CONVIVIENTES,
-          cada una como máximo una vez y con valor; el contexto del error indica la
-          clave cuando se puede identificar.
+          con las claves NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES,
+          RENTAS, DECLARACION_PROPIA y DISCAPACIDAD, cada una como máximo una vez
+          y con valor; el contexto del error indica la clave cuando se puede identificar.
         list_help: Lista los ascendientes declarados en el perfil activo y si el perfil
           declara que no hay ninguno.
         remove_help: Elimina un ascendiente por índice (base 0) del perfil activo.

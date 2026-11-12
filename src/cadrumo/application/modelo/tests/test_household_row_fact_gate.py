@@ -1,7 +1,9 @@
 """An ascendant stored without a NIF, or a descendant or ascendant without a name, refuses checking, filing and export with a typed refusal that names the fact.
 
 The profile door admits the ascendant as a draft; the Modelo 100 design requires
-its NIF on every ascendant row. The profile record goes through the production
+its NIF on every ascendant row, and the mínimo por ascendientes needs the facts of
+art. 59 LIRPF. A row without one of those names its own position, so the refusal
+sends the filer to the edit of that row. The profile record goes through the production
 profile resolver, its diagnostics persist as the revision's notes the way a
 calculation persists them, and the application's own gate decides each action.
 The refusal carries the profile door where the NIF is stated, and the NIF is
@@ -21,6 +23,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.error_codes import get_registered_error_code
+from ....core.operator_action_enums import ActionArgumentStatus
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision import (
@@ -49,6 +52,8 @@ _BUCKET = "0de41ce4-0000-4000-8000-000000000810"
 _CLOCK = datetime(1980, 5, 21, 10, 0, tzinfo=UTC)
 _NIF = "00000001R"
 _ACTIONS = {"verify": "modelo.work.verify", "file": "modelo.work.file", "export": "modelo.export"}
+_MINIMUM_FACTS = {"convivientes": "1", "rentas_anuales": "7200.00", "declaracion_propia": "false"}
+"""The art. 59 facts a stated ascendant row carries, so a test of another fact sees only that fact's note."""
 
 
 def _filing_years(operation: PinnedAuthorityOperation) -> tuple[int, ...]:
@@ -71,12 +76,19 @@ def _record(operation: PinnedAuthorityOperation, *facts: UserProfileFact) -> Use
     )
 
 
-def _ascendant(year: int, *, nif: str | None) -> tuple[UserProfileFact, ...]:
+def _minimum_facts(parent: str, *, omit: str | None = None) -> tuple[UserProfileFact, ...]:
+    return tuple(
+        UserProfileFact(path=f"{parent}.{leaf}", value=value) for leaf, value in _MINIMUM_FACTS.items() if leaf != omit
+    )
+
+
+def _ascendant(year: int, *, nif: str | None, omit: str | None = None) -> tuple[UserProfileFact, ...]:
     parent = "renta_family.ascendiente.0"
     return (
         UserProfileFact(path="renta_family.ascendientes_count", value="1"),
         UserProfileFact(path=f"{parent}.birth_date", value=date(year - 78, 1, 8).isoformat()),
         UserProfileFact(path=f"{parent}.apellidos_nombre", value="Navarro Gil Carmen"),
+        *_minimum_facts(parent, omit=omit),
         *(() if nif is None else (UserProfileFact(path=f"{parent}.nif", value=nif),)),
     )
 
@@ -282,7 +294,7 @@ def test_an_ascendant_without_a_name_is_refused_with_the_ascendant_door(operatio
 
 @pytest.mark.parametrize(
     ("member", "door"),
-    [("descendiente", "operator.profile.descendiente"), ("ascendiente", "operator.profile.ascendiente")],
+    [("descendiente", "operator.profile.descendiente"), ("ascendiente", "operator.profile.ascendiente.edit")],
 )
 def test_a_row_without_a_birth_date_is_refused_with_the_door_of_its_member_kind(
     operation: PinnedAuthorityOperation, member: str, door: str
@@ -291,7 +303,14 @@ def test_a_row_without_a_birth_date_is_refused_with_the_door_of_its_member_kind(
         facts = (
             UserProfileFact(path=f"renta_family.{member}s_count", value="1"),
             UserProfileFact(path=f"renta_family.{member}.0.apellidos_nombre", value="Navarro Gil Carmen"),
-            *((UserProfileFact(path=f"renta_family.{member}.0.nif", value=_NIF),) if member == "ascendiente" else ()),
+            *(
+                (
+                    UserProfileFact(path=f"renta_family.{member}.0.nif", value=_NIF),
+                    *_minimum_facts(f"renta_family.{member}.0"),
+                )
+                if member == "ascendiente"
+                else ()
+            ),
         )
         revision = _revision(operation, year, _record(operation, *facts))
 
@@ -320,6 +339,8 @@ def test_only_the_ascendant_rows_that_omit_the_nif_are_counted(operation: Pinned
         UserProfileFact(path=f"{first}.apellidos_nombre", value="Navarro Gil Carmen"),
         UserProfileFact(path=f"{second}.apellidos_nombre", value="Navarro Gil Pedro"),
         UserProfileFact(path=f"{second}.birth_date", value=date(year - 80, 2, 9).isoformat()),
+        *_minimum_facts(first),
+        *_minimum_facts(second),
     )
     revision = _revision(operation, year, _record(operation, *facts))
 
@@ -327,3 +348,44 @@ def test_only_the_ascendant_rows_that_omit_the_nif_are_counted(operation: Pinned
         _gate(operation, year, revision, "file")
 
     assert _context(refused.value)["count"] == "1"
+
+
+@pytest.mark.parametrize("leaf", ["rentas_anuales", "convivientes"])
+def test_an_ascendant_without_a_minimum_fact_names_the_edit_of_its_row(
+    operation: PinnedAuthorityOperation, leaf: str
+) -> None:
+    years = _filing_years(operation)
+    assert years
+    for year in years:
+        stated = (
+            UserProfileFact(path="renta_family.ascendiente.1.birth_date", value=date(year - 80, 2, 9).isoformat()),
+            UserProfileFact(path="renta_family.ascendiente.1.apellidos_nombre", value="Navarro Gil Pedro"),
+            UserProfileFact(path="renta_family.ascendiente.1.nif", value=_NIF),
+            *_minimum_facts("renta_family.ascendiente.1", omit=leaf),
+        )
+        facts = (
+            *(fact for fact in _ascendant(year, nif=_NIF) if fact.path != "renta_family.ascendientes_count"),
+            UserProfileFact(path="renta_family.ascendientes_count", value="2"),
+            *stated,
+        )
+        revision = _revision(operation, year, _record(operation, *facts))
+
+        for action, subject in _ACTIONS.items():
+            with pytest.raises(ModeloHouseholdRowFactUnstatedError) as refused:
+                _gate(operation, year, revision, action)
+
+            assert _context(refused.value) == {"field": f"renta_family.ascendiente.{leaf}", "count": "1"}, year
+            failure = refused.value.precondition_failure
+            assert failure is not None
+            assert failure.subject_leaf_key == subject
+            verdict = failure.verdict
+            assert verdict.action is not None
+            assert verdict.action.action_id == "operator.profile.ascendiente.edit"
+            bindings = {binding.argument_name: binding for binding in verdict.argument_bindings}
+            assert (bindings["index"].status, bindings["index"].value) == (ActionArgumentStatus.RESOLVED, 1)
+            assert bindings["ascendiente"].status is ActionArgumentStatus.MISSING
+
+
+def test_the_row_door_the_refusal_names_is_the_ascendant_edit_command() -> None:
+    action = lookup_action("operator.profile.ascendiente.edit")
+    assert action.target_command_key == "config.profile.ascendiente.edit"

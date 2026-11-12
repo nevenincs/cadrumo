@@ -189,6 +189,8 @@ def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
 
     assert len(covered) == 30, sorted(covered)
     assert "tax_residence.state_attribution_ratio" in covered
+    assert "renta_family.ascendientes_minimos_aggregate" in covered
+    assert "renta_family.ascendientes_minimos_aggregate_autonomico" in covered
     assert {
         "irpf.estimation_directa",
         "irpf.estimation_directa_normal",

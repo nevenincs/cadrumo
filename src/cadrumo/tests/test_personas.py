@@ -847,9 +847,10 @@ def test_a_malformed_calendar_advice_is_refused(obligation: dict[str, object], m
 
 
 def _governed_expectations(*, provision: str = "provision-x") -> dict[str, Any]:
-    """The persona's expectations with a second copy of its first value limited to ``provision``."""
+    """The persona's expectations with its first value, made plain, and a copy limited to ``provision``."""
     document = copy.deepcopy(_document("expectations.toml"))
     plain = document["values"][0]
+    plain.pop("governed_by", None)
     governed = copy.deepcopy(plain)
     governed["governed_by"] = provision
     governed["legal_ref"] = [*plain["legal_ref"], "provision-x"]

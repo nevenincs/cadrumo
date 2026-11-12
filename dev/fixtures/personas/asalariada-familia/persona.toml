@@ -78,6 +78,10 @@ cotizaciones_ss_madre = "2332.80"
 identity = "asalariada.madre"
 birth_date = { year = "horizon-79", month = 1, day = 8 }
 convivientes = "1"
+# Her pension, the only income she has: below the 8000 euros of LIRPF art. 59.1. Being
+# under the filing limits she files no return of her own (art. 61 norma 2ª).
+rentas_anuales = "7200.00"
+declaracion_propia = "false"
 
 # The taxpayer transcribes the payer's certificate: the catalogue holds no
 # certificate document, so the figures are recorded as her own declaration.

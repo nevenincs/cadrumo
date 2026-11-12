@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .autonomic_deduccion_enrolment_checks import check_autonomic_deduccion_enrolments
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .reference_checker import IdReferenceChecker
@@ -60,6 +61,7 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_deadline_window_refs(checker, revision)
     _check_filing_schedule_refs(checker, revision)
     check_construct_refs(checker, revision)
+    check_autonomic_deduccion_enrolments(checker, revision)
     check_dependency_classification_refs(checker, revision)
     check_export_layout_refs(checker, revision)
     check_cross_domain_snapshot_routing(checker, snapshot)

@@ -8,7 +8,10 @@ so a stated zero is a real answer and a person left out is removed.
 
 The leaves are the ones an ascendant row can state and the declaration reads: the
 NIF or NIE, the surnames and name, the date of birth, the date of death and the number
-of descendants the ascendant lives with. The row limit is the one the declaration's own design states.
+of descendants the ascendant lives with, plus the facts the mínimo por ascendientes
+turns on: the annual rentas excluding exempt income, whether the ascendant files
+their own return and the statutory disability grade. The row limit is the one the
+declaration's own design states.
 Every refusal names the row by its position and never echoes what was typed;
 :class:`UserProfileRecord`, the stored taxpayer profile record.
 """
@@ -23,13 +26,20 @@ from typing import TYPE_CHECKING, Final, NoReturn
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
+from ...domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.contribuyente.ascendant_minimum import (
+    DECLARACION_PROPIA_LEAF,
+    DISCAPACIDAD_LEAF,
+    RENTAS_ANUALES_LEAF,
+)
 from ...domain.contribuyente.household_person_name import admitted_household_person_name, household_person_name_limit
 from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
@@ -63,8 +73,20 @@ _DEATH_BEFORE_BIRTH_LOCALE_KEY: Final = "application.user_profile.errors.ascenda
 _NIF_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_nif_invalid"
 _NAME_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_name_invalid"
 _COHABITING_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_convivientes_invalid"
+_VALUE_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.ascendant_value_invalid"
+_YES_NO_VALUES: Final = {"true": "true", "false": "false"}
 
-_LEAF_ORDER: Final = (_NIF_LEAF, _NAME_LEAF, _BIRTH_DATE_LEAF, _DEATH_DATE_LEAF, _COHABITING_LEAF)
+ASCENDANT_ROW_LEAVES: Final = (
+    _NIF_LEAF,
+    _NAME_LEAF,
+    _BIRTH_DATE_LEAF,
+    _DEATH_DATE_LEAF,
+    _COHABITING_LEAF,
+    RENTAS_ANUALES_LEAF,
+    DECLARACION_PROPIA_LEAF,
+    DISCAPACIDAD_LEAF,
+)
+"""The leaves an ascendant row states, in stored order; a row stating none of them is not a row."""
 
 
 class ProfileAscendantFact(BaseModel):
@@ -105,12 +127,14 @@ def ascendant_rows_from_facts(facts: Mapping[str, str]) -> tuple[ProfileAscendan
     stored: dict[int, dict[str, str]] = {}
     for path, value in facts.items():
         match = _STORED_LEAF_PATTERN.match(path)
-        if match is not None and match.group(2) in _LEAF_ORDER and value.strip():
+        if match is not None and match.group(2) in ASCENDANT_ROW_LEAVES and value.strip():
             stored.setdefault(int(match.group(1)), {})[match.group(2)] = value
     return tuple(
         ProfileAscendantRow(
             facts=tuple(
-                ProfileAscendantFact(field_key=leaf, value=leaves[leaf]) for leaf in _LEAF_ORDER if leaf in leaves
+                ProfileAscendantFact(field_key=leaf, value=leaves[leaf])
+                for leaf in ASCENDANT_ROW_LEAVES
+                if leaf in leaves
             )
         )
         for _, leaves in sorted(stored.items())
@@ -167,10 +191,36 @@ def _cohabiting(raw: str, *, position: int, operation: PinnedAuthorityOperation)
     return str(int(text))
 
 
+def _rentas(raw: str, *, position: int) -> str:
+    """Admit a non-negative euro amount in the canonical grammar, which refuses the Spanish thousands shape."""
+    value = try_parse_canonical_decimal(raw.strip(), max_fraction_digits=2)
+    if value is None or value < 0:
+        _refuse(_VALUE_INVALID_LOCALE_KEY, row=position)
+    return format(value, "f")
+
+
+def _yes_no(raw: str, *, position: int) -> str:
+    """Admit ``true`` or ``false``; both are answers, so neither is dropped."""
+    answer = _YES_NO_VALUES.get(raw.strip().lower())
+    if answer is None:
+        _refuse(_VALUE_INVALID_LOCALE_KEY, row=position)
+    return answer
+
+
+def _disability_grade(raw: str, *, position: int, operation: PinnedAuthorityOperation) -> str:
+    """Admit a statutory disability grade; the art. 60.3 bands are the same for every family member."""
+    text = raw.strip()
+    if not (text.isascii() and text.isdigit()) or int(text) not in accepted_descendant_disability_grades(
+        authority=operation
+    ):
+        _refuse(_VALUE_INVALID_LOCALE_KEY, row=position)
+    return str(int(text))
+
+
 def _row_facts(row: ProfileAscendantRow, *, position: int, operation: PinnedAuthorityOperation) -> dict[str, str]:
     """Validate one row's leaves and return them in their canonical stored form."""
     supplied = {fact.field_key: fact.value for fact in row.facts}
-    if not supplied.keys() <= set(_LEAF_ORDER):
+    if not supplied.keys() <= set(ASCENDANT_ROW_LEAVES):
         _refuse(_FACT_UNSUPPORTED_LOCALE_KEY, row=position)
     if _BIRTH_DATE_LEAF not in supplied:
         _refuse(_BIRTH_DATE_REQUIRED_LOCALE_KEY, row=position)
@@ -186,8 +236,25 @@ def _row_facts(row: ProfileAscendantRow, *, position: int, operation: PinnedAuth
         if death < birth:
             _refuse(_DEATH_BEFORE_BIRTH_LOCALE_KEY, row=position)
         stored[_DEATH_DATE_LEAF] = death.isoformat()
+    stored.update(_household_facts(supplied, position=position, operation=operation))
+    return stored
+
+
+def _household_facts(
+    supplied: Mapping[str, str], *, position: int, operation: PinnedAuthorityOperation
+) -> dict[str, str]:
+    """Validate the household and entitlement leaves the row supplies."""
+    stored: dict[str, str] = {}
     if _COHABITING_LEAF in supplied:
         stored[_COHABITING_LEAF] = _cohabiting(supplied[_COHABITING_LEAF], position=position, operation=operation)
+    if RENTAS_ANUALES_LEAF in supplied:
+        stored[RENTAS_ANUALES_LEAF] = _rentas(supplied[RENTAS_ANUALES_LEAF], position=position)
+    if DECLARACION_PROPIA_LEAF in supplied:
+        stored[DECLARACION_PROPIA_LEAF] = _yes_no(supplied[DECLARACION_PROPIA_LEAF], position=position)
+    if DISCAPACIDAD_LEAF in supplied:
+        stored[DISCAPACIDAD_LEAF] = _disability_grade(
+            supplied[DISCAPACIDAD_LEAF], position=position, operation=operation
+        )
     return stored
 
 
@@ -204,7 +271,7 @@ def _validated_ascendant_facts(
     for index, row in enumerate(ascendants):
         stored = _row_facts(row, position=index + 1, operation=operation)
         pairs.update(
-            {f"{ASCENDANT_OBJECT_PATH}.{index}.{leaf}": stored[leaf] for leaf in _LEAF_ORDER if leaf in stored}
+            {f"{ASCENDANT_OBJECT_PATH}.{index}.{leaf}": stored[leaf] for leaf in ASCENDANT_ROW_LEAVES if leaf in stored}
         )
     pairs[ASCENDANT_COUNT_PATH] = str(len(ascendants))
     return pairs
@@ -275,6 +342,7 @@ def replace_profile_ascendants(
 __all__ = [
     "ASCENDANT_COUNT_PATH",
     "ASCENDANT_OBJECT_PATH",
+    "ASCENDANT_ROW_LEAVES",
     "AscendantFamilyMutation",
     "ProfileAscendantFact",
     "ProfileAscendantRow",

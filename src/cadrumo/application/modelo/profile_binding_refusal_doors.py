@@ -14,8 +14,14 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import Final
 
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ..operator_actions.models import PreconditionVerdict
+from ...core.operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict, profile_required_facts_missing_verdict
 
 _CONDITION_PREFIX: Final[str] = "modelo.profile_binding"
@@ -59,12 +65,48 @@ def binding_contract_defect_verdict(reason: str, facts: Mapping[str, _Fact]) -> 
     )
 
 
+_ASCENDANT_ROW_EDIT_ACTION_ID: Final[str] = "operator.profile.ascendiente.edit"
+
+
+def ascendant_row_value_refused_verdict(index: int, leaf: str) -> PreconditionVerdict:
+    """The edit of the ascendant row whose stored ``leaf`` the binding refuses.
+
+    The row is known, so its edit door is addressed to it; the value to state
+    again is the filer's, so the door asks for it.
+    """
+    condition = f"{_CONDITION_PREFIX}.ascendant_row_value.resolvable"
+    index_binding = ActionArgumentBinding(
+        argument_name="index",
+        status=ActionArgumentStatus.RESOLVED,
+        value=index,
+        source=ActionArgumentSource.VERDICT_CONTEXT,
+        source_key="index",
+    )
+    value_binding = ActionArgumentBinding(argument_name="ascendiente", status=ActionArgumentStatus.MISSING)
+    return PreconditionVerdict(
+        failed_condition_id=condition,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition,
+                evidence_id=f"{condition}.observation",
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                values={"index": index, "leaf": leaf, "resolvable": False},
+            ),
+        ),
+        action=ActionReference(action_id=_ASCENDANT_ROW_EDIT_ACTION_ID),
+        argument_bindings=(index_binding, value_binding),
+        missing_argument_names=("ascendiente",),
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+    )
+
+
 def profile_fact_absent_verdict(field_path: str) -> PreconditionVerdict:
     """The profile questions that state a fact the binding needs and the profile does not hold."""
     return profile_required_facts_missing_verdict(modelo=None, field_paths=(field_path,))
 
 
 __all__ = [
+    "ascendant_row_value_refused_verdict",
     "binding_contract_defect_verdict",
     "profile_fact_absent_verdict",
     "profile_fact_value_refused_verdict",

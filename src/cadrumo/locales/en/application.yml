@@ -1631,6 +1631,11 @@ application:
           of activity.
         what_to_do: Set the type of activity on those income entries, then calculate
           again.
+      autonomic_deducciones_not_enrolled:
+        what: None of the regional deductions of your comunidad of residence is
+          worked out for this year, so the total of regional deductions includes
+          only the amounts you enter yourself.
+        what_to_do: If any applies to you, enter its amount yourself in its box.
       calculation_screen_outdated:
         what: This calculation was made before Cadrumo's current checks on its figures,
           so it cannot be checked, exported or recorded as it stands.
@@ -2244,7 +2249,11 @@ application:
       household_leaf:
         apellidos_nombre: surnames and name
         birth_date: date of birth
+        convivientes: the number of descendants they live with
+        declaracion_propia: whether they file their own return
+        discapacidad: disability grade
         nif: tax ID (NIF)
+        rentas_anuales: annual income
       income_class:
         actividad_economica: economic activities
         arrendamiento_inmueble_urbano: urban property rental
@@ -2508,6 +2517,9 @@ application:
       applicability_filter_unknown: A verification rule in the bundled data cites
         the applicability filter %{filter}, which the program does not know. The bundled
         data is inconsistent, and nothing you entered caused it.
+      ascendant_stored_value_unreadable: Ascendant %{row} in your profile holds a
+        saved value the return cannot read. Edit that ascendant and state the value
+        again, then calculate again.
       binding_source_kind_unclassified: The bundled rules give the source kind %{source_kind}
         no family, so its origin cannot be explained. The bundled data is incomplete,
         and nothing you entered caused it.
@@ -3538,6 +3550,15 @@ application:
         so it stays unresolved instead of counting as zero. Record the missing evidence,
         then project again.
       casilla_reason:
+        autonomic_deduction_other_comunidad: This box adds the regional deductions
+          of your comunidad of residence, but the return has amounts in the deduction
+          boxes of another comunidad. A return carries the deductions of one comunidad
+          only. Correct those boxes or your comunidad of residence, or enter this
+          box yourself. It is never shown as zero.
+        autonomic_deduction_unsummed_box: This box adds the regional deductions
+          of your comunidad of residence, but the official sum also names a box that
+          this calculation does not add, and that box holds an amount. Check it, or enter this
+          box yourself. It is never shown as zero.
         income_family_contradicts_profile: This box compares your other income with
           the limit, but the income categories you stated exclude a kind of income
           that you have figures for. Correct the categories or remove the figures,
@@ -4116,6 +4137,8 @@ application:
         its letters and digits.
       ascendant_rows_over_limit: A declaration lists at most %{limit} ascendants,
         and %{count} were given.
+      ascendant_value_invalid: Ascendant %{row} states a value the declaration cannot
+        hold; check its income amount, disability grade and yes-or-no answer.
       censal_read_identity_absent: The tax registration read contained no tax identity,
         so it cannot be confirmed to belong to this profile.
       censal_read_identity_cleared: This profile's tax ID was cleared, so a tax registration
@@ -4222,11 +4245,23 @@ application:
           label: Date of birth
         convivientes:
           label: Number of descendants this ascendant lives with
+        declaracion_propia:
+          help: 'Asked when the income is above the figure the law sets: an own return
+            then removes the minimum.'
+          label: Does this ascendant file their own income tax return?
+        discapacidad:
+          help: Asked for an ascendant under the minimum age, who gives the minimum
+            only with a disability.
+          label: This ascendant's disability grade
         fallecimiento:
           help: Leave blank if this ascendant has not died.
           label: Date of death
         nif:
           label: Ascendant's NIF/NIE (leave blank if none)
+        rentas_anuales:
+          help: Income above the limit the law sets for the year means the ascendant
+            does not give the minimum for ascendants.
+          label: This ascendant's annual income, excluding exempt income (euros)
       incomplete: '{stated} stated, {recorded} recorded'
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge

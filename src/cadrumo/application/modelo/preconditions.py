@@ -433,6 +433,17 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         for member in ("ascendiente", "descendiente")
         for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
+    # The door that states a fact the mínimo por ascendientes needs of one named ascendant:
+    # the note says which row omits it, so the edit is addressed to that row.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.household_row_facts.ascendiente_row_stated",
+            f"{leaf}.household_row_facts.ascendiente_row_unstated",
+            action_id="operator.profile.ascendiente.edit",
+        )
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
     # The command that states which ledger entry books an inventory purchase, or that none does.
     *(
         _profile(

@@ -1734,6 +1734,11 @@ application:
           sin tipo de actividad.
         what_to_do: Indica el tipo de actividad en esos registros de ingresos y vuelve
           a calcular.
+      autonomic_deducciones_not_enrolled:
+        what: No se calcula ninguna deducción autonómica de tu comunidad de residencia
+          en este ejercicio, así que el total de deducciones autonómicas solo incluye
+          los importes que escribas tú.
+        what_to_do: Si te corresponde alguna, escribe tú su importe en su casilla.
       calculation_screen_outdated:
         what: Este cálculo se hizo antes de las comprobaciones actuales de Cadrumo
           sobre sus cifras, así que no se puede comprobar, exportar ni registrar tal
@@ -2360,7 +2365,11 @@ application:
       household_leaf:
         apellidos_nombre: apellidos y nombre
         birth_date: fecha de nacimiento
+        convivientes: número de descendientes con quienes convive
+        declaracion_propia: si presenta declaración propia
+        discapacidad: grado de discapacidad
         nif: NIF
+        rentas_anuales: rentas anuales
       income_class:
         actividad_economica: actividades económicas
         arrendamiento_inmueble_urbano: arrendamiento de inmueble urbano
@@ -2630,6 +2639,9 @@ application:
       applicability_filter_unknown: Una regla de verificación de los datos incluidos
         cita el filtro de aplicabilidad %{filter}, que el programa no conoce. Los
         datos incluidos son incoherentes y nada de lo que has introducido lo causa.
+      ascendant_stored_value_unreadable: El ascendiente %{row} de tu perfil tiene
+        guardado un valor que la declaración no puede leer. Edita ese ascendiente,
+        vuelve a indicar el valor y calcula de nuevo.
       binding_source_kind_unclassified: Las reglas incluidas no asignan ninguna familia
         al tipo de fuente %{source_kind}, así que no se puede explicar su origen.
         Los datos incluidos están incompletos y nada de lo que has introducido lo
@@ -3725,6 +3737,15 @@ application:
         de tus registros, así que queda sin resolver en lugar de contar como cero.
         Registra la evidencia que falta y vuelve a proyectar.
       casilla_reason:
+        autonomic_deduction_other_comunidad: Esta casilla suma las deducciones autonómicas
+          de tu comunidad de residencia, pero la declaración tiene importes en las
+          casillas de deducción de otra comunidad. Una declaración solo lleva las
+          deducciones de una comunidad. Corrige esas casillas o tu comunidad de residencia,
+          o introduce tú esta casilla. Nunca se muestra como cero.
+        autonomic_deduction_unsummed_box: Esta casilla suma las deducciones autonómicas
+          de tu comunidad de residencia, pero la suma oficial también nombra una casilla
+          que este cálculo no suma, y esa casilla tiene un importe. Revísala, o introduce
+          tú esta casilla. Nunca se muestra como cero.
         income_family_contradicts_profile: Esta casilla compara tus demás rentas con
           el límite, pero las categorías de renta que indicaste excluyen un tipo de
           renta del que tienes importes. Corrige las categorías o retira los importes
@@ -4324,6 +4345,9 @@ application:
         sus letras y cifras.
       ascendant_rows_over_limit: Una declaración incluye como máximo %{limit} ascendientes
         y se han indicado %{count}.
+      ascendant_value_invalid: El ascendiente %{row} indica un valor que la declaración
+        no admite; revisa su importe de rentas, su grado de discapacidad y su respuesta
+        de sí o no.
       censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
         que no puede confirmarse que corresponda a este perfil.
       censal_read_identity_cleared: El NIF de este perfil se ha vaciado, por lo que
@@ -4432,11 +4456,23 @@ application:
           label: Fecha de nacimiento
         convivientes:
           label: Número de descendientes con los que convive este ascendiente
+        declaracion_propia:
+          help: 'Se pregunta cuando sus rentas superan la cifra que fija la ley: entonces
+            presentar su propia declaración quita el mínimo.'
+          label: ¿Presenta este ascendiente su propia declaración del IRPF?
+        discapacidad:
+          help: Se pregunta para un ascendiente por debajo de la edad mínima, que
+            da derecho al mínimo solo con discapacidad.
+          label: Grado de discapacidad de este ascendiente
         fallecimiento:
           help: Déjalo en blanco si este ascendiente no ha fallecido.
           label: Fecha de fallecimiento
         nif:
           label: NIF/NIE del ascendiente (déjalo en blanco si no tiene)
+        rentas_anuales:
+          help: Si sus rentas superan el límite que fija la ley para el año, el ascendiente
+            no da derecho al mínimo por ascendientes.
+          label: Rentas anuales de este ascendiente, excluidas las exentas (euros)
       incomplete: '{stated} indicadas, {recorded} registradas'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen

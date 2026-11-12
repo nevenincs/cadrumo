@@ -333,6 +333,7 @@ PROFILE_CONNECTION_KEYS = frozenset(
         "config_profile_inmueble_list",
         "config_profile_inmueble_remove",
         "config_profile_ascendiente_add",
+        "config_profile_ascendiente_edit",
         "config_profile_ascendiente_list",
         "config_profile_ascendiente_remove",
         "config_profile_descendiente",

@@ -1153,7 +1153,9 @@ _DESCENDANT_LEAVES = frozenset(
         "cotizaciones_ss_madre",
     }
 )
-_ASCENDANT_LEAVES = frozenset({"birth_date", "fallecimiento", "convivientes"})
+_ASCENDANT_LEAVES = frozenset(
+    {"birth_date", "fallecimiento", "convivientes", "rentas_anuales", "declaracion_propia", "discapacidad"}
+)
 
 
 class _Roles:

@@ -163,6 +163,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "ConfigProfileArrendamientoListResult",
     ),
     ActionTarget(
+        "config.profile.ascendiente.edit",
+        ("config", "profile", "ascendiente", "edit"),
+        "ConfigProfileAscendienteEditResult",
+        required_inputs=("index",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "config.profile.ascendiente.list",
         ("config", "profile", "ascendiente", "list"),
         "ConfigProfileAscendienteListResult",

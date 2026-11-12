@@ -2678,17 +2678,29 @@ cli:
       ascendiente:
         add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,NIF=<NIF vagy NIE>][,APELLIDOS_NOMBRE=<vezeték-
           és utónév>][,FALLECIMIENTO=ÉÉÉÉ-HH-NN][,CONVIVIENTES=<azon leszármazottak
-          száma, akikkel a felmenő együtt él>]. Ismételhető; a NACIMIENTO minden sorban
-          kötelező.
+          száma, akikkel a felmenő együtt él>][,RENTAS=<éves jövedelem a mentes jövedelmek
+          nélkül, euróban>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65].
+          Ismételhető; a NACIMIENTO minden sorban kötelező.
         add_help: Egy vagy több felmenő hozzáadása az aktív profilhoz, vagy a --none
           megadásával annak rögzítése, hogy nincs egy sem.
+        edit_clear_help: Egy kulcs, amelynek megadott adatát törölni szeretnéd a felmenőtől,
+          például FALLECIMIENTO. Ismételhető; a NACIMIENTO nem törölhető.
+        edit_empty: Nevezz meg legalább egy adatot, amelyet --ascendiente KULCS=ÉRTÉK
+          formában módosítasz, vagy --clear KULCS formában törölsz.
+        edit_flag_help: 'Lecserélendő KULCS=ÉRTÉK párok az add kulcsaival: NACIMIENTO,
+          NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, RENTAS, DECLARACION_PROPIA
+          és DISCAPACIDAD. Ismételhető; minden kulcs legfeljebb egyszer.'
+        edit_help: Az aktív profil egy felmenőjének megadott adatait módosítja 0-tól
+          kezdődő index alapján; a meg nem nevezett adatok változatlanok maradnak.
+        edit_index_help: A módosítandó felmenő 0-tól kezdődő indexe, ahogy a list
+          mutatja.
         help: A adózó felmenőinek megadása a 100-as modell családi szakaszához.
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
           %{total} felmenő van.
         invalid_row: Az --ascendiente sor nem olvasható. KULCS=ÉRTÉK párokat használj
-          a NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO és CONVIVIENTES kulcsokkal,
-          mindegyiket legfeljebb egyszer és értékkel; a hiba kontextusa megnevezi
-          a kulcsot, ha az azonosítható.
+          a NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, RENTAS,
+          DECLARACION_PROPIA és DISCAPACIDAD kulcsokkal, mindegyiket legfeljebb egyszer
+          és értékkel; a hiba kontextusa megnevezi a kulcsot, ha az azonosítható.
         list_help: Az aktív profilon megadott felmenők listázása, és annak jelzése,
           hogy a profil szerint nincs egy sem.
         remove_help: Egy felmenő eltávolítása 0-alapú index szerint az aktív profilról.

@@ -78,7 +78,6 @@ _C0556 = validated_casilla_id("0556", surface="test_renta_chain_behaviour casill
 _C0557 = validated_casilla_id("0557", surface="test_renta_chain_behaviour casilla id")
 _C0558 = validated_casilla_id("0558", surface="test_renta_chain_behaviour casilla id")
 _C0559 = validated_casilla_id("0559", surface="test_renta_chain_behaviour casilla id")
-_C0564 = validated_casilla_id("0564", surface="test_renta_chain_behaviour casilla id")
 _C0565 = validated_casilla_id("0565", surface="test_renta_chain_behaviour casilla id")
 _C0566 = validated_casilla_id("0566", surface="test_renta_chain_behaviour casilla id")
 _C0568 = validated_casilla_id("0568", surface="test_renta_chain_behaviour casilla id")
@@ -176,7 +175,7 @@ def _base_2025_inputs() -> dict[CasillaId, Decimal]:
         _C0557: Decimal("0"),
         _C0558: Decimal("0"),
         _C0559: Decimal("0"),
-        _C0564: Decimal("0"),
+        # 0564 sums the comunidad of residence's deduction boxes, which hold no value here.
         _C0565: Decimal("0"),
         _C0566: Decimal("0"),
         _C0584: Decimal("0"),

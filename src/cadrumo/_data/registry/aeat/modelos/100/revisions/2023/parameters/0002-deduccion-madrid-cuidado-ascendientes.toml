@@ -1,0 +1,51 @@
+# Comunidad de Madrid, deducción "Por cuidado de ascendientes" (DL 1/2010 art. 7 bis), first
+# carried by the Manual práctico de Renta 2023 and repeated unchanged by the 2024 and 2025
+# manuals: 515,50 euros for each ascendant over 65, or with a disability of at least 33 per
+# cent, for whom the mínimo por ascendientes applies. Later editions inherit these values.
+[[revisions."2023".parameters]]
+id = "renta-deduccion-madrid-cuidado-ascendientes-cuantia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-7-bis"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.values]]
+value = "515.50"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["515,50 euros por cada ascendiente mayor de 65 años o con discapacidad igual o"]
+
+[[revisions."2023".parameters]]
+id = "renta-deduccion-madrid-cuidado-ascendientes-edad-minima"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-7-bis"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.values]]
+value = "65"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["515,50 euros por cada ascendiente mayor de 65 años o con discapacidad igual o"]
+
+[[revisions."2023".parameters]]
+id = "renta-deduccion-madrid-cuidado-ascendientes-discapacidad-minima"
+data_type = "integer"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-7-bis"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.values]]
+value = "33"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["superior al 33 por 100 por el que puedan aplicarse el mínimo por ascendientes."]
