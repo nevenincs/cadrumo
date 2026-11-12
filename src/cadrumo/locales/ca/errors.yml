@@ -2108,6 +2108,9 @@ errors:
       autenticar aquest perfil.
     refused_profile_schema_validation: Les dades del perfil infringeixen el contracte
       de l'esquema. Corregeix els valors indicats.
+    refused_renta_date_required: Aquesta exempció depèn del que és vigent en l'exercici
+      de la renda, així que el càlcul no fa servir la data d'avui. Indica l'exercici
+      de presentació.
     refused_renta_maritime_exemption_inactive: 'L''exempció DA 41 LIRPF (flota tonyinaire)
       està inactiva: no s''ha concedit l''autorització d''ajuts d''Estat de la UE
       per al 2024/2025. L''AEAT confirma la seva no aplicabilitat en la guia oficial

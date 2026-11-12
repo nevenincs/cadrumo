@@ -35,6 +35,7 @@ from ....core.errors.severity import BaseSeverity
 from ....core.period import Period
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import (
     build_draft,
@@ -166,6 +167,7 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             "renta-profile-has-economic-activity": "1",
             "renta-profile-income-family-excluded-capital-mobiliario": "0",
             "renta-profile-income-family-excluded-capital-inmobiliario": "0",
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-profile-income-family-excluded-ganancias-patrimoniales": "0",
             "renta-profile-estimacion-directa": "1",
             "renta-profile-declaration-type": Decimal("1"),

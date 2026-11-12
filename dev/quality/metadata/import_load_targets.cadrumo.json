@@ -1451,6 +1451,7 @@
         "cadrumo.application.modelo.projection_next_steps",
         "cadrumo.application.modelo.projection_operation",
         "cadrumo.application.modelo.projection_quarter_inputs",
+        "cadrumo.application.modelo.projection_rental_total",
         "cadrumo.application.modelo.projection_unresolved",
         "cadrumo.application.modelo.projection_words",
         "cadrumo.application.modelo.prorrata_regularizacion_advisory",

@@ -63,6 +63,8 @@ from ...components.account_chrome import AccountChromeScreen
 from ...components.language import localized
 from ...components.theme import toggle_appearance, tokenised
 from ...navigation import TuiNavigationTargetV1
+from ..disagreements import ModeloDisagreementsDoorV1
+from ..disagreements_workbench import WorkbenchDisagreementsMixin
 from .casilla_list import (
     CasillaList,
 )
@@ -89,6 +91,7 @@ from .ports import (
     ModeloWorkbenchReaderV1,
     WorkbenchApplyPrerequisite,
 )
+from .screen_amendment import WorkbenchAmendmentMixin
 from .screen_confirmation import WorkbenchConfirmationMixin
 from .screen_constants import (
     GREETED,
@@ -104,6 +107,7 @@ from .screen_operation import WorkbenchOperationMixin
 from .screen_presentation import WorkbenchPresentationMixin
 from .screen_review import WorkbenchReviewMixin
 from .screen_statements import WorkbenchStatementsMixin
+from .screen_taxation import WorkbenchTaxationMixin
 from .screen_widgets import NoticeLine, SymbolsPanel
 from .search import WorkbenchSearchPanel
 from .session import StagedChange, WorkbenchEditSession
@@ -124,6 +128,9 @@ class ModeloWorkbenchScreen(
     WorkbenchEditorMixin,
     WorkbenchConfirmationMixin,
     WorkbenchStatementsMixin,
+    WorkbenchTaxationMixin,
+    WorkbenchDisagreementsMixin,
+    WorkbenchAmendmentMixin,
     WorkbenchReviewMixin,
     WorkbenchNextStepMixin,
     WorkbenchOperationMixin,
@@ -373,6 +380,9 @@ class ModeloWorkbenchScreen(
         Binding("i", "issues", "", show=False),
         Binding("b", "bulk_confirm", "", show=False),
         Binding("a", "statements", "", show=False),
+        Binding("t", "compare_taxation", "", show=False),
+        Binding("D", "disagreements", "", show=False),
+        Binding("m", "amend", "", show=False),
         Binding("slash", "search", "", show=False),
         Binding("g", "go_to", "", show=False),
         Binding("left", "fold(0)", "", show=False),
@@ -393,6 +403,7 @@ class ModeloWorkbenchScreen(
         actions: ModeloWorkbenchActionsV1 | None = None,
         navigate: Callable[[TuiNavigationTargetV1], None] | None = None,
         native_review: Callable[[str], Screen[None]] | None = None,
+        disagreements: ModeloDisagreementsDoorV1 | None = None,
         id: str | None = None,
     ) -> None:
         """Hold the ports this workbench reads and acts through, and how it opens another product area.
@@ -405,6 +416,7 @@ class ModeloWorkbenchScreen(
         self._actions = actions
         self._navigate = navigate
         self._native_review = native_review
+        self._disagreements = disagreements
         self._operation_in_flight = False
         self._apply_prerequisite: WorkbenchApplyPrerequisite | None = None
         self._load: ModeloWorkFormLoadV1 | None = None

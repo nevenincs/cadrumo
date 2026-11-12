@@ -318,6 +318,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.renta.errors.RentaDateRequiredError",
+        ErrorCode(
+            code="REFUSED_RENTA_DATE_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_renta_date_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.renta.maritime_exemption.MaritimeExemptionInactiveError",
         ErrorCode(
             code="REFUSED_RENTA_MARITIME_EXEMPTION_INACTIVE",

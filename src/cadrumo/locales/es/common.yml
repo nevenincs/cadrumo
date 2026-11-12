@@ -8987,6 +8987,31 @@ tui:
       selection_dropped: No se muestra el apunte que selecciona este enlace.
       title: Registros no disponibles
   modelo:
+    amendment:
+      done: 'Corrección preparada y registrada aquí. No se ha enviado nada a la AEAT:
+        exporta su fichero y preséntalo tú.'
+      incomplete: Completa todo lo que pide la corrección y corrige al menos un valor.
+      key: Corregir
+      kind_label: Tipo de corrección
+      motive_label: Motivo de la rectificación
+      unknown: Puede que esta corrección se haya registrado. Comprueba su operación
+        antes de preparar otra.
+      values_label: Valores corregidos
+    disagreements:
+      accept: Aceptar
+      key: Responder discrepancias
+      none: La declaración no plantea ninguna discrepancia entre fuentes.
+      outcome_unknown: Puede que la respuesta se haya guardado. Vuelve a leer la declaración
+        antes de responder a nada más.
+      read_failed: No se han podido leer tus respuestas.
+      reading: Leyendo tus respuestas...
+      reason_label: Tu motivo para aceptar
+      refused: La respuesta se ha rechazado.
+      revoke: Retirar
+      sending: Enviando tu respuesta...
+      title: Discrepancias entre fuentes
+      unavailable: Todavía no hay nada que responder. Calcula antes la declaración.
+      your_reason: 'Tu motivo: {reason}'
     editor:
       confirm_hint: Pulsa ⏎ para confirmar {value} o escribe el valor correcto.
       keys: 'Teclas: ⏎ {save_next} · Ctrl+⏎ {save}'
@@ -9172,6 +9197,9 @@ tui:
       stage: Dejar para revisar
       title: Manifestaciones que puedes hacer
       withdraw: Retirar la manifestación
+    taxation:
+      key: Conjunta o individual
+      reading: Calculando las dos opciones…
   operations:
     action:
       close: Cerrar

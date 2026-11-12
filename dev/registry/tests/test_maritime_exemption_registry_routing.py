@@ -14,7 +14,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, latest_period_end
 from cadrumo.domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     calculate_art_7p_exemption,
@@ -24,6 +24,9 @@ from cadrumo.domain.renta.maritime_exemption import (
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_DEVENGO_DATE = latest_period_end()
+_FILING_PERIOD = latest_period_end()
 
 
 @pytest.fixture(autouse=True)
@@ -63,6 +66,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
+            filing_period=_FILING_PERIOD,
         )
         assert obs.casilla_id == _registry_target_for(obs)
 
@@ -79,5 +83,6 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
+            devengo_date=_DEVENGO_DATE,
         )
         assert obs.casilla_id == _registry_target_for(obs)
