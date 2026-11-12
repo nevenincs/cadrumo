@@ -26,10 +26,14 @@ from ...application.inventory.registered_options_operation import (
     InventoryOptionsProjection,
     InventoryOptionsRequest,
 )
-from ...application.inventory.registered_projections import InventoryClosingAuthorityOperationProjection
+from ...application.inventory.registered_projections import (
+    InventoryClosingAuthorityOperationProjection,
+    InventoryLedgerChangeProjection,
+)
 from ...application.inventory.registered_requests import (
     InventoryClosingValueFactsInput,
     InventoryClosingValueRecordRequest,
+    InventoryMovementClaimRequest,
 )
 from ...application.inventory.service import InventoryService
 from ...core.hashing import sha256_hex
@@ -40,6 +44,7 @@ from ...domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingDecisionEvidenceRole,
     PriorClosingContinuityEvidence,
 )
+from ...domain.contribuyente.inventory.records import PurchaseLedgerRow
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.transactions.models import TransactionCatalogue
 from ..adapter_composition_ports import build_inventory_service_ports
@@ -146,6 +151,52 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             verify=verify_candidates,
         )
 
+    if definition_id == "ledger.inventory.movement.claim":
+        claimed = ledger_row_of("conformance-claimed")
+        TransactionCatalogueRepository(bucket_id=profile, objects=secure_object_repository_for_bucket(profile)).save(
+            TransactionCatalogue.from_transactions([claimed])
+        )
+        claimant = InventoryService(ports=build_inventory_service_ports(bucket_id=profile))
+        claimant.create(
+            bucket_id=profile,
+            actividad_id="inventory-claim",
+            year=YEAR,
+            valuation_method="fifo",
+            actor="conformance-seed",
+        )
+        claimant.movement_add(
+            bucket_id=profile,
+            actividad_id="inventory-claim",
+            year=YEAR,
+            movement=purchase_movement("conformance-claim", claim=None),
+            actor="conformance-seed",
+        )
+        claim_events_before = events.load()
+
+        def verify_claim(outcome: ConformanceOutcome) -> None:
+            result = outcome.resolve_result(InventoryLedgerChangeProjection)
+            assert result.outcome == "applied" and result.profile_id == context.profile_id
+            assert result.bucket_event_ids
+            ledger = claimant.show(bucket_id=profile, actividad_id="inventory-claim", year=YEAR)
+            (stored,) = (item for item in ledger.period_movements if item.movement_id == "conformance-claim")
+            assert stored.ledger_row is PurchaseLedgerRow.CLAIMED
+            assert stored.claimed_transaction_id == claimed.transaction_id
+            assert events.load() != claim_events_before
+
+        return ConformancePreparation(
+            subject,
+            InventoryMovementClaimRequest(
+                profile_id=context.profile_id,
+                actividad_id="inventory-claim",
+                year=YEAR,
+                correction_id="conformance-claim-1",
+                movement_id="conformance-claim",
+                ledger_row=PurchaseLedgerRow.CLAIMED,
+                claimed_transaction_id=claimed.transaction_id,
+            ),
+            verify=verify_claim,
+        )
+
     assert definition_id == "ledger.inventory.closing-value.record"
     service = InventoryService(ports=build_inventory_service_ports(bucket_id=profile))
     actividad_id = "inventory-closing-facts"
@@ -211,6 +262,7 @@ INVENTORY_FACTS_CONFORMANCE_FAMILY = ConformanceFamily(
         for definition_id, effect in (
             ("ledger.inventory.options", OperationEffect.NONE),
             ("ledger.inventory.movement.claim-candidates", OperationEffect.NONE),
+            ("ledger.inventory.movement.claim", OperationEffect.UPDATED),
             ("ledger.inventory.evidence.add", OperationEffect.UPDATED),
             ("ledger.inventory.closing-value.record", OperationEffect.UPDATED),
         )
