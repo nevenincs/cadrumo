@@ -51,6 +51,7 @@ from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_recargo_equivalencia_token
 from ...domain.contribuyente.inventory.records import MovementKind
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecordStatus
@@ -226,28 +227,36 @@ def test_a_persona_replays_through_production_operations(
 def _expected_movements(
     persona: Persona, book: InventoryBook, envelope: YearEnvelope
 ) -> list[tuple[MovementKind, str, Decimal]]:
-    """The movements a book's stated purchases and closing imply, at one unit per euro of acquisition cost.
+    """The movements a book's stated purchases and closing imply, each quantity derived from euros.
 
-    A purchase under recargo de equivalencia bears its IVA and recargo as cost,
-    since that regime deducts neither (LIVA art. 154.Dos); any other purchase
-    costs its base. The opening stock is one lot, and the stock sold is what
-    leaves the opening lot and the purchases at the stated closing.
+    Every figure is a value in euros first. A purchase costs its base, plus the
+    IVA and recargo it bears when the persona states the recargo de
+    equivalencia regime, which deducts neither (LIVA art. 154.Dos). The stock
+    sold is ``opening + purchases - closing`` in euros. The quantities then
+    follow the valuation's layers: the opening stock is one layer of one unit
+    at its whole value (``valuation._opening_layers``) and each purchase is
+    booked at one unit per euro of its cost, so FIFO sells the opening layer
+    first, as one unit or the fraction of it the sold value covers, and then
+    one unit per euro of purchases.
     """
+    year = book.year.resolve(envelope)
+    regime = next((answer.value for answer in persona.profile if answer.question_id == "iva-regime"), None)
+    bears_tax = regime == iva_regime_recargo_equivalencia_token(effective_date=date(year, 12, 31)).value
     rows = {row.ref: row for row in persona.ledger}
-    purchases: list[tuple[MovementKind, str, Decimal]] = []
+    movements: list[tuple[MovementKind, str, Decimal]] = []
     for ref in book.purchases:
         row = rows[ref]
         assert row.taxable_base is not None
         assert row.iva_amount is not None
-        recargo = row.recargo_amount or Decimal(0)
-        cost = row.taxable_base + (row.iva_amount + recargo if recargo else Decimal(0))
-        purchases.append((MovementKind.PURCHASE, ref, cost))
-    if not purchases:
-        return []
-    opening_lot = Decimal(1) if book.opening_stock else Decimal(0)
-    sold = opening_lot + sum((cost for _, _, cost in purchases), Decimal(0)) - book.closing_stock
-    year = book.year.resolve(envelope)
-    return purchases + ([(MovementKind.COGS, f"{book.activity}-{year}-vendido", sold)] if sold else [])
+        borne = row.iva_amount + (row.recargo_amount or Decimal(0)) if bears_tax else Decimal(0)
+        movements.append((MovementKind.PURCHASE, ref, row.taxable_base + borne))
+    purchased = sum((cost for _, _, cost in movements), Decimal(0))
+    sold_value = book.opening_stock + purchased - book.closing_stock
+    if not sold_value:
+        return movements
+    opening_units = min(sold_value, book.opening_stock) / book.opening_stock if book.opening_stock else Decimal(0)
+    sold_units = opening_units + max(sold_value - book.opening_stock, Decimal(0))
+    return [*movements, (MovementKind.COGS, f"{book.activity}-{year}-vendido", sold_units)]
 
 
 def _profile_values(world: PersonaWorld) -> dict[str, str]:
