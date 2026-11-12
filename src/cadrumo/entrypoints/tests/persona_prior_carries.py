@@ -1,7 +1,7 @@
 """State a persona's pending Modelo 100 carries of earlier ejercicios through the operations the refusal's door names.
 
-A Modelo 100 reads the negative general bases still pending from the four
-previous ejercicios from the previous return. Where the profile holds no such
+A Modelo 100 reads the carries still pending from previous ejercicios from the
+previous return. Where the profile holds no such
 return, as for the return of the support floor, the calculation refuses with
 ``REFUSED_MODELO_PRIOR_CARRY_ABSENCE_UNSTATED`` and its door is
 ``operator.modelo.work.attest_prior_carries``. That command reads the
@@ -15,7 +15,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...application.modelo.carry_attestation_submission import prior_carry_attestation_submission
 from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1, ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
@@ -37,6 +36,7 @@ from ...application.modelo.workbench_operations import (
 from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.ids import BindingId
 from ...tests.personas import Persona, PriorCarries
@@ -48,9 +48,32 @@ _PERIOD = "0A"
 _LANGUAGE = OutputLanguage.ES
 
 
-def _statement(persona: Persona, world: PersonaWorld, year: int) -> PriorCarries | None:
-    """The persona's statement for the Modelo 100 of ``year``, or ``None`` when it states none."""
-    return next((item for item in persona.prior_carries if item.year.resolve(world.envelope) == year), None)
+def statement_families(persona: Persona) -> dict[tuple[str, str], AbsenceAttestationFamily]:
+    """Each statement's family token as the registry's family member, refusing a token that is not one.
+
+    The persona loader cannot import the domain, so this is where the tokens it
+    read are checked against the members :class:`AbsenceAttestationFamily` has.
+    """
+    families: dict[tuple[str, str], AbsenceAttestationFamily] = {}
+    for item in persona.prior_carries:
+        try:
+            families[(str(item.year), item.family)] = AbsenceAttestationFamily(item.family)
+        except ValueError:
+            known = [member.value for member in AbsenceAttestationFamily]
+            raise PersonaMaterialisationError(
+                f"{persona.id}: prior_carries family {item.family!r} is not one of {known}"
+            ) from None
+    return families
+
+
+def _statements(persona: Persona, world: PersonaWorld, year: int) -> dict[AbsenceAttestationFamily, PriorCarries]:
+    """The persona's statements for the Modelo 100 of ``year``, by the family each one names."""
+    families = statement_families(persona)
+    return {
+        families[(str(item.year), item.family)]: item
+        for item in persona.prior_carries
+        if item.year.resolve(world.envelope) == year
+    }
 
 
 def _box_amounts(
@@ -76,31 +99,37 @@ def _submission(
     world: PersonaWorld,
     year: int,
     baseline: ModeloEditBaselineV1,
-    statement: PriorCarries,
+    statements: Mapping[AbsenceAttestationFamily, PriorCarries],
     form_read: ModeloWorkbenchFormProjectionV1,
-) -> ModeloEditSubmissionV1:
-    """One intent per open carry: the stated amount where the persona states one, else the statement of none."""
-    attestations = form_read.form.form.carry_attestations
-    if not statement.pending:
-        return prior_carry_attestation_submission(baseline, attestations)
-    open_carries = tuple(sorted({binding_id for item in attestations for binding_id in item.binding_ids}))
-    amounts = _box_amounts(world, year, open_carries, statement)
+) -> ModeloEditSubmissionV1 | None:
+    """One intent per open carry of a family the persona names: the stated amount, else the statement of none.
+
+    A carry of a family no statement names is left open. ``None`` when no open
+    carry belongs to a named family.
+    """
+    intents: list[ModeloBindingEditIntentV1] = []
+    for attestation in form_read.form.form.carry_attestations:
+        statement = statements.get(attestation.family)
+        if statement is None:
+            continue
+        open_carries = tuple(sorted(set(attestation.binding_ids)))
+        amounts = _box_amounts(world, year, open_carries, statement) if statement.pending else {}
+        for binding_id in open_carries:
+            address = ModeloEditBindingAddressV1(binding_id=binding_id)
+            if binding_id in amounts:
+                intents.append(
+                    ModeloBindingEditIntentV1(
+                        address=address, kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE, value=amounts[binding_id]
+                    )
+                )
+            else:
+                intents.append(
+                    ModeloBindingEditIntentV1(address=address, kind=ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT)
+                )
+    if not intents:
+        return None
     return ModeloEditSubmissionV1(
-        baseline=baseline,
-        mutation_family=ModeloEditMutationFamily.CALCULATE,
-        binding_intents=tuple(
-            ModeloBindingEditIntentV1(
-                address=ModeloEditBindingAddressV1(binding_id=binding_id),
-                kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
-                value=amounts[binding_id],
-            )
-            if binding_id in amounts
-            else ModeloBindingEditIntentV1(
-                address=ModeloEditBindingAddressV1(binding_id=binding_id),
-                kind=ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
-            )
-            for binding_id in open_carries
-        ),
+        baseline=baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, binding_intents=tuple(intents)
     )
 
 
@@ -111,15 +140,17 @@ def attest_prior_carries(persona: Persona, world: PersonaWorld, work_unit_id: st
     return supplies; the staged intents are checked by the edit preflight, then
     applied by the guarded edit, which calculates the declaration with them.
     Returns the carries answered, empty when the persona states nothing for
-    ``year`` or every carry is already supplied, in which case nothing is
-    submitted beyond the form read.
+    ``year``, every carry of the families it names is already supplied, or the
+    form holds no open carry of those families; nothing is then submitted beyond
+    the form read.
 
     Raises:
-        PersonaMaterialisationError: When the form admits no edit, the check
+        PersonaMaterialisationError: When a statement names a family the registry
+            does not have, the form admits no edit, the check
             refuses or blocks the staged intents, or the apply does not succeed.
     """
-    statement = _statement(persona, world, year)
-    if statement is None:
+    statements = _statements(persona, world, year)
+    if not statements:
         return ()
     form_read = run_operation(
         world,
@@ -132,7 +163,9 @@ def attest_prior_carries(persona: Persona, world: PersonaWorld, work_unit_id: st
         return ()
     if form_read.admitted_baseline is None:
         raise PersonaMaterialisationError(f"{work_unit_id}: the form admitted no edit: {form_read.admission_refusal}")
-    submission = _submission(world, year, form_read.admitted_baseline.to_baseline(), statement, form_read)
+    submission = _submission(world, year, form_read.admitted_baseline.to_baseline(), statements, form_read)
+    if submission is None:
+        return ()
     staged = ModeloEditOperatorInputV2(
         submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=_LANGUAGE
     )
@@ -151,4 +184,4 @@ def attest_prior_carries(persona: Persona, world: PersonaWorld, work_unit_id: st
     return tuple(intent.address.binding_id for intent in submission.binding_intents)
 
 
-__all__ = ["attest_prior_carries"]
+__all__ = ["attest_prior_carries", "statement_families"]

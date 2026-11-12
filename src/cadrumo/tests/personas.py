@@ -310,20 +310,29 @@ class OwnAccount:
     designations: tuple[OwnAccountDesignation, ...]
 
 
+GENERAL_BASES_CARRY_FAMILY: Final[str] = "renta_negative_general_bases_pending"
+"""The family token of the negative general bases, whose boxes :data:`PRIOR_CARRY_BOXES` lists."""
+
 PRIOR_CARRY_BOXES: tuple[str, ...] = ("1380", "1382", "1385", "1388")
 """The Modelo 100 boxes of the negative general bases still pending from the four previous ejercicios."""
 
 
 @dataclass(frozen=True, slots=True)
 class PriorCarries:
-    """What the persona states is still pending, on one year's Modelo 100, of earlier ejercicios' negative bases.
+    """What the persona states is still pending, on one year's Modelo 100, for one family of earlier-ejercicio carries.
 
-    An empty ``pending`` is the statement that nothing is pending. Otherwise each
-    entry is a box of :data:`PRIOR_CARRY_BOXES` with the amount pending in it,
-    and a box it does not name is stated to hold nothing.
+    ``family`` names the carries the statement speaks of; a carry of a family no
+    statement names is never answered. The token is checked against the registry's
+    attestation families where the statement is used, since this shared support
+    module cannot import the domain. An empty ``pending`` is the statement
+    that nothing is pending in that family. Otherwise each entry is a box with
+    the amount pending in it (for the general bases, a box of
+    :data:`PRIOR_CARRY_BOXES`), and a box of the family it does not name is
+    stated to hold nothing.
     """
 
     year: YearToken
+    family: str
     pending: tuple[tuple[str, Decimal], ...]
 
 
@@ -1144,29 +1153,40 @@ def _check_designations(accounts: tuple[OwnAccount, ...], where: str) -> None:
         raise _fail(where, "two designations state one role and scope")
 
 
+def _attestation_family(value: object, where: str) -> str:
+    """The carry family token a statement names; the registry's family members are checked by the user of the statement."""
+    if not isinstance(value, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", value):
+        raise _fail(where, f"{value!r} is not a carry family token (lower snake case)")
+    return value
+
+
 def _prior_carries(table: _Table, where: str, modelos: tuple[str, ...]) -> PriorCarries:
-    _keys(table, where, required=frozenset({"year"}), optional=frozenset({"nothing_pending", "pending"}))
+    _keys(table, where, required=frozenset({"year", "family"}), optional=frozenset({"nothing_pending", "pending"}))
     if "100" not in modelos:
         raise _fail(where, "the pending carries are a Modelo 100 statement, and the persona files no Modelo 100")
     year = YearToken.parse(table["year"], where=f"{where}.year")
+    family = _attestation_family(table["family"], f"{where}.family")
     if ("nothing_pending" in table) == ("pending" in table):
         raise _fail(where, "state either nothing_pending = true or the pending amounts")
     if "nothing_pending" in table:
         if not _bool(table, "nothing_pending", where):
             raise _fail(where, "nothing_pending can only be stated true; state the pending amounts instead")
-        return PriorCarries(year=year, pending=())
+        return PriorCarries(year=year, family=family, pending=())
     boxes = _table(table["pending"], f"{where}.pending")
     if not boxes:
         raise _fail(where, "pending must name at least one box; state nothing_pending = true when none is pending")
     pending: list[tuple[str, Decimal]] = []
     for box, text in sorted(boxes.items()):
-        if box not in PRIOR_CARRY_BOXES:
-            raise _fail(where, f"box {box!r} is not one of {list(PRIOR_CARRY_BOXES)}")
+        if family == GENERAL_BASES_CARRY_FAMILY:
+            if box not in PRIOR_CARRY_BOXES:
+                raise _fail(where, f"box {box!r} is not one of {list(PRIOR_CARRY_BOXES)}")
+        elif not re.fullmatch(r"\d{4}", box):
+            raise _fail(where, f"box {box!r} is not a four-digit casilla")
         amount = _amount(text, f"{where}.pending.{box}")
         if amount <= 0:
             raise _fail(where, f"box {box} must hold a positive amount; a box left out is stated to hold nothing")
         pending.append((box, amount))
-    return PriorCarries(year=year, pending=tuple(pending))
+    return PriorCarries(year=year, family=family, pending=tuple(pending))
 
 
 def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertificate:
@@ -2092,10 +2112,10 @@ def _check_attested_prior_values(persona: Persona, envelope: YearEnvelope) -> No
 
 
 def _check_prior_carries(persona: Persona, envelope: YearEnvelope) -> None:
-    """Refuse two statements of the pending carries for one Modelo 100 year."""
-    years = [statement.year.resolve(envelope) for statement in persona.prior_carries]
-    if len(set(years)) != len(years):
-        raise _fail(persona.id, "the pending carries of one Modelo 100 year are stated twice")
+    """Refuse two statements of one carry family for one Modelo 100 year."""
+    keys = [(statement.year.resolve(envelope), statement.family) for statement in persona.prior_carries]
+    if len(set(keys)) != len(keys):
+        raise _fail(persona.id, "the pending carries of one family and Modelo 100 year are stated twice")
 
 
 def _check_inventory(persona: Persona) -> None:
@@ -2177,6 +2197,7 @@ __all__ = [
     "BIOGRAPHICAL_DATE_KEYS",
     "CATALOGUE_FORMAT",
     "DECLARATIVE_BLOCKS",
+    "GENERAL_BASES_CARRY_FAMILY",
     "LEDGER_ACCRUAL_COLUMNS",
     "LEDGER_COLUMNS",
     "PERSONAS_ROOT",

@@ -106,4 +106,5 @@ reason = "Bases liquidables generales negativas pendientes en la declaración de
 # takes them as zero, so the taxpayer states that none is pending.
 [[prior_carries]]
 year = "horizon-1"
+family = "renta_negative_general_bases_pending"
 nothing_pending = true

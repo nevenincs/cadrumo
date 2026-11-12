@@ -466,36 +466,55 @@ def _with_prior_carries(*statements: dict[str, object]) -> dict[str, Any]:
     return document
 
 
+_GENERAL = "renta_negative_general_bases_pending"
+_SAVINGS = "renta_negative_savings_capital_income_pending"
+
+
 def test_the_pending_carries_are_stated_as_nothing_pending_or_as_amounts_per_box() -> None:
-    nothing, amounts = _parse(
+    nothing, amounts, savings = _parse(
         _with_prior_carries(
-            {"year": "horizon-1", "nothing_pending": True},
-            {"year": "horizon-2", "pending": {"1388": "1250.40", "1380": "300.00"}},
+            {"year": "horizon-1", "family": _GENERAL, "nothing_pending": True},
+            {"year": "horizon-2", "family": _GENERAL, "pending": {"1388": "1250.40", "1380": "300.00"}},
+            {"year": "horizon-1", "family": _SAVINGS, "nothing_pending": True},
         )
     ).prior_carries
-    assert (str(nothing.year), nothing.pending) == ("horizon-1", ())
-    assert (str(amounts.year), amounts.pending) == (
+    assert (str(nothing.year), nothing.family, nothing.pending) == ("horizon-1", _GENERAL, ())
+    assert (str(amounts.year), amounts.family, amounts.pending) == (
         "horizon-2",
+        _GENERAL,
         (("1380", Decimal("300.00")), ("1388", Decimal("1250.40"))),
     )
+    assert (savings.family, savings.pending) == (_SAVINGS, ())
+
+
+def _carry(**keys: object) -> dict[str, object]:
+    return {"year": "horizon-1", "family": _GENERAL, **keys}
 
 
 @pytest.mark.parametrize(
     ("statements", "message"),
     [
-        (({"year": "horizon-1", "pending": {"1381": "10.00"}},), "is not one of"),
-        (({"year": "horizon-1", "pending": {"1380": "0.00"}},), "positive amount"),
-        (({"year": "horizon-1", "pending": {"1380": "1.234,00"}},), "canonical decimal"),
-        (({"year": "horizon-1", "pending": {}},), "at least one box"),
-        (({"year": "horizon-1", "nothing_pending": False},), "only be stated true"),
-        (({"year": "horizon-1"},), "either nothing_pending"),
-        (({"year": "horizon-1", "nothing_pending": True, "pending": {"1380": "1.00"}},), "either nothing_pending"),
-        (({"year": "horizon-1", "nothing_pending": True, "modelo": "100"},), "unknown fields"),
-        (({"year": _ENVELOPE.horizon, "nothing_pending": True},), "not a year token"),
-        (({"year": "horizon+1", "nothing_pending": True},), "outside the supported envelope"),
-        (({"year": "floor-1", "nothing_pending": True},), "outside the supported envelope"),
+        ((_carry(pending={"1381": "10.00"}),), "is not one of"),
+        ((_carry(pending={"1380": "0.00"}),), "positive amount"),
+        ((_carry(pending={"1380": "1.234,00"}),), "canonical decimal"),
+        ((_carry(pending={}),), "at least one box"),
+        ((_carry(nothing_pending=False),), "only be stated true"),
+        ((_carry(),), "either nothing_pending"),
+        ((_carry(nothing_pending=True, pending={"1380": "1.00"}),), "either nothing_pending"),
+        ((_carry(nothing_pending=True, modelo="100"),), "unknown fields"),
+        ((_carry(year=_ENVELOPE.horizon, nothing_pending=True),), "not a year token"),
+        ((_carry(year="horizon+1", nothing_pending=True),), "outside the supported envelope"),
+        ((_carry(year="floor-1", nothing_pending=True),), "outside the supported envelope"),
+        (({"year": "horizon-1", "nothing_pending": True},), "missing fields"),
+        ((_carry(family="Savings carry", nothing_pending=True),), "not a carry family token"),
+        ((_carry(family=7, nothing_pending=True),), "not a carry family token"),
+        ((_carry(family=_SAVINGS, pending={"abc": "1.00"}),), "four-digit casilla"),
         (
-            ({"year": "horizon-1", "nothing_pending": True}, {"year": "floor+3", "pending": {"1380": "5.00"}}),
+            (
+                _carry(nothing_pending=True),
+                _carry(year="floor+3", pending={"1380": "5.00"}),
+                _carry(nothing_pending=True),
+            ),
             "stated twice",
         ),
     ],
@@ -508,7 +527,9 @@ def test_a_malformed_pending_carry_statement_is_refused(
 
 
 def test_a_pending_carry_statement_needs_a_persona_that_files_modelo_100() -> None:
-    document = _with_prior_carries({"year": "horizon-1", "nothing_pending": True})
+    document = _with_prior_carries(
+        {"year": "horizon-1", "family": "renta_negative_general_bases_pending", "nothing_pending": True}
+    )
     document["persona"]["modelos"] = ["303"]
     document.pop("own_accounts", None)
     with pytest.raises(PersonaCatalogueError, match="files no Modelo 100"):

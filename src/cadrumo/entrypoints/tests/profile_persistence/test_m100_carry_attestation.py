@@ -1,9 +1,10 @@
 """A filer states that no earlier-ejercicio carry is pending on a Modelo 100, and it stays a statement.
 
 The Modelo 100 carries the negative general bases still pending from the four
-previous ejercicios (Ley 35/2006 art. 50.3) from the previous return. With no
-earlier return held, those carries are unknown, never zero, so the filer states
-that nothing is pending. The statement is a zero the operator layer marks
+previous ejercicios (Ley 35/2006 art. 50.3) and the negative savings balances
+still pending (art. 49.2) from the previous return. With no earlier return
+held, those carries are unknown, never zero, so the filer states that nothing
+is pending. The statement is a zero the operator layer marks
 attested, kept apart from a zero typed, and a typed value withdraws it.
 
 Real behaviour throughout: an isolated encrypted profile, the bundled
@@ -76,6 +77,19 @@ _PENDING_CARRIES: tuple[BindingId, ...] = (
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
 )
+#: The negative savings balances still pending from the four previous ejercicios, one carry per
+#: origin year for net capital income and for net gains and losses, each with its own statement.
+_SAVINGS_CARRIES: dict[AbsenceAttestationFamily, tuple[BindingId, ...]] = {
+    AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING: tuple(
+        f"renta-saldo-negativo-rcm-ahorro-{origin}-pendiente-inicio" for origin in ("em1", "em2", "em3", "em4")
+    ),
+    AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING: tuple(
+        f"renta-saldo-negativo-gyp-ahorro-{origin}-pendiente-inicio" for origin in ("em1", "em2", "em3", "em4")
+    ),
+}
+_SAVINGS: tuple[BindingId, ...] = tuple(sorted(carry for carries in _SAVINGS_CARRIES.values() for carry in carries))
+#: Every carry the declaration reads from the previous return, as the operator layer records them: sorted.
+_EVERY_CARRY: tuple[BindingId, ...] = tuple(sorted((*_PENDING_CARRIES, *_SAVINGS)))
 #: The previous return's Anexo C boxes each carry is read from, in the order of ``_PENDING_CARRIES``.
 _CARRIED_FROM: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(token, surface="_CARRIED_FROM") for token in ("1391", "1390", "1387", "1384")
@@ -107,6 +121,19 @@ def _renta_years_with_a_prior_return() -> tuple[int, ...]:
 
 #: The boxes the form prints for the four carries, in the order of ``_PENDING_CARRIES``.
 _CARRY_BOXES = ("1388", "1385", "1382", "1380")
+#: Each statement family's carries and the opening boxes the form prints for them (Anexo C.3 for
+#: the savings balances, by origin year em1..em4).
+_FAMILY_CARRIES: dict[AbsenceAttestationFamily, tuple[tuple[BindingId, ...], tuple[str, ...]]] = {
+    AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (_PENDING_CARRIES, _CARRY_BOXES),
+    AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING: (
+        _SAVINGS_CARRIES[AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING],
+        ("1280", "1277", "1274", "1272"),
+    ),
+    AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING: (
+        _SAVINGS_CARRIES[AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING],
+        ("1267", "1264", "1261", "1259"),
+    ),
+}
 
 
 def _attest(binding_id: BindingId) -> ModeloBindingEditIntentV1:
@@ -136,12 +163,14 @@ def test_a_filer_states_no_carry_is_pending_and_the_revision_keeps_it_apart_from
         attestable = _attestable(renta)
         assert set(_PENDING_CARRIES) <= attestable
 
-        applied = renta.apply(binding=tuple(_attest(binding_id) for binding_id in _PENDING_CARRIES))
+        assert set(_SAVINGS) <= attestable
+
+        applied = renta.apply(binding=tuple(_attest(binding_id) for binding_id in _EVERY_CARRY))
         assert applied.refusal is None
         layer = renta.require_head().operator_layer
         assert layer is not None
-        assert layer.attested_binding_ids == _PENDING_CARRIES
-        assert all(layer.binding_overrides[binding_id] == ATTESTED_ZERO for binding_id in _PENDING_CARRIES)
+        assert layer.attested_binding_ids == _EVERY_CARRY
+        assert all(layer.binding_overrides[binding_id] == ATTESTED_ZERO for binding_id in _EVERY_CARRY)
         # The statement answers the carries: none is left standing as an earlier filing nobody recorded.
         assert not [
             issue
@@ -152,10 +181,11 @@ def test_a_filer_states_no_carry_is_pending_and_the_revision_keeps_it_apart_from
         # Calculating the declaration again keeps the statement as the filer made it.
         recalculated = renta.recalculate().operator_layer
         assert recalculated is not None
-        assert recalculated.attested_binding_ids == _PENDING_CARRIES
+        assert recalculated.attested_binding_ids == _EVERY_CARRY
 
         # A figure typed over one carry is the filer's figure, no longer the statement.
-        typed, *kept = _PENDING_CARRIES
+        typed = _PENDING_CARRIES[0]
+        kept = [binding_id for binding_id in _EVERY_CARRY if binding_id != typed]
         retyped = renta.apply(
             binding=(
                 ModeloBindingEditIntentV1(
@@ -181,7 +211,7 @@ def test_an_earlier_return_stored_later_with_a_pending_amount_contradicts_the_st
         profile_adapter_composition(),
         seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
     ):
-        assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in _PENDING_CARRIES)).refusal is None
+        assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in _EVERY_CARRY)).refusal is None
 
         # The earlier return turns up afterwards, and it shows a negative base still pending.
         save_stamped_observation(
@@ -201,7 +231,7 @@ def test_an_earlier_return_stored_later_with_a_pending_amount_contradicts_the_st
 
     layer = head.operator_layer
     assert layer is not None
-    assert layer.attested_binding_ids == _PENDING_CARRIES
+    assert layer.attested_binding_ids == _EVERY_CARRY
     disputed = {
         issue.disagreement.key
         for issue in head.source_issues
@@ -235,16 +265,24 @@ def test_the_form_offers_the_statement_while_a_carry_is_open_and_applying_it_clo
         profile_adapter_composition(),
         seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
     ):
-        (offered,) = _form(renta, OutputLanguage.EN).carry_attestations
-        assert offered.family is AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
-        assert set(_PENDING_CARRIES) <= set(offered.binding_ids)
-        (spanish,) = _form(renta, OutputLanguage.ES).carry_attestations
-        assert spanish.binding_ids == offered.binding_ids
-        assert spanish.action_words != offered.action_words
-        assert spanish.effect_words != offered.effect_words
+        # One statement per family: the general bases and each kind of negative savings balance.
+        offered = {item.family: item for item in _form(renta, OutputLanguage.EN).carry_attestations}
+        expected = {AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: _PENDING_CARRIES, **_SAVINGS_CARRIES}
+        assert set(offered) == set(expected)
+        for family, carries in expected.items():
+            assert set(carries) <= set(offered[family].binding_ids)
+        spanish = {item.family: item for item in _form(renta, OutputLanguage.ES).carry_attestations}
+        assert set(spanish) == set(offered)
+        for family, item in offered.items():
+            assert spanish[family].binding_ids == item.binding_ids
+            assert spanish[family].action_words != item.action_words
+            assert spanish[family].effect_words != item.effect_words
+        # Each family speaks of its own carries.
+        assert len({item.statement_words for item in offered.values()}) == len(offered)
 
         # The window stages one statement per binding the form names, and nothing is left to state.
-        assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in offered.binding_ids)).refusal is None
+        named = sorted(binding_id for item in offered.values() for binding_id in item.binding_ids)
+        assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in named)).refusal is None
         assert _form(renta, OutputLanguage.EN).carry_attestations == ()
 
 
@@ -267,7 +305,7 @@ def test_a_stated_carry_reads_as_stated_and_a_typed_zero_does_not(tmp_path: Path
     ):
         applied = renta.apply(
             binding=(
-                *(_attest(binding_id) for binding_id in (stated, *also_stated)),
+                *(_attest(binding_id) for binding_id in (stated, *also_stated, *_SAVINGS)),
                 ModeloBindingEditIntentV1(
                     address=ModeloEditBindingAddressV1(binding_id=typed),
                     kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
@@ -328,22 +366,22 @@ def test_an_unstated_carry_with_no_earlier_return_is_refused_naming_every_open_c
         assert renta.head() is None
         error = refused.value
         assert isinstance(error, ModeloWorkMissingInputError)
-        assert error.family is AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
-        assert error.open_carry_ids == tuple(sorted(_PENDING_CARRIES))
+        carries, boxes = _FAMILY_CARRIES[error.family]
+        assert error.open_carry_ids == tuple(sorted(carries))
         code = get_registered_error_code(error)
         assert code.category is ErrorCategory.REFUSED
         assert code.code == "REFUSED_MODELO_PRIOR_CARRY_ABSENCE_UNSTATED"
         for locale in ("es", "en", "ca", "hu"):
             message = resolve_error_message(error, locale=locale)
             assert str(year) in message
-            assert all(box in message for box in _CARRY_BOXES), message
-            assert not any(binding_id in message for binding_id in _PENDING_CARRIES), message
+            assert all(box in message for box in boxes), message
+            assert not any(binding_id in message for binding_id in _EVERY_CARRY), message
         # The context the refusal is recorded and rendered with names boxes, never a registry binding.
         context = public_error_context(error)
         assert context is not None
-        assert context["boxes"] == ", ".join(sorted(_CARRY_BOXES)), context
+        assert context["boxes"] == ", ".join(sorted(boxes)), context
         assert "binding_id" not in context, context
-        assert not any(binding_id in value for value in context.values() for binding_id in _PENDING_CARRIES), context
+        assert not any(binding_id in value for value in context.values() for binding_id in _EVERY_CARRY), context
         verdict = error.terminal_precondition_verdict
         assert isinstance(verdict, PreconditionVerdict)
         assert verdict.failed_condition_id == "modelo.work.calculate.prior_carries.stated"
@@ -354,21 +392,21 @@ def test_an_unstated_carry_with_no_earlier_return_is_refused_naming_every_open_c
             "work_unit_id": renta.work_unit_id
         }
         (evidence,) = verdict.evidence
-        assert evidence.values["open_carries"] == ",".join(sorted(_PENDING_CARRIES))
+        assert evidence.values["open_carries"] == ",".join(sorted(carries))
         assert evidence.values["filing_year"] == year
         # The declaration's own form, which serves the statement, stays the window's way on.
         step = error_next_step(error, OutputLanguage.ES)
         assert isinstance(step, OperationOpenWorkStepV1)
         assert step.work_unit_id == renta.work_unit_id
 
-        assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in _PENDING_CARRIES)).refusal is None
+        assert renta.apply(binding=tuple(_attest(binding_id) for binding_id in _EVERY_CARRY)).refusal is None
         head = renta.recalculate()
 
     # The calculation now stands, and box 1380 holds the filer's statement, not a zero nobody gave.
     assert head.casilla_values[validated_casilla_id("1380", surface="test")] == Decimal("0")
     layer = head.operator_layer
     assert layer is not None
-    assert layer.attested_binding_ids == _PENDING_CARRIES
+    assert layer.attested_binding_ids == _EVERY_CARRY
 
 
 def _apply_as_submitted(work: SeededOperatorWork, *, offered: ModeloWorkForm) -> CadrumoError | None:
@@ -408,7 +446,7 @@ def test_the_command_line_statement_stages_what_the_form_names_and_lets_the_refu
         offered = _form(renta, OutputLanguage.EN)
         staged = prior_carry_attestation_submission(renta.baseline(), offered.carry_attestations).binding_intents
         # One statement per carry the form names, and nothing else: no value travels with it.
-        assert [intent.address.binding_id for intent in staged] == sorted(_PENDING_CARRIES)
+        assert [intent.address.binding_id for intent in staged] == list(_EVERY_CARRY)
         assert {intent.kind for intent in staged} == {ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT}
         assert all(intent.value is None for intent in staged)
         # Checking the staged statement records nothing: the form still offers it.
@@ -427,7 +465,7 @@ def test_the_command_line_statement_stages_what_the_form_names_and_lets_the_refu
     assert head.casilla_values[validated_casilla_id("1380", surface="test")] == Decimal("0")
     layer = head.operator_layer
     assert layer is not None
-    assert layer.attested_binding_ids == _PENDING_CARRIES
+    assert layer.attested_binding_ids == _EVERY_CARRY
     code = get_registered_error_code(again.value)
     assert code.category is ErrorCategory.REFUSED
     assert code.code == "REFUSED_MODELO_PRIOR_CARRY_NOTHING_OPEN"
