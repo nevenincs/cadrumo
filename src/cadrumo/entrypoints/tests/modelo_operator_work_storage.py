@@ -154,7 +154,11 @@ class _ExecutorContext:
 
 @dataclass(frozen=True, slots=True)
 class AppliedEdit:
-    """One executor run: the settled revision id, or the registered refusal it raised."""
+    """One executor run: the settled revision id, or the registered refusal it raised.
+
+    ``calculation_revision_id`` is ``None`` on a refusal and on an applied edit
+    that withdrew the work unit's calculation.
+    """
 
     calculation_revision_id: str | None
     refusal: CadrumoError | None
@@ -318,9 +322,12 @@ class SeededOperatorWork:
             return AppliedEdit(calculation_revision_id=None, refusal=refused, effects=tuple(events.effects))
         finally:
             prepared.release()
-        head = self.require_head()
+        # A withdrawn calculation leaves the work unit with no current calculation.
+        head = self.head()
         return AppliedEdit(
-            calculation_revision_id=head.calculation_revision_id, refusal=None, effects=tuple(events.effects)
+            calculation_revision_id=None if head is None else head.calculation_revision_id,
+            refusal=None,
+            effects=tuple(events.effects),
         )
 
     def recalculate(self) -> CalculationRevision:

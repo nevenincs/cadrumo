@@ -71,6 +71,7 @@ from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
+from .edit_carry_withdrawal import calculation_refusing_carry_bindings
 from .edit_models import (
     ModeloEditCorrectionAddressV1,
     ModeloEditNormalisation,
@@ -532,6 +533,14 @@ class ModeloEditPreflightExecutor:
                 work_catalogue=ports.work_units.load(),
                 calculation_catalogue=ports.calculations.load(operation=operation),
                 tax_id_format=tax_id_format,
+                carry_bindings=calculation_refusing_carry_bindings(
+                    operation.revision_for_context(
+                        str(baseline.modelo),
+                        filing_year=baseline.filing_year,
+                        period=baseline.period.registry_token,
+                        revision_id=baseline.law_selected_revision_id,
+                    )
+                ),
             )
             corrections = _correction_grammars(submission, operation)
             parsed = (

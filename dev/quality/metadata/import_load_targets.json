@@ -1268,6 +1268,7 @@
         "cadrumo.application.modelo.edit_apply_row_contracts",
         "cadrumo.application.modelo.edit_apply_scalar_contracts",
         "cadrumo.application.modelo.edit_baseline_projection",
+        "cadrumo.application.modelo.edit_carry_withdrawal",
         "cadrumo.application.modelo.edit_contract",
         "cadrumo.application.modelo.edit_execution",
         "cadrumo.application.modelo.edit_locale_input",

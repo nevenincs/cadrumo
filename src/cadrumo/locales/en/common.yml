@@ -10417,6 +10417,13 @@ workspace:
         set_nothing: new value
         set_source: replaces the value from its source
       finding:
+        calculation_withdrawn: The calculation is withdrawn. Calculate again after
+          you state the amounts carried from earlier years.
+        carry_withdrawal_filed: This declaration is recorded as filed. Correct it
+          with an amendment.
+        carry_withdrawal_keeps_entries: Withdrawing this statement would discard the
+          other values you entered on this declaration. Enter the carried amounts
+          instead.
         clear_of_source_fed_casilla: A source fills this box, so it cannot be emptied.
           Give it back to its source instead.
         intent_not_admitted: This box cannot be changed that way.

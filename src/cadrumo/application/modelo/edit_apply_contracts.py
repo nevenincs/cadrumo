@@ -241,11 +241,12 @@ class ModeloEditApplyPublicResultV1(BaseModel):
 
     Only the id: the full receipt is the domain record of truth, addressable
     through the ModeloEditReceiptRepositoryPort capability, and this result exists to confirm
-    which one a submission produced.
+    which one a submission produced. ``calculation_revision_id`` is ``None``
+    when the edit withdrew the work unit's calculation.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     result_version: int = 1
     receipt_id: Annotated[str, Field(min_length=1, max_length=128)]
-    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)] | None

@@ -2500,6 +2500,9 @@ application:
         entry has no invoice, so the draft is still open and picks the document up.'
       detail_row_identity_conflict: A detail row you entered does not match the row
         your records give for the same declarant; correct or remove it before calculating.
+      edit_prior_carries_unstated: This change leaves the amounts carried from earlier
+        years unstated, so the declaration cannot be calculated. Nothing was changed.
+        State those amounts first.
       edit_revision_id_unresolved: The calculation behind the edit did not report
         which revision it created, so the receipt of the edit could not be kept. This
         is a program inconsistency, and nothing you entered caused it. List the revisions
@@ -3694,6 +3697,7 @@ application:
         modelo_iva_wallet_override: Correct the IVA balance to carry forward
         modelo_iva_wallet_seed: State the opening IVA balance to carry forward
         modelo_verification_report_list: Review the verification reports
+        modelo_work_amend: Amend the filed declaration
         modelo_work_attest_m303_exonerado_390: Confirm you are exempt from Modelo
           390
         modelo_work_attest_prior_carries: State the amounts carried from earlier years

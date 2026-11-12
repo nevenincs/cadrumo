@@ -56,6 +56,7 @@ ACTION_TARGET_OPERATION_IDS: Final[Mapping[str, tuple[str, ...]]] = MappingProxy
         "modelo.work.attest_m303_exonerado_390": ("modelo.work.m303_attestation",),
         "modelo.work.attest_prior_carries": ("modelo.edit.apply", "modelo.edit.preflight", "modelo.work.form"),
         "modelo.work.attest_prior_value": ("modelo.edit.apply", "modelo.edit.preflight", "modelo.work.form"),
+        "modelo.work.amend": ("modelo.work.amend", "modelo.work.filing_record"),
         "modelo.work.attest_work_income": ("modelo.edit.apply", "modelo.edit.preflight", "modelo.work.form"),
         "modelo.work.calculate": ("modelo.work.calculate", "modelo.work.metadata"),
         "modelo.work.create": ("modelo.work.create",),
