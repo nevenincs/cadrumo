@@ -2976,6 +2976,17 @@ cli:
         state_help: '`observed` lezárt évre; `committed` még le nem zárt évre, amelyet
           teljesítés hiányában helyesbíteni kell.'
         year_help: Az a naptári év, amelyre az átlag vonatkozik.
+      posicion:
+        add_help: Adj hozzá egy pozíciót --value TÉNY=ÉRTÉK adatokkal; csak akkor
+          kerül mentésre, ha az adatok összhangban vannak.
+        clear_help: Töröl egy adatot a nevével; több adathoz ismételd az opciót.
+        edit_help: Módosítsd egy pozíció adatait, és töröld a megnevezetteket; a többi
+          marad.
+        help: Rögzítsd a bankszámláidat, lekötött betéteidet és értékpapírszámláidat.
+        list_help: Listázd a mentett pozíciókat a sorkulcsukkal.
+        remove_help: Töröld a pozíciót.
+        row_help: A pozíció sorkulcsa, ahogy a «list» mutatja.
+        value_help: Egy TÉNY=ÉRTÉK adat; több adathoz ismételd az opciót.
       recovery:
         channel_absent: A helyreállítási kód csak terminálon jeleníthető meg. Terminál
           nélküli gépen add meg a --recovery-handoff-fd és --recovery-verification-fd

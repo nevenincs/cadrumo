@@ -2981,6 +2981,18 @@ cli:
         state_help: '`observed` per a un any tancat; `committed` per a un any encara
           no tancat, que s''haurà de regularitzar si no es compleix.'
         year_help: Any natural al qual correspon la mitjana.
+      posicion:
+        add_help: Afegeix una posició amb dades --value FET=VALOR; es desa només si
+          les dades són coherents.
+        clear_help: Esborra una dada pel seu nom; repeteix l'opció per a diverses.
+        edit_help: Canvia dades d'una posició i esborra les que indiquis; les altres
+          es mantenen.
+        help: Registra els teus comptes bancaris, dipòsits a termini i comptes de
+          valors.
+        list_help: Llista les posicions desades amb la seva clau de fila.
+        remove_help: Elimina una posició.
+        row_help: Clau de fila de la posició, la que mostra «list».
+        value_help: Una dada FET=VALOR; repeteix l'opció per a diverses dades.
       recovery:
         channel_absent: Un codi de recuperació només es pot mostrar en un terminal.
           En un host sense terminal, indica --recovery-handoff-fd i --recovery-verification-fd;

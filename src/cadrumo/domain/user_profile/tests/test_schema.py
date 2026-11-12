@@ -44,6 +44,7 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
         "renta_filing",
         "renta_inmueble",
         "renta_arrendamiento",
+        "inversiones_posicion",
         "renta_taxpayer",
         "renta_spouse",
         "renta_family",

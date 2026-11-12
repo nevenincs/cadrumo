@@ -1,6 +1,6 @@
-"""Shared mechanics of the property and lease doors under ``config profile``.
+"""Shared mechanics of the property, lease and position doors under ``config profile``.
 
-Both records are repeatable profile sections, so a door reads the complete facts
+Each record is a repeatable profile section, so a door reads the complete facts
 view once, judges the row it is about to write against the rest of the profile,
 and submits one registered row operation bound to the exact revision and content
 digest it read. A profile that moved in between refuses the write.

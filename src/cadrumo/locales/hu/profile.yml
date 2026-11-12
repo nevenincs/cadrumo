@@ -276,6 +276,27 @@ profile:
           label: Vezetéknevek
         tax_id:
           label: Adóazonosító (NIF/NIE/CIF)
+      inversiones_posicion:
+        fecha_fin:
+          label: Tulajdonos eddig
+        fecha_inicio:
+          label: Tulajdonos ettől
+        identificador:
+          label: A pozíció saját azonosítód
+        pagador_nif:
+          label: Kifizető adóazonosítója
+        pagador_nombre:
+          label: Kifizető neve
+        pais_origen:
+          label: A jövedelem forrásállama
+        porcentaje_titularidad:
+          label: Tulajdoni hányadod
+        tipo:
+          choices:
+            cuenta: Folyó- vagy megtakarítási számla
+            deposito: Lekötött betét
+            valores_negociables: Értékpapírszámla
+          label: Pozíció fajtája
       irpf:
         activity_income_imputation_criterion:
           choices:
@@ -737,6 +758,10 @@ profile:
       identity:
         summary: 'A neved és NIF-számod: kinek a nevében készülnek a bevallások.'
         title: Azonosítás
+      inversiones_posicion:
+        summary: A bankszámláid, lekötött betéteid és értékpapírszámláid, pozíciónként
+          egy sor. Ide kerülnek az állandó adataik; az összegek a főkönyvből jönnek.
+        title: Megtakarítási pozíciók
       irpf:
         summary: Hogyan számítják a személyi jövedelemadóját (IRPF), és milyen levonások
           terhelik.

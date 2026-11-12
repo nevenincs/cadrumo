@@ -4323,6 +4323,12 @@ application:
       passphrase_confirmation_mismatch: La nueva contraseña y su confirmación no coinciden.
       passphrase_current_rejected: La contraseña actual no es correcta; la contraseña
         no se ha cambiado.
+      posicion_country_unknown: El Estado de origen «%{pais}» no es un código de país
+        de dos letras conocido; corrígelo y repite «%{door}».
+      posicion_payer_id_invalid: El NIF de un pagador español no es válido; revisa
+        sus letras y cifras, y repite «%{door}».
+      posicion_row_invalid: El dato «%{leaf}» no es válido o contradice otros datos
+        de la posición; no se guardó nada. Corrígelo y repite «%{door}».
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
       profile_authentication_refused: No se aceptó la contraseña del perfil.

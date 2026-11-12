@@ -1,4 +1,4 @@
-"""The property and lease verbs are registered, reachable and worded in every locale."""
+"""The property, lease and position verbs are registered, reachable and worded in every locale."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _VERBS = {
     "inmueble": ("add", "edit", "list", "remove"),
     "arrendamiento": ("add", "edit", "end", "list", "remove"),
+    "posicion": ("add", "edit", "list", "remove"),
 }
 _LOCALES = ("en", "es", "ca", "hu")
 
@@ -34,10 +35,15 @@ def test_each_verb_has_help_in_every_locale(family: str, verb: str) -> None:
         assert "cli.config.profile" not in result.output, (locale, result.output)
 
 
-def test_the_edit_verbs_take_values_and_clears_and_end_takes_a_date() -> None:
-    edit = invoke_cached_cli(["config", "profile", "inmueble", "edit", "--help"])
-    end = invoke_cached_cli(["config", "profile", "arrendamiento", "end", "--help"])
+@pytest.mark.parametrize("family", ["inmueble", "posicion"])
+def test_the_edit_verbs_take_values_and_clears(family: str) -> None:
+    edit = invoke_cached_cli(["config", "profile", family, "edit", "--help"])
 
     assert "--value" in edit.output
     assert "--clear" in edit.output
+
+
+def test_end_takes_a_date() -> None:
+    end = invoke_cached_cli(["config", "profile", "arrendamiento", "end", "--help"])
+
     assert "FECHA" in end.output.upper()

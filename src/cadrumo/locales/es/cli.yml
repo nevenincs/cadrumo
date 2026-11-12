@@ -3009,6 +3009,17 @@ cli:
         state_help: '`observed` para un año cerrado; `committed` para un año aún no
           cerrado, que deberá regularizarse si no se cumple.'
         year_help: Año natural al que corresponde la media.
+      posicion:
+        add_help: Añade una posición con datos --value HECHO=VALOR; se guarda solo
+          si los datos son coherentes.
+        clear_help: Borra un dato por su nombre; repite la opción para varios.
+        edit_help: Cambia datos de una posición y borra los que indiques; los demás
+          se mantienen.
+        help: Registra tus cuentas bancarias, depósitos a plazo y cuentas de valores.
+        list_help: Lista las posiciones guardadas con su clave de fila.
+        remove_help: Elimina una posición.
+        row_help: Clave de fila de la posición, la que muestra «list».
+        value_help: Un dato HECHO=VALOR; repite la opción para varios datos.
       recovery:
         channel_absent: Un código de recuperación solo puede mostrarse en un terminal.
           En un sistema sin terminal interactiva, indica --recovery-handoff-fd y --recovery-verification-fd;

@@ -4108,6 +4108,12 @@ application:
         match.
       passphrase_current_rejected: The current password is not correct; the password
         was not changed.
+      posicion_country_unknown: The source state “%{pais}” is not a known two-letter
+        country code; correct it and repeat “%{door}”.
+      posicion_payer_id_invalid: The tax ID of a Spanish payer is not valid; check
+        its letters and digits, then repeat “%{door}”.
+      posicion_row_invalid: The fact “%{leaf}” is not valid or contradicts other facts
+        of the position; nothing was stored. Correct it and repeat “%{door}”.
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
       profile_authentication_refused: The profile password was not accepted.

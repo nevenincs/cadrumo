@@ -4259,6 +4259,12 @@ application:
         profil sémájának.
       passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik.
       passphrase_current_rejected: A jelenlegi jelszó helytelen; a jelszó nem változott.
+      posicion_country_unknown: 'A(z) „%{pais}” forrásállam nem ismert kétbetűs országkód;
+        javítsd, és ismételd meg: «%{door}».'
+      posicion_payer_id_invalid: 'Egy spanyol kifizető adóazonosítója érvénytelen;
+        ellenőrizd a betűit és számjegyeit, majd ismételd meg: «%{door}».'
+      posicion_row_invalid: 'A(z) „%{leaf}” adat érvénytelen, vagy ellentmond a pozíció
+        más adatainak; semmi nem került mentésre. Javítsd, és ismételd meg: «%{door}».'
       profile_already_exists: A(z) %{profile} profil már létezik; futtasd az aeat
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.

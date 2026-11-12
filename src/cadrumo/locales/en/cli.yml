@@ -2800,6 +2800,17 @@ cli:
         state_help: '`observed` for a closed year; `committed` for a year not yet
           closed, which must be regularised if not met.'
         year_help: Calendar year the average applies to.
+      posicion:
+        add_help: Add a position from --value FACT=VALUE facts; it is stored only
+          if they cohere.
+        clear_help: Clear a fact by name; repeat the option for several.
+        edit_help: Change facts of a position and clear the ones you name; the rest
+          stay.
+        help: Record your bank accounts, term deposits and securities accounts.
+        list_help: List the stored positions with their row key.
+        remove_help: Remove a position.
+        row_help: Row key of the position, as «list» shows it.
+        value_help: One FACT=VALUE fact; repeat the option for several facts.
       recovery:
         channel_absent: A recovery code can only be shown on a terminal. On a headless
           host, provide both --recovery-handoff-fd and --recovery-verification-fd;
