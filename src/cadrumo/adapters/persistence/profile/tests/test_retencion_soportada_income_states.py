@@ -224,6 +224,20 @@ def test_a_class_the_profile_excludes_is_a_proven_zero_for_every_income_binding(
     assert {node.terminal_origin for node in resolution.provenance} == {TerminalOriginClass.PROFILE_FIELD}
 
 
+def test_an_attestation_beside_a_profile_that_excludes_the_class_proves_the_income_zero(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    # The attestation speaks of withholding only; the stated categories speak of the income itself.
+    profile = _profile(operation, UserProfileFact(path=_CATEGORIES, value="actividad_economica"))
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        _attest_trabajo(operation)
+        resolution = _resolve(profile)
+    assert resolution.diagnostics == ()
+    assert resolution.unresolved_binding_ids == ()
+    assert set(resolution.binding_values.values()) == {Decimal("0.00")}
+    assert len(resolution.binding_values) == len(_QUANTITIES) + 1
+
+
 def test_a_declared_class_without_a_record_or_attestation_needs_evidence_for_income_and_credit(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
