@@ -2439,6 +2439,7 @@
         "cadrumo.domain.calculations.registry.facts",
         "cadrumo.domain.calculations.registry.facts.atoms",
         "cadrumo.domain.calculations.registry.facts.declared_token",
+        "cadrumo.domain.calculations.registry.facts.envelope_editions",
         "cadrumo.domain.calculations.registry.facts.payloads",
         "cadrumo.domain.calculations.registry.facts.resolution",
         "cadrumo.domain.calculations.registry.facts.schema",
