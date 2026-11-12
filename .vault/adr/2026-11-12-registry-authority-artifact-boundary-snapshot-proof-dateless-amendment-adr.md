@@ -5,14 +5,16 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:afadf39c690f1c98e86e4b7ceef95a36692eb42a1d33ce7e7689f3224df85229'
+body_hash: 'sha256:7bc419278bb8d9177f465159694628c50963a2c98915581084e2fbed6fd71e2a'
 related:
   - "[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr]]"
   - '[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-reference]]'
   - '[[2026-11-12-registry-authority-artifact-boundary-indexed-storage-v6-amendment-adr]]'
 ---
 
-# `registry-authority-artifact-boundary` adr: `snapshot proofs without a run-date window (amendment proposal)` | (**status:** `proposed`)
+# `registry-authority-artifact-boundary` adr: `snapshot proofs without a run-date window (amendment proposal)` | (**status:** `deprecated`)
+
+Retired 2026-11-12: accepted by the coordinator on 2026-11-12 and applied into `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr`, which now carries the decision. This record is kept as the proposal's provenance and holds no authority of its own.
 
 This record proposes an amendment to the accepted `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr`. The accepted body stays unchanged until the amendment is accepted; on acceptance, the passages named under Implementation are applied to it and this proposal is retired.
 
