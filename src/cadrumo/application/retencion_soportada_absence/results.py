@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.i18n.render import tr
@@ -75,7 +75,7 @@ _STATE_LOCALE_KEYS: Final[dict[RetencionSoportadaAbsenceState, str]] = {
 }
 """A literal table so the locale audit sees each state's word reach the translator."""
 if set(_STATE_LOCALE_KEYS) != set(RetencionSoportadaAbsenceState):
-    raise RuntimeError("every absence attestation state needs its word")
+    raise InternalInvariantError("every absence attestation state needs its word")
 
 
 class RetencionSoportadaAbsenceRowProjection(_AbsenceFields):
