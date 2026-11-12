@@ -25,6 +25,12 @@ _PROBES = {
     "APELLIDOS_NOMBRE": "APELLIDOS_NOMBRE=Roca Carmen",
     "FALLECIMIENTO": "FALLECIMIENTO=2025-02-01",
     "CONVIVIENTES": "CONVIVIENTES=2",
+    "RENTAS": "RENTAS=7200.00",
+    "DECLARACION_PROPIA": "DECLARACION_PROPIA=false",
+    "DISCAPACIDAD": "DISCAPACIDAD=33",
+    "CONVIVENCIA_MITAD_PERIODO": "CONVIVENCIA_MITAD_PERIODO=true",
+    "DISCAPACIDAD_ASISTENCIA": "DISCAPACIDAD_ASISTENCIA=false",
+    "INCAPACIDAD_JUDICIAL": "INCAPACIDAD_JUDICIAL=false",
 }
 
 
@@ -54,13 +60,31 @@ def test_the_help_advertises_exactly_the_keys_the_grammar_honours(locale: str) -
 
 def test_the_rendered_commands_expose_the_flag_and_the_none_form() -> None:
     group = _group_at("config", "profile", "ascendiente")
-    assert sorted(group.list_commands(typer.Context(group))) == ["add", "list", "remove"]
+    assert sorted(group.list_commands(typer.Context(group))) == ["add", "edit", "list", "remove"]
     add = group.get_command(typer.Context(group), "add")
     assert add is not None
     options = {param.name: param for param in add.params}
     assert {"ascendiente", "none"} <= set(options)
     assert not options["ascendiente"].required
     assert set(_TOKEN_RE.findall(getattr(options["ascendiente"], "help", None) or "")) == set(_PROBES)
+
+
+@pytest.mark.parametrize("locale", _LOCALES)
+def test_the_edit_help_names_every_key_the_grammar_honours(locale: str) -> None:
+    named = set(
+        re.findall(r"\b[A-Z][A-Z_]+[A-Z]\b", tr("cli.config.profile.ascendiente.edit_flag_help", locale=locale))
+    )
+    assert set(_PROBES) <= named, f"{locale}: edit help omits {sorted(set(_PROBES) - named)}"
+
+
+def test_the_rendered_edit_takes_the_row_index_the_replacements_and_the_clears() -> None:
+    group = _group_at("config", "profile", "ascendiente")
+    edit = group.get_command(typer.Context(group), "edit")
+    assert edit is not None
+    params = {param.name: param for param in edit.params}
+    assert {"index", "ascendiente", "clear"} <= set(params)
+    assert params["index"].required
+    assert params["ascendiente"].multiple and params["clear"].multiple
 
 
 def test_the_descendant_add_offers_the_same_none_form_and_no_longer_requires_a_row() -> None:

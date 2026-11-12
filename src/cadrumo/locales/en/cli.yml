@@ -2519,17 +2519,30 @@ cli:
       ascendiente:
         add_flag_help: NACIMIENTO=YYYY-MM-DD[,NIF=<NIF or NIE>][,APELLIDOS_NOMBRE=<surnames
           and name>][,FALLECIMIENTO=YYYY-MM-DD][,CONVIVIENTES=<number of descendants
-          the ascendant lives with>]. Repeatable; NACIMIENTO is required in every
-          row.
+          the ascendant lives with>][,CONVIVENCIA_MITAD_PERIODO=true|false][,RENTAS=<annual
+          income excluding exempt income, in euros>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65][,DISCAPACIDAD_ASISTENCIA=true|false][,INCAPACIDAD_JUDICIAL=true|false].
+          Repeatable; NACIMIENTO is required in every row.
         add_help: Add one or more ascendants to the active profile, or state with
           --none that there are none.
+        edit_clear_help: A key whose stated fact to remove from the ascendant, such
+          as FALLECIMIENTO. Repeatable; NACIMIENTO cannot be removed.
+        edit_empty: Name at least one fact to change with --ascendiente KEY=VALUE
+          or to remove with --clear KEY.
+        edit_flag_help: 'KEY=VALUE pairs to replace, with the keys of add: NACIMIENTO,
+          NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, CONVIVENCIA_MITAD_PERIODO,
+          RENTAS, DECLARACION_PROPIA, DISCAPACIDAD, DISCAPACIDAD_ASISTENCIA and INCAPACIDAD_JUDICIAL.
+          Repeatable; each key at most once.'
+        edit_help: Change the stated facts of one ascendant of the active profile
+          by 0-based index; the facts you do not name stay as they are.
+        edit_index_help: 0-based index of the ascendant to change, as list shows it.
         help: Declare the taxpayer's ascendants for the Modelo 100 household section.
         index_out_of_range: Index %{index} is out of range; the profile has %{total}
           ascendant(s).
         invalid_row: The --ascendiente row could not be read. Use KEY=VALUE pairs
-          with the keys NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO and CONVIVIENTES,
-          each at most once and with a value; the error context names the key when
-          it can be identified.
+          with the keys NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES,
+          CONVIVENCIA_MITAD_PERIODO, RENTAS, DECLARACION_PROPIA, DISCAPACIDAD, DISCAPACIDAD_ASISTENCIA
+          and INCAPACIDAD_JUDICIAL, each at most once and with a value; the error
+          context names the key when it can be identified.
         list_help: List the ascendants declared on the active profile and whether
           the profile states there are none.
         remove_help: Remove one ascendant by 0-based index from the active profile.
@@ -2763,6 +2776,12 @@ cli:
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       notices:
+        ascendant_disability_key_cleared: 'Your profile stored a disability key for
+          ascendant {row}. That value no longer exists: the key is derived from the
+          disability grade, whether the ascendant needs help from other people or
+          has reduced mobility, and whether a court declared the incapacity. State
+          those three facts with «aeat config profile ascendiente edit {row}» so the
+          ascendant minimum can be calculated again.'
         payer_fact_cleared: '{fact}: this profile stored a “no” that the setup wizard
           wrote as its default, so it could not be told apart from an unanswered question
           and has been cleared. Obligations that depend on it stay undetermined until

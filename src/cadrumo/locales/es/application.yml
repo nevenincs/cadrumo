@@ -1747,6 +1747,17 @@ application:
           sin tipo de actividad.
         what_to_do: Indica el tipo de actividad en esos registros de ingresos y vuelve
           a calcular.
+      ascendant_disability_minimum_not_computed:
+        what: Un ascendiente por el que aplicas el mínimo tiene discapacidad, y su
+          mínimo por discapacidad aún no se calcula, así que la declaración no puede
+          comprobarse, exportarse ni presentarse.
+        what_to_do: Revisa en tu perfil los datos de discapacidad de ese ascendiente.
+          Mientras tenga discapacidad, esta declaración no puede completarse aquí.
+      autonomic_deducciones_not_enrolled:
+        what: No se calcula ninguna deducción autonómica de tu comunidad de residencia
+          en este ejercicio, así que el total de deducciones autonómicas solo incluye
+          los importes que escribas tú.
+        what_to_do: Si te corresponde alguna, escribe tú su importe en su casilla.
       calculation_screen_outdated:
         what: Este cálculo se hizo antes de las comprobaciones actuales de Cadrumo
           sobre sus cifras, así que no se puede comprobar, exportar ni registrar tal
@@ -2127,6 +2138,8 @@ application:
         fuera del pago fraccionado del periodo que termina el {period_end}.'
       amortization_box_unbound: '{element}: esta edición no tiene casilla para su
         dotación, así que no suma nada a este cálculo.'
+      ascendant_disability_minimum_not_computed: '{group}: {count} con discapacidad
+        cuyo mínimo por discapacidad no se calcula.'
       book_claimed_purchase: El movimiento del {row_date} por {row_amount} es una
         compra de tu inventario, así que se declara como compra de existencias y no
         como gasto.
@@ -2373,7 +2386,13 @@ application:
       household_leaf:
         apellidos_nombre: apellidos y nombre
         birth_date: fecha de nacimiento
+        convivencia_mitad_periodo: si ha convivido contigo al menos la mitad del año
+        convivientes: número de descendientes con quienes convive
+        declaracion_propia: si presenta declaración propia
+        discapacidad: grado de discapacidad
+        incapacidad_judicial: si un juez ha declarado su incapacidad
         nif: NIF
+        rentas_anuales: rentas anuales
       income_class:
         actividad_economica: actividades económicas
         arrendamiento_inmueble_urbano: arrendamiento de inmueble urbano
@@ -2643,6 +2662,9 @@ application:
       applicability_filter_unknown: Una regla de verificación de los datos incluidos
         cita el filtro de aplicabilidad %{filter}, que el programa no conoce. Los
         datos incluidos son incoherentes y nada de lo que has introducido lo causa.
+      ascendant_stored_value_unreadable: El ascendiente %{row} de tu perfil tiene
+        guardado un valor que la declaración no puede leer. Edita ese ascendiente,
+        vuelve a indicar el valor y calcula de nuevo.
       binding_source_kind_unclassified: Las reglas incluidas no asignan ninguna familia
         al tipo de fuente %{source_kind}, así que no se puede explicar su origen.
         Los datos incluidos están incompletos y nada de lo que has introducido lo
@@ -3817,6 +3839,15 @@ application:
         de tus registros, así que queda sin resolver en lugar de contar como cero.
         Registra la evidencia que falta y vuelve a proyectar.
       casilla_reason:
+        autonomic_deduction_other_comunidad: Esta casilla suma las deducciones autonómicas
+          de tu comunidad de residencia, pero la declaración tiene importes en las
+          casillas de deducción de otra comunidad. Una declaración solo lleva las
+          deducciones de una comunidad. Corrige esas casillas o tu comunidad de residencia,
+          o introduce tú esta casilla. Nunca se muestra como cero.
+        autonomic_deduction_unsummed_box: Esta casilla suma las deducciones autonómicas
+          de tu comunidad de residencia, pero la suma oficial también nombra una casilla
+          que este cálculo no suma, y esa casilla tiene un importe. Revísala, o introduce
+          tú esta casilla. Nunca se muestra como cero.
         income_family_contradicts_profile: Esta casilla compara tus demás rentas con
           el límite, pero las categorías de renta que indicaste excluyen un tipo de
           renta del que tienes importes. Corrige las categorías o retira los importes
@@ -4530,6 +4561,9 @@ application:
         a leer los datos familiares antes de quitar a nadie.
       ascendant_rows_over_limit: Una declaración incluye como máximo %{limit} ascendientes
         y se han indicado %{count}.
+      ascendant_value_invalid: El ascendiente %{row} indica un valor que la declaración
+        no admite; revisa su importe de rentas, su grado de discapacidad y su respuesta
+        de sí o no.
       censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
         que no puede confirmarse que corresponda a este perfil.
       censal_read_identity_cleared: El NIF de este perfil se ha vaciado, por lo que
@@ -4643,13 +4677,39 @@ application:
           label: Apellidos y nombre del ascendiente (primero los apellidos)
         birth_date:
           label: Fecha de nacimiento
+        convivencia_mitad_periodo:
+          help: Cuenta hasta la fecha de fallecimiento si el ascendiente falleció
+            durante el año. El internamiento en un centro especializado cuenta como
+            convivencia.
+          label: ¿Ha convivido este ascendiente contigo al menos la mitad del año?
         convivientes:
           label: Número de descendientes con los que convive este ascendiente
+        declaracion_propia:
+          help: 'Se pregunta cuando sus rentas superan la cifra que fija la ley: entonces
+            presentar su propia declaración quita el mínimo.'
+          label: ¿Presenta este ascendiente su propia declaración del IRPF?
+        discapacidad:
+          help: Se pregunta para un ascendiente por debajo de la edad mínima, que
+            da derecho al mínimo solo con discapacidad.
+          label: Grado de discapacidad de este ascendiente
+        discapacidad_asistencia:
+          help: Se pregunta para un grado de discapacidad desde el 33 % hasta menos
+            del 65 %; fija la clave de discapacidad que consigna la declaración.
+          label: ¿Necesita este ascendiente ayuda de terceras personas o tiene movilidad
+            reducida?
         fallecimiento:
           help: Déjalo en blanco si este ascendiente no ha fallecido.
           label: Fecha de fallecimiento
+        incapacidad_judicial:
+          help: La incapacidad declarada judicialmente cuenta como un grado de discapacidad
+            del 65 % o más, sea cual sea el grado indicado.
+          label: ¿Ha declarado un juez la incapacidad de este ascendiente?
         nif:
           label: NIF/NIE del ascendiente (déjalo en blanco si no tiene)
+        rentas_anuales:
+          help: Si sus rentas superan el límite que fija la ley para el año, el ascendiente
+            no da derecho al mínimo por ascendientes.
+          label: Rentas anuales de este ascendiente, excluidas las exentas (euros)
       descendiente:
         cotizaciones_ss_madre:
           help: Déjalo en blanco si no lo sabes. Escribe el importe con punto decimal

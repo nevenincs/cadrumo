@@ -1709,6 +1709,17 @@ application:
           nélküli bevételei.
         what_to_do: Add meg a tevékenység típusát ezeknél a bevételi tételeknél, majd
           számolj újra.
+      ascendant_disability_minimum_not_computed:
+        what: Egy felmenő, akire a minimumot alkalmazod, fogyatékossággal él, és a
+          fogyatékossági minimumát még nem számítjuk ki, ezért a bevallás nem ellenőrizhető,
+          nem exportálható és nem nyújtható be.
+        what_to_do: Ellenőrizd a profilodban a felmenő fogyatékossági adatait. Amíg
+          fogyatékossággal él, ez a bevallás itt nem fejezhető be.
+      autonomic_deducciones_not_enrolled:
+        what: Ebben az évben a lakóhelyed szerinti autonóm közösség egyik regionális
+          kedvezménye sincs kiszámítva, ezért a regionális kedvezmények összege csak
+          az általad beírt összegeket tartalmazza.
+        what_to_do: Ha valamelyik megillet, írd be te magad az összegét a rovatába.
       calculation_screen_outdated:
         what: Ez a számítás a Cadrumo jelenlegi ellenőrzései előtt készült, ezért
           ebben a formában nem ellenőrizhető, nem exportálható és nem rögzíthető.
@@ -2085,6 +2096,8 @@ application:
         kimarad a(z) {period_end} napon végződő időszak előlegéből.'
       amortization_box_unbound: '{element}: ebben a kiadásban nincs mező az értékcsökkenési
         leírásához, ezért semmit sem ad ehhez a számításhoz.'
+      ascendant_disability_minimum_not_computed: '{group}: {count} fogyatékossággal
+        élő, akinek a fogyatékossági minimumát nem számítjuk ki.'
       book_claimed_purchase: A(z) {row_date} napi, {row_amount} összegű tétel a készletnyilvántartásod
         egyik vásárlása, ezért készletbeszerzésként szerepel, nem költségként.
       book_claimed_purchase_undated: Egy könyvelt tétel a készletnyilvántartásod egyik
@@ -2335,7 +2348,13 @@ application:
       household_leaf:
         apellidos_nombre: vezetéknév és keresztnév
         birth_date: születési dátum
+        convivencia_mitad_periodo: hogy legalább az év felében együtt élt-e veled
+        convivientes: a vele együtt élő leszármazottak száma
+        declaracion_propia: hogy saját bevallást nyújt-e be
+        discapacidad: fogyatékossági fok
+        incapacidad_judicial: hogy bíróság cselekvőképtelennek nyilvánította-e
         nif: NIF
+        rentas_anuales: éves jövedelem
       income_class:
         actividad_economica: Gazdasági tevékenységből származó
         arrendamiento_inmueble_urbano: Városi ingatlan bérbeadásából származó
@@ -2601,6 +2620,9 @@ application:
       applicability_filter_unknown: A mellékelt adatok egyik ellenőrzési szabálya
         a(z) %{filter} alkalmazhatósági szűrőre hivatkozik, amelyet a program nem
         ismer. A mellékelt adatok ellentmondásosak, és semmi, amit megadtál, nem okozta.
+      ascendant_stored_value_unreadable: A profilod %{row}. felmenőjénél olyan mentett
+        érték szerepel, amelyet a bevallás nem tud beolvasni. Szerkeszd ezt a felmenőt,
+        add meg újra az értéket, majd számolj újra.
       binding_source_kind_unclassified: A mellékelt szabályok nem rendelnek családot
         a(z) %{source_kind} forrástípushoz, ezért az eredete nem magyarázható. A mellékelt
         adatok hiányosak, és semmi, amit megadtál, nem okozta.
@@ -3762,6 +3784,17 @@ application:
         kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó
         igazolást, majd vetíts újra.
       casilla_reason:
+        autonomic_deduction_other_comunidad: Ez a rovat a lakóhelyed szerinti autonóm
+          közösség regionális kedvezményeit adja össze, de a bevallásban egy másik
+          közösség kedvezményrovataiban is vannak összegek. Egy bevallás csak egy
+          közösség kedvezményeit tartalmazhatja. Javítsd azokat a rovatokat vagy a
+          lakóhelyed szerinti közösséget, vagy add meg te magad ezt a rovatot. Soha
+          nem jelenik meg nullaként.
+        autonomic_deduction_unsummed_box: Ez a rovat a lakóhelyed szerinti autonóm
+          közösség regionális kedvezményeit adja össze, de a hivatalos összeg egy
+          olyan rovatot is megnevez, amelyet ez a számítás nem ad hozzá, és abban
+          a rovatban összeg van. Ellenőrizd, vagy add meg te magad ezt a rovatot.
+          Soha nem jelenik meg nullaként.
         income_family_contradicts_profile: Ez a rovat a többi jövedelmedet veti össze
           a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
           amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
@@ -4464,6 +4497,9 @@ application:
         be újra a családi adatokat, mielőtt bárkit eltávolítasz.
       ascendant_rows_over_limit: Egy bevallás legfeljebb %{limit} felmenőt tartalmaz,
         de %{count} lett megadva.
+      ascendant_value_invalid: A(z) %{row}. felmenő olyan értéket ad meg, amelyet
+        a bevallás nem fogad el; ellenőrizd a jövedelme összegét, a fogyatékossága
+        fokát és az igen-nem válaszát.
       censal_read_identity_absent: A nyilvántartási olvasás nem tartalmazott adóazonosítót,
         ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.
       censal_read_identity_cleared: Ennek a profilnak az adóazonosítója ki lett ürítve,
@@ -4576,14 +4612,39 @@ application:
           label: A felmenő vezeték- és utóneve (elöl a vezetéknév)
         birth_date:
           label: Születési dátum
+        convivencia_mitad_periodo:
+          help: Ha a felmenő az év során elhunyt, a halála napjáig számolj. A szakosított
+            intézményben való elhelyezés együttélésnek számít.
+          label: Együtt élt veled ez a felmenő legalább az év felében?
         convivientes:
           label: Azoknak a leszármazottaknak a száma, akikkel ez a felmenő együtt
             él
+        declaracion_propia:
+          help: 'Akkor kérdezzük, ha a jövedelme meghaladja a törvényben megállapított
+            összeget: ilyenkor a saját bevallás megszünteti a minimumot.'
+          label: Benyújtja ez a felmenő a saját személyijövedelemadó-bevallását?
+        discapacidad:
+          help: A minimális életkor alatti felmenőnél kérdezzük, aki után csak fogyatékosság
+            esetén jár a minimum.
+          label: Ennek a felmenőnek a fogyatékossági foka
+        discapacidad_asistencia:
+          help: A 33 %-tól 65 % alatti fogyatékossági foknál kérdezzük; ez határozza
+            meg a bevallásban szereplő fogyatékossági kódot.
+          label: Szüksége van ennek a felmenőnek mások segítségére, vagy csökkent
+            a mozgásképessége?
         fallecimiento:
           help: Hagyd üresen, ha ez a felmenő nem hunyt el.
           label: A halálozás dátuma
+        incapacidad_judicial:
+          help: A bíróság által megállapított cselekvőképtelenség legalább 65 %-os
+            fogyatékossági foknak számít, bármilyen fokot adtál meg.
+          label: Bíróság cselekvőképtelennek nyilvánította ezt a felmenőt?
         nif:
           label: A felmenő adószáma (NIF/NIE) (hagyd üresen, ha nincs)
+        rentas_anuales:
+          help: Ha a jövedelme meghaladja a törvény által az adott évre megállapított
+            határt, a felmenő után nem jár a felmenői minimum.
+          label: Ennek a felmenőnek az éves jövedelme a mentes jövedelmek nélkül (euró)
       descendiente:
         cotizaciones_ss_madre:
           help: Hagyd üresen, ha nem tudod. Az összeget tizedesponttal és ezres elválasztó

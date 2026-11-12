@@ -48,6 +48,16 @@ GROUP_DOORS: Final[dict[str, tuple[str, str]]] = {
 The scenario and door are declared with the precondition profiles in :mod:`.preconditions`.
 """
 
+_ROW_DOORS: Final[dict[str, str]] = {
+    "renta_family.ascendiente": "ascendiente_row",
+}
+"""The scenario of a group whose note names the row that omits the fact, so the door edits that row.
+
+The door takes the row's 0-based position, which the note carries, and the fact the filer states,
+which only the filer has.
+"""
+_ROW_DOOR_FACT_ARGUMENT: Final = "ascendiente"
+
 
 class ModeloHouseholdRowFactUnstatedError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a household row omits a fact the official design requires and the profile has not stated it."""
@@ -64,6 +74,15 @@ def _fact_value(issue: CalculationSourceIssue, name: str) -> str | None:
     if issue.fact is None:
         return None
     return next((value for key, value in issue.fact.values if key == name), None)
+
+
+def _door_scenario(issue: CalculationSourceIssue, group: str, group_scenario: str) -> tuple[str, int | None]:
+    """The scenario that names the refusal's door, and the row it points at when the group has a row door."""
+    row = issue.fact.row_refs[0] if issue.fact is not None and issue.fact.row_refs else None
+    row_scenario = _ROW_DOORS.get(group)
+    if row is None or row_scenario is None:
+        return group_scenario, None
+    return f"{row_scenario}_unstated", int(row)
 
 
 def household_row_fact_refusal(
@@ -91,7 +110,7 @@ def household_row_fact_refusal(
     door = None if group is None else GROUP_DOORS.get(group)
     if group is None or fact_leaf is None or omitting is None or recorded is None or door is None:
         return None
-    scenario, _ = door
+    scenario, row = _door_scenario(first, group, door[0])
     return ModeloHouseholdRowFactUnstatedError(
         translated_message="errors.refused.refused_modelo_household_row_fact_unstated",
         context={
@@ -109,6 +128,7 @@ def household_row_fact_refusal(
             fact_leaf=fact_leaf,
             omitting=int(omitting),
             recorded=int(recorded),
+            row=row,
         ),
     )
 
@@ -122,8 +142,12 @@ def household_row_fact_unstated_failure(
     fact_leaf: str,
     omitting: int,
     recorded: int,
+    row: int | None = None,
 ) -> ModeloPreconditionFailure:
-    """Build the declared verdict that sends the filer to the profile door that states the fact."""
+    """Build the declared verdict that sends the filer to the profile door that states the fact.
+
+    With ``row``, the door is the edit of that 0-based row, and the fact to state is left to the filer.
+    """
     return build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=leaf,
         scenario_id=f"{leaf}.household_row_facts.{scenario}",
@@ -137,6 +161,8 @@ def household_row_fact_unstated_failure(
             "fact_stated": False,
         },
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values=None if row is None else {"index": row},
+        missing_action_arguments=() if row is None else (_ROW_DOOR_FACT_ARGUMENT,),
     )
 
 

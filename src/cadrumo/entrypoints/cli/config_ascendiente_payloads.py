@@ -1,8 +1,11 @@
 """Typed ``--json`` payload schemas for the ``config profile ascendiente`` family.
 
 Each row projects what the ascendants operation stores for one person: the stored
-NIF or NIE, the date of birth, the date of death and the number of descendants the
-ascendant lives with. A leaf the row does not state is ``None``, never a default.
+NIF or NIE, the date of birth, the date of death, the number of descendants the
+ascendant lives with, whether it lived with the filer at least half the period, its
+annual rentas, whether it files its own return, its disability grade, whether it needs
+assistance of third persons or has reduced mobility and whether a judicial resolution
+declares its incapacity. A leaf the row does not state is ``None``, never a default.
 
 ``state`` is the backend's own reading of the group: ``rows``, ``incomplete``,
 ``none_declared`` (the profile states that there are none) or ``unknown`` (nothing
@@ -13,6 +16,7 @@ says whether that is an answer.
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 from pydantic import NonNegativeInt
 
@@ -29,6 +33,12 @@ class ProfileAscendientePayload(OutputSchema):
     birth_date: date
     death_date: date | None = None
     convivientes: NonNegativeInt | None = None
+    rentas_anuales: Decimal | None = None
+    declaracion_propia: bool | None = None
+    discapacidad: NonNegativeInt | None = None
+    convivencia_mitad_periodo: bool | None = None
+    discapacidad_asistencia: bool | None = None
+    incapacidad_judicial: bool | None = None
 
 
 class ConfigProfileAscendienteAddResult(OutputSchema):
@@ -48,6 +58,15 @@ class ConfigProfileAscendienteListResult(OutputSchema):
     state: ProfileFamilyGroupState
     stated_count: str | None = None
     ascendientes: list[ProfileAscendientePayload] = []
+
+
+class ConfigProfileAscendienteEditResult(OutputSchema):
+    """JSON envelope for ``aeat config profile ascendiente edit``; ``changed`` is false when nothing differed."""
+
+    profile: str
+    index: NonNegativeInt
+    changed: bool
+    total: NonNegativeInt
 
 
 class ConfigProfileAscendienteRemoveResult(OutputSchema):

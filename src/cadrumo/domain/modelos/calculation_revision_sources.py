@@ -202,6 +202,8 @@ class CalculationNoteSentence(StrEnum):
     """A household group states more people than the profile records."""
     HOUSEHOLD_ROW_FACT_UNSTATED = "household_row_fact_unstated"
     """A household row omits a fact the official design requires of every row of its group."""
+    ASCENDANT_DISABILITY_MINIMUM_NOT_COMPUTED = "ascendant_disability_minimum_not_computed"
+    """An ascendant the mínimo reaches has a disability, and its disability minimum is not computed."""
     PROFILE_FACT_UNRECORDED = "profile_fact_unrecorded"
     """A profile fact a calculation compares is unrecorded, so the box built on it stays open."""
     PRIOR_FILING_UNRECORDED = "prior_filing_unrecorded"
@@ -433,6 +435,10 @@ class CalculationSourceIssue(BaseModel):
     ``household_row_fact_unstated`` is a stored household row that omits a fact
     the official design requires of every row, such as an ascendant's NIF: it
     withholds checking, exporting and filing until the profile states the fact.
+    ``ascendant_disability_minimum_not_computed`` is an ascendant the mínimo por
+    ascendientes reaches whose grade reaches the disability threshold: the
+    disability minimum for that ascendant is not computed, so it withholds checking,
+    exporting and filing rather than leave the minimum silently out.
     ``fact`` states such a note's own row, element, interval and amount.
     ``binding_source`` is ``None`` only where the condition names no binding
     source kind. ``precedence_tier_divergence`` is a filed figure for
@@ -473,6 +479,7 @@ class CalculationSourceIssue(BaseModel):
         "ledger_expense_may_be_durable",
         "household_rows_incomplete",
         "household_row_fact_unstated",
+        "ascendant_disability_minimum_not_computed",
         "advisory_binding_value",
         "credit_source_disagreement",
         "credit_cross_check_absent",

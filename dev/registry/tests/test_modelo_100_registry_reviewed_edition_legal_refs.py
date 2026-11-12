@@ -43,22 +43,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # The newest Modelo 100 edition the registry authors; the section counts and
 # reference sets asserted here are that edition's.
 _REVIEWED_EDITION = newest_authored_edition("100")
+_MADRID_CUIDADO_ASCENDIENTES_ROLE = "irpf_deduccion_madrid_cuidado_ascendientes"
+_MADRID_CUIDADO_ASCENDIENTES_REF = "madrid-dl-1-2010:art-7-bis"
 
 
 def test_modelo_100_autonomic_deduction_sections_use_art77_only() -> None:
     revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
     expected_refs = {AUTONOMIC_DEDUCTION_ART_77_REF}
+    cuidado_ascendientes_refs: list[set[str]] = []
     for section, expected_count in AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
         # The nueva-empresa NIF box and the computed Madrid nacimiento/adopción
-        # deducción (casilla 1039) legitimately carry more than the art-77
-        # framework default: the latter is a computed regulatory value whose
-        # per-child cuantía and income limits MUST cite their binding provision
-        # (Madrid DL 1/2010 arts. 4 y 18.1) per aeat-calculation-grounding.
+        # (casilla 1039) and cuidado de ascendientes (casilla 1115) deducciones
+        # legitimately carry more than the art-77 framework default: each
+        # computed deducción is a regulatory value whose cuantía and limits MUST
+        # cite their binding provision (Madrid DL 1/2010 arts. 4 y 18.1 for 1039,
+        # art. 7 bis for 1115) per aeat-calculation-grounding.
         _art77_only_exempt_roles = frozenset(
             {
                 "irpf_deduccion_nueva_empresa_entidad_nif",
                 "irpf_deduccion_madrid_nacimiento_adopcion",
+                _MADRID_CUIDADO_ASCENDIENTES_ROLE,
             }
         )
         art77_only_casillas = [casilla for casilla in checked if casilla.semantic_role not in _art77_only_exempt_roles]
@@ -70,6 +75,12 @@ def test_modelo_100_autonomic_deduction_sections_use_art77_only() -> None:
             if set(casilla.legal_refs) != expected_refs
         }
         assert not offenders
+        cuidado_ascendientes_refs.extend(
+            {str(ref) for ref in casilla.legal_refs}
+            for casilla in checked
+            if casilla.semantic_role == _MADRID_CUIDADO_ASCENDIENTES_ROLE
+        )
+    assert cuidado_ascendientes_refs == [{AUTONOMIC_DEDUCTION_ART_77_REF, _MADRID_CUIDADO_ASCENDIENTES_REF}]
 
 
 def test_modelo_100_result_sections_do_not_cite_fractional_payment_article() -> None:

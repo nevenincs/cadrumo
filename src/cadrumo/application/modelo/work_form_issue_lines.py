@@ -129,7 +129,7 @@ _AT_SOURCE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         },
         **{
             what_to_do_locale_key(reason): _AT_SOURCE_IF_APPLIES_ACTION_LOCALE_KEY
-            for reason in ("deferred_binding_source", "oss_no_live_source")
+            for reason in ("deferred_binding_source", "oss_no_live_source", "autonomic_deducciones_not_enrolled")
         },
     }
 )

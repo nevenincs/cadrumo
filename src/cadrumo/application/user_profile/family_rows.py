@@ -15,10 +15,11 @@ their canonical object, never by an array's label.
 Ascendants are stored as ``renta_family.ascendiente.{n}.{leaf}`` facts with
 ``renta_family.ascendientes_count``. The ``user-profile.ascendants`` operation
 writes them, and the schema names no leaves, so the leaves served are the ones the
-Modelo 100 household bindings read from that object and that a row can state.
-The one leaf those bindings read but nothing can store (the official disability
-clave) is not offered. A filer with no stored ascendant therefore reads as unknown,
-never as an empty household.
+Modelo 100 household bindings read from that object and that a row can state, and
+the three the mínimo por ascendientes reads: the ascendant's annual rentas, whether
+it files its own return and its disability grade. The one leaf the bindings read
+but nothing can store (the official disability clave) is not offered. A filer with
+no stored ascendant therefore reads as unknown, never as an empty household.
 
 A group says what is known about its rows, never more. ``unknown`` means nothing
 was stated and no row is stored; ``none_declared`` means the profile states a
@@ -57,6 +58,7 @@ from pydantic import BaseModel, Field
 from ...core.flows import FlowWidgetKind
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ...domain.user_profile.labels import profile_field_label_key
 from ...domain.user_profile.schema import ProfileFieldType
 from ..flows.copy import resolve_copy, resolve_optional_copy
@@ -88,6 +90,36 @@ _ASCENDANT_FALLECIMIENTO_LABEL_LOCALE_KEY: Final = (
 )
 _ASCENDANT_FALLECIMIENTO_HELP_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.fallecimiento.help"
 _ASCENDANT_CONVIVIENTES_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.convivientes.label"
+_ASCENDANT_RENTAS_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.rentas_anuales.label"
+_ASCENDANT_RENTAS_HELP_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.rentas_anuales.help"
+_ASCENDANT_DECLARACION_PROPIA_LABEL_LOCALE_KEY: Final = (
+    "application.user_profile.family_rows.ascendiente.declaracion_propia.label"
+)
+_ASCENDANT_DECLARACION_PROPIA_HELP_LOCALE_KEY: Final = (
+    "application.user_profile.family_rows.ascendiente.declaracion_propia.help"
+)
+_ASCENDANT_DISCAPACIDAD_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.discapacidad.label"
+_ASCENDANT_DISCAPACIDAD_HELP_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.discapacidad.help"
+_ASCENDANT_ANSWER_LEAVES: Final[tuple[tuple[str, str, str], ...]] = (
+    (
+        "convivencia_mitad_periodo",
+        "application.user_profile.family_rows.ascendiente.convivencia_mitad_periodo.label",
+        "application.user_profile.family_rows.ascendiente.convivencia_mitad_periodo.help",
+    ),
+    (
+        "discapacidad_asistencia",
+        "application.user_profile.family_rows.ascendiente.discapacidad_asistencia.label",
+        "application.user_profile.family_rows.ascendiente.discapacidad_asistencia.help",
+    ),
+    (
+        "incapacidad_judicial",
+        "application.user_profile.family_rows.ascendiente.incapacidad_judicial.label",
+        "application.user_profile.family_rows.ascendiente.incapacidad_judicial.help",
+    ),
+)
+"""The yes-or-no ascendant leaves served after the grade, with the locale keys of their label and help."""
+# The art. 60.3 grade bands are the same for every family member, so their words are shared.
+_DISABILITY_GRADE_CHOICE_LOCALE_KEY: Final = "wizard.setup.descendientes.discapacidad.choices.{grade}.label"
 _INCOMPLETE_WORDS_LOCALE_KEY: Final = "application.user_profile.family_rows.incomplete"
 _DESCENDANT_COTIZACIONES_LEAF: Final = "cotizaciones_ss_madre"
 _DESCENDANT_COTIZACIONES_AFTER_LEAF: Final = "gastos_guarderia_mensuales"
@@ -224,10 +256,7 @@ def _shown_when(visible_when: FlowCondition | FlowVisibility | None) -> tuple[Pr
 def _leaf(page: FlowPage) -> ProfileFamilyLeaf:
     field_type = _WIDGET_FIELD_TYPES[page.widget]
     if field_type is ProfileFieldType.BOOLEAN:
-        choices = (
-            ProfileFieldChoice(value="true", label=tr("flows.confirm.yes")),
-            ProfileFieldChoice(value="false", label=tr("flows.confirm.no")),
-        )
+        choices = _yes_no_choices()
     else:
         choices = tuple(ProfileFieldChoice(value=c.value, label=resolve_copy(c.label)) for c in page.choices)
     return ProfileFamilyLeaf(
@@ -284,7 +313,14 @@ def _stated_exceeds_rows(stated: str | None, rows: int) -> bool:
     return count.is_finite() and count > rows
 
 
-def _ascendant_leaves() -> tuple[ProfileFamilyLeaf, ...]:
+def _yes_no_choices() -> tuple[ProfileFieldChoice, ...]:
+    return (
+        ProfileFieldChoice(value="true", label=tr("flows.confirm.yes")),
+        ProfileFieldChoice(value="false", label=tr("flows.confirm.no")),
+    )
+
+
+def _ascendant_leaves(operation: PinnedAuthorityOperation) -> tuple[ProfileFamilyLeaf, ...]:
     return (
         ProfileFamilyLeaf(
             leaf="nif",
@@ -325,6 +361,44 @@ def _ascendant_leaves() -> tuple[ProfileFamilyLeaf, ...]:
             field_type=ProfileFieldType.INTEGER,
             required=False,
             choices=(),
+        ),
+        ProfileFamilyLeaf(
+            leaf="rentas_anuales",
+            label=tr(_ASCENDANT_RENTAS_LABEL_LOCALE_KEY),
+            help=tr(_ASCENDANT_RENTAS_HELP_LOCALE_KEY),
+            field_type=ProfileFieldType.DECIMAL,
+            required=False,
+            choices=(),
+        ),
+        ProfileFamilyLeaf(
+            leaf="declaracion_propia",
+            label=tr(_ASCENDANT_DECLARACION_PROPIA_LABEL_LOCALE_KEY),
+            help=tr(_ASCENDANT_DECLARACION_PROPIA_HELP_LOCALE_KEY),
+            field_type=ProfileFieldType.BOOLEAN,
+            required=False,
+            choices=_yes_no_choices(),
+        ),
+        ProfileFamilyLeaf(
+            leaf="discapacidad",
+            label=tr(_ASCENDANT_DISCAPACIDAD_LABEL_LOCALE_KEY),
+            help=tr(_ASCENDANT_DISCAPACIDAD_HELP_LOCALE_KEY),
+            field_type=ProfileFieldType.ENUM,
+            required=False,
+            choices=tuple(
+                ProfileFieldChoice(value=str(grade), label=tr(_DISABILITY_GRADE_CHOICE_LOCALE_KEY.format(grade=grade)))
+                for grade in sorted(accepted_descendant_disability_grades(authority=operation))
+            ),
+        ),
+        *(
+            ProfileFamilyLeaf(
+                leaf=leaf,
+                label=tr(label),
+                help=tr(help_text),
+                field_type=ProfileFieldType.BOOLEAN,
+                required=False,
+                choices=_yes_no_choices(),
+            )
+            for leaf, label, help_text in _ASCENDANT_ANSWER_LEAVES
         ),
     )
 
@@ -452,7 +526,7 @@ def family_row_items(
             schema,
             field_key=_ASCENDANT_FIELD_KEY,
             count_path=_ASCENDANT_COUNT_PATH,
-            leaves=_ascendant_leaves(),
+            leaves=_ascendant_leaves(operation),
             operation=operation,
             actions=(
                 PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,

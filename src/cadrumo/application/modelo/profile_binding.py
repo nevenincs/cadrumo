@@ -39,7 +39,7 @@ out of the calculation source mesh.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from datetime import date
@@ -75,6 +75,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..user_profile.projections import profile_fact_index
+from .autonomic_deduccion_dispatch import inject_autonomic_deduccion_facts
 from .printed_boxes import first_printed_dependent, printed_boxes
 from .profile_binding_refusal_doors import binding_contract_defect_verdict, profile_fact_value_refused_verdict
 from .profile_derived_facts import (
@@ -84,7 +85,6 @@ from .profile_derived_facts import (
     family_fact_context,
     inject_derived_activity_tipo_clave_fact,
     inject_derived_anualidades_eligibility_facts,
-    inject_derived_autonomic_deduccion_facts,
     inject_derived_cash_election_fact,
     inject_derived_estimation_modality_fact,
     inject_derived_incremento_guarderia_facts,
@@ -94,9 +94,9 @@ from .profile_derived_facts import (
     inject_ordinary_work_maritime_facts,
     profile_declares_economic_activity,
     profile_excludes_income_family,
-    snapshot_authored_year,
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
+from .profile_minimo_ascendientes import inject_derived_minimo_ascendientes_facts
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
@@ -373,6 +373,10 @@ class _ProfileFacts:
     fingerprint: str | None
     decided_derived_paths: frozenset[str] = frozenset()
     """Derived paths an injector decided, including those it decided to leave absent."""
+    withheld_derived_paths: frozenset[str] = frozenset()
+    """Derived paths withheld because a household row leaves a deciding fact unstated."""
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    """Diagnostics the injectors raised while deciding their paths, naming the facts behind each withheld path."""
 
 
 def _is_calculation_only_profile_binding(binding: BindingDefinition) -> bool:
@@ -476,13 +480,6 @@ def _load_profile_facts(
         context=family_context,
         operation=operation,
     )
-    inject_derived_autonomic_deduccion_facts(
-        fact_index,
-        snapshot.filing_year,
-        authored_year=snapshot_authored_year(snapshot),
-        context=family_context,
-        operation=operation,
-    )
     inject_derived_minimo_descendientes_facts(
         fact_index,
         snapshot,
@@ -495,6 +492,20 @@ def _load_profile_facts(
         declared_selectors,
         context=family_context,
         operation=operation,
+    )
+    ascendientes = inject_derived_minimo_ascendientes_facts(
+        fact_index,
+        snapshot,
+        declared_selectors,
+        context=family_context,
+        bucket_id=bucket_id,
+    )
+    autonomicas = inject_autonomic_deduccion_facts(
+        fact_index,
+        snapshot,
+        schema=resolved_schema,
+        context=family_context,
+        bucket_id=bucket_id,
     )
     inject_derived_incremento_guarderia_facts(
         fact_index,
@@ -514,7 +525,13 @@ def _load_profile_facts(
     return _ProfileFacts(
         fact_index=fact_index,
         fingerprint=profile_record_fingerprint,
-        decided_derived_paths=decided_derived_paths,
+        decided_derived_paths=decided_derived_paths | ascendientes.withheld_paths | autonomicas.decided_paths,
+        withheld_derived_paths=ascendientes.withheld_paths | autonomicas.withheld_paths,
+        # A deducción resting on the mínimo owes the facts the mínimo owes, so one note serves both.
+        diagnostics=(
+            *ascendientes.diagnostics,
+            *(note for note in autonomicas.diagnostics if note not in ascendientes.diagnostics),
+        ),
     )
 
 
@@ -657,6 +674,12 @@ def resolve_profile_sourced_bindings(
     unanswered_text_bindings = _unanswered_text_comparison_bindings(
         snapshot, selection.bindings, enum_values, caller_binding_ids=caller_binding_ids
     )
+    withheld_bindings = _withheld_binding_ids(
+        selection.bindings,
+        facts.withheld_derived_paths,
+        caller_binding_ids=caller_binding_ids,
+        unanswered=unanswered_text_bindings,
+    )
     date_values = channels.date_values
     boolean_values = channels.boolean_values
     sourced = tuple(
@@ -679,9 +702,10 @@ def resolve_profile_sourced_bindings(
         date_binding_values=date_values,
         boolean_binding_values=boolean_values,
         row_binding_values=rows.row_binding_values,
-        unresolved_binding_ids=tuple(binding.id for binding in unanswered_text_bindings),
+        unresolved_binding_ids=(*(binding.id for binding in unanswered_text_bindings), *withheld_bindings),
         diagnostics=(
             *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
+            *facts.diagnostics,
             *derived_binding_diagnostics(
                 selection.bindings,
                 facts.fact_index,
@@ -691,21 +715,44 @@ def resolve_profile_sourced_bindings(
             ),
             *rows.diagnostics,
         ),
-        provenance=tuple(
-            CalculationSourceProvenance(
-                resolver_id=_PROFILE_RESOLVER_ID,
-                resolved_binding_source=BindingSourceKind.PROFILE,
-                contributor_source_kind=BindingSourceKind.PROFILE.value,
-                contributor_binding_source=BindingSourceKind.PROFILE,
-                lineage_role=CalculationSourceLineageRole.PRIMARY,
-                source_ref=f"profile:{bucket_id}:binding:{binding_id}",
-                parent_source_ref=None,
-                terminal_origin=TerminalOriginClass.PROFILE_FIELD,
-                fingerprint=fingerprint,
-            )
-            for binding_id in sourced
+        provenance=_binding_provenance(sourced, bucket_id=bucket_id, fingerprint=fingerprint) + rows.provenance,
+    )
+
+
+def _withheld_binding_ids(
+    bindings: Sequence[BindingDefinition],
+    withheld_derived_paths: frozenset[str],
+    *,
+    caller_binding_ids: frozenset[BindingId],
+    unanswered: Sequence[BindingDefinition],
+) -> tuple[BindingId, ...]:
+    """The bindings a withheld derived fact leaves without a value, apart from caller-supplied and unanswered ones."""
+    return tuple(
+        binding.id
+        for binding in bindings
+        if binding.id not in caller_binding_ids
+        and binding not in unanswered
+        and withheld_derived_paths.intersection(profile_binding_selectors(binding.provider))
+    )
+
+
+def _binding_provenance(
+    sourced: Sequence[BindingId], *, bucket_id: str, fingerprint: str | None
+) -> tuple[CalculationSourceProvenance, ...]:
+    """One profile provenance row per binding the profile supplied a value for."""
+    return tuple(
+        CalculationSourceProvenance(
+            resolver_id=_PROFILE_RESOLVER_ID,
+            resolved_binding_source=BindingSourceKind.PROFILE,
+            contributor_source_kind=BindingSourceKind.PROFILE.value,
+            contributor_binding_source=BindingSourceKind.PROFILE,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=f"profile:{bucket_id}:binding:{binding_id}",
+            parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.PROFILE_FIELD,
+            fingerprint=fingerprint,
         )
-        + rows.provenance,
+        for binding_id in sourced
     )
 
 
