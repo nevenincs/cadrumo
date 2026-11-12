@@ -9,6 +9,7 @@ import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.commands.registered_operation_errors import detailed_registered_operation_error
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import remaining_budget
@@ -21,7 +22,7 @@ from cadrumo_client.transport.modelo_metadata import (
 )
 
 from ...application.modelo.metadata_read_operation import ModeloWorkMetadataRequest
-from ...application.modelo.work_addressing import ModeloWorkAddressNotFoundError
+from ...application.modelo.work_address_errors import ModeloWorkAddressNotFoundError
 from ...application.modelo.work_change_contracts import (
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardPublicResultV2,
@@ -105,8 +106,18 @@ def _read_unit(
     return observed.projection.unit.to_work_unit()
 
 
+def _effect_text(error: ModeloMetadataRunError) -> str:
+    return error.effect.value if error.effect is not None else "unknown"
+
+
 def _refuse(error: Exception) -> CliRefusedBoundaryError:
     if isinstance(error, ModeloMetadataRunError):
+        if error.detail is not None:
+            # The stopped executor's own error, with the verdict that names its remedy.
+            facts = {"operation_id": str(error.operation_id), "effect": _effect_text(error)}
+            if error.terminal_condition is not None:
+                facts["terminal_condition"] = error.terminal_condition.value
+            return detailed_registered_operation_error(error.detail, facts)
         return CliRefusedBoundaryError(error.reason, context=error.context)
     if isinstance(error, FrontendRefusedError):
         return CliRefusedBoundaryError(error.reason, context=error.context)

@@ -35,7 +35,7 @@ its keyed ``payer_ref``, never by the payer's tax identifier;
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, Final
@@ -153,12 +153,14 @@ def recorded_income_classes(source_refs: Iterable[str]) -> frozenset[RetencionSo
     for ref in source_refs:
         if not ref.startswith(RETENCION_SOPORTADA_SOURCE_REF_PREFIX):
             continue
-        parts = ref.removeprefix(RETENCION_SOPORTADA_SOURCE_REF_PREFIX).split(":")
-        if len(parts) == 3 and parts[0].isdigit():
-            try:
-                classes.add(RetencionSoportadaClase(parts[1]))
-            except ValueError:
-                continue
+        ejercicio, _, rest = ref.removeprefix(RETENCION_SOPORTADA_SOURCE_REF_PREFIX).partition(":")
+        class_token, _, payer_ref = rest.partition(":")
+        if not ejercicio.isdigit() or not payer_ref or ":" in payer_ref:
+            continue
+        try:
+            classes.add(RetencionSoportadaClase(class_token))
+        except ValueError:
+            continue
     return frozenset(classes)
 
 
@@ -239,6 +241,8 @@ def _refined_state(
     income_class: RetencionSoportadaClase,
     quantity: RetencionSoportadaCantidad,
     class_records: Sequence[RetencionSoportadaRecord],
+    *,
+    income_declared_absent: Callable[[], bool],
 ) -> RetencionSoportadaClassState:
     """Narrow a class state by the quantity drawn: a figure a record lacks, or income an attestation cannot state."""
     if state is RetencionSoportadaClassState.RECORDED and not all(record.states(quantity) for record in class_records):
@@ -247,7 +251,10 @@ def _refined_state(
         state is RetencionSoportadaClassState.ATTESTED_ABSENT
         and (income_class, quantity) in RETENCION_SOPORTADA_INCOME_ROLES
     ):
-        # An attestation says no payer withheld, never how much income there was.
+        # An attestation says no payer withheld, never how much income there was; the profile's
+        # stated income categories can, when they positively exclude the class.
+        if income_declared_absent():
+            return RetencionSoportadaClassState.DECLARED_ABSENT
         return RetencionSoportadaClassState.MISSING_INCOME_RECORD
     return state
 
@@ -369,7 +376,22 @@ class RetencionSoportadaSourceResolver:
                     effective_date=context.period.end_date,
                     authority=operation,
                 )
-                state = _refined_state(state, income_class, provider.quantity, class_records)
+                state = _refined_state(
+                    state,
+                    income_class,
+                    provider.quantity,
+                    class_records,
+                    income_declared_absent=lambda income_class=income_class: (
+                        retencion_soportada_applicability(
+                            income_class,
+                            declared,
+                            activity_epigraphs,
+                            effective_date=context.period.end_date,
+                            authority=operation,
+                        )
+                        is RetencionSoportadaApplicability.DECLARED_ABSENT
+                    ),
+                )
                 if state is RetencionSoportadaClassState.RECORDED:
                     binding_values[binding.id] = sum(
                         (record.quantity(provider.quantity) for record in class_records),
@@ -377,7 +399,14 @@ class RetencionSoportadaSourceResolver:
                     )
                 elif state in _PROVEN_ZERO_STATES:
                     binding_values[binding.id] = Decimal("0.00")
-                    zero_provenance.setdefault(income_class, self._zero_provenance(context, income_class, attestation))
+                    zero_provenance.setdefault(
+                        income_class,
+                        self._zero_provenance(
+                            context,
+                            income_class,
+                            None if state is RetencionSoportadaClassState.DECLARED_ABSENT else attestation,
+                        ),
+                    )
                 else:
                     # Named unresolved here as well as in the note, so a formula reading the binding as an
                     # operand leaves its own box unresolved instead of failing on a missing value.

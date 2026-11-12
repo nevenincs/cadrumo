@@ -357,6 +357,8 @@ def _require_populated_row_bindings(
     if missing:
         raise FilingExportValidationError(
             f"binding-row {row_index} omits required export field(s): {', '.join(sorted(map(str, missing)))}",
+            translated_message="application.filing.export.errors.record_binding_row_omits_fields",
+            context={"row": row_index, "fields": ", ".join(sorted(map(str, missing)))},
             precondition_verdict=export_input_decision(ExportRefusalReason.REQUIRED_BINDING_OMITTED),
         )
 
@@ -496,6 +498,8 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
     if amount <= 0:
         raise FilingExportValidationError(
             f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla_id!r}",
+            translated_message="application.filing.export.errors.record_requires_positive_casilla",
+            context={"record_id": record.id, "casilla": str(record.requires_positive_casilla_id)},
             precondition_verdict=export_input_decision(ExportRefusalReason.POSITIVE_CASILLA_REQUIRED),
         )
 

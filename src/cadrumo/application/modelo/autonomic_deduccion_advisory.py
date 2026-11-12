@@ -158,6 +158,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     except AmbiguousSemanticRoleCasillaError as exc:
         raise ModeloError(
             str(exc),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
             context=exc.ambiguity.context(),
             precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
         ) from exc

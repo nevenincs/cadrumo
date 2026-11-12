@@ -45,9 +45,9 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.refund_election import RefundElection
@@ -70,6 +70,7 @@ from ...domain.iva.refund_eligibility import (
     refund_eligibility_for_period,
 )
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import (
     CalculationRegistryUnavailableError,
@@ -462,15 +463,19 @@ def _reject_non_revision_casilla_values(
 
     if noncanonical_details:
         details = "; ".join(noncanonical_details)
-        raise CoreValidationError(
+        raise ModeloValidationError(
             translated_message="errors.integrity.integrity_cadrumo_core_validation",
             context={"modelo": modelo, "revision_id": revision_id, "casilla_refs": details},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
     if unknown_ids:
         unknown = ", ".join(repr(casilla_id) for casilla_id in unknown_ids)
-        raise CoreValidationError(
+        raise ModeloValidationError(
             translated_message="errors.integrity.integrity_cadrumo_core_validation",
             context={"modelo": modelo, "revision_id": revision_id, "casilla_ids": unknown},
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
         )
 
 

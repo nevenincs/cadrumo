@@ -150,6 +150,7 @@ def _limit_findings(
 
 
 def trabajo_income_findings(
+    modelo_id: str,
     revision: ModeloRevision,
     target: CalculationRevision,
     *,
@@ -157,7 +158,7 @@ def trabajo_income_findings(
     effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloVerificationFinding, ...]:
-    """Return the work-income findings of ``target`` against the registry ``revision`` it was calculated on.
+    """Return the work-income findings of ``target`` against the ``modelo_id`` registry ``revision`` it rests on.
 
     ``profile_values`` are the path-keyed profile facts in force at the end of the ejercicio.
     A revision that declares none of the roles earns nothing here.
@@ -181,6 +182,6 @@ def trabajo_income_findings(
         disability = _disability_finding(revision, target, profile_values)
         if disability is not None:
             findings.append(disability)
-        limits = trabajo_expense_limits(revision, operation=operation, effective_date=effective_date)
+        limits = trabajo_expense_limits(modelo_id, revision, operation=operation, effective_date=effective_date)
         findings.extend(_limit_findings(revision, target, limits))
     return tuple(findings)

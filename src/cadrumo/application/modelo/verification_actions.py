@@ -124,6 +124,8 @@ def _load_verification_context(
     if work_unit is None:
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": target.work_unit_id},
         )
     require_revision_parent_active(
         work_unit=work_unit,

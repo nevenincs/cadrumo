@@ -726,6 +726,7 @@ def _execute_modelo_edit(
     if not captured_receipt:
         raise ModeloError(
             "the calculation boundary resolved no revision id for the applied edit",
+            translated_message="application.modelo.errors.edit_revision_id_unresolved",
             precondition_verdict=caller_defect_verdict("edit_calculation_revision_id"),
         )
     return ModeloEditExecutionUpdatedV1(receipt=captured_receipt[0])

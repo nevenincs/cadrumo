@@ -128,6 +128,7 @@ def append_revision_advisory_findings(
     )
     findings.extend(
         trabajo_income_findings(
+            str(work_unit.modelo),
             snapshot.revision,
             target,
             profile_values={}

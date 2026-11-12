@@ -320,6 +320,8 @@ def evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) ->
         return tax_regime == _IRNR_TAX_REGIME and not profile.ue_eee_status
     raise ModeloApplicabilityFilterError(
         f"Unknown applicability filter: {filter_name!r}",
+        translated_message="application.modelo.errors.applicability_filter_unknown",
+        context={"filter": filter_name},
         precondition_verdict=registry_defect_verdict("applicability_filter"),
     )
 

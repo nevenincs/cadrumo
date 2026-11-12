@@ -27,7 +27,6 @@ from ...application.ledger.counterparty_operation import (
     CounterpartyFilingNameRendering,
     LedgerCounterpartyRequest,
 )
-from ...core.cli_value_parsers import refuse_cli_value
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.declared_party_name import DeclaredPartyKind
@@ -95,17 +94,6 @@ def filing_name_finding_notices(findings: tuple[CounterpartyFilingNameFinding, .
         )
         for finding in findings
     ]
-
-
-def parse_filing_name_rendering(value: object) -> CounterpartyFilingNameRendering:
-    """Read one ``WIDTH=TEXT`` rendering at the parse boundary, refusing one that names no width."""
-    if isinstance(value, CounterpartyFilingNameRendering):
-        return value
-    rendering = str(value)
-    width, separator, text = rendering.partition("=")
-    if not separator or not width.isdigit() or int(width) == 0 or not text:
-        refuse_cli_value(tr("cli.ledger.counterparty.errors.rendering_malformed", rendering=rendering))
-    return CounterpartyFilingNameRendering(width=int(width), text=text)
 
 
 def counterparty_filing_name(
