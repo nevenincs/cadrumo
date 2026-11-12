@@ -80,17 +80,6 @@ edition-only|322|constructs|modelo-322-printed-disclosure-arithmetic-2008-2022|2
 edition-only|322|constructs|modelo-322-printed-disclosure-arithmetic-2023|2023|uncited appearing and disappearing boundary
 edition-only|322|constructs|modelo-322-printed-disclosure-arithmetic-2024-2025|2024-2025|uncited appearing and disappearing boundary
 edition-only|345|application_links|modelo-345-export|2025|uncited appearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termin|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municip|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reducciones-total|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-el-termin|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municip|2024|uncited appearing and disappearing boundary
-edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducciones-total|2024|uncited appearing and disappearing boundary
 edition-only|390|constructs|modelo-390-printed-disclosure-arithmetic-2022|2022|uncited disappearing boundary
 edition-only|390|constructs|modelo-390-printed-disclosure-arithmetic-2023|2023|uncited appearing and disappearing boundary
 edition-only|390|constructs|modelo-390-printed-disclosure-arithmetic-2024|2024|uncited appearing and disappearing boundary
