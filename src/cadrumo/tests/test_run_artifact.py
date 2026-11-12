@@ -281,3 +281,85 @@ def test_an_entry_another_worker_retires_during_retirement_is_skipped(
     assert newest.published_by_this_call
     assert not victim.exists()
     assert (tmp_path / "kind" / "bbbb").is_dir()
+
+
+# A reader in another process takes an entry the way a worker reuses a sealed
+# world: it asks for the key, then, after the main process has published a
+# newer key, copies what it was handed.
+_READER = """
+import shutil
+import sys
+import time
+from pathlib import Path
+
+from cadrumo.tests.run_artifact import run_artifact
+
+cache_root, signals = Path(sys.argv[1]), Path(sys.argv[2])
+
+
+def unexpected(staging):
+    raise SystemExit("the reader was handed no entry and had to publish")
+
+
+artifact = run_artifact(
+    "kind",
+    "aaaa",
+    publish=unexpected,
+    verify=lambda root: (root / "payload").read_bytes() == b"artifact bytes",
+    cache_root=cache_root,
+)
+(signals / "claimed").touch()
+guard = time.monotonic() + 120
+while not (signals / "published").exists():
+    if time.monotonic() > guard:
+        raise SystemExit("hang guard: the publisher never signalled")
+    time.sleep(0.01)
+copy = shutil.copytree(artifact.root, signals / "copy")
+print((copy / "payload").read_bytes().decode())
+"""
+
+
+def test_an_entry_another_process_is_reading_survives_a_newer_publication(tmp_path: Path) -> None:
+    cache_root, signals = tmp_path / "cache", tmp_path / "signals"
+    signals.mkdir()
+    run_artifact("kind", "aaaa", publish=_counting_publisher([]), verify=_verify, cache_root=cache_root)
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        reader = pool.submit(
+            run_audited_process,
+            [sys.executable, "-c", _READER, str(cache_root), str(signals)],
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+        guard = time.monotonic() + 120
+        while not (signals / "claimed").exists():
+            assert not reader.done(), reader.result().stderr
+            assert time.monotonic() < guard, "hang guard: the reader never signalled"
+            time.sleep(0.01)
+        newer = run_artifact(
+            "kind", "bbbb", publish=_counting_publisher([]), verify=_verify, cache_root=cache_root, retain=1
+        )
+        (signals / "published").touch()
+        outcome = reader.result()
+
+    assert newer.published_by_this_call
+    assert outcome.returncode == 0, outcome.stderr
+    assert str(outcome.stdout).strip() == _PAYLOAD.decode()
+    assert _verify(cache_root / "kind" / "aaaa")
+
+
+def test_an_entry_unused_for_longer_than_a_run_is_retired_and_a_holder_learns_it(tmp_path: Path) -> None:
+    calls: list[Path] = []
+    old = run_artifact("kind", "aaaa", publish=_counting_publisher(calls), verify=_verify, cache_root=tmp_path)
+    long_ago = time.time() - 2 * 24 * 60 * 60
+    os.utime(old.root, (long_ago, long_ago))
+
+    run_artifact("kind", "bbbb", publish=_counting_publisher(calls), verify=_verify, cache_root=tmp_path, retain=1)
+
+    assert not old.root.exists()
+    assert not old.mark_used()
+    assert sorted(path.name for path in (tmp_path / "kind").iterdir() if path.is_dir()) == ["bbbb"]
+    again = run_artifact("kind", "aaaa", publish=_counting_publisher(calls), verify=_verify, cache_root=tmp_path)
+    assert again.published_by_this_call
+    assert len(calls) == 3
