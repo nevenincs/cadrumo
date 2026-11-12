@@ -116,7 +116,10 @@ def _reduction_diagnostics(
 
 def _rules(year: int, operation: PinnedAuthorityOperation) -> RentalReductionArt232Rules:
     return resolve_rental_reduction_art232_rules(
-        revision_id=_snapshot(year).revision.id, devengo=date(year, 12, 31), operation=operation
+        modelo_id=_snapshot(year).modelo.id,
+        revision_id=_snapshot(year).revision.id,
+        devengo=date(year, 12, 31),
+        operation=operation,
     )
 
 
