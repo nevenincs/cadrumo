@@ -2492,6 +2492,9 @@ application:
       applicability_filter_unknown: A mellékelt adatok egyik ellenőrzési szabálya
         a(z) %{filter} alkalmazhatósági szűrőre hivatkozik, amelyet a program nem
         ismer. A mellékelt adatok ellentmondásosak, és semmi, amit megadtál, nem okozta.
+      ascendant_stored_value_unreadable: A profilod %{row}. felmenőjénél olyan mentett
+        érték szerepel, amelyet a bevallás nem tud beolvasni. Szerkeszd ezt a felmenőt,
+        add meg újra az értéket, majd számolj újra.
       binding_source_kind_unclassified: A mellékelt szabályok nem rendelnek családot
         a(z) %{source_kind} forrástípushoz, ezért az eredete nem magyarázható. A mellékelt
         adatok hiányosak, és semmi, amit megadtál, nem okozta.

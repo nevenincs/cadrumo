@@ -161,6 +161,8 @@ def _residence_ccaa(fact_index: Mapping[str, UserProfileFactValue]) -> str | Non
 def _refuse_stored(index: int, leaf: str) -> ProfileBindingResolutionError:
     return ProfileBindingResolutionError(
         f"{_ASCENDANT_GROUP}.{index}.{leaf} holds a value the ascendant row cannot",
+        translated_message="application.modelo.errors.ascendant_stored_value_unreadable",
+        context={"row": index + 1},
         precondition_verdict=ascendant_row_value_refused_verdict(index, leaf),
     )
 

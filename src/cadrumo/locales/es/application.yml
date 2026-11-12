@@ -2535,6 +2535,9 @@ application:
       applicability_filter_unknown: Una regla de verificación de los datos incluidos
         cita el filtro de aplicabilidad %{filter}, que el programa no conoce. Los
         datos incluidos son incoherentes y nada de lo que has introducido lo causa.
+      ascendant_stored_value_unreadable: El ascendiente %{row} de tu perfil tiene
+        guardado un valor que la declaración no puede leer. Edita ese ascendiente,
+        vuelve a indicar el valor y calcula de nuevo.
       binding_source_kind_unclassified: Las reglas incluidas no asignan ninguna familia
         al tipo de fuente %{source_kind}, así que no se puede explicar su origen.
         Los datos incluidos están incompletos y nada de lo que has introducido lo

@@ -23,7 +23,6 @@
   "src/cadrumo/application/modelo/m145_communication_records.py::mark_m145_communication_record_delivered_to_payer::REFUSED_M145_COMMUNICATION_RECORD_VALIDATION::0",
   "src/cadrumo/application/modelo/m145_communication_records.py::mark_m145_communication_record_locally_completed::REFUSED_M145_COMMUNICATION_RECORD_TRANSITION::0",
   "src/cadrumo/application/modelo/m145_communication_records.py::snapshot_for_scope::REFUSED_M145_COMMUNICATION_RECORD_VALIDATION::0",
-  "src/cadrumo/application/modelo/profile_minimo_ascendientes.py::_refuse_stored::REFUSED_PROFILE_BINDING_RESOLUTION::0",
   "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::0",
   "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::1",
   "src/cadrumo/application/modelo/reconciliation.py::prepare_filed_observation_reconciliation::REFUSED_RECONCILIATION_EVIDENCE_INVALID::2"

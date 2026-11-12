@@ -2415,6 +2415,9 @@ application:
       applicability_filter_unknown: A verification rule in the bundled data cites
         the applicability filter %{filter}, which the program does not know. The bundled
         data is inconsistent, and nothing you entered caused it.
+      ascendant_stored_value_unreadable: Ascendant %{row} in your profile holds a
+        saved value the return cannot read. Edit that ascendant and state the value
+        again, then calculate again.
       binding_source_kind_unclassified: The bundled rules give the source kind %{source_kind}
         no family, so its origin cannot be explained. The bundled data is incomplete,
         and nothing you entered caused it.
