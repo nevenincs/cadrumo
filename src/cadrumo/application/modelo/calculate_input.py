@@ -105,7 +105,7 @@ from .calculate_maternidad_advisory import (
     ambiguous_relacion_hijo_ids,
     maternidad_ambiguous_relacion_advisory,
     maternidad_ceilings_unresolved_advisory,
-    maternidad_cotizaciones_ceiling_advisory,
+    maternidad_cotizaciones_figure_advisory,
     maternidad_meses_withheld_advisory,
 )
 from .calculation_action_ports import CalculationActionPorts
@@ -824,8 +824,8 @@ def _maternidad_advisories(
             maternidad_casilla_id,
         ),
         maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
-        maternidad_cotizaciones_ceiling_advisory(
-            maternidad.declares_meses and maternidad.cotizaciones_ceiling_inexpressible,
+        maternidad_cotizaciones_figure_advisory(
+            maternidad.cotizaciones_figure_missing,
             maternidad_casilla_id,
         ),
         maternidad_ambiguous_relacion_advisory(

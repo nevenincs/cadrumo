@@ -358,6 +358,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.modelos.errors.CalculationRevisionIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_MODELOS_CALCULATION_REVISION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_modelos_calculation_revision",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.modelos.errors.ModeloOperatorLayerIntegrityError",
         ErrorCode(
             code="INTEGRITY_MODELOS_OPERATOR_LAYER",
@@ -473,6 +483,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_FILING_EXPORT_VALIDATION",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_filing_export_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_FILING_EXPORT",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_filing_export",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDesignIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_FILING_EXPORT_DESIGN",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_filing_export_design",
             retryable=False,
             runbook_id=None,
         ),

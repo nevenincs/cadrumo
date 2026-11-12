@@ -10,7 +10,7 @@ from ...core.decimal.coercion import coerce_decimal
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...domain.calculations.registry.export_xml_dictionary import SINO_DICTIONARY_TYPE, XML_DICTIONARY_BOOLEAN_TYPES
 from ...domain.calculations.registry.form_codes import resolve_form_codes
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportValidationError
 
 # The registry owns the two boolean wire types. A new dictionary type does not
 # accept booleans until it is explicitly declared there.
@@ -105,11 +105,13 @@ def _format_xml_dictionary_boolean_value(data_type: str, normalized_type: str, v
     # casilla on a non-boolean row. This guards a route added later, so it stays
     # total and cheap rather than trying to interpret the value.
     if normalized_type not in XML_DICTIONARY_BOOLEAN_TYPES:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"a {data_type} row cannot carry the boolean {value!r}. Only "
             f"{'/'.join(sorted(XML_DICTIONARY_BOOLEAN_TYPES))} rows are declared boolean by AEAT. "
             "The value reaching this row has the wrong type; correct it at the source rather "
             "than rendering it, because a boolean written to an amount row is filed as 1 or 0.",
+            translated_message="errors.integrity.filing_export_xml_boolean_in_non_boolean_row",
+            context={"data_type": str(data_type)},
         )
     if normalized_type == SINO_DICTIONARY_TYPE:
         return "SI" if value else "NO"

@@ -328,6 +328,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.field.unrenderable",
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
+    # The application's own export design or renderer contradicts itself; no
+    # filer action repairs it.
+    _profile(
+        "modelo.export",
+        "modelo.export.design.consistent",
+        "modelo.export.design.inconsistent",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
     _profile(
         "modelo.export",
         "modelo.export.period.maps_to_filing_period",

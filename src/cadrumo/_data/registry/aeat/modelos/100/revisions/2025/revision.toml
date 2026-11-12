@@ -9307,7 +9307,6 @@ position = 44
 [[revisions."2025".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "renta-profile-deduccion-maternidad"}
-fields = {provider = {profile_key = "renta_family.deduccion_maternidad_2025"}}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Deducción por maternidad", "Por tanto, 100 euros por cada mes.", "El importe de la deducción por maternidad por cada hijo que otorgue derecho a la misma no podrá superar 1.200 euros anuales"]}], source_refs = ["aeat-renta-2025-manual-parte1", "aeat-dr-100-2025-dictionary"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 

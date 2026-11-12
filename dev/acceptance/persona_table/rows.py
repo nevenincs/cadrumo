@@ -330,7 +330,7 @@ def unchecked_items(persona: Persona, envelope: YearEnvelope, key: tuple[str, in
     """The sorted items the persona states for return ``key`` (modelo, year, period) that are not compared.
 
     ``envelope`` carries the replay horizon. Values are the in-force ones the planner takes, so a value a provision
-    replaces is not listed; a value stated ``not_sourced`` states no value and is not listed.
+    replaces is not listed; a ``not_sourced`` casilla is listed, since the return is known to lack the law's figure.
     """
     return unchecked_by_key(in_force(persona.expectations.values, envelope)).get(key, ())
 

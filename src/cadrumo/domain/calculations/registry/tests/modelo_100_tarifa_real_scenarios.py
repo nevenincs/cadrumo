@@ -5,34 +5,33 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
 from .authored_editions import authored_revisions_where, manual_editions_printing
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, neutral_binding_values
 
-# The Art. 81.2 guardería profile binding the fixture supplies beside the
-# maternidad binding.
-FIXTURE_GUARDERIA_BINDINGS = frozenset({"renta-profile-incremento-guarderia"})
-
-# The Modelo 100 edition these cuotas are computed for: the newest one whose AEAT Renta
-# manual prints the Cataluna scale the expected cuotas use and whose declared bindings
-# are the ones the fixture below supplies (the maternidad and guardería bindings).
+# The Modelo 100 edition these cuotas are computed for: the newest authored one whose
+# AEAT Renta manual prints the Cataluna scale rows (base, cuota) the expected cuotas
+# below are derived from. A later Cataluna scale prints other cuota figures, so the
+# printed rows, not the edition's binding set, select the year.
 TARIFF_EXERCISE = max(
-    set(manual_editions_printing("renta", "17.707,20", "33.007,20"))
-    & {
-        revision.valid_from.year
-        for revision in authored_revisions_where(
-            "100",
-            lambda revision: (
-                set(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS) | FIXTURE_GUARDERIA_BINDINGS
-                <= {b.id for b in revision.bindings}
-            ),
-        )
-    }
+    set(manual_editions_printing("renta", "17.707,20 1.938,11", "33.007,20 4.200,18"))
+    & {revision.valid_from.year for revision in authored_revisions_where("100", lambda revision: True)}
 )
 
+
+# Every other scalar binding the chosen edition declares, at its neutral value: the
+# tariff scenarios exercise no maritime, guarderia or births deduction, and an
+# unsupplied binding is a refusal rather than a zero. Relations arrive on their own.
+_NEUTRAL_DECIMAL_BINDINGS, _NEUTRAL_BOOLEAN_BINDINGS, _, _ = neutral_binding_values(
+    binding
+    for revision in authored_revisions_where("100", lambda revision: revision.valid_from.year == TARIFF_EXERCISE)
+    for binding in revision.bindings
+    if binding.source is not BindingSourceKind.RELATION_PREFILL
+)
 
 # -----------------------------------------------------------------------
 # Expected values — derived from LIRPF 2024 tables, not engine output.
@@ -215,6 +214,7 @@ PERE_AGE_70_BIRTH_DATE_BINDINGS: dict[BindingId, date] = {
 
 def base_binding_values() -> dict[BindingId, Decimal]:
     return {
+        **_NEUTRAL_DECIMAL_BINDINGS,
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -257,6 +257,14 @@ def base_binding_values() -> dict[BindingId, Decimal]:
         # as an economic activity to the rental box 0153; no such activity here.
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
     }
+
+
+# The boolean predicates the scenarios do not already answer as 1/0 quantities.
+NEUTRAL_BOOLEAN_BINDINGS: dict[BindingId, bool] = {
+    binding_id: value
+    for binding_id, value in _NEUTRAL_BOOLEAN_BINDINGS.items()
+    if binding_id not in base_binding_values()
+}
 
 
 # Art. 57.1.b LIRPF age supplement requires a taxpayer birth_date; supply a
@@ -377,6 +385,7 @@ def check_m100_minimo_contribuyente_computed_not_zero(tariff_snapshot: RegistryS
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     assert result.values[MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA] == EXPECTED_MINIMO_CONTRIBUYENTE, (
@@ -411,6 +420,7 @@ def check_m100_cuota_integra_estatal_matches_lirpf_tables(tariff_snapshot: Regis
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     cuota_estatal = result.values[CUOTA_INTEGRA_ESTATAL_CASILLA]
@@ -438,6 +448,7 @@ def check_m100_cuota_integra_autonomica_cataluna_matches_lirpf_tables(
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     cuota_autonomica = result.values[CUOTA_INTEGRA_AUTONOMICA_CASILLA]
@@ -463,6 +474,7 @@ def check_m100_cuota_integra_estatal_is_positive(tariff_snapshot: RegistrySnapsh
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     assert result.values[CUOTA_INTEGRA_ESTATAL_CASILLA] > Decimal("0"), (
@@ -498,6 +510,7 @@ def check_m100_cuota_estatal_pere_age_70_with_age_supplement(
         },
         relation_values=RELATION_VALUES,
         date_binding_values=PERE_AGE_70_BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     minimo_contribuyente_estatal = result.values[MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]
@@ -549,6 +562,7 @@ def check_m100_cuota_estatal_two_descendants_one_under_three(
         },
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     minimo_descendientes_estatal = result.values[MINIMO_DESCENDIENTES_CASILLA]
@@ -585,6 +599,7 @@ def check_m100_cuota_estatal_ascendant_over_75(
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     cuota_estatal = result.values[CUOTA_INTEGRA_ESTATAL_CASILLA]
@@ -610,6 +625,7 @@ def check_0505_computed_from_0500_no_anualidades(tariff_snapshot: RegistrySnapsh
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     assert result.values[BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA] == EXPECTED_0505_NO_ANUALIDADES, (
@@ -649,6 +665,7 @@ def check_anualidades_alimentos_separate_escala(tariff_snapshot: RegistrySnapsho
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     assert result.values[ANUALIDADES_TOTAL_CASILLA] == ANUALIDADES_3000, (
@@ -690,6 +707,7 @@ def check_anti_tautology_anualidades_changes_cuota(tariff_snapshot: RegistrySnap
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
     result_with_anualidades = calculate_registry_snapshot(
         tariff_snapshot,
@@ -702,6 +720,7 @@ def check_anti_tautology_anualidades_changes_cuota(tariff_snapshot: RegistrySnap
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     cuota_no = result_no_anualidades.values[CUOTA_INTEGRA_ESTATAL_CASILLA]
@@ -745,6 +764,7 @@ def check_anualidades_regime_off_shared_custody_reduces_to_single_escala(
         binding_values=bindings,
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     assert result.values[BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA] == EXPECTED_0505_NO_ANUALIDADES
@@ -776,6 +796,7 @@ def check_anualidades_regime_off_when_anualidades_exceed_base(
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     assert result.values[BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA] == EXPECTED_0505_NO_ANUALIDADES
@@ -802,6 +823,7 @@ def check_0587_equals_sum_of_liquida_incrementada(tariff_snapshot: RegistrySnaps
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     c0585 = result.values[CUOTA_LIQUIDA_INCREMENTADA_ESTATAL_CASILLA]
@@ -837,6 +859,7 @@ def check_0609_equals_retencion_trabajo_operand(tariff_snapshot: RegistrySnapsho
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     c0609 = result.values[TOTAL_PAGOS_A_CUENTA_CASILLA]
@@ -866,6 +889,7 @@ def check_0610_equals_0595_minus_0609(tariff_snapshot: RegistrySnapshot) -> None
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     c0595 = result.values[CUOTA_RESULTANTE_CASILLA]
@@ -900,6 +924,7 @@ def check_anti_tautology_higher_retencion_reduces_cuota_diferencial(
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
     result_high = calculate_registry_snapshot(
         tariff_snapshot,
@@ -912,6 +937,7 @@ def check_anti_tautology_higher_retencion_reduces_cuota_diferencial(
         binding_values=base_binding_values(),
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
+        boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
     c0610_low = result_low.values[CUOTA_DIFERENCIAL_CASILLA]
