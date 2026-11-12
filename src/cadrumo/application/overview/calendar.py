@@ -88,7 +88,7 @@ from .calendar_warnings import (
     calendar_unverified_justificante_warnings,
 )
 from .coverage import build_obligation_coverage
-from .modelo202_instalment import modelo_202_instalment_verdict
+from .modelo202_instalment import Modelo202InstalmentVerdict, modelo_202_instalment_verdict
 from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
@@ -378,10 +378,27 @@ def local_work_unit_entries(
     )
 
 
+def _unit_earns_own_row(
+    unit: WorkUnit,
+    key: tuple[str, int, str],
+    *,
+    withheld_addresses: frozenset[tuple[str, int, str]],
+    calendar_range: OverviewCalendarRange,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether ``unit``, which no registry row annotates, is shown as a calendar row of its own."""
+    # A declaration the operator opened is not evidence that the obligation is owed: where the
+    # obligation's own facts withheld its row, only a local filing earns the unit a row of its own.
+    if key in withheld_addresses and not _work_unit_has_filing_pointers(unit):
+        return False
+    return _work_unit_intersects_range(unit, calendar_range, operation=operation)
+
+
 def _merge_work_units_into_entries(
     entries: tuple[OverviewCalendarEntry, ...],
     *,
     work_units: tuple[WorkUnit, ...],
+    withheld_addresses: frozenset[tuple[str, int, str]] = frozenset(),
     calendar_range: OverviewCalendarRange,
     today: date,
     due_soon_days: int,
@@ -402,10 +419,8 @@ def _merge_work_units_into_entries(
             merged[existing_index] = _annotate_entry_with_work_unit(merged[existing_index], unit)
             annotated_registry_keys.add(key)
             continue
-        if not _work_unit_intersects_range(
-            unit,
-            calendar_range,
-            operation=operation,
+        if not _unit_earns_own_row(
+            unit, key, withheld_addresses=withheld_addresses, calendar_range=calendar_range, operation=operation
         ):
             continue
         merged.append(
@@ -651,18 +666,17 @@ def _with_instalment_verdict(
     applicability: ModeloApplicability,
     applicability_evidence: FilingYearApplicabilityEvidence | None,
     operation: PinnedAuthorityOperation,
-) -> tuple[ModeloApplicability, tuple[DeclaredNextAction, ...], bool]:
-    """Decide a Modelo 202 instalment where facts were read: verdict, doors, and whether the election is unstated."""
+) -> Modelo202InstalmentVerdict:
+    """Decide a Modelo 202 instalment where facts were read; any other obligation keeps its verdict."""
     if applicability_evidence is None or applicability_evidence.modelo_202_instalment_facts is None:
-        return applicability, (), False
-    instalment = modelo_202_instalment_verdict(
+        return Modelo202InstalmentVerdict(applicability)
+    return modelo_202_instalment_verdict(
         applicability,
         instalment=obligation.period,
         profile=applicability_evidence.profile_for_year(obligation.period.filing_year),
         facts_reader=applicability_evidence.modelo_202_instalment_facts,
         operation=operation,
     )
-    return instalment.applicability, instalment.doors, instalment.election_unstated
 
 
 def _calendar_obligation_projection(
@@ -684,11 +698,15 @@ def _calendar_obligation_projection(
     str | None,
     str | None,
     str | None,
+    bool,
 ]:
     """Classify one scheduled obligation for the requested calendar projection.
 
     The fifth result names the modelo when the obligation waits on an
-    unstated art. 40.3 election inside the range.
+    unstated art. 40.3 election inside the range; the sixth reports whether
+    the obligation's own facts withheld its row, as a Modelo 202 instalment's
+    do: those facts include the base the operator stated on the instalment's
+    declaration, so that declaration cannot stand in for a row they withheld.
     """
     intersects_range = entry_intersects_range(
         obligation,
@@ -699,20 +717,20 @@ def _calendar_obligation_projection(
     disagreeing_modelo = (
         obligation.modelo if applicability.evidence_disagreement is not None and intersects_range else None
     )
-    applicability, doors, election_unstated = _with_instalment_verdict(
-        obligation, applicability, applicability_evidence, operation
-    )
-    election_unstated_modelo = obligation.modelo if election_unstated and intersects_range else None
+    instalment = _with_instalment_verdict(obligation, applicability, applicability_evidence, operation)
+    applicability, doors = instalment.applicability, instalment.doors
+    election_unstated_modelo = obligation.modelo if instalment.election_unstated and intersects_range else None
     if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
         suppressed_entry = (
             _suppressed_calendar_entry(obligation, applicability, doors)
             if show_suppressed and intersects_range
             else None
         )
-        return None, suppressed_entry, None, disagreeing_modelo, election_unstated_modelo
+        withheld = instalment.decided_by_facts
+        return None, suppressed_entry, None, disagreeing_modelo, election_unstated_modelo, withheld
 
     if not intersects_range:
-        return None, None, obligation.modelo, disagreeing_modelo, None
+        return None, None, obligation.modelo, disagreeing_modelo, None, False
     entry = calendar_entry_from_obligation(
         obligation,
         filing_evidence=filing_evidence,
@@ -722,7 +740,7 @@ def _calendar_obligation_projection(
         operation=operation,
         censo_enrolment_states=censo_enrolment_states,
     )
-    return entry, None, obligation.modelo, disagreeing_modelo, None
+    return entry, None, obligation.modelo, disagreeing_modelo, None, False
 
 
 def _entries_and_suppressed_from_schedules(
@@ -737,7 +755,14 @@ def _entries_and_suppressed_from_schedules(
     due_soon_days: int,
     operation: PinnedAuthorityOperation,
     applicability_evidence: FilingYearApplicabilityEvidence | None = None,
-) -> tuple[list[OverviewCalendarEntry], list[SuppressedCalendarEntry], set[str], set[str], set[str]]:
+) -> tuple[
+    list[OverviewCalendarEntry],
+    list[SuppressedCalendarEntry],
+    set[str],
+    set[str],
+    set[str],
+    frozenset[tuple[str, int, str]],
+]:
     """Project every schedule's obligations into applicable calendar entries.
 
     Each modelo's applicability is DERIVED from the taxpayer model. Only a
@@ -755,30 +780,34 @@ def _entries_and_suppressed_from_schedules(
     With ``applicability_evidence``, each obligation is decided on the profile
     as of its own filing year and on the ledger derivations for that year. The
     fourth result names the modelos whose in-range rows carry a disagreement
-    between the profile answer and the ledger, and the fifth those whose
-    in-range rows wait on an unstated art. 40.3 election.
+    between the profile answer and the ledger, the fifth those whose
+    in-range rows wait on an unstated art. 40.3 election, and the sixth the
+    natural addresses whose own facts withheld the row.
     """
     entries: list[OverviewCalendarEntry] = []
     suppressed: list[SuppressedCalendarEntry] = []
     coverage_surface_modelos: set[str] = set()
     disagreeing_modelos: set[str] = set()
     election_unstated_modelos: set[str] = set()
+    withheld_addresses: set[tuple[str, int, str]] = set()
     # Every row shares this pinned authority and live-censo tuple. Resolve
     # enrolment once per modelo, rather than reloading rules for each period.
     censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] = {}
     for obligation in (row for schedule in schedules for row in schedule.obligations):
-        entry, suppressed_entry, covered_modelo, disagreeing_modelo, unstated = _calendar_obligation_projection(
-            obligation,
-            profile=profile,
-            calendar_range=calendar_range,
-            show_suppressed=show_suppressed,
-            filing_evidence=filing_evidence,
-            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-            today=today,
-            due_soon_days=due_soon_days,
-            operation=operation,
-            censo_enrolment_states=censo_enrolment_states,
-            applicability_evidence=applicability_evidence,
+        entry, suppressed_entry, covered_modelo, disagreeing_modelo, unstated, withheld = (
+            _calendar_obligation_projection(
+                obligation,
+                profile=profile,
+                calendar_range=calendar_range,
+                show_suppressed=show_suppressed,
+                filing_evidence=filing_evidence,
+                live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+                today=today,
+                due_soon_days=due_soon_days,
+                operation=operation,
+                censo_enrolment_states=censo_enrolment_states,
+                applicability_evidence=applicability_evidence,
+            )
         )
         if entry is not None:
             entries.append(entry)
@@ -790,7 +819,18 @@ def _entries_and_suppressed_from_schedules(
             disagreeing_modelos.add(disagreeing_modelo)
         if unstated is not None:
             election_unstated_modelos.add(unstated)
-    return entries, suppressed, coverage_surface_modelos, disagreeing_modelos, election_unstated_modelos
+        if withheld:
+            withheld_addresses.add(
+                (str(obligation.modelo), obligation.period.filing_year, obligation.period.registry_token)
+            )
+    return (
+        entries,
+        suppressed,
+        coverage_surface_modelos,
+        disagreeing_modelos,
+        election_unstated_modelos,
+        frozenset(withheld_addresses),
+    )
 
 
 def _undeclared_taxpayer_model_reason(profile: TaxpayerProfile) -> str:
@@ -906,6 +946,7 @@ def build_overview_calendar(
         coverage_surface_modelos,
         disagreeing_modelos,
         election_unstated_modelos,
+        withheld_addresses,
     ) = _entries_and_suppressed_from_schedules(
         schedules,
         profile=profile,
@@ -930,6 +971,7 @@ def build_overview_calendar(
     entries_tuple = _merge_work_units_into_entries(
         tuple(entries),
         work_units=work_units,
+        withheld_addresses=withheld_addresses,
         calendar_range=calendar_range,
         today=today,
         due_soon_days=due_soon_days,

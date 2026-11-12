@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 from typing import Final
 
 from ...contribuyente.renta_codes import FiscalResidency
@@ -249,7 +250,45 @@ def is_ue_eea_country_code(
     )
 
 
+class EnvelopeMembership(StrEnum):
+    """What the editions inside the support envelope say about one country's EU/EEA membership."""
+
+    EVERY_EDITION = "every_edition"
+    """Every edition lists the country, so it is a member on any date of the envelope."""
+    NO_EDITION = "no_edition"
+    """No edition lists the country, so it is not a member on any date of the envelope."""
+    DEPENDS_ON_DATE = "depends_on_date"
+    """Only some editions list it: membership is a fact of the date its caller holds."""
+
+
+def ue_eea_membership_across_envelope(
+    country_code: str | None,
+    *,
+    authority: GovernedFactSource | None = None,
+) -> EnvelopeMembership | None:
+    """Return what every edition inside the support envelope says of one country, or ``None`` for no country.
+
+    A caller that holds no date can still act on a country whose membership is
+    the same on every date; one whose membership differs between editions
+    needs the date of the fact it decides.
+    """
+    if country_code is None:
+        return None
+    selected = require_governed_fact_authority(authority, subject="EU/EEA country-entity set")
+    editions = resolve_support_envelope_editions(selected, _country_entities_query)
+    if not editions:
+        raise RegistryValidationError("EU/EEA country membership authors no edition inside the supported filing years")
+    code = country_code.strip().upper()
+    listed = [code in _country_entities(resolved) for resolved in editions]
+    if all(listed):
+        return EnvelopeMembership.EVERY_EDITION
+    if not any(listed):
+        return EnvelopeMembership.NO_EDITION
+    return EnvelopeMembership.DEPENDS_ON_DATE
+
+
 __all__ = [
+    "EnvelopeMembership",
     "FiscalResidencyCatalogue",
     "FiscalResidencyDefinition",
     "fiscal_residency_choices",
@@ -258,4 +297,5 @@ __all__ = [
     "require_fiscal_residency",
     "resolve_fiscal_residency_catalogue",
     "ue_eea_country_codes",
+    "ue_eea_membership_across_envelope",
 ]

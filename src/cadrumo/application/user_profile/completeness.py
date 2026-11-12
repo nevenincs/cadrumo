@@ -23,7 +23,7 @@ from ...domain.contribuyente.entity_type import (
     entity_type_natural_person_token,
 )
 from ...domain.contribuyente.renta_codes import RentaDeclaracionType
-from ...domain.deadlines.models import irnr_representante_fiscal_required
+from ...domain.deadlines.models import irnr_representante_fiscal_required_on_every_date
 from ...domain.deadlines.profiles import modelo_iva_profile_required_paths
 
 if TYPE_CHECKING:
@@ -136,7 +136,10 @@ def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[s
         return (*required, COUNTRY_OF_FISCAL_RESIDENCE_PATH)
 
     required.append(COUNTRY_OF_FISCAL_RESIDENCE_PATH)
-    if irnr_representante_fiscal_required(country):
+    # Readiness holds no filing date. A country outside the EU/EEA on every date
+    # owes the representative now; one whose membership differs between editions
+    # is decided by verification, which holds the period of the filing.
+    if irnr_representante_fiscal_required_on_every_date(country) is True:
         required.extend((REPRESENTANTE_FISCAL_NIF_PATH, REPRESENTANTE_FISCAL_NOMBRE_PATH))
     return tuple(required)
 

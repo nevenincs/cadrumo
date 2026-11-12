@@ -1900,6 +1900,10 @@ errors:
     refused_modelo_payment_election_capability: A választott fizetési mód nem támogatott.
     refused_modelo_payment_election_incompatible: A választott fizetési módhoz pozitív
       eredmény szükséges.
+    refused_modelo_predicate_date_required: Egy ellenőrzési szabálynak tudnia kell,
+      hogy az adóügyi illetőség országa az EU vagy az EGT tagja volt-e, ez pedig a
+      benyújtási időszak dátumától függ. Az ellenőrzés nem adta meg a dátumot. Ez
+      a program hibája, nem te okoztad azzal, amit megadtál.
     refused_modelo_refund_account_missing: Visszatérítést kértek, de nincs visszatérítési
       számla rögzítve; az AEAT nem tud visszatérítést fizetni számla nélkül. Állíts
       be visszatérítési számlát, vagy vidd tovább a kreditet (compensar).

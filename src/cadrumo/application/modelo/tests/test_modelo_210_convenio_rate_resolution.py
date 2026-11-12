@@ -443,7 +443,7 @@ def test_representante_predicate_holds_for_eea_resident_without_representante() 
     """EEA-resident IRNR profile is exempt; predicate holds despite missing representante."""
 
     profile = _irnr_profile_without_representante("FR")
-    assert profile.ue_eee_status is True
+    assert profile.ue_eee_status_on(_DEVENGO_DATE) is True
 
     assert (
         evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile, fact_date=_DEVENGO_DATE) is True
@@ -454,7 +454,7 @@ def test_representante_predicate_holds_for_eea_resident_with_representante() -> 
     """EEA-resident IRNR profile with a representante — rule does not apply; predicate holds."""
 
     profile = _irnr_profile("FR")  # carries representante_fiscal_nif
-    assert profile.ue_eee_status is True
+    assert profile.ue_eee_status_on(_DEVENGO_DATE) is True
 
     assert (
         evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile, fact_date=_DEVENGO_DATE) is True
@@ -471,7 +471,7 @@ def test_representante_predicate_violated_for_non_eea_resident_without_represent
         country_of_fiscal_residence="AR",
         representante_fiscal_nif=None,
     )
-    assert profile.ue_eee_status is False
+    assert profile.ue_eee_status_on(_DEVENGO_DATE) is False
 
     assert (
         evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile, fact_date=_DEVENGO_DATE)
@@ -483,7 +483,7 @@ def test_representante_predicate_holds_for_non_eea_resident_with_representante()
     """Non-EEA IRNR profile with representante — rule applies and is satisfied; predicate holds."""
 
     profile = _irnr_profile("AR")  # AR is non-EEA, _irnr_profile sets representante
-    assert profile.ue_eee_status is False
+    assert profile.ue_eee_status_on(_DEVENGO_DATE) is False
     assert profile.representante_fiscal_nif == "12345678Z"
 
     assert (

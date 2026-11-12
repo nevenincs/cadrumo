@@ -526,8 +526,9 @@ application:
           ninguno. Rellena la casilla %{casilla_id}, o vacía la casilla %{field_casilla_id},
           y vuelve a exportar.'
         box_not_stated_by_rows: 'No se ha escrito nada: la casilla %{casilla_id} tiene
-          un valor que las filas de %{element_path} no suman. Corrige la casilla o
-          las filas para que cada fila indique sus propias cifras, y vuelve a exportar.'
+          el valor %{value}, que las filas de %{element_path} no suman. Corrige la
+          casilla o las filas para que cada fila indique sus propias cifras, y vuelve
+          a exportar.'
         counterparty_rows_unattributable: 'No se ha escrito nada: el registro %{record_id}
           tiene %{row_count} filas de contraparte, y las casillas de valor único %{casillas}
           no se pueden atribuir a una de ellas. Indica esas cifras en las filas y
@@ -3065,6 +3066,44 @@ application:
         Modelo 036 %{declaration_id}: no hay ninguna alta registrada, así que una
         %{requested_event_kind} no tiene ningún registro que cambiar. Registra primero
         el alta.'
+      m145_application_surfaces_mismatch: 'Los vínculos de aplicación que el registro
+        declara para el modelo 145 no coinciden con el contrato de la comunicación
+        al pagador, así que el registro de comunicación no puede usarse. Es un defecto
+        del registro: nada de lo que hagas lo repara.'
+      m145_delivery_blocked_by_validation: El registro de comunicación del modelo
+        145 tiene %{issue_count} incidencia(s) de validación, así que no puede marcarse
+        como entregado al pagador. Indica de nuevo el registro con los valores corregidos.
+      m145_export_blocked_by_validation: El registro de comunicación del modelo 145
+        tiene %{issue_count} incidencia(s) de validación, así que no puede exportarse.
+        Indica de nuevo el registro con los valores corregidos.
+      m145_export_layout_format_unsupported: 'El diseño de exportación %{export_layout_id}
+        declarado para el modelo 145 usa el formato %{format}, que la exportación
+        de la comunicación no puede escribir. Es un defecto del registro: nada de
+        lo que hagas lo repara.'
+      m145_export_layout_mixed_encodings: 'El diseño de exportación %{export_layout_id}
+        declarado para el modelo 145 mezcla codificaciones de caracteres entre sus
+        registros, así que la comunicación no puede exportarse. Es un defecto del
+        registro: nada de lo que hagas lo repara.'
+      m145_export_layout_shared_cells: 'El diseño de exportación %{export_layout_id}
+        declarado para el modelo 145 escribiría una misma casilla en celdas sin relación,
+        así que la comunicación no puede exportarse. Es un defecto del registro: nada
+        de lo que hagas lo repara.'
+      m145_export_layout_without_records: 'El diseño de exportación %{export_layout_id}
+        declarado para el modelo 145 no declara ningún registro, así que la comunicación
+        no puede exportarse. Es un defecto del registro: nada de lo que hagas lo repara.'
+      m145_export_record_not_encodable: El registro de exportación %{export_record_id}
+        de la comunicación no puede escribirse en el diseño oficial con los valores
+        indicados. Indica de nuevo el registro con valores que el diseño admita.
+      m145_record_not_delivered: El registro de comunicación del modelo 145 está en
+        el estado %{state}. Márcalo como entregado al pagador antes de marcarlo como
+        completado localmente.
+      m145_record_registry_coordinate_not_current: El registro de comunicación del
+        modelo 145 se guardó con una revisión del registro que ya no puede confirmarse
+        como vigente, así que no puede usarse. Indica de nuevo el registro con el
+        registro vigente.
+      m145_record_undeclared_casillas: El registro de comunicación nombra %{unknown_casilla_count}
+        casilla(s) que la revisión del modelo 145 no declara. Indica de nuevo el registro
+        solo con casillas declaradas.
       m200_accounting_result_required: El Modelo 200 necesita el resultado contable
         del ejercicio antes de calcularse a partir del libro.
       m210_agrupacion_annual_code_not_lease_or_sublease: El Modelo 210 anual (periodo
@@ -3217,8 +3256,21 @@ application:
         declaración aún no está habilitada para este modelo; reconcilia un justificante
         descargado con aeat app modelo reconcile import, o espera a que este modelo
         se habilite.
+      reconcile_divergence_casilla_undeclared: 'La comparación encontró una diferencia
+        en la casilla %{casilla_id}, que la revisión del registro no declara, así
+        que la diferencia no tiene fuente legal en la que apoyarse. Es un defecto
+        de la revisión o del programa: nada de lo que hagas lo repara.'
       reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de reconciliar una declaración.
+      reconcile_observation_no_numeric_fields: La declaración capturada no contiene
+        ninguna casilla numérica que comparar, así que no puede conciliarse. Elige
+        otra prueba.
+      reconcile_observation_not_comparable: La declaración capturada no contiene casillas
+        comparables o no contiene la identidad del contribuyente, así que no puede
+        conciliarse. Elige otra prueba.
+      reconcile_observation_registry_not_current: La declaración capturada se leyó
+        con unas coordenadas del registro que ya no están vigentes, así que no puede
+        conciliarse. Elige otra prueba.
       refund_election_not_eligible: Se eligió devolver para el Modelo %{modelo} %{period}
         %{filing_year}, pero la devolución solo está disponible en el último periodo
         de declaración del año. Arrastra el crédito (compensar) o elige la devolución
@@ -3336,6 +3388,9 @@ application:
         la ventana de obligación esté abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+    export_disclosure:
+      lead: Este cálculo indica límites y la exportación los lleva tal cual. Léelos
+        antes de fiarte de ella.
     finding_fact:
       box_unnumbered: sin número
       date_unknown: una fecha no registrada
@@ -4009,6 +4064,15 @@ application:
           la vacíes para continuar: presenta esta declaración con otra herramienta
           o espera a que se revisen sus celdas.'
       inspection_heading: Todas las casillas, por número de casilla
+      prior_value_attestation:
+        refusal:
+          source_held: La declaración anterior está guardada aquí, así que este concepto
+            toma su importe de ella y no puedes indicar otro en su lugar. Ábrela entre
+            tus declaraciones.
+        withdrawal:
+          action: Retira los importes que indicaste para estas declaraciones anteriores
+          effect: Se retira el importe que indicaste; el concepto queda sin valor
+            hasta que vuelvas a indicarlo o se añada la declaración anterior.
       served_action:
         credit_source_disagreement: Compara el importe con el certificado de cada
           pagador, corrige la fuente que esté mal y vuelve a calcular. Si has comprobado
@@ -4464,6 +4528,8 @@ application:
         pueden quedar en blanco y admiten como máximo %{limit} caracteres.
       ascendant_nif_invalid: El NIF o NIE del ascendiente %{row} no es válido; revisa
         sus letras y cifras.
+      ascendant_row_not_stored: Ese ascendiente ya no consta en este perfil. Vuelve
+        a leer los datos familiares antes de quitar a nadie.
       ascendant_rows_over_limit: Una declaración incluye como máximo %{limit} ascendientes
         y se han indicado %{count}.
       ascendant_value_invalid: El ascendiente %{row} indica un valor que la declaración
@@ -4501,6 +4567,8 @@ application:
         pueden quedar en blanco y admiten como máximo %{limit} caracteres.
       descendant_nif_invalid: El NIF o NIE del descendiente %{row} no es válido; revisa
         sus letras y cifras.
+      descendant_row_not_stored: Ese descendiente ya no consta en este perfil. Vuelve
+        a leer los datos familiares antes de quitar a nadie.
       descendant_rows_over_limit: Una declaración incluye como máximo %{limit} descendientes
         y se han indicado %{count}.
       descendant_value_invalid: El descendiente %{row} indica un valor que la declaración
@@ -4570,6 +4638,11 @@ application:
       row_unknown_field: 'La sección ''%{section}'' no declara estos campos: %{unknown}.
         Campos disponibles: %{fields}.'
     family_rows:
+      actions:
+        add_ascendiente: Añade un ascendiente
+        add_descendiente: Añade un descendiente
+        remove_ascendiente: Quita este ascendiente
+        remove_descendiente: Quita este descendiente
       ascendiente:
         apellidos_nombre:
           label: Apellidos y nombre del ascendiente (primero los apellidos)
@@ -4608,6 +4681,12 @@ application:
           help: Si sus rentas superan el límite que fija la ley para el año, el ascendiente
             no da derecho al mínimo por ascendientes.
           label: Rentas anuales de este ascendiente, excluidas las exentas (euros)
+      descendiente:
+        cotizaciones_ss_madre:
+          help: Déjalo en blanco si no lo sabes. Escribe el importe con punto decimal
+            y sin separador de miles, por ejemplo 2332.80.
+          label: Cotizaciones a la Seguridad Social de la madre posteriores al nacimiento
+            de este hijo (euros)
       incomplete: '{stated} indicadas, {recorded} registradas'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen

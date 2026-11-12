@@ -3,7 +3,11 @@
 A replacement states the whole family: the rows, their count and the clearing of every
 row it no longer holds are one write against one exact custody revision. Every refusal
 names the row by its position and never echoes what was typed, so the sentence served
-for it discloses nothing the person did not already see.
+for it discloses nothing the person did not already see. A caller may instead name
+one row to add, or the stored index of one row to remove; the family is then
+composed from the rows stored at the expected revision, so the people left alone are
+rewritten from storage with every leaf they state, and the same validation and write
+publish it.
 
 Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
@@ -32,6 +36,7 @@ from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from .household_person_tax_id import canonical_person_tax_id
 from .household_row_limit import declared_household_row_limit
 from .profile_record_repository import ProfileRecordRepository
+from .projections import record_to_effective_facts
 
 DESCENDANT_OBJECT_PATH: Final = "renta_family.descendiente"
 DESCENDANT_COUNT_PATH: Final = "renta_family.descendientes_count"
@@ -47,6 +52,7 @@ _NIF_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.descendant_nif
 _NAME_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.descendant_name_invalid"
 _VALUE_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.descendant_value_invalid"
 _FACT_UNSUPPORTED_LOCALE_KEY: Final = "application.user_profile.errors.descendant_fact_unsupported"
+_ROW_NOT_STORED_LOCALE_KEY: Final = "application.user_profile.errors.descendant_row_not_stored"
 
 
 class ProfileDescendantFact(BaseModel):
@@ -191,6 +197,36 @@ def _replaced_descendant_facts(current: UserProfileRecord, pairs: dict[str, str]
     )
 
 
+def _stored_leaves_without(current: UserProfileRecord, remove_row_index: str | None) -> dict[str, str]:
+    """The effective stored leaves, less the row at ``remove_row_index``; a row that holds nothing is refused."""
+    stored = {path: fact.value for path, fact in record_to_effective_facts(current).items() if fact.value is not None}
+    if remove_row_index is None:
+        return stored
+    prefix = f"{DESCENDANT_OBJECT_PATH}.{remove_row_index}."
+    if not any(path.startswith(prefix) and value.strip() for path, value in stored.items()):
+        _refuse(_ROW_NOT_STORED_LOCALE_KEY)
+    return {path: value for path, value in stored.items() if not path.startswith(prefix)}
+
+
+def _composed_descendants(
+    current: UserProfileRecord,
+    *,
+    descendants: tuple[ProfileDescendantRow, ...] | None,
+    add_row: ProfileDescendantRow | None,
+    remove_row_index: str | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ProfileDescendantRow, ...]:
+    """The family a change states: the family itself, or the stored rows less one removed and plus one added.
+
+    The stored rows are read from the effective facts, so a leaf the operator cleared is not written back.
+    """
+    if descendants is not None:
+        return descendants
+    stored = _stored_leaves_without(current, remove_row_index)
+    kept = encode_descendant_rows(descendant_list_from_facts(stored, authority=operation), authority=operation)
+    return (*kept, *(() if add_row is None else (add_row,)))
+
+
 @dataclass(frozen=True, slots=True)
 class DescendantFamilyMutation:
     """Published revision and actual change, without duplicating private rows."""
@@ -203,23 +239,35 @@ class DescendantFamilyMutation:
 def replace_profile_descendants(
     *,
     profile_id: str,
-    descendants: tuple[ProfileDescendantRow, ...],
+    descendants: tuple[ProfileDescendantRow, ...] | None = None,
+    add_row: ProfileDescendantRow | None = None,
+    remove_row_index: str | None = None,
     expected_revision: int,
     expected_content_digest: ContentDigest,
     operation: PinnedAuthorityOperation,
 ) -> DescendantFamilyMutation:
     """Validate and replace the whole family against one exact custody revision.
 
-    The count and orphaned optional/indexed fields belong to the same write.
-    Revalidation uses the execution owner's authority even when the frontend
-    has already constructed domain records under another publication.
+    The family is ``descendants`` when given; otherwise it is the rows stored at
+    that revision, without the row stored at ``remove_row_index`` and with
+    ``add_row`` appended. The count and orphaned optional/indexed fields belong
+    to the same write. Revalidation uses the execution owner's authority even
+    when the frontend has already constructed domain records under another
+    publication.
     """
     decode = operation.profile_decode_context()
     current = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode).load(profile_id)
     if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
         raise ProfileRecordConflictError("descendant family replacement baseline is stale")
     with validating_governed_facts(operation):
-        validated, pairs = _validated_descendant_facts(descendants, operation)
+        rows = _composed_descendants(
+            current,
+            descendants=descendants,
+            add_row=add_row,
+            remove_row_index=remove_row_index,
+            operation=operation,
+        )
+        validated, pairs = _validated_descendant_facts(rows, operation)
         changes = _replaced_descendant_facts(current, pairs)
         published = apply_profile_fact_changes(
             profile_id=profile_id,

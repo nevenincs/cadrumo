@@ -10270,6 +10270,7 @@ workspace:
         blocks: 'akadályozó: {count}'
         check: 'átnézendő: {count}'
         confirm: 'megerősítendő: {count}'
+        limitation: 'jelzett korlátok: {count}'
         missing: 'hiányzó: {count}'
       deadline: 'Határidő: {date} · hátralévő napok: {days}'
       deadline_passed: 'A határidő lejárt: {date}; a benyújtás most már késedelmes'
@@ -10546,6 +10547,7 @@ workspace:
       check: Érdemes átnézni
       confirm: Megerősítendő
       info: Tájékoztatásul
+      limitation: Jelzett korlát
       missing: Hiányzik
     loading: A bevallás betöltése…
     modelo_number: Modelo {modelo}
