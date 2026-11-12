@@ -1624,6 +1624,10 @@ errors:
       (field 114) must be the holder of the account you chose.
     refused_modelo_360_solicitud_undeclared: No Modelo 360 solicitud is declared for
       {filing_year}.
+    refused_modelo_390_prorrata_apartado_unrendered: 'The Modelo 390 stays refused:
+      your prorrata register has rows for this year, but the form edition in use does
+      not yet include the prorrata section (apartado 12), so it cannot be verified,
+      recorded as filed or exported without leaving that section blank.'
     refused_modelo_aggregation_input_conflict: A value you entered contradicts what
       your records give; correct it before calculating.
     refused_modelo_amendment_complementaria_liability_decrease: A complementaria cannot

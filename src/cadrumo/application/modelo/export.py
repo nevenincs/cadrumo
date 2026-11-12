@@ -161,6 +161,10 @@ from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies,
 )
+from .m390_prorrata_apartado_gate import (
+    Modelo390ProrrataApartadoStage,
+    require_modelo_390_prorrata_apartado_rendered,
+)
 from .modelo_bucket_events import emit_modelo_bucket_event
 from .preconditions import (
     build_modelo_precondition_failure,
@@ -1019,6 +1023,13 @@ def _prepare_modelo_export(
         stage=Modelo123CountAuthorityStage.EXPORT,
     )
     require_modelo_193_settled_row_amount_authority(work_unit, revision, stage=Modelo193SettledRowStage.EXPORT)
+    require_modelo_390_prorrata_apartado_rendered(
+        work_unit,
+        registry_revision_id=revision.registry_snapshot_ref.revision_id,
+        prorrata_register_repository=export_ports.prorrata_register,
+        operation=operation,
+        stage=Modelo390ProrrataApartadoStage.EXPORT,
+    )
     amendment_evidence = resolve_persisted_amendment_export_evidence(
         command,
         revision,

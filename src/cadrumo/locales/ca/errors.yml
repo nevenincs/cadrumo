@@ -1779,6 +1779,11 @@ errors:
       (camp 114) ha de ser el titular del compte que has triat.
     refused_modelo_360_solicitud_undeclared: No hi ha cap sol·licitud del Model 360
       declarada per a {filing_year}.
+    refused_modelo_390_prorrata_apartado_unrendered: 'El model 390 continua rebutjat:
+      el teu registre de prorrata té files per a aquest exercici, però l''edició del
+      formulari en ús encara no inclou l''apartat de prorrates (apartat 12), de manera
+      que no es pot verificar, registrar com a presentat ni exportar sense deixar
+      aquest apartat en blanc.'
     refused_modelo_aggregation_input_conflict: Una dada que has introduït contradiu
       el que donen els teus registres; corregeix-la abans de calcular.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementària

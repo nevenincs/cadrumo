@@ -885,6 +885,7 @@
         "cadrumo.application.modelo.m303_regimen_simplificado_scope",
         "cadrumo.application.modelo.m360_solicitud_input",
         "cadrumo.application.modelo.m360_solicitud_operation",
+        "cadrumo.application.modelo.m390_prorrata_apartado_gate",
         "cadrumo.application.modelo.maritime_preview",
         "cadrumo.application.modelo.maritime_preview_operation",
         "cadrumo.application.modelo.metadata_operation_access",

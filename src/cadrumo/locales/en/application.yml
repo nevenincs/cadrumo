@@ -2983,6 +2983,11 @@ application:
       m303_m349_intracom_reconciliation_mismatch: For period %{period_code} %{filing_year},
         the intra-community total in modelo 303 (%{m303_total} EUR) and the total
         in modelo 349 (%{m349_total} EUR) differ by %{gap} EUR.
+      m390_prorrata_apartado_unrendered: 'Modelo 390 for %{filing_year}: your prorrata
+        register applies to this year (%{registered_activity_rows} activity row(s)),
+        but the form edition does not yet include the prorrata section (apartado 12),
+        so it would be exported with that section blank. You cannot verify or export
+        it yet.'
       madrid_nacimiento_adopcion_eligibility_advisory: Box [%{casilla_id}], with a
         weighted count of %{weighted_count}, may entitle you to the Madrid deduction
         for birth or adoption.
