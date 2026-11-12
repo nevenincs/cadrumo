@@ -82,6 +82,7 @@ from ..refund_eligibility import resolve_refund_eligibility_policy
 from ..renta_codes_catalogue import resolve_fiscal_residency_catalogue, ue_eea_country_codes
 from ..renta_expense_policy import renta_expense_policy_declarations
 from ..rental_reduction import resolve_rental_reduction_art232_tier_catalogue
+from ..retencion_clave_catalogue import resolve_retencion_clave
 from ..retenciones_bindings import registry_schemes_for_modelo
 from ..setup_profile_bindings import mapping_fact_entries
 from ..situacion_familiar_catalogue import resolve_situacion_familiar_catalogue
@@ -89,7 +90,7 @@ from ..situacion_familiar_m145_catalogue import resolve_situacion_familiar_m145_
 from ..tax_id_format import runtime_tax_id_format, tax_id_format_value
 from ..third_party_declaration_roles import resolve_third_party_declaration_role_catalogue
 from ..travel_agency_mediation import resolve_travel_agency_mediation_catalogue
-from ..withholding_bindings import resolve_retencion_clave, withholding_role_declarations
+from ..withholding_bindings import withholding_role_declarations
 from .authored_editions import filing_year_envelope
 from .fact_scope import outside_governed_fact_validation
 from .m347_fixture import resolve_m347_counterparty_annual_threshold

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
-from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
     required_mapping_entry,
@@ -136,7 +135,7 @@ def _no_activity_declaration(entries: Mapping[str, str]) -> OssIossNoActivityDec
 
 def resolve_oss_ioss_regime_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> OssIossRegimeCatalogue:
     """Resolve the complete OSS / IOSS regime catalogue through facts authority."""
@@ -145,7 +144,7 @@ def resolve_oss_ioss_regime_catalogue(
         raise RegistryValidationError(
             "OSS/IOSS regime catalogue requires an explicit authority operation or scope",
         )
-    entries = _ENTRIES_FACT.resolve_entries(authority, effective_date=effective_date or today_madrid())
+    entries = _ENTRIES_FACT.resolve_entries(authority, effective_date=effective_date)
     ordered_tokens = unique_mapping_tokens(
         entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
     )
@@ -179,7 +178,7 @@ def resolve_oss_ioss_regime_catalogue(
 def require_oss_ioss_regime(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> OssIossRegime:
     """Return one registry-declared OSS/IOSS token or refuse it."""

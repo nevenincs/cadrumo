@@ -166,6 +166,7 @@ class ProfileReviewDoors:
             profile_decode_context=context,
             expected_revision=expected_revision,
             expected_content_digest=expected_content_digest,
+            authority=self.operation,
         )
         return self._project(applied.record)
 
@@ -190,6 +191,7 @@ class ProfileReviewDoors:
             profile_decode_context=context,
             expected_revision=expected_revision,
             expected_content_digest=expected_content_digest,
+            authority=self.operation,
         )
         return self._project(applied.record)
 

@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 8
+version = 9
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -16,8 +16,8 @@ remove_policy = "live_profile_tombstone_retain_snapshots"
 # `descendientes_minimos_aggregate_{filing_year}` cannot swallow the longer
 # `descendientes_minimos_aggregate_autonomico_{filing_year}` paths.
 #
-# `cotizaciones_ss_madre_2024` and `renta_rental.reduccion_art_23_2_tier_2024`
-# are deliberately absent: they are genuine operator input, not derived.
+# `cotizaciones_ss_madre_2024` is deliberately absent: it is genuine operator
+# input, not derived.
 
 [[derived_selectors]]
 pattern = "renta_family.descendientes_minimos_aggregate_{filing_year}"
@@ -76,10 +76,17 @@ description = "Incremento por gastos de custodia, prorrateado por meses y limita
 legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
 
 [[derived_selectors]]
-pattern = "renta_family.deduccion_maternidad_{filing_year}"
+pattern = "renta_family.deduccion_maternidad"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
 description = "Deduccion por maternidad, calculada por descendiente desde los meses declarados y su elegibilidad."
+legal_refs = ["ley-35-2006:art-81"]
+
+[[derived_selectors]]
+pattern = "renta_family.deduccion_maternidad_cotizaciones"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Deduccion por maternidad calculada por descendiente desde los meses declarados y limitada, ademas, por las cotizaciones de la madre tras su nacimiento (art. 81.1 LIRPF hasta la Ley 31/2022)."
 legal_refs = ["ley-35-2006:art-81"]
 
 [[derived_selectors]]
@@ -88,6 +95,20 @@ derived_from = ["tax_residence.jurisdiction_scope"]
 entry_surface = "aeat config profile edit --tax-residence-jurisdiction-scope SCOPE"
 description = "Porcentaje atribuible al Estado derivado exclusivamente del regimen territorial declarado."
 legal_refs = ["ley-12-2002:art-29"]
+
+[[derived_selectors]]
+pattern = "renta_capital_inmobiliario.reduccion_art_23_2_aplicable"
+derived_from = ["renta_arrendamiento.uso_vivienda", "renta_arrendamiento.fecha_contrato", "renta_arrendamiento.zona_tensionada", "renta_arrendamiento.incumple_lau_17_6"]
+entry_surface = "aeat config profile arrendamiento edit"
+description = "Si la reduccion del art. 23.2 LIRPF alcanza el arrendamiento del ejercicio: no alcanza al que no es de vivienda ni, en el regimen de tramos, al que incumple el art. 17.6 LAU."
+legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-23-2021", "ley-35-2006:dt-38"]
+
+[[derived_selectors]]
+pattern = "renta_capital_inmobiliario.reduccion_art_23_2_tier"
+derived_from = ["renta_arrendamiento.fecha_contrato", "renta_arrendamiento.zona_tensionada", "renta_arrendamiento.primer_arrendamiento_vivienda", "renta_arrendamiento.inquilinos", "renta_arrendamiento.arrendatario_entidad_tipo", "renta_arrendamiento.arrendatario_entidad_finalidad", "renta_arrendamiento.rehabilitacion_fecha", "renta_arrendamiento.renta_inicial", "renta_arrendamiento.renta_ultima_contrato_anterior"]
+entry_surface = "aeat config profile arrendamiento edit"
+description = "Regimen o tramo de la reduccion del art. 23.2 LIRPF del arrendamiento del ejercicio: el 60 por ciento anterior a la Ley 12/2023, o el 90, 70, 60 o 50 por ciento."
+legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-23-2021", "ley-35-2006:dt-38"]
 
 [[derived_selectors]]
 pattern = "irpf.estimation_directa"
@@ -1494,19 +1515,371 @@ model_selectors = ["declaration.type", "modelo_100"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections]]
-key = "renta_rental"
-title = "Renta rental context"
-sensitivity = "financial"
-effective_dated = false
+key = "renta_inmueble"
+title = "Renta inmueble"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
 
 [[sections.fields]]
-key = "reduccion_art_23_2_tier_2024"
+key = "situacion"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de situacion del inmueble (casilla 0065): 1 con referencia catastral fuera del Pais Vasco y Navarra, 2 Pais Vasco, 3 Navarra, 4 en Espana sin referencia catastral, 5 en el extranjero."
+enum_values = ["1", "2", "3", "4", "5"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "referencia_catastral"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Referencia catastral del inmueble (casilla 0066); obligatoria con las situaciones 1, 2 y 3. Identifica el inmueble de un ejercicio al siguiente."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "naturaleza"
 type = "enum"
 required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Naturaleza del inmueble (casillas 0067 y 0068): urbana o rustica."
+enum_values = ["urbana", "rustica"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "direccion"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Direccion del inmueble (casilla 0069)."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "titularidad_regimen"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Regimen de titularidad del contribuyente sobre el inmueble: pleno dominio, nuda propiedad, usufructo, o pleno dominio y usufructo combinados. Ausente significa titularidad no declarada."
+enum_values = ["pleno_dominio", "nuda_propiedad", "usufructo", "pleno_dominio_y_usufructo"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "titular"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Contribuyente titular del inmueble (casilla 0062): primer declarante, conyuge, hijo (con su ordinal) o comun a ambos conyuges."
+enum_values = ["primer_declarante", "conyuge", "hijo", "comun"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "titular_hijo_ordinal"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Ordinal del hijo titular (Hijo 1, Hijo 2, etc.) cuando el titular es un hijo."
+minimum = "1"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "porcentaje_propiedad"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Porcentaje de propiedad del contribuyente (casilla 0063), con dos decimales como maximo."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "porcentaje_usufructo"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Porcentaje de usufructo del contribuyente (casilla 0064), con dos decimales como maximo."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "adquisicion_titulo"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Titulo de adquisicion del inmueble (casillas 0118 y 0119): onerosa o lucrativa."
+enum_values = ["onerosa", "lucrativa"]
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "fecha_adquisicion"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de adquisicion del inmueble (casilla 0120)."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "fecha_transmision"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de transmision del inmueble cuando procede (casilla 0121)."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "importe_adquisicion"
+type = "money"
+required = false
 sensitivity = "financial"
-description = "Modelo 100 de 2024, art. 23.2: porcentaje de reducción por alquiler de vivienda entre los tramos legales del 50, 60, 70 o 90 %. Sin este dato no puede calcularse la casilla 0150 únicamente a partir de la condición de elegibilidad."
-enum_values = ["tier-50", "tier-60", "tier-70", "tier-90"]
-model_selectors = ["renta_rental.reduccion_art_23_2_tier_2024", "modelo_100"]
+effective_dated = true
+description = "Importe de adquisicion (casilla 0126); en una adquisicion lucrativa, el valor que corresponda al Impuesto sobre Sucesiones y Donaciones."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "gastos_tributos_adquisicion"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Gastos y tributos inherentes a la adquisicion satisfechos por el adquirente (casilla 0127)."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "valor_suelo"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Valor del suelo cuando la escritura de adquisicion lo declara; excluido de la base de amortizacion."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "mejoras"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Mejoras hechas antes de que el libro mayor cubra el inmueble, con fecha e importe: FECHA:IMPORTE separadas por punto y coma (por ejemplo 2020-05-01:1500.00)."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "valores_catastrales"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Valores catastrales por ejercicio del IBI: ANO:TOTAL:CONSTRUCCION separados por punto y coma (casillas 0123 y 0124)."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "usos"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Usos distintos del arrendamiento como intervalos fechados: TIPO:DESDE:HASTA separados por punto y coma, con TIPO vivienda_habitual, disposicion_propietario o actividad_economica; HASTA vacio indica que continua."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "inmueble_principal"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Solo para un anejo (casillas 0074 y 0090): identificador de fila del inmueble principal con el que se arrienda, otra fila de esta misma seccion."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "importes_movimientos"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Si los movimientos del libro mayor vinculados al inmueble recogen los importes del inmueble completo o solo la parte propia del contribuyente; se exige solo cuando el porcentaje de propiedad es inferior a 100."
+enum_values = ["inmueble_completo", "parte_propia"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "amortizacion_acumulada"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Amortizacion acumulada atestada hasta el inicio del primer ejercicio que la aplicacion calcula; se exige solo cuando el limite acumulado puede alcanzarse."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections.fields]]
+key = "amortizacion_acumulada_desde"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de inicio del primer ejercicio que la aplicacion calcula, a la que se refiere la amortizacion acumulada atestada."
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+
+[[sections]]
+key = "renta_arrendamiento"
+title = "Renta arrendamiento"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "inmueble"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Identificador de fila del inmueble arrendado: el indice de su fila en la seccion de inmuebles."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "fecha_contrato"
+type = "date"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha del contrato de arrendamiento (casilla 0093)."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "fecha_inicio"
+type = "date"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de inicio del arrendamiento."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "fecha_fin"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de fin del arrendamiento; ausente indica que continua."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "uso_vivienda"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "El arrendamiento tiene por destino la vivienda del arrendatario, requisito de la reduccion del articulo 23.2."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "inquilinos"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Arrendatarios: NIF:FRANJA:EXTRANJERO separados por punto y coma, con FRANJA 18_35, otra o no_aplica y EXTRANJERO si o no (casillas 0091 a 0098 y filas siguientes)."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "zona_tensionada"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "El inmueble estaba en una zona de mercado residencial tensionado al firmar el contrato."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "primer_arrendamiento_vivienda"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Es el primer arrendamiento de la vivienda."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "arrendatario_entidad_tipo"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Tipo de arrendatario no persona fisica: administracion publica o entidad sin fines lucrativos."
+enum_values = ["administracion_publica", "entidad_sin_fines_lucro"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "arrendatario_entidad_finalidad"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Finalidad con que la entidad arrendataria destina la vivienda: vivienda asequible o social, u otra."
+enum_values = ["vivienda_asequible_o_social", "otra"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "rehabilitacion_fecha"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha de finalizacion de la rehabilitacion de la vivienda, si la hubo."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "renta_inicial"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta inicial del contrato."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "renta_ultima_contrato_anterior"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Ultima renta actualizada del contrato anterior sobre la misma vivienda."
+minimum = "0"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+
+[[sections.fields]]
+key = "arrendatario_pariente_art24"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "El arrendatario es pariente dentro del grado del articulo 24 de la Ley 35/2006."
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+
+[[sections.fields]]
+key = "incumple_lau_17_6"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "El inmueble esta en zona tensionada y el contrato incumple el articulo 17.6 de la Ley de Arrendamientos Urbanos."
 legal_refs = ["ley-35-2006:art-23"]
 
 [[sections]]

@@ -7714,6 +7714,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 
 [[refusal]]
 modelo = "100"
+revision = "2022"
+casilla = "trabajo-mar-renta-exenta"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
 revision = "2023"
 casilla = "0057"
 category = "not_examined"
@@ -10208,6 +10215,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2023"
 casilla = "eo-agraria-reduccion-irregularidad-base"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "trabajo-mar-renta-exenta"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
@@ -13925,6 +13939,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2024"
 casilla = "prestacion-inss-maternidad-paternidad-exenta"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2024"
+casilla = "trabajo-mar-renta-exenta"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 

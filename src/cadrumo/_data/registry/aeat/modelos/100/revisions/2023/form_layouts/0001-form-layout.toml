@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "f8a594d4dd53c5e68560575b64ea41b835321909417ef265b9bc9a887be7eedb"
+source_state_digest = "4b064b70430c2aec96490267a5df855b99592697c7a0f28688082fa2098a1d31"
 design_sources = [
     { source_ref = "aeat-dr-100-2023-dictionary", sha256 = "a9b8d0e24878b550870666870107b66af2df3eb7d341739e59accce6f1108024" },
     { source_ref = "aeat-dr-100-2023-input-dictionary", sha256 = "183692c1a5a4785d9a04508e2ab928b25e44742ced448e19359ea7afb22c37cd" },
@@ -1979,6 +1979,7 @@ placements = [
     { casilla_id = "base-liq-neg-general-em3-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "base-liq-neg-general-em4-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "trabajo-mar-renta-exenta", kind = "working_figure" },
 ]
 
 [[revisions.2023.form_layouts.pages]]

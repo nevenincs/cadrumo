@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unreachable-capability'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:4e2921cac434f436ed9a97f7757398eb4628013ff97e87b387fd2adf3ccbd921'
+body_hash: 'sha256:f5371a1f244d38a9904ef96a0dec288fe02613e22d00a9a37a6c3367d582b9a6'
 related:
   - "[[2026-09-02-unreachable-capability-fincas-unblock-research]]"
   - "[[2026-09-02-unreachable-capability-disconnected-capability-inventory-reference]]"
@@ -204,3 +204,7 @@ a full owner, halved for a cotitular under the pág. 292 rule, and the Capítulo
   readiness function reports the persistence one. Both remain true, the row
   still records only one, and choosing between them belongs to the owner of the
   closed disposition vocabulary.
+
+## Amendment 2026-11-11: titularidad attaches to the property record
+
+Accepted 2026-11-11 by CADRUMO-PRIME under the operator's delegation, with the decision `2026-11-11-renta-rental-income-source-adr`. The titularidad value object and its attribution rule attach to the `renta_inmueble` profile section (named `renta_inmuebles.inmueble` before the 2026-11-11 decisions ruling). The `Finca` record, the `rental_fincas` mapper row and the schema-version paragraph above describe code removed on 2026-09-08 and no longer apply. The unencrypted titular column no longer applies either, because every field of the property record is held in encrypted profile custody. The titularidad rule, its refusals and its oracles stand unchanged.

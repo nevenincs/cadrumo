@@ -24,7 +24,7 @@ from typing import (
 from pydantic import BaseModel, Field, Tag, field_validator, model_validator
 from pydantic.fields import FieldInfo
 
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -32,6 +32,7 @@ from ...domain.calculations.registry.binding_provider_registration import BINDIN
 from ...domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from .lifecycle_view_refusal_doors import work_list_verdict
 from .workspace_models import ModeloWorkspaceSchemaClassification
 
 _MANIFEST_VERSION = 1
@@ -823,7 +824,7 @@ def manifest_digest(
     )
 
 
-class ModeloWorkspaceManifestCaptureError(CadrumoError):
+class ModeloWorkspaceManifestCaptureError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Raised when a field manifest cannot be captured over one stable window."""
 
 
@@ -831,6 +832,7 @@ def _manifest_capture_not_current(reason: str) -> ModeloWorkspaceManifestCapture
     return ModeloWorkspaceManifestCaptureError(
         translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
         context={"reason": reason},
+        precondition_verdict=work_list_verdict("workspace_manifest_capture"),
     )
 
 

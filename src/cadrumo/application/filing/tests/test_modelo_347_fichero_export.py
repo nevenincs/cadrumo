@@ -132,7 +132,7 @@ class _FilingNames:
             if invoice.counterparty_tax_id is not None
         }
 
-    def filing_name_of(self, tax_identifier: str, *, country_code: str) -> DeclaredPartyFilingName | None:
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
         del country_code
         return self._names.get(tax_identifier)
 

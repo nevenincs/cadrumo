@@ -16,6 +16,8 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
+from .refusal_door_verdicts import registry_defect_verdict
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 __all__ = ["art20_reduccion_advisory_finding"]
@@ -59,7 +61,11 @@ def art20_reduccion_advisory_finding(
         rnt_id = casilla_id_for_unique_revision_semantic_role(revision, _ART20_RNT_ROLE)
         reduccion_id = casilla_id_for_unique_revision_semantic_role(revision, _ART20_REDUCCION_ROLE)
     except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+        raise ModeloError(
+            str(exc),
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
 
     if rnt_id is None or reduccion_id is None:
         return None
@@ -69,7 +75,10 @@ def art20_reduccion_advisory_finding(
     resolved_ceiling = context.resolved_decimal(_ART20_RNT_CEILING_FACT_ID)
     ceiling = resolved_ceiling.payload.value
     if not isinstance(ceiling, Decimal):
-        raise ModeloError("Art. 20 RNT ceiling fact must resolve to a Decimal")
+        raise ModeloError(
+            "Art. 20 RNT ceiling fact must resolve to a Decimal",
+            precondition_verdict=registry_defect_verdict("art20_ceiling_fact"),
+        )
     if not (Decimal(0) < rnt_value < ceiling and reduccion_value == Decimal(0)):
         return None
 

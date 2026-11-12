@@ -12,7 +12,12 @@ from cadrumo.domain.calculations.registry.applicability import (
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
-from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
+from cadrumo.domain.calculations.registry.applicability_modelo202 import (
+    Modelo202Modality,
+    Modelo202ModalityVerdict,
+    modelo_202_incn_threshold_decimal,
+    resolve_modelo_202_art_40_3_incn_threshold,
+)
 from cadrumo.domain.calculations.registry.applicability_models import (
     ApplicabilityVerdict,
     ModeloApplicability,
@@ -46,6 +51,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _HORIZON = filing_year_envelope().horizon
 _REGIME_START = date(_HORIZON - 3, 1, 1)
 _REGIME_TODAY = date(_HORIZON, 5, 27)
+# Each return is decided on its own tax period; these cases use the last day of the horizon year.
+_REFERENCE_DATE = date(_HORIZON, 12, 31)
 
 
 class _FactUpdateParams(TypedDict, total=False):
@@ -207,13 +214,30 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
         legal_entity_form=_LEGAL_FORM_SL,
         iva_regime=_IVA_GENERAL,
         fiscal_residency=_RESIDENT_IRPF,
+        # Orden HFP/227/2017 art. 1.3: filing is unconditional only above the LIS art. 40.3 INCN threshold.
+        incn_prior_12_months=modelo_202_incn_threshold_decimal(
+            resolve_modelo_202_art_40_3_incn_threshold(
+                effective_date=_REFERENCE_DATE, authority=compiled_bundled_authority()
+            )
+        )
+        + 1,
     )
 
-    assert derive_modelo_applicability(direct_autonomo, "130").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(direct_autonomo, "131").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
-    assert derive_modelo_applicability(objetiva_autonomo, "131").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(sociedad_limitada, "202").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(sociedad_limitada, "100").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
+    assert derive_modelo_applicability(direct_autonomo, "130", reference_date=_REFERENCE_DATE).verdict is (
+        ApplicabilityVerdict.APPLICABLE
+    )
+    assert derive_modelo_applicability(direct_autonomo, "131", reference_date=_REFERENCE_DATE).verdict is (
+        ApplicabilityVerdict.NOT_APPLICABLE
+    )
+    assert derive_modelo_applicability(objetiva_autonomo, "131", reference_date=_REFERENCE_DATE).verdict is (
+        ApplicabilityVerdict.APPLICABLE
+    )
+    assert derive_modelo_applicability(sociedad_limitada, "202", reference_date=_REFERENCE_DATE).verdict is (
+        ApplicabilityVerdict.APPLICABLE
+    )
+    assert derive_modelo_applicability(sociedad_limitada, "100", reference_date=_REFERENCE_DATE).verdict is (
+        ApplicabilityVerdict.NOT_APPLICABLE
+    )
 
 
 def _attribution_entity_profile(
@@ -278,7 +302,7 @@ def test_attribution_entity_with_general_iva_is_applicable_for_iva_modelos() -> 
     """An attribution entity can be IVA-taxable even though income passes through."""
 
     for modelo in _PERIODIC_IVA_MODELOS:
-        result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
+        result = derive_modelo_applicability(_attribution_entity_profile(), modelo, reference_date=_REFERENCE_DATE)
 
         assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
         assert result.applicable is True, modelo
@@ -292,7 +316,7 @@ def test_attribution_entity_without_periodic_iva_regime_owes_no_m303_or_m390() -
         profile = _attribution_entity_profile(iva_regime=iva_regime)
 
         for modelo in _PERIODIC_IVA_MODELOS:
-            result = derive_modelo_applicability(profile, modelo)
+            result = derive_modelo_applicability(profile, modelo, reference_date=_REFERENCE_DATE)
             assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, (iva_regime, modelo)
             assert result.applicable is False, (iva_regime, modelo)
 
@@ -304,7 +328,7 @@ def test_attribution_entity_with_employees_is_applicable_for_modelo_111_and_190(
     profile = _attribution_entity_profile(has_employees=True)
 
     for modelo in ("111", "190"):
-        result = derive_modelo_applicability(profile, modelo)
+        result = derive_modelo_applicability(profile, modelo, reference_date=_REFERENCE_DATE)
         assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
         assert result.applicable is True, modelo
 
@@ -313,7 +337,7 @@ def test_attribution_entity_with_employees_is_applicable_for_modelo_111_and_190(
 def test_attribution_entity_without_withheld_income_fact_is_incomplete_for_modelo_111() -> None:
     """Without an employee/professional payer fact, M111 is undecided, not applicable."""
 
-    result = derive_modelo_applicability(_attribution_entity_profile(), "111")
+    result = derive_modelo_applicability(_attribution_entity_profile(), "111", reference_date=_REFERENCE_DATE)
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert result.applicable is False
@@ -324,7 +348,9 @@ def test_attribution_entity_with_required_fact_is_applicable_for_fact_gated_mode
     """Attribution entities can owe non-cuota payer/informative modelos."""
 
     for modelo, payer_fact_update in _FACT_GATED_MODELO_CASES:
-        result = derive_modelo_applicability(_attribution_entity_profile(**payer_fact_update), modelo)
+        result = derive_modelo_applicability(
+            _attribution_entity_profile(**payer_fact_update), modelo, reference_date=_REFERENCE_DATE
+        )
 
         assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
         assert result.applicable is True, modelo
@@ -335,7 +361,7 @@ def test_attribution_entity_without_required_fact_is_incomplete_for_fact_gated_m
     """Missing payer/trade facts stay undecided instead of entity-excluded."""
 
     for modelo, _payer_fact_update in _FACT_GATED_MODELO_CASES:
-        result = derive_modelo_applicability(_attribution_entity_profile(), modelo)
+        result = derive_modelo_applicability(_attribution_entity_profile(), modelo, reference_date=_REFERENCE_DATE)
 
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
         assert result.applicable is False, modelo
@@ -366,8 +392,14 @@ def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() 
     )
     # The undeclared regime defaults to directa (the LIRPF default method).
     assert autonomo_no_regime.irpf_estimation_regime is None
-    assert derive_modelo_applicability(autonomo_no_regime, "130").verdict is ApplicabilityVerdict.APPLICABLE
-    assert derive_modelo_applicability(autonomo_no_regime, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert (
+        derive_modelo_applicability(autonomo_no_regime, "130", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
+    assert (
+        derive_modelo_applicability(autonomo_no_regime, "131", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.NOT_APPLICABLE
+    )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
@@ -384,7 +416,7 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_130() -> None:
         country_of_fiscal_residence="FR",
     )
 
-    result = derive_modelo_applicability(non_resident_autonomo, "130")
+    result = derive_modelo_applicability(non_resident_autonomo, "130", reference_date=_REFERENCE_DATE)
 
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert result.applicable is False
@@ -406,7 +438,7 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_100() -> None:
         country_of_fiscal_residence="FR",
     )
 
-    result = derive_modelo_applicability(non_resident_autonomo, "100")
+    result = derive_modelo_applicability(non_resident_autonomo, "100", reference_date=_REFERENCE_DATE)
 
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert result.applicable is False
@@ -437,9 +469,12 @@ def test_non_resident_irnr_legal_entity_without_pe_does_not_owe_modelo_200() -> 
         country_of_fiscal_residence="DE",
     )
 
-    assert derive_modelo_applicability(resident_company, "200").verdict is ApplicabilityVerdict.APPLICABLE
+    assert (
+        derive_modelo_applicability(resident_company, "200", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
 
-    result = derive_modelo_applicability(non_resident_company, "200")
+    result = derive_modelo_applicability(non_resident_company, "200", reference_date=_REFERENCE_DATE)
 
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert result.applicable is False
@@ -465,8 +500,14 @@ def test_objective_estimation_regime_routes_to_m131() -> None:
         fiscal_residency=_RESIDENT_IRPF,
     )
     assert autonomo_modulos.irpf_estimation_regime == _OBJETIVA
-    assert derive_modelo_applicability(autonomo_modulos, "131").verdict is ApplicabilityVerdict.APPLICABLE
-    assert derive_modelo_applicability(autonomo_modulos, "130").verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert (
+        derive_modelo_applicability(autonomo_modulos, "131", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
+    assert (
+        derive_modelo_applicability(autonomo_modulos, "130", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.NOT_APPLICABLE
+    )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
@@ -490,8 +531,14 @@ def test_pure_landlord_without_actividad_economica_owes_no_m130() -> None:
         iva_regime=_IVA_GENERAL,
         fiscal_residency=_RESIDENT_IRPF,
     )
-    assert derive_modelo_applicability(landlord, "130").verdict is ApplicabilityVerdict.NOT_APPLICABLE
-    assert derive_modelo_applicability(landlord, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert (
+        derive_modelo_applicability(landlord, "130", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.NOT_APPLICABLE
+    )
+    assert (
+        derive_modelo_applicability(landlord, "131", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.NOT_APPLICABLE
+    )
 
 
 def _beckham_profile(
@@ -532,7 +579,7 @@ def test_impatriado_art93_exempts_modelo_720_even_with_bienes_declared() -> None
 
     beckham_profile = _beckham_profile(bienes_extranjero_above_threshold=True)
     # Pass today within the 6-year window so the exemption fires.
-    result = derive_modelo_applicability(beckham_profile, "720", today=_REGIME_TODAY)
+    result = derive_modelo_applicability(beckham_profile, "720", reference_date=_REGIME_TODAY)
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     # Reason must cite the Art. 93 special regime
     assert "Art. 93" in result.reason or "impatriado" in result.reason.lower()
@@ -556,7 +603,7 @@ def test_general_regime_profile_with_bienes_declared_modelo_720_applicable() -> 
         irpf_special_regime=None,
         bienes_extranjero_above_threshold=True,
     )
-    result = derive_modelo_applicability(general_profile, "720")
+    result = derive_modelo_applicability(general_profile, "720", reference_date=_REFERENCE_DATE)
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
 
@@ -576,8 +623,11 @@ def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() ->
         iva_regime=_IVA_GENERAL,
     )
 
-    assert derive_modelo_applicability(base_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE
-    base_721 = derive_modelo_applicability(base_profile, "721")
+    assert (
+        derive_modelo_applicability(base_profile, "720", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.INCOMPLETE
+    )
+    base_721 = derive_modelo_applicability(base_profile, "721", reference_date=_REFERENCE_DATE)
     assert base_721.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "monedas virtuales" in base_721.reason
     assert "alquileres sujetos a retención" not in base_721.reason
@@ -586,8 +636,14 @@ def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() ->
 
     crypto_profile = base_profile.model_copy(update={"monedas_virtuales_extranjero_above_threshold": True})
 
-    assert derive_modelo_applicability(crypto_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE
-    assert derive_modelo_applicability(crypto_profile, "721").verdict is ApplicabilityVerdict.APPLICABLE
+    assert (
+        derive_modelo_applicability(crypto_profile, "720", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.INCOMPLETE
+    )
+    assert (
+        derive_modelo_applicability(crypto_profile, "721", reference_date=_REFERENCE_DATE).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
@@ -596,8 +652,8 @@ def test_impatriado_in_window_routes_annual_irpf_to_modelo_151() -> None:
 
     beckham_profile = _beckham_profile()
 
-    m100 = derive_modelo_applicability(beckham_profile, "100", today=_REGIME_TODAY)
-    m151 = derive_modelo_applicability(beckham_profile, "151", today=_REGIME_TODAY)
+    m100 = derive_modelo_applicability(beckham_profile, "100", reference_date=_REGIME_TODAY)
+    m151 = derive_modelo_applicability(beckham_profile, "151", reference_date=_REGIME_TODAY)
 
     assert m100.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert m100.applicable is False
@@ -624,14 +680,16 @@ def test_impatriado_year_seven_restores_m100_m720_and_suppresses_m151() -> None:
     year_seven = date(_REGIME_START.year + 6, 1, 1)
 
     assert (
-        derive_modelo_applicability(expired_profile, "100", today=year_seven).verdict is ApplicabilityVerdict.APPLICABLE
+        derive_modelo_applicability(expired_profile, "100", reference_date=year_seven).verdict
+        is ApplicabilityVerdict.APPLICABLE
     )
     assert (
-        derive_modelo_applicability(expired_profile, "151", today=year_seven).verdict
+        derive_modelo_applicability(expired_profile, "151", reference_date=year_seven).verdict
         is ApplicabilityVerdict.NOT_APPLICABLE
     )
     assert (
-        derive_modelo_applicability(expired_profile, "720", today=year_seven).verdict is ApplicabilityVerdict.APPLICABLE
+        derive_modelo_applicability(expired_profile, "720", reference_date=year_seven).verdict
+        is ApplicabilityVerdict.APPLICABLE
     )
 
 
@@ -648,7 +706,7 @@ def test_non_impatriado_profile_does_not_route_to_modelo_151() -> None:
             irpf_special_regime=special_regime,
         )
 
-        result = derive_modelo_applicability(general_profile, "151", today=_REGIME_TODAY)
+        result = derive_modelo_applicability(general_profile, "151", reference_date=_REGIME_TODAY)
 
         assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, special_regime
         assert result.applicable is False, special_regime

@@ -50,6 +50,7 @@ from ...domain.contribuyente.ascendant_minimum import (
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..user_profile.ascendant_rows import ASCENDANT_ROW_LEAVES
+from .profile_binding_refusal_doors import ascendant_row_value_refused_verdict
 from .profile_derived_facts import ProfileBindingResolutionError, snapshot_authored_year
 
 if TYPE_CHECKING:
@@ -158,7 +159,10 @@ def _residence_ccaa(fact_index: Mapping[str, UserProfileFactValue]) -> str | Non
 
 
 def _refuse_stored(index: int, leaf: str) -> ProfileBindingResolutionError:
-    return ProfileBindingResolutionError(f"{_ASCENDANT_GROUP}.{index}.{leaf} holds a value the ascendant row cannot")
+    return ProfileBindingResolutionError(
+        f"{_ASCENDANT_GROUP}.{index}.{leaf} holds a value the ascendant row cannot",
+        precondition_verdict=ascendant_row_value_refused_verdict(index, leaf),
+    )
 
 
 def _stored_date(row: Mapping[str, str], index: int, leaf: str) -> date | None:

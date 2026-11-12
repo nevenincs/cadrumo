@@ -26,6 +26,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.errors import ModeloExportError
+from .refusal_door_verdicts import operator_choice_verdict
 
 
 class ModeloExportOutputPathError(ModeloExportError):
@@ -134,6 +135,7 @@ def _path_refusal(output_path: str, reason: str) -> ModeloExportOutputPathError:
     return ModeloExportOutputPathError(
         translated_message="application.modelo.errors.export_output_path_invalid",
         context={"output_path": output_path, "reason": reason},
+        precondition_verdict=operator_choice_verdict("export_output_path"),
     )
 
 

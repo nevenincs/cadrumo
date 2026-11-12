@@ -41,6 +41,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.temporal import select_revision_for_year, select_revision_metadata_for_year
 from ...domain.user_profile.errors import ProfileNotFoundError
 from .profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
+from .registry_input_refusals import request_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -75,6 +76,7 @@ def profile_resolvable_binding_ids(
         raise RegistryValidationError(
             translated_message="errors.error.error_calculations_registry_validation",
             context={"period": str(period), "filing_year": str(filing_year), "period_matches_year": False},
+            precondition_verdict=request_verdict("binding_readiness_period_year"),
         )
     resolved_period = (
         period.registry_token

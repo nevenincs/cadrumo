@@ -99,9 +99,8 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
         # the zero for these
         # childless test couples is supplied via the
         # renta-profile-minimo-descendientes-estatal binding in
-        # _BASE_BINDINGS below, not as a manual casilla input.
-        "0515": Decimal("0"),
-        "0516": Decimal("0"),
+        # _BASE_BINDINGS below, not as a manual casilla input; 0515/0516
+        # (mínimo por ascendientes) likewise through their profile bindings.
         "0517": Decimal("0"),
         "0518": Decimal("0"),
         "0544": Decimal("0"),
@@ -159,6 +158,12 @@ _BASE_BINDINGS = {
     # eligible descendants exist).
     "renta-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+    # No ascendants: the Art. 59/61 LIRPF mínimo por ascendientes is zero for
+    # both halves (casillas 0515 and 0516), and so is the Madrid deducción por
+    # cuidado de ascendientes that rests on it (DL 1/2010 art. 7 bis).
+    "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+    "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+    "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
     # Not maritime workers: no navigation income, salary or qualifying days.
     "renta-maritime-gross-navigation-income": Decimal("0"),
     "renta-maritime-annual-salary": Decimal("0"),
@@ -166,6 +171,9 @@ _BASE_BINDINGS = {
     # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
     # neutral zero for a scenario with no descendants.
     "renta-profile-deduccion-maternidad": Decimal("0"),
+    # The art. 81.2 guarderia increment of an edition that computes casilla 0613;
+    # neutral zero for a scenario with no descendants.
+    "renta-profile-incremento-guarderia": Decimal("0"),
 }
 
 # Art. 75 Ley 19/1994 maritime-worker exemption path: these couples are not

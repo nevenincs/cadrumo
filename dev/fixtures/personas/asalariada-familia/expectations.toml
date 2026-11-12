@@ -39,17 +39,18 @@ period = "0A"
 year = "horizon-1"
 governed_by = "madrid-dl-1-2010:art-2-2022"
 casillas = { "0596" = "5412.00" }
-not_sourced = { "0003" = "36000.00", "0013" = "2332.80" }
-concepts = { rendimiento_neto_previo_trabajo = "33667.20", otros_gastos_trabajo = "2000.00", reduccion_rendimientos_trabajo = "0.00", rendimiento_neto_reducido_trabajo = "31667.20" }
+not_sourced = { "0003" = "36000.00", "0013" = "2332.80", "0017" = "33667.20", "0019" = "2000.00", "0025" = "31667.20" }
+roles = { "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
 derivation = """
 From the employer's certificate, as the taxpayer declares it (withholding_certificates): íntegro 36000.00, Seguridad Social 2332.80 (6.48 %), retención 5412.00.
 The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
 Rendimiento neto previo = 36000.00 - 2332.80 = 33667.20; otros gastos art. 19.2.f 2000.00; neto = 31667.20.
 The art. 20 reduction is zero because the net exceeds the top of its band.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): rendimiento_neto_previo_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_previo (LIRPF art. 19); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20); rendimiento_neto_reducido_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_reducido (LIRPF arts. 18-20).
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20", "madrid-dl-1-2010:art-2-2022"]
 grounding = "verified"
-reason = "The application sources neither figure from the employer's certificate: the recorded withholding feeds casilla 0596, but no binding reads the certificate's íntegro into 0003 (LIRPF art. 17), and nothing records the employee's Seguridad Social contributions or binds them to 0013 (LIRPF art. 19.2.a). An application gap pending a decision on how the certificate's income and contribution quantities are recorded."
+reason = "The application sources neither figure from the employer's certificate: the recorded withholding feeds casilla 0596, but no binding reads the certificate's íntegro into 0003 (LIRPF art. 17), and nothing records the employee's Seguridad Social contributions or binds them to 0013 (LIRPF art. 19.2.a). An application gap pending a decision on how the certificate's income and contribution quantities are recorded. The suffered-withholding binding family admits no income casilla for any class (RETENCION_SOPORTADA_NON_CREDIT_ROLES is empty in src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py), and casilla 0003 carries no binding in any Modelo 100 edition, although the record stores the certificate's importe_integro_dinerario. Casillas 0017, 0019 and 0025 follow from 0003 and 0013 through the registry formulas, so they cannot carry the law's figures either. The art. 20 reduction (role irpf_rendimiento_trabajo_reduccion_gastos_generales) stays compared: the law gives 0.00 here, and with no work income the calculation also gives 0.00."
 
 [[values]]
 modelo = "100"
@@ -93,7 +94,7 @@ period = "0A"
 year = "horizon-1"
 governed_by = "madrid-dl-1-2010:art-2-2022"
 casillas = { "0613" = "916.67" }
-concepts = { deduccion_maternidad = "1200.00", incremento_guarderia = "916.67", deduccion_maternidad_total = "2116.67" }
+roles = { "irpf_deduccion_maternidad" = "1200.00" }
 derivation = """
 Art. 81: the daughter is under three for all twelve months and the mother is in alta all year: 12 x 100.00 = 1200.00.
 Guardería increment: up to 83.33 euros (1000.00 / 12) for each month in which the art. 81.1 and 81.2 requirements hold
@@ -105,6 +106,7 @@ Total 1200.00 + 916.67 = 2116.67.
 Until ejercicio 2022 the increment is also limited, for each child, by the cotizaciones devengadas after the birth (2022 manual
 lines 62690 to 62700, a) and b)); the daughter's row states 2332.80, which is above 916.67, so 0613 is 916.67 in 2022 too.
 Casilla 0613 is asserted as a casilla, so the row checks the product rather than a named concept.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): deduccion_maternidad = irpf_deduccion_maternidad (LIRPF art. 81). The total maternity deduction, 1200.00 + 916.67 = 2116.67, is not stated as a value: no casilla prints the sum, and both of its parts are compared above. incremento_guarderia is carried by the casilla asserted above (0613), so its concept is not repeated.
 """
 legal_ref = ["ley-35-2006:art-81", "madrid-dl-1-2010:art-2-2022"]
 grounding = "verified"
@@ -115,17 +117,18 @@ period = "0A"
 year = "horizon-1"
 governed_by = "madrid-dl-1-2010:art-2-2023"
 casillas = { "0596" = "5412.00" }
-not_sourced = { "0003" = "36000.00", "0013" = "2332.80" }
-concepts = { rendimiento_neto_previo_trabajo = "33667.20", otros_gastos_trabajo = "2000.00", reduccion_rendimientos_trabajo = "0.00", rendimiento_neto_reducido_trabajo = "31667.20" }
+not_sourced = { "0003" = "36000.00", "0013" = "2332.80", "0017" = "33667.20", "0019" = "2000.00", "0025" = "31667.20" }
+roles = { "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
 derivation = """
 From the employer's certificate, as the taxpayer declares it (withholding_certificates): íntegro 36000.00, Seguridad Social 2332.80 (6.48 %), retención 5412.00.
 The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
 Rendimiento neto previo = 36000.00 - 2332.80 = 33667.20; otros gastos art. 19.2.f 2000.00; neto = 31667.20.
 The art. 20 reduction is zero because the net exceeds the top of its band.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): rendimiento_neto_previo_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_previo (LIRPF art. 19); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20); rendimiento_neto_reducido_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_reducido (LIRPF arts. 18-20).
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20", "madrid-dl-1-2010:art-2-2023"]
 grounding = "verified"
-reason = "The application sources neither figure from the employer's certificate: the recorded withholding feeds casilla 0596, but no binding reads the certificate's íntegro into 0003 (LIRPF art. 17), and nothing records the employee's Seguridad Social contributions or binds them to 0013 (LIRPF art. 19.2.a). An application gap pending a decision on how the certificate's income and contribution quantities are recorded."
+reason = "The application sources neither figure from the employer's certificate: the recorded withholding feeds casilla 0596, but no binding reads the certificate's íntegro into 0003 (LIRPF art. 17), and nothing records the employee's Seguridad Social contributions or binds them to 0013 (LIRPF art. 19.2.a). An application gap pending a decision on how the certificate's income and contribution quantities are recorded. The suffered-withholding binding family admits no income casilla for any class (RETENCION_SOPORTADA_NON_CREDIT_ROLES is empty in src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py), and casilla 0003 carries no binding in any Modelo 100 edition, although the record stores the certificate's importe_integro_dinerario. Casillas 0017, 0019 and 0025 follow from 0003 and 0013 through the registry formulas, so they cannot carry the law's figures either. The art. 20 reduction (role irpf_rendimiento_trabajo_reduccion_gastos_generales) stays compared: the law gives 0.00 here, and with no work income the calculation also gives 0.00."
 
 [[values]]
 modelo = "100"
@@ -176,7 +179,10 @@ Deducción autonómica de la Comunidad de Madrid por cuidado de ascendientes (DL
 aplicarse el mínimo por ascendientes, prorrateado por partes iguales entre los contribuyentes con derecho que tributen
 individualmente (Manual práctico de Renta 2023, parte 1, lines 64096 to 64104; 2024, parte 2, page 370; 2025, parte 2,
 lines 15955 to 15964). The 2022 manual's Madrid deducciones do not include it, so it is stated from ejercicio 2023, the
-years this value's provision governs. The mother is 78 and the taxpayer applies the mínimo por ascendientes for her alone
+years this value's provision governs: its list (src/cadrumo/_data/corpus/manuals/renta/2022/part1/source.pdf.extracted.md)
+opens at lines 55399 to 55402 with "Por nacimiento o adopción de hijos", passes from art. 7 (lines 55542 to 55544) straight
+to art. 8 (lines 55574 and 55575) and closes with art. 17 (lines 55973 to 55975) before the Región de Murcia at line
+56011, with no art. 7 bis; the 2023 manual places art. 7 bis between them (2023 part1 file, lines 64096 to 64105). The mother is 78 and the taxpayer applies the mínimo por ascendientes for her alone
 (casilla 0515), so 1 x 515.50 = 515.50, role irpf_deduccion_madrid_cuidado_ascendientes, casilla 1115. The article sets no
 income limit.
 """
@@ -189,7 +195,7 @@ period = "0A"
 year = "horizon-1"
 governed_by = "madrid-dl-1-2010:art-2-2023"
 casillas = { "0613" = "916.67" }
-concepts = { deduccion_maternidad = "1200.00", incremento_guarderia = "916.67", deduccion_maternidad_total = "2116.67" }
+roles = { "irpf_deduccion_maternidad" = "1200.00" }
 derivation = """
 Art. 81: the daughter is under three for all twelve months and the mother is in alta all year: 12 x 100.00 = 1200.00.
 Guardería increment: up to 83.33 euros (1000.00 / 12) for each month in which the art. 81.1 and 81.2 requirements hold
@@ -201,6 +207,141 @@ Total 1200.00 + 916.67 = 2116.67.
 Until ejercicio 2022 the increment is also limited, for each child, by the cotizaciones devengadas after the birth (2022 manual
 lines 62690 to 62700, a) and b)); the daughter's row states 2332.80, which is above 916.67, so 0613 is 916.67 in 2022 too.
 Casilla 0613 is asserted as a casilla, so the row checks the product rather than a named concept.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): deduccion_maternidad = irpf_deduccion_maternidad (LIRPF art. 81). The total maternity deduction, 1200.00 + 916.67 = 2116.67, is not stated as a value: no casilla prints the sum, and both of its parts are compared above. incremento_guarderia is carried by the casilla asserted above (0613), so its concept is not repeated.
 """
 legal_ref = ["ley-35-2006:art-81", "madrid-dl-1-2010:art-2-2023"]
+grounding = "verified"
+
+# The daughter's birth year: she is born on 21 March of horizon-2, so the deduction runs from the month of birth.
+# The horizon-2 result below follows the Ley 13/2023 redaction, so this year too states its values once per redaction.
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-2"
+governed_by = "madrid-dl-1-2010:art-2-2022"
+casillas = { "0613" = "750.00" }
+roles = { "irpf_deduccion_maternidad" = "1000.00" }
+derivation = """
+Art. 81: the deduction is proportional to the months after the requirements are met, the children being determined by their
+situation on the last day of each month, so the month of birth counts in full (Manual práctico de Renta 2024 lines 58715 to
+58723 and 58747 to 58750; 2025 lines 54684 to 54692 and 54712 to 54715). Born on 21 March, the daughter gives March to December: 10 x 100.00
+= 1000.00. The additional 150.00 of the month the mother completes 30 days of cotización (2024 line 58740, 2025 line 54705) does not arise:
+she is in alta all year, before the birth.
+Guardería increment: the month in which the requirements are met counts, and only months whose fee is paid for the whole
+month (2024 lines 58882 to 58899, 2025 lines 54862 to 54874). The fees of January and February precede the birth and do not
+count; March to December less August gives 9 months: 1000.00 / 12 x 9 = 750.00, below the 1980.00 spent in those months
+and the cap of 1000.00.
+Total 1000.00 + 750.00 = 1750.00. Until ejercicio 2022 the deduction and increment were also limited, for each child, by the
+cotizaciones devengadas after the birth (2022 manual lines 62690 to 62700); the mother's 194.40 a month from March to
+December give 1944.00, above 1750.00, so the limit does not bind in that year either.
+Roles are Modelo 100 registry semantic_roles (LIRPF art. 81): irpf_deduccion_maternidad, casilla 0611; the increment is
+casilla 0613, asserted as a casilla.
+"""
+legal_ref = ["ley-35-2006:art-81", "madrid-dl-1-2010:art-2-2022"]
+grounding = "verified"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-2"
+governed_by = "madrid-dl-1-2010:art-2-2023"
+casillas = { "0613" = "750.00" }
+roles = { "irpf_deduccion_maternidad" = "1000.00" }
+derivation = """
+Art. 81: the deduction is proportional to the months after the requirements are met, the children being determined by their
+situation on the last day of each month, so the month of birth counts in full (Manual práctico de Renta 2024 lines 58715 to
+58723 and 58747 to 58750; 2025 lines 54684 to 54692 and 54712 to 54715). Born on 21 March, the daughter gives March to December: 10 x 100.00
+= 1000.00. The additional 150.00 of the month the mother completes 30 days of cotización (2024 line 58740, 2025 line 54705) does not arise:
+she is in alta all year, before the birth.
+Guardería increment: the month in which the requirements are met counts, and only months whose fee is paid for the whole
+month (2024 lines 58882 to 58899, 2025 lines 54862 to 54874). The fees of January and February precede the birth and do not
+count; March to December less August gives 9 months: 1000.00 / 12 x 9 = 750.00, below the 1980.00 spent in those months
+and the cap of 1000.00.
+Total 1000.00 + 750.00 = 1750.00. Until ejercicio 2022 the deduction and increment were also limited, for each child, by the
+cotizaciones devengadas after the birth (2022 manual lines 62690 to 62700); the mother's 194.40 a month from March to
+December give 1944.00, above 1750.00, so the limit does not bind in that year either.
+Roles are Modelo 100 registry semantic_roles (LIRPF art. 81): irpf_deduccion_maternidad, casilla 0611; the increment is
+casilla 0613, asserted as a casilla.
+"""
+legal_ref = ["ley-35-2006:art-81", "madrid-dl-1-2010:art-2-2023"]
+grounding = "verified"
+
+# The Madrid scale and mínimos and the Madrid deductions this return takes are identical in the 2023, 2024
+# and 2025 editions (Ley 13/2023, with effect 1 January 2023), and the state side is the same in every year
+# from the floor. The 2022 return differs: Ley 8/2022 set a lower Madrid scale and mínimos (2022 manual part1,
+# lines 37591 to 37598, first bracket up to 12960.45 at 8.50) and the 2022 manual's Madrid deductions carry no
+# art. 7 bis (see the cuidado de ascendientes value above), giving -2525.66. It is not stated here: the Ley 8/2022 scale and mínimos it needs
+# are not yet cited, so each result is limited to the Ley 13/2023 redaction and a year that redaction does
+# not govern states no result.
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+governed_by = "madrid-dl-1-2010:art-2-2023"
+roles = { "resultado-ingresar-o-devolver-irpf" = "-3095.05" }
+parameters = { madrid_minimo_contribuyente = "5956.65", madrid_minimo_descendiente_primero = "2575.85", madrid_minimo_descendiente_segundo = "2897.83", madrid_minimo_descendiente_menor_tres = "3005.16", madrid_minimo_ascendiente = "1234.26", madrid_minimo_ascendiente_mayor_75 = "1502.58", madrid_deduccion_cuidado_ascendientes = "515.50", madrid_limite_base_nacimiento_individual = "30930.00" }
+derivation = """
+Base liquidable general = 31667.20 (the work-income value above; no other income, no reduction of the base).
+Cuota íntegra estatal (art. 63, scale unchanged since 2021): 2112.75 + (31667.20 - 20200.00) x 15 % = 3832.83, less the
+scale on the state mínimo 12050.00 (value above) at 9.5 % = 1144.75: 2688.08. The mínimo lies inside the scale's first
+bracket, up to 12450.00 at 9.50 % (LIRPF art. 63.1.1º; src/cadrumo/_data/corpus/manuals/renta/<year>/part1/source.pdf.extracted.md,
+"Gravamen estatal", normativa and first row at 2023 lines 43787 and 43793, 2024 lines 48209 and 48215, 2025 lines 44066
+and 44072).
+Madrid mínimo (DL 1/2010 arts. 2 to 2 quater; Manual práctico de Renta 2023 lines 42678 to 42695, 2024 lines 47061 to 47078,
+2025 lines 42898 to 42915): 5956.65 + (2575.85 + 2897.83 + 3005.16) / 2 + (1234.26 + 1502.58) = 12932.91.
+Cuota íntegra autonómica (art. 74; Madrid scale, DL 1/2010 art. 1, 2023 manual lines 44081 to 44089, 2024 lines 48473 to 48481,
+2025 lines 44324 to 44330): 1739.53 + (31667.20 - 19004.63) x 12.80 % = 3360.34, less 12932.91 x 8.50 % = 1099.30: 2261.04.
+The Madrid mínimo lies inside that scale's first bracket, up to 13362.22 at 8.50 % (same files, normativa DL 1/2010 art. 1
+and first row at 2023 lines 44078 and 44085, 2024 lines 48470 and 48477, 2025 lines 44319 and 44326).
+Madrid deductions (art. 77): por cuidado de ascendientes, DL 1/2010 art. 7 bis, 515.50 for the mother, over 65 and giving the
+mínimo por ascendientes to the taxpayer alone, with no base limit (2023 manual lines 64096 to 64104, 2024 parte 2 page 370,
+2025 parte 2 lines 15955 to 15964). Por nacimiento (arts. 4 and 18.1) is barred: the base imponible 31667.20 exceeds
+30930.00 (2023 line 63963, 2024 parte 2 page 367, 2025 parte 2 line 15801); para familias con dos o más descendientes
+(art. 14) likewise, above 24744.00 (2025 parte 2 line 16980). Por gastos educativos (art. 11) is not taken: for the primer
+ciclo de Educación Infantil its base excludes fees paid as public or administration-authorised prices and its limit counts
+the spouse's base (2025 parte 2 lines 16486 and 16510); the persona states neither fact.
+Cuota líquida = 2688.08 + 2261.04 - 515.50 = 4433.62. Cuota diferencial (art. 79) = 4433.62 - 5412.00 = -978.38.
+Deducción por maternidad (art. 81, value above) 1200.00 + 916.67 = 2116.67 reduces it: -3095.05, a devolver. No advance
+payment of the maternity deduction, spouse compensation or refund waiver is stated, so casilla 0700 equals 0670.
+Role: continuidad_id resultado-ingresar-o-devolver-irpf, casilla 0700 RESINGDEV of the 2024 edition (LIRPF art. 97).
+"""
+legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-63", "ley-35-2006:art-74", "ley-35-2006:art-77", "ley-35-2006:art-79", "ley-35-2006:art-81", "ley-35-2006:art-97", "madrid-dl-1-2010:art-2", "madrid-dl-1-2010:art-18", "madrid-dl-1-2010:art-2-2023"]
+grounding = "verified"
+
+# The edition before: the scales, mínimos and deductions above are unchanged there; only the maternity deduction
+# differs, horizon-2 being the daughter's birth year.
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-2"
+governed_by = "madrid-dl-1-2010:art-2-2023"
+roles = { "resultado-ingresar-o-devolver-irpf" = "-2728.38" }
+parameters = { madrid_minimo_contribuyente = "5956.65", madrid_minimo_descendiente_primero = "2575.85", madrid_minimo_descendiente_segundo = "2897.83", madrid_minimo_descendiente_menor_tres = "3005.16", madrid_minimo_ascendiente = "1234.26", madrid_minimo_ascendiente_mayor_75 = "1502.58", madrid_deduccion_cuidado_ascendientes = "515.50", madrid_limite_base_nacimiento_individual = "30930.00" }
+derivation = """
+Base liquidable general = 31667.20 (the work-income value above; no other income, no reduction of the base).
+Cuota íntegra estatal (art. 63, scale unchanged since 2021): 2112.75 + (31667.20 - 20200.00) x 15 % = 3832.83, less the
+scale on the state mínimo 12050.00 (value above) at 9.5 % = 1144.75: 2688.08. The mínimo lies inside the scale's first
+bracket, up to 12450.00 at 9.50 % (LIRPF art. 63.1.1º; src/cadrumo/_data/corpus/manuals/renta/<year>/part1/source.pdf.extracted.md,
+"Gravamen estatal", normativa and first row at 2023 lines 43787 and 43793, 2024 lines 48209 and 48215, 2025 lines 44066
+and 44072).
+Madrid mínimo (DL 1/2010 arts. 2 to 2 quater; Manual práctico de Renta 2023 lines 42678 to 42695, 2024 lines 47061 to 47078,
+2025 lines 42898 to 42915): 5956.65 + (2575.85 + 2897.83 + 3005.16) / 2 + (1234.26 + 1502.58) = 12932.91.
+Cuota íntegra autonómica (art. 74; Madrid scale, DL 1/2010 art. 1, 2023 manual lines 44081 to 44089, 2024 lines 48473 to 48481,
+2025 lines 44324 to 44330): 1739.53 + (31667.20 - 19004.63) x 12.80 % = 3360.34, less 12932.91 x 8.50 % = 1099.30: 2261.04.
+The Madrid mínimo lies inside that scale's first bracket, up to 13362.22 at 8.50 % (same files, normativa DL 1/2010 art. 1
+and first row at 2023 lines 44078 and 44085, 2024 lines 48470 and 48477, 2025 lines 44319 and 44326).
+Madrid deductions (art. 77): por cuidado de ascendientes, DL 1/2010 art. 7 bis, 515.50 for the mother, over 65 and giving the
+mínimo por ascendientes to the taxpayer alone, with no base limit (2023 manual lines 64096 to 64104, 2024 parte 2 page 370,
+2025 parte 2 lines 15955 to 15964). Por nacimiento (arts. 4 and 18.1) is barred: the base imponible 31667.20 exceeds
+30930.00 (2023 line 63963, 2024 parte 2 page 367, 2025 parte 2 line 15801); para familias con dos o más descendientes
+(art. 14) likewise, above 24744.00 (2025 parte 2 line 16980). Por gastos educativos (art. 11) is not taken: for the primer
+ciclo de Educación Infantil its base excludes fees paid as public or administration-authorised prices and its limit counts
+the spouse's base (2025 parte 2 lines 16486 and 16510); the persona states neither fact.
+Cuota líquida = 2688.08 + 2261.04 - 515.50 = 4433.62. Cuota diferencial (art. 79) = 4433.62 - 5412.00 = -978.38.
+Deducción por maternidad (art. 81) of the birth year, 1000.00 + 750.00 = 1750.00 (horizon-2 value above), reduces it:
+-2728.38, a devolver. No advance
+payment of the maternity deduction, spouse compensation or refund waiver is stated, so casilla 0700 equals 0670.
+Role: continuidad_id resultado-ingresar-o-devolver-irpf, casilla 0700 RESINGDEV of the 2024 edition (LIRPF art. 97).
+"""
+legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-63", "ley-35-2006:art-74", "ley-35-2006:art-77", "ley-35-2006:art-79", "ley-35-2006:art-81", "ley-35-2006:art-97", "madrid-dl-1-2010:art-2", "madrid-dl-1-2010:art-18", "madrid-dl-1-2010:art-2-2023"]
 grounding = "verified"

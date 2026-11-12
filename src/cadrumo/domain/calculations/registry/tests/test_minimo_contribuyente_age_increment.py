@@ -29,7 +29,11 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from .authored_editions import newest_authored_editions
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import (
+    M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_MARITIME_WORKER_BINDINGS,
+    M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
+)
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -94,7 +98,9 @@ def _calc_prior_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+            **M100_NO_MARITIME_WORKER_BINDINGS,
         },
+        boolean_binding_values=dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS),
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_PRIOR_EDITION,
         date_binding_values={"renta-profile-taxpayer-birth-date": birth_date},
@@ -139,6 +145,9 @@ def _calc_reviewed_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+            # Art. 81.2 LIRPF guarderia increment, inherited by every later edition;
+            # neutral zero in a scenario with no guarderia spend.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

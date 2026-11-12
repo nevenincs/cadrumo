@@ -6,7 +6,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:0fc6424caae99bc53db8348b9490f7d177aeca7f27bc315e1c6264c7787025d5'
+body_hash: 'sha256:4770a79a7e9dd378274cf4b4081d3df4639ee90c9568dc7cb90e589afae5bbcd'
 related:
   - '[[2026-09-26-export-parity-adr]]'
   - '[[2026-09-26-export-parity-audit]]'
@@ -25,6 +25,8 @@ related:
   - '[[2026-11-01-export-parity-suffered-withholding-schemas-adr]]'
   - '[[2026-11-01-export-parity-suffered-withholding-schemas-reference]]'
   - '[[2026-11-01-export-parity-withholding-legal-readings-research]]'
+  - '[[2026-11-11-export-parity-work-income-sourcing-adr]]'
+  - '[[2026-11-11-export-parity-work-income-sourcing-research]]'
 ---
 
 # `export-parity` feature index
@@ -44,6 +46,7 @@ Auto-generated index of all documents tagged with `#export-parity`.
 - `2026-11-01-export-parity-income-imputation-criterion-adr` - `export-parity` adr: `income imputation criterion` | (**status:** `accepted`)
 - `2026-11-01-export-parity-observation-filing-kind-adr` - `export-parity` adr: `Typed filing kind on captured observations proves complementaria-only casillas zero for originals` | (**status:** `accepted`)
 - `2026-11-01-export-parity-suffered-withholding-schemas-adr` - `export-parity` adr: `suffered-withholding, credit reconciliation and resolution-record schemas` | (**status:** `accepted`)
+- `2026-11-11-export-parity-work-income-sourcing-adr` - `export-parity` adr: `Modelo 100 work income from the suffered-withholding payer record` | (**status:** `proposed`)
 
 ### audit
 
@@ -61,3 +64,4 @@ Auto-generated index of all documents tagged with `#export-parity`.
 - `2026-11-01-export-parity-datos-fiscales-format-research` - `export-parity` research: `datos-fiscales-format`
 - `2026-11-01-export-parity-income-imputation-criterion-research` - `export-parity` research: `income imputation criterion`
 - `2026-11-01-export-parity-withholding-legal-readings-research` - `export-parity` research: `Withholding legal readings`
+- `2026-11-11-export-parity-work-income-sourcing-research` - `export-parity` research: `Modelo 100 work income sourcing`

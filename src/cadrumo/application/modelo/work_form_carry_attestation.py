@@ -20,6 +20,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditPermittedSurfaceEntryV1,
@@ -52,7 +53,10 @@ _EFFECT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProx
 
 for _family_words in (_ACTION_LOCALE_KEYS, _STATEMENT_LOCALE_KEYS, _EFFECT_LOCALE_KEYS):
     if frozenset(_family_words) != frozenset(AbsenceAttestationFamily):
-        raise InternalInvariantError("every statement family the registry can declare needs its words")
+        raise InternalInvariantError(
+            "every statement family the registry can declare needs its words",
+            precondition_verdict=internal_invariant_verdict("work_form_wording.statement_family_worded"),
+        )
 
 
 def _open_carries_by_family(

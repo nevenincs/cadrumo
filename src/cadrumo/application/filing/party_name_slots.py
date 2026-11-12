@@ -29,7 +29,14 @@ from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from .record_types import RecordRenderRow
 
 #: Row fields that file the party's identifier, in the order one is preferred.
-_TAX_IDENTIFIER_ROW_FIELDS: Final = ("party_tax_id", "declarado_tax_id", "community_iva_number")
+_TAX_IDENTIFIER_ROW_FIELDS: Final = (
+    "party_tax_id",
+    "declarado_tax_id",
+    "community_iva_number",
+    "perceptor_tax_id",
+    "perceptor_nif",
+    "contributor_tax_id",
+)
 #: Row fields that file the party's country.
 _COUNTRY_ROW_FIELDS: Final = ("country_code", "residence_country_code")
 #: The declarado NIF slot holds only "NIF asignados en España".

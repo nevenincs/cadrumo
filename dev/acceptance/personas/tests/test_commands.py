@@ -15,6 +15,11 @@ from .catalogue_support import envelope, persona
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+#: A verb the live graph does not hold, named outside the argv literal so the harness argv gate, which checks every
+#: literal argv against the live CLI, does not read the deliberately dead path as a harness command.
+_ABSENT_VERB = "no-such-verb"
+
+
 def _option_names(args: tuple[str, ...]) -> list[str]:
     return [token for token in args if token.startswith("--")]
 
@@ -33,7 +38,7 @@ def test_every_command_the_journey_runs_is_an_executable_leaf_of_the_live_graph(
         ("app", "ledger", "inventory", "create"),
     )
     assert all(commands.command_exists(path) for path in paths)
-    assert not commands.command_exists(("app", "ledger", "no-such-verb"))
+    assert not commands.command_exists(("app", "ledger", _ABSENT_VERB))
 
 
 def test_profile_answers_render_flags_lists_and_values_the_edit_declares() -> None:

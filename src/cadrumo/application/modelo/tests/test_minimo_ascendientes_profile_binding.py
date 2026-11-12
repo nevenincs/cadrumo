@@ -34,8 +34,10 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...aggregation.source_mesh import CalculationSourceResolution
+from ...operator_actions.models import PreconditionVerdict
 from ..calculation_notes import note_fact_text
 from ..profile_binding import resolve_profile_sourced_bindings
+from ..profile_derived_facts import ProfileBindingResolutionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -280,3 +282,25 @@ def test_an_unstated_own_return_withholds_only_above_the_norma_2_figure(
     withheld = _resolve(year, _record(above), authority_operation)
     assert _BINDING in withheld.unresolved_binding_ids
     assert _unstated_leaves(withheld) == {"declaracion_propia"}
+
+
+def test_a_stored_value_the_row_refuses_opens_the_edit_of_that_row(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    year = newest_authored_edition("100")
+    stated = {"birth_date": _born(year, 70).isoformat(), "convivientes": "1", "rentas_anuales": "1800.00"}
+    refused = {**stated, "convivientes": "uno"}
+
+    with pytest.raises(ProfileBindingResolutionError) as raised:
+        _resolve(year, _record(stated, refused), authority_operation)
+
+    verdict = raised.value.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.profile.ascendiente.edit"
+    assert {binding.argument_name: binding.value for binding in verdict.argument_bindings} == {
+        "index": 1,
+        "ascendiente": None,
+    }
+    assert verdict.missing_argument_names == ("ascendiente",)
+    assert dict(verdict.evidence[0].values)["leaf"] == "convivientes"

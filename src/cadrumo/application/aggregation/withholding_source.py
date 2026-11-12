@@ -59,6 +59,8 @@ from ...domain.calculations.registry.withholding_bindings import (
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
 )
+from ...domain.filing.declared_party_name_filing import PartyNameRefusals
+from ..invoices.source_resolver_ports import CounterpartyFilingNameReader, InvoiceSourcePersistenceError
 from .errors import AggregationValidationError
 from .m193_phase_materialization import (
     Modelo193PhaseAmountField,
@@ -87,6 +89,12 @@ from .withholding_filing_cadence import (
     withholding_filer_cadence_for_work_profile,
 )
 from .withholding_modelo_routing import AnnualWithholdingComposition, annual_withholding_composition
+from .withholding_party_names import (
+    DeclaredPerceptors,
+    PerceptorReference,
+    declare_perceptors,
+    perceptor_name_refusal_diagnostics,
+)
 
 if TYPE_CHECKING:
     from ...core.period import Period
@@ -340,10 +348,21 @@ class WithholdingSourceResolver:
     resolver_id: ClassVar[str] = _WITHHOLDING_SOURCE.value
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_WITHHOLDING_SOURCE,)
 
-    def __init__(self, *, ports: PercepcionObservationPorts, retencion_ports: RetencionObservationPorts) -> None:
-        """Bind the bucket-scoped percepciones and retención capabilities."""
+    def __init__(
+        self,
+        *,
+        ports: PercepcionObservationPorts,
+        retencion_ports: RetencionObservationPorts,
+        filing_names: CounterpartyFilingNameReader | None = None,
+    ) -> None:
+        """Bind the bucket-scoped percepciones and retención capabilities.
+
+        ``filing_names`` is absent where no record naming a perceptor is built;
+        no name slot is then filled and none is reported.
+        """
         self._ports = ports
         self._retencion_ports = retencion_ports
+        self._filing_names = filing_names
 
     def _window(
         self,
@@ -423,6 +442,23 @@ class WithholdingSourceResolver:
             phase_source_modelo=composition.capital_disclosure_retenciones,
         )
 
+    def _declared_perceptors(self, observations: tuple[WithholdingObservation, ...]) -> DeclaredPerceptors | None:
+        """Return each perceptor with its declared filing name, or ``None`` where names are not read."""
+        if self._filing_names is None:
+            return None
+        return declare_perceptors(
+            (
+                PerceptorReference(
+                    country_code=observation.country_code or "",
+                    tax_id=observation.perceptor_tax_id,
+                    row_ref=observation.source_id,
+                    printed_name=observation.perceptor_legal_name,
+                )
+                for observation in observations
+            ),
+            self._filing_names,
+        )
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve withholding totals from the bucket-scoped observation store."""
         try:
@@ -449,10 +485,34 @@ class WithholdingSourceResolver:
         # its fact, so a nil-percepciones filer can calculate; the advisory below
         # makes the zero loud (no-silent-under-declaration), never a hard refusal.
         binding_values = resolve_withholding_binding_values(context.revision, observations)
+        try:
+            perceptors = self._declared_perceptors(observations)
+        except InvoiceSourcePersistenceError as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+        party_name_refusals = PartyNameRefusals(modelo=str(context.modelo)) if perceptors is not None else None
+        row_binding_values = resolve_withholding_binding_row_values(
+            context.revision,
+            observations,
+            parties=() if perceptors is None else perceptors.parties,
+            party_name_refusals=party_name_refusals,
+        )
         diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+        if party_name_refusals is not None and perceptors is not None:
+            diagnostics = perceptor_name_refusal_diagnostics(
+                party_name_refusals.refusals,
+                perceptors,
+                context=context,
+                resolver_id=self.resolver_id,
+            )
         if not observations:
             legal_refs, source_refs = withholding_binding_grounding(context.revision)
             diagnostics = (
+                *diagnostics,
                 CalculationSourceDiagnostic(
                     reason="withholding_detail_absent",
                     source_kind=_WITHHOLDING_SOURCE,
@@ -482,7 +542,7 @@ class WithholdingSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
-            row_binding_values=resolve_withholding_binding_row_values(context.revision, observations),
+            row_binding_values=row_binding_values,
             diagnostics=(*diagnostics, *_settled_amount_authority_diagnostics(detail.phase_rows)),
             provenance=(*_provenance(observations), *phase_provenance),
         )

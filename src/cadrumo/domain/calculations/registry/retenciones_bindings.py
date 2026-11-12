@@ -17,15 +17,17 @@ canonical binding values for this source family.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Literal, Protocol
+from typing import TYPE_CHECKING, Annotated, Final, Literal, Protocol
 
 from pydantic import BaseModel, BeforeValidator, Field
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionScheme
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
+from ...filing.declared_party_name_filing import PartyNameRefusals
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
@@ -33,8 +35,11 @@ from .facts.resolution import ResolvedMappingFact
 from .form_codes import form_for_role
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
+from .invoice_row_materialization import invoice_party_reference
+from .party_name_rows import RowValues, file_party_names
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 from .schema_exports import ExportFieldDataType
+from .withholding_party_rows import DeclaredWithholdingParty
 
 if TYPE_CHECKING:
     from ....core.period import Period
@@ -62,6 +67,9 @@ RetencionesAggregationFactField = Annotated[
 # type-2 materialization for a field; membership is refused if the materializer
 # does not expose the requested field.
 _Modelo180Type2RowField = str
+
+#: The row field whose cell holds the perceptor's declared filing name rather than the name the source printed.
+_PARTY_FILING_NAME_ROW_FIELD: Final = "party_filing_name"
 Modelo180Type2RowGrouping = Literal["per_type2_record"]
 
 
@@ -323,6 +331,9 @@ def resolve_retenciones_aggregation_binding_values(
 def resolve_retenciones_aggregation_binding_row_values(
     revision: ModeloRevision,
     aggregation: _RetencionesAggregationProtocol,
+    *,
+    parties: Iterable[DeclaredWithholdingParty] = (),
+    party_name_refusals: PartyNameRefusals | None = None,
 ) -> dict[tuple[BindingId, int], Decimal | str | int | bool]:
     """Materialise the selected Modelo 180 type-2 record fields by stable row index.
 
@@ -330,6 +341,12 @@ def resolve_retenciones_aggregation_binding_row_values(
     last withholding percentage for each row.  This resolver only projects that
     canonical result into the generic repeated-record channel; it does not
     regroup observations or calculate an alternative annual total.
+
+    A ``party_filing_name`` cell holds the name declared for the row's perceptor
+    among ``parties``, composed by the rule and width of the layout field that
+    files it. A perceptor with no such name leaves the cell absent, never blank
+    and never the name the retention source printed; ``party_name_refusals``
+    receives each cell left without content.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
@@ -339,8 +356,24 @@ def resolve_retenciones_aggregation_binding_row_values(
         return {}
     _require_modelo_180_row_bindings(aggregation.modelo)
     resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
+    party_references: RowValues = {}
     for binding, selector in row_bindings:
-        resolved.update(_retenciones_type2_binding_row_values(binding, selector, aggregation.type2_rows))
+        values = _retenciones_type2_binding_row_values(binding, selector, aggregation.type2_rows)
+        if selector.row_field == _PARTY_FILING_NAME_ROW_FIELD:
+            party_references.update((key, str(value)) for key, value in values.items())
+        else:
+            resolved.update(values)
+    resolved.update(
+        file_party_names(
+            revision,
+            party_references,
+            tuple(parties),
+            name_bindings=frozenset(
+                binding.id for binding, selector in row_bindings if selector.row_field == _PARTY_FILING_NAME_ROW_FIELD
+            ),
+            refusals=party_name_refusals,
+        ),
+    )
     return resolved
 
 
@@ -492,7 +525,7 @@ def _modelo_180_type2_row_value(
     values: dict[str, Decimal | str | int | bool | None] = {
         "perceptor_nif": row.perceptor_nif,
         "representative_nif": None if detail.representative_nif is None else detail.representative_nif,
-        "perceptor_name": row.perceptor_name,
+        _PARTY_FILING_NAME_ROW_FIELD: invoice_party_reference("", row.perceptor_nif),
         "recipient_province_code": detail.recipient_province_code,
         "modality": detail.modality,
         "taxable_base": row.taxable_base,

@@ -53,12 +53,15 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, PartyFact, TransactionKind
 from ..components import category_cuota_is_zero_by_law
 from ..establishment import country_code_for_printed_tax_identifier
 from ..identification import identification_state_for_printed_tax_identifier
 from ..schema import EUMemberState, InvoiceKind, IvaCategory, IvaTerritorialScope
 from .classification_authority_support import classify_with_registry_rules
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -570,12 +573,14 @@ def test_the_resolved_treatment_admits_no_cuota_at_all(
     """
     category = _outbound(customer, kind, operation=operation)
 
-    assert category_cuota_is_zero_by_law(category, InvoiceKind.ISSUED)
+    assert category_cuota_is_zero_by_law(category, InvoiceKind.ISSUED, effective_date=_ON_DATE)
 
 
 def test_a_domestic_treatment_is_not_cuota_less_so_the_check_stays_narrow() -> None:
     """The precision half: the contradiction must not fire on ordinary invoices."""
-    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
+    assert not category_cuota_is_zero_by_law(
+        IvaCategory("domestic_general"), InvoiceKind.ISSUED, effective_date=_ON_DATE
+    )
 
 
 def test_the_charged_rate_never_places_the_customer(*, operation: PinnedAuthorityOperation) -> None:

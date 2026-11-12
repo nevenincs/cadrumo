@@ -123,9 +123,12 @@ def test_a_return_with_only_concepts_is_unchecked_and_not_without_an_oracle() ->
     assert row.unchecked == ("concept:clave",)
 
 
-def test_a_value_stated_not_sourced_is_not_unchecked() -> None:
-    value = _value(not_sourced=(("02", "5.00"),))
-    assert _items("130", value) == ()
+def test_a_casilla_stated_not_sourced_keeps_the_row_from_green() -> None:
+    value = _value(casillas=(("01", "10.00"),), not_sourced=(("02", "5.00"),))
+    assert _items("130", value) == ("not-sourced:02",)
+    row = _passed(_planned(value))
+    assert row.verdict is Verdict.UNCHECKED
+    assert row.verdict not in GREEN
 
 
 def test_a_failing_row_stays_failing_and_an_expected_refusal_with_unchecked_items_is_unchecked() -> None:

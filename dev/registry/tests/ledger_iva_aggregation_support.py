@@ -81,10 +81,11 @@ def ledger_iva_aggregation_deduction_provenance(
     kind: IvaDeductionFactKind,
     *,
     source_locator: str,
+    effective_date: date = date(_FIXTURE_YEAR, 6, 15),
 ) -> IvaDeductionClassificationProvenance:
     """Build fixture provenance from the production kind-to-authority contract."""
     return IvaDeductionClassificationProvenance(
-        authority=required_deduction_evidence_authority(kind),
+        authority=required_deduction_evidence_authority(kind, effective_date=effective_date),
         source_locator=source_locator,
         evidence_digest="a" * 64,
     )
@@ -292,13 +293,14 @@ def ledger_iva_aggregation_observation(
         raise AssertionError("deduction evidence authority cannot be stated without its fact kind")
     if deduction_fact_kind is not None and deduction_authority not in {
         None,
-        required_deduction_evidence_authority(deduction_fact_kind),
+        required_deduction_evidence_authority(deduction_fact_kind, effective_date=txn_date),
     }:
         raise AssertionError("fixture deduction authority disagrees with the production kind-to-authority contract")
     deduction_provenance = (
         ledger_iva_aggregation_deduction_provenance(
             deduction_fact_kind,
             source_locator=f"test-ledger:{ledger_id}",
+            effective_date=txn_date,
         )
         if deduction_fact_kind is not None
         else None

@@ -38,8 +38,10 @@ from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...cli_exception_preconditions import nested_terminal_precondition_verdict
+from ...operator_actions.preconditions import PROFILE_FIELD_EDIT_ACTION_ID
 from ..enums import ReviewSeverity
-from ..errors import ReviewSourceLoadError
+from ..errors import ReviewDraftsUnattributedError, ReviewSourceLoadError
 from ..models import FindingReviewItem, InvoiceReviewItem, TransactionReviewItem
 from ..source_adapters import drafts_pending, invoices_pending, transactions_pending
 from .draft_review_test_support import draft_review_ports
@@ -411,6 +413,56 @@ def test_drafts_pending_load_failure_context_omits_raw_storage_error(
     assert exc_info.value.translated_message == "review.adapters.errors.drafts_load_failed"
     assert exc_info.value.context == {"error_type": "ValueError"}
     assert "not-json" not in str(exc_info.value)
+
+
+def test_drafts_pending_profile_load_failure_raises_without_raw_error(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    settings = build_settings(tmp_path)
+    ports = draft_review_ports(drafts=(adapters_draft(),), profile_error=OSError("disk-secret"))
+    with pytest.raises(ReviewSourceLoadError) as exc_info:
+        drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation)
+
+    assert exc_info.value.translated_message == "review.adapters.errors.profile_load_failed"
+    assert exc_info.value.context == {"error_type": "OSError"}
+    assert "disk-secret" not in str(exc_info.value)
+
+
+def test_drafts_pending_profile_without_tax_id_refuses_with_the_profile_fact_door(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    settings = build_settings(tmp_path)
+    ports = draft_review_ports(drafts=(adapters_draft(status=ModeloDraftStatus.BORRADOR),), profile_values={})
+    with pytest.raises(ReviewDraftsUnattributedError) as exc_info:
+        drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation)
+
+    assert exc_info.value.context == {"draft_count": 1}
+    verdict = nested_terminal_precondition_verdict(exc_info.value)
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == PROFILE_FIELD_EDIT_ACTION_ID
+    assert verdict.evidence[0].values["missing_fields"] == "identity.tax_id"
+    assert "00000000T" not in str(exc_info.value)
+
+
+def test_drafts_pending_profile_without_tax_id_and_no_drafts_is_empty(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    settings = build_settings(tmp_path)
+    ports = draft_review_ports(drafts=(), profile_values={})
+    assert drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation) == ()
+
+
+def test_drafts_pending_profile_with_tax_id_lists_matching_drafts(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    settings = build_settings(tmp_path)
+    ports = draft_review_ports(drafts=(adapters_draft(status=ModeloDraftStatus.BORRADOR),))
+    assert len(drafts_pending(settings, bucket_id=PROFILE_ID, ports=ports, operation=operation)) == 1
 
 
 def test_drafts_pending_emits_one_finding_per_finding(

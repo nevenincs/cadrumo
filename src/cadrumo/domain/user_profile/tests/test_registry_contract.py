@@ -171,12 +171,11 @@ def test_anti_rot_gate_detects_a_pattern_that_matches_nothing() -> None:
 
 
 def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
-    """The patterns own the 31 derived selectors and neither operator input.
+    """The patterns own the 30 derived selectors and neither operator input.
 
-    ``cotizaciones_ss_madre`` and ``rental_reduccion_art_23_2_tier`` are
-    genuine taxpayer input that keep their declarations, so a pattern
-    reaching either would later refuse a write the operator must be able to
-    make. The count is asserted alongside the exclusions because a pattern
+    ``cotizaciones_ss_madre`` is genuine taxpayer input that keeps its
+    declaration, so a pattern reaching it would later refuse a write the
+    operator must be able to make. The count is asserted alongside the exclusions because a pattern
     that silently stopped matching would otherwise leave every gate green.
     """
     schema = published_profile_schema()
@@ -188,7 +187,7 @@ def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
         if any(definition.matches(selector) for definition in schema.derived_selectors)
     }
 
-    assert len(covered) == 31, sorted(covered)
+    assert len(covered) == 30, sorted(covered)
     assert "tax_residence.state_attribution_ratio" in covered
     assert "renta_family.ascendientes_minimos_aggregate" in covered
     assert "renta_family.ascendientes_minimos_aggregate_autonomico" in covered
@@ -199,7 +198,6 @@ def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
         "irpf.activity_income_cash_criterion_elected",
     } <= covered
     assert not [selector for selector in covered if "cotizaciones_ss_madre" in selector]
-    assert not [selector for selector in covered if "rental_reduccion_art_23_2_tier" in selector]
 
 
 def test_aggregate_pattern_does_not_swallow_its_autonomico_sibling() -> None:

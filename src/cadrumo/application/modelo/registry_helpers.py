@@ -50,11 +50,23 @@ from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnaps
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id_from_revision
+from ...domain.modelos.work_unit import WorkUnit
+from ..operator_actions.models import PreconditionVerdict
 from .action_errors import (
     AmendmentOverrideCasillaError,
     AmendmentVerificationRefusedError,
     ExternalModeloImportError,
     StoredCalculationDriftError,
+)
+from .calculation_input_refusal_doors import amendment_casillas_listing_verdict
+from .filing_import_refusal_profiles import FilingImportRefusalCause
+from .filing_import_refusals import filing_import_failure
+from .refusal_door_verdicts import registry_defect_verdict
+from .registry_input_refusals import (
+    RegistryInputCondition,
+    casilla_value_arguments,
+    listing_arguments,
+    registry_input_verdict,
 )
 from .registry_resources import (
     reject_unknown_period_for_revision,
@@ -219,6 +231,7 @@ def reject_incomplete_amendment_casillas(
                 "period": period.registry_token,
                 "snapshot_present": False,
             },
+            precondition_verdict=registry_defect_verdict("amendment_snapshot"),
         )
     required, _ = required_optional
     missing = sorted(casilla_id for casilla_id in required if casilla_id not in casilla_values)
@@ -231,12 +244,15 @@ def reject_incomplete_amendment_casillas(
                 "period": period.registry_token,
                 "missing_casilla_ids": ", ".join(missing),
             },
+            precondition_verdict=amendment_casillas_listing_verdict(str(modelo), filing_year, period.registry_token),
         )
 
 
 def validate_casilla_input_ids[CasillaKey, CasillaValue](
     revision: ModeloRevision,
     casilla_inputs: Mapping[CasillaKey, CasillaValue],
+    *,
+    work_unit: WorkUnit | None = None,
 ) -> dict[CasillaId, Decimal]:
     """Validate operator-supplied numeric input casillas against the revision.
 
@@ -252,16 +268,20 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
     engine itself reads a boolean casilla. Both arrive as ``Decimal``; a Python
     ``bool`` is refused for either, so widening to booleans never widens toward
     writing a ``True`` onto an amount row.
+
+    A refusal opens the listing of the declared casillas for an identifier the
+    revision does not declare, and the value edit for a value its casilla
+    refuses; ``work_unit``, when the caller has one, addresses either door.
     """
     if not casilla_inputs:
         return {}
     revision_casillas_by_id = casillas_by_id(revision)
     canonical_inputs, malformed = _canonicalise_casilla_inputs(casilla_inputs)
-    _reject_malformed_casilla_input_keys(revision, malformed)
-    _reject_unknown_casilla_input_ids(revision, canonical_inputs)
-    decimal_inputs = _validated_decimal_casilla_inputs(revision, canonical_inputs)
-    _reject_non_numeric_casilla_inputs(revision, revision_casillas_by_id, decimal_inputs)
-    _reject_boolean_casilla_inputs_outside_domain(revision, revision_casillas_by_id, decimal_inputs)
+    _reject_malformed_casilla_input_keys(revision, malformed, work_unit)
+    _reject_unknown_casilla_input_ids(revision, canonical_inputs, work_unit)
+    decimal_inputs = _validated_decimal_casilla_inputs(revision, canonical_inputs, work_unit)
+    _reject_non_numeric_casilla_inputs(revision, revision_casillas_by_id, decimal_inputs, work_unit)
+    _reject_boolean_casilla_inputs_outside_domain(revision, revision_casillas_by_id, decimal_inputs, work_unit)
     return decimal_inputs
 
 
@@ -281,18 +301,42 @@ def _canonicalise_casilla_inputs[CasillaKey, CasillaValue](
     return canonical_inputs, malformed
 
 
-def _reject_malformed_casilla_input_keys(revision: ModeloRevision, malformed: list[str]) -> None:
+def _undeclared_casilla_verdict(
+    revision: ModeloRevision, refused_count: int, work_unit: WorkUnit | None
+) -> PreconditionVerdict:
+    return registry_input_verdict(
+        RegistryInputCondition.CASILLA_DECLARED,
+        facts={"revision_id": revision.id, "refused_casilla_count": refused_count, "declared": False},
+        action_arguments=listing_arguments(work_unit),
+    )
+
+
+def _refused_value_verdict(
+    revision: ModeloRevision, casilla_ids: tuple[CasillaId, ...], work_unit: WorkUnit | None
+) -> PreconditionVerdict:
+    return registry_input_verdict(
+        RegistryInputCondition.CASILLA_VALUE_ADMITTED,
+        facts={"revision_id": revision.id, "casilla_ids": ",".join(casilla_ids), "admitted": False},
+        action_arguments=casilla_value_arguments(casilla_ids, work_unit),
+    )
+
+
+def _reject_malformed_casilla_input_keys(
+    revision: ModeloRevision, malformed: list[str], work_unit: WorkUnit | None
+) -> None:
     """Refuse malformed keys before examining declared membership or values."""
     if malformed:
         raise RegistryValidationError(
             translated_message="errors.error.error_calculations_registry_validation",
             context={"casilla_ids": ",".join(sorted(malformed)), "revision_id": revision.id},
+            precondition_verdict=_undeclared_casilla_verdict(revision, len(malformed), work_unit),
         )
 
 
 def _reject_unknown_casilla_input_ids(
     revision: ModeloRevision,
     canonical_inputs: Mapping[CasillaId, object],
+    work_unit: WorkUnit | None,
 ) -> None:
     """Refuse unknown ids, naming non-canonical reference tokens first."""
     unknown = undeclared_casilla_ids(revision, canonical_inputs)
@@ -310,16 +354,19 @@ def _reject_unknown_casilla_input_ids(
                     "revision_id": revision.id,
                     "noncanonical_reference_targets": details,
                 },
+                precondition_verdict=_undeclared_casilla_verdict(revision, len(noncanonical), work_unit),
             )
         raise RegistryValidationError(
             translated_message="errors.error.error_calculations_registry_validation",
             context={"casilla_ids": ",".join(unknown_only), "revision_id": revision.id},
+            precondition_verdict=_undeclared_casilla_verdict(revision, len(unknown_only), work_unit),
         )
 
 
 def _validated_decimal_casilla_inputs[CasillaValue](
     revision: ModeloRevision,
     canonical_inputs: Mapping[CasillaId, CasillaValue],
+    work_unit: WorkUnit | None,
 ) -> dict[CasillaId, Decimal]:
     """Refuse non-decimal values before data-type or boolean-domain checks."""
     non_decimal = sorted(
@@ -335,6 +382,7 @@ def _validated_decimal_casilla_inputs[CasillaValue](
                 "revision_id": revision.id,
                 "value_types": ",".join(type(canonical_inputs[casilla_id]).__name__ for casilla_id in non_decimal),
             },
+            precondition_verdict=_refused_value_verdict(revision, tuple(non_decimal), work_unit),
         )
     return {casilla_id: value for casilla_id, value in canonical_inputs.items() if isinstance(value, Decimal)}
 
@@ -343,6 +391,7 @@ def _reject_non_numeric_casilla_inputs(
     revision: ModeloRevision,
     revision_casillas_by_id: Mapping[CasillaId, CasillaDefinition],
     decimal_inputs: Mapping[CasillaId, Decimal],
+    work_unit: WorkUnit | None,
 ) -> None:
     """Keep the numeric/boolean input-kind policy at this application boundary."""
     accepted_data_types = NUMERIC_CASILLA_DATA_TYPES | _BOOLEAN_CASILLA_DATA_TYPES
@@ -359,6 +408,7 @@ def _reject_non_numeric_casilla_inputs(
                 "revision_id": revision.id,
                 "data_types": ",".join(revision_casillas_by_id[casilla_id].data_type for casilla_id in non_numeric),
             },
+            precondition_verdict=_refused_value_verdict(revision, tuple(non_numeric), work_unit),
         )
 
 
@@ -366,6 +416,7 @@ def _reject_boolean_casilla_inputs_outside_domain(
     revision: ModeloRevision,
     revision_casillas_by_id: Mapping[CasillaId, CasillaDefinition],
     decimal_inputs: Mapping[CasillaId, Decimal],
+    work_unit: WorkUnit | None,
 ) -> None:
     """Require the engine's exact 0/1 representation for boolean casillas."""
     out_of_domain = sorted(
@@ -387,6 +438,7 @@ def _reject_boolean_casilla_inputs_outside_domain(
                 "accepted": "0,1",
                 "values": ",".join(str(decimal_inputs[casilla_id]) for casilla_id in out_of_domain),
             },
+            precondition_verdict=_refused_value_verdict(revision, tuple(out_of_domain), work_unit),
         )
 
 
@@ -418,7 +470,30 @@ def _reject_override_row_fields(resolved: _ResolvedRegistryCasillaInputs) -> Non
                     sorted({record for casilla in row_fields for record in records_by_casilla[casilla]})
                 ),
             },
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.CASILLA_SCALAR,
+                facts={"revision_id": resolved.snapshot.revision.id, "row_field_casilla_count": len(row_fields)},
+            ),
         )
+
+
+def _override_listing_verdict(
+    *, modelo: str, filing_year: int, period: Period, refused_count: int
+) -> PreconditionVerdict:
+    """Open the listing of the casillas the amended declaration's revision declares."""
+    return registry_input_verdict(
+        RegistryInputCondition.CASILLA_DECLARED,
+        facts={"modelo": modelo, "refused_casilla_count": refused_count, "declared": False},
+        action_arguments={"modelo": modelo, "year": filing_year, "period": period.registry_token},
+    )
+
+
+def _authority_unavailable_verdict(*, modelo: str, filing_year: int, period: Period) -> PreconditionVerdict:
+    """No catalogued action publishes the authority the amended declaration is read against."""
+    return registry_input_verdict(
+        RegistryInputCondition.AUTHORITY_AVAILABLE,
+        facts={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token, "available": False},
+    )
 
 
 def reject_unknown_override_casillas[CasillaKey](
@@ -455,11 +530,13 @@ def reject_unknown_override_casillas[CasillaKey](
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_registry_root_missing",
             context={"missing_path": absent_authority_file(exc)},
+            precondition_verdict=_authority_unavailable_verdict(modelo=modelo, filing_year=filing_year, period=period),
         ) from exc
     except RegistrySnapshotError as exc:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_registry_snapshot_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
+            precondition_verdict=_authority_unavailable_verdict(modelo=modelo, filing_year=filing_year, period=period),
         ) from exc
 
     if resolved.malformed:
@@ -471,6 +548,9 @@ def reject_unknown_override_casillas[CasillaKey](
                 "period": period.registry_token,
                 "casillas": list(resolved.malformed),
             },
+            precondition_verdict=_override_listing_verdict(
+                modelo=modelo, filing_year=filing_year, period=period, refused_count=len(resolved.malformed)
+            ),
         )
     if resolved.unknown:
         if resolved.noncanonical:
@@ -489,6 +569,9 @@ def reject_unknown_override_casillas[CasillaKey](
                     "period": period.registry_token,
                     "casillas": sorted(resolved.noncanonical),
                 },
+                precondition_verdict=_override_listing_verdict(
+                    modelo=modelo, filing_year=filing_year, period=period, refused_count=len(resolved.noncanonical)
+                ),
             )
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_unknown_casillas",
@@ -498,6 +581,9 @@ def reject_unknown_override_casillas[CasillaKey](
                 "period": period.registry_token,
                 "casillas": resolved.unknown_only,
             },
+            precondition_verdict=_override_listing_verdict(
+                modelo=modelo, filing_year=filing_year, period=period, refused_count=len(resolved.unknown_only)
+            ),
         )
     _reject_override_row_fields(resolved)
     return resolved.canonical_values
@@ -535,11 +621,13 @@ def reject_unknown_import_casillas[CasillaKey](
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_registry_root_missing",
             context={"missing_path": absent_authority_file(exc)},
+            precondition_failure=filing_import_failure(FilingImportRefusalCause.AUTHORITY),
         ) from exc
     except RegistrySnapshotError as exc:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_registry_snapshot_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
+            precondition_failure=filing_import_failure(FilingImportRefusalCause.SOURCE_VALUES),
         ) from exc
 
     if resolved.malformed:
@@ -551,6 +639,7 @@ def reject_unknown_import_casillas[CasillaKey](
                 "period": period.registry_token,
                 "casillas": list(resolved.malformed),
             },
+            precondition_failure=filing_import_failure(FilingImportRefusalCause.SOURCE_VALUES),
         )
     if resolved.unknown:
         if resolved.noncanonical:
@@ -569,6 +658,7 @@ def reject_unknown_import_casillas[CasillaKey](
                     "period": period.registry_token,
                     "casillas": sorted(resolved.noncanonical),
                 },
+                precondition_failure=filing_import_failure(FilingImportRefusalCause.SOURCE_VALUES),
             )
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_unknown_casillas",
@@ -578,6 +668,7 @@ def reject_unknown_import_casillas[CasillaKey](
                 "period": period.registry_token,
                 "casillas": resolved.unknown_only,
             },
+            precondition_failure=filing_import_failure(FilingImportRefusalCause.SOURCE_VALUES),
         )
     return resolved.snapshot, resolved.canonical_values
 
@@ -641,6 +732,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
             f"calculation revision {revision.calculation_revision_id!r} content-address mismatch: "
             f"stored id does not match re-derived hash of its payload; "
             f"the record may have been tampered with or corrupted",
+            context={"work_unit_id": revision.work_unit_id},
         )
 
     for obs in revision.observations:
@@ -652,6 +744,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
                 f"calculation revision {revision.calculation_revision_id!r} provenance drift: "
                 f"observation for casilla {obs.casilla_id!r} is present but neither casilla_values nor "
                 f"input_values_by_casilla_id has an entry for it; the provenance envelope may have been tampered with",
+                context={"work_unit_id": revision.work_unit_id},
             )
         if obs.value != stored:
             raise StoredCalculationDriftError(
@@ -659,6 +752,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
                 f"observation value for casilla {obs.casilla_id!r} is {obs.value!r} "
                 f"but casilla_values holds {stored!r}; "
                 f"the record may have been tampered with or corrupted",
+                context={"work_unit_id": revision.work_unit_id},
             )
 
 

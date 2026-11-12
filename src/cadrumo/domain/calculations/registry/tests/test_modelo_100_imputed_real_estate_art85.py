@@ -12,7 +12,11 @@ from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from .authored_editions import newest_authored_editions
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import (
+    M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+    M100_NO_MARITIME_WORKER_BINDINGS,
+    M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS,
+)
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -47,6 +51,8 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # Every edition computes the maritime-worker exemption; neutral when the chain under test is unrelated.
+        **M100_NO_MARITIME_WORKER_BINDINGS,
     }
     if year == _NEWEST:
         # The production profile resolver supplies this predicate as 1/0 from
@@ -56,14 +62,12 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         # facts; neutral zero when the chain under test is unrelated.
         values["renta-profile-madrid-nacimiento-adopcion-eligible-count"] = Decimal("0")
         values["renta-profile-unidad-familiar-otros-miembros-base"] = Decimal("0")
-        # Art. 75 Ley 19/1994 maritime-worker exemption operands; neutral zero
-        # when the chain under test is unrelated (path itself is false).
-        values["renta-maritime-gross-navigation-income"] = Decimal("0")
-        values["renta-maritime-annual-salary"] = Decimal("0")
-        values["renta-maritime-qualifying-days"] = Decimal("0")
         # The 2025 edition computes the maternity deducción as well; neutral
         # zero for the same reason as in 2024 below.
         values.update(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS)
+        # The Art. 81.2 guarderia increment is inherited from the earlier edition;
+        # neutral zero for a scenario with no guarderia spend.
+        values["renta-profile-incremento-guarderia"] = Decimal("0")
     if year == _PRIOR:
         values.update(
             {
@@ -85,11 +89,7 @@ def _calculate(
     inputs: Mapping[str, Decimal],
     text_inputs: Mapping[str, str] | None = None,
 ) -> RegistryCalculationResult:
-    boolean_binding_values = (
-        # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
-        # when the chain under test is unrelated.
-        {"renta-maritime-path-rebeca": False} if year == _NEWEST else None
-    )
+    boolean_binding_values = dict(M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS)
     return calculate_registry_snapshot(
         _snapshot(year),
         inputs=inputs,

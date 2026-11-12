@@ -176,12 +176,13 @@ modelo = "303"
 period = "1T"
 year = "horizon-1"
 casillas = { "07" = "9600.00", "09" = "2016.00", "27" = "2016.00", "28" = "3040.00", "29" = "638.40", "45" = "638.40", "64" = "1377.60", "66" = "1377.60", "71" = "1377.60" }
-concepts = { resultado_regimen_general = "1377.60" }
+roles = { "iva-resultado-regimen-general" = "1377.60" }
 derivation = """
 07 = ELE-VTA-01 6200.00 + ELE-VTA-02 3400.00 = 9600.00; 09 = 21 % of 07 = 2016.00; 27 = 09 (no other rate).
 28 = ELE-MAT-1 2800.00 + ELE-GES-1 240.00 = 3040.00; 29 = 588.00 + 50.40 = 638.40; 45 = 29.
 Resultado del régimen general = 27 - 45 = 1377.60; 64 = 66 (100 % atribuible al Estado) = 71 (sin cuotas a compensar ni resultado de declaraciones anteriores).
 The RETA rows are no IVA operation and enter neither 28 nor 29.
+role iva-resultado-regimen-general is the DR303 box [46] "Resultado régimen general (27 - 45)" printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition.
 """
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-164"]
 grounding = "verified"
@@ -191,11 +192,12 @@ modelo = "303"
 period = "2T"
 year = "horizon-1"
 casillas = { "07" = "8700.00", "09" = "1827.00", "27" = "1827.00", "28" = "2690.00", "29" = "564.90", "45" = "564.90", "64" = "1262.10", "66" = "1262.10", "71" = "1262.10" }
-concepts = { resultado_regimen_general = "1262.10" }
+roles = { "iva-resultado-regimen-general" = "1262.10" }
 derivation = """
 07 = ELE-VTA-03 5800.00 + ELE-VTA-04 2900.00 = 8700.00; 09 = 1827.00.
 28 = ELE-MAT-2 2450.00 + ELE-GES-2 240.00 = 2690.00; 29 = 514.50 + 50.40 = 564.90.
 Resultado = 1827.00 - 564.90 = 1262.10.
+role iva-resultado-regimen-general is the DR303 box [46] "Resultado régimen general (27 - 45)" printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition.
 """
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-164"]
 grounding = "verified"
@@ -205,11 +207,12 @@ modelo = "303"
 period = "3T"
 year = "horizon-1"
 casillas = { "07" = "7700.00", "09" = "1617.00", "27" = "1617.00", "28" = "2140.00", "29" = "449.40", "45" = "449.40", "64" = "1167.60", "66" = "1167.60", "71" = "1167.60" }
-concepts = { resultado_regimen_general = "1167.60" }
+roles = { "iva-resultado-regimen-general" = "1167.60" }
 derivation = """
 07 = ELE-VTA-05 4600.00 + ELE-VTA-06 3100.00 = 7700.00; 09 = 1617.00.
 28 = ELE-MAT-3 1900.00 + ELE-GES-3 240.00 = 2140.00; 29 = 399.00 + 50.40 = 449.40.
 Resultado = 1617.00 - 449.40 = 1167.60.
+role iva-resultado-regimen-general is the DR303 box [46] "Resultado régimen general (27 - 45)" printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition.
 """
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-164"]
 grounding = "verified"
@@ -219,11 +222,12 @@ modelo = "303"
 period = "4T"
 year = "horizon-1"
 casillas = { "07" = "10100.00", "09" = "2121.00", "27" = "2121.00", "28" = "2890.00", "29" = "606.90", "45" = "606.90", "64" = "1514.10", "66" = "1514.10", "71" = "1514.10" }
-concepts = { resultado_regimen_general = "1514.10" }
+roles = { "iva-resultado-regimen-general" = "1514.10" }
 derivation = """
 07 = ELE-VTA-07 6400.00 + ELE-VTA-08 3700.00 = 10100.00; 09 = 2121.00.
 28 = ELE-MAT-4 2650.00 + ELE-GES-4 240.00 = 2890.00; 29 = 556.50 + 50.40 = 606.90.
 Resultado = 2121.00 - 606.90 = 1514.10.
+role iva-resultado-regimen-general is the DR303 box [46] "Resultado régimen general (27 - 45)" printed by the aeat-dr-303 design of every supported edition; the registry resolves it to that casilla in each edition.
 """
 legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-164"]
 grounding = "verified"
@@ -351,11 +355,12 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0599" = "0.00", "0604" = "4300.00" }
-concepts = { ingresos_actividad = "36100.00", gastos_actividad = "14600.00", rendimiento_neto_actividad = "21500.00", minimo_personal = "5550.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "36100.00", "irpf_ed_suma_gastos_previos" = "14600.00", "irpf_ed_rdto_neto_previo_reduccion" = "21500.00", "irpf_minimo_contribuyente_estatal" = "5550.00" }
 derivation = """
 Activity income is the 130 4T cumulative figure: 36100.00 - 14600.00 = 21500.00, with no provision for gastos de difícil justificación under the normal modality.
 0604 pagos fraccionados = 1120.00 + 1010.00 + 920.00 + 1250.00 = 4300.00. No withheld activity income, so 0599 = 0.
 Mínimo personal 5550.00 (under 65). Cuota and resultado are not asserted: they depend on the state and Madrid scales.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); rendimiento_neto_previo_actividad = irpf_ed_rdto_neto_previo_reduccion (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"

@@ -49,6 +49,8 @@ from .autonomic_deduccion_dispatch import (
     is_indeterminate_unidad_familiar,
     residence_ccaa,
 )
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
+from .registry_input_refusals import registry_integrity_verdict
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
 if TYPE_CHECKING:
@@ -65,6 +67,7 @@ def _require_formula_legal_refs(
         raise RegistryValidationError(
             f"autonomic deducción advisory formula {formula_id!r} has legal refs absent from the selected "
             f"authority: {missing!r}",
+            precondition_verdict=registry_integrity_verdict("madrid_nacimiento_adopcion_advisory"),
         )
     return tuple(legal_refs)
 
@@ -82,11 +85,13 @@ def _advisory_legal_refs(snapshot: RegistrySnapshot, casilla_id: CasillaId) -> t
     if casilla is None or casilla.formula is None:
         raise RegistryValidationError(
             f"autonomic deducción advisory casilla {casilla_id!r} has no registry formula provenance",
+            precondition_verdict=registry_integrity_verdict("madrid_nacimiento_adopcion_advisory"),
         )
     formula = next((candidate for candidate in snapshot.revision.formulas if candidate.id == casilla.formula), None)
     if formula is None or not formula.legal_refs:
         raise RegistryValidationError(
             f"autonomic deducción advisory formula {casilla.formula!r} has no legal provenance",
+            precondition_verdict=registry_integrity_verdict("madrid_nacimiento_adopcion_advisory"),
         )
     return _require_formula_legal_refs(snapshot, formula.legal_refs, formula.id)
 
@@ -127,7 +132,11 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
         try:
             casilla_id = casilla_id_for_unique_semantic_role(snapshot, enrolment.target_semantic_role)
         except AmbiguousSemanticRoleCasillaError as exc:
-            raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+            raise ModeloError(
+                str(exc),
+                context=exc.ambiguity.context(),
+                precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+            ) from exc
         if casilla_id is None:
             continue
         if AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, casilla_id) != Decimal(0):

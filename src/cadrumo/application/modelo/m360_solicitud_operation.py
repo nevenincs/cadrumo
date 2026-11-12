@@ -51,7 +51,10 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .declaration_refusal_failures import declaration_refusal_failure
+from .declaration_refusal_profiles import DeclarationRefusalCause
 from .m360_solicitud_input import Modelo360ProfileInput
 
 MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID = "modelo.m360_solicitud"
@@ -64,7 +67,21 @@ _READ_ACTIONS: Final = frozenset({"list"})
 
 
 class Modelo360SolicitudRefusedError(ModeloError):
-    """Raised when a solicitud cannot be declared or removed as asked."""
+    """Raised when a solicitud cannot be declared or removed as asked.
+
+    Each refusal carries the door of its cause: every one is the operator's to
+    decide, since no catalogued action declares, changes or removes a solicitud.
+    """
+
+
+def _refusal(
+    cause: DeclarationRefusalCause, *, translated_message: str, context: dict[str, object] | None = None
+) -> Modelo360SolicitudRefusedError:
+    return Modelo360SolicitudRefusedError(
+        translated_message=translated_message,
+        context=context,
+        precondition_verdict=declaration_refusal_failure(cause).verdict,
+    )
 
 
 class Modelo360SolicitudRepositoryProtocol(Protocol):
@@ -191,17 +208,20 @@ def _require_admissible_own_account(account: Modelo360AccountChoice, register: O
         return
     held = next((item for item in register.accounts if item.own_account_id == account.own_account_id), None)
     if held is None:
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_ACCOUNT_REGISTERED,
             translated_message="errors.refused.refused_modelo_360_solicitud_account_unknown",
             context={"own_account_id": account.own_account_id},
         )
     if held.closed_on is not None:
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_ACCOUNT_OPEN,
             translated_message="errors.refused.refused_modelo_360_solicitud_account_closed",
             context={"own_account_id": account.own_account_id},
         )
     if not held.swift_bic:
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_ACCOUNT_BIC,
             translated_message="errors.refused.refused_modelo_360_solicitud_account_bic_missing",
             context={"own_account_id": account.own_account_id},
         )
@@ -216,7 +236,8 @@ def _account_choice(payload: Modelo360SolicitudRequest) -> Modelo360AccountChoic
         return Modelo360RepresentanteAccountChoice(account=RefundAccount.model_validate(entered.model_dump()))
     except pydantic.ValidationError:
         # Input is hidden from these messages, so they never carry account material.
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_ACCOUNT_VALID,
             translated_message="errors.refused.refused_modelo_360_solicitud_account_invalid",
         ) from None
 
@@ -224,7 +245,10 @@ def _account_choice(payload: Modelo360SolicitudRequest) -> Modelo360AccountChoic
 def _required[T](value: T | None, name: str) -> T:
     # The request validator already demanded the field for this action.
     if value is None:
-        raise InternalInvariantError(f"modelo 360 solicitud request reached its action without {name}")
+        raise InternalInvariantError(
+            f"modelo 360 solicitud request reached its action without {name}",
+            precondition_verdict=internal_invariant_verdict("m360_solicitud.request_field_present"),
+        )
     return value
 
 
@@ -256,7 +280,8 @@ def apply_solicitud_request(
     period = solicitud_period(_required(payload.filing_year, "filing_year"))
     if payload.action == "remove":
         if before.entry_for(period) is None:
-            raise Modelo360SolicitudRefusedError(
+            raise _refusal(
+                DeclarationRefusalCause.SOLICITUD_DECLARED,
                 translated_message="errors.refused.refused_modelo_360_solicitud_undeclared",
                 context={"filing_year": period.filing_year},
             )
@@ -267,13 +292,14 @@ def apply_solicitud_request(
     try:
         facts = _required(payload.facts, "facts").to_facts()
     except pydantic.ValidationError:
-        raise Modelo360SolicitudRefusedError(
-            translated_message="errors.refused.refused_modelo_360_solicitud",
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_FACTS, translated_message="errors.refused.refused_modelo_360_solicitud"
         ) from None
     try:
         entry = Modelo360SolicitudEntry(period=period, facts=facts, account=account)
     except pydantic.ValidationError:
-        raise Modelo360SolicitudRefusedError(
+        raise _refusal(
+            DeclarationRefusalCause.SOLICITUD_HOLDER,
             translated_message="errors.refused.refused_modelo_360_solicitud_holder_mismatch",
         ) from None
     after = repository.declare(entry)

@@ -28,7 +28,7 @@ required_text = ["estimación directa", "rendimiento neto"]
 
 [[revisions."2023".bindings]]
 id = "renta-profile-deduccion-maternidad"
-provider = { kind = "profile", profile_key = "renta_family.deduccion_maternidad_2023" }
+provider = { kind = "profile", profile_key = "renta_family.deduccion_maternidad" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-81"]

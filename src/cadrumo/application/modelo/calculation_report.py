@@ -52,7 +52,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes, sha256_hex
@@ -81,6 +81,7 @@ from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.modelos.work_unit import WorkUnit
 from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH
 from .disagreement_words import disagreement_value_text
+from .refusal_door_verdicts import registry_defect_verdict
 from .settlement_casilla import DECLARATION_RESULT_SEMANTIC_ROLES, SETTLEMENT_SEMANTIC_ROLES
 from .work_review import ModeloWorkReviewCasilla
 
@@ -103,7 +104,7 @@ covers cannot silently produce the same digest for a different report.
 """
 
 
-class CalculationReportNoticeUnavailableError(CadrumoError):
+class CalculationReportNoticeUnavailableError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """The catalogue carries no local-calculation statement for the report.
 
     A refusal rather than a blank or a humanised key: the statement is what tells
@@ -444,6 +445,7 @@ def local_calculation_report_notice(language: OutputLanguage) -> str:
         raise CalculationReportNoticeUnavailableError(
             translated_message="application.modelo.errors.calculation_report_notice_unavailable",
             context={"report_language": language.value, "translation_key": CALCULATION_REPORT_NOTICE_LOCALE_KEY},
+            precondition_verdict=registry_defect_verdict("calculation_report_notice_text"),
         )
     return notice
 

@@ -1134,6 +1134,22 @@ required_text = [
     "Límite del incremento",
     "con posterioridad al nacimiento, adopción",
 ]
+[[revisions."2022".bindings]]
+id = "renta-profile-deduccion-maternidad-cotizaciones"
+provider = { kind = "profile", profile_key = "renta_family.deduccion_maternidad_cotizaciones" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-redaccion-2018"]
+source_refs = ["aeat-renta-2022-manual-parte1", "aeat-dr-100-2022-dictionary"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+    "100 euros por cada mes del período impositivo en que concurran de forma",
+    "no podrá superar ninguna de las dos cantidades",
+    "Hasta 1.200 euros anuales.",
+    "cotizaciones y cuotas totales a la Seguridad Social y Mutualidades",
+]
 # Per-activity inventory projections for Anexo D. Runtime expansion supplies one
 # aligned row per complete encrypted activity ledger; the registry declares only
 # the three legal operations and never a taxpayer activity identity.
@@ -1172,3 +1188,76 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Variación de existencias"]
+[[revisions."2022".bindings]]
+id = "renta-maritime-path-rebeca"
+provider = { kind = "profile", profile_key = "maritime_worker.exemption_path_rebeca" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-19-1994:art-75"]
+source_refs = ["boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Registro Especial de Buques y Empresas Navieras"]
+
+[[revisions."2022".bindings]]
+id = "renta-maritime-gross-navigation-income"
+provider = { kind = "profile", profile_key = "maritime_worker.gross_navigation_income" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-19-1994:art-75"]
+source_refs = ["boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Está exenta el 50 por 100 de los ingresos íntegros procedentes del trabajo personal"]
+
+[[revisions."2022".bindings]]
+id = "renta-maritime-annual-salary"
+provider = { kind = "profile", profile_key = "maritime_worker.annual_salary" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-7"]
+source_refs = ["boe-lirpf-statutory-facts", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["límite máximo de 60.100 euros anuales"]
+
+[[revisions."2022".bindings]]
+id = "renta-maritime-qualifying-days"
+provider = { kind = "profile", profile_key = "maritime_worker.qualifying_days" }
+value = { data_type = "integer", channel = "integer" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-7"]
+source_refs = ["boe-lirpf-statutory-facts", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["días que efectivamente el trabajador ha estado"]
+
+# Derived from the lease the profile holds for the ejercicio: whether the art. 23.2
+# reduction reaches it, and the regime or tier that sets its rate.
+[[revisions."2022".bindings]]
+id = "renta-rental-reduccion-art-23-2-aplicable"
+provider = { kind = "profile", profile_key = "renta_capital_inmobiliario.reduccion_art_23_2_aplicable" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-23-2021"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["arrendamiento de bienes inmuebles destinados a vivienda", "en su redacción vigente a 31 de diciembre de 2021"]
+
+[[revisions."2022".bindings]]
+id = "renta-rental-reduccion-art-23-2-tier"
+provider = { kind = "profile", profile_key = "renta_capital_inmobiliario.reduccion_art_23_2_tier" }
+value = { data_type = "enum", channel = "enum" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-23-2021"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["arrendamiento de bienes inmuebles destinados a vivienda", "en su redacción vigente a 31 de diciembre de 2021"]

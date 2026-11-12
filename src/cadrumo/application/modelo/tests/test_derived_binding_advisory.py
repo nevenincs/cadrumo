@@ -201,6 +201,8 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
         "renta-profile-minimo-ascendientes-estatal",
         "renta-profile-minimo-descendientes-autonomico",
         "renta-profile-minimo-descendientes-estatal",
+        "renta-rental-reduccion-art-23-2-aplicable",
+        "renta-rental-reduccion-art-23-2-tier",
     }
     assert all(d.source_kind == "profile" for d in fired)
     assert all("derives" in d.message or "derived" in d.message for d in fired)

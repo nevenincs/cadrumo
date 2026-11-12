@@ -82,14 +82,10 @@ def test_renta_declaration_type_has_one_domain_owner_and_canonical_profile_path(
         schema.field("filing_export.declaration_type")
 
 
-def test_rental_reduction_tier_refuses_the_legacy_profile_path() -> None:
+def test_rental_reduction_tier_is_no_longer_a_profile_field() -> None:
     schema = published_profile_schema()
 
-    assert schema.field("renta_rental.reduccion_art_23_2_tier_2024").enum_values == (
-        "tier-50",
-        "tier-60",
-        "tier-70",
-        "tier-90",
-    )
-    with pytest.raises(UserProfileNotFoundError):
-        schema.field("filing_export.rental_reduccion_art_23_2_tier_2024")
+    for retired in ("renta_rental.reduccion_art_23_2_tier_2024", "filing_export.rental_reduccion_art_23_2_tier_2024"):
+        with pytest.raises(UserProfileNotFoundError):
+            schema.field(retired)
+    assert "renta_rental" not in {section.key for section in schema.sections}

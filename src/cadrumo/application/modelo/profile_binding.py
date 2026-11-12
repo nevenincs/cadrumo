@@ -48,7 +48,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.aggregation import BindingSourceKind, BindingTypedEnumKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import prefixed_digest
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
@@ -56,7 +56,6 @@ from ...domain.calculations.registry.binding_terminal_origin import TerminalOrig
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
-from ...domain.calculations.registry.rental_reduction import require_rental_reduction_art232_tier
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -78,6 +77,7 @@ from ..aggregation.source_mesh import (
 from ..user_profile.projections import profile_fact_index
 from .autonomic_deduccion_dispatch import inject_autonomic_deduccion_facts
 from .printed_boxes import first_printed_dependent, printed_boxes
+from .profile_binding_refusal_doors import binding_contract_defect_verdict, profile_fact_value_refused_verdict
 from .profile_derived_facts import (
     ProfileBindingResolutionError,
     declared_profile_selectors,
@@ -95,6 +95,7 @@ from .profile_derived_facts import (
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
 from .profile_minimo_ascendientes import inject_derived_minimo_ascendientes_facts
+from .profile_rental_reduction import inject_derived_rental_reduction_facts
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
@@ -163,6 +164,9 @@ def _decimal_value(binding_id: BindingId, value: object) -> Decimal:
         f"numeric operand; the profile fact must carry a numeric value",
         translated_message="application.modelo.profile_binding.errors.decimal_value_type_invalid",
         context={"binding_id": binding_id, "value_type": type(value).__name__},
+        precondition_verdict=profile_fact_value_refused_verdict(
+            "decimal_value_type", {"binding_id": binding_id, "value_type": type(value).__name__}
+        ),
     )
 
 
@@ -184,6 +188,9 @@ def _boolean_value(binding_id: BindingId, value: object) -> bool:
         f"rather than coerced",
         translated_message="application.modelo.profile_binding.errors.boolean_value_type_invalid",
         context={"binding_id": binding_id, "value_type": type(value).__name__},
+        precondition_verdict=profile_fact_value_refused_verdict(
+            "boolean_value_type", {"binding_id": binding_id, "value_type": type(value).__name__}
+        ),
     )
 
 
@@ -249,6 +256,9 @@ def _route_resolved_binding(
                 f"profile fact for date-channel binding {binding_id!r} must be a date, got {type(value).__name__!r}",
                 translated_message="application.modelo.profile_binding.errors.date_value_type_invalid",
                 context={"binding_id": binding_id, "value_type": type(value).__name__},
+                precondition_verdict=profile_fact_value_refused_verdict(
+                    "date_value_type", {"binding_id": binding_id, "value_type": type(value).__name__}
+                ),
             )
         channels.date_values[binding_id] = value
         return
@@ -266,6 +276,9 @@ def _route_resolved_binding(
                 f"({value!r}); boolean facts are not valid enum dispatch keys",
                 translated_message="application.modelo.profile_binding.errors.enum_boolean_invalid",
                 context={"binding_id": binding_id, "value_type": "bool"},
+                precondition_verdict=binding_contract_defect_verdict(
+                    "enum_dispatch_key_type", {"binding_id": binding_id, "value_type": "bool"}
+                ),
             )
         # Unaddressed profile TEXT inputs use the existing string channel.
         # Dictionary/XSD-addressed numeric controls retain their established
@@ -282,6 +295,9 @@ def _route_resolved_binding(
             f"{declared_channel.value} quantity and is refused rather than coerced",
             translated_message="application.modelo.profile_binding.errors.boolean_value_channel_mismatch",
             context={"binding_id": binding_id, "declared_channel": declared_channel.value},
+            precondition_verdict=profile_fact_value_refused_verdict(
+                "boolean_value_channel", {"binding_id": binding_id, "declared_channel": declared_channel.value}
+            ),
         )
     # The resolver projects profile facts into engine channels; it does not
     # invent values the operator never supplied. Per-verb baselines own the
@@ -321,6 +337,10 @@ def _reject_channel_declaration_conflict(
             f"rather than resolving it on a channel its declaration does not name",
             translated_message="application.modelo.profile_binding.errors.channel_declaration_conflict",
             context={"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "date"},
+            precondition_verdict=binding_contract_defect_verdict(
+                "channel_declaration",
+                {"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "date"},
+            ),
         )
     if is_enum_channel and declared_channel not in {BindingValueChannel.ENUM, BindingValueChannel.TEXT}:
         raise ProfileBindingResolutionError(
@@ -329,6 +349,10 @@ def _reject_channel_declaration_conflict(
             f"rather than resolving it on a channel its declaration does not name",
             translated_message="application.modelo.profile_binding.errors.channel_declaration_conflict",
             context={"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "enum"},
+            precondition_verdict=binding_contract_defect_verdict(
+                "channel_declaration",
+                {"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "enum"},
+            ),
         )
 
 
@@ -350,8 +374,8 @@ class _ProfileFacts:
     """Derived paths an injector decided, including those it decided to leave absent."""
     withheld_derived_paths: frozenset[str] = frozenset()
     """Derived paths withheld because a household row leaves a deciding fact unstated."""
-    derived_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
-    """The notes naming the unstated facts behind each withheld path."""
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    """Diagnostics the injectors raised while deciding their paths, naming the facts behind each withheld path."""
 
 
 def _is_calculation_only_profile_binding(binding: BindingDefinition) -> bool:
@@ -497,15 +521,27 @@ def _load_profile_facts(
             effective_date=date(snapshot.filing_year, 1, 1),
             operation=operation,
         )
+    rental_reduction = inject_derived_rental_reduction_facts(
+        fact_index,
+        snapshot,
+        declared_selectors,
+        bucket_id=bucket_id,
+        resolver_id=_PROFILE_RESOLVER_ID,
+        operation=operation,
+    )
     return _ProfileFacts(
         fact_index=fact_index,
         fingerprint=profile_record_fingerprint,
-        decided_derived_paths=decided_derived_paths | ascendientes.withheld_paths | autonomicas.decided_paths,
+        decided_derived_paths=decided_derived_paths
+        | ascendientes.withheld_paths
+        | autonomicas.decided_paths
+        | frozenset(rental_reduction.decided_paths),
         withheld_derived_paths=ascendientes.withheld_paths | autonomicas.withheld_paths,
         # A deducción resting on the mínimo owes the facts the mínimo owes, so one note serves both.
-        derived_diagnostics=(
+        diagnostics=(
             *ascendientes.diagnostics,
             *(note for note in autonomicas.diagnostics if note not in ascendientes.diagnostics),
+            *rental_reduction.diagnostics,
         ),
     )
 
@@ -517,8 +553,6 @@ def resolve_profile_binding_channels(
     caller_binding_ids: frozenset[BindingId],
     formula_date_consumed: frozenset[BindingId],
     enum_bindings: frozenset[BindingId],
-    effective_date: date | None = None,
-    operation: PinnedAuthorityOperation,
 ) -> _ResolvedBindingChannels:
     """Resolve each selected binding into the Decimal / enum / date / boolean channels."""
     channels = _ResolvedBindingChannels()
@@ -529,12 +563,6 @@ def resolve_profile_binding_channels(
         value = resolve_profile_binding_value(binding, fact_index)
         if value is None:
             continue
-        if binding.value.typed_enum is BindingTypedEnumKind.RENTAL_REDUCTION_ART_23_2_TIER:
-            value = require_rental_reduction_art232_tier(
-                value,
-                effective_date=effective_date,
-                authority=operation,
-            )
         _route_resolved_binding(
             binding_id,
             value,
@@ -651,8 +679,6 @@ def resolve_profile_sourced_bindings(
         caller_binding_ids=caller_binding_ids,
         formula_date_consumed=selection.formula_date_consumed,
         enum_bindings=enum_consumed_binding_ids(snapshot.revision),
-        effective_date=date(snapshot.filing_year, 1, 1),
-        operation=operation,
     )
     decimal_values = channels.decimal_values
     enum_values = channels.enum_values
@@ -691,7 +717,7 @@ def resolve_profile_sourced_bindings(
         unresolved_binding_ids=(*(binding.id for binding in unanswered_text_bindings), *withheld_bindings),
         diagnostics=(
             *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
-            *facts.derived_diagnostics,
+            *facts.diagnostics,
             *derived_binding_diagnostics(
                 selection.bindings,
                 facts.fact_index,

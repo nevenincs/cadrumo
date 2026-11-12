@@ -48,6 +48,7 @@ from ...core.export_layout_format import ExportLayoutFormat
 from ...core.field_origin import FieldOrigin
 from ...core.filing_timeliness import FilingTimeliness
 from ...core.modelo import Modelo
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.payment_instalment_election import second_instalment_is_payable
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
@@ -107,6 +108,7 @@ from ..filing.producer_snapshot import (
 )
 from ..filing.producer_snapshot_m360 import Modelo360RepresentanteAccountChoice, Modelo360SolicitudEntry
 from ..filing.runtime import RegistrySchemaAccessor
+from ..operator_actions.models import PreconditionVerdict
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..user_profile.completeness import pinned_registry_scope
 from ..user_profile.modelo_scoped_conditions import (
@@ -117,6 +119,7 @@ from ..user_profile.modelo_scoped_conditions import (
 from .action_errors import (
     ModeloChargeAccountMissingError,
     ModeloDomiciliationPastCutoffError,
+    ModeloProfileReadinessError,
     ModeloRefundAccountMissingError,
     instalment_election_refusal,
     own_account_missing_error,
@@ -124,18 +127,24 @@ from .action_errors import (
 from .export_contracts import (
     ModeloExportAccountReference,
     ModeloExportCommand,
+    ModeloExportDesignIntegrityError,
     ModeloExportEvidenceMissingError,
 )
+from .export_field_refusal import export_design_fault_refusal, export_operator_decision_refusal
 from .export_ports import M303ArrivalPorts, ModeloExportPorts
 from .export_preparation import (
     require_m303_regimen_simplificado_scope_matches_profile,
     resolve_m303_export_arrivals,
 )
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
+from .lifecycle_view_refusal_doors import profile_facts_verdict, unit_filing_evidence_verdict
+from .m303_regimen_simplificado_scope import m303_profile_readiness_failure
 from .profile_export_binding import (
     resolve_declaration_contact,
     resolve_export_identity,
 )
+from .profile_readiness_gate import open_profile_path_step
+from .refusal_door_verdicts import operator_choice_verdict, stored_defect_verdict
 from .result_disposition_resolution import require_admissible_charge_account
 
 
@@ -354,7 +363,11 @@ def require_domiciliation_before_cutoff(
     if isinstance(resolution, DerivedPaymentCutoff):
         context["payment_cutoff_rule"] = f"{resolution.clause.variant_id}, {resolution.procedure.variant_id}"
         message_key = "errors.refused.refused_modelo_domiciliation_past_cutoff_derived"
-    raise ModeloDomiciliationPastCutoffError(translated_message=message_key, context=context)
+    raise ModeloDomiciliationPastCutoffError(
+        translated_message=message_key,
+        context=context,
+        precondition_verdict=operator_choice_verdict("domiciliation_past_cutoff"),
+    )
 
 
 _INSTALMENT_PAYABLE: frozenset[ResultDisposition] = frozenset(
@@ -592,24 +605,39 @@ def build_export_producer_snapshot(
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
             context={"calculation_revision_id": command.calculation_revision_id, "cause_type": type(exc).__name__},
+            precondition_verdict=stored_defect_verdict("export_producer_assembly"),
         ) from exc
 
 
 def _producer_facts_refusal(
     command: ModeloExportCommand, exc: FilingProducerSnapshotError
-) -> ModeloExportProducerFactsRefusedError:
+) -> ModeloProfileReadinessError | ModeloExportDesignIntegrityError:
     """Refuse an export whose facts about the filer or the filing cannot form the producer snapshot.
 
-    The cause's structured context -- the missing fact identifiers, a reason --
-    is merged forward, so the refusal names what is missing rather than only
-    that something failed.
+    A snapshot refusal carries the verdict that says whose fault it is. A fact
+    the filer supplies reaches the operator as a readiness refusal with that
+    verdict, and the profile detail it names is offered to open; the
+    cause's structured context -- the missing fact identifiers, a reason -- is
+    merged forward, so the refusal names what is missing. A guard only a
+    caller or design fault reaches stays the terminal integrity refusal.
     """
-    return ModeloExportProducerFactsRefusedError(
-        context={
-            "calculation_revision_id": command.calculation_revision_id,
-            "cause_type": type(exc).__name__,
-            **(exc.context or {}),
-        },
+    context = exc.context or {}
+    verdict = exc.terminal_precondition_verdict
+    if isinstance(verdict, PreconditionVerdict) and verdict.no_recovery_outcome is not NoRecoveryOutcome.TERMINAL:
+        profile_path = context.get("profile_path")
+        return ModeloProfileReadinessError(
+            translated_message=exc.translated_message,
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause_type": type(exc).__name__,
+                **context,
+            },
+            profile_precondition_verdict=verdict,
+            next_step=open_profile_path_step(profile_path) if isinstance(profile_path, str) else None,
+        )
+    return export_design_fault_refusal(
+        cause=str(context.get("reason", "producer_snapshot_inconsistent")),
+        calculation_revision_id=command.calculation_revision_id,
     )
 
 
@@ -717,11 +745,13 @@ def _require_export_identity(
                 "calculation_revision_id": command.calculation_revision_id,
                 "reason": "export_identity_unresolved",
             },
+            precondition_verdict=profile_facts_verdict(("identity.tax_id", "identity.legal_name")),
         )
     return presenter, taxpayer_identity
 
 
 def _require_m360_solicitud(
+    command: ModeloExportCommand,
     *,
     modelo: Modelo,
     work_unit: WorkUnit,
@@ -737,10 +767,11 @@ def _require_m360_solicitud(
         return None
     entry = export_ports.m360_solicitud.load().entry_for(work_unit.period)
     if entry is None:
-        raise FilingProducerSnapshotError(
-            "modelo 360 requires the solicitud facts declared for its period",
+        raise export_operator_decision_refusal(
+            translated_message="application.filing.export.errors.m360_solicitud_undeclared",
+            reason="m360_solicitud_undeclared",
             context={
-                "reason": "m360_solicitud_undeclared",
+                "calculation_revision_id": command.calculation_revision_id,
                 "filing_year": work_unit.period.filing_year,
                 "period": work_unit.period.registry_token,
             },
@@ -755,14 +786,12 @@ def require_m360_solicitud_for_export(
     export_ports: ModeloExportPorts,
 ) -> Modelo360SolicitudEntry | None:
     """Load the modelo 360 solicitud before any account resolves, refusing an undeclared one."""
-    try:
-        return _require_m360_solicitud(
-            modelo=Modelo(str(work_unit.modelo)),
-            work_unit=work_unit,
-            export_ports=export_ports,
-        )
-    except FilingProducerSnapshotError as exc:
-        raise _producer_facts_refusal(command, exc) from exc
+    return _require_m360_solicitud(
+        command,
+        modelo=Modelo(str(work_unit.modelo)),
+        work_unit=work_unit,
+        export_ports=export_ports,
+    )
 
 
 def _resolve_export_model_profile(
@@ -780,7 +809,11 @@ def _resolve_export_model_profile(
         return m360_solicitud.facts, None
     if modelo == form_for_role("iva.periodic"):
         if iva_profile is None:
-            raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")
+            raise ModeloProfileReadinessError(
+                precondition_failure=m303_profile_readiness_failure(
+                    "iva_composition_missing", {"iva_profile_present": False}
+                ),
+            )
         return iva_profile, _resolve_m303_filing_facts_for_export(
             work_unit=work_unit,
             revision=revision,
@@ -849,6 +882,9 @@ def _resolve_m303_filing_facts_for_export(
     if filing_instance_evidence is None:
         raise ModeloExportEvidenceMissingError(
             f"work unit {work_unit.work_unit_id!r} carries no filing-instance evidence valid for its revision",
+            precondition_verdict=unit_filing_evidence_verdict(
+                "export_filing_instance_evidence", work_unit.work_unit_id
+            ),
         )
     filing_facts = resolve_m303_filing_facts_from_arrivals(
         bucket_id=work_unit.bucket_id,

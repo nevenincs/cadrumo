@@ -471,7 +471,7 @@ def domestic_rate_tier_is_required(
     issuer_residency: IvaTerritorialScope,
     customer_residency: IvaTerritorialScope,
     kind: TransactionKind,
-    transaction_date: date | None = None,
+    transaction_date: date,
     customer_tax_status: CustomerTaxStatus | None = None,
     art_69_dos_service: IvaArt69DosService | None = None,
     operation: PinnedAuthorityOperation,
@@ -486,14 +486,13 @@ def domestic_rate_tier_is_required(
     way. Identification is probed absent: a row that needs one cannot then
     preempt a later rate-tier row, which errs toward asking.
     """
-    effective_date = transaction_date or today_madrid()
-    vocabulary = resolve_iva_classification_catalogue(effective_date, operation=operation)
-    rules = resolve_iva_classification_inputs(effective_date=effective_date, operation=operation).rules
+    vocabulary = resolve_iva_classification_catalogue(transaction_date, operation=operation)
+    rules = resolve_iva_classification_inputs(effective_date=transaction_date, operation=operation).rules
     statuses = (customer_tax_status,) if customer_tax_status is not None else vocabulary.customer_tax_statuses
     for status in statuses:
         for direction in InvoiceKind:
             criteria = IvaInvoiceClassificationCriteria(
-                transaction_date=effective_date,
+                transaction_date=transaction_date,
                 issuer_residency=issuer_residency,
                 customer_residency=customer_residency,
                 customer_tax_status=status,

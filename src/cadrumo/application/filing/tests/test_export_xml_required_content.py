@@ -55,11 +55,28 @@ def _schema() -> Element[str]:
     return DefusedElementTree.fromstring(_SCHEMA)
 
 
-def _missing(document: str) -> set[str]:
+_SCHEMA_WITH_EMPTIABLE_CHOICE = """<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Declaracion">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element name="Stated" type="xs:string"/>
+        <xs:sequence>
+          <xs:element name="Spare" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>"""
+
+
+def _missing(document: str, *, schema: str = _SCHEMA) -> set[str]:
     """Return the paths refused; the boxes fall back to paths because no dictionary row names them."""
     try:
         refuse_xml_missing_required_content(
-            DefusedElementTree.fromstring(document), schema=_schema(), source_id="synthetic", entries=()
+            DefusedElementTree.fromstring(document),
+            schema=DefusedElementTree.fromstring(schema),
+            source_id="synthetic",
+            entries=(),
         )
     except ModeloApplicationError as refused:
         assert str(refused.translated_message).endswith("xml_value_required_missing")
@@ -92,6 +109,10 @@ def test_a_choice_requires_only_its_begun_branch() -> None:
 
 def test_an_unbegun_required_choice_is_named_by_its_first_branch() -> None:
     assert _missing('<Declaracion needed="1"><Head>h</Head></Declaracion>') == {"/OptionA"}
+
+
+def test_an_unbegun_choice_with_a_branch_that_requires_nothing_requires_nothing() -> None:
+    assert _missing("<Declaracion/>", schema=_SCHEMA_WITH_EMPTIABLE_CHOICE) == set()
 
 
 def _pruned(document: str) -> Element[str]:

@@ -34,6 +34,7 @@ from ...domain.calculations.registry.governed_fact_scope import governed_facts_i
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .producer_snapshot import (
     FilingProducerSnapshot,
 )
@@ -53,7 +54,10 @@ def _registry_m296_projection_catalogue(
     """Resolve detail-row collections from the selected registry authority."""
     authority = governed_facts_in_scope()
     if authority is None:
-        raise InternalInvariantError("Modelo 296 projection requires a generation-pinned authority operation")
+        raise InternalInvariantError(
+            "Modelo 296 projection requires a generation-pinned authority operation",
+            precondition_verdict=internal_invariant_verdict("m296_projection.authority_pinned"),
+        )
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-296-detail-collection-mapping",

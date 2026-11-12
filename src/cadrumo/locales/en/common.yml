@@ -6136,7 +6136,11 @@ review:
   adapters:
     errors:
       drafts_load_failed: Failed to load filing drafts from secure backend.
+      drafts_unattributed: Your profile has no tax ID, so none of the %{draft_count}
+        stored drafts can be shown as yours. Add your tax ID to your profile and review
+        again.
       invoices_load_failed: Failed to load invoices catalogue from secure backend.
+      profile_load_failed: Failed to load profile from secure backend.
       transactions_load_failed: Failed to load transactions catalogue from secure
         backend.
   filing:

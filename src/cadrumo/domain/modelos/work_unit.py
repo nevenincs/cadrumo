@@ -36,12 +36,13 @@ from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
 from ..calculations.registry.ids import RevisionId
 from ..contribuyente.ccaa import CCAA
 from .codes import ModeloCode, coerce_modelo_code
-from .errors import ModeloValidationError
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 
 
@@ -109,6 +110,8 @@ def derive_work_unit_id(
     if period.filing_year != int(filing_year):
         raise ModeloValidationError(
             f"filing_year {filing_year!r} does not match period year {period.filing_year!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.WORK_UNIT,
         )
     payload = {
         "bucket_id": bucket_id.strip(),
@@ -125,6 +128,8 @@ def _validate_work_unit_identity(unit: WorkUnit) -> None:
     if unit.period.filing_year != unit.filing_year:
         raise ModeloValidationError(
             f"filing_year {unit.filing_year!r} does not match period year {unit.period.filing_year!r}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.WORK_UNIT,
         )
     derived = derive_work_unit_id(
         bucket_id=unit.bucket_id,
@@ -138,6 +143,8 @@ def _validate_work_unit_identity(unit: WorkUnit) -> None:
             f"work_unit_id {unit.work_unit_id!r} does not match the derived id "
             f"{derived!r} for (bucket={unit.bucket_id!r}, modelo={unit.modelo!r}, "
             f"year={unit.filing_year}, period={unit.period!r}, revision={unit.revision_id!r})",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.WORK_UNIT,
         )
 
 
@@ -146,6 +153,8 @@ def _validate_work_unit_timestamps(unit: WorkUnit) -> None:
     if unit.updated_at < unit.created_at:
         raise ModeloValidationError(
             f"updated_at {unit.updated_at.isoformat()} precedes created_at {unit.created_at.isoformat()}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.WORK_UNIT,
         )
 
 
@@ -155,13 +164,21 @@ def _validate_work_unit_state(unit: WorkUnit) -> None:
         if unit.discarded_at is not None or unit.discarded_by is not None or unit.discard_reason is not None:
             raise ModeloValidationError(
                 "draft work unit must not carry discard metadata (discarded_at / discarded_by / discard_reason)",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.WORK_UNIT,
             )
     else:
         if unit.discarded_at is None or unit.discarded_by is None:
-            raise ModeloValidationError("discarded work unit must carry discarded_at and discarded_by")
+            raise ModeloValidationError(
+                "discarded work unit must carry discarded_at and discarded_by",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.WORK_UNIT,
+            )
         if unit.discarded_at < unit.created_at:
             raise ModeloValidationError(
                 f"discarded_at {unit.discarded_at.isoformat()} precedes created_at {unit.created_at.isoformat()}",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.WORK_UNIT,
             )
 
 
@@ -271,7 +288,11 @@ class WorkUnitCatalogue(BaseModel):
         """Pin that every mapping key equals its record's ``work_unit_id``."""
         for key, unit in self.work_units.items():
             if key != unit.work_unit_id:
-                raise ModeloValidationError(f"catalogue key {key!r} does not match work_unit_id {unit.work_unit_id!r}")
+                raise ModeloValidationError(
+                    f"catalogue key {key!r} does not match work_unit_id {unit.work_unit_id!r}",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.WORK_UNIT,
+                )
         return self
 
     @override

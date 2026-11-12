@@ -27,6 +27,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.iva.supply_nature import (
     StatutoryCitation,
@@ -47,8 +48,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # would go stale the moment the module moves, and it silently resolves to a
 # directory that does not exist rather than saying so.
 _BUNDLED_ROOT = bundled_path()
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 with bundled_indexed_authority().operation() as _module_operation:
-    _CITATION_CATALOGUE = registry_citation_catalogue(effective_date=date.today(), authority=_module_operation)
+    _CITATION_CATALOGUE = registry_citation_catalogue(effective_date=_ON_DATE, authority=_module_operation)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -262,17 +264,20 @@ def test_an_article_number_without_its_statute_derives_nothing() -> None:
     bundles its text too, so reading ``art. 21`` out of context would confidently
     return the wrong law's answer.
     """
-    assert match_statutory_citations("Operación exenta según art. 21") == ()
+    assert match_statutory_citations("Operación exenta según art. 21", catalogue=_CITATION_CATALOGUE) == ()
     assert (
         derive_supply_nature_from_citation(
             printed_citation="Operación exenta según art. 21",
+            catalogue=_CITATION_CATALOGUE,
         ).outcome
         is SupplyNatureDerivationOutcome.ABSENT
     )
 
     # The same sentence, qualified, does derive -- so the empty result above is
     # the qualifier's doing and not a broken matcher.
-    qualified = derive_supply_nature_from_citation(printed_citation="Operación exenta según art. 21 LIVA")
+    qualified = derive_supply_nature_from_citation(
+        printed_citation="Operación exenta según art. 21 LIVA", catalogue=_CITATION_CATALOGUE
+    )
     assert qualified.outcome is SupplyNatureDerivationOutcome.DERIVED
     assert qualified.nature is SupplyNature.GOODS
 
@@ -288,15 +293,15 @@ def test_an_article_number_without_its_statute_derives_nothing() -> None:
 )
 def test_the_printed_forms_a_document_actually_uses_all_reach_the_same_row(printed: str) -> None:
     """One article, four typographies. The statute fixes the number, not the layout."""
-    derivation = derive_supply_nature_from_citation(printed_citation=printed)
+    derivation = derive_supply_nature_from_citation(printed_citation=printed, catalogue=_CITATION_CATALOGUE)
     assert derivation.outcome is SupplyNatureDerivationOutcome.DERIVED
     assert derivation.nature is SupplyNature.GOODS
 
 
 def test_a_number_that_is_not_an_article_reference_is_not_read_as_one() -> None:
     """An amount or a longer article number must not match a declared row."""
-    assert match_statutory_citations("Base imponible 25,00 EUR - Ley 37/1992") == ()
-    assert match_statutory_citations("según art. 250 LIVA") == ()
+    assert match_statutory_citations("Base imponible 25,00 EUR - Ley 37/1992", catalogue=_CITATION_CATALOGUE) == ()
+    assert match_statutory_citations("según art. 250 LIVA", catalogue=_CITATION_CATALOGUE) == ()
 
 
 def test_free_prose_describing_the_lines_derives_nothing() -> None:
@@ -310,12 +315,14 @@ def test_free_prose_describing_the_lines_derives_nothing() -> None:
     assert (
         derive_supply_nature_from_citation(
             printed_citation="Servicios de consultoría informática prestados durante marzo",
+            catalogue=_CITATION_CATALOGUE,
         ).outcome
         is SupplyNatureDerivationOutcome.ABSENT
     )
     assert (
         derive_supply_nature_from_citation(
             printed_citation="Suministro de material de oficina: 40 cajas de folios",
+            catalogue=_CITATION_CATALOGUE,
         ).outcome
         is SupplyNatureDerivationOutcome.ABSENT
     )
@@ -325,6 +332,7 @@ def test_an_article_governing_both_limbs_establishes_nothing_while_reporting_wha
     """A cited article that fixes nothing is a different fact from no citation."""
     derivation = derive_supply_nature_from_citation(
         printed_citation="Inversión del sujeto pasivo, art. 84 LIVA",
+        catalogue=_CITATION_CATALOGUE,
     )
 
     assert derivation.outcome is SupplyNatureDerivationOutcome.ABSENT
@@ -336,6 +344,7 @@ def test_two_citations_establishing_different_natures_are_reported_not_resolved(
     """The document disagrees with itself; picking a side would erase the signal."""
     derivation = derive_supply_nature_from_citation(
         printed_citation="Exenta art. 25 LIVA; régimen art. 163 octiesdecies LIVA",
+        catalogue=_CITATION_CATALOGUE,
     )
 
     assert derivation.outcome is SupplyNatureDerivationOutcome.CONTRADICTED
@@ -350,10 +359,10 @@ def test_a_suffixed_article_does_not_match_a_differently_suffixed_one() -> None:
     services for one, nothing for the other -- so a matcher keying on the number
     alone would swap a derived answer for an absent one.
     """
-    services_only = match_statutory_citations("art. 163 octiesdecies LIVA")
+    services_only = match_statutory_citations("art. 163 octiesdecies LIVA", catalogue=_CITATION_CATALOGUE)
     assert [citation.article for citation in services_only] == ["163 octiesdecies"]
 
-    mixed_only = match_statutory_citations("art. 163 unvicies LIVA")
+    mixed_only = match_statutory_citations("art. 163 unvicies LIVA", catalogue=_CITATION_CATALOGUE)
     assert [citation.article for citation in mixed_only] == ["163 unvicies"]
 
 
@@ -369,12 +378,12 @@ def test_a_category_the_catalogue_names_a_service_derives_services() -> None:
     Discovered from the catalogue rather than listed, so a member added later is
     covered without editing this file.
     """
-    category_catalogue = resolve_iva_category_catalogue(effective_date=date.today())
+    category_catalogue = resolve_iva_category_catalogue(effective_date=_ON_DATE)
     service_named = tuple(category for category in category_catalogue.all_categories if "service" in category.value)
     assert service_named, "the catalogue names no service member, so this case cannot discriminate"
 
     for category in service_named:
-        derivation = supply_nature_implied_by_category(category)
+        derivation = supply_nature_implied_by_category(category, catalogue=_CITATION_CATALOGUE)
         assert derivation.nature is SupplyNature.SERVICES, (
             f"{category.value} is named a service but its grounding derives {derivation.nature} ({derivation.outcome})"
         )
@@ -395,7 +404,7 @@ def test_the_goods_categories_still_derive_goods(category: IvaCategory) -> None:
     families derived. Each of these rests on an article defining an operation on
     *bienes* -- arts. 25, 15 and 21 -- and none cites art. 68 alongside them.
     """
-    assert supply_nature_implied_by_category(category).nature is SupplyNature.GOODS
+    assert supply_nature_implied_by_category(category, catalogue=_CITATION_CATALOGUE).nature is SupplyNature.GOODS
 
 
 def test_no_shipped_category_is_grounded_in_articles_that_disagree() -> None:
@@ -407,9 +416,9 @@ def test_no_shipped_category_is_grounded_in_articles_that_disagree() -> None:
     operator can be asked about. Stated as a property so it keeps holding as
     articles and members are added.
     """
-    category_catalogue = resolve_iva_category_catalogue(effective_date=date.today())
+    category_catalogue = resolve_iva_category_catalogue(effective_date=_ON_DATE)
     for category in category_catalogue.all_categories:
-        derivation = supply_nature_implied_by_category(category)
+        derivation = supply_nature_implied_by_category(category, catalogue=_CITATION_CATALOGUE)
         assert derivation.outcome is not SupplyNatureDerivationOutcome.CONTRADICTED, (
             f"{category.value} is grounded in articles establishing different natures: {derivation.note}"
         )
@@ -430,6 +439,6 @@ def test_no_declared_article_pattern_matches_a_bare_number_in_running_text() -> 
     """Every row needs the article word; none may fire on a naked figure."""
     for citation in _CITATION_CATALOGUE.citations:
         bare = re.sub(r"\s+", " ", citation.article)
-        assert match_statutory_citations(f"Total {bare} LIVA") == (), (
+        assert match_statutory_citations(f"Total {bare} LIVA", catalogue=_CITATION_CATALOGUE) == (), (
             f"row {citation.article} matched a number with no article reference before it"
         )

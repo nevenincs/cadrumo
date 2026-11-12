@@ -29,6 +29,11 @@ _COMPONENT_WORDS: Final[Mapping[PartyNameComponent, str]] = {
     PartyNameComponent.RAZON_SOCIAL: "razón social",
 }
 
+#: How an entity sentence asks for the razón social: some designs name the denominación completa alone.
+_ENTITY_COMPONENT_WORDS: Final[Mapping[PartyNameComponent, tuple[str, ...]]] = {
+    PartyNameComponent.RAZON_SOCIAL: ("razón social", "denominación completa"),
+}
+
 #: How the designs name a separator between two parts.
 _SEPARATOR_WORDS: Final[Mapping[str, str]] = {" ": "un espacio"}
 
@@ -98,7 +103,10 @@ def _require_stated_order(rule: SemanticMapPartyName, entry: SemanticMapEntry) -
             f"{rule.composition.separator!r}, which its quoted design sentence does not state",
         )
     entity = _collapsed(rule.entity_statement).casefold()
-    if any(_COMPONENT_WORDS[component] not in entity for component in rule.composition.entity):
+    if any(
+        not any(word in entity for word in _ENTITY_COMPONENT_WORDS.get(component, (_COMPONENT_WORDS[component],)))
+        for component in rule.composition.entity
+    ):
         raise RegistryValidationError(
             f"semantic map export field {entry.export_field_id!r} composes an entity from parts its quoted "
             "design sentence does not ask for",

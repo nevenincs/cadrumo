@@ -361,6 +361,10 @@ def _calculated_casillas(materialised: MaterialisedPersona, modelo: str, year: i
             if not isinstance(outcome, ModeloWorkCreateSuccess):
                 return _Calculated({"refusal": f"work creation refused: {outcome}"})
             work_unit_id = outcome.unit.work_unit_id
+            if modelo == "100":
+                # A year whose earlier return the profile does not hold takes the
+                # persona's statement of its pending carries before it calculates.
+                attest_prior_carries(materialised.persona, world, work_unit_id, year)
             calculated = run_operation(
                 world,
                 MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,

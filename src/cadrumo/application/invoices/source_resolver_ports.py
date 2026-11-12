@@ -68,8 +68,10 @@ class CounterpartyProvinciaReader(Protocol):
 class CounterpartyFilingNameReader(Protocol):
     """Read the filing name a person declared for a counterparty."""
 
-    def filing_name_of(self, tax_identifier: str, *, country_code: str) -> DeclaredPartyFilingName | None:
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
         """Return the counterparty's declared filing name, or ``None`` when none is stated.
+
+        ``country_code`` is ``None`` when the source stated none; the identifier's own prefix then decides.
 
         Raise :class:`InvoiceSourcePersistenceError` when the stated facts cannot be read.
         """

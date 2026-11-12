@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from ..__main__ import main
+from ..__main__ import _envelope, main
 from ..diff import diff_tables, render_diff, row_id
-from ..render import counts, render_table, summary_line
+from ..render import counts, render_table, summary_line, unchecked_causes
 from ..rows import PlannedRow, Stage, TableRow, Verdict, write_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -65,6 +65,16 @@ def test_each_lane_carries_its_unchecked_rows_beside_green_and_total() -> None:
     assert "Summary: green 1 / 3," in text
 
 
+def test_unchecked_rows_are_counted_per_cause_and_a_row_with_two_causes_under_each() -> None:
+    gap = dataclasses.replace(_GREEN, period="2T", unchecked=("not-sourced:0003", "not-sourced:0017"))
+    both = dataclasses.replace(_GREEN, period="3T", unchecked=("concept:cuota", "not-sourced:0003"))
+    concept = dataclasses.replace(_GREEN, period="4T", unchecked=("concept:base",))
+    rows = [_GREEN, gap, both, concept]
+    assert unchecked_causes(rows) == {"concept": 2, "not-sourced": 2}
+    text = render_table(rows, head="abc")
+    assert "Unchecked rows by cause (a row with several causes counts under each): concept 2, not-sourced 2." in text
+
+
 def test_the_diff_separates_green_regression_and_stage_moves() -> None:
     before = {row.key: row for row in (_GREEN, _RED_VERIFY, _RED_CALCULATE)}
     after = {
@@ -90,6 +100,29 @@ def test_check_fails_only_when_a_baseline_green_row_is_not_green(tmp_path: Path)
     write_rows(lost, [dataclasses.replace(_GREEN, export=Stage.REFUSED)])
     assert main(["check", str(held), "--baseline", str(baseline)]) == 0
     assert main(["check", str(lost), "--baseline", str(baseline)]) == 1
+
+
+def test_the_diff_keeps_the_unchecked_items_an_earlier_table_was_written_with(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    horizon = _envelope().horizon
+    plan = PlannedRow(
+        persona="autonomo-electricista",
+        modelo="100",
+        year=horizon - 1,
+        period="0A",
+        horizon=horizon,
+        has_values=True,
+        grounding="verified",
+        sources=("ley:art-1",),
+    )
+    passed = TableRow.from_plan(plan, Stage.PASSED, verify=Stage.PASSED, export=Stage.PASSED)
+    before, after = tmp_path / "before.jsonl", tmp_path / "after.jsonl"
+    write_rows(before, [dataclasses.replace(passed, unchecked=("concept:retired",))])
+    write_rows(after, [passed])
+    assert main(["diff", str(before), str(after), "--before-label", "old", "--after-label", "new"]) == 0
+    turned = capsys.readouterr().out.split("## Turned green (1)", 1)[1].split("##", 1)[0]
+    assert "autonomo-electricista|100|" in turned
 
 
 def test_baseline_writes_one_file_per_persona(tmp_path: Path) -> None:

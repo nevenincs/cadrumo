@@ -13,7 +13,6 @@ from decimal import Decimal
 
 from ...core.i18n.render import tr
 from ...core.period import Period
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
@@ -56,6 +55,7 @@ from ...domain.iva.schema import (
     spanish_eu_member_state,
 )
 from ...domain.transactions.cash_accounting_validation import validate_cash_accounting_axis
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from .currency_predicates import is_non_eur_without_conversion
@@ -240,7 +240,7 @@ def _unaccepted_cash_accounting_treatment_issue(
     Read on the date every other treatment comparison in this pipeline reads
     it, so a treatment this check admits is one those comparisons can answer.
     """
-    effective_date = today_madrid()
+    effective_date = transaction_operation_date(transaction)
     catalogue = resolve_iva_cash_accounting_catalogue(effective_date=effective_date, authority=operation)
     try:
         catalogue.require(transaction.cash_accounting_treatment)
@@ -358,7 +358,7 @@ def _unaccepted_exemption_article_issue(
     exemption_article = transaction.exemption_article
     if exemption_article is None:
         return None
-    effective_date = today_madrid()
+    effective_date = transaction_operation_date(transaction)
     catalogue = resolve_iva_exemption_article_catalogue(effective_date=effective_date, authority=operation)
     try:
         catalogue.require(exemption_article)
@@ -391,7 +391,7 @@ def _unaccepted_art_104_tres_exclusion_issue(
     exclusion = transaction.art_104_tres_exclusion
     if exclusion is None:
         return None
-    effective_date = today_madrid()
+    effective_date = transaction_operation_date(transaction)
     catalogue = resolve_art104_tres_exclusion_catalogue(effective_date=effective_date, authority=operation)
     try:
         declared = catalogue.require(exclusion)
@@ -710,7 +710,12 @@ def _declared_category_issue(
     if counterparty_issue is not None:
         return counterparty_issue
     catalogue = registry_component_catalogue(effective_date=effective_date, authority=operation)
-    components = category_components(explicit_category, invoice_kind, component_catalogue=catalogue)
+    components = category_components(
+        explicit_category,
+        invoice_kind,
+        effective_date=effective_date,
+        component_catalogue=catalogue,
+    )
     does_not_arise = registry_kind_applicability_token(
         "does_not_arise",
         effective_date=effective_date,
@@ -894,7 +899,11 @@ def _missing_deduction_classification_issue(
     # sujeta row remains in the domestic family and still requires its identity.
     if not (
         is_deducible_flow(flow_direction)
-        and admits_iva_deduction_classification(category=category, flow_direction=flow_direction)
+        and admits_iva_deduction_classification(
+            category=category,
+            flow_direction=flow_direction,
+            effective_date=transaction_operation_date(transaction),
+        )
         and (transaction.deduction_fact_kind is None or transaction.deduction_provenance is None)
     ):
         return None

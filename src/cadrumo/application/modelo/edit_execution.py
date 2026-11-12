@@ -107,6 +107,7 @@ from .edit_services import (
     validate_scalar_intent,
 )
 from .edit_value_grammar import ModeloEditValueChannel, ModeloEditValueGrammarV1
+from .refusal_door_verdicts import caller_defect_verdict
 from .work_missing_input import ModeloPriorCarryAbsenceUnstatedError, ModeloPriorPeriodUnfiledError
 
 if TYPE_CHECKING:
@@ -669,7 +670,10 @@ def _execute_modelo_edit(
             raise
         return pre_effect_refusal(refused, revision=prepared.revision)
     if not captured_receipt:
-        raise ModeloError("the calculation boundary resolved no revision id for the applied edit")
+        raise ModeloError(
+            "the calculation boundary resolved no revision id for the applied edit",
+            precondition_verdict=caller_defect_verdict("edit_calculation_revision_id"),
+        )
     return ModeloEditExecutionUpdatedV1(receipt=captured_receipt[0])
 
 

@@ -2484,6 +2484,18 @@ cli:
           export_target_exists: A file already exists at the destination path, and
             a backup is never overwritten. Choose another --output or move the existing
             file first; no profile was read.
+      arrendamiento:
+        add_help: Add a lease from --value FACT=VALUE facts; the property it names
+          must exist.
+        clear_help: Clear a fact by name; repeat the option for several.
+        edit_help: Change facts of a lease and clear the ones you name; the rest stay.
+        end_fecha_help: Last day of the lease (YYYY-MM-DD).
+        end_help: State the last day of a lease.
+        help: Record the leases of your properties.
+        list_help: List the stored leases with their row key.
+        remove_help: Remove a lease.
+        row_help: Row key of the lease, as «list» shows it.
+        value_help: One FACT=VALUE fact; repeat the option for several facts.
       ascendiente:
         add_flag_help: NACIMIENTO=YYYY-MM-DD[,NIF=<NIF or NIE>][,APELLIDOS_NOMBRE=<surnames
           and name>][,FALLECIMIENTO=YYYY-MM-DD][,CONVIVIENTES=<number of descendants
@@ -2713,6 +2725,17 @@ cli:
           command.
         rows_or_none_required: Give at least one %{flag} row, or %{none} to state
           there are none.
+      inmueble:
+        add_help: Add a property from --value FACT=VALUE facts; it is stored only
+          if they cohere.
+        clear_help: Clear a fact by name; repeat the option for several.
+        edit_help: Change facts of a property and clear the ones you name; the rest
+          stay.
+        help: Record the properties you let.
+        list_help: List the stored properties with their row key.
+        remove_help: Remove a property; refused while a lease names it.
+        row_help: Row key of the property, as «list» shows it.
+        value_help: One FACT=VALUE fact; repeat the option for several facts.
       list:
         incoherent_observation_advisory: 'The profile listing could not be read coherently
           (outcome: {outcome}). Run the command again; if it persists, inspect the
@@ -2740,6 +2763,10 @@ cli:
           wizard wrote as its default, so it could not be told apart from an unanswered
           question and has been cleared. Obligations that depend on it stay undetermined
           until you answer it with the {flag} option of the profile edit command.'
+        rental_tier_cleared: 'Your profile stored the art. 23.2 reduction tier for
+          rental income. That value no longer exists: the tier is derived from the
+          facts of each lease. Record your leases with «aeat config profile arrendamiento
+          add» to calculate the reduction again.'
       plantilla_media:
         average_workforce_help: Average total workforce for the year, as full-time
           equivalents with at most two decimal places.
@@ -3062,7 +3089,13 @@ cli:
       registry_integrity_skipped: 'Integrity check of the modelo definitions: skipped.'
       registry_unavailable: The modelo definitions are unavailable.
       secure_objects_empty: Secure object store is empty.
+      secure_objects_probe_failed: Secure-object integrity could not be checked in
+        %{failed} namespace(s). This does not mean they are empty or healthy.
+      secure_objects_probe_failed_detail: 'not checked: %{namespaces}'
       secure_objects_readable: '%{readable} readable secure-object namespace(s): %{namespaces}.'
+      secure_objects_unavailable: Secure-object integrity could not be checked because
+        the encrypted store could not be read. This does not mean the store is empty
+        or healthy.
       secure_objects_unreadable: '%{unreadable} unreadable row(s), %{readable} readable
         row(s)'
       state_backend_readable: Workflow state store is readable.
@@ -4023,8 +4056,14 @@ cli:
       bienes_extranjero_unset: Your profile does not yet record whether your assets
         and rights abroad exceed the reporting threshold.
       censo_enrolment_unverified: Census enrolment has not been verified
+      deadline_windows_unavailable: The registry has no deadline windows for part
+        of this range, so nothing is known about the obligations that fall in it.
+        Check the overview status; an empty list here does not mean nothing is due.
       estimacion_objetiva_unset: Your profile does not yet record which income-tax
         assessment regime applies to your activity.
+      explain_deadline_windows_unavailable: The registry has no deadline windows for
+        modelo %{modelo} and year %{year}, so no lateness or schedule can be stated.
+        A missing late-filing warning here does not mean the filing is on time.
       gran_empresa_unset: Your profile does not yet record whether your turnover in
         the previous calendar year exceeded the large-company threshold, which decides
         whether you file monthly or quarterly.

@@ -81,6 +81,7 @@ from .filed_revision_observation import (
     prepare_filed_revision_observation,
     require_filing_result_disposition,
 )
+from .lifecycle_view_refusal_doors import verification_reports_verdict
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .modelo_bucket_events import build_modelo_bucket_event
 from .participation_writes import build_participation_writes
@@ -567,6 +568,9 @@ def require_approved_verification_report(
                 "calculation_revision_id": target.calculation_revision_id,
                 "verification_report_id": approved_verification_report_id,
             },
+            precondition_verdict=verification_reports_verdict(
+                "approved_verification_report", target.calculation_revision_id
+            ),
         )
     require_verification_report_coordinates_current(catalogue, operation=operation)
     return report
