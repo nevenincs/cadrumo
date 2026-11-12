@@ -431,7 +431,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             action_id=f"operator.profile.{member}",
         )
         for member in ("ascendiente", "descendiente")
-        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+        for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
     # The door that states a fact the mínimo por ascendientes needs of one named ascendant:
     # the note says which row omits it, so the edit is addressed to that row.

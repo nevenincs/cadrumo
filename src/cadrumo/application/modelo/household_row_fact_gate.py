@@ -31,6 +31,7 @@ from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_
 HOUSEHOLD_ROW_FACT_UNSTATED_REASON: Final[str] = "household_row_fact_unstated"
 """The persisted note reason this gate refuses on."""
 
+
 _STAGE_LEAVES: Final[dict[str, str]] = {
     "verify": "modelo.work.verify",
     "file": "modelo.work.file",
@@ -38,7 +39,7 @@ _STAGE_LEAVES: Final[dict[str, str]] = {
 }
 """The operator leaf each gated action refuses at."""
 
-_GROUP_DOORS: Final[dict[str, tuple[str, str]]] = {
+GROUP_DOORS: Final[dict[str, tuple[str, str]]] = {
     "renta_family.ascendiente": ("ascendiente_unstated", "operator.profile.ascendiente"),
     "renta_family.descendiente": ("descendiente_unstated", "operator.profile.descendiente"),
 }
@@ -106,7 +107,7 @@ def household_row_fact_refusal(
     fact_leaf = _fact_value(first, "leaf")
     omitting = _fact_value(first, "omitting")
     recorded = _fact_value(first, "recorded")
-    door = None if group is None else _GROUP_DOORS.get(group)
+    door = None if group is None else GROUP_DOORS.get(group)
     if group is None or fact_leaf is None or omitting is None or recorded is None or door is None:
         return None
     scenario, row = _door_scenario(first, group, door[0])
@@ -166,6 +167,7 @@ def household_row_fact_unstated_failure(
 
 
 __all__ = [
+    "GROUP_DOORS",
     "HOUSEHOLD_ROW_FACT_UNSTATED_REASON",
     "ModeloHouseholdRowFactUnstatedError",
     "household_row_fact_refusal",

@@ -1014,6 +1014,26 @@ def inject_derived_incremento_guarderia_facts(
             fact_index[key] = increment
 
 
+def incremento_guarderia_rows_lacking_cotizaciones(
+    fact_index: Mapping[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+    *,
+    context: FamilyFactResolutionContext,
+) -> tuple[int, ...]:
+    """The descendant rows whose guardería increment awaits a cotizaciones figure the profile never stated.
+
+    Empty when the cap or the eligibility ceilings are unresolvable: the increment is then
+    unresolved for that reason, not for a missing row fact.
+    """
+    cap_anual = guarderia_cap_anual(snapshot)
+    thresholds = resolved_minimo_descendientes_thresholds(snapshot)
+    if cap_anual is None or thresholds is None:
+        return ()
+    return renta_family_profile_from_facts(fact_index).guarderia_rows_lacking_cotizaciones(
+        snapshot.filing_year, thresholds=thresholds, cap_anual=cap_anual, context=context
+    )
+
+
 def inject_derived_state_attribution_facts(
     fact_index: dict[str, UserProfileFactValue],
     *,

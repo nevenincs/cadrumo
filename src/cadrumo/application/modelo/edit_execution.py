@@ -108,6 +108,7 @@ from .edit_services import (
     validate_scalar_intent,
 )
 from .edit_value_grammar import ModeloEditValueChannel, ModeloEditValueGrammarV1
+from .household_row_fact_input import ModeloHouseholdRowFactInputRequiredError
 from .refusal_door_verdicts import caller_defect_verdict
 from .work_missing_input import ModeloPriorCarryAbsenceUnstatedError, ModeloPriorPeriodUnfiledError
 
@@ -672,7 +673,7 @@ def _unresolved_source_context(error: BaseException, revision: ModeloRevision) -
     """
     if isinstance(error, ModeloPriorCarryAbsenceUnstatedError):
         return _first_box_fed_by(",".join(error.open_carry_ids), revision)
-    if isinstance(error, ModeloPriorPeriodUnfiledError):
+    if isinstance(error, ModeloPriorPeriodUnfiledError | ModeloHouseholdRowFactInputRequiredError):
         return _first_box_fed_by(error.binding_id, revision)
     if not isinstance(error, RegistryValidationError) or error.context is None:
         return None
