@@ -422,6 +422,73 @@ def test_an_activity_in_estimacion_objetiva_is_not_one_the_book_can_belong_to() 
     assert "declares 0 activities in estimacion directa" in result.diagnostics[0].message
 
 
+def test_a_filer_whose_activities_are_all_in_estimacion_objetiva_keeps_no_book_for_the_rows() -> None:
+    """The existencias rows belong to the direct-estimation block, so a modulos filer has nothing to answer.
+
+    LIRPF arts. 28 and 30 and RIRPF art. 30 place the stock variation in the rendimiento of an activity
+    in estimacion directa; the modulos rendimiento (RIRPF arts. 32 to 37) takes none.
+    """
+    repository = _InventoryLedgerRepositoryScenario()
+    objetiva = (UserProfileFact(path=_ESTIMATION_REGIME, value=str(irpf_estimation_regime_objetiva_token())),)
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(
+        _context(_revision(inventory=True), facts=objetiva)
+    )
+
+    inventory_ids = {"inventory-0177", "inventory-0181", "inventory-0182"}
+    assert result.row_binding_values == {}
+    assert result.diagnostics == ()
+    assert set(result.inapplicable_binding_ids) == inventory_ids
+    assert set(result.unresolved_binding_ids) == inventory_ids
+
+
+@pytest.mark.parametrize("regime", ["directa_normal", "directa_simplificada", "part_year_directa"])
+def test_a_filer_with_an_activity_in_estimacion_directa_and_no_book_is_asked_for_the_book(regime: str) -> None:
+    """Any day of direct estimation puts the activity in the block, so the missing book keeps its remedy."""
+    year = newest_authored_edition("100")
+    objetiva = str(irpf_estimation_regime_objetiva_token())
+    facts = {
+        "directa_normal": (
+            UserProfileFact(path=_ESTIMATION_REGIME, value=str(irpf_estimation_regime_directa_normal_token())),
+        ),
+        "directa_simplificada": (
+            UserProfileFact(path=_ESTIMATION_REGIME, value=str(irpf_estimation_regime_directa_simplificada_token())),
+        ),
+        "part_year_directa": (
+            UserProfileFact(path=_ESTIMATION_REGIME, value=objetiva, valid_to=date(year, 6, 30)),
+            UserProfileFact(
+                path=_ESTIMATION_REGIME,
+                value=str(irpf_estimation_regime_directa_simplificada_token()),
+                valid_from=date(year, 7, 1),
+            ),
+        ),
+    }[regime]
+
+    result = InventorySourceResolver(inventory_repository=_InventoryLedgerRepositoryScenario()).resolve(
+        _context(_revision(inventory=True), facts=facts)
+    )
+
+    assert result.row_binding_values == {}
+    assert result.inapplicable_binding_ids == ()
+    assert set(result.unresolved_binding_ids) == {"inventory-0177", "inventory-0181", "inventory-0182"}
+    (refusal,) = result.diagnostics
+    assert refusal.reason == "source_domain_not_ready"
+    assert "missing_activity_ledgers" in refusal.message
+    assert "inventory book" in (refusal.remedy or "")
+
+
+def test_a_filer_with_no_stated_regime_and_no_book_is_not_excused_from_the_book() -> None:
+    """An undeclared regime leaves the block's activities unknown, so no book is not read as not needed."""
+    undeclared = (UserProfileFact(path=_ESTIMATION_REGIME, value=""),)
+
+    result = InventorySourceResolver(inventory_repository=_InventoryLedgerRepositoryScenario()).resolve(
+        _context(_revision(inventory=True), facts=undeclared)
+    )
+
+    assert result.inapplicable_binding_ids == ()
+    assert [diagnostic.reason for diagnostic in result.diagnostics] == ["source_domain_not_ready"]
+
+
 def test_an_activity_counts_on_the_days_the_regime_is_direct_estimation() -> None:
     """Modulos until June and directa from July: the one activity is in the block, once, for its book."""
     repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("alpha"),)))

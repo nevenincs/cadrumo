@@ -73,6 +73,7 @@ class RegistryUnresolvedOutcomeReason(StrEnum):
     M210_CONVENIO_RATE_MISSING = "m210-convenio-rate-missing"
     WAIVED_REFUND_RESULT_UNSUPPORTED = "waived-refund-result-unsupported"
     INCOME_FAMILY_CONTRADICTS_PROFILE = "income-family-contradicts-profile"
+    M200_TAX_REGIME_UNSUPPORTED = "m200-tax-regime-unsupported"
 
 
 class UnresolvedFormulaOutcomeError(RegistrySnapshotError):

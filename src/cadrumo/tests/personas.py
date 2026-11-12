@@ -27,6 +27,7 @@ from typing import Final, Literal, cast, override
 
 from ..core.decimal.grammar import try_parse_canonical_decimal
 from ..core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from ..core.period import StandardPeriodCode, is_filing_period_token
 from .inventory import REPO_ROOT
 from .run_artifact import file_inputs_digest
 
@@ -510,9 +511,11 @@ class AttestedPriorValue:
     """A figure the taxpayer states for a calculation's dependency on an earlier return the application does not hold.
 
     The replay submits it through the registered edit operation as an operator
-    attestation, and only where the application holds nothing of ``source``:
-    where it holds a work unit, a filing record or an observation of it, that
-    source governs and the entry is not submitted. ``derivation`` and
+    attestation, and only where the application holds nothing of ``sources``:
+    where it holds a work unit, a filing record or an observation of one, that
+    source governs and the entry is not submitted. One figure stands for every
+    earlier return the binding reads, as the application records one attested
+    value per binding naming each source it stands in for. ``derivation`` and
     ``legal_ref`` record where the figure comes from; the operation does not
     receive them.
     """
@@ -522,7 +525,7 @@ class AttestedPriorValue:
     year: YearToken
     binding: str
     value: Decimal
-    source: PriorValueSource
+    sources: tuple[PriorValueSource, ...]
     derivation: str
     legal_ref: tuple[str, ...]
 
@@ -1543,10 +1546,16 @@ def _attested_prior_value(table: _Table, where: str) -> AttestedPriorValue:
     _keys(
         table,
         where,
-        required=frozenset({"modelo", "period", "year", "binding", "value", "source", "derivation", "legal_ref"}),
+        required=frozenset({"modelo", "period", "year", "binding", "value", "sources", "derivation", "legal_ref"}),
     )
-    source = _table(table["source"], f"{where}.source")
-    _keys(source, f"{where}.source", required=frozenset({"modelo", "year", "period"}))
+    sources = tuple(
+        _prior_value_source(source, f"{where}.sources[{index}]")
+        for index, source in enumerate(_tables(table["sources"], where))
+    )
+    if not sources:
+        raise _fail(where, "sources must name at least one earlier return")
+    if len(set(sources)) != len(sources):
+        raise _fail(where, "sources must name each earlier return once")
     legal_ref = _strings(table, "legal_ref", where)
     if not legal_ref:
         raise _fail(where, "legal_ref must name at least one provision")
@@ -1556,11 +1565,7 @@ def _attested_prior_value(table: _Table, where: str) -> AttestedPriorValue:
         year=YearToken.parse(table["year"], where=f"{where}.year"),
         binding=_string(table, "binding", where),
         value=_amount(table["value"], f"{where}.value"),
-        source=PriorValueSource(
-            modelo=_string(source, "modelo", f"{where}.source"),
-            year=YearToken.parse(source["year"], where=f"{where}.source.year"),
-            period=_choice(_string(source, "period", f"{where}.source"), _FILED_PERIODS, f"{where}.source"),
-        ),
+        sources=sources,
         derivation=_string(table, "derivation", where),
         legal_ref=legal_ref,
     )
@@ -1592,6 +1597,19 @@ def _work_input(table: _Table, where: str) -> WorkInput:
         roles=tuple(values),
         sources=tuple((role, cast(str, sources[role])) for role, _ in values),
         reason=_string(table, "reason", where),
+    )
+
+
+def _prior_value_source(source: _Table, where: str) -> PriorValueSource:
+    """One earlier return an attested figure stands in for; its period is any period a taxpayer files."""
+    _keys(source, where, required=frozenset({"modelo", "year", "period"}))
+    period = _string(source, "period", where)
+    if not is_filing_period_token(period):
+        raise _fail(where, f"{period!r} is not a filing period")
+    return PriorValueSource(
+        modelo=_string(source, "modelo", where),
+        year=YearToken.parse(source["year"], where=f"{where}.year"),
+        period=period,
     )
 
 
@@ -2364,7 +2382,12 @@ def _check_aeat_filings(persona: Persona, envelope: YearEnvelope) -> None:
 
 
 def _check_attested_prior_values(persona: Persona, envelope: YearEnvelope) -> None:
-    """Refuse an attested figure listed twice, or whose source does not precede the return it feeds."""
+    """Refuse an attested figure listed twice, or with a source that does not precede the return it feeds.
+
+    A source of an earlier year precedes. A source of the same year precedes only an
+    annual return of another modelo, as an instalment or periodic return of the year
+    feeds its annual return.
+    """
     seen: set[tuple[str, str, str, str]] = set()
     for item in persona.attested_prior_values:
         key = (item.modelo, str(item.year), item.period, item.binding)
@@ -2372,11 +2395,15 @@ def _check_attested_prior_values(persona: Persona, envelope: YearEnvelope) -> No
             raise _fail(persona.id, f"Modelo {item.modelo} {item.year} {item.period} attests {item.binding} twice")
         seen.add(key)
         try:
-            source_year = item.source.year.resolve(envelope, biographical=True)
             year = item.year.resolve(envelope)
+            source_years = [source.year.resolve(envelope, biographical=True) for source in item.sources]
         except ValueError as error:
             raise _fail(persona.id, str(error)) from None
-        if source_year >= year:
+        if not all(
+            source_year < year
+            or (source_year == year and item.period == StandardPeriodCode.ANNUAL and source.modelo != item.modelo)
+            for source, source_year in zip(item.sources, source_years, strict=True)
+        ):
             raise _fail(
                 persona.id,
                 f"Modelo {item.modelo} {item.year} {item.period} attests a source that does not precede it",

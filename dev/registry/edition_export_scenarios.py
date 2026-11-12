@@ -228,6 +228,7 @@ __all__ = [
     "m190_export_scenario",
     "m193_export_scenario",
     "m200_export_scenario",
+    "m200_one_row_per_family",
     "m222_export_scenario",
     "m296_export_scenario",
     "m303_export_scenario",
@@ -863,7 +864,10 @@ def _scenario_software_identity(modelo_id: str) -> AeatProductSoftwareIdentity:
 
 
 def m200_export_scenario(
-    period: Period, *, result_disposition: ResultDisposition = ResultDisposition.NEGATIVA
+    period: Period,
+    *,
+    result_disposition: ResultDisposition = ResultDisposition.NEGATIVA,
+    projection_rows: Modelo200ProjectionRows | None = None,
 ) -> EditionExportScenario:
     """A synthetic corporate draft with explicit envelope software evidence and its rate-dispatch profile bindings.
 
@@ -879,7 +883,8 @@ def m200_export_scenario(
     every family it prints. The snapshot below supplies exactly one synthetic
     row per family, carrying the identity the row is about and leaving every
     monetary member absent, which is what AEAT's blancos rule prescribes for an
-    unsupplied alphanumeric field.
+    unsupplied alphanumeric field. A caller that exercises the families' slots passes
+    its own ``projection_rows`` instead.
     """
     return EditionExportScenario(
         period=period,
@@ -892,7 +897,11 @@ def m200_export_scenario(
             # determination starts from it, so no draft can omit it.
             "DP200012:00501": Decimal("0.00"),
         },
-        producer_snapshot=partial(_m200_producer_snapshot, result_disposition=result_disposition),
+        producer_snapshot=partial(
+            _m200_producer_snapshot,
+            result_disposition=result_disposition,
+            projection_rows=m200_one_row_per_family() if projection_rows is None else projection_rows,
+        ),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity_factory=partial(_scenario_software_identity, "200"),
     )
@@ -905,7 +914,7 @@ _M200_SYNTHETIC_NIF: Final = "B00010082"
 _M200_SYNTHETIC_COUNTRY: Final = "ES"
 
 
-def _m200_projection_rows() -> Modelo200ProjectionRows:
+def m200_one_row_per_family() -> Modelo200ProjectionRows:
     """One synthetic row of every repeated family modelo 200's layout projects."""
     return Modelo200ProjectionRows(
         administrador=(Modelo200AdministradorRow(nif=_M200_SYNTHETIC_NIF, apellidos_nombre_razon_social="Ana Prueba"),),
@@ -960,14 +969,16 @@ def _m200_projection_rows() -> Modelo200ProjectionRows:
     )
 
 
-def _m200_producer_snapshot(*, result_disposition: ResultDisposition) -> FilingProducerSnapshot:
+def _m200_producer_snapshot(
+    *, result_disposition: ResultDisposition, projection_rows: Modelo200ProjectionRows
+) -> FilingProducerSnapshot:
     """The Modelo 200 snapshot whose typed rows feed the layout's projection pages."""
     return build_filing_producer_snapshot(
         modelo=Modelo("200"),
         taxpayer_tax_id=SYNTHETIC_TAX_ID,
         taxpayer_identity=_TAXPAYER,
         presenter=_presenter(),
-        model_profile=Modelo200ProfileFacts(projection_rows=_m200_projection_rows()),
+        model_profile=Modelo200ProfileFacts(projection_rows=projection_rows),
         elections=FilingElectionFacts(
             result_disposition=result_disposition,
             payment=PaymentElection.INGRESO,

@@ -3034,6 +3034,21 @@ application:
         újra a rekordot csak deklarált rovatokkal.
       m200_accounting_result_required: A Modelo 200 főkönyvből való számításához szükség
         van az év számviteli eredményére.
+      m200_page_002_none_refused_for_form: '%{modelo} %{filing_year} modelo, 002.
+        oldal: %{entity_form} típusú szervezet nem válaszolhatja, hogy nincs %{profile_section};
+        rögzítsd a sorait a profilodban itt: %{profile_path}.'
+      m200_page_002_percentage_total: '%{modelo} %{filing_year} modelo, 002. oldal:
+        a(z) %{profile_section} százalékainak összege %{percentage_sum}, de %{entity_form}
+        típusú szervezetnél %{percentage_total} kell legyen; javítsd itt: %{profile_path}.'
+      m200_page_002_rows_contradict_answer: '%{modelo} %{filing_year} modelo, 002.
+        oldal: a(z) %{profile_section} sorokat tartalmaz, de a(z) %{deciding_fact}
+        szerint nincs ilyen; javítsd az egyiket itt: %{profile_path}.'
+      m200_page_002_rows_exceed_design: '%{modelo} %{filing_year} modelo, 002. oldal:
+        a(z) %{profile_section} %{rows} sort tartalmaz, de a hivatalos terv csak %{slots}
+        sort enged.'
+      m200_page_002_value_exceeds_design: '%{modelo} %{filing_year} modelo, 002. oldal:
+        a(z) %{profile_section} %{row} sorának %{field} mezője %{length} karakter,
+        de a hivatalos terv legfeljebb %{limit} karaktert enged; rövidítsd itt: %{profile_path}.'
       m210_agrupacion_annual_code_not_lease_or_sublease: Az éves 210-es modell (0A
         időszak) csak bérleti és albérleti jövedelmet csoportosít, de a sorok más
         jövedelemkódot használnak. Javítsd a sorok jövedelemkódját.
@@ -3745,6 +3760,10 @@ application:
           a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
           amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
           összegeket, majd vetíts újra. Soha nem jelenik meg nullaként.
+        m200_tax_regime_unsupported: Ehhez a rovathoz a szervezeted adózási rendszerének
+          adókulcsa (tipo de gravamen) kell, ez viszont az adott rendszerre vagy jogi
+          formára nem számolható ki, ezért a rovatnak nincs értéke. Add meg a rovatot
+          magad a hivatalos útmutató alapján. Soha nem jelenik meg nullaként.
         m210_baseline_tipo_deferred: Ehhez a rovathoz az ilyen jellegű jövedelem általános
           adókulcsa kell, amely az adóévre még nincs megalapozva, ezért nincs értéke.
         m210_convenio_rate_missing: Ehhez a rovathoz a kettős adóztatást kizáró egyezmény

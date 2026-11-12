@@ -360,6 +360,124 @@ profile:
           label: Inscripció al SII
         voluntary_sii_enrolled:
           label: Inscripció voluntària al SII
+      m200_administrador:
+        apellidos_nombre_razon_social:
+          label: Cognoms i nom o raó social
+        codigo_provincia:
+          label: Codi de província
+        domicilio_fiscal:
+          label: Domicili fiscal del representant a Espanya
+        forma_juridica:
+          label: F/J (persona física o jurídica)
+        nif:
+          label: NIF
+        representante:
+          label: Representant (RPTE.)
+      m200_entidad_menor_dependiente:
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Nom o raó social
+      m200_establecimiento_permanente:
+        beneficio_o_perdida:
+          label: Benefici o pèrdua
+        identificacion:
+          label: Identificació
+        pais_residencia_fiscal:
+          label: País de residència fiscal
+        suma_ajustes_resultado_contable:
+          label: Suma d'ajustos al resultat comptable
+        suma_deducciones_di_internacional_anteriores:
+          label: Suma de deduccions per doble imposició internacional de períodes
+            anteriors
+        volumen_operaciones:
+          label: Volum d'operacions
+      m200_participacion_directa:
+        ajuste_valor_razonable:
+          label: Ajust per valor raonable
+        capital:
+          label: Capital
+        codigo_provincia_pais:
+          label: Codi província/país
+        correccion_valor_perdidas_ganancias:
+          label: Correcció de valor en pèrdues i guanys
+        efecto_correccion_valorativa_base_imponible:
+          label: Efecte de la correcció valorativa en la base imposable
+        eliminacion_deterioro_contable:
+          label: Eliminació del deteriorament comptable
+        eliminacion_deterioro_valores_participacion:
+          label: Eliminació del deteriorament de valors representatius de la participació
+        ingresos_por_dividendos:
+          label: Ingressos per dividends
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Nom o raó social
+        otras_partidas_patrimonio_neto:
+          label: Altres partides del patrimoni net
+        porcentaje_participacion:
+          label: Percentatge de participació
+        reservas_y_otras_partidas_fondos_propios:
+          label: Reserves i altres partides de fons propis
+        resultado_ultimo_ejercicio:
+          label: Resultat de l'últim exercici
+        reversion_perdidas_deterioro_valores:
+          label: Reversió de pèrdues per deteriorament de valors
+        saldo_correcciones_fiscales_pendientes:
+          label: Saldo de correccions fiscals pendents
+        valor_en_libros:
+          label: Valor en llibres
+        valor_nominal_total:
+          label: Valor nominal total
+      m200_participacion_socio:
+        apellidos_nombre_razon_social:
+          label: Cognoms i nom o raó social
+        codigo_provincia_pais:
+          label: Codi província/país
+        forma_juridica:
+          label: F/J/Altra (forma jurídica)
+        nif:
+          label: NIF
+        nominal:
+          label: Valor nominal
+        porcentaje_participacion:
+          label: Percentatge de participació
+        representante:
+          label: Representant (RPTE.)
+      m200_relaciones:
+        has_entidad_menor_dependiente:
+          label: Integra la teva entitat entitats menors dependents?
+        has_establecimiento_permanente:
+          label: Té la teva entitat establiments permanents a l'estranger?
+        has_participacion_directa:
+          label: Participa la teva entitat directament en altres entitats?
+        has_participacion_socio:
+          label: Té la teva entitat socis o partícips amb participació directa?
+        has_representante_legal:
+          label: Té la teva entitat apoderats o representants legals?
+        has_secretario_consejo:
+          label: Té la teva entitat Secretari del Consell d'Administració?
+        has_socio_sicav_disolucion:
+          label: És la teva entitat sòcia d'una SICAV dissolta?
+      m200_representante_legal:
+        apellidos_y_nombre:
+          label: Cognoms i nom
+        fecha_poder:
+          label: Data del poder
+        nif:
+          label: NIF
+        notaria_otros:
+          label: Notaria/altres
+      m200_secretario_consejo:
+        apellidos_y_nombre:
+          label: Cognoms i nom
+        nif:
+          label: NIF
+      m200_socio_sicav_disolucion:
+        nif_iic_reinversion:
+          label: NIF de la IIC de reinversió
+        nif_sociedad_disuelta:
+          label: NIF de la societat dissolta
       maritime_worker:
         annual_salary:
           label: Salari anual
@@ -739,6 +857,41 @@ profile:
       iva:
         summary: El teu règim d'IVA i amb quina freqüència el presentes.
         title: Perfil d'IVA
+      m200_administrador:
+        summary: Les persones que administren, dirigeixen o controlen l'entitat, una
+          fila per persona.
+        title: Administradors
+      m200_entidad_menor_dependiente:
+        summary: Les entitats menors dependents que integres en la teva declaració,
+          una fila per entitat.
+        title: Entitats menors dependents
+      m200_establecimiento_permanente:
+        summary: Els establiments permanents que operen a l'estranger, una fila per
+          establiment.
+        title: Establiments permanents
+      m200_participacion_directa:
+        summary: Les entitats en què participes directament a final del període, una
+          fila per entitat participada.
+        title: Participacions directes
+      m200_participacion_socio:
+        summary: Les persones i entitats que posseeixen una participació directa en
+          la teva entitat, una fila per soci.
+        title: Relació de socis o partícips
+      m200_relaciones:
+        summary: Si la teva entitat té files en cada apartat opcional de la pàgina
+          2 del Model 200.
+        title: Relacions declarades
+      m200_representante_legal:
+        summary: Els apoderats o representants legals de l'entitat, una fila per persona.
+        title: Representant legal
+      m200_secretario_consejo:
+        summary: El Secretari del Consell d'Administració, o qui en compleixi les
+          funcions.
+        title: Secretari del Consell d'Administració
+      m200_socio_sicav_disolucion:
+        summary: Les SICAV dissoltes de les quals ets soci i la institució en què
+          reinverteixes la quota de liquidació.
+        title: Socis de SICAV dissoltes
       maritime_worker:
         summary: 'Només per a treballadors del mar: la classificació que decideix
           deduccions especials.'

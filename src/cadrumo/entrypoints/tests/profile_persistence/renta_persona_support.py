@@ -21,6 +21,7 @@ from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -29,6 +30,7 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support impo
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -59,6 +61,7 @@ from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
@@ -405,7 +408,11 @@ def _expense(expense: ActivityExpense) -> Transaction:
 def seed_activity_ledger(
     objects: SecureObjectRepository, invoices: Iterable[ActivityInvoice], expenses: Iterable[ActivityExpense]
 ) -> None:
-    """Persist the activity's issued invoices with their linked receipts, and its expense rows."""
+    """Persist the activity's issued invoices with their linked receipts, its expense rows and its inventory book.
+
+    The persona's activity sells services and held no existencias, which it states as a book opened with no
+    stock and closed at zero, so the Modelo 100 Anexo D rows of its estimacion directa block read zero.
+    """
     rows: list[Transaction] = []
     issued: list[Invoice] = []
     for item in invoices:
@@ -418,6 +425,7 @@ def seed_activity_ledger(
         TransactionCatalogue.from_transactions(rows)
     )
     InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=objects).save(build_invoice_catalogue(issued))
+    InventoryLedgerRepository(objects=objects).save(InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),)))
 
 
 def create_work(objects: SecureObjectRepository, *, modelo: str, period: str, revision_id: str | None = None) -> str:

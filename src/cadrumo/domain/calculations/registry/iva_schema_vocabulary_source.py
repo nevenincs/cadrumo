@@ -12,6 +12,7 @@ from weakref import ReferenceType, ref
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .facts.string_mapping import (
     MappingValueWhitespace,
+    StringMappingFact,
     StringMappingPolicy,
     require_resolved_mapping_fact,
     string_mapping_entries,
@@ -32,12 +33,14 @@ _ENTRIES_POLICY = StringMappingPolicy(
     subject=SCHEMA_VOCABULARY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE
 )
 
+_ENVELOPE_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
+
 
 @dataclass(frozen=True, slots=True)
 class SchemaVocabularyProjections:
     """The flattened entries of one resolved fact, and projections derived from them."""
 
-    owner: ReferenceType[ResolvedMappingFact]
+    owner: ReferenceType[ResolvedMappingFact] | None
     entries: Mapping[str, str]
     cash_accounting: list[IvaCashAccountingTreatmentCatalogue]
 
@@ -51,7 +54,7 @@ def _entry_projections(resolved: ResolvedMappingFact) -> SchemaVocabularyProject
     key = id(resolved)
     with _PROJECTIONS_LOCK:
         cached = PROJECTIONS.get(key)
-        if cached is not None and cached.owner() is resolved:
+        if cached is not None and cached.owner is not None and cached.owner() is resolved:
             return cached
     entries = string_mapping_entries(resolved, policy=_ENTRIES_POLICY)
 
@@ -67,14 +70,14 @@ def _entry_projections(resolved: ResolvedMappingFact) -> SchemaVocabularyProject
     return projections
 
 
-BY_AUTHORITY: dict[tuple[int, date], tuple[ReferenceType[GovernedFactSource], SchemaVocabularyProjections]] = {}
+BY_AUTHORITY: dict[tuple[int, date | None], tuple[ReferenceType[GovernedFactSource], SchemaVocabularyProjections]] = {}
 
 _BY_AUTHORITY_LIMIT = 1024
 
 
 def _resolve_projections(
     *,
-    effective_date: date,
+    effective_date: date | None,
     authority: GovernedFactSource,
 ) -> SchemaVocabularyProjections:
     key = (id(authority), effective_date)
@@ -102,9 +105,12 @@ def _resolve_projections(
 
 def _resolve_projections_uncached(
     *,
-    effective_date: date,
+    effective_date: date | None,
     authority: GovernedFactSource,
 ) -> SchemaVocabularyProjections:
+    if effective_date is None:
+        entries = _ENVELOPE_FACT.resolve_support_envelope_entries(authority)
+        return SchemaVocabularyProjections(owner=None, entries=entries, cash_accounting=[])
     resolved = require_resolved_mapping_fact(
         authority,
         MappingFactQuery(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, effective_date=effective_date),
@@ -115,10 +121,15 @@ def _resolve_projections_uncached(
 
 def resolve_scoped_schema_projections(
     *,
-    effective_date: date,
+    effective_date: date | None,
     authority: GovernedFactSource | None,
 ) -> SchemaVocabularyProjections:
     """Resolve the shared schema-vocabulary projections from the explicit authority or the scope.
+
+    A dated read takes the edition in force on ``effective_date``. Without a date
+    the run date is never substituted: the entries are those of every edition
+    inside the supported filing years, the newest spelling standing where
+    editions differ.
 
     Raises:
         InternalInvariantError: When no authority is supplied and no validation scope is active.
@@ -130,7 +141,7 @@ def resolve_scoped_schema_projections(
 
 def resolve_scoped_schema_entries(
     *,
-    effective_date: date,
+    effective_date: date | None,
     authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
     """Return the shared schema-vocabulary entries, resolved as the projections are."""

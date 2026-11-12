@@ -13,22 +13,21 @@ consumer reading the override surface picks ``2T``.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Final
 
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.authority_artifact import (
     AuthorityComponentQuery,
-    AuthorityGenerationPin,
     ModeloDirectoryComponentQuery,
     ModeloRevisionComponentQuery,
 )
 from ...domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from ...domain.calculations.registry.authority_store import SQLiteAuthorityReader
-from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
+from .overriding_authority_reader import OverridingComponentReader
 
 OVERRIDE_MODELO: Final = "216"
 """The modelo whose revision the fixture overrides; every other component is published verbatim."""
@@ -49,27 +48,6 @@ omits; which one it is comes from the registry's declared order."""
 
 OVERRIDE_PERIODS: Final = ("2T", "3T", "4T")
 """The surface the overridden year actually serves."""
-
-
-class _OverridingComponentReader:
-    """Serve a published generation with a closed set of substituted components."""
-
-    def __init__(self, reader: SQLiteAuthorityReader, overrides: Mapping[AuthorityComponentQuery, object]) -> None:
-        self._reader = reader
-        self._overrides = dict(overrides)
-
-    def pin(self) -> AuthorityGenerationPin:
-        return self._reader.pin()
-
-    def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
-        if query in self._overrides:
-            if pin != self._reader.pin():
-                raise RegistrySnapshotError("authority component query crossed an operation generation boundary")
-            return self._overrides[query]
-        return self._reader.load(query, pin=pin)
-
-    def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
-        return self._reader.component_queries()
 
 
 @contextmanager
@@ -116,7 +94,7 @@ def period_override_operation(
                     },
                 ),
             }
-            operation = PinnedAuthorityOperation(_OverridingComponentReader(reader, overrides), generation)
+            operation = PinnedAuthorityOperation(OverridingComponentReader(reader, overrides), generation)
             with validating_governed_facts(operation):
                 yield operation
     finally:

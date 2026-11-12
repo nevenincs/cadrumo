@@ -3077,6 +3077,21 @@ application:
         només amb caselles declarades.
       m200_accounting_result_required: El Model 200 necessita el resultat comptable
         de l'exercici abans de calcular-se a partir del llibre.
+      m200_page_002_none_refused_for_form: 'Model %{modelo} %{filing_year}, pàgina
+        002: una entitat %{entity_form} no pot respondre que no té %{profile_section};
+        registra''n les files al teu perfil a %{profile_path}.'
+      m200_page_002_percentage_total: 'Model %{modelo} %{filing_year}, pàgina 002:
+        els percentatges de %{profile_section} sumen %{percentage_sum}, però una entitat
+        %{entity_form} ha de sumar %{percentage_total}; corregeix-los a %{profile_path}.'
+      m200_page_002_rows_contradict_answer: 'Model %{modelo} %{filing_year}, pàgina
+        002: %{profile_section} té files, però %{deciding_fact} indica que no en té
+        cap; corregeix-ne un dels dos a %{profile_path}.'
+      m200_page_002_rows_exceed_design: 'Model %{modelo} %{filing_year}, pàgina 002:
+        %{profile_section} té %{rows} files, però el disseny oficial només n''admet
+        %{slots}.'
+      m200_page_002_value_exceeds_design: 'Model %{modelo} %{filing_year}, pàgina
+        002: el camp %{field} de la fila %{row} a %{profile_section} té %{length}
+        caràcters, però el disseny oficial n''admet %{limit}; escurça''l a %{profile_path}.'
       m210_agrupacion_annual_code_not_lease_or_sublease: El Modelo 210 anual (període
         0A) agrupa només rendes d'arrendament i subarrendament, però les files usen
         un altre codi de renda. Corregeix el codi de renda de les files.
@@ -3791,6 +3806,10 @@ application:
           rendes amb el límit, però les categories de renda que has indicat exclouen
           un tipus de renda del qual tens imports. Corregeix les categories o retira
           els imports i torna a projectar. Mai es mostra com a zero.
+        m200_tax_regime_unsupported: Aquesta casella necessita el tipus de gravamen
+          del règim fiscal de la teva entitat, que no es calcula per a aquest règim
+          o forma jurídica, així que no té valor. Introdueix la casella tu mateix
+          segons les instruccions oficials. Mai es mostra com a zero.
         m210_baseline_tipo_deferred: Aquesta casella necessita el tipus de gravamen
           general d'aquesta classe de renda, que encara no està fonamentat per a l'exercici,
           així que no té valor.

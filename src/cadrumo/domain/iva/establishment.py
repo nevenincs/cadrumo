@@ -122,11 +122,17 @@ twice is the drift this codebase keeps closing.
 """
 
 
-def _eu_member_codes(*, operation: PinnedAuthorityOperation) -> frozenset[str]:
-    """Return non-Spanish EU codes projected from fact 0131."""
+def _eu_member_codes(*, effective_date: date | None, operation: PinnedAuthorityOperation) -> frozenset[str]:
+    """Return non-Spanish EU codes projected from fact 0131.
+
+    A date selects the catalogue in force on it, which is the only reading that may
+    decide a party's territorial scope: membership changes over time. ``None``
+    reads the vocabulary across the support envelope and answers only whether a
+    token is catalogued, never whether a state was a member on a day.
+    """
     return frozenset(
         str(member).upper()
-        for member in resolve_eu_member_state_catalogue(authority=operation).all_states
+        for member in resolve_eu_member_state_catalogue(effective_date=effective_date, authority=operation).all_states
         if str(member).upper() != SPAIN_COUNTRY_CODE
     )
 
@@ -322,7 +328,7 @@ def catalogued_country_codes(
     """
     return (
         frozenset(country_vocabulary.country_codes_by_printed_name(operation=operation).values())
-        | _eu_member_codes(operation=operation)
+        | _eu_member_codes(effective_date=None, operation=operation)
         | {SPAIN_COUNTRY_CODE}
         | frozenset(code for code, _ in _territory_carve_out_records(operation=operation))
     )
@@ -408,7 +414,7 @@ def _scope_for_catalogued_country(
         return _scope_for_carve_out(carve_out, effective_date=effective_date, operation=operation)
     if country_code == SPAIN_COUNTRY_CODE:
         return None
-    if country_code in _eu_member_codes(operation=operation):
+    if country_code in _eu_member_codes(effective_date=effective_date, operation=operation):
         return territorial_scope_alias("eu_member", effective_date=effective_date, operation=operation)
     return territorial_scope_alias("third_country", effective_date=effective_date, operation=operation)
 
