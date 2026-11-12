@@ -21,6 +21,7 @@ from cadrumo.application.modelo.work_change_contracts import (
     ModeloWorkRenamePublicResultV2,
     ModeloWorkRenameRequest,
 )
+from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
@@ -36,6 +37,7 @@ from .operation_run_error_context import operation_run_error_context
 from .operation_settlement import (
     PinnedConnection,
     read_settled_result_bytes,
+    settled_registered_error_detail,
     start_and_await_terminal,
     submit_operation,
 )
@@ -55,7 +57,12 @@ class ModeloMetadataCompletion:
 
 
 class ModeloMetadataRunError(CadrumoError):
-    """Retain a submitted ID and only settlement facts the native owner proved."""
+    """Retain a submitted ID and only settlement facts the native owner proved.
+
+    A refused or failed operation also keeps the public detail the worker
+    recorded for the error that stopped it, so a frontend can rebuild that
+    error with its typed verdict instead of only its registered code.
+    """
 
     def __init__(
         self,
@@ -64,12 +71,14 @@ class ModeloMetadataRunError(CadrumoError):
         code: str,
         terminal_condition: OperationTerminalCondition | None = None,
         effect: OperationEffect | None = None,
+        detail: OperationErrorDetailV1 | None = None,
     ) -> None:
         """Expose a safe reason and durable recovery identity after submission."""
         self.operation_id = operation_id
         self.reason = code
         self.terminal_condition = terminal_condition
         self.effect = effect
+        self.detail = detail
         super().__init__(
             code,
             context=operation_run_error_context(
@@ -144,6 +153,14 @@ def _run(
                 or (condition.value if condition is not None else "unknown"),
                 terminal_condition=condition,
                 effect=effect,
+                detail=settled_registered_error_detail(
+                    client,
+                    operation_id=operation_id,
+                    terminal_revision=terminal.revision,
+                    contract=contract,
+                    condition=condition,
+                    deadline=deadline,
+                ),
             )
         result = _result(
             read_settled_result_bytes(client, operation_id, terminal, contract, deadline=deadline),

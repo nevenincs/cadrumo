@@ -129,6 +129,7 @@ def build_modelo_metadata_definition(factory: ActiveWorkLifecyclePortsFactory) -
         executor_type=ModeloWorkMetadataExecutor,
         build=lambda: ModeloWorkMetadataExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+        public_error_detail=True,
     )
 
 
