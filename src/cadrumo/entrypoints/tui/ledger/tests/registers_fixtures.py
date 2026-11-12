@@ -30,6 +30,11 @@ from .....application.bienes_inversion.registered_result_contracts import (
     BienInversionRecordProjection,
 )
 from .....application.inventory.refusal_words import served_refusal_words
+from .....application.inventory.registered_claim_candidates_operation import (
+    InventoryClaimCandidateProjection,
+    InventoryClaimCandidatesProjection,
+    InventoryClaimCandidatesRequest,
+)
 from .....application.inventory.registered_evidence_operation import (
     InventoryEvidenceAddProjection,
     InventoryEvidenceAddRequest,
@@ -520,6 +525,7 @@ class MemoryInventoryDoor:
         self.rows: list[InventoryListRowProjection] = list(rows)
         self.movements: dict[tuple[str, int], list[InventoryMovementProjection]] = {}
         self.corrections: set[str] = set()
+        self.candidates: tuple[InventoryClaimCandidateProjection, ...] = ()
         self.closing_value = closing_value
         self.cogs = cogs
         self.requests: list[object] = []
@@ -626,6 +632,27 @@ class MemoryInventoryDoor:
         self.corrections.add(request.correction_id)
         return InventoryLedgerChangeProjection(
             outcome="applied", profile_id=request.profile_id, ledger=self._ledger(row), bucket_event_ids=("event-1",)
+        )
+
+    async def claim_candidates(self, request: InventoryClaimCandidatesRequest) -> InventoryClaimCandidatesProjection:
+        """Answer the claim-candidates read: the held candidates of a known inventory, or its not-found refusal."""
+        self._check(request)
+        if self._row(request.actividad_id, request.year) is None:
+            return InventoryClaimCandidatesProjection(
+                outcome="refused",
+                profile_id=request.profile_id,
+                actividad_id=request.actividad_id,
+                year=request.year,
+                movement_id=request.movement_id,
+                refusal=self._not_found(request.actividad_id, request.year),
+            )
+        return InventoryClaimCandidatesProjection(
+            outcome="listed",
+            profile_id=request.profile_id,
+            actividad_id=request.actividad_id,
+            year=request.year,
+            movement_id=request.movement_id,
+            candidates=self.candidates,
         )
 
     async def read_register(self, request: InventoryListRequest) -> InventoryListProjection:
