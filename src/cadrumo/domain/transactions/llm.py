@@ -430,7 +430,11 @@ def prompt_spec_with_every_spending_category(
     )
 
 
-def default_iva_category_choices(*, operation: PinnedAuthorityOperation) -> tuple[IvaCategoryChoice, ...]:
+def default_iva_category_choices(
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaCategoryChoice, ...]:
     """Return the grounded IVA-category choices for the saturation prompt.
 
     The allow-list and concise hints are projected from the dated IVA category
@@ -443,10 +447,11 @@ def default_iva_category_choices(*, operation: PinnedAuthorityOperation) -> tupl
         authored order.
 
     Args:
+        effective_date: The date whose IVA category catalogue the allow-list projects.
         operation: The generation-pinned authority operation used to resolve the
             IVA category catalogue.
     """
-    catalogue = resolve_iva_category_catalogue(authority=operation)
+    catalogue = resolve_iva_category_catalogue(effective_date=effective_date, authority=operation)
     return tuple(
         IvaCategoryChoice(value=definition.token, hint=catalogue.hint(definition.token))
         for definition in catalogue.definitions
@@ -488,7 +493,7 @@ def prompt_spec_with_saturation_fields(
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
         categories=category_choices,
-        iva_categories=default_iva_category_choices(operation=operation),
+        iva_categories=default_iva_category_choices(effective_date=date(year, 12, 31), operation=operation),
     )
 
 

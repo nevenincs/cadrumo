@@ -108,7 +108,7 @@ def _supply(
         iva_amount=(Decimal(base) * applied).quantize(Decimal("0.01")) if applied is not None else Decimal("0"),
         recargo_amount=Decimal(recargo),
         applied_rate=applied,
-        cash_accounting_treatment=require_iva_cash_accounting_treatment(cash_treatment),
+        cash_accounting_treatment=require_iva_cash_accounting_treatment(cash_treatment, effective_date=day),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 

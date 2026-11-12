@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Iterable, Mapping
+from datetime import date
 from threading import RLock
 from types import MappingProxyType
 from typing import TYPE_CHECKING
@@ -692,10 +693,11 @@ def calendar_regime_incompatibility_warnings(
     *,
     iva_regime: IVARegime | None,
     entries: tuple[OverviewCalendarEntry, ...],
+    evaluated_on: date,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalendarWarning, ...]:
     """Return warnings where a surfaced modelo row lacks regime-specific calculation support."""
-    if iva_regime != iva_regime_simplificado_token(authority=operation):
+    if iva_regime != iva_regime_simplificado_token(effective_date=evaluated_on, authority=operation):
         return ()
     periodic_iva_modelo = form_for_role(_PERIODIC_IVA_ROLE, authority=operation)
     if not any(entry.modelo == periodic_iva_modelo for entry in entries):

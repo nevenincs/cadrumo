@@ -41,6 +41,7 @@ from typing import Any
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..profile_derived_facts import (
     inject_derived_autonomic_deduccion_facts,
@@ -56,6 +57,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MARRIAGE_FULL_YEAR = "renta_taxpayer.marriage_full_year"
 _STATE_ATTRIBUTION = "tax_residence.state_attribution_ratio"
 _MADRID_YEAR = 2025
+_ON_DATE = date(filing_year_envelope().horizon, 1, 1)
 
 #: Values no branch of these injectors can produce. The marriage flag is 0 or 1,
 #: the attribution ratio is 1 or 0, and the Madrid count is a non-negative
@@ -103,12 +105,14 @@ def test_marriage_facts_preserve_a_stored_value() -> None:
 def test_state_attribution_ratio_rejects_a_stored_value_as_authority() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         seeded: dict[str, Any] = {**_common_regime_profile(), _STATE_ATTRIBUTION: _UNREACHABLE_RATIO}
-        inject_derived_state_attribution_facts(seeded, operation=_authority_operation_for_test)
+        inject_derived_state_attribution_facts(seeded, effective_date=_ON_DATE, operation=_authority_operation_for_test)
 
         assert seeded[_STATE_ATTRIBUTION] == Decimal("100")
 
         computed: dict[str, Any] = _common_regime_profile()
-        inject_derived_state_attribution_facts(computed, operation=_authority_operation_for_test)
+        inject_derived_state_attribution_facts(
+            computed, effective_date=_ON_DATE, operation=_authority_operation_for_test
+        )
         assert _STATE_ATTRIBUTION in computed
         assert computed[_STATE_ATTRIBUTION] != _UNREACHABLE_RATIO
 

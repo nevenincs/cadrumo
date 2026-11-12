@@ -126,7 +126,7 @@ Hypotheses that may change within these constraints: field names, the source-kin
 Reconciliation of existing records. Proposed edits, applied only on approval:
 
 - `2026-09-03-unreachable-capability-fincas-titularidad-adr`: add an amendment section stating that the titularidad value object and attribution rule attach to the `renta_inmuebles.inmueble` record. Its `Finca` record, `rental_fincas` mapper row and schema-version paragraph describe code removed on 2026-09-08. Its unencrypted titular column no longer applies, because every field is held in encrypted profile custody. The rule, the refusals and the oracles stand.
-- `2026-11-08-prior-carry-attestation-adr`: add an amendment admitting one more absence-attestation family, `renta_capital_inmobiliario_gastos_pendientes`, at row grain keyed by referencia catastral. Without it, a first year in the app cannot state an absent 0103.
+- `2026-11-08-prior-carry-attestation-adr`: add an amendment admitting one more absence-attestation family, `renta_capital_inmobiliario_gastos_pendientes`, at row grain keyed by the property row identity (amended 2026-11-12 to match the accepted 23:25 ruling: situaciones 4 and 5 hold no referencia catastral and it is an editable fact, so the property row identity is the key). Without it, a first year in the app cannot state an absent 0103.
 - `2026-09-30-modelo-editor-workbench-operator-layer-adr` and `2026-09-21-assets-core-lifecycle-contract-adr`: no edit. Bound row columns become non-writable under the existing source-kind rule, and the asset lifecycle already excludes rental income.
 
 ## Rationale

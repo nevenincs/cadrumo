@@ -951,6 +951,7 @@ def build_overview_calendar(
     regime_incompatibility_warnings = calendar_regime_incompatibility_warnings(
         iva_regime=profile.iva_regime,
         entries=entries_tuple,
+        evaluated_on=today,
         operation=operation,
     )
     coverage = build_obligation_coverage(

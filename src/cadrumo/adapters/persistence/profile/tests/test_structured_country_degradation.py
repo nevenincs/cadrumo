@@ -94,6 +94,7 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.domain.iva.schema import IvaCategory
@@ -112,6 +113,8 @@ from .evidence_test_support import (
 from .evidence_test_support import runtime_profile as runtime_profile
 from .evidence_test_support import seeded_filer_profile as seeded_filer_profile
 from .invoice_confirmation_test_support import InvoiceAuthorityFixture, invoice_draft_extraction_kwargs
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -491,7 +494,9 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
+            advisory = country_vocabulary_advisory(
+                draft, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
             assert advisory is not None
             assert advisory.fields == ("supplier_stated_country_code",)
@@ -525,7 +530,9 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
+            advisory = country_vocabulary_advisory(
+                draft, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
             assert advisory is not None
             assert advisory.parties[0].status is StatedCountryCodeStatus.UNCATALOGUED
@@ -550,7 +557,9 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
+            advisory = country_vocabulary_advisory(
+                draft, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
             assert advisory is not None
             assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
@@ -587,7 +596,9 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
+            advisory = country_vocabulary_advisory(
+                draft, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
             assert advisory is not None
             assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
@@ -618,7 +629,10 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is None
+            assert (
+                country_vocabulary_advisory(draft, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
+            )
 
     def test_a_catalogued_country_raises_no_advisory(
         self,
@@ -644,7 +658,10 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is None
+            assert (
+                country_vocabulary_advisory(draft, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
+            )
 
 
 class TestTheTwoDocumentsAreNoLongerIdentical:
@@ -693,8 +710,14 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
                 silent,
                 "supplier_stated_country_code",
             )
-            assert (country_vocabulary_advisory(unplaceable, operation=_authority_operation_for_test) is None) != (
-                country_vocabulary_advisory(silent, operation=_authority_operation_for_test) is None
+            assert (
+                country_vocabulary_advisory(
+                    unplaceable, operation=_authority_operation_for_test, effective_date=_ON_DATE
+                )
+                is None
+            ) != (
+                country_vocabulary_advisory(silent, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
             )
 
     def test_the_unplaceable_country_still_resolves_no_territory(

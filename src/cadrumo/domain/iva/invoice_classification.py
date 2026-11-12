@@ -109,6 +109,8 @@ class IvaInvoiceClassification(BaseModel):
             construction time via
             :func:`settlement_sides_for_flow` so consumers don't
             recompute it.
+        effective_date: Date whose flow vocabulary the classification was
+            resolved under.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -117,10 +119,11 @@ class IvaInvoiceClassification(BaseModel):
     rate_kind: IvaRateKind | None
     flow_direction: IvaFlowDirection
     settlement_sides: frozenset[IvaSettlementSide]
+    effective_date: date
 
     @model_validator(mode="after")
     def _validate_settlement_sides_match_flow(self) -> IvaInvoiceClassification:
-        expected = settlement_sides_for_flow(self.flow_direction)
+        expected = settlement_sides_for_flow(self.flow_direction, effective_date=self.effective_date)
         if self.settlement_sides != expected:
             raise _invoice_validation_error(
                 f"settlement_sides {sorted(s.value for s in self.settlement_sides)!r} "
@@ -193,12 +196,13 @@ def classify_invoice_line_for_iva(
     # One canonical rate-kind to domestic-category table, composed with the
     # public rate-kind accessor.
     category = domestic_categories_by_rate_kind(_scoped_rate_categories(on_date))[rate_kind]
-    flow_direction = flow_direction_for_invoice_kind(invoice_kind)
+    flow_direction = flow_direction_for_invoice_kind(invoice_kind, effective_date=on_date)
     return IvaInvoiceClassification(
         category=category,
         rate_kind=rate_kind,
         flow_direction=flow_direction,
-        settlement_sides=settlement_sides_for_flow(flow_direction),
+        settlement_sides=settlement_sides_for_flow(flow_direction, effective_date=on_date),
+        effective_date=on_date,
     )
 
 

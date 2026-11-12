@@ -343,8 +343,13 @@ def invoice_add(
     # clave. The derivation exists so an intracomunitaria is not left
     # ungrounded when the operator only states the clave; it is a fallback, and
     # silently overriding a value the operator did state would be the reverse.
-    resolved_iva_category = iva_category or iva_category_for_operation_type(
-        operation_type,
+    resolved_iva_category = iva_category or (
+        None
+        if operation_type is None
+        else iva_category_for_operation_type(
+            operation_type,
+            effective_date=parse_iso_date(operation_date or invoice_date, label="invoice-date"),
+        )
     )
     try:
         request = _invoice_add_request(

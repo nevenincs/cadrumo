@@ -320,7 +320,7 @@ class IvaRateKind(str):
 
 
 def default_iva_cash_accounting_treatment(
-    on_date: date | None = None,
+    on_date: date,
     *,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
@@ -334,7 +334,7 @@ def default_iva_cash_accounting_treatment(
 
 def is_iva_cash_accounting_none(
     treatment: IvaCashAccountingTreatment,
-    on_date: date | None = None,
+    on_date: date,
     *,
     authority: GovernedFactSource | None = None,
 ) -> bool:
@@ -358,7 +358,7 @@ def is_iva_cash_accounting_none(
 
 def is_iva_cash_accounting_supplier_regime(
     treatment: IvaCashAccountingTreatment,
-    on_date: date | None = None,
+    on_date: date,
     *,
     authority: GovernedFactSource | None = None,
 ) -> bool:

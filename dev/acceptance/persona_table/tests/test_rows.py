@@ -99,6 +99,19 @@ def test_history_filed_expected_refusal_and_missing_oracle_are_never_green() -> 
     assert not {history.verdict, refusal.verdict, no_oracle.verdict} & GREEN
 
 
+def test_a_refused_calculation_is_red_whatever_the_oracle_states() -> None:
+    no_oracle = _plan(has_values=False, grounding="none", sources=())
+    unsourced = _plan(grounding="unverified")
+    uncompared = dataclasses.replace(_plan(), unchecked=("not-sourced:00255",))
+    verdicts = {
+        TableRow.from_plan(plan, Stage.REFUSED, reason="modelo.work.calculate refused C").verdict
+        for plan in (no_oracle, unsourced, uncompared)
+    }
+    assert verdicts == {Verdict.FAIL}
+    passed = TableRow.from_plan(uncompared, Stage.PASSED, verify=Stage.PASSED, export=Stage.PASSED)
+    assert passed.verdict is Verdict.UNCHECKED
+
+
 def test_unsupported_and_not_run_rows_are_counted_apart() -> None:
     assert TableRow.from_plan(_plan(), Stage.UNSUPPORTED).verdict is Verdict.UNSUPPORTED
     assert TableRow.from_plan(_plan(), Stage.NOT_RUN).verdict is Verdict.NOT_RUN

@@ -63,7 +63,7 @@ from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import now
+from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.ine_provincia_catalogue import is_ine_provincia_code
 from ...domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind, DeclaredPartyNameRendering
 from ...domain.iva.classification import require_iva_territorial_scope
@@ -260,7 +260,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
         from ...domain.calculations.registry.authority import bundled_indexed_authority
 
         with bundled_indexed_authority().operation() as operation:
-            return require_iva_territorial_scope(value, operation=operation)
+            return require_iva_territorial_scope(value, effective_date=today_madrid(), operation=operation)
 
     @model_validator(mode="after")
     def _only_an_operator_may_confirm(self) -> Self:

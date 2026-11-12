@@ -35,7 +35,7 @@ from typing import cast
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where, filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_legal_references,
 )
@@ -49,6 +49,8 @@ from ...calculations.registry.schema_base import ThresholdComparison
 from ...invoices.enums import iva_rate_kind, iva_rate_percentage
 from ..lookup import lookup_rate
 from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -331,7 +333,7 @@ def test_iva_rate_slot_to_iva_rate_kind_mapping_is_total_and_consistent() -> Non
     tiers, anchored to LIVA arts 90-91."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert {
-            rate: iva_rate_kind(rate)
+            rate: iva_rate_kind(rate, on_date=_ON_DATE)
             for rate in (
                 resolve_iva_rate_token("RATE_0", date.today()),
                 resolve_iva_rate_token("RATE_4", date.today()),
@@ -378,7 +380,7 @@ def test_iva_rate_zero_resolves_to_zero_percent_inside_its_statutory_window() ->
     the law, and `iva_rate_percentage` is the guard that refuses it.
     """
     in_window = date(2024, 8, 20)  # RDL 4/2024 art. 1.Dos.1: 0 % from 07-01 to 09-30
-    assert iva_rate_kind(resolve_iva_rate_token("RATE_0", date.today())) == IvaRateKind("zero")
+    assert iva_rate_kind(resolve_iva_rate_token("RATE_0", date.today()), on_date=_ON_DATE) == IvaRateKind("zero")
     assert iva_rate_percentage(resolve_iva_rate_token("RATE_0", date.today()), on_date=in_window) == Decimal("0")
 
 
@@ -417,8 +419,8 @@ def test_iva_rate_zero_resolves_outside_the_food_window_because_zero_rating_outl
 def test_iva_rate_exempt_and_not_subject_resolve_to_none() -> None:
     """EXEMPT has a classification tier but no numeric percentage;
     NOT_SUBJECT has neither a rate tier nor a numeric percentage."""
-    assert iva_rate_kind(resolve_iva_rate_token("EXEMPT", date.today())) == IvaRateKind("exempt")
-    assert iva_rate_kind(resolve_iva_rate_token("NOT_SUBJECT", date.today())) is None
+    assert iva_rate_kind(resolve_iva_rate_token("EXEMPT", date.today()), on_date=_ON_DATE) == IvaRateKind("exempt")
+    assert iva_rate_kind(resolve_iva_rate_token("NOT_SUBJECT", date.today()), on_date=_ON_DATE) is None
     assert iva_rate_percentage(resolve_iva_rate_token("EXEMPT", date.today()), on_date=_BINDING_DATE) is None
     assert iva_rate_percentage(resolve_iva_rate_token("NOT_SUBJECT", date.today()), on_date=_BINDING_DATE) is None
 

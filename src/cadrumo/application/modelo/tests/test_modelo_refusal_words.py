@@ -308,16 +308,20 @@ def test_an_order_number_above_the_form_ceiling_is_worded() -> None:
     )
 
 
+#: A day inside the support envelope.
+_ON_DATE = date(filing_year_envelope().horizon, 1, 1)
+
+
 def test_an_unset_tax_territory_is_worded(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(ProfileBindingResolutionError) as raised:
-        inject_derived_state_attribution_facts({}, operation=operation)
+        inject_derived_state_attribution_facts({}, effective_date=_ON_DATE, operation=operation)
     _assert_words(raised.value, "application.modelo.errors.profile_jurisdiction_scope_required")
 
 
 def test_an_unsupported_tax_territory_is_named(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(ProfileBindingResolutionError) as raised:
         inject_derived_state_attribution_facts(
-            {"tax_residence.jurisdiction_scope": "no-such-territory"}, operation=operation
+            {"tax_residence.jurisdiction_scope": "no-such-territory"}, effective_date=_ON_DATE, operation=operation
         )
     _assert_words(raised.value, "application.modelo.errors.profile_jurisdiction_scope_unsupported", "no-such-territory")
 

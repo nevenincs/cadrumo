@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
+from ....core.time.clock import today_madrid
 from ...deadlines.models import IVARegime
 from .errors import RegistryValidationError
 from .facts.resolution import (
@@ -85,7 +86,7 @@ def resolve_iva_regime_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> IvaRegimeCatalogue:
     """Resolve the dated IVA-regime vocabulary from governed facts."""
-    entries = resolve_scoped_schema_entries(effective_date=effective_date, authority=authority)
+    entries = resolve_scoped_schema_entries(effective_date=effective_date or today_madrid(), authority=authority)
     definitions: list[IvaRegimeDefinition] = []
     for raw_token in unique_mapping_tokens(
         entries, _REGIME_ORDER_KEY, subject=SCHEMA_VOCABULARY_SUBJECT, requirement=UNIQUE_TOKENS_REQUIREMENT
@@ -200,7 +201,7 @@ def _iva_regime_semantic_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IVARegime:
-    entries = resolve_scoped_schema_entries(effective_date=effective_date, authority=authority)
+    entries = resolve_scoped_schema_entries(effective_date=effective_date or today_madrid(), authority=authority)
     return require_iva_regime(
         required_mapping_entry(entries, key, subject=SCHEMA_VOCABULARY_SUBJECT),
         effective_date=effective_date,

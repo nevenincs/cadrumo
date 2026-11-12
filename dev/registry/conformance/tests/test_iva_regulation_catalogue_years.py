@@ -15,6 +15,8 @@ from dev.registry.conformance.iva_regulation_catalogue import (
     resolve_catalogue,
 )
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _YEAR = filing_year_envelope().horizon
@@ -80,7 +82,8 @@ def test_the_undated_corpus_carries_every_citation_regardless_of_span() -> None:
     """The loaded corpus is the whole record; only resolution narrows it."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         whole = sum(
-            len(regulation.citations) for regulation in bundled_iva_catalogue(operation=_authority_operation_for_test)
+            len(regulation.citations)
+            for regulation in bundled_iva_catalogue(operation=_authority_operation_for_test, effective_date=_ON_DATE)
         )
         resolved = sum(
             len(regulation.citations)

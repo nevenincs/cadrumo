@@ -17,10 +17,12 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import normalise_supported_language, output_language
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
 from ...domain.calculations.registry.ledger_binding_resolution import UnroutedLedgerQuantity
 from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_iva_bindings import (
@@ -33,8 +35,10 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
     unrouted_ledger_iva_quantities,
     unsupported_ledger_iva_observations,
 )
+from ...domain.calculations.registry.prorrata_volume_catalogue import resolve_prorrata_volume_catalogue
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.iva.flow import IvaFlowDirection
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
@@ -271,6 +275,70 @@ class _UnroutedIvaQuantityRow:
     amount: Decimal
 
 
+@dataclass(frozen=True, slots=True)
+class _ProrrataOnlyExemptOutput:
+    """The taxpayer's exempt output whose base the periodic return has no box for: it only drives the prorrata.
+
+    An operation exempt without the right to deduct (LIVA art. 20) enters the
+    prorrata denominator (art. 104.Dos), and the Modelo 303 declares its base in
+    no box; the annual summary carries it in the volume of operations. Such a row
+    is accounted for, not lost, so its base is no unrouted quantity. A row is
+    taken as one only when the registry's prorrata output-volume vocabulary
+    names its category as sin derecho, no base binding of the revision could
+    ever reach that category, and the taxpayer performs the operation.
+    """
+
+    categories: frozenset[IvaCategory]
+    output_flows: frozenset[IvaFlowDirection]
+
+    def accounts_for(self, observation: IvaLedgerObservation) -> bool:
+        return observation.category in self.categories and observation.flow_direction in self.output_flows
+
+
+def _prorrata_only_exempt_output(
+    context: CalculationSourceContext,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> _ProrrataOnlyExemptOutput | None:
+    """The exempt output the periodic return leaves to the prorrata, or ``None`` on any other modelo."""
+    if context.modelo != form_for_role("iva.periodic"):
+        return None
+    sin_derecho = resolve_prorrata_volume_catalogue(effective_date=period.end_date, authority=operation).sin_derecho
+    categories = sin_derecho & frozenset(structurally_unroutable_iva_base_categories(context.revision))
+    if not categories:
+        return None
+    flows = resolve_iva_flow_direction_catalogue(effective_date=period.end_date, authority=operation)
+    return _ProrrataOnlyExemptOutput(
+        categories=categories,
+        output_flows=frozenset({flows.issued_token, flows.supplier_reverse_charge_token}),
+    )
+
+
+def _without_prorrata_only_exempt_bases(
+    quantities: Iterable[UnroutedLedgerQuantity[IvaLedgerObservation]],
+    exempt_output: _ProrrataOnlyExemptOutput | None,
+) -> tuple[UnroutedLedgerQuantity[IvaLedgerObservation], ...]:
+    """Drop the base of each row the prorrata accounts for; every other undrawn quantity stays."""
+    if exempt_output is None:
+        return tuple(quantities)
+    kept: list[UnroutedLedgerQuantity[IvaLedgerObservation]] = []
+    for quantity in quantities:
+        rows = (
+            quantity.observations
+            if quantity.fact != "base_amount_sum"
+            else tuple(row for row in quantity.observations if not exempt_output.accounts_for(row))
+        )
+        if rows:
+            kept.append(
+                UnroutedLedgerQuantity(
+                    fact=quantity.fact,
+                    total=sum((ledger_iva_quantity(quantity.fact, row) for row in rows), Decimal("0")),
+                    observations=rows,
+                )
+            )
+    return tuple(kept)
+
+
 def _unrouted_iva_quantity_rows(
     quantities: Iterable[UnroutedLedgerQuantity[IvaLedgerObservation]],
 ) -> tuple[_UnroutedIvaQuantityRow, ...]:
@@ -369,8 +437,15 @@ class LedgerIvaAggregationSourceResolver:
                 prorrata_apportionment=aggregation.prorrata_apportionment,
                 operation=operation,
             )
+            exempt_output = _prorrata_only_exempt_output(context, aggregation_period, operation)
         return self._assemble_resolution(
-            context, aggregation_period, aggregation, binding_values, transaction_ids, invoice_screen_of(aggregation)
+            context,
+            aggregation_period,
+            aggregation,
+            binding_values,
+            transaction_ids,
+            invoice_screen_of(aggregation),
+            exempt_output,
         )
 
     def _assemble_resolution(
@@ -381,11 +456,14 @@ class LedgerIvaAggregationSourceResolver:
         binding_values: Mapping[BindingId, Decimal],
         transaction_ids: set[str],
         invoice_screen: ScreenedInvoiceIva,
+        exempt_output: _ProrrataOnlyExemptOutput | None,
     ) -> CalculationSourceResolution:
         # Report declarable observations that no binding consumes.
         unconsumed = unsupported_ledger_iva_observations(context.revision, aggregation.observations)
-        # A consumed row can still carry an unrouted quantity.
-        unrouted_quantities = unrouted_ledger_iva_quantities(context.revision, aggregation.observations)
+        # A consumed row can still carry an unrouted quantity, except a base the prorrata accounts for.
+        unrouted_quantities = _without_prorrata_only_exempt_bases(
+            unrouted_ledger_iva_quantities(context.revision, aggregation.observations), exempt_output
+        )
         # Check taxpayer-relevant categories that cannot route a base.
         unroutable_categories = _present_unroutable_iva_categories(context, aggregation.observations)
         return CalculationSourceResolution(

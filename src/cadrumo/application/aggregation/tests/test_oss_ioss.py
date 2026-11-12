@@ -193,10 +193,10 @@ def test_repository_projection_passes_invoice_devengo_to_rate_tier_classifier(
     with pytest.raises(IvaRateNotFoundError):
         invoice_enums.iva_rate_percentage(rate, observation_date)
     monkeypatch.setattr(invoice_enums, "today_madrid", lambda: observation_date)
-    classified_dates: list[date | None] = []
+    classified_dates: list[date] = []
     real_iva_rate_kind = invoice_enums.iva_rate_kind
 
-    def classify_at_date(rate: IvaRate, on_date: date | None = None) -> IvaRateKind | None:
+    def classify_at_date(rate: IvaRate, on_date: date) -> IvaRateKind | None:
         classified_dates.append(on_date)
         return real_iva_rate_kind(rate, on_date)
 

@@ -291,6 +291,7 @@ def _scope(
     *,
     field: str,
     asserted: IvaTerritorialScope | None,
+    effective_date: date | None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[IvaTerritorialScope | None, MissingClassifierInput | None]:
     """Resolve one party's territorial scope from its printed establishment evidence.
@@ -316,12 +317,26 @@ def _scope(
     """
     if asserted is not None:
         return asserted, None
-    resolved = territorial_scope_for_country(country_code, operation=operation)
+    if effective_date is None:
+        # The territorial vocabulary is read on the operation's date, never on the
+        # day the program runs. Evidence that is present waits for that date, which
+        # the caller records as its own gap; a party stating no country at all is
+        # reported here as it is with a date.
+        if (country_code or "").strip():
+            return None, None
+        return None, MissingClassifierInput(
+            field=field,
+            reason="no country code was established for this party",
+            settled_by="a printed country code for this party, or an explicit operator assertion of the territory",
+        )
+    resolved = territorial_scope_for_country(country_code, effective_date=effective_date, operation=operation)
     if resolved is not None:
         return resolved, None
 
     if names_spain(country_code):
-        territory = territorial_scope_for_spanish_postal_code(postal_code, operation=operation)
+        territory = territorial_scope_for_spanish_postal_code(
+            postal_code, effective_date=effective_date, operation=operation
+        )
         if territory is not None:
             return territory, None
         reason = (
@@ -478,6 +493,7 @@ def _scope_or_recorded_gap(
     *,
     field: str,
     asserted: IvaTerritorialScope | None,
+    effective_date: date | None,
     operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope | None:
     """Resolve one party's scope, recording rather than raising what stopped it.
@@ -485,7 +501,9 @@ def _scope_or_recorded_gap(
     Asked of each party independently and accumulated into one list, so an
     operator missing both parties' evidence learns both at once.
     """
-    scope, gap = _scope(country_code, postal_code, field=field, asserted=asserted, operation=operation)
+    scope, gap = _scope(
+        country_code, postal_code, field=field, asserted=asserted, effective_date=effective_date, operation=operation
+    )
     if gap is not None:
         missing.append(gap)
     return scope
@@ -542,6 +560,7 @@ def _status_axis_gap(
             (_status_candidates(effective_date=effective_date, operation=operation), (kind,))
             for kind in kind_candidates
         ],
+        effective_date=effective_date,
         operation=operation,
     ):
         return None
@@ -554,6 +573,7 @@ def _supply_nature_axis_gap(
     supply_nature: SupplyNature | None,
     status_candidates: tuple[CustomerTaxStatus, ...],
     kind_candidates: tuple[TransactionKind, ...],
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> MissingClassifierInput | None:
     """Demand the supply nature only where the table's verdict turns on it."""
@@ -562,6 +582,7 @@ def _supply_nature_axis_gap(
     if not classification_assembly_rules.axis_forks_the_law(
         probe,
         slices=[((candidate,), kind_candidates) for candidate in status_candidates],
+        effective_date=effective_date,
         operation=operation,
     ):
         return None
@@ -668,6 +689,7 @@ def _unresolved_axis_gaps(
             supply_nature=supply_nature,
             status_candidates=status_candidates,
             kind_candidates=kind_candidates,
+            effective_date=transaction_date,
             operation=operation,
         ),
         _identification_axis_gap(
@@ -703,6 +725,7 @@ def _initial_classification_state(
         issuer_postal_code,
         field="issuer_residency",
         asserted=_value_of(declared.issuer_scope),
+        effective_date=transaction_date,
         operation=operation,
     )
     customer_scope = _scope_or_recorded_gap(
@@ -711,6 +734,7 @@ def _initial_classification_state(
         customer_postal_code,
         field="customer_residency",
         asserted=_value_of(declared.customer_scope),
+        effective_date=transaction_date,
         operation=operation,
     )
 

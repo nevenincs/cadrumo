@@ -24,6 +24,7 @@ from ..calculations.iva_compensation_history_ports import IvaCompensationHistory
 from .m193_settled_row_gate import modelo_193_settled_row_verification_finding
 from .m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
 from .m303_m349_reconcile import m303_m349_intracom_reconcile_findings
+from .m390_prorrata_apartado_gate import modelo_390_prorrata_apartado_verification_finding
 from .m720_redeclaration_gate import modelo_720_redeclaration_findings
 from .preconditions import ModeloPreconditionFailure
 from .pulled_filing_reconcile import pulled_filing_divergence_findings
@@ -118,6 +119,18 @@ def append_readable_model_findings(
 
     Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
+    # Keyed on the pinned revision's own casillas, not its snapshot: a calculation-grade
+    # edition is refused a snapshot, and that is exactly when the apartado is missing.
+    prorrata_apartado = modelo_390_prorrata_apartado_verification_finding(
+        work_unit,
+        registry_revision_id=target.registry_snapshot_ref.revision_id,
+        prorrata_register_repository=repos.prorrata_register,
+        operation=operation,
+    )
+    if prorrata_apartado is not None:
+        prorrata_finding, prorrata_failure = prorrata_apartado
+        findings.append(prorrata_finding)
+        failures_by_finding_id[id(prorrata_finding)] = prorrata_failure
     registry_snapshot_refused = any(
         failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()
     )

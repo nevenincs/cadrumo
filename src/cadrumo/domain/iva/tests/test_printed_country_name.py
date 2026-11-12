@@ -36,10 +36,13 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..country_vocabulary import country_codes_by_printed_name, normalise_printed_country_name
 from ..establishment import (
@@ -47,6 +50,8 @@ from ..establishment import (
     territorial_scope_for_country,
 )
 from ..schema import IvaTerritorialScope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -80,6 +85,7 @@ class TestAnUnrecognisedNameEstablishesNothing:
                 territorial_scope_for_country(
                     country_code_for_printed_country_name(printed, operation=_authority_operation_for_test),
                     operation=_authority_operation_for_test,
+                    effective_date=_ON_DATE,
                 )
                 is None
             )
@@ -91,6 +97,7 @@ class TestAnUnrecognisedNameEstablishesNothing:
                 territorial_scope_for_country(
                     country_code_for_printed_country_name(None, operation=_authority_operation_for_test),
                     operation=_authority_operation_for_test,
+                    effective_date=_ON_DATE,
                 )
                 is None
             )
@@ -113,6 +120,7 @@ class TestAnUnrecognisedNameEstablishesNothing:
             assert territorial_scope_for_country(
                 country_code_for_printed_country_name(printed, operation=_authority_operation_for_test),
                 operation=_authority_operation_for_test,
+                effective_date=_ON_DATE,
             ) not in {
                 IvaTerritorialScope.from_registry("es_mainland"),
                 IvaTerritorialScope.from_registry("es_canarias"),
@@ -230,6 +238,7 @@ class TestTheRungComposesRatherThanDecides:
             assert territorial_scope_for_country(
                 country_code_for_printed_country_name("Deutschland", operation=_authority_operation_for_test),
                 operation=_authority_operation_for_test,
+                effective_date=_ON_DATE,
             ) == IvaTerritorialScope.from_registry("eu_member")
 
     def test_a_third_country_name_establishes_the_third_country_scope(self) -> None:
@@ -237,6 +246,7 @@ class TestTheRungComposesRatherThanDecides:
             assert territorial_scope_for_country(
                 country_code_for_printed_country_name("Suiza", operation=_authority_operation_for_test),
                 operation=_authority_operation_for_test,
+                effective_date=_ON_DATE,
             ) == IvaTerritorialScope.from_registry("third_country")
 
     def test_a_spanish_name_names_the_state_but_establishes_no_scope(self) -> None:
@@ -253,6 +263,7 @@ class TestTheRungComposesRatherThanDecides:
                 territorial_scope_for_country(
                     country_code_for_printed_country_name("España", operation=_authority_operation_for_test),
                     operation=_authority_operation_for_test,
+                    effective_date=_ON_DATE,
                 )
                 is None
             )

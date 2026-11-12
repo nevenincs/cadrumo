@@ -86,6 +86,7 @@ devengada / cuota deducible total?".
 
 from __future__ import annotations
 
+from datetime import date
 from typing import TYPE_CHECKING, Self, override
 
 from ...core.registry_token import StrictRegistryToken
@@ -118,7 +119,7 @@ class IvaFlowDirection(StrictRegistryToken):
         return self
 
 
-def flow_direction_for_invoice_kind(invoice_kind: InvoiceKind) -> IvaFlowDirection:
+def flow_direction_for_invoice_kind(invoice_kind: InvoiceKind, *, effective_date: date) -> IvaFlowDirection:
     """Return the IVA flow direction an invoice's issuance side settles as.
 
     This is the base rule the tax itself states: an invoice the autónomo
@@ -130,21 +131,22 @@ def flow_direction_for_invoice_kind(invoice_kind: InvoiceKind) -> IvaFlowDirecti
     regimes (reverse charge, intra-community) that route the same members
     differently.
     """
-    flow_catalogue = _flow_direction_catalogue()
+    flow_catalogue = _flow_direction_catalogue(effective_date)
     return flow_catalogue.issued_token if invoice_kind is InvoiceKind.ISSUED else flow_catalogue.received_token
 
 
-def _flow_direction_catalogue() -> IvaFlowDirectionCatalogue:
-    """Resolve the selected 0083 flow catalogue without an import cycle."""
+def _flow_direction_catalogue(effective_date: date) -> IvaFlowDirectionCatalogue:
+    """Resolve the 0083 flow catalogue in force on ``effective_date`` without an import cycle."""
     from ..calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
 
-    return resolve_iva_flow_direction_catalogue()
+    return resolve_iva_flow_direction_catalogue(effective_date=effective_date)
 
 
 def derive_flow_for_classification(
     *,
     category: IvaCategory,
     invoice_direction: InvoiceKind,
+    effective_date: date,
 ) -> IvaFlowDirection:
     """Return the IVA flow direction for a substrate-classified line.
 
@@ -176,19 +178,20 @@ def derive_flow_for_classification(
             classifier.
         invoice_direction: Whether the invoice was issued or received
             by the autónomo.
+        effective_date: The date whose flow and category vocabularies govern the lookup.
 
     Returns:
         The :class:`IvaFlowDirection` that matches the classification.
     """
-    category_catalogue = resolve_iva_category_catalogue()
-    flow_catalogue = _flow_direction_catalogue()
+    category_catalogue = resolve_iva_category_catalogue(effective_date=effective_date)
+    flow_catalogue = _flow_direction_catalogue(effective_date)
     if category in category_catalogue.projection("recipient_only_reverse_charge"):
         return flow_catalogue.recipient_reverse_charge_token
     if category == category_catalogue.require("domestic_reverse_charge"):
         if invoice_direction is InvoiceKind.ISSUED:
             return flow_catalogue.supplier_reverse_charge_token
         return flow_catalogue.recipient_reverse_charge_token
-    return flow_direction_for_invoice_kind(invoice_direction)
+    return flow_direction_for_invoice_kind(invoice_direction, effective_date=effective_date)
 
 
 class IvaSettlementSide(StrictRegistryToken):
@@ -199,6 +202,8 @@ class IvaSettlementSide(StrictRegistryToken):
 
 def settlement_sides_for_flow(
     flow: IvaFlowDirection,
+    *,
+    effective_date: date,
 ) -> frozenset[IvaSettlementSide]:
     """Return the settlement side(s) ``flow`` contributes to.
 
@@ -225,6 +230,7 @@ def settlement_sides_for_flow(
 
     Args:
         flow: The :class:`IvaFlowDirection` to classify.
+        effective_date: The date whose flow vocabulary governs the lookup.
 
     Returns:
         Frozenset of :class:`IvaSettlementSide` values: ``{DEVENGADA}`` for
@@ -234,10 +240,10 @@ def settlement_sides_for_flow(
         :attr:`IvaFlowDirection.OPERACION_CON_INVERSION`, whose supplier
         repercutes no cuota and bears none.
     """
-    return _flow_direction_catalogue().settlement_sides_for(flow)
+    return _flow_direction_catalogue(effective_date).settlement_sides_for(flow)
 
 
-def is_devengada_flow(flow: IvaFlowDirection) -> bool:
+def is_devengada_flow(flow: IvaFlowDirection, *, effective_date: date) -> bool:
     """Return ``True`` iff ``flow`` contributes to cuota devengada.
 
     Canonical predicate for the ledger / modelo registries when
@@ -246,10 +252,10 @@ def is_devengada_flow(flow: IvaFlowDirection) -> bool:
     substrate's settlement-side codification so downstream consumers
     don't have to re-enumerate the mapping.
     """
-    return _flow_direction_catalogue().is_devengada(flow)
+    return _flow_direction_catalogue(effective_date).is_devengada(flow)
 
 
-def is_deducible_flow(flow: IvaFlowDirection) -> bool:
+def is_deducible_flow(flow: IvaFlowDirection, *, effective_date: date) -> bool:
     """Return ``True`` iff ``flow`` contributes to cuota deducible.
 
     Canonical predicate for the ledger / modelo registries when
@@ -257,28 +263,28 @@ def is_deducible_flow(flow: IvaFlowDirection) -> bool:
     ``flow in {SOPORTADO, INVERSION_SUJETO_PASIVO}`` but anchored to the
     substrate's settlement-side codification.
     """
-    return _flow_direction_catalogue().is_deducible(flow)
+    return _flow_direction_catalogue(effective_date).is_deducible(flow)
 
 
-def is_inversion_sujeto_pasivo_flow(flow: IvaFlowDirection) -> bool:
+def is_inversion_sujeto_pasivo_flow(flow: IvaFlowDirection, *, effective_date: date) -> bool:
     """Return whether ``flow`` is the recipient reverse-charge direction."""
-    return flow == _flow_direction_catalogue().recipient_reverse_charge_token
+    return flow == _flow_direction_catalogue(effective_date).recipient_reverse_charge_token
 
 
-def is_standard_issued_or_received_flow(flow: IvaFlowDirection) -> bool:
+def is_standard_issued_or_received_flow(flow: IvaFlowDirection, *, effective_date: date) -> bool:
     """Return whether ``flow`` is one of the ordinary invoice-side flows."""
-    catalogue = _flow_direction_catalogue()
+    catalogue = _flow_direction_catalogue(effective_date)
     return flow in {catalogue.issued_token, catalogue.received_token}
 
 
-def issued_flow_direction() -> IvaFlowDirection:
+def issued_flow_direction(*, effective_date: date) -> IvaFlowDirection:
     """Return the registry-declared flow for an issued invoice."""
-    return _flow_direction_catalogue().issued_token
+    return _flow_direction_catalogue(effective_date).issued_token
 
 
-def received_flow_direction() -> IvaFlowDirection:
+def received_flow_direction(*, effective_date: date) -> IvaFlowDirection:
     """Return the registry-declared flow for a received invoice."""
-    return _flow_direction_catalogue().received_token
+    return _flow_direction_catalogue(effective_date).received_token
 
 
 __all__ = [
