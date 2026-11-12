@@ -39,6 +39,7 @@ from ..aggregation.withholding_filing_cadence import QUARTERLY_WITHHOLDING_PERIO
 from ..aggregation.withholding_modelo_routing import withholding_total_route
 from ..aggregation.withholding_source import withholding_binding_grounding
 from .finding_message_text import PERIOD_LIST_SEPARATOR
+from .registry_input_refusals import registry_integrity_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -57,7 +58,10 @@ def _casilla_grounding(
 ) -> tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]:
     definition = casillas_by_id(revision).get(casilla_id)
     if definition is None:
-        raise RegistryValidationError(f"revision {revision.id!r} declares no casilla {casilla_id!r}")
+        raise RegistryValidationError(
+            f"revision {revision.id!r} declares no casilla {casilla_id!r}",
+            precondition_verdict=registry_integrity_verdict("withholding_total_route"),
+        )
     return tuple(definition.legal_refs), tuple(definition.source_refs)
 
 
