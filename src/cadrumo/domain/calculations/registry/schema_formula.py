@@ -153,6 +153,11 @@ BracketKindField = Annotated[BracketKind, BeforeValidator(coerce_enum_member(Bra
 """Registry token hydrated into a BracketKind member."""
 
 
+def _progressive_by_default(value: object) -> bool:
+    """Leave the default bracket kind out of a dump, so revisions saved before the field existed keep their digest."""
+    return value is BracketKind.PROGRESSIVE
+
+
 class FormulaExpression(RegistryModel):
     """Represent one formula leaf or operator node.
 
@@ -421,7 +426,7 @@ class ParameterDefinition(RegistryModel):
     brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)
     keyed_brackets: tuple[KeyedBracketEntry, ...] = Field(default_factory=tuple)
     bracket_axis: DateAxisField | None = None
-    bracket_kind: BracketKindField = BracketKind.PROGRESSIVE
+    bracket_kind: BracketKindField = Field(default=BracketKind.PROGRESSIVE, exclude_if=_progressive_by_default)
     non_filing_axis_admission: NonFilingAxisAdmission | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
