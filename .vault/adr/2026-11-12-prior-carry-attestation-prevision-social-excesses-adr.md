@@ -5,14 +5,16 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:9eec38a70bd6428ba866e3e83e12bdb1fd7d4b1b353e150b48ffc1dcd36e6f38'
+body_hash: 'sha256:bbed9ea38017925de271be950110b5bd273dc00e4d03f59b23f37b486383acd1'
 related:
   - "[[2026-11-08-prior-carry-attestation-adr]]"
   - "[[2026-11-12-renta-prevision-social-contribution-source-adr]]"
   - '[[2026-11-12-renta-prevision-social-contribution-source-research]]'
 ---
 
-# `prior-carry-attestation` adr: `Attest or state the pension-reduction excesses pending from earlier ejercicios` | (**status:** `proposed`)
+# `prior-carry-attestation` adr: `Attest or state the pension-reduction excesses pending from earlier ejercicios` | (**status:** `deprecated`)
+
+Retired 2026-11-12: accepted by CADRUMO-PRIME at 15:14 with four conditions and applied to `2026-11-08-prior-carry-attestation-adr` as its amendment 2026-11-12 (c), which is the authoritative text. This proposal is kept only as the drafting record.
 
 Proposed 2026-11-12 by CALCULATORS for slice S40 (c), on CADRUMO-PRIME's split of 15:03 ("(c) follows the accepted carry ADRs: never inferred, attestation enough"). It is a proposed amendment to `2026-11-08-prior-carry-attestation-adr`, held apart until accepted, in the form the savings carries took. Grounding: lane note `.tmp/2026-11-12-calculators-s40/pension-limits-grounding.md`.
 

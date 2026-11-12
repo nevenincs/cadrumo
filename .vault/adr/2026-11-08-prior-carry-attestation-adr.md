@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#prior-carry-attestation'
 date: '2026-11-08'
-modified: '2026-11-08'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:573cc1ee90e3b55c47d5adcc0693bc3afd33ac1a7f19b355ca3fab32f021a0f0'
+body_hash: 'sha256:8ae8cbaa01ba8ba90aab91a30d9d3490d35e7e52b67b66e7af482cb69e44303e'
 related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-06-13-first-filer-attestation-adr]]"
@@ -158,3 +158,26 @@ Decision. One statement covers every open carry family.
 Rejected. Recording a statement while other carries stay unstated would need a revision with unresolved required carries, against the engine contract and the refusal this record rests on. Keeping per-family doors would leave a door that works only for the last open family.
 
 Evidence owed. A filer with three open families commits in one statement; a partial statement is refused before staging with the full door; a mixed statement (absence for one family, an amount for another) commits; the preflight blocks a partial statement.
+
+## Amendment 2026-11-12 (c): the pension-reduction excesses pending from earlier ejercicios
+
+Accepted 2026-11-12 15:14 by CADRUMO-PRIME under the operator's delegation, with four conditions written in below (ruling: the 15:14 entry of PRIME's ADR acceptance log). Proposed in `2026-11-12-prior-carry-attestation-prevision-social-excesses-adr`, now retired. Grounding: `2026-11-12-renta-prevision-social-contribution-source-research`.
+
+Problem. LIRPF art. 52.2 lets a contribution that could not reduce the base, because the general base was insufficient or the percentage limit applied, reduce it in the five following ejercicios. Modelo 100 holds those excesses in Anexo C per contributing member: general social-welfare systems in rows 1284 to 1299 and collective dependency insurance in rows 1300 to 1315 (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/casillas/0001-declarations.toml:8636-8726`), with opening, applied and closing rows per origin year and a generated row for the year's own excess (1299, 1315). None has a binding or a formula, and without an earlier return the pending amounts are unknown, never zero.
+
+Decision. The closed family set gains `renta_prevision_social_excess_pending` (general systems) and `renta_dependency_insurance_excess_pending` (collective dependency insurance), two families because the kinds carry and apply separately and a filer can hold one without the other. Each is declared on the opening rows of its kind, at row grain keyed by the contributing member, so a joint return keeps each member's excesses apart. Intent, operator layer, admission, form action, door and contradiction finding are those of this record and its savings amendments, unchanged.
+
+Implementation.
+- Bindings: each opening row reads the previous return's row one origin year newer (`filing_year_offset` -1), declared once in the earliest edition whose design holds the rows, inherited after. The oldest origin year lapses after its application year.
+- Formulas: applied rows in the order the year's text states, closing rows as opening minus applied, generated rows (1299, 1315) as the part of the year's admissible contributions the S40 (a) limit formula could not reduce.
+- A pension-reduction remainder never reaches the savings base (LIRPF art. 50).
+- Surfaces: refusal, statement, effect and origin words served per family; the two tokens join the `attest-prior-carries --family` choices.
+- Evidence: real resolvers and stores for every Modelo 100 year the envelope admits; the manual's worked example for each rule period as oracle; a two-year cascade; a joint return with excesses on one member; a captured earlier return contradicting an attested zero.
+
+Conditions of acceptance.
+1. Applied to this record as an amendment, preserving its body; the proposal is retired.
+2. Only amounts blocked by insufficient base or by the percentage limit carry; the excess over the absolute limit never carries. The order of application is the official text's for each year, cited per edition; where no text fixes an order and the order changes a figure, the result is calculation grade only.
+3. The 2021 employer-contribution split rows (1742 to 1763) are read in the 2021 official design before authoring. A third family is added only if that design carries them as a separate pending amount, and the citation is reported to CADRUMO-PRIME.
+4. Depends on S40 (a) and (b): nothing of this amendment lands before S40 (a) is on feature/tui.
+
+Consequences. A filer with or without an earlier return can complete the pension reduction, and nothing pending is never read from an unprinted box. The year's own excess feeds the next return. `PRIOR_CARRY_FAMILIES` and the carry door grow by two families, and the operation contract manifest is regenerated.

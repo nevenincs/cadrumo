@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#prior-carry-attestation'
 date: '2026-11-11'
-modified: '2026-11-11'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:4381278c190805c702efb6139728dffd04014729eac999c0a349c2270b977dea'
+body_hash: 'sha256:8c8ab3d1e62a89cbcd8bc932c672e94f2e32b4b4b4c46b3bb56e9a33bfb9d4af'
 related:
   - "[[2026-11-08-prior-carry-attestation-adr]]"
   - '[[2026-11-08-prior-carry-attestation-reference]]'

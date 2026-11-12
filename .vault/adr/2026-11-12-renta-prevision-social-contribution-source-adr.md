@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:74fc4426e0dde3d943092a431b0a9101cc0330caee55840c73afb2a0a532803e'
+body_hash: 'sha256:55ad19ad078049384d48011181dd46078927990e85efc953a82da7a1abd240f6'
 related:
   - "[[2026-11-11-renta-savings-income-source-adr]]"
   - "[[2026-11-01-export-parity-suffered-withholding-schemas-adr]]"
@@ -13,9 +13,9 @@ related:
   - '[[2026-11-12-renta-prevision-social-contribution-source-research]]'
 ---
 
-# `renta-prevision-social-contribution-source` adr: `Source the Modelo 100 pension-plan contribution boxes from contribution certificate records` | (**status:** `proposed`)
+# `renta-prevision-social-contribution-source` adr: `Source the Modelo 100 pension-plan contribution boxes from contribution certificate records` | (**status:** `accepted`)
 
-Proposed 2026-11-12 by CALCULATORS for slice S40 (b), on CADRUMO-PRIME's split of 15:03. Grounding: lane note `.tmp/2026-11-12-calculators-s40/pension-limits-grounding.md` (Manual práctico Renta capítulo 13 for 2020 to 2025, LIRPF arts. 51 to 53 and DA 16), and the Modelo 345 record design `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_345/files/01-345-ejercicio-2025.pdf.extracted.md:318-720`.
+Proposed 2026-11-12 by CALCULATORS for slice S40 (b), on CADRUMO-PRIME's split of 15:03. Accepted 2026-11-12 15:14 by CADRUMO-PRIME under the operator's delegation, with four conditions written into Constraints (ruling: the 15:14 entry of PRIME's ADR acceptance log). Grounding: lane note `.tmp/2026-11-12-calculators-s40/pension-limits-grounding.md` (Manual práctico Renta capítulo 13 for 2020 to 2025, LIRPF arts. 51 to 53 and DA 16), and the Modelo 345 record design `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_345/files/01-345-ejercicio-2025.pdf.extracted.md:318-720`.
 
 ## Problem Statement
 
@@ -41,9 +41,11 @@ Modelo 100 has no source for the contributions behind the reduction for social-w
 
 - The record stores the issuer NIF and name, the plan NIF and name (casilla 0397 where the edition has it), the ejercicio, the official clave and subclave, the amount, the beneficiary role, the certificate fingerprint and the correction chain. It computes nothing.
 - The clave/subclave to box mapping is registry data per edition, declared once at the earliest edition where the design holds, with deltas only where the official design changed. No box id or year appears in Python.
-- A clave or subclave the edition's mapping does not admit is refused at record time with served words. It is never filed under another box.
+- Condition of acceptance 3: the clave/subclave mapping is authored from each edition's official design and the manual's casilla list, declared once at the earliest edition where it holds. A clave or subclave the design does not place is refused at record time with served words, never mapped by analogy and never filed under another box.
+- Condition of acceptance 4: the oracles are the manual's worked examples for each rule period, wired as tests through the real resolver.
 - Spouse contributions (art. 51.7) and contributions to a disabled person's system (art. 53) are refused at record time in this slice, with served words saying why. Their boxes stay operator inputs until a later slice.
-- With no certificate recorded for an ejercicio, the contribution boxes give no reduction, disclosed as a limitation on the form and never blocking (ruling 09:00). A typed contribution box remains an operator entry and is shown as one.
+- Condition of acceptance 1: with no certificate recorded for an ejercicio, the reduction is disclosed as a limitation and does not block (ruling 09:00), unless a stored fact shows that a contribution exists for that ejercicio: an employer contribution imputed on the work-income record, a ledger row classified as a social-welfare contribution, or a typed contribution box. Then a blocking not-computed finding reaches the user with the record door.
+- Condition of acceptance 2: a typed contribution box beside certificate records for the same box is an aggregation conflict, resolved only through the existing override door with provenance. A record never silently overrides an operator entry, nor the reverse.
 - When a clave B or C record (employer contribution imputed to the worker) and the employer's work-income certificate disagree on the imputed amount, a structured finding reaches the user. Neither figure overrides the other.
 - Custody: one registered secure namespace, schema v1, encrypted; certificate bytes only through the existing evidence custody; nothing private in logs.
 
