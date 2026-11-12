@@ -108,17 +108,25 @@ class ModeloFormPriorValueAttestation(ModeloFormBase):
             raise ValueError("a prior-value entry stages attest_prior_value")
         if self.edit_address.binding_id != self.binding_id:
             raise ValueError("a prior-value entry is submitted to its own binding")
-        refused = (self.refusal_reason, self.refusal_words, self.refusal)
-        if self.admitted != all(item is None for item in refused) or (
-            not self.admitted and any(item is None for item in refused)
-        ):
+        if not _refusal_matches_admission(self):
             raise ValueError("a refused statement, and only one, carries its reason, words and way out")
-        if self.withdrawal is not None and (
-            self.withdrawal.family_id != self.family_id
-            or (self.stated and self.binding_id not in self.withdrawal.binding_ids)
-        ):
+        if not _withdrawal_matches_family(self):
             raise ValueError("a withdrawal withdraws the entry's own family, the entry included when stated")
         return self
+
+
+def _refusal_matches_admission(entry: ModeloFormPriorValueAttestation) -> bool:
+    """Whether the refusal's reason, words and way out are all present exactly when the statement is not admitted."""
+    present = {item is not None for item in (entry.refusal_reason, entry.refusal_words, entry.refusal)}
+    return present == {not entry.admitted}
+
+
+def _withdrawal_matches_family(entry: ModeloFormPriorValueAttestation) -> bool:
+    """Whether a withdrawal names the entry's own family and, when the entry is stated, the entry itself."""
+    withdrawal = entry.withdrawal
+    if withdrawal is None:
+        return True
+    return withdrawal.family_id == entry.family_id and (not entry.stated or entry.binding_id in withdrawal.binding_ids)
 
 
 __all__ = [
