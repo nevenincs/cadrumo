@@ -42,6 +42,9 @@ from ...application.modelo.workbench_operations import (
 )
 from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
 from ...core.external_constants import OutputLanguage
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
+from ...domain.calculations.registry.errors import RegistryError
 from ...tests.personas import AttestedPriorValue, YearEnvelope
 
 
@@ -72,6 +75,30 @@ def entries_on(
         for entry in entries
         if entry.modelo == modelo and entry.period == period and entry.year.resolve(envelope) == filing_year
     )
+
+
+def check_prior_value_bindings(
+    entries: Sequence[AttestedPriorValue], envelope: YearEnvelope, operation: PinnedAuthorityOperation
+) -> None:
+    """Refuse a stated figure whose binding the return's selected registry edition does not declare.
+
+    A binding the edition declares whose source the application holds is left
+    unsubmitted by the replay; a binding id the edition does not declare at all
+    can never be offered, so it is a stale or misspelt statement and is refused
+    here, before any calculation. A return the registry selects no edition for
+    is left to its own calculation refusal.
+    """
+    for entry in entries:
+        year = entry.year.resolve(envelope)
+        try:
+            revision = operation.revision_for_context(entry.modelo, filing_year=year, period=entry.period)
+        except RegistryError:
+            continue
+        if entry.binding not in revision_bindings_by_id(revision):
+            raise PriorValueAttestationError(
+                f"Modelo {entry.modelo} {year} {entry.period}: attested binding {entry.binding} "
+                f"is not a binding of edition {revision.id}"
+            )
 
 
 def entries_for(
@@ -188,6 +215,7 @@ __all__ = [
     "SettleOperation",
     "attest_prior_values",
     "attest_return_prior_values",
+    "check_prior_value_bindings",
     "entries_for",
     "entries_on",
 ]

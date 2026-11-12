@@ -272,6 +272,7 @@ from .persona_prior_values import (
     PriorValueAttestationError,
     attest_prior_values,
     attest_return_prior_values,
+    check_prior_value_bindings,
     entries_on,
 )
 from .persona_rental_replay import replay_rentals
@@ -2032,6 +2033,10 @@ def materialise_persona(
         check_work_inputs(persona, world.envelope, world.operation)
     except WorkInputError as error:
         raise PersonaMaterialisationError(str(error)) from error
+    try:
+        check_prior_value_bindings(persona.attested_prior_values, world.envelope, world.operation)
+    except PriorValueAttestationError as error:
+        raise PersonaMaterialisationError(f"{persona.id}: {error}") from error
     transactions: dict[str, str] = {}
     invoices: dict[str, str] = {}
     evidence: dict[str, str] = {}

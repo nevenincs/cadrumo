@@ -25,7 +25,7 @@ from ...tests.personas import (
     read_persona,
 )
 from .persona_materialisation import attested_returns_to_replay, year_envelope
-from .persona_prior_values import attest_return_prior_values
+from .persona_prior_values import PriorValueAttestationError, attest_return_prior_values, check_prior_value_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -82,3 +82,16 @@ def test_a_return_with_no_attested_entry_submits_nothing() -> None:
         settle=settle,
     )
     assert (attested.applied, attested.unoffered) == (None, ())
+
+
+def test_a_binding_the_returns_edition_does_not_declare_is_refused_by_name() -> None:
+    envelope = _envelope()
+    (entry, *_) = read_persona("sociedad-limitada", envelope=envelope).attested_prior_values
+    stale = dataclasses.replace(entry, binding="no-such-binding-in-any-edition")
+    with bundled_indexed_authority().operation() as operation:
+        check_prior_value_bindings((entry,), envelope, operation)
+        with pytest.raises(PriorValueAttestationError) as refused:
+            check_prior_value_bindings((entry, stale), envelope, operation)
+    message = str(refused.value)
+    assert "no-such-binding-in-any-edition" in message
+    assert f"Modelo {entry.modelo}" in message
