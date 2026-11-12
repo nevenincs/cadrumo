@@ -120,23 +120,41 @@ profile:
       ccaa: Tax-residence autonomous community or city
       jurisdiction_scope: Which tax territory applies to this Modelo 303?
     taxpayer_type:
+      cooperativa_fiscalmente_protegida: Is the entity a tax-protected cooperative?
       country_of_fiscal_residence: Country of fiscal residence (ISO 3166-1 alpha-2
         code, e.g. GB, DE, FR)
       declaration_roles: Does the declaring entity hold any of these institutional
         roles for Modelo 347 (third-party operations) purposes?
       entity_type: Entity type
+      erd_tipo_gravamen_especifico: Is the entity a small company taxed at its specific
+        rate under art. 101 LIS?
       fiscal_residency: Fiscal residency category
+      incn_periodo_anterior_inferior_1m: Was the entity's net turnover in the prior
+        tax period under €1 million?
       incn_prior_12_months: What was your net turnover over the past 12 months? (in
         euros, optional)
       irpf_income_categories: IRPF income categories
       legal_entity_form: Legal form
+      marca_instrumental: Does the instrumental mark of the design's Nota 7 apply
+        to the entity?
+      multiples_tipos_impositivos: Is the entity taxed at more than one corporate
+        tax rate?
       new_entity_first_two_profit_periods: Is this a newly-created legal entity in
         one of its first two profit-making tax periods?
       pago_fraccionado_art_40_3_elected: Did the entity elect, in its census declaration,
         the Art. 40.3 LIS option for its instalment payments?
+      principal_cnae: What is the four-digit CNAE code of the entity's main activity?
+      regimen_entidad_capital_riesgo: Is the entity a venture capital entity under
+        art. 50 LIS?
+      regimen_entidades_navieras_tonelaje: Does the entity apply the shipping tonnage
+        regime?
+      regimen_ley_49_2002: Does the entity apply the Ley 49/2002 regime?
+      regimen_socimi: Does the entity apply the SOCIMI regime (Ley 11/2009)?
       representante_fiscal_nif: NIF/NIE of fiscal representative in Spain (required
         outside EU/EEA)
       representante_fiscal_nombre: Name of fiscal representative in Spain
+      tipo_gravamen_is: Which corporate tax rate does the entity apply, as the Modelo
+        202 states it?
     withholding:
       has_employees: Has employees and pays salaries subject to withholding
       modelo_111_no_retenciones_periods: Modelo 111 periods with no withholding
@@ -646,6 +664,8 @@ profile:
               yet
           label: Territorial regime
       taxpayer_type:
+        cooperativa_fiscalmente_protegida:
+          label: Tax-protected cooperative
         country_of_fiscal_residence:
           label: Country of fiscal residence
         declaration_roles:
@@ -656,11 +676,15 @@ profile:
             legal_entity: Legal entity (company)
             natural_person: Individual
           label: Entity type
+        erd_tipo_gravamen_especifico:
+          label: Small company with its specific rate (art. 101 LIS)
         fiscal_residency:
           choices:
             non_resident_irnr: Non-resident (IRNR)
             resident_irpf: Resident in Spain (IRPF)
           label: Fiscal residency
+        incn_periodo_anterior_inferior_1m:
+          label: Prior-period net turnover under €1M
         incn_prior_12_months:
           label: Net turnover of the prior 12 months
         irpf_income_categories:
@@ -676,14 +700,30 @@ profile:
             sll: Employee-owned limited company (S.L.L.)
             sociedad_civil_mercantil: Civil partnership with a commercial purpose
           label: Legal form
+        marca_instrumental:
+          label: Instrumental mark (Nota 7)
+        multiples_tipos_impositivos:
+          label: Taxed at more than one rate
         new_entity_first_two_profit_periods:
           label: In one of the first two profit periods
         pago_fraccionado_art_40_3_elected:
           label: Art. 40.3 LIS instalment election
+        principal_cnae:
+          label: Main activity CNAE
+        regimen_entidad_capital_riesgo:
+          label: Venture capital entity (art. 50 LIS)
+        regimen_entidades_navieras_tonelaje:
+          label: Shipping tonnage regime
+        regimen_ley_49_2002:
+          label: Ley 49/2002 regime
+        regimen_socimi:
+          label: SOCIMI regime (Ley 11/2009)
         representante_fiscal_nif:
           label: Fiscal representative NIF
         representante_fiscal_nombre:
           label: Fiscal representative name
+        tipo_gravamen_is:
+          label: Corporate tax rate
         tributacion_estado_porcentaje:
           label: State taxation percentage
       vivienda_office:

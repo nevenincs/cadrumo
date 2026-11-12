@@ -120,23 +120,41 @@ profile:
       ccaa: Comunitat o ciutat autònoma de residència fiscal
       jurisdiction_scope: Quin territori tributari s'aplica a aquest Model 303?
     taxpayer_type:
+      cooperativa_fiscalmente_protegida: L'entitat és una cooperativa fiscalment protegida?
       country_of_fiscal_residence: País de residència fiscal (codi ISO 3166-1 alfa-2,
         p.ex. GB, DE, FR)
       declaration_roles: L'entitat declarant exerceix algun d'aquests rols institucionals
         als efectes del Model 347 (operacions amb terceres persones)?
       entity_type: Tipus d'entitat
+      erd_tipo_gravamen_especifico: L'entitat és de dimensió reduïda i tributa al
+        tipus específic de l'art. 101 LIS?
       fiscal_residency: Categoria de residència fiscal
+      incn_periodo_anterior_inferior_1m: La xifra de negocis de l'entitat en el període
+        impositiu anterior va ser inferior a 1 milió d'euros?
       incn_prior_12_months: Quin va ser el teu import net de la xifra de negocis durant
         els darrers 12 mesos? (en euros, opcional)
       irpf_income_categories: Categories de renda IRPF
       legal_entity_form: Forma jurídica
+      marca_instrumental: S'aplica a l'entitat la marca instrumental de la Nota 7
+        del disseny?
+      multiples_tipos_impositivos: L'entitat tributa a més d'un tipus de gravamen?
       new_entity_first_two_profit_periods: És una entitat de nova creació en un dels
         seus dos primers períodes impositius amb beneficis?
       pago_fraccionado_art_40_3_elected: Va exercir l'entitat a la seva declaració
         censal l'opció de l'article 40.3 de la LIS per al pagament fraccionat?
+      principal_cnae: Quin és el codi CNAE de quatre dígits de l'activitat principal
+        de l'entitat?
+      regimen_entidad_capital_riesgo: L'entitat és una entitat de capital risc de
+        l'art. 50 LIS?
+      regimen_entidades_navieras_tonelaje: L'entitat aplica el règim d'entitats navilieres
+        en funció del tonatge?
+      regimen_ley_49_2002: L'entitat aplica el règim de la Llei 49/2002?
+      regimen_socimi: L'entitat aplica el règim SOCIMI (Llei 11/2009)?
       representante_fiscal_nif: NIF/NIE del representant fiscal a Espanya (obligatori
         fora UE/EEE)
       representante_fiscal_nombre: Nom del representant fiscal a Espanya
+      tipo_gravamen_is: Quin tipus de gravamen de l'Impost sobre Societats aplica
+        l'entitat, tal com l'indica el Model 202?
     withholding:
       has_employees: Té empleats i paga salaris amb retenció
       modelo_111_no_retenciones_periods: Períodes Model 111 sense retencions
@@ -644,6 +662,8 @@ profile:
             foral_unsupported: Territori foral (País Basc o Navarra) - encara no admès
           label: Règim territorial
       taxpayer_type:
+        cooperativa_fiscalmente_protegida:
+          label: Cooperativa fiscalment protegida
         country_of_fiscal_residence:
           label: País de residència fiscal
         declaration_roles:
@@ -654,11 +674,15 @@ profile:
             legal_entity: Persona jurídica (societat)
             natural_person: Persona física
           label: Tipus de contribuent
+        erd_tipo_gravamen_especifico:
+          label: Entitat de dimensió reduïda amb tipus específic (art. 101 LIS)
         fiscal_residency:
           choices:
             non_resident_irnr: No resident (IRNR)
             resident_irpf: Resident a Espanya (IRPF)
           label: Residència fiscal del contribuent
+        incn_periodo_anterior_inferior_1m:
+          label: Xifra de negocis del període anterior inferior a 1 milió
         incn_prior_12_months:
           label: INCN dels 12 mesos anteriors
         irpf_income_categories:
@@ -674,14 +698,30 @@ profile:
             sll: Societat limitada laboral (S.L.L.)
             sociedad_civil_mercantil: Societat civil amb objecte mercantil
           label: Forma jurídica de l'entitat
+        marca_instrumental:
+          label: Marca instrumental (Nota 7)
+        multiples_tipos_impositivos:
+          label: Tributa a més d'un tipus de gravamen
         new_entity_first_two_profit_periods:
           label: En un dels dos primers períodes amb benefici
         pago_fraccionado_art_40_3_elected:
           label: Opció de l'art. 40.3 LIS en el pagament fraccionat
+        principal_cnae:
+          label: CNAE de l'activitat principal
+        regimen_entidad_capital_riesgo:
+          label: Entitat de capital risc (art. 50 LIS)
+        regimen_entidades_navieras_tonelaje:
+          label: Règim d'entitats navilieres en funció del tonatge
+        regimen_ley_49_2002:
+          label: Règim de la Llei 49/2002
+        regimen_socimi:
+          label: Règim SOCIMI (Llei 11/2009)
         representante_fiscal_nif:
           label: NIF del representant fiscal
         representante_fiscal_nombre:
           label: Nom del representant fiscal
+        tipo_gravamen_is:
+          label: Tipus de gravamen de l'Impost sobre Societats
         tributacion_estado_porcentaje:
           label: Percentatge de tributació a l'Estat
       vivienda_office:
