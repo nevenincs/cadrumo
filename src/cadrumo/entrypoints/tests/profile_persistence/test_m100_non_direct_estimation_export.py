@@ -87,7 +87,7 @@ def _export(
                 objects, modelo="131", period=period, casilla_values=_M131_FILED_QUARTER
             )
     register_refund_account(objects)
-    annual = calculate_annual(objects, casilla_inputs={validated_casilla_id("0003"): Decimal("24000.00")})
+    annual = calculate_annual(objects)
     return annual, verify_and_export(annual, objects, directory / "modelo-100.xml", persona)
 
 
