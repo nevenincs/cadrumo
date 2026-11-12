@@ -93,7 +93,6 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
         # formula target (registry formula 0290); the engine computes it and
         # would refuse it as a supplied input.
         "0003": Decimal("0"),
-        "0429": Decimal("0"),
         "0507": Decimal("0"),
         # 0513/0514 (mínimo por descendientes) are computed (Option A engine);
         # the zero for these
@@ -137,6 +136,7 @@ _BASE_BINDINGS = {
     "renta-profile-has-economic-activity": Decimal("0"),
     # declaration_type is intentionally absent: each mode's run supplies it.
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
+    "renta-profile-incremento-guarderia": Decimal("0"),
     "renta-profile-marriage-full-year": Decimal("1"),  # married full year
     "renta-profile-marriage-month-start": Decimal("1"),
     "renta-profile-marriage-month-end": Decimal("12"),

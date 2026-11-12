@@ -38,7 +38,6 @@ _REVISION = str(revision_covering("100", _EXERCISE).id)
 _C0003 = validated_casilla_id("0003", surface="test_renta_chain_behaviour casilla id")
 _C0426 = validated_casilla_id("0426", surface="test_renta_chain_behaviour casilla id")
 _C0427 = validated_casilla_id("0427", surface="test_renta_chain_behaviour casilla id")
-_C0429 = validated_casilla_id("0429", surface="test_renta_chain_behaviour casilla id")
 _C0432 = validated_casilla_id("0432", surface="test_renta_chain_behaviour casilla id")
 _C0433 = validated_casilla_id("0433", surface="test_renta_chain_behaviour casilla id")
 _C0435 = validated_casilla_id("0435", surface="test_renta_chain_behaviour casilla id")
@@ -135,7 +134,6 @@ def _expected_output(
 def _base_2025_inputs() -> dict[CasillaId, Decimal]:
     return {
         _C0003: Decimal("0"),
-        _C0429: Decimal("0"),
         # 0424 is now computed via the ganancias-patrimoniales saldo formula
         # (max(0422-0423, 0)) and cannot be supplied as input.
         # 0461 is now computed via renta-reduccion-art-84-conjunta
