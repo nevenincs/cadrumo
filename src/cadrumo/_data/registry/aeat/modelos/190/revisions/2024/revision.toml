@@ -33,10 +33,9 @@ application_link_source_refs = ["boe-modelo-190-2024-amendment", "aeat-modelo-19
 # would transcribe 2025 law onto a 2024 edition.
 #
 # THE DECLARANTE TOTALS ARE THE DESIGN'S OWN SUMS. aeat-dr-190-2024 states
-# positions 145-160 and 161-175 as sums over this declaration's type-2 records,
-# and no instrucciones for ejercicio 2024 are held that would ground the modelo
-# 111 relation prefills, so both formulas total the type-2 records as the 2022
-# and 2023 editions do and the relation starts with the 2025 edition.
+# positions 136-144, 145-160 and 161-175 over this declaration's type-2
+# records, word for word as the 2020 and 2023 designs and the 2025 design and
+# instrucciones do, so the totals are inherited from the 2022 edition unchanged.
 #
 # ITS AMENDING ORDEN IS HAC/1432/2024. Every casilla, binding, link and layout
 # field cites orden-hac-1432-2024:art-unico and boe-modelo-190-2024-amendment,
@@ -91,7 +90,7 @@ source_refs = [
 
 [revisions."2024".family_dispositions.dependency_classifications]
 reason = """
-A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: aeat-dr-190-2024 states its totals as sums over this declaration's own type-2 perceptor records (positions 145-160 and 161-175 of the type-1 record), so the calculation closes inside the edition. The modelo 111 relation prefills of the 2025 edition rest on the 2025 instrucciones, and no instrucciones for ejercicio 2024 are held that would ground them for this exercise. Empty because no grounded cross-modelo edge exists here, not because one is unbuilt."""
+A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: aeat-dr-190-2024 states its totals as sums over this declaration's own type-2 perceptor records (positions 145-160 and 161-175 of the type-1 record), so the calculation closes inside the edition. Every design from aeat-dr-190-2020 onward, and the 2025 instrucciones for casillas 01 to 03, define the totals the same way and none defines them from modelo 111. Empty because no cross-modelo edge exists, not because one is unbuilt."""
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 

@@ -1,43 +1,23 @@
-"""E2E reconciliation continuity: Modelo 190 (annual) ← Modelo 111 (quarterly).
+"""Modelo 190 resumen sources against the Modelo 111 quarters the same retenedor files.
 
-Modelo 111 is the quarterly retención-rendimientos del trabajo autoliquidación
-(Orden EHA/586/2011, RD 439/2007 arts. 80, 86, 95): an employer-retainer
-files 1T–4T each year, declaring nine perception categories (trabajo
-dinerario, especie, actividades económicas dinerario, especie, premios
-dinerario, especie, ganancias forestales dinerario, especie, cesión derechos
-imagen) with a perceptor count and payment amount per category, plus total
-retenciones (casilla 28, computed). Modelo 190 is the annual resumen: it
-aggregates the four quarters' monetary casillas via ``source = "previous_filing"``
-relations (``annual_summary``, ``op=sum``), and derives the annual percepciones
-count from the withholding detalle source:
+Modelo 111 is the quarterly retencion autoliquidacion (Orden EHA/586/2011, RD
+439/2007 arts. 80, 86 and 108.1); Modelo 190 is the annual resumen (RD 439/2007
+art. 108.2, Orden EHA/3127/2009). The Modelo 190 record design defines its three
+declarante totals over the declaration's own type-2 perceptor records, in every
+edition from the 2020 design onward and in the 2025 instrucciones for casillas
+01 to 03, and no official text defines them from Modelo 111:
 
-- ``decl.total-percepciones`` = distinct (perceptor, clave, subclave) withholding rows
-- ``decl.percepciones-total`` = sum of nine importe relations
-- ``decl.retenciones-total`` = copy of the retenciones relation
+- ``decl.total-percepciones`` = distinct (perceptor, clave, subclave) records
+- ``decl.percepciones-total`` = sum of the records' percepciones
+- ``decl.retenciones-total`` = sum of the records' retenciones e ingresos a cuenta
 
-(RD 439/2007 art. 108, Orden EHA/3127/2009 art. 1, Orden HAC/1431/2025 art. 2,
-Ley 35/2006 arts. 99, 101.)
-
-The source casillas for the remaining 190 relations are 02, 05, 08, 11, 14, 17,
-20, 23, 26 (importes) and 28 (retenciones). The retired quarterly perceptor-count
-relations stay absent so the old over-declaration path cannot silently return.
-
-This module is the cross-year behavior coverage for Modelo 190.
-It drives the REAL backend (real encrypted-SQLite observation store, the real
-registry authority, the real calculation engine, the real relation resolver —
-no mocks) across two distinct renta years (2025, 2026). The simplest non-zero
-111 scenario populates only the ``trabajo dinerario`` category (casillas
-02-03) plus total retenciones (casilla 28 is computed from sub-totals) and
-zeroes the remaining eight monetary categories. Both calculated resumen years are
-recorded through the ``cross-year observation`` and cross-checked against
-the cross-year claim via ``the cross-year behavior assertion``.
-
-Grounding (non-tautological): the 111 casilla 28 (total retenciones) is
-computed by the engine as the sum over all retention sub-totals. The 190
-assertion is the *wiring* invariant — the three 190 output casillas equal the
-aggregate of the corresponding 111 quarterly casillas — grounded in the AEAT
-form instructions and the form BOE-modelo-190-2025-form. Distinct per-quarter
-values per year ensure cross-contamination fails loudly.
+This module drives the REAL backend (encrypted-SQLite observation store, the
+registry authority, the calculation engine and the relation resolver, no mocks).
+It files the four Modelo 111 quarters into the same store and proves that the
+Modelo 190 resolver takes no relation from them in any supported exercise, and
+that two distinct exercises total their own withholding records only. The 111
+quarterly amounts deliberately differ from the 190 record amounts, so a total
+drawn from Modelo 111 fails loudly.
 """
 
 from __future__ import annotations
@@ -65,13 +45,12 @@ from .....domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from .....domain.calculations.registry.ids import RelationId
 from .....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from .....domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
@@ -86,11 +65,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO_111 = "111"
 _MODELO_190 = "190"
 
-#: Two distinct renta years.
-_YEAR_N = 2025
-_YEAR_N_PLUS_1 = 2026
+#: Two distinct exercises, the newest the support envelope admits.
+_YEAR_N, _YEAR_N_PLUS_1 = filing_year_envelope().years[-2:]
 
-_CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(_YEAR_N_PLUS_1 + 1, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
 _M111_TRABAJO_DINERARIO_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
@@ -101,24 +79,6 @@ _M190_TOTAL_PERCEPCIONES_CASILLA: CasillaId = validated_casilla_id("decl.total-p
 _M190_PERCEPCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.percepciones-total")
 _M190_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
 _M190_PERCEPCIONES_BINDING = "modelo-190-percepciones-anual"
-_RETIRED_M190_M111_PERCEPCIONES_BINDINGS = frozenset(
-    {
-        "modelo-190-111-trabajo-dinerario-percepciones-anual",
-        "modelo-190-111-trabajo-especie-percepciones-anual",
-        "modelo-190-111-actividades-dinerario-percepciones-anual",
-        "modelo-190-111-actividades-especie-percepciones-anual",
-        "modelo-190-111-premios-dinerario-percepciones-anual",
-        "modelo-190-111-premios-especie-percepciones-anual",
-        "modelo-190-111-ganancias-dinerario-percepciones-anual",
-        "modelo-190-111-ganancias-especie-percepciones-anual",
-        "modelo-190-111-derechos-imagen-percepciones-anual",
-    },
-)
-_RETIRED_M190_M111_PERCEPCIONES_RELATIONS = frozenset(
-    binding_id.replace("modelo-190-111-", "modelo-190-rel-111-", 1)
-    for binding_id in _RETIRED_M190_M111_PERCEPCIONES_BINDINGS
-)
-
 # ---------------------------------------------------------------------------
 # 111 quarterly scenarios — a trabajo-dinerario-only filer.
 #
@@ -129,18 +89,8 @@ _RETIRED_M190_M111_PERCEPCIONES_RELATIONS = frozenset(
 # Casillas 04-27 = eight remaining categories, all zero.
 # Casilla 28 = total retenciones (computed: sum of sub-total retenciones).
 #
-# Only casillas 02, 03, 28 are sourced by the remaining 190 relations we test
-# (02 -> importe for trabajo-dinerario; 28 -> retenciones-total copy).
-# Zeroing all other monetary categories keeps the scenario minimal and the
-# wiring assertion tight.
+# Zeroing all other monetary categories keeps the scenario minimal.
 # ---------------------------------------------------------------------------
-
-# Source casilla ids the remaining 190 relation machinery aggregates.
-# The importe relations source even casillas 02,05,08,11,14,17,20,23,26.
-# The retenciones relation sources casilla 28.
-_IMPORTE_CASILLAS: list[CasillaId] = list(
-    validated_casilla_id(_v) for _v in ("02", "05", "08", "11", "14", "17", "20", "23", "26")
-)
 
 # All 111 manual-input casillas not driven by the scenario are zero.
 _ZERO_CASILLAS: list[CasillaId] = list(
@@ -221,6 +171,11 @@ _YEAR_N_PLUS_1_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
 }
 
 
+#: Each 190 record's percepcion and retencion, chosen apart from every 111 quarterly amount.
+_RECORD_PERCEPCION = Decimal("1000.00")
+_RECORD_RETENCION = Decimal("190.00")
+
+
 def _withholding_obs(source_id: str, nif: str, clave: str, *, filing_year: int) -> WithholdingObservation:
     return WithholdingObservation.model_validate(
         {
@@ -228,8 +183,8 @@ def _withholding_obs(source_id: str, nif: str, clave: str, *, filing_year: int) 
             "perceptor_tax_id": nif,
             "transaction_date": date(filing_year, 6, 1),
             "clave": clave,
-            "percibido_dinerario": Decimal("1000.00"),
-            "retencion_practicada": Decimal("190.00"),
+            "percibido_dinerario": _RECORD_PERCEPCION,
+            "retencion_practicada": _RECORD_RETENCION,
             "incapacity_cash_perception": Decimal("0"),
             "incapacity_cash_withholding": Decimal("0"),
             "incapacity_kind_value": Decimal("0"),
@@ -360,59 +315,41 @@ def _111_observation(*, filing_year: int, period: str, result: RegistryCalculati
 def _calculate_190(
     *,
     filing_year: int,
-    relation_values: dict[RelationId, Decimal],
     withholding_observations: tuple[WithholdingObservation, ...],
-) -> tuple[RegistryCalculationResult, int]:
-    """Run the REAL 190 annual calculation from relations + withholding detail."""
+) -> RegistryCalculationResult:
+    """Run the REAL 190 annual calculation from its withholding records alone."""
     snapshot = published_authority_operation().snapshot(_MODELO_190, filing_year=filing_year, period="0A")
-    relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
-    withholding_binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
-    binding_values = {**relation_binding_values, **withholding_binding_values}
-    inputs = {
-        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-    }
-    result = calculate_registry_snapshot(
+    binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
+    return calculate_registry_snapshot(
         snapshot,
-        inputs=inputs,
+        inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         binding_values=binding_values,
-        relation_values=relation_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
     )
-    return result, len(result.values)
 
 
-def _compute_year_111_totals(
+def _file_111_quarters(
     quarters: dict[str, dict[CasillaId, Decimal]],
     *,
     filing_year: int,
     obs_repo: CalculationObservationRepository,
     operation: PinnedAuthorityOperation,
-) -> dict[CasillaId, Decimal]:
-    """Calculate all four 111 quarters, persist observations, return casilla sums.
-
-    Returns a dict with the summed values for the casillas the remaining 190
-    relations aggregate: importe casilla 02 and retenciones casilla 28.
-    All other importe casillas are zero in this scenario.
-    """
-    totals: dict[CasillaId, Decimal] = {
-        cid: Decimal("0") for cid in (*_IMPORTE_CASILLAS, _M111_RETENCIONES_TOTAL_CASILLA)
-    }
+) -> Decimal:
+    """Calculate all four 111 quarters, persist their observations, return the summed casilla 02."""
+    importe = Decimal("0")
     for period, inputs in quarters.items():
         result = _calculate_111(filing_year=filing_year, period=period, casilla_inputs=inputs, operation=operation)
+        observation = _111_observation(filing_year=filing_year, period=period, result=result)
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
-                _111_observation(filing_year=filing_year, period=period, result=result),
+                observation,
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-                stamped_revision_id=revision_id_for_observation(
-                    _111_observation(filing_year=filing_year, period=period, result=result)
-                ),
+                stamped_revision_id=revision_id_for_observation(observation),
             )
         )
-        for cid in totals:
-            if cid in result.values:
-                totals[cid] += result.values[cid]
-    return totals
+        importe += result.values[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
+    return importe
 
 
 def test_modelo_111_quarterly_engine_produces_retenciones_casilla(
@@ -437,161 +374,48 @@ def test_modelo_111_quarterly_engine_produces_retenciones_casilla(
     )
 
 
-def test_modelo_190_relation_prefill_aggregates_111_quarters(tmp_path: Path) -> None:
-    """The 190 relation resolver aggregates Year N's four 111 quarterly monetary casillas.
-
-    The cross-quarter aggregation contract for the trabajo-dinerario scenario:
-    ``resolve_relations_from_local_store`` for the 190 annual snapshot produces
-    relation values that equal the arithmetic sum over the four 111 quarters
-    for each still relation-backed targeted casilla (02 importe, 28 retenciones).
-    The retired quarterly count relations remain absent.
-    """
+@pytest.mark.parametrize("exercise", filing_year_envelope().years)
+def test_modelo_190_takes_no_relation_from_filed_modelo_111_quarters(tmp_path: Path, exercise: int) -> None:
+    """Filed Modelo 111 quarters reach no Modelo 190 total in any supported exercise."""
     with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         obs_repo = CalculationObservationRepository()
-        expected = _compute_year_111_totals(
-            _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation
-        )
-        snapshot_190 = published_authority_operation().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
+        _file_111_quarters(_YEAR_N_QUARTERS, filing_year=exercise, obs_repo=obs_repo, operation=operation)
+        snapshot_190 = published_authority_operation().snapshot(_MODELO_190, filing_year=exercise, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_190, operation=operation, repository=obs_repo)
-        relation_ids = {
-            binding.id
-            for binding in snapshot_190.revision.bindings
-            if binding.source is BindingSourceKind.RELATION_PREFILL
-        }
-        binding_ids = {binding.id for binding in snapshot_190.revision.bindings}
-        construct_bindings = set(snapshot_190.revision.constructs[0].bindings)
 
-    resolved: dict[RelationId, Decimal] = {
-        item.relation: item.value for item in prefill.values if item.value is not None
-    }
-    assert relation_ids.isdisjoint(_RETIRED_M190_M111_PERCEPCIONES_RELATIONS)
-    assert binding_ids.isdisjoint(_RETIRED_M190_M111_PERCEPCIONES_BINDINGS)
-    assert construct_bindings.isdisjoint(_RETIRED_M190_M111_PERCEPCIONES_BINDINGS)
-    assert set(resolved).isdisjoint(_RETIRED_M190_M111_PERCEPCIONES_RELATIONS)
-    # trabajo-dinerario importe (source: casilla 02)
-    assert (
-        resolved["modelo-190-111-trabajo-dinerario-importe-anual"] == expected[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
-    )
-    # total retenciones (source: casilla 28)
-    assert resolved["modelo-190-111-retenciones-anual"] == expected[_M111_RETENCIONES_TOTAL_CASILLA]
+    relation_bindings = [
+        binding.id for binding in snapshot_190.revision.bindings if binding.source is BindingSourceKind.RELATION_PREFILL
+    ]
+    assert not relation_bindings
+    assert not [item.relation for item in prefill.values if item.value is not None]
 
 
-def test_modelo_190_year_isolation_ignores_prior_year_observations(tmp_path: Path) -> None:
-    """Year N+1's 190 resolver draws only from Year N+1 111 records, not Year N.
+def test_modelo_190_resumen_totals_each_exercise_own_withholding_records(tmp_path: Path) -> None:
+    """Two exercises, both with filed 111 quarters, total only their own 190 records.
 
-    Both years' observations reside in the same repository. The relation
-    resolver MUST discriminate by ``filing_year`` so the Year N+1 190 monetary
-    relations equal Year N+1's quarterly sums and do not absorb Year N's values.
+    The 111 trabajo-dinerario importe of each exercise is filed into the same
+    store and differs from the 190 records' percepciones, so a total read from
+    Modelo 111, or from the other exercise, fails the equalities below.
     """
     with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         obs_repo = CalculationObservationRepository()
-        _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation)
-        expected_n1 = _compute_year_111_totals(
+        filed_111_n = _file_111_quarters(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation)
+        filed_111_n1 = _file_111_quarters(
             _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo, operation=operation
         )
-        snapshot_190_n1 = published_authority_operation().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
-        prefill = resolve_relations_from_local_store(snapshot_190_n1, operation=operation, repository=obs_repo)
-
-    resolved: dict[RelationId, Decimal] = {
-        item.relation: item.value for item in prefill.values if item.value is not None
-    }
-    assert set(resolved).isdisjoint(_RETIRED_M190_M111_PERCEPCIONES_RELATIONS)
-    assert (
-        resolved["modelo-190-111-trabajo-dinerario-importe-anual"]
-        == expected_n1[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
-    )
-    assert resolved["modelo-190-111-retenciones-anual"] == expected_n1[_M111_RETENCIONES_TOTAL_CASILLA]
-
-
-def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> None:
-    """End-to-end enrollment: 111 quarterly aggregation → 190 annual across two renta years.
-
-    Drives the REAL 111 and 190 backends for both renta years (2025, 2026),
-    records each 190 calculation through the ``cross-year observation``
-    (RECONCILIATION evidence_class — calculation mode, evidenced by _produced
-    casilla count), and cross-checks the recorded two-year set against the
-    cross-year claim.
-
-    The load-bearing wiring assertions are:
-
-    - For each year, ``decl.total-percepciones`` equals the distinct
-      (perceptor, clave, subclave) withholding count.
-    - For each year, ``decl.percepciones-total`` equals the sum of all nine
-      importe relations (here: all zero except trabajo-dinerario importe).
-    - For each year, ``decl.retenciones-total`` equals the retenciones relation
-      (casilla 28 aggregated over 1T-4T).
-    - Year N+1's 190 relations are drawn from Year N+1 observations only.
-
-    These are wiring invariants grounded in RD 439/2007 art. 108, Orden
-    EHA/3127/2009 art. 1, and the AEAT M190 form (BOE-modelo-190-2025-form).
-    """
-
-    with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
-        obs_repo = CalculationObservationRepository()
-
-        # Year N: calculate four 111 quarters, persist, resolve 190, calculate 190.
-        expected_n = _compute_year_111_totals(
-            _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation
-        )
-        # 111 feeder: evidence the feeder year via one real quarterly calculation.
-        _q1_result = _calculate_111(
-            filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"], operation=operation
+        result_n = _calculate_190(filing_year=_YEAR_N, withholding_observations=_year_n_withholding_observations())
+        result_n1 = _calculate_190(
+            filing_year=_YEAR_N_PLUS_1, withholding_observations=_year_n_plus_1_withholding_observations()
         )
 
-        snapshot_190_n = published_authority_operation().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
-        prefill_n = resolve_relations_from_local_store(snapshot_190_n, operation=operation, repository=obs_repo)
-        resolved_n = {item.relation: item.value for item in prefill_n.values if item.value is not None}
-        year_n_withholding = _year_n_withholding_observations()
-        withholding_n = resolve_withholding_binding_values(
-            snapshot_190_n.revision,
-            year_n_withholding,
-        )
-        assert withholding_n[_M190_PERCEPCIONES_BINDING] == _YEAR_N_WITHHOLDING_PERCEPCIONES
-        result_n, _produced_n = _calculate_190(
-            filing_year=_YEAR_N,
-            relation_values=resolved_n,
-            withholding_observations=year_n_withholding,
-        )
-
-        # Year N+1: same pipeline.
-        expected_n1 = _compute_year_111_totals(
-            _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo, operation=operation
-        )
-        _q1_result_n1 = _calculate_111(
-            filing_year=_YEAR_N_PLUS_1,
-            period="1T",
-            casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"],
-            operation=operation,
-        )
-
-        snapshot_190_n1 = published_authority_operation().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
-        prefill_n1 = resolve_relations_from_local_store(snapshot_190_n1, operation=operation, repository=obs_repo)
-        resolved_n1 = {item.relation: item.value for item in prefill_n1.values if item.value is not None}
-        year_n_plus_1_withholding = _year_n_plus_1_withholding_observations()
-        withholding_n1 = resolve_withholding_binding_values(
-            snapshot_190_n1.revision,
-            year_n_plus_1_withholding,
-        )
-        assert withholding_n1[_M190_PERCEPCIONES_BINDING] == _YEAR_N_PLUS_1_WITHHOLDING_PERCEPCIONES
-        result_n1, _produced_n1 = _calculate_190(
-            filing_year=_YEAR_N_PLUS_1,
-            relation_values=resolved_n1,
-            withholding_observations=year_n_plus_1_withholding,
-        )
-
-    # Wiring invariant Year N:
-    # total-percepciones = distinct withholding percepciones, not M111 count sums.
+    year_n_records = len(_year_n_withholding_observations())
+    year_n1_records = len(_year_n_plus_1_withholding_observations())
     assert result_n.values[_M190_TOTAL_PERCEPCIONES_CASILLA] == _YEAR_N_WITHHOLDING_PERCEPCIONES
-    # percepciones-total = sum of importe relations; trabajo-dinerario only.
-    assert result_n.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == expected_n[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
-    # retenciones-total = aggregated casilla 28 over 1T-4T.
-    assert result_n.values[_M190_RETENCIONES_TOTAL_CASILLA] == expected_n[_M111_RETENCIONES_TOTAL_CASILLA]
+    assert result_n.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == _RECORD_PERCEPCION * year_n_records
+    assert result_n.values[_M190_RETENCIONES_TOTAL_CASILLA] == _RECORD_RETENCION * year_n_records
+    assert result_n.values[_M190_PERCEPCIONES_TOTAL_CASILLA] != filed_111_n
 
-    # Wiring invariant Year N+1 (year-isolated):
     assert result_n1.values[_M190_TOTAL_PERCEPCIONES_CASILLA] == _YEAR_N_PLUS_1_WITHHOLDING_PERCEPCIONES
-    assert result_n1.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == expected_n1[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
-    assert result_n1.values[_M190_RETENCIONES_TOTAL_CASILLA] == expected_n1[_M111_RETENCIONES_TOTAL_CASILLA]
-
-    # Authorization-gate enrollment for the 190 resumen.
-
-    # Authorization-gate enrollment for the 111 feeder (standalone fleet modelo).
+    assert result_n1.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == _RECORD_PERCEPCION * year_n1_records
+    assert result_n1.values[_M190_RETENCIONES_TOTAL_CASILLA] == _RECORD_RETENCION * year_n1_records
+    assert result_n1.values[_M190_PERCEPCIONES_TOTAL_CASILLA] != filed_111_n1
