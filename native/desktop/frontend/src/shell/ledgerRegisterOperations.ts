@@ -4,7 +4,7 @@
 // which the host fills. A refused mutation comes back as the refusal's
 // detail, in the same shape.
 
-import type { FileToken, PublicDecimal } from "./ledger";
+import type { FileToken, JsonValue, PublicDecimal } from "./ledger";
 import type {
   WithholdingIncomeClass,
   WithholdingOrigin,
@@ -236,31 +236,48 @@ export type ProrrataRemoveGrossRequest = {
 
 /** One payer's certificate figures for an ejercicio and income class. The
  * payer is named by `payer_ref`, never by their tax identifier, which the
- * backend does not give back. `income_class_label` is the class in the
- * person's language where the backend serves it. */
+ * backend does not give back. The class, the payer and the origin are served
+ * in the person's language; an amount the certificate does not state is null
+ * or absent. */
 export type WithholdingRow = {
   ejercicio: number;
   income_class: WithholdingIncomeClass;
-  income_class_label?: string | null;
+  income_class_label: string;
   payer_ref: string;
   payer_legal_name: string | null;
+  /** The legal name, or the words saying the record states none. */
+  payer_display_name: string;
   importe_integro_dinerario: PublicDecimal;
   valoracion_especie: PublicDecimal;
   retencion: PublicDecimal;
   ingreso_a_cuenta: PublicDecimal;
   ingreso_a_cuenta_repercutido: PublicDecimal;
+  reducciones_aplicables?: PublicDecimal | null;
+  gastos_deducibles?: PublicDecimal | null;
   pago_a_cuenta: PublicDecimal;
   origin: WithholdingOrigin;
+  origin_label: string;
   evidence_fingerprint: string | null;
   revision_id: string;
 };
 
 export type WithholdingListRequest = { ejercicio: number };
 
+/** One amount field of a listed row and the words naming it. */
+export type WithholdingAmountColumn = {
+  /** The row field holding the amount, as the backend names it. */
+  field: string;
+  label: string;
+};
+
 export type WithholdingListResult = {
   profile_id: string;
   ejercicio: number;
   rows: WithholdingRow[];
+  /** The amount fields of a row, in row order, each with its words. */
+  amount_columns: WithholdingAmountColumn[];
+  /** Every ejercicio the pinned authority supports, oldest first. */
+  ejercicios: number[];
 };
 
 /** Why a certificate change was refused before anything was stored. */
@@ -275,6 +292,7 @@ export type WithholdingRefusalReason =
   | "certificate_not_in_custody"
   | "certificate_file_unreadable"
   | "certificate_fingerprint_mismatch"
+  | "trabajo_certificate_figure_missing"
   | "taxpayer_tax_id_unknown"
   | "not_found"
   | "validation";
@@ -312,15 +330,14 @@ export type WithholdingRecordRequest = {
   income_class: WithholdingIncomeClass;
   payer_tax_id: string;
   payer_legal_name?: string | null;
-  importe_integro_dinerario: PublicDecimal;
-  valoracion_especie: PublicDecimal;
-  retencion: PublicDecimal;
-  ingreso_a_cuenta: PublicDecimal;
-  ingreso_a_cuenta_repercutido: PublicDecimal;
   origin: WithholdingOrigin;
   evidence_fingerprint?: string | null;
   source_path?: FileToken | null;
   expected_revision_id?: string | null;
+  /** The certificate's figures, each under the field name the ledger serves
+   * in its `withholding_certificate_figure` options for the class: the
+   * request holds none of them by name. */
+  [figure: string]: JsonValue | undefined;
 };
 
 export type WithholdingRemoveRequest = {
@@ -332,7 +349,7 @@ export type WithholdingRemoveRequest = {
 
 /** The person's attestation that no payer withheld on a class. A change's
  * answer carries the attestation as stored; only the listing words its
- * income class, in `income_class_label`, in the person's language. */
+ * income class and its state, in the person's language. */
 export type WithholdingAbsence = {
   ejercicio: number;
   income_class: WithholdingIncomeClass;
@@ -342,6 +359,7 @@ export type WithholdingAbsence = {
   withdrawn_at: string | null;
   revision_id: string;
   income_class_label?: string | null;
+  state_label?: string | null;
 };
 
 /** Every attestation of an ejercicio, active and withdrawn. */

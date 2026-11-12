@@ -241,6 +241,10 @@ def compose_actividad_asset_registered_operations(inputs: OperationCompositionIn
 
 def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose inventory registered operation."""
+    from ..application.inventory.registered_claim_candidates_operation import (
+        build_inventory_claim_candidates_definition,
+        build_inventory_claim_candidates_registration,
+    )
     from ..application.inventory.registered_evidence_operation import (
         build_inventory_evidence_add_definition,
         build_inventory_evidence_add_registration,
@@ -273,6 +277,7 @@ def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -
     caller = inputs.execution_caller_reader
     evidence = build_inventory_evidence_add_definition(build_ledger_evidence_ports, execution_caller_reader=caller)
     options = build_inventory_options_definition()
+    claim_candidates = build_inventory_claim_candidates_definition(build_inventory_service_ports)
     listing = build_inventory_list_definition(build_inventory_service_ports)
     create = build_inventory_create_definition(build_inventory_service_ports, execution_caller_reader=caller)
     movement = build_inventory_movement_add_definition(build_inventory_service_ports, execution_caller_reader=caller)
@@ -288,7 +293,19 @@ def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -
     inspect = build_inventory_inspect_definition(build_inventory_service_ports)
     changes = build_inventory_ledger_change_definitions(build_inventory_service_ports, execution_caller_reader=caller)
     return built(
-        (listing, create, movement, valuation, closing, closing_value, inspect, evidence, options, *changes),
+        (
+            listing,
+            create,
+            movement,
+            valuation,
+            closing,
+            closing_value,
+            inspect,
+            evidence,
+            options,
+            claim_candidates,
+            *changes,
+        ),
         (
             build_inventory_list_registration(listing),
             build_inventory_create_registration(create),
@@ -299,6 +316,7 @@ def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -
             build_inventory_inspect_registration(inspect),
             build_inventory_evidence_add_registration(evidence),
             build_inventory_options_registration(options),
+            build_inventory_claim_candidates_registration(claim_candidates),
             *(build_inventory_ledger_change_registration(definition) for definition in changes),
         ),
     )

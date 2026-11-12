@@ -832,7 +832,7 @@ def test_m349_note_opens_the_invoice_update_with_the_operation_type_left_to_the_
     resolution = _resolver(build_invoice_catalogue([invoice])).resolve(context)
     (finding,) = (item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified")
 
-    verdict = note_record_verdict(finding)
+    verdict = note_record_verdict(finding.reason, finding.fact)
 
     assert verdict is not None
     assert verdict.action is not None
@@ -926,7 +926,7 @@ def test_an_unstated_party_name_note_opens_the_counterparty_filing_name_door() -
         if item.reason == "declared_party_name_unresolved"
     ]
 
-    verdict = note_record_verdict(finding)
+    verdict = note_record_verdict(finding.reason, finding.fact)
 
     assert verdict is not None
     assert verdict.action is not None

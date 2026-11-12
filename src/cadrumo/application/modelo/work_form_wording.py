@@ -291,6 +291,8 @@ def _held_origin_words(field: ModeloFormField, *, recorded: bool, locale: str) -
     """The words for a stated absence, a filed value or a held zero, which outrank every other origin."""
     if field.stated_absent is not None:
         return tr(STATED_ABSENT_LOCALE_KEYS[field.stated_absent], locale=locale)
+    if field.stated_prior_value is not None:
+        return field.stated_prior_value.origin_words
     if recorded and field.origin in FILED_LOCALE_KEYS:
         return tr(FILED_LOCALE_KEYS[field.origin], locale=locale)
     if field.origin in HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):

@@ -48,8 +48,10 @@ from ....application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from ....application.ledger.statement_reading import bind_statement_reader_factory
+from ....application.operations.error_detail import served_words_language
 from ....application.operations.frontend_requests import OperationObservationSuccessV1
 from ....application.operations.registry import OperationRegistry
+from ....application.operator_actions.served_actions import serve_precondition_verdict
 from ....core.model_roles import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -147,7 +149,8 @@ def _assert_carries_the_refusal(refusal: LedgerImportFileRefusal, role: ModelRol
     assert refusal.reason_code == "reader_unavailable"
     assert refusal.precondition_verdict is not None, "the settled result lost the refused run's verdict"
     verdict = refusal.precondition_verdict.to_verdict()
-    assert verdict == model_run_refusal_verdict(ModelRunRefusal(code=code), role=role)
+    produced = model_run_refusal_verdict(ModelRunRefusal(code=code), role=role)
+    assert verdict == serve_precondition_verdict(produced, served_words_language())
     assert {str(item.values.get("role")) for item in verdict.evidence} == {role.value}
 
 

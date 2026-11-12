@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { typeAsAPerson } from "@/dev/personTyping";
 import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
 import {
@@ -710,5 +710,112 @@ export const FileCannotBeKept: Story = {
         `${t("desktop.ledger.stock.proof.price")}: ${t("desktop.ledger.stock.proof.choose_file")}`,
       ),
     );
+  },
+};
+
+// ---- A purchase's statement about the ledger -------------------------------------
+
+const DRAWING_BOOK = "Venta en línea de material de dibujo";
+
+/** Opens the book of drawing material and the form that states which ledger
+ * transaction books its purchase. */
+async function openClaim(context: PlayContext) {
+  const t = wordsOf(context);
+  await readBook(context, DRAWING_BOOK);
+  await press(context, t("desktop.ledger.stock.action.movement_claim"));
+}
+
+/** Chooses one of the ledger transactions the form offers, by what its line
+ * says, else the first. */
+async function chooseTransaction(context: PlayContext, containing?: string) {
+  const t = wordsOf(context);
+  // The picker is named by the field it fills.
+  await userEvent.click(
+    await control(context, t("desktop.ledger.stock.claim.transaction")),
+  );
+  const option = await waitFor(() => {
+    const found = within(document.body).queryAllByRole("option");
+    const wanted = containing
+      ? found.find((one) => one.textContent?.includes(containing))
+      : found[0];
+    if (!wanted) throw new Error("no transaction is offered yet");
+    return wanted;
+  });
+  await userEvent.click(option);
+}
+
+export const PurchaseStatementUnstated: Story = {
+  name: "A purchase that states nothing about the ledger yet",
+  play: (context) => readBook(context, DRAWING_BOOK),
+};
+
+export const ClaimForm: Story = {
+  name: "Stating which ledger transaction books a purchase",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openClaim(context);
+    await pick(context, t("desktop.ledger.stock.claim.row"), "claimed");
+  },
+};
+
+export const PurchaseClaimed: Story = {
+  name: "A purchase booked by a named ledger transaction",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openClaim(context);
+    await pick(context, t("desktop.ledger.stock.claim.row"), "claimed");
+    await chooseTransaction(context);
+    await press(context, t("desktop.ledger.stock.submit.movement_claim"));
+  },
+};
+
+export const PurchaseBookedByNone: Story = {
+  name: "A purchase that no ledger transaction books",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openClaim(context);
+    await pick(context, t("desktop.ledger.stock.claim.row"), "none");
+    await press(context, t("desktop.ledger.stock.submit.movement_claim"));
+  },
+};
+
+export const ClaimRefused: Story = {
+  name: "A statement refused: the transaction is not in euros",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openClaim(context);
+    await pick(context, t("desktop.ledger.stock.claim.row"), "claimed");
+    await chooseTransaction(context, "SWIFT");
+    await press(context, t("desktop.ledger.stock.submit.movement_claim"));
+  },
+};
+
+/** The three statements a purchase can make, and what the chosen one does,
+ * are the words the backend serves for them: the form holds none of its own. */
+export const ClaimStatementsInServedWords: Story = {
+  name: "The statements and their effects in the served words",
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openClaim(context);
+    const select = await field(context, t("desktop.ledger.stock.claim.row"));
+    for (const value of ["claimed", "none", "unstated"] as const)
+      await waitFor(() => {
+        const found = select.querySelector(`option[value="${value}"]`);
+        // The option carries the word its served label key resolves to,
+        // never the bare token or the unnamed fallback.
+        const said = found?.textContent ?? "";
+        if (
+          said === "" ||
+          said === value ||
+          said === t("desktop.ledger.stock.unnamed")
+        )
+          throw new Error(`${value} is not in the served words yet`);
+      });
+    await userEvent.selectOptions(select, "none");
+    await expect(
+      within(context.canvasElement).getByText(
+        t("application.inventory.effects.purchase_ledger_row.none"),
+      ),
+    ).toBeVisible();
   },
 };

@@ -209,6 +209,15 @@ def _entry_payload(entry: OverviewCalendarEntry) -> dict[str, object]:
     }
 
 
+def _suppressed_entry_payload(entry: SuppressedCalendarEntry) -> dict[str, object]:
+    """Project one suppressed obligation with its resolved doors, the primary first."""
+    resolved = (_resolved_action(action) for action in entry.actions)
+    return {
+        **entry.model_dump(mode="json"),
+        "actions": [action.model_dump(mode="json") for action in resolved if action is not None],
+    }
+
+
 def _typed_with_resolved_actions[ResultT: BaseModel](
     result_type: type[ResultT], source: OverviewAgenda | OverviewBacklog
 ) -> ResultT:
@@ -599,7 +608,7 @@ def overview_calendar_output(
                 "completeness": cal.completeness.model_dump(mode="json"),
                 "taxpayer_model_declared": cal.taxpayer_model_declared,
                 "incomplete_reason": cal.incomplete_reason,
-                "suppressed_entries": [entry.model_dump(mode="json") for entry in cal.suppressed_entries],
+                "suppressed_entries": [_suppressed_entry_payload(entry) for entry in cal.suppressed_entries],
                 "coverage": cal.coverage.model_dump(mode="json"),
             },
         ),

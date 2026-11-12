@@ -737,6 +737,14 @@ application:
       retired_book_leaves_year_unresolved: This inventory was retired but still holds
         entries, so the %{year} `Anexo D` stays unresolved. Restore it, or remove
         its entries.
+    effects:
+      purchase_ledger_row:
+        claimed: This purchase books the named ledger transaction; that row is left
+          out of the Modelo 100 expenses and the purchase carries its cost into the
+          inventory book instead.
+        none: You state that no ledger transaction books this purchase.
+        unstated: Nothing is stated yet about the ledger transaction that books this
+          purchase.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Cost check
@@ -784,6 +792,10 @@ application:
       physical_evidence_role:
         acquisition_price_valuation: Valuation at purchase price
         physical_count: Physical count
+      purchase_ledger_row:
+        claimed: Booked by a ledger transaction
+        none: Not in the ledger
+        unstated: Not stated yet
       retirement_reason:
         activity_ceased: Activity ceased
         created_in_error: Created in error
@@ -2601,6 +2613,9 @@ application:
         entry has no invoice, so the draft is still open and picks the document up.'
       detail_row_identity_conflict: A detail row you entered does not match the row
         your records give for the same declarant; correct or remove it before calculating.
+      edit_prior_carries_unstated: This change leaves the amounts carried from earlier
+        years unstated, so the declaration cannot be calculated. Nothing was changed.
+        State those amounts first.
       edit_revision_id_unresolved: The calculation behind the edit did not report
         which revision it created, so the receipt of the edit could not be kept. This
         is a program inconsistency, and nothing you entered caused it. List the revisions
@@ -3663,6 +3678,25 @@ application:
       pattern: '{month} {day}, {year}'
     work_form:
       additional_data_for_box: Additional data for box {box}
+      authority_grade:
+        applicability: Deadlines only
+        calculation: Calculation and preview only
+        filing: Calculation, filing check and export
+      binding_statement:
+        attest_no_amount:
+          action: State there is no amount
+          effect: Recorded as a 0 you stated.
+          statement: States that this carry holds no amount from an earlier ejercicio.
+            It is recorded as a 0 you stated, apart from a figure you typed; if an
+            earlier return later shows an amount, the declaration flags the difference.
+        attest_prior_value:
+          action: State the figure from the earlier return
+          effect: Recorded as a figure you stated for the earlier return.
+          origin: You stated this for %{source}
+          statement: States the figure this carry takes from an earlier return that
+            is not stored here. Your figure is used in its place and marked as stated
+            by you; verification and export say the figure rests on your statement,
+            and if the earlier return is added later, the declaration flags any difference.
       box_locator_help:
         one_year: Box {box} of modelo {modelo}, tax year {years}.
         onwards: Box {box} of Modelo {modelo}, tax years {years} onwards.
@@ -3759,6 +3793,76 @@ application:
         not be done.
       unworded: This could not be done. Its reason has no sentence yet; its code is
         {error_code}.
+  operator_actions:
+    served:
+      action:
+        auth_configure: Set up the sign-in method
+        auth_diagnostics_view: View the sign-in diagnostic
+        auth_login: Sign in to the AEAT
+        diagnostics_repair: Repair local storage
+        diagnostics_secure_objects_quarantine: Quarantine the damaged records
+        diagnostics_workflow_reset_progress: Reset the guided workflow's progress
+        ledger_account_add: Add your bank account
+        ledger_actividad_asset_correct_revision: Correct the business asset record
+        ledger_classify: Classify your bank movements
+        ledger_classify_irpf_category: Set this movement's IRPF category
+        ledger_classify_movement: Classify this movement
+        ledger_counterparty_filing_name: State the counterparty's name for the declaration
+        ledger_evidence_review_list: Review the pending documents
+        ledger_inventory_movement_claim: Assign the movement to your existencias
+        ledger_invoice_update_operation_type: Set the invoice's operation type
+        ledger_link: Link the invoice to its payment
+        ledger_preflight: Check the ledger for this period
+        ledger_prorrata_list: Review the prorrata register
+        ledger_review: Review the ledger
+        live_filed_pull: Fetch the filed declaration from the AEAT
+        live_filed_pull_all: Fetch all filed declarations from the AEAT
+        live_notifications_list: Check your AEAT notifications
+        modelo_bindings_list: Review where the declaration's figures come from
+        modelo_casillas: Review the declaration's casillas
+        modelo_describe: Read about this modelo
+        modelo_export: Export the declaration file
+        modelo_filing_record_import: Record the filing receipt
+        modelo_filing_record_list: Review the filing records
+        modelo_iva_wallet_override: Correct the IVA balance to carry forward
+        modelo_iva_wallet_seed: State the opening IVA balance to carry forward
+        modelo_verification_report_list: Review the verification reports
+        modelo_work_amend: Amend the filed declaration
+        modelo_work_attest_m303_exonerado_390: Confirm you are exempt from Modelo
+          390
+        modelo_work_attest_prior_carries: State the amounts carried from earlier years
+        modelo_work_attest_prior_value: State the earlier return's figure
+        modelo_work_calculate: Calculate this declaration
+        modelo_work_calculate_joint_return: Calculate it as a joint return
+        modelo_work_create: Start this declaration
+        modelo_work_file: Record this declaration as filed
+        modelo_work_list: Review your declarations
+        modelo_work_override: Override the calculated value
+        modelo_work_revisions: Review this declaration's versions
+        modelo_work_set_value: Enter the casilla's value
+        modelo_work_status: Check this declaration's status
+        modelo_work_verify: Verify this declaration
+        overview_explain: See why this modelo applies to you
+        overview_status: Review your tax obligations
+        profile_archive_reconcile: Reconcile the profile archive
+        profile_arrendamiento: Review your arrendamientos
+        profile_ascendiente: Review your ascendientes
+        profile_complete_setup: Complete your profile setup
+        profile_create: Create a profile
+        profile_descendiente: Review your descendientes
+        profile_edit: Edit your profile
+        profile_list: Review your profiles
+        profile_login: Open your profile
+        profile_logout: Close your profile
+        profile_repair_active_pointer: Repair the active profile selection
+        profile_repair_clear_active: Clear the active profile selection
+        profile_status: Check your profile
+        storage_init: Set up local storage
+      no_recovery:
+        operator_decision: This needs your own decision; no action can take it for
+          you.
+        safety: This was stopped to protect your data, so no action is offered.
+        terminal: 'This refusal is final: no action can clear it.'
   overview:
     calendar:
       event:

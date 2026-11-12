@@ -103,6 +103,7 @@ export type BindingSourceKind =
   | "activity_asset_disposal"
   | "renta_inmueble"
   | "prorrata_regularizacion"
+  | "prorrata_register_activity"
   | "borrador"
   | "iva_wallet_decision"
   | "payable_invoice"

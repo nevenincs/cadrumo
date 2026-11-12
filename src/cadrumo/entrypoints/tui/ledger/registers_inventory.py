@@ -16,14 +16,22 @@ from pathlib import Path
 from typing import Final, Protocol, override
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+from textual import on
 from textual.app import ComposeResult
-from textual.widgets import Static
+from textual.containers import Vertical
+from textual.widgets import Button, Input, Select, Static
 
+from ....application.inventory.registered_claim_candidates_operation import (
+    InventoryClaimCandidateProjection,
+    InventoryClaimCandidatesProjection,
+    InventoryClaimCandidatesRequest,
+)
 from ....application.inventory.registered_evidence_operation import (
     InventoryEvidenceAddProjection,
     InventoryEvidenceAddRequest,
 )
+from ....application.inventory.registered_options_operation import inventory_options
 from ....application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
@@ -34,6 +42,7 @@ from ....application.inventory.registered_projections import (
     InventoryListProjection,
     InventoryListRowProjection,
     InventoryMovementAddProjection,
+    InventoryMovementProjection,
     InventoryRefusalProjection,
     InventoryValuationOperationProjection,
 )
@@ -50,6 +59,7 @@ from ....application.inventory.registered_requests import (
     InventoryLedgerChangeRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementClaimRequest,
     InventoryMovementCorrectRequest,
     InventoryMovementReverseRequest,
     InventoryRestoreRequest,
@@ -57,13 +67,19 @@ from ....application.inventory.registered_requests import (
     InventoryValuationPreviewRequest,
 )
 from ....application.ledger.workspace import LedgerWorkspaceArea
+from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....domain.contribuyente.inventory.records import (
     InventoryCorrectionReason,
     InventoryRetirementReason,
     MovementKind,
+    PurchaseLedgerRow,
     ValuationMethod,
 )
+from ..account import AccountSessionExpiredError
+from ..components.language import localized
+from ..refusal.panel import RefusalSlot
+from ..refusal.served import ServedRefusalV1, ServedWordsV1, served_refusal
 from .controller import LedgerWorkspaceController
 from .registers_input import (
     blank_to_none,
@@ -85,6 +101,7 @@ from .registers_presentation import (
     show_fields,
 )
 from .tools import LedgerToolV1
+from .workspace_presentation import door_refusal_text
 from .workspace_screen import LedgerWorkspaceScreen
 
 INVENTORY_TOOL_KEY: Final = "ledger.tool.registers.inventory"
@@ -120,6 +137,7 @@ _ACTION_LOCALE_KEYS: Final[dict[str, str]] = {
     "correct": "application.inventory.workbench.action.correct",
     "movement_correct": "application.inventory.workbench.action.movement_correct",
     "movement_reverse": "application.inventory.workbench.action.movement_reverse",
+    "movement_claim": "tui.ledger.registers.inventory.action.movement_claim",
     "retire": "application.inventory.workbench.action.retire",
     "restore": "application.inventory.workbench.action.restore",
 }
@@ -133,6 +151,13 @@ _METHOD_LOCALE_KEYS: Final[dict[str, str]] = {
     "pmp": "tui.ledger.registers.inventory.method.pmp",
     "coste_medio": "tui.ledger.registers.inventory.method.coste_medio",
 }
+_CLAIM_LOCALE_KEYS: Final[dict[str, str]] = {
+    "load": "tui.ledger.registers.inventory.claim.load",
+    "prompt": "tui.ledger.registers.inventory.claim.prompt",
+    "none_offered": "tui.ledger.registers.inventory.claim.none_offered",
+}
+_CANDIDATE_SEPARATOR: Final = " | "
+_PURCHASE_LEDGER_ROW_FAMILY: Final = "purchase_ledger_row"
 _KIND_LOCALE_KEYS: Final[dict[str, str]] = {
     "opening": "tui.ledger.registers.inventory.kind.opening",
     "purchase": "tui.ledger.registers.inventory.kind.purchase",
@@ -179,6 +204,8 @@ _FIELDS: Final = (
     "inventory-authority-path",
     "inventory-closing-facts-path",
     "inventory-evidence-path",
+    "inventory-ledger-row",
+    "inventory-claimed-transaction",
     "inventory-target-movement",
     "inventory-correction-reason",
     "inventory-retirement-reason",
@@ -219,6 +246,7 @@ _ACTION_FIELDS: Final[dict[str, frozenset[str]]] = {
         "inventory-acquisition-path",
     },
     "movement_reverse": _SCOPE | {"inventory-target-movement", "inventory-correction-reason"},
+    "movement_claim": _SCOPE | {"inventory-movement-id", "inventory-ledger-row", "inventory-claimed-transaction"},
     "retire": _SCOPE | {"inventory-retirement-reason"},
     "restore": _SCOPE,
 }
@@ -286,6 +314,10 @@ class LedgerInventoryDoorV1(Protocol):
         """Run one edit, rectification, retirement or restoration; a registered refusal is returned, not raised."""
         ...
 
+    async def claim_candidates(self, request: InventoryClaimCandidatesRequest) -> InventoryClaimCandidatesProjection:
+        """Read the ledger transactions one purchase may claim; a registered refusal is returned, not raised."""
+        ...
+
     async def read_acquisition_cost(self, path: str) -> InventoryAcquisitionCostRequest:
         """Read and validate one typed purchase-cost file the operator named."""
         ...
@@ -345,22 +377,54 @@ def _reason_family(entry: InventoryHistoryEntryProjection) -> str:
     return "correction_reason" if entry.correction_reason is not None else "retirement_reason"
 
 
+def _purchase_ledger_row_words() -> dict[str, tuple[str, str | None]]:
+    """The served label and effect key of each statement a purchase can make about the ledger."""
+    family = next(
+        item for item in inventory_options(UUID(int=0)).families if item.family == _PURCHASE_LEDGER_ROW_FAMILY
+    )
+    return {option.value: (option.label_key, option.effect_key) for option in family.options}
+
+
+def _movement_line(item: InventoryMovementProjection) -> str:
+    """One effective movement; a purchase also states whether a ledger transaction books it."""
+    line = tr(
+        "application.inventory.workbench.result.movement",
+        movement_id=item.movement_id,
+        date=item.movement_date.isoformat(),
+        kind=tr(_KIND_LOCALE_KEYS[item.kind.value]),
+        quantity=item.quantity.decimal,
+    )
+    if item.kind is not MovementKind.PURCHASE:
+        return line
+    parts = [line, tr(_purchase_ledger_row_words()[item.ledger_row.value][0])]
+    if item.claimed_transaction_id is not None:
+        parts.append(item.claimed_transaction_id)
+    return _CANDIDATE_SEPARATOR.join(parts)
+
+
+def _candidate_label(candidate: InventoryClaimCandidateProjection) -> str:
+    """One claimable transaction as the ledger states it; a figure the ledger does not state is left out."""
+    base = None if candidate.taxable_base is None else f"{candidate.taxable_base.decimal} {candidate.currency}"
+    parts = (candidate.booked_date.isoformat(), candidate.counterparty, candidate.description, base)
+    return _CANDIDATE_SEPARATOR.join(part for part in parts if part is not None and part != "")
+
+
+def _candidates_refusal(refusal: InventoryRefusalProjection) -> ServedRefusalV1 | None:
+    """The refusal a candidate read served, in its served sentence or the registry's for its code."""
+    if refusal.refusal_words is not None and refusal.refusal_words_language is not None:
+        return ServedRefusalV1(
+            refusal_words=ServedWordsV1(words=refusal.refusal_words, language=refusal.refusal_words_language)
+        )
+    return served_refusal(None, refusal_code=refusal.code)
+
+
 def _ledger_detail_lines(ledger: InventoryLedgerProjection) -> tuple[str, ...]:
     """The ledger's state, its effective movements and every retained change."""
     label = "" if ledger.descriptor is None else ledger.descriptor.label
     return (
         _ledger_line(ledger),
         tr("application.inventory.workbench.result.state", state=_state_word(retired=ledger.retired), label=label),
-        *(
-            tr(
-                "application.inventory.workbench.result.movement",
-                movement_id=item.movement_id,
-                date=item.movement_date.isoformat(),
-                kind=tr(_KIND_LOCALE_KEYS[item.kind.value]),
-                quantity=item.quantity.decimal,
-            )
-            for item in ledger.period_movements
-        ),
+        *(_movement_line(item) for item in ledger.period_movements),
         *(_history_line(entry) for entry in ledger.history),
         *(tr(item.key, year=item.year) for item in ledger.advisories),
     )
@@ -478,6 +542,9 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
                 (tr(_METHOD_LOCALE_KEYS[method.value]), method.value) for method in ValuationMethod
             ),
             "inventory-movement-kind": tuple((tr(_KIND_LOCALE_KEYS[kind.value]), kind.value) for kind in MovementKind),
+            "inventory-ledger-row": tuple(
+                (tr(label_key), row) for row, (label_key, _effect) in _purchase_ledger_row_words().items()
+            ),
             "inventory-correction-reason": tuple(
                 (tr(f"application.inventory.labels.correction_reason.{reason.value}"), reason.value)
                 for reason in InventoryCorrectionReason
@@ -518,6 +585,25 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
         yield from labelled_input(_FIELD_LOCALE_KEYS["authority_record"], "inventory-authority-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["facts"], "inventory-closing-facts-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["source_path"], "inventory-evidence-path")
+        yield from labelled_select(
+            _FIELD_LOCALE_KEYS["ledger_row"], "inventory-ledger-row", options["inventory-ledger-row"]
+        )
+        with Vertical(id="inventory-claimed-transaction-field", classes="register-field"):
+            yield localized(
+                Static(tr(_FIELD_LOCALE_KEYS["claimed_transaction_id"]), markup=False),
+                _FIELD_LOCALE_KEYS["claimed_transaction_id"],
+            )
+            yield localized(
+                Button(tr(_CLAIM_LOCALE_KEYS["load"]), id="inventory-claim-load"), _CLAIM_LOCALE_KEYS["load"]
+            )
+            yield Select[str](
+                (),
+                prompt=tr(_CLAIM_LOCALE_KEYS["prompt"]),
+                allow_blank=True,
+                id="inventory-claimed-transaction",
+            )
+            yield Static("", id="inventory-claim-status", markup=False)
+            yield RefusalSlot(id="inventory-claim-refusal")
         yield from labelled_input(_FIELD_LOCALE_KEYS["target_movement_id"], "inventory-target-movement")
         yield from labelled_select(
             _FIELD_LOCALE_KEYS["reason"], "inventory-correction-reason", options["inventory-correction-reason"]
@@ -539,6 +625,58 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
         """Show only the fields the chosen request takes."""
         self._show_action_fields()
 
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Forget the offered transactions once the purchase they were read for is no longer the one named."""
+        if event.input.id in {"inventory-actividad", "inventory-year", "inventory-movement-id"}:
+            self._forget_candidates()
+
+    def _forget_candidates(self) -> None:
+        self.query_one("#inventory-claimed-transaction", Select).set_options(())
+        self.query_one("#inventory-claim-status", Static).update("")
+        self.query_one("#inventory-claim-refusal", RefusalSlot).show(None)
+
+    @on(Button.Pressed, "#inventory-claim-load")
+    def _offer_candidates(self) -> None:
+        if self._busy:
+            return
+        self.run_worker(self._read_candidates(), group="inventory-claim-candidates", exclusive=True)
+
+    async def _read_candidates(self) -> None:
+        """Offer the transactions the served read lists for the purchase named, or show its served refusal."""
+        refusal = self.query_one("#ledger-refusal", Static)
+        refusal.update("")
+        self._forget_candidates()
+        try:
+            request = InventoryClaimCandidatesRequest(
+                profile_id=self.door.profile_id,
+                actividad_id=require_text(
+                    self.input_value("#inventory-actividad"), field_key=_FIELD_LOCALE_KEYS["actividad_id"]
+                ),
+                year=parse_whole_number(self.input_value("#inventory-year"), field_key=_FIELD_LOCALE_KEYS["year"]),
+                movement_id=require_text(
+                    self.input_value("#inventory-movement-id"), field_key=_FIELD_LOCALE_KEYS["movement_id"]
+                ),
+            )
+            listed = await self.door.claim_candidates(request)
+        except AccountSessionExpiredError as error:
+            self._clear_private_view()
+            refusal.update(door_refusal_text(error))
+            return
+        except (CadrumoError, ValidationError) as error:
+            refusal.update(door_refusal_text(error))
+            return
+        except ValueError as error:
+            refusal.update(str(error))
+            return
+        if listed.refusal is not None:
+            self.query_one("#inventory-claim-refusal", RefusalSlot).show(_candidates_refusal(listed.refusal))
+            return
+        self.query_one("#inventory-claimed-transaction", Select).set_options(
+            (_candidate_label(item), item.transaction_id) for item in listed.candidates
+        )
+        if not listed.candidates:
+            self.query_one("#inventory-claim-status", Static).update(tr(_CLAIM_LOCALE_KEYS["none_offered"]))
+
     def _evidence_request(self) -> InventoryEvidenceAddRequest:
         return InventoryEvidenceAddRequest(
             profile_id=self.door.profile_id,
@@ -553,7 +691,7 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
 
     @override
     def form_controls(self) -> tuple[str, ...]:
-        return ("#inventory-action", *(f"#{field}" for field in _FIELDS))
+        return ("#inventory-action", *(f"#{field}" for field in _FIELDS), "#inventory-claim-load")
 
     @override
     async def read_register(self) -> None:
@@ -600,7 +738,15 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
             return InventoryCreateRequest.model_validate(fields), None
         if action == "inspect":
             return InventoryInspectRequest(profile_id=profile_id, actividad_id=actividad, year=year), None
-        if action in {"describe", "correct", "movement_correct", "movement_reverse", "retire", "restore"}:
+        if action in {
+            "describe",
+            "correct",
+            "movement_correct",
+            "movement_reverse",
+            "movement_claim",
+            "retire",
+            "restore",
+        }:
             return await self._change_request(action, actividad=actividad, year=year)
         if action == "valuation_preview":
             return InventoryValuationPreviewRequest(profile_id=profile_id, actividad_id=actividad, year=year), None
@@ -667,6 +813,8 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
             return InventoryRetireRequest.model_validate({**scope, "reason": reason}), None
         if action == "restore":
             return InventoryRestoreRequest.model_validate(scope), None
+        if action == "movement_claim":
+            return self._claim_request(scope), None
         correction_reason = InventoryCorrectionReason(self.select_value("#inventory-correction-reason"))
         if action == "correct":
             method = self.select_value("#inventory-corrected-method")
@@ -718,11 +866,34 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
             path,
         )
 
+    def _claimed_transaction(self) -> str | None:
+        """The transaction picked from the offered ones, or ``None`` when none is picked."""
+        picker = self.query_one("#inventory-claimed-transaction", Select)
+        return None if picker.is_blank() else str(picker.value)
+
+    def _claim_request(self, scope: dict[str, object]) -> InventoryMovementClaimRequest:
+        """State the transaction that books a purchase, that none does, or clear the statement."""
+        return InventoryMovementClaimRequest.model_validate(
+            {
+                **scope,
+                "movement_id": require_text(
+                    self.input_value("#inventory-movement-id"), field_key=_FIELD_LOCALE_KEYS["movement_id"]
+                ),
+                "ledger_row": PurchaseLedgerRow(self.select_value("#inventory-ledger-row")),
+                "claimed_transaction_id": self._claimed_transaction(),
+            }
+        )
+
     @override
     async def stage(self) -> tuple[BaseModel, str]:
         action = self.select_value("#inventory-action")
         request, source = (self._evidence_request(), None) if action == "evidence_add" else await self._request(action)
         lines = [tr(_ACTION_LOCALE_KEYS[action]), request_summary(request, field_keys=_FIELD_LOCALE_KEYS)]
+        if isinstance(request, InventoryMovementClaimRequest):
+            label_key, effect_key = _purchase_ledger_row_words()[request.ledger_row.value]
+            lines.append(tr(label_key))
+            if effect_key is not None:
+                lines.append(tr(effect_key))
         if source is not None:
             lines.append(tr("tui.ledger.registers.inventory.source", path=source))
         return request, "\n".join(lines)

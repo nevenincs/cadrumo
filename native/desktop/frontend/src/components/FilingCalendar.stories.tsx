@@ -9,6 +9,8 @@ import {
   FIXTURE_CALENDAR,
   FIXTURE_TODAY,
   STRADDLING_CALENDAR,
+  UNKNOWN_YEAR_CALENDAR,
+  UNKNOWN_YEAR_EMPTY_CALENDAR,
 } from "@/dev/fixtures/calendar";
 import { BUSY_CALENDAR, BUSY_TODAY } from "@/dev/fixtures/calendarBusy";
 import profiles from "@fixtures/desktop-profile/userProfile.json" with { type: "json" };
@@ -155,6 +157,18 @@ export const Refreshing: Story = { args: { refreshing: true } };
 export const NothingDue: Story = {
   name: "Nothing in the range",
   args: { state: { kind: "ready", calendar: EMPTY_CALENDAR } },
+};
+
+// A year the registry has no deadline windows for is unknown, said in the
+// served words: an empty list there is not "nothing due".
+export const UnknownYearEmpty: Story = {
+  name: "Unknown year: no rows, said as unknown",
+  args: { state: { kind: "ready", calendar: UNKNOWN_YEAR_EMPTY_CALENDAR } },
+};
+
+export const UnknownYearBesideRows: Story = {
+  name: "Unknown year: beside known rows",
+  args: { state: { kind: "ready", calendar: UNKNOWN_YEAR_CALENDAR } },
 };
 
 // Where the mark for today stands in each shape of range.

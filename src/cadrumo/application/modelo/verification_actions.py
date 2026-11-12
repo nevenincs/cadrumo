@@ -31,15 +31,13 @@ from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     TransactionParticipationIndexRepositoryProtocol,
 )
-from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     VerificationCompletenessStatus,
     VerificationReport,
 )
 from ...domain.modelos.verification_repository import upsert_verification_report
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
@@ -80,6 +78,7 @@ from .registry_helpers import assert_revision_content_integrity
 from .required_binding_gate import (
     require_persisted_revision_required_bindings_resolved,
 )
+from .selectors import require_work_unit_holds_a_calculation
 from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs
 from .verification_gate_findings import collect_verification_gate_findings
 from .verification_model_findings import append_readable_model_findings
@@ -132,6 +131,7 @@ def _load_verification_context(
         calculation_revision_id=calculation_revision_id,
         operation=RevisionParentOperation.VERIFY,
     )
+    require_work_unit_holds_a_calculation(work_unit)
     # Before the idempotent no-op below: a revision granted before evidence was
     # captured must not be reported as verified beside that evidence either.
     require_modelo_123_count_authority(
@@ -383,7 +383,7 @@ def _finish_verification(
     missing_required_casilla_ids: list[CasillaId],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> ModeloVerificationResult:
-    cr_repo, wu_repo, vr_repo = repos.calculation, repos.work_unit, repos.verification
+    cr_repo, vr_repo = repos.calculation, repos.verification
     if granted:
         gate_engine = workflow_engine or build_revision_workflow_engine(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -434,12 +434,6 @@ def _finish_verification(
             calculation_repository=cr_repo,
             participation_index_repository=repos.participation_index,
         )
-        _repair_verified_revision_current_pointer(
-            work_unit=work_unit,
-            calculation_revision_id=calculation_revision_id,
-            verified_at=now,
-            work_unit_repository=wu_repo,
-        )
 
     _emit_verification_bucket_event(
         repository=repos.bucket_event,
@@ -480,50 +474,6 @@ def _recorded_notes(
         *read_recorded_notes(target.source_issues, repos.ledger_membership_ports.activity_asset_history_repository),
         *applied_resolution_notes(target, lookup),
     )
-
-
-def _repair_verified_revision_current_pointer(
-    *,
-    work_unit: WorkUnit,
-    calculation_revision_id: CalculationRevisionId,
-    verified_at: datetime,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
-) -> None:
-    work_units = work_unit_repository.load()
-    latest = work_units.get(work_unit.work_unit_id)
-    if latest is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit.work_unit_id, "phase": "verification"},
-        )
-    if latest.current_calculation_revision_id == calculation_revision_id:
-        return
-    if latest.current_calculation_revision_id is not None:
-        return
-
-    # Guarded: stamping this pointer rewrites the WHOLE singleton catalogue, so
-    # a work unit another operator created or advanced in the interim would be
-    # discarded by a repair that was only meant to fill in one pointer. The
-    # already-set and absent checks above ran against the catalogue this call
-    # read; re-running them inside the mutation is what makes the retry honest,
-    # because a concurrent verification may have set the very pointer this
-    # repair exists to fill.
-    def _stamp(current: WorkUnitCatalogue) -> WorkUnitCatalogue:
-        """Fill in the pointer, unless the catalogue being written already has one."""
-        present = current.get(work_unit.work_unit_id)
-        if present is None or present.current_calculation_revision_id is not None:
-            return current
-        return upsert_work_unit(
-            current,
-            present.model_copy(
-                update={
-                    "current_calculation_revision_id": calculation_revision_id,
-                    "updated_at": verified_at,
-                },
-            ),
-        )
-
-    work_unit_repository.mutate(_stamp)
 
 
 def _persist_verified_revision_evidence(

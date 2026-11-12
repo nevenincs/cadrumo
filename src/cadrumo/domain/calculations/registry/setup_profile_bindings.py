@@ -14,41 +14,32 @@ renders a setup value.
 
 from __future__ import annotations
 
-from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 
 _SETUP_FACT_ID = "ley-49-2002-profile-binding-catalogue"
 
 
 def mapping_fact_entries(fact_id: str, *, authority: GovernedFactSource | None = None) -> dict[str, str]:
-    """Resolve one string mapping fact and return its exact entries.
+    """Resolve one string mapping fact across the support envelope and return its exact entries.
 
-    The returned mapping is copied at the boundary; the authority remains the
-    only source of the declarations and no Python fallback is retained when a
+    The declarations carry no date of their own, so the read never takes the
+    run date: it merges every edition the fact authors inside the supported
+    filing years, the newest edition's value standing where two differ. The
+    returned mapping is copied at the boundary; the authority remains the only
+    source of the declarations and no Python fallback is retained when a
     required entry is absent.
     """
+    from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, StringMappingPolicy
     from .schema_base import DateAxis
 
     selected_authority = require_governed_fact_authority(authority, subject="setup mapping fact")
-    resolved = selected_authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=fact_id,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
-        ),
+    fact = StringMappingFact(
+        fact_id=fact_id,
+        date_axis=DateAxis.FILING_PERIOD,
+        policy=StringMappingPolicy(subject=repr(fact_id), value_whitespace=MappingValueWhitespace.PRESERVE),
     )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise TypeError(f"{fact_id!r} must resolve as a mapping fact")
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError(f"{fact_id!r} must contain string mappings")
-        if entry.key in entries:
-            raise RegistryValidationError(f"{fact_id!r} contains duplicate key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return entries
+    return dict(fact.resolve_support_envelope_entries(selected_authority))
 
 
 def setup_answer_declarations(

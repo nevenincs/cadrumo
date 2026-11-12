@@ -20,6 +20,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.period import calculation_filing_date
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..user_profile.projections import record_to_path_values
 from .action_errors import (
@@ -374,6 +375,7 @@ def append_registry_predicate_findings(
             predicate_profile,
             target.input_values_by_casilla_id,
             declared_casilla_ids=frozenset(casilla.id for casilla in snapshot.revision.casillas),
+            fact_date=calculation_filing_date(work_unit.period),
             blocking_finding_observer=lambda finding, predicate: failures_by_finding_id.__setitem__(
                 id(finding),
                 build_verification_precondition_failure(

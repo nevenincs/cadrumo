@@ -2,21 +2,31 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
+from .....core.time.clock import frozen_clock
+from ..authority import PinnedAuthorityOperation
 from ..errors import RegistryValidationError
+from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
+from ..formula_expression import EvalContext
 from ..formula_runtime import calculate_registry_snapshot
-from ..formula_runtime_irnr import irnr_resolve_tipo_gravamen_args, m210_allows_art_24_6_expenses
+from ..formula_runtime_irnr import (
+    evaluate_m210_resolve_base_imponible,
+    irnr_resolve_tipo_gravamen_args,
+    m210_allows_art_24_6_expenses,
+)
 from ..formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
     resolve_keyed_bracket,
 )
+from ..governed_fact_scope import validating_governed_facts
 from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue, tipo_renta_ue_residente_token
 from ..schema import FormulaDefinition, RegistrySnapshot
 from ..schema_formula import FormulaExpression
+from ..schema_references import TemporalSupportEnvelope
 from .authored_editions import filing_year_envelope
 from .published_authority import published_snapshot
 
@@ -69,6 +79,71 @@ def test_art_24_6_expense_branch_uses_the_registry_declared_resident_token() -> 
         country_code="ZW",
         effective_date=effective_date,
     )
+
+
+class _DateRecordingSource:
+    """Delegate every governed-fact read to the pinned operation, keeping the date each one asked for."""
+
+    def __init__(self, inner: PinnedAuthorityOperation) -> None:
+        self._inner = inner
+        self.asked: list[date] = []
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        self.asked.append(query.effective_date)
+        return self._inner.resolve_governed_fact(query)
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        return self._inner.supported_filing_years()
+
+
+def test_art_24_6_expense_branch_reads_eu_eea_membership_at_the_devengo_not_the_run_date(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    devengo = date(_YEAR, 3, 1)
+    other_token = next(
+        token
+        for token in resolve_tipo_renta_irnr_catalogue(effective_date=devengo).all_tokens
+        if token != tipo_renta_ue_residente_token(effective_date=devengo)
+    )
+    recorder = _DateRecordingSource(operation)
+    outside_the_envelope = datetime(filing_year_envelope().floor - 3, 6, 15, 12, tzinfo=UTC)
+
+    with frozen_clock(outside_the_envelope), validating_governed_facts(recorder):
+        allows_eu = m210_allows_art_24_6_expenses(tipo_renta=other_token, country_code="FR", effective_date=devengo)
+        allows_third_country = m210_allows_art_24_6_expenses(
+            tipo_renta=other_token, country_code="ZW", effective_date=devengo
+        )
+
+    assert allows_eu
+    assert not allows_third_country
+    assert recorder.asked
+    assert set(recorder.asked) == {devengo}
+
+
+def test_m210_base_imponible_without_a_devengo_date_is_refused() -> None:
+    expression = next(
+        formula.expression
+        for formula in _current_m210_snapshot().revision.formulas
+        if formula.expression.op == "m210_resolve_base_imponible"
+    )
+    context = EvalContext(
+        values={},
+        binding_values={},
+        parameters={},
+        date_context={},
+        relation_values={},
+        unresolved_relation_ids=frozenset(),
+        unresolved_casilla_ids=set(),
+        operand_refs=[],
+        operand_casilla_refs=[],
+        operand_values=[],
+        enum_binding_values={},
+        date_binding_values={},
+        filing_year=_YEAR,
+    )
+
+    with pytest.raises(RegistryValidationError, match=r"^M210 base imponible requires a filing_period devengo date$"):
+        evaluate_m210_resolve_base_imponible(expression, context)
 
 
 def test_irnr_resolve_tipo_gravamen_args_accepts_current_five_arg_contract() -> None:

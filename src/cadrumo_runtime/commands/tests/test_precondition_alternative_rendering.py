@@ -65,8 +65,8 @@ def test_the_runtime_resolver_puts_the_executable_before_every_door() -> None:
 def test_the_runtime_text_rows_show_the_statement_after_the_capture_door() -> None:
     lines = precondition_action_lines(resolve_cli_precondition_action(_verdict(attestable=True)))
 
-    assert lines[-1].split("\t", 1)[0] == "precondition_action.alternative_actions"
-    alternatives = json.loads(lines[-1].split("\t", 1)[1])
+    assert lines[7].split("\t", 1)[0] == "precondition_action.alternative_actions"
+    alternatives = json.loads(lines[7].split("\t", 1)[1])
     assert alternatives[0]["action"]["cli_path"] == list(_recorded_path("modelo.work.attest_prior_value"))
     assert alternatives[0]["missing_argument_names"] == ["value"]
 
@@ -74,5 +74,6 @@ def test_the_runtime_text_rows_show_the_statement_after_the_capture_door() -> No
 def test_a_runtime_refusal_with_one_door_adds_no_row() -> None:
     lines = precondition_action_lines(resolve_cli_precondition_action(_verdict(attestable=False)))
 
-    assert len(lines) == 7
+    # Seven rows of the refusal, then the served words, their language and the operations the door submits.
+    assert len(lines) == 10
     assert not any(line.startswith("precondition_action.alternative_actions") for line in lines)

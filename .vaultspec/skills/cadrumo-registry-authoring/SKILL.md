@@ -59,7 +59,7 @@ For a new modelo, use the scaffold route in the command reference with explicit 
 
 Use the current `ModeloRevision` schema in `src/cadrumo/domain/calculations/registry/schema.py` and the public keyed-family/delta types it imports as the declaration contract:
 
-- `casilla_storage_baseline` and `family_storage_baseline` select storage ancestry. Do not invent legal `predecessor` continuity to obtain inheritance.
+- `casilla_storage_baseline` and `family_storage_baseline` select storage ancestry. Do not invent legal `predecessor` continuity to obtain inheritance. The converter assigns `predecessor` for storage inheritance only: review what it assigned, and treat a blocked edition as unresolved, never as legal continuity.
 - `casilla_overrides` and `family_overrides` patch changed leaves; their selectors identify the actual inherited member. Author new members in their owning family fragments.
 - `casilla_removals`/`family_removals`, positions and `cleared_families` encode real deletion, ordering and clearing. Omission inherits; it is not deletion. False, zero and empty values retain distinct typed meanings.
 - `cleared_families` takes every member of a family out of an edition, so each entry states `family`, `cause` and an authored `reason`, exactly as `restated_families` does. Pick the cause that is true: `official_structure_withdraws` claims the governing document no longer lays the family out, while `not_authored_for_this_edition` records that nobody has authored this edition's members and the predecessor's are not adopted. A family the law does not require at all is an evidenced family disposition, not a clearance.
@@ -80,10 +80,14 @@ Follow the command reference for candidate inspection, generic modelo collapse, 
 1. The release intentionally changes exactly the evidenced fields/claims, with tests for affected frames and preserved historical behavior.
 2. The storage normalization changes no effective typed meaning and leaves no eligible duplicate payload, unresolved shapes or coverage gaps; a second conversion changes no files.
 
+Conversion rewrites casillas; `--drop-restatement` then removes members of the enrolled keyed families that an edition restates byte for byte (procedure in the command reference). Export layouts, form layouts, verification expectations, workbook pins and the completeness manifest are per-edition generated claims and are never collapsed. Measure minimality with the `delta_minimality` and `edition_delta_assessment` lanes of `just check-registry` and with `python -m dev.registry.analysis.delta_minimality --check`.
+
 Inspect the complete report, not only the process exit code. Already-delta casillas do not mean remaining families are minimal. If the user requested implementation, finish the actual source installation and verify its live fingerprint; a staging path is not completion. Do not replace unrelated modelos during a single-modelo task.
 
 ## 5. Publish and verify the requested boundary
 
 When publication is in scope, finish applicable named export targets against the canonical compiled candidate, then use the real authority publisher on stable final inputs and verify currency. The target pipeline compiles source; it does not require publishing an intermediate runtime generation. Recheck source minimality after target writes. If a target operation changes inputs after publication, republish authority only after those final inputs pass acceptance. Never hand-write the active pointer, treat a temporary SQLite file as publication, or remove retained lock sidecars.
+
+Final checks are `just check-registry`, `just check-registry-gate`, `just check-bindings` and `just check-registry-year-independence`.
 
 Complete only when the requested boundary is proven. Report modelo/frame, official release evidence, authored versus projected status, changed live paths, baseline/delta counts, semantic change tests, minimality/idempotence, and separate source-installed/authority-published/runtime-package results. For an unchanged projected edition, report the resolved baseline and evidence for the no-new-payload decision. For a real blocker, name the failing invariant and exact affected scope; continue independent in-scope work, but do not bypass publication validation.

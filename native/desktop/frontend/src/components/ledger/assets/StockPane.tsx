@@ -9,6 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { facts } from "@/shell/compose";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
 import type {
@@ -38,9 +39,10 @@ import {
   RestoreForm,
 } from "./StockBookForms";
 import { ClosingForm } from "./StockClosingForm";
+import { MovementClaimForm } from "./StockClaimForm";
 import { MovementForm, MovementCorrectForm } from "./StockMovementForms";
 import { YearStepper } from "./YearStepper";
-import { bookName } from "./stockModel";
+import { bookName, claimOf } from "./stockModel";
 import {
   keyOf,
   useBookList,
@@ -48,7 +50,7 @@ import {
   useOffers,
   type BookKey,
 } from "./stockReads";
-import { plays, wordOf } from "./stockVocabulary";
+import { plays, servedWord, wordOf } from "./stockVocabulary";
 import { refusalOf, refusalWords } from "./stockWords";
 
 const NO_BOOKS: readonly InventoryBookRow[] = [];
@@ -103,7 +105,11 @@ type Task =
       book: BookKey;
     }
   | {
-      kind: "movement_correct" | "movement_reverse" | "purchase_facts";
+      kind:
+        | "movement_correct"
+        | "movement_reverse"
+        | "movement_claim"
+        | "purchase_facts";
       book: BookKey;
       target: InventoryMovement;
     };
@@ -467,6 +473,16 @@ export function StockPane({
             target={task.target}
           />
         );
+      case "movement_claim":
+        return (
+          <MovementClaimForm
+            key={`${key}|${task.target.movement_id}`}
+            {...common}
+            reader={reader}
+            locale={locale}
+            target={task.target}
+          />
+        );
       case "movement_reverse":
         return (
           <ReverseForm
@@ -589,6 +605,30 @@ export function StockPane({
                 },
               },
               {
+                key: "ledger_row",
+                label: t("desktop.ledger.stock.claim.column"),
+                sort: (movement) => claimOf(movement)?.row ?? "",
+                cell: (movement) => {
+                  if (!plays(catalogue.vocabulary, "purchase", movement.kind))
+                    return "—";
+                  const claim = claimOf(movement);
+                  // A statement the read did not serve is not said as any of
+                  // the three.
+                  if (claim === null) return "—";
+                  // Only the served label words a statement; the window
+                  // holds no word of its own for one.
+                  const served = (
+                    catalogue.offers.purchase_ledger_row ?? []
+                  ).find((found) => found.value === claim.row);
+                  const said = served
+                    ? servedWord(t, served)
+                    : t("desktop.ledger.stock.unnamed");
+                  return claim.row === "claimed" && claim.transaction !== null
+                    ? facts(t, [said, claim.transaction])
+                    : said;
+                },
+              },
+              {
                 key: "actions",
                 label: t("desktop.ledger.form.actions"),
                 hidden: true,
@@ -609,6 +649,28 @@ export function StockPane({
                       >
                         <Icon name="eye" />
                       </IconButton>
+                    )}
+                    {plays(catalogue.vocabulary, "purchase", movement.kind) && (
+                      <WriteHold>
+                        <IconButton
+                          label={t(
+                            "desktop.ledger.stock.action.movement_claim",
+                          )}
+                          hint={why}
+                          aria-disabled={stopped || undefined}
+                          className="ledger-stock-movement-claim"
+                          onClick={() =>
+                            !stopped &&
+                            open({
+                              kind: "movement_claim",
+                              book: bookKey,
+                              target: movement,
+                            })
+                          }
+                        >
+                          <Icon name="link" />
+                        </IconButton>
+                      </WriteHold>
                     )}
                     <WriteHold>
                       <IconButton

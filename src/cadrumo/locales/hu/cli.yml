@@ -400,6 +400,9 @@ cli:
         list_help: Készletnyilvántartások listázása az aktív profilban.
         movement_add_help: Vásárlási, értékesítési vagy helyesbítési mozgás hozzáadása
           a készletnyilvántartáshoz.
+        movement_claim_candidates_help: 'Felsorolja azokat a főkönyvi tranzakciókat,
+          amelyeket egy vásárlás megjelölhet: amelyeknek alapja, áfája és egyenértékűségi
+          pótdíja centre egyezik a vásárláséval.'
         movement_claim_help: Megadod, melyik főkönyvi tranzakció könyveli a beszerzést,
           vagy hogy egyik sem, vagy törlöd a megjelölést; a lefoglalt tranzakció kikerül
           a főkönyvi költségrovatokból.
@@ -4347,6 +4350,11 @@ cli:
         tartott virtuális valutáid meghaladják-e a bejelentési értékhatárt.
       oss_unset: A profilodban még nem szerepel, hogy be vagy-e jelentkezve az egyablakos
         áfaszabályozásba.
+      pago_fraccionado_art_40_3_unset: A profilodban még nem szerepel, hogy a társaság
+        a cégbejelentésében (declaración censal) élt-e az LIS 40.3. cikkely szerinti
+        választással (részletfizetés az első 3, 9 vagy 11 hónap adóalapja után). A
+        cikkely küszöbértéke alatt ettől a választástól függ, hogy a Modelo 202 egyes
+        részletei után keletkezik-e befizetés, és így be kell-e nyújtanod.
       patrimonio_umbral_unset: A profilodban még nem szerepel, hogy az Impuesto sobre
         el Patrimonio szerinti adód fizetendő-e, vagy hogy a vagyonod és jogaid meghaladják-e
         a 2 000 000 eurót.

@@ -159,7 +159,7 @@ def test_a_purchase_without_a_standing_ledger_entry_refuses_every_action_with_th
 def test_the_calculation_names_the_same_door_on_the_note_it_shows() -> None:
     (diagnostic,) = _diagnostics("100.00", claiming=False)
 
-    verdict = note_record_verdict(diagnostic)
+    verdict = note_record_verdict(diagnostic.reason, diagnostic.fact)
 
     assert verdict is not None
     assert verdict.action is not None

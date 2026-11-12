@@ -27,6 +27,14 @@ _PRECONDITION_ACTION_FIELDS = (
     "no_recovery_outcome",
 )
 _PRECONDITION_ALTERNATIVE_ACTIONS_FIELD = "alternative_actions"
+SERVED_PRECONDITION_FIELDS = (
+    "action_words",
+    "action_words_language",
+    "target_operation_ids",
+    "no_recovery_words",
+    "no_recovery_words_language",
+)
+"""Fields a transport serves on a resolved verdict, rendered only when present."""
 
 
 def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
@@ -68,6 +76,20 @@ def activate_subcommand_output_language(ctx: typer.Context, language: OutputLang
     clear_output_language_cache()
 
 
+def served_action_lines(action: ResolvedPreconditionAction) -> tuple[str, ...]:
+    """Each offered action's served words in offered order, or the served no-way-out sentence.
+
+    The words come from the verdict as served; nothing here authors them. The
+    command a word names stays in the action's own rows, which carry its
+    resolved path and any argument it still needs, so no partial command line is
+    printed beside the words. An action without served words adds no line.
+    """
+    if action.no_recovery_words is not None:
+        return (action.no_recovery_words,)
+    offered = (action.action_words, *(item.action_words for item in action.alternative_actions))
+    return tuple(words for words in offered if words is not None)
+
+
 def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tuple[str, ...]:
     """Render the exact resolved action DTO as stable machine-readable rows, without synthesising recovery prose.
 
@@ -82,6 +104,7 @@ def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tupl
         if action.alternative_actions
         else _PRECONDITION_ACTION_FIELDS
     )
+    field_names = (*field_names, *(name for name in SERVED_PRECONDITION_FIELDS if name in document))
     return tuple(
         f"precondition_action.{field_name}\t"
         f"{json.dumps(document[field_name], ensure_ascii=False, sort_keys=True, separators=(',', ':'))}"

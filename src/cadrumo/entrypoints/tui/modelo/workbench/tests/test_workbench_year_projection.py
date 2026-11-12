@@ -31,6 +31,7 @@ async def _projection_line(form_words: str | None) -> tuple[bool, str]:
                     direction=TemporalProjectionDirection.FORWARD,
                     authored_filing_year=form.year_projection.authored_filing_year - 1,
                     reachable_grade=RegistryAuthorityGrade.CALCULATION,
+                    reachable_grade_words="Synthetic calculation grade words",
                     words=form_words,
                 )
             }

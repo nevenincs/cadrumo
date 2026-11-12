@@ -6,6 +6,7 @@
 // the payer's reference. Everything it answers is synthetic.
 
 import served from "@fixtures/desktop-withholding-refusal-words/ledgerWithholdingRefusalWords.json" with { type: "json" };
+import servedEntryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import {
   WITHHOLDING_INCOME_CLASSES,
   WITHHOLDING_ORIGINS,
@@ -49,13 +50,16 @@ declare global {
 const WRITE_CODE = "REFUSED_RETENCION_SOPORTADA_WRITE";
 const ABSENCE_CODE = "REFUSED_RETENCION_SOPORTADA_ABSENCE";
 const REVISION_CODE = "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT";
-const AMOUNTS = [
-  "importe_integro_dinerario",
-  "valoracion_especie",
-  "retencion",
-  "ingreso_a_cuenta",
-  "ingreso_a_cuenta_repercutido",
-] as const;
+/** The figures a certificate states for each class, as `ledger.entry-options`
+ * serves them, in the order served. */
+const FIGURES_OF = (incomeClass: string): string[] =>
+  (
+    servedEntryOptions.families.find(
+      (found) => found.family === "withholding_certificate_figure",
+    )?.options ?? []
+  )
+    .filter((option) => "group" in option && option.group === incomeClass)
+    .map((option) => option.value);
 const DECIMAL = /^(0|[1-9]\d*)(\.\d+)?$/;
 /** The sentences the backend serves with every refusal of the record and of
  * the absence operations, by reason and language, read from its own wording. */
@@ -65,18 +69,51 @@ type ServedWords = Record<
 >;
 const RECORD_WORDS: ServedWords = served.record;
 const ABSENCE_WORDS: ServedWords = served.absence;
-/** The class the scenario serves a label for; the others are served bare. */
-const LABELLED = {
-  [WITHHOLDING_INCOME_CLASSES[0]]: "Employment income",
-  [WITHHOLDING_INCOME_CLASSES[4]]: "Economic activity income",
+/** The words the scenario serves for the income classes it holds. */
+const LABELLED: Record<string, string> = {
+  trabajo: "Employment income",
+  capital_mobiliario: "Income from movable capital",
+  arrendamiento_inmueble_urbano:
+    "Income from real estate capital: urban property rental",
+  arrendamiento_inmueble_urbano_actividad:
+    "Economic activity income: urban property rental",
+  actividad_economica: "Economic activity income",
+  ganancia_patrimonial: "Capital gains",
+  atribucion_capital_mobiliario: "Attributed income: movable capital",
+  atribucion_capital_inmobiliario: "Attributed income: real estate capital",
+  atribucion_actividad_economica: "Attributed income: economic activities",
+  atribucion_ganancia_patrimonial: "Attributed income: capital gains",
+  imputacion_aie_ute: "Income imputed from AIE and UTE",
+  imputacion_derechos_imagen:
+    "Income imputed from the assignment of image rights",
 };
+const ORIGIN_WORDS: Record<string, string> = {
+  [WITHHOLDING_ORIGINS[0]]: "Payer's certificate",
+  [WITHHOLDING_ORIGINS[1]]: "Your own declaration",
+};
+const UNNAMED_PAYER = "Payer without a stated name";
+const STATE_WORDS = { active: "In force", withdrawn: "Withdrawn" } as const;
+/** Every amount a listed row carries, in row order, with its words. */
+const AMOUNT_COLUMNS = [
+  ["importe_integro_dinerario", "Gross cash amount"],
+  ["valoracion_especie", "Valuation of payments in kind"],
+  ["retencion", "Withholding"],
+  ["ingreso_a_cuenta", "Payment on account made"],
+  ["ingreso_a_cuenta_repercutido", "Payment on account passed on to you"],
+  ["reducciones_aplicables", "Applicable reductions"],
+  ["gastos_deducibles", "Deductible expenses"],
+  ["pago_a_cuenta", "Total payments on account"],
+] as const;
+/** The ejercicios the scenario's authority serves: the year and the two
+ * before it. */
+const servedEjercicios = (year: number): number[] => [year - 2, year - 1, year];
 
 type Stored = {
   ejercicio: number;
   income_class: string;
   payer_ref: string;
   payer_legal_name: string | null;
-  figures: Record<(typeof AMOUNTS)[number], string>;
+  figures: Record<string, string>;
   origin: string;
   evidence_fingerprint: string | null;
   revision: number;
@@ -126,6 +163,8 @@ export function withholdingOperations(tools: Tools) {
         retencion: "4500.00",
         ingreso_a_cuenta: "0",
         ingreso_a_cuenta_repercutido: "0",
+        reducciones_aplicables: "0",
+        gastos_deducibles: "0",
       },
       origin: WITHHOLDING_ORIGINS[0],
       evidence_fingerprint: hex64("certificate:employer"),
@@ -156,30 +195,37 @@ export function withholdingOperations(tools: Tools) {
   let revisions = 3;
 
   const revisionOf = (revision: number) => `rev-${revision}`;
+  /** A payment figure every stored certificate states. */
+  const paid = (found: Stored, name: string): string =>
+    found.figures[name] ?? invalid();
   const rowOf = (found: Stored): JsonObject => {
-    const label = (LABELLED as Record<string, string | undefined>)[
-      found.income_class
-    ];
     const pago = (
-      Number(found.figures.retencion) + Number(found.figures.ingreso_a_cuenta)
+      Number(paid(found, "retencion")) + Number(paid(found, "ingreso_a_cuenta"))
     ).toFixed(2);
+    const stated = (name: string) =>
+      found.figures[name] === undefined ? null : decimal(found.figures[name]);
     return {
       ejercicio: found.ejercicio,
       income_class: found.income_class,
-      ...(label ? { income_class_label: label } : {}),
+      income_class_label: LABELLED[found.income_class] ?? invalid(),
       payer_ref: found.payer_ref,
       payer_legal_name: found.payer_legal_name,
+      payer_display_name: found.payer_legal_name ?? UNNAMED_PAYER,
       importe_integro_dinerario: decimal(
-        found.figures.importe_integro_dinerario,
+        paid(found, "importe_integro_dinerario"),
       ),
-      valoracion_especie: decimal(found.figures.valoracion_especie),
-      retencion: decimal(found.figures.retencion),
-      ingreso_a_cuenta: decimal(found.figures.ingreso_a_cuenta),
+      valoracion_especie: decimal(paid(found, "valoracion_especie")),
+      retencion: decimal(paid(found, "retencion")),
+      ingreso_a_cuenta: decimal(paid(found, "ingreso_a_cuenta")),
       ingreso_a_cuenta_repercutido: decimal(
-        found.figures.ingreso_a_cuenta_repercutido,
+        paid(found, "ingreso_a_cuenta_repercutido"),
       ),
+      // Only a work-income certificate states these two.
+      reducciones_aplicables: stated("reducciones_aplicables"),
+      gastos_deducibles: stated("gastos_deducibles"),
       pago_a_cuenta: decimal(pago),
       origin: found.origin,
+      origin_label: ORIGIN_WORDS[found.origin] ?? invalid(),
       evidence_fingerprint: found.evidence_fingerprint,
       revision_id: revisionOf(found.revision),
     };
@@ -193,17 +239,13 @@ export function withholdingOperations(tools: Tools) {
     withdrawn_at: found.withdrawn_at,
     revision_id: revisionOf(found.revision),
   });
-  /** A listed attestation also words its income class, as the payers' rows
-   * do where a label is served. */
-  const attestationRowOf = (found: Attestation): JsonObject => {
-    const label = (LABELLED as Record<string, string | undefined>)[
-      found.income_class
-    ];
-    return {
-      ...attestationOf(found),
-      ...(label ? { income_class_label: label } : {}),
-    };
-  };
+  /** A listed attestation also words its income class and its state, as the
+   * payers' rows word theirs. */
+  const attestationRowOf = (found: Attestation): JsonObject => ({
+    ...attestationOf(found),
+    income_class_label: LABELLED[found.income_class] ?? invalid(),
+    state_label: STATE_WORDS[found.state],
+  });
 
   const whole = (value: JsonValue | undefined): number =>
     typeof value === "number" && Number.isInteger(value) ? value : invalid();
@@ -304,6 +346,11 @@ export function withholdingOperations(tools: Tools) {
         rows: stored
           .filter((found) => found.ejercicio === ejercicio)
           .map(rowOf),
+        amount_columns: AMOUNT_COLUMNS.map(([field, label]) => ({
+          field,
+          label,
+        })),
+        ejercicios: servedEjercicios(year),
       };
     },
     "ledger.retencion_soportada.list_absences": (request) => {
@@ -334,7 +381,9 @@ export function withholdingOperations(tools: Tools) {
         "income_class",
         "payer_tax_id",
         "payer_legal_name",
-        ...AMOUNTS,
+        ...new Set(
+          WITHHOLDING_INCOME_CLASSES.flatMap((name) => FIGURES_OF(name)),
+        ),
         "origin",
         "evidence_fingerprint",
         "source_path",
@@ -348,9 +397,32 @@ export function withholdingOperations(tools: Tools) {
       const taxId = text(request.payer_tax_id);
       if (taxId === null || taxId.length > 32) return invalid();
       const origin = choice(request.origin, WITHHOLDING_ORIGINS);
-      const figures = Object.fromEntries(
-        AMOUNTS.map((name) => [name, figure(request[name])]),
-      ) as Stored["figures"];
+      // A certificate states exactly the figures served for its class: one
+      // sent that the class does not state is invalid, one it states and
+      // that is left out is refused, a class-specific one in the served words.
+      const stated = FIGURES_OF(incomeClass);
+      const sentFigures = Object.keys(request).filter((name) =>
+        WITHHOLDING_INCOME_CLASSES.some((other) =>
+          FIGURES_OF(other).includes(name),
+        ),
+      );
+      if (sentFigures.some((name) => !stated.includes(name))) return invalid();
+      const left = stated.filter((name) => request[name] === undefined);
+      if (left.length > 0) {
+        const sharedByAll = (name: string) =>
+          WITHHOLDING_INCOME_CLASSES.every((other) =>
+            FIGURES_OF(other).includes(name),
+          );
+        if (left.some(sharedByAll)) return invalid();
+        return certificateRefusal(
+          WRITE_CODE,
+          "trabajo_certificate_figure_missing",
+          ejercicio,
+        );
+      }
+      const figures: Stored["figures"] = Object.fromEntries(
+        stated.map((name) => [name, figure(request[name])]),
+      );
       const given = text(request.evidence_fingerprint);
       if (given !== null && !/^[0-9a-f]{64}$/.test(given)) return invalid();
       const picked = text(request.source_path);
@@ -382,8 +454,8 @@ export function withholdingOperations(tools: Tools) {
           ejercicio,
         );
       if (
-        Number(figures.ingreso_a_cuenta_repercutido) >
-        Number(figures.ingreso_a_cuenta)
+        Number(figures["ingreso_a_cuenta_repercutido"]) >
+        Number(figures["ingreso_a_cuenta"])
       )
         return certificateRefusal(
           WRITE_CODE,

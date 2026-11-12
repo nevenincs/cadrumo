@@ -1,3 +1,5 @@
+import { seededUnit } from "@/dev/seededUnits";
+import { RENTA_UNIT } from "@/dev/rentaUnit";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
 import { expect, waitFor } from "storybook/test";
@@ -19,11 +21,11 @@ import { useFormSession, type FormSession } from "./session";
 const noop = () => undefined;
 
 const UNITS = {
-  "130": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-  "303": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
-  "347": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
+  "130": seededUnit("130"),
+  "303": seededUnit("303"),
+  "347": seededUnit("347"),
   "rules-incomplete": rulesIncomplete.work_unit_id,
-  "100": "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4",
+  "100": RENTA_UNIT,
 } as const;
 
 const language = (globals: Record<string, unknown>) =>
@@ -118,7 +120,7 @@ export default meta;
 type Story = StoryObj;
 
 /** Opens what the read serves about the chosen box, once the form draws it. */
-export async function openChosenFacts(canvasElement: HTMLElement) {
+async function openChosenFacts(canvasElement: HTMLElement) {
   const button = await waitFor(
     () => {
       const found = canvasElement.querySelector<HTMLButtonElement>(
@@ -159,8 +161,14 @@ export const FieldHelp: Story = {
     <Form
       modelo="130"
       locale={language(globals)}
-      setup={(session) => {
-        session.selectBox("03");
+      setup={(session, envelope) => {
+        // A box the read gives help for, whichever box that is.
+        const helped = envelope.form.form.pages
+          .flatMap((page) => page.sections)
+          .flatMap((section) => section.blocks)
+          .flatMap((block) => (block.kind === "field" ? [block.field] : []))
+          .find((field) => field.help !== null && field.box !== null);
+        if (helped) session.selectAddress(helped.address);
       }}
     />
   ),
@@ -229,22 +237,85 @@ export const Pages: Story = {
   render: (_, { globals }) => <Form modelo="303" locale={language(globals)} />,
 };
 
+/** The column keys of every repeated-record block on the page a story
+ * opens, in the order the read serves them, kept for the story's play. */
+const servedRecordColumns = new Map<string, string[][]>();
+
+/** Opens the first page holding repeated records and keeps its served
+ * columns under `story`. */
+const openRecords =
+  (story: string): Setup =>
+  (session, envelope) => {
+    const page = envelope.form.form.pages.find((candidate) =>
+      candidate.sections.some((section) =>
+        section.blocks.some(
+          (block) => block.kind === "repeating" && block.rows_known,
+        ),
+      ),
+    );
+    if (!page) return;
+    servedRecordColumns.set(
+      story,
+      page.sections
+        .flatMap((section) => section.blocks)
+        .flatMap((block) =>
+          block.kind === "repeating"
+            ? [block.columns.map((column) => column.key)]
+            : [],
+        ),
+    );
+    session.setPageId(page.id);
+  };
+
+/** Every served column is drawn in served order, and a table wider than the
+ * form scrolls inside its own region while the form never scrolls sideways. */
+async function recordsDrawWhole(canvasElement: HTMLElement, story: string) {
+  const tables = await waitFor(
+    () => {
+      const served = servedRecordColumns.get(story);
+      const found = canvasElement.querySelectorAll<HTMLElement>(
+        "[data-records-scroll]",
+      );
+      if (!served || found.length !== served.length)
+        throw new Error("the repeated records are not drawn yet");
+      return { served, found: [...found] };
+    },
+    { timeout: 15_000 },
+  );
+  tables.found.forEach((region, index) => {
+    const drawn = [...region.querySelectorAll<HTMLElement>("th")].map(
+      (header) => header.dataset.column,
+    );
+    expect(drawn).toEqual(tables.served[index]);
+    for (const row of region.querySelectorAll("tbody tr"))
+      expect(row.querySelectorAll("td")).toHaveLength(drawn.length);
+  });
+  const form = canvasElement.querySelector<HTMLElement>("[data-modelo-form]");
+  expect(form).not.toBeNull();
+  if (form) expect(form.scrollWidth).toBeLessThanOrEqual(form.clientWidth);
+}
+
 export const Records: Story = {
-  name: "347 · repeated records",
+  name: "347 · repeated records, every served column",
   render: (_, { globals }) => (
-    <Form
-      modelo="347"
-      locale={language(globals)}
-      setup={(session, envelope) => {
-        const page = envelope.form.form.pages.find((candidate) =>
-          candidate.sections.some((section) =>
-            section.blocks.some((block) => block.kind === "repeating"),
-          ),
-        );
-        if (page) session.setPageId(page.id);
-      }}
-    />
+    <Form modelo="347" locale={language(globals)} setup={openRecords("347")} />
   ),
+  play: async ({ canvasElement }) => {
+    await recordsDrawWhole(canvasElement, "347");
+    // The counterparty table serves more columns than any window is wide.
+    const widest = [
+      ...canvasElement.querySelectorAll<HTMLElement>("[data-records-scroll]"),
+    ].some((region) => region.scrollWidth > region.clientWidth);
+    expect(widest).toBe(true);
+  },
+};
+
+export const RentaRecords: Story = {
+  name: "100 · descendants and ascendants as repeated records",
+  render: (_, { globals }) => (
+    <Form modelo="100" locale={language(globals)} setup={openRecords("100")} />
+  ),
+  play: ({ canvasElement }) => recordsDrawWhole(canvasElement, "100"),
 };
 
 export const ReadOnly: Story = {

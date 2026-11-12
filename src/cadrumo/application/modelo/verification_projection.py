@@ -19,16 +19,19 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from ...core.precondition_action_invariants import ServedActionWords, ServedNoRecoveryWords
 from ...domain.calculations.registry.ids import LegalRefId, ModeloId, RevisionId, SourceRefId, VerificationExpectationId
 from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ...domain.modelos.filing_text import ModeloActorLabel
 from ...domain.modelos.verification_report import (
+    DisclosedLimitationFlag,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
     VerificationReport,
 )
+from ..operations.error_detail import served_words_language
 from ..operations.public_scalar import (
     PublicNamedScalar,
     PublicScalar,
@@ -44,6 +47,7 @@ from ..operator_actions.models import (
     ConditionEvidence,
     PreconditionVerdict,
 )
+from ..operator_actions.served_actions import serve_precondition_verdict
 from .preconditions import ModeloPreconditionFailure
 from .verification_preconditions import ModeloVerificationResult, VerificationFindingPreconditionProjection
 
@@ -70,6 +74,7 @@ class ModeloFindingSnapshot(BaseModel):
     message_facts: tuple[PublicNamedScalar, ...]
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
+    disclosed_limitation: DisclosedLimitationFlag = False
 
     @classmethod
     def from_finding(cls, finding: ModeloVerificationFinding) -> Self:
@@ -130,8 +135,8 @@ class ModeloArgumentSnapshot(BaseModel):
         )
 
 
-class ModeloAlternativeActionSnapshot(BaseModel):
-    """A further declared recovery action, offered in order after the primary one."""
+class ModeloAlternativeActionSnapshot(ServedActionWords):
+    """A further declared recovery action, offered in order after the primary one, with its served words."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     action: ActionReference
@@ -149,6 +154,9 @@ class ModeloAlternativeActionSnapshot(BaseModel):
             ),
             missing_argument_names=alternative.missing_argument_names,
             conditionality=alternative.conditionality,
+            action_words=alternative.action_words,
+            action_words_language=alternative.action_words_language,
+            target_operation_ids=alternative.target_operation_ids,
         )
 
     def to_alternative(self) -> AlternativeRecoveryAction:
@@ -158,14 +166,19 @@ class ModeloAlternativeActionSnapshot(BaseModel):
             argument_bindings=tuple(item.to_argument() for item in self.argument_bindings),
             missing_argument_names=self.missing_argument_names,
             conditionality=self.conditionality,
+            action_words=self.action_words,
+            action_words_language=self.action_words_language,
+            target_operation_ids=self.target_operation_ids,
         )
 
 
-class ModeloPreconditionSnapshot(BaseModel):
+class ModeloPreconditionSnapshot(ServedActionWords, ServedNoRecoveryWords):
     """A complete application refusal identity and its canonical recovery facts.
 
     ``alternative_actions`` is left out of the serialized snapshot when empty,
     so a refusal without alternatives keeps the shape it was published with.
+    The served action words and routing, or the no-way-out sentence, follow
+    the same rule.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -184,8 +197,8 @@ class ModeloPreconditionSnapshot(BaseModel):
 
     @classmethod
     def from_failure(cls, failure: ModeloPreconditionFailure) -> Self:
-        """Flatten one verdict without losing its discriminators or evidence."""
-        verdict = failure.verdict
+        """Flatten one verdict without losing its discriminators or evidence, serving its action words."""
+        verdict = serve_precondition_verdict(failure.verdict, served_words_language())
         return cls.model_validate(
             verdict.model_dump(mode="python")
             | {

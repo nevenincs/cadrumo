@@ -1,4 +1,4 @@
-"""A refused act names the command that remedies it, when its verdict names an action that resolves to one."""
+"""A refused act is shown through the refusal it served: its sentence and the verdict naming its ways out."""
 
 from __future__ import annotations
 
@@ -8,14 +8,17 @@ import pytest
 
 from cadrumo_client.contracts.installation_requests import InstallationAct, InstallationRefused
 
-from .....application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
+from .....application.operations.error_detail import (
+    OperationErrorContextEntryV1,
+    OperationErrorDetailKind,
+    OperationErrorDetailV1,
+)
 from .....application.operator_actions.models import PreconditionVerdict
 from .....application.operator_actions.preconditions import (
     no_action_precondition_verdict,
     profile_setup_incomplete_verdict,
 )
-from .....core.errors.error_codes import resolve_error_message
-from .....core.errors.hierarchy import RecordedRegisteredError
+from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..acts import offered_act
@@ -25,6 +28,7 @@ from ..rendering import ActPresentation, present_outcome
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CODE = "REFUSED_AUTH_CERTIFICATE_SOURCE_NOT_FOUND"
+_SERVED = "The certificate this profile names is not where it was."
 
 
 def _refused_with(verdict: PreconditionVerdict | None) -> ActPresentation:
@@ -37,33 +41,47 @@ def _refused_with(verdict: PreconditionVerdict | None) -> ActPresentation:
             kind=OperationErrorDetailKind.REGISTERED_ERROR,
             error_code=_CODE,
             message_key=None,
-            context=(),
+            context=(OperationErrorContextEntryV1(key="source", value="primary"),),
             precondition_verdict_json=None if verdict is None else verdict.model_dump_json(),
+            refusal_words=_SERVED,
+            refusal_words_language=OutputLanguage.EN,
         ),
     )
     return present_outcome(ActRefused(refusal), offered_act(InstallationAct.REPAIR_PROFILE).contract)
 
 
-def test_a_refused_act_names_the_remedy_command_as_its_last_line() -> None:
+def test_a_refused_act_carries_its_served_sentence_and_the_verdict_naming_its_way_out() -> None:
     shown = _refused_with(profile_setup_incomplete_verdict(modelo="303", missing_required_field_count=1))
 
     assert shown.tone == "error"
     assert shown.status == tr("tui.installation.status.refused", code=_CODE)
-    assert shown.lines == (
-        resolve_error_message(RecordedRegisteredError(_CODE, context={})),
-        tr("tui.installation.result.remedy", action="operator.profile.complete_setup"),
-        tr("tui.operations.stopped.remedy_command", command="aeat config profile complete-setup"),
-    )
+    assert shown.refusal is not None
+    assert shown.refusal.sentence == _SERVED
+    assert shown.refusal.verdict is not None
+    assert shown.refusal.verdict.action_id == "operator.profile.complete_setup"
+    assert not any("aeat " in line or "operator." in line for line in shown.lines)
 
 
-def test_a_refusal_whose_verdict_names_no_action_is_shown_as_it_was() -> None:
+def test_a_refusal_with_no_way_out_keeps_its_sentence_and_offers_no_action() -> None:
     no_action = no_action_precondition_verdict(
         condition_id="storage.root.unreadable",
         facts={"readable": False},
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,
         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
-    explanation = (resolve_error_message(RecordedRegisteredError(_CODE, context={})),)
 
-    assert _refused_with(no_action).lines == explanation
-    assert _refused_with(None).lines == explanation
+    closed = _refused_with(no_action).refusal
+    bare = _refused_with(None).refusal
+
+    assert closed is not None
+    assert closed.sentence == _SERVED
+    assert closed.verdict is not None
+    assert closed.verdict.action_id is None
+    assert closed.verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert bare is not None
+    assert bare.sentence == _SERVED
+    assert bare.verdict is None
+
+
+def test_the_recorded_context_stays_beside_the_refusal() -> None:
+    assert _refused_with(None).lines == ("source  primary",)

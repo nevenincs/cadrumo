@@ -248,7 +248,7 @@ def legacy_capsule(
 
 def test_both_supported_stored_versions_are_older_than_the_current_schema() -> None:
     """The declared window must name real earlier versions, not the current one."""
-    assert (*_PAYER_DEFAULT_VERSIONS, 8) == SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
+    assert (*_PAYER_DEFAULT_VERSIONS, 8, 9) == SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
     assert max(SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS) < MIGRATED_PROFILE_SCHEMA_VERSION
 
 

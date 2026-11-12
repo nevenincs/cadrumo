@@ -62,7 +62,12 @@ from .errors import (
     InventoryClosingAuthorityConflictError,
     InventoryServiceInputError,
 )
-from .movement_claim_checks import InventoryClaimLedgerReads, require_ledger_claims_stand
+from .movement_claim_checks import (
+    InventoryClaimCandidate,
+    InventoryClaimLedgerReads,
+    claim_candidates,
+    require_ledger_claims_stand,
+)
 from .ports import InventoryClosingAuthorityWrite, InventoryLedgerServiceRepositoryProtocol, InventoryServicePorts
 
 
@@ -401,6 +406,39 @@ class InventoryService:
                 context={"actividad_id": actividad_id, "year": str(year)},
             )
         return ledger
+
+    def movement_claim_candidates(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        movement_id: str,
+    ) -> tuple[InventoryClaimCandidate, ...]:
+        """List the ledger transactions one purchase may claim, by the gate the claim write applies.
+
+        Read-only: it emits no bucket event and stores nothing.
+
+        Raises:
+            InventoryActividadNotFoundError: When the bucket has no such ledger.
+            InventoryServiceInputError: When the movement is not an effective purchase of the ledger.
+        """
+        document = self._repository_for(bucket_id).load()
+        ledger = _find_ledger(document, actividad_id, year)
+        if ledger is None:
+            raise InventoryActividadNotFoundError(
+                translated_message="application.inventory.service.errors.activity_not_found",
+                context={"actividad_id": actividad_id, "year": str(year)},
+            )
+        try:
+            return claim_candidates(
+                document,
+                ledger,
+                movement_id=movement_id,
+                reads=self._claim_reads_factory(bucket_id),
+            )
+        except InventoryLedgerError as exc:
+            raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
 
     def movement_add(
         self,

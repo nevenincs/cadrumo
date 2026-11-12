@@ -4,16 +4,15 @@ Publication proves that :func:`~.snapshot.build_validated_snapshot` passes for
 every cell of the generation's declared selector set: each modelo, each filing
 year from the support floor to the horizon, each declared period token (the
 symbolic ``EVENT-N`` as itself) and each authority grade, always with ``on`` and
-``revision_id`` absent. The passing cells, the validator that proved them and
-the date window in which their wall-clock fact lookups resolve identically are
-recorded in the published database, covered by its physical digest.
+``revision_id`` absent. The passing cells and the validator that proved them
+are recorded in the published database, covered by its physical digest. No
+check reads the run date, so a proof holds on every day the program runs.
 
 At runtime a proof only lets the same validator skip its cross-check calls; it
 never selects, assembles or refuses anything. It is stated against the
 :class:`RegistrySnapshot` the proven cells build. A request outside the proven set,
-a validator whose sources changed, a date outside the window or a database
-without proofs all run the full validation in the same function. Refusals are
-never recorded: a refusal always comes from the validator itself.
+a validator whose sources changed or a database without proofs all run the
+full validation in the same function. Refusals are never recorded: a refusal always comes from the validator itself.
 """
 
 from __future__ import annotations
@@ -23,21 +22,16 @@ import importlib.util
 import os
 import sys
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass, field
-from datetime import date, timedelta
+from dataclasses import dataclass
 from threading import Lock
 from typing import TYPE_CHECKING, Final, Protocol
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.hierarchy import CadrumoError
 from ....core.hashing import canonical_json_bytes, sha256_hex
-from ....core.time.clock import today_madrid
 from .errors import RegistryFailureCondition, RegistryValidationError
 
 if TYPE_CHECKING:
-    from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
-    from .facts.schema import GovernedFact
-    from .governed_fact_scope import GovernedFactSource
     from .schema import RegistrySnapshot
     from .schema_references import PeriodSelector
     from .snapshot_globals import SupportedFilingYearsCatalogue
@@ -45,16 +39,15 @@ if TYPE_CHECKING:
 
 SNAPSHOT_PROOF_DDL: Final[tuple[str, ...]] = (
     "CREATE TABLE snapshot_proof_contract (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), "
-    "validator_digest TEXT NOT NULL CHECK (length(validator_digest) = 64), window_from TEXT, window_to TEXT) STRICT",
+    "validator_digest TEXT NOT NULL CHECK (length(validator_digest) = 64)) STRICT",
     "CREATE TABLE snapshot_proof_validator_sources (module TEXT PRIMARY KEY, "
     "sha256 TEXT NOT NULL CHECK (length(sha256) = 64)) STRICT",
     "CREATE TABLE snapshot_proofs (modelo_id TEXT NOT NULL, filing_year INTEGER NOT NULL, period TEXT NOT NULL, "
     "grade TEXT NOT NULL, revision_id TEXT NOT NULL, PRIMARY KEY (modelo_id, filing_year, period, grade)) "
     "STRICT, WITHOUT ROWID",
 )
-"""The proof tables of a ``cadrumo-authority-sqlite-v5`` database, one statement each.
+"""The proof tables of a ``cadrumo-authority-sqlite-v6`` database, one statement each.
 
-Dates are ISO ``YYYY-MM-DD`` text with NULL meaning an open bound, and
 ``grade`` is a :class:`RegistryAuthorityGrade` value. The publisher creates
 these tables from this single definition and the reader queries them.
 """
@@ -104,23 +97,10 @@ class ValidatorSource:
 
 @dataclass(frozen=True, slots=True)
 class SnapshotProofContract:
-    """The validator and wall-clock window under which a database's proofs hold.
-
-    Both window bounds are inclusive and ``None`` is open. A window whose
-    ``window_from`` lies after its ``window_to`` is empty and admits no date;
-    publication records it when it cannot bound a wall-clock fact lookup.
-    """
+    """The validator under which a database's proofs hold."""
 
     validator_sources: tuple[ValidatorSource, ...]
     validator_digest: str
-    window_from: date | None
-    window_to: date | None
-
-    def admits_date(self, coordinate: date) -> bool:
-        """Return whether ``coordinate`` lies inside the recorded fact-date window."""
-        if self.window_from is not None and coordinate < self.window_from:
-            return False
-        return self.window_to is None or coordinate <= self.window_to
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,14 +131,6 @@ class SnapshotProofOperation(Protocol):
         """Return the generation's filing-year support envelope."""
         ...
 
-    def governed_fact(self, fact_id: str, /) -> GovernedFact:
-        """Return one raw governed fact."""
-        ...
-
-    def resolve_governed_fact(self, query: GovernedFactQuery, /) -> ResolvedGovernedFact:
-        """Resolve one governed-fact query."""
-        ...
-
     def snapshot_proof_contract(self) -> SnapshotProofContract | None:
         """Return the proof contract the generation already records, if any."""
         ...
@@ -171,7 +143,6 @@ class SnapshotProofOperation(Protocol):
         filing_year: int,
         period: str,
         grade: RegistryAuthorityGrade,
-        governed_facts: GovernedFactSource | None = None,
     ) -> RegistrySnapshot:
         """Build one validated snapshot without retaining it in a shared cache."""
         ...
@@ -430,79 +401,6 @@ def runtime_validator_matches(contract: SnapshotProofContract) -> bool:
         return known
 
 
-_EMPTY_WINDOW: Final = (date.max, date.min)
-
-
-@dataclass(slots=True, weakref_slot=True)
-class _RecordingFactSource:
-    """Delegate governed-fact resolution to the swept operation and keep the wall-clock queries."""
-
-    operation: SnapshotProofOperation
-    today: date
-    wall_clock_queries: dict[GovernedFactQuery, None] = field(default_factory=dict)
-
-    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
-        resolved = self.operation.resolve_governed_fact(query)
-        if query.effective_date == self.today:
-            self.wall_clock_queries[query] = None
-        return resolved
-
-    def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
-        return self.operation.supported_filing_years()
-
-
-def _constant_resolution_window(
-    operation: SnapshotProofOperation,
-    query: GovernedFactQuery,
-    today: date,
-) -> tuple[date | None, date | None]:
-    """Return the widest window around ``today`` in which ``query``'s fact resolves the same variant.
-
-    Resolution picks among the variants whose materialized window contains
-    the date, by static precedence. Between two consecutive window endpoints
-    of any variant of the fact, the containing set cannot change, so neither
-    can the winner or its payload. The interval is also confined to the
-    support envelope's hard gates. A fact that cannot be read, or whose
-    windows do not contain ``today``, yields the empty window.
-    """
-    try:
-        fact = operation.governed_fact(query.fact_id)
-        envelope = operation.supported_filing_years().date_envelope()
-        windows = tuple(fact.materialized_windows(envelope).values())
-    except (CadrumoError, LookupError):
-        return _EMPTY_WINDOW
-    if not any(window.contains_date(today) for window in windows):
-        return _EMPTY_WINDOW
-    lower: date = envelope.floor
-    upper: date | None = envelope.hard_ceiling
-    for window in windows:
-        if window.valid_from <= today:
-            lower = max(lower, window.valid_from)
-        else:
-            boundary = window.valid_from - timedelta(days=1)
-            upper = boundary if upper is None else min(upper, boundary)
-        if window.valid_to is None:
-            continue
-        if window.valid_to < today:
-            lower = max(lower, window.valid_to + timedelta(days=1))
-        else:
-            upper = window.valid_to if upper is None else min(upper, window.valid_to)
-    return lower, upper
-
-
-def _intersect_windows(
-    windows: Iterable[tuple[date | None, date | None]],
-) -> tuple[date | None, date | None]:
-    lower: date | None = None
-    upper: date | None = None
-    for window_from, window_to in windows:
-        if window_from is not None:
-            lower = window_from if lower is None else max(lower, window_from)
-        if window_to is not None:
-            upper = window_to if upper is None else min(upper, window_to)
-    return lower, upper
-
-
 def _is_expected_ladder_refusal(error: CadrumoError, grade: RegistryAuthorityGrade) -> bool:
     """Say whether ``error`` is the grade ceiling refusing a grade above the revision's declaration.
 
@@ -532,7 +430,6 @@ class _SelectorSweep:
     """Accumulate one publication sweep over the operation's declared selector space."""
 
     operation: SnapshotProofOperation
-    recorder: _RecordingFactSource
     support: SupportedFilingYearsCatalogue
     grades: tuple[RegistryAuthorityGrade, ...]
     proofs: list[SnapshotCrossCheckProof]
@@ -564,7 +461,6 @@ class _SelectorSweep:
                     filing_year=filing_year,
                     period=period,
                     grade=grade,
-                    governed_facts=self.recorder,
                 )
             except CadrumoError as exc:
                 if not _is_expected_ladder_refusal(exc, grade):
@@ -584,18 +480,15 @@ def prove_snapshot_selectors(operation: SnapshotProofOperation) -> SnapshotProof
 
     Every cell runs :func:`~.snapshot.build_validated_snapshot` through the
     operation's normal, uncached build, without a proof and with the
-    governed-fact scope bound to a recorder around ``operation``. A cell
+    governed-fact scope bound to ``operation``. A cell
     whose selection refuses does not exist and is skipped. A pass is recorded
     with the revision it selected. A refusal of a grade above the revision's
     declared grade is the expected ladder outcome and is not recorded. Any
     other failure is collected, and after the sweep all of them are raised
     together.
 
-    The fact-date window is the intersection of the windows in which each
-    governed-fact query made at today's Madrid date resolves the same variant.
-    A query whose window cannot be determined makes the window empty, so the
-    runtime never trusts the proofs; a window that intersects to nothing is
-    likewise never trusted.
+    No governed-fact read of the validator substitutes the run date, so the
+    proofs carry no date window and hold whatever day the program runs.
 
     Raises:
         SnapshotProofPublicationError: ``operation`` already records a proof
@@ -606,13 +499,11 @@ def prove_snapshot_selectors(operation: SnapshotProofOperation) -> SnapshotProof
         raise SnapshotProofPublicationError(
             "snapshot proofs must be swept over a database that records no proof contract yet",
         )
-    today = today_madrid()
-    recorder = _RecordingFactSource(operation, today)
     support = operation.supported_filing_years()
     grades = tuple(RegistryAuthorityGrade)
     proofs: list[SnapshotCrossCheckProof] = []
     failures: list[str] = []
-    sweep = _SelectorSweep(operation, recorder, support, grades, proofs, failures)
+    sweep = _SelectorSweep(operation, support, grades, proofs, failures)
     for modelo_id in operation.modelo_ids():
         sweep.prove_directory(modelo_id)
     if failures:
@@ -620,15 +511,10 @@ def prove_snapshot_selectors(operation: SnapshotProofOperation) -> SnapshotProof
             "declared snapshot selectors fail at or below their declared authority grade:\n"
             + "\n".join(f" - {failure}" for failure in failures),
         )
-    window_from, window_to = _intersect_windows(
-        _constant_resolution_window(operation, query, today) for query in recorder.wall_clock_queries
-    )
     sources = snapshot_validator_closure()
     contract = SnapshotProofContract(
         validator_sources=sources,
         validator_digest=validator_digest(sources),
-        window_from=window_from,
-        window_to=window_to,
     )
     return SnapshotProofSet(contract=contract, proofs=tuple(proofs))
 

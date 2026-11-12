@@ -780,6 +780,14 @@ application:
       retired_book_leaves_year_unresolved: Ez a készlet ki van vezetve, de még vannak
         tételei, ezért a %{year}. évi D melléklet megoldatlan marad. Állítsd vissza,
         vagy töröld a tételeit.
+    effects:
+      purchase_ledger_row:
+        claimed: Ez a vásárlás a megjelölt főkönyvi tranzakciót könyveli; az a sor
+          kimarad a 100-as modell költségeiből, a vásárlás pedig a költségét a készletnyilvántartásba
+          viszi.
+        none: Megadod, hogy egyetlen főkönyvi tranzakció sem könyveli ezt a vásárlást.
+        unstated: Még nincs megadva semmi arról a főkönyvi tranzakcióról, amely ezt
+          a vásárlást könyveli.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Költségellenőrzés
@@ -827,6 +835,10 @@ application:
       physical_evidence_role:
         acquisition_price_valuation: Értékelés beszerzési áron
         physical_count: Fizikai leltár
+      purchase_ledger_row:
+        claimed: Főkönyvi tranzakció könyveli
+        none: Nincs a főkönyvben
+        unstated: Még nincs megadva
       retirement_reason:
         activity_ceased: A tevékenység megszűnt
         created_in_error: Tévedésből létrehozva
@@ -2689,6 +2701,9 @@ application:
       detail_row_identity_conflict: Egy általad megadott részletező sor nem egyezik
         a nyilvántartásaid szerinti sorral ugyanarra a nyilatkozóra; javítsd vagy
         töröld a számítás előtt.
+      edit_prior_carries_unstated: Ez a módosítás megadatlanul hagyja a korábbi évekből
+        áthozott összegeket, ezért a bevallás nem számolható ki. Semmi sem változott.
+        Először add meg ezeket az összegeket.
       edit_revision_id_unresolved: A szerkesztés mögötti számítás nem jelezte, melyik
         változatot hozta létre, ezért a szerkesztés nyugtáját nem lehetett megőrizni.
         Ez programhiba, és semmi, amit megadtál, nem okozta. Újabb szerkesztés előtt
@@ -3803,6 +3818,26 @@ application:
       pattern: '{year}. {month} {day}.'
     work_form:
       additional_data_for_box: Kiegészítő adat a(z) {box}. rovathoz
+      authority_grade:
+        applicability: Csak határidők
+        calculation: Csak számítás és előnézet
+        filing: Számítás, benyújtás előtti ellenőrzés és exportálás
+      binding_statement:
+        attest_no_amount:
+          action: Jelezd, hogy nincs összeg
+          effect: Általad kijelentett 0-ként rögzül.
+          statement: Kijelenti, hogy ebben a korábbi ejercicióból áthozott tételben
+            nincs összeg. Általad kijelentett 0-ként rögzül, elkülönítve a beírt számtól;
+            ha egy korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+        attest_prior_value:
+          action: Add meg a korábbi bevallás összegét
+          effect: A korábbi bevallásra általad kijelentett összegként rögzül.
+          origin: 'Te adtad meg ehhez: %{source}'
+          statement: Megadja azt az összeget, amelyet ez a tétel egy itt nem tárolt
+            korábbi bevallásból venne át. A te összeged kerül a helyére, általad kijelentettként
+            megjelölve; az ellenőrzés és az exportálás jelzi, hogy a kijelentéseden
+            alapul, és ha a korábbi bevallás később bekerül, a bevallás jelzi az esetleges
+            eltérést.
       box_locator_help:
         one_year: A Modelo {modelo} nyomtatvány {box}. rovata, {years}. adóév.
         onwards: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. és az azt követő
@@ -3905,6 +3940,78 @@ application:
         ellenőrzésének, ezért ezt nem sikerült elvégezni.
       unworded: 'Ezt nem sikerült elvégezni. Az okához még nincs mondat; a kódja:
         {error_code}.'
+  operator_actions:
+    served:
+      action:
+        auth_configure: Állítsd be a bejelentkezési módot
+        auth_diagnostics_view: Nézd meg a bejelentkezés diagnosztikáját
+        auth_login: Jelentkezz be az AEAT-hoz
+        diagnostics_repair: Javítsd a helyi tárolót
+        diagnostics_secure_objects_quarantine: Helyezd karanténba a sérült rekordokat
+        diagnostics_workflow_reset_progress: Állítsd vissza az irányított folyamat
+          haladását
+        ledger_account_add: Add hozzá a bankszámládat
+        ledger_actividad_asset_correct_revision: Javítsd a tevékenységhez rendelt
+          eszköz nyilvántartását
+        ledger_classify: Sorold be a banki tételeidet
+        ledger_classify_irpf_category: Add meg ennek a tételnek az IRPF-kategóriáját
+        ledger_classify_movement: Sorold be ezt a tételt
+        ledger_counterparty_filing_name: Add meg a partner nevét a bevalláshoz
+        ledger_evidence_review_list: Nézd át a függő dokumentumokat
+        ledger_inventory_movement_claim: Rendeld a tételt a készletedhez
+        ledger_invoice_update_operation_type: Add meg a számla ügylettípusát
+        ledger_link: Kapcsold össze a számlát a kifizetésével
+        ledger_preflight: Ellenőrizd az időszak nyilvántartását
+        ledger_prorrata_list: Nézd át a prorrata-nyilvántartást
+        ledger_review: Nézd át a nyilvántartást
+        live_filed_pull: Töltsd le a benyújtott bevallást az AEAT-tól
+        live_filed_pull_all: Töltsd le az összes benyújtott bevallást az AEAT-tól
+        live_notifications_list: Nézd meg az AEAT-értesítéseidet
+        modelo_bindings_list: Nézd át, honnan származnak a bevallás összegei
+        modelo_casillas: Nézd át a bevallás casilláit
+        modelo_describe: Olvasd el a modelo leírását
+        modelo_export: Exportáld a bevallás fájlját
+        modelo_filing_record_import: Rögzítsd a benyújtási igazolást
+        modelo_filing_record_list: Nézd át a benyújtási nyilvántartást
+        modelo_iva_wallet_override: Javítsd a továbbvihető IVA-egyenleget
+        modelo_iva_wallet_seed: Add meg a továbbvihető IVA nyitóegyenlegét
+        modelo_verification_report_list: Nézd át az ellenőrzési jelentéseket
+        modelo_work_amend: Javítsd a benyújtott bevallást
+        modelo_work_attest_m303_exonerado_390: Erősítsd meg, hogy mentesülsz a 390-es
+          modelo alól
+        modelo_work_attest_prior_carries: Add meg a korábbi évekből áthozott összegeket
+        modelo_work_attest_prior_value: Add meg a korábbi bevallás összegét
+        modelo_work_calculate: Számold ki ezt a bevallást
+        modelo_work_calculate_joint_return: Számold ki együttes bevallásként
+        modelo_work_create: Kezdd el ezt a bevallást
+        modelo_work_file: Rögzítsd ezt a bevallást benyújtottként
+        modelo_work_list: Nézd át a bevallásaidat
+        modelo_work_override: Írd felül a kiszámított értéket
+        modelo_work_revisions: Nézd át a bevallás változatait
+        modelo_work_set_value: Add meg a casilla értékét
+        modelo_work_status: Nézd meg a bevallás állapotát
+        modelo_work_verify: Ellenőrizd ezt a bevallást
+        overview_explain: Nézd meg, miért vonatkozik rád ez a modelo
+        overview_status: Nézd át az adókötelezettségeidet
+        profile_archive_reconcile: Egyeztesd a profil archívumát
+        profile_arrendamiento: Nézd át a bérbeadásaidat
+        profile_ascendiente: Nézd át a felmenőidet
+        profile_complete_setup: Fejezd be a profilod beállítását
+        profile_create: Hozz létre egy profilt
+        profile_descendiente: Nézd át a leszármazottaidat
+        profile_edit: Szerkeszd a profilodat
+        profile_list: Nézd át a profiljaidat
+        profile_login: Nyisd meg a profilodat
+        profile_logout: Zárd be a profilodat
+        profile_repair_active_pointer: Javítsd az aktív profil kiválasztását
+        profile_repair_clear_active: Töröld az aktív profil kiválasztását
+        profile_status: Ellenőrizd a profilodat
+        storage_init: Készítsd elő a helyi tárolót
+      no_recovery:
+        operator_decision: Ehhez a saját döntésed kell; ezt semmilyen lépés nem hozhatja
+          meg helyetted.
+        safety: Ez az adataid védelmében állt le, ezért nincs felkínált lépés.
+        terminal: 'Ez az elutasítás végleges: semmilyen lépés nem oldja fel.'
   overview:
     calendar:
       event:

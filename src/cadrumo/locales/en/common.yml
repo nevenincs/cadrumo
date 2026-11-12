@@ -243,6 +243,11 @@ aggregation:
       unsupported_period: Annual period is required for Modelo 100 income aggregation
         (e.g. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: In force
+      withdrawn: Withdrawn
+    amount:
+      pago_a_cuenta: Total payments on account
     clase:
       actividad_economica: Economic activity income
       arrendamiento_inmueble_urbano: 'Income from real estate capital: urban property
@@ -292,6 +297,10 @@ aggregation:
         takes them.
       validation: 'The withholding record was not saved: check the payer ID, the amounts
         (at most two decimals) and the certificate fingerprint.'
+    origen:
+      operator_declaration: Your own declaration
+      payer_certificate: Payer's certificate
+    payer_unnamed: Payer without a stated name
     served:
       certificate_file_unreadable: The certificate file could not be read. Check that
         it still exists, is not empty and is a PDF, an image or an XML document, then
@@ -3658,6 +3667,7 @@ desktop:
       previous: Previous period
       year_next: Next year
       year_previous: Previous year
+      years_supported: Years you can read
       years_with_movements: Years with movements
     position: Row {row} of {count}
     prorrata:
@@ -4055,11 +4065,6 @@ desktop:
         note: Say which ledger transaction books this purchase, that none does, or
           clear what was stated.
         row: The ledger books this purchase
-        row_claimed: A ledger transaction books it
-        row_none: No ledger transaction books it
-        row_unstated: Not stated
-        row_unstated_hint: This clears an earlier statement.
-        state_claimed: Booked by {transaction}
         transaction: Ledger transaction
       closing:
         authority: How the value is decided
@@ -4257,27 +4262,16 @@ desktop:
       action:
         attest: State no withholding
         record: Record certificate
-      amount:
-        importe_integro_dinerario: Gross cash amount
-        ingreso_a_cuenta: Payment on account
-        ingreso_a_cuenta_repercutido: Payment on account passed on
-        retencion: Withholding
-        valoracion_especie: Value in kind
-      attested_on: Stated on {date}
       changes: Changes to the {ejercicio} certificates
       column:
         class: Income class
         document: Document
-        especie: In kind
-        ingreso: On account
-        integro: Gross cash
         note: Note
         origin: Source
-        pago: Credit
         payer: Payer
-        repercutido: Passed on
-        retencion: Withholding
         state: State
+        stated_on: Stated on
+        withdrawn_on: Withdrawn on
       correct_hint: To correct a certificate, remove it and record it again.
       document: Certificate document (optional)
       document_hint: A document stored under Documents. The record is refused if Cadrumo
@@ -4303,7 +4297,6 @@ desktop:
         payer_certificate: Payer certificate
       origin_label: Source of the figures
       payer_legal_name: Payer name (optional)
-      payer_ref: Payer {ref}
       payer_tax_id: Payer tax ID
       payer_tax_id_hint: Sent with the record to identify the payer. It is not shown
         again.
@@ -4316,7 +4309,6 @@ desktop:
         states it, or state that an income class has none.
       withdraw: Withdraw
       withdraw_of: Withdraw the statement for {class}
-      withdrawn_on: Withdrawn on {date}
   logs:
     all_loggers: All loggers
     all_origins: All origins
@@ -4439,7 +4431,6 @@ desktop:
       lead: These boxes are filled from your withholding records, never typed here.
         To change one, correct it in your withholding records and calculate again.
       list: Withholdings
-      show: Show on the form
       show_box: Show box {box} on the form
     details:
       close: Close details
@@ -7097,8 +7088,6 @@ tui:
         active: Active
         id: Identifier
         label: Name
-    result:
-      remedy: 'Suggested next step: {action}'
     status:
       completed: Done.
       effect_unknown: The connection ended before an answer arrived ({code}). It may
@@ -7257,6 +7246,26 @@ tui:
           shows %{evidenced}. %{detail}'
         country: Country code (2 letters, optional)
         evidenced: Scope a document shows, for the lookup (optional)
+        filing_done: The filing name of %{identifier} was stated.
+        filing_heading: Filing name
+        filing_kind_entity: Entity
+        filing_kind_natural_person: Natural person
+        filing_no_second: No second surname
+        filing_nombre: Given name
+        filing_primer: First surname
+        filing_razon: Company name
+        filing_rendering: 'For %{width} characters: %{text}'
+        filing_renderings: Shorter renderings, as width=text; width=text (optional)
+        filing_renderings_malformed: Write each shorter rendering as a width, an equals
+          sign and its text, for example 20=Short name, and separate several with
+          a semicolon.
+        filing_review: Review filing name
+        filing_segundo: Second surname
+        filing_stage: State the filing name of %{identifier} as %{kind}.
+        filing_stated: 'Filing name of %{identifier}: %{kind} · %{name}'
+        filing_stated_by: Stated by %{name} on %{date}.
+        filing_unchanged: '%{identifier} already had this filing name.'
+        filing_unstated: No filing name is stated for %{identifier}.
         identification: EU member state of its VAT number (2 letters)
         identifier: Tax identifier
         identifier_required: Type the counterparty's tax identifier first.
@@ -7892,6 +7901,16 @@ tui:
       empty: No supporting documents await review.
       extract: Read document
       loading: Reading the documents…
+      page:
+        document: '{file} ({media}) - page {page} of {count}'
+        empty: The document states nothing to show.
+        fact: '{label}: {value}'
+        failed: The document could not be shown.
+        line: '{position}. {facts}'
+        loading: Reading the stored document...
+        not_drawn: The terminal does not draw pages. Open the document in the window
+          to see it.
+        view: View document
       path_placeholder: Type the path of the file
       pending: Pending
       printed_total_disagrees: The total printed on the document differs from the
@@ -8607,7 +8626,12 @@ tui:
           create: Create an inventory
           evidence_add: Store a purchase document
           movement_add: Add a movement
+          movement_claim: State the ledger entry of a purchase
           valuation_preview: Preview the valuation
+        claim:
+          load: Show transactions this purchase can claim
+          none_offered: No ledger transaction can be claimed by this purchase.
+          prompt: Choose a transaction
         column:
           actividad: Activity
           method: Method
@@ -9025,8 +9049,6 @@ tui:
       unavailable: The registered operations could not be read.
     stopped:
       code: Code
-      remedy: What would let it proceed
-      remedy_command: 'Remedy command: {command}'
     title: Operations
   reference:
     action:
@@ -9300,10 +9322,6 @@ tui:
         revision_current: Current
         revision_superseded: Replaced
   withholding:
-    absence:
-      state:
-        active: Active
-        withdrawn: Withdrawn
     absences:
       title: Statements of no withholding
     action:
@@ -9316,6 +9334,7 @@ tui:
       attested_on: Stated on
       income: Income
       note: Note
+      origin: Stated by
       payer: Payer
       state: State
     ejercicio: Year
@@ -9355,6 +9374,15 @@ workspace:
         declaration: Declaration
         legal: Legal status
         local: Local status
+      coverage:
+        applicability_undetermined: 'Whether you need to file is not known: {modelos}.
+          Check your obligations.'
+        applicable_window_missing: 'These modelos apply, but no filing window is held
+          for them: {modelos}. Check the official calendar.'
+        no_dates: No filing dates are available for this range. That is not the same
+          as nothing being due.
+        registry_unmodeled: 'No applicability rules or filing windows are held for:
+          {modelos}. Check the official guidance on your obligations.'
       detail:
         action: 'Enter action: {action}'
         axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · AEAT receipt: {receipt}
@@ -10543,6 +10571,13 @@ workspace:
         set_nothing: new value
         set_source: replaces the value from its source
       finding:
+        calculation_withdrawn: The calculation is withdrawn. Calculate again after
+          you state the amounts carried from earlier years.
+        carry_withdrawal_filed: This declaration is recorded as filed. Correct it
+          with an amendment.
+        carry_withdrawal_keeps_entries: Withdrawing this statement would discard the
+          other values you entered on this declaration. Enter the carried amounts
+          instead.
         clear_of_source_fed_casilla: A source fills this box, so it cannot be emptied.
           Give it back to its source instead.
         intent_not_admitted: This box cannot be changed that way.

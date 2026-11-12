@@ -14,6 +14,9 @@ two.
   reduction is derived from the facts of each lease, and a stored tier cannot be
   converted into those facts, so the migration clears whatever value is stored
   and the operator is asked to record the leases.
+- Schema 10 adds the LIS art. 40.3 election of the Modelo 202 as an optional
+  fact. It changes no stored value, so its transition clears nothing; a
+  schema-9 record that already carries the field is refused.
 
 Before each of those bumps the setup wizard pre-answered the affected
 questions and wrote its default as an ordinary ``manual_cli`` fact, so the
@@ -49,7 +52,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 9
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 10
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -137,6 +140,10 @@ no successor to read its value, so every stored value goes.
 """
 
 
+_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9})
+"""Versions whose outgoing transition only adds fields, so it clears no stored value."""
+
+
 def _transition_paths(version: int) -> frozenset[str]:
     defaulted: set[str] = set(_DEFAULTED_VALUES_BY_TRANSITION.get(version, _NO_DEFAULTS))
     return frozenset(defaulted | _RETIRED_PATHS_BY_TRANSITION.get(version, _NO_PATHS))
@@ -145,7 +152,7 @@ def _transition_paths(version: int) -> frozenset[str]:
 _CLEARED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         version: _transition_paths(version)
-        for version in (*_DEFAULTED_VALUES_BY_TRANSITION, *_RETIRED_PATHS_BY_TRANSITION)
+        for version in (*_DEFAULTED_VALUES_BY_TRANSITION, *_RETIRED_PATHS_BY_TRANSITION, *_ADDITIVE_TRANSITIONS)
     },
 )
 """The same transitions as path sets, for the callers that only need the names."""
@@ -213,10 +220,14 @@ PATHS_INTRODUCED_IN_V9: Final[frozenset[str]] = frozenset(
 )
 """Fields schema 8 did not declare: the property and lease records."""
 
+PATHS_INTRODUCED_IN_V10: Final[frozenset[str]] = frozenset({"taxpayer_type.pago_fraccionado_art_40_3_elected"})
+"""Fields schema 9 did not declare: the LIS art. 40.3 election of the Modelo 202."""
+
 _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         7: PATHS_INTRODUCED_IN_V7,
         9: PATHS_INTRODUCED_IN_V9,
+        10: PATHS_INTRODUCED_IN_V10,
     },
 )
 """Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
@@ -450,6 +461,7 @@ __all__ = [
     "MIGRATED_PROFILE_SCHEMA_VERSION",
     "PATHS_INTRODUCED_IN_V7",
     "PATHS_INTRODUCED_IN_V9",
+    "PATHS_INTRODUCED_IN_V10",
     "RETIRED_RENTAL_TIER_PATH",
     "SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS",
     "ProfileSchemaMigration",

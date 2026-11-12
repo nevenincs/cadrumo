@@ -1,9 +1,8 @@
-"""Word a settled operation's receipt, typed result and recorded stop for the run screen.
+"""Word a settled operation's receipt and typed result for the run screen.
 
 The result is the registered result model's own JSON, formatted and cut into
-pages a terminal can hold. A refused or failed operation is worded from the
-detail it recorded: its registered code, its message with the recorded context,
-and the precondition verdict that says what would let it proceed.
+pages a terminal can hold. A refused or failed operation's own refusal is
+shown by the refusal panel, from what it served.
 """
 
 from __future__ import annotations
@@ -13,14 +12,10 @@ from typing import Final
 
 from pydantic import BaseModel
 
-from ....application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
-from ....core.errors.error_codes import render_error_text
-from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.i18n.render import tr
 from ....core.operations import OperationTerminalCondition
 from .projection import build_operation_modal_view_model
-from .refusal_explanation import recorded_remedy_line
 
 RESULT_PAGE_LINES: Final = 200
 """How many formatted lines one result page shows before the next is asked for."""
@@ -61,25 +56,4 @@ def receipt_text(projection: OperationPublicProjectionV1) -> str:
     return "\n".join(lines)
 
 
-def stopped_operation_text(detail: OperationErrorDetailV1 | None) -> str:
-    """Return the recorded code, message and remedy of a refused or failed operation.
-
-    An operation that recorded no detail, or recorded a fault of its own
-    records, has nothing to add to the code its receipt already carries.
-    """
-    if detail is None or detail.kind is not OperationErrorDetailKind.REGISTERED_ERROR or detail.error_code is None:
-        return ""
-    error = RecordedRegisteredError(
-        detail.error_code, context=detail.context_mapping(), translated_message=detail.message_key
-    )
-    lines = [f"{tr('tui.operations.stopped.code')}: {detail.error_code}", render_error_text(error).rstrip()]
-    if detail.precondition_verdict_json is not None:
-        verdict = json.dumps(json.loads(detail.precondition_verdict_json), ensure_ascii=False, indent=2)
-        lines.append(f"{tr('tui.operations.stopped.remedy')}:\n{verdict}")
-        remedy = recorded_remedy_line(detail)
-        if remedy is not None:
-            lines.append(remedy)
-    return "\n".join(lines)
-
-
-__all__ = ["RESULT_PAGE_LINES", "receipt_text", "result_is_readable", "result_pages", "stopped_operation_text"]
+__all__ = ["RESULT_PAGE_LINES", "receipt_text", "result_is_readable", "result_pages"]

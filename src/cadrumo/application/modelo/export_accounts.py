@@ -75,6 +75,7 @@ from ...domain.modelos.errors import (
     ModeloExportProducerFactsRefusedError,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.period import calculation_filing_date
 from ...domain.transactions.own_accounts import (
     OwnAccountRegister,
     OwnAccountRegisterError,
@@ -106,6 +107,7 @@ from ..filing.producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
+from ..filing.producer_snapshot_m200 import Modelo200ProfileFacts
 from ..filing.producer_snapshot_m360 import Modelo360RepresentanteAccountChoice, Modelo360SolicitudEntry
 from ..filing.runtime import RegistrySchemaAccessor
 from ..operator_actions.models import PreconditionVerdict
@@ -434,7 +436,11 @@ def _instalment_refusal_reason(
     operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Name the first condition of the split the export fails, or ``None`` when it meets them all."""
-    if not two_instalments_declared(str(work_unit.modelo), period_day=work_unit.period.end_date, authority=operation):
+    if not two_instalments_declared(
+        str(work_unit.modelo),
+        period_day=calculation_filing_date(work_unit.period, authority=operation),
+        authority=operation,
+    ):
         return "not_declared"
     if resolved_result_disposition not in _INSTALMENT_PAYABLE:
         return "nothing_to_pay"
@@ -453,7 +459,11 @@ def _instalment_refusal_reason(
         return "past_filing_window"
     if timeliness is FilingTimeliness.UNKNOWN:
         return "filing_window_unknown"
-    share = first_instalment_share(str(work_unit.modelo), period_day=work_unit.period.end_date, authority=operation)
+    share = first_instalment_share(
+        str(work_unit.modelo),
+        period_day=calculation_filing_date(work_unit.period, authority=operation),
+        authority=operation,
+    )
     if (
         share is not None
         and settled_amount is not None
@@ -558,7 +568,7 @@ def build_export_producer_snapshot(
             amendment_evidence=amendment_evidence,
             operation=operation,
         )
-        model_profile, m303_filing_facts = _resolve_export_model_profile(
+        model_profile, m303_filing_facts = resolve_export_model_profile(
             modelo=modelo,
             work_unit=work_unit,
             revision=revision,
@@ -794,7 +804,7 @@ def require_m360_solicitud_for_export(
     )
 
 
-def _resolve_export_model_profile(
+def resolve_export_model_profile(
     *,
     modelo: Modelo,
     work_unit: WorkUnit,
@@ -805,6 +815,7 @@ def _resolve_export_model_profile(
     operation: PinnedAuthorityOperation,
     m360_solicitud: Modelo360SolicitudEntry | None,
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
+    """Return the model profile facts this modelo's export reads, and the Modelo 303 filing facts for a 303."""
     if m360_solicitud is not None:
         return m360_solicitud.facts, None
     if modelo == form_for_role("iva.periodic"):
@@ -821,6 +832,8 @@ def _resolve_export_model_profile(
             export_ports=export_ports,
             operation=operation,
         )
+    if modelo == form_for_role("sociedades.annual"):
+        return Modelo200ProfileFacts(), None
     if modelo == form_for_role("sociedades.instalment"):
         return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
     if modelo == form_for_role("withholding.work_periodic"):

@@ -261,6 +261,11 @@ aggregation:
       unsupported_period: Se requiere un periodo anual para la agregación de ingresos
         del Modelo 100 (p.ej. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: Vigente
+      withdrawn: Retirada
+    amount:
+      pago_a_cuenta: Total de pagos a cuenta
     clase:
       actividad_economica: Rendimientos de actividades económicas
       arrendamiento_inmueble_urbano: 'Rendimientos del capital inmobiliario: arrendamiento
@@ -315,6 +320,10 @@ aggregation:
         nada; ninguna otra clase de renta los admite.
       validation: 'El registro de retención no se guardó: revisa el NIF del pagador,
         los importes (como máximo dos decimales) y la huella del certificado.'
+    origen:
+      operator_declaration: Tu propia declaración
+      payer_certificate: Certificado del pagador
+    payer_unnamed: Pagador sin nombre indicado
     served:
       certificate_file_unreadable: No se pudo leer el archivo del certificado. Comprueba
         que sigue existiendo, que no está vacío y que es un PDF, una imagen o un documento
@@ -3725,6 +3734,7 @@ desktop:
       previous: Periodo anterior
       year_next: Año siguiente
       year_previous: Año anterior
+      years_supported: Ejercicios que puedes consultar
       years_with_movements: Años con movimientos
     position: Fila {row} de {count}
     prorrata:
@@ -4129,11 +4139,6 @@ desktop:
         note: Indica qué transacción del libro registra esta compra, que ninguna lo
           hace, o borra lo indicado antes.
         row: El libro registra esta compra
-        row_claimed: La registra una transacción del libro
-        row_none: No la registra ninguna transacción del libro
-        row_unstated: Sin indicar
-        row_unstated_hint: Esto borra una indicación anterior.
-        state_claimed: Registrada por {transaction}
         transaction: Transacción del libro
       closing:
         authority: Cómo se decide el valor
@@ -4336,27 +4341,16 @@ desktop:
       action:
         attest: Indicar sin retenciones
         record: Anotar certificado
-      amount:
-        importe_integro_dinerario: Importe íntegro dinerario
-        ingreso_a_cuenta: Ingreso a cuenta
-        ingreso_a_cuenta_repercutido: Ingreso a cuenta repercutido
-        retencion: Retención
-        valoracion_especie: Valoración en especie
-      attested_on: Indicado el {date}
       changes: Cambios en los certificados de {ejercicio}
       column:
         class: Clase de renta
         document: Documento
-        especie: En especie
-        ingreso: A cuenta
-        integro: Íntegro dinerario
         note: Nota
         origin: Origen
-        pago: Crédito
         payer: Pagador
-        repercutido: Repercutido
-        retencion: Retención
         state: Estado
+        stated_on: Declarado el
+        withdrawn_on: Retirado el
       correct_hint: Para corregir un certificado, quítalo y anótalo de nuevo.
       document: Documento del certificado (opcional)
       document_hint: Un documento guardado en Documentos. Se rechaza el registro si
@@ -4383,7 +4377,6 @@ desktop:
         payer_certificate: Certificado del pagador
       origin_label: Origen de las cifras
       payer_legal_name: Nombre del pagador (opcional)
-      payer_ref: Pagador {ref}
       payer_tax_id: NIF del pagador
       payer_tax_id_hint: Se envía con el registro para identificar al pagador. No
         se vuelve a mostrar.
@@ -4396,7 +4389,6 @@ desktop:
         su certificado, o indica que una clase de renta no tiene ninguna.
       withdraw: Retirar
       withdraw_of: Retirar la indicación de {class}
-      withdrawn_on: Retirado el {date}
   logs:
     all_loggers: Todos los registradores
     all_origins: Todos los orígenes
@@ -4525,7 +4517,6 @@ desktop:
         escriben aquí. Para cambiar una, corrígela en tus registros de retenciones
         y vuelve a calcular.
       list: Retenciones
-      show: Ver en el formulario
       show_box: Ver la casilla {box} en el formulario
     details:
       close: Cerrar detalles
@@ -7257,8 +7248,6 @@ tui:
         active: Activo
         id: Identificador
         label: Nombre
-    result:
-      remedy: 'Siguiente paso sugerido: {action}'
     status:
       completed: Hecho.
       effect_unknown: La conexión terminó antes de que llegara una respuesta ({code}).
@@ -7424,6 +7413,26 @@ tui:
           muestra %{evidenced}. %{detail}'
         country: Código de país (2 letras, opcional)
         evidenced: Ámbito que muestra un documento, para la consulta (opcional)
+        filing_done: Se indicó el nombre de presentación de %{identifier}.
+        filing_heading: Nombre de presentación
+        filing_kind_entity: Entidad
+        filing_kind_natural_person: Persona física
+        filing_no_second: Sin segundo apellido
+        filing_nombre: Nombre
+        filing_primer: Primer apellido
+        filing_razon: Razón social
+        filing_rendering: 'Para %{width} caracteres: %{text}'
+        filing_renderings: Versiones más cortas, como ancho=texto; ancho=texto (opcional)
+        filing_renderings_malformed: Escribe cada versión más corta como un ancho,
+          un signo igual y su texto, por ejemplo 20=Nombre corto, y separa varias
+          con punto y coma.
+        filing_review: Revisar nombre de presentación
+        filing_segundo: Segundo apellido
+        filing_stage: Indicar el nombre de presentación de %{identifier} como %{kind}.
+        filing_stated: 'Nombre de presentación de %{identifier}: %{kind} · %{name}'
+        filing_stated_by: Indicado por %{name} el %{date}.
+        filing_unchanged: '%{identifier} ya tenía este nombre de presentación.'
+        filing_unstated: No hay nombre de presentación indicado para %{identifier}.
         identification: Estado miembro de la UE de su NIF-IVA (2 letras)
         identifier: Identificador fiscal
         identifier_required: Escribe primero el identificador fiscal de la contraparte.
@@ -8073,6 +8082,16 @@ tui:
       empty: No hay justificantes pendientes de revisión.
       extract: Leer documento
       loading: Leyendo los documentos…
+      page:
+        document: '{file} ({media}) - página {page} de {count}'
+        empty: El documento no declara nada que mostrar.
+        fact: '{label}: {value}'
+        failed: No se ha podido mostrar el documento.
+        line: '{position}. {facts}'
+        loading: Leyendo el documento guardado...
+        not_drawn: El terminal no dibuja páginas. Abre el documento en la ventana
+          para verlo.
+        view: Ver documento
       path_placeholder: Escribe la ruta del fichero
       pending: Pendiente
       printed_total_disagrees: El total impreso en el documento no coincide con el
@@ -8804,7 +8823,12 @@ tui:
           create: Crear un inventario
           evidence_add: Guardar un documento de compra
           movement_add: Añadir un movimiento
+          movement_claim: Indicar el apunte del libro de una compra
           valuation_preview: Previsualizar la valoración
+        claim:
+          load: Muestra los movimientos que esta compra puede reclamar
+          none_offered: Ningún movimiento del libro puede ser reclamado por esta compra.
+          prompt: Elige un movimiento
         column:
           actividad: Actividad
           method: Método
@@ -9229,8 +9253,6 @@ tui:
       unavailable: No se han podido leer las operaciones registradas.
     stopped:
       code: Código
-      remedy: Qué permitiría continuar
-      remedy_command: 'Comando que lo resuelve: {command}'
     title: Operaciones
   reference:
     action:
@@ -9509,10 +9531,6 @@ tui:
         revision_current: Vigente
         revision_superseded: Sustituida
   withholding:
-    absence:
-      state:
-        active: Activa
-        withdrawn: Retirada
     absences:
       title: Declaraciones de ausencia de retenciones
     action:
@@ -9525,6 +9543,7 @@ tui:
       attested_on: Declarada el
       income: Rendimiento
       note: Nota
+      origin: Declarado por
       payer: Pagador
       state: Estado
     ejercicio: Ejercicio
@@ -9564,6 +9583,15 @@ workspace:
         declaration: Declaración
         legal: Situación legal
         local: Estado local
+      coverage:
+        applicability_undetermined: 'No se sabe si tienes que presentar: {modelos}.
+          Revisa tus obligaciones.'
+        applicable_window_missing: 'Estos modelos te afectan, pero no hay plazo de
+          presentación registrado para ellos: {modelos}. Consulta el calendario oficial.'
+        no_dates: No hay fechas de presentación disponibles para este intervalo. Eso
+          no significa que no haya nada pendiente.
+        registry_unmodeled: 'No hay reglas de aplicabilidad ni plazos registrados
+          para: {modelos}. Consulta la guía oficial sobre tus obligaciones.'
       detail:
         action: 'Acción al pulsar Intro: {action}'
         axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante de la
@@ -10762,6 +10790,13 @@ workspace:
         set_nothing: valor nuevo
         set_source: sustituye el valor de su origen
       finding:
+        calculation_withdrawn: El cálculo se retira. Vuelve a calcular cuando indiques
+          los importes pendientes de ejercicios anteriores.
+        carry_withdrawal_filed: Esta declaración consta como presentada. Corrígela
+          con una declaración complementaria o rectificativa.
+        carry_withdrawal_keeps_entries: Retirar esta declaración descartaría los demás
+          valores que has introducido en esta declaración. Indica los importes pendientes
+          en su lugar.
         clear_of_source_fed_casilla: Un origen rellena esta casilla, así que no se
           puede vaciar. Devuélvela a su origen en su lugar.
         intent_not_admitted: Esta casilla no se puede cambiar de esa forma.

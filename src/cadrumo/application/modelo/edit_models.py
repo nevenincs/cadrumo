@@ -686,6 +686,19 @@ class ModeloEditDomainRefusalV1(EditModel):
         return self
 
 
+class ModeloEditCarryWithdrawalBlock(StrEnum):
+    """The fact a refused withdrawal of a calculation-refusing carry statement names.
+
+    Withdrawing such a statement returns the work unit to no current
+    calculation; these are the two cases where it cannot.
+    """
+
+    #: The declaration is recorded as filed; only an amendment corrects it.
+    FILED = "carry_withdrawal_filed"
+    #: The head holds other values of the filer's, which withdrawing would discard.
+    KEEPS_ENTRIES = "carry_withdrawal_keeps_entries"
+
+
 class ModeloEditUnsupportedIntentReason(StrEnum):
     """One closed reason per intent kind this V1 executor cannot yet reach.
 
@@ -1074,6 +1087,7 @@ __all__ = [
     "ModeloEditBaselineV1",
     "ModeloEditBindingAddressV1",
     "ModeloEditBindingIntentKind",
+    "ModeloEditCarryWithdrawalBlock",
     "ModeloEditCompatibilityRefusalV1",
     "ModeloEditCorrectionAddressV1",
     "ModeloEditDetailRowAddressV1",

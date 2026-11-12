@@ -16,6 +16,7 @@ from typing import Final, Literal, Protocol, Self, cast, runtime_checkable
 from pydantic import BaseModel, model_validator
 from textual.screen import Screen
 
+from ...application.operator_actions.projection import ActionArgumentSnapshot
 from ...application.search.workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
@@ -139,6 +140,8 @@ class TuiNavigationTargetV1(BaseModel):
     destination: TuiDestinationIdV1
     focus: TuiFocusIdentityV1
     action_candidate_id: NamespacedId | None = None
+    #: Arguments a served way out already holds, for the form the destination opens on.
+    request_prefill: tuple[ActionArgumentSnapshot, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -156,6 +159,8 @@ class TuiScreenContextV1(BaseModel):
     destination: TuiDestinationIdV1
     focus: TuiFocusIdentityV1 | None = None
     action_candidate_id: NamespacedId | None = None
+    #: Arguments a served way out already holds, for the form the destination opens on.
+    request_prefill: tuple[ActionArgumentSnapshot, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -411,6 +416,7 @@ class TuiDestinationCatalogueV1:
             destination=target.destination,
             focus=target.focus,
             action_candidate_id=target.action_candidate_id,
+            request_prefill=target.request_prefill,
         )
         try:
             screen = factory(context)

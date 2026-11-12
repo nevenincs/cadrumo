@@ -18,6 +18,7 @@ from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
+from ....application.ledger.evidence_page_contracts import LedgerEvidencePageProjection
 from ....application.overview.next_actions import declare_next_action
 from ....application.search.workbench import WorkbenchSearchService
 from ..app import CadrumoTuiApp
@@ -129,6 +130,9 @@ class _GuardedEvidenceDoor:
 
     async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         raise AssertionError(f"not exercised: {confirmation}")
+
+    async def page(self, evidence_id: str) -> LedgerEvidencePageProjection:
+        raise AssertionError(f"not exercised: {evidence_id}")
 
 
 def _evidence_screen(boundary: TransportBoundary) -> LedgerEvidenceScreen:

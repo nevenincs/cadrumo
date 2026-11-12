@@ -27,12 +27,15 @@ from __future__ import annotations
 
 import calendar
 from datetime import date
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from ..core.errors.hierarchy import CadrumoError
 from ..core.period import Period
 from ..core.period import PeriodError as CorePeriodError
 from .calculations.registry.form_codes import resolve_form_codes
+
+if TYPE_CHECKING:
+    from .calculations.registry.governed_fact_scope import GovernedFactSource
 
 _INSTALMENT_MONTHS_FACT: Final = "modelo-202-instalment-payment-months"
 
@@ -100,7 +103,7 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
     return _last_day_of_month(filing_year, month)
 
 
-def calculation_filing_date(period: Period) -> date:
+def calculation_filing_date(period: Period, *, authority: GovernedFactSource | None = None) -> date:
     """Resolve the deterministic filing date used by a calculation context.
 
     This is deliberately distinct from :func:`period_end_date`.  The latter
@@ -112,6 +115,8 @@ def calculation_filing_date(period: Period) -> date:
 
     Args:
         period: The typed filing-period scope of the calculation.
+        authority: The pinned registry generation that declares the instalment payment months;
+            ``None`` reads the governed-fact scope in progress.
 
     Returns:
         The inclusive end date for contiguous periods; the corresponding
@@ -124,7 +129,7 @@ def calculation_filing_date(period: Period) -> date:
     code = period.registry_token
     if (scheme_quarter := period.scheme_quarter) is not None:
         return Period.from_year_and_code(period.filing_year, scheme_quarter.value).end_date
-    month = _instalment_month(code)
+    month = _instalment_month(code, authority=authority)
     if month is not None:
         return _last_day_of_month(period.filing_year, month)
     if code == "4P" or code.startswith("EVENT-"):
@@ -132,9 +137,9 @@ def calculation_filing_date(period: Period) -> date:
     raise PeriodValidationError(f"calculation filing date is undefined for registry period {code!r}")
 
 
-def _instalment_month(token: str) -> int | None:
+def _instalment_month(token: str, *, authority: GovernedFactSource | None = None) -> int | None:
     """Return the payment month the registry declares for an instalment token, if it is one."""
-    declared = resolve_form_codes(_INSTALMENT_MONTHS_FACT)
+    declared = resolve_form_codes(_INSTALMENT_MONTHS_FACT, authority=authority)
     return declared.integer(token) if token in declared.entries else None
 
 

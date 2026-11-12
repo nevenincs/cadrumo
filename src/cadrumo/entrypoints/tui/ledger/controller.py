@@ -6,6 +6,7 @@ from collections.abc import Collection
 from dataclasses import replace
 from typing import Final
 
+from ....application.ledger.evidence_page_contracts import LedgerEvidencePageProjection
 from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
@@ -426,6 +427,12 @@ class LedgerWorkspaceController:
         if self.evidence_door is None:
             raise InternalInvariantError("evidence reading is unavailable")
         return await self.evidence_door.extract(evidence_id)
+
+    async def view_evidence_page(self, evidence_id: str) -> LedgerEvidencePageProjection:
+        """Read what is served of one registered document through the injected evidence door."""
+        if self.evidence_door is None:
+            raise InternalInvariantError("evidence viewing is unavailable")
+        return await self.evidence_door.page(evidence_id)
 
     async def confirm_evidence(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         """Record one read document as an invoice through the injected evidence door."""

@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.binding_targets import revision_bindin
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from cadrumo.domain.calculations.registry.tests.authored_editions import supported_authored_exercises
-from cadrumo.domain.filing.errors import FilingExportValidationError
+from cadrumo.domain.filing.errors import FilingExportCasillaValueRefusedError
 from cadrumo.domain.filing.protocols import ModeloInputValue
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -297,10 +297,11 @@ def test_a_box_for_the_whole_block_refuses_when_the_row_book_opens_two_activitie
         folder.mkdir()
         draft = _rows_draft(provider, year, binding_id, {"1": "125.00", "2": "75.00"})
 
-        with pytest.raises(FilingExportValidationError) as refused:
+        with pytest.raises(FilingExportCasillaValueRefusedError) as refused:
             _render(provider, draft, folder)
 
-        assert f"box {_row(provider, _ACTIVITY_KEY_FIELD).casilla_id} holds A05" in str(refused.value)
+        assert refused.value.casilla_id == _row(provider, _ACTIVITY_KEY_FIELD).casilla_id
+        assert (refused.value.context or {}).get("value") == "A05"
 
 
 def test_a_box_whose_activity_already_states_another_value_refuses(
@@ -317,7 +318,8 @@ def test_a_box_whose_activity_already_states_another_value_refuses(
         )
         assert any(value.casilla_id == column.casilla_id for value in values)
 
-        with pytest.raises(FilingExportValidationError) as refused:
+        with pytest.raises(FilingExportCasillaValueRefusedError) as refused:
             _render(provider, draft.model_copy(update={"values": values}), folder)
 
-        assert f"box {column.casilla_id} holds 130.00" in str(refused.value)
+        assert refused.value.casilla_id == column.casilla_id
+        assert (refused.value.context or {}).get("value") == "130.00"
