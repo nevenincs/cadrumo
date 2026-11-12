@@ -26,6 +26,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.verification_report import (
+    DisclosedLimitationFlag,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -101,7 +102,7 @@ class ModeloVerificationFindingProjection(BaseModel):
         tuple[LegalRefId, ...], Field(min_length=1, max_length=MAX_MODELO_VERIFICATION_REPORT_FINDING_REFS)
     ]
     source_refs: Annotated[tuple[SourceRefId, ...], Field(max_length=MAX_MODELO_VERIFICATION_REPORT_FINDING_REFS)] = ()
-    disclosed_limitation: bool = Field(default=False, exclude_if=lambda value: not value)
+    disclosed_limitation: DisclosedLimitationFlag = False
 
     @model_validator(mode="after")
     def _unique_refs(self) -> Self:

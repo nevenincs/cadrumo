@@ -24,6 +24,7 @@ from ...domain.calculations.registry.ids import LegalRefId, ModeloId, RevisionId
 from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ...domain.modelos.filing_text import ModeloActorLabel
 from ...domain.modelos.verification_report import (
+    DisclosedLimitationFlag,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -73,7 +74,7 @@ class ModeloFindingSnapshot(BaseModel):
     message_facts: tuple[PublicNamedScalar, ...]
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
-    disclosed_limitation: bool = Field(default=False, exclude_if=lambda value: not value)
+    disclosed_limitation: DisclosedLimitationFlag = False
 
     @classmethod
     def from_finding(cls, finding: ModeloVerificationFinding) -> Self:

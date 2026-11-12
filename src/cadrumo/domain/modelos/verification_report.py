@@ -163,6 +163,14 @@ class ModeloVerificationFindingSeverity(StrEnum):
     WARNING = "warning"
 
 
+def _omitted_when_false(value: bool) -> bool:
+    return not value
+
+
+DisclosedLimitationFlag = Annotated[bool, Field(exclude_if=_omitted_when_false)]
+"""A finding's disclosed-limitation marker, left out of every serialized form while it is false."""
+
+
 class ModeloVerificationFinding(BaseModel):
     """One verification finding.
 
@@ -186,7 +194,7 @@ class ModeloVerificationFinding(BaseModel):
     message_facts: Mapping[str, _FindingFactValue] = Field(default_factory=dict)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = ()
-    disclosed_limitation: bool = Field(default=False, exclude_if=lambda value: not value)
+    disclosed_limitation: DisclosedLimitationFlag = False
     """Whether the finding discloses a figure the calculation leaves out, not a check that ran.
 
     The producer that knows the value is uncomputed sets it, and it never blocks: a limitation
