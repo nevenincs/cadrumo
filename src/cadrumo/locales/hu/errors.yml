@@ -1618,5 +1618,12 @@ errors:
       kivéve, ha száraz-futási mód van használatban.
     own_account_unknown: A(z) {own_account_id} saját számla nem szerepel a nyilvántartott
       saját bankszámláid között.
+    rental_lease_unknown: A(z) {ref} bérleti szerződés nem szerepel a profilodban.
+      A szerződéseket az «{door}» paranccsal listázhatod.
+    rental_link_category: A bérleti szerződéshez vagy ingatlanhoz kapcsolt sornak
+      a(z) {category} jövedelemkategóriát kell viselnie; add meg az «{door}» paranccsal
+      és a --irpf-category kapcsolóval.
+    rental_property_unknown: A(z) {ref} ingatlan nem szerepel a profilodban. Az ingatlanokat
+      az «{door}» paranccsal listázhatod.
     unknown_ledger_provider: 'Ismeretlen főkönyv-szolgáltató: {provider!r}. Elismert
       szolgáltatók: {providers}.'

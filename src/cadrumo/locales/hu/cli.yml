@@ -102,8 +102,8 @@ cli:
         razon_social_help: Egy szervezet teljes cégneve (razón social vagy denominación),
           sosem kereskedelmi név.
         rendering_help: Egy rövidebb alak, amelyet egy keskenyebb mezőhöz adsz meg,
-          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak úgy
-          rövidül, ahogy megadod.
+          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak
+          úgy rövidül, ahogy megadod.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
         segundo_apellido_help: Egy természetes személy második vezetékneve. Csak a
           --no-second-surname kapcsolóval együtt hagyd el.
@@ -3430,6 +3430,8 @@ cli:
       irpf_purpose_employment_income: munkaviszonyból származó jövedelem (nem nettó
         számlákhoz)
       irpf_purpose_rent_expense_withholding: nettó bérleti díj visszatartása
+      irpf_purpose_rental_property_income: ingatlan bérbeadásából származó bevétel
+        és kiadás
       irpf_usage_example: 'Nettó bérleti díj: --category-id {rent_category} --irpf-category
         {rent_category}. Nettó szakmai szolgáltatás: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -3450,6 +3452,10 @@ cli:
       year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     classify:
       apply_help: Az LLM javaslatát `llm:` forrással menti, nem csak előnézetet készít.
+      arrendamiento_help: A tárolt bérleti szerződés sorkulcsa, amelyhez ez a bevételi
+        sor tartozik; a szerződéseket az «aeat config profile arrendamiento list»
+        paranccsal listázhatod. Üres szöveg törli a kapcsolatot. A kapcsolt sor a
+        capital_inmobiliario jövedelemkategóriát viseli.
       auto_split_help: Olvasd be a csatolt számlát, és ha többkomponensű, bontsd soronkénti
         alap/áfa-gyermekekre; egyébként osztályozd helyben (a --read-evidence kapcsoló
         szükséges).
@@ -3488,9 +3494,16 @@ cli:
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].'
       file_not_found: 'A CSV-fájl nem található: %{path}'
+      gasto_inmobiliario_help: Az ingatlankiadás fajtája, a nyilvántartás által deklaráltak
+        egyike; ismeretlen értéket az elfogadottak felsorolásával utasít el. Ingatlankapcsolat
+        (--inmueble) szükséges hozzá. Üres szöveg törli.
       help: Egyetlen tranzakció besorolása az aktív profil nyilvántartásában.
       id_help: A besorolandó tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --file nincs megadva.
+      inmueble_help: A tárolt ingatlan sorkulcsa, amelyhez ez a kiadási sor tartozik;
+        az ingatlanokat az «aeat config profile inmueble list» paranccsal listázhatod.
+        Nem használható a --arrendamiento kapcsolóval együtt. Üres szöveg törli a
+        kapcsolatot. A kapcsolt sor a capital_inmobiliario jövedelemkategóriát viseli.
       investment_asset_id_help: Annak a beruházási javak nyilvántartási bejegyzésnek
         az azonosítója, amellyel szemben ez a beszerzés levonásra kerül, a bejegyzésben
         szereplő alakban. Beruházási levonási típusnál kötelező, minden más típusnál
@@ -3634,6 +3647,8 @@ cli:
         Add meg az összeget előjel nélkül, és a folyást a --direction kapcsolóval
         állítsd be (OUTGOING kimenő, INCOMING bejövő, INTERNAL_TRANSFER saját számlák
         között).
+      rental_concept_unknown: 'Ismeretlen --gasto-inmobiliario {value!r}. Elfogadott
+        fajták: {accepted}.'
       unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű kategóriaazonosítót
         adj meg, például {example!r}, ne kategóriacsalád-előtaggal ellátott vagy összetett
         kulcsot. A felismert azonosítókért tekintsd meg a nyilvántartásod kategóriakatalógusát.'
