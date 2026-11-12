@@ -19,10 +19,10 @@ from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
 
-from .....core.time.clock import today_madrid
 from ..errors import RegistryValidationError
 from ..governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..schema_base import DateAxis
+from .envelope_editions import resolve_support_envelope_editions
 from .resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .variants import FactSelector
 
@@ -75,13 +75,37 @@ class StringMappingFact:
             RegistryValidationError: When the fact does not resolve as a mapping
                 or its payload is not string-to-string.
         """
-        query = MappingFactQuery(
-            fact_id=self.fact_id,
-            date_axis=self.date_axis,
-            effective_date=effective_date,
-            selectors=self.selectors,
-        )
-        return resolve_string_mapping_entries(authority, query, policy=self.policy)
+        return resolve_string_mapping_entries(authority, self._query_on(effective_date), policy=self.policy)
+
+    def resolve_support_envelope_entries(self, authority: GovernedFactSource) -> Mapping[str, str]:
+        """Return the union of every edition inside the support envelope, without a date.
+
+        A dateless read never substitutes the run date. It reads each edition
+        the fact authors inside the supported filing years, oldest first, and
+        merges their entries: a key any edition declares is kept, and where two
+        editions spell one key differently the newest edition's value stands.
+        Vocabulary editions extend their predecessors (a later edition adds a
+        token to an order list or a reference to a token's legal basis), so the
+        newest value is the union of the tokens and is also what a picker
+        offers. A token a later edition withdraws is therefore not admitted by
+        a dateless read; the caller that holds the record's date reads that
+        date's edition instead.
+
+        Raises:
+            RegistryValidationError: When no edition lies inside the envelope
+                or an edition is not a string-to-string mapping.
+        """
+        merged: dict[str, str] = {}
+        editions = resolve_support_envelope_editions(authority, self._query_on)
+        if not editions:
+            raise RegistryValidationError(
+                f"{self.policy.subject} authors no edition inside the supported filing years",
+            )
+        for resolved in editions:
+            if not isinstance(resolved, ResolvedMappingFact):
+                raise RegistryValidationError(f"{self.policy.subject} must resolve as a mapping fact")
+            merged.update(string_mapping_entries(resolved, policy=self.policy))
+        return MappingProxyType(merged)
 
     def resolve_scoped_entries(
         self,
@@ -91,18 +115,31 @@ class StringMappingFact:
     ) -> Mapping[str, str]:
         """Resolve this fact from the explicit authority or the validation scope.
 
-        An absent ``effective_date`` is today's date in Madrid. The published
-        bundle is never read: with neither an authority nor a scope the
-        catalogue refuses.
+        A dated read resolves at ``effective_date``. An absent date never means
+        the run date: the read returns the entries of every edition inside the
+        support envelope (see :meth:`resolve_support_envelope_entries`). The
+        published bundle is never read: with neither an authority nor a scope
+        the catalogue refuses.
 
         Raises:
             InternalInvariantError: When no authority is supplied and no
                 validation scope is active.
-            RegistryValidationError: When the fact does not resolve as a mapping
-                or its payload is not string-to-string.
+            RegistryValidationError: When the fact does not resolve as a mapping,
+                its payload is not string-to-string, or no edition lies inside
+                the support envelope.
         """
         selected = require_governed_fact_authority(authority, subject=self.policy.subject)
-        return self.resolve_entries(selected, effective_date=effective_date or today_madrid())
+        if effective_date is None:
+            return self.resolve_support_envelope_entries(selected)
+        return self.resolve_entries(selected, effective_date=effective_date)
+
+    def _query_on(self, effective_date: date) -> MappingFactQuery:
+        return MappingFactQuery(
+            fact_id=self.fact_id,
+            date_axis=self.date_axis,
+            effective_date=effective_date,
+            selectors=self.selectors,
+        )
 
 
 def require_resolved_mapping_fact(

@@ -82,6 +82,7 @@ async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirma
                         source="operator_confirmed",
                     ),
                     tr("tui.ledger.categorisation.counterparty.state", state="-", source="operator_confirmed"),
+                    tr("tui.ledger.categorisation.counterparty.filing_unstated", identifier=SYNTHETIC_TAX_ID),
                 )
             )
 

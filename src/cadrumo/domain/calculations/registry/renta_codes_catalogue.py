@@ -6,12 +6,13 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
-from ....core.time.clock import today_madrid
 from ...contribuyente.renta_codes import FiscalResidency
 from .errors import RegistryValidationError
+from .facts.envelope_editions import resolve_support_envelope_editions
 from .facts.resolution import (
     EntitySetFactQuery,
     ResolvedEntitySetFact,
+    ResolvedGovernedFact,
     required_mapping_entry,
     unique_mapping_tokens,
 )
@@ -103,7 +104,12 @@ def resolve_fiscal_residency_catalogue(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> FiscalResidencyCatalogue:
-    """Resolve the dated fiscal-residency vocabulary through fact 0122."""
+    """Resolve the fiscal-residency vocabulary through fact 0122.
+
+    A dated read takes the vocabulary in force on ``effective_date``; without a
+    date it admits every token an edition inside the supported filing years
+    declares and never substitutes the run date.
+    """
     entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
     definitions: list[FiscalResidencyDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _FISCAL_RESIDENCY_ORDER_KEY, subject=_ENTRY_SUBJECT):
@@ -187,18 +193,15 @@ def fiscal_residency_requires_country(
     )
 
 
-def _resolve_country_entities(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> frozenset[str]:
-    resolved = authority.resolve_governed_fact(
-        EntitySetFactQuery(
-            fact_id=_EU_EEA_COUNTRY_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
+def _country_entities_query(effective_date: date) -> EntitySetFactQuery:
+    return EntitySetFactQuery(
+        fact_id=_EU_EEA_COUNTRY_FACT_ID,
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=effective_date,
     )
+
+
+def _country_entities(resolved: ResolvedGovernedFact) -> frozenset[str]:
     if not isinstance(resolved, ResolvedEntitySetFact):
         raise RegistryValidationError("EU/EEA country membership must resolve as an entity-set fact")
     entities = tuple(entity.strip().upper() for entity in resolved.payload.entities)
@@ -212,9 +215,23 @@ def ue_eea_country_codes(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> frozenset[str]:
-    """Return the selected EU/EEA country-code entity set from fact 0123."""
+    """Return the EU/EEA country-code entity set from fact 0123.
+
+    A dated read returns the set in force on ``effective_date``. Without a date
+    the run date is never substituted: the result is every code an edition
+    inside the supported filing years declares, which admits a code but cannot
+    decide a tax fact; a caller deciding one supplies the date.
+    """
     selected = require_governed_fact_authority(authority, subject="EU/EEA country-entity set")
-    return _resolve_country_entities(effective_date=effective_date or today_madrid(), authority=selected)
+    if effective_date is not None:
+        return _country_entities(selected.resolve_governed_fact(_country_entities_query(effective_date)))
+    editions = resolve_support_envelope_editions(selected, _country_entities_query)
+    if not editions:
+        raise RegistryValidationError("EU/EEA country membership authors no edition inside the supported filing years")
+    codes = frozenset[str]()
+    for resolved in editions:
+        codes |= _country_entities(resolved)
+    return codes
 
 
 def is_ue_eea_country_code(

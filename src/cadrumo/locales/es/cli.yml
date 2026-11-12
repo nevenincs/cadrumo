@@ -410,6 +410,9 @@ cli:
         list_help: Lista los registros de existencias del perfil activo
         movement_add_help: Añade un movimiento de compra, venta o ajuste al registro
           de existencias
+        movement_claim_candidates_help: 'Lista las transacciones del libro que una
+          compra puede reclamar: aquellas cuya base, IVA y recargo coinciden con los
+          de la compra al céntimo.'
         movement_claim_help: Indica qué transacción del libro registra una compra,
           indica que ninguna lo hace o borra la indicación; una transacción reclamada
           deja las casillas de gasto del libro.

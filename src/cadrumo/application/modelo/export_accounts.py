@@ -106,6 +106,7 @@ from ..filing.producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
+from ..filing.producer_snapshot_m200 import Modelo200ProfileFacts
 from ..filing.producer_snapshot_m360 import Modelo360RepresentanteAccountChoice, Modelo360SolicitudEntry
 from ..filing.runtime import RegistrySchemaAccessor
 from ..operator_actions.models import PreconditionVerdict
@@ -558,7 +559,7 @@ def build_export_producer_snapshot(
             amendment_evidence=amendment_evidence,
             operation=operation,
         )
-        model_profile, m303_filing_facts = _resolve_export_model_profile(
+        model_profile, m303_filing_facts = resolve_export_model_profile(
             modelo=modelo,
             work_unit=work_unit,
             revision=revision,
@@ -794,7 +795,7 @@ def require_m360_solicitud_for_export(
     )
 
 
-def _resolve_export_model_profile(
+def resolve_export_model_profile(
     *,
     modelo: Modelo,
     work_unit: WorkUnit,
@@ -805,6 +806,7 @@ def _resolve_export_model_profile(
     operation: PinnedAuthorityOperation,
     m360_solicitud: Modelo360SolicitudEntry | None,
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
+    """Return the model profile facts this modelo's export reads, and the Modelo 303 filing facts for a 303."""
     if m360_solicitud is not None:
         return m360_solicitud.facts, None
     if modelo == form_for_role("iva.periodic"):
@@ -821,6 +823,8 @@ def _resolve_export_model_profile(
             export_ports=export_ports,
             operation=operation,
         )
+    if modelo == form_for_role("sociedades.annual"):
+        return Modelo200ProfileFacts(), None
     if modelo == form_for_role("sociedades.instalment"):
         return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
     if modelo == form_for_role("withholding.work_periodic"):

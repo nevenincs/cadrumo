@@ -30,6 +30,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 
@@ -53,12 +54,12 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
         yield operation
 
 
-def _transaction(*, counterparty_country: str | None) -> Transaction:
+def _transaction(*, counterparty_country: str | None, booked: date = date(2026, 4, 10)) -> Transaction:
     return Transaction(
         raw=RawTransaction(
             provider_transaction_id="row-1",
-            booked_date=date(2026, 4, 10),
-            value_date=date(2026, 4, 10),
+            booked_date=booked,
+            value_date=booked,
             amount=Decimal("100.00"),
             currency="EUR",
             counterparty="Acme Inc",
@@ -116,6 +117,26 @@ def test_the_member_state_is_derived_and_never_stored_twice() -> None:
                 "counterparty_eu_member_state": "fr",
             },
         )
+
+
+def test_the_membership_is_decided_on_the_rows_own_date_across_the_support_envelope() -> None:
+    """A row at the envelope's floor and one at its horizon both resolve their membership."""
+    with bundled_indexed_authority().operation() as authority:
+        envelope = authority.supported_filing_years().date_envelope()
+    for booked in (envelope.floor, envelope.horizon):
+        row = _transaction(counterparty_country="DE", booked=booked)
+        assert row.counterparty_eu_member_state == require_eu_member_state("DE", effective_date=booked)
+
+
+def test_a_row_dated_outside_the_envelope_is_not_decided_on_the_run_date() -> None:
+    """The membership read takes the row's date: a date below the floor is refused, not replaced by today."""
+    with bundled_indexed_authority().operation() as authority:
+        envelope = authority.supported_filing_years().date_envelope()
+    below_floor = date(envelope.floor.year - 1, 6, 1)
+    row = _transaction(counterparty_country="DE", booked=below_floor)
+
+    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+        _ = row.counterparty_eu_member_state
 
 
 @pytest.mark.parametrize("country", ("US", "XX"))

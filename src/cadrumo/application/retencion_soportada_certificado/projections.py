@@ -64,6 +64,8 @@ def project_retencion_soportada_list_result(
         or private.outcome != "success"
         or private.profile_id != profile_id
         or private.rows is None
+        or private.amount_columns is None
+        or private.ejercicios is None
     ):
         raise ValueError(message)
     require_succeeded_terminal_receipt(
@@ -73,7 +75,13 @@ def project_retencion_soportada_list_result(
         effect=OperationEffect.NONE,
         message=message,
     )
-    return RetencionSoportadaListProjection(profile_id=profile_id, ejercicio=private.ejercicio, rows=private.rows)
+    return RetencionSoportadaListProjection(
+        profile_id=profile_id,
+        ejercicio=private.ejercicio,
+        rows=private.rows,
+        amount_columns=private.amount_columns,
+        ejercicios=private.ejercicios,
+    )
 
 
 def _refusal_receipt_matches(receipt: OperationTerminalReceipt, code: str, definition_id: str) -> bool:

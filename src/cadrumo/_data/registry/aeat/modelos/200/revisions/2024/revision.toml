@@ -89,6 +89,15 @@ selector = { revision = "2023", id = "01495" }
 fields = { binding = "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores", input_kind = "bound" }
 removed_fields = []
 
+# Casilla [00625] (porcentaje de tributación a la Administración del Estado,
+# aeat-dr-200-2024 DP200026) prints the same profile percentage the cuota
+# [00599] reads, so the return shows the percentage the cuota applied; an
+# absent profile value refuses the cuota as a missing input.
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200026:00625" }
+fields = { binding = "modelo-200-profile-tributacion-estado-porcentaje", input_kind = "bound" }
+removed_fields = []
+
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "DP200014:00550" }
 fields = { formula = "modelo-200-base-imponible-previa", input_kind = "computed" }

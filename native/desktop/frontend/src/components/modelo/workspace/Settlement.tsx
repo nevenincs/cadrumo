@@ -159,6 +159,9 @@ export function Settlement({
   if (asked.length === 0) return null;
   return (
     <section
+      // A group: a page may show the settlement of several years, and a
+      // landmark must have a name of its own.
+      role="group"
       aria-label={t("desktop.modelo.settlement.title")}
       data-settlement=""
       className="flex flex-col gap-3"

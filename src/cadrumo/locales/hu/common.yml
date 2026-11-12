@@ -249,6 +249,11 @@ aggregation:
       unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
         (pl. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: Hatályos
+      withdrawn: Visszavont
+    amount:
+      pago_a_cuenta: Előlegfizetések összesen
     clase:
       actividad_economica: Gazdasági tevékenységből származó jövedelem
       arrendamiento_inmueble_urbano: 'Ingatlanvagyon-jövedelem: városi ingatlan bérbeadása'
@@ -297,6 +302,10 @@ aggregation:
         fel semmit; más jövedelemosztály nem fogadja el őket.
       validation: 'A levonási rekord nem lett mentve: ellenőrizd a kifizető NIF-jét,
         az összegeket (legfeljebb két tizedesjegy) és az igazolás ujjlenyomatát.'
+    origen:
+      operator_declaration: A saját nyilatkozatod
+      payer_certificate: A kifizető igazolása
+    payer_unnamed: Megnevezés nélküli kifizető
     served:
       certificate_file_unreadable: Az igazolás fájlja nem olvasható. Ellenőrizd, hogy
         még megvan, nem üres, és PDF, kép vagy XML dokumentum, majd válaszd ki újra.
@@ -4300,12 +4309,6 @@ desktop:
       action:
         attest: Nincs levonás jelzése
         record: Igazolás rögzítése
-      amount:
-        importe_integro_dinerario: Bruttó pénzbeli összeg
-        ingreso_a_cuenta: Előlegbefizetés
-        ingreso_a_cuenta_repercutido: Áthárított előlegbefizetés
-        retencion: Levonás
-        valoracion_especie: Természetbeni érték
       attested_on: 'Jelezve: {date}'
       changes: A(z) {ejercicio} évi igazolások módosításai
       column:
@@ -4486,7 +4489,6 @@ desktop:
         írod be őket. Ha módosítani akarsz egyet, javítsd a levonási nyilvántartásaidban,
         majd számolj újra.
       list: Levonások
-      show: Megjelenítés az űrlapon
       show_box: A(z) {box} rovat megjelenítése az űrlapon
     details:
       close: Részletek bezárása
@@ -7216,8 +7218,6 @@ tui:
         active: Aktív
         id: Azonosító
         label: Név
-    result:
-      remedy: 'Javasolt következő lépés: {action}'
     status:
       completed: Kész.
       effect_unknown: A kapcsolat megszakadt, mielőtt válasz érkezett volna ({code}).
@@ -7382,6 +7382,27 @@ tui:
           szerint %{evidenced}. %{detail}'
         country: Országkód (2 betű, nem kötelező)
         evidenced: Bizonylaton szereplő hatály a lekérdezéshez (nem kötelező)
+        filing_done: '%{identifier} bevallási neve megadva.'
+        filing_heading: Bevallási név
+        filing_kind_entity: Jogi személy
+        filing_kind_natural_person: Természetes személy
+        filing_no_second: Nincs második vezetéknév
+        filing_nombre: Keresztnév
+        filing_primer: Első vezetéknév
+        filing_razon: Cégnév
+        filing_rendering: '%{width} karakterhez: %{text}'
+        filing_renderings: Rövidebb változatok, szélesség=szöveg; szélesség=szöveg
+          (nem kötelező)
+        filing_renderings_malformed: Írd a rövidebb változatot szélesség, egyenlőségjel
+          és szöveg alakban, például 20=Rövid név, többet pontosvesszővel válassz
+          el.
+        filing_review: Bevallási név ellenőrzése
+        filing_segundo: Második vezetéknév
+        filing_stage: '%{identifier} bevallási nevének megadása mint %{kind}.'
+        filing_stated: '%{identifier} bevallási neve: %{kind} · %{name}'
+        filing_stated_by: 'Megadta: %{name}, ekkor: %{date}.'
+        filing_unchanged: '%{identifier} bevallási neve már ez volt.'
+        filing_unstated: '%{identifier} számára nincs megadva bevallási név.'
         identification: Közösségi adószámának EU-tagállama (2 betű)
         identifier: Adóazonosító
         identifier_required: Előbb add meg a partner adóazonosítóját.
@@ -8747,6 +8768,7 @@ tui:
           create: Készlet létrehozása
           evidence_add: Beszerzési dokumentum mentése
           movement_add: Mozgás hozzáadása
+          movement_claim: Egy beszerzés főkönyvi tételének megadása
           valuation_preview: Értékelés előnézete
         column:
           actividad: Tevékenység
@@ -8786,6 +8808,10 @@ tui:
           count: Leltár
           opening: Nyitás
           purchase: Vásárlás
+        ledger_row:
+          claimed: Egy főkönyvi tétel rögzíti ezt a beszerzést
+          none: Egy főkönyvi tétel sem rögzíti ezt a beszerzést
+          unstated: A megadás törlése (nincs megadva)
         list: Készletek
         method:
           coste_medio: Átlagköltség
@@ -9173,8 +9199,6 @@ tui:
       unavailable: A regisztrált műveleteket nem sikerült beolvasni.
     stopped:
       code: Kód
-      remedy: Mi kell a folytatáshoz
-      remedy_command: 'Megoldó parancs: {command}'
     title: Műveletek
   reference:
     action:

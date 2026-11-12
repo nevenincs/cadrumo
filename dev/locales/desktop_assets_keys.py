@@ -176,6 +176,28 @@ def _inventory_enum_families() -> dict[str, type[Enum]]:
     return {f"{INVENTORY_LABEL_NAMESPACE}{family}.": enum for family, enum in INVENTORY_OPTION_FAMILIES}
 
 
+def _inventory_effect_families() -> frozenset[str]:
+    from cadrumo.application.inventory.registered_options_operation import INVENTORY_EFFECT_FAMILIES
+
+    return INVENTORY_EFFECT_FAMILIES
+
+
+def _inventory_effect_keys() -> frozenset[str]:
+    """Return the sentence key the options operation serves beside each member whose effect it states."""
+    from cadrumo.application.inventory.registered_options_operation import (
+        INVENTORY_EFFECT_FAMILIES,
+        INVENTORY_OPTION_FAMILIES,
+        inventory_option_effect_key,
+    )
+
+    return frozenset(
+        inventory_option_effect_key(family, member)
+        for family, enum in INVENTORY_OPTION_FAMILIES
+        if family in INVENTORY_EFFECT_FAMILIES
+        for member in enum
+    )
+
+
 def _inventory_advisory_members() -> tuple[str, ...]:
     """Return the advisory sentences the catalogue has for a book, as members of the advisory family."""
     source = locale_catalogue_source(LOCALES_DIR, "en")
@@ -200,6 +222,18 @@ INVENTORY_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = _inventory_families()
 
 #: The enum behind each inventory token family, for the test that compares them.
 INVENTORY_ENUM_FAMILIES: Final[Mapping[str, type[Enum]]] = MappingProxyType(_inventory_enum_families())
+
+#: The sentences stating what choosing an option does, which the options operation serves by key.
+INVENTORY_EFFECT_KEYS: Final[frozenset[str]] = _inventory_effect_keys()
+
+#: The words of the families whose options serve a sentence of effect; the panel reads each by the
+#: ``label_key`` it is served with, so its source never names them.
+INVENTORY_SERVED_LABEL_KEYS: Final[frozenset[str]] = frozenset(
+    f"{prefix}{member}"
+    for prefix, members in INVENTORY_FAMILIES.items()
+    if prefix.removeprefix(INVENTORY_LABEL_NAMESPACE).rstrip(".") in _inventory_effect_families()
+    for member in members
+)
 
 #: Every inventory key the panel words, each family member spelled out.
 INVENTORY_KEYS: Final[frozenset[str]] = frozenset(

@@ -258,6 +258,11 @@ aggregation:
       unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
         del Model 100 (p.ex. 2024-0A).
   retencion_soportada:
+    absence_state:
+      active: Vigent
+      withdrawn: Retirada
+    amount:
+      pago_a_cuenta: Total de pagaments a compte
     clase:
       actividad_economica: Rendiments d'activitats econòmiques
       arrendamiento_inmueble_urbano: 'Rendiments del capital immobiliari: arrendament
@@ -310,6 +315,10 @@ aggregation:
         res; cap altra classe de renda no els admet.
       validation: 'El registre de retenció no s''ha desat: revisa el NIF del pagador,
         els imports (com a màxim dos decimals) i l''empremta del certificat.'
+    origen:
+      operator_declaration: La teva pròpia declaració
+      payer_certificate: Certificat del pagador
+    payer_unnamed: Pagador sense nom indicat
     served:
       certificate_file_unreadable: No s'ha pogut llegir el fitxer del certificat.
         Comprova que encara existeix, que no està buit i que és un PDF, una imatge
@@ -4330,12 +4339,6 @@ desktop:
       action:
         attest: Indica sense retencions
         record: Anota un certificat
-      amount:
-        importe_integro_dinerario: Import íntegre dinerari
-        ingreso_a_cuenta: Ingrés a compte
-        ingreso_a_cuenta_repercutido: Ingrés a compte repercutit
-        retencion: Retenció
-        valoracion_especie: Valoració en espècie
       attested_on: Indicat el {date}
       changes: Canvis als certificats de {ejercicio}
       column:
@@ -4518,7 +4521,6 @@ desktop:
         s'escriuen aquí. Per canviar-ne una, corregeix-la als teus registres de retencions
         i torna a calcular.
       list: Retencions
-      show: Mostra-ho al formulari
       show_box: Mostra la casella {box} al formulari
     details:
       close: Tancar els detalls
@@ -7249,8 +7251,6 @@ tui:
         active: Actiu
         id: Identificador
         label: Nom
-    result:
-      remedy: 'Pas següent suggerit: {action}'
     status:
       completed: Fet.
       effect_unknown: La connexió va acabar abans que arribés una resposta ({code}).
@@ -7415,6 +7415,26 @@ tui:
           mostra %{evidenced}. %{detail}'
         country: Codi de país (2 lletres, opcional)
         evidenced: Àmbit que mostra un document, per a la consulta (opcional)
+        filing_done: S'ha indicat el nom de presentació de %{identifier}.
+        filing_heading: Nom de presentació
+        filing_kind_entity: Entitat
+        filing_kind_natural_person: Persona física
+        filing_no_second: Sense segon cognom
+        filing_nombre: Nom
+        filing_primer: Primer cognom
+        filing_razon: Raó social
+        filing_rendering: 'Per a %{width} caràcters: %{text}'
+        filing_renderings: Versions més curtes, com amplada=text; amplada=text (opcional)
+        filing_renderings_malformed: Escriu cada versió més curta com una amplada,
+          un signe igual i el seu text, per exemple 20=Nom curt, i separa'n diverses
+          amb un punt i coma.
+        filing_review: Revisar nom de presentació
+        filing_segundo: Segon cognom
+        filing_stage: Indicar el nom de presentació de %{identifier} com a %{kind}.
+        filing_stated: 'Nom de presentació de %{identifier}: %{kind} · %{name}'
+        filing_stated_by: Indicat per %{name} el %{date}.
+        filing_unchanged: '%{identifier} ja tenia aquest nom de presentació.'
+        filing_unstated: No hi ha cap nom de presentació indicat per a %{identifier}.
         identification: Estat membre de la UE del seu NIF-IVA (2 lletres)
         identifier: Identificador fiscal
         identifier_required: Escriu primer l'identificador fiscal de la contrapart.
@@ -8785,6 +8805,7 @@ tui:
           create: Crea un inventari
           evidence_add: Desa un document de compra
           movement_add: Afegeix un moviment
+          movement_claim: Indicar l'apunt del llibre d'una compra
           valuation_preview: Previsualitza la valoració
         column:
           actividad: Activitat
@@ -8824,6 +8845,10 @@ tui:
           count: Recompte
           opening: Obertura
           purchase: Compra
+        ledger_row:
+          claimed: Un apunt del llibre registra aquesta compra
+          none: Cap apunt del llibre registra aquesta compra
+          unstated: Esborrar la indicació (sense indicar)
         list: Inventaris
         method:
           coste_medio: Cost mitjà
@@ -9211,8 +9236,6 @@ tui:
       unavailable: No s'han pogut llegir les operacions registrades.
     stopped:
       code: Codi
-      remedy: Què permetria continuar
-      remedy_command: 'Ordre que ho resol: {command}'
     title: Operacions
   reference:
     action:

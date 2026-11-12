@@ -1,3 +1,4 @@
+import { RENTA_UNIT } from "@/dev/rentaUnit";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
@@ -15,7 +16,7 @@ import { byName } from "@/dev/globByName";
 // withholding register. Nothing here is typed into; a credit is corrected in
 // the register, which the workspace opens.
 
-const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
+const UNIT = RENTA_UNIT;
 
 const refusals = byName(
   import.meta.glob<LedgerErrorDetail>(
