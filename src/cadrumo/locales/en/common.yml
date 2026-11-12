@@ -10376,6 +10376,9 @@ workspace:
         set_nothing: new value
         set_source: replaces the value from its source
       finding:
+        carry_left_open: This amount from an earlier year is still open. State it,
+          as nothing pending or with its amount, in this same change; the calculation
+          cannot proceed while it is open.
         clear_of_source_fed_casilla: A source fills this box, so it cannot be emptied.
           Give it back to its source instead.
         intent_not_admitted: This box cannot be changed that way.

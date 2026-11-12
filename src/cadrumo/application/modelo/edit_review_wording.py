@@ -40,6 +40,7 @@ from .edit_models import (
 )
 from .edit_parse_text import parse_refusal_text
 from .edit_preflight import (
+    CARRY_LEFT_OPEN,
     CLEAR_OF_SOURCE_FED_CASILLA,
     INTENT_NOT_ADMITTED,
     NOTHING_TO_RESTORE,
@@ -62,6 +63,7 @@ WORDED_FINDING_CODES: Final[tuple[str, ...]] = (
     CLEAR_OF_SOURCE_FED_CASILLA,
     REQUIRED_EMPTY,
     NOTHING_TO_RESTORE,
+    CARRY_LEFT_OPEN,
 )
 """The check's findings worded by their own catalogue sentence; a refused value says how to fix it instead."""
 

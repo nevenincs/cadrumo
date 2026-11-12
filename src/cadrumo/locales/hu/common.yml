@@ -10534,6 +10534,9 @@ workspace:
         set_nothing: új érték
         set_source: felülírja a forrásból származó értéket
       finding:
+        carry_left_open: Ez a korábbi évből származó összeg még nyitott. Jelentsd
+          ki ugyanebben a változtatásban, nincs függőben lévő összegként vagy az összegével;
+          amíg nyitott, a számítás nem folytatható.
         clear_of_source_fed_casilla: Ezt a rovatot egy forrás tölti ki, ezért nem
           üríthető ki. Állítsd inkább vissza a forrására.
         intent_not_admitted: Ez a rovat így nem módosítható.

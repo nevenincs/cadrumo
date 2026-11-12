@@ -42,6 +42,11 @@ _RESCATE_TYPE = ValueContract(DeferredTarget("...core.rescate_type", "RescateTyp
 _VERIFY_SELECTOR = ValueContract(
     DeferredTarget("...application.modelo.verify_selector", "ModeloVerifySelector", __package__)
 )
+_ABSENCE_FAMILY = ValueContract(
+    DeferredTarget(
+        "...domain.calculations.registry.binding_absence_attestation", "AbsenceAttestationFamily", __package__
+    )
+)
 _REFUND = ValueContract(DeferredTarget("...core.refund_election", "RefundElection", __package__))
 _PAYMENT = ValueContract(DeferredTarget("...core.payment_election", "PaymentElection", __package__))
 _DOMICILIATION = ValueContract(
@@ -296,6 +301,8 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ".modelo_work_carry_attestation_cli",
         (
             a("work_unit_id", required=True),
+            o("family", "--family", _ABSENCE_FAMILY, help_name="attest_prior_carries_family", multiple=True),
+            o("amount", "--amount", help_name="attest_prior_carries_amount", multiple=True),
             o("confirmed", "--yes", FLAG_VALUE, help_name="attest_prior_carries_yes", flag=True),
             _LANG,
         ),

@@ -21,7 +21,7 @@ fails registry load, and the binding must read a decimal from an earlier filing.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import BeforeValidator
 
@@ -46,5 +46,18 @@ AbsenceAttestationFamilyField = Annotated[
 ]
 """Registry token hydrated into an :class:`AbsenceAttestationFamily` member."""
 
+PRIOR_CARRY_FAMILIES: Final[frozenset[AbsenceAttestationFamily]] = frozenset(
+    {
+        AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING,
+        AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING,
+        AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING,
+    }
+)
+"""The families whose bindings carry an amount pending from an earlier ejercicio's return.
 
-__all__ = ["AbsenceAttestationFamily", "AbsenceAttestationFamilyField"]
+A family of another kind states figures of the year itself that no source
+holds; it is never stated as a carry.
+"""
+
+
+__all__ = ["PRIOR_CARRY_FAMILIES", "AbsenceAttestationFamily", "AbsenceAttestationFamilyField"]

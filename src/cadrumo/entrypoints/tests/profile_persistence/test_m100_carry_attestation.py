@@ -25,6 +25,7 @@ from ....application.modelo.carry_attestation_submission import (
     ModeloPriorCarryNothingOpenError,
     prior_carry_attestation_submission,
 )
+from ....application.modelo.carry_family_selection import prior_carry_binding_ids
 from ....application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -417,6 +418,7 @@ def _apply_as_submitted(work: SeededOperatorWork, *, offered: ModeloWorkForm) ->
         work_catalogue=work.ports.work_unit_repository.load(),
         calculation_catalogue=work.ports.calculation_repository.load(),
         tax_id_format=runtime_tax_id_format(authority=work.operation),
+        prior_carry_bindings=prior_carry_binding_ids(work.operation, submission),
     )
     assert isinstance(review, ModeloEditPreflightEvaluatedV1), review
     errors = [finding for finding in review.findings if finding.severity is ModeloEditFindingSeverity.ERROR]

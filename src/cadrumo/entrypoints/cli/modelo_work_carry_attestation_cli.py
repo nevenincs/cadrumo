@@ -11,6 +11,8 @@ confirms with ``--yes``.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from decimal import Decimal
 from uuid import UUID
 
 import typer
@@ -19,7 +21,8 @@ from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 
 from ...application.modelo.action_errors import ModeloEditRefusedError, modelo_edit_refusal_error
-from ...application.modelo.carry_attestation_submission import prior_carry_attestation_submission
+from ...application.modelo.carry_amount_statement import prior_carry_statement_submission, resolve_prior_carry_amounts
+from ...application.modelo.carry_family_selection import select_prior_carry_attestations
 from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1
 from ...application.modelo.edit_models import ModeloEditRefusedV1, ModeloEditSubmissionV1
 from ...application.modelo.work_form_models import ModeloFormCarryAttestation
@@ -27,9 +30,15 @@ from ...application.modelo.workbench_operations import ModeloEditPreflightProjec
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ...domain.calculations.registry.ids import BindingId
 from .common import emit_envelope
 from .modelo_cli_support import resolve_explicit_or_active_bucket_id
-from .modelo_work_carry_attestation_payloads import PriorCarryStatementPayload, WorkAttestPriorCarriesResult
+from .modelo_work_carry_attestation_payloads import (
+    PriorCarryPayload,
+    PriorCarryStatementPayload,
+    WorkAttestPriorCarriesResult,
+)
 from .operation_modelo_carry_attestation import (
     apply_modelo_edit_for_cli,
     preflight_modelo_edit_for_cli,
@@ -39,8 +48,20 @@ from .operation_modelo_carry_attestation import (
 _COMMAND = "modelo.work.attest_prior_carries"
 
 
-def _statement(attestation: ModeloFormCarryAttestation) -> PriorCarryStatementPayload:
+def _statement(
+    attestation: ModeloFormCarryAttestation, amounts: Mapping[BindingId, Decimal]
+) -> PriorCarryStatementPayload:
     return PriorCarryStatementPayload(
+        carries=[
+            PriorCarryPayload(
+                binding_id=binding_id,
+                amount=None if binding_id not in amounts else str(amounts[binding_id]),
+                effect_words=attestation.effect_words
+                if binding_id not in amounts
+                else tr("cli.app.modelo.work.attest_prior_carries_amount_effect", amount=amounts[binding_id]),
+            )
+            for binding_id in attestation.binding_ids
+        ],
         family=attestation.family.value,
         action_words=attestation.action_words,
         statement_words=attestation.statement_words,
@@ -56,25 +77,33 @@ def _checked(review: ModeloEditPreflightProjectionV1) -> list[str]:
     return [finding.words for finding in review.findings]
 
 
-def _lines(result: WorkAttestPriorCarriesResult, work_unit_id: str) -> list[str]:
+def attest_prior_carries_lines(result: WorkAttestPriorCarriesResult, work_unit_id: str, selection: str) -> list[str]:
+    """The text lines of the receipt: each family and carry with its effect, then the findings and the next step."""
     lines = [f"operation\t{_COMMAND}", f"work_unit_id\t{work_unit_id}", f"applied\t{str(result.applied).lower()}"]
     for statement in result.statements:
+        lines.append(f"family\t{statement.family}")
         lines.append(f"statement\t{statement.statement_words}")
-        lines.extend(f"carry\t{binding_id}\t{statement.effect_words}" for binding_id in statement.binding_ids)
+        lines.extend(
+            f"carry\t{statement.family}\t{carry.binding_id}\t{carry.effect_words}" for carry in statement.carries
+        )
     lines.extend(f"finding\t{words}" for words in result.findings)
     if result.applied:
         lines.extend((f"receipt_id\t{result.receipt_id}", f"calculation_revision_id\t{result.calculation_revision_id}"))
     else:
-        lines.append(tr("cli.app.modelo.work.attest_prior_carries_confirm", work_unit_id=work_unit_id))
+        lines.append(
+            tr("cli.app.modelo.work.attest_prior_carries_confirm", work_unit_id=work_unit_id, selection=selection)
+        )
     return lines
 
 
-def _result(
+def attest_prior_carries_result(
     submission: ModeloEditSubmissionV1,
     attestations: tuple[ModeloFormCarryAttestation, ...],
     findings: list[str],
+    amounts: Mapping[BindingId, Decimal],
     applied: ModeloEditApplyPublicResultV1 | None,
 ) -> WorkAttestPriorCarriesResult:
+    """The receipt of the statement: each family and carry with its effect, applied or only shown."""
     baseline = submission.baseline
     return WorkAttestPriorCarriesResult(
         bucket_id=baseline.bucket_id,
@@ -82,7 +111,7 @@ def _result(
         modelo=str(baseline.modelo),
         filing_year=baseline.filing_year,
         applied=applied is not None,
-        statements=[_statement(attestation) for attestation in attestations],
+        statements=[_statement(attestation, amounts) for attestation in attestations],
         findings=findings,
         receipt_id=None if applied is None else applied.receipt_id,
         calculation_revision_id=None if applied is None else applied.calculation_revision_id,
@@ -92,10 +121,12 @@ def _result(
 def work_attest_prior_carries(
     ctx: typer.Context,
     work_unit_id: str,
+    family: list[AbsenceAttestationFamily] | None = None,
+    amount: list[str] | None = None,
     confirmed: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """State that no carry from an earlier ejercicio is pending, for every carry the declaration's form names."""
+    """State the carries from earlier ejercicios open in every family, as nothing pending or with an amount."""
     activate_subcommand_output_language(ctx, output_language)
     client = require_profile_client(ctx, expected_profile_id=UUID(resolve_explicit_or_active_bucket_id(None)))
     language = OutputLanguage(active_output_language())
@@ -105,7 +136,10 @@ def work_attest_prior_carries(
     if form.admitted_baseline is None:
         raise ModeloEditRefusedError()
     attestations = form.form.form.carry_attestations
-    submission = prior_carry_attestation_submission(form.admitted_baseline.to_baseline(), attestations)
+    baseline = form.admitted_baseline.to_baseline()
+    attestations = select_prior_carry_attestations(baseline, attestations, families=family or ())
+    amounts = resolve_prior_carry_amounts(baseline, form.form.form, attestations, amount or ())
+    submission = prior_carry_statement_submission(baseline, attestations, amounts)
     review = preflight_modelo_edit_for_cli(client, submission, language=language)
     findings = _checked(review)
     applied: ModeloEditApplyPublicResultV1 | None = None
@@ -113,8 +147,16 @@ def work_attest_prior_carries(
         if any(finding.blocking for finding in review.findings):
             raise ModeloEditRefusedError()
         applied = apply_modelo_edit_for_cli(client, submission, language=language).projection
-    result = _result(submission, attestations, findings, applied)
-    emit_envelope(ctx, command=_COMMAND, result=result, lines=_lines(result, submission.baseline.work_unit_id))
+    result = attest_prior_carries_result(submission, attestations, findings, amounts, applied)
+    selection = "".join(f" --family {statement.family.value}" for statement in attestations) + "".join(
+        f" --amount {option.strip()}" for option in amount or ()
+    )
+    emit_envelope(
+        ctx,
+        command=_COMMAND,
+        result=result,
+        lines=attest_prior_carries_lines(result, submission.baseline.work_unit_id, selection),
+    )
 
 
-__all__ = ["work_attest_prior_carries"]
+__all__ = ["attest_prior_carries_lines", "attest_prior_carries_result", "work_attest_prior_carries"]

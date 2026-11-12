@@ -1712,7 +1712,9 @@ application:
         what: La aplicación todavía no calcula una de las familias de renta que aparecen
           en tus registros o en tu perfil, así que esta declaración queda sin resolver
           hasta que introduzcas a mano las cifras de esa familia.
-        what_to_do: "Introduce a mano las cifras en las casillas de esa familia y vuelve a calcular. Reclasifica una fila solo si estaba clasificada en la familia equivocada."
+        what_to_do: Introduce a mano las cifras en las casillas de esa familia y vuelve
+          a calcular. Reclasifica una fila solo si estaba clasificada en la familia
+          equivocada.
       inferred_retencion_excluded_from_credit:
         what: Parte de la retención de tus facturas emitidas se ha calculado a partir
           de lo que pagó el cliente, así que se ha dejado fuera de tu deducción y
@@ -2079,7 +2081,9 @@ application:
       household_row_fact_unstated: '{group}: {recorded} registradas, {omitting} sin
         {leaf}.'
       household_rows_incomplete: '{group}: {stated} indicadas, {recorded} registradas.'
-      income_family_rows_changed_since_entry: 'Las filas del libro de una familia de renta han cambiado después de que introdujeras sus cifras a mano; ahora tiene {count} filas este año, así que vuelve a introducir sus cifras.'
+      income_family_rows_changed_since_entry: Las filas del libro de una familia de
+        renta han cambiado después de que introdujeras sus cifras a mano; ahora tiene
+        {count} filas este año, así que vuelve a introducir sus cifras.
       instalment_free_gap: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no suma nada a la casilla
         {box}.'
@@ -2831,6 +2835,27 @@ application:
         casilla que no muestra es desconocida, no cero: registra esa declaración con
         esas casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
         No se ha guardado nada.'
+      prior_carries_amount_duplicate: En el Modelo %{modelo} de %{filing_year}, el
+        importe que alimenta la casilla %{box} ya tiene un importe en esta declaración.
+        Da un solo importe a cada uno. No se ha cambiado nada.
+      prior_carries_amount_invalid: En el Modelo %{modelo} de %{filing_year}, cada
+        --amount debe ser <casilla>=<importe>, con un importe positivo escrito como
+        1234.56 (hasta dos decimales, sin signo ni separador de miles). No se ha cambiado
+        nada.
+      prior_carries_amount_not_a_carry: En el Modelo %{modelo} de %{filing_year},
+        la casilla %{box} no es un importe abierto de ejercicios anteriores de una
+        familia que hayas indicado con --family. Revisa la casilla y las familias.
+        No se ha cambiado nada.
+      prior_carries_family_choice_required: 'El Modelo %{modelo} de %{filing_year}
+        tiene importes de ejercicios anteriores abiertos en estas familias: %{families}.
+        Una sola declaración las cubre todas, porque el cálculo se niega mientras
+        alguna quede sin declarar, así que no se ha cambiado nada. Tu elección deja
+        fuera: %{missing}. Declara todas las familias abiertas, cada una como nada
+        pendiente: %{family_door}.'
+      prior_carries_family_nothing_open: 'El Modelo %{modelo} de %{filing_year} no
+        tiene ningún importe abierto de ejercicios anteriores en la familia %{family}:
+        cada uno ya tiene un valor o tu declaración, o la declaración no arrastra
+        ninguno. No se ha cambiado nada.'
       prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no tiene
         ningún importe de ejercicios anteriores que puedas declarar como no pendiente:
         cada uno ya tiene un valor o tu declaración, o la declaración no arrastra
@@ -2842,17 +2867,17 @@ application:
           la declaración del año anterior o indica en la declaración que no queda
           ninguna pendiente. No se ha guardado nada.'
         renta_negative_savings_capital_income_pending: 'No se puede calcular el Modelo
-          %{modelo} de %{filing_year}: no consta si quedan saldos negativos de
-          rendimientos del capital mobiliario de la base del ahorro de ejercicios
-          anteriores pendientes de compensar (casillas %{boxes}). Guarda la declaración
-          del año anterior o indica en la declaración que no queda ninguno pendiente. No
-          se ha guardado nada.'
+          %{modelo} de %{filing_year}: no consta si quedan saldos negativos de rendimientos
+          del capital mobiliario de la base del ahorro de ejercicios anteriores pendientes
+          de compensar (casillas %{boxes}). Guarda la declaración del año anterior
+          o indica en la declaración que no queda ninguno pendiente. No se ha guardado
+          nada.'
         renta_negative_savings_gains_losses_pending: 'No se puede calcular el Modelo
           %{modelo} de %{filing_year}: no consta si quedan saldos negativos de ganancias
           y pérdidas patrimoniales de la base del ahorro de ejercicios anteriores
           pendientes de compensar (casillas %{boxes}). Guarda la declaración del año
-          anterior o indica en la declaración que no queda ninguno pendiente. No se ha
-          guardado nada.'
+          anterior o indica en la declaración que no queda ninguno pendiente. No se
+          ha guardado nada.'
       prior_period_unfiled: 'Todavía no se puede calcular el Modelo %{modelo} %{period}
         %{filing_year}: arrastra importes de la declaración de %{unfiled_period},
         que no está presentada. Presenta primero %{unfiled_period} y vuelve a calcular.
@@ -2994,16 +3019,16 @@ application:
       application_not_required_maximum: 'La casilla [%{box}] tiene %{casilla_value},
         pero debe ser %{computed_value}: la ley exige aplicar la mayor cuantía que
         permite este ejercicio, ni más ni menos.'
-      application_order_capacity_unresolved: 'Este ejercicio compensa saldos pendientes
+      application_order_capacity_unresolved: Este ejercicio compensa saldos pendientes
         de varios ejercicios anteriores (%{pending_total} en total), pero aún no se
-        conoce el importe disponible para compensarlos, así que no se puede saber cuánto
-        toma cada ejercicio. Completa los importes de los que depende.'
-      application_order_unsettled: 'Este ejercicio puede compensar %{capacity} de los
+        conoce el importe disponible para compensarlos, así que no se puede saber
+        cuánto toma cada ejercicio. Completa los importes de los que depende.
+      application_order_unsettled: Este ejercicio puede compensar %{capacity} de los
         %{pending_total} pendientes de varios ejercicios anteriores, y ningún texto
-        oficial indica en qué orden se toman esos ejercicios. Lo que se aplica de cada
-        uno, y lo que queda pendiente, depende de ese orden, así que esta declaración se
-        queda en cálculo y no se puede presentar desde esta aplicación hasta que se
-        aclare la regla.'
+        oficial indica en qué orden se toman esos ejercicios. Lo que se aplica de
+        cada uno, y lo que queda pendiente, depende de ese orden, así que esta declaración
+        se queda en cálculo y no se puede presentar desde esta aplicación hasta que
+        se aclare la regla.
       art20_reduccion_possible: La casilla [%{rnt_id}] recoge %{rnt_value} EUR de
         rendimiento neto del trabajo, dentro del límite del art. 20 LIRPF, así que
         la casilla [%{reduccion_id}] puede darte una reducción que aún no aplicas.
@@ -3499,28 +3524,28 @@ application:
             distinto de una cifra escrita; si después una declaración anterior muestra
             un importe, la declaración señala la diferencia.
         renta_negative_savings_capital_income_pending:
-          action: 'No tengo rendimientos del capital mobiliario negativos pendientes de
-            ejercicios anteriores'
+          action: No tengo rendimientos del capital mobiliario negativos pendientes
+            de ejercicios anteriores
           effect: 'Se registra como un 0 que has declarado: ningún rendimiento del
             capital mobiliario negativo pendiente de ejercicios anteriores.'
-          origin: 'Has declarado que no queda nada pendiente'
-          statement: 'Indica que no te queda ningún saldo neto negativo de rendimientos
+          origin: Has declarado que no queda nada pendiente
+          statement: Indica que no te queda ningún saldo neto negativo de rendimientos
             del capital mobiliario de los cuatro ejercicios anteriores pendiente de
             compensar en la base imponible del ahorro (art. 49.1.a de la Ley 35/2006).
-            Cada importe se registra como un 0 que has declarado, distinto de una cifra
-            escrita; si después una declaración anterior muestra un importe, la
-            declaración señala la diferencia.'
+            Cada importe se registra como un 0 que has declarado, distinto de una
+            cifra escrita; si después una declaración anterior muestra un importe,
+            la declaración señala la diferencia.
         renta_negative_savings_gains_losses_pending:
-          action: 'No tengo pérdidas patrimoniales pendientes de ejercicios anteriores'
+          action: No tengo pérdidas patrimoniales pendientes de ejercicios anteriores
           effect: 'Se registra como un 0 que has declarado: ninguna pérdida patrimonial
             pendiente de ejercicios anteriores.'
-          origin: 'Has declarado que no queda nada pendiente'
-          statement: 'Indica que no te queda ningún saldo negativo de ganancias y
-            pérdidas patrimoniales de la base imponible del ahorro de los cuatro
-            ejercicios anteriores pendiente de compensar (art. 49.1.b de la Ley
-            35/2006). Cada importe se registra como un 0 que has declarado, distinto de
-            una cifra escrita; si después una declaración anterior muestra un importe,
-            la declaración señala la diferencia.'
+          origin: Has declarado que no queda nada pendiente
+          statement: Indica que no te queda ningún saldo negativo de ganancias y pérdidas
+            patrimoniales de la base imponible del ahorro de los cuatro ejercicios
+            anteriores pendiente de compensar (art. 49.1.b de la Ley 35/2006). Cada
+            importe se registra como un 0 que has declarado, distinto de una cifra
+            escrita; si después una declaración anterior muestra un importe, la declaración
+            señala la diferencia.
       credits_heading:
         mixed: Retenciones
         practised: Retenciones que has practicado

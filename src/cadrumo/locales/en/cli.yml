@@ -1607,13 +1607,25 @@ cli:
         attest_no_amount_help: State that one carry from an earlier filing holds no
           amount. Shows the check of the change; with --yes it records the carry as
           a 0 you stated, apart from a figure you typed.
+        attest_prior_carries_amount_effect: stated as %{amount}
+        attest_prior_carries_amount_help: Give an amount for one carry instead of
+          nothing pending, as <box>=<amount> with the box the carry feeds and a positive
+          amount like 1234.56; repeat it for more carries. The box must belong to
+          a family named with --family. The other open carries of that family are
+          stated as nothing pending
         attest_prior_carries_confirm: Nothing was stated yet. Run `aeat app modelo
-          work attest-prior-carries %{work_unit_id} --yes` to state it.
-        attest_prior_carries_help: State that no amount from earlier years is still
-          pending on a declaration (the negative general taxable bases of the four
-          previous years in a Modelo 100), for every carry its form offers the statement
-          for. Shows the statement and the check of the change; with --yes it records
-          each carry as a 0 you stated, apart from a figure you typed.
+          work attest-prior-carries %{work_unit_id}%{selection} --yes` to state it.
+        attest_prior_carries_family_help: State this family of earlier-year carries
+          as nothing pending; repeat it to name every open family. One statement must
+          cover all of them
+        attest_prior_carries_help: 'State that no amount from earlier years is still
+          pending on a declaration (the negative general taxable bases and the negative
+          savings balances of the four previous years in a Modelo 100). Shows the
+          statement and the check of the change; with --yes it records each carry
+          as a 0 you stated, apart from a figure you typed. One statement covers every
+          open family: name each with --family (repeatable), or none when only one
+          is open. To give an amount for a carry, use --amount; the other open carries
+          of its family are then stated as nothing pending.'
         attest_prior_carries_yes_help: Confirm the statement and record it on the
           declaration
         attest_prior_value_help: State the figure a declaration takes from an earlier

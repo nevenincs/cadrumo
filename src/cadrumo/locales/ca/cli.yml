@@ -1713,14 +1713,27 @@ cli:
         attest_no_amount_help: Indica que un import que s'arrossega d'una declaració
           anterior és nul. Mostra la comprovació del canvi; amb --yes el registra
           com un 0 que has declarat, diferent d'una xifra escrita.
+        attest_prior_carries_amount_effect: declarat com a %{amount}
+        attest_prior_carries_amount_help: Dona un import per a un import arrossegat
+          en lloc de res pendent, com <casella>=<import> amb la casella que alimenta
+          aquest import i un import positiu com 1234.56; repeteix-ho per a més imports.
+          La casella ha de pertànyer a una família indicada amb --family. Els altres
+          imports oberts de la família es declaren com a res pendent
         attest_prior_carries_confirm: Encara no s'ha declarat res. Executa `aeat app
-          modelo work attest-prior-carries %{work_unit_id} --yes` per declarar-ho.
-        attest_prior_carries_help: Indica que no et queda cap import pendent d'exercicis
-          anteriors en una declaració (les bases liquidables generals negatives dels
-          quatre exercicis anteriors en un Modelo 100), per a cada import al qual
-          el seu formulari ofereix la declaració. Mostra la declaració i la comprovació
-          del canvi; amb --yes registra cada import com un 0 que has declarat, diferent
-          d'una xifra escrita.
+          modelo work attest-prior-carries %{work_unit_id}%{selection} --yes` per
+          declarar-ho.
+        attest_prior_carries_family_help: Declara aquesta família d'exercicis anteriors
+          com a res pendent; repeteix-ho per indicar totes les famílies obertes. Una
+          sola declaració les ha de cobrir totes
+        attest_prior_carries_help: 'Indica que no et queda cap import pendent d''exercicis
+          anteriors en una declaració (les bases liquidables generals negatives i
+          els saldos negatius de la base de l''estalvi dels quatre exercicis anteriors
+          en un Modelo 100). Mostra la declaració i la comprovació del canvi; amb
+          --yes registra cada import com un 0 que has declarat, diferent d''una xifra
+          escrita. Una declaració cobreix totes les famílies obertes: indica cadascuna
+          amb --family (repetible), o cap quan només n''hi ha una d''oberta. Per donar
+          l''import d''un, usa --amount; els altres imports oberts de la seva família
+          queden declarats sense res pendent.'
         attest_prior_carries_yes_help: Confirma la declaració i registra-la a l'autoliquidació
         attest_prior_value_help: Indica la xifra que una declaració pren d'una declaració
           anterior que l'aplicació no desa, com el Model 100 de l'any passat presentat

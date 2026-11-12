@@ -422,6 +422,25 @@ class PublicModeloWorkForm(BaseModel):
     modelo_number: str | None
     period_words: str | None
 
+    def fields(self) -> tuple[PublicModeloFormField, ...]:
+        """Return every field once, in reading order: pages, then working figures, unplaced, then answers."""
+        collected: list[PublicModeloFormField] = []
+        for page in self.pages:
+            for section in page.sections:
+                for block in section.blocks:
+                    if isinstance(block, PublicModeloFormFieldBlock):
+                        collected.append(block.field)
+                    elif isinstance(block, PublicModeloFormGridBlock):
+                        collected.extend(
+                            cell.field for row in block.rows for cell in row.cells if cell.field is not None
+                        )
+                    elif isinstance(block, PublicModeloFormBindingInputsBlock):
+                        collected.extend(block.fields)
+        collected.extend(self.working_figures)
+        collected.extend(item.field for item in self.unplaced)
+        collected.extend(self.answers)
+        return tuple(collected)
+
 
 class PublicModeloWorkFormLoadV1(BaseModel):
     """Typed local-human workbench view of ModeloWorkFormLoadV1."""

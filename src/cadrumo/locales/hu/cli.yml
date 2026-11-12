@@ -1702,14 +1702,27 @@ cli:
         attest_no_amount_help: Kijelented, hogy egy korábbi bevallásból áthozott tételnek
           nincs összege. Megmutatja a módosítás ellenőrzését; a --yes kapcsolóval
           általad kijelentett 0-ként rögzíti, a beírt számtól külön.
+        attest_prior_carries_amount_effect: 'kijelentve: %{amount}'
+        attest_prior_carries_amount_help: Megadsz egy összeget egy áthozott tételhez
+          a nincs függőben helyett, <rovat>=<összeg> alakban, a tételt tápláló rovattal
+          és 1234.56 formájú pozitív összeggel; ismételd meg több tételhez. A rovatnak
+          a --family által megnevezett családhoz kell tartoznia. A család többi nyitott
+          tétele nincs függőben lévőként lesz kijelentve
         attest_prior_carries_confirm: 'Még semmit sem jelentettél ki. Futtasd: `aeat
-          app modelo work attest-prior-carries %{work_unit_id} --yes` a kijelentéshez.'
-        attest_prior_carries_help: Kijelented, hogy egy bevallásban nincs korábbi
+          app modelo work attest-prior-carries %{work_unit_id}%{selection} --yes`
+          a kijelentéshez.'
+        attest_prior_carries_family_help: Ezt a korábbi évekből áthozott családot
+          nincs függőben lévő összegként jelented ki; ismételd meg az összes nyitott
+          család megnevezéséhez. Egyetlen kijelentésnek mindet le kell fedni
+        attest_prior_carries_help: 'Kijelented, hogy egy bevallásban nincs korábbi
           évekből fennmaradó összeged (a Modelo 100 esetén az előző négy adóév negatív
-          általános adóalapjai), minden olyan összegre, amelyre az űrlap felkínálja
-          a kijelentést. Megmutatja a kijelentést és a változás ellenőrzését; --yes
-          megadásával minden összeget általad kijelentett 0-ként rögzít, a beírt számtól
-          elkülönítve.
+          általános adóalapjai és negatív megtakarítási alap egyenlegei). Megmutatja
+          a kijelentést és a változás ellenőrzését; --yes megadásával minden összeget
+          általad kijelentett 0-ként rögzít, a beírt számtól elkülönítve. Egy kijelentés
+          minden nyitott családot lefed: nevezd meg mindegyiket a --family (ismételhető)
+          kapcsolóval, vagy egyiket sem, ha csak egy nyitott. Egy tétel összegének
+          megadásához használd a --amount kapcsolót; a család többi nyitott tétele
+          ekkor függő összeg nélküliként rögzül.'
         attest_prior_carries_yes_help: A kijelentés megerősítése és rögzítése a bevallásban
         attest_prior_value_help: Kijelented azt az összeget, amelyet egy bevallás
           egy olyan korábbi bevallásból vesz át, amelyet az alkalmazás nem tárol,
@@ -3404,7 +3417,8 @@ cli:
       irpf_purpose_activity_income_withholding: szakmai tevékenységi visszatartás
         (nettó bevétel vagy kiadás)
       irpf_purpose_capital_gain: vagyoni nyereség vagy veszteség (még nincs kiszámítva)
-      irpf_purpose_capital_mobiliario_yield: ingó tőkéből származó jövedelem (kamat, osztalék)
+      irpf_purpose_capital_mobiliario_yield: ingó tőkéből származó jövedelem (kamat,
+        osztalék)
       irpf_purpose_employment_income: munkaviszonyból származó jövedelem (nem nettó
         számlákhoz)
       irpf_purpose_rent_expense_withholding: nettó bérleti díj visszatartása

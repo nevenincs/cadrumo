@@ -1702,7 +1702,9 @@ application:
         what: L'aplicació encara no calcula una de les famílies de renda que apareixen
           als teus registres o al teu perfil, així que aquesta declaració queda sense
           resoldre fins que introdueixis a mà les xifres d'aquesta família.
-        what_to_do: "Introdueix a mà les xifres a les caselles d'aquesta família i torna a calcular. Reclassifica una fila només si estava classificada a la família equivocada."
+        what_to_do: Introdueix a mà les xifres a les caselles d'aquesta família i
+          torna a calcular. Reclassifica una fila només si estava classificada a la
+          família equivocada.
       inferred_retencion_excluded_from_credit:
         what: Part de la retenció de les teves factures emeses s'ha calculat a partir
           del que va pagar el client, així que s'ha deixat fora de la teva deducció
@@ -2075,7 +2077,9 @@ application:
       household_row_fact_unstated: '{group}: {recorded} registrades, {omitting} sense
         {leaf}.'
       household_rows_incomplete: '{group}: {stated} indicades, {recorded} registrades.'
-      income_family_rows_changed_since_entry: 'Les files del llibre d''una família de renda han canviat després que n''introduïssis les xifres a mà; ara té {count} files aquest any, així que torna a introduir-ne les xifres.'
+      income_family_rows_changed_since_entry: Les files del llibre d'una família de
+        renda han canviat després que n'introduïssis les xifres a mà; ara té {count}
+        files aquest any, així que torna a introduir-ne les xifres.
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
@@ -2829,6 +2833,26 @@ application:
         que la dada %{binding} arrossega d''ella. Una casella que no mostra és desconeguda,
         no zero: registra aquesta declaració amb aquestes caselles o indica tu l''import
         de la dada %{binding}, i torna a calcular. No s''ha desat res.'
+      prior_carries_amount_duplicate: Al Modelo %{modelo} de %{filing_year}, l'import
+        que alimenta la casella %{box} ja té un import en aquesta declaració. Dona
+        un sol import a cadascun. No s'ha canviat res.
+      prior_carries_amount_invalid: Al Modelo %{modelo} de %{filing_year}, cada --amount
+        ha de ser <casella>=<import>, amb un import positiu escrit com 1234.56 (fins
+        a dos decimals, sense signe ni separador de milers). No s'ha canviat res.
+      prior_carries_amount_not_a_carry: Al Modelo %{modelo} de %{filing_year}, la
+        casella %{box} no és un import obert d'exercicis anteriors d'una família que
+        hagis indicat amb --family. Revisa la casella i les famílies. No s'ha canviat
+        res.
+      prior_carries_family_choice_required: 'El Modelo %{modelo} de %{filing_year}
+        té imports d''exercicis anteriors oberts en aquestes famílies: %{families}.
+        Una sola declaració les cobreix totes, perquè el càlcul es nega mentre alguna
+        quedi sense declarar, de manera que no s''ha canviat res. La teva elecció
+        deixa fora: %{missing}. Declara totes les famílies obertes, cadascuna com
+        a res pendent: %{family_door}.'
+      prior_carries_family_nothing_open: 'El Modelo %{modelo} de %{filing_year} no
+        té cap import obert d''exercicis anteriors a la família %{family}: cadascun
+        ja té un valor o la teva declaració, o la declaració no n''arrossega cap.
+        No s''ha canviat res.'
       prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no té cap
         import d''exercicis anteriors que puguis declarar com a no pendent: cadascun
         ja té un valor o la teva declaració, o la declaració no n''arrossega cap.
@@ -2842,13 +2866,15 @@ application:
         renta_negative_savings_capital_income_pending: 'No es pot calcular el Modelo
           %{modelo} de %{filing_year}: no consta si queden saldos negatius de rendiments
           del capital mobiliari de la base de l''estalvi d''exercicis anteriors pendents
-          de compensar (caselles %{boxes}). Desa la declaració de l''any anterior o
-          indica a la declaració que no en queda cap de pendent. No s''ha desat res.'
+          de compensar (caselles %{boxes}). Desa la declaració de l''any anterior
+          o indica a la declaració que no en queda cap de pendent. No s''ha desat
+          res.'
         renta_negative_savings_gains_losses_pending: 'No es pot calcular el Modelo
-          %{modelo} de %{filing_year}: no consta si queden saldos negatius de guanys i
-          pèrdues patrimonials de la base de l''estalvi d''exercicis anteriors pendents
-          de compensar (caselles %{boxes}). Desa la declaració de l''any anterior o
-          indica a la declaració que no en queda cap de pendent. No s''ha desat res.'
+          %{modelo} de %{filing_year}: no consta si queden saldos negatius de guanys
+          i pèrdues patrimonials de la base de l''estalvi d''exercicis anteriors pendents
+          de compensar (caselles %{boxes}). Desa la declaració de l''any anterior
+          o indica a la declaració que no en queda cap de pendent. No s''ha desat
+          res.'
       prior_period_unfiled: 'Encara no es pot calcular el Model %{modelo} %{period}
         %{filing_year}: arrossega imports de la declaració de %{unfiled_period}, que
         no està presentada. Presenta primer %{unfiled_period} i torna a calcular.
@@ -2990,16 +3016,16 @@ application:
       application_not_required_maximum: 'La casella [%{box}] té %{casilla_value},
         però ha de ser %{computed_value}: la llei exigeix aplicar la quantia més gran
         que permet aquest exercici, ni més ni menys.'
-      application_order_capacity_unresolved: 'Aquest exercici compensa saldos pendents
-        de diversos exercicis anteriors (%{pending_total} en total), però encara no es
-        coneix l''import disponible per compensar-los, així que no es pot saber quant en
-        pren cada exercici. Completa els imports dels quals depèn.'
-      application_order_unsettled: 'Aquest exercici pot compensar %{capacity} dels
-        %{pending_total} pendents de diversos exercicis anteriors, i cap text oficial no
-        indica en quin ordre es prenen aquests exercicis. El que s''aplica de cadascun,
-        i el que queda pendent, depèn d''aquest ordre, així que aquesta declaració es
-        queda en càlcul i no es pot presentar des d''aquesta aplicació fins que
-        s''aclareixi la regla.'
+      application_order_capacity_unresolved: Aquest exercici compensa saldos pendents
+        de diversos exercicis anteriors (%{pending_total} en total), però encara no
+        es coneix l'import disponible per compensar-los, així que no es pot saber
+        quant en pren cada exercici. Completa els imports dels quals depèn.
+      application_order_unsettled: Aquest exercici pot compensar %{capacity} dels
+        %{pending_total} pendents de diversos exercicis anteriors, i cap text oficial
+        no indica en quin ordre es prenen aquests exercicis. El que s'aplica de cadascun,
+        i el que queda pendent, depèn d'aquest ordre, així que aquesta declaració
+        es queda en càlcul i no es pot presentar des d'aquesta aplicació fins que
+        s'aclareixi la regla.
       art20_reduccion_possible: La casella [%{rnt_id}] recull %{rnt_value} EUR de
         rendiment net del treball, dins del límit de l'art. 20 LIRPF, així que la
         casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
@@ -3494,28 +3520,27 @@ application:
             d'una xifra escrita; si després una declaració anterior mostra un import,
             la declaració assenyala la diferència.
         renta_negative_savings_capital_income_pending:
-          action: 'No tinc rendiments del capital mobiliari negatius pendents
-            d''exercicis anteriors'
+          action: No tinc rendiments del capital mobiliari negatius pendents d'exercicis
+            anteriors
           effect: 'Es registra com un 0 que has declarat: cap rendiment del capital
             mobiliari negatiu pendent d''exercicis anteriors.'
-          origin: 'Has declarat que no queda res pendent'
-          statement: 'Indica que no et queda cap saldo net negatiu de rendiments del
-            capital mobiliari dels quatre exercicis anteriors pendent de compensar a la
-            base imposable de l''estalvi (art. 49.1.a de la Llei 35/2006). Cada import
-            es registra com un 0 que has declarat, diferent d''una xifra escrita; si
-            després una declaració anterior mostra un import, la declaració assenyala la
-            diferència.'
+          origin: Has declarat que no queda res pendent
+          statement: Indica que no et queda cap saldo net negatiu de rendiments del
+            capital mobiliari dels quatre exercicis anteriors pendent de compensar
+            a la base imposable de l'estalvi (art. 49.1.a de la Llei 35/2006). Cada
+            import es registra com un 0 que has declarat, diferent d'una xifra escrita;
+            si després una declaració anterior mostra un import, la declaració assenyala
+            la diferència.
         renta_negative_savings_gains_losses_pending:
-          action: 'No tinc pèrdues patrimonials pendents d''exercicis anteriors'
+          action: No tinc pèrdues patrimonials pendents d'exercicis anteriors
           effect: 'Es registra com un 0 que has declarat: cap pèrdua patrimonial pendent
             d''exercicis anteriors.'
-          origin: 'Has declarat que no queda res pendent'
-          statement: 'Indica que no et queda cap saldo negatiu de guanys i pèrdues
-            patrimonials de la base imposable de l''estalvi dels quatre exercicis
-            anteriors pendent de compensar (art. 49.1.b de la Llei 35/2006). Cada import
-            es registra com un 0 que has declarat, diferent d''una xifra escrita; si
-            després una declaració anterior mostra un import, la declaració assenyala la
-            diferència.'
+          origin: Has declarat que no queda res pendent
+          statement: Indica que no et queda cap saldo negatiu de guanys i pèrdues
+            patrimonials de la base imposable de l'estalvi dels quatre exercicis anteriors
+            pendent de compensar (art. 49.1.b de la Llei 35/2006). Cada import es
+            registra com un 0 que has declarat, diferent d'una xifra escrita; si després
+            una declaració anterior mostra un import, la declaració assenyala la diferència.
       credits_heading:
         mixed: Retencions
         practised: Retencions que has practicat

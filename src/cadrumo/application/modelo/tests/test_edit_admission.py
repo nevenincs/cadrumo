@@ -730,6 +730,7 @@ def _preflight(
         work_catalogue=catalogue,
         calculation_catalogue=CalculationRevisionCatalogue(),
         tax_id_format=None,
+        prior_carry_bindings=frozenset(),
     )
     assert isinstance(result, ModeloEditPreflightEvaluatedV1)
     return result

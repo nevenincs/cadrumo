@@ -1668,7 +1668,8 @@ application:
         what: Az alkalmazás még nem számítja ki a nyilvántartásaidban vagy a profilodban
           szereplő egyik jövedelemcsaládot, ezért a bevallás addig marad megoldatlan,
           amíg kézzel meg nem adod a család összegeit.
-        what_to_do: "Add meg kézzel az összegeket a család rovataiban, majd számíts újra. Csak akkor sorold át a tételt, ha tévesen sorolták be."
+        what_to_do: Add meg kézzel az összegeket a család rovataiban, majd számíts
+          újra. Csak akkor sorold át a tételt, ha tévesen sorolták be.
       inferred_retencion_excluded_from_credit:
         what: A kiállított számláin szereplő levonás egy részét az ügyfél által kifizetett
           összegből számoltuk ki, ezért kimaradt a jóváírásból, és a szükségesnél
@@ -2038,7 +2039,9 @@ application:
       household_row_fact_unstated: '{group}: {recorded} rögzítve, ebből {omitting}
         {leaf} nélkül.'
       household_rows_incomplete: '{group}: {stated} megadva, {recorded} rögzítve.'
-      income_family_rows_changed_since_entry: 'Egy jövedelemcsalád tételei megváltoztak, miután kézzel megadtad az összegeit; most {count} tétele van ebben az évben, ezért add meg újra az összegeit.'
+      income_family_rows_changed_since_entry: Egy jövedelemcsalád tételei megváltoztak,
+        miután kézzel megadtad az összegeit; most {count} tétele van ebben az évben,
+        ezért add meg újra az összegeit.
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       inventory_purchase_claim_refused: A(z) {year}. évi készlet {count} vásárlása
@@ -2784,6 +2787,26 @@ application:
         nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
         vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
         lett mentve.'
+      prior_carries_amount_duplicate: A(z) %{filing_year}. évi %{modelo} modellben
+        a(z) %{box} rovatot tápláló tételnek már van összege ebben a kijelentésben.
+        Minden tételnek egyetlen összeget adj. Semmi sem változott.
+      prior_carries_amount_invalid: A(z) %{filing_year}. évi %{modelo} modellben minden
+        --amount <rovat>=<összeg> alakú legyen, 1234.56 formában írt pozitív összeggel
+        (legfeljebb két tizedes, előjel és ezerelválasztó nélkül). Semmi sem változott.
+      prior_carries_amount_not_a_carry: A(z) %{filing_year}. évi %{modelo} modellben
+        a(z) %{box} rovat nem nyitott, korábbi évekből származó összeg a --family
+        által megnevezett családban. Ellenőrizd a rovatot és a családokat. Semmi sem
+        változott.
+      prior_carries_family_choice_required: 'A(z) %{filing_year}. évi %{modelo} modellben
+        ezekben a családokban nyitottak a korábbi évekből származó összegek: %{families}.
+        Egyetlen kijelentés mindet lefedi, mert a számítás addig elutasít, amíg bármelyik
+        kijelentetlen marad, ezért semmi sem változott. A választásod kihagyja: %{missing}.
+        Jelentsd ki az összes nyitott családot, mindegyiket nincs függőben lévő összegként:
+        %{family_door}.'
+      prior_carries_family_nothing_open: 'A(z) %{filing_year}. évi %{modelo} modellben
+        a(z) %{family} családban nincs nyitott összeg a korábbi évekből: mindegyikhez
+        van már érték vagy kijelentésed, vagy a bevallás egyet sem hoz át. Semmi sem
+        változott.'
       prior_carries_nothing_open: 'A %{filing_year}. évi Modelo %{modelo} bevallásban
         nincs olyan korábbi évekből származó összeg, amelyről kijelenthetnéd, hogy
         nincs függőben: mindegyiknek van már értéke vagy kijelentésed, vagy a bevallás
@@ -2795,13 +2818,13 @@ application:
           évi bevallást, vagy jelezd a bevallásban, hogy nincs függőben lévő összeg.
           Semmi sem lett mentve.'
         renta_negative_savings_capital_income_pending: 'A %{filing_year}. évi Modelo
-          %{modelo} nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még
-          ki nem egyenlített negatív ingó tőkejövedelem a megtakarítási adóalapban
+          %{modelo} nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből
+          még ki nem egyenlített negatív ingó tőkejövedelem a megtakarítási adóalapban
           (%{boxes}. mező). Mentsd el az előző évi bevallást, vagy jelezd a bevallásban,
           hogy nincs függőben lévő összeg. Semmi sem lett mentve.'
         renta_negative_savings_gains_losses_pending: 'A %{filing_year}. évi Modelo
-          %{modelo} nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még
-          ki nem egyenlített negatív vagyoni nyereség- és veszteségegyenleg a
+          %{modelo} nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből
+          még ki nem egyenlített negatív vagyoni nyereség- és veszteségegyenleg a
           megtakarítási adóalapban (%{boxes}. mező). Mentsd el az előző évi bevallást,
           vagy jelezd a bevallásban, hogy nincs függőben lévő összeg. Semmi sem lett
           mentve.'
@@ -2946,17 +2969,16 @@ application:
       application_not_required_maximum: 'A(z) [%{box}] rovatban %{casilla_value} szerepel,
         de %{computed_value} kell, hogy legyen: a törvény előírja, hogy az adott évben
         megengedett legnagyobb összeget kell alkalmazni, se többet, se kevesebbet.'
-      application_order_capacity_unresolved: 'Ebben az évben több korábbi adóévből
-        fennmaradó egyenleg (összesen %{pending_total}) kerül beszámításra, de a
-        beszámításra rendelkezésre álló összeg még nem ismert, így nem állapítható meg,
-        mennyit vesz fel az egyes évekből. Töltsd ki azokat az összegeket, amelyektől
-        függ.'
-      application_order_unsettled: 'Ebben az évben %{capacity} számítható be a több
+      application_order_capacity_unresolved: Ebben az évben több korábbi adóévből
+        fennmaradó egyenleg (összesen %{pending_total}) kerül beszámításra, de a beszámításra
+        rendelkezésre álló összeg még nem ismert, így nem állapítható meg, mennyit
+        vesz fel az egyes évekből. Töltsd ki azokat az összegeket, amelyektől függ.
+      application_order_unsettled: Ebben az évben %{capacity} számítható be a több
         korábbi adóévből fennmaradó %{pending_total} összegből, és egyetlen hivatalos
-        szöveg sem mondja meg, milyen sorrendben kell az éveket figyelembe venni. Az
-        egyes évekből beszámított és a továbbvitt összeg ettől a sorrendtől függ, ezért
-        ez a bevallás számítás marad, és ebből az alkalmazásból nem nyújtható be, amíg a
-        szabály nem tisztázott.'
+        szöveg sem mondja meg, milyen sorrendben kell az éveket figyelembe venni.
+        Az egyes évekből beszámított és a továbbvitt összeg ettől a sorrendtől függ,
+        ezért ez a bevallás számítás marad, és ebből az alkalmazásból nem nyújtható
+        be, amíg a szabály nem tisztázott.
       art20_reduccion_possible: A(z) [%{rnt_id}] rovat %{rnt_value} EUR nettó munkajövedelmet
         (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
         belül, ezért a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet
@@ -3449,27 +3471,25 @@ application:
             kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
             korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
         renta_negative_savings_capital_income_pending:
-          action: 'Nincs korábbi évekből fennmaradó negatív tőkejövedelmem'
+          action: Nincs korábbi évekből fennmaradó negatív tőkejövedelmem
           effect: 'Általad kijelentett 0-ként rögzítve: nincs korábbi évekből fennmaradó
             negatív tőkejövedelem.'
-          origin: 'Kijelentetted, hogy nincs fennmaradó összeg'
-          statement: 'Rögzíti, hogy az előző négy adóévből nincs a megtakarítási
-            adóalapban beszámításra váró negatív nettó ingó tőkejövedelem-egyenleged
-            (rendimientos del capital mobiliario; Ley 35/2006, 49.1.a cikk). Minden
-            összeg általad kijelentett 0-ként kerül rögzítésre, a beírt számtól
-            elkülönítve; ha egy korábbi bevallás később összeget mutat, a bevallás jelzi
-            az eltérést.'
+          origin: Kijelentetted, hogy nincs fennmaradó összeg
+          statement: Rögzíti, hogy az előző négy adóévből nincs a megtakarítási adóalapban
+            beszámításra váró negatív nettó ingó tőkejövedelem-egyenleged (rendimientos
+            del capital mobiliario; Ley 35/2006, 49.1.a cikk). Minden összeg általad
+            kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
+            korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
         renta_negative_savings_gains_losses_pending:
-          action: 'Nincs korábbi évekből fennmaradó vagyoni veszteségem'
+          action: Nincs korábbi évekből fennmaradó vagyoni veszteségem
           effect: 'Általad kijelentett 0-ként rögzítve: nincs korábbi évekből fennmaradó
             vagyoni veszteség.'
-          origin: 'Kijelentetted, hogy nincs fennmaradó összeg'
-          statement: 'Rögzíti, hogy az előző négy adóévből nincs a megtakarítási
-            adóalapban beszámításra váró negatív vagyoni nyereség- és
-            veszteségegyenleged (ganancias y pérdidas patrimoniales; Ley 35/2006, 49.1.b
-            cikk). Minden összeg általad kijelentett 0-ként kerül rögzítésre, a beírt
-            számtól elkülönítve; ha egy korábbi bevallás később összeget mutat, a
-            bevallás jelzi az eltérést.'
+          origin: Kijelentetted, hogy nincs fennmaradó összeg
+          statement: Rögzíti, hogy az előző négy adóévből nincs a megtakarítási adóalapban
+            beszámításra váró negatív vagyoni nyereség- és veszteségegyenleged (ganancias
+            y pérdidas patrimoniales; Ley 35/2006, 49.1.b cikk). Minden összeg általad
+            kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
+            korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
       credits_heading:
         mixed: Levonások
         practised: Az általad levont összegek

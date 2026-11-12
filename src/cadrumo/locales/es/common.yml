@@ -10590,6 +10590,9 @@ workspace:
         set_nothing: valor nuevo
         set_source: sustituye el valor de su origen
       finding:
+        carry_left_open: Este importe de un ejercicio anterior sigue abierto. Decláralo,
+          como nada pendiente o con su importe, en este mismo cambio; el cálculo no
+          puede continuar mientras siga abierto.
         clear_of_source_fed_casilla: Un origen rellena esta casilla, así que no se
           puede vaciar. Devuélvela a su origen en su lugar.
         intent_not_admitted: Esta casilla no se puede cambiar de esa forma.

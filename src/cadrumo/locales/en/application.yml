@@ -1611,7 +1611,8 @@ application:
         what: The application does not compute one of the income families in your
           records or profile yet, so this return stays unresolved until you enter
           that family's figures by hand.
-        what_to_do: "Enter the figures in that family's casillas by hand, then calculate again. Reclassify a row only if it was classified to the wrong family."
+        what_to_do: Enter the figures in that family's casillas by hand, then calculate
+          again. Reclassify a row only if it was classified to the wrong family.
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
@@ -1971,7 +1972,9 @@ application:
       household_row_fact_unstated: '{group}: {recorded} recorded, {omitting} without
         {leaf}.'
       household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
-      income_family_rows_changed_since_entry: 'An income family''s ledger rows changed after you entered its figures by hand; it now has {count} rows this year, so enter its figures again.'
+      income_family_rows_changed_since_entry: An income family's ledger rows changed
+        after you entered its figures by hand; it now has {count} rows this year,
+        so enter its figures again.
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       inventory_purchase_claim_refused: '{count} purchases of the {year} inventory
@@ -2689,6 +2692,24 @@ application:
         carries from it. A box it does not show is unknown, not zero: record that
         return with those boxes, or state the amount of the input %{binding} yourself,
         then calculate again. Nothing was saved.'
+      prior_carries_amount_duplicate: In Modelo %{modelo} for %{filing_year}, the
+        carry that box %{box} feeds already has an amount in this statement. Give
+        each carry one amount. Nothing was changed.
+      prior_carries_amount_invalid: For Modelo %{modelo} of %{filing_year}, each --amount
+        must read <box>=<amount>, with a positive amount written like 1234.56 (up
+        to two decimals, no sign and no thousands separator). Nothing was changed.
+      prior_carries_amount_not_a_carry: In Modelo %{modelo} for %{filing_year}, box
+        %{box} is not an open amount from earlier years in a family you named with
+        --family. Check the box and the families. Nothing was changed.
+      prior_carries_family_choice_required: 'Modelo %{modelo} for %{filing_year} has
+        amounts from earlier years open in these families: %{families}. One statement
+        covers all of them, because the calculation refuses while any stays unstated,
+        so nothing was changed. Your choice leaves out: %{missing}. State every open
+        family, each as nothing pending: %{family_door}.'
+      prior_carries_family_nothing_open: 'Modelo %{modelo} for %{filing_year} has
+        no open amount from earlier years in the family %{family}: each one already
+        holds a value or your statement, or the declaration carries none of them.
+        Nothing was changed.'
       prior_carries_nothing_open: 'Modelo %{modelo} for %{filing_year} has no amount
         from earlier years left to state as not pending: each one already holds a
         value or your statement, or the declaration carries none. Nothing was changed.'
@@ -2698,16 +2719,16 @@ application:
           from earlier years are still pending offset (boxes %{boxes}). Store the
           previous year''s return, or state in the declaration that none is pending.
           Nothing was saved.'
-        renta_negative_savings_capital_income_pending: 'Modelo %{modelo} for
-          %{filing_year} cannot be calculated: it is not known whether negative capital
-          income of the savings base from earlier years is still pending offset (boxes
-          %{boxes}). Store the previous year''s return, or state in the declaration that
-          none is pending. Nothing was saved.'
-        renta_negative_savings_gains_losses_pending: 'Modelo %{modelo} for
-          %{filing_year} cannot be calculated: it is not known whether negative balances
-          of capital gains and losses of the savings base from earlier years are still
-          pending offset (boxes %{boxes}). Store the previous year''s return, or state
-          in the declaration that none is pending. Nothing was saved.'
+        renta_negative_savings_capital_income_pending: 'Modelo %{modelo} for %{filing_year}
+          cannot be calculated: it is not known whether negative capital income of
+          the savings base from earlier years is still pending offset (boxes %{boxes}).
+          Store the previous year''s return, or state in the declaration that none
+          is pending. Nothing was saved.'
+        renta_negative_savings_gains_losses_pending: 'Modelo %{modelo} for %{filing_year}
+          cannot be calculated: it is not known whether negative balances of capital
+          gains and losses of the savings base from earlier years are still pending
+          offset (boxes %{boxes}). Store the previous year''s return, or state in
+          the declaration that none is pending. Nothing was saved.'
       prior_period_unfiled: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
         yet: it carries figures from the return for %{unfiled_period}, which has not
         been filed. File %{unfiled_period} first, then calculate again. Nothing was
@@ -2834,15 +2855,15 @@ application:
       application_not_required_maximum: 'Box [%{box}] holds %{casilla_value}, but
         it must be %{computed_value}: the law requires applying the largest amount
         this year allows, no more and no less.'
-      application_order_capacity_unresolved: 'Pending balances from several earlier
+      application_order_capacity_unresolved: Pending balances from several earlier
         years (%{pending_total} in total) are offset this year, but the amount available
         to offset them is not known yet, so how much each year takes cannot be worked
-        out. Complete the figures that amount depends on.'
-      application_order_unsettled: 'This year can offset %{capacity} of the
-        %{pending_total} pending from several earlier years, and no official text says
-        in which order those years are taken. What each year applies, and what it
-        carries forward, depends on that order, so this declaration stays a calculation
-        and cannot be filed from this application until the rule is settled.'
+        out. Complete the figures that amount depends on.
+      application_order_unsettled: This year can offset %{capacity} of the %{pending_total}
+        pending from several earlier years, and no official text says in which order
+        those years are taken. What each year applies, and what it carries forward,
+        depends on that order, so this declaration stays a calculation and cannot
+        be filed from this application until the rule is settled.
       art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
         from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
         so box [%{reduccion_id}] may give you a reduction you are not using yet. Check
@@ -3316,25 +3337,25 @@ application:
             as a 0 you stated, apart from a figure you typed; if an earlier return
             later shows an amount, the declaration flags the difference.
         renta_negative_savings_capital_income_pending:
-          action: 'I have no negative capital income pending from earlier years'
-          effect: 'Recorded as a 0 you stated: no negative capital income pending from
-            earlier years.'
-          origin: 'You stated nothing is pending'
-          statement: 'States that no negative net balance of income from movable capital
-            (rendimientos del capital mobiliario) from the four previous years is still
-            pending offset in the savings base (art. 49.1.a Ley 35/2006). Each carry is
-            recorded as a 0 you stated, apart from a figure you typed; if an earlier
-            return later shows an amount, the declaration flags the difference.'
+          action: I have no negative capital income pending from earlier years
+          effect: 'Recorded as a 0 you stated: no negative capital income pending
+            from earlier years.'
+          origin: You stated nothing is pending
+          statement: States that no negative net balance of income from movable capital
+            (rendimientos del capital mobiliario) from the four previous years is
+            still pending offset in the savings base (art. 49.1.a Ley 35/2006). Each
+            carry is recorded as a 0 you stated, apart from a figure you typed; if
+            an earlier return later shows an amount, the declaration flags the difference.
         renta_negative_savings_gains_losses_pending:
-          action: 'I have no capital losses pending from earlier years'
+          action: I have no capital losses pending from earlier years
           effect: 'Recorded as a 0 you stated: no capital losses pending from earlier
             years.'
-          origin: 'You stated nothing is pending'
-          statement: 'States that no negative balance of capital gains and losses
-            (ganancias y pérdidas patrimoniales) of the savings base from the four
-            previous years is still pending offset (art. 49.1.b Ley 35/2006). Each carry
-            is recorded as a 0 you stated, apart from a figure you typed; if an earlier
-            return later shows an amount, the declaration flags the difference.'
+          origin: You stated nothing is pending
+          statement: States that no negative balance of capital gains and losses (ganancias
+            y pérdidas patrimoniales) of the savings base from the four previous years
+            is still pending offset (art. 49.1.b Ley 35/2006). Each carry is recorded
+            as a 0 you stated, apart from a figure you typed; if an earlier return
+            later shows an amount, the declaration flags the difference.
       credits_heading:
         mixed: Withholdings
         practised: Withholdings you have taken

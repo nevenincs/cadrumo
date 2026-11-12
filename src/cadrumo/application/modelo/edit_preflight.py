@@ -25,6 +25,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass
 
 from ...core.casilla_id import CasillaId
@@ -36,6 +37,7 @@ from .caller_context import caller_context_of
 from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAddressV1,
+    ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
     ModeloEditFindingSeverity,
     ModeloEditFindingV1,
@@ -46,6 +48,7 @@ from .edit_models import (
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloEditSubmissionV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloScalarEditIntentV1,
 )
@@ -58,6 +61,7 @@ OVERRIDES_SOURCE_VALUE = "overrides_source_value"
 REQUIRED_EMPTY = "required_empty"
 OPERATOR_LAYER_UNKNOWN = "operator_layer_unknown"
 NOTHING_TO_RESTORE = "nothing_to_restore"
+CARRY_LEFT_OPEN = "carry_left_open"
 VALUE_REFUSED_PREFIX = "value."
 """A refused value's finding code is this prefix plus its :class:`~.edit_models.ModeloEditParseReason`."""
 
@@ -196,18 +200,62 @@ def _required_empty_findings(submission: ModeloEditSubmissionV1, head: _Head) ->
     return findings
 
 
+_CARRY_STATEMENT_KINDS = frozenset(
+    {
+        ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
+        ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+        ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+    }
+)
+
+
+def _open_carry_findings(
+    submission: ModeloEditSubmissionV1, head: _Head, prior_carry_bindings: Collection[BindingId]
+) -> list[ModeloEditFindingV1]:
+    """Block a statement of earlier-ejercicio carries that leaves another attestable carry holding no value.
+
+    The apply recalculates, and the calculation refuses while any such carry is
+    unstated, so a statement that covers only some of them could never commit.
+    Only the bindings of a prior-carry family count: a statement of another
+    family's absent figures never stops the calculation. A submission that
+    states no carry is not about them and raises nothing.
+    """
+    attestable = [
+        entry.binding_id
+        for entry in submission.baseline.permitted_surface
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
+        and entry.binding_id in prior_carry_bindings
+    ]
+    stated = {
+        intent.address.binding_id
+        for intent in submission.binding_intents
+        if intent.kind in _CARRY_STATEMENT_KINDS and intent.address.binding_id in attestable
+    }
+    if not stated:
+        return []
+    held = frozenset() if head.revision is None else frozenset(head.revision.binding_overrides)
+    return [
+        _finding(CARRY_LEFT_OPEN, ModeloEditFindingSeverity.ERROR, ModeloEditBindingAddressV1(binding_id=binding_id))
+        for binding_id in sorted(attestable)
+        if binding_id not in stated and binding_id not in held and binding_id not in head.operator_bindings
+    ]
+
+
 def preflight_modelo_edit(
     submission: ModeloEditSubmissionV1,
     *,
     work_catalogue: WorkUnitCatalogue,
     calculation_catalogue: CalculationRevisionCatalogue,
     tax_id_format: SpanishTaxIdFormat | None,
+    prior_carry_bindings: Collection[BindingId],
 ) -> ModeloEditPreflightResultV1:
     """Recheck the baseline, then evaluate every intent and the resulting required casillas.
 
     ``tax_id_format`` is the governed Spanish tax-identifier format NIF values
     are validated with; ``None`` reports NIF values as refused rather than
-    validating them against nothing.
+    validating them against nothing. ``prior_carry_bindings`` are the bindings
+    of the revision's prior-carry families, which one statement must cover together.
     """
     baseline = submission.baseline
     stale = reconfirm_modelo_edit_baseline(
@@ -236,10 +284,12 @@ def preflight_modelo_edit(
     for binding_intent in submission.binding_intents:
         findings.extend(_binding_findings(binding_intent, submission, head, tax_id_format=tax_id_format))
     findings.extend(_required_empty_findings(submission, head))
+    findings.extend(_open_carry_findings(submission, head, prior_carry_bindings))
     return ModeloEditPreflightEvaluatedV1(baseline_id=baseline.baseline_id, findings=tuple(findings))
 
 
 __all__ = [
+    "CARRY_LEFT_OPEN",
     "CLEAR_OF_SOURCE_FED_CASILLA",
     "INTENT_NOT_ADMITTED",
     "NOTHING_TO_RESTORE",

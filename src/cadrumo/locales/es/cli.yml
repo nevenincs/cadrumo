@@ -1730,14 +1730,27 @@ cli:
         attest_no_amount_help: Indica que un importe que se arrastra de una declaración
           anterior es nulo. Muestra la comprobación del cambio; con --yes lo registra
           como un 0 que has declarado, distinto de una cifra escrita.
+        attest_prior_carries_amount_effect: declarado como %{amount}
+        attest_prior_carries_amount_help: Da un importe para un importe arrastrado
+          en lugar de nada pendiente, como <casilla>=<importe> con la casilla que
+          alimenta ese importe y un importe positivo como 1234.56; repítelo para más
+          importes. La casilla debe pertenecer a una familia indicada con --family.
+          Los demás importes abiertos de la familia se declaran como nada pendiente
         attest_prior_carries_confirm: Todavía no se ha declarado nada. Ejecuta `aeat
-          app modelo work attest-prior-carries %{work_unit_id} --yes` para declararlo.
-        attest_prior_carries_help: Indica que no te queda ningún importe pendiente
+          app modelo work attest-prior-carries %{work_unit_id}%{selection} --yes`
+          para declararlo.
+        attest_prior_carries_family_help: Declara esta familia de ejercicios anteriores
+          como nada pendiente; repítelo para indicar todas las familias abiertas.
+          Una sola declaración debe cubrirlas todas
+        attest_prior_carries_help: 'Indica que no te queda ningún importe pendiente
           de ejercicios anteriores en una declaración (las bases liquidables generales
-          negativas de los cuatro ejercicios anteriores en un Modelo 100), para cada
-          importe al que su formulario ofrece la declaración. Muestra la declaración
-          y la comprobación del cambio; con --yes registra cada importe como un 0
-          que has declarado, distinto de una cifra escrita.
+          negativas y los saldos negativos de la base del ahorro de los cuatro ejercicios
+          anteriores en un Modelo 100). Muestra la declaración y la comprobación del
+          cambio; con --yes registra cada importe como un 0 que has declarado, distinto
+          de una cifra escrita. Una declaración cubre todas las familias abiertas:
+          indica cada una con --family (repetible), o ninguna cuando solo hay una
+          abierta. Para dar el importe de uno, usa --amount; los demás importes abiertos
+          de su familia quedan declarados sin nada pendiente.'
         attest_prior_carries_yes_help: Confirma la declaración y regístrala en la
           autoliquidación
         attest_prior_value_help: Indica la cifra que una declaración toma de una declaración
