@@ -13,8 +13,8 @@ from dataclasses import dataclass
 from typing import Final
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 
+from ..compiler.design_sum import NUMERIC_CASILLA_TYPES
 from .autonomic_deduction_sum_dictionary import ComunidadOperands, LeftOutBox
 
 __all__ = [
@@ -27,7 +27,6 @@ __all__ = [
     "left_out_entries",
 ]
 
-_NUMERIC: Final = frozenset({CasillaDataType.MONEY, CasillaDataType.DECIMAL, CasillaDataType.INTEGER})
 _HEADER: Final = "edition\tcomunidad\tfield\tsum_row\tbox\treason\tprinted_at\tregistry\teffect"
 REFUSES: Final = "0564 is left without a value while this box holds an amount"
 UNDECLARED: Final = "the edition's registry declares no such casilla, so the return cannot carry it"
@@ -49,7 +48,7 @@ class LeftOutEntry:
 def _entry(revision: ModeloRevision, comunidad: ComunidadOperands, left_out: LeftOutBox) -> LeftOutEntry:
     casilla = next((item for item in revision.casillas if str(item.id) == left_out.box), None)
     declared_as = None if casilla is None else str(casilla.data_type)
-    guarded = casilla is not None and casilla.data_type in _NUMERIC
+    guarded = casilla is not None and casilla.data_type in NUMERIC_CASILLA_TYPES
     return LeftOutEntry(comunidad.residence, comunidad.row.field, comunidad.row.line, left_out, declared_as, guarded)
 
 

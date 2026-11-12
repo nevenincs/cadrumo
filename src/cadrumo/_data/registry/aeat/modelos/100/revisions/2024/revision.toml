@@ -10217,7 +10217,7 @@ sequence_removals = {source_citations = [0]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = { revision = "2023", id = "renta-deducciones-autonomicas-suma" }
-sequence_removals = { "expression.args" = [1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13, 14] }
+sequence_removals = { "expression.args" = [1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13, 14], "source_citations" = [2, 3, 4, 5, 6, 8, 10, 11, 12, 13, 14, 15] }
 sequence_additions = { "expression.args" = [
     # aeat-dr-100-2024-dictionary:1624 DEDAUTAR
     { op = "if_then_else", args = [
@@ -10470,6 +10470,31 @@ sequence_additions = { "expression.args" = [
             { op = "unresolved_outcome", args = [{ text_literal = "autonomic-deduction-other-comunidad" }] },
         ] },
     ] },
+], "source_citations" = [
+    # aeat-dr-100-2024-dictionary:1624 DEDAUTAR
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTAR=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/AragonRes/DEDAUTAR][P102][0564][(suma de las casillas [0866] a [0881] + [1851] + [1852] + [1850] + [0885] + [0888])]"] },
+    # aeat-dr-100-2024-dictionary:1656 DEDAUTPA
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTPA=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/AsturiasRes/DEDAUTPA][P102][0564][(suma de las casillas [0689] + [0803] + [0811] a [0813] + [0883] + [0884] + [0886] + [0887] + [0889] a [0897] + [1556] + [1557] + [1848] + [1849] + [0819] + [1628] + [1630] + [1643] + [1683])]"] },
+    # aeat-dr-100-2024-dictionary:1691 DEDAUTIB
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTIB=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/IBalearesRes/DEDAUTIB][P102][0564][(suma de las casillas [0898] a [0910] + [0913] a [0915] + [1905] + [1718] ? [1719] + [0504] + [1721] + [1714] + [1716] + [1763] + [1720] + [1698] + [0770])]"] },
+    # aeat-dr-100-2024-dictionary:1735 DEDAUTCAN
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTCAN=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CanariasRes/DEDAUTCAN][P102][0564][(suma de las casillas [0916] a [0920] + [0922] a [0928] + [0933] a [0942] + [0944]  + [2049] +[2050] + [2051])]"] },
+    # aeat-dr-100-2024-dictionary:1758 DEDAUTCANT
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTCANT=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CantabriaRes/DEDAUTCANT][P102][0564][(suma de las casillas [0946] a [0948] + [0951] a [0954] + [0772] + [0774] + [0775] + [0818] + [0820] + [0821] +[0823] + [1707] + [1710] + [1711])]"] },
+    # aeat-dr-100-2024-dictionary:1817 DEDAUTCL
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTCL=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CastillaYLeonRes/DEDAUTCL][P102][0564][(suma de las casillas [0799] + [0970] a [0976] + [0978] a [0980] + [0984])]"] },
+    # aeat-dr-100-2024-dictionary:1848 DEDAUTE
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTE=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/ExtremaduraRes/DEDAUTE][P102][0564][Total deducciones autonómicas: (suma de las casillas [1010] a [1020] + [1091] + [1105] + [1910])]"] },
+    # aeat-dr-100-2024-dictionary:1875 DEDAUTGA
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTGA=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/GaliciaRes/DEDAUTGA][P102][0564][(suma de las casillas [1021] a [1032] + [1034] a [1038] + [0825] + [0828] + [0230] + [0822] + [1077])]"] },
+    # aeat-dr-100-2024-dictionary:1906 DEDAUTM
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTM=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/MadridRes/DEDAUTM][P102][0564][(suma de las casillas [1039] a [1050] + [1115] a [1120] +[2020] + [2021] + [2026] + [2027] + [2030])]"] },
+    # aeat-dr-100-2024-dictionary:1932 DEDAUTMU
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTMU=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/MurciaRes/DEDAUTMU][P102][0564][Total deducciones autonómicas (suma de las casillas [0991] + [1052] a [1060] + [1073] + [1157] + [1158] + [1161] + [1171] + [0846] + [0847] + [2033] + [2035] a [2037])]"] },
+    # aeat-dr-100-2024-dictionary:1968 DEDAUTLR
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTLR=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/LaRiojaRes/DEDAUTLR][P102][0564][(suma de las casillas [0250] a [0254] + [1061] a [1063] + [1065] + [1066] + [1068] + [1069] + [1072] + [1075] + [1079] a [1082] + [1163] + [1165] a [1166] + [1168] + [1167] + [1785])]"] },
+    # aeat-dr-100-2024-dictionary:2022 DEDAUTVA
+    { source_ref = "aeat-dr-100-2024-dictionary", required_text = ["DEDAUTVA=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CValencianaRes/DEDAUTVA][P102][0564][(suma de las casillas [0801] + [0805] + [0806] + [1083] a [1090] + [1092] a [1095] + [1097] + [1099] a [1104] + [1106] + [1108] + [1110] a [1114] + [1169] + [1172] + [1173] + [1180] + [1181] + [1183] + [1121] + [1702] + [1704] + [1959] + [1960] + [1962] )]"] },
 ], source_refs = ["aeat-dr-100-2024-dictionary"] }
-sequence_order = { "expression.args" = [0, 3, 4, 5, 6, 7, 1, 8, 2, 9, 10, 11, 12, 13, 14] }
+sequence_order = { "expression.args" = [0, 3, 4, 5, 6, 7, 1, 8, 2, 9, 10, 11, 12, 13, 14], "source_citations" = [0, 1, 4, 5, 6, 7, 8, 2, 9, 3, 10, 11, 12, 13, 14, 15] }
 # END casilla 0564 autonomic deduction sum

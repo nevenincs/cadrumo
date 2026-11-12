@@ -285,3 +285,78 @@ source_refs = ["lirpf-cuota-chain-authority", "aeat-dr-100-2020-dictionary"]
 [[revisions."2020".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["El importe de las deducciones establecidas por la Comunidad Autónoma en el ejercicio de las competencias"]
+
+# aeat-dr-100-2020-dictionary:1237 DEDAUTA
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTA=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/AndaluciaRes/DEDAUTA][P102][0564][(suma de las casillas [0849] a [0858] + [0860]+ [0862] a [0864])]"]
+
+# aeat-dr-100-2020-dictionary:1254 DEDAUTAR
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTAR=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/AragonRes/DEDAUTAR][P102][0564][(suma de las casillas [0866] a [0881])]"]
+
+# aeat-dr-100-2020-dictionary:1273 DEDAUTPA
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTPA=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/AsturiasRes/DEDAUTPA][P102][0564][(suma de las casillas [0883] a [0896])]"]
+
+# aeat-dr-100-2020-dictionary:1292 DEDAUTIB
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTIB=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/IBalearesRes/DEDAUTIB][P102][0564][(suma de las casillas [0898] a [0910] + [0913] a [0915] )]"]
+
+# aeat-dr-100-2020-dictionary:1321 DEDAUTCAN
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTCAN=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CanariasRes/DEDAUTCAN][P102][0564][(suma de las casillas [0916] a [0928] + [0933] a [0944] )]"]
+
+# aeat-dr-100-2020-dictionary:1339 DEDAUTCANT
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTCANT=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CantabriaRes/DEDAUTCANT][P102][0564][(suma de las casillas [0946] a [0948] + [0950] a [0954] + [0772] + [0774] + [0775])]"]
+
+# aeat-dr-100-2020-dictionary:1354 DEDAUTCM
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTCM=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CastillaLaManchaRes/DEDAUTCM][P102][0564][(suma de las casillas [0957] a [0968])]"]
+
+# aeat-dr-100-2020-dictionary:1383 DEDAUTCL
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTCL=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CastillaYLeonRes/DEDAUTCL][P102][0564][(suma de las casillas [0970] a [0974] + [0799] + [0975] + [0976] + [0978] + [0979] + [0980] + [0984] + [0995])]"]
+
+# aeat-dr-100-2020-dictionary:1397 DEDAUTCT
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTCT=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CatalunyaRes/DEDAUTCT][P102][0564][(suma de las casillas [1000] a [1008] + [0824])]"]
+
+# aeat-dr-100-2020-dictionary:1408 DEDAUTE
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTE=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/ExtremaduraRes/DEDAUTE][P102][0564][(suma de las casillas [1010] a [1019])]"]
+
+# aeat-dr-100-2020-dictionary:1430 DEDAUTGA
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTGA=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/GaliciaRes/DEDAUTGA][P102][0564][(suma de las casillas [1021] a [1032] + [1034] a [1037] )]"]
+
+# aeat-dr-100-2020-dictionary:1443 DEDAUTM
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTM=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/MadridRes/DEDAUTM][P102][0564][(suma de las casillas [1039] a [1050] )]"]
+
+# aeat-dr-100-2020-dictionary:1458 DEDAUTMU
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTMU=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/MurciaRes/DEDAUTMU][P102][0564][(suma de las casillas [1052] a [1060] + [1073] + [1157] + [1158] + [1161])]"]
+
+# aeat-dr-100-2020-dictionary:1487 DEDAUTLR
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTLR=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/LaRiojaRes/DEDAUTLR][P102][0564][(suma de las casillas [1061] a [1063] + [1065] + [1066] + [1068] + [1069] + [1072] + [1075] + [1077] a [1082] )]"]
+
+# aeat-dr-100-2020-dictionary:1531 DEDAUTVA
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-dr-100-2020-dictionary"
+required_text = ["DEDAUTVA=[/DatosEconomicos/Resultados/DeduccionAutonomicaRes/CValencianaRes/DEDAUTVA][P102][0564][(suma de las casillas [1083] a [1095] + [1097] + [1099] a [1106] + [1108] + [1110] a [1114] + [1120] )]"]

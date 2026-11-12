@@ -26,13 +26,19 @@ that :mod:`.autonomic_deduction_sum` writes and checks.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from cadrumo.domain.calculations.registry.export_xml_dictionary import decode_dictionary_text
+from ..compiler.design_sum import (
+    DesignSumError,
+    DictionaryRow,
+    SignedBox,
+    named_boxes,
+    parse_dictionary_rows,
+    printed_terms,
+)
 
 __all__ = [
     "BLOCK_RESIDENCE_TOKENS",
@@ -42,11 +48,8 @@ __all__ = [
     "UNREADABLE_SIGN",
     "AutonomicSumExtractionError",
     "ComunidadOperands",
-    "DictionaryRow",
     "LeftOutBox",
-    "SignedBox",
     "extract_comunidad_operands",
-    "parse_dictionary_rows",
 ]
 
 SUMMARY_BOX: Final = "0564"
@@ -76,50 +79,8 @@ BLOCK_RESIDENCE_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
 )
 
 
-_ROW_RE: Final = re.compile(
-    r"^(?P<field>[A-Za-z0-9_]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<box>[^\]]*)\]\[(?P<label>.*)\]\s*$"
-)
-_SUM_RE: Final = re.compile(
-    r"^(?:Total deducciones autonómicas:?\s*)?\(suma de las casillas\s+(?P<expression>.*?)\s*\)$"
-)
-_TOKEN_RE: Final = re.compile(r"\s*(?:(?P<box>\[\d{4}\])|(?P<range>a)(?=\s)|(?P<sign>[+\-?]))")
-
-
-class AutonomicSumExtractionError(ValueError):
-    """A dictionary row the extraction cannot read without guessing."""
-
-
-@dataclass(frozen=True, slots=True)
-class DictionaryRow:
-    """One mapped row of a declaration dictionary."""
-
-    line: int
-    text: str
-    field: str
-    path: str
-    data_type: str
-    box: str
-    label: str
-
-    @property
-    def block(self) -> str:
-        """The XML element directly containing the row's variable."""
-        parts = self.path.strip("/").split("/")
-        return parts[-2] if len(parts) >= 2 else ""
-
-    @property
-    def in_deduction_block(self) -> bool:
-        """Whether the row sits in a comunidad block of the autonomic deductions."""
-        parts = self.path.strip("/").split("/")
-        return len(parts) >= 3 and parts[-3] == _DEDUCTION_BLOCK_PARENT
-
-
-@dataclass(frozen=True, slots=True)
-class SignedBox:
-    """One operand: a box and whether the sum adds (1) or subtracts (-1) it."""
-
-    sign: int
-    box: str
+class AutonomicSumExtractionError(DesignSumError):
+    """A dictionary or registry state the extraction cannot read without guessing."""
 
 
 #: Why a box the official sum names is not an operand of the edition.
@@ -148,79 +109,8 @@ class ComunidadOperands:
     left_out: tuple[LeftOutBox, ...]
 
 
-def parse_dictionary_rows(body: bytes) -> tuple[DictionaryRow, ...]:
-    """Decode a published dictionary and return every row that maps a variable to a box."""
-    rows: list[DictionaryRow] = []
-    for number, line in enumerate(decode_dictionary_text(body).splitlines(), start=1):
-        matched = _ROW_RE.match(line)
-        if matched is None:
-            continue
-        rows.append(
-            DictionaryRow(
-                line=number,
-                text=line.rstrip(),
-                field=matched["field"],
-                path=matched["path"],
-                data_type=matched["type"],
-                box=matched["box"],
-                label=matched["label"],
-            )
-        )
-    return tuple(rows)
-
-
 def _comunidad_rows(rows: Iterable[DictionaryRow]) -> tuple[DictionaryRow, ...]:
-    return tuple(row for row in rows if row.box == SUMMARY_BOX and row.in_deduction_block)
-
-
-def _terms(row: DictionaryRow) -> tuple[tuple[int, str, str | None], ...]:
-    """Parse the description into ``(sign, first box, last box or None)`` terms; sign 0 is unreadable."""
-    summed = _SUM_RE.match(row.label.strip())
-    if summed is None:
-        raise AutonomicSumExtractionError(f"line {row.line} {row.field}: the description is not an official sum")
-    expression = summed["expression"]
-    tokens: list[tuple[str, str]] = []
-    position = 0
-    while position < len(expression):
-        matched = _TOKEN_RE.match(expression, position)
-        if matched is None or matched.end() == position:
-            raise AutonomicSumExtractionError(
-                f"line {row.line} {row.field}: cannot read the sum at {expression[position:]!r}"
-            )
-        kind = matched.lastgroup or ""
-        tokens.append((kind, matched[kind]))
-        position = matched.end()
-        while position < len(expression) and expression[position].isspace():
-            position += 1
-    return _fold_terms(row, tokens)
-
-
-def _term_at(tokens: list[tuple[str, str]], index: int) -> tuple[str, str | None, int]:
-    """The box or range starting at ``index``, and the index after it."""
-    if index + 2 < len(tokens) and tokens[index + 1][0] == "range" and tokens[index + 2][0] == "box":
-        return tokens[index][1][1:-1], tokens[index + 2][1][1:-1], index + 3
-    return tokens[index][1][1:-1], None, index + 1
-
-
-def _fold_terms(row: DictionaryRow, tokens: list[tuple[str, str]]) -> tuple[tuple[int, str, str | None], ...]:
-    terms: list[tuple[int, str, str | None]] = []
-    index, sign = 0, 1
-    expect_term = True
-    while index < len(tokens):
-        kind, value = tokens[index]
-        if expect_term and kind == "box":
-            first, last, index = _term_at(tokens, index)
-            terms.append((sign, first, last))
-            expect_term = False
-        elif not expect_term and kind == "sign":
-            sign = {"-": -1, "?": 0}.get(value, 1)
-            expect_term = True
-            index += 1
-        else:
-            raise AutonomicSumExtractionError(f"line {row.line} {row.field}: unexpected {value!r} in the sum")
-    if expect_term or not terms:
-        raise AutonomicSumExtractionError(f"line {row.line} {row.field}: the sum ends without a box")
-    return tuple(terms)
+    return tuple(row for row in rows if row.box == SUMMARY_BOX and row.parent_block == _DEDUCTION_BLOCK_PARENT)
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,15 +135,6 @@ def _classified(printed: _Printed, row: DictionaryRow, sign: int, box: str) -> S
     return LeftOutBox(box, PRINTED_ELSEWHERE, rows)
 
 
-def _named_boxes(row: DictionaryRow, first: str, last: str | None) -> tuple[str, ...]:
-    if last is None:
-        return (first,)
-    low, high = int(first), int(last)
-    if low > high:
-        raise AutonomicSumExtractionError(f"line {row.line} {row.field}: range [{first}] a [{last}] runs backwards")
-    return tuple(f"{number:04d}" for number in range(low, high + 1))
-
-
 def _merge(
     row: DictionaryRow,
     found: list[SignedBox | LeftOutBox],
@@ -273,8 +154,8 @@ def _merge(
 def _operands(printed: _Printed, row: DictionaryRow) -> tuple[tuple[SignedBox, ...], tuple[LeftOutBox, ...]]:
     operands: dict[str, SignedBox] = {}
     left_out: dict[str, LeftOutBox] = {}
-    for sign, first, last in _terms(row):
-        found = [_classified(printed, row, sign, box) for box in _named_boxes(row, first, last)]
+    for sign, first, last in printed_terms(row):
+        found = [_classified(printed, row, sign, box) for box in named_boxes(row, first, last)]
         if last is not None and sign != 0 and not any(isinstance(item, SignedBox) for item in found):
             raise AutonomicSumExtractionError(f"line {row.line} {row.field}: range [{first}] a [{last}] holds no box")
         _merge(row, found, operands, left_out)

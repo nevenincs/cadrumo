@@ -33,15 +33,12 @@ from ..authoring.autonomic_deduction_sum_dictionary import (
     PRINTED_ELSEWHERE,
     SUMMARY_BOX,
     UNREADABLE_SIGN,
-    AutonomicSumExtractionError,
     ComunidadOperands,
-    DictionaryRow,
     LeftOutBox,
-    SignedBox,
     extract_comunidad_operands,
-    parse_dictionary_rows,
 )
 from ..authoring.autonomic_deduction_sum_inventory import LeftOutEntry
+from ..compiler.design_sum import DesignSumError, DictionaryRow, SignedBox, parse_dictionary_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -180,7 +177,7 @@ def test_a_malformed_comunidad_row_fails_the_extraction(
     original = b"[1039] a [1050] )"
     assert body.count(original) == 1
 
-    with pytest.raises(AutonomicSumExtractionError):
+    with pytest.raises(DesignSumError):
         extract_comunidad_operands(body.replace(original, replacement))
 
 

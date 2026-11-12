@@ -18,6 +18,9 @@ delta only for the comunidades whose meaning changes from the edition before it,
 is whose set of signed operands or of left-out guards differs; a reordered list is the
 same sum and is inherited. Changed terms are replaced in place, and every other term
 is inherited, so each term keeps the dictionary row of the edition that declared it. Each
+term cites that row as layout authority: the citation names the edition's dictionary and
+quotes the whole row, and a comment gives its line. The formula computes nothing beyond
+the rows it cites, which is what lets the compiler admit those citations. Each
 edition's calculation-completeness manifest then lists the boxes the formula reads.
 
 ``--check`` fails when the committed declarations differ from a fresh extraction,
@@ -43,14 +46,13 @@ from cadrumo.domain.calculations.registry.formula_runtime_ops import RegistryUnr
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
+from ..compiler.design_sum import DesignSumError, SelectedTerm, SignedBox, decode_selected_sum
 from ..compiler.loader import load_registry_tree
 from .autonomic_deduction_sum_dictionary import (
     SUMMARY_BOX,
     AutonomicSumExtractionError,
     ComunidadOperands,
-    SignedBox,
     extract_comunidad_operands,
 )
 from .autonomic_deduction_sum_inventory import LeftOutEntry, inventory_header, inventory_lines, left_out_entries
@@ -76,8 +78,7 @@ RESIDENCE_BINDING: Final = "renta-profile-tax-residence-ccaa"
 OTHER_COMUNIDAD_REASON: Final = RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_OTHER_COMUNIDAD.value
 UNSUMMED_REASON: Final = RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_UNSUMMED_BOX.value
 LEGAL_REFS: Final = ("ley-35-2006:art-77",)
-#: Formula citations quote guidance-tier text. The dictionaries are layout authority, so each
-#: edition's dictionary is listed in ``source_refs`` and each term names its row by line.
+#: The guidance-tier citation the formula keeps beside its row citations.
 GUIDANCE_REF: Final = "lirpf-cuota-chain-authority"
 GUIDANCE_TEXT: Final = (
     "El importe de las deducciones establecidas por la Comunidad Autónoma en el ejercicio de las competencias",
@@ -215,6 +216,26 @@ def _term_lines(edition: EditionOperands, comunidad: ComunidadOperands, indent: 
     ]
 
 
+def _citation(edition: EditionOperands, comunidad: ComunidadOperands) -> str:
+    """The layout citation of one term: the edition's dictionary and the whole row it prints."""
+    return (
+        f"{{ source_ref = {_toml_string(edition.source_ref)}, required_text = [{_toml_string(comunidad.row.text)}] }}"
+    )
+
+
+def _citation_tables(edition: EditionOperands) -> list[str]:
+    lines: list[str] = []
+    for comunidad in edition.comunidades:
+        lines += [
+            "",
+            f"# {edition.source_ref}:{comunidad.row.line} {comunidad.row.field}",
+            f'[[revisions."{edition.revision_id}".formulas.source_citations]]',
+            f"source_ref = {_toml_string(edition.source_ref)}",
+            f"required_text = [{_toml_string(comunidad.row.text)}]",
+        ]
+    return lines
+
+
 def render_baseline(edition: EditionOperands) -> str:
     """The full formula declaration of the oldest authored edition."""
     lines = [
@@ -237,6 +258,7 @@ def render_baseline(edition: EditionOperands) -> str:
         f'[[revisions."{edition.revision_id}".formulas.source_citations]]',
         f"source_ref = {_toml_string(GUIDANCE_REF)}",
         "required_text = [" + ", ".join(_toml_string(text) for text in GUIDANCE_TEXT) + "]",
+        *_citation_tables(edition),
     ]
     return "\n".join(lines) + "\n"
 
@@ -261,27 +283,44 @@ def _restoring_order(count: int, replaced: tuple[int, ...]) -> list[int]:
     return [patched.index(position) for position in range(count)]
 
 
+def _positions(values: Sequence[int]) -> str:
+    return "[" + ", ".join(str(value) for value in values) + "]"
+
+
 def render_delta(previous: EditionOperands, edition: EditionOperands, known_refs: frozenset[str]) -> str:
-    """The family override replacing the changed comunidad terms, or an empty string."""
+    """The family override replacing the changed comunidad terms and their row citations, or an empty string.
+
+    The citations list the guidance citation first and then one row citation per term, so a
+    term's citation sits one position after the term.
+    """
     changed = _changed(previous, edition)
     if not changed:
         return ""
-    indices = "[" + ", ".join(str(index) for index in changed) + "]"
-    order = "[" + ", ".join(str(index) for index in _restoring_order(len(edition.comunidades), changed)) + "]"
+    count = len(edition.comunidades)
+    cited = tuple(index + 1 for index in changed)
     terms: list[str] = []
     for index in changed:
         terms.extend(_term_lines(edition, edition.comunidades[index], "    "))
+    citations = [
+        f"    # {edition.source_ref}:{edition.comunidades[index].row.line} {edition.comunidades[index].row.field}\n"
+        f"    {_citation(edition, edition.comunidades[index])},"
+        for index in changed
+    ]
     refs = "" if edition.source_ref in known_refs else f", source_refs = [{_toml_string(edition.source_ref)}]"
     return "\n".join(
         [
             f'[[revisions."{edition.revision_id}".family_overrides]]',
             'family = "formulas"',
             f'selector = {{ revision = "{previous.revision_id}", id = "{FORMULA_ID}" }}',
-            f'sequence_removals = {{ "expression.args" = {indices} }}',
+            f'sequence_removals = {{ "expression.args" = {_positions(changed)}, '
+            f'"source_citations" = {_positions(cited)} }}',
             'sequence_additions = { "expression.args" = [',
             *terms,
+            '], "source_citations" = [',
+            *citations,
             f"]{refs} }}",
-            f'sequence_order = {{ "expression.args" = {order} }}',
+            f'sequence_order = {{ "expression.args" = {_positions(_restoring_order(count, changed))}, '
+            f'"source_citations" = {_positions(_restoring_order(count + 1, cited))} }}',
         ]
     )
 
@@ -353,53 +392,6 @@ def write(editions: Sequence[EditionOperands]) -> list[Path]:
     return changed + _publish(_manifest_files(modelos))
 
 
-def _signed(expression: FormulaExpression) -> SignedBox:
-    if expression.casilla_id is not None:
-        return SignedBox(1, str(expression.casilla_id))
-    if expression.op == "negate" and len(expression.args) == 1 and expression.args[0].casilla_id is not None:
-        return SignedBox(-1, str(expression.args[0].casilla_id))
-    raise AutonomicSumExtractionError(f"operand {expression!r} is neither a casilla nor its negation")
-
-
-def _is_zero_test(test: FormulaExpression) -> bool:
-    return test.op == "equal" and len(test.args) == 2 and test.args[0].op == "sum" and test.args[1].literal == 0
-
-
-def _is_other_comunidad_outcome(unresolved: FormulaExpression) -> bool:
-    return unresolved.op == "unresolved_outcome" and unresolved.args[0].text_literal == OTHER_COMUNIDAD_REASON
-
-
-def _guarded_sum(other: FormulaExpression) -> tuple[SignedBox, ...] | None:
-    """The operands of the other-comunidad guard, or ``None`` when its shape is not the writer's."""
-    if other.op != "if_then_else" or len(other.args) != 3:
-        return None
-    test, zero, unresolved = other.args
-    if not _is_zero_test(test) or zero.literal != 0 or not _is_other_comunidad_outcome(unresolved):
-        return None
-    return tuple(_signed(arg) for arg in test.args[0].args)
-
-
-def _magnitude_box(expression: FormulaExpression) -> str:
-    """The box of one ``max(box, -box)`` magnitude the writer emits."""
-    if expression.op == "max" and len(expression.args) == 2:
-        box, negated = expression.args
-        if box.casilla_id is not None and _signed(negated) == SignedBox(-1, str(box.casilla_id)):
-            return str(box.casilla_id)
-    raise AutonomicSumExtractionError("a 0564 left-out guard is not the magnitude of one box")
-
-
-def _resident_sum(resident: FormulaExpression) -> tuple[FormulaExpression, tuple[str, ...]]:
-    """The resident sum and the left-out boxes guarding it, refusing any other shape."""
-    if resident.op == "sum":
-        return resident, ()
-    if resident.op == "if_then_else" and len(resident.args) == 3:
-        test, summed, unresolved = resident.args
-        refused = unresolved.op == "unresolved_outcome" and unresolved.args[0].text_literal == UNSUMMED_REASON
-        if _is_zero_test(test) and summed.op == "sum" and refused:
-            return summed, tuple(_magnitude_box(arg) for arg in test.args[0].args)
-    raise AutonomicSumExtractionError("a 0564 resident term is neither a sum nor a guarded sum")
-
-
 AuthoredTerm = tuple[tuple[SignedBox, ...], tuple[str, ...]]
 Meaning = tuple[frozenset[SignedBox], frozenset[str]]
 
@@ -410,23 +402,6 @@ def meaning(term: AuthoredTerm) -> Meaning:
     return frozenset(operands), frozenset(guards)
 
 
-def _term_operands(term: FormulaExpression) -> tuple[str, AuthoredTerm]:
-    """Decode one comunidad term into its operands and guards, refusing any shape the writer does not produce."""
-    if term.op != "if_then_else" or len(term.args) != 3:
-        raise AutonomicSumExtractionError("a 0564 term is not a residence test")
-    predicate, resident, other = term.args
-    if predicate.op != "text_equal" or len(predicate.args) != 2:
-        raise AutonomicSumExtractionError("a 0564 term is not a residence test")
-    binding, literal = predicate.args
-    if binding.binding != RESIDENCE_BINDING or literal.text_literal is None:
-        raise AutonomicSumExtractionError("a 0564 term does not test the residence binding")
-    summed, guards = _resident_sum(resident)
-    operands = tuple(_signed(arg) for arg in summed.args)
-    if _guarded_sum(other) != operands:
-        raise AutonomicSumExtractionError(f"the {literal.text_literal} term does not guard its other-comunidad sum")
-    return literal.text_literal, (operands, guards)
-
-
 def registry_operands(revision: ModeloRevision) -> Mapping[str, AuthoredTerm]:
     """Each comunidad's operands and left-out guards as the hydrated edition declares them, in term order."""
     formulas = [formula for formula in revision.formulas if formula.target_casilla_id == SUMMARY_BOX]
@@ -435,17 +410,29 @@ def registry_operands(revision: ModeloRevision) -> Mapping[str, AuthoredTerm]:
         raise AutonomicSumExtractionError(
             f"edition {revision.id}: casilla {SUMMARY_BOX} is not computed by {FORMULA_ID}"
         )
-    expression = formulas[0].expression
-    if expression.op != "sum":
-        raise AutonomicSumExtractionError(f"edition {revision.id}: the 0564 formula is not a sum of terms")
-    decoded = [_term_operands(term) for term in expression.args]
-    return dict(decoded)
+    terms = decode_selected_sum(formulas[0].expression)
+    for term in terms:
+        _require_writer_shape(revision, term)
+    return {term.selector: (term.operands, term.guards) for term in terms}
+
+
+def _require_writer_shape(revision: ModeloRevision, term: SelectedTerm) -> None:
+    """Refuse a decoded term on another binding or refusing for a reason the writer does not emit."""
+    expected_guard_reason = UNSUMMED_REASON if term.guards else None
+    if (
+        term.binding != RESIDENCE_BINDING
+        or term.other_reason != OTHER_COMUNIDAD_REASON
+        or term.guard_reason != expected_guard_reason
+    ):
+        raise AutonomicSumExtractionError(
+            f"edition {revision.id}: the {term.selector} term is not the residence term the writer emits"
+        )
 
 
 def _edition_problems(revision: ModeloRevision, edition: EditionOperands) -> list[str]:
     try:
         authored = registry_operands(revision)
-    except AutonomicSumExtractionError as exc:
+    except DesignSumError as exc:
         return [str(exc)]
     extracted = {comunidad.residence: meaning(edition.term(comunidad)) for comunidad in edition.comunidades}
     problems = (
@@ -501,7 +488,7 @@ def main(argv: list[str] | None = None) -> int:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     try:
         editions = extract_editions(modelos, catalogues)
-    except AutonomicSumExtractionError as exc:
+    except DesignSumError as exc:
         print(f"autonomic-deduction-sum\tfailed\t{exc}", file=sys.stderr)
         return 1
     _report_inventory(editions, args.inventory)
