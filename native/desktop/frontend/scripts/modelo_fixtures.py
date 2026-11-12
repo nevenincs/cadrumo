@@ -47,7 +47,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, cast, get_args, get_origin
+from typing import TYPE_CHECKING, Annotated, Any, TypeAliasType, cast, get_args, get_origin
 from uuid import UUID
 
 from dev.fixture_projections.location import family_directory, scratch_tree
@@ -389,10 +389,16 @@ def _model_roots() -> tuple[list[tuple[str, str, type[BaseModel]]], list[type[Ba
 
 
 def _models_in(annotation: object) -> Iterator[type[BaseModel]]:
-    """The Pydantic models an annotation names, through unions, containers and ``Annotated``."""
+    """The Pydantic models an annotation names, through unions, containers, ``Annotated`` and ``type`` aliases."""
     if isinstance(annotation, type) and issubclass(annotation, BaseModel):
         yield annotation
         return
+    if isinstance(annotation, TypeAliasType):
+        yield from _models_in(annotation.__value__)
+        return
+    origin = get_origin(annotation)
+    if isinstance(origin, TypeAliasType):
+        yield from _models_in(origin.__value__)
     if get_origin(annotation) is Annotated:
         yield from _models_in(get_args(annotation)[0])
         return

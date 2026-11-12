@@ -85,7 +85,7 @@ export type ModeloEditBaselineId = string;
 export type ModeloEditBindingAddressV1 = {
   kind: "binding";
   binding_id: BindingId;
-  row_identity: string | null;
+  row_identity?: string | null;
 };
 
 /**

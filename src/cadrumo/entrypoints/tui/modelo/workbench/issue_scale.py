@@ -132,6 +132,8 @@ class IssueLine:
     in_records: bool = False
     #: The area of the application that owns the finding's value, when one does and can be opened.
     area: SourceSurface | None = None
+    #: The second area a finding leads to, where the figures it was compared with are kept, when it can be opened.
+    compared_area: SourceSurface | None = None
     #: Whether the latest calculation noticed this, rather than the check.
     from_calculation: bool = False
     #: Whether calculating again is what puts this right, so ``c`` does it from the list.

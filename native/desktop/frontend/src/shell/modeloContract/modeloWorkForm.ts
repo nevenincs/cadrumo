@@ -543,6 +543,7 @@ export type ModeloFormIssueLine = {
   address: ModeloFormAddressV1 | null;
   in_records: boolean;
   surface: SourceSurface | null;
+  compared_surface: SourceSurface | null;
   from_calculation: boolean;
   recalculates: boolean;
   finding_id: string | null;

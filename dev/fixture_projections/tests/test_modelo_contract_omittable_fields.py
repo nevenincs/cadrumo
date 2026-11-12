@@ -33,6 +33,17 @@ class _Root(BaseModel):
     leaf: _Leaf | None = None
 
 
+class _BehindAlias(BaseModel):
+    dropped_when_none: str | None = Field(default=None, exclude_if=lambda value: value is None)
+
+
+type _AliasedRows = tuple[_BehindAlias, ...]
+
+
+class _AliasRoot(BaseModel):
+    rows: _AliasedRows = ()
+
+
 @pytest.fixture(scope="module")
 def producer() -> ModuleType:
     spec = importlib.util.spec_from_file_location("modelo_fixtures_omittable_under_test", _PRODUCER)
@@ -67,3 +78,9 @@ def test_the_wire_leaves_out_exactly_those_fields(producer: ModuleType) -> None:
     wire = _Root(leaves=(_Leaf(),)).model_dump(mode="json")
     assert set(wire) == {"always_with_default", "leaves", "leaf"}
     assert wire["leaves"] == [{"kept": "kept"}]
+
+
+def test_a_model_reached_only_through_a_type_alias_keeps_its_omittable_fields(producer: ModuleType) -> None:
+    _, schema = models_json_schema([(_AliasRoot, "serialization")], ref_template="#/$defs/{model}")
+    omittable = producer.omittable_fields([_AliasRoot], schema["$defs"])
+    assert omittable.get("_BehindAlias") == frozenset({"dropped_when_none"})

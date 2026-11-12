@@ -53,6 +53,7 @@ from .issue_screen_components import (
     BOXES_SUFFIX,
     CONFIRM_SCOPE_KEY,
     ISSUE_ID_PREFIX,
+    OPEN_COMPARED_KEY,
     SECTION_INFIX,
     IssueList,
     footer_keys_for_width,
@@ -81,7 +82,7 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 
 """What ``b`` does, in full, where the list has room to say it; the footer says it in two words."""
 
-_FOOTER_PRIORITY: Final[tuple[str, ...]] = ("enter", "escape", "a", CONFIRM_SCOPE_KEY, "t")
+_FOOTER_PRIORITY: Final[tuple[str, ...]] = ("enter", "escape", "a", OPEN_COMPARED_KEY, CONFIRM_SCOPE_KEY, "t")
 
 """The list's footer keys, most needed first; those that do not fit the width are left to the help."""
 
@@ -166,6 +167,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         Binding("t", "technical", "", show=False),
         Binding("c", "calculate", "", show=False),
         Binding("a", "open_area", "", show=False),
+        Binding("o", "open_compared_area", "", show=False),
         Binding("b", "confirm_scope", "", show=False),
     ]
 
@@ -291,6 +293,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             choice = "more"
         self.query_one(IssueList).describe_enter(_ENTER_LOCALE_KEYS[choice])
         self._describe_open_area(None if index is None else self._lines[index].area)
+        self._describe_open_compared_area(None if index is None else self._lines[index].compared_area)
         self._fit_footer()
 
     def _fit_footer(self) -> None:
@@ -303,12 +306,13 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             self._bindings.key_to_bindings,
             self.app.get_key_display,
             has_open_area=self._highlighted_area() is not None,
+            has_compared_area=self._highlighted_compared_area() is not None,
             has_confirm_target=self._confirm_target() is not None,
             gap=_FOOTER_KEY_GAP,
         )
         issues.show_enter("enter" in shown)
         table = self._bindings.key_to_bindings
-        for key in ("escape", "a", "b", "t"):
+        for key in ("escape", "a", OPEN_COMPARED_KEY, "b", "t"):
             entries = table.get(key)
             if entries is not None and entries:
                 table[key] = [replace(binding, show=key in shown) for binding in entries]
@@ -321,6 +325,17 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         if entries is not None and entries:
             label = "" if area is None else tr(_OPEN_AREA_LOCALE_KEY, area=area_words(area))
             table["a"] = [replace(binding, description=label, show=area is not None) for binding in entries]
+        self.refresh_bindings()
+
+    def _describe_open_compared_area(self, area: SourceSurface | None) -> None:
+        """Name the second area the finding under the cursor leads to, and show its key only when there is one."""
+        table = self._bindings.key_to_bindings
+        entries = table.get(OPEN_COMPARED_KEY)
+        if entries is not None and entries:
+            label = "" if area is None else tr(_OPEN_AREA_LOCALE_KEY, area=area_words(area))
+            table[OPEN_COMPARED_KEY] = [
+                replace(binding, description=label, show=area is not None) for binding in entries
+            ]
         self.refresh_bindings()
 
     def _confirm_target(self) -> AddressKey | None:
@@ -349,11 +364,17 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         index = self._issue_index(self._highlighted_id())
         return None if index is None else self._lines[index].area
 
+    def _highlighted_compared_area(self) -> SourceSurface | None:
+        index = self._issue_index(self._highlighted_id())
+        return None if index is None else self._lines[index].compared_area
+
     @override
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         """Offer ``a`` only on a finding whose value an area owns, and ``b`` only while assumed values wait."""
         if action == "open_area":
             return self._highlighted_area() is not None
+        if action == "open_compared_area":
+            return self._highlighted_compared_area() is not None
         if action == "confirm_scope":
             return self._confirm_target() is not None
         if action == "calculate":
@@ -368,6 +389,12 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
     def action_open_area(self) -> None:
         """Close the list asking the workbench to open the area that owns the selected finding's value."""
         area = self._highlighted_area()
+        if area is not None:
+            self.dismiss(OpenSourceSurface(area))
+
+    def action_open_compared_area(self) -> None:
+        """Close the list asking the workbench to open the area that keeps what the selected finding compared."""
+        area = self._highlighted_compared_area()
         if area is not None:
             self.dismiss(OpenSourceSurface(area))
 

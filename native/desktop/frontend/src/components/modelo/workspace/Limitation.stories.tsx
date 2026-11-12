@@ -32,6 +32,7 @@ const line = (
   address: null,
   in_records: false,
   surface: null,
+  compared_surface: null,
   from_calculation: true,
   recalculates: false,
   finding_id: null,
