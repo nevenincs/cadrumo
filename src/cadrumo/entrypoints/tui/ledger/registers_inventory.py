@@ -156,6 +156,8 @@ _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "source_path": "tui.ledger.registers.inventory.field.evidence_file",
     "source_directory": "tui.ledger.registers.inventory.field.evidence_folder",
     "authority_record": "tui.ledger.registers.inventory.field.authority_record",
+    "ledger_row": "tui.ledger.registers.inventory.field.ledger_row",
+    "claimed_transaction_id": "tui.ledger.registers.inventory.field.claimed_transaction_id",
     "correction_id": "application.inventory.workbench.field.correction_id",
     "target_movement_id": "application.inventory.workbench.field.target_movement_id",
     "reason": "application.inventory.workbench.field.reason",

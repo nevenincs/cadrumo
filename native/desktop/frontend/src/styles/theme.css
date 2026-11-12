@@ -63,6 +63,13 @@
     --destructive: var(--cadrumo-accent-danger);
     --warning: var(--cadrumo-accent-warning);
     --success: var(--cadrumo-accent-success);
+    /* The failure colour as text on the chosen row's tint, where the plain
+       colour falls just short of AA: a step toward the ink. */
+    --destructive-ink: color-mix(
+      in srgb,
+      var(--destructive) 80%,
+      var(--foreground)
+    );
 
     /* Elevation and scrim: the only colour values this file writes. */
     --scrim: rgb(0 0 0 / 22%);
@@ -127,6 +134,7 @@
   --color-raised: var(--raised);
   --color-brand: var(--brand);
   --color-destructive: var(--destructive);
+  --color-destructive-ink: var(--destructive-ink);
   --color-warning: var(--warning);
   --color-success: var(--success);
   --color-border: var(--border);

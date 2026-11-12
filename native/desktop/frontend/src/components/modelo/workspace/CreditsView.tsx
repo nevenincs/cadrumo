@@ -135,12 +135,9 @@ function CreditRow({
             size="xs"
             variant="link"
             className="h-auto p-0 text-sm"
-            aria-label={t("desktop.modelo.credits.show_box", {
-              box: field.box,
-            })}
             onClick={() => onGo(field.address)}
           >
-            {t("desktop.modelo.credits.show")}
+            {t("desktop.modelo.credits.show_box", { box: field.box })}
           </Button>
         )}
       </span>

@@ -99,18 +99,26 @@ function useRailItems(chosen: string, errors = 0, messages?: Messages) {
   return { label: t("desktop.rail.label"), top, bottom };
 }
 
+function railOf<R extends { label: string }>(rail: R, nth: number): R {
+  return { ...rail, label: `${rail.label} ${nth}` };
+}
+
 function RailSpecimen({
   chosen,
   errors,
   messages,
+  nth,
 }: {
+  /** Which specimen of the page it is: a page's landmarks need names of
+   * their own, and the window has one rail. */
+  nth: number;
   chosen: string;
   errors?: number;
   messages?: Messages;
 }) {
   return (
     <div className="flex h-120 border bg-chrome">
-      <Rail {...useRailItems(chosen, errors, messages)} />
+      <Rail {...railOf(useRailItems(chosen, errors, messages), nth)} />
     </div>
   );
 }
@@ -124,9 +132,9 @@ export const RailStates: Story = {
       note="One tab stop; the arrow keys, Home and End move within it. Search, the window's toggles, shortcuts, then one panel toggle. A chosen item carries a bar as well as its surface. The error count stays visible when the panel is collapsed and is said in the button's name."
       className="items-start gap-8"
     >
-      <RailSpecimen chosen="tui" />
-      <RailSpecimen chosen="panel" errors={3} />
-      <RailSpecimen chosen="tui" errors={128} />
+      <RailSpecimen nth={1} chosen="tui" />
+      <RailSpecimen nth={2} chosen="panel" errors={3} />
+      <RailSpecimen nth={3} chosen="tui" errors={128} />
     </Specimen>
   ),
 };
@@ -140,12 +148,12 @@ export const RailViews: Story = {
       note="Where the host offers the profile's views, the calendar and Messages lead the shortcuts. Messages shows what was unread at the last sync; none unread shows nothing more, while never synced and a failed read carry a hollow pin, not a zero, and say which in the tooltip and the name. Withheld by the account, it carries the same pin and the account's own reason."
       className="items-start gap-8"
     >
-      <RailSpecimen chosen="calendar" messages={3} />
-      <RailSpecimen chosen="tui" messages={128} errors={3} />
-      <RailSpecimen chosen="tui" messages={0} />
-      <RailSpecimen chosen="tui" messages="never" />
-      <RailSpecimen chosen="tui" messages="failed" />
-      <RailSpecimen chosen="tui" messages="unknown" />
+      <RailSpecimen nth={1} chosen="calendar" messages={3} />
+      <RailSpecimen nth={2} chosen="tui" messages={128} errors={3} />
+      <RailSpecimen nth={3} chosen="tui" messages={0} />
+      <RailSpecimen nth={4} chosen="tui" messages="never" />
+      <RailSpecimen nth={5} chosen="tui" messages="failed" />
+      <RailSpecimen nth={6} chosen="tui" messages="unknown" />
     </Specimen>
   ),
 };

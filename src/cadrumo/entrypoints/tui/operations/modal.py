@@ -55,6 +55,8 @@ from ....core.operations import OperationLifecycle
 from ....core.time.clock import now
 from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import tokenised
+from ..refusal.panel import RefusalSlot
+from ..refusal.served import ServedRefusalV1, served_refusal
 from .controller_port import (
     OperationChangeSourcePort,
     OperationChangeWaiterPort,
@@ -71,7 +73,6 @@ from .interactions import (
 from .logs import OperationModalLogViewV1, build_initial_log_view, fold_event_page
 from .modal_wording import log_row_text, phase_text, progress_text
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
-from .refusal_explanation import operation_error_explanation, public_refusal_explanation
 
 # A refused observation is not watched, so no cue follows it: retry with backoff.
 _REFUSED_RETRY_FIRST = timedelta(milliseconds=200)
@@ -106,8 +107,8 @@ class OperationModalSettledOutcomeV1(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
     disposition: Literal["settled"] = "settled"
     view_model: OperationModalViewModelV1
-    #: The stopped executor's own localized message, when it recorded one.
-    error_explanation: str | None = None
+    #: The refusal the stopped operation served: its sentence and the verdict naming its ways out.
+    refusal: ServedRefusalV1 | None = None
 
 
 class OperationModalDetachedOutcomeV1(BaseModel):
@@ -214,6 +215,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 yield Static("", id="operation-modal-diagnostic")
                 yield Static("", id="operation-modal-action-refusal")
                 yield Static("", id="operation-modal-receipt")
+                yield RefusalSlot(id="operation-modal-refusal")
                 yield Static("", id="operation-modal-review")
                 yield Static("", id="operation-modal-log")
             with ItemGrid(id="operation-modal-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
@@ -322,8 +324,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self, projection: OperationPublicProjectionV1, view_model: OperationModalViewModelV1
     ) -> None:
         detail = await self._settled_error_detail(projection)
+        refusal_code = view_model.receipt_ref if view_model.receipt_kind == "refusal" else None
         outcome = OperationModalSettledOutcomeV1(
-            view_model=view_model, error_explanation=operation_error_explanation(detail)
+            view_model=view_model, refusal=served_refusal(detail, refusal_code=refusal_code)
         )
         if not self._observing():
             return
@@ -353,6 +356,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self._action_refusal = code
         for suffix in ("phase", "progress", "deadlines", "diagnostic", "receipt", "review", "log"):
             self.query_one(f"#operation-modal-{suffix}", Static).update("")
+        self.query_one("#operation-modal-refusal", RefusalSlot).show(None)
         self.query_one("#operation-modal-status", Static).update(tr("operation.modal.status.access_unavailable"))
         self._render_action_refusal()
         for action in ("cancel", "detach", "apply", "reject"):
@@ -468,14 +472,16 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         # refusal the operator has not acted on yet.
         self._render_action_refusal()
         receipt = self.query_one("#operation-modal-receipt", Static)
+        refusal = self.query_one("#operation-modal-refusal", RefusalSlot)
         if view_model.receipt_kind == "result":
             receipt.update(f"{tr('operation.modal.detail.receipt_result')}: {view_model.receipt_ref}")
+            refusal.show(None)
         elif view_model.receipt_kind == "refusal":
-            refusal = f"{tr('operation.modal.detail.receipt_refusal')}: {view_model.receipt_ref}"
-            explanation = public_refusal_explanation(view_model.receipt_ref)
-            receipt.update(refusal if explanation is None else f"{refusal}\n{explanation}")
+            receipt.update(f"{tr('operation.modal.detail.receipt_refusal')}: {view_model.receipt_ref}")
+            refusal.show(served_refusal(None, refusal_code=view_model.receipt_ref))
         else:
             receipt.update("")
+            refusal.show(None)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Dispatch one operator action through the bound controller only."""

@@ -1,3 +1,5 @@
+import { seededUnit } from "@/dev/seededUnits";
+import { RENTA_UNIT } from "@/dev/rentaUnit";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
 import { expect, waitFor } from "storybook/test";
@@ -19,11 +21,11 @@ import { useFormSession, type FormSession } from "./session";
 const noop = () => undefined;
 
 const UNITS = {
-  "130": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-  "303": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
-  "347": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
+  "130": seededUnit("130"),
+  "303": seededUnit("303"),
+  "347": seededUnit("347"),
   "rules-incomplete": rulesIncomplete.work_unit_id,
-  "100": "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4",
+  "100": RENTA_UNIT,
 } as const;
 
 const language = (globals: Record<string, unknown>) =>
@@ -118,7 +120,7 @@ export default meta;
 type Story = StoryObj;
 
 /** Opens what the read serves about the chosen box, once the form draws it. */
-export async function openChosenFacts(canvasElement: HTMLElement) {
+async function openChosenFacts(canvasElement: HTMLElement) {
   const button = await waitFor(
     () => {
       const found = canvasElement.querySelector<HTMLButtonElement>(
@@ -159,8 +161,14 @@ export const FieldHelp: Story = {
     <Form
       modelo="130"
       locale={language(globals)}
-      setup={(session) => {
-        session.selectBox("03");
+      setup={(session, envelope) => {
+        // A box the read gives help for, whichever box that is.
+        const helped = envelope.form.form.pages
+          .flatMap((page) => page.sections)
+          .flatMap((section) => section.blocks)
+          .flatMap((block) => (block.kind === "field" ? [block.field] : []))
+          .find((field) => field.help !== null && field.box !== null);
+        if (helped) session.selectAddress(helped.address);
       }}
     />
   ),

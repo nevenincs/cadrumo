@@ -30,7 +30,6 @@ from ....core.operations import OperationEffect, OperationTerminalCondition
 from ..account import AccountSessionExpiredError
 from ..operations.modal import OperationModal, OperationModalDetachedOutcomeV1, OperationModalSettledOutcomeV1
 from ..operations.outcome import OperationOutcomeUnknownError
-from ..operations.refusal_explanation import public_refusal_explanation
 from .categorisation_common import (
     CategorisationScreen,
     Wording,
@@ -246,16 +245,20 @@ class ReviewingCategorisationScreen(CategorisationScreen):
         if view.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED:
             self.run_worker(self._read_review(door, request, view.projection), exclusive=True, group="categorisation")
             return
-        explanation = outcome.error_explanation or (
-            public_refusal_explanation(view.receipt_ref) if view.receipt_kind == "refusal" else None
-        )
+        refusal = outcome.refusal
         if view.projection.effect is not OperationEffect.NONE:
-            # The review settled without succeeding yet changed something, so its outcome is unknown, not refused.
+            # The review settled without succeeding yet changed something, so its outcome is unknown, not refused:
+            # its served sentence is said, and no way out is offered over a change that may have been made.
+            explanation = None if refusal is None else refusal.sentence
             self._review_outcome_unknown(view.projection.operation_id, view.projection.effect, explanation)
             return
         self.busy = False
         self.status("tui.ledger.categorisation.failed")
-        self.refuse(tr("tui.ledger.categorisation.not_done") if explanation is None else explanation)
+        if refusal is None:
+            self.refuse(tr("tui.ledger.categorisation.not_done"))
+            return
+        self.refuse("")
+        self.show_refusal(refusal)
 
     def _review_outcome_unknown(
         self, operation_id: str, effect: OperationEffect | None, explanation: str | None

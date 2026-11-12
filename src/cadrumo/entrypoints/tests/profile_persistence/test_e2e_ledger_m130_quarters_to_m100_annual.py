@@ -499,7 +499,6 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
 
     annual = calculate_m100_annual(
         secure_objects,
-        casilla_inputs={validated_casilla_id("0003"): _AUTONOMA_SALARY_GROSS},
         text_casilla_inputs={M100_ACTIVITY_KEY_CASILLA: M100_ACTIVITY_KEY},
     )
 

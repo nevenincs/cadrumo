@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
 
 from ......core.errors.hierarchy import InternalInvariantError
-from ......core.time.clock import today_madrid
+from ......core.time.clock import frozen_clock, today_madrid
 from ...errors import RegistryValidationError
 from ...governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from ...schema_base import DateAxis
@@ -241,21 +241,83 @@ def test_a_scoped_catalogue_fact_with_neither_authority_nor_scope_refuses_as_an_
         fact.resolve_scoped_entries(effective_date=_MID_WINDOW, authority=None)
 
 
-def test_an_absent_effective_date_resolves_at_todays_date_in_madrid() -> None:
+def _editions_authority(*editions: tuple[date, date | None, dict[str, str]]) -> CandidateFactAuthority:
+    """Build a mapping fact authoring one edition per ``(valid_from, valid_to, entries)``."""
+    fact = GovernedFact.model_validate(
+        {
+            "fact_id": _FACT_ID,
+            "family": "mapping",
+            "variants": tuple(
+                {
+                    **_variant(
+                        _FACT_ID,
+                        {
+                            "kind": "mapping",
+                            "entries": tuple({"key": key, "value": value} for key, value in entries.items()),
+                        },
+                    ),
+                    "variant_id": f"{_FACT_ID}.{valid_from.isoformat()}",
+                    "valid_from": valid_from,
+                    "valid_to": valid_to,
+                }
+                for valid_from, valid_to, entries in editions
+            ),
+        },
+    )
+    return CandidateFactAuthority(catalogue=GovernedFactCatalogue(facts={fact.fact_id: fact}), support=_SUPPORT)
+
+
+_MID_YEAR_CHANGE = date(_HORIZON, 7, 1)
+_OLDER = {"order": "a", "a.value": "a", "a.legacy": "kept"}
+_NEWER = {"order": "a,b", "a.value": "a", "b.value": "b"}
+
+
+def _two_editions() -> CandidateFactAuthority:
+    return _editions_authority(
+        (date(_FLOOR, 1, 1), _MID_YEAR_CHANGE - timedelta(days=1), _OLDER),
+        (_MID_YEAR_CHANGE, None, _NEWER),
+    )
+
+
+@pytest.mark.parametrize(
+    "run_date",
+    [date(_FLOOR - 3, 2, 1), date(_FLOOR, 3, 1), date(_HORIZON, 3, 1), date(_HORIZON + 3, 9, 1)],
+)
+def test_an_absent_effective_date_reads_every_edition_of_the_envelope_whatever_the_run_date(run_date: date) -> None:
     fact = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_PRESERVE)
-    inner = _authority(("order", "a"))
-    asked: list[date] = []
 
-    class _RecordingSource:
-        def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
-            asked.append(query.effective_date)
-            return inner.resolve_governed_fact(query.model_copy(update={"effective_date": _MID_WINDOW}))
+    with frozen_clock(datetime(run_date.year, run_date.month, run_date.day, 12, tzinfo=UTC)):
+        assert today_madrid() == run_date
+        entries = fact.resolve_scoped_entries(effective_date=None, authority=_two_editions())
 
-        def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
-            return _SUPPORT
+    assert dict(entries) == {"order": "a,b", "a.value": "a", "a.legacy": "kept", "b.value": "b"}
 
-    before = today_madrid()
-    fact.resolve_scoped_entries(effective_date=None, authority=_RecordingSource())
-    after = today_madrid()
 
-    assert asked and asked[0] in {before, after}
+def test_a_dated_read_still_takes_only_the_edition_in_force_on_its_date() -> None:
+    fact = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_PRESERVE)
+
+    before = fact.resolve_scoped_entries(effective_date=_MID_YEAR_CHANGE - timedelta(days=1), authority=_two_editions())
+    after = fact.resolve_scoped_entries(effective_date=_MID_YEAR_CHANGE, authority=_two_editions())
+
+    assert dict(before) == _OLDER
+    assert dict(after) == _NEWER
+
+
+def test_a_dateless_read_steps_over_a_gap_between_editions() -> None:
+    fact = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_PRESERVE)
+    authority = _editions_authority(
+        (date(_FLOOR, 1, 1), date(_FLOOR, 3, 31), {"order": "a"}),
+        (date(_FLOOR + 1, 1, 1), None, {"order": "a,b"}),
+    )
+
+    assert dict(fact.resolve_support_envelope_entries(authority)) == {"order": "a,b"}
+
+
+def test_a_dateless_read_of_a_fact_with_no_edition_inside_the_envelope_is_refused() -> None:
+    fact = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_PRESERVE)
+    authority = _editions_authority((date(_FLOOR - 5, 1, 1), date(_FLOOR - 1, 12, 31), {"order": "a"}))
+
+    with pytest.raises(
+        RegistryValidationError, match=r"^demo catalogue authors no edition inside the supported filing years$"
+    ):
+        fact.resolve_support_envelope_entries(authority)

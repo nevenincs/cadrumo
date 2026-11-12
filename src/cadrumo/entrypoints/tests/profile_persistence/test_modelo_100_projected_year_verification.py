@@ -15,7 +15,6 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from uuid import UUID
 
 import pytest
 
@@ -29,7 +28,6 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.aggregation.retencion_soportada_absence_repository import attest_retencion_soportada_absence
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -39,11 +37,8 @@ from ....application.modelo.verification_actions import verify_modelo_revision_w
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.casilla_id import validated_casilla_id
 from ....core.identity.hex_ids import WorkUnitId
 from ....core.period import Period
-from ....core.retencion_soportada import RetencionSoportadaClase
-from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
@@ -59,23 +54,23 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationReport,
 )
-from ....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_work_lifecycle_ports
-from ...retencion_soportada_absence_composition import build_retencion_soportada_absence_ports
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
+from .work_income_support import record_work_income
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _MODELO = "100"
 _PERIOD = "0A"
 _PROJECTED_KEY = "application.modelo.findings.registry_filing_year_projected"
-_WORK_INCOME = validated_casilla_id("0003")
+_WORK_INCOME = Decimal("40000.00")
+_TAXPAYER_TAX_ID = "12345678Z"
 _PROFILE_ID = "10010000-0000-4100-8100-000000000504"
 _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 _NO_PENDING_NEGATIVE_BASES: dict[BindingId, Decimal] = {
@@ -92,7 +87,7 @@ def _seed_profile(filing_year: int) -> None:
         profile_id=_PROFILE_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.tax_id", value=_TAXPAYER_TAX_ID),
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
@@ -106,15 +101,8 @@ def _seed_profile(filing_year: int) -> None:
     )
     seed_test_profile_record(record)
     with bundled_indexed_authority().operation() as operation:
-        attest_retencion_soportada_absence(
-            RetencionSoportadaAbsence(
-                ejercicio=filing_year,
-                income_class=RetencionSoportadaClase.TRABAJO,
-                note="No payer withheld on this income in the ejercicio.",
-                attested_at=_CLOCK,
-            ),
-            ports=build_retencion_soportada_absence_ports(profile_id=UUID(_PROFILE_ID), operation=operation),
-            expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+        record_work_income(
+            operation=operation, taxpayer_tax_id=_TAXPAYER_TAX_ID, filing_year=filing_year, gross=_WORK_INCOME
         )
 
 
@@ -174,7 +162,7 @@ def _calculate(filing_year: int, work_unit_id: WorkUnitId) -> CalculationRevisio
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             actor=_PROFILE_ID,
-            casilla_inputs={_WORK_INCOME: Decimal("40000.00")},
+            casilla_inputs={},
             binding_values=binding_values,
             relation_values=relation_values,
             ports=ports,

@@ -26,7 +26,7 @@ from cadrumo_client.contracts.installation_requests import (
 from ....application.operator_output.connection_remedies import connection_unavailable_remedy
 from ....core.i18n.render import tr
 from ..components.status import StatusTone
-from ..operations.refusal_explanation import operation_error_explanation, recorded_remedy_line
+from ..refusal.served import ServedRefusalV1, served_refusal
 from .door import ActCompleted, ActFailed, ActOutcome, ActRefused, ActSecretDeclined, ActUnreachable
 from .texts import yes_no
 
@@ -52,6 +52,8 @@ class ActPresentation:
     table: ResultTable | None = None
     outcome_read_by: InstallationAct | None = None
     """The read that says how this act ended, when nobody was told."""
+    refusal: ServedRefusalV1 | None = None
+    """The refusal a refused act served: its sentence and its ways out."""
 
 
 def _scalar_text(value: object) -> str:
@@ -159,21 +161,11 @@ def _completed(outcome: ActCompleted, *, preview: bool) -> ActPresentation:
 def _refused(reply: InstallationRefused, *, preview: bool) -> ActPresentation:
     detail = reply.detail
     code = detail.error_code or detail.kind.value
-    lines: list[str] = []
-    explanation = operation_error_explanation(detail)
-    if explanation is not None and explanation:
-        lines.append(explanation)
-    lines.extend(_mapping_lines(detail.context_mapping(), ""))
-    verdict = detail.precondition_verdict()
-    if verdict is not None and verdict.action is not None:
-        lines.append(tr("tui.installation.result.remedy", action=verdict.action.action_id))
-    remedy = recorded_remedy_line(detail)
-    if remedy is not None:
-        lines.append(remedy)
     return ActPresentation(
         tone="warning" if preview else "error",
         status=tr("tui.installation.status.refused", code=code),
-        lines=tuple(lines),
+        lines=tuple(_mapping_lines(detail.context_mapping(), "")),
+        refusal=served_refusal(detail),
     )
 
 

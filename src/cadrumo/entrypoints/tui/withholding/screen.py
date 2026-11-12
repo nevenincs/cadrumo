@@ -124,7 +124,7 @@ class WithholdingScreen(AccountChromeScreen):
     #withholding-page { width: 100%; height: 1fr; padding: $cadrumo-space-0 $cadrumo-gutter; }
     .withholding-actions { height: auto; margin-bottom: $cadrumo-stack; }
     .withholding-actions Button { margin-right: $cadrumo-space-1; }
-    #withholding-ejercicio { width: 16; }
+    #withholding-ejercicio { width: $cadrumo-control-min-width; }
     #withholding-refusal { color: $warning; height: auto; }
     #withholding-status { height: auto; }
     """)

@@ -101,6 +101,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from .verification_substance_support import general_iva_workflow_profile
+from .work_income_support import UNSTATED_WORK_INCOME_AS_ZERO
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -634,6 +635,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
             income_class=RetencionSoportadaClase.TRABAJO,
             retencion=retenciones_trabajo_amount,
             importe_integro_dinerario=Decimal("32000.00"),
+            gastos_deducibles=Decimal("2100.00"),
         )
         snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
         work_unit = create_work_unit(
@@ -655,8 +657,6 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
                 actor="operator-test",
                 casilla_inputs={
-                    "0003": Decimal("32000.00"),
-                    "0013": Decimal("2100.00"),
                     "0014": Decimal("0"),
                     "0015": Decimal("0"),
                     "0016": Decimal("0"),
@@ -666,6 +666,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
                     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
                     "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+                    **UNSTATED_WORK_INCOME_AS_ZERO,
                 },
                 clock=_CLOCK,
             ).revision

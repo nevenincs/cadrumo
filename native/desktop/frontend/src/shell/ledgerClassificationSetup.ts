@@ -169,7 +169,7 @@ export type LedgerRatiosUnsetResult = {
 // ---- Counterparties ------------------------------------------------------
 
 export type LedgerCounterpartyRequest = {
-  action: "view" | "confirm" | "withdraw" | "provincia";
+  action: "view" | "confirm" | "withdraw" | "provincia" | "filing_name";
   tax_identifier: string;
   country_code?: string | null;
   territorial_scope?: string | null;
@@ -179,6 +179,40 @@ export type LedgerCounterpartyRequest = {
   asserted_by?: string | null;
   /** The INE code of the province of its domicilio fiscal; only with the provincia action. */
   provincia_code?: string | null;
+  /** Only with the filing_name action: `natural_person` or `entity`. */
+  party_kind?: string | null;
+  primer_apellido?: string | null;
+  segundo_apellido?: string | null;
+  /** The person states there is no second surname; refused with a second surname. */
+  no_second_surname?: boolean;
+  nombre?: string | null;
+  razon_social?: string | null;
+  /** Shorter renderings, at most 16, one per width, each text fitting its width. */
+  renderings?: CounterpartyFilingNameRendering[];
+};
+
+/** A shorter rendering of the filing name for a field of `width` characters. */
+export type CounterpartyFilingNameRendering = { width: number; text: string };
+
+/** The name stated for a counterparty, and who stated it and when. */
+export type CounterpartyFilingName = {
+  party_kind: string;
+  primer_apellido: string | null;
+  segundo_apellido: string | null;
+  no_second_surname: boolean;
+  nombre: string | null;
+  razon_social: string | null;
+  renderings: CounterpartyFilingNameRendering[];
+  asserted_by: string;
+  asserted_at: string;
+};
+
+/** The declared kind disagrees with the form of the identifier; it carries
+ * the two kinds and no words. */
+export type CounterpartyFilingNameFinding = {
+  code: "counterparty_filing_name_kind_contradicts_identifier_form";
+  declared_kind: "natural_person" | "entity";
+  observed_form: "natural_person" | "entity";
 };
 
 /** One province or autonomous city, by its INE code and the name INE prints. */
@@ -186,7 +220,7 @@ export type CounterpartyProvinciaChoice = { code: string; name: string };
 
 export type LedgerCounterpartyResult = {
   profile_id: string;
-  action: "view" | "confirm" | "withdraw" | "provincia";
+  action: "view" | "confirm" | "withdraw" | "provincia" | "filing_name";
   tax_identifier: string;
   country_code: string | null;
   evidenced_scope: string | null;
@@ -219,6 +253,9 @@ export type LedgerCounterpartyResult = {
   provincia_code: string | null;
   /** The provinces it can be stated as, in INE code order; empty on a confirm or withdraw. */
   provincia_choices: CounterpartyProvinciaChoice[];
+  /** The name stated for the counterparty, served by a view and a filing-name statement. */
+  filing_name?: CounterpartyFilingName | null;
+  findings?: CounterpartyFilingNameFinding[];
 };
 
 // ---- Model diagnostics ---------------------------------------------------
