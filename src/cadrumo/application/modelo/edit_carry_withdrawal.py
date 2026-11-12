@@ -1,8 +1,9 @@
 """The withdrawal of a carry statement that returns a work unit to no current calculation.
 
 Some carries from earlier ejercicios refuse the calculation while nobody has
-stated them: before the filer's statement the work unit had no calculation at
-all. Withdrawing that statement therefore cannot recalculate. Instead, when the
+stated them, whether that nothing is pending or the figure an earlier return
+the application does not hold would give: before the filer's statement the
+work unit had no calculation at all. Withdrawing that statement therefore cannot recalculate. Instead, when the
 withdrawal leaves the carry unstated and the head holds nothing of the filer's
 but statements of such carries, the work unit returns to the state it had
 before the statement: no current calculation. The family is all or nothing, so
@@ -27,7 +28,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevision
-from ...domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO
+from ...domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO, CalculationOperatorLayer
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit
@@ -66,31 +67,42 @@ def is_carry_withdrawal(submission: ModeloEditSubmissionV1, carry_bindings: froz
     )
 
 
-def holds_only_carry_statements(head: CalculationRevision, carry_bindings: frozenset[BindingId]) -> bool:
-    """Whether everything of the filer's on ``head`` is a statement that a calculation-refusing carry holds nothing.
+def stated_carry_binding_ids(layer: CalculationOperatorLayer) -> frozenset[BindingId]:
+    """The carries ``layer`` holds a statement on: that nothing is pending, or a figure for an earlier return."""
+    return frozenset((*layer.attested_binding_ids, *layer.value_attestations))
 
-    An unknown operator layer, a typed or stated figure, a clear, a detail row
-    or any other caller input is something the filer would lose.
+
+def holds_carry_statement(head: CalculationRevision, carry_bindings: frozenset[BindingId]) -> bool:
+    """Whether ``head`` holds a statement on one of ``carry_bindings``."""
+    layer = head.operator_layer
+    return layer is not None and bool(stated_carry_binding_ids(layer) & carry_bindings)
+
+
+def holds_only_carry_statements(head: CalculationRevision, carry_bindings: frozenset[BindingId]) -> bool:
+    """Whether everything of the filer's on ``head`` is a statement on a calculation-refusing carry.
+
+    A statement says the carry holds nothing, or states the figure of an
+    earlier return the application does not hold. An unknown operator layer, a
+    typed figure, a clear, a detail row or any other caller input is something
+    the filer would lose.
     """
     context = caller_context_of(head)
     layer = context.operator_layer
     if layer is None or _holds_other_caller_input(context):
         return False
-    stated = set(layer.attested_binding_ids)
+    stated = stated_carry_binding_ids(layer)
     return (
         bool(stated)
         and stated <= carry_bindings
         and set(layer.binding_overrides) == stated
-        and all(value == ATTESTED_ZERO for value in layer.binding_overrides.values())
+        and all(layer.binding_overrides[binding_id] == ATTESTED_ZERO for binding_id in layer.attested_binding_ids)
     )
 
 
 def _holds_other_caller_input(context: CalculationCallerContext) -> bool:
     """Whether ``context`` carries any caller input besides carry-binding statements."""
     layer = context.operator_layer
-    layer_inputs = (
-        () if layer is None else (layer.decimal_casilla_inputs, layer.text_casilla_inputs, layer.value_attestations)
-    )
+    layer_inputs = () if layer is None else (layer.decimal_casilla_inputs, layer.text_casilla_inputs)
     context_inputs = (
         context.filing_instance_evidence,
         context.m210_official_tipo_renta_code,
@@ -162,8 +174,10 @@ def withdraw_current_calculation(
 __all__ = [
     "calculation_refusing_carry_bindings",
     "carry_withdrawal_block",
+    "holds_carry_statement",
     "holds_only_carry_statements",
     "is_carry_withdrawal",
     "recorded_as_filed",
+    "stated_carry_binding_ids",
     "withdraw_current_calculation",
 ]

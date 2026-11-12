@@ -671,7 +671,9 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
     sociedad de responsabilidad limitada). A sociedad de capital is
     taxed at the LIS Art. 29 general rate, so the dispatch resolves
     ``00558`` to the registry's ``is.modelo-200.tipo-gravamen-general``
-    value (25); the cuota íntegra then matches the manual oracle.
+    value (25), which the current edition's casilla 00558 holds as its record
+    design's four-digit code "2500" (aeat-dr-200-2025 DP200014 field 31,
+    Nota 1); the cuota íntegra then matches the manual oracle.
 
     The expected outputs are read from the manual table, not recomputed
     by the test author, so the test fails if the registry formula or the
@@ -712,8 +714,8 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
     )
 
-    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (
-        "tipo de gravamen 00558 must be dispatched to the LIS Art. 29 general rate (25) for a sociedad limitada"
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("2500"), (
+        "tipo de gravamen 00558 must code the LIS Art. 29 general rate (25) as 2500 for a sociedad limitada"
     )
     assert result.values[_M200_BASE_NIVELACION_CASILLA] == Decimal("1000000.00"), (
         "base imponible después de la reserva de nivelación 01330 must equal "

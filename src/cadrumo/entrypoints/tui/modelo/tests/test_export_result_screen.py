@@ -23,12 +23,14 @@ from .....adapters.persistence.profile.review_package_signing import (
 )
 from .....application.modelo.calculation_report_export import ModeloCalculationReportResult
 from .....application.modelo.export_contracts import ModeloExportAccountReference, ModeloExportResult
+from .....application.modelo.export_disclosure import ModeloExportDisclosedLimitation, ModeloExportDisclosure
 from .....application.modelo.export_operation import build_modelo_export_definition, build_modelo_export_registration
 from .....application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
     ModeloExportPublicResultV3,
 )
+from .....application.modelo.finding_message_text import finding_message_text
 from .....application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from .....application.modelo.work_export_contracts import ModeloExportSettledResult
 from .....application.modelo.work_form_export_offer import EXPORT_ARTEFACT_LOCALE_KEYS
@@ -36,11 +38,16 @@ from .....application.operations.models import OperationIdentity, OperationTermi
 from .....core.calculation_report_format import CalculationReportDocumentFormat
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import tr
+from .....core.i18n.render import output_language, tr
 from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationEffect, OperationTerminalCondition
 from .....core.period import Period
 from .....domain.filing.software_identity import AeatSoftwareIdentityGrade
+from .....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from .....domain.transactions.own_accounts import OwnAccountRole
 from ....adapter_composition_ports import build_modelo_export_ports
 from ...components.widgets import ContentDataTable
@@ -52,6 +59,7 @@ from ..export_result import (
     EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS,
     SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS,
     ModeloExportResultScreen,
+    export_result_warnings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -228,6 +236,82 @@ async def test_uncomputed_work_income_deductions_are_warned_only_when_the_result
             await app.push_screen(ModeloExportResultScreen(result))
             await settle(pilot)
             assert (limitation in _warnings(app)) is flagged
+
+
+def test_the_limits_the_backend_served_are_warned_in_its_words_and_never_twice(tmp_path: Path) -> None:
+    """A disclosed limitation reads as the backend worded it; the flag's own warning yields to the same sentence."""
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message_locale_key="application.modelo.findings.trabajo_deduction_not_computed",
+        legal_refs=("ley-35-2006:art-19",),
+        disclosed_limitation=True,
+    )
+    words = finding_message_text(finding, OutputLanguage(output_language()))
+    receipt = _filing_file_receipt(
+        tmp_path, completeness_unverified=False, software_identity_grade=None, trabajo_deductions_not_computed=True
+    )
+    served = ModeloExportSettledResult(
+        fichero_boe=receipt.fichero_boe,
+        disclosure=ModeloExportDisclosure(
+            lead_words="Read these limits.",
+            limitations=(ModeloExportDisclosedLimitation(message_locale_key=finding.message_locale_key, words=words),),
+        ),
+    )
+
+    warnings = export_result_warnings(_publicly_projected(served))
+
+    assert words == tr(finding.message_locale_key)
+    assert [warning.message for warning in warnings].count(words) == 1
+
+
+def _two_served_limits() -> ModeloExportDisclosure:
+    return ModeloExportDisclosure(
+        lead_words="Synthetic lead: the file carries these limits as they are.",
+        limitations=(
+            ModeloExportDisclosedLimitation(
+                message_locale_key="synthetic.limit.first", casilla_id="01", words="Synthetic first limit."
+            ),
+            ModeloExportDisclosedLimitation(
+                message_locale_key="synthetic.limit.second", words="Synthetic second limit."
+            ),
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_served_disclosure_is_shown_verbatim_lead_first_then_each_limit_in_served_order(tmp_path: Path) -> None:
+    """The lead sentence and every limit read as the backend worded them; the screen words and sorts none."""
+    receipt = _filing_file_receipt(tmp_path, completeness_unverified=False, software_identity_grade=None)
+    served = ModeloExportSettledResult(fichero_boe=receipt.fichero_boe, disclosure=_two_served_limits())
+    app = App[None]()
+    async with app.run_test() as pilot:
+        await app.push_screen(ModeloExportResultScreen(_publicly_projected(served)))
+        await settle(pilot)
+
+        shown = [str(item.content) for item in app.screen.query_one("#modelo-export-result-warnings").query(Static)]
+
+    lead = next(index for index, line in enumerate(shown) if "Synthetic lead: the file carries" in line)
+    assert shown[lead + 1].endswith("Synthetic first limit.")
+    assert shown[lead + 2].endswith("Synthetic second limit.")
+
+
+@pytest.mark.asyncio
+async def test_an_export_with_no_disclosure_shows_no_lead_and_no_limit(tmp_path: Path) -> None:
+    """A result that serves no disclosure states none; the ordinary warnings stay."""
+    result = _publicly_projected(
+        _filing_file_receipt(tmp_path, completeness_unverified=False, software_identity_grade=None)
+    )
+    assert result.disclosure is None
+    app = App[None]()
+    async with app.run_test() as pilot:
+        await app.push_screen(ModeloExportResultScreen(result))
+        await settle(pilot)
+
+        warnings = _warnings(app)
+
+    assert "Synthetic" not in warnings
+    assert tr("tui.modelo.export.result.warning.not_official") in warnings
 
 
 @pytest.mark.asyncio
@@ -410,6 +494,8 @@ def test_every_public_result_fact_has_a_row() -> None:
         "handoff_required",
         "fichero_boe",
         "calculation_report",
+        # The served limitation sentences are warnings, not rows.
+        "disclosure",
     }
 
     ordinary = set(EXPORT_RESULT_ROW_LOCALE_KEYS)

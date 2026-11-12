@@ -524,9 +524,9 @@ application:
           té cap. Omple la casella %{casilla_id}, o buida la casella %{field_casilla_id},
           i torna a exportar.'
         box_not_stated_by_rows: 'No s''ha escrit res: la casella %{casilla_id} té
-          un valor que les files de %{element_path} no sumen. Corregeix la casella
-          o les files perquè cada fila indiqui les seves pròpies xifres, i torna a
-          exportar.'
+          el valor %{value}, que les files de %{element_path} no sumen. Corregeix
+          la casella o les files perquè cada fila indiqui les seves pròpies xifres,
+          i torna a exportar.'
         counterparty_rows_unattributable: 'No s''ha escrit res: el registre %{record_id}
           té %{row_count} files de contrapart, i les caselles de valor únic %{casillas}
           no es poden atribuir a una d''elles. Indica aquestes xifres a les files
@@ -3037,6 +3037,44 @@ application:
       m036_declaration_without_alta: 'No s''ha registrat res de la declaració del
         Modelo 036 %{declaration_id}: no hi ha cap alta registrada, així que una %{requested_event_kind}
         no té cap registre que canviar. Registra primer l''alta.'
+      m145_application_surfaces_mismatch: 'Els vincles d''aplicació que el registre
+        declara per al model 145 no coincideixen amb el contracte de la comunicació
+        al pagador, així que el registre de comunicació no es pot fer servir. És un
+        defecte del registre: res del que facis no el repara.'
+      m145_delivery_blocked_by_validation: El registre de comunicació del model 145
+        té %{issue_count} incidència(es) de validació, així que no es pot marcar com
+        a lliurat al pagador. Indica de nou el registre amb els valors corregits.
+      m145_export_blocked_by_validation: El registre de comunicació del model 145
+        té %{issue_count} incidència(es) de validació, així que no es pot exportar.
+        Indica de nou el registre amb els valors corregits.
+      m145_export_layout_format_unsupported: 'El disseny d''exportació %{export_layout_id}
+        declarat per al model 145 fa servir el format %{format}, que l''exportació
+        de la comunicació no pot escriure. És un defecte del registre: res del que
+        facis no el repara.'
+      m145_export_layout_mixed_encodings: 'El disseny d''exportació %{export_layout_id}
+        declarat per al model 145 barreja codificacions de caràcters entre els seus
+        registres, així que la comunicació no es pot exportar. És un defecte del registre:
+        res del que facis no el repara.'
+      m145_export_layout_shared_cells: 'El disseny d''exportació %{export_layout_id}
+        declarat per al model 145 escriuria una mateixa casella en cel·les sense relació,
+        així que la comunicació no es pot exportar. És un defecte del registre: res
+        del que facis no el repara.'
+      m145_export_layout_without_records: 'El disseny d''exportació %{export_layout_id}
+        declarat per al model 145 no declara cap registre, així que la comunicació
+        no es pot exportar. És un defecte del registre: res del que facis no el repara.'
+      m145_export_record_not_encodable: El registre d'exportació %{export_record_id}
+        de la comunicació no es pot escriure en el disseny oficial amb els valors
+        indicats. Indica de nou el registre amb valors que el disseny admeti.
+      m145_record_not_delivered: El registre de comunicació del model 145 és en l'estat
+        %{state}. Marca'l com a lliurat al pagador abans de marcar-lo com a completat
+        localment.
+      m145_record_registry_coordinate_not_current: El registre de comunicació del
+        model 145 es va desar amb una revisió del registre que ja no es pot confirmar
+        com a vigent, així que no es pot fer servir. Indica de nou el registre amb
+        el registre vigent.
+      m145_record_undeclared_casillas: El registre de comunicació anomena %{unknown_casilla_count}
+        casella(es) que la revisió del model 145 no declara. Indica de nou el registre
+        només amb caselles declarades.
       m200_accounting_result_required: El Model 200 necessita el resultat comptable
         de l'exercici abans de calcular-se a partir del llibre.
       m200_page_002_none_refused_for_form: 'Model %{modelo} %{filing_year}, pàgina
@@ -3204,8 +3242,21 @@ application:
         declaració encara no està habilitada per a aquest model; reconcilia un justificant
         descarregat amb aeat app modelo reconcile import, o espera que aquest model
         estigui habilitat.
+      reconcile_divergence_casilla_undeclared: 'La comparació ha trobat una diferència
+        a la casella %{casilla_id}, que la revisió del registre no declara, així que
+        la diferència no té cap font legal on recolzar-se. És un defecte de la revisió
+        o del programa: res del que facis no el repara.'
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una declaració.
+      reconcile_observation_no_numeric_fields: La declaració capturada no conté cap
+        casella numèrica per comparar, així que no es pot conciliar. Tria una altra
+        prova.
+      reconcile_observation_not_comparable: La declaració capturada no conté caselles
+        comparables o no conté la identitat del contribuent, així que no es pot conciliar.
+        Tria una altra prova.
+      reconcile_observation_registry_not_current: La declaració capturada es va llegir
+        amb unes coordenades del registre que ja no són vigents, així que no es pot
+        conciliar. Tria una altra prova.
       refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{period}
         %{filing_year}, però la devolució només està disponible en l'últim període
         de declaració de l'any. Arrossega el crèdit (compensar) o tria la devolució
@@ -3322,6 +3373,9 @@ application:
         sigui oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+    export_disclosure:
+      lead: Aquest càlcul indica límits i l'exportació els porta tal qual. Llegeix-los
+        abans de refiar-te'n.
     finding_fact:
       box_unnumbered: sense número
       date_unknown: una data no registrada
@@ -3752,6 +3806,10 @@ application:
           rendes amb el límit, però les categories de renda que has indicat exclouen
           un tipus de renda del qual tens imports. Corregeix les categories o retira
           els imports i torna a projectar. Mai es mostra com a zero.
+        m200_tax_regime_unsupported: Aquesta casella necessita el tipus de gravamen
+          del règim fiscal de la teva entitat, que no es calcula per a aquest règim
+          o forma jurídica, així que no té valor. Introdueix la casella tu mateix
+          segons les instruccions oficials. Mai es mostra com a zero.
         m210_baseline_tipo_deferred: Aquesta casella necessita el tipus de gravamen
           general d'aquesta classe de renda, que encara no està fonamentat per a l'exercici,
           així que no té valor.
@@ -3986,6 +4044,15 @@ application:
           No la buidis per continuar: presenta aquesta declaració amb una altra eina
           o espera que se''n revisin les cel·les.'
       inspection_heading: Totes les caselles, per número de casella
+      prior_value_attestation:
+        refusal:
+          source_held: La declaració anterior està desada aquí, de manera que aquest
+            concepte en pren l'import i no en pots indicar un altre en el seu lloc.
+            Obre-la entre les teves declaracions.
+        withdrawal:
+          action: Retira els imports que vas indicar per a aquestes declaracions anteriors
+          effect: Es retira l'import que vas indicar; el concepte queda sense valor
+            fins que el tornis a indicar o s'afegeixi la declaració anterior.
       served_action:
         credit_source_disagreement: Compara l'import amb el certificat de cada pagador,
           corregeix la font que estigui malament i torna a calcular. Si has comprovat
@@ -4439,6 +4506,8 @@ application:
         quedar en blanc i admeten com a màxim %{limit} caràcters.
       ascendant_nif_invalid: El NIF o NIE de l'ascendent %{row} no és vàlid; revisa'n
         les lletres i xifres.
+      ascendant_row_not_stored: Aquest ascendent ja no consta en aquest perfil. Torna
+        a llegir les dades familiars abans de treure ningú.
       ascendant_rows_over_limit: Una declaració inclou com a màxim %{limit} ascendents
         i se n'han indicat %{count}.
       censal_read_identity_absent: La lectura censal no inclou cap NIF, de manera
@@ -4473,6 +4542,8 @@ application:
         quedar en blanc i admeten com a màxim %{limit} caràcters.
       descendant_nif_invalid: El NIF o NIE del descendent %{row} no és vàlid; revisa'n
         les lletres i xifres.
+      descendant_row_not_stored: Aquest descendent ja no consta en aquest perfil.
+        Torna a llegir les dades familiars abans de treure ningú.
       descendant_rows_over_limit: Una declaració inclou com a màxim %{limit} descendents
         i se n'han indicat %{count}.
       descendant_value_invalid: El descendent %{row} indica un valor que la declaració
@@ -4543,6 +4614,11 @@ application:
       row_unknown_field: 'La secció ''%{section}'' no declara aquests camps: %{unknown}.
         Camps disponibles: %{fields}.'
     family_rows:
+      actions:
+        add_ascendiente: Afegeix un ascendent
+        add_descendiente: Afegeix un descendent
+        remove_ascendiente: Treu aquest ascendent
+        remove_descendiente: Treu aquest descendent
       ascendiente:
         apellidos_nombre:
           label: Cognoms i nom de l'ascendent (primer els cognoms)
@@ -4555,6 +4631,12 @@ application:
           label: Data de defunció
         nif:
           label: NIF/NIE de l'ascendent (deixa'l en blanc si no en té)
+      descendiente:
+        cotizaciones_ss_madre:
+          help: Deixa-ho en blanc si no ho saps. Escriu l'import amb punt decimal
+            i sense separador de milers, per exemple 2332.80.
+          label: Cotitzacions a la Seguretat Social de la mare posteriors al naixement
+            d'aquest fill (euros)
       incomplete: '{stated} indicades, {recorded} registrades'
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara

@@ -529,22 +529,19 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
 
 
 def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_display_rate_to_first_tranche() -> None:
-    """A DT 44ª first-year micro-company pays 10.500 on 50.000 and states no single 00558 rate.
+    """A DT 44ª first-year micro-company pays 10.500 on 50.000 and states both rates in 00558.
 
     The cuota follows LIS DT 44ª at 21 % on the first 50.000 euros. Casilla
     00558 holds both rates of a double scale ("2122", aeat-dr-200-2025
-    DP200014 Nota 1), which a decimal rate cannot state, so it is left without
-    a value under its typed reason rather than echoing 21 or the legacy 23.
+    DP200014 Nota 1), the design's own code, rather than echoing 21 or the
+    legacy 23.
     """
     result = _calculate_tipo_gravamen(
         _base_inputs(Decimal("50000")), "sl", incn="450000", exercise=_DT44_FIRST_TRANSITIONAL_EXERCISE
     )
 
-    assert _M200_TIPO_GRAVAMEN_CASILLA not in result.values
-    assert (
-        _unresolved_reason(result, _M200_TIPO_GRAVAMEN_CASILLA)
-        is RegistryUnresolvedOutcomeReason.M200_TWO_RATE_TIPO_GRAVAMEN_UNREPRESENTED
-    )
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("2122")
+    assert _unresolved_reason(result, _M200_TIPO_GRAVAMEN_CASILLA) is None
     assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("10500.00")
 
 
@@ -581,23 +578,25 @@ def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_under_dt44() -> None
     For the first DT 44ª filing period, LIS DT 44ª fixes the art.101 ERD rate at
     24%. A sociedad anónima with prior-period INCN 7.000.000 EUR is not
     a micro-empresa, but is below the art.101 10M threshold, so both the
-    displayed rate and cuota path must use the ERD schedule.
+    displayed rate and cuota path must use the ERD schedule. Casilla 00558
+    holds the 2025 design's four-digit code for a single 24, "2400"
+    (aeat-dr-200-2025 DP200014 field 31, Nota 1).
     """
     result = _calculate_tipo_gravamen(
         _base_inputs(Decimal("1000000")), "sa", incn="7000000", exercise=_DT44_FIRST_TRANSITIONAL_EXERCISE
     )
 
-    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("24")
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("2400")
     assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("240000.00")
 
 
 def test_tipo_gravamen_dispatch_keeps_general_rate_at_art101_boundary_under_dt44() -> None:
-    """INCN at 10M is outside art.101 ERD and stays on the general rate."""
+    """INCN at 10M is outside art.101 ERD and stays on the general rate, coded "2500" in 00558."""
     result = _calculate_tipo_gravamen(
         _base_inputs(Decimal("1000000")), "sa", incn="10000000", exercise=_DT44_FIRST_TRANSITIONAL_EXERCISE
     )
 
-    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25")
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("2500")
     assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
 
 

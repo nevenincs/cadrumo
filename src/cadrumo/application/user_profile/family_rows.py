@@ -28,6 +28,20 @@ is not complete. ``stated_count`` and ``row_count`` stay visible beside it, and
 ``incomplete_words`` says the two numbers in the output language. None of these
 may be drawn alike. ``max_rows`` is the most rows the declaration's design holds for the group,
 so a surface offers no more people than the declaration can carry.
+
+``leaves`` is also the form of a new row: a surface adding a person offers exactly
+those leaves, with their words, types, answer sets and the answers of other leaves
+each one is asked after (``shown_when``). ``add_row_action`` and ``remove_row_action``
+serve the words of the two controls and the registered operation that composes the
+change against the read's revision: the group's replacement operation takes one new
+row (``add_row``) or the ``row_index`` of a served row to remove (``remove_row_index``),
+so a surface never resends, and never needs to see, the facts of the people it leaves
+alone. A group already holding the most rows its design admits, or whose design
+declares no limit, offers no add; a group with no stored row offers no remove.
+
+The descendant leaves are the setup wizard's pages plus the mother's Social Security
+contributions after the child's birth, which a descendant row stores and the Modelo
+100 calculation reads but the wizard does not ask.
 """
 
 from __future__ import annotations
@@ -46,15 +60,19 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.user_profile.labels import profile_field_label_key
 from ...domain.user_profile.schema import ProfileFieldType
 from ..flows.copy import resolve_copy, resolve_optional_copy
+from ..flows.definition import FlowCondition, FlowPage, FlowVisibility
 from ..wizard.descendant_group import build_descendant_group
 from .completeness import profile_value_is_present
 from .household_row_limit import declared_household_row_limit
 from .overview import ProfileFieldChoice, mask_profile_field
+from .profile_operation_contracts import (
+    PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
+    PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.schema import ProfileFieldDefinition, ProfileSchemaDefinition
-    from ..flows.definition import FlowPage
 
 _SECTION_KEY: Final = "renta_family"
 _DESCENDANT_FIELD_KEY: Final = "descendiente"
@@ -71,6 +89,18 @@ _ASCENDANT_FALLECIMIENTO_LABEL_LOCALE_KEY: Final = (
 _ASCENDANT_FALLECIMIENTO_HELP_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.fallecimiento.help"
 _ASCENDANT_CONVIVIENTES_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.convivientes.label"
 _INCOMPLETE_WORDS_LOCALE_KEY: Final = "application.user_profile.family_rows.incomplete"
+_DESCENDANT_COTIZACIONES_LEAF: Final = "cotizaciones_ss_madre"
+_DESCENDANT_COTIZACIONES_AFTER_LEAF: Final = "gastos_guarderia_mensuales"
+_DESCENDANT_COTIZACIONES_LABEL_LOCALE_KEY: Final = (
+    "application.user_profile.family_rows.descendiente.cotizaciones_ss_madre.label"
+)
+_DESCENDANT_COTIZACIONES_HELP_LOCALE_KEY: Final = (
+    "application.user_profile.family_rows.descendiente.cotizaciones_ss_madre.help"
+)
+_ADD_ASCENDANT_LOCALE_KEY: Final = "application.user_profile.family_rows.actions.add_ascendiente"
+_REMOVE_ASCENDANT_LOCALE_KEY: Final = "application.user_profile.family_rows.actions.remove_ascendiente"
+_ADD_DESCENDANT_LOCALE_KEY: Final = "application.user_profile.family_rows.actions.add_descendiente"
+_REMOVE_DESCENDANT_LOCALE_KEY: Final = "application.user_profile.family_rows.actions.remove_descendiente"
 
 _WIDGET_FIELD_TYPES: Final[Mapping[FlowWidgetKind, ProfileFieldType]] = {
     FlowWidgetKind.DATE: ProfileFieldType.DATE,
@@ -92,6 +122,20 @@ class ProfileFamilyGroupState(StrEnum):
     NOT_SERVED = "not_served"
 
 
+class ProfileFamilyLeafCondition(BaseModel):
+    """One answer of another leaf of the same row; exactly one of ``equals`` and ``contains`` is set.
+
+    ``equals`` holds when that leaf's answer is the token; ``contains`` when the token is
+    one of the comma-joined tokens of that answer.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    leaf: str
+    equals: str | None = None
+    contains: str | None = None
+
+
 class ProfileFamilyLeaf(BaseModel):
     """One fact a row can state: its stored key, its words and its answer set."""
 
@@ -103,6 +147,17 @@ class ProfileFamilyLeaf(BaseModel):
     field_type: ProfileFieldType
     required: bool
     choices: tuple[ProfileFieldChoice, ...]
+    #: The leaf is asked only when one of these holds; empty means it is always asked.
+    shown_when: tuple[ProfileFamilyLeafCondition, ...] = ()
+
+
+class ProfileFamilyRowAction(BaseModel):
+    """A control that changes a group's rows: its words and the registered operation it submits."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action_words: str
+    target_operation_ids: tuple[str, ...]
 
 
 class ProfileFamilyRowFact(BaseModel):
@@ -132,6 +187,10 @@ class ProfileViewFamilyGroupItem(BaseModel):
     #: The most rows the declaration's own design lets the group hold; ``None`` when the design declares none.
     max_rows: int | None = Field(default=None, ge=1)
     leaves: tuple[ProfileFamilyLeaf, ...] = ()
+    #: Adds one row built from ``leaves``; absent when the group takes no more rows.
+    add_row_action: ProfileFamilyRowAction | None = None
+    #: Removes one served row named by its ``row_index``; absent when no row is stored.
+    remove_row_action: ProfileFamilyRowAction | None = None
 
 
 class ProfileViewFamilyRowItem(BaseModel):
@@ -152,6 +211,16 @@ def _leaf_key(page_id: str) -> str:
     return page_id.replace("-", "_")
 
 
+def _shown_when(visible_when: FlowCondition | FlowVisibility | None) -> tuple[ProfileFamilyLeafCondition, ...]:
+    if visible_when is None:
+        return ()
+    clauses = visible_when.any_of if isinstance(visible_when, FlowVisibility) else (visible_when,)
+    return tuple(
+        ProfileFamilyLeafCondition(leaf=_leaf_key(clause.page_id), equals=clause.equals, contains=clause.contains)
+        for clause in clauses
+    )
+
+
 def _leaf(page: FlowPage) -> ProfileFamilyLeaf:
     field_type = _WIDGET_FIELD_TYPES[page.widget]
     if field_type is ProfileFieldType.BOOLEAN:
@@ -168,7 +237,23 @@ def _leaf(page: FlowPage) -> ProfileFamilyLeaf:
         field_type=field_type,
         required=page.required,
         choices=choices,
+        shown_when=_shown_when(page.visible_when),
     )
+
+
+def _descendant_leaves(operation: PinnedAuthorityOperation) -> tuple[ProfileFamilyLeaf, ...]:
+    """The wizard's descendant pages, with the stored contributions leaf after the nursery spend."""
+    wizard = [_leaf(page) for page in build_descendant_group(operation).pages]
+    cotizaciones = ProfileFamilyLeaf(
+        leaf=_DESCENDANT_COTIZACIONES_LEAF,
+        label=tr(_DESCENDANT_COTIZACIONES_LABEL_LOCALE_KEY),
+        help=tr(_DESCENDANT_COTIZACIONES_HELP_LOCALE_KEY),
+        field_type=ProfileFieldType.DECIMAL,
+        required=False,
+        choices=(),
+    )
+    at = [leaf.leaf for leaf in wizard].index(_DESCENDANT_COTIZACIONES_AFTER_LEAF) + 1
+    return (*wizard[:at], cotizaciones, *wizard[at:])
 
 
 def _declared_field(schema: ProfileSchemaDefinition, field_key: str) -> ProfileFieldDefinition | None:
@@ -286,6 +371,20 @@ def _row_items(
     )
 
 
+def _row_actions(
+    *, row_count: int, max_rows: int | None, actions: tuple[str, str, str]
+) -> tuple[ProfileFamilyRowAction | None, ProfileFamilyRowAction | None]:
+    """The add and remove controls of a group, each only where the replacement can accept it."""
+    operation_id, add_key, remove_key = actions
+    can_add = max_rows is not None and row_count < max_rows
+    return (
+        ProfileFamilyRowAction(action_words=tr(add_key), target_operation_ids=(operation_id,)) if can_add else None,
+        ProfileFamilyRowAction(action_words=tr(remove_key), target_operation_ids=(operation_id,))
+        if row_count
+        else None,
+    )
+
+
 def _group_items(
     values: Mapping[str, str],
     schema: ProfileSchemaDefinition,
@@ -294,6 +393,7 @@ def _group_items(
     count_path: str,
     leaves: tuple[ProfileFamilyLeaf, ...],
     operation: PinnedAuthorityOperation,
+    actions: tuple[str, str, str],
 ) -> tuple[ProfileFamilyItem, ...]:
     declared = _declared_field(schema, field_key)
     if declared is None:
@@ -304,6 +404,8 @@ def _group_items(
     count = stated if profile_value_is_present(stated) else None
     incomplete = _stated_exceeds_rows(count, len(stored))
     state = _group_state(stored, count, incomplete=incomplete)
+    max_rows = declared_household_row_limit(operation, object_path=f"{_SECTION_KEY}.{field_key}")
+    add_row_action, remove_row_action = _row_actions(row_count=len(stored), max_rows=max_rows, actions=actions)
     group = ProfileViewFamilyGroupItem(
         group_key=f"{_SECTION_KEY}.{field_key}",
         label=tr(profile_field_label_key(_SECTION_KEY, field_key)),
@@ -315,8 +417,10 @@ def _group_items(
             if incomplete and count is not None
             else None
         ),
-        max_rows=declared_household_row_limit(operation, object_path=f"{_SECTION_KEY}.{field_key}"),
+        max_rows=max_rows,
         leaves=leaves,
+        add_row_action=add_row_action,
+        remove_row_action=remove_row_action,
     )
     rows = _row_items(values, stored, group_key=group.group_key, leaves=leaves, declared=declared)
     return (group, *rows)
@@ -335,8 +439,13 @@ def family_row_items(
             schema,
             field_key=_DESCENDANT_FIELD_KEY,
             count_path=_DESCENDANT_COUNT_PATH,
-            leaves=tuple(_leaf(page) for page in build_descendant_group(operation).pages),
+            leaves=_descendant_leaves(operation),
             operation=operation,
+            actions=(
+                PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
+                _ADD_DESCENDANT_LOCALE_KEY,
+                _REMOVE_DESCENDANT_LOCALE_KEY,
+            ),
         ),
         *_group_items(
             values,
@@ -345,5 +454,10 @@ def family_row_items(
             count_path=_ASCENDANT_COUNT_PATH,
             leaves=_ascendant_leaves(),
             operation=operation,
+            actions=(
+                PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
+                _ADD_ASCENDANT_LOCALE_KEY,
+                _REMOVE_ASCENDANT_LOCALE_KEY,
+            ),
         ),
     )

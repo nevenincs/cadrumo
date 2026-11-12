@@ -83,6 +83,7 @@ from .caller_context import CalculationCallerContext, caller_context_calculation
 from .edit_carry_withdrawal import (
     calculation_refusing_carry_bindings,
     carry_withdrawal_block,
+    holds_carry_statement,
     is_carry_withdrawal,
     withdraw_current_calculation,
 )
@@ -788,8 +789,7 @@ def _withdraw_carry_statement(
         head is None
         or work_unit is None
         or not is_carry_withdrawal(submission, carry_bindings)
-        or head.operator_layer is None
-        or not set(head.operator_layer.attested_binding_ids) & carry_bindings
+        or not holds_carry_statement(head, carry_bindings)
     ):
         return None
     block = carry_withdrawal_block(head, work_unit, carry_bindings)

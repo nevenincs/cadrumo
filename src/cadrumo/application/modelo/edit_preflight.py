@@ -38,7 +38,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .caller_context import caller_context_of
-from .edit_carry_withdrawal import carry_withdrawal_block, is_carry_withdrawal
+from .edit_carry_withdrawal import carry_withdrawal_block, holds_carry_statement, is_carry_withdrawal
 from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAddressV1,
@@ -223,9 +223,8 @@ def _carry_withdrawal_findings(
     if (
         revision is None
         or work_unit is None
-        or revision.operator_layer is None
         or not is_carry_withdrawal(submission, carry_bindings)
-        or not set(revision.operator_layer.attested_binding_ids) & carry_bindings
+        or not holds_carry_statement(revision, carry_bindings)
     ):
         return []
     block = carry_withdrawal_block(revision, work_unit, carry_bindings)

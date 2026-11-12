@@ -22,6 +22,7 @@ import {
   type FormSession,
 } from "../form/session";
 import { useModeloOperation } from "../WriteScope";
+import { servedRefusal, type ServedRefusal } from "../../../shell/refusal";
 import { mayRenew } from "./operationRun";
 
 // The review's run: the staged edits are checked by a preflight on the
@@ -60,11 +61,14 @@ export type ReviewPhase =
   | { kind: "applied" }
   /** The apply was refused, or never reached the runtime; nothing was
    * changed and the edits are still staged. `words` is why, as the
-   * application served it; null when it served none. */
+   * application served it; null when it served none. `refusal` is the
+   * served refusal with its stored verdict, for the window's one refusal
+   * notice; null when the apply never reached the runtime. */
   | {
       kind: "not_applied";
       code: LedgerFailureCode | "refused";
       words: string | null;
+      refusal: ServedRefusal | null;
     }
   /** The apply was sent and its settlement was not seen. */
   | { kind: "unknown"; operationId: string | null };
@@ -413,11 +417,21 @@ export function useEditReview({
       await onReread();
     } else if (run.kind === "refused") {
       if (alive.current)
-        setPhase({ kind: "not_applied", code: "refused", words: run.words });
+        setPhase({
+          kind: "not_applied",
+          code: "refused",
+          words: run.words,
+          refusal: servedRefusal(run.words, run.detail),
+        });
       await readPrerequisite(on, run.operationId);
     } else if (run.kind === "not_sent") {
       if (alive.current)
-        setPhase({ kind: "not_applied", code: run.code, words: null });
+        setPhase({
+          kind: "not_applied",
+          code: run.code,
+          words: null,
+          refusal: null,
+        });
     } else {
       if (alive.current)
         setPhase({ kind: "unknown", operationId: run.operationId });

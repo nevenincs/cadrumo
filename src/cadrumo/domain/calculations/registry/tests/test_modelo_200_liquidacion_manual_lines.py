@@ -45,6 +45,7 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources.bundled_data import bundled_path
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from .authored_editions import authored_revisions_where, manual_editions_printing
@@ -56,7 +57,7 @@ from .modelo_200_casilla_ids import (
     M200_RESERVA_CAPITALIZACION_CASILLA,
     M200_RESULTADO_CONTABLE_CASILLA,
 )
-from .published_authority import published_snapshot
+from .published_authority import published_snapshot, published_source_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -174,6 +175,31 @@ def _calculate(
     )
 
 
+def _tipo(exercise: int, rate: str) -> Decimal:
+    """Casilla 00558 for a single rate, as the exercise's own record design states the box.
+
+    Every design prints 00558 in four positions. The 2023 and 2024 designs read
+    "2 enteros y 2 decimales", so the box holds the percentage. The 2025 design
+    points the row to Nota 1: a single rate fills the first two digits and 00 the
+    last two, so 25 is the code 2500 (01-200-ejercicio-2025-10-9-mb-xls.xls
+    .extracted.md L1495, L1530-1534), and the box holds that code.
+    """
+    snapshot = published_snapshot(_M200, filing_year=exercise, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    designs = [
+        source
+        for source in (published_source_reference(ref) for ref in snapshot.revision.source_refs)
+        if source.kind == "record_design"
+    ]
+    assert len(designs) == 1, designs
+    text = bundled_path(f"{designs[0].corpus_path}.extracted.md").read_text(encoding="utf-8")
+    rows = [line for line in text.splitlines() if "Tipo de gravamen [00558]" in line]
+    assert len(rows) == 1, rows
+    if rows[0].rstrip().endswith("Nota 1"):
+        return Decimal(rate) * 100
+    assert rows[0].rstrip().endswith("2 enteros y 2 decimales"), rows[0]
+    return Decimal(rate)
+
+
 def _reason(result: RegistryCalculationResult, casilla_id: CasillaId) -> RegistryUnresolvedOutcomeReason | None:
     return next((outcome.reason for outcome in result.unresolved_outcomes if outcome.casilla_id == casilla_id), None)
 
@@ -195,7 +221,7 @@ def test_cuota_integra_is_the_base_times_the_tipo(exercise: int) -> None:
     """Base 100.000 at the general rate: 00558 = 25, 00562 = 100.000 x 25 / 100 = 25.000 (L14648-14656, L14670)."""
     values = _calculate(exercise, resultado=Decimal("100000")).values
 
-    assert values[_TIPO_GRAVAMEN] == Decimal("25")
+    assert values[_TIPO_GRAVAMEN] == _tipo(exercise, "25")
     assert values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("25000.00")
 
 
@@ -204,7 +230,7 @@ def test_nueva_creacion_takes_fifteen(exercise: int) -> None:
     """A nueva creación of LIS art. 29.1 below 1 millón INCN: 15, 100.000 x 15 / 100 = 15.000 (L14671-14675)."""
     values = _calculate(exercise, resultado=Decimal("100000"), incn=_INCN_MICRO, new_entity=_MARKED).values
 
-    assert values[_TIPO_GRAVAMEN] == Decimal("15")
+    assert values[_TIPO_GRAVAMEN] == _tipo(exercise, "15")
     assert values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("15000.00")
 
 
@@ -215,7 +241,7 @@ def test_entidad_patrimonial_takes_the_general_rate_whatever_its_size_or_age(exe
         exercise, resultado=Decimal("100000"), incn=_INCN_MICRO, new_entity=_MARKED, marked=("00066",)
     ).values
 
-    assert values[_TIPO_GRAVAMEN] == Decimal("25")
+    assert values[_TIPO_GRAVAMEN] == _tipo(exercise, "25")
     assert values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("25000.00")
 
 
@@ -224,7 +250,7 @@ def test_ley_49_2002_entity_takes_ten(exercise: int) -> None:
     """Casilla 00001 marked: 10, 100.000 x 10 / 100 = 10.000 (L14724)."""
     values = _calculate(exercise, resultado=Decimal("100000"), form="sin_fines_lucrativos", marked=("00001",)).values
 
-    assert values[_TIPO_GRAVAMEN] == Decimal("10")
+    assert values[_TIPO_GRAVAMEN] == _tipo(exercise, "10")
     assert values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("10000.00")
 
 
@@ -242,7 +268,7 @@ def test_cooperativa_protegida_states_twenty_and_leaves_its_cuota_to_the_coopera
     """00017 marked: 00558 = 20 (L14704-14712, nota L14752-14755); 00562 refused (L26990)."""
     result = _calculate(exercise, resultado=Decimal("100000"), form="cooperativa", marked=("00017",))
 
-    assert result.values[_TIPO_GRAVAMEN] == Decimal("20")
+    assert result.values[_TIPO_GRAVAMEN] == _tipo(exercise, "20")
     assert _reason(result, M200_CUOTA_INTEGRA_CASILLA) is RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED
 
 
@@ -288,16 +314,16 @@ def test_a_regime_with_its_own_rate_is_refused_not_given_the_general_one(exercis
 
 
 @pytest.mark.parametrize("exercise", _TWO_RATE_EXERCISES)
-def test_two_rate_scale_computes_the_cuota_and_leaves_the_double_rate_unstated(exercise: int) -> None:
+def test_two_rate_scale_computes_the_cuota_and_states_the_double_rate(exercise: int) -> None:
     """INCN 600.000, base 100.000: 50.000 x 21 % + 50.000 x 22 % = 10.500 + 11.000 = 21.500 (L14980-14983).
 
-    00558 would hold "2122" under the design's Nota 1; a decimal rate cannot, so
-    it is left without a value under its typed reason.
+    00558 holds the design's code "2122" (Nota 1: first rate, then second rate).
     """
     result = _calculate(exercise, resultado=Decimal("100000"), incn=_INCN_MICRO)
 
     assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("21500.00")
-    assert _reason(result, _TIPO_GRAVAMEN) is RegistryUnresolvedOutcomeReason.M200_TWO_RATE_TIPO_GRAVAMEN_UNREPRESENTED
+    assert result.values[_TIPO_GRAVAMEN] == Decimal("2122")
+    assert _reason(result, _TIPO_GRAVAMEN) is None
 
 
 @pytest.mark.parametrize("exercise", _FLAT_23_EXERCISES)

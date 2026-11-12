@@ -625,6 +625,7 @@ def _cross_period_operator_attested_advisory_finding(
         },
         legal_refs=_cross_period_requirement_legal_refs(requirement),
         source_refs=_cross_period_requirement_source_refs(requirement),
+        disclosed_limitation=True,
     )
 
 

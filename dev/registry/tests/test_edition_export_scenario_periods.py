@@ -98,12 +98,12 @@ _CORPORATE_SCENARIO_BUILDERS = {"200": m200_export_scenario, "222": m222_export_
 
 
 def _open_ended_edition_period(modelo_id: str) -> Period:
-    """The first supported period the open-ended edition of ``modelo_id`` governs."""
+    """The first declared period of the first supported year the open-ended edition of ``modelo_id`` governs."""
     modelo, catalogues = committed_modelo(modelo_id)
     revision = modelo.revisions[open_ended_revision(modelo_id).id]
     selector = revision.period_selector
     year = next(year for year in catalogues.supported_filing_years.years if selector.includes_year(year))
-    (token,) = selector.periods_for_year(year)
+    token = next(iter(selector.periods_for_year(year)))
     return Period.from_year_and_code(year, str(token))
 
 

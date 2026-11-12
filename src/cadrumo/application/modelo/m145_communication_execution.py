@@ -79,6 +79,7 @@ from .m145_communication_records_ports import (
     M145CommunicationRecordsPorts,
     M145CommunicationRecordsPortsFactory,
 )
+from .m145_communication_refusal_doors import m145_record_decision_verdict
 from .ports import FicheroBoeRecordRenderer
 
 
@@ -568,6 +569,8 @@ class M145CommunicationExecutor:
             operation_error = M145CommunicationOperationRecordNotFoundError(
                 str(error),
                 context=error.context,
+                translated_message="errors.error.m145_communication_record_not_found",
+                precondition_verdict=m145_record_decision_verdict("record_exists", {}),
             )
             refusal_code = M145_COMMUNICATION_RECORD_NOT_FOUND_REFUSAL_CODE
         else:

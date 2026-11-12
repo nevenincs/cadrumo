@@ -46,6 +46,7 @@ def test_every_stored_descendant_leaf_but_one_has_served_wording() -> None:
             alta_posterior_nacimiento_mes=3,
             segundo_ciclo_infantil_inicio_mes=9,
             gastos_guarderia_mensuales=(GuarderiaMonthSpend(month=1, amount_euros=50),),
+            cotizaciones_ss_madre_euros=Decimal("2332.80"),
             nif="12345678Z",
             apellidos_nombre="Ortega Navarro Pablo",
         )
@@ -59,6 +60,7 @@ def test_every_stored_descendant_leaf_but_one_has_served_wording() -> None:
     group, row = items[0], items[1]
     assert isinstance(group, ProfileViewFamilyGroupItem) and isinstance(row, ProfileViewFamilyRowItem)
     served = {leaf.leaf for leaf in group.leaves}
+    assert "cotizaciones_ss_madre" in stored
     assert set(stored) - served == _STORED_WITHOUT_WORDING
     assert {fact.leaf for fact in row.facts} == set(stored) - _STORED_WITHOUT_WORDING
 

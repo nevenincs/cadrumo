@@ -74,7 +74,6 @@ class RegistryUnresolvedOutcomeReason(StrEnum):
     WAIVED_REFUND_RESULT_UNSUPPORTED = "waived-refund-result-unsupported"
     INCOME_FAMILY_CONTRADICTS_PROFILE = "income-family-contradicts-profile"
     M200_TAX_REGIME_UNSUPPORTED = "m200-tax-regime-unsupported"
-    M200_TWO_RATE_TIPO_GRAVAMEN_UNREPRESENTED = "m200-two-rate-tipo-gravamen-unrepresented"
 
 
 class UnresolvedFormulaOutcomeError(RegistrySnapshotError):

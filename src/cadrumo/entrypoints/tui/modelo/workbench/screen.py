@@ -65,6 +65,8 @@ from ...components.theme import toggle_appearance, tokenised
 from ...navigation import TuiNavigationTargetV1
 from ..disagreements import ModeloDisagreementsDoorV1
 from ..disagreements_workbench import WorkbenchDisagreementsMixin
+from ..wallet import ModeloIvaWalletDoorV1
+from ..wallet_workbench import WorkbenchWalletMixin
 from .casilla_list import (
     CasillaList,
 )
@@ -130,6 +132,7 @@ class ModeloWorkbenchScreen(
     WorkbenchStatementsMixin,
     WorkbenchTaxationMixin,
     WorkbenchDisagreementsMixin,
+    WorkbenchWalletMixin,
     WorkbenchAmendmentMixin,
     WorkbenchReviewMixin,
     WorkbenchNextStepMixin,
@@ -382,6 +385,7 @@ class ModeloWorkbenchScreen(
         Binding("a", "statements", "", show=False),
         Binding("t", "compare_taxation", "", show=False),
         Binding("D", "disagreements", "", show=False),
+        Binding("w", "wallet", "", show=False),
         Binding("m", "amend", "", show=False),
         Binding("slash", "search", "", show=False),
         Binding("g", "go_to", "", show=False),
@@ -404,6 +408,7 @@ class ModeloWorkbenchScreen(
         navigate: Callable[[TuiNavigationTargetV1], None] | None = None,
         native_review: Callable[[str], Screen[None]] | None = None,
         disagreements: ModeloDisagreementsDoorV1 | None = None,
+        wallet: ModeloIvaWalletDoorV1 | None = None,
         id: str | None = None,
     ) -> None:
         """Hold the ports this workbench reads and acts through, and how it opens another product area.
@@ -417,6 +422,7 @@ class ModeloWorkbenchScreen(
         self._navigate = navigate
         self._native_review = native_review
         self._disagreements = disagreements
+        self._wallet = wallet
         self._operation_in_flight = False
         self._apply_prerequisite: WorkbenchApplyPrerequisite | None = None
         self._load: ModeloWorkFormLoadV1 | None = None

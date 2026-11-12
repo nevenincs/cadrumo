@@ -119,6 +119,7 @@ from .work_form_notes import (
     project_verification_issues,
 )
 from .work_form_outline import form_outline
+from .work_form_prior_value_attestation import form_prior_value_attestations
 from .work_form_source_groups import worded_source_groups
 from .work_form_wording import worded_form
 from .work_review import ModeloWorkReview
@@ -429,6 +430,7 @@ def _assemble_work_form(
         filing=project_filing_summary(context),
         edit_closure=ModeloFormEditClosure.RECORDED_AS_FILED if context.filed else None,
         carry_attestations=form_carry_attestations(context),
+        prior_value_attestations=form_prior_value_attestations(context),
     )
 
 

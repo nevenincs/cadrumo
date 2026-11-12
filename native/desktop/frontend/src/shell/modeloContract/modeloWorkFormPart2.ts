@@ -11,13 +11,17 @@
 import type {
   BindingSourceKind,
   CasillaId,
+  ModeloVerificationFindingKind,
+  ModeloVerificationFindingSeverity,
   OutputLanguage,
   PublicPeriod,
+  ResultDisposition,
   VerificationCompletenessStatus,
 } from "./modelo";
 import type { SourceSurface } from "./modeloWork";
 import type {
   FormLayoutSeedSource,
+  FormUnplacedReason,
   ModeloFormAeatData,
   ModeloFormCalculationNote,
   ModeloFormCarryAttestation,
@@ -30,16 +34,79 @@ import type {
   ModeloFormInspectionReason,
   ModeloFormLayoutProvenance,
   ModeloFormOutlineGroup,
+  ModeloFormResultDirection,
   ModeloFormSourceGroup,
+  ModeloFormText,
   ModeloFormYearProjection,
   ModeloWorkProgress,
   OperationNextStepV1,
+  PublicFactEntryV1,
+  PublicModeloFormBlock,
+  PublicModeloFormEarlierFiling,
   PublicModeloFormField,
   PublicModeloFormIssue,
   PublicModeloFormPage,
-  PublicModeloFormResult,
-  PublicModeloFormUnplacedField,
+  PublicModeloFormPriorValueAttestation,
 } from "./modeloWorkForm";
+
+/**
+ * Typed local-human workbench view of ModeloFormResult; the value keeps its
+ * exact decimal text.
+ */
+export type PublicModeloFormResult = {
+  casilla_id: CasillaId;
+  box: string | null;
+  value: string | null;
+  direction: ModeloFormResultDirection;
+  disposition: ResultDisposition | null;
+  election_may_change: boolean;
+  refund_eligibility: PublicRefundEligibility | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormSection.
+ */
+export type PublicModeloFormSection = {
+  id: string;
+  heading: ModeloFormText;
+  official_heading: string | null;
+  blocks: PublicModeloFormBlock[];
+  counts: ModeloFormCounts;
+  applies: boolean | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormUnplacedField.
+ */
+export type PublicModeloFormUnplacedField = {
+  field: PublicModeloFormField;
+  reason: FormUnplacedReason | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormValueSource.
+ */
+export type PublicModeloFormValueSource = {
+  family: SourceFamily;
+  binding_id: string | null;
+  source_kind: BindingSourceKind | null;
+  earlier_filings: PublicModeloFormEarlierFiling[];
+};
+
+/**
+ * Typed local-human workbench view of ModeloVerificationFinding.
+ */
+export type PublicModeloVerificationFinding = {
+  kind: ModeloVerificationFindingKind;
+  severity: ModeloVerificationFindingSeverity;
+  casilla_id: string | null;
+  expectation_id: string | null;
+  message_locale_key: string;
+  message_facts: PublicFactEntryV1[];
+  legal_refs: string[];
+  source_refs: string[];
+  disclosed_limitation: boolean;
+};
 
 /**
  * Typed local-human workbench view of ModeloWorkForm.
@@ -86,6 +153,7 @@ export type PublicModeloWorkForm = {
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;
   carry_attestations: ModeloFormCarryAttestation[];
+  prior_value_attestations: PublicModeloFormPriorValueAttestation[];
   modelo_title: string | null;
   modelo_name: string | null;
   modelo_number: string | null;

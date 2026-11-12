@@ -34,6 +34,7 @@ from .work_form_models import (
     ModeloFormField,
     ModeloFormStatedPriorValue,
 )
+from .work_form_prior_value_models import prior_value_family_id
 from .work_form_source_groups import earlier_filing_text
 
 _ACTION_LOCALE_KEYS: Final[Mapping[ModeloEditBindingIntentKind, str]] = MappingProxyType(
@@ -148,9 +149,11 @@ def with_binding_statements(field: ModeloFormField, context: WorkFormContext) ->
         return field
     attestation = _value_attestation(binding_id, context)
     if attestation is not None:
-        source_words = earlier_filing_text(_attested_filings(attestation), context.language)
+        filings = _attested_filings(attestation)
+        source_words = earlier_filing_text(filings, context.language)
         stated = ModeloFormStatedPriorValue(
             source_words=source_words,
+            family_id=prior_value_family_id(filings),
             origin_words=tr(_STATED_PRIOR_VALUE_ORIGIN_LOCALE_KEY, source=source_words, locale=context.language.value),
         )
         field = field.model_copy(update={"stated_prior_value": stated})

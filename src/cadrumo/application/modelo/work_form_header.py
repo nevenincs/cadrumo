@@ -58,6 +58,7 @@ from .work_form_next_step import (
     blocking_count,
     check_count,
     confirm_count,
+    limitation_count,
     missing_count,
     missing_findings,
     result_fields,
@@ -104,6 +105,7 @@ _COUNTED_LEVEL_LOCALE_KEYS: Final[Mapping[ModeloFormAttention, str]] = MappingPr
         ModeloFormAttention.MISSING: "workspace.modelo.header.chip.missing",
         ModeloFormAttention.CONFIRM: "workspace.modelo.header.chip.confirm",
         ModeloFormAttention.CHECK: "workspace.modelo.header.chip.check",
+        ModeloFormAttention.LIMITATION: "workspace.modelo.header.chip.limitation",
     }
 )
 """The attention levels the header counts, most urgent first, with the words for each count."""
@@ -300,6 +302,7 @@ def attention_counts(
         ModeloFormAttention.MISSING: missing_count(form),
         ModeloFormAttention.CONFIRM: confirm_count(form),
         ModeloFormAttention.CHECK: check_count(form),
+        ModeloFormAttention.LIMITATION: limitation_count(form),
     }
     return tuple(
         ModeloFormAttentionCount(

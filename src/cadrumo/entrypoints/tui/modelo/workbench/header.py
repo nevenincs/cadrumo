@@ -51,7 +51,15 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from ...components.cell_text import ellipsize
 from .issue_scale import levels_marked
-from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
+from .vocabulary import (
+    BLOCKS_MARK,
+    CHECK_MARK,
+    CONFIRM_MARK,
+    LIMITATION_MARK,
+    MISSING_MARK,
+    STALE_MARK,
+    WorkbenchMark,
+)
 
 _PART_GAP: Final[str] = "   "
 _IDENTITY_SEPARATOR: Final[str] = " · "
@@ -71,6 +79,7 @@ _CHIP_MARKS: Final[Mapping[ModeloFormAttention, WorkbenchMark]] = MappingProxyTy
         ModeloFormAttention.MISSING: MISSING_MARK,
         ModeloFormAttention.CONFIRM: CONFIRM_MARK,
         ModeloFormAttention.CHECK: CHECK_MARK,
+        ModeloFormAttention.LIMITATION: LIMITATION_MARK,
     }
 )
 URGENT_CHIPS: Final[frozenset[ModeloFormAttention]] = frozenset(

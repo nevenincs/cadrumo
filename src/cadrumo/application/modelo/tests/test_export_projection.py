@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -28,6 +29,8 @@ from ....core.errors.error_codes import (
     public_error_context,
     resolve_error_message,
 )
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
@@ -51,10 +54,16 @@ from ....domain.modelos.errors import (
     ModeloExportError,
     ModeloExportValueOverflowError,
 )
+from ....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from ...filing.errors import ModeloApplicationError
 from ...filing.record_field_renderer import format_field
 from ..calculation_summary_pdf_ports import CalculationSummaryCertifier, CalculationSummaryPdfRequest
 from ..export import export_write_failure
+from ..export_disclosure import ModeloExportDisclosedLimitation, ModeloExportDisclosure
 from ..export_operation import build_modelo_export_definition, build_modelo_export_registration
 from ..export_ports import ModeloExportPorts
 from ..export_projection import (
@@ -63,6 +72,7 @@ from ..export_projection import (
     ModeloExportPublicResultV3,
     ModeloFicheroBoePublicReceipt,
 )
+from ..finding_message_text import finding_message_text
 from ..operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from ..review_package_signing_ports import ReviewPackageSigningKeypairCapability
 from ..work_export_contracts import ModeloExportSettledResult
@@ -471,3 +481,77 @@ def test_export_public_result_refuses_a_receipt_that_does_not_match_its_artefact
                 "fichero_boe": ModeloFicheroBoePublicReceipt.from_result(canonical),
             }
         )
+
+
+def _terminal() -> OperationTerminalReceipt:
+    return OperationTerminalReceipt(
+        identity=OperationIdentity(
+            operation_id="e" * 64, definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID, subject_ref=_WORK_UNIT_ID
+        ),
+        revision=4,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        settled_at=_AT,
+        result_ref="f" * 64,
+    )
+
+
+def _deduction_disclosure(language: OutputLanguage) -> ModeloExportDisclosure:
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message_locale_key="application.modelo.findings.trabajo_deduction_not_computed",
+        legal_refs=("ley-35-2006:art-19",),
+        disclosed_limitation=True,
+    )
+    return ModeloExportDisclosure(
+        lead_words=tr("application.modelo.export_disclosure.lead", locale=language.value),
+        limitations=(
+            ModeloExportDisclosedLimitation(
+                message_locale_key=finding.message_locale_key, words=finding_message_text(finding, language)
+            ),
+        ),
+    )
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_the_public_result_serves_the_disclosure_its_settled_receipt_carries(language: OutputLanguage) -> None:
+    canonical = _canonical_receipt(
+        include_prior_proof=False,
+        include_wallet_provenance=False,
+        include_elections=False,
+        completeness_unverified=False,
+    )
+    disclosure = _deduction_disclosure(language)
+    _, registration = _export_registration()
+    projector = registration.result_projector
+    assert projector is not None
+
+    projected = projector(ModeloExportSettledResult(fichero_boe=canonical, disclosure=disclosure), _terminal())
+
+    assert isinstance(projected, ModeloExportPublicResultV3)
+    restored = ModeloExportPublicResultV3.model_validate_json(projected.model_dump_json())
+    assert restored.disclosure == disclosure
+    assert restored.disclosure is not None
+    assert restored.disclosure.limitations[0].words == tr(
+        "application.modelo.findings.trabajo_deduction_not_computed", locale=language.value
+    )
+
+
+def test_a_result_without_a_disclosure_stays_as_it_was() -> None:
+    canonical = _canonical_receipt(
+        include_prior_proof=False,
+        include_wallet_provenance=False,
+        include_elections=False,
+        completeness_unverified=False,
+    )
+    _, registration = _export_registration()
+    projector = registration.result_projector
+    assert projector is not None
+
+    projected = projector(ModeloExportSettledResult(fichero_boe=canonical), _terminal())
+
+    assert isinstance(projected, ModeloExportPublicResultV3)
+    assert projected.disclosure is None
+    older = {key: value for key, value in projected.model_dump(mode="json").items() if key != "disclosure"}
+    assert ModeloExportPublicResultV3.model_validate_json(json.dumps(older)) == projected

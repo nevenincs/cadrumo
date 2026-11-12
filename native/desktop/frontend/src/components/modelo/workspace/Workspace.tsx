@@ -68,7 +68,7 @@ const ACTION_VIEW: Partial<Record<ModeloFormNextAction, WorkspaceView>> = {
 /** The attention levels each tab shows, as the read model counted them. */
 const TAB_LEVELS: Partial<Record<WorkspaceView, ModeloFormAttention[]>> = {
   form: ["missing", "confirm"],
-  check: ["blocks", "check"],
+  check: ["blocks", "check", "limitation"],
 };
 
 function ResultLine({

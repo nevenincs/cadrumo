@@ -252,7 +252,12 @@ async def test_activity_asset_refusal_shows_its_served_refusal_and_moves_to_the_
         assert slot.refusal.verdict is not None
         assert slot.refusal.verdict.action_id == "operator.ledger.actividad_asset.correct_revision"
         assert str(slot.query_one("#refusal-words", Static).render()) == served.refusal_words
-        assert not slot.query(Button)
+        # The verdict carries its served action words, so its way out is drawn in them.
+        words = slot.refusal.verdict.action_words
+        drawn = [str(button.label) for button in slot.query(Button)]
+        assert words is not None
+        assert len(drawn) == 1
+        assert drawn[0].startswith(words)
         assert screen.focused is screen.query_one("#asset-correct", Button)
 
 

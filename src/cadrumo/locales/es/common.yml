@@ -4537,9 +4537,6 @@ desktop:
       confirm: Descartar
       lead: Sale de tu lista de declaraciones. Su historial se conserva.
       reason: Por qué (opcional)
-    export:
-      limitation:
-        title: Lo que este fichero no incluye
     form:
       pages: Páginas del formulario
     keys:
@@ -4557,6 +4554,11 @@ desktop:
       label: Esquema del formulario
       may_apply: Solo si se te aplica
       needs_you: 'Te necesita: {count}'
+    prior_values:
+      intro: Si aquí no consta la declaración anterior de la que una casilla arrastra
+        un importe, puedes indicar tú ese importe. Los importes indicados para las
+        mismas declaraciones anteriores se retiran juntos.
+      title: Importes de declaraciones anteriores
     rename:
       name: Nombre
       save: Guardar el nombre
@@ -7005,6 +7007,37 @@ tui:
     unattended: Permitir uso desatendido
     uncertain: Resultado desconocido; conserva el ID de solicitud
     waiting: Enviando solicitud
+  censo:
+    action:
+      detail: Ver detalles
+      read: Leer de nuevo
+      record: Registrar una declaración
+    column:
+      declared_on: Declarada el
+      kind: Tipo
+      recorded_at: Registrada el
+    detail:
+      id: Identificador
+      justificante: Referencia del justificante
+      none: Sin indicar
+      note: Nota
+    local_note: 'Una declaración aquí es solo un registro local: se guarda en este
+      dispositivo y no se envía nada a la administración tributaria.'
+    prompt: Declaraciones de cambios en tus datos censales que presentaste fuera de
+      esta aplicación y registraste aquí.
+    records:
+      title: Declaraciones registradas
+    status:
+      choose_declaration: Elige primero una declaración de la lista.
+      empty: Todavía no has registrado ninguna declaración.
+      read_failed: No se pudieron leer las declaraciones. Nada de lo que ves abajo
+        está actualizado.
+      reading: Leyendo las declaraciones...
+      recorded: 'Registrada en local: {kind} declarada el {declared_on}. No se envió
+        nada a la administración tributaria.'
+      unconfirmed: Ese formulario no confirmó ningún resultado. La lista de abajo
+        se leyó de nuevo y muestra lo guardado; revísala antes de volver a registrar.
+    title: Cambios censales
   declarations:
     list:
       new:
@@ -7013,6 +7046,7 @@ tui:
       start_hint: Pulsa + para empezar una.
   destination:
     aeat_sync: Sincronización AEAT
+    censo: Cambios censales
     declarations: Declaraciones
     home: Inicio
     installation: Instalación
@@ -9111,6 +9145,9 @@ tui:
     legend:
       first_open: ¿Es tu primera vez? Pulsa ? para ver qué significa cada símbolo.
       meaning:
+        level:
+          limitation: Un límite del cálculo, indicado de forma expresa, o una cifra
+            que indicaste tú. No te impide presentar.
         mark:
           collapsed: Pulsa → para abrirla.
           expanded: Pulsa ← para cerrarla.
@@ -9194,12 +9231,26 @@ tui:
       none: Esta declaración no ofrece ahora ninguna manifestación.
       not_placed: Una manifestación se refiere a una casilla que esta pantalla no
         muestra, así que no se ha dejado para revisar.
+      prior:
+        heading: Cifras que indicaste para declaraciones anteriores
+        partial: Escribe una cifra para cada casilla de esta manifestación o deja
+          todas vacías. Se hace entera o no se hace.
       stage: Dejar para revisar
       title: Manifestaciones que puedes hacer
       withdraw: Retirar la manifestación
     taxation:
       key: Conjunta o individual
       reading: Calculando las dos opciones…
+    wallet:
+      code_label: Código del periodo
+      key: Cartera de IVA
+      no_lots: No hay lotes de crédito registrados para este año.
+      not_sent: 'Revisa lo que has indicado: no se ha enviado nada.'
+      outcome_unknown: Puede que lo que has indicado se haya guardado. Vuelve a leer
+        el saldo antes de indicar nada más.
+      refused: Se ha rechazado lo que has indicado.
+      sending: Enviando lo que has indicado...
+      year_label: Año del periodo
   operations:
     action:
       close: Cerrar
@@ -9484,6 +9535,7 @@ tui:
       validate_ledger: Comprobar registros
     destination:
       aeat_sync: Abrir Sincronización AEAT
+      censo: Abrir Cambios censales
       declarations: Abrir Declaraciones
       home: Abrir Inicio
       installation: Abrir Instalación
@@ -9495,6 +9547,8 @@ tui:
       withholding: Abrir Retenciones
     destination_help:
       aeat_sync: Lo que se ha leído de la AEAT y lo que se puede leer a continuación
+      censo: 'Cambios censales: los cambios en tus datos fiscales registrados que
+        anotaste aquí'
       declarations: Declaraciones, cálculos anteriores, historial de presentaciones
         y calendario
       home: Próximas acciones, declaraciones y plazos de un vistazo
@@ -10329,6 +10383,7 @@ workspace:
         blocks: 'impiden presentar: {count}'
         check: 'para revisar: {count}'
         confirm: 'por confirmar: {count}'
+        limitation: 'límites indicados: {count}'
         missing: 'faltan: {count}'
       deadline: 'Plazo hasta el {date} · días restantes: {days}'
       deadline_passed: 'El plazo terminó el {date}: presentar ahora es fuera de plazo'
@@ -10601,6 +10656,7 @@ workspace:
       check: Conviene revisarlo
       confirm: Por confirmar
       info: Para tu información
+      limitation: Límite indicado
       missing: Falta
     loading: Cargando la declaración…
     modelo_number: Modelo {modelo}
@@ -10659,6 +10715,8 @@ workspace:
         incomplete: 'Comprobada: faltan datos que la declaración necesita.'
       done: Hecho. La declaración se ha actualizado.
       not_done: No se ha completado; tus cambios siguen aquí.
+      unknown: Puede que se haya aplicado. Vuelve a leer la declaración antes de aplicar
+        nada más.
     origin:
       calculated: Calculada
       calculation_failed: No se pudo calcular

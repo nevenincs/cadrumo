@@ -99,6 +99,7 @@ from .work_form_field_vocabulary import (
     fitting_standings,
 )
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
+from .work_form_prior_value_models import ModeloFormPriorValueAttestation
 from .work_form_scalar_values import comparable_entry, holds_zero
 from .work_review import ModeloWorkProgress
 
@@ -266,6 +267,48 @@ def _restorable_of(data: dict[str, object]) -> bool:
 def _confirm_value_of(data: dict[str, object]) -> ModeloEditWireScalar:
     value = _factory_value(data)
     return wire_scalar_value(value) if value is not None and _confirmable_of(data) else None
+
+
+class ModeloFormStatedPriorValue(ModeloFormBase):
+    """The mark of a carry holding a figure the filer stated for an earlier return the application does not hold."""
+
+    #: The earlier return or returns the figure stands in for, in the form's language.
+    source_words: str = Field(min_length=1)
+    #: Where the box's value comes from, in the few words a frontend shows beside it.
+    origin_words: str = Field(min_length=1)
+    #: The family of the statement, the carries standing in for the same earlier returns, as
+    #: :attr:`ModeloWorkForm.prior_value_attestations` names it; left out when ``None``.
+    family_id: str | None = Field(default=None, min_length=1, exclude_if=_is_absent)
+
+
+class ModeloFormBindingStatement(ModeloFormBase):
+    """One statement the edit admits on a single carry, worded for the form.
+
+    ``attest_no_amount`` states the carry holds nothing; ``attest_prior_value``
+    states its figure for the earlier return ``source_words`` names, which the
+    application does not hold. Applying it stages that one intent on
+    ``binding_id``; withdrawing it stages ``remove_override`` on the same binding.
+    """
+
+    intent: ModeloEditBindingIntentKind
+    binding_id: BindingId
+    #: The action, in the form's language.
+    action_words: str = Field(min_length=1)
+    #: What the statement records and what follows when an earlier return later shows otherwise.
+    statement_words: str = Field(min_length=1)
+    #: What the statement does to the carry, as a review lists each staged change.
+    effect_words: str = Field(min_length=1)
+    #: The earlier return a stated figure stands in for; ``None`` for a statement of no amount.
+    source_words: str | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _a_figure_names_its_earlier_return(self) -> ModeloFormBindingStatement:
+        if self.intent not in _CARRY_STATEMENT_INTENTS:
+            raise ValueError("a carry statement states no amount or an earlier return's figure")
+        if (self.intent is ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE) != (self.source_words is not None):
+            raise ValueError("a stated figure, and only a stated figure, names the earlier return it stands in for")
+        return self
 
 
 class ModeloFormField(ModeloFormBase):
@@ -757,45 +800,6 @@ class ModeloFormCredit(ModeloFormBase):
     dependents: tuple[ModeloFormCasillaAddressV1, ...] | None
 
 
-class ModeloFormStatedPriorValue(ModeloFormBase):
-    """The mark of a carry holding a figure the filer stated for an earlier return the application does not hold."""
-
-    #: The earlier return or returns the figure stands in for, in the form's language.
-    source_words: str = Field(min_length=1)
-    #: Where the box's value comes from, in the few words a frontend shows beside it.
-    origin_words: str = Field(min_length=1)
-
-
-class ModeloFormBindingStatement(ModeloFormBase):
-    """One statement the edit admits on a single carry, worded for the form.
-
-    ``attest_no_amount`` states the carry holds nothing; ``attest_prior_value``
-    states its figure for the earlier return ``source_words`` names, which the
-    application does not hold. Applying it stages that one intent on
-    ``binding_id``; withdrawing it stages ``remove_override`` on the same binding.
-    """
-
-    intent: ModeloEditBindingIntentKind
-    binding_id: BindingId
-    #: The action, in the form's language.
-    action_words: str = Field(min_length=1)
-    #: What the statement records and what follows when an earlier return later shows otherwise.
-    statement_words: str = Field(min_length=1)
-    #: What the statement does to the carry, as a review lists each staged change.
-    effect_words: str = Field(min_length=1)
-    #: The earlier return a stated figure stands in for; ``None`` for a statement of no amount.
-    source_words: str | None = Field(default=None, min_length=1)
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _a_figure_names_its_earlier_return(self) -> ModeloFormBindingStatement:
-        if self.intent not in _CARRY_STATEMENT_INTENTS:
-            raise ValueError("a carry statement states no amount or an earlier return's figure")
-        if (self.intent is ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE) != (self.source_words is not None):
-            raise ValueError("a stated figure, and only a stated figure, names the earlier return it stands in for")
-        return self
-
-
 class ModeloFormCarryAttestation(ModeloFormBase):
     """The statement a filer can make that no amount from an earlier ejercicio is still pending.
 
@@ -906,6 +910,10 @@ class ModeloWorkForm(ModeloFormBase):
     #: The statements that no earlier-ejercicio amount is pending, one per family, while a carry each
     #: answers holds no value.
     carry_attestations: tuple[ModeloFormCarryAttestation, ...] = ()
+    #: The carries whose figure the filer can state for earlier returns the application does not hold, one per
+    #: carry the edit takes, with why a statement is refused and how a family's statements are withdrawn; left
+    #: out when there are none.
+    prior_value_attestations: tuple[ModeloFormPriorValueAttestation, ...] = Field(default=(), exclude_if=_is_empty)
     #: The modelo's number and title, its number alone, and the period, in the form's language.
     modelo_title: str | None = None
     #: The modelo's own title without its number, beside the number a frontend shows apart; ``None`` without one.

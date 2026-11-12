@@ -68,9 +68,13 @@ export type AeatConfirmationState =
 export type AeatSoftwareIdentityGrade = "reviewed" | "development_mock";
 
 /**
- * One further recovery action of a verdict, in the order it is offered.
+ * One further recovery action of a verdict, in the order it is offered, with
+ * its served words and routing.
  */
 export type AlternativeActionSnapshot = {
+  action_words: string | null;
+  action_words_language: OutputLanguage | null;
+  target_operation_ids: string[];
   action_id: string;
   argument_bindings: ActionArgumentSnapshot[];
   missing_argument_names: string[];
@@ -408,7 +412,44 @@ export type CalculationNoteSentence =
   | "unrouted_iva_cuota"
   | "unrouted_iva_recargo"
   | "inventory_purchase_ledger_row_unstated"
-  | "inventory_purchase_claim_refused";
+  | "inventory_purchase_claim_refused"
+  | "renta_inmueble_record_unreadable"
+  | "renta_inmueble_titularidad_unstated"
+  | "renta_inmueble_acquisition_date_unstated"
+  | "renta_inmueble_naturaleza_unstated"
+  | "renta_inmueble_lease_names_no_property"
+  | "renta_inmueble_row_names_no_lease"
+  | "renta_inmueble_row_names_no_property"
+  | "renta_inmueble_income_row_on_property"
+  | "renta_inmueble_expense_row_on_lease"
+  | "renta_inmueble_expense_row_without_concept"
+  | "renta_inmueble_concept_undeclared"
+  | "renta_inmueble_income_outside_lease"
+  | "renta_inmueble_lease_without_income"
+  | "renta_inmueble_relative_fact_unstated"
+  | "renta_inmueble_currency_unconverted"
+  | "renta_inmueble_regime_not_pleno_dominio"
+  | "renta_inmueble_titular_not_declarant"
+  | "renta_inmueble_property_abroad_let"
+  | "renta_inmueble_accessory_property"
+  | "renta_inmueble_concurrent_leases"
+  | "renta_inmueble_several_leases"
+  | "renta_inmueble_tenants_beyond_numbered"
+  | "renta_inmueble_relative_tenant"
+  | "renta_inmueble_improvement_in_ejercicio"
+  | "renta_inmueble_held_part_of_ejercicio"
+  | "renta_inmueble_days_not_let"
+  | "renta_inmueble_acquisition_cost_unstated"
+  | "renta_inmueble_cadastral_values_unstated"
+  | "renta_inmueble_cumulative_amortisation_unstated"
+  | "renta_inmueble_pending_expenses_unstated"
+  | "renta_inmueble_pending_expenses_held_return_unstated"
+  | "renta_inmueble_pending_expenses_origin_unsplit"
+  | "renta_inmueble_reduction_fact_unstated"
+  | "renta_inmueble_reduction_tenants_mixed"
+  | "renta_inmueble_withholding_payer_no_tenant"
+  | "renta_inmueble_withholding_payer_several_properties"
+  | "renta_inmueble_boxes_not_offered";
 
 export type CalculationRevisionId = string;
 
@@ -800,6 +841,7 @@ export type ModeloFindingSnapshot = {
   message_facts: PublicNamedScalar[];
   legal_refs: LegalRefId[];
   source_refs: SourceRefId[];
+  disclosed_limitation: boolean;
 };
 
 /**
@@ -991,9 +1033,17 @@ export type PaymentElection = "ingreso" | "domiciliacion" | "cuenta_corriente";
  * Typed action evidence needed by the existing CLI action resolver.
  *
  * `alternative_actions` is left out of the serialized snapshot when empty, so
- * a verdict without alternatives keeps the bytes it was stored with.
+ * a verdict without alternatives keeps the bytes it was stored with. The
+ * snapshot is the verdict as it crosses a process boundary, so it carries the
+ * words and routing served for the primary action, or the sentence served for
+ * a refusal with no way out, in the language of the process that projected it.
  */
 export type PreconditionVerdictSnapshot = {
+  no_recovery_words: string | null;
+  no_recovery_words_language: OutputLanguage | null;
+  action_words: string | null;
+  action_words_language: OutputLanguage | null;
+  target_operation_ids: string[];
   failed_condition_id: string;
   evidence: ConditionEvidenceSnapshot[];
   action_id: string | null;

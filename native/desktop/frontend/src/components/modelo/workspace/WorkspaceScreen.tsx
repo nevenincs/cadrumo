@@ -41,6 +41,7 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   OperationNextStepV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
+import type { WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import { Details, type OpenableSurface } from "../details/Details";
@@ -867,6 +868,13 @@ function Ready({
               if (surface !== "none") onOpenSurface(surface);
             }}
             canOpenSurface={canOpenSurface}
+            opensRefusalPlace={opensFromForm}
+            onRefusalAction={() => {
+              // The declarations list, where an earlier return the
+              // application holds is opened; staged edits are asked about
+              // before they are left.
+              if (!guard.current(onBack)) onBack();
+            }}
           />
         ),
         rail: (
@@ -1056,6 +1064,16 @@ function Ready({
               language={language}
               onReread={reread}
               onPrerequisiteHeld={setPrerequisiteHeld}
+              opensRefusalPlace={opensFromReview}
+              onRefusalAction={(intent) => {
+                setReviewing(false);
+                // A correction opens on the history; a statement on the
+                // form, which the closed review leaves in view.
+                if (intent.place.definition === "modelo.work.amend") {
+                  setView("history");
+                  setCorrecting(true);
+                }
+              }}
             />
             {leaving && (
               <Dialog
@@ -1156,6 +1174,23 @@ function Ready({
     />
   );
 }
+
+/** The places a refused apply's served way out can open from the review:
+ * the form, where a carry's statements are made, and the correction of the
+ * recorded filing. */
+const FROM_REVIEW: ReadonlySet<string> = new Set([
+  "modelo.edit.apply",
+  "modelo.edit.preflight",
+  "modelo.work.form",
+  "modelo.work.amend",
+]);
+const opensFromReview = (place: WindowPlace) =>
+  place.page === "declarations" && FROM_REVIEW.has(place.definition);
+
+/** The place a refused statement's served way out can open from the form:
+ * the list of declarations, where an earlier return is opened. */
+const opensFromForm = (place: WindowPlace) =>
+  place.page === "declarations" && place.definition === "modelo.work.list";
 
 /**
  * One declaration's workspace over the modelo port: reads its form in the
