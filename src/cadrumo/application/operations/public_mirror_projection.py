@@ -108,14 +108,27 @@ def _project_tuple(
     )
 
 
+def _served_value(value: BaseModel | object, served: MirrorServing) -> BaseModel | object:
+    if isinstance(value, BaseModel) and (serve := served.get(type(value))) is not None:
+        return serve(value)
+    return value
+
+
+def _source_annotations(value: BaseModel | object) -> Mapping[str, object]:
+    """Each canonical field of ``value`` with its annotation, for a model or a dataclass node."""
+    if isinstance(value, BaseModel):
+        return {name: field.annotation for name, field in type(value).model_fields.items()}
+    hints = dataclass_type_hints(type(value))
+    return {field.name: hints[field.name] for field in dataclass_instance_fields(value)}
+
+
 def _project_model(
     value: BaseModel | object,
     public: object,
     omissions: Mapping[type[BaseModel], frozenset[str]],
     served: MirrorServing,
 ) -> object:
-    if isinstance(value, BaseModel) and (serve := served.get(type(value))) is not None:
-        value = serve(value)
+    value = _served_value(value, served)
     target = _public_model_type(public, value)
     if target is None:
         raise TypeError("public-mirror model arm is unavailable")
@@ -123,14 +136,11 @@ def _project_model(
         return target.model_validate_json(value.model_dump_json(), strict=True)
     target.model_rebuild()
     target_fields = target.model_fields
-    if isinstance(value, BaseModel):
-        source_fields = type(value).model_fields
-        source_annotations = {name: field.annotation for name, field in source_fields.items()}
-    else:
-        source_fields = {field.name: field for field in dataclass_instance_fields(value)}
-        source_annotations = dataclass_type_hints(type(value))
+    source_annotations = _source_annotations(value)
     allowed_missing = omissions.get(target, frozenset())
-    if frozenset(set(source_fields) - set(target_fields)) != allowed_missing or set(target_fields) - set(source_fields):
+    if frozenset(set(source_annotations) - set(target_fields)) != allowed_missing or set(target_fields) - set(
+        source_annotations
+    ):
         raise ValueError("public-mirror model field inventory drifted")
     return target.model_validate(
         {
