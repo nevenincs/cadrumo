@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:16324d86305e4591cfadff11700d6822c3a00981e6d83852cb89ade323d30e13'
+body_hash: 'sha256:5c3e0eac67ed273a27d6a910e07c891e6bb296413c30a3389a1f152aecc795ab'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -128,6 +128,47 @@ related:
 - `S43` `verify:` `pytest test_calendar_modelo_202_instalment test_modelo_202_instalment_facts test_overview_modelo_202_instalment_doors test_calendar_legal_entity test_cross_period_clean_state test_cross_period_first_year_fractional` -> `pass`
 - `S43` `verify:` `lint-imports --config .importlinter` -> `pass`
 - `S43` `by:` `implementation-engineer`
+- `S43` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S43` `M` `dev/quality/metadata/import_load_targets.json`
+- `S43` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S43` `verify:` `operation_contract_manifest.generate --check=pass; import_load_probe --compile-targets` -> `pass`
+- `S43` `M` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S43` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_profile_schema_migration.py`
+- `S43` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_profile_schema_migration_art_40_3_election.py`
+- `S43` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_profile_schema_migration_rental_tier.py`
+- `S43` `M` `src/cadrumo/domain/user_profile/schema_migration.py`
+- `S43` `M` `src/cadrumo/domain/user_profile/tests/test_schema.py`
+- `S43` `verify:` `pytest custody schema-migration tests and domain/user_profile/tests=pass; registry conformance valid, runtime-load, integrity` -> `pass`
+- `S43` `M` `src/cadrumo/application/overview/calendar_warnings.py`
+- `S43` `M` `src/cadrumo/application/overview/modelo202_instalment_evidence.py`
+- `S43` `A` `src/cadrumo/application/overview/tests/test_modelo_202_art_40_3_election_reader.py`
+- `S43` `verify:` `pytest application/overview/tests=pass; ty and lint-imports` -> `pass`
+- `S43` `M` `.vault/adr/2026-11-11-modelo-202-obligation-adr.md`
+- `S43` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_202_instalment_facts.py`
+- `S43` `M` `src/cadrumo/application/overview/modelo202_instalment.py`
+- `S43` `M` `src/cadrumo/application/overview/tests/test_calendar_modelo_202_instalment.py`
+- `S43` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_modelo_202_instalment_doors.py`
+- `S43` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S43` `M` `src/cadrumo/locales/en/cli.yml`
+- `S43` `M` `src/cadrumo/locales/es/cli.yml`
+- `S43` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S43` `verify:` `pytest Modelo 202 instalment overview, persistence and cli tests (148 passed)` -> `pass`
+- `S43` `M` `docs/_sequences/how-to/profile-setup/profile-setup-flag-help.json`
+- `S43` `M` `docs/_sequences/how-to/protect-data-access/protect-data-access-machine-secret-help.json`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/facts/0096-ley-49-2002-profile-binding-catalogue.toml`
+- `S43` `M` `src/cadrumo/application/wizard/command_parameters.py`
+- `S43` `M` `src/cadrumo/application/wizard/setup_identity_sections.py`
+- `S43` `M` `src/cadrumo/domain/user_profile/setup_answers.py`
+- `S43` `M` `src/cadrumo/entrypoints/cli/config/profile_command_specs.py`
+- `S43` `M` `src/cadrumo/locales/ca/profile.yml`
+- `S43` `M` `src/cadrumo/locales/ca/wizard.yml`
+- `S43` `M` `src/cadrumo/locales/en/profile.yml`
+- `S43` `M` `src/cadrumo/locales/en/wizard.yml`
+- `S43` `M` `src/cadrumo/locales/es/profile.yml`
+- `S43` `M` `src/cadrumo/locales/es/wizard.yml`
+- `S43` `M` `src/cadrumo/locales/hu/profile.yml`
+- `S43` `M` `src/cadrumo/locales/hu/wizard.yml`
+- `S43` `verify:` `pytest application/wizard/tests domain/deadlines/tests and dev/locales/tests (2896 passed)` -> `pass`
 
 ## Notes
 
