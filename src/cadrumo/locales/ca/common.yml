@@ -4512,7 +4512,6 @@ desktop:
         s'escriuen aquí. Per canviar-ne una, corregeix-la als teus registres de retencions
         i torna a calcular.
       list: Retencions
-      show: Mostra-ho al formulari
       show_box: Mostra la casella {box} al formulari
     details:
       close: Tancar els detalls

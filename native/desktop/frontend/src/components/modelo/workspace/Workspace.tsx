@@ -457,7 +457,10 @@ export function ModeloWorkspace({
           className="relative grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] @4xl:grid-cols-[--spacing(60)_minmax(0,1fr)] @6xl:grid-rows-[minmax(0,1fr)_auto] @6xl:data-[details=true]:grid-cols-[--spacing(64)_minmax(0,1fr)_--spacing(88)]"
           data-details={detailsOpen && slots.details !== undefined}
         >
-          <aside className="hidden min-h-0 flex-col border-r border-border bg-chrome @4xl:flex @6xl:col-start-1 @6xl:row-span-2 @6xl:row-start-1">
+          <aside
+            aria-label={t("desktop.modelo.side.label")}
+            className="hidden min-h-0 flex-col border-r border-border bg-chrome @4xl:flex @6xl:col-start-1 @6xl:row-span-2 @6xl:row-start-1"
+          >
             {slots.rail}
           </aside>
           <div className="flex min-h-0 min-w-0 flex-col @6xl:contents">

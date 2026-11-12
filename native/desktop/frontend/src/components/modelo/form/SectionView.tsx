@@ -193,6 +193,9 @@ export function SectionView({
     <section
       ref={ref}
       id={`section-${section.id}`}
+      // A group, not a region: headings repeat across a form, and a landmark
+      // must have a name of its own.
+      role="group"
       aria-label={section.heading.text}
       className="scroll-mt-4"
       style={drawn ? undefined : { minHeight: estimate(section) }}

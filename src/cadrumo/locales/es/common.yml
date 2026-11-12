@@ -4519,7 +4519,6 @@ desktop:
         escriben aquí. Para cambiar una, corrígela en tus registros de retenciones
         y vuelve a calcular.
       list: Retenciones
-      show: Ver en el formulario
       show_box: Ver la casilla {box} en el formulario
     details:
       close: Cerrar detalles

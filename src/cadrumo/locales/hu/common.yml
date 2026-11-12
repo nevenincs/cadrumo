@@ -4480,7 +4480,6 @@ desktop:
         írod be őket. Ha módosítani akarsz egyet, javítsd a levonási nyilvántartásaidban,
         majd számolj újra.
       list: Levonások
-      show: Megjelenítés az űrlapon
       show_box: A(z) {box} rovat megjelenítése az űrlapon
     details:
       close: Részletek bezárása
