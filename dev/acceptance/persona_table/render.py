@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from pathlib import Path
 
 from .rows import GREEN, VERDICT_MEANING, Stage, TableRow, Verdict
 
@@ -96,6 +99,65 @@ def _unchecked_section(rows: Iterable[TableRow]) -> list[str]:
     return [*lines, ""]
 
 
+@dataclass(frozen=True)
+class CoverageGap:
+    """A return the application's own calendar marks applicable that the table does not run."""
+
+    persona: str
+    modelo: str
+    year: int
+    period: str
+
+    @property
+    def label(self) -> str:
+        """The gap id ``persona|modelo|year|period``, spelled as a row id."""
+        return f"{self.persona}|{self.modelo}|{self.year}|{self.period}"
+
+
+def load_coverage_gaps(path: Path) -> tuple[CoverageGap, ...]:
+    """The gaps of a coverage JSON (a ``gaps`` list of persona, modelo, year, period), refusing a malformed file."""
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise ValueError(f"coverage file {path} is unreadable: {error}") from error
+    if not isinstance(document, dict) or not isinstance(document.get("gaps"), list):
+        raise ValueError(f"coverage file {path} must be an object with a 'gaps' list")
+    gaps: list[CoverageGap] = []
+    for index, item in enumerate(document["gaps"]):
+        if not isinstance(item, dict):
+            raise ValueError(f"coverage file {path}: gap {index} must be an object")
+        missing = [key for key in ("persona", "modelo", "year", "period") if key not in item]
+        if missing:
+            raise ValueError(f"coverage file {path}: gap {index} lacks {', '.join(missing)}")
+        year = item["year"]
+        if (
+            not isinstance(year, int)
+            or isinstance(year, bool)
+            or not all(isinstance(item[key], str) for key in ("persona", "modelo", "period"))
+        ):
+            raise ValueError(
+                f"coverage file {path}: gap {index} needs text persona, modelo and period and an integer year"
+            )
+        gaps.append(CoverageGap(item["persona"], item["modelo"], year, item["period"]))
+    return tuple(gaps)
+
+
+def rows_line(rows: Sequence[TableRow], coverage_gaps: Sequence[CoverageGap] | None) -> str:
+    """The ``rows expected / rows run`` sentence; expected adds the coverage gaps to the table's planned rows."""
+    run = sum(row.verdict is not Verdict.NOT_RUN for row in rows)
+    if coverage_gaps is None:
+        return f"Rows: expected {len(rows)} (table plan only; no coverage audit) / run {run}"
+    return f"Rows: expected {len(rows) + len(coverage_gaps)} / run {run}"
+
+
+def _gap_section(coverage_gaps: Sequence[CoverageGap] | None) -> list[str]:
+    if coverage_gaps is None or len(coverage_gaps) == 0:
+        return []
+    lines = [f"## Coverage gaps ({len(coverage_gaps)})", ""]
+    lines += [f"- {label}" for label in sorted(gap.label for gap in coverage_gaps)]
+    return [*lines, ""]
+
+
 def _cell(text: object) -> str:
     return str(text).replace("|", "\\|").replace("\n", " ")
 
@@ -106,8 +168,12 @@ def render_table(
     head: str,
     lanes: Mapping[str, str] | None = None,
     provenance: Mapping[str, str] | None = None,
+    coverage_gaps: Sequence[CoverageGap] | None = None,
 ) -> str:
-    """The full table for ``head`` as Markdown, naming the run's tree and authority when ``provenance`` is given."""
+    """The full table for ``head`` as Markdown, naming the run's tree and authority when ``provenance`` is given.
+
+    ``coverage_gaps`` is ``None`` when no coverage audit was supplied, which the rows line says.
+    """
     ordered = sorted(rows, key=lambda row: row.key)
     lines = [f"# Persona table at {head}", ""]
     if provenance:
@@ -117,11 +183,13 @@ def render_table(
         ]
     lines += [
         f"Summary: {summary_line(ordered)}.",
+        rows_line(ordered, coverage_gaps),
         "",
     ]
     if lanes is not None:
         lines += [lane_line(ordered, lanes), ""]
     lines += _unchecked_section(ordered)
+    lines += _gap_section(coverage_gaps)
     lines += ["Verdicts:", ""]
     lines += [f"- `{verdict.value}`: {meaning}." for verdict, meaning in VERDICT_MEANING.items()]
     lines += [
@@ -157,12 +225,15 @@ def render_table(
 
 
 __all__ = [
+    "CoverageGap",
     "counts",
     "lane_counts",
     "lane_line",
+    "load_coverage_gaps",
     "red_stage",
     "render_table",
     "row_label",
+    "rows_line",
     "summary_line",
     "unchecked_causes",
 ]

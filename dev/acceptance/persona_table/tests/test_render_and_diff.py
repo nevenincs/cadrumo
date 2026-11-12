@@ -9,7 +9,7 @@ import pytest
 
 from ..__main__ import _envelope, main
 from ..diff import diff_tables, render_diff, row_id
-from ..render import counts, render_table, summary_line, unchecked_causes
+from ..render import CoverageGap, counts, load_coverage_gaps, render_table, summary_line, unchecked_causes
 from ..rows import PlannedRow, Stage, TableRow, Verdict, write_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -136,3 +136,67 @@ def test_render_prints_run_provenance_in_the_header() -> None:
     text = render_table([_GREEN], head="abc", provenance={"tree": "t1", "logical_generation": "g1"})
     assert "Run provenance: logical_generation `g1`, tree `t1`." in text
     assert "Run provenance" not in render_table([_GREEN], head="abc")
+
+
+_NOT_RUN = _row("2T", Stage.NOT_RUN)
+
+
+def test_the_rows_line_without_coverage_says_the_expected_count_is_the_table_plan_only() -> None:
+    text = render_table([_GREEN, _HISTORY, _NOT_RUN], head="abc")
+    assert "Rows: expected 3 (table plan only; no coverage audit) / run 2\n" in text
+    assert "Coverage gaps" not in text
+
+
+def test_not_run_rows_are_expected_but_never_run() -> None:
+    assert _NOT_RUN.verdict is Verdict.NOT_RUN
+    text = render_table([_NOT_RUN, _dup("3T"), _dup("4T")], head="abc", coverage_gaps=())
+    assert "Rows: expected 3 / run 2\n" in text
+
+
+def _dup(period: str) -> TableRow:
+    return dataclasses.replace(_GREEN, period=period)
+
+
+def test_coverage_with_no_gaps_expects_only_the_planned_rows_and_adds_no_section() -> None:
+    text = render_table([_GREEN, _HISTORY], head="abc", coverage_gaps=())
+    assert "Rows: expected 2 / run 2\n" in text
+    assert "table plan only" not in text
+    assert "Coverage gaps" not in text
+
+
+def test_coverage_gaps_raise_the_expected_count_and_are_listed_sorted() -> None:
+    gaps = (CoverageGap("persona", "303", _YEAR, "4T"), CoverageGap("alpha", "130", _YEAR, "1T"))
+    text = render_table([_GREEN, _HISTORY], head="abc", coverage_gaps=gaps)
+    lines = text.splitlines()
+    assert lines[lines.index(next(line for line in lines if line.startswith("Summary: "))) + 1] == (
+        "Rows: expected 4 / run 2"
+    )
+    section = text.split("## Coverage gaps (2)", 1)[1].split("Verdicts:", 1)[0]
+    assert section.split() == ["-", f"alpha|130|{_YEAR}|1T", "-", f"persona|303|{_YEAR}|4T"]
+
+
+def test_coverage_gaps_load_from_the_coverage_file(tmp_path: Path) -> None:
+    path = tmp_path / "coverage.json"
+    path.write_text(
+        '{"horizon": 9, "gaps": [{"persona": "p", "modelo": "303", "year": 7, "period": "1T", "source": "calendar"}]}',
+        encoding="utf-8",
+    )
+    assert load_coverage_gaps(path) == (CoverageGap("p", "303", 7, "1T"),)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "not json",
+        "[]",
+        '{"horizon": 9}',
+        '{"gaps": ["x"]}',
+        '{"gaps": [{"persona": "p", "modelo": "303", "year": 7}]}',
+        '{"gaps": [{"persona": "p", "modelo": "303", "year": "7", "period": "1T"}]}',
+    ],
+)
+def test_a_malformed_coverage_file_is_refused(tmp_path: Path, content: str) -> None:
+    path = tmp_path / "coverage.json"
+    path.write_text(content, encoding="utf-8")
+    with pytest.raises(ValueError, match="coverage file"):
+        load_coverage_gaps(path)
