@@ -41,6 +41,8 @@ class RegistryFailureCondition(StrEnum):
     SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT = "registry.snapshot.authority_grade.sufficient"
     SNAPSHOT_EXPORT_LAYOUT_DECLARED = "registry.snapshot.export_layout.declared"
     TREE_QUIESCENT = "registry.tree.concurrent_write.quiescent"
+    DECLARATION_CONSISTENT = "registry.declaration.consistent"
+    ROWS_WITHIN_DECLARED_CAPACITY = "registry.rows.within_declared_capacity"
 
 
 @dataclass(frozen=True)
@@ -184,6 +186,32 @@ class RegistryValidationError(RegistryError, CoreValidationError):
     locale templates and CLI JSON emit are pinned to a named
     contract per scenario.
     """
+
+    @classmethod
+    def for_inconsistent_declaration(cls, detail: str, *, declaration: str) -> Self:
+        """The selected registry's own declarations contradict what their reader requires.
+
+        The published registry is shipped data, so no filer input reaches the
+        fault; ``declaration`` names the declaration family that broke.
+        """
+        return cls(
+            detail,
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.DECLARATION_CONSISTENT,
+                facts={"declaration": declaration, "consistent": False},
+            ),
+        )
+
+    @classmethod
+    def for_rows_over_declared_capacity(cls, detail: str, *, rows: str, capacity: int, supplied: int) -> Self:
+        """More detail rows were supplied than the selected revision declares slots for."""
+        return cls(
+            detail,
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.ROWS_WITHIN_DECLARED_CAPACITY,
+                facts={"rows": rows, "capacity": capacity, "supplied": supplied},
+            ),
+        )
 
     @classmethod
     def for_unknown_input_casilla_ids(cls, *, casilla_ids: Sequence[CasillaId]) -> Self:

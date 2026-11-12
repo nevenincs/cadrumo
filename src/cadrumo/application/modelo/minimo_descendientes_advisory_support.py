@@ -33,6 +33,7 @@ from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .profile_derived_facts import renta_family_profile_from_facts, second_entitled_filer_indicated
+from .registry_input_refusals import registry_integrity_verdict, request_verdict
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 if TYPE_CHECKING:
@@ -104,7 +105,10 @@ def _selected_registry_scope(
     if modelo != form_for_role("renta.annual"):
         return None
     if type(filing_year) is not int or filing_year <= 0 or not period_token.strip():
-        raise RegistryValidationError("descendant advisory registry scope is incomplete")
+        raise RegistryValidationError(
+            "descendant advisory registry scope is incomplete",
+            precondition_verdict=request_verdict("descendant_advisory_scope"),
+        )
     return RegistryScope(
         revision=revision,
         bindings=tuple(revision.bindings),
@@ -120,10 +124,12 @@ def _validate_binding_report(scope: RegistryScope) -> None:
     if declared_ids != reported_ids:
         raise RegistryValidationError(
             "selected descendant advisory binding report does not match the revision declarations",
+            precondition_verdict=registry_integrity_verdict("descendant_advisory_bindings"),
         )
     if any(not binding.legal_refs or not binding.source_refs for binding in scope.bindings):
         raise RegistryValidationError(
             "selected descendant advisory binding report contains an ungrounded declaration",
+            precondition_verdict=registry_integrity_verdict("descendant_advisory_bindings"),
         )
 
 
@@ -137,6 +143,7 @@ def _registry_named_descendant_limit(scope: RegistryScope) -> int:
     if len(candidates) != 1:
         raise RegistryValidationError(
             "selected descendant advisory revision must declare exactly one integer diagnostic_items parameter",
+            precondition_verdict=registry_integrity_verdict("descendant_advisory_cardinality"),
         )
     selected = resolve_dated_value(
         candidates[0],
@@ -145,11 +152,13 @@ def _registry_named_descendant_limit(scope: RegistryScope) -> int:
     if selected.date_axis is not DateAxis.FILING_PERIOD:
         raise RegistryValidationError(
             "selected descendant advisory cardinality must use the filing_period axis",
+            precondition_verdict=registry_integrity_verdict("descendant_advisory_cardinality"),
         )
     value = selected.value
     if value != value.to_integral_value() or value <= 0:
         raise RegistryValidationError(
             "selected descendant advisory cardinality must be a positive integer",
+            precondition_verdict=registry_integrity_verdict("descendant_advisory_cardinality"),
         )
     return int(value)
 

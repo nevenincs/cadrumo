@@ -70,6 +70,7 @@ from .profile_derived_facts import (
     madrid_nacimiento_adopcion_candidate_weighted_count,
     snapshot_authored_year,
 )
+from .registry_input_refusals import registry_integrity_verdict
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
 if TYPE_CHECKING:
@@ -88,6 +89,7 @@ def _require_formula_legal_refs(
         raise RegistryValidationError(
             f"Madrid nacimiento/adopción advisory formula {formula_id!r} has legal refs absent from the selected "
             f"authority: {missing!r}",
+            precondition_verdict=registry_integrity_verdict("madrid_nacimiento_adopcion_advisory"),
         )
     return tuple(legal_refs)
 
@@ -105,11 +107,13 @@ def _advisory_legal_refs(snapshot: RegistrySnapshot, casilla_id: CasillaId) -> t
     if casilla is None or casilla.formula is None:
         raise RegistryValidationError(
             f"Madrid nacimiento/adopción advisory casilla {casilla_id!r} has no registry formula provenance",
+            precondition_verdict=registry_integrity_verdict("madrid_nacimiento_adopcion_advisory"),
         )
     formula = next((candidate for candidate in snapshot.revision.formulas if candidate.id == casilla.formula), None)
     if formula is None or not formula.legal_refs:
         raise RegistryValidationError(
             f"Madrid nacimiento/adopción advisory formula {casilla.formula!r} has no legal provenance",
+            precondition_verdict=registry_integrity_verdict("madrid_nacimiento_adopcion_advisory"),
         )
     return _require_formula_legal_refs(snapshot, formula.legal_refs, formula.id)
 

@@ -93,6 +93,7 @@ from .calculate_input_validation import (
     decimal_binding_value,
     projected_m210_tipo_renta_code,
     refuse_row_field_casilla_override,
+    refused_text_value_verdict,
     text_value,
     typed_text_value,
     validate_detail_rows,
@@ -446,6 +447,7 @@ def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_de
     raise ModeloCalculateTextInputError(
         context={"key": key, "label": casilla_def.label, "data_type": casilla_def.data_type},
         translated_message="application.modelo.errors.calculate_text_casilla_numeric_value",
+        precondition_verdict=refused_text_value_verdict(key),
     )
 
 
@@ -485,7 +487,7 @@ def resolve_casilla_overrides(
             continue
         casilla_inputs[key] = decimal(raw_value, flag="--casilla", key=key)
     return (
-        validate_casilla_input_ids(revision, casilla_inputs),
+        validate_casilla_input_ids(revision, casilla_inputs, work_unit=work_unit),
         text_casilla_inputs,
         m210_official_tipo_renta_code,
     )

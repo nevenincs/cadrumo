@@ -96,6 +96,7 @@ from .export_ports import M303ArrivalPorts
 from .profile_binding import resolve_profile_sourced_bindings
 from .profile_export_binding import resolve_m303_profile_lexicals, resolve_profile_identity_producer_values
 from .projection_declaration import modelo_projection_available
+from .registry_input_refusals import registry_integrity_verdict
 from .taxation_comparison import revision_compares_taxation
 from .verification_report_facts import verification_sources_digest
 from .work_addressing import law_selected_revision_for_work_target
@@ -368,7 +369,10 @@ def _m303_context_values(
     values: dict[FilingProducerKey, ModeloFormScalar] = {}
     for key, value in m303_context_producer_values(profile, filing).items():
         if value is not None and not isinstance(value, str):
-            raise RegistryValidationError("form context producer value is not a supported scalar")
+            raise RegistryValidationError(
+                "form context producer value is not a supported scalar",
+                precondition_verdict=registry_integrity_verdict("form_context_producer_value"),
+            )
         values[key] = value
     return values
 

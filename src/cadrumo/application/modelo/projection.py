@@ -92,6 +92,7 @@ from .projection_unresolved import (
     unresolved_casilla_rows,
 )
 from .registry_helpers import validate_casilla_input_ids
+from .registry_input_refusals import RegistryInputCondition, registry_input_verdict, registry_integrity_verdict
 from .work_form_wording import modelo_number, period_words
 from .work_lifecycle import list_work_units
 from .work_profile import ModeloWorkProfile
@@ -293,18 +294,32 @@ def decimal_overrides(
     return values
 
 
-def _binding_id(value: object, *, surface: str) -> BindingId:
+def _binding_id(value: object, *, surface: str, operator_supplied: bool = False) -> BindingId:
+    """Admit a canonical binding id; an id the operator typed is theirs to restate, any other is the registry's."""
     try:
         return _BINDING_ID_ADAPTER.validate_python(value)
     except ValidationError as exc:
-        raise RegistryValidationError(f"{surface} must be a canonical binding id: {value!r}") from exc
+        raise RegistryValidationError(
+            f"{surface} must be a canonical binding id: {value!r}",
+            precondition_verdict=(
+                registry_input_verdict(
+                    RegistryInputCondition.INPUT_ADMITTED,
+                    facts={"input": "projection_binding_override", "admitted": False},
+                )
+                if operator_supplied
+                else registry_integrity_verdict("projection_binding_id")
+            ),
+        ) from exc
 
 
 def _relation_id(value: object, *, surface: str) -> RelationId:
     try:
         return _RELATION_ID_ADAPTER.validate_python(value)
     except ValidationError as exc:
-        raise RegistryValidationError(f"{surface} must be a canonical relation id: {value!r}") from exc
+        raise RegistryValidationError(
+            f"{surface} must be a canonical relation id: {value!r}",
+            precondition_verdict=registry_integrity_verdict("projection_relation_id"),
+        ) from exc
 
 
 def _require_declared_target(
@@ -597,7 +612,7 @@ def parse_projection_binding_overrides(
     enum_channel_ids = enum_consumed_binding_ids(revision)
     date_channel_ids = revision_date_binding_ids(revision)
     for raw_key, value in binding_overrides.items():
-        binding_id = _binding_id(raw_key, surface="project modelo 100 binding override")
+        binding_id = _binding_id(raw_key, surface="project modelo 100 binding override", operator_supplied=True)
         if binding_id in date_channel_ids:
             raise ModeloCalculateBindingInputError(
                 f"--binding {binding_id!r} is a date-valued binding sourced from the active "

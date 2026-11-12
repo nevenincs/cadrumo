@@ -33,6 +33,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 
+from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.modelos.errors import ModeloError
@@ -455,8 +456,12 @@ class ModeloWorkflowGateError(ModeloError):
         return verdict
 
 
-class AmendmentOverrideCasillaError(ModeloError):
-    """Raised when an amendment override targets an undeclared casilla id."""
+class AmendmentOverrideCasillaError(TerminalPreconditionErrorMixin[object], ModeloError):
+    """Raised when an amendment override targets an undeclared casilla id.
+
+    Each raise site carries the verdict of its cause: the declared-casilla
+    listing, the operator's decision for a row field, or a terminal authority.
+    """
 
 
 class AmendmentVerificationRefusedError(ModeloError):

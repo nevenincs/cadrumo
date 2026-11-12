@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Literal, NoReturn
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import (
@@ -45,11 +46,13 @@ from ...domain.modelos.row_models import (
     validate_m349_nif_format,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ..operator_actions.models import PreconditionVerdict
 from .action_errors import ModeloPreconditionErrorMixin
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .registry_input_refusals import RegistryInputCondition, casilla_value_arguments, registry_input_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -70,8 +73,12 @@ class ModeloCalculateDecimalInputError(ModeloPreconditionErrorMixin, ModeloCalcu
     """Raised when a calculation override value is not decimal-shaped."""
 
 
-class ModeloCalculateTextInputError(ModeloCalculateInputError):
-    """Raised when a ``--casilla`` override targets a text casilla with a value its type refuses."""
+class ModeloCalculateTextInputError(TerminalPreconditionErrorMixin[object], ModeloCalculateInputError):
+    """Raised when a ``--casilla`` override targets a text casilla with a value its type refuses.
+
+    A value the operator can state again opens the value edit; a real value
+    this version does not yet file is the operator's decision.
+    """
 
 
 class ModeloCalculateCasillaInputError(ModeloPreconditionErrorMixin, ModeloCalculateInputError):
@@ -191,6 +198,15 @@ def decimal_binding_value(raw_value: str, binding: BindingDefinition) -> Decimal
     return parsed
 
 
+def refused_text_value_verdict(key: str) -> PreconditionVerdict:
+    """Open the value edit of the ``--casilla`` text casilla whose value its type refused."""
+    return registry_input_verdict(
+        RegistryInputCondition.CASILLA_VALUE_ADMITTED,
+        facts={"casilla_id": key, "admitted": False},
+        action_arguments=casilla_value_arguments((key,), None),
+    )
+
+
 def typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinition) -> str:
     """Canonicalise a ``--casilla`` value through its casilla's declared text-scalar validator.
 
@@ -220,6 +236,7 @@ def typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinition
         raise ModeloCalculateTextInputError(
             context=context,
             translated_message="application.modelo.errors.calculate_typed_text_input_invalid",
+            precondition_verdict=refused_text_value_verdict(key),
         ) from exc
 
 
@@ -239,6 +256,7 @@ def text_value(raw_value: str, *, key: str) -> str:
         raise ModeloCalculateTextInputError(
             context={"key": key, "value": raw_value},
             translated_message="application.modelo.errors.calculate_text_input_empty",
+            precondition_verdict=refused_text_value_verdict(key),
         )
     return value
 
@@ -289,11 +307,16 @@ def validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str:
         raise ModeloCalculateTextInputError(
             context={"key": key, "value": value, "accepted": accepted},
             translated_message="application.modelo.errors.calculate_m210_tipo_renta_fetch_gated",
+            precondition_verdict=registry_input_verdict(
+                RegistryInputCondition.CASILLA_VALUE_SUPPORTED,
+                facts={"casilla_id": key, "supported": False},
+            ),
         )
     fetch_gated = ", ".join(sorted(fetch_gated_codes))
     raise ModeloCalculateTextInputError(
         context={"key": key, "value": value, "accepted": accepted, "fetch_gated": fetch_gated},
         translated_message="application.modelo.errors.calculate_m210_tipo_renta_unknown",
+        precondition_verdict=refused_text_value_verdict(key),
     )
 
 

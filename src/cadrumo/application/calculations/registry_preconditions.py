@@ -85,6 +85,22 @@ def calculation_registry_failure_verdict(
             argument_bindings=(binding,),
             conditionality=ActionConditionality.IMMEDIATE,
         )
+    if failure.condition is RegistryFailureCondition.DECLARATION_CONSISTENT:
+        # The published registry is shipped data; no filer action repairs it.
+        return no_action_precondition_verdict(
+            condition_id=condition_id,
+            facts=facts,
+            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+            outcome=NoRecoveryOutcome.TERMINAL,
+        )
+    if failure.condition is RegistryFailureCondition.ROWS_WITHIN_DECLARED_CAPACITY:
+        # Which rows to keep is the filer's choice; no catalogued action states rows.
+        return no_action_precondition_verdict(
+            condition_id=condition_id,
+            facts=facts,
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
     if failure.condition not in {
         RegistryFailureCondition.QUERY_CASILLA_DECLARED,
         RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,

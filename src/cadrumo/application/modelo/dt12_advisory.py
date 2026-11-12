@@ -18,6 +18,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from .registry_input_refusals import registry_integrity_verdict
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 if TYPE_CHECKING:
@@ -58,11 +59,20 @@ def _declared_threshold(declaration: ResolvedMappingFact) -> Decimal:
             try:
                 threshold = Decimal(str(entry.value))
             except InvalidOperation as exc:
-                raise RegistryValidationError(f"DT12 mapping {_DT12_THRESHOLD_KEY!r} is not a decimal") from exc
+                raise RegistryValidationError(
+                    f"DT12 mapping {_DT12_THRESHOLD_KEY!r} is not a decimal",
+                    precondition_verdict=registry_integrity_verdict("dt12_threshold"),
+                ) from exc
             if not threshold.is_finite():
-                raise RegistryValidationError(f"DT12 mapping {_DT12_THRESHOLD_KEY!r} is not finite")
+                raise RegistryValidationError(
+                    f"DT12 mapping {_DT12_THRESHOLD_KEY!r} is not finite",
+                    precondition_verdict=registry_integrity_verdict("dt12_threshold"),
+                )
             return threshold
-    raise RegistryValidationError(f"DT12 mapping is missing {_DT12_THRESHOLD_KEY!r}")
+    raise RegistryValidationError(
+        f"DT12 mapping is missing {_DT12_THRESHOLD_KEY!r}",
+        precondition_verdict=registry_integrity_verdict("dt12_threshold"),
+    )
 
 
 def dt12_reduccion_advisory_finding(

@@ -28,6 +28,7 @@ from ...domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplific
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
+from .registry_input_refusals import registry_integrity_verdict, saved_calculation_verdict, saved_evidence_verdict
 from .work_form_models import ModeloFormRepeatingRow
 
 
@@ -37,17 +38,26 @@ def _annual_evidence(
     if revision is None:
         return None
     if revision.registry_snapshot_ref != snapshot.snapshot_ref:
-        raise RegistryValidationError("saved projection value belongs to another registry coordinate")
+        raise RegistryValidationError(
+            "saved projection value belongs to another registry coordinate",
+            precondition_verdict=saved_calculation_verdict(revision.work_unit_id, coordinate="registry_snapshot"),
+        )
     envelope = revision.filing_instance_evidence
     if envelope is None:
         return None
     if envelope.m303.period != snapshot.filing_period:
-        raise RegistryValidationError("saved annual evidence belongs to another filing period")
+        raise RegistryValidationError(
+            "saved annual evidence belongs to another filing period",
+            precondition_verdict=saved_evidence_verdict("m303_annual_evidence_period"),
+        )
     evidence = envelope.m303.exonerado_390
     if evidence is None:
         return None
     if evidence.applicable and snapshot.period not in ("4T", "12"):
-        raise RegistryValidationError("annual activity evidence requires the final filing period")
+        raise RegistryValidationError(
+            "annual activity evidence requires the final filing period",
+            precondition_verdict=saved_evidence_verdict("m303_annual_evidence_final_period"),
+        )
     return evidence
 
 
@@ -66,9 +76,14 @@ def saved_projection_context_value(
     field = resolve_form_context_field(snapshot.revision, block)
     supported = (M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef)
     if not isinstance(field.projection_ref, supported):
-        raise RegistryValidationError("unsupported scalar form projection")
+        raise RegistryValidationError(
+            "unsupported scalar form projection", precondition_verdict=registry_integrity_verdict("form_projection_ref")
+        )
     if snapshot.modelo.id != form_for_role("iva.periodic"):
-        raise RegistryValidationError("annual activity projection requires Modelo 303")
+        raise RegistryValidationError(
+            "annual activity projection requires Modelo 303",
+            precondition_verdict=registry_integrity_verdict("form_projection_ref"),
+        )
     evidence = _annual_evidence(snapshot, revision)
     if evidence is None:
         return None
@@ -116,17 +131,26 @@ def _simplified_evidence(
         return None
     facts = envelope.m303
     if facts.period != snapshot.filing_period:
-        raise RegistryValidationError("saved activity evidence belongs to another filing period")
+        raise RegistryValidationError(
+            "saved activity evidence belongs to another filing period",
+            precondition_verdict=saved_evidence_verdict("m303_simplified_evidence_period"),
+        )
     evidence = facts.regimen_simplificado
     if (
         evidence.regimen_snapshot.registry_revision_id != snapshot.revision.id
         or evidence.regimen_snapshot.orden.registry_revision_id != snapshot.revision.id
     ):
-        raise RegistryValidationError("saved activity evidence belongs to another registry revision")
+        raise RegistryValidationError(
+            "saved activity evidence belongs to another registry revision",
+            precondition_verdict=saved_calculation_verdict(revision.work_unit_id, coordinate="registry_revision"),
+        )
     design = evidence.regimen_snapshot.record_design
     current_design = snapshot.sources.get(design.id)
     if current_design is None or current_design.sha256 != design.sha256:
-        raise RegistryValidationError("saved activity evidence uses a different record-design source")
+        raise RegistryValidationError(
+            "saved activity evidence uses a different record-design source",
+            precondition_verdict=saved_calculation_verdict(revision.work_unit_id, coordinate="record_design_source"),
+        )
     return evidence
 
 
@@ -144,7 +168,10 @@ def saved_projection_form_records(
     the registry declarations used by the projection.
     """
     if revision.registry_snapshot_ref != snapshot.snapshot_ref:
-        raise RegistryValidationError("saved projection rows belong to another registry coordinate")
+        raise RegistryValidationError(
+            "saved projection rows belong to another registry coordinate",
+            precondition_verdict=saved_calculation_verdict(revision.work_unit_id, coordinate="registry_snapshot"),
+        )
     fields = resolve_form_projection_fields(snapshot.revision, block)
     refs = tuple(field.projection_ref for field in fields)
     supported = (
@@ -155,7 +182,10 @@ def saved_projection_form_records(
     if not all(isinstance(ref, supported) for ref in refs):
         return False, ()
     if snapshot.modelo.id != form_for_role("iva.periodic"):
-        raise RegistryValidationError("simplified-regime projection requires Modelo 303")
+        raise RegistryValidationError(
+            "simplified-regime projection requires Modelo 303",
+            precondition_verdict=registry_integrity_verdict("form_projection_ref"),
+        )
     evidence = _simplified_evidence(snapshot, revision)
     if evidence is None:
         return False, ()
@@ -189,7 +219,10 @@ def _project_simplified_rows(
         ),
     )
     if block.max_rows is not None and any(row.record > block.max_rows for row in projected):
-        raise RegistryValidationError("saved projection exceeds the declared form record capacity")
+        raise RegistryValidationError(
+            "saved projection exceeds the declared form record capacity",
+            precondition_verdict=saved_evidence_verdict("m303_simplified_rows_capacity"),
+        )
     return True, tuple(
         ModeloFormRepeatingRow(index=row.record, values=tuple(field.value for field in row.fields)) for row in projected
     )
