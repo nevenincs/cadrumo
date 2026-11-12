@@ -193,3 +193,76 @@ tributación - Admón.del Estado [00625]" (aeat-dr-200, the same line in the 202
 """
 legal_ref = ["ley-12-2002:art-15", "ley-28-1990:art-19"]
 grounding = "verified"
+
+[[values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_compensacion_bin_aplicada" = "16300.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2275.00", "is_cuota_liquida" = "2275.00", "is_liquidacion_iv_cuota_diferencial" = "2275.00" }
+derivation = """
+Base imponible previa 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
+(no amortización, no retribución de administradores, no periodificación, as that source states). The company compensates its whole pending
+base imponible negativa, 16300.00 (casilla 00671 of the prior return, persona.toml [[attested_prior_values]]), within LIS art. 26.1
+(70 % x 25400.00 = 17780.00, and in any case 1000000.00): base imponible = 25400.00 - 16300.00 = 9100.00.
+Pagos fraccionados 00601/00603/00605 are 0.00: under art. 40.2 each is 18 % of a prior cuota of 0.00, and art. 40.3 was never elected
+(persona.toml [[attested_prior_values]]). No deducciones, bonificaciones, retenciones or ingresos a cuenta, and the State levies 100 %
+(00625), so cuota líquida and cuota diferencial (manual práctico de Sociedades: [00611] = [00599] - ([00601] + [00603] + [00605]))
+both equal the cuota íntegra.
+Cuota íntegra, LIS art. 29.1 as worded before Ley 31/2022 (periodos before 2023): tipo general 25 %, there being no reduced rate for an
+INCN below 1 millón de euros; 9100.00 x 25 % = 2275.00. This plain value holds in a year neither the 2023 redaction nor DT 44 governs.
+Roles are Modelo 200 registry semantic_roles of the liquidación pages DP200014 and DP200014B (aeat-dr-200), resolved to each edition's casilla:
+base imponible previa 00550, compensación 00547, base imponible 00552, cuota íntegra 00562, cuota líquida 00592, pagos fraccionados
+00601/00603/00605, cuota diferencial 00611.
+"""
+legal_ref = ["ley-27-2014:art-10", "ley-27-2014:art-26", "ley-27-2014:art-40", "ley-27-2014:art-29"]
+grounding = "verified"
+
+[[values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+governed_by = "ley-27-2014:art-29-2023"
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_compensacion_bin_aplicada" = "16300.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2093.00", "is_cuota_liquida" = "2093.00", "is_liquidacion_iv_cuota_diferencial" = "2093.00" }
+derivation = """
+Base imponible previa 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
+(no amortización, no retribución de administradores, no periodificación, as that source states). The company compensates its whole pending
+base imponible negativa, 16300.00 (casilla 00671 of the prior return, persona.toml [[attested_prior_values]]), within LIS art. 26.1
+(70 % x 25400.00 = 17780.00, and in any case 1000000.00): base imponible = 25400.00 - 16300.00 = 9100.00.
+Pagos fraccionados 00601/00603/00605 are 0.00: under art. 40.2 each is 18 % of a prior cuota of 0.00, and art. 40.3 was never elected
+(persona.toml [[attested_prior_values]]). No deducciones, bonificaciones, retenciones or ingresos a cuenta, and the State levies 100 %
+(00625), so cuota líquida and cuota diferencial (manual práctico de Sociedades: [00611] = [00599] - ([00601] + [00603] + [00605]))
+both equal the cuota íntegra.
+Cuota íntegra, LIS art. 29.1 as Ley 31/2022 art. 39 worded it for periodos 2023 and 2024: 23 % for an entity whose INCN of the
+prior periodo is below 1 millón de euros (28500.00 here; manual práctico de Sociedades 2024, rate table "Entidades INCN < 1 millón de
+euros en el período impositivo inmediato anterior ... 23 por 100"); 9100.00 x 23 % = 2093.00.
+Roles are Modelo 200 registry semantic_roles of the liquidación pages DP200014 and DP200014B (aeat-dr-200), resolved to each edition's casilla:
+base imponible previa 00550, compensación 00547, base imponible 00552, cuota íntegra 00562, cuota líquida 00592, pagos fraccionados
+00601/00603/00605, cuota diferencial 00611.
+"""
+legal_ref = ["ley-27-2014:art-10", "ley-27-2014:art-26", "ley-27-2014:art-40", "ley-27-2014:art-29-2023"]
+grounding = "verified"
+
+[[values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+governed_by = "ley-27-2014:dt-44"
+roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_compensacion_bin_aplicada" = "16300.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "0.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "1911.00", "is_cuota_liquida" = "1911.00", "is_liquidacion_iv_cuota_diferencial" = "1911.00" }
+derivation = """
+Base imponible previa 25400.00: the resultado contable the company enters (persona.toml [[work_inputs]], 00501), with no ajuste
+(no amortización, no retribución de administradores, no periodificación, as that source states). The company compensates its whole pending
+base imponible negativa, 16300.00 (casilla 00671 of the prior return, persona.toml [[attested_prior_values]]), within LIS art. 26.1
+(70 % x 25400.00 = 17780.00, and in any case 1000000.00): base imponible = 25400.00 - 16300.00 = 9100.00.
+Pagos fraccionados 00601/00603/00605 are 0.00: under art. 40.2 each is 18 % of a prior cuota of 0.00, and art. 40.3 was never elected
+(persona.toml [[attested_prior_values]]). No deducciones, bonificaciones, retenciones or ingresos a cuenta, and the State levies 100 %
+(00625), so cuota líquida and cuota diferencial (manual práctico de Sociedades: [00611] = [00599] - ([00601] + [00603] + [00605]))
+both equal the cuota íntegra.
+Cuota íntegra, LIS DT 44.1.a (Ley 7/2024), periodos starting within 2025: an entity whose INCN of the prior periodo is below
+1 millón de euros pays 21 % on the base between 0 and 50000.00 and 22 % on the rest; the whole base 9100.00 lies in the first band,
+9100.00 x 21 % = 1911.00.
+Roles are Modelo 200 registry semantic_roles of the liquidación pages DP200014 and DP200014B (aeat-dr-200), resolved to each edition's casilla:
+base imponible previa 00550, compensación 00547, base imponible 00552, cuota íntegra 00562, cuota líquida 00592, pagos fraccionados
+00601/00603/00605, cuota diferencial 00611.
+"""
+legal_ref = ["ley-27-2014:art-10", "ley-27-2014:art-26", "ley-27-2014:art-40", "ley-27-2014:dt-44"]
+grounding = "verified"
