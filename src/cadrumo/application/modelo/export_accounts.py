@@ -75,6 +75,7 @@ from ...domain.modelos.errors import (
     ModeloExportProducerFactsRefusedError,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.period import calculation_filing_date
 from ...domain.transactions.own_accounts import (
     OwnAccountRegister,
     OwnAccountRegisterError,
@@ -435,7 +436,11 @@ def _instalment_refusal_reason(
     operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Name the first condition of the split the export fails, or ``None`` when it meets them all."""
-    if not two_instalments_declared(str(work_unit.modelo), period_day=work_unit.period.end_date, authority=operation):
+    if not two_instalments_declared(
+        str(work_unit.modelo),
+        period_day=calculation_filing_date(work_unit.period, authority=operation),
+        authority=operation,
+    ):
         return "not_declared"
     if resolved_result_disposition not in _INSTALMENT_PAYABLE:
         return "nothing_to_pay"
@@ -454,7 +459,11 @@ def _instalment_refusal_reason(
         return "past_filing_window"
     if timeliness is FilingTimeliness.UNKNOWN:
         return "filing_window_unknown"
-    share = first_instalment_share(str(work_unit.modelo), period_day=work_unit.period.end_date, authority=operation)
+    share = first_instalment_share(
+        str(work_unit.modelo),
+        period_day=calculation_filing_date(work_unit.period, authority=operation),
+        authority=operation,
+    )
     if (
         share is not None
         and settled_amount is not None

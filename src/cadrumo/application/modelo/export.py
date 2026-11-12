@@ -84,6 +84,7 @@ from ...domain.modelos.errors import (
     ModeloExportValueOverflowError,
 )
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.period import calculation_filing_date
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..calculations.cross_period_models import CrossPeriodExpectedMemberSet
 from ..calculations.m303_regimen_simplificado_annual_summary import (
@@ -467,7 +468,9 @@ def _settlement_values_for_export(
         settlement=settlement,
         instalment=command.instalment_election,
         first_instalment_share=first_instalment_share(
-            str(work_unit.modelo), period_day=work_unit.period.end_date, authority=operation
+            str(work_unit.modelo),
+            period_day=calculation_filing_date(work_unit.period, authority=operation),
+            authority=operation,
         ),
         charge_account=charge_account,
         refund_account=refund_account,
