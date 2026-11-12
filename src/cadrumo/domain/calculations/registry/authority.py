@@ -698,14 +698,15 @@ class PinnedAuthorityOperation:
     ) -> RegistrySnapshot:
         """Return the snapshot a consumer reads to calculate, preview or report, not to claim for filing.
 
-        An authored year is read at filing grade, exactly as :meth:`snapshot`
-        reads it. A year the selected revision does not author is carried across
-        from the nearest edition and reaches calculation grade at most, so it is
-        read at that grade instead of being refused as a filing claim. Only the
+        An authored year is read at the grade its revision declares, so an
+        edition held below filing grade is read at that grade rather than refused.
+        A year the selected revision does not author is carried across from the
+        nearest edition and reaches calculation grade at most, so it is read at
+        that grade instead of being refused as a filing claim. Only the
         filing-claim gates (verification, export, filing) ask :meth:`snapshot`
         for filing grade of a year directly.
         """
-        from .schema_references import TemporalProjectionDirection
+        from .schema_references import reachable_authority_grade
         from .temporal import revision_temporal_resolution
 
         revision = self.revision_for_context(modelo_id, filing_year=filing_year, period=period, on=on)
@@ -715,11 +716,7 @@ class PinnedAuthorityOperation:
             period=period,
             support=self.supported_filing_years(),
         )
-        grade = (
-            RegistryAuthorityGrade.FILING
-            if resolution.projection_direction is TemporalProjectionDirection.AUTHORED
-            else RegistryAuthorityGrade.CALCULATION
-        )
+        grade = reachable_authority_grade(revision.effective_authority_grade, resolution.projection_direction)
         return self.snapshot(modelo_id, filing_year=filing_year, period=period, on=on, grade=grade)
 
     def snapshot(
