@@ -247,6 +247,7 @@ def _official_references(
             layout,
             sources=snapshot.sources,
             source_payloads=source_payloads,
+            casillas=snapshot.revision.casillas,
         ):
             if entry.casilla_id is not None:
                 xml_paths.setdefault(entry.casilla_id, entry.path)

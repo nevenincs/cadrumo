@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 
 from ....core.casilla_id import CasillaId
 from ....core.export_layout_format import ExportLayoutFormat
@@ -21,6 +21,7 @@ from .schema_exports import (
     FilingEnvelopeDefinition,
 )
 from .schema_references import SourceReference
+from .schema_surfaces import CasillaDefinition
 
 
 def parse_export_payload(
@@ -29,9 +30,16 @@ def parse_export_payload(
     *,
     sources: Mapping[str, SourceReference] | None = None,
     source_payloads: Mapping[str, bytes] | None = None,
+    casillas: Iterable[CasillaDefinition] | None = None,
 ) -> ParsedExportPayload:
-    """Validate exported bytes, including blank filler and declared record terminators."""
-    return _parse_payload(layout, payload, sources=sources, source_payloads=source_payloads, filed=False)
+    """Validate exported bytes, including blank filler and declared record terminators.
+
+    ``casillas`` are the edition's casillas; an XML-dictionary layout needs them to
+    resolve which casilla each dictionary row reads, and a fixed-width layout ignores them.
+    """
+    return _parse_payload(
+        layout, payload, sources=sources, source_payloads=source_payloads, casillas=casillas, filed=False
+    )
 
 
 def parse_filed_payload(
@@ -40,6 +48,7 @@ def parse_filed_payload(
     *,
     sources: Mapping[str, SourceReference] | None = None,
     source_payloads: Mapping[str, bytes] | None = None,
+    casillas: Iterable[CasillaDefinition] | None = None,
 ) -> ParsedExportPayload:
     """Read downloaded filing evidence without treating AEAT annotations as export inputs.
 
@@ -49,7 +58,9 @@ def parse_filed_payload(
     mixed framing still has to satisfy every declared record terminator.
     Geometry, literal, numeric and envelope validation remain shared with export.
     """
-    return _parse_payload(layout, payload, sources=sources, source_payloads=source_payloads, filed=True)
+    return _parse_payload(
+        layout, payload, sources=sources, source_payloads=source_payloads, casillas=casillas, filed=True
+    )
 
 
 def _compact_filing_payload(layout: ExportLayoutDefinition, payload: bytes, filed: bool) -> bool:
@@ -73,16 +84,37 @@ def _payload_body(layout: ExportLayoutDefinition, payload: bytes) -> tuple[int, 
     return cursor, payload
 
 
+def _parse_xml_dictionary(
+    layout: ExportLayoutDefinition,
+    payload: bytes,
+    *,
+    sources: Mapping[str, SourceReference] | None,
+    source_payloads: Mapping[str, bytes] | None,
+    casillas: Iterable[CasillaDefinition] | None,
+) -> ParsedExportPayload:
+    if casillas is None:
+        raise RegistryValidationError(
+            f"XML export layout {layout.id!r} needs the edition's casillas to resolve which casilla each "
+            "dictionary row reads",
+        )
+    return parse_xml_dictionary_payload(
+        layout, payload, sources=sources, source_payloads=source_payloads, casillas=casillas
+    )
+
+
 def _parse_payload(
     layout: ExportLayoutDefinition,
     payload: bytes,
     *,
     sources: Mapping[str, SourceReference] | None,
     source_payloads: Mapping[str, bytes] | None,
+    casillas: Iterable[CasillaDefinition] | None,
     filed: bool,
 ) -> ParsedExportPayload:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
-        return parse_xml_dictionary_payload(layout, payload, sources=sources, source_payloads=source_payloads)
+        return _parse_xml_dictionary(
+            layout, payload, sources=sources, source_payloads=source_payloads, casillas=casillas
+        )
 
     compact = _compact_filing_payload(layout, payload, filed)
     cursor, payload = _payload_body(layout, payload)
@@ -105,8 +137,8 @@ def _parse_payload(
         raise RegistryValidationError(f"filing envelope has {len(trailing)} undeclared body byte(s) after its records")
     if trailing and trailing.strip(b"\r\n"):
         raise RegistryValidationError(f"payload has {len(payload) - cursor} trailing byte(s) after export layout")
-    casillas = tuple(value for value in parsed if value.casilla_id is not None)
-    return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
+    casilla_values = tuple(value for value in parsed if value.casilla_id is not None)
+    return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casilla_values)
 
 
 def filing_envelope_body(envelope: FilingEnvelopeDefinition, payload: bytes) -> tuple[int, bytes]:

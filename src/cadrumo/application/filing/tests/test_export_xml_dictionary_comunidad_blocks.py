@@ -59,6 +59,7 @@ def _entries():
         source_payloads={
             str(source.id): (bundled_path() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
         },
+        casillas=revision.casillas,
     )
 
 

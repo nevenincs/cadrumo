@@ -115,6 +115,7 @@ def _entries(provider: RegistrySchemaAccessor) -> tuple[XmlDictionaryEntry, ...]
         provider.get_snapshot("100").revision.export_layouts[0],
         sources=provider.sources,
         source_payloads=provider.source_payloads,
+        casillas=provider.get_snapshot("100").revision.casillas,
     )
 
 

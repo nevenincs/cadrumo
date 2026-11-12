@@ -791,6 +791,7 @@
         "cadrumo.application.filing.export_verification",
         "cadrumo.application.filing.export_xml_dictionary",
         "cadrumo.application.filing.export_xml_dictionary_modelo100",
+        "cadrumo.application.filing.export_xml_dictionary_rows",
         "cadrumo.application.filing.export_xml_dictionary_values",
         "cadrumo.application.filing.export_xml_dictionary_xsd",
         "cadrumo.application.filing.export_xml_value_limits",

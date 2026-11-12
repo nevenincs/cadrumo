@@ -116,6 +116,7 @@ _LAYOUT_KEYS: Final[frozenset[str]] = frozenset(
         "filing_envelope",
         "auxiliary_envelope_header",
         "dictionary_path_overrides",
+        "dictionary_row_targets",
         "aux_idioma",
     },
 )
@@ -206,6 +207,11 @@ _DISCRIMINATOR_KEYS: Final[frozenset[str]] = frozenset({"offset", "length", "req
 _DICTIONARY_OVERRIDE_KEYS: Final[frozenset[str]] = frozenset({"field_id", "path", "reason"})
 
 
+_DICTIONARY_ROW_TARGET_KEYS: Final[frozenset[str]] = frozenset(
+    {"field_id", "casilla_id", "dictionary_source_ref", "dictionary_line", "xsd_source_ref", "xsd_element"},
+)
+
+
 def semantic_map_digest(semantic_map: SemanticMap) -> str:
     """Return a stable digest of reviewed semantic-map meaning, independent of entry order."""
     payload = semantic_map.model_dump(mode="json")
@@ -265,6 +271,13 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
     }
     # Projected only when declared, so a layout without the member attests
     # byte-identical semantics to the projection that preceded it.
+    row_targets = [
+        _normalise_dictionary_row_target(item)
+        for item in _as_object_list(payload["dictionary_row_targets"], subject="loader dictionary row targets")
+    ]
+    if row_targets:
+        row_targets.sort(key=lambda item: _as_string(item["field_id"], subject="loader dictionary row target field_id"))
+        projected["dictionary_row_targets"] = row_targets
     if payload["auxiliary_envelope_header"] is not None:
         projected["auxiliary_envelope_header"] = payload["auxiliary_envelope_header"]
     return projected
@@ -559,6 +572,7 @@ _IDENTIFIED_PROJECTION_ARRAYS: Final[Mapping[str, str]] = {
     "records": "id",
     "fields": "id",
     "dictionary_path_overrides": "field_id",
+    "dictionary_row_targets": "field_id",
 }
 
 
@@ -662,6 +676,11 @@ def _normalise_dictionary_override(payload: Mapping[str, object]) -> dict[str, o
         "path": payload["path"],
         "reason": payload["reason"],
     }
+
+
+def _normalise_dictionary_row_target(payload: Mapping[str, object]) -> dict[str, object]:
+    _require_exact_keys(payload, _DICTIONARY_ROW_TARGET_KEYS, subject="loader dictionary row target")
+    return {key: payload[key] for key in sorted(_DICTIONARY_ROW_TARGET_KEYS)}
 
 
 def _require_exact_keys(payload: Mapping[str, object], expected: frozenset[str], *, subject: str) -> None:

@@ -38,6 +38,10 @@ def render_tree_files(
 ) -> tuple[tuple[str, bytes], ...]:
     """Build the ordered metadata and reviewable record-fragment payloads."""
     layout_payload = layout.model_dump(mode="json", exclude_none=True)
+    # Rendered only when declared, as the loader-semantic projection does, so a
+    # layout without row targets keeps the bytes it was published with.
+    if not layout_payload.get("dictionary_row_targets"):
+        layout_payload.pop("dictionary_row_targets", None)
     records = tuple(layout_payload.pop("records"))
     metadata_payload = {"revisions": {str(revision_id): {"export_layouts": [layout_payload]}}}
     metadata_bytes = render_toml_bytes("0000-export-layout.toml", metadata_payload)

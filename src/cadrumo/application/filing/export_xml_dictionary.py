@@ -40,10 +40,7 @@ from ...core.filing_producer_key import FilingProducerKey
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_value_contract import BindingDataType
-from ...domain.calculations.registry.export_xml_dictionary import (
-    XmlDictionaryEntry,
-    xml_dictionary_entries,
-)
+from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.inventory_bindings import TAXPAYER_YEAR_ACTIVITY_GRAIN
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
@@ -64,6 +61,7 @@ from .export_xml_dictionary_modelo100 import (
     refuse_family_minimum_without_its_rows,
     registry_modelo_100_xml_declarations,
 )
+from .export_xml_dictionary_rows import xml_dictionary_layout_entries
 from .export_xml_dictionary_values import format_xml_dictionary_value, is_xml_dictionary_numeric_type
 from .export_xml_dictionary_xsd import (
     XML_DICTIONARY_ROOT_TAG,
@@ -236,11 +234,7 @@ def render_xml_dictionary_layout(
     Returns:
         UTF-8 XML declaration bytes for the local export artefact.
     """
-    entries = xml_dictionary_entries(
-        layout,
-        sources=schema_provider.sources,
-        source_payloads=schema_provider.source_payloads,
-    )
+    entries = xml_dictionary_layout_entries(layout, schema_provider=schema_provider)
     root = ElementTree.Element(
         XML_DICTIONARY_ROOT_TAG,
         expected_xml_dictionary_root_identity(layout, draft=draft, schema_provider=schema_provider),
@@ -317,11 +311,7 @@ def refuse_xml_dictionary_payload_outside_xsd(
     _refuse_values_outside_xsd(
         DefusedElementTree.fromstring(payload),
         layout,
-        entries=xml_dictionary_entries(
-            layout,
-            sources=schema_provider.sources,
-            source_payloads=schema_provider.source_payloads,
-        ),
+        entries=xml_dictionary_layout_entries(layout, schema_provider=schema_provider),
         schema_provider=schema_provider,
     )
 
@@ -353,11 +343,7 @@ def refuse_incomplete_xml_dictionary_payload(
         document,
         schema=xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
         source_id=source.id,
-        entries=xml_dictionary_entries(
-            layout,
-            sources=schema_provider.sources,
-            source_payloads=schema_provider.source_payloads,
-        ),
+        entries=xml_dictionary_layout_entries(layout, schema_provider=schema_provider),
     )
     if draft.modelo == form_for_role("renta.annual"):
         refuse_family_minimum_without_its_rows(document)

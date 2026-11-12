@@ -668,20 +668,6 @@ def _validate_manifest_casilla_ids(casillas: tuple[CalculationCompletenessCasill
         )
 
 
-def _validate_manifest_record_design_metadata(casillas: tuple[CalculationCompletenessCasilla, ...]) -> None:
-    """Reject duplicate reviewed segment/number metadata in a manifest."""
-    metadata_pairs = Counter(casilla.record_design_metadata() for casilla in casillas)
-    duplicates = sorted(pair for pair, count in metadata_pairs.items() if count > 1)
-    if duplicates:
-        rendered = ", ".join(
-            f"{number!r}" if segmento is None else f"{number!r} within segmento {segmento!r}"
-            for segmento, number in duplicates
-        )
-        raise RegistryValidationError(
-            f"calculation-completeness manifest declares duplicate casilla record-design metadata: {rendered}",
-        )
-
-
 def _validate_manifest_grounding(source_ref: SourceRefId, source_refs: SourceRefs) -> None:
     """Require the manifest's derivation source to be among its evidence refs."""
     if source_ref not in source_refs:
@@ -742,7 +728,6 @@ class CalculationCompletenessManifest(RegistryModel):
     def _validate_manifest(self) -> CalculationCompletenessManifest:
         _validate_manifest_population(self.casillas)
         _validate_manifest_casilla_ids(self.casillas)
-        _validate_manifest_record_design_metadata(self.casillas)
         _validate_manifest_grounding(self.source_ref, self.source_refs)
         _validate_manifest_extraction_state(self.manual_extraction, self.manual_extraction_reason)
         return self

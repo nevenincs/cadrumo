@@ -108,11 +108,26 @@ def _asterisk_casilla(entry: XmlDictionaryEntry, box_token: str, asterisk_casill
     return entry.field_id if entry.field_id in asterisk_casillas else None
 
 
+def _anchored_casilla(entry: XmlDictionaryEntry, declared_ids: frozenset[str]) -> str | None:
+    """Name the casilla a dictionary row anchors on the form.
+
+    A row that prints the box of another casilla, because the dictionary prints
+    one number on several rows, restates that box: the form has one box there,
+    so the row anchors the casilla that holds the number as its id and never the
+    carrier the row was resolved to.
+    """
+    printed = entry.printed_number
+    if printed is not None and entry.casilla_id != printed and printed in declared_ids:
+        return printed
+    return entry.casilla_id
+
+
 def _dictionary_position(
     build: Build,
     entry: XmlDictionaryEntry,
     described: Mapping[str, tuple[str, str]],
     asterisk_casillas: frozenset[str],
+    declared_ids: frozenset[str],
 ) -> Position:
     containers, page = _dictionary_position_parts(entry)
     box_token, text = described.get(entry.field_id, ("", ""))
@@ -124,8 +139,9 @@ def _dictionary_position(
         box=box_digits if box_token.startswith("[") and box_digits else None,
         xml_container=containers,
     )
-    if entry.casilla_id is not None:
-        position.casilla_ids.append(entry.casilla_id)
+    anchored = _anchored_casilla(entry, declared_ids)
+    if anchored is not None:
+        position.casilla_ids.append(anchored)
     asterisk = _asterisk_casilla(entry, box_token, asterisk_casillas)
     if asterisk is not None:
         position.casilla_ids.append(asterisk)
@@ -145,12 +161,17 @@ def dictionary_positions(
         return
     path = data_root / source.corpus_path
     payload = path.read_bytes()
-    entries = xml_dictionary_entries(layout, sources=sources, source_payloads={str(source.id): payload})
+    entries = xml_dictionary_entries(
+        layout, sources=sources, source_payloads={str(source.id): payload}, casillas=build.revision.casillas
+    )
     described = _dictionary_descriptions(payload)
     build.used_dictionary = True
     build.design_sources.append(FormDesignSource(source_ref=str(source.id), sha256=sha256_file(path)))
     asterisk_casillas = frozenset(casilla.id for casilla in build.revision.casillas if casilla.number.startswith("*"))
-    build.positions.extend(_dictionary_position(build, entry, described, asterisk_casillas) for entry in entries)
+    declared_ids = frozenset(casilla.id for casilla in build.revision.casillas)
+    build.positions.extend(
+        _dictionary_position(build, entry, described, asterisk_casillas, declared_ids) for entry in entries
+    )
     build.repeats.update(official_repeats(layout, sources, data_root))
 
 

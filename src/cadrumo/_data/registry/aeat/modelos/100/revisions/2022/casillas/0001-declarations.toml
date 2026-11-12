@@ -1795,6 +1795,20 @@ internal_only = true
 legal_refs = ["ley-35-2006:art-7", "ley-19-1994:art-75"]
 source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2022-manual-parte1"]
 
+[[revisions."2022".casillas]]
+id = "RESINGDEV"
+continuidad_id = "resultado-ingresar-o-devolver-irpf"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:2008 y aeat-dr-100-2022-dictionary:2198: RESINGDEV, ruta /DatosEconomicos/Resultados/IngresoDevolucionRes/RESINGDEV, tipo N102, impresa [0695]; el diccionario 2021 imprime la fila y el registro de la edicion 2021 no declara la casilla."
+number = "0695"
+section = ["resultados", "ingreso_devolucion_res"]
+data_type = "decimal"
+semantic_role = "resultado_ingresar_o_devolver_irpf"
+input_kind = "computed"
+formula = "renta-resultado-ingresar-o-devolver"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+
 # The rentas other than work income that LIRPF art. 20 weighs against its 6.500 euros limit. The
 # Manual practico defines them as the algebraic sum of the net capital, activity, imputed and
 # capital-gain income, before reductions and without integration or compensation. No box of the
