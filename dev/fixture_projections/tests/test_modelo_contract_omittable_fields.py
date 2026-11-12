@@ -84,3 +84,8 @@ def test_a_model_reached_only_through_a_type_alias_keeps_its_omittable_fields(pr
     _, schema = models_json_schema([(_AliasRoot, "serialization")], ref_template="#/$defs/{model}")
     omittable = producer.omittable_fields([_AliasRoot], schema["$defs"])
     assert omittable.get("_BehindAlias") == frozenset({"dropped_when_none"})
+
+
+def test_a_model_the_schema_does_not_define_is_refused(producer: ModuleType) -> None:
+    with pytest.raises(SystemExit, match="_Leaf"):
+        producer.omittable_fields([_Root], {"_Root": {}})

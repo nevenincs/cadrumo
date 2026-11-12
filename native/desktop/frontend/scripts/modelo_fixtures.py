@@ -432,7 +432,7 @@ def omittable_fields(roots: Iterable[type[BaseModel]], defs: Mapping[str, Any]) 
         if not fields:
             continue
         if name not in defs:
-            continue
+            raise SystemExit(f"{name} leaves out {sorted(fields)} but the schema does not define it")
         omittable[name] = fields
     return omittable
 
