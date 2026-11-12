@@ -8969,6 +8969,31 @@ tui:
       selection_dropped: No es mostra l'apunt que selecciona aquest enllaç.
       title: Registres no disponibles
   modelo:
+    amendment:
+      done: 'Correcció preparada i registrada aquí. No s''ha enviat res a l''AEAT:
+        exporta''n el fitxer i presenta''l tu.'
+      incomplete: Completa tot el que demana la correcció i corregeix almenys un valor.
+      key: Corregeix
+      kind_label: Tipus de correcció
+      motive_label: Motiu de la rectificació
+      unknown: Pot ser que aquesta correcció s'hagi registrat. Comprova'n l'operació
+        abans de preparar-ne una altra.
+      values_label: Valors corregits
+    disagreements:
+      accept: Accepta
+      key: Respon discrepàncies
+      none: La declaració no planteja cap discrepància entre fonts.
+      outcome_unknown: Pot ser que la resposta s'hagi desat. Torna a llegir la declaració
+        abans de respondre res més.
+      read_failed: No s'han pogut llegir les teves respostes.
+      reading: Llegint les teves respostes...
+      reason_label: El teu motiu per acceptar
+      refused: La resposta s'ha rebutjat.
+      revoke: Retira
+      sending: Enviant la teva resposta...
+      title: Discrepàncies entre fonts
+      unavailable: Encara no hi ha res a respondre. Calcula primer la declaració.
+      your_reason: 'El teu motiu: {reason}'
     editor:
       confirm_hint: Prem ⏎ per confirmar {value} o escriu el valor correcte.
       keys: 'Tecles: ⏎ {save_next} · Ctrl+⏎ {save}'
@@ -9154,6 +9179,9 @@ tui:
       stage: Deixar per revisar
       title: Manifestacions que pots fer
       withdraw: Retirar la manifestació
+    taxation:
+      key: Conjunta o individual
+      reading: Calculant les dues opcions…
   operations:
     action:
       close: Tanca
