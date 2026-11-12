@@ -90,6 +90,7 @@ const OPTION_FAMILIES: Record<string, readonly string[]> = {
   ],
   movement_kind: MOVEMENT_KINDS,
   physical_evidence_role: PHYSICAL_ROLES,
+  purchase_ledger_row: ["claimed", "none", "unstated"],
   retirement_reason: ["created_in_error", "activity_ceased", "no_stock_held"],
   valuation_method: VALUATION,
 };
@@ -1306,6 +1307,10 @@ export function inventoryOperations(
               family === "closing_authority" ||
               family === "movement_kind"
                 ? (OPTION_ROLES[value] ?? null)
+                : null,
+            effect_key:
+              family === "purchase_ledger_row"
+                ? `application.inventory.effects.${family}.${value}`
                 : null,
           })),
         })),

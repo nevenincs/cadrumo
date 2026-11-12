@@ -248,7 +248,7 @@ def legacy_capsule(
 
 def test_both_supported_stored_versions_are_older_than_the_current_schema() -> None:
     """The declared window must name real earlier versions, not the current one."""
-    assert (*_PAYER_DEFAULT_VERSIONS, 8, 9) == SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
+    assert (*_PAYER_DEFAULT_VERSIONS, 8, 9, 10) == SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
     assert max(SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS) < MIGRATED_PROFILE_SCHEMA_VERSION
 
 
@@ -396,21 +396,21 @@ def test_a_schema_6_record_carrying_a_later_schema_path_is_refused(
 
 
 @pytest.mark.parametrize("path", ("m200_administrador.0.nif", "m200_relaciones.has_participacion_socio"))
-def test_a_schema_9_record_carrying_a_modelo_200_page_002_path_is_refused(
+def test_a_schema_10_record_carrying_a_modelo_200_page_002_path_is_refused(
     path: str,
     tmp_path: Path,
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
 ) -> None:
-    """Schema 9 declared no Modelo 200 page 002 section, so a schema-9 row carrying one was forged."""
+    """Schema 10 declared no Modelo 200 page 002 section, so a schema-10 row carrying one was forged."""
     value: object = False if path.startswith("m200_relaciones.") else "Y0000000Z"
     stored = _publish_legacy(
-        tmp_path, contexts, (*_UNTOUCHED_FACTS, UserProfileFact(path=path, value=value)), version=9
+        tmp_path, contexts, (*_UNTOUCHED_FACTS, UserProfileFact(path=path, value=value)), version=10
     )
     session = _session(contexts[1])
     try:
         with pytest.raises(UserProfileValidationError, match="later-schema paths"):
             migrate_profile_record_on_open(session, root=tmp_path)
-        assert stored.schema_version == 9
+        assert stored.schema_version == 10
     finally:
         session.close()
 

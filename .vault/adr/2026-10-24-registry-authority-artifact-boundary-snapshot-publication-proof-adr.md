@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-authority-artifact-boundary'
 date: '2026-10-24'
-modified: '2026-10-24'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:92048427ae528030c139ac4d37bcb41e9768ded785be77577207c8650b2ebd71'
+body_hash: 'sha256:46744e1721ddcdba4aad51781586ede0e8e5f26bffa82315dc0076ea7e4cdb32'
 related:
   - "[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-reference]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]"
@@ -20,11 +20,13 @@ Accepted 2026-10-24 by the operator ("accept … go"), relayed by the coordinato
 
 1. A case that fails at or below its declared grade blocks publication.
 2. A proof-version mismatch falls back to full validation; it never refuses.
-3. The two wall-clock fact lookups stay at today's Madrid date. Moving them to the filing coordinate is out of scope and would be a separate decision.
+3. ~~The two wall-clock fact lookups stay at today's Madrid date. Moving them to the filing coordinate is out of scope and would be a separate decision.~~ Superseded 2026-11-12 by the coordinator's rulings of that date (amendment `2026-11-12-registry-authority-artifact-boundary-snapshot-proof-dateless-amendment-adr`): a governed-fact read without a date resolves across every edition inside the supported filing years, never at the run date.
 4. The proof version is computed automatically as a digest, not a hand-maintained constant.
 5. Where the design kept two ways of validating the same request, one canonical route is preferred, as long as correctness holds.
 
 The sections below incorporate these rulings. Ruling 5 drops the proposed draft's recorded refusals and its publication self-check. Ruling 4 drops its hand-maintained contract constant and repository gate.
+
+**Amended 2026-11-12.** Accepted by the coordinator on 2026-11-12 (proposal `2026-11-12-registry-authority-artifact-boundary-snapshot-proof-dateless-amendment-adr`, with the companion format amendment `2026-11-12-registry-authority-artifact-boundary-indexed-storage-v6-amendment-adr`). The only run-date governed-fact read in the proof sweep was the legal-reference vocabulary read by `setup_profile_bindings.py`; it now reads across the support envelope, the sweep makes no clock read, and the fact-date window is removed from publication, the proof contract, proof use and the snapshot memo key. The passages below are amended in place and marked with that date.
 
 ## Problem Statement
 
@@ -32,7 +34,7 @@ The sections below incorporate these rulings. Ruling 5 drops the proposed draft'
 
 ## Considerations
 
-- For a request with `on=None` and no `revision_id`, the outcome of a `(modelo, filing_year, period, grade)` cell is a function of generation content, validator code, the period end date and two governed-fact lookups made at the wall-clock date (reference, "What `build_validated_snapshot` does").
+- For a request with `on=None` and no `revision_id`, the outcome of a `(modelo, filing_year, period, grade)` cell is a function of generation content, validator code, the period end date and two governed-fact lookups made at the wall-clock date (reference, "What `build_validated_snapshot` does"). Amended 2026-11-12: those lookups now read across the support envelope, so the outcome no longer depends on the run date.
 - The current generation's set is finite and small: 1,258 cells over 141 revisions, 3,774 cell-grade outcomes, swept in about 23 s. Every refusal is the declared grade ceiling, and outcomes are uniform per `(modelo, revision, grade)` (reference, "Selector set").
 - The request space is wider than the declared set. `EVENT-N` admits any concrete `EVENT-n`, years above the horizon are projected, and production callers pass `on` and `revision_id` (reference, "Runtime inputs").
 - Logical generation identifies the legal inputs only. A validator change republishes new physical bytes under the same generation (`2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr`, amendment 2026-09-30). A proof therefore certifies something the generation digest does not name.
@@ -55,24 +57,24 @@ The sections below incorporate these rulings. Ruling 5 drops the proposed draft'
 - `build_validated_snapshot` stays the single canonical validator and the single snapshot assembly route. A proof does not create a second route. The function takes an optional typed proof, and that proof satisfies only the cross-check step of the same sequence. Publication proves cells by calling the same function without a proof. There is no second check implementation, no publication-only variant, and no selection, precedence or grade logic duplicated in SQL (indexed-storage ADR, "Constraints").
 - The proven set is exactly: every modelo directory, every filing year from the support floor to the horizon, every declared period token (the symbolic `EVENT-N` as itself), and every member of the grade ladder, with `on=None` and `revision_id=None`. A cell is recorded only when it passes, together with the revision it selected. Refusals are not recorded: at runtime they take the full path, which reproduces the same typed refusal from the validator itself.
 - A cell that fails at or below its revision's declared grade refuses publication and preserves the previous descriptor (ruling 1). A refusal above the declared grade is the expected ladder outcome and is simply not recorded.
-- A proof is used only when all of these hold: the database was admitted by physical digest; the request is in the proven set after canonical period normalization and selects the recorded revision; the runtime's validator digest equals the recorded one; and the current Madrid date lies inside the recorded fact-date window. Otherwise the same function runs every check (ruling 2). A missing or unusable proof never refuses and never weakens a check.
+- A proof is used only when all of these hold: the database was admitted by physical digest; the request is in the proven set after canonical period normalization and selects the recorded revision; and the runtime's validator digest equals the recorded one (amended 2026-11-12: there is no date condition). Otherwise the same function runs every check (ruling 2). A missing or unusable proof never refuses and never weakens a check.
 - The validator digest is computed automatically (ruling 4). Publication records the import closure of the snapshot validator: `snapshot.py` and the registered cross-domain check modules, followed through their `cadrumo` imports. It records each module's source digest and a digest over that list. Runtime re-hashes exactly the recorded modules once per process and compares. A new import can enter the closure only through an edit to a module already in it, so re-hashing the recorded set cannot report a false match. If a module's source cannot be read, the proof is unusable and the request falls back to full validation.
-- The fact-date window is the intersection of the validity windows of the governed-fact variants that the proven checks resolved at the publication date. Today each of the two such facts has one open-ended variant, so the window is open above (ruling 3).
+- Amended 2026-11-12: no snapshot cross-check reads the run date, so publication records no fact-date window and the proof contract carries the validator closure and its digest only. The registry clock guard is shrink-only; a new clock read in the validator closure is a defect, not a reason to restore a window.
 - The validator digest identifies the validator, not the law. The logical generation stays the legal-input digest. A validator change alone needs republication to restore the fast path, not a new generation.
-- The proof tables are part of the published database and are covered by the physical digest. The store format advances to `cadrumo-authority-sqlite-v5`. Runtime admits both v5 and the preceding v4. A v4 database is a database without proofs, so every request takes full validation until the operator republishes. The descriptor format is unchanged.
+- The proof tables are part of the published database and are covered by the physical digest. The store format advances to `cadrumo-authority-sqlite-v5`. Runtime admits both v5 and the preceding v4. A v4 database is a database without proofs, so every request takes full validation until the operator republishes. The descriptor format is unchanged. Amended 2026-11-12: removing the window columns advances the format to `cadrumo-authority-sqlite-v6`; v5 is admitted without proofs and v4 is refused (companion amendment).
 - Unchanged by this decision: static inspection (`grade=None`) keeps its narrower non-snapshot claim; the eager `ValidatedRegistryAuthority`, dev conformance, tree validation and diagnostic classification never pass a proof; the public helper checks keep their direct callers; stale-draft and capture checks before durable filing output remain mandatory.
 
 ## Implementation
 
-We will prove the snapshot cross-checks once, at publication, for the generation's declared selector set. Runtime will rely on those passes through the admitted physical digest, an automatic validator digest and a fact-date window. Every other request gets full validation in the same function.
+We will prove the snapshot cross-checks once, at publication, for the generation's declared selector set. Runtime will rely on those passes through the admitted physical digest and an automatic validator digest (the fact-date window was removed on 2026-11-12). Every other request gets full validation in the same function.
 
-- **Domain.** A registry module owns the proof contract that runtime and publication share. It enumerates the proven set through the canonical directory and temporal selection, defines the proof key and the typed proof value, computes the validator closure digest, and records wall-clock fact lookups to derive the window. `build_validated_snapshot` accepts that typed proof and refuses one that does not match the selected revision and request.
-- **Publication.** After complete validation, the publisher sweeps the staged database through the runtime reader, with the governed-fact scope bound to that reader's operation. It writes the passing cells, the validator closure and digest, and the window into the database, then computes the physical digest and installs the file. A below-ceiling failure aborts before installation.
+- **Domain.** A registry module owns the proof contract that runtime and publication share. It enumerates the proven set through the canonical directory and temporal selection, defines the proof key and the typed proof value, and computes the validator closure digest (amended 2026-11-12: it no longer records wall-clock fact lookups or derives a window). `build_validated_snapshot` accepts that typed proof and refuses one that does not match the selected revision and request.
+- **Publication.** After complete validation, the publisher sweeps the staged database through the runtime reader, with the governed-fact scope bound to that reader's operation. It writes the passing cells, the validator closure and digest into the database (amended 2026-11-12: no window), then computes the physical digest and installs the file. A below-ceiling failure aborts before installation.
 - **Runtime.** On a memo miss, `PinnedAuthorityOperation` reads the proof for the normalized request from its reader. It passes the proof to `build_validated_snapshot` when every trust condition holds, and passes none otherwise.
-- **Interaction with the runtime memo** (commit `d83d955504`). The memo keys on the generation pin, the full request coordinate, the grade and the Madrid validation date, and caches successes only. The proof changes neither the memo's key nor its result, only the cost of the build behind a miss.
-- **Tests** use the real publisher, reader and validator. A usable proof skips the checks. A physical-digest, validator-digest or window miss runs them. A below-ceiling failure blocks publication. Snapshots are typed-equal with and without a proof across the proven set.
+- **Interaction with the runtime memo** (commit `d83d955504`). The memo keys on the generation pin, the full request coordinate and the grade, and caches successes only (amended 2026-11-12: the Madrid validation date is no longer part of the key). The proof changes neither the memo's key nor its result, only the cost of the build behind a miss.
+- **Tests** use the real publisher, reader and validator. A usable proof skips the checks. A physical-digest or validator-digest miss runs them; a proof holds whatever the run date (amended 2026-11-12). A below-ceiling failure blocks publication. Snapshots are typed-equal with and without a proof across the proven set.
 
-This decision is applied to the indexed-storage ADR as its 2026-10-24 amendment: store format `cadrumo-authority-sqlite-v5`, proofs admitted by physical digest, and v4 still admitted without proofs.
+This decision is applied to the indexed-storage ADR as its 2026-10-24 amendment: store format `cadrumo-authority-sqlite-v5`, proofs admitted by physical digest, and v4 still admitted without proofs. Amended 2026-11-12: store format `cadrumo-authority-sqlite-v6`, v5 admitted without proofs, v4 refused.
 
 ## Rationale
 

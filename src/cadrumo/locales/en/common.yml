@@ -3667,6 +3667,7 @@ desktop:
       previous: Previous period
       year_next: Next year
       year_previous: Previous year
+      years_supported: Years you can read
       years_with_movements: Years with movements
     position: Row {row} of {count}
     prorrata:
@@ -4064,11 +4065,6 @@ desktop:
         note: Say which ledger transaction books this purchase, that none does, or
           clear what was stated.
         row: The ledger books this purchase
-        row_claimed: A ledger transaction books it
-        row_none: No ledger transaction books it
-        row_unstated: Not stated
-        row_unstated_hint: This clears an earlier statement.
-        state_claimed: Booked by {transaction}
         transaction: Ledger transaction
       closing:
         authority: How the value is decided
@@ -4266,21 +4262,16 @@ desktop:
       action:
         attest: State no withholding
         record: Record certificate
-      attested_on: Stated on {date}
       changes: Changes to the {ejercicio} certificates
       column:
         class: Income class
         document: Document
-        especie: In kind
-        ingreso: On account
-        integro: Gross cash
         note: Note
         origin: Source
-        pago: Credit
         payer: Payer
-        repercutido: Passed on
-        retencion: Withholding
         state: State
+        stated_on: Stated on
+        withdrawn_on: Withdrawn on
       correct_hint: To correct a certificate, remove it and record it again.
       document: Certificate document (optional)
       document_hint: A document stored under Documents. The record is refused if Cadrumo
@@ -4306,7 +4297,6 @@ desktop:
         payer_certificate: Payer certificate
       origin_label: Source of the figures
       payer_legal_name: Payer name (optional)
-      payer_ref: Payer {ref}
       payer_tax_id: Payer tax ID
       payer_tax_id_hint: Sent with the record to identify the payer. It is not shown
         again.
@@ -4319,7 +4309,6 @@ desktop:
         states it, or state that an income class has none.
       withdraw: Withdraw
       withdraw_of: Withdraw the statement for {class}
-      withdrawn_on: Withdrawn on {date}
   logs:
     all_loggers: All loggers
     all_origins: All origins
@@ -7860,6 +7849,16 @@ tui:
       empty: No supporting documents await review.
       extract: Read document
       loading: Reading the documents…
+      page:
+        document: '{file} ({media}) - page {page} of {count}'
+        empty: The document states nothing to show.
+        fact: '{label}: {value}'
+        failed: The document could not be shown.
+        line: '{position}. {facts}'
+        loading: Reading the stored document...
+        not_drawn: The terminal does not draw pages. Open the document in the window
+          to see it.
+        view: View document
       path_placeholder: Type the path of the file
       pending: Pending
       printed_total_disagrees: The total printed on the document differs from the
@@ -8577,6 +8576,10 @@ tui:
           movement_add: Add a movement
           movement_claim: State the ledger entry of a purchase
           valuation_preview: Preview the valuation
+        claim:
+          load: Show transactions this purchase can claim
+          none_offered: No ledger transaction can be claimed by this purchase.
+          prompt: Choose a transaction
         column:
           actividad: Activity
           method: Method
@@ -8615,10 +8618,6 @@ tui:
           count: Count
           opening: Opening
           purchase: Purchase
-        ledger_row:
-          claimed: A ledger entry books this purchase
-          none: No ledger entry books this purchase
-          unstated: Clear the statement (unstated)
         list: Inventories
         method:
           coste_medio: Average cost
@@ -9271,10 +9270,6 @@ tui:
         revision_current: Current
         revision_superseded: Replaced
   withholding:
-    absence:
-      state:
-        active: Active
-        withdrawn: Withdrawn
     absences:
       title: Statements of no withholding
     action:
@@ -9287,6 +9282,7 @@ tui:
       attested_on: Stated on
       income: Income
       note: Note
+      origin: Stated by
       payer: Payer
       state: State
     ejercicio: Year
@@ -9326,6 +9322,15 @@ workspace:
         declaration: Declaration
         legal: Legal status
         local: Local status
+      coverage:
+        applicability_undetermined: 'Whether you need to file is not known: {modelos}.
+          Check your obligations.'
+        applicable_window_missing: 'These modelos apply, but no filing window is held
+          for them: {modelos}. Check the official calendar.'
+        no_dates: No filing dates are available for this range. That is not the same
+          as nothing being due.
+        registry_unmodeled: 'No applicability rules or filing windows are held for:
+          {modelos}. Check the official guidance on your obligations.'
       detail:
         action: 'Enter action: {action}'
         axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · AEAT receipt: {receipt}
@@ -10514,6 +10519,13 @@ workspace:
         set_nothing: new value
         set_source: replaces the value from its source
       finding:
+        calculation_withdrawn: The calculation is withdrawn. Calculate again after
+          you state the amounts carried from earlier years.
+        carry_withdrawal_filed: This declaration is recorded as filed. Correct it
+          with an amendment.
+        carry_withdrawal_keeps_entries: Withdrawing this statement would discard the
+          other values you entered on this declaration. Enter the carried amounts
+          instead.
         clear_of_source_fed_casilla: A source fills this box, so it cannot be emptied.
           Give it back to its source instead.
         intent_not_admitted: This box cannot be changed that way.

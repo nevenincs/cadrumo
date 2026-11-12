@@ -398,6 +398,11 @@ wizard:
           rate. Optional; unset leaves the entity on its otherwise-applicable rate.
       output-language:
         help: CLI output language for this profile
+      pago-fraccionado-art-40-3-elected:
+        help: States whether the entity elected, in its census declaration, the Art.
+          40.3 LIS option (instalments on the taxable base of the first 3, 9 or 11
+          months); the negative form records that it did not or that it renounced
+          it. Optional; left unset, neither answer is assumed.
       patrimonio-declaration-threshold-met:
         help: Your Impuesto sobre el Patrimonio tax is payable or, if not, your assets
           and rights are worth more than 2,000,000 euros
@@ -957,6 +962,12 @@ wizard:
           15 percent reduced rate during those two periods.
         prompt: Is this a newly-created legal entity in one of its first two profit-making
           tax periods?
+      pago-fraccionado-art-40-3-elected:
+        help: 'Applies only to legal entities. With net turnover below the Art. 40.3
+          threshold, this election decides whether each Modelo 202 instalment yields
+          a payment. If you do not know, leave it unanswered: no answer is assumed.'
+        prompt: Did the entity elect, in its census declaration, the Art. 40.3 LIS
+          option for its instalment payments?
       title: Taxpayer type
     title: Setup wizard
     verifier:

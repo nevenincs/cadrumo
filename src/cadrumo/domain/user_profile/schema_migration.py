@@ -14,7 +14,10 @@ two.
   reduction is derived from the facts of each lease, and a stored tier cannot be
   converted into those facts, so the migration clears whatever value is stored
   and the operator is asked to record the leases.
-- Schema 10 adds the Modelo 200 page 002 relations: the administradores, the
+- Schema 10 adds the LIS art. 40.3 election of the Modelo 202 as an optional
+  fact. It changes no stored value, so its transition clears nothing; a
+  schema-9 record that already carries the field is refused.
+- Schema 11 adds the Modelo 200 page 002 relations: the administradores, the
   participations in and of the entity, its representatives, its secretary, its
   dependent entities, its permanent establishments abroad, its SICAV holdings
   and whether it has any of each. It only adds fields, so it clears nothing.
@@ -53,7 +56,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 10
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 11
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -141,6 +144,23 @@ no successor to read its value, so every stored value goes.
 """
 
 
+_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9, 10})
+"""Versions whose outgoing transition only adds fields, so it clears no stored value."""
+
+
+def _transition_paths(version: int) -> frozenset[str]:
+    defaulted: set[str] = set(_DEFAULTED_VALUES_BY_TRANSITION.get(version, _NO_DEFAULTS))
+    return frozenset(defaulted | _RETIRED_PATHS_BY_TRANSITION.get(version, _NO_PATHS))
+
+
+_CLEARED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
+    {
+        version: _transition_paths(version)
+        for version in (*_DEFAULTED_VALUES_BY_TRANSITION, *_RETIRED_PATHS_BY_TRANSITION, *_ADDITIVE_TRANSITIONS)
+    },
+)
+"""The same transitions as path sets, for the callers that only need the names."""
+
 _PROPERTY_LEAVES: Final[tuple[str, ...]] = (
     "situacion",
     "referencia_catastral",
@@ -203,6 +223,9 @@ PATHS_INTRODUCED_IN_V9: Final[frozenset[str]] = frozenset(
     },
 )
 """Fields schema 8 did not declare: the property and lease records."""
+
+PATHS_INTRODUCED_IN_V10: Final[frozenset[str]] = frozenset({"taxpayer_type.pago_fraccionado_art_40_3_elected"})
+"""Fields schema 9 did not declare: the LIS art. 40.3 election of the Modelo 202."""
 
 _M200_RELATION_LEAVES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
@@ -267,43 +290,20 @@ _M200_RELATION_LEAVES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     },
 )
 
-PATHS_INTRODUCED_IN_V10: Final[frozenset[str]] = frozenset(
+PATHS_INTRODUCED_IN_V11: Final[frozenset[str]] = frozenset(
     f"{section}.{leaf}" for section, leaves in _M200_RELATION_LEAVES.items() for leaf in leaves
 )
-"""Fields schema 9 did not declare: the Modelo 200 page 002 relations."""
+"""Fields schema 10 did not declare: the Modelo 200 page 002 relations."""
 
 _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         7: PATHS_INTRODUCED_IN_V7,
         9: PATHS_INTRODUCED_IN_V9,
         10: PATHS_INTRODUCED_IN_V10,
+        11: PATHS_INTRODUCED_IN_V11,
     },
 )
 """Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
-
-
-def _transition_paths(version: int) -> frozenset[str]:
-    defaulted: set[str] = set(_DEFAULTED_VALUES_BY_TRANSITION.get(version, _NO_DEFAULTS))
-    return frozenset(defaulted | _RETIRED_PATHS_BY_TRANSITION.get(version, _NO_PATHS))
-
-
-_CLEARED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
-    {
-        version: _transition_paths(version)
-        for version in sorted(
-            {
-                *_DEFAULTED_VALUES_BY_TRANSITION,
-                *_RETIRED_PATHS_BY_TRANSITION,
-                *(introduced_in - 1 for introduced_in in _PATHS_INTRODUCED_BY_VERSION),
-            },
-        )
-    },
-)
-"""The cleared paths of every declared transition, keyed by the version it leaves.
-
-A transition that only adds fields clears nothing and maps to an empty set, so the
-version it leaves is still a supported stored source.
-"""
 
 SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS: Final[tuple[int, ...]] = tuple(sorted(_CLEARED_PATHS_BY_TRANSITION))
 """Every stored profile schema version this build still migrates forward.
@@ -535,6 +535,7 @@ __all__ = [
     "PATHS_INTRODUCED_IN_V7",
     "PATHS_INTRODUCED_IN_V9",
     "PATHS_INTRODUCED_IN_V10",
+    "PATHS_INTRODUCED_IN_V11",
     "RETIRED_RENTAL_TIER_PATH",
     "SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS",
     "ProfileSchemaMigration",

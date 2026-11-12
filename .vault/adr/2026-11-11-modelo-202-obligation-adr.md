@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-202-obligation'
 date: '2026-11-11'
-modified: '2026-11-11'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:129c61af0f3d09ec051543697054631e2d590a0962177bcd74043eefee3c5c14'
+body_hash: 'sha256:df4f0acb7080aaff6c52a5c22d8c8a634ff437c17660e437b1745ee6a3dd42b7'
 related:
   - "[[2026-06-19-m202-first-period-attestation-adr]]"
   - "[[2026-11-11-cross-period-filing-clean-state-out-of-envelope-attestation-adr]]"
@@ -66,6 +66,7 @@ We will decide the Modelo 202 obligation of a sociedad at or below the threshold
   - Election stated yes: INCOMPLETE with its own reason, because the ingreso depends on the base imponible of the 3, 9 or 11 months, which only the Modelo 202 calculation of that instalment produces. Door: calculate that 202. Under ruling (a) as narrowed at acceptance: a positive result of a current Modelo 202 calculation decides APPLICABLE; a zero result decides NOT_APPLICABLE only when that calculation is current and verified; an unverified or stale calculation leaves the verdict INCOMPLETE.
   - Election stated no: resolve the base binding for the instalment. A positive base gives APPLICABLE. Zero or negative gives NOT_APPLICABLE, citing art. 40.2 and Orden art. 1.3. A source periodo impositivo that ended before the declared activity start means no prior return exists, so NOT_APPLICABLE with operator-declared provenance. An absent base gives INCOMPLETE, with the Modelo 200 create or capture door first and the attest door as an alternative.
 - **Attestation.** Reuse `ATTEST_PRIOR_VALUE` on the base binding of the Modelo 202 work unit for that instalment, under the absence rule of the 2026-11-11 amendment. The calendar reads it from the operator layer of the latest revision of that work unit, with operator-attested provenance. INCOMPLETE applicability does not block creating that work unit (`BLOCKING_APPLICABILITY_VERDICTS` in `src/cadrumo/application/modelo/profile_readiness_gate.py`). No new intent kind.
+  - Note 2026-11-12 (LIFECYCLE ruling, confirmed by the coordinator): the calendar does not serve `operator.modelo.work.attest_prior_value` itself. A calendar door is a complete success-path action, and the success-notice resolver refuses an action whose required `value` input only the operator can supply. For an absent base the doors are: create the earlier Modelo 200, capture it, then `operator.modelo.work.verify` on the instalment's work unit, or create that Modelo 202 work unit when none exists. The verify gate's cross-period refusal serves `attest_prior_value` with `value` as an operator input, so attestation stays one step away. No new payload contract is added. Doors: `src/cadrumo/application/overview/modelo202_instalment.py`.
 - **Registry.** Declare the base binding at the earliest Modelo 202 edition whose instructions carry the art. 40.2 wording, after checking the instructions of each edition, so later editions inherit it. Where the resolved edition still declares no base binding, the verdict stays INCOMPLETE; there is no fallback. Reword `reason.filing_depends_on_ingreso` in the catalogue and add one served reason per outcome above.
 - **Schema.** The next profile schema version, taken in landing order on the integration branch, introduces the new path. The transition from the version before it clears nothing, and a record of an earlier version carrying the path is refused, as `PATHS_INTRODUCED_IN_V7` does today.
 

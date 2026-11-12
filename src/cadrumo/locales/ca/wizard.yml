@@ -410,6 +410,11 @@ wizard:
           del 15 per cent. Opcional; sense marcar no s'aplica el tipus reduït.
       output-language:
         help: Idioma de sortida de la CLI per a aquest perfil
+      pago-fraccionado-art-40-3-elected:
+        help: Indica si l'entitat va exercir a la seva declaració censal l'opció de
+          l'article 40.3 de la LIS (pagament fraccionat sobre la base imposable dels
+          3, 9 o 11 primers mesos); la forma negativa registra que no la va exercir
+          o que hi va renunciar. Opcional; si no s'indica, no se'n presumeix cap.
       patrimonio-declaration-threshold-met:
         help: La teva quota de l'Impost sobre el Patrimoni resulta a ingressar o,
           si no, els teus béns i drets valen més de 2.000.000 euros
@@ -984,6 +989,13 @@ wizard:
           al tipus reduït del 15 per cent durant aquests dos períodes.
         prompt: És una entitat de nova creació en un dels seus dos primers períodes
           impositius amb beneficis?
+      pago-fraccionado-art-40-3-elected:
+        help: 'S''aplica només a persones jurídiques. Amb un import net de la xifra
+          de negocis per sota del llindar de l''article 40.3, d''aquesta opció depèn
+          si cada pagament fraccionat del Model 202 dona lloc a ingrés. Si no ho saps,
+          deixa-ho sense respondre: no es presumeix cap resposta.'
+        prompt: Va exercir l'entitat a la seva declaració censal l'opció de l'article
+          40.3 de la LIS per al pagament fraccionat?
       title: Tipus de contribuent
     title: Auxiliar de configuració
     verifier:

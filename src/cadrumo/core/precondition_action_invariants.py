@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from .action_argument_resolution import ActionArgumentResolution
 from .errors.hierarchy import pydantic_validation_boundary
+from .external_constants import OutputLanguage
 from .identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from .models import STRICT_FROZEN_CONFIG
 from .operator_action_enums import (
@@ -163,10 +164,64 @@ def _is_empty(value: tuple[object, ...]) -> bool:
     return not value
 
 
+def _is_absent(value: object) -> bool:
+    """Whether an optional served value is missing, so the serialized record leaves it out."""
+    return value is None
+
+
+class ServedActionWords(BaseModel):
+    """The words and routing a transport projection serves for one offered recovery action.
+
+    ``action_words`` names the action as an operator reads it on a control, in
+    ``action_words_language``. ``target_operation_ids`` are the registered
+    operation definitions the action's command can submit, in the order the
+    command-operation relation lists them; a frontend routes by them. Each
+    field is absent until a projection serves it and is then left out of the
+    serialized record while absent, so an unserved record keeps its bytes.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action_words: str | None = Field(default=None, min_length=1, exclude_if=_is_absent)
+    action_words_language: OutputLanguage | None = Field(default=None, exclude_if=_is_absent)
+    target_operation_ids: tuple[str, ...] = Field(default_factory=tuple, exclude_if=_is_empty)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _served_action_words_name_their_language(self) -> Self:
+        """Keep served words bound to their language and each target operation named once."""
+        if (self.action_words is None) != (self.action_words_language is None):
+            raise ValueError("served action words name the language they are in")
+        if len(set(self.target_operation_ids)) != len(self.target_operation_ids):
+            raise ValueError("served target operations are named once each")
+        return self
+
+    def has_served_action_fields(self) -> bool:
+        """Whether any served word or routing field is present."""
+        return self.action_words is not None or bool(self.target_operation_ids)
+
+
+class ServedNoRecoveryWords(BaseModel):
+    """The sentence a transport projection serves for a refusal that offers no way out."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    no_recovery_words: str | None = Field(default=None, min_length=1, exclude_if=_is_absent)
+    no_recovery_words_language: OutputLanguage | None = Field(default=None, exclude_if=_is_absent)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _served_no_recovery_words_name_their_language(self) -> Self:
+        """Keep the served sentence bound to its language."""
+        if (self.no_recovery_words is None) != (self.no_recovery_words_language is None):
+            raise ValueError("served no-recovery words name the language they are in")
+        return self
+
+
 class PreconditionAlternativeAction[
     ActionT: PreconditionActionIdentity,
     ArgumentT: ActionArgumentResolution,
-](BaseModel):
+](ServedActionWords):
     """One further recovery action that clears the same failed condition as the primary one.
 
     It follows the argument grammar of the outcome's primary action: unique
@@ -218,7 +273,7 @@ class PreconditionOutcomeInvariant[
     ActionT: PreconditionActionIdentity,
     ArgumentT: ActionArgumentResolution,
     AlternativeT: PreconditionAlternativeAction[Any, Any],
-](BaseModel):
+](ServedActionWords, ServedNoRecoveryWords):
     """Canonical consistency rules for an actionable or closed precondition outcome.
 
     ``action`` and its argument fields describe the primary recovery action. An
@@ -226,6 +281,8 @@ class PreconditionOutcomeInvariant[
     the same failed condition, offered in list order after the primary one. An
     outcome without alternatives leaves the list out of its serialized form, so
     it reads and hashes exactly as a record written before the list existed.
+    The served words and routing of the primary action, or the served sentence
+    of a closed outcome, follow the same rule.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -284,6 +341,10 @@ class PreconditionOutcomeInvariant[
             missing_from_bindings=missing_from_bindings,
         )
         self._reject_alternatives_the_outcome_cannot_carry()
+        if not has_action and self.has_served_action_fields():
+            raise ValueError("served action words and targets require a recovery action")
+        if not has_no_recovery and self.no_recovery_words is not None:
+            raise ValueError("served no-recovery words require a no-recovery outcome")
         return self
 
     def _reject_arguments_their_evidence_does_not_support(self) -> None:
@@ -329,4 +390,6 @@ __all__ = [
     "PreconditionAlternativeAction",
     "PreconditionEvidence",
     "PreconditionOutcomeInvariant",
+    "ServedActionWords",
+    "ServedNoRecoveryWords",
 ]

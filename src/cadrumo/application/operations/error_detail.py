@@ -59,6 +59,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import TERMINAL_CONDITIONS_WITH_ERROR_DETAIL, OperationLifecycle
 from ..cli_exception_preconditions import cli_exception_envelope_view, nested_terminal_precondition_verdict
 from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.served_actions import serve_precondition_verdict
 from .frontend_requests import (
     OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
@@ -323,11 +324,11 @@ def build_operation_error_detail(error: BaseException) -> OperationErrorDetailV1
         entries, omitted = _bounded_context(public_error_context(view))
         key = view.translated_message
         message_key = key if isinstance(key, str) and _is_message_key(key) else None
+        words, language = _registered_error_words(registered, message_key, entries)
         verdict = nested_terminal_precondition_verdict(error)
-        verdict_json = None if verdict is None else verdict.model_dump_json()
+        verdict_json = None if verdict is None else serve_precondition_verdict(verdict, language).model_dump_json()
         if verdict_json is not None and len(verdict_json) > MAX_OPERATION_ERROR_VERDICT_LENGTH:
             verdict_json = None
-        words, language = _registered_error_words(registered, message_key, entries)
         return OperationErrorDetailV1(
             kind=OperationErrorDetailKind.REGISTERED_ERROR,
             error_code=registered.code,

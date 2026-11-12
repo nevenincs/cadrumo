@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 10
+version = 11
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -496,6 +496,16 @@ effective_dated = true
 description = "Whether a newly-created legal entity is in one of its first two profit-making tax periods. Opts the entity into the LIS Art. 29 15 percent micro-empresa-style rate override. The override is opt-in: an undeclared value leaves the entity on the otherwise-applicable sub-form rate."
 model_selectors = ["taxpayer.new_entity_first_two_profit_periods"]
 legal_refs = ["ley-27-2014:art-29"]
+
+[[sections.fields]]
+key = "pago_fraccionado_art_40_3_elected"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Opción del art. 40.3 LIS ejercida en la declaración censal: pago fraccionado sobre la base imponible de los 3, 9 u 11 primeros meses. true es la opción ejercida desde el período impositivo indicado en valid_from; false es una respuesta negativa o una renuncia. Sin valor no se ha preguntado y no se presume. Se lee el valor vigente al inicio del período impositivo de cada pago fraccionado y, por debajo del umbral del art. 40.3, decide si resulta ingreso."
+model_selectors = ["taxpayer.pago_fraccionado_art_40_3_elected"]
+legal_refs = ["ley-27-2014:art-40-3"]
 
 [[sections.fields]]
 key = "tributacion_estado_porcentaje"

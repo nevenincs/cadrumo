@@ -9,6 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { facts } from "@/shell/compose";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
 import type {
@@ -38,7 +39,7 @@ import {
   RestoreForm,
 } from "./StockBookForms";
 import { ClosingForm } from "./StockClosingForm";
-import { MovementClaimForm, CLAIM_ROW_KEYS } from "./StockClaimForm";
+import { MovementClaimForm } from "./StockClaimForm";
 import { MovementForm, MovementCorrectForm } from "./StockMovementForms";
 import { YearStepper } from "./YearStepper";
 import { bookName, claimOf } from "./stockModel";
@@ -49,7 +50,7 @@ import {
   useOffers,
   type BookKey,
 } from "./stockReads";
-import { plays, wordOf } from "./stockVocabulary";
+import { plays, servedWord, wordOf } from "./stockVocabulary";
 import { refusalOf, refusalWords } from "./stockWords";
 
 const NO_BOOKS: readonly InventoryBookRow[] = [];
@@ -614,11 +615,17 @@ export function StockPane({
                   // A statement the read did not serve is not said as any of
                   // the three.
                   if (claim === null) return "—";
+                  // Only the served label words a statement; the window
+                  // holds no word of its own for one.
+                  const served = (
+                    catalogue.offers.purchase_ledger_row ?? []
+                  ).find((found) => found.value === claim.row);
+                  const said = served
+                    ? servedWord(t, served)
+                    : t("desktop.ledger.stock.unnamed");
                   return claim.row === "claimed" && claim.transaction !== null
-                    ? t("desktop.ledger.stock.claim.state_claimed", {
-                        transaction: claim.transaction,
-                      })
-                    : t(CLAIM_ROW_KEYS[claim.row]);
+                    ? facts(t, [said, claim.transaction])
+                    : said;
                 },
               },
               {

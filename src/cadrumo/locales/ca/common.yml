@@ -3730,6 +3730,7 @@ desktop:
       previous: Període anterior
       year_next: Any següent
       year_previous: Any anterior
+      years_supported: Exercicis que pots consultar
       years_with_movements: Anys amb moviments
     position: Fila {row} de {count}
     prorrata:
@@ -4134,11 +4135,6 @@ desktop:
         note: Indica quina transacció del llibre registra aquesta compra, que cap
           ho fa, o esborra el que has indicat abans.
         row: El llibre registra aquesta compra
-        row_claimed: La registra una transacció del llibre
-        row_none: No la registra cap transacció del llibre
-        row_unstated: Sense indicar
-        row_unstated_hint: Això esborra una indicació anterior.
-        state_claimed: Registrada per {transaction}
         transaction: Transacció del llibre
       closing:
         authority: Com es decideix el valor
@@ -4339,21 +4335,16 @@ desktop:
       action:
         attest: Indica sense retencions
         record: Anota un certificat
-      attested_on: Indicat el {date}
       changes: Canvis als certificats de {ejercicio}
       column:
         class: Classe de renda
         document: Document
-        especie: En espècie
-        ingreso: A compte
-        integro: Íntegre dinerari
         note: Nota
         origin: Origen
-        pago: Crèdit
         payer: Pagador
-        repercutido: Repercutit
-        retencion: Retenció
         state: Estat
+        stated_on: Declarat el
+        withdrawn_on: Retirat el
       correct_hint: Per corregir un certificat, treu-lo i anota'l de nou.
       document: Document del certificat (opcional)
       document_hint: Un document desat a Documents. Es rebutja el registre si Cadrumo
@@ -4379,7 +4370,6 @@ desktop:
         payer_certificate: Certificat del pagador
       origin_label: Origen de les xifres
       payer_legal_name: Nom del pagador (opcional)
-      payer_ref: Pagador {ref}
       payer_tax_id: NIF del pagador
       payer_tax_id_hint: S'envia amb el registre per identificar el pagador. No es
         torna a mostrar.
@@ -4392,7 +4382,6 @@ desktop:
         el seu certificat, o indica que una classe de renda no en té cap.
       withdraw: Retira
       withdraw_of: Retira la indicació de {class}
-      withdrawn_on: Retirat el {date}
   logs:
     all_loggers: Tots els registradors
     all_origins: Tots els orígens
@@ -8023,6 +8012,16 @@ tui:
       empty: No hi ha justificants pendents de revisió.
       extract: Llegeix el document
       loading: S'estan llegint els documents…
+      page:
+        document: '{file} ({media}) - pàgina {page} de {count}'
+        empty: El document no declara res per mostrar.
+        fact: '{label}: {value}'
+        failed: No s'ha pogut mostrar el document.
+        line: '{position}. {facts}'
+        loading: Llegint el document desat...
+        not_drawn: El terminal no dibuixa pàgines. Obre el document a la finestra
+          per veure'l.
+        view: Mostra el document
       path_placeholder: Escriu el camí del fitxer
       pending: Pendent
       printed_total_disagrees: El total imprès al document no coincideix amb el registrat.
@@ -8753,6 +8752,10 @@ tui:
           movement_add: Afegeix un moviment
           movement_claim: Indicar l'apunt del llibre d'una compra
           valuation_preview: Previsualitza la valoració
+        claim:
+          load: Mostra els moviments que aquesta compra pot reclamar
+          none_offered: Cap moviment del llibre pot ser reclamat per aquesta compra.
+          prompt: Tria un moviment
         column:
           actividad: Activitat
           method: Mètode
@@ -8791,10 +8794,6 @@ tui:
           count: Recompte
           opening: Obertura
           purchase: Compra
-        ledger_row:
-          claimed: Un apunt del llibre registra aquesta compra
-          none: Cap apunt del llibre registra aquesta compra
-          unstated: Esborrar la indicació (sense indicar)
         list: Inventaris
         method:
           coste_medio: Cost mitjà
@@ -9459,10 +9458,6 @@ tui:
         revision_current: Vigent
         revision_superseded: Substituïda
   withholding:
-    absence:
-      state:
-        active: Activa
-        withdrawn: Retirada
     absences:
       title: Declaracions d'absència de retencions
     action:
@@ -9475,6 +9470,7 @@ tui:
       attested_on: Declarada el
       income: Rendiment
       note: Nota
+      origin: Declarat per
       payer: Pagador
       state: Estat
     ejercicio: Exercici
@@ -9514,6 +9510,15 @@ workspace:
         declaration: Declaració
         legal: Situació legal
         local: Estat local
+      coverage:
+        applicability_undetermined: 'No se sap si has de presentar: {modelos}. Revisa
+          les teves obligacions.'
+        applicable_window_missing: 'Aquests models t''afecten, però no hi ha cap termini
+          de presentació registrat per a ells: {modelos}. Consulta el calendari oficial.'
+        no_dates: No hi ha dates de presentació disponibles per a aquest interval.
+          Això no vol dir que no hi hagi res pendent.
+        registry_unmodeled: 'No hi ha regles d''aplicabilitat ni terminis registrats
+          per a: {modelos}. Consulta la guia oficial sobre les teves obligacions.'
       detail:
         action: 'Acció en prémer Retorn: {action}'
         axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant de l''AEAT:
@@ -10719,6 +10724,13 @@ workspace:
         set_nothing: valor nou
         set_source: substitueix el valor del seu origen
       finding:
+        calculation_withdrawn: El càlcul es retira. Torna a calcular quan indiquis
+          els imports pendents d'exercicis anteriors.
+        carry_withdrawal_filed: Aquesta declaració consta com a presentada. Corregeix-la
+          amb una declaració complementària o rectificativa.
+        carry_withdrawal_keeps_entries: Retirar aquesta declaració descartaria els
+          altres valors que has introduït en aquesta declaració. Indica els imports
+          pendents en lloc d'això.
         clear_of_source_fed_casilla: Un origen emplena aquesta casella, així que no
           es pot buidar. Torna-la al seu origen en lloc d'això.
         intent_not_admitted: Aquesta casella no es pot canviar d'aquesta manera.

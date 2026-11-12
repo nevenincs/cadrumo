@@ -1488,6 +1488,14 @@ errors:
       distintos.
     modelo_edit_baseline_stale: La declaración ha cambiado desde que se abrió, por
       lo que no se ha aplicado la edición. Vuelve a abrirla y edítala de nuevo.
+    modelo_edit_carry_withdrawal_filed: Esta declaración consta como presentada, por
+      lo que no se puede retirar la declaración sobre los importes pendientes de ejercicios
+      anteriores. No se ha cambiado nada. Corrígela con una declaración complementaria
+      o rectificativa.
+    modelo_edit_carry_withdrawal_keeps_entries: Retirar la declaración sobre los importes
+      pendientes de ejercicios anteriores dejaría la declaración sin cálculo y descartaría
+      los demás valores que has introducido en ella. No se ha cambiado nada. Indica
+      los importes pendientes en lugar de retirar la declaración.
     modelo_edit_contract_incompatible: La edición se preparó en un formato que esta
       versión no acepta, por lo que no se ha cambiado nada. Vuelve a abrir la declaración
       y edítala de nuevo.

@@ -66,6 +66,7 @@ from ...domain.modelos.verification_report import (
 from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON
 from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
+from .edit_models import ModeloEditBindingIntentKind
 from .source_policy import SourceOverridePolicy, SourceSurface
 from .work_form_declaration_facts import (
     ModeloFormAeatData,
@@ -129,6 +130,19 @@ def _default_standing(data: dict[str, object]) -> ModeloFormStanding:
 
 _OVERRIDE_EDITABILITIES = frozenset({ModeloFormEditability.OVERRIDABLE_SOURCE, ModeloFormEditability.EDITABLE_OVERRIDE})
 _CONFIRMING_EDITABILITIES = frozenset({ModeloFormEditability.EDITABLE_VALUE, ModeloFormEditability.EDITABLE_OVERRIDE})
+
+
+def _is_absent(value: object) -> bool:
+    return value is None
+
+
+def _is_empty(value: tuple[object, ...]) -> bool:
+    return not value
+
+
+_CARRY_STATEMENT_INTENTS: Final = frozenset(
+    {ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT, ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE}
+)
 
 
 def _edit_address_of(
@@ -324,6 +338,12 @@ class ModeloFormField(ModeloFormBase):
     #: The statement the filer made that this carry holds nothing, by the family its binding declares;
     #: ``None`` for a value typed or taken from a source, so a zero stated never reads as a zero typed.
     stated_absent: AbsenceAttestationFamily | None = None
+    #: The figure on the carry is one the filer stated for an earlier return the application does not hold;
+    #: ``None`` for a value typed, taken from a source or stated absent. Left out when ``None``.
+    stated_prior_value: ModeloFormStatedPriorValue | None = Field(default=None, exclude_if=_is_absent)
+    #: The statements the edit admits on the box's carry that the filer has not made, in served words;
+    #: left out when there are none.
+    statements: tuple[ModeloFormBindingStatement, ...] = Field(default=(), exclude_if=_is_empty)
     #: The value confirming the box stages, as an edit intent carries it; ``None`` when the box is not confirmable.
     confirm_value: ModeloEditWireScalar = Field(default_factory=_confirm_value_of)
     #: Where the box's value stands, in the few words every frontend shows beside it, in the
@@ -735,6 +755,45 @@ class ModeloFormCredit(ModeloFormBase):
 
     address: ModeloFormAddressV1
     dependents: tuple[ModeloFormCasillaAddressV1, ...] | None
+
+
+class ModeloFormStatedPriorValue(ModeloFormBase):
+    """The mark of a carry holding a figure the filer stated for an earlier return the application does not hold."""
+
+    #: The earlier return or returns the figure stands in for, in the form's language.
+    source_words: str = Field(min_length=1)
+    #: Where the box's value comes from, in the few words a frontend shows beside it.
+    origin_words: str = Field(min_length=1)
+
+
+class ModeloFormBindingStatement(ModeloFormBase):
+    """One statement the edit admits on a single carry, worded for the form.
+
+    ``attest_no_amount`` states the carry holds nothing; ``attest_prior_value``
+    states its figure for the earlier return ``source_words`` names, which the
+    application does not hold. Applying it stages that one intent on
+    ``binding_id``; withdrawing it stages ``remove_override`` on the same binding.
+    """
+
+    intent: ModeloEditBindingIntentKind
+    binding_id: BindingId
+    #: The action, in the form's language.
+    action_words: str = Field(min_length=1)
+    #: What the statement records and what follows when an earlier return later shows otherwise.
+    statement_words: str = Field(min_length=1)
+    #: What the statement does to the carry, as a review lists each staged change.
+    effect_words: str = Field(min_length=1)
+    #: The earlier return a stated figure stands in for; ``None`` for a statement of no amount.
+    source_words: str | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _a_figure_names_its_earlier_return(self) -> ModeloFormBindingStatement:
+        if self.intent not in _CARRY_STATEMENT_INTENTS:
+            raise ValueError("a carry statement states no amount or an earlier return's figure")
+        if (self.intent is ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE) != (self.source_words is not None):
+            raise ValueError("a stated figure, and only a stated figure, names the earlier return it stands in for")
+        return self
 
 
 class ModeloFormCarryAttestation(ModeloFormBase):

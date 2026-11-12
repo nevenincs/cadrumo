@@ -1400,6 +1400,13 @@ errors:
       év szükséges.
     modelo_edit_baseline_stale: A bevallás a megnyitása óta megváltozott, ezért a
       szerkesztés nem lett alkalmazva. Nyisd meg újra, és szerkeszd ismét.
+    modelo_edit_carry_withdrawal_filed: Ez a bevallás benyújtottként van rögzítve,
+      ezért a korábbi évekből áthozott összegekről szóló nyilatkozat nem vonható vissza.
+      Semmi sem változott. Javítsd önellenőrzéssel.
+    modelo_edit_carry_withdrawal_keeps_entries: Ha visszavonod a korábbi évekből áthozott
+      összegekről szóló nyilatkozatot, a bevallásnak nem lesz számítása, és elvesznek
+      a többi értékek, amelyeket megadtál benne. Semmi sem változott. A nyilatkozat
+      visszavonása helyett add meg az áthozott összegeket.
     modelo_edit_contract_incompatible: A szerkesztés olyan formátumban készült, amelyet
       ez a verzió nem fogad el, ezért semmi sem változott. Nyisd meg újra a bevallást,
       és szerkeszd ismét.

@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from cadrumo_client.commands.output import precondition_action_lines
+from cadrumo_client.commands.output import precondition_action_lines, served_action_lines
 
 from ....application.modelo.action_errors import ModeloCrossPeriodCleanStateError
 from ....application.modelo.precondition_action_bindings import AlternativeActionArguments
@@ -105,8 +105,11 @@ def test_the_text_refusal_adds_one_line_for_the_alternatives() -> None:
         "  action.conditionality",
         "  action.no_recovery_outcome",
         "  action.alternative_actions",
+        "  action.action_words",
+        "  action.action_words_language",
+        "  action.target_operation_ids",
     ]
-    alternatives = json.loads(lines[-1].split(": ", 1)[1])
+    alternatives = json.loads(lines[7].split(": ", 1)[1])
     assert [item["action"]["action_id"] for item in alternatives] == [ATTEST_PRIOR_VALUE_ACTION_ID]
 
 
@@ -121,7 +124,7 @@ def test_a_refusal_without_alternatives_renders_no_alternatives_line_or_member()
 
     assert "action.alternative_actions" not in text
     assert "alternative_actions" not in document["error"]["action"]
-    assert len([line for line in text.splitlines() if line.startswith("  action.")]) == 7
+    assert len([line for line in text.splitlines() if line.startswith("  action.")]) == 10
 
 
 def test_the_shared_text_rows_add_the_alternatives_only_when_offered() -> None:
@@ -136,7 +139,32 @@ def test_the_shared_text_rows_add_the_alternatives_only_when_offered() -> None:
         "precondition_action.missing_argument_names",
         "precondition_action.conditionality",
         "precondition_action.no_recovery_outcome",
+        "precondition_action.action_words",
+        "precondition_action.action_words_language",
+        "precondition_action.target_operation_ids",
     ]
-    assert offered[:-1] == single
-    assert offered[-1].split("\t", 1)[0] == "precondition_action.alternative_actions"
+    assert offered[:7] == single[:7]
+    assert offered[7].split("\t", 1)[0] == "precondition_action.alternative_actions"
+    assert offered[8:] == single[7:]
     assert len(offered) == len(single) + 1
+
+
+def test_the_text_refusal_shows_each_served_door_in_offered_order() -> None:
+    error = _refusal(_failure(attestable=True))
+    projection = cli_policy_refusal_projection(error)
+    assert projection is not None
+    action = projection.precondition_action
+    assert action is not None
+    assert action.action is not None
+    assert action.action.cli_path is not None
+    statement = action.alternative_actions[0]
+    assert statement.action.cli_path is not None
+    assert action.action_words is not None
+    assert statement.action_words is not None
+
+    text = render_error_payload(error, as_json=False, action=action)
+
+    assert served_action_lines(action) == (action.action_words, statement.action_words)
+    for line in served_action_lines(action):
+        assert f"  {line}" in text.splitlines()
+    assert action.target_operation_ids == ("modelo.work.create",)

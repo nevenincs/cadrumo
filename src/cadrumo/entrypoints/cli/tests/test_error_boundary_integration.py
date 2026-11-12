@@ -125,7 +125,10 @@ def test_log_level_resolution_error_exits_refused(
 
 def test_invalid_log_level_environment_value_reaches_the_json_boundary_with_no_action() -> None:
     """The configuration-value refusal keeps its typed no-action contract at the root boundary."""
+    from ....application.operator_actions.served_actions import NO_RECOVERY_WORDS_LOCALE_KEYS
     from ....core.config import override_settings
+    from ....core.i18n.render import tr
+    from ....core.operator_action_enums import NoRecoveryOutcome
 
     with override_settings(cadrumo_output_language="en", cadrumo_log_level="NOT_A_VALID_LEVEL"):
         result = invoke_cached_cli(["--format", "json", "config", "repair"], catch_exceptions=False)
@@ -150,4 +153,6 @@ def test_invalid_log_level_environment_value_reaches_the_json_boundary_with_no_a
         "missing_argument_names": [],
         "conditionality": "not_applicable",
         "no_recovery_outcome": "operator_decision",
+        "no_recovery_words": tr(NO_RECOVERY_WORDS_LOCALE_KEYS[NoRecoveryOutcome.OPERATOR_DECISION], locale="en"),
+        "no_recovery_words_language": "en",
     }

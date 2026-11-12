@@ -79,6 +79,11 @@ class ModeloEditMutationResultReceiptV1(EditModel):
     advances or confirms only the work-unit pointer and emits no fresh
     ``MODELO_CALCULATION_CREATED`` event to reference. It is always present
     when the commit created the revision.
+
+    ``calculation_revision_id`` is ``None`` when the edit withdrew the work
+    unit's calculation: the withdrawal of a carry statement that leaves the
+    calculation refused returns the work unit to no current calculation, and
+    the withdrawn revision stays stored.
     """
 
     receipt_id: ModeloEditMutationResultReceiptId
@@ -86,7 +91,7 @@ class ModeloEditMutationResultReceiptV1(EditModel):
     mutation_family: ModeloEditMutationFamily
     baseline_id: ModeloEditBaselineId
     work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
+    calculation_revision_id: CalculationRevisionId | None
     bucket_event_id: Hex64Str | None
     effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
     committed_at: datetime

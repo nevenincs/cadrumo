@@ -16,6 +16,7 @@ from ....core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from ...operations.error_detail import served_words_language
 from ..models import (
     ActionArgumentBinding,
     ActionReference,
@@ -24,6 +25,7 @@ from ..models import (
     PreconditionVerdict,
 )
 from ..projection import ActionArgumentSnapshot, ConditionEvidenceSnapshot, PreconditionVerdictSnapshot
+from ..served_actions import serve_precondition_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -92,7 +94,7 @@ def test_the_snapshot_restores_every_alternative_in_order_through_its_json() -> 
     restored = PreconditionVerdictSnapshot.model_validate_json(snapshot.model_dump_json())
 
     assert restored == snapshot
-    assert restored.to_verdict() == verdict
+    assert restored.to_verdict() == serve_precondition_verdict(verdict, served_words_language())
     assert [item.action_id for item in restored.alternative_actions] == [
         "operator.modelo.work.attest_prior_value",
         "operator.live.filed.pull",
@@ -128,8 +130,7 @@ def test_a_snapshot_without_alternatives_keeps_the_bytes_stored_before_the_list(
         conditionality=ActionConditionality.IMMEDIATE,
     ).model_dump_json()
 
-    assert snapshot.model_dump_json() == stored
-    assert set(json.loads(snapshot.model_dump_json())) == {
+    stored_fields = {
         "failed_condition_id",
         "evidence",
         "action_id",
@@ -138,7 +139,12 @@ def test_a_snapshot_without_alternatives_keeps_the_bytes_stored_before_the_list(
         "conditionality",
         "no_recovery_outcome",
     }
+    assert set(json.loads(stored)) == stored_fields
+    assert set(json.loads(snapshot.model_dump_json())) == stored_fields | {
+        "action_words",
+        "action_words_language",
+        "target_operation_ids",
+    }
     restored = PreconditionVerdictSnapshot.model_validate_json(stored)
-    assert restored == snapshot
     assert restored.model_dump_json() == stored
     assert restored.to_verdict() == verdict

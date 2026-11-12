@@ -63,6 +63,7 @@ from ...domain.calculations.registry.payment_instalment_split import first_insta
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.iva.refund_eligibility import RefundEligibilityOutcome
 from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
+from ...domain.period import calculation_filing_date
 from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRole, OwnBankAccount
 from .export_settlement import SettlementRefusal, declared_settlement
 from .settlement_casilla import declaration_settlement_casilla_id
@@ -461,7 +462,7 @@ def _declares_refund_or_carry(modelo: str) -> bool:
 
 
 def _instalment_share(modelo: str, period: Period) -> Decimal | None:
-    return first_instalment_share(modelo, period_day=period.end_date)
+    return first_instalment_share(modelo, period_day=calculation_filing_date(period))
 
 
 def asks_export_elections(modelo: str, period: Period) -> bool:

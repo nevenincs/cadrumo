@@ -7,7 +7,7 @@ revision_id = "2023-2024"
 seed_source = "authored"
 review = { state = "generated", notes = "Part 1 authored against boe-2023-8120-modelo-202-form-pdf, printed pages 46667–46668. Two rate rows only; B.1 remains on page 1. All54casillas retained. Regime/election controls, tax-period start date, negative/payment details and Part2 disclosures remain incomplete. No complete official-form acceptance or producer-profile admission claimed. Additional-data section now renders 8 exact existing regime/turnover/rate producer fields. Historical small-enterprise wording retains article 29.1 first paragraph. The combined cooperativa_o_multiples_tipos producer cannot prove the two separate official marks; neither is inferred. Missing facts remain unknown." }
 generator_version = 1
-source_state_digest = "03f9ca6564420d3164a5fae1404adb3a52f53223ab49b874a89b1559f199bf91"
+source_state_digest = "86bda89091eec185dd1baf681a072774836b76b23a62135c70ae0f82749393ef"
 design_sources = [
     { source_ref = "aeat-dr-202-2023", sha256 = "feca183eed1fc557950e44d043931e64b85d2858a16b06dff2c3cb8ba15aace5" },
     { source_ref = "boe-2023-8120-modelo-202-form-pdf", sha256 = "826304a374caf88485fb8e15d62a51a4f2c7ddf059d5ca181ccbfa75e6e3e7a1" },

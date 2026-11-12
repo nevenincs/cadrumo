@@ -770,6 +770,11 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
             values=_values(CoverageAdviceReason),
         ),
         FStringKeyRegistration(
+            description="workspace.declarations.calendar.coverage.* (CoverageAdviceReason)",
+            key_factory=lambda v: f"workspace.declarations.calendar.coverage.{v}",
+            values=_values(CoverageAdviceReason),
+        ),
+        FStringKeyRegistration(
             description="workspace.declarations.list.filter.* (grouped declarations filter choices)",
             key_factory=lambda v: f"workspace.declarations.list.filter.{v}",
             values=("all", "attention", "this_year", "recorded", "not_started"),

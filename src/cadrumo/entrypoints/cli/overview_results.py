@@ -282,6 +282,7 @@ class OverviewSuppressedCalendarEntryPayload(OutputSchema):
     period: str
     verdict: str
     reason: str
+    actions: list[ResolvedNoticeAction] = []
 
 
 class OverviewAdvisedObligationPayload(OutputSchema):
