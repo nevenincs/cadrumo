@@ -9,9 +9,10 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
+from ...core.text_fold import code_point_label
 
 
-class ModeloDraftError(CadrumoError):
+class ModeloDraftError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base class for every error raised inside :mod:`domain.filing`."""
 
 
@@ -44,7 +45,12 @@ class ModeloImportError(ModeloDraftError):
 
 
 class FilingExportError(ModeloDraftError):
-    """Raised when exporting a draft to an AEAT wire format fails."""
+    """Raised when exporting a draft to an AEAT wire format fails.
+
+    A refusal may carry the typed verdict that says whether the filer's data,
+    the filer's decision or nothing the filer does can put it right. The domain
+    holds the verdict opaquely; the application builds it.
+    """
 
 
 class FilingExportValidationError(FilingExportError):
@@ -73,7 +79,7 @@ class FilingExportDesignIntegrityError(FilingExportIntegrityError, FilingExportV
     """
 
 
-class FilingExportProfileFactMissingError(TerminalPreconditionErrorMixin[object], FilingExportValidationError):
+class FilingExportProfileFactMissingError(FilingExportValidationError):
     """Raised when the export needs a fact about the filer that the profile does not state.
 
     The fact is the filer's to state, so the refusal carries the door that
@@ -81,7 +87,7 @@ class FilingExportProfileFactMissingError(TerminalPreconditionErrorMixin[object]
     """
 
 
-class FilingExportCasillaValueRefusedError(TerminalPreconditionErrorMixin[object], FilingExportValidationError):
+class FilingExportCasillaValueRefusedError(FilingExportValidationError):
     """Raised when the value of one box the filer states cannot be written as the design places it.
 
     ``casilla_id`` is the box whose value puts it right; the served words say
@@ -124,6 +130,7 @@ class FilingExportValueOverflowError(FilingExportValidationError):
         rendered: str,
         data_type: str,
         record_type: str | None = None,
+        precondition_verdict: object | None = None,
     ) -> None:
         """Construct the refusal for one slot, optionally already placed in its record."""
         self.field_id: str = field_id
@@ -135,6 +142,7 @@ class FilingExportValueOverflowError(FilingExportValidationError):
         super().__init__(
             f"export field {field_id!r} cannot render its fixed-width value",
             context={"field_id": field_id, "field_length": field_length, "value_length": len(rendered)},
+            precondition_verdict=precondition_verdict,
         )
 
     def in_record(self, record_type: str) -> FilingExportValueOverflowError:
@@ -146,6 +154,7 @@ class FilingExportValueOverflowError(FilingExportValidationError):
             rendered=self.rendered,
             data_type=self.data_type,
             record_type=record_type,
+            precondition_verdict=self.terminal_precondition_verdict,
         )
 
 
@@ -156,16 +165,17 @@ class FilingExportRequiredRecordAbsentError(FilingExportValidationError):
     with nothing to state in it has nothing to file in this format.
     """
 
-    def __init__(self, *, export_record_id: str) -> None:
+    def __init__(self, *, export_record_id: str, precondition_verdict: object | None = None) -> None:
         """Record which required record has no occurrence."""
         self.export_record_id: str = export_record_id
         super().__init__(
             f"required export record {export_record_id!r} has no applicable occurrence",
             context={"export_record_id": export_record_id},
+            precondition_verdict=precondition_verdict,
         )
 
 
-class FilingExportFieldUnrenderableError(TerminalPreconditionErrorMixin[object], FilingExportValidationError):
+class FilingExportFieldUnrenderableError(FilingExportValidationError):
     """Raised when the record design and a value disagree so that the field cannot be written.
 
     An integer slot given a fractional amount is the example. The export
@@ -199,7 +209,7 @@ class FilingExportFieldUnrenderableError(TerminalPreconditionErrorMixin[object],
         )
 
 
-class FilingExportUnrepresentableCharacterError(TerminalPreconditionErrorMixin[object], FilingExportValidationError):
+class FilingExportUnrepresentableCharacterError(FilingExportValidationError):
     """Raised when a text value holds a character its record design cannot write.
 
     The export refuses instead of dropping or replacing the character, and names
@@ -229,7 +239,7 @@ class FilingExportUnrepresentableCharacterError(TerminalPreconditionErrorMixin[o
         self.record_type: str | None = record_type
         super().__init__(
             f"export field {field_id!r} holds a character its record cannot write",
-            context={"field_id": field_id, "code_point": f"U+{ord(character):04X}"},
+            context={"field_id": field_id, "code_point": code_point_label(character)},
             precondition_verdict=precondition_verdict,
         )
 

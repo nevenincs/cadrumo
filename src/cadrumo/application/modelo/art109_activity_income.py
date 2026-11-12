@@ -49,6 +49,7 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ..aggregation.concepto_ingreso_admission import row_counts_toward_art_109_activity_income
+from .registry_input_refusals import registry_integrity_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -82,6 +83,7 @@ def _art109_registry_declarations(
     if len(ratio_parameters) != 1:
         raise RegistryValidationError(
             f"selected Modelo 130 revision {revision.id} does not declare one Art. 109 ratio parameter",
+            precondition_verdict=registry_integrity_verdict("art109_declarations"),
         )
 
     resolved_catalogue = operation.resolve_governed_fact(
@@ -92,7 +94,10 @@ def _art109_registry_declarations(
         ),
     )
     if not isinstance(resolved_catalogue, ResolvedMappingFact):
-        raise RegistryValidationError("the activity selector catalogue is not a mapping fact")
+        raise RegistryValidationError(
+            "the activity selector catalogue is not a mapping fact",
+            precondition_verdict=registry_integrity_verdict("art109_declarations"),
+        )
     selector_ids: dict[str, str] = {}
     for entry in resolved_catalogue.payload.entries:
         key = str(entry.key)
@@ -100,7 +105,10 @@ def _art109_registry_declarations(
             continue
         selector_ids["exempt" if "exencion" in key else "net"] = str(entry.value)
     if set(selector_ids) != {"exempt", "net"}:
-        raise RegistryValidationError("the activity selector catalogue has no complete Art. 109 selector pair")
+        raise RegistryValidationError(
+            "the activity selector catalogue has no complete Art. 109 selector pair",
+            precondition_verdict=registry_integrity_verdict("art109_declarations"),
+        )
     return ratio_parameters[0], selector_ids["exempt"], selector_ids["net"]
 
 

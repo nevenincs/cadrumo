@@ -57,6 +57,7 @@ from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.public_scalar import restore_scalar
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.bindings import binding_source_modelo
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.filing.errors import ModeloBuilderError
@@ -96,6 +97,7 @@ from .rows import (
     not_run,
     planned_rows,
     replay_horizons,
+    replayed,
     select,
     stage_refusal_codes,
     write_rows,
@@ -135,11 +137,35 @@ def _persona_at(persona_id: str, horizon: int) -> Persona:
     return persona_at(persona_id, horizon, _envelope())
 
 
-def _plan(persona_id: str, horizon: int) -> list[PlannedRow]:
+@cache
+def _sources(modelo: str) -> frozenset[str]:
+    """Every modelo a revision of ``modelo`` reads, as its bindings and dependency classifications declare."""
+    with bundled_indexed_authority().operation() as operation:
+        revisions = [
+            operation.revision(owner, revision_id) for owner, revision_id in operation.revision_ids() if owner == modelo
+        ]
+    return frozenset(
+        {
+            source
+            for revision in revisions
+            for binding in revision.bindings
+            if (source := binding_source_modelo(binding))
+        }
+        | {
+            classification.source_modelo
+            for revision in revisions
+            for classification in revision.dependency_classifications
+        }
+    )
+
+
+def _plan(persona_id: str, horizon: int) -> tuple[list[PlannedRow], frozenset[tuple[str, str, int, str]]]:
+    """The rows the replay runs, in chain order, and the keys of the selected rows it writes."""
     persona, envelope = _persona_at(persona_id, horizon), _envelope()
     today = persona.as_of.resolve(dataclasses.replace(envelope, horizon=horizon))
     rows = ended(planned_rows(persona, horizon, envelope), today)
-    return select(rows, modelos=_listed(MODELOS_ENV), years=tuple(int(year) for year in _listed(YEARS_ENV)))
+    selected = select(rows, modelos=_listed(MODELOS_ENV), years=tuple(int(year) for year in _listed(YEARS_ENV)))
+    return replayed(rows, selected, _sources), frozenset(row.key for row in selected)
 
 
 def _cases() -> list[pytest.ParameterSet]:
@@ -149,7 +175,7 @@ def _cases() -> list[pytest.ParameterSet]:
         for persona_id in persona_ids()
         if not wanted or persona_id in wanted
         for horizon in replay_horizons(_envelope())
-        if _plan(persona_id, horizon)
+        if _plan(persona_id, horizon)[1]
     ]
 
 
@@ -571,13 +597,16 @@ def _scope(persona: Persona) -> ReplayScope:
 def test_persona_returns(tmp_path: Path, persona_id: str, horizon: int) -> None:
     """Replay one persona under one horizon and append a row for every return it owes there."""
     out = Path(os.environ[OUT_ENV])
-    plans = _plan(persona_id, horizon)
+    plans, emitted = _plan(persona_id, horizon)
     persona = _persona(persona_id)
     try:
         with materialised_persona(persona_id, tmp_path, _scope(persona), reuse=True, horizon=horizon) as materialised:
             envelope = materialised.world.envelope
             for plan in plans:
                 values = _values(materialised.persona, envelope, plan)
-                write_rows(out, [_run_return(materialised, plan, values, tmp_path / "exports")])
+                row = _run_return(materialised, plan, values, tmp_path / "exports")
+                if plan.key in emitted:
+                    write_rows(out, [row])
     except (PersonaMaterialisationError, PersonaCatalogueError) as error:
-        write_rows(out, [not_run(plan, f"replay under horizon {horizon}: {_short(error)}") for plan in plans])
+        reason = f"replay under horizon {horizon}: {_short(error)}"
+        write_rows(out, [not_run(plan, reason) for plan in plans if plan.key in emitted])

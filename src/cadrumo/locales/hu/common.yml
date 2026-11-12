@@ -6240,6 +6240,9 @@ review:
     errors:
       drafts_load_failed: Nem sikerült betölteni a bevallási piszkozatokat a biztonságos
         háttértárból.
+      drafts_unattributed: A profilodban nincs adóazonosító, ezért a(z) %{draft_count}
+        mentett tervezet egyike sem jeleníthető meg a tiédként. Add meg az adóazonosítódat
+        a profilodban, és nézd át újra.
       invoices_load_failed: A számlakatalógus betöltése a biztonságos háttértárból
         sikertelen.
       profile_load_failed: A profil betöltése a biztonságos háttértárból sikertelen.

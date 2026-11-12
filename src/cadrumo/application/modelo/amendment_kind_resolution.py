@@ -47,6 +47,7 @@ from ...domain.calculations.registry.amendment_regime_policy import resolve_amen
 from ...domain.calculations.registry.result_casillas import canonical_result_amount, result_disposition_casilla_ids
 from ...domain.modelos.filing_record import FilingDeclarationKind
 from .action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
+from .calculation_input_refusal_doors import amendment_choice_verdict
 
 __all__ = [
     "assert_amendment_kind_permitted",
@@ -88,6 +89,7 @@ def assert_amendment_kind_permitted(
                 "period": period.registry_token,
                 "requested_kind": amendment_kind.value,
             },
+            precondition_verdict=amendment_choice_verdict("kind_not_permitted"),
         )
     accepted = ", ".join(sorted(regime.permitted_kinds))
     raise AmendmentKindNotPermittedError(
@@ -99,6 +101,7 @@ def assert_amendment_kind_permitted(
             "requested_kind": amendment_kind.value,
             "accepted_kinds": accepted,
         },
+        precondition_verdict=amendment_choice_verdict("kind_not_permitted"),
     )
 
 
@@ -209,4 +212,5 @@ def assert_complementaria_liability_direction_permitted(
             "baseline_result": str(baseline_result),
             "corrected_result": str(corrected_result),
         },
+        precondition_verdict=amendment_choice_verdict("complementaria_liability_decrease"),
     )

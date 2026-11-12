@@ -19,6 +19,7 @@ from ...domain.calculations.registry.schema_form_layouts import FormContextField
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..filing.export_producer import filing_producer_values
 from ..filing.producer_snapshot import FilingProducerSnapshot
+from .registry_input_refusals import registry_integrity_verdict, request_verdict
 from .work_form_field_vocabulary import ModeloFormScalar
 from .work_form_projection_records import saved_projection_context_value
 
@@ -43,12 +44,18 @@ def form_context_value(
     the registry declarations used by the projection.
     """
     if producer_snapshot is not None and str(producer_snapshot.modelo) != snapshot.modelo.id:
-        raise RegistryValidationError("form context producer belongs to another modelo")
+        raise RegistryValidationError(
+            "form context producer belongs to another modelo",
+            precondition_verdict=request_verdict("form_context_producer_modelo"),
+        )
     field = resolve_form_context_field(snapshot.revision, block)
     if field.projection_ref is not None:
         return saved_projection_context_value(snapshot=snapshot, revision=revision, block=block)
     if field.binding is not None:
-        raise RegistryValidationError("binding context requires the saved binding or workbook projection")
+        raise RegistryValidationError(
+            "binding context requires the saved binding or workbook projection",
+            precondition_verdict=request_verdict("form_context_binding_source"),
+        )
     if field.draft_attribute in FORM_CONTEXT_DRAFT_ATTRIBUTES:
         return _draft_context_value(snapshot, field.draft_attribute)
     return _producer_context_value(producer_snapshot, field.producer_key, producer_values)
@@ -66,7 +73,10 @@ def _draft_context_value(snapshot: RegistrySnapshot, attribute: ExportDraftAttri
         if period is None or not period.has_date_span():
             return None
         return period.start_date if attribute is ExportDraftAttribute.PERIOD_START_DATE else period.end_date
-    raise RegistryValidationError("unsupported draft context value")
+    raise RegistryValidationError(
+        "unsupported draft context value",
+        precondition_verdict=registry_integrity_verdict("form_context_draft_attribute"),
+    )
 
 
 def _producer_context_value(
@@ -80,4 +90,7 @@ def _producer_context_value(
     value = None if values is None else values.get(producer_key)
     if value is None or isinstance(value, (str, bool, int, Decimal, date)):
         return value
-    raise RegistryValidationError("form context producer value is not a supported scalar")
+    raise RegistryValidationError(
+        "form context producer value is not a supported scalar",
+        precondition_verdict=registry_integrity_verdict("form_context_producer_value"),
+    )

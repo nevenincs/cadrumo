@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError, TerminalPreconditionErrorMixin
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.period import Period
@@ -20,7 +20,9 @@ from ...domain.calculations.registry.static_inspection import RegistryRevisionIn
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from ..operator_actions.models import ActionReference
+from .refusal_door_verdicts import caller_defect_verdict
 from .stored_data_integrity import StoredDataIntegrityMixin
 from .work_addressing import (
     ModeloExactWorkUnitTarget,
@@ -96,7 +98,7 @@ class ModeloWorkspaceAbsentReadinessProjectionError(StoredDataIntegrityMixin, Ca
     integrity_record = "workspace_readiness_projection"
 
 
-class ModeloWorkspaceUnresolvedWorkError(CadrumoError):
+class ModeloWorkspaceUnresolvedWorkError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Raised when a workspace read reaches an unresolved work selection."""
 
 
@@ -473,7 +475,10 @@ def modelo_workspace_recovery_action(
     operator cannot invoke, which is worse than offering none.
     """
     if action_id not in MODELO_WORKSPACE_RECOVERY_ACTION_IDS:
-        raise InternalInvariantError(f"{action_id} is not a declared workspace recovery action")
+        raise InternalInvariantError(
+            f"{action_id} is not a declared workspace recovery action",
+            precondition_verdict=internal_invariant_verdict("workspace.recovery_action_declared"),
+        )
     entry = OPERATOR_ACTION_CATALOGUE.lookup(action_id)
     requires_work_unit = any(
         specification.argument_name == _WORK_UNIT_ACTION_ARGUMENT for specification in entry.argument_specifications
@@ -692,6 +697,7 @@ def resolved_obligation(resolution: ModeloWorkResolution) -> tuple[ModeloCode, i
     if resolution.modelo is None or resolution.filing_year is None or resolution.period is None:
         raise ModeloWorkspaceUnresolvedWorkError(
             "work selection resolved without a complete modelo/ejercicio/period address",
+            precondition_verdict=caller_defect_verdict("workspace_unresolved_work"),
         )
     return resolution.modelo, resolution.filing_year, resolution.period
 

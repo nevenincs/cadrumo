@@ -136,7 +136,6 @@ _BASE_BINDINGS = {
     "renta-profile-has-economic-activity": Decimal("0"),
     # declaration_type is intentionally absent: each mode's run supplies it.
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
-    "renta-profile-incremento-guarderia": Decimal("0"),
     "renta-profile-marriage-full-year": Decimal("1"),  # married full year
     "renta-profile-marriage-month-start": Decimal("1"),
     "renta-profile-marriage-month-end": Decimal("12"),

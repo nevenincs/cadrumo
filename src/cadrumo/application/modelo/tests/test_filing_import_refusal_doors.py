@@ -27,6 +27,7 @@ from ....domain.modelos.work_unit import WorkUnit
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...operator_actions.models import PreconditionVerdict
+from .. import registry_helpers
 from ..action_errors import ExternalModeloImportError, ModeloLocalObservationError
 from ..external_import_actions import (
     ExternalFilingBaselineSource,
@@ -148,6 +149,20 @@ def test_a_source_value_the_operator_can_state_again_opens_the_import_naming_the
 def test_a_source_the_application_built_inconsistently_is_terminal() -> None:
     other_year = Period.from_year_and_code(_YEAR - 1, "1T")
     error = _refusal_of(lambda: external_filing_source_casillas(_source({"0001": "1"}, period=other_year)))
+    _assert_no_action(error, NoRecoveryOutcome.TERMINAL)
+
+
+@pytest.mark.usefixtures("operation")
+def test_an_import_against_an_absent_authority_is_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
+    def absent_authority(**_: object) -> object:
+        raise FileNotFoundError(2, "No such file or directory", "authority.current.json")
+
+    monkeypatch.setattr(registry_helpers, "_normalise_registry_casilla_inputs", absent_authority)
+    error = _refusal_of(
+        lambda: registry_helpers.reject_unknown_import_casillas(
+            modelo=form_for_role("iva.periodic"), filing_year=_YEAR, period=_PERIOD, casilla_values={}
+        )
+    )
     _assert_no_action(error, NoRecoveryOutcome.TERMINAL)
 
 

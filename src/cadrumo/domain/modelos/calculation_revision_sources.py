@@ -15,7 +15,8 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
-from .errors import ModeloValidationError
+from ...core.operator_action_enums import NoRecoveryOutcome
+from .errors import ModeloValidatedRecord, ModeloValidationError
 from .source_disagreement import SourceDisagreementFact
 
 
@@ -109,16 +110,28 @@ class CalculationSourceRef(BaseModel):
                 raise ModeloValidationError(
                     "source provenance contributor_binding_source is required when contributor_source_kind "
                     "is a binding source kind",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
                 )
         elif contributor_kind is not self.contributor_binding_source:
             raise ModeloValidationError(
                 "source provenance contributor_binding_source must equal contributor_source_kind",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         if self.lineage_role is CalculationSourceLineageRole.PRIMARY:
             if self.parent_source_ref is not None:
-                raise ModeloValidationError("primary source provenance cannot have a parent")
+                raise ModeloValidationError(
+                    "primary source provenance cannot have a parent",
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                    record=ModeloValidatedRecord.CALCULATION_REVISION,
+                )
         elif self.parent_source_ref is None:
-            raise ModeloValidationError("contributor source provenance requires a parent")
+            raise ModeloValidationError(
+                "contributor source provenance requires a parent",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
 
@@ -444,14 +457,22 @@ class CalculationSourceIssue(BaseModel):
     @pydantic_validation_boundary
     def _require_outcome_on_capped_value_only(self) -> Self:
         if self.value_outcome is not None and self.reason != "advisory_binding_value":
-            raise ModeloValidationError("only a capped binding value carries a resolver-stated value outcome")
+            raise ModeloValidationError(
+                "only a capped binding value carries a resolver-stated value outcome",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_disagreement_on_disagreement_reasons_only(self) -> Self:
         if (self.disagreement is not None) != (self.reason in DISAGREEMENT_REASONS):
-            raise ModeloValidationError("a source disagreement is carried by exactly the reasons that state one")
+            raise ModeloValidationError(
+                "a source disagreement is carried by exactly the reasons that state one",
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                record=ModeloValidatedRecord.CALCULATION_REVISION,
+            )
         return self
 
 
@@ -543,14 +564,22 @@ def validate_revision_source_provenance(rows: Sequence[CalculationSourceRef]) ->
     """Require unique primary identities and a declared primary parent for each contributor."""
     primary_refs = tuple(row.source_ref for row in rows if row.lineage_role is CalculationSourceLineageRole.PRIMARY)
     if len(primary_refs) != len(set(primary_refs)):
-        raise ModeloValidationError("source provenance primary reference is ambiguous")
+        raise ModeloValidationError(
+            "source provenance primary reference is ambiguous",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     primary_ref_set = frozenset(primary_refs)
     if any(
         row.parent_source_ref not in primary_ref_set
         for row in rows
         if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
     ):
-        raise ModeloValidationError("source provenance contributor parent does not resolve to a primary")
+        raise ModeloValidationError(
+            "source provenance contributor parent does not resolve to a primary",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
 
 
 def element_names_of(fact: CalculationNoteFact | None, names: Mapping[str, str]) -> tuple[tuple[str, str], ...]:

@@ -34,6 +34,8 @@ from ...domain.filing.schema import ModeloDraft, registry_schema_version
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.submission.models import ModeloDraftStatus
 from .envelope_modelo_policy import filing_envelope_modelo_policy
+from .errors import casilla_value_refusal
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal
 from .producer_snapshot import FilingProducerSnapshot
 
 #: The governed fact holding the envelope's declared extents.
@@ -381,11 +383,17 @@ def _envelope_prefix_identity_value(
 ) -> str | None:
     if role is FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER:
         if product_software_identity is None:
-            raise FilingExportValidationError("program identifier requires explicit software identity")
+            raise FilingExportValidationError(
+                "program identifier requires explicit software identity",
+                precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCT_IDENTITY_UNSUPPLIED),
+            )
         return product_software_identity.program_identifier
     if role is FilingEnvelopePrefixRole.DEVELOPER_TAX_ID:
         if product_software_identity is None:
-            raise FilingExportValidationError("developer tax ID requires explicit software identity")
+            raise FilingExportValidationError(
+                "developer tax ID requires explicit software identity",
+                precondition_verdict=export_design_terminal(ExportRefusalReason.PRODUCT_IDENTITY_UNSUPPLIED),
+            )
         return product_software_identity.developer_tax_id
     if role is FilingEnvelopePrefixRole.DECLARANT_TAX_ID:
         if declarant_tax_id is None:
@@ -412,7 +420,11 @@ def _envelope_prefix_language_value(
         )
     value = casilla_values.get(casilla_id)
     if not isinstance(value, str) or value not in {member.value for member in DeclaracionIdioma}:
-        raise FilingExportValidationError("envelope language must be source-listed E, C, G, or V")
+        raise casilla_value_refusal(
+            str(casilla_id),
+            translated_message="errors.refused.refused_filing_export_casilla_value",
+            context={},
+        )
     return value
 
 

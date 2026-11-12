@@ -894,7 +894,7 @@ class Modelo210AgrupacionRentaRow(BaseModel):
 class Modelo210AgrupacionRentaRowsError(CadrumoError):
     """A Modelo 210 annual grouped-renta set violates row compatibility."""
 
-    def __init__(self, *, reason: str, detail: str) -> None:
+    def __init__(self, *, reason: str = "unspecified", detail: str = "") -> None:
         """Record which row compatibility rule the row set broke."""
         self.reason = reason
         self.detail = detail

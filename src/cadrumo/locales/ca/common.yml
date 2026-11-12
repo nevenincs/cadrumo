@@ -6268,6 +6268,9 @@ review:
     errors:
       drafts_load_failed: No s'han pogut carregar els esborranys de presentació des
         del backend segur.
+      drafts_unattributed: El teu perfil no té NIF, així que cap dels %{draft_count}
+        esborranys desats no es pot mostrar com a teu. Afegeix el teu NIF al perfil
+        i torna a revisar.
       invoices_load_failed: No s'han pogut carregar les factures de l'adaptador.
       profile_load_failed: No s'ha pogut carregar el perfil des de l'emmagatzematge
         segur.

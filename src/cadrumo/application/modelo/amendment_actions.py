@@ -119,6 +119,11 @@ from .calculation_helpers import (
     calculate_amendment,
     resolve_registry_snapshot_for_work_unit,
 )
+from .calculation_input_refusal_doors import (
+    amendment_baseline_record_verdict,
+    amendment_choice_verdict,
+    amendment_evidence_missing_verdict,
+)
 from .calculation_modelo_adjustments import detail_row_declaration_modelos
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
@@ -135,6 +140,7 @@ from .profile_export_binding import resolve_export_identity
 from .registry_helpers import reject_incomplete_amendment_casillas, reject_unknown_override_casillas
 from .result_disposition_resolution import base_modelo_result_disposition
 from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs
+from .work_lifecycle_refusal_failures import amendment_duplicate_failure, amendment_unchanged_failure
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,6 +173,7 @@ def _load_amendment_baseline[CasillaKey](
         raise ModeloRecordNotFoundError(
             translated_message="application.modelo.errors.filing_record_not_found",
             context={"filing_record_id": from_filing_record_id},
+            precondition_verdict=amendment_baseline_record_verdict("absent"),
         )
     if in_force.status is not ModeloRecordStatus.VIGENTE:
         raise AmendmentTargetStateError(
@@ -175,6 +182,7 @@ def _load_amendment_baseline[CasillaKey](
                 "filing_record_id": from_filing_record_id,
                 "record_status": in_force.status.value,
             },
+            precondition_verdict=amendment_baseline_record_verdict("not_in_force"),
         )
     baseline = filing_catalogue.latest_confirmed_for(
         bucket_id=in_force.bucket_id,
@@ -228,6 +236,7 @@ def _load_amendment_baseline[CasillaKey](
                 "filing_record_id": from_filing_record_id,
                 "filing_instance_evidence_present": False,
             },
+            precondition_verdict=amendment_evidence_missing_verdict(work_unit),
         )
 
     canonical_overrides = reject_unknown_override_casillas(
@@ -297,6 +306,7 @@ def _resolve_m303_rectificativa_motive_before_identity(
             "motive_present": supplied is not None,
             "motive_applicable": applicable,
         },
+        precondition_verdict=amendment_choice_verdict("m303_rectificativa_motive"),
     )
 
 
@@ -313,6 +323,7 @@ def _m303_rectificativa_motive_is_applicable(
         raise AmendmentEvidenceMissingError(
             translated_message="errors.refused.refused_modelo_amendment_evidence_missing",
             context={"work_unit_id": work_unit.work_unit_id, "filing_instance_evidence_present": False},
+            precondition_verdict=amendment_evidence_missing_verdict(work_unit),
         )
     regimen_snapshot = filing_evidence.m303.regimen_simplificado.regimen_snapshot
     snapshot = operation.snapshot(
@@ -423,6 +434,7 @@ def _prepare_amendment_identity(
                 "calculation_revision_id": source_revision.calculation_revision_id,
                 "state": "no_op_amendment",
             },
+            precondition_failure=amendment_unchanged_failure(),
         )
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=in_force.work_unit_id,
@@ -444,6 +456,7 @@ def _prepare_amendment_identity(
         raise CalculationRevisionStateError(
             translated_message="errors.error.error_modelo_calculation_revision_state",
             context={"calculation_revision_id": new_revision_id, "state": "duplicate_amendment_revision"},
+            precondition_failure=amendment_duplicate_failure(),
         )
 
     return new_revision_id, amendment_identity, amendment_detail_rows
@@ -804,6 +817,7 @@ def require_amendment_detail_rows(
         raise AmendmentDetailRowsRequiredError(
             translated_message="errors.refused.refused_modelo_amendment_detail_rows_required",
             context={"modelo": modelo, "reason": "amendment_detail_rows_required"},
+            precondition_verdict=amendment_choice_verdict("detail_rows_required"),
         )
     return tuple(supplied)
 

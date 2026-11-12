@@ -137,12 +137,14 @@ from .export_preparation import (
     resolve_m303_export_arrivals,
 )
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
+from .lifecycle_view_refusal_doors import profile_facts_verdict, unit_filing_evidence_verdict
 from .m303_regimen_simplificado_scope import m303_profile_readiness_failure
 from .profile_export_binding import (
     resolve_declaration_contact,
     resolve_export_identity,
 )
 from .profile_readiness_gate import open_profile_path_step
+from .refusal_door_verdicts import operator_choice_verdict, stored_defect_verdict
 from .result_disposition_resolution import require_admissible_charge_account
 
 
@@ -361,7 +363,11 @@ def require_domiciliation_before_cutoff(
     if isinstance(resolution, DerivedPaymentCutoff):
         context["payment_cutoff_rule"] = f"{resolution.clause.variant_id}, {resolution.procedure.variant_id}"
         message_key = "errors.refused.refused_modelo_domiciliation_past_cutoff_derived"
-    raise ModeloDomiciliationPastCutoffError(translated_message=message_key, context=context)
+    raise ModeloDomiciliationPastCutoffError(
+        translated_message=message_key,
+        context=context,
+        precondition_verdict=operator_choice_verdict("domiciliation_past_cutoff"),
+    )
 
 
 _INSTALMENT_PAYABLE: frozenset[ResultDisposition] = frozenset(
@@ -599,6 +605,7 @@ def build_export_producer_snapshot(
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
             context={"calculation_revision_id": command.calculation_revision_id, "cause_type": type(exc).__name__},
+            precondition_verdict=stored_defect_verdict("export_producer_assembly"),
         ) from exc
 
 
@@ -738,6 +745,7 @@ def _require_export_identity(
                 "calculation_revision_id": command.calculation_revision_id,
                 "reason": "export_identity_unresolved",
             },
+            precondition_verdict=profile_facts_verdict(("identity.tax_id", "identity.legal_name")),
         )
     return presenter, taxpayer_identity
 
@@ -874,6 +882,9 @@ def _resolve_m303_filing_facts_for_export(
     if filing_instance_evidence is None:
         raise ModeloExportEvidenceMissingError(
             f"work unit {work_unit.work_unit_id!r} carries no filing-instance evidence valid for its revision",
+            precondition_verdict=unit_filing_evidence_verdict(
+                "export_filing_instance_evidence", work_unit.work_unit_id
+            ),
         )
     filing_facts = resolve_m303_filing_facts_from_arrivals(
         bucket_id=work_unit.bucket_id,

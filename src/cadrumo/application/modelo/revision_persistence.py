@@ -13,6 +13,7 @@ from decimal import Decimal
 from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
 from ...core.irnr import M210GrossIncomeSourceMode
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
@@ -43,7 +44,7 @@ from ...domain.modelos.calculation_revision_operator_layer import CalculationOpe
 from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
 from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue, CalculationSourceRef
 from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
-from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.invoice_fingerprint import InvoiceFingerprintSnapshot
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ...domain.modelos.protocols import (
@@ -471,7 +472,11 @@ def _validate_calculation_publication_scope(
         rendering_snapshot.authority_generation != operation.pin().logical_generation
         or rendering_snapshot.registry_snapshot.snapshot_ref != registry_snapshot_ref
     ):
-        raise ModeloValidationError("rendering snapshot does not belong to the admitted calculation scope")
+        raise ModeloValidationError(
+            "rendering snapshot does not belong to the admitted calculation scope",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
     if any(
         row_set.bucket_id != work_unit.bucket_id
         or row_set.work_unit_id != work_unit_id
@@ -479,7 +484,11 @@ def _validate_calculation_publication_scope(
         or row_set.authority_generation != operation.pin().logical_generation
         for row_set in closed_record_row_sets
     ):
-        raise ModeloValidationError("closed record rows do not belong to the admitted calculation scope")
+        raise ModeloValidationError(
+            "closed record rows do not belong to the admitted calculation scope",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            record=ModeloValidatedRecord.CALCULATION_REVISION,
+        )
 
 
 def _publish_new_calculation_revision(

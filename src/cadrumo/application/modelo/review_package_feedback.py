@@ -56,7 +56,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
@@ -68,6 +68,7 @@ from .recipient_encryption import (
     RecipientEncryptedPackage,
     RecipientEncryptionCapability,
 )
+from .refusal_door_verdicts import operator_choice_verdict, safety_stop_verdict
 from .review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
 from .review_package_recipient_encryption import (
     decrypt_review_package_for_recipient,
@@ -80,7 +81,7 @@ from .review_package_text import ReviewFeedbackNote
 _FEEDBACK_PACKAGE_VERSION = 1
 
 
-class ReviewPackageFeedbackError(CadrumoError):
+class ReviewPackageFeedbackError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error for review-package feedback round-trip failures."""
 
 
@@ -262,6 +263,7 @@ def decrypt_feedback_package_from_originator_envelope(
         raise ReviewPackageFeedbackError(
             "recovered feedback envelope did not contain a well-formed feedback package",
             translated_message="application.modelo.errors.review_package_generic",
+            precondition_verdict=operator_choice_verdict("feedback_package_malformed"),
         ) from exc
 
 
@@ -356,6 +358,7 @@ def import_feedback_package(
             "feedback carries a counter-signed receipt but no counter_signer_public_key_hex "
             "was supplied to verify it against",
             translated_message="application.modelo.errors.review_package_generic",
+            precondition_verdict=operator_choice_verdict("counter_signer_key_required"),
         )
 
     verified = verify_counter_signed_receipt(
@@ -370,6 +373,7 @@ def import_feedback_package(
             "the archive, the original signature, the note, or the counter-signature "
             "no longer match",
             translated_message="application.modelo.errors.review_package_generic",
+            precondition_verdict=safety_stop_verdict("feedback_counter_signature"),
             context={
                 "calculation_revision_id": feedback.calculation_revision_id,
                 "work_unit_id": feedback.work_unit_id,

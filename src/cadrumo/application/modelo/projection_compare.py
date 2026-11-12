@@ -27,7 +27,9 @@ from ...domain.modelos.calculation_revision import CalculationRevision, Calculat
 from ...domain.modelos.work_unit import WorkUnit
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_revision_queries import list_calculation_revisions
+from .lifecycle_view_refusal_doors import work_create_verdict, work_list_verdict
 from .projection import ModeloProjectionError
+from .refusal_door_verdicts import operator_choice_verdict, registry_defect_verdict
 from .work_lifecycle import list_work_units
 
 if TYPE_CHECKING:
@@ -111,6 +113,7 @@ def _compare_row_provenance(
                 "year_b": year_b,
                 "casilla_id": casilla_id,
             },
+            precondition_verdict=registry_defect_verdict("compare_casilla_declared"),
         )
     formula_id = observation.formula_id if observation is not None else None
     if formula_id is None and cdef.formula is not None:
@@ -126,6 +129,7 @@ def _compare_row_provenance(
                 "year_b": year_b,
                 "casilla_id": casilla_id,
             },
+            precondition_verdict=registry_defect_verdict("compare_casilla_references"),
         )
     return formula_id, legal_refs, source_refs
 
@@ -141,6 +145,7 @@ def _best_revision_for_compare(
         raise ModeloCompareNoWorkUnitsError(
             context={"modelo": modelo, "filing_year": filing_year},
             translated_message="cli.app.modelo.compare.no_work_units",
+            precondition_verdict=work_create_verdict("compare_work_units", modelo=str(modelo), filing_year=filing_year),
         )
 
     period_by_unit = {unit.work_unit_id: unit.period.registry_token for unit in units_for_year}
@@ -150,6 +155,7 @@ def _best_revision_for_compare(
         raise ModeloCompareNoRevisionsError(
             context={"modelo": modelo, "filing_year": filing_year},
             translated_message="cli.app.modelo.compare.no_revisions",
+            precondition_verdict=work_list_verdict("compare_revisions"),
         )
 
     best = _latest_comparison_revision(all_revisions, state=CalculationRevisionState.VERIFICADO_COMPLETO)
@@ -163,6 +169,7 @@ def _best_revision_for_compare(
     raise ModeloCompareNoUsableRevisionsError(
         context={"modelo": modelo, "filing_year": filing_year},
         translated_message="cli.app.modelo.compare.no_usable_revisions",
+        precondition_verdict=work_list_verdict("compare_usable_revisions"),
     )
 
 
@@ -205,7 +212,10 @@ def _comparison_year_pair(years: Iterable[int]) -> tuple[int, int]:
     try:
         year_a, year_b = requested_years
     except ValueError:
-        raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years") from None
+        raise ModeloCompareNeedTwoYearsError(
+            translated_message="cli.app.modelo.compare.need_two_years",
+            precondition_verdict=operator_choice_verdict("compare_two_years"),
+        ) from None
     return year_a, year_b
 
 

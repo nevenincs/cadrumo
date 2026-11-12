@@ -88,6 +88,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.review.errors.ReviewDraftsUnattributedError",
+        ErrorCode(
+            code="REFUSED_REVIEW_DRAFTS_UNATTRIBUTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_review_drafts_unattributed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.review.errors.ReviewSourceLoadError",
         ErrorCode(
             code="FAIL_REVIEW_SOURCE_LOAD",

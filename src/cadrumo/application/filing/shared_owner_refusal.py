@@ -10,6 +10,7 @@ from ...domain.calculations.registry.export_shared_owner import written_unadjudi
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.filing.errors import FilingExportValidationError
+from .export_refusal_doors import ExportRefusalReason, export_design_terminal
 
 _REFUSAL_MESSAGE = "application.filing.export.errors.shared_casilla_cells_unadjudicated"
 
@@ -36,6 +37,7 @@ def refuse_written_shared_owners(
             "casilla_ids": ", ".join(str(owner.casilla_id) for owner in owners),
             "target_cells": {str(owner.casilla_id): list(owner.target_cell_ids) for owner in owners},
         },
+        precondition_verdict=export_design_terminal(ExportRefusalReason.SHARED_CELLS_UNADJUDICATED),
     )
 
 

@@ -51,7 +51,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from pydantic import BaseModel, Field
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hex import HEX_PATTERN_64, HEX_PATTERN_128
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -65,7 +65,7 @@ from .review_package_text import ReviewPackageNote
 _COUNTER_SIGNATURE_ENVELOPE_VERSION = 1
 
 
-class ReviewPackageCounterSigningError(CadrumoError):
+class ReviewPackageCounterSigningError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error for review-package counter-signing/verification failures."""
 
 
