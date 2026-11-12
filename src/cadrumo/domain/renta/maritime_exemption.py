@@ -124,16 +124,32 @@ def art_7p_eligible(facts: MaritimeWorkerFacts) -> bool:
     return facts.vessel_flag == "foreign" or facts.waters_type == "international"
 
 
-def rebeca_eligible(facts: MaritimeWorkerFacts, *, authority: GovernedFactSource | None = None) -> bool:
+def is_maritime_worker(facts: MaritimeWorkerFacts) -> bool:
+    """Return whether the profile declares the trabajador del mar worker class."""
+    return facts.worker_class == _MARITIME_WORKER_CLASS
+
+
+def rebeca_eligible(
+    facts: MaritimeWorkerFacts,
+    *,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> bool:
     """Return whether the REBECA exemption applies to the worker profile.
+
+    Which registers open the exemption is a dated fact, so the read takes
+    ``effective_date``, a date inside the filing period of the income, and never
+    the run date.
 
     A trabajador del mar on a REBECA vessel, a REBECA company vessel in another
     EU/EEA register, or a scheduled Canary Islands route (Ley 19/1994
     Arts. 73.2 73.3 75.1 75.3, BOE-A-1994-15794).
     """
-    if facts.worker_class != _MARITIME_WORKER_CLASS:
+    if not is_maritime_worker(facts):
         return False
-    registries = resolve_form_codes(_ELIGIBLE_VESSEL_REGISTRIES_FACT, authority=authority).codes("registries")
+    registries = resolve_form_codes(
+        _ELIGIBLE_VESSEL_REGISTRIES_FACT, authority=authority, effective_date=effective_date
+    ).codes("registries")
     return facts.vessel_registry in registries
 
 
@@ -246,7 +262,7 @@ def calculate_rebeca_exemption(
     gross_navigation_income: Decimal,
     facts: MaritimeWorkerFacts,
     authority: GovernedFactSource | None = None,
-    devengo_date: date | None = None,
+    devengo_date: date,
 ) -> CasillaObservation:
     """Calculate the REBECA exempt amount.
 
@@ -260,7 +276,8 @@ def calculate_rebeca_exemption(
         facts: Resolved profile facts; :func:`rebeca_eligible` must hold.
         authority: Governed-fact authority. Defaults to the scoped authority,
             else the published one.
-        devengo_date: Devengo-date coordinate for the fraction; defaults to today.
+        devengo_date: Devengo date of the income, for the register list and the
+            fraction.
 
     Returns:
         :class:`CasillaObservation` carrying the exempt amount and provenance.
@@ -271,7 +288,7 @@ def calculate_rebeca_exemption(
     """
 
     def resolve(source: GovernedFactSource) -> CasillaObservation:
-        if not rebeca_eligible(facts, authority=source):
+        if not rebeca_eligible(facts, effective_date=devengo_date, authority=source):
             raise RentaValidationError("rebeca_eligible predicate is False; cannot calculate REBECA exemption")
         if not gross_navigation_income.is_finite() or gross_navigation_income <= Decimal("0"):
             raise RentaValidationError("gross_navigation_income must be a positive finite Decimal")
@@ -279,7 +296,7 @@ def calculate_rebeca_exemption(
             source,
             fact_id=_REBECA_EXEMPTION_FRACTION_FACT_ID,
             date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=devengo_date or today_madrid(),
+            effective_date=devengo_date,
         )
         return _exempt_observation(gross_navigation_income * fraction, resolved_fraction)
 
@@ -348,5 +365,6 @@ __all__ = [
     "check_retmar_mandatory_filing",
     "da41_eligible",
     "guard_da41_inactive",
+    "is_maritime_worker",
     "rebeca_eligible",
 ]

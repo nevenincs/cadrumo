@@ -247,15 +247,15 @@ class TestRebecaEligible:
 
     def test_selector_cases(self) -> None:
         for label, facts, expected in _REBECA_SELECTOR_CASES:
-            assert rebeca_eligible(facts) is expected, label
+            assert rebeca_eligible(facts, effective_date=_DEVENGO_DATE) is expected, label
 
     def test_an_explicit_source_controls_both_selector_and_calculation(self) -> None:
         with bundled_indexed_authority().operation() as operation:
             source = _RebecaMappingSource(operation=operation, registry="custom-register")
             ordinary = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
             custom = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="custom-register")
-            assert not rebeca_eligible(ordinary, authority=source)
-            assert rebeca_eligible(custom, authority=source)
+            assert not rebeca_eligible(ordinary, effective_date=_DEVENGO_DATE, authority=source)
+            assert rebeca_eligible(custom, effective_date=_DEVENGO_DATE, authority=source)
             result = calculate_rebeca_exemption(
                 gross_navigation_income=Decimal("1000"), facts=custom, authority=source, devengo_date=_DEVENGO_DATE
             )
@@ -269,7 +269,7 @@ class TestRebecaEligible:
             ThreadPoolExecutor(max_workers=1) as pool,
             pytest.raises(InternalInvariantError, match="generation-pinned"),
         ):
-            pool.submit(rebeca_eligible, facts).result()
+            pool.submit(rebeca_eligible, facts, effective_date=_DEVENGO_DATE).result()
 
 
 class TestDa41Eligible:
@@ -556,6 +556,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
+            devengo_date=_DEVENGO_DATE,
         )
         assert isinstance(obs, CasillaObservation)
         assert isinstance(obs.value, Decimal)
@@ -572,6 +573,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("40000"),
             facts=facts,
+            devengo_date=_DEVENGO_DATE,
         )
         assert isinstance(obs, CasillaObservation)
         assert isinstance(obs.value, Decimal)
@@ -588,6 +590,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("50000"),
             facts=facts,
+            devengo_date=_DEVENGO_DATE,
         )
         assert isinstance(obs, CasillaObservation)
         assert isinstance(obs.value, Decimal)
@@ -598,6 +601,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
+            devengo_date=_DEVENGO_DATE,
         )
         assert obs.legal_refs == _REBECA_LEGAL_REFS
 
@@ -605,6 +609,7 @@ class TestCalculateRebecaExemption:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
+            devengo_date=_DEVENGO_DATE,
         )
         assert obs.source_refs == _REBECA_SOURCE_REFS
 
@@ -619,6 +624,7 @@ class TestCalculateRebecaExemption:
             calculate_rebeca_exemption(
                 gross_navigation_income=Decimal("30000"),
                 facts=facts,
+                devengo_date=_DEVENGO_DATE,
             )
 
     def test_raises_on_zero_income(self) -> None:
@@ -628,6 +634,7 @@ class TestCalculateRebecaExemption:
             calculate_rebeca_exemption(
                 gross_navigation_income=Decimal("0"),
                 facts=self._REBECA_FACTS,
+                devengo_date=_DEVENGO_DATE,
             )
 
 
@@ -667,6 +674,7 @@ def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
     obs = calculate_rebeca_exemption(
         gross_navigation_income=Decimal("30000"),
         facts=facts,
+        devengo_date=_DEVENGO_DATE,
     )
     assert obs.legal_refs == _REBECA_LEGAL_REFS
 
@@ -720,6 +728,7 @@ def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
             worker_class="trabajador_del_mar",
             vessel_registry="REBECA",
         ),
+        devengo_date=_DEVENGO_DATE,
     )
 
     legal_refs = set(art7p_obs.legal_refs) | set(rebeca_obs.legal_refs)

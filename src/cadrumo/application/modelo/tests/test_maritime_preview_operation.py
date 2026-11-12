@@ -18,6 +18,8 @@ from ....core.config import override_settings
 from ....core.errors.hierarchy import CadrumoError
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.renta.errors import RentaValidationError
 from ....domain.renta.maritime_exemption import MaritimeExemptionInactiveError, MaritimeWorkerFacts
 from ...calculations.maritime_exemption_service import resolve_maritime_exemption
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -162,7 +164,7 @@ def test_maritime_worker_preserves_canonical_observations_original_facts_and_war
             qualifying_days=qualifying_days,
             gross_navigation_income=gross_navigation_income,
             operation=authority_operation,
-            filing_year=filing_year,
+            filing_year=filing_year or filing_year_envelope().horizon,
         )
 
     canonical = preview(annual_salary=Decimal("36500"), qualifying_days=100, gross_navigation_income=Decimal("30000"))
@@ -205,6 +207,20 @@ def test_maritime_worker_preserves_canonical_observations_original_facts_and_war
         assert result.retmar_warning.legal_ref == "ley-35-2006:art-96"
     else:
         assert result.retmar_warning is None
+
+
+def test_rebeca_profile_without_a_filing_year_refuses_instead_of_using_the_run_date(
+    authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA")
+    monkeypatch.setattr("cadrumo.application.modelo.maritime_preview.maritime_facts_from_active_profile", lambda: facts)
+    with pytest.raises(RentaValidationError, match="devengo_date is required"):
+        preview_maritime_exemption_for_active_profile(
+            annual_salary=None,
+            qualifying_days=None,
+            gross_navigation_income=Decimal("30000"),
+            operation=authority_operation,
+        )
 
 
 def test_foreign_active_profile_refuses_before_private_fact_read(authority_operation: PinnedAuthorityOperation) -> None:

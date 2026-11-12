@@ -208,7 +208,8 @@ def preview_maritime_exemption_for_active_profile(
         gross_navigation_income: Optional gross navigation income in EUR for
             REBECA.
         operation: Optional caller-held generation-pinned registry operation.
-        filing_year: The tax year asked about, which fixes its days, cap and fraction; today's when absent.
+        filing_year: The tax year asked about, which fixes its days, cap and fraction.
+            The REBECA pathway refuses without it, never falling back to the run date.
 
     Returns:
         :class:`ModeloMaritimeExemptionPreview` carrying original facts,
@@ -231,6 +232,7 @@ def preview_maritime_exemption_for_active_profile(
             )
     facts = maritime_facts_from_active_profile()
     resolved_on = today_madrid() if filing_year is None else date(filing_year, 12, 31)
+    devengo_date = None if filing_year is None else resolved_on
     try:
         result = resolve_maritime_exemption(
             facts=facts,
@@ -239,7 +241,7 @@ def preview_maritime_exemption_for_active_profile(
             gross_navigation_income=gross_navigation_income,
             authority=operation,
             filing_period=resolved_on,
-            devengo_date=resolved_on,
+            devengo_date=devengo_date,
         )
     except ProfileCompletenessError as exc:
         facts_without_retmar = replace(facts, retmar_registered=False)
@@ -250,7 +252,7 @@ def preview_maritime_exemption_for_active_profile(
             gross_navigation_income=gross_navigation_income,
             authority=operation,
             filing_period=resolved_on,
-            devengo_date=resolved_on,
+            devengo_date=devengo_date,
         )
         return ModeloMaritimeExemptionPreview(
             facts=facts,
