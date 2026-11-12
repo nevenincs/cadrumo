@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#renta-rental-income-source'
 date: '2026-11-11'
-modified: '2026-11-11'
+modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:5821045668a71a7a5e0cc795daf2446e1d8a796486827de6732d4c1b8eb7c30f'
+body_hash: 'sha256:9b3489f3fee7fd274b00b12231232e4e4212aa4535f64d8898b53279777b6093'
 related:
   - "[[2026-09-03-unreachable-capability-fincas-titularidad-adr]]"
   - "[[2026-09-02-unreachable-capability-fincas-unblock-research]]"
