@@ -13,6 +13,7 @@ import {
   openList,
   RAW,
   rowsOf,
+  rulesIncomplete,
   tab,
   views,
 } from "../support/scenarioModelo";
@@ -33,8 +34,8 @@ import { calls, stage, TYPED_06 } from "../support/scenarioModeloWrites";
 test("a modelo whose rules are incomplete opens read only, without a next step", async ({
   page: target,
 }) => {
-  const read = form("390-0A");
-  await openFromDialog(target, "390");
+  const read = form(`${rulesIncomplete.modelo}-${rulesIncomplete.period_code}`);
+  await openFromDialog(target, rulesIncomplete.modelo);
   const banner = target
     .getByRole("status")
     .filter({ hasText: label("workspace.modelo.editor.rules_incomplete") });

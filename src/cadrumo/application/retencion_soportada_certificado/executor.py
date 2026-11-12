@@ -19,7 +19,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.operations import OperationEffect
-from ...core.retencion_soportada import RetencionSoportadaClase
+from ...core.retencion_soportada import RetencionSoportadaCantidad
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -28,6 +28,7 @@ from ...domain.renta.retencion_soportada import (
     RetencionSoportadaIdentity,
     RetencionSoportadaOrigen,
     RetencionSoportadaRecord,
+    class_certificate_figures,
 )
 from ..aggregation.retencion_soportada_repository import (
     RetencionSoportadaRevisionConflictError,
@@ -143,8 +144,11 @@ def _build_record(
     }
     if amounts["ingreso_a_cuenta_repercutido"] > amounts["ingreso_a_cuenta"]:
         return _CertificateRefusal("repercutido_exceeds_ingreso_a_cuenta")
-    work_figures = (request.reducciones_aplicables, request.gastos_deducibles)
-    if request.income_class is RetencionSoportadaClase.TRABAJO and None in work_figures:
+    class_figures = {
+        RetencionSoportadaCantidad.REDUCCIONES_APLICABLES: request.reducciones_aplicables,
+        RetencionSoportadaCantidad.GASTOS_DEDUCIBLES: request.gastos_deducibles,
+    }
+    if any(class_figures.get(figure) is None for figure in class_certificate_figures(request.income_class)):
         return _CertificateRefusal("trabajo_certificate_figure_missing")
     if request.origin is RetencionSoportadaOrigen.PAYER_CERTIFICATE and fingerprint is None:
         return _CertificateRefusal("certificate_fingerprint_required")

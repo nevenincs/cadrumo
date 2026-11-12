@@ -79,7 +79,11 @@ import { hex64 } from "./fixtures/ledger";
  * `exported` is the checked declaration with its file made, which exports
  * and records, `export-unverified` exports a file whose design carries no
  * completeness manifest, `export-cutoff-unverified` exports a direct debit
- * whose result says no direct-debit cutoff was checked, `export-notes`
+ * whose result says no direct-debit cutoff was checked,
+ * `export-work-income-limitation` exports a file whose result discloses that
+ * the work-income deductions only the filer can evidence are not computed
+ * (synthetic: the application's export of this synthetic Modelo 130 sets no
+ * such flag, so the flag is set on its stored result), `export-notes`
  * exports a file whose calculation
  * noted two gaps of one kind about two elements and one of another kind, and
  * `export-unknown` loses the export's settlement, and `check-notes` reads the
@@ -161,6 +165,7 @@ export const MODELO_SHAPES = [
   "exported",
   "export-unverified",
   "export-cutoff-unverified",
+  "export-work-income-limitation",
   "export-notes",
   "check-notes",
   "withholding-link",
@@ -587,6 +592,7 @@ export function modeloFixture(options: Options): ModeloPort {
       case "exported":
       case "export-unverified":
       case "export-cutoff-unverified":
+      case "export-work-income-limitation":
       case "export-notes":
       case "export-unknown":
       case "export-past-cutoff":
@@ -745,6 +751,20 @@ export function modeloFixture(options: Options): ModeloPort {
         resolved_result_disposition: "U",
         payment_election: "domiciliacion",
         domiciliation_cutoff_unverified: true,
+      },
+    };
+  };
+  /** The first quarter's export with the work-income limitation disclosed.
+   * Synthetic: only the flag is set on the stored result. */
+  const exportWorkIncomeLimitation = async (): Promise<unknown> => {
+    const exported = (await written(
+      "export-130",
+    )) as ModeloExportPublicResultV3;
+    return {
+      ...exported,
+      fichero_boe: exported.fichero_boe && {
+        ...exported.fichero_boe,
+        trabajo_deductions_not_computed: true,
       },
     };
   };
@@ -943,8 +963,12 @@ export function modeloFixture(options: Options): ModeloPort {
         definition === "modelo.project" &&
         !catalogue[`project-${rentaForm(shape)}-${spoken}`]
       )
+        // The filer's own recorded refusal where the application refused its
+        // profile's estimate, else the one for the quarter's stage.
         return (await refusedWith(
-          PROJECT_REFUSAL[quarter],
+          catalogue[`refusal-project-${rentaForm(shape)}-${spoken}`]
+            ? `project-${rentaForm(shape)}`
+            : PROJECT_REFUSAL[quarter],
           spoken,
         )) as LedgerOutcome<ModeloResult<typeof definition>>;
       if (
@@ -1138,6 +1162,8 @@ export function modeloFixture(options: Options): ModeloPort {
               return written("export-165-unverified");
             if (shape === "export-cutoff-unverified")
               return exportCutoffUnverified();
+            if (shape === "export-work-income-limitation")
+              return exportWorkIncomeLimitation();
             if (shape === "export-notes") return exportWithNotes();
             return shape === "exported" ? written("export-130") : unserved();
           }

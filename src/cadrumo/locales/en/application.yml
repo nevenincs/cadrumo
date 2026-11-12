@@ -1235,6 +1235,14 @@ application:
       m210_payer_mode:
         multiple_payers_code_35: Several payers (code 35)
         single_payer: One payer
+      withholding_certificate_figure:
+        gastos_deducibles: Deductible expenses
+        importe_integro_dinerario: Gross cash amount
+        ingreso_a_cuenta: Payment on account
+        ingreso_a_cuenta_repercutido: Payment on account passed on
+        reducciones_aplicables: Reductions applied
+        retencion: Withholding
+        valoracion_especie: Value in kind
     errors:
       evidence_attachment_requires_ids: Attaching a supporting document to your records
         requires purchase evidence or attachment ids.

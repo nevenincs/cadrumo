@@ -60,7 +60,7 @@ def row_figures(world: PersonaWorld, calculated: ModeloWorkCalculatePublicResult
     ports = build_calculation_action_ports(bucket_id=str(world.profile_id), operation=world.operation)
     stored = ports.calculation_repository.load().get(calculated.calculation_revision_id)
     if stored is None:
-        return {}
+        return single_row_figures({}, {})
     revision = world.operation.revision(str(calculated.unit.modelo), calculated.unit.revision_id)
     fed = {binding.id: str(provider.target_casilla_id) for binding, provider in renta_inmueble_columns(revision)}
     return single_row_figures(stored.row_binding_values, fed)

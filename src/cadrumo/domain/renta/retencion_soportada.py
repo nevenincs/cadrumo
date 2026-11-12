@@ -14,9 +14,11 @@ identifiers is small enough to recover from an unkeyed hash.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Self
+from types import MappingProxyType
+from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -34,6 +36,8 @@ __all__ = [
     "RetencionSoportadaIdentity",
     "RetencionSoportadaOrigen",
     "RetencionSoportadaRecord",
+    "certificate_figures",
+    "class_certificate_figures",
 ]
 
 type _Importe = Annotated[Decimal, Field(ge=Decimal("0"), decimal_places=2)]
@@ -51,6 +55,43 @@ class RetencionSoportadaOrigen(StrEnum):
 
 type RetencionSoportadaIdentity = tuple[int, RetencionSoportadaClase, str]
 """The ``(ejercicio, income class, payer_ref)`` a record is stored under, one row each."""
+
+_PAYMENT_FIGURES: Final = (
+    RetencionSoportadaCantidad.IMPORTE_INTEGRO_DINERARIO,
+    RetencionSoportadaCantidad.VALORACION_ESPECIE,
+    RetencionSoportadaCantidad.RETENCION,
+    RetencionSoportadaCantidad.INGRESO_A_CUENTA,
+    RetencionSoportadaCantidad.INGRESO_A_CUENTA_REPERCUTIDO,
+)
+"""The payment figures every payer's certificate states, whatever the income class."""
+
+_CLASS_FIGURES: Final[Mapping[RetencionSoportadaClase, tuple[RetencionSoportadaCantidad, ...]]] = MappingProxyType(
+    {
+        RetencionSoportadaClase.TRABAJO: (
+            RetencionSoportadaCantidad.REDUCCIONES_APLICABLES,
+            RetencionSoportadaCantidad.GASTOS_DEDUCIBLES,
+        ),
+    }
+)
+"""The figures a certificate states only for its class.
+
+A work-income certificate states the art. 18.2 and 18.3 reductions the payer
+applied and the art. 19.2 a), b) and c) deductible expenses; no other class's
+certificate states either.
+"""
+
+_CLASS_SPECIFIC_FIGURES: Final = frozenset(figure for figures in _CLASS_FIGURES.values() for figure in figures)
+"""Every figure some class states beyond the payment figures; a record holds each one optionally."""
+
+
+def class_certificate_figures(income_class: RetencionSoportadaClase) -> tuple[RetencionSoportadaCantidad, ...]:
+    """Return the figures a certificate states for ``income_class`` beyond the payment figures."""
+    return _CLASS_FIGURES.get(income_class, ())
+
+
+def certificate_figures(income_class: RetencionSoportadaClase) -> tuple[RetencionSoportadaCantidad, ...]:
+    """Return every figure a payer's certificate states for ``income_class``, in the certificate's order."""
+    return (*_PAYMENT_FIGURES, *class_certificate_figures(income_class))
 
 
 def _stated(figure: Decimal | None, words: str) -> Decimal:
@@ -112,11 +153,11 @@ class RetencionSoportadaRecord(BaseModel):
         a ``trabajo`` record with both absent; :attr:`lacks_work_certificate_figures`
         names that state so a writer can refuse to create it afresh.
         """
-        stated = (self.reducciones_aplicables is not None, self.gastos_deducibles is not None)
-        if self.income_class is not RetencionSoportadaClase.TRABAJO:
-            if any(stated):
-                raise RentaValidationError("only a work-income record states reductions and deductible expenses")
-        elif stated[0] != stated[1]:
+        stated = {figure for figure in _CLASS_SPECIFIC_FIGURES if self.states(figure)}
+        declared = set(class_certificate_figures(self.income_class))
+        if stated - declared:
+            raise RentaValidationError("only a work-income record states reductions and deductible expenses")
+        if stated and stated != declared:
             raise RentaValidationError(
                 "a work-income record states both reductions and deductible expenses, or neither"
             )
@@ -136,8 +177,8 @@ class RetencionSoportadaRecord(BaseModel):
 
     @property
     def lacks_work_certificate_figures(self) -> bool:
-        """Return whether this is a work-income record that states neither figure a new record must state."""
-        return self.income_class is RetencionSoportadaClase.TRABAJO and self.reducciones_aplicables is None
+        """Return whether this record leaves out a figure its class's certificate states, as an older payload does."""
+        return not all(self.states(figure) for figure in class_certificate_figures(self.income_class))
 
     def states(self, cantidad: RetencionSoportadaCantidad) -> bool:
         """Return whether this record states the figure ``cantidad`` draws."""

@@ -53,6 +53,7 @@ from ...core.i18n.render import tr
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_recargo_equivalencia_token
 from ...domain.contribuyente.inmueble_facts import arrendamientos_from_facts, inmuebles_from_facts
+from ...domain.contribuyente.inmueble_record import AdquisicionTitulo
 from ...domain.contribuyente.inventory.records import MovementKind
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecordStatus
@@ -245,14 +246,14 @@ def _assert_rentals_recorded(
             dwelling.referencia_catastral,
             dwelling.importe_adquisicion,
             dwelling.valor_suelo,
-            dwelling.adquisicion_titulo.value,
+            dwelling.adquisicion_titulo,
             dwelling.fecha_adquisicion,
             dwelling.gastos_tributos_adquisicion,
         ) == (
             rental.referencia_catastral,
             rental.importe_adquisicion,
             rental.valor_suelo,
-            rental.adquisicion_titulo,
+            AdquisicionTitulo(rental.adquisicion_titulo),
             rental.fecha_adquisicion.resolve(envelope),
             rental.gastos_tributos_adquisicion,
         )

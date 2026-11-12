@@ -252,12 +252,13 @@ def permitted_binding_entry(
     ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
     source = binding.source
-    refusal = _source_refusal(binding)
-    if refusal is None:
-        grammar = binding_value_grammar(binding, revision=revision)
-        refusal = _placement_refusal(binding, grammar=grammar, period=period, row_filled=row_filled)
-    if refusal is not None:
-        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(binding_id=binding.id, reason=refusal)
+    source_refusal = _source_refusal(binding)
+    if source_refusal is not None:
+        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(binding_id=binding.id, reason=source_refusal)
+    grammar = binding_value_grammar(binding, revision=revision)
+    placement_refusal = _placement_refusal(binding, grammar=grammar, period=period, row_filled=row_filled)
+    if placement_refusal is not None:
+        return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(binding_id=binding.id, reason=placement_refusal)
     # Only a carry the registry declares a statement of absence for can be
     # stated to hold nothing; on any other binding the statement would assert a figure.
     attestable = binding.absence_attestation is not None

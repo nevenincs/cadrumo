@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterator
-from datetime import date
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from importlib.resources import files
 from types import SimpleNamespace
@@ -20,6 +20,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
+from ....core.retencion_soportada import RetencionSoportadaCantidad, RetencionSoportadaClase
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
 from ....domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
@@ -33,6 +34,12 @@ from ....domain.categories.spending_category import SpendingCategory, SpendingCa
 from ....domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
 from ....domain.invoices.business_premises import SituacionInmueble
 from ....domain.iva.establishment import StatedCountryCodeStatus, stated_country_code_status
+from ....domain.renta.errors import RentaValidationError
+from ....domain.renta.retencion_soportada import (
+    RetencionSoportadaOrigen,
+    RetencionSoportadaRecord,
+    certificate_figures,
+)
 from ....domain.transactions.classification_rule import require_new_rule_decision
 from ....domain.transactions.enums import (
     BUSINESS_BEARING_STATES,
@@ -109,6 +116,7 @@ def test_every_family_is_served_once(served: dict[str, tuple[tuple[str, str | No
         "capital_good_disposal",
         "import_format",
         "export_format",
+        "withholding_certificate_figure",
     }
 
 
@@ -189,6 +197,78 @@ def test_invoice_classes_are_the_ones_the_registry_declares(
         str(catalogue.simplificada_token),
         str(catalogue.rectificativa_token),
     } == set(classes)
+
+
+_OPTIONAL_CERTIFICATE_FIGURES = (
+    RetencionSoportadaCantidad.REDUCCIONES_APLICABLES,
+    RetencionSoportadaCantidad.GASTOS_DEDUCIBLES,
+)
+"""The figures a record holds optionally because a certificate states them only for some income classes."""
+
+
+def _stated_figure(figure: RetencionSoportadaCantidad, stated: frozenset[str]) -> Decimal | None:
+    return Decimal("0.00") if figure.value in stated else None
+
+
+def _withholding_record(income_class: RetencionSoportadaClase, stated: frozenset[str]) -> RetencionSoportadaRecord:
+    """A record of ``income_class`` stating the optional figures named in ``stated`` and leaving the others out."""
+    return RetencionSoportadaRecord(
+        ejercicio=_ON_DATE.year,
+        payer_tax_id="B00000001",
+        payer_ref="0" * 64,
+        income_class=income_class,
+        importe_integro_dinerario=Decimal("1000.00"),
+        valoracion_especie=Decimal("0.00"),
+        retencion=Decimal("100.00"),
+        ingreso_a_cuenta=Decimal("0.00"),
+        ingreso_a_cuenta_repercutido=Decimal("0.00"),
+        origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
+        evidence_fingerprint="a" * 64,
+        captured_at=datetime.combine(_ON_DATE, time(9), tzinfo=UTC),
+        reducciones_aplicables=_stated_figure(RetencionSoportadaCantidad.REDUCCIONES_APLICABLES, stated),
+        gastos_deducibles=_stated_figure(RetencionSoportadaCantidad.GASTOS_DEDUCIBLES, stated),
+    )
+
+
+def _served_figures(
+    operation: PinnedAuthorityOperation,
+) -> dict[str | None, frozenset[str]]:
+    family = next(
+        family
+        for family in ledger_entry_options(_PROFILE, operation=operation).families
+        if family.family == "withholding_certificate_figure"
+    )
+    grouped: dict[str | None, set[str]] = {}
+    for option in family.options:
+        grouped.setdefault(option.group, set()).add(option.value)
+    return {group: frozenset(values) for group, values in grouped.items()}
+
+
+def test_each_income_class_is_served_the_figures_its_record_takes(operation: PinnedAuthorityOperation) -> None:
+    served = _served_figures(operation)
+
+    assert set(served) == {income_class.value for income_class in RetencionSoportadaClase}
+    for income_class in RetencionSoportadaClase:
+        figures = served[income_class.value]
+        assert figures == {figure.value for figure in certificate_figures(income_class)}
+        record = _withholding_record(income_class, figures)
+        assert not record.lacks_work_certificate_figures
+        assert all(record.states(RetencionSoportadaCantidad(figure)) for figure in figures)
+        for unserved in sorted(figure.value for figure in _OPTIONAL_CERTIFICATE_FIGURES if figure.value not in figures):
+            with pytest.raises((RentaValidationError, ValidationError)):
+                _withholding_record(income_class, figures | {unserved})
+
+
+def test_withholding_figures_carry_their_words_and_keep_the_record_order(
+    served: dict[str, tuple[tuple[str, str | None], ...]],
+) -> None:
+    options = served["withholding_certificate_figure"]
+
+    assert all(
+        label == f"application.ledger.entry_options.withholding_certificate_figure.{value}" for value, label in options
+    )
+    work = [figure.value for figure in certificate_figures(RetencionSoportadaClase.TRABAJO)]
+    assert [value for value, _ in options][: len(work)] == work
 
 
 def test_premises_situations_are_the_codes_the_record_carries(

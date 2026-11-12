@@ -219,7 +219,7 @@ def _open_carry_boxes(
     return tuple(sorted(found, key=lambda box: (len(box), box)))
 
 
-def _door_arguments(family: AbsenceAttestationFamily, work_unit: WorkUnit) -> dict[str, object]:
+def _door_arguments(family: AbsenceAttestationFamily, work_unit: WorkUnit) -> dict[str, str]:
     """The action arguments of the statement's door: a row-grain family names its row later, so none here."""
     return {} if family.row_grain else {"work_unit_id": work_unit.work_unit_id}
 

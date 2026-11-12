@@ -1321,7 +1321,7 @@ def _ledger_links(value: object, where: str) -> tuple[RentalLedgerLink, ...]:
         links.append(
             RentalLedgerLink(
                 ref_prefix=_string(table, "ref_prefix", here),
-                target=cast(Literal["arrendamiento", "inmueble"], target),
+                target=target,
                 gasto=gasto,
             )
         )

@@ -23,6 +23,7 @@ from ....application.operations.subject_reference import (
     OperationSubjectReferenceV1,
     expected_operation_subject,
 )
+from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 
@@ -32,6 +33,8 @@ _SKELETON_DEPTH = 4
 _PROFILE_FIELD = "profile_id"
 _PATH_FORMATS = frozenset({"path", "file-path", "directory-path"})
 _TEXT_TYPES = frozenset({"string", "integer", "number"})
+_PUBLIC_DECIMAL_TITLE = "PublicDecimal"
+_PUBLIC_DECIMAL_KEY = "decimal"
 
 
 class RequestFieldKind(StrEnum):
@@ -70,6 +73,8 @@ class RequestFieldV1:
     choices: tuple[object, ...]
     initial: str
     session_fixed: bool
+    # A decimal the request carries as ``{"decimal": "<text>"}`` rather than as a bare string.
+    public_decimal: bool = False
 
     @property
     def choice_labels(self) -> tuple[str, ...]:
@@ -165,6 +170,21 @@ def _classified(node: _Schema, definitions: _Schema) -> tuple[RequestFieldKind, 
     return RequestFieldKind.JSON, ()
 
 
+def _is_public_decimal(node: _Schema, definitions: _Schema) -> bool:
+    """Report whether the field is the explicit decimal object, optional or not, by its served shape."""
+    alternatives = _alternatives(node, definitions)
+    if len(alternatives) != 1:
+        return False
+    only = alternatives[0]
+    properties = only.get("properties")
+    if only.get("type") != "object" or only.get("title") != _PUBLIC_DECIMAL_TITLE:
+        return False
+    if not isinstance(properties, Mapping) or set(cast("_Schema", properties)) != {_PUBLIC_DECIMAL_KEY}:
+        return False
+    member = cast("_Schema", properties)[_PUBLIC_DECIMAL_KEY]
+    return isinstance(member, Mapping) and cast("_Schema", member).get("type") == "string"
+
+
 def _object_skeleton(resolved: _Schema, definitions: _Schema, depth: int) -> object:
     properties = resolved.get("properties")
     required = resolved.get("required")
@@ -249,6 +269,9 @@ def request_fields(schema: _Schema, *, profile_id: UUID) -> tuple[RequestFieldV1
     for name, raw in cast("_Schema", properties).items():
         node = _resolved(raw, definitions)
         kind, choices = _classified(node, definitions)
+        public_decimal = _is_public_decimal(node, definitions)
+        if public_decimal:
+            kind, choices = RequestFieldKind.DECIMAL, ()
         required = name in required_names
         session_fixed = name == _PROFILE_FIELD and kind is RequestFieldKind.UUID
         description = _field_description(node, definitions)
@@ -263,6 +286,7 @@ def request_fields(schema: _Schema, *, profile_id: UUID) -> tuple[RequestFieldV1
                     str(profile_id) if session_fixed else _initial_text(kind, node, definitions, required=required)
                 ),
                 session_fixed=session_fixed,
+                public_decimal=public_decimal,
             )
         )
     return tuple(fields)
@@ -315,7 +339,18 @@ def _field_value(field: RequestFieldV1, text: str) -> object:
         return str(Path(stripped).expanduser().resolve())
     if kind is RequestFieldKind.TEXT:
         return text
+    if field.public_decimal:
+        return _public_decimal_value(stripped)
     return stripped
+
+
+def _public_decimal_value(stripped: str) -> object:
+    # The shared parser settles a comma or grouped token and refuses a bare dot-grouped one that could
+    # be thousands or decimals, so the operator is asked rather than guessed at.
+    parsed = coerce_finite_european_decimal(stripped)
+    if parsed is None:
+        return RequestFieldProblem.NUMBER
+    return {_PUBLIC_DECIMAL_KEY: str(parsed)}
 
 
 def request_document(
@@ -347,11 +382,22 @@ def field_texts(fields: tuple[RequestFieldV1, ...], document: Mapping[str, objec
     for field in fields:
         if field.name not in document:
             texts[field.name] = ""
+        elif field.public_decimal:
+            texts[field.name] = _public_decimal_text(document[field.name])
         elif field.kind is RequestFieldKind.JSON:
             texts[field.name] = json.dumps(document[field.name], ensure_ascii=False, indent=2)
         else:
             texts[field.name] = _scalar_text(document[field.name])
     return texts
+
+
+def _public_decimal_text(value: object) -> str:
+    if isinstance(value, Mapping):
+        inner = cast("_Schema", value).get(_PUBLIC_DECIMAL_KEY)
+        if isinstance(inner, str):
+            return inner
+        return json.dumps(value, ensure_ascii=False)
+    return _scalar_text(value)
 
 
 @dataclass(frozen=True, slots=True)

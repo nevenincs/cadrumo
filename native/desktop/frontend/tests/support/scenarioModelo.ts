@@ -38,6 +38,15 @@ export const form = (name: string, language: Language = "en") =>
 export const list = (language: Language = "en") =>
   envelope<ModeloDeclarationsListProjectionV1>(`declarations-${language}`);
 
+/** The declaration the producer chose, from the registry, to open with rules
+ * short of calculation grade: the scenarios name it by this role, not by a
+ * modelo. */
+export const rulesIncomplete = envelope<{
+  modelo: string;
+  period_code: string;
+  work_unit_id: string;
+}>("scenario-rules-incomplete");
+
 /** The name the exported 130's filing file is saved under, as the window
  * names it from the declaration's period. */
 export const FILING_FILE = (() => {
